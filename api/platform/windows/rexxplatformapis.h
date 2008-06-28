@@ -40,12 +40,12 @@
 
 /***    RexxPullQueue - Retrieve data from an External Data Queue */
 
-APIRET REXXENTRY RexxPullQueue (
+RexxReturnCode REXXENTRY RexxPullQueue (
         const char *,                          /* Name of queue to read from  */
         PRXSTRING,                             /* RXSTRING to receive data    */
         SYSTEMTIME *,                          /* Stor for data date/time     */
         unsigned int);                         /* wait status (WAIT|NOWAIT)   */
-typedef APIRET (REXXENTRY *PFNREXXPULLQUEUE)(const char *, PCONSTRXSTRING, SYSTEMTIME *,
+typedef RexxReturnCode (REXXENTRY *PFNREXXPULLQUEUE)(const char *, PCONSTRXSTRING, SYSTEMTIME *,
                                            unsigned int);
 
 #endif /* REXXPLATFORMAPIS_INCLUDED */

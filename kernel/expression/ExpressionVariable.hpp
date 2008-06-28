@@ -61,6 +61,8 @@ class RexxParseVariable : public RexxVariableBase {
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   RexxObject *getValue(RexxVariableDictionary *);
   RexxObject *getValue(RexxActivation *);
+  RexxObject *getRealValue(RexxVariableDictionary *);
+  RexxObject *getRealValue(RexxActivation *);
   bool exists(RexxActivation *);
   void set(RexxActivation *, RexxObject *) ;
   void set(RexxVariableDictionary *, RexxObject *) ;

@@ -51,10 +51,12 @@
 #include "RexxDateTime.hpp"
 #include "RexxCode.hpp"
 #include "ActivityManager.hpp"
+#include "RexxCompoundTail.hpp"
 
 
 class RexxInstructionCallBase;
 class ProtectedObject;
+class RexxSupplier;
 
 #define trace_debug         0x00000001 /* interactive trace mode flag       */
 #define trace_all           0x00000002 /* trace all instructions            */
@@ -87,6 +89,7 @@ class ProtectedObject;
 #define transfer_failed     0x10000000 /* transfer of variable lock failure */
 
 #define elapsed_reset       0x20000000 // The elapsed time stamp was reset via time('r')
+#define guarded_method      0x40000000 // this is a guarded method
 
 /* execution_state values */
 #define ACTIVE    0
@@ -130,7 +133,8 @@ class ActivationSettings
       RexxString    * calltype;            /* (COMMAND/METHOD/FUNCTION/ROUTINE) */
       RexxDirectory * streams;             /* Directory of openned streams      */
       RexxString    * halt_description;    /* description from a HALT condition */
-      RexxObject    * securityManager;     /* security manager object           */
+      SecurityManager * securityManager;   /* security manager object           */
+      RexxObject    * scope;               // scope of the method call
       size_t traceoption;                  /* current active trace option       */
       size_t flags;                        /* trace/numeric and other settings  */
       wholenumber_t trace_skip;            /* count of trace events to skip     */
@@ -169,8 +173,6 @@ class ActivationSettings
 
 RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
 
-RexxObject * activation_find  (void);
-
  class RexxActivation : public RexxActivationBase {
   public:
    void *operator new(size_t);
@@ -179,12 +181,12 @@ RexxObject * activation_find  (void);
    inline void  operator delete(void *, void *) { ; }
 
    inline RexxActivation(RESTORETYPE restoreType) { ; };
-   RexxActivation(RexxActivity* _activity, RexxMethod * _method, RexxCode *_code);
-   RexxActivation(RexxActivity *_activity, RexxMethod *_method, RexxCode *_code, RexxActivation *_parent, RexxString *calltype, RexxString *env, int context);
-   void init(RexxObject *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, int);
+   RexxActivation(RexxActivity* _activity, RexxMethod *_method, RexxCode *_code);
+   RexxActivation(RexxActivity *_activity, RoutineClass *_routine, RexxCode *_code, RexxString *calltype, RexxString *env, int context);
+   RexxActivation(RexxActivity *_activity, RexxActivation *_parent, RexxCode *_code, int context);
+
    void live(size_t);
    void liveGeneral(int reason);
-   void flatten(RexxEnvelope *);
    RexxObject      * dispatch();
    void              traceBack(RexxList *);
    size_t            digits();
@@ -211,8 +213,11 @@ RexxObject * activation_find  (void);
    inline bool isInterpret() { return activation_context == INTERPRET; }
    inline bool isInternalCall() { return activation_context == INTERNALCALL; }
    inline bool isMethod() { return activation_context == METHODCALL; }
-   inline bool isTopLevelCall() { return activation_context == METHODCALL; }
-   inline bool isNestedCall() { return (activation_context & INTERNAL_LEVEL_CALL) != 0; }
+   inline bool isProgram() { return activation_context == PROGRAMCALL; }
+   inline bool isTopLevelCall() { return (activation_context & TOP_LEVEL_CALL) != 0; }
+   inline bool isProgramLevelCall() { return (activation_context & PROGRAM_LEVEL_CALL) != 0; }
+   inline bool isInternalLevelCall() { return (activation_context & INTERNAL_LEVEL_CALL) != 0; }
+   inline bool isProgramOrMethod() { return (activation_context & PROGRAM_OR_METHOD) != 0; }
 
    RexxObject *run(RexxObject *_receiver, RexxString *msgname, RexxObject **_arglist,
        size_t _argcount, RexxInstruction * start, ProtectedObject &resultObj);
@@ -250,13 +255,14 @@ RexxObject * activation_find  (void);
    RexxString      * trapState(RexxString *);
    void              trapDelay(RexxString *);
    void              trapUndelay(RexxString *);
-   bool              callExternalRexx(RexxString *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+   bool              callExternalRexx(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
    RexxObject      * externalCall(RexxString *, size_t, RexxExpressionStack *, RexxString *, ProtectedObject &);
    RexxObject      * internalCall(RexxInstruction *, size_t, RexxExpressionStack *, ProtectedObject &);
    RexxObject      * internalCallTrap(RexxInstruction *, RexxDirectory *, ProtectedObject &);
    bool              callMacroSpaceFunction(RexxString *, RexxObject **, size_t, RexxString *, int, ProtectedObject &);
-   RexxMethod      * getMacroCode(RexxString *macroName);
-   bool              callRegisteredExternalFunction(RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+   static RoutineClass* getMacroCode(RexxString *macroName);
+   RexxString       *resolveProgramName(RexxString *name);
+   RexxClass        *findClass(RexxString *name);
    RexxObject      * command(RexxString *, RexxString *);
    int64_t           getElapsed();
    RexxDateTime      getTime();
@@ -264,6 +270,7 @@ RexxObject * activation_find  (void);
    size_t            currentLine();
    void              arguments(RexxObject *);
    void              traceValue(RexxObject *, int);
+   void              traceCompoundValue(int prefix, RexxString *stemName, RexxObject **tails, size_t tailCount, RexxCompoundTail *tail);
    void              traceCompoundValue(int prefix, RexxString *stem, RexxObject **tails, size_t tailCount, const char *marker, RexxObject * value);
    void              traceTaggedValue(int prefix, const char *tagPrefix, bool quoteTag, RexxString *tag, const char *marker, RexxObject * value);
    void              traceOperatorValue(int prefix, const char *tag, RexxObject *value);
@@ -303,7 +310,8 @@ RexxObject * activation_find  (void);
    void              propagateExit(RexxObject *);
    void              setDefaultAddress(RexxString *);
    bool              internalMethod();
-   RexxObject      * loadRequired(RexxString *, RexxInstruction *);
+   PackageClass    * loadRequired(RexxString *, RexxInstruction *);
+   void              loadLibrary(RexxString *target, RexxInstruction *instruction);
    RexxObject      * rexxVariable(RexxString *);
    void              pushEnvironment(RexxObject *);
    RexxObject      * popEnvironment();
@@ -319,11 +327,11 @@ RexxObject * activation_find  (void);
    void              closeStreams();
    void              checkTrapTable();
    RexxDirectory   * getStreams();
-   bool              callSecurityManager(RexxString *, RexxDirectory *);
    RexxObject  *novalueHandler(RexxString *);
    RexxVariableBase *retriever(RexxString *);
    RexxVariableBase *directRetriever(RexxString *);
    RexxObject       *handleNovalueEvent(RexxString *name, RexxVariable *variable);
+   RexxSource       *getSourceObject();
 
    inline void              setCallType(RexxString *type) {this->settings.calltype = type; }
    inline void              pushBlock(RexxDoBlock *block) { block->setPrevious(this->dostack); this->dostack = block; }
@@ -335,7 +343,6 @@ RexxObject * activation_find  (void);
    inline void              addBlock()    { this->blockNest++; };
    inline bool              hasActiveBlocks() { return blockNest != 0; }
    inline bool              inMethod()  {return this->activation_context == METHODCALL; }
-   inline RexxSource *      getSource() {return this->settings.parent_code->getSourceObject(); };
    inline void              indent() {this->settings.traceindent++; };
    inline void              unindent() {this->settings.traceindent--; };
    inline void              setIndent(size_t v) {this->settings.traceindent=(v); };
@@ -344,7 +351,6 @@ RexxObject * activation_find  (void);
    inline void              clearTraceSettings() { settings.flags &= ~trace_flags; settings.intermediate_trace = false; }
    inline bool              tracingResults() {return (this->settings.flags&trace_results) != 0; }
    inline RexxActivity    * getActivity() {return this->activity;};
-   inline RexxMethod      * getMethod() {return this->method;};
    inline RexxString      * getMessageName() {return this->settings.msgname;};
    inline RexxString      * getCallname() {return this->settings.msgname;};
    inline RexxInstruction * getCurrent() {return this->current;};
@@ -361,7 +367,9 @@ RexxObject * activation_find  (void);
 
    virtual NumericSettings *getNumericSettings();
    virtual RexxActivation  *getRexxContext();
+   virtual RexxActivation  *findRexxContext();
    virtual RexxObject      *getReceiver();
+   virtual bool             isRexxContext();
 
    inline void              traceIntermediate(RexxObject * v, int p) { if (this->settings.intermediate_trace) this->traceValue(v, p); };
    inline void              traceVariable(RexxString *n, RexxObject *v)
@@ -393,9 +401,12 @@ RexxObject * activation_find  (void);
    inline void              pauseLabel() { if ((this->settings.flags&(trace_labels | trace_debug)) == (trace_labels | trace_debug)) this->debugPause(); };
    inline void              pauseCommand() { if ((this->settings.flags&(trace_commands | trace_debug)) == (trace_commands | trace_debug)) this->debugPause(); };
 
-   inline bool              hasSecurityManager() { return this->settings.securityManager != OREF_NULL; }
+          SecurityManager  *getSecurityManager();
+          SecurityManager  *getEffectiveSecurityManager();
    inline bool              isTopLevel() { return (this->activation_context&TOP_LEVEL_CALL) != 0; }
    inline bool              isForwarded() { return (this->settings.flags&forwarded) != 0; }
+   inline bool              isGuarded() { return (this->settings.flags&guarded_method) != 0; }
+   inline bool              setGuarded() { return (this->settings.flags&guarded_method) != 0; }
 
    inline bool              isExternalTraceOn() { return (this->settings.flags&trace_on) != 0; }
    inline void              setExternalTraceOn() { this->settings.flags |= trace_on; }
@@ -434,7 +445,7 @@ RexxObject * activation_find  (void);
        return settings.local_variables.getDictionary();
    }
 
-   inline RexxArray *getAllLocalVariables()
+   inline RexxSupplier *getAllLocalVariables()
    {
        return getLocalVariables()->getAllVariables();
    }
@@ -507,101 +518,15 @@ RexxObject * activation_find  (void);
        variable->drop();
    }
 
-   inline RexxObject *evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
-   {
-     RexxStem     *stem_table;            /* retrieved stem table              */
-                                          /* new tail for compound             */
-     RexxCompoundTail resolved_tail(this, tail, tailCount);
-
-     stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-     RexxObject *value = stem_table->evaluateCompoundVariableValue(this, &resolved_tail);
-                                          /* need to trace?                    */
-     if (tracingIntermediates()) {
-       traceCompoundName(stemName, tail, tailCount, &resolved_tail);
-                                          /* trace variable value              */
-       traceCompound(stemName, tail, tailCount, value);
-     }
-     return value;
-   }
-
-
-   inline RexxObject *getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
-   {
-     RexxStem     *stem_table;            /* retrieved stem table              */
-                                          /* new tail for compound             */
-     RexxCompoundTail resolved_tail(this, tail, tailCount);
-
-     stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-     return stem_table->getCompoundVariableValue(&resolved_tail);
-   }
-
-   inline RexxCompoundElement *getLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
-   {
-     RexxStem     *stem_table;            /* retrieved stem table              */
-                                          /* new tail for compound             */
-     RexxCompoundTail resolved_tail(this, tail, tailCount);
-
-     stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-     return stem_table->getCompoundVariable(&resolved_tail);
-   }
-
-   inline RexxCompoundElement *exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
-   {
-     RexxStem     *stem_table;            /* retrieved stem table              */
-                                          /* new tail for compound             */
-     RexxCompoundTail resolved_tail(this, tail, tailCount);
-
-     stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-     return stem_table->exposeCompoundVariable(&resolved_tail);
-   }
-
-   inline bool localCompoundVariableExists(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
-   {
-     RexxStem     *stem_table;            /* retrieved stem table              */
-                                          /* new tail for compound             */
-     RexxCompoundTail resolved_tail(this, tail, tailCount);
-
-     stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-     return stem_table->compoundVariableExists(&resolved_tail);
-   }
-
-   inline void assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value)
-   {
-     RexxStem     *stem_table;                 /* retrieved stem table              */
-                                               /* new tail for compound             */
-     RexxCompoundTail resolved_tail(this, tail, tailCount);
-
-     stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-                                               /* and set the value                 */
-     stem_table->setCompoundVariable(&resolved_tail, value);
-     if (tracingIntermediates()) {
-       traceCompoundName(stemName, tail, tailCount, &resolved_tail);
-                                          /* trace variable value              */
-       traceCompoundAssignment(stemName, tail, tailCount, value);
-     }
-   }
-
-   inline void setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value)
-   {
-     RexxStem     *stem_table;                 /* retrieved stem table              */
-                                               /* new tail for compound             */
-     RexxCompoundTail resolved_tail(this, tail, tailCount);
-
-     stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-                                               /* and set the value                 */
-     stem_table->setCompoundVariable(&resolved_tail, value);
-   }
-
-   inline void dropLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount)
-   {
-     RexxStem     *stem_table;                 /* retrieved stem table              */
-                                               /* new tail for compound             */
-     RexxCompoundTail resolved_tail(this, tail, tailCount);
-
-     stem_table = getLocalStem(stemName, index);   /* get the stem entry from this dictionary */
-                                               /* and set the value                 */
-     stem_table->dropCompoundVariable(&resolved_tail);
-   }
+   RexxObject *evaluateLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   RexxObject *getLocalCompoundVariableValue(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   RexxObject *getLocalCompoundVariableRealValue(RexxString *localstem, size_t index, RexxObject **tail, size_t tailCount);
+   RexxCompoundElement *getLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   RexxCompoundElement *exposeLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   bool localCompoundVariableExists(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
+   void assignLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value);
+   void setLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount, RexxObject *value);
+   void dropLocalCompoundVariable(RexxString *stemName, size_t index, RexxObject **tail, size_t tailCount);
 
    inline bool novalueEnabled() { return settings.local_variables.getNovalue(); }
 
@@ -636,18 +561,19 @@ RexxObject * activation_find  (void);
        /* if we're nested, we need to make sure that any variable */
        /* dictionary created at this level is propagated back to */
        /* the caller. */
-       if (isNestedCall() && settings.local_variables.isNested())
+       if (isInternalLevelCall() && settings.local_variables.isNested())
        {
-           sender->setLocalVariableDictionary(settings.local_variables.getNestedDictionary());
+           parent->setLocalVariableDictionary(settings.local_variables.getNestedDictionary());
        }
        else
        {
            // we need to cleanup the local variables and return them to the
            // cache.
-           size_t i;
-           for (i = 0; i < settings.local_variables.size; i++) {
+           for (size_t i = 0; i < settings.local_variables.size; i++)
+           {
                RexxVariable *var = settings.local_variables.get(i);
-               if (var != OREF_NULL && var->isLocal(this)) {
+               if (var != OREF_NULL && var->isLocal(this))
+               {
                    cacheLocalVariable(var);
                }
            }
@@ -660,11 +586,11 @@ RexxObject * activation_find  (void);
 
    ActivationSettings   settings;      /* inherited REXX settings           */
    RexxExpressionStack  stack;         /* current evaluation stack          */
-   RexxMethod          *method;        /* executed method                   */
    RexxCode            *code;          /* rexx method object                */
+   RexxClass           *scope;         // scope of any active method call
    RexxObject          *receiver;      /* target of a message invocation    */
    RexxActivity        *activity;      /* current running activation        */
-   RexxActivation      *sender;        /* previous running activation       */
+   RexxActivation      *parent;        // previous running activation for internal call/interpret
    RexxObject         **arglist;       /* activity argument list            */
    size_t               argcount;      /* the count of arguments            */
    RexxDoBlock         *dostack;       /* stack of DO loops                 */

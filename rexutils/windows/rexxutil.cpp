@@ -183,7 +183,7 @@
 
 /* Include files */
 
-#include <rexx.h>
+#include "oorexxapi.h"
 #include <memory.h>
 #include <fcntl.h>
 #include <ctype.h>
@@ -332,108 +332,6 @@ typedef struct RxStemData {
                                        /* processed                  */
 } RXSTEMDATA;
 
-/*********************************************************************/
-/* RxFncTable                                                        */
-/*   Array of names of the REXXUTIL functions.                       */
-/*   This list is used for registration and deregistration.          */
-/*********************************************************************/
-
-static const char *RxFncTable[] =
-   {
-      "SysCls",
-      "SysCurpos",
-      "SysCurState",
-      "SysDriveInfo",
-      "SysDriveMap",
-      "SysDropFuncs",
-      "SysFileDelete",
-      "SysFileSearch",
-      "SysFileTree",
-      "SysGetKey",
-      "SysIni",
-      "SysLoadFuncs",
-      "SysMkDir",
-      "SysWinVer",
-      "SysVersion",
-      "SysRmDir",
-      "SysSearchPath",
-      "SysSleep",
-      "SysTempFileName",
-      "SysTextScreenRead",
-      "SysTextScreenSize",
-      "SysPi",
-      "SysSqrt",
-      "SysExp",
-      "SysLog",
-      "SysLog10",
-      "SysSinh",
-      "SysCosh",
-      "SysTanh",
-      "SysPower",
-      "SysSin",
-      "SysCos",
-      "SysTan",
-      "SysCotan",
-      "SysArcSin",
-      "SysArcCos",
-      "SysArcTan",
-      "SysAddRexxMacro",
-      "SysDropRexxMacro",
-      "SysReorderRexxMacro",
-      "SysQueryRexxMacro",
-      "SysClearRexxMacroSpace",
-      "SysLoadRexxMacroSpace",
-      "SysSaveRexxMacroSpace",
-      "SysBootDrive",
-      "SysSystemDirectory",
-      "SysFileSystemType",
-      "SysVolumeLabel",
-      "SysCreateMutexSem",
-      "SysOpenMutexSem",
-      "SysCloseMutexSem",
-      "SysRequestMutexSem",
-      "SysReleaseMutexSem",
-      "SysCreateEventSem",
-      "SysOpenEventSem",
-      "SysCloseEventSem",
-      "SysResetEventSem",
-      "SysPostEventSem",
-      "SysPulseEventSem",
-      "SysWaitEventSem",
-      "SysSetPriority",
-      "SysShutDownSystem",
-      "SysSwitchSession",
-      "SysWaitNamedPipe",
-      "SysQueryProcess",
-      "SysDumpVariables",
-      "SysSetFileDateTime",
-      "SysGetFileDateTime",
-      "SysStemSort",
-      "SysStemDelete",
-      "SysStemInsert",
-      "SysStemCopy",
-      "SysUtilVersion",
-      "RxWinExec",
-      "SysWinEncryptFile",
-      "SysWinDecryptFile",
-      "SysGetErrortext",
-      "SysFromUniCode",
-      "SysToUniCode",
-      "SysWinGetPrinters",
-      "SysWinGetDefaultPrinter",
-      "SysWinSetDefaultPrinter",
-      "SysFileCopy",
-      "SysFileMove",
-      "SysIsFile",
-      "SysIsFileDirectory",
-      "SysIsFileLink",
-      "SysIsFileCompressed",
-      "SysIsFileEncrypted",
-      "SysIsFileNotContentIndexed",
-      "SysIsFileOffline",
-      "SysIsFileSparse",
-      "SysIsFileTemporary"
-   };
 
 /*********************************************************************/
 /* Saved character status                                            */
@@ -787,7 +685,7 @@ bool SetFileMode(
 *********************************************************************/
 
 bool string2long(
-  char *string,
+  const char *string,
   int *number)
 {
   int      accumulator;                /* converted number           */
@@ -832,7 +730,7 @@ bool string2long(
 *********************************************************************/
 
 bool string2ulong(
-  char  *string,                       /* string to convert          */
+  const char  *string,                 /* string to convert          */
   size_t *number)                      /* converted number           */
 {
   size_t   accumulator;                /* converted number           */
@@ -871,7 +769,7 @@ bool string2ulong(
 
 bool string2pointer(
   const char *string,                  /* string to convert          */
-  void  *pointer)                      /* converted number           */
+  void  **pointer)                     /* converted number           */
 {
   return sscanf(string, "%p", pointer) == 1;
 }
@@ -1577,12 +1475,7 @@ VOID GetUniqueFileName(
 * Return:    NO_UTIL_ERROR - Successful.                              *
 **********************************************************************/
 
-LONG REXXENTRY SysCls(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCls(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   HANDLE hStdout;                      /* Handle to Standard Out     */
   DWORD dummy;
@@ -1616,12 +1509,7 @@ LONG REXXENTRY SysCls(
 * Return:    row, col                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysCurPos(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCurPos(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   int    inrow;                        /* Row to change to           */
@@ -1678,12 +1566,7 @@ LONG REXXENTRY SysCurPos(
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-LONG REXXENTRY SysCurState(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCurState(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   CONSOLE_CURSOR_INFO CursorInfo;      /* info about cursor          */
@@ -1719,16 +1602,8 @@ LONG REXXENTRY SysCurState(
 * Return:    disk free total label                                       *
 *************************************************************************/
 
-LONG REXXENTRY SysDriveInfo(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysDriveInfo(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-
-  PSZ    arg;                          /* Temp var for holding args  */
-
   CHAR   chFileSysType[MAX_PATH],      /*  File system name          */
          chVolumeName[MAX_PATH],       /*  volume label              */
          chDriveLetter[4];             /*  drive_letter + : + \ + \0 */
@@ -1751,9 +1626,9 @@ LONG REXXENTRY SysDriveInfo(
       args[0].strlength == 0)          /* at least 1                 */
     return INVALID_ROUTINE;
 
-  arg = args[0].strptr;                /* get argument pointer       */
+  const char *arg = args[0].strptr;    /* get argument pointer       */
                                        /* drive letter?              */
-  if (strlen(arg) == 2 &&            /* if second letter isn't : bye */
+  if (strlen(arg) == 2 &&              /* if second letter isn't : bye */
       arg[1] != ':')
     return INVALID_ROUTINE;
 
@@ -1848,12 +1723,7 @@ LONG REXXENTRY SysDriveInfo(
 * Return:    'A: B: C: D: ...'                                           *
 *************************************************************************/
 
-LONG REXXENTRY SysDriveMap(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysDriveMap(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   CHAR     temp[MAX];                  /* Entire drive map built here*/
@@ -1988,28 +1858,11 @@ LONG REXXENTRY SysDriveMap(
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-LONG REXXENTRY SysDropFuncs(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysDropFuncs(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-
-  INT     entries;                     /* Num of entries             */
-  INT     j;                           /* Counter                    */
-
-  if (numargs != 0)                    /* no arguments for this      */
-    return INVALID_ROUTINE;            /* raise an error             */
-
-  retstr->strlength = 0;               /* return a null string result*/
-
-  entries = sizeof(RxFncTable)/sizeof(PSZ);
-
-  for (j = 0; j < entries; j++)
-    RexxDeregisterFunction(RxFncTable[j]);
-
-  return VALID_ROUTINE;                /* no error on call           */
+    // this is a NOP now
+    retstr->strlength = 0;               /* set return value           */
+    return VALID_ROUTINE;
 }
 
 /*************************************************************************
@@ -2022,12 +1875,7 @@ LONG REXXENTRY SysDropFuncs(
 * Return:    Return code from DeleteFile() function.                     *
 *************************************************************************/
 
-LONG REXXENTRY SysFileDelete(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysFileDelete(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   if (numargs != 1)                    /* we need one argument       */
@@ -2056,17 +1904,9 @@ LONG REXXENTRY SysFileDelete(
 *            ERROR_NOMEM     - Out of memory.                            *
 *************************************************************************/
 
-LONG REXXENTRY SysFileSearch(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysFileSearch(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
-  PSZ         target;                  /* search string              */
-  PSZ         file;                    /* search file                */
-  PSZ         opts;                    /* option string              */
   CHAR        line[MAX_LINE_LEN];      /* Line read from file        */
   char       *ptr;                     /* Pointer to char str found  */
   ULONG       num = 0;                 /* Line number                */
@@ -2091,11 +1931,11 @@ LONG REXXENTRY SysFileSearch(
 
   buffer_pointer = NULL;               /* nothing in buffer          */
 
-  target = args[0].strptr;             /* get target pointer         */
-  file = args[1].strptr;               /* get file name              */
+  const char *target = args[0].strptr;             /* get target pointer         */
+  const char *file = args[1].strptr;               /* get file name              */
 
   if (numargs == 4) {                  /* process options            */
-    opts = args[3].strptr;             /* point to the options       */
+    const char *opts = args[3].strptr;     /* point to the options       */
     if (strstr(opts, "N") || strstr(opts, "n"))
       linenums = true;
 
@@ -2198,12 +2038,7 @@ LONG REXXENTRY SysFileSearch(
 *            ERROR_NOMEM     - Out of memory.                            *
 *************************************************************************/
 
-LONG REXXENTRY SysFileTree(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysFileTree(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   CHAR        buff1[MAX];              /* buffer1 ...we may need to  */
   CHAR        buff2[MAX];              /* buffer2 ...alloc new mem...*/
@@ -2437,12 +2272,7 @@ LONG REXXENTRY SysFileTree(
 * Return:    The key striked.                                            *
 *************************************************************************/
 
-LONG REXXENTRY SysGetKey(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysGetKey(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   INT       tmp;                       /* Temp var used to hold      */
                                        /* keystroke value            */
@@ -2542,238 +2372,244 @@ LONG REXXENTRY SysGetKey(
 *            ERROR_RETSTR   - Error opening INI or querying/writing info.*
 *************************************************************************/
 
-LONG REXXENTRY SysIni(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIni(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-
-  size_t      x;                       /* Temp counter               */
-  size_t      len;                     /* Len var used when creating */
-                                       /* stem                       */
-  size_t      lSize;                   /* Size of queried info buffer*/
-                                       /* area                       */
-  PSZ         IniFile;                 /* Ini file (USER, SYSTEM,    */
-                                       /* BOTH, file)                */
-  PSZ         App;                     /* Application field          */
-  PSZ         Key;                     /* Key field                  */
-  CHAR       *Val=NULL;                /* Ptr to data associated w/  */
-                                       /* App->Key                   */
-  LONG        Error = FALSE;           /* Set to true if error       */
-                                       /* encountered                */
-  bool        WildCard = false;        /* Set to true if a wildcard  */
-                                       /* operation                  */
-  bool        QueryApps;               /* Set to true if a query     */
-                                       /* operation                  */
-  bool        terminate = true;        /* perform WinTerminate call  */
-  RXSTEMDATA  ldp;                     /* local data                 */
-  PSZ         next;                    /* next returned string       */
-  size_t      buffersize;              /* return buffer size         */
+    size_t      x;                       /* Temp counter               */
+    size_t      len;                     /* Len var used when creating */
+                                         /* stem                       */
+    size_t      lSize;                   /* Size of queried info buffer*/
+                                         /* area                       */
+    LONG        Error = FALSE;           /* Set to true if error       */
+                                         /* encountered                */
+    bool        WildCard = false;        /* Set to true if a wildcard  */
+                                         /* operation                  */
+    bool        QueryApps;               /* Set to true if a query     */
+                                         /* operation                  */
+    bool        terminate = true;        /* perform WinTerminate call  */
+    RXSTEMDATA  ldp;                     /* local data                 */
+    size_t      buffersize;              /* return buffer size         */
 
 
-  buffersize = retstr->strlength;      /* save default buffer size   */
-  retstr->strlength = 0;               /* set return value           */
-  Key = "";
-                                       /* validate arguments         */
-  if (numargs < 2 ||
-      numargs > 4 ||
-      !RXVALIDSTRING(args[1]))
-    return INVALID_ROUTINE;
-                                       /* get pointers to args       */
-  IniFile = args[0].strptr;
-  if (!RXVALIDSTRING(args[0]))         /* not specified?             */
-    IniFile = "WIN.INI";               /* default to WIN.INI         */
-  App = args[1].strptr;
-
-  if (numargs >= 3 && args[2].strptr)
-    Key = args[2].strptr;
-
-  if (numargs == 4)
-    Val = args[3].strptr;
-                                       /* Check KEY and APP values   */
-                                       /* for "WildCard"             */
-  if (!_stricmp(App, "ALL:")) {
-    App = "";
-    QueryApps = true;
-    WildCard = true;
-
-    if (numargs != 3)
-      return INVALID_ROUTINE;          /* Error - Not enough args    */
-    else
-      x = 2;                           /* Arg number of STEM variable*/
-  }
-
-  else if (!_stricmp(Key, "ALL:")) {
-    Key = "";
-    Val = "";
-    QueryApps = false;
-    WildCard = true;
-
-    if (numargs != 4)
-      return INVALID_ROUTINE;          /* Error - Not enough args    */
-
-    else
-      x = 3;                           /* Arg number of STEM variable*/
-  }
-                                       /* If this is a "WildCard     */
-                                       /* search, then allocate mem  */
-                                       /* for stem struct and get the*/
-                                       /* stem name                  */
-  if (WildCard == true) {
-
-    ldp.count = 0;                     /* get the stem variable name */
-    strcpy(ldp.varname, args[x].strptr);
-    ldp.stemlen = args[x].strlength;
-                                       /* uppercase the name         */
-    memupper(ldp.varname, strlen(ldp.varname));
-
-    if (ldp.varname[ldp.stemlen-1] != '.')
-      ldp.varname[ldp.stemlen++] = '.';
-  }
-
-                                         /* get value if is a query    */
-  if ((numargs == 3 && _stricmp(Key, "DELETE:")) ||
-      WildCard == true) {
-    lSize = 0x0000ffffL;
-                                       /* Allocate a large buffer    */
-    if (!(Val = (char *)GlobalAlloc(GPTR, lSize))) {
-      BUILDRXSTRING(retstr, ERROR_NOMEM);
-      return VALID_ROUTINE;
-    }
-
-    if (WildCard && QueryApps)
-                                       /* Retrieve the names of all  */
-                                       /* applications.              */
-      lSize = GetPrivateProfileString(NULL, NULL, "", Val, (DWORD)lSize, IniFile);
-    else if (WildCard && !QueryApps)
-                                       /* Retrieve all keys for an   */
-                                       /* application                */
-      lSize = GetPrivateProfileString(App, NULL, "", Val, (DWORD)lSize, IniFile);
-    else
-                                       /* Retrieve a single key value*/
-      lSize = GetPrivateProfileString(App, Key, "", Val, (DWORD)lSize, IniFile);
-
-    if (lSize <= 0) {
-      Error = true;
-      BUILDRXSTRING(retstr, ERROR_RETSTR);
-    }
-    else if (WildCard == false) {
-      if (lSize > buffersize)
-        if (!(retstr->strptr = (PCH)GlobalAlloc(GMEM_FIXED, lSize))) { /* use GlobalAlloc */
-          if (GlobalFlags(Val) != GMEM_INVALID_HANDLE) GlobalFree(Val);  /* release buffer */
-          BUILDRXSTRING(retstr, ERROR_NOMEM);
-          return VALID_ROUTINE;
-        }
-      memcpy(retstr->strptr, Val, lSize);
-      retstr->strlength = lSize;
-    }
-  }
-  else {                               /* Set or delete Key          */
-
-    if (!_stricmp(Key, "DELETE:") || (numargs == 2) ||
-        !RXVALIDSTRING(args[2]))
-                                       /* Delete application and all */
-                                       /* associated keys            */
-      Error = !WritePrivateProfileString(App, NULL, NULL, IniFile);
-    else if (!_stricmp(Val, "DELETE:") ||
-        !RXVALIDSTRING(args[3]))
-                                       /* Delete a single key        */
-      Error = !WritePrivateProfileString(App, Key, NULL, IniFile);
-    else {
-      lSize = args[3].strlength;
-                                       /* Set a single key value     */
-      Error = !WritePrivateProfileString(App, Key, Val, IniFile);
-    }
-
-    if (Error) {
-      BUILDRXSTRING(retstr, ERROR_RETSTR);
-    }
-    else
-      retstr->strlength = 0;           /* just return a null string  */
-  }
-
-      /******************************************
-      * If this was a wildcard search, change   *
-      * the Val variable from one long string   *
-      * of values to a REXX stem variable.      *
-      ******************************************/
-
-  if (WildCard == true) {              /* fill stem variable         */
-
-    if (Error == false) {
-      x = 0;
-      ldp.count = 0;
-
-      do {
-  /* Copy string terminated by \0 to Temp.  Last string will end     */
-  /* in \0\0 and thus have a length of 0.                            */
-        len = 0;
-
-        next = &Val[x];                /* point to string            */
-        len = strlen(next);            /* get string length          */
-                                       /* if non-zero length, then   */
-                                       /* set the stem element       */
-        if (len != 0) {
-          x += (len+1);                /* Increment pointer past the */
-                                       /* new string                 */
-          strcpy(ldp.ibuf, next);
-          ldp.vlen = len;
-          ldp.count++;
-          ltoa((long)ldp.count, ldp.varname+ldp.stemlen, 10);
-
-          if (ldp.ibuf[ldp.vlen-1] == '\n')
-            ldp.vlen--;
-          ldp.shvb.shvnext = NULL;
-          ldp.shvb.shvname.strptr = ldp.varname;
-          ldp.shvb.shvname.strlength = strlen(ldp.varname);
-          ldp.shvb.shvvalue.strptr = ldp.ibuf;
-          ldp.shvb.shvvalue.strlength = ldp.vlen;
-          ldp.shvb.shvnamelen = ldp.shvb.shvname.strlength;
-          ldp.shvb.shvvaluelen = ldp.vlen;
-          ldp.shvb.shvcode = RXSHV_SET;
-          ldp.shvb.shvret = 0;
-          if (RexxVariablePool(&ldp.shvb) == RXSHV_BADN) {
-            if (GlobalFlags(Val) != GMEM_INVALID_HANDLE) GlobalFree(Val);  /* release buffer */
-            return INVALID_ROUTINE;    /* error on non-zero          */
-          }
-        }
-      }
-
-      while (Val[x] != '\0');
-    }
-
-    else
-      ldp.count = 0;
-
-    if (GlobalFlags(Val) != GMEM_INVALID_HANDLE)
+    buffersize = retstr->strlength;      /* save default buffer size   */
+    retstr->strlength = 0;               /* set return value           */
+    const char *Key = "";
+    /* validate arguments         */
+    if (numargs < 2 || numargs > 4 || !RXVALIDSTRING(args[1]))
     {
-      GlobalFree(Val);
-      Val = NULL;
+        return INVALID_ROUTINE;
+    }
+    /* get pointers to args       */
+    const char *IniFile = args[0].strptr;
+    if (!RXVALIDSTRING(args[0]))         /* not specified?             */
+        IniFile = "WIN.INI";               /* default to WIN.INI         */
+    const char *App = args[1].strptr;
+
+    if (numargs >= 3 && args[2].strptr)
+        Key = args[2].strptr;
+
+    const char *Val = NULL;
+    if (numargs == 4)
+        Val = args[3].strptr;
+    /* Check KEY and APP values   */
+    /* for "WildCard"             */
+    if (!_stricmp(App, "ALL:"))
+    {
+        App = "";
+        QueryApps = true;
+        WildCard = true;
+
+        if (numargs != 3)
+            return INVALID_ROUTINE;          /* Error - Not enough args    */
+        else
+            x = 2;                           /* Arg number of STEM variable*/
     }
 
-                                       /* set number returned        */
-    ltoa((long)ldp.count, ldp.ibuf, 10);
-    ldp.varname[ldp.stemlen] = '0';
-    ldp.varname[ldp.stemlen+1] = 0;
-    ldp.shvb.shvnext = NULL;
-    ldp.shvb.shvname.strptr = ldp.varname;
-    ldp.shvb.shvname.strlength = ldp.stemlen+1;
-    ldp.shvb.shvnamelen = ldp.stemlen+1;
-    ldp.shvb.shvvalue.strptr = ldp.ibuf;
-    ldp.shvb.shvvalue.strlength = strlen(ldp.ibuf);
-    ldp.shvb.shvvaluelen = ldp.shvb.shvvalue.strlength;
-    ldp.shvb.shvcode = RXSHV_SET;
-    ldp.shvb.shvret = 0;
-    if (RexxVariablePool(&ldp.shvb) == RXSHV_BADN)
-      return INVALID_ROUTINE;          /* error on non-zero          */
+    else if (!_stricmp(Key, "ALL:"))
+    {
+        Key = "";
+        Val = "";
+        QueryApps = false;
+        WildCard = true;
 
-  }                                    /* * End - IF (Wildcard ... * */
-  if (Val != 0 && ((GlobalFlags(Val) != GMEM_INVALID_HANDLE)))
-    GlobalFree(Val);  /* release buffer                              */
+        if (numargs != 4)
+            return INVALID_ROUTINE;          /* Error - Not enough args    */
 
-  return VALID_ROUTINE;                /* no error on call           */
+        else
+            x = 3;                           /* Arg number of STEM variable*/
+    }
+    /* If this is a "WildCard     */
+    /* search, then allocate mem  */
+    /* for stem struct and get the*/
+    /* stem name                  */
+    if (WildCard == true)
+    {
+
+        ldp.count = 0;                     /* get the stem variable name */
+        strcpy(ldp.varname, args[x].strptr);
+        ldp.stemlen = args[x].strlength;
+        /* uppercase the name         */
+        memupper(ldp.varname, strlen(ldp.varname));
+
+        if (ldp.varname[ldp.stemlen-1] != '.')
+            ldp.varname[ldp.stemlen++] = '.';
+    }
+
+    char *returnVal = NULL;
+    /* get value if is a query    */
+    if ((numargs == 3 && _stricmp(Key, "DELETE:")) ||
+        WildCard == true)
+    {
+        lSize = 0x0000ffffL;
+        /* Allocate a large buffer    */
+        if (!(returnVal = (char *)GlobalAlloc(GPTR, lSize)))
+        {
+            BUILDRXSTRING(retstr, ERROR_NOMEM);
+            return VALID_ROUTINE;
+        }
+
+        if (WildCard && QueryApps)
+            /* Retrieve the names of all  */
+            /* applications.              */
+            lSize = GetPrivateProfileString(NULL, NULL, "", returnVal, (DWORD)lSize, IniFile);
+        else if (WildCard && !QueryApps)
+            /* Retrieve all keys for an   */
+            /* application                */
+            lSize = GetPrivateProfileString(App, NULL, "", returnVal, (DWORD)lSize, IniFile);
+        else
+            /* Retrieve a single key value*/
+            lSize = GetPrivateProfileString(App, Key, "", returnVal, (DWORD)lSize, IniFile);
+
+        if (lSize <= 0)
+        {
+            Error = true;
+            BUILDRXSTRING(retstr, ERROR_RETSTR);
+        }
+        else if (WildCard == false)
+        {
+            if (lSize > buffersize)
+                if (!(retstr->strptr = (PCH)GlobalAlloc(GMEM_FIXED, lSize)))
+                { /* use GlobalAlloc */
+                    if (GlobalFlags(returnVal) != GMEM_INVALID_HANDLE) GlobalFree(returnVal);  /* release buffer */
+                    BUILDRXSTRING(retstr, ERROR_NOMEM);
+                    return VALID_ROUTINE;
+                }
+            memcpy(retstr->strptr, returnVal, lSize);
+            retstr->strlength = lSize;
+        }
+    }
+    else
+    {                               /* Set or delete Key          */
+
+        if (!_stricmp(Key, "DELETE:") || (numargs == 2) || !RXVALIDSTRING(args[2]))
+            /* Delete application and all */
+            /* associated keys            */
+            Error = !WritePrivateProfileString(App, NULL, NULL, IniFile);
+        else if (!_stricmp(Val, "DELETE:") ||
+                 !RXVALIDSTRING(args[3]))
+            /* Delete a single key        */
+            Error = !WritePrivateProfileString(App, Key, NULL, IniFile);
+        else
+        {
+            lSize = args[3].strlength;
+            /* Set a single key value     */
+            Error = !WritePrivateProfileString(App, Key, Val, IniFile);
+        }
+
+        if (Error)
+        {
+            BUILDRXSTRING(retstr, ERROR_RETSTR);
+        }
+        else
+            retstr->strlength = 0;           /* just return a null string  */
+    }
+
+    /******************************************
+    * If this was a wildcard search, change   *
+    * the Val variable from one long string   *
+    * of values to a REXX stem variable.      *
+    ******************************************/
+
+    if (WildCard == true)
+    {              /* fill stem variable         */
+
+        if (Error == false)
+        {
+            x = 0;
+            ldp.count = 0;
+
+            do
+            {
+                /* Copy string terminated by \0 to Temp.  Last string will end     */
+                /* in \0\0 and thus have a length of 0.                            */
+                len = 0;
+
+                const char *next = &returnVal[x]; /* point to string            */
+                len = strlen(next);            /* get string length          */
+                                               /* if non-zero length, then   */
+                                               /* set the stem element       */
+                if (len != 0)
+                {
+                    x += (len+1);                /* Increment pointer past the */
+                                                 /* new string                 */
+                    strcpy(ldp.ibuf, next);
+                    ldp.vlen = len;
+                    ldp.count++;
+                    ltoa((long)ldp.count, ldp.varname+ldp.stemlen, 10);
+
+                    if (ldp.ibuf[ldp.vlen-1] == '\n')
+                        ldp.vlen--;
+                    ldp.shvb.shvnext = NULL;
+                    ldp.shvb.shvname.strptr = ldp.varname;
+                    ldp.shvb.shvname.strlength = strlen(ldp.varname);
+                    ldp.shvb.shvvalue.strptr = ldp.ibuf;
+                    ldp.shvb.shvvalue.strlength = ldp.vlen;
+                    ldp.shvb.shvnamelen = ldp.shvb.shvname.strlength;
+                    ldp.shvb.shvvaluelen = ldp.vlen;
+                    ldp.shvb.shvcode = RXSHV_SET;
+                    ldp.shvb.shvret = 0;
+                    if (RexxVariablePool(&ldp.shvb) == RXSHV_BADN)
+                    {
+                        if (GlobalFlags(returnVal) != GMEM_INVALID_HANDLE) GlobalFree(returnVal);  /* release buffer */
+                        return INVALID_ROUTINE;    /* error on non-zero          */
+                    }
+                }
+            }
+
+            while (Val[x] != '\0');
+        }
+
+        else
+            ldp.count = 0;
+
+        if (GlobalFlags(returnVal) != GMEM_INVALID_HANDLE)
+        {
+            GlobalFree(returnVal);
+            Val = NULL;
+        }
+
+        /* set number returned        */
+        ltoa((long)ldp.count, ldp.ibuf, 10);
+        ldp.varname[ldp.stemlen] = '0';
+        ldp.varname[ldp.stemlen+1] = 0;
+        ldp.shvb.shvnext = NULL;
+        ldp.shvb.shvname.strptr = ldp.varname;
+        ldp.shvb.shvname.strlength = ldp.stemlen+1;
+        ldp.shvb.shvnamelen = ldp.stemlen+1;
+        ldp.shvb.shvvalue.strptr = ldp.ibuf;
+        ldp.shvb.shvvalue.strlength = strlen(ldp.ibuf);
+        ldp.shvb.shvvaluelen = ldp.shvb.shvvalue.strlength;
+        ldp.shvb.shvcode = RXSHV_SET;
+        ldp.shvb.shvret = 0;
+        if (RexxVariablePool(&ldp.shvb) == RXSHV_BADN)
+            return INVALID_ROUTINE;          /* error on non-zero          */
+
+    }                                    /* * End - IF (Wildcard ... * */
+    if (returnVal != NULL && ((GlobalFlags(returnVal) != GMEM_INVALID_HANDLE)))
+    {
+        GlobalFree(returnVal);  /* release buffer                              */
+    }
+
+    return VALID_ROUTINE;                /* no error on call           */
 }
 
 
@@ -2787,29 +2623,11 @@ LONG REXXENTRY SysIni(
 * Return:    null string                                                 *
 *************************************************************************/
 
-LONG REXXENTRY SysLoadFuncs(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysLoadFuncs(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-
-  INT    entries;                      /* Num of entries             */
-  INT    j;                            /* Counter                    */
-
-  retstr->strlength = 0;               /* set return value           */
-                                       /* check arguments            */
-  if (numargs > 0)
-    return INVALID_ROUTINE;
-
-  entries = sizeof(RxFncTable)/sizeof(PSZ);
-
-  for (j = 0; j < entries; j++) {
-    RexxRegisterFunctionDll(RxFncTable[j],
-          "REXXUTIL", RxFncTable[j]);
-  }
-  return VALID_ROUTINE;
+    // this is a NOP now
+    retstr->strlength = 0;               /* set return value           */
+    return VALID_ROUTINE;
 }
 
 
@@ -2824,12 +2642,7 @@ LONG REXXENTRY SysLoadFuncs(
 *            Return code from CreateDirectory()                          *
 *************************************************************************/
 
-LONG REXXENTRY SysMkDir(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysMkDir(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   if (numargs != 1)                    /* we need one argument       */
@@ -2852,34 +2665,34 @@ LONG REXXENTRY SysMkDir(
 * Return:    Description or empty string                                 *
 *************************************************************************/
 
-LONG REXXENTRY SysGetErrortext(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysGetErrortext(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
+    DWORD  errnum;
+    char  *errmsg;
 
-  DWORD  errnum;
-  char  *errmsg;
+    if (numargs != 1)
+    {
+        /* If no args, then its an    */
+        /* incorrect call             */
+        return INVALID_ROUTINE;
+    }
 
-  if (numargs != 1)
-                                       /* If no args, then its an    */
-                                       /* incorrect call             */
-    return INVALID_ROUTINE;
-
-  errnum = atoi(args[0].strptr);
-  if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,NULL,errnum,0,(LPSTR)&errmsg,64,NULL) == 0)
-    retstr->strptr[0] = 0x00;
-  else {                               /* succeeded                  */
-    if (strlen(errmsg)>=retstr->strlength)
-      retstr->strptr = (PCH)GlobalAlloc(GMEM_ZEROINIT | GMEM_FIXED, strlen(errmsg+1));
-    strcpy(retstr->strptr,errmsg);
-    LocalFree(errmsg);
-  }
-  retstr->strlength = strlen(retstr->strptr);
-
-  return VALID_ROUTINE;
+    errnum = atoi(args[0].strptr);
+    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,NULL,errnum,0,(LPSTR)&errmsg,64,NULL) == 0)
+    {
+        retstr->strptr[0] = 0x00;
+    }
+    else
+    {                               /* succeeded                  */
+        if (strlen(errmsg)>=retstr->strlength)
+        {
+            retstr->strptr = (PCH)GlobalAlloc(GMEM_ZEROINIT | GMEM_FIXED, strlen(errmsg+1));
+        }
+        strcpy(retstr->strptr,errmsg);
+        LocalFree(errmsg);
+    }
+    retstr->strlength = strlen(retstr->strptr);
+    return VALID_ROUTINE;
 }
 
 
@@ -2894,39 +2707,43 @@ LONG REXXENTRY SysGetErrortext(
 *            Return code from EncryptFile()                              *
 *************************************************************************/
 
-LONG REXXENTRY SysWinEncryptFile(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysWinEncryptFile(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
+    ULONG  rc;                           /* Ret code of func           */
+    OSVERSIONINFO vi;
 
-  ULONG  rc;                           /* Ret code of func           */
-  OSVERSIONINFO vi;
-
-  if (numargs != 1)
-                                       /* If no args, then its an    */
-                                       /* incorrect call             */
-    return INVALID_ROUTINE;
-
-  vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-
-  if (rc = GetVersionEx(&vi)) {
-    /* allow this only on W2K or newer */
-    if (vi.dwPlatformId == VER_PLATFORM_WIN32_NT && vi.dwMajorVersion > 4)
-      rc = EncryptFile(args[0].strptr);
-    else {
-      rc = 0;
-      SetLastError(ERROR_CANNOT_MAKE);
+    if (numargs != 1)
+    {
+        /* If no args, then its an    */
+        /* incorrect call             */
+        return INVALID_ROUTINE;
     }
-  }
-  if (rc)
-    sprintf(retstr->strptr, "%d", 0);
-  else
-    sprintf(retstr->strptr, "%d", GetLastError());
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;
+
+    vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+    if (rc = GetVersionEx(&vi))
+    {
+        /* allow this only on W2K or newer */
+        if (vi.dwPlatformId == VER_PLATFORM_WIN32_NT && vi.dwMajorVersion > 4)
+        {
+            rc = EncryptFile(args[0].strptr);
+        }
+        else
+        {
+            rc = 0;
+            SetLastError(ERROR_CANNOT_MAKE);
+        }
+    }
+    if (rc)
+    {
+        sprintf(retstr->strptr, "%d", 0);
+    }
+    else
+    {
+        sprintf(retstr->strptr, "%d", GetLastError());
+    }
+    retstr->strlength = strlen(retstr->strptr);
+    return VALID_ROUTINE;
 }
 
 /*************************************************************************
@@ -2940,12 +2757,7 @@ LONG REXXENTRY SysWinEncryptFile(
 *            Return code from DecryptFile()                              *
 *************************************************************************/
 
-LONG REXXENTRY SysWinDecryptFile(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysWinDecryptFile(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   ULONG  rc;                           /* Ret code of func           */
@@ -2985,12 +2797,7 @@ LONG REXXENTRY SysWinDecryptFile(
 * Return:    Windows Version                                             *
 *************************************************************************/
 
-LONG REXXENTRY SysWinVer(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysWinVer(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   OSVERSIONINFO vi;                    /* Return RXSTRING            */
@@ -3027,12 +2834,7 @@ LONG REXXENTRY SysWinVer(
 * Return:    Operating System and Version                                *
 *************************************************************************/
 
-LONG REXXENTRY SysVersion(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysVersion(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   /* this is only an alias for SysWinVer */
   return SysWinVer(name, numargs, args, queuename, retstr);
@@ -3049,12 +2851,7 @@ LONG REXXENTRY SysVersion(
 *            Return code from RemoveDirectory()                          *
 *************************************************************************/
 
-LONG REXXENTRY SysRmDir(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysRmDir(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   if (numargs != 1)                    /* we need one argument       */
@@ -3082,25 +2879,16 @@ LONG REXXENTRY SysRmDir(
 *            ''     - Specified file not found along path.               *
 *************************************************************************/
 
-LONG REXXENTRY SysSearchPath(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSearchPath(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   char     szFullPath[_MAX_PATH];      /* returned file name         */
   char     szCurDir[MAX_ENVVAR + _MAX_PATH]; /* current directory    */
   char     szEnvStr[MAX_ENVVAR];
-  PSZ      opts;                       /* option string              */
 
   LPTSTR pszOnlyFileName;              /* parm for searchpath        */
   LPTSTR lpPath;                       /* ptr to search path+        */
-//  LPTSTR lpEnv;                        // ptr to env
   UINT   errorMode;
 
-//  SearchFlag = SEARCH_IGNORENETERRS | SEARCH_ENVIRONMENT |
-//               SEARCH_CUR_DIRECTORY ;
                                        /* validate arguments         */
   if (numargs < 2 || numargs > 3 ||
       !RXVALIDSTRING(args[0]) ||
@@ -3112,26 +2900,23 @@ LONG REXXENTRY SysSearchPath(
   GetCurrentDirectory(_MAX_PATH, szCurDir);
   lpPath=strcat(szCurDir,";");         /*  and specified path        */
 
-//  lpEnv=getenv(args[0].strptr);   /* do not search current dir  */
-
   if (GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR))
-/*  if (lpEnv)  */
      lpPath=strcat(szCurDir,szEnvStr); /* szEnvStr instead of lpEnv  */
 
-  if (numargs == 3) {                  /* process options            */
-
-    opts = args[2].strptr;             /* point to the options       */
-    if ((*opts == 'N') || (*opts == 'n'))
-    {
-//      lpPath=getenv(args[0].strptr);   /* do not search current dir  */
-      GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR);
-      lpPath = szEnvStr;
+    if (numargs == 3)
+    {                  /* process options            */
+        char opt = toupper(args[2].strptr[0]);
+        if (opt = 'N')
+        {
+            GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR);
+            lpPath = szEnvStr;
+        }
+        // this is the default
+        else if (opt != 'C')
+        {
+            return INVALID_ROUTINE;          /* Invalid option             */
+        }
     }
-    else if ((*opts == 'C') || (*opts == 'c'));
-                                       /* search current 1st(default)*/
-    else
-      return INVALID_ROUTINE;          /* Invalid option             */
-  }
                                        /* use DosSearchPath          */
 
   errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -3160,14 +2945,8 @@ LONG REXXENTRY SysSearchPath(
 * Return:    NO_UTIL_ERROR                                               *
 *************************************************************************/
 
-LONG REXXENTRY SysSleep(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSleep(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-
   LONG secs;                           /* Time to sleep in secs      */
   MSG msg;
 
@@ -3175,13 +2954,12 @@ LONG REXXENTRY SysSleep(
   LONG secs_buf;
   size_t length;
   LONG digits;
-  PCHAR string;
 
   if (numargs != 1)                    /* Must have one argument     */
     return INVALID_ROUTINE;
 
   /* code fragment taken from lrxutil.c: */
-  string = args[0].strptr;             /* point to the string        */
+  const char *string = args[0].strptr; /* point to the string        */
   length = args[0].strlength;          /* get length of string       */
   if (length == 0 ||                   /* if null string             */
       length > MAX_DIGITS)             /* or too long                */
@@ -3284,35 +3062,32 @@ LONG REXXENTRY SysSleep(
 *            ''    - No more files exist given specified template.       *
 *************************************************************************/
 
-LONG REXXENTRY SysTempFileName(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysTempFileName(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
+    CHAR   filler;                       /* filler character           */
 
-  CHAR   filler;                       /* filler character           */
+    if (numargs < 1 ||                   /* validate arguments         */
+        numargs > 2 ||
+        !RXVALIDSTRING(args[0]) ||
+        args[0].strlength > 512)
+        return INVALID_ROUTINE;
 
-  if (numargs < 1 ||                   /* validate arguments         */
-      numargs > 2 ||
-      !RXVALIDSTRING(args[0]) ||
-      args[0].strlength > 512)
-    return INVALID_ROUTINE;
+    if (numargs == 2 &&                  /* get filler character       */
+        !RXNULLSTRING(args[1]))
+    {
+        if (args[1].strlength != 1)        /* must be one character      */
+            return INVALID_ROUTINE;
+        filler = args[1].strptr[0];
+    }
+    else
+    {
+        filler = '?';
+    }
+    /* get the file id            */
+    GetUniqueFileName(const_cast<char *>(args[0].strptr), filler, retstr->strptr);
+    retstr->strlength = strlen(retstr->strptr);
 
-  if (numargs == 2 &&                  /* get filler character       */
-      !RXNULLSTRING(args[1])) {
-    if (args[1].strlength != 1)        /* must be one character      */
-      return INVALID_ROUTINE;
-    filler = args[1].strptr[0];
-  }
-  else
-    filler = '?';
-                                       /* get the file id            */
-  GetUniqueFileName(args[0].strptr, filler, retstr->strptr);
-  retstr->strlength = strlen(retstr->strptr);
-
-  return VALID_ROUTINE;
+    return VALID_ROUTINE;
 }
 
 
@@ -3330,12 +3105,7 @@ LONG REXXENTRY SysTempFileName(
 *                                                                        *
 * Return:    Characters read from text screen.                           *
 *************************************************************************/
-LONG REXXENTRY SysTextScreenRead(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysTextScreenRead(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   int   row;                           /* Row from which to start    */
@@ -3418,12 +3188,7 @@ LONG REXXENTRY SysTextScreenRead(
 * Return:    Size of screen in row and columns returned as:  row, col    *
 *************************************************************************/
 
-LONG REXXENTRY SysTextScreenSize(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysTextScreenSize(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   HANDLE    hStdout;                   /* Handle to Standard Out     */
@@ -3464,12 +3229,7 @@ LONG REXXENTRY SysTextScreenSize(
 * Return:    Process ID or Error code                                    *
 *************************************************************************/
 
-LONG REXXENTRY RxWinExec(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry RxWinExec(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   int         CmdShow;                 /* show window style flags    */
@@ -3573,12 +3333,7 @@ ULONG  show_flags[] =                  /* show window styles        */
 * Return:    return code from RexxAddMacro                               *
 *************************************************************************/
 
-LONG REXXENTRY SysAddRexxMacro(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysAddRexxMacro(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   ULONG       position;                /* added position             */
 
@@ -3615,12 +3370,7 @@ LONG REXXENTRY SysAddRexxMacro(
 * Return:    return code from RexxReorderMacro                           *
 *************************************************************************/
 
-LONG REXXENTRY SysReorderRexxMacro(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysReorderRexxMacro(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   ULONG       position;                /* added position             */
 
@@ -3650,12 +3400,7 @@ LONG REXXENTRY SysReorderRexxMacro(
 * Return:    return code from RexxDropMacro                              *
 *************************************************************************/
 
-LONG REXXENTRY SysDropRexxMacro(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysDropRexxMacro(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   if (numargs != 1)                    /* wrong number?              */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -3673,12 +3418,7 @@ LONG REXXENTRY SysDropRexxMacro(
 * Return:    position of the macro ('B' or 'A'), returns null for errors.*
 *************************************************************************/
 
-LONG REXXENTRY SysQueryRexxMacro(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysQueryRexxMacro(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   USHORT      position;                /* returned position          */
 
@@ -3708,12 +3448,7 @@ LONG REXXENTRY SysQueryRexxMacro(
 * Return:    return code from RexxClearMacroSpace()                      *
 *************************************************************************/
 
-LONG REXXENTRY SysClearRexxMacroSpace(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysClearRexxMacroSpace(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   if (numargs)                         /* wrong number?              */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -3730,12 +3465,7 @@ LONG REXXENTRY SysClearRexxMacroSpace(
 * Return:    return code from RexxSaveMacroSpace()                       *
 *************************************************************************/
 
-LONG REXXENTRY SysSaveRexxMacroSpace(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSaveRexxMacroSpace(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   if (numargs != 1)                    /* wrong number?              */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -3753,12 +3483,7 @@ LONG REXXENTRY SysSaveRexxMacroSpace(
 * Return:    return code from RexxLoadMacroSpace()                       *
 *************************************************************************/
 
-LONG REXXENTRY SysLoadRexxMacroSpace(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysLoadRexxMacroSpace(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   if (numargs != 1)                    /* wrong number?              */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -3777,12 +3502,7 @@ LONG REXXENTRY SysLoadRexxMacroSpace(
 * Return:    'A: B: C: D: ...'                                           *
 *************************************************************************/
 
-LONG REXXENTRY SysBootDrive(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysBootDrive(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   if (numargs)                         /* validate arguments         */
     return INVALID_ROUTINE;
@@ -3808,12 +3528,7 @@ LONG REXXENTRY SysBootDrive(
 * Return:    'C:\WINDOWS ...'                                            *
 *************************************************************************/
 
-LONG REXXENTRY SysSystemDirectory(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSystemDirectory(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   if (numargs)                         /* validate arguments         */
     return INVALID_ROUTINE;
@@ -3841,12 +3556,7 @@ LONG REXXENTRY SysSystemDirectory(
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-LONG REXXENTRY SysFileSystemType(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysFileSystemType(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   char *      drive;
   CHAR chDriveLetter[4];
@@ -3912,12 +3622,7 @@ LONG REXXENTRY SysFileSystemType(
 * Return     '' - Empty string in case of any error                      *
 *************************************************************************/
 
-LONG REXXENTRY SysVolumeLabel(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysVolumeLabel(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   char  *      drive;
   CHAR chDriveLetter[4];
@@ -3980,12 +3685,7 @@ LONG REXXENTRY SysVolumeLabel(
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-LONG REXXENTRY SysCreateMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCreateMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   HANDLE    handle;                    /* mutex handle               */
   SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, true};
@@ -4021,12 +3721,7 @@ LONG REXXENTRY SysCreateMutexSem(
 * Return:    result - handle to the mutex                                *
 *************************************************************************/
 
-LONG REXXENTRY SysOpenMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysOpenMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   HANDLE    handle;                    /* mutex handle               */
   SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
@@ -4052,12 +3747,7 @@ LONG REXXENTRY SysOpenMutexSem(
 * Return:    result - return code from ReleaseMutex                      *
 *************************************************************************/
 
-LONG REXXENTRY SysReleaseMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysReleaseMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   void     *handle;                    /* mutex handle               */
 
@@ -4082,12 +3772,7 @@ LONG REXXENTRY SysReleaseMutexSem(
 * Return:    result - return code from CloseHandle                       *
 *************************************************************************/
 
-LONG REXXENTRY SysCloseMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCloseMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   void     *handle;                    /* mutex handle               */
 
@@ -4112,15 +3797,10 @@ LONG REXXENTRY SysCloseMutexSem(
 * Return:    result - return code from WaitForSingleObject               *
 *************************************************************************/
 
-LONG REXXENTRY SysRequestMutexSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysRequestMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   void     *handle;                    /* mutex handle               */
-  APIRET    rc;                        /* creation return code       */
+  RexxReturnCode    rc;                        /* creation return code       */
   int       timeout;                   /* timeout value              */
 
   if (numargs < 1 ||                   /* too few, or                */
@@ -4159,12 +3839,7 @@ LONG REXXENTRY SysRequestMutexSem(
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-LONG REXXENTRY SysCreateEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCreateEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   HANDLE    handle;                    /* mutex handle               */
   SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
@@ -4209,12 +3884,7 @@ LONG REXXENTRY SysCreateEventSem(
 * Return:    result - return code from OpenEvent                         *
 *************************************************************************/
 
-LONG REXXENTRY SysOpenEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysOpenEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   HANDLE    handle;                    /* mutex handle               */
   SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
@@ -4238,12 +3908,7 @@ LONG REXXENTRY SysOpenEventSem(
 * Return:    result - return code from SetEvent                          *
 *************************************************************************/
 
-LONG REXXENTRY SysPostEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysPostEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   void     *handle;                    /* mutex handle               */
 
@@ -4268,12 +3933,7 @@ LONG REXXENTRY SysPostEventSem(
 * Return:    result - return code from ResetEvent                        *
 *************************************************************************/
 
-LONG REXXENTRY SysResetEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysResetEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   void     *handle;                    /* mutex handle               */
 
@@ -4299,12 +3959,7 @@ LONG REXXENTRY SysResetEventSem(
 * Return:    result - return code from PulseEvent                        *
 *************************************************************************/
 
-LONG REXXENTRY SysPulseEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysPulseEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   void     *handle;                    /* mutex handle               */
 
@@ -4330,12 +3985,7 @@ LONG REXXENTRY SysPulseEventSem(
 * Return:    result - return code from CloseHandle                       *
 *************************************************************************/
 
-LONG REXXENTRY SysCloseEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCloseEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   void     *handle;                    /* mutex handle               */
 
@@ -4360,15 +4010,10 @@ LONG REXXENTRY SysCloseEventSem(
 * Return:    result - return code from WaitForSingleObject               *
 *************************************************************************/
 
-LONG REXXENTRY SysWaitEventSem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysWaitEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   void     *handle;                    /* mutex handle               */
-  APIRET    rc;                        /* creation return code       */
+  RexxReturnCode    rc;                        /* creation return code       */
   int       timeout;                   /* timeout value              */
 
   if (numargs < 1 ||                   /* too few, or                */
@@ -4406,16 +4051,11 @@ LONG REXXENTRY SysWaitEventSem(
 *                                                                        *
 *************************************************************************/
 
-LONG REXXENTRY SysSetPriority(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSetPriority(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   int       pclass;                    /* priority class             */
   int       level;                     /* priority level             */
-  APIRET    rc;                        /* creation return code       */
+  RexxReturnCode    rc;                        /* creation return code       */
   HANDLE    process;
   HANDLE    thread;
   DWORD     iclass=-1;
@@ -4487,12 +4127,7 @@ LONG REXXENTRY SysSetPriority(
 *            "TTIME" - (default) returns current thread times            *
 *************************************************************************/
 
-LONG REXXENTRY SysQueryProcess(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysQueryProcess(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   if (numargs > 1)                  /* none or one argument accepted */
     return INVALID_ROUTINE;            /* raise error condition      */
@@ -4599,43 +4234,37 @@ LONG REXXENTRY SysQueryProcess(
 * Return:    success (1) or failure (0) string                        *
 **********************************************************************/
 
-LONG REXXENTRY SysShutDownSystem(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysShutDownSystem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  char  * machine = NULL;
-  char  * message = NULL;
-  size_t timeout= 0;
-  LONG  rc = 0;
-  size_t forceClose = false;
-  size_t reboot = false;
+    const char  * machine = NULL;
+    const char  * message = NULL;
+    size_t timeout= 0;
+    LONG  rc = 0;
+    size_t forceClose = false;
+    size_t reboot = false;
 
-  if (numargs>5)                       /* arguments specified?       */
-    return INVALID_ROUTINE;            /* raise the error            */
+    if (numargs>5)                       /* arguments specified?       */
+        return INVALID_ROUTINE;            /* raise the error            */
 
-  if ((numargs>=1) && (strlen(args[0].strptr) > 0)) machine = args[0].strptr;
-  if ((numargs>=2) && (strlen(args[1].strptr) > 0)) message = args[1].strptr;
-  if (numargs>=3) if (!string2ulong(args[2].strptr, &timeout))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-  if (numargs>=4) if (!string2ulong(args[3].strptr, &forceClose))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-  if (numargs>=5) if (!string2ulong(args[4].strptr, &reboot))
-    return INVALID_ROUTINE;            /* raise error if bad         */
+    if ((numargs>=1) && (strlen(args[0].strptr) > 0)) machine = args[0].strptr;
+    if ((numargs>=2) && (strlen(args[1].strptr) > 0)) message = args[1].strptr;
+    if (numargs>=3) if (!string2ulong(args[2].strptr, &timeout))
+            return INVALID_ROUTINE;            /* raise error if bad         */
+    if (numargs>=4) if (!string2ulong(args[3].strptr, &forceClose))
+            return INVALID_ROUTINE;            /* raise error if bad         */
+    if (numargs>=5) if (!string2ulong(args[4].strptr, &reboot))
+            return INVALID_ROUTINE;            /* raise error if bad         */
 
 /* Display the shutdown dialog box and start the time-out countdown. */
 
-  if (!InitiateSystemShutdown(
-     machine,            /* address of name of computer to shut down */
-     message,         /* address of message to display in dialog box */
-     (DWORD)timeout,       /* time to display dialog box */
-     (BOOL)forceClose,     /* force applications with unsaved changes flag */
-     (BOOL)reboot          /*                reboot flag */
-  )) RETVAL(GetLastError())
-  else
-     RETVAL(0)
+    if (!InitiateSystemShutdown(const_cast<LPSTR>(machine), const_cast<LPSTR>(message), (DWORD)timeout, (BOOL)forceClose, (BOOL)reboot))
+    {
+        RETVAL(GetLastError())
+    }
+    else
+    {
+        RETVAL(0)
+    }
 }
 
 /*************************************************************************
@@ -4648,12 +4277,7 @@ LONG REXXENTRY SysShutDownSystem(
 * Return:    OS/2 error return code                                      *
 *************************************************************************/
 
-LONG REXXENTRY SysSwitchSession(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSwitchSession(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   HWND hwnd;
 
@@ -4685,12 +4309,7 @@ LONG REXXENTRY SysSwitchSession(
 * Return:    Return code from WaitNamedPipe                              *
 *************************************************************************/
 
-LONG REXXENTRY SysWaitNamedPipe(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysWaitNamedPipe(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   int         timeout;                 /* timeout value              */
 
@@ -4741,8 +4360,8 @@ void FormatResult(
 /* that are of the form fn(number, <precision>)                      */
 /*********************************************************************/
 LONG  ValidateMath(
-  LONG      numargs,                   /* Number of arguments.       */
-  RXSTRING  args[],                    /* Function arguments.        */
+  size_t    numargs,                   /* Number of arguments.       */
+  CONSTRXSTRING  args[],               /* Function arguments.        */
   double   *x,                         /* input number               */
   size_t   *precision )                /* returned precision         */
 {
@@ -4771,8 +4390,8 @@ LONG  ValidateMath(
 /* that are of the form fn(number, <precision>, <unit>)              */
 /*********************************************************************/
 LONG  ValidateTrig(
-  LONG      numargs,                   /* Number of arguments.       */
-  RXSTRING  args[],                    /* Function arguments.        */
+  size_t    numargs,                   /* Number of arguments.       */
+  CONSTRXSTRING  args[],               /* Function arguments.        */
   PRXSTRING retstr,                    /* return string              */
   INT       function )                 /* function to perform        */
 {
@@ -4893,8 +4512,8 @@ LONG  ValidateTrig(
 /* that are of the form fn(number, <precision>, <units>)             */
 /*********************************************************************/
 LONG  ValidateArcTrig(
-  LONG       numargs,                  /* Number of arguments.       */
-  RXSTRING   args[],                   /* Function arguments.        */
+  size_t     numargs,                  /* Number of arguments.       */
+  CONSTRXSTRING   args[],              /* Function arguments.        */
   PRXSTRING  retstr,                   /* return string              */
   INT        function )                /* function to perform        */
 {
@@ -4973,12 +4592,7 @@ LONG  ValidateArcTrig(
 /*   result = func_name(x <, prec> <,angle>)                        */
 /*                                                                  */
 /********************************************************************/
-LONG  REXXENTRY SysSqrt(                /* Square root function.      */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSqrt(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   double    x;                         /* input number               */
   size_t    precision;                 /* precision used             */
@@ -4993,12 +4607,7 @@ LONG  REXXENTRY SysSqrt(                /* Square root function.      */
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysExp(                 /* Exponential function.      */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysExp(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   double    x;                         /* input number               */
   size_t    precision;                 /* precision used             */
@@ -5013,12 +4622,7 @@ LONG  REXXENTRY SysExp(                 /* Exponential function.      */
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysLog(                 /* Logarithm function.        */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysLog(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   double    x;                         /* input number               */
   size_t    precision;                 /* precision used             */
@@ -5033,12 +4637,7 @@ LONG  REXXENTRY SysLog(                 /* Logarithm function.        */
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysLog10(               /* Log base 10 function.      */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysLog10(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   double    x;                         /* input number               */
   size_t    precision;                 /* precision used             */
@@ -5053,12 +4652,7 @@ LONG  REXXENTRY SysLog10(               /* Log base 10 function.      */
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysSinH(                /* Hyperbolic sine function.  */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSinH(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)                 /* Hyperbolic sine function.  */
 {
   double    x;                         /* input number               */
   size_t    precision;                 /* precision used             */
@@ -5073,12 +4667,7 @@ LONG  REXXENTRY SysSinH(                /* Hyperbolic sine function.  */
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysCosH(                /* Hyperbolic cosine funct.   */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCosH(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   double    x;                         /* input number               */
   size_t    precision;                 /* precision used             */
@@ -5093,12 +4682,7 @@ LONG  REXXENTRY SysCosH(                /* Hyperbolic cosine funct.   */
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysTanH(                /* Hyperbolic tangent funct.  */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysTanH(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   double    x;                         /* input number               */
   size_t    precision;                 /* precision used             */
@@ -5126,12 +4710,7 @@ LONG  REXXENTRY SysTanH(                /* Hyperbolic tangent funct.  */
 /*   result = func_name(x, y <, prec>)                              */
 /*                                                                  */
 /********************************************************************/
-LONG  REXXENTRY SysPower(               /* Power function.           */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysPower(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   double    x;                         /* input number               */
   double    y;                         /* second input number        */
@@ -5178,48 +4757,28 @@ LONG  REXXENTRY SysPower(               /* Power function.           */
 /*   x = func_name(angle <, prec> <, [R | D | G]>)                  */
 /*                                                                  */
 /********************************************************************/
-LONG  REXXENTRY SysSin(                 /* Sine function.             */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSin(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
                                        /* call common routine        */
   return ValidateTrig(numargs, args, retstr, SINE);
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysCos(                 /* Cosine function.           */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCos(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
                                        /* call common routine        */
   return ValidateTrig(numargs, args, retstr, COSINE);
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysTan(                 /* Tangent function.          */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysTan(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
                                        /* call common routine        */
   return ValidateTrig(numargs, args, retstr, TANGENT);
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysCotan(               /* Cotangent function.        */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysCotan(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
                                        /* call common routine        */
   return ValidateTrig(numargs, args, retstr, COTANGENT);
@@ -5236,12 +4795,7 @@ LONG  REXXENTRY SysCotan(               /* Cotangent function.        */
 /*   result = syspi(<precision>)                                    */
 /*                                                                  */
 /********************************************************************/
-LONG  REXXENTRY SysPi(                  /* Pi function                */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysPi(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   size_t    precision;                 /* required precision         */
 
@@ -5271,36 +4825,21 @@ LONG  REXXENTRY SysPi(                  /* Pi function                */
 /*   a = func_name(arg <, prec> <, [R | D | G]>)                    */
 /*                                                                  */
 /********************************************************************/
-LONG  REXXENTRY SysArcSin(              /* Arc Sine function.         */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysArcSin(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
                                        /* call common routine        */
   return ValidateArcTrig(numargs, args, retstr, ARCSINE);
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysArcCos(              /* Arc Cosine function.       */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysArcCos(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
                                        /* call common routine        */
   return ValidateArcTrig(numargs, args, retstr, ARCCOSINE);
 }
 
 /*==================================================================*/
-LONG  REXXENTRY SysArcTan(              /* Arc Tangent function.      */
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysArcTan(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
                                        /* call common routine        */
   return ValidateArcTrig(numargs, args, retstr, ARCTANGENT);
@@ -5319,12 +4858,7 @@ LONG  REXXENTRY SysArcTan(              /* Arc Tangent function.      */
 *            -1 - failure during dump                                     *
 *************************************************************************/
 
-LONG REXXENTRY SysDumpVariables(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysDumpVariables(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   LONG      rc;                        /* Ret code                   */
   SHVBLOCK  shvb;
@@ -5446,12 +4980,7 @@ LONG REXXENTRY SysDumpVariables(
 *            -1 - failure attribute update                               *
 *************************************************************************/
 
-LONG REXXENTRY SysSetFileDateTime(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysSetFileDateTime(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   BOOL      fOk = TRUE;
   HANDLE    setFile = NULL;
@@ -5535,12 +5064,7 @@ LONG REXXENTRY SysSetFileDateTime(
 *            other - date and time as YYYY-MM-DD HH:MM:SS                *
 *************************************************************************/
 
-LONG REXXENTRY SysGetFileDateTime(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysGetFileDateTime(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   BOOL      fOk = TRUE;
   HANDLE    setFile = NULL;
@@ -5615,7 +5139,7 @@ LONG REXXENTRY SysGetFileDateTime(
 }
 
 
-APIRET REXXENTRY RexxStemSort(const char *stemname, int order, int type,
+RexxReturnCode REXXENTRY RexxStemSort(const char *stemname, int order, int type,
     size_t start, size_t end, size_t firstcol, size_t lastcol);
 
 /*************************************************************************
@@ -5636,12 +5160,7 @@ APIRET REXXENTRY RexxStemSort(const char *stemname, int order, int type,
 *            -1 - sort failed                                            *
 *************************************************************************/
 
-LONG REXXENTRY SysStemSort(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 
 {
     CHAR          stemName[255];
@@ -5756,15 +5275,9 @@ LONG REXXENTRY SysStemSort(
 *            -1 - delete failed                                          *
 *************************************************************************/
 
-LONG REXXENTRY SysStemDelete(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+size_t RexxEntry SysStemDelete(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  APIRET        rc;
+  RexxReturnCode        rc;
   CHAR          szStemName[255];
   PSZ           pszStemIdx;
   CHAR          szValue[255];
@@ -5927,15 +5440,9 @@ LONG REXXENTRY SysStemDelete(
 *            -1 - insert failed                                          *
 *************************************************************************/
 
-LONG REXXENTRY SysStemInsert(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+size_t RexxEntry SysStemInsert(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  APIRET        rc;
+  RexxReturnCode        rc;
   CHAR          szStemName[255];
   PSZ           pszStemIdx;
   CHAR          szValue[255];
@@ -6027,8 +5534,8 @@ LONG REXXENTRY SysStemInsert(
       sprintf(pszStemIdx, "%ld", ulPosition);
       shvb.shvnext = NULL;
       shvb.shvname.strptr = szStemName;
-      shvb.shvname.strlength = strlen((const char *)szStemName);
-      shvb.shvvalue.strptr = args[2].strptr;
+      shvb.shvname.strlength = strlen(szStemName);
+      shvb.shvvalue.strptr = const_cast<char *>(args[2].strptr);
       shvb.shvvalue.strlength = args[2].strlength;
       shvb.shvnamelen = shvb.shvname.strlength;
       shvb.shvvaluelen = shvb.shvvalue.strlength;
@@ -6087,15 +5594,9 @@ LONG REXXENTRY SysStemInsert(
 *            -1 - stem copy failed                                       *
 *************************************************************************/
 
-LONG REXXENTRY SysStemCopy(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+size_t RexxEntry SysStemCopy(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  APIRET        rc;
+  RexxReturnCode        rc;
   CHAR          szFromStemName[255];
   CHAR          szToStemName[255];
   PSZ           pszFromStemIdx;
@@ -6365,12 +5866,7 @@ LONG REXXENTRY SysStemCopy(
 * Return:    REXXUTIL.DLL Version                                        *
 *************************************************************************/
 
-LONG REXXENTRY SysUtilVersion(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysUtilVersion(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   if (numargs != 0)                    /* validate arg count         */
     return INVALID_ROUTINE;
@@ -6390,7 +5886,7 @@ LONG REXXENTRY SysUtilVersion(
 * Return:    false - failed                                              *
 *            true  - no error                                            *
 *************************************************************************/
-LONG SetRexxStem(CHAR * name, char * tailname, CHAR * data)
+bool SetRexxStem(const char* name, const char *tailname, const char *data)
 {
    SHVBLOCK shvb;
    CHAR buffer[MAX];
@@ -6401,7 +5897,7 @@ LONG SetRexxStem(CHAR * name, char * tailname, CHAR * data)
    shvb.shvname.strptr = buffer;
    shvb.shvname.strlength = strlen(buffer);
    shvb.shvnamelen = shvb.shvname.strlength;
-   shvb.shvvalue.strptr = data;
+   shvb.shvvalue.strptr = const_cast<char *>(data);
    shvb.shvvalue.strlength = strlen(data);
    shvb.shvvaluelen = strlen(data);
    shvb.shvcode = RXSHV_SYSET;
@@ -6420,7 +5916,7 @@ LONG SetRexxStem(CHAR * name, char * tailname, CHAR * data)
 * Return:    false - failed                                              *
 *            true  - no error                                            *
 *************************************************************************/
-LONG SetRexxStemLength(CHAR * name, char * tailname, CHAR * data, LONG datalen)
+bool SetRexxStemLength(const char *name, const char *tailname, const char * data, size_t datalen)
 {
    SHVBLOCK shvb;
    CHAR buffer[MAX];
@@ -6431,7 +5927,7 @@ LONG SetRexxStemLength(CHAR * name, char * tailname, CHAR * data, LONG datalen)
    shvb.shvname.strptr = buffer;
    shvb.shvname.strlength = strlen(buffer);
    shvb.shvnamelen = shvb.shvname.strlength;
-   shvb.shvvalue.strptr = data;
+   shvb.shvvalue.strptr = const_cast<char *>(data);
    shvb.shvvalue.strlength = datalen;
    shvb.shvvaluelen = datalen;
    shvb.shvcode = RXSHV_SYSET;
@@ -6518,18 +6014,12 @@ LONG SetRexxStemLength(CHAR * name, char * tailname, CHAR * data, LONG datalen)
     Replace exceptions with the default character during conversion.
 
 *************************************************************************/
-LONG REXXENTRY SysFromUniCode(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+size_t RexxEntry SysFromUniCode(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   int   iBytesDestination;
   ULONG iBytesNeeded;
   DWORD dwFlags = 0;
-  char  *strDefaultChar = NULL;
+  const char  *strDefaultChar = NULL;
   BOOL  bUsedDefaultChar = FALSE;
   UINT  codePage;
   size_t len;
@@ -6774,13 +6264,7 @@ LONG SetRexxUIStem(CHAR * name, char * tailname, LPWSTR data, int datalen)
 
 
 *************************************************************************/
-LONG REXXENTRY SysToUniCode(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
-
+size_t RexxEntry SysToUniCode(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   ULONG  ulDataLen, ulWCharsNeeded;
   DWORD  dwFlags = 0;
@@ -6890,12 +6374,7 @@ LONG REXXENTRY SysToUniCode(
 * Return:    error number                                                *
 *************************************************************************/
 
-LONG REXXENTRY SysWinGetPrinters(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysWinGetPrinters(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD realSize = 0;
   DWORD entries = 0;
@@ -6904,8 +6383,6 @@ LONG REXXENTRY SysWinGetPrinters(
   PRINTER_INFO_2 *pResult;
   DWORD currentSize = 10*sizeof(PRINTER_INFO_2)*sizeof(char);
   char *pArray = (char*) malloc(sizeof(char)*currentSize);
-  SHVBLOCK shvb;
-  APIRET rc;
 
   if (numargs != 1)                    /* If no args, then its an    */
                                        /* incorrect call             */
@@ -6927,38 +6404,20 @@ LONG REXXENTRY SysWinGetPrinters(
   }
   pResult = (PRINTER_INFO_2*) pArray;
 
-  // set number of entries to stem.0
-  sprintf(szBuffer,"%d",entries);
-  sprintf(args[0].strptr+args[0].strlength,"0");
-  shvb.shvnext = NULL;
-  shvb.shvname.strptr = args[0].strptr;
-  shvb.shvname.strlength = strlen(args[0].strptr);
-  shvb.shvvalue.strptr = szBuffer;
-  shvb.shvvalue.strlength = strlen(szBuffer);
-  shvb.shvnamelen = shvb.shvname.strlength;
-  shvb.shvvaluelen = shvb.shvvalue.strlength;
-  shvb.shvcode = RXSHV_SYSET;
-  shvb.shvret = 0;
-
   fSuccess = false;
 
-  rc = RexxVariablePool(&shvb);
-  if (rc == RXSHV_OK || rc == RXSHV_NEWV) {
+  // set number of entries to stem.0
+  sprintf(szBuffer,"%d",entries);
+  if (SetRexxStem(args[0].strptr, "0", szBuffer))
+  {
     fSuccess = true;
     while (entries--) {
       sprintf(szBuffer,"%s,%s,%s",pResult[entries].pPrinterName,pResult[entries].pDriverName,pResult[entries].pPortName);
-      sprintf(args[0].strptr+args[0].strlength,"%d",entries+1);
-      shvb.shvnext = NULL;
-      shvb.shvname.strptr = args[0].strptr;
-      shvb.shvname.strlength = strlen(args[0].strptr);
-      shvb.shvvalue.strptr = szBuffer;
-      shvb.shvvalue.strlength = strlen(szBuffer);
-      shvb.shvnamelen = shvb.shvname.strlength;
-      shvb.shvvaluelen = shvb.shvvalue.strlength;
-      shvb.shvcode = RXSHV_SYSET;
-      shvb.shvret = 0;
-      rc = RexxVariablePool(&shvb);
-      if (rc != RXSHV_OK && rc != RXSHV_NEWV) {
+      char tailBuffer[20];
+      sprintf(tailBuffer, "%d",entries+1);
+
+      if (SetRexxStem(args[0].strptr, tailBuffer, szBuffer))
+      {
         fSuccess = false;
         break;
       }
@@ -6982,12 +6441,7 @@ LONG REXXENTRY SysWinGetPrinters(
 * Return:    string describing default printer                           *
 *************************************************************************/
 
-LONG REXXENTRY SysWinGetDefaultPrinter(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysWinGetDefaultPrinter(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
   DWORD  errnum = 0;
@@ -7045,104 +6499,40 @@ LONG REXXENTRY SysWinGetDefaultPrinter(
 * Return:    error number                                                *
 *************************************************************************/
 
-LONG REXXENTRY SysWinSetDefaultPrinter(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysWinSetDefaultPrinter(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
+    DWORD  errnum = 0;
+    UINT   count = 0;
+    OSVERSIONINFO osv;
 
-  DWORD  errnum = 0;
-  UINT   count = 0;
-  OSVERSIONINFO osv;
+    if (numargs != 1)                    /* If no args, then its an    */
+                                         /* incorrect call             */
+        return INVALID_ROUTINE;
 
-  if (numargs != 1)                    /* If no args, then its an    */
-                                       /* incorrect call             */
-    return INVALID_ROUTINE;
-
-  /* just make sure the input string has valid format:
-     it has to contain at least two commas */
-  for (count = 0; count < args[0].strlength; count++) {
-    if (args[0].strptr[count] == ',')
-      errnum++;
-  }
-
-  if (errnum < 2)
-    return INVALID_ROUTINE;
-
-  // What version of Windows are you running?
-  osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-  GetVersionEx(&osv);
-
-  // If Windows 95 or 98, use EnumPrinters...
-  if (osv.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-    BOOL   bFlag;
-    HANDLE hPrinter = NULL;
-    char  *pPrinterName = args[0].strptr;
-    PRINTER_INFO_2 *printerInfo = NULL;
-    DWORD  dwNeeded = 0;
-
+    /* just make sure the input string has valid format:
+       it has to contain at least two commas */
     for (count = 0; count < args[0].strlength; count++)
-      if (pPrinterName[count] == ',') {
-        pPrinterName[count] = 0x00; // we only need the name
-        break;
-      }
-
-    // Open this printer so you can get information about it...
-    bFlag = OpenPrinter(pPrinterName, &hPrinter, NULL);
-    if (!bFlag || !hPrinter)
-      return INVALID_ROUTINE;
-
-    // The first GetPrinter() tells you how big our buffer should
-    // be in order to hold ALL of PRINTER_INFO_2. Note that this will
-    // usually return false. This only means that the buffer (the 3rd
-    // parameter) was not filled in. You don't want it filled in here...
-    GetPrinter(hPrinter, 2, 0, 0, &dwNeeded);
-    if (dwNeeded == 0)
     {
-      ClosePrinter(hPrinter);
-      return INVALID_ROUTINE;
+        if (args[0].strptr[count] == ',')
+            errnum++;
     }
 
-    // Allocate enough space for PRINTER_INFO_2...
-    printerInfo = (PRINTER_INFO_2*) malloc(sizeof(char)*dwNeeded);
-    if (!printerInfo)
-    {
-      ClosePrinter(hPrinter);
-      return INVALID_ROUTINE;
-    }
+    if (errnum < 2)
+        return INVALID_ROUTINE;
 
-    // The second GetPrinter() will fill in all the current information
-    // so that all you need to do is modify what you're interested in...
-    bFlag = GetPrinter(hPrinter, 2, (LPBYTE) printerInfo, dwNeeded, &dwNeeded);
-    if (!bFlag)
-    {
-      ClosePrinter(hPrinter);
-      free(printerInfo);
-      return INVALID_ROUTINE;
-    }
+    // What version of Windows are you running?
+    osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx(&osv);
 
-    // Set default printer attribute for this printer...
-    printerInfo->Attributes |= PRINTER_ATTRIBUTE_DEFAULT;
-    bFlag = SetPrinter(hPrinter, 2, (LPBYTE) printerInfo, 0);
-    if (bFlag)
-      SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM) "windows");
-
-    ClosePrinter(hPrinter);
-    free(printerInfo);
-  }
-  else {
     // NT / W2K
     WriteProfileString("Windows", "DEVICE", args[0].strptr);
     SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM) "windows");
-  }
 
-  errnum = GetLastError();
-  sprintf(retstr->strptr,"%d",errnum);
-  retstr->strlength = strlen(retstr->strptr);
+    errnum = GetLastError();
+    sprintf(retstr->strptr,"%d",errnum);
+    retstr->strlength = strlen(retstr->strptr);
 
-  return VALID_ROUTINE;
+    return VALID_ROUTINE;
 }
 
 /*************************************************************************
@@ -7156,12 +6546,7 @@ LONG REXXENTRY SysWinSetDefaultPrinter(
 * Return:    Return code from CopyFile() function.                       *
 *************************************************************************/
 
-LONG REXXENTRY SysFileCopy(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysFileCopy(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
                                        /* we need two valid arguments */
@@ -7186,12 +6571,7 @@ LONG REXXENTRY SysFileCopy(
 * Return:    Return code from MoveFile() function.                       *
 *************************************************************************/
 
-LONG REXXENTRY SysFileMove(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysFileMove(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
                                        /* we need two valid arguments */
   if ( numargs != 2 || !RXVALIDSTRING(args[0]))
@@ -7214,12 +6594,7 @@ LONG REXXENTRY SysFileMove(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysIsFile(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIsFile(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD dwAttrs;
 
@@ -7249,12 +6624,7 @@ LONG REXXENTRY SysIsFile(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysIsFileDirectory(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIsFileDirectory(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD dwAttrs;
 
@@ -7283,12 +6653,7 @@ LONG REXXENTRY SysIsFileDirectory(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysIsFileLink(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIsFileLink(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD dwAttrs;
 
@@ -7317,12 +6682,7 @@ LONG REXXENTRY SysIsFileLink(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysIsFileCompressed(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIsFileCompressed(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD dwAttrs;
 
@@ -7351,12 +6711,7 @@ LONG REXXENTRY SysIsFileCompressed(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysIsFileEncrypted(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIsFileEncrypted(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD dwAttrs;
 
@@ -7386,12 +6741,7 @@ LONG REXXENTRY SysIsFileEncrypted(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysIsFileNotContentIndexed(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIsFileNotContentIndexed(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD dwAttrs;
 
@@ -7420,12 +6770,7 @@ LONG REXXENTRY SysIsFileNotContentIndexed(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysIsFileOffline(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIsFileOffline(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD dwAttrs;
 
@@ -7454,12 +6799,7 @@ LONG REXXENTRY SysIsFileOffline(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysIsFileSparse(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIsFileSparse(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD dwAttrs;
 
@@ -7489,12 +6829,7 @@ LONG REXXENTRY SysIsFileSparse(
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-LONG REXXENTRY SysIsFileTemporary(
-  PSZ       name,                      /* Function name              */
-  LONG      numargs,                   /* Number of arguments        */
-  RXSTRING  args[],                    /* Argument array             */
-  PSZ       queuename,                 /* Current queue              */
-  PRXSTRING retstr )                   /* Return RXSTRING            */
+size_t RexxEntry SysIsFileTemporary(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
   DWORD dwAttrs;
 
@@ -7512,3 +6847,117 @@ LONG REXXENTRY SysIsFileTemporary(
   else
       RETVAL(0)                        /* False - Is not temporary   */
 }
+
+
+// now build the actual entry list
+RexxRoutineEntry rexxutil_routines[] =
+{
+    REXX_CLASSIC_ROUTINE(SysCls,                      SysCls),
+    REXX_CLASSIC_ROUTINE(SysCurPos,                   SysCurPos),
+    REXX_CLASSIC_ROUTINE(SysCurState,                 SysCurState),
+    REXX_CLASSIC_ROUTINE(SysDriveInfo,                SysDriveInfo),
+    REXX_CLASSIC_ROUTINE(SysDriveMap,                 SysDriveMap),
+    REXX_CLASSIC_ROUTINE(SysDropFuncs,                SysDropFuncs),
+    REXX_CLASSIC_ROUTINE(SysFileDelete,               SysFileDelete),
+    REXX_CLASSIC_ROUTINE(SysFileSearch,               SysFileSearch),
+    REXX_CLASSIC_ROUTINE(SysFileTree,                 SysFileTree),
+    REXX_CLASSIC_ROUTINE(SysGetKey,                   SysGetKey),
+    REXX_CLASSIC_ROUTINE(SysIni,                      SysIni),
+    REXX_CLASSIC_ROUTINE(SysLoadFuncs,                SysLoadFuncs),
+    REXX_CLASSIC_ROUTINE(SysMkDir,                    SysMkDir),
+    REXX_CLASSIC_ROUTINE(SysWinVer,                   SysWinVer),
+    REXX_CLASSIC_ROUTINE(SysVersion,                  SysVersion),
+    REXX_CLASSIC_ROUTINE(SysRmDir,                    SysRmDir),
+    REXX_CLASSIC_ROUTINE(SysSearchPath,               SysSearchPath),
+    REXX_CLASSIC_ROUTINE(SysSleep,                    SysSleep),
+    REXX_CLASSIC_ROUTINE(SysTempFileName,             SysTempFileName),
+    REXX_CLASSIC_ROUTINE(SysTextScreenRead,           SysTextScreenRead),
+    REXX_CLASSIC_ROUTINE(SysTextScreenSize,           SysTextScreenSize),
+    REXX_CLASSIC_ROUTINE(SysPi,                       SysPi),
+    REXX_CLASSIC_ROUTINE(SysSqrt,                     SysSqrt),
+    REXX_CLASSIC_ROUTINE(SysExp,                      SysExp),
+    REXX_CLASSIC_ROUTINE(SysLog,                      SysLog),
+    REXX_CLASSIC_ROUTINE(SysLog10,                    SysLog10),
+    REXX_CLASSIC_ROUTINE(SysSinH,                     SysSinH),
+    REXX_CLASSIC_ROUTINE(SysCosH,                     SysCosH),
+    REXX_CLASSIC_ROUTINE(SysTanH,                     SysTanH),
+    REXX_CLASSIC_ROUTINE(SysPower,                    SysPower),
+    REXX_CLASSIC_ROUTINE(SysSin,                      SysSin),
+    REXX_CLASSIC_ROUTINE(SysCos,                      SysCos),
+    REXX_CLASSIC_ROUTINE(SysTan,                      SysTan),
+    REXX_CLASSIC_ROUTINE(SysCotan,                    SysCotan),
+    REXX_CLASSIC_ROUTINE(SysArcSin,                   SysArcSin),
+    REXX_CLASSIC_ROUTINE(SysArcCos,                   SysArcCos),
+    REXX_CLASSIC_ROUTINE(SysArcTan,                   SysArcTan),
+    REXX_CLASSIC_ROUTINE(SysAddRexxMacro,             SysAddRexxMacro),
+    REXX_CLASSIC_ROUTINE(SysDropRexxMacro,            SysDropRexxMacro),
+    REXX_CLASSIC_ROUTINE(SysReorderRexxMacro,         SysReorderRexxMacro),
+    REXX_CLASSIC_ROUTINE(SysQueryRexxMacro,           SysQueryRexxMacro),
+    REXX_CLASSIC_ROUTINE(SysClearRexxMacroSpace,      SysClearRexxMacroSpace),
+    REXX_CLASSIC_ROUTINE(SysLoadRexxMacroSpace,       SysLoadRexxMacroSpace),
+    REXX_CLASSIC_ROUTINE(SysSaveRexxMacroSpace,       SysSaveRexxMacroSpace),
+    REXX_CLASSIC_ROUTINE(SysBootDrive,                SysBootDrive),
+    REXX_CLASSIC_ROUTINE(SysSystemDirectory,          SysSystemDirectory),
+    REXX_CLASSIC_ROUTINE(SysFileSystemType,           SysFileSystemType),
+    REXX_CLASSIC_ROUTINE(SysVolumeLabel,              SysVolumeLabel),
+    REXX_CLASSIC_ROUTINE(SysCreateMutexSem,           SysCreateMutexSem),
+    REXX_CLASSIC_ROUTINE(SysOpenMutexSem,             SysOpenMutexSem),
+    REXX_CLASSIC_ROUTINE(SysCloseMutexSem,            SysCloseMutexSem),
+    REXX_CLASSIC_ROUTINE(SysRequestMutexSem,          SysRequestMutexSem),
+    REXX_CLASSIC_ROUTINE(SysReleaseMutexSem,          SysReleaseMutexSem),
+    REXX_CLASSIC_ROUTINE(SysCreateEventSem,           SysCreateEventSem),
+    REXX_CLASSIC_ROUTINE(SysOpenEventSem,             SysOpenEventSem),
+    REXX_CLASSIC_ROUTINE(SysCloseEventSem,            SysCloseEventSem),
+    REXX_CLASSIC_ROUTINE(SysResetEventSem,            SysResetEventSem),
+    REXX_CLASSIC_ROUTINE(SysPostEventSem,             SysPostEventSem),
+    REXX_CLASSIC_ROUTINE(SysPulseEventSem,            SysPulseEventSem),
+    REXX_CLASSIC_ROUTINE(SysWaitEventSem,             SysWaitEventSem),
+    REXX_CLASSIC_ROUTINE(SysSetPriority,              SysSetPriority),
+    REXX_CLASSIC_ROUTINE(SysShutDownSystem,           SysShutDownSystem),
+    REXX_CLASSIC_ROUTINE(SysSwitchSession,            SysSwitchSession),
+    REXX_CLASSIC_ROUTINE(SysWaitNamedPipe,            SysWaitNamedPipe),
+    REXX_CLASSIC_ROUTINE(SysQueryProcess,             SysQueryProcess),
+    REXX_CLASSIC_ROUTINE(SysDumpVariables,            SysDumpVariables),
+    REXX_CLASSIC_ROUTINE(SysSetFileDateTime,          SysSetFileDateTime),
+    REXX_CLASSIC_ROUTINE(SysGetFileDateTime,          SysGetFileDateTime),
+    REXX_CLASSIC_ROUTINE(SysStemSort,                 SysStemSort),
+    REXX_CLASSIC_ROUTINE(SysStemDelete,               SysStemDelete),
+    REXX_CLASSIC_ROUTINE(SysStemInsert,               SysStemInsert),
+    REXX_CLASSIC_ROUTINE(SysStemCopy,                 SysStemCopy),
+    REXX_CLASSIC_ROUTINE(SysUtilVersion,              SysUtilVersion),
+    REXX_CLASSIC_ROUTINE(RxWinExec,                   RxWinExec),
+    REXX_CLASSIC_ROUTINE(SysWinEncryptFile,           SysWinEncryptFile),
+    REXX_CLASSIC_ROUTINE(SysWinDecryptFile,           SysWinDecryptFile),
+    REXX_CLASSIC_ROUTINE(SysGetErrortext,             SysGetErrortext),
+    REXX_CLASSIC_ROUTINE(SysFromUniCode,              SysFromUniCode),
+    REXX_CLASSIC_ROUTINE(SysToUniCode,                SysToUniCode),
+    REXX_CLASSIC_ROUTINE(SysWinGetPrinters,           SysWinGetPrinters),
+    REXX_CLASSIC_ROUTINE(SysWinGetDefaultPrinter,     SysWinGetDefaultPrinter),
+    REXX_CLASSIC_ROUTINE(SysWinSetDefaultPrinter,     SysWinSetDefaultPrinter),
+    REXX_CLASSIC_ROUTINE(SysFileCopy,                 SysFileCopy),
+    REXX_CLASSIC_ROUTINE(SysFileMove,                 SysFileMove),
+    REXX_CLASSIC_ROUTINE(SysIsFile,                   SysIsFile),
+    REXX_CLASSIC_ROUTINE(SysIsFileDirectory,          SysIsFileDirectory),
+    REXX_CLASSIC_ROUTINE(SysIsFileLink,               SysIsFileLink),
+    REXX_CLASSIC_ROUTINE(SysIsFileCompressed,         SysIsFileCompressed),
+    REXX_CLASSIC_ROUTINE(SysIsFileEncrypted,          SysIsFileEncrypted),
+    REXX_CLASSIC_ROUTINE(SysIsFileNotContentIndexed,  SysIsFileNotContentIndexed),
+    REXX_CLASSIC_ROUTINE(SysIsFileOffline,            SysIsFileOffline),
+    REXX_CLASSIC_ROUTINE(SysIsFileSparse,             SysIsFileSparse),
+    REXX_CLASSIC_ROUTINE(SysIsFileTemporary,          SysIsFileTemporary),
+    REXX_LAST_ROUTINE()
+};
+
+RexxPackageEntry rexxutil_package_entry =
+{
+    STANDARD_PACKAGE_HEADER
+    "REXXUTIL",                          // name of the package
+    "4.0",                               // package information
+    NULL,                                // no load/unload functions
+    NULL,
+    rexxutil_routines,                   // the exported functions
+    NULL                                 // no methods in this package
+};
+
+// package loading stub.
+OOREXX_GET_PACKAGE(rexxutil);

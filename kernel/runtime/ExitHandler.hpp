@@ -52,7 +52,7 @@ class RexxActivity;
 class ExitHandler
 {
 public:
-    inline ExitHandler() : entryPoint(NULL) { }
+    inline ExitHandler() : entryPoint(NULL) { type = UNRESOLVED; }
     void setEntryPoint(REXXPFN e) { entryPoint = e; }
     inline bool isEnabled()
     {
@@ -68,13 +68,24 @@ public:
     inline ExitHandler & operator= (ExitHandler &o)
     {
         entryPoint = o.entryPoint;
+        type = o.type;
         return *this;
     }
 
     void resolve(const char *name);
+    void resolve(RexxContextExitHandler *handler);
 
 protected:
+
+    typedef enum {
+        UNRESOLVED,
+        REGISTERED_NAME,
+        DIRECT
+    } ExitType;
+
+
     REXXPFN    entryPoint;             // resolved exit entry point
+    ExitType   type;                   // the type of call
 };
 
 
@@ -91,6 +102,16 @@ public:
     int        minor;                     // minor exit code
     REXXPFN    entryPoint;                // resolved exit entry point
     void      *parms;                     // opaque arguments passed to callback handler
+};
+
+
+class ContextExitHandlerDispatcher : public ExitHandlerDispatcher
+{
+public:
+    inline ContextExitHandlerDispatcher(REXXPFN e, int code, int subcode, void *a) : ExitHandlerDispatcher(e, code, subcode, a) { }
+    virtual ~ContextExitHandlerDispatcher() { ; }
+
+    virtual void run();
 };
 
 #endif

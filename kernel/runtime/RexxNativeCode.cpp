@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                         RexxNativeMethod.c     */
+/* REXX Kernel                                         RexxNativeMethod.cpp   */
 /*                                                                            */
 /* Primitive Method Class                                                     */
 /*                                                                            */
@@ -46,75 +46,21 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "DirectoryClass.hpp"
-#include "LibraryManager.hpp"
 #include "RexxNativeActivation.hpp"
+#include "RexxNativeCode.hpp"
+#include "SourceFile.hpp"
+#include "PackageManager.hpp"
 #include <ctype.h>
 
 
-
-RexxNativeCode::RexxNativeCode(
-    PNMF        _entry)                /* Entry point address for method    */
-/****************************************************************************/
-/* Function:  Initialize a REXX native code object                          */
-/****************************************************************************/
+RexxNativeCode::RexxNativeCode(RexxString *_package, RexxString *_name)
 {
-    // save the entry point
-    this->entry = _entry;
-    // no procedure information here.
-    this->index = 0;
-    OrefSet(this, this->library, OREF_NULL);
-    OrefSet(this, this->procedure, OREF_NULL);
-}
-
-
-RexxNativeCode::RexxNativeCode(
-    PNMF        _entry,                /* Entry point address for method    */
-     size_t      _index )               /* internal method index             */
-/****************************************************************************/
-/* Function:  Initialize a REXX native code object                          */
-/****************************************************************************/
-{
-    // save the index and entry point
-    this->index = _index;
-    this->entry = _entry;
-    // no procedure information here.
-    OrefSet(this, this->library, OREF_NULL);
-    OrefSet(this, this->procedure, OREF_NULL);
-}
-
-
-RexxNativeCode::RexxNativeCode(
-     RexxString *_procedure,            /* procedure to load                 */
-     RexxString *_library,              /* library to load from              */
-     PNMF        _entry)                /* Entry point address for method    */
-/****************************************************************************/
-/* Function:  Initialize a REXX native code object                          */
-/****************************************************************************/
-{
-  this->entry = _entry;                 /* no resolved entry point yet       */
-  this->index = 0;                      // no index value
-                                       /* save the library name             */
-  OrefSet(this, this->library, _library);
-                                       /* save the procedure name           */
-  OrefSet(this, this->procedure, _procedure);
-}
-
-void RexxNativeCode::reinit(           /* reinitialize the nmethod entry    */
-     RexxPointer *handle )             /* library handle information        */
-/****************************************************************************/
-/* Function:  Reinitialize a REXX native method                             */
-/****************************************************************************/
-{
-    if (this->procedure != OREF_NULL)    /* in another library?               */
-    {
-                                           /* and resolve the function address  */
-        this->entry = (PNMF)SysLoadProcedure(handle, this->procedure);
-    }
-    else
-    {
-        // resolve the internal version
-        this->entry = LibraryManager::resolveInternalMethod(index);
-    }
+    // and this is the information needed to resolve this again after an
+    // image restore
+    OrefSet(this, this->package, _package);
+    OrefSet(this, this->name, _name);
+    // this will be set later, if available
+    OrefSet(this, this->source, OREF_NULL);
 }
 
 
@@ -123,67 +69,183 @@ void RexxNativeCode::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->library);
-  memory_mark(this->procedure);
+    memory_mark(this->package);
+    memory_mark(this->name);
+    memory_mark(this->source);
 }
 
 
 void RexxNativeCode::liveGeneral(int reason)
 /******************************************************************************/
-/* Function:  Generalized object marking                                      */
+/* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark_general(this->library);
-  memory_mark_general(this->procedure);
-
-  // if we're restoring the image, we need to fix up the entry point for any
-  // internal methods.
-  if (memoryObject.restoringImage())
-  {
-      if (this->procedure == OREF_NULL)
-      {
-          // resolve the internal version
-          this->entry = LibraryManager::resolveInternalMethod(index);
-      }
-  }
+    memory_mark_general(this->package);
+    memory_mark_general(this->name);
+    memory_mark_general(this->source);
 }
+
 
 void RexxNativeCode::flatten(RexxEnvelope *envelope)
 /******************************************************************************/
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxNativeCode)
-
-   flatten_reference(newThis->library, envelope);
-   flatten_reference(newThis->procedure, envelope);
-                                       /* Set entry to NUll for 2 reasons   */
-                                       /* 1st force branch to 0 is not      */
-                                       /*restored, 2 used to indicated if   */
-                                       /* the method has bee unflattened    */
-   newThis->entry = NULL;
+  setUpFlatten(RexxNativeMethod)
+   flatten_reference(newThis->package, envelope);
+   flatten_reference(newThis->name, envelope);
+   flatten_reference(newThis->source, envelope);
   cleanUpFlatten
 }
 
-RexxObject * RexxNativeCode::unflatten(RexxEnvelope *envelope)
+
+/**
+ * Resolve a class in the context of this code object.
+ *
+ * @param className The name of the desired class.
+ *
+ * @return The returned class.
+ */
+RexxClass *RexxNativeCode::findClass(RexxString *className)
+{
+    // if there is a source object attached, have it resolve things.  Otherwise, go back to the default.
+    if (source != OREF_NULL)
+    {
+        return source->findClass(className);
+    }
+    return BaseCode::findClass(className);
+}
+
+
+/**
+ * Set a source object into a native code context.  If the
+ * object is already set, then this returns a copy of the code object.
+ *
+ * @param s      The new source object.
+ *
+ * @return Either the same object, or a new copy of the code object.
+ */
+BaseCode *RexxNativeCode::setSourceObject(RexxSource *s)
+{
+    if (source == OREF_NULL)
+    {
+        OrefSet(this, this->source, s);
+        return this;
+    }
+    else
+    {
+        RexxNativeCode *copy = (RexxNativeCode *)this->copy();
+        OrefSet(copy, copy->source, s);
+        return copy;
+    }
+}
+
+
+/**
+ * Get the source object backing this code instance.  If created from
+ * a directive, this will be the source package containing the
+ * directive.
+ *
+ * @return The parent source instance.
+ */
+RexxSource *RexxNativeCode::getSourceObject()
+{
+    return source;
+}
+
+
+/**
+ * Get the security manager associated with native code.  Generally,
+ * only native methods and routines defined with directives
+ * will have an associated security manager.
+ *
+ * @return The source security manager.
+ */
+SecurityManager *RexxNativeCode::getSecurityManager()
+{
+    if (source != OREF_NULL)
+    {
+        return source->getSecurityManager();
+    }
+    return OREF_NULL;
+}
+
+
+void RexxNativeMethod::liveGeneral(int reason)
 /******************************************************************************/
-/* Function:  unflatten an object                                             */
+/* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-   if (this->entry == NULL)
-   {
-       if (procedure == OREF_NULL)
-       {
-           // resolve the internal version
-           this->entry = LibraryManager::resolveInternalMethod(index);
-       }
-       else
-       {
-           // resolve the internal version
-           this->entry = LibraryManager::resolveExternalMethod(library, procedure);
-       }
-   }
-   return (RexxObject *)this;          /* return ourself.                   */
+    // zero the entry point if saving the image
+    if (reason == SAVINGIMAGE)
+    {
+        entry = NULL;
+    }
+    RexxNativeCode::liveGeneral(reason);
+}
+
+
+void RexxNativeMethod::flatten(RexxEnvelope *envelope)
+/******************************************************************************/
+/* Function:  Flatten an object                                               */
+/******************************************************************************/
+{
+  setUpFlatten(RexxNativeMethod)
+   newThis->entry = NULL;
+   RexxNativeCode::flatten(envelope);
+  cleanUpFlatten
+}
+
+
+void RexxNativeRoutine::liveGeneral(int reason)
+/******************************************************************************/
+/* Function:  Generalized object marking                                      */
+/******************************************************************************/
+{
+    // zero the entry point if saving the image
+    if (reason == SAVINGIMAGE)
+    {
+        entry = NULL;
+    }
+    RexxNativeCode::liveGeneral(reason);
+}
+
+
+void RexxNativeRoutine::flatten(RexxEnvelope *envelope)
+/******************************************************************************/
+/* Function:  Flatten an object                                               */
+/******************************************************************************/
+{
+  setUpFlatten(RexxNativeRoutine)
+   newThis->entry = NULL;
+   RexxNativeCode::flatten(envelope);
+  cleanUpFlatten
+}
+
+
+void RegisteredRoutine::liveGeneral(int reason)
+/******************************************************************************/
+/* Function:  Generalized object marking                                      */
+/******************************************************************************/
+{
+    // zero the entry point if saving the image
+    if (reason == SAVINGIMAGE)
+    {
+        entry = NULL;
+    }
+    RexxNativeCode::liveGeneral(reason);
+}
+
+
+void RegisteredRoutine::flatten(RexxEnvelope *envelope)
+/******************************************************************************/
+/* Function:  Flatten an object                                               */
+/******************************************************************************/
+{
+  setUpFlatten(RegisteredRoutine)
+   newThis->entry = NULL;
+   RexxNativeCode::flatten(envelope);
+  cleanUpFlatten
 }
 
 
@@ -199,27 +261,103 @@ RexxObject * RexxNativeCode::unflatten(RexxEnvelope *envelope)
  * @param argPtr   The pointer to the arguments.
  * @param result   The protected object used to return the result.
  */
-void RexxNativeCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
-    size_t count, RexxObject **argPtr, ProtectedObject &result)
+void RexxNativeMethod::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
+    RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
+    // if this is NULL currently, we need to lazy resolve this entry
+    if (entry == NULL)
+    {
+        // have the package manager resolve this for us before we make a call
+        entry = PackageManager::resolveMethodEntry(package, name);
+    }
+
     // create a new native activation
-    RexxNativeActivation *newNActa = new RexxNativeActivation(activity, method, this);
+    RexxNativeActivation *newNActa = new RexxNativeActivation(activity);
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
-    newNActa->run(receiver, messageName, count, argPtr, result);
+    newNActa->run(method, this, receiver, messageName, argPtr, count, result);
 }
 
 
-void * RexxNativeCode::operator new(
+void * RexxNativeMethod::operator new(
      size_t      size)                 /* object size                       */
 /****************************************************************************/
 /* Function:  Create a new Native method                                    */
 /****************************************************************************/
 {
-  RexxObject *newMethod;               /* new object                        */
+    return new_object(size, T_NativeMethod);  // Get new object
+}
 
-  newMethod = new_object(size);        /* Get new object                    */
-                                       /* Give new object its behaviour     */
-  newMethod->setBehaviour(TheNativeCodeBehaviour);
-  return newMethod;                    /* and return the new method         */
+
+/**
+ * Run a method call (vs a straight program call).
+ *
+ * @param activity The current activity.
+ * @param functionName
+ *                 The name of the message used to invoke the method.
+ * @param count    The count of arguments.
+ * @param argPtr   The pointer to the arguments.
+ * @param result   The protected object used to return the result.
+ */
+void RexxNativeRoutine::call(RexxActivity *activity, RoutineClass *routine, RexxString *functionName, RexxObject **argPtr, size_t count, ProtectedObject &result)
+{
+    // if this is NULL currently, we need to lazy resolve this entry
+    if (entry == NULL)
+    {
+        // have the package manager resolve this for us before we make a call
+        entry = PackageManager::resolveRoutineEntry(package, name);
+    }
+
+    // create a new native activation
+    RexxNativeActivation *newNActa = new RexxNativeActivation(activity);
+    activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
+                                       /* and go run it                     */
+    newNActa->callNativeRoutine(routine, this, functionName, argPtr, count, result);
+}
+
+
+void * RexxNativeRoutine::operator new(
+     size_t      size)                 /* object size                       */
+/****************************************************************************/
+/* Function:  Create a new Native method                                    */
+/****************************************************************************/
+{
+    return new_object(size, T_NativeRoutine);  // Get new object
+}
+
+
+/**
+ * Run a method call (vs a straight program call).
+ *
+ * @param activity The current activity.
+ * @param functionName
+ *                 The name of the message used to invoke the method.
+ * @param count    The count of arguments.
+ * @param argPtr   The pointer to the arguments.
+ * @param result   The protected object used to return the result.
+ */
+void RegisteredRoutine::call(RexxActivity *activity, RoutineClass *routine, RexxString *functionName, RexxObject **argPtr, size_t count, ProtectedObject &result)
+{
+    // if this is NULL currently, we need to lazy resolve this entry
+    if (entry == NULL)
+    {
+        // have the package manager resolve this for us before we make a call
+        entry = PackageManager::resolveRegisteredRoutineEntry(package, name);
+    }
+
+    // create a new native activation
+    RexxNativeActivation *newNActa = new RexxNativeActivation(activity);
+    activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
+                                       /* and go run it                     */
+    newNActa->callRegisteredRoutine(routine, this, functionName, argPtr, count, result);
+}
+
+
+void * RegisteredRoutine::operator new(
+     size_t      size)                 /* object size                       */
+/****************************************************************************/
+/* Function:  Create a new Native method                                    */
+/****************************************************************************/
+{
+    return new_object(size, T_RegisteredRoutine);  // Get new object
 }

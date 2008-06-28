@@ -92,20 +92,20 @@ size_t RexxSmartBuffer::copyData(
 /* Function:  Copy data into the buffer at the very end.                      */
 /******************************************************************************/
 {
-  size_t dataLoc;                      /* location to copy                  */
+    if (this->space() < length)          /* enough room in buffer for data?   */
+    {
+        /* not big enough, tell buffer to    */
+        /* make itself bigger, and assign    */
+        /* new buffer                        */
+        OrefSet(this, this->buffer, this->buffer->expand(length));
+    }
+    this->buffer->copyData(this->current, (char *)start, length);
 
-  if (this->space() < length)          /* enough room in buffer for data?   */
-                                       /* not big enough, tell buffer to    */
-                                       /* make itself bigger, and assign    */
-                                       /* new buffer                        */
-    OrefSet(this, this->buffer, this->buffer->expand(length));
-  this->buffer->copyData(this->current, (char *)start, length);
-
-  dataLoc = this->current;             /* save start location of copied data*/
-                                       /* bump pointer to end of copied     */
-                                       /* data, (prepare for next copy)     */
-  this->current = this->current + length;
-  return dataLoc;                      /* return location of copied data    */
+    size_t dataLoc = this->current;      /* save start location of copied data*/
+                                         /* bump pointer to end of copied     */
+                                         /* data, (prepare for next copy)     */
+    this->current = this->current + length;
+    return dataLoc;                      /* return location of copied data    */
 }
 
 void   *RexxSmartBuffer::operator new(size_t size)
@@ -113,12 +113,12 @@ void   *RexxSmartBuffer::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject * newObject;              /* newly allocated object            */
+    RexxObject * newObject;              /* newly allocated object            */
 
-  newObject = new_object(size);        /* get storage for a new object      */
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheSmartBufferBehaviour);
-  return (void *)newObject;            /* return the new object             */
+    newObject = new_object(size);        /* get storage for a new object      */
+                                         /* Give new object its behaviour     */
+    newObject->setBehaviour(TheSmartBufferBehaviour);
+    return(void *)newObject;            /* return the new object             */
 }
 
 size_t RexxSmartBuffer::space()

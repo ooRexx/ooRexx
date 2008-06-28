@@ -2883,6 +2883,24 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Incorrect_call_write_to_readonly</SymbolicName>
         <Text>Cannot write to a read-only property or typelib element.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>40</Code>
+        <Subcode>918</Subcode>
+        <MessageNumber>700</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_call_signature</SymbolicName>
+        <Text>Invalid native function signature specification</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>40</Code>
+        <Subcode>919</Subcode>
+        <MessageNumber>702</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_call_nostem</SymbolicName>
+        <Text>Argument <Sub position="1" name="argument"/> must have a stem object or stem name value; found <q><Sub position="2" name="value"/></q></Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -3454,6 +3472,42 @@ special character (such as a parenthesis).
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_format</SymbolicName>
           <Text>Argument <Sub position="1" name="argument"/> is not in a valid format; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>919</Subcode>
+          <MessageNumber>704</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_pointer</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> is not in valid pointer format; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>920</Subcode>
+          <MessageNumber>705</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_nostem</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must have a stem object or stem name value; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>921</Subcode>
+          <MessageNumber>706</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_double</SymbolicName>
+          <Text>Argument <Sub position="1" name="argument"/> must be a valid double value; found <q><Sub position="2" name="value"/></q></Text>
+        </SubMessage>
+        <SubMessage>
+          <Code>88</Code>
+          <Subcode>922</Subcode>
+          <MessageNumber>707</MessageNumber>
+          <Component>Rexx</Component>
+          <Severity>Warning</Severity>
+          <SymbolicName>Error_Invalid_argument_maxarg</SymbolicName>
+          <Text>Too many arguments in invocation; <Sub position="1" name="number"/> expected</Text>
         </SubMessage>
     </Subcodes>
   </Message>
@@ -4255,6 +4309,24 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Unsupported_new_method</SymbolicName>
         <Text>New method is not supported for the <Sub position="1" name="name"/> class</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>968</Subcode>
+        <MessageNumber>701</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_signature</SymbolicName>
+        <Text>Invalid native method signature specification</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>93</Code>
+        <Subcode>969</Subcode>
+        <MessageNumber>703</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Incorrect_method_nostem</SymbolicName>
+        <Text>Method argument <Sub position="1" name="argument"/> must have a stem object value; found <q><Sub position="2" name="value"/></q></Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -4593,6 +4665,33 @@ special character (such as a parenthesis).
         <Severity>Error</Severity>
         <SymbolicName>Error_Execution_nostem</SymbolicName>
         <Text>Stem object default value cannot be another stem object</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>978</Subcode>
+        <MessageNumber>697</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_library_method</SymbolicName>
+        <Text>Unable to load method <q><Sub position="1" name="name"/></q> from library <q><Sub position="1" name="library"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>979</Subcode>
+        <MessageNumber>698</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_library_routine</SymbolicName>
+        <Text>Unable to load routine <q><Sub position="1" name="name"/></q> from library <q><Sub position="1" name="library"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>980</Subcode>
+        <MessageNumber>699</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_native_routine</SymbolicName>
+        <Text>Unable to load native routine <q><Sub position="1" name="name"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>

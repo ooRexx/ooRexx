@@ -67,7 +67,7 @@ typedef struct listentry {
    void         live(size_t);
    void         liveGeneral(int reason);
    void         flatten(RexxEnvelope *);
-   inline LISTENTRY   *address() {return this->elements; };
+   inline LISTENTRY   *getData() {return this->elements; };
 
    size_t size;                        /* count of list elements            */
    LISTENTRY elements[1];              /* entry elements                    */

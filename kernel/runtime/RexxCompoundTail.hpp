@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxCompoundTail.hpp    */
+/* REXX Kernel                                        RexxCompoundTail.hpp    */
 /*                                                                            */
 /* Primitive Compound Tail Class Definitions                                  */
 /*                                                                            */
@@ -45,28 +45,56 @@
 #ifndef Included_RexxCompoundTail
 #define Included_RexxCompoundTail
 
-#include "RexxCore.h"
-#include "StringClass.hpp"
+#include "ProtectedObject.hpp"
+
+class RexxBuffer;
 
  class RexxCompoundTail {
 
     enum { ALLOCATION_PAD = 100 } ;   /* amount of padding added when the buffer size is increased */
 
   public:
-   inline RexxCompoundTail(RexxVariableDictionary *dictionary, RexxObject **tails, size_t tailCount) {
+   inline RexxCompoundTail(RexxVariableDictionary *dictionary, RexxObject **tails, size_t tailCount)
+   {
        init();                                  /* do the common initialization */
        buildTail(dictionary, tails, tailCount); /* build the full tail up */
    }
 
-   inline RexxCompoundTail(RexxActivation *context, RexxObject **tails, size_t tailCount) {
+   inline RexxCompoundTail(RexxActivation *context, RexxObject **tails, size_t tailCount)
+   {
        init();                                  /* do the common initialization */
        buildTail(context, tails, tailCount);    /* build the full tail up */
    }
 
-   inline RexxCompoundTail(RexxObject **tails, size_t count) {
+   inline RexxCompoundTail(RexxObject **tails, size_t count)
+   {
        init();                                  /* do the common initialization */
        buildTail(tails, count);                 /* build the full tail up */
    }
+   inline RexxCompoundTail(RexxString *tails, size_t count)
+   {
+       init();                                  /* do the common initialization */
+       buildTail(tails, count);                 /* build the full tail up */
+   }
+
+   inline RexxCompoundTail(RexxString *tailString)
+   {
+       init();                                  /* do the common initialization */
+       buildTail(tailString);                   /* build the full tail up */
+   }
+
+   inline RexxCompoundTail(const char *tailString)
+   {
+       init();                                  /* do the common initialization */
+       buildTail(tailString);                   /* build the full tail up */
+   }
+
+   inline RexxCompoundTail(size_t index)
+   {
+       init();                                  /* do the common initialization */
+       buildTail(index);                        /* build the full tail up */
+   }
+
 
    inline RexxCompoundTail(RexxObject **tails, size_t count, bool resolve) {
        init();                                  /* do the common initialization */
@@ -80,85 +108,71 @@
        }
    }
 
-   inline RexxCompoundTail(RexxString *tails, size_t count) {
-       init();                                  /* do the common initialization */
-       buildTail(tails, count);                 /* build the full tail up */
-   }
-
-   inline RexxCompoundTail(RexxString *tailString) {
-       init();                                  /* do the common initialization */
-       buildTail(tailString);                   /* build the full tail up */
-   }
-
-   inline RexxCompoundTail(size_t index) {
-       init();                                  /* do the common initialization */
-       buildTail(index);                        /* build the full tail up */
-   }
-
-   inline ~RexxCompoundTail() {
-       if (temp != OREF_NULL) {                 /* if we allocated a buffer, we need to release it now */
-           memoryObject.discardHoldObject((RexxObject *)temp);
-       }
+   inline ~RexxCompoundTail()
+   {
    }
 
    inline void ensureCapacity(size_t needed) { if (remainder < needed) expandCapacity(needed); }
    void expandCapacity(size_t needed);
-   inline void append(const char *newData, size_t stringLen)
-    {
+   inline void append(const char  *newData, size_t stringLen)
+   {
         ensureCapacity(stringLen);               /* make sure have have space */
         memcpy(current, newData, stringLen);     /* copy this into the buffer */
         current += stringLen;                    /* step the pointer          */
         remainder -= stringLen;                  /* adjust the lengths        */
     }
-   inline void append(char newData) {
+   inline void append(char newData)
+   {
        ensureCapacity(1);                       /* make sure have have space */
        *current = newData;                      /* store the character       */
        current++;                               /* step the pointer          */
        remainder--;                             /* adjust the lengths        */
    }
+
    RexxString *createCompoundName(RexxString *);
-   inline RexxString *makeString() {
-       if (value == NULL) {
-                                                /* create a new string               */
-           value = (RexxString *)new_string((char *)tail, length);
-       }
-       return value;                            /* return the result                 */
-   }
-   void init() {
+   RexxString *makeString();
+   void init()
+   {
        length = 0;                              /* set the initial lengths */
        remainder = MAX_SYMBOL_LENGTH;
        tail = buffer;                           /* the default tail is the buffer */
-       current = buffer;                        /* the current pointer is the beginning */
+       current = tail;                          /* the current pointer is the beginning */
        temp = OREF_NULL;                        /* we don't have a temporary here */
        value = OREF_NULL;                       /* and no string value yet */
    }
+
    void buildTail(RexxVariableDictionary *dictionary, RexxObject **tails, size_t tailCount);
    void buildTail(RexxActivation *context, RexxObject **tails, size_t tailCount);
    void buildTail(RexxObject **tails, size_t count);
-   void buildUnresolvedTail(RexxObject **tails, size_t count);
    void buildTail(RexxString *tail);
    void buildTail(RexxString *tail, size_t index);
    void buildTail(size_t index);
+   void buildTail(const char *index);
+   void buildUnresolvedTail(RexxObject **tails, size_t count);
 
    inline void addDot() { append('.'); }
-   inline int compare(RexxString *name) {
-       if (length == name->getLength())
+   inline int compare(RexxString *name)
+   {
+       wholenumber_t rc = (wholenumber_t)length - (wholenumber_t)name->getLength();
+       if (rc == 0)
        {
-           return memcmp(tail, name->getStringData(), length);
+           rc = memcmp(tail, name->getStringData(), length);
        }
-
-       return length > name->getLength() ? 1 : -1;
+       return (int)rc;
    }
 
    inline size_t getLength() { return length; }
    inline const char *getTail()  { return tail; }
 
-   size_t       length;                      /* length of the buffer (current) */
-   size_t       remainder;                   /* remaining length in the buffer */
-   char        *tail;                        /* the start of the tail buffer   */
-   char        *current;                     /* current write position         */
-   RexxBuffer  *temp;                        /* a buffer used for real long tails */
-   char         buffer[MAX_SYMBOL_LENGTH];   /* the default buffer             */
-   RexxString  *value;                       /* a created string value         */
+ protected:
+
+   size_t  length;                     /* length of the buffer (current) */
+   size_t  remainder;                  /* remaining length in the buffer */
+   char   *tail;                       /* the start of the tail buffer   */
+   char   *current;                    /* current write position         */
+   char    buffer[MAX_SYMBOL_LENGTH];  /* the default buffer             */
+   RexxString  *value;                 /* a created string value         */
+   RexxBuffer *temp;                   // potential temporary buffer
+   ProtectedObject p;                  // used to protect the temp buffer
  };
 #endif

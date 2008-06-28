@@ -236,4 +236,3 @@ RexxInteger *RexxExpressionStack::optionalIntegerArg(
     this->replace(position, newInt);     /* replace the argument              */
     return newInt;                       /* return the replacement value      */
 }
-

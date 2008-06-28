@@ -36,7 +36,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /* convert REXX code to be included into C/C++ source */
-
 parse arg in " " out " " variable
 
 input = .stream~new(in)

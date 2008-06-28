@@ -39,7 +39,10 @@
 #include "RexxCore.h"
 #include "RexxStartDispatcher.hpp"
 #include "ProtectedObject.hpp"
-#include "MethodClass.hpp"
+#include "RoutineClass.hpp"
+#include "SystemInterpreter.hpp"
+#include "InterpreterInstance.hpp"
+#include "RexxNativeActivation.hpp"
 
 
 /**
@@ -100,12 +103,12 @@ void RexxStartDispatcher::run()
             break;
     }
 
-    RexxMethod *method = OREF_NULL;
+    RoutineClass *program = OREF_NULL;
 
     if (instore == NULL)                     /* no instore request?               */
     {
         /* go resolve the name               */
-        fullname = SysResolveProgramName(name, OREF_NULL);
+        fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
         if (fullname == OREF_NULL)         /* not found?                        */
         {
             /* got an error here                 */
@@ -113,52 +116,26 @@ void RexxStartDispatcher::run()
         }
         savedObjects.add(fullname);
                                            /* try to restore saved image        */
-        method = SysRestoreProgram(fullname);
-        if (method == OREF_NULL)           /* unable to restore?                */
-        {
-            /* go translate the image            */
-            method = TheMethodClass->newFile(fullname);
-            savedObjects.add(method);
-            SysSaveProgram(fullname, method);/* go save this method               */
-        }
+        program = RoutineClass::fromFile(fullname);
     }
     else                                 /* have an instore program           */
     {
         /* go handle instore parms           */
-        method = RexxMethod::processInstore(instore, name);
-        if (method == OREF_NULL)           /* couldn't get it?                  */
+        program = RoutineClass::processInstore(instore, name);
+        if (program == OREF_NULL)        /* couldn't get it?                  */
         {
             /* got an error here                 */
             reportException(Error_Program_unreadable_name, name);
         }
     }
 
-    RexxString *initial_address = OREF_INITIALADDRESS;
-
-    if (defaultEnvironment != NULL)                /* have an address override?         */
-    {
-        /* use the provided one              */
-        initial_address = new_string(defaultEnvironment);
-    }
-    else
-    {
-        /* check for a file extension        */
-        const char *file_extension = SysFileExtension(fullname->getStringData());
-        if (file_extension != NULL)      /* have a real one?                  */
-        {
-            /* use extension as the environment  */
-            initial_address = new_string(file_extension + 1);
-        }
-    }
-    /* protect from garbage collect      */
-
-    savedObjects.add(initial_address);
+    RexxString *initial_address = activity->getInstance()->getDefaultEnvironment();
     /* actually need to run this?        */
-    if (method != OREF_NULL)
+    if (program != OREF_NULL)
     {
         ProtectedObject program_result;
         // call the program
-        method->runProgram(activity, source_calltype, initial_address, new_arglist->data(), argcount, program_result);
+        program->runProgram(activity, source_calltype, initial_address, new_arglist->data(), argcount, program_result);
         if (result != NULL)          /* if return provided for            */
         {
             /* actually have a result to return? */
@@ -203,5 +180,51 @@ void RexxStartDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(-r, c);
     retcode = (short)rc;
+    // process the error to display the error message.
+    activity->error(activation);
 }
 
+
+
+/**
+ * Run a routine for a thread context API call.
+ */
+void CallRoutineDispatcher::run()
+{
+    if (arguments != OREF_NULL)
+    {
+        // we use a null string for the name when things are called directly
+        routine->call(activity, OREF_NULLSTRING, arguments->data(), arguments->size(), result);
+    }
+    else
+    {
+        // we use a null string for the name when things are called directly
+        routine->call(activity, OREF_NULLSTRING, NULL, 0, result);
+    }
+}
+
+
+
+/**
+ * Run a routine for a thread context API call.
+ */
+void CallProgramDispatcher::run()
+{
+    RexxString *name = new_string(program);
+
+    // get a routine from the file source first
+    RoutineClass *routine = new RoutineClass(name);
+
+    ProtectedObject p(routine);
+
+    if (arguments != OREF_NULL)
+    {
+        // use the provided name for the call name
+        routine->runProgram(activity, arguments->data(), arguments->size(), result);
+    }
+    else
+    {
+        // we use a null string for the name when things are called directly
+        routine->runProgram(activity, NULL, 0, result);
+    }
+}

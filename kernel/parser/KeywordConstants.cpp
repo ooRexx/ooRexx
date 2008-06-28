@@ -186,6 +186,7 @@ KeywordEntry RexxSource::builtinFunctions[] = {        /* built-in function tabl
     KeywordEntry(CHAR_DELSTR,      BUILTIN_DELSTR),
     KeywordEntry(CHAR_DELWORD,     BUILTIN_DELWORD),
     KeywordEntry(CHAR_DIGITS,      BUILTIN_DIGITS),
+    KeywordEntry(CHAR_ENDLOCAL,    BUILTIN_ENDLOCAL),
     KeywordEntry(CHAR_ERRORTEXT,   BUILTIN_ERRORTEXT),
     KeywordEntry(CHAR_FORM,        BUILTIN_FORM),
     KeywordEntry(CHAR_FORMAT,      BUILTIN_FORMAT),
@@ -206,6 +207,10 @@ KeywordEntry RexxSource::builtinFunctions[] = {        /* built-in function tabl
     KeywordEntry(CHAR_RANDOM,      BUILTIN_RANDOM),
     KeywordEntry(CHAR_REVERSE,     BUILTIN_REVERSE),
     KeywordEntry(CHAR_RIGHT,       BUILTIN_RIGHT),
+    KeywordEntry(CHAR_RXFUNCADD,   BUILTIN_RXFUNCADD),
+    KeywordEntry(CHAR_RXFUNCDROP,  BUILTIN_RXFUNCDROP),
+    KeywordEntry(CHAR_RXFUNCQUERY, BUILTIN_RXFUNCQUERY),
+    KeywordEntry(CHAR_SETLOCAL,    BUILTIN_SETLOCAL),
     KeywordEntry(CHAR_SIGN,        BUILTIN_SIGN),
     KeywordEntry(CHAR_SOURCELINE,  BUILTIN_SOURCELINE),
     KeywordEntry(CHAR_SPACE,       BUILTIN_SPACE),
@@ -232,6 +237,7 @@ KeywordEntry RexxSource::builtinFunctions[] = {        /* built-in function tabl
     KeywordEntry(CHAR_X2C,         BUILTIN_X2C),
     KeywordEntry(CHAR_X2D,         BUILTIN_X2D),
     KeywordEntry(CHAR_XRANGE,      BUILTIN_XRANGE),
+    KeywordEntry(CHAR_QUEUEEXIT,   BUILTIN_QUEUEEXIT),
 };
 
 /*********************************************************************/
@@ -288,6 +294,7 @@ KeywordEntry RexxSource::subDirectives[] = {           /* language directive sub
    KeywordEntry(CHAR_GET,         SUBDIRECTIVE_GET),
    KeywordEntry(CHAR_GUARDED,     SUBDIRECTIVE_GUARDED),
    KeywordEntry(CHAR_INHERIT,     SUBDIRECTIVE_INHERIT),
+   KeywordEntry(CHAR_LIBRARY,     SUBDIRECTIVE_LIBRARY),
    KeywordEntry(CHAR_METACLASS,   SUBDIRECTIVE_METACLASS),
    KeywordEntry(CHAR_MIXINCLASS,  SUBDIRECTIVE_MIXINCLASS),
    KeywordEntry(CHAR_PRIVATE,     SUBDIRECTIVE_PRIVATE),
@@ -311,48 +318,59 @@ KeywordEntry RexxSource::subDirectives[] = {           /* language directive sub
  */
 int RexxSource::resolveKeyword(RexxString *token, KeywordEntry *Table, int Table_Size)
 {
-  int       Upper;                     /* search upper bound         */
-  int       Lower;                     /* search lower bound         */
-  int       Middle;                    /* search middle bound        */
-  char      FirstChar;                 /* first search character     */
-  int       rc;                        /* comparison result          */
+    const char *Name = token->getStringData();
+    stringsize_t Length = token->getLength();
 
-  const char *Name = token->getStringData();
-  stringsize_t Length = token->getLength();
+    int Lower = 0;                           /* set initial lower bound    */
+    int Upper = Table_Size - 1;              /* set the upper bound        */
+    char FirstChar = *Name;                   /* get the first character    */
 
-  Lower = 0;                           /* set initial lower bound    */
-  Upper = Table_Size - 1;              /* set the upper bound        */
-  FirstChar = *Name;                   /* get the first character    */
-
-  while (Lower <= Upper) {             /* while still a range        */
-                                       /* set new middle location    */
-    Middle = Lower + ((Upper - Lower) / 2);
-                                       /* if first character matches */
-    if (*Table[Middle].name == FirstChar) {
-      rc = memcmp(Name, Table[Middle].name, Numerics::minVal(Length, Table[Middle].length));
-      if (!rc) {                       /* compared equal             */
-                                       /* lengths equal?             */
-        if (Length == Table[Middle].length)
-                                       /* return this keyword code   */
-          return Table[Middle].keyword_code;
-                                       /* have to go up?             */
-        else if (Length > Table[Middle].length)
-          Lower = Middle + 1;          /* set new lower bound        */
-        else                           /* going down                 */
-          Upper = Middle - 1;          /* set new upper bound        */
-      }
-      else if (rc > 0)                 /* name is larger             */
-        Lower = Middle + 1;            /* set new lower bound        */
-      else                             /* going down                 */
-        Upper = Middle - 1;            /* set new upper bound        */
+    while (Lower <= Upper)
+    {             /* while still a range        */
+                  /* set new middle location    */
+        int Middle = Lower + ((Upper - Lower) / 2);
+        /* if first character matches */
+        if (*Table[Middle].name == FirstChar)
+        {
+            int rc = memcmp(Name, Table[Middle].name, Numerics::minVal(Length, Table[Middle].length));
+            if (!rc)
+            {                       /* compared equal             */
+                                    /* lengths equal?             */
+                if (Length == Table[Middle].length)
+                {
+                    /* return this keyword code   */
+                    return Table[Middle].keyword_code;
+                }
+                /* have to go up?             */
+                else if (Length > Table[Middle].length)
+                {
+                    Lower = Middle + 1;          /* set new lower bound        */
+                }
+                else                           /* going down                 */
+                {
+                    Upper = Middle - 1;          /* set new upper bound        */
+                }
+            }
+            else if (rc > 0)                 /* name is larger             */
+            {
+                Lower = Middle + 1;            /* set new lower bound        */
+            }
+            else                             /* going down                 */
+            {
+                Upper = Middle - 1;            /* set new upper bound        */
+            }
+        }
+        /* name is larger             */
+        else if (*Table[Middle].name < FirstChar)
+        {
+            Lower = Middle + 1;              /* set new lower bound        */
+        }
+        else                               /* going down                 */
+        {
+            Upper = Middle - 1;              /* set new upper bound        */
+        }
     }
-                                       /* name is larger             */
-    else if (*Table[Middle].name < FirstChar)
-      Lower = Middle + 1;              /* set new lower bound        */
-    else                               /* going down                 */
-      Upper = Middle - 1;              /* set new upper bound        */
-  }
-  return 0;                            /* return failure flag        */
+    return 0;                            /* return failure flag        */
 }
 
 #define tabSize(t) (sizeof(t)/sizeof(t[0]))

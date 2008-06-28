@@ -101,6 +101,11 @@ public:
         return protectedObject;
     }
 
+    inline operator RexxObjectPtr ()
+    {
+        return (RexxObjectPtr)protectedObject;
+    }
+
     inline operator RexxString *()
     {
         return (RexxString *)protectedObject;

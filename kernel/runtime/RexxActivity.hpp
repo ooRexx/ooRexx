@@ -52,6 +52,7 @@
 #include "RexxLocalVariables.hpp"
 #include "SourceLocation.hpp"
 #include "ExitHandler.hpp"
+#include "ActivationApiContexts.hpp"
 
 
 
@@ -94,6 +95,7 @@ enum TracePrefixes {
 // marker used for tagged traces to separate tag from the value
 #define ASSIGNMENT_MARKER " <= "
 
+
 #define MAX_TRACEBACK_LIST 80      /* 40 messages are displayed */
 #define MAX_TRACEBACK_INDENT 20    /* 10 messages are indented */
 
@@ -130,11 +132,14 @@ typedef enum
 
 
    void runThread();
-   wholenumber_t error(size_t);
+   wholenumber_t error();
+   wholenumber_t error(RexxActivationBase *);
    wholenumber_t errorNumber(RexxDirectory *conditionObject);
    bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);
    void        raiseException(wholenumber_t, SourceLocation *, RexxSource *, RexxString *, RexxArray *, RexxObject *);
+   RexxDirectory *createExceptionObject(wholenumber_t, RexxActivation *, SourceLocation *, RexxSource *, RexxString *, RexxArray *, RexxObject *);
    void        reportAnException(wholenumber_t, const char *);
+   void        reportAnException(wholenumber_t, const char *, const char *);
    void        reportAnException(wholenumber_t, RexxObject *, const char *);
    void        reportAnException(wholenumber_t, RexxObject *, wholenumber_t);
    void        reportAnException(wholenumber_t, const char *, RexxObject *);
@@ -159,6 +164,7 @@ typedef enum
    void        liveGeneral(int reason);
    void        flatten(RexxEnvelope *);
    void        run();
+   void        run(RexxMessage *target);
    void        checkActivationStack();
    void        updateFrameMarkers();
    void        pushStackFrame(RexxActivationBase *new_activation);
@@ -244,10 +250,10 @@ typedef enum
    inline RexxActivity *getNestedActivity() { return nestedActivity; }
    inline bool isAttached() { return attached; }
 
-
-   bool hasSecurityManager();
-   bool callSecurityManager(RexxString *name, RexxDirectory *args);
+   SecurityManager *getEffectiveSecurityManager();
+   SecurityManager *getInstanceSecurityManager();
    void inheritSettings(RexxActivity *parent);
+   void enterCurrentThread();
    void exitCurrentThread();
    void run(ActivityDispatcher &target);
    void run(CallbackDispatcher &target);
@@ -260,6 +266,7 @@ typedef enum
    inline void        addRunningRequires(RexxString *program) { this->requiresTable->stringAdd((RexxObject *)program, program);}
    inline void        removeRunningRequires(RexxObject *program) {this->requiresTable->remove(program);}
    inline void        resetRunningRequires() {this->requiresTable->reset();}
+   inline bool        checkRequires(RexxString *n) { return runningRequires(n) != OREF_NULL; }
    inline void        setNextWaitingActivity(RexxActivity *next) { this->nextWaitingActivity = next; }
    inline RexxActivity *getNextWaitingActivity() { return nextWaitingActivity; }
    inline void        waitKernel() { EVWAIT(this->runsem); }
@@ -270,6 +277,9 @@ typedef enum
    inline RexxMethod *getLastMethod() { return lastMethod; }
    inline void setLastMethod(RexxString *n, RexxMethod *m) { lastMessageName = n; lastMethod = m; }
    inline int  getPriority() { return priority; }
+
+   inline RexxThreadContext *getThreadContext() { return &threadContext.threadContext; }
+   inline RexxNativeActivation *getApiContext() { return (RexxNativeActivation *)topStackFrame; }
 
    inline void allocateStackFrame(RexxExpressionStack *stack, size_t entries)
    {
@@ -295,11 +305,17 @@ typedef enum
    void setExitHandler(int exitNum, REXXPFN e) { getExitHandler(exitNum).setEntryPoint(e); }
    void setExitHandler(int exitNum, const char *e) { getExitHandler(exitNum).resolve(e); }
    void setExitHandler(RXSYSEXIT &e) { getExitHandler(e.sysexit_code).resolve(e.sysexit_name); }
+   RexxString *resolveProgramName(RexxString *, RexxString *, RexxString *);
+   void createMethodContext(MethodContext &context, RexxNativeActivation *owner);
+   void createCallContext(CallContext &context, RexxNativeActivation *owner);
+   void createExitContext(ExitContext &context, RexxNativeActivation *owner);
 
    // TODO:  This needs to be replaced by a system object.
 #ifdef THREADHANDLE
    HANDLE   hThread;                   /* handle to thread                  */
 #endif
+
+   static void initializeThreadContext();
 
  protected:
 
@@ -308,10 +324,12 @@ typedef enum
 
 
    InterpreterInstance *instance;      // the interpreter we're running under
+   ActivityContext      threadContext; // the handed out activity context
    RexxActivity *oldActivity;          // pushed nested activity
    RexxActivationStack   frameStack;   /* our stack used for activation frames */
    RexxDirectory      *conditionobj;   /* condition object for killed activi*/
    RexxTable          *requiresTable;  /* Current ::REQUIRES being installed*/
+   RexxMessage        *dispatchMessage;  // a message object to run on this thread
 
 
    // the activation frame stack.  This stack is one RexxActivation or
@@ -356,6 +374,72 @@ typedef enum
    RexxString *lastMessageName;        // class called message
    RexxMethod *lastMethod;             // last called method
    RexxActivity *nestedActivity;       // used to push down activities in threads with more than one instance
+
+   // structures containing the various interface vectors
+   static RexxThreadInterface threadContextFunctions;
+   static MethodContextInterface methodContextFunctions;
+   static CallContextInterface callContextFunctions;
+   static ExitContextInterface exitContextFunctions;
  };
+
+
+/**
+ * Convert an API context to into the top native activation
+ * context associated with the thread.
+ *
+ * @param c      The source API context.
+ *
+ * @return A Native activation context that is the anchor point for the
+ *         API activity.
+ */
+inline RexxNativeActivation *contextToActivation(RexxThreadContext *c)
+{
+    return contextToActivity(c)->getApiContext();
+}
+
+
+/**
+ * Convert an API context to into the top native activation
+ * context associated with the thread.
+ *
+ * @param c      The source API context.
+ *
+ * @return A Native activation context that is the anchor point for the
+ *         API activity.
+ */
+inline RexxNativeActivation *contextToActivation(RexxCallContext *c)
+{
+    return ((CallContext *)c)->context;
+}
+
+
+/**
+ * Convert an API context to into the top native activation
+ * context associated with the thread.
+ *
+ * @param c      The source API context.
+ *
+ * @return A Native activation context that is the anchor point for the
+ *         API activity.
+ */
+inline RexxNativeActivation *contextToActivation(RexxExitContext *c)
+{
+    return ((ExitContext *)c)->context;
+}
+
+
+/**
+ * Convert an API context to into the top native activation
+ * context associated with the thread.
+ *
+ * @param c      The source API context.
+ *
+ * @return A Native activation context that is the anchor point for the
+ *         API activity.
+ */
+inline RexxNativeActivation *contextToActivation(RexxMethodContext *c)
+{
+    return ((MethodContext *)c)->context;
+}
 
 #endif

@@ -97,8 +97,8 @@ extern __declspec(dllimport) LONG APIdllcheck(PAPIBLOCK, LONG);
 extern __declspec(dllimport) LONG APIregdrop(PSZ, PSZ, LONG, DWORD);
 extern __declspec(dllimport) PAPIBLOCK APIsearch(PSZ, PSZ, LONG, DWORD);
 
-extern _declspec(dllimport) APIRET APIAddQueue(void);
-extern _declspec(dllimport) APIRET APIPullQueue(void);
+extern _declspec(dllimport) RexxReturnCode APIAddQueue(void);
+extern _declspec(dllimport) RexxReturnCode APIPullQueue(void);
 extern _declspec(dllimport) PQUEUEHEADER APICreateQueue(process_id_t Pid, BOOL newProcess);
 extern _declspec(dllimport) size_t APISessionQueue(process_id_t Pid, BOOL newProcess);
 extern _declspec(dllimport) size_t APIDeleteQueue(process_id_t Pid, BOOL SessionQ);
@@ -115,13 +115,13 @@ extern _declspec(dllimport) SECURITY_DESCRIPTOR SD_NullAcl;      /* let RXAPI.EX
 BOOL AllocComBlock(int chain, size_t size, size_t modifer, SECURITY_ATTRIBUTES * sa);
 void FreeComBlock(int chain);
 
-extern _declspec(dllimport) APIRET APIAddMacro(BOOL updateIfExists);
-extern _declspec(dllimport) APIRET APIDropMacro(void);
-extern _declspec(dllimport) APIRET APIClearMacroSpace(void);
-extern _declspec(dllimport) APIRET APIQueryMacro(void);
-extern _declspec(dllimport) APIRET APIReorderMacro(void);
-extern _declspec(dllimport) APIRET APIExecuteMacroFunction(void);
-extern _declspec(dllimport) APIRET APIList(int kind);
+extern _declspec(dllimport) RexxReturnCode APIAddMacro(BOOL updateIfExists);
+extern _declspec(dllimport) RexxReturnCode APIDropMacro(void);
+extern _declspec(dllimport) RexxReturnCode APIClearMacroSpace(void);
+extern _declspec(dllimport) RexxReturnCode APIQueryMacro(void);
+extern _declspec(dllimport) RexxReturnCode APIReorderMacro(void);
+extern _declspec(dllimport) RexxReturnCode APIExecuteMacroFunction(void);
+extern _declspec(dllimport) RexxReturnCode APIList(int kind);
 
 static BOOL API_Stopped = FALSE;
 

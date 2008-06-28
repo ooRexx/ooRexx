@@ -143,7 +143,7 @@ static int rxstrtofile(FILE *,const char *, size_t);
 /*  Output:             return code                                  */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxAddMacro(
+RexxReturnCode REXXENTRY RexxAddMacro(
   const char *n,                       /* name of macro function     */
   const char *s,                       /* name of file               */
   size_t pos )                         /* search order pos request   */
@@ -228,7 +228,7 @@ APIRET REXXENTRY RexxAddMacro(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET REXXENTRY RexxDropMacro(
+RexxReturnCode REXXENTRY RexxDropMacro(
   const char * n )                     /* name of macro to delete    */
 {
   size_t p;                             /* pointer to function struct */
@@ -276,7 +276,7 @@ APIRET REXXENTRY RexxDropMacro(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET REXXENTRY RexxClearMacroSpace()
+RexxReturnCode REXXENTRY RexxClearMacroSpace()
 {
   size_t  rc;                           /* return code from function  */
 
@@ -320,7 +320,7 @@ APIRET REXXENTRY RexxClearMacroSpace()
 /*                                                                   */
 /*********************************************************************/
 
-APIRET REXXENTRY RexxSaveMacroSpace(
+RexxReturnCode REXXENTRY RexxSaveMacroSpace(
   size_t    ac,                       /* count of arguments         */
   const char **av,                    /* argument list              */
   const char * fnam )                 /* file name                  */
@@ -329,7 +329,7 @@ APIRET REXXENTRY RexxSaveMacroSpace(
   size_t   *list;                      /* list of functions to save  */
   PMACRO    p;                         /* temp pointer to struct     */
   size_t    i;                         /* miscellaneous size_t s      */
-  APIRET    rc;                        /* return code from function  */
+  RexxReturnCode    rc;                        /* return code from function  */
                                        /* Exception handler record   */
 
   list = NULL;                         /* list of functions to save  */
@@ -398,13 +398,13 @@ APIRET REXXENTRY RexxSaveMacroSpace(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET REXXENTRY RexxLoadMacroSpace(
+RexxReturnCode REXXENTRY RexxLoadMacroSpace(
   size_t    ac,                        /* argument count             */
   const char **av,                     /* list of argument strings   */
   const char * fnam )                  /* file name to load functs   */
 {
   FILE     *f;                         /* file handle                */
-  APIRET    rc ;                       /* return code from function  */
+  RexxReturnCode    rc ;                       /* return code from function  */
                                        /* Exception handler record   */
 
   APISTARTUP(MACROCHAIN);              /* do common entry code       */
@@ -435,11 +435,11 @@ APIRET REXXENTRY RexxLoadMacroSpace(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET REXXENTRY RexxQueryMacro(
+RexxReturnCode REXXENTRY RexxQueryMacro(
   const char *name,                    /* name to search for         */
   unsigned short *pos)                 /* pointer for return of pos  */
 {
-  APIRET rc;                           /* return code from call      */
+  RexxReturnCode rc;                           /* return code from call      */
   size_t tmp;                           /* temp pointer to record     */
 
   APISTARTUP(MACROCHAIN);              /* do common entry code       */
@@ -468,11 +468,11 @@ APIRET REXXENTRY RexxQueryMacro(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET REXXENTRY RexxReorderMacro(
+RexxReturnCode REXXENTRY RexxReorderMacro(
   const char *name,                    /* name of function to change */
   size_t  pos )                        /* new position for function  */
 {
-  APIRET rc;                           /* return code from call      */
+  RexxReturnCode rc;                           /* return code from call      */
   size_t tmp;                           /* temp pointer to record     */
 
   APISTARTUP(MACROCHAIN);              /* do common entry code       */
@@ -506,18 +506,18 @@ APIRET REXXENTRY RexxReorderMacro(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET REXXENTRY RexxExecuteMacroFunction(
+RexxReturnCode REXXENTRY RexxExecuteMacroFunction(
   const char *name,                    /* name of func to find       */
   PRXSTRING p )                        /* storage for image return   */
 {
   size_t tmp;                          /* temp macro pointer         */
-  APIRET rc;                           /* return code from function  */
+  RexxReturnCode rc;                           /* return code from function  */
 
   APISTARTUP(MACROCHAIN);              /* do common entry code       */
 
   if((tmp=does_exist(name,NULL))){     /* if name exists in list...  */
     // allocate a new buffer in local memory
-    p->strptr = (char *)RexxAllocateMemory(MDATA(tmp)->i_size); 
+    p->strptr = (char *)RexxAllocateMemory(MDATA(tmp)->i_size);
     if (p->strptr == NULL)
     {
         rc = RXMACRO_NO_STORAGE;

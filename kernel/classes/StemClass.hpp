@@ -46,7 +46,6 @@
 
 #include "RexxCompoundElement.hpp"
 #include "RexxCompoundTable.hpp"
-#include "RexxCompoundTail.hpp"
 #include "ExpressionStem.hpp"
 
 #define SORT_CASESENSITIVE 0
@@ -56,6 +55,15 @@
 #define SORT_DECENDING 1
 
 class RexxSupplier;
+class RexxCompoundTail;
+
+ class SortData
+ {
+ public:
+     stringsize_t startColumn;
+     stringsize_t columnLength;
+ };
+
 
  class RexxStem : public RexxObject {
   friend class RexxCompoundTable;
@@ -88,6 +96,7 @@ class RexxSupplier;
   size_t        items();
 
   void        dropValue();
+  RexxObject *getStemValue();
   RexxObject *unknown (RexxString *, RexxArray *);
   RexxObject *bracket (RexxObject **, size_t);
   RexxObject *bracketEqual(RexxObject **, size_t);
@@ -104,6 +113,7 @@ class RexxSupplier;
   RexxObject *newRexx(RexxObject **, size_t);
   RexxObject *evaluateCompoundVariableValue(RexxActivation *context, RexxCompoundTail *resolved_tail);
   RexxObject *getCompoundVariableValue(RexxCompoundTail *resolved_tail);
+  RexxObject *getCompoundVariableRealValue(RexxCompoundTail *resolved_tail);
   RexxObject *realCompoundVariableValue(RexxCompoundTail *resolved_tail);
   RexxCompoundElement *getCompoundVariable(RexxCompoundTail *name);
   RexxCompoundElement *exposeCompoundVariable(RexxCompoundTail *name);
@@ -117,13 +127,24 @@ class RexxSupplier;
   RexxObject *handleNovalue(RexxActivation *context, RexxString *name, RexxCompoundElement *variable);
   void        expose(RexxCompoundElement *variable);
   bool        sort(RexxString *prefix, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+  void        quickSort(SortData *sd, int (*comparator)(SortData *, RexxString *, RexxString *), RexxString **strings, size_t left, size_t right);
 
   inline bool compoundVariableExists(RexxCompoundTail *resolved_tail) { return realCompoundVariableValue(resolved_tail) != OREF_NULL; }
   inline RexxString *getName() { return stemName; }
   inline RexxCompoundElement *first() { return tails.first(); }
-  inline RexxString *createCompoundName(RexxCompoundTail *tailPart) { return tailPart->createCompoundName(stemName); }
+         RexxString *createCompoundName(RexxCompoundTail *tailPart);
   inline void init() { tails.init(this); }
 
+  void setElement(const char *tail, RexxObject *value);
+  void setElement(size_t tail, RexxObject *value);
+  void dropElement(const char *tail);
+  void dropElement(size_t tail);
+  void dropElement(RexxCompoundTail *tail);
+  RexxObject *getElement(size_t tail);
+  RexxObject *getElement(const char *tail);
+  RexxObject *getElement(RexxCompoundTail *tail);
+
+  static void createInstance();
   static RexxClass *classInstance;
 
  protected:

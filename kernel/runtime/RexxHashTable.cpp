@@ -78,24 +78,25 @@ RexxHashTable *RexxHashTable::newInstance(
 /* Function:  Create a new hash table                                         */
 /******************************************************************************/
 {
-  RexxHashTable * newHash;             /* new hash table object             */
-  size_t bytes;                        /* size of the allocated object      */
-  size_t bucketSize;                   /* size of the bucket                */
+    RexxHashTable * newHash;             /* new hash table object             */
+    size_t bytes;                        /* size of the allocated object      */
+    size_t bucketSize;                   /* size of the bucket                */
 
-  bucketSize = entries / 2;            /* get the size of the bucket from this capacity */
-  if (bucketSize % 2 == 0) {           /* if this is even, increase it      */
-      bucketSize++;
-  }
+    bucketSize = entries / 2;            /* get the size of the bucket from this capacity */
+    if (bucketSize % 2 == 0)
+    {           /* if this is even, increase it      */
+        bucketSize++;
+    }
 
-  entries = bucketSize * 2;            /* double the bucket size for the overflow */
+    entries = bucketSize * 2;            /* double the bucket size for the overflow */
 
-  bytes = sizeof(RexxHashTable) + (sizeof(TABENTRY) * (entries - 1));
-                                       /* Get new object                    */
-  newHash = (RexxHashTable *)new_object(bytes, T_HashTable);
-  newHash->clearObject();              /* clear things out                  */
-  newHash->size = bucketSize;          /* record the size                   */
-  newHash->free = entries - 1;         /* and the first free slot           */
-  return newHash;                      /* and return it                     */
+    bytes = sizeof(RexxHashTable) + (sizeof(TABENTRY) * (entries - 1));
+    /* Get new object                    */
+    newHash = (RexxHashTable *)new_object(bytes, T_HashTable);
+    newHash->clearObject();              /* clear things out                  */
+    newHash->size = bucketSize;          /* record the size                   */
+    newHash->free = entries - 1;         /* and the first free slot           */
+    return newHash;                      /* and return it                     */
 }
 
 RexxTable *RexxHashTable::newInstance(
@@ -112,43 +113,44 @@ RexxTable *RexxHashTable::newInstance(
 /*            hashtab object in the same location as the table class.         */
 /******************************************************************************/
 {
-  RexxHashTable *newHash;              /* new hash table object             */
-  RexxTable     *newObj;               /* associated table object           */
-  size_t bytes;                        /* size of the allocated object      */
-  size_t bucketSize;                   /* size of the bucket                */
+    RexxHashTable *newHash;              /* new hash table object             */
+    RexxTable     *newObj;               /* associated table object           */
+    size_t bytes;                        /* size of the allocated object      */
+    size_t bucketSize;                   /* size of the bucket                */
 
-  bucketSize = entries / 2;            /* get the size of the bucket from this capacity */
-  if (bucketSize % 2 == 0) {           /* if this is even, increase it      */
-      bucketSize++;
-  }
+    bucketSize = entries / 2;            /* get the size of the bucket from this capacity */
+    if (bucketSize % 2 == 0)
+    {           /* if this is even, increase it      */
+        bucketSize++;
+    }
 
-  entries = bucketSize * 2;            /* double the bucket size for the overflow */
-                                       /* Compute size of hash tab object   */
-  bytes = roundObjectBoundary(sizeof(RexxHashTable) + (sizeof(TABENTRY) * (entries - 1)));
-  /* make sure we've got proper sizes for each of the object parts. */
-  companionSize = roundObjectBoundary(companionSize);
-                                       /* Get space for two objects         */
-  newObj = (RexxTable *)new_object(bytes + companionSize, type);
-  newObj->clearObject();               /* clear the entire lot              */
-                                       /* address the hash table            */
-  newHash = (RexxHashTable *)(((char *)newObj) + companionSize);
-                                       /* compute total size of the hash    */
-                                       /* table (allowing for possible      */
-                                       /* over allocation by the memory     */
-                                       /* manager                           */
-  bytes = newObj->getObjectSize() - companionSize;
+    entries = bucketSize * 2;            /* double the bucket size for the overflow */
+                                         /* Compute size of hash tab object   */
+    bytes = roundObjectBoundary(sizeof(RexxHashTable) + (sizeof(TABENTRY) * (entries - 1)));
+    /* make sure we've got proper sizes for each of the object parts. */
+    companionSize = roundObjectBoundary(companionSize);
+    /* Get space for two objects         */
+    newObj = (RexxTable *)new_object(bytes + companionSize, type);
+    newObj->clearObject();               /* clear the entire lot              */
+                                         /* address the hash table            */
+    newHash = (RexxHashTable *)(((char *)newObj) + companionSize);
+    /* compute total size of the hash    */
+    /* table (allowing for possible      */
+    /* over allocation by the memory     */
+    /* manager                           */
+    bytes = newObj->getObjectSize() - companionSize;
 
-  // initialize the hash table object
-  ((RexxObject *)newHash)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::virtualFunctionTable[T_HashTable], TheHashTableBehaviour);
-                                       /* reduce the companion size         */
-  newObj->setObjectSize(companionSize);
-  newHash->size = bucketSize;          /* record the size                   */
-  newHash->free = entries - 1;         /* and the first free slot           */
-                                       /* hook the hash into the companion  */
-                                       /* OrefSet is not used, because the  */
-                                       /* companion object is not fully set */
-  newObj->contents = newHash;          /* up yet (no behaviour)             */
-  return newObj;                       /* return the object                 */
+    // initialize the hash table object
+    ((RexxObject *)newHash)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::virtualFunctionTable[T_HashTable], TheHashTableBehaviour);
+    /* reduce the companion size         */
+    newObj->setObjectSize(companionSize);
+    newHash->size = bucketSize;          /* record the size                   */
+    newHash->free = entries - 1;         /* and the first free slot           */
+                                         /* hook the hash into the companion  */
+                                         /* OrefSet is not used, because the  */
+                                         /* companion object is not fully set */
+    newObj->contents = newHash;          /* up yet (no behaviour)             */
+    return newObj;                       /* return the object                 */
 }
 
 void RexxHashTable::live(size_t liveMark)
@@ -156,20 +158,20 @@ void RexxHashTable::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  TABENTRY *ep;                        /* table element pointer             */
-  TABENTRY *endp;
-                                       /* hash table size                   */
-  size_t count = this->totalSlotsSize();
+    TABENTRY *ep;                        /* table element pointer             */
+    TABENTRY *endp;
+    /* hash table size                   */
+    size_t count = this->totalSlotsSize();
 
-                                       /* loop through all of the entries   */
-  for (ep = this->entries, endp = ep + count; ep < endp; ep++)
-  {
-    if (ep->index != OREF_NULL)        /* have a value here?                */
+    /* loop through all of the entries   */
+    for (ep = this->entries, endp = ep + count; ep < endp; ep++)
     {
-        memory_mark(ep->index);          /* mark both the index and the       */
-        memory_mark(ep->value);          /* value                             */
+        if (ep->index != OREF_NULL)        /* have a value here?                */
+        {
+            memory_mark(ep->index);          /* mark both the index and the       */
+            memory_mark(ep->value);          /* value                             */
+        }
     }
-  }
 }
 
 void RexxHashTable::liveGeneral(int reason)
@@ -177,19 +179,19 @@ void RexxHashTable::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  TABENTRY *ep;                        /* table element pointer             */
-                                       /* hash table size                   */
-  size_t count = this->totalSlotsSize();
+    TABENTRY *ep;                        /* table element pointer             */
+                                         /* hash table size                   */
+    size_t count = this->totalSlotsSize();
 
-                                       /* loop through all of the entries   */
-  for (ep = this->entries; ep < this->entries + count; ep++)
-  {
-    if (ep->index != OREF_NULL)        /* have a value here?                */
+    /* loop through all of the entries   */
+    for (ep = this->entries; ep < this->entries + count; ep++)
     {
-        memory_mark_general(ep->index);  /* mark both the index and the       */
-        memory_mark_general(ep->value);  /* value                             */
+        if (ep->index != OREF_NULL)        /* have a value here?                */
+        {
+            memory_mark_general(ep->index);  /* mark both the index and the       */
+            memory_mark_general(ep->value);  /* value                             */
+        }
     }
-  }
 }
 
 void RexxHashTable::flatten(RexxEnvelope *envelope)
@@ -197,18 +199,18 @@ void RexxHashTable::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxHashTable)
-  size_t count = this->totalSlotsSize();  /* hash table size                   */
+    setUpFlatten(RexxHashTable)
+    size_t count = this->totalSlotsSize();  /* hash table size                   */
 
-  size_t i;
-
-   for (i=0; i < count ; i++) {
-     if (this->entries[i].index != OREF_NULL) {
-       flatten_reference(newThis->entries[i].index, envelope);
-       flatten_reference(newThis->entries[i].value, envelope);
-     }
-   }
-  cleanUpFlatten
+    for (size_t i=0; i < count ; i++)
+    {
+        if (this->entries[i].index != OREF_NULL)
+        {
+            flatten_reference(newThis->entries[i].index, envelope);
+            flatten_reference(newThis->entries[i].value, envelope);
+        }
+    }
+    cleanUpFlatten
 }
 
 RexxHashTable * RexxHashTable::add(
@@ -219,18 +221,17 @@ RexxHashTable * RexxHashTable::add(
 /*            the new table is returned.                                      */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-
-  position = hashIndex(_index);         /* calculate the hash slot           */
-                                       /* if the hash slot is empty         */
-  if (this->entries[position].index == OREF_NULL) {
-                                       /* fill in both the value and index  */
-    OrefSet(this,this->entries[position].value, _value);
-    OrefSet(this,this->entries[position].index, _index);
-    return OREF_NULL;                  /* successful  addition              */
-  }
-                                       /* go insert                         */
-  return this->insert(_value, _index, position, FULL_TABLE);
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    /* if the hash slot is empty         */
+    if (this->entries[position].index == OREF_NULL)
+    {
+        /* fill in both the value and index  */
+        OrefSet(this,this->entries[position].value, _value);
+        OrefSet(this,this->entries[position].index, _index);
+        return OREF_NULL;                  /* successful  addition              */
+    }
+    /* go insert                         */
+    return this->insert(_value, _index, position, FULL_TABLE);
 }
 
 RexxHashTable * RexxHashTable::primitiveAdd(
@@ -241,18 +242,17 @@ RexxHashTable * RexxHashTable::primitiveAdd(
 /*            the new table is returned.                                      */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-
-  position = hashPrimitiveIndex(_index);   /* calculate the hash slot           */
-                                       /* if the hash slot is empty         */
-  if (this->entries[position].index == OREF_NULL) {
-                                       /* fill in both the value and index  */
-    OrefSet(this,this->entries[position].value, _value);
-    OrefSet(this,this->entries[position].index, _index);
-    return OREF_NULL;                  /* successful  addition              */
-  }
-                                       /* go insert                         */
-  return this->insert(_value, _index, position, PRIMITIVE_TABLE);
+    HashLink position = hashPrimitiveIndex(_index);   /* calculate the hash slot           */
+    /* if the hash slot is empty         */
+    if (this->entries[position].index == OREF_NULL)
+    {
+        /* fill in both the value and index  */
+        OrefSet(this,this->entries[position].value, _value);
+        OrefSet(this,this->entries[position].index, _index);
+        return OREF_NULL;                  /* successful  addition              */
+    }
+    /* go insert                         */
+    return this->insert(_value, _index, position, PRIMITIVE_TABLE);
 }
 
 
@@ -262,59 +262,68 @@ RexxObject *RexxHashTable::remove(
 /* Function:  Remove an element from a hash table                             */
 /******************************************************************************/
 {
-  HashLink position;                   /* target hash position              */
-  HashLink previous;                   /* previous hash position            */
-  HashLink _next;                      /* next hash position                */
-  RexxObject *removed;                 /* removed item value                */
+    HashLink _next;                      /* next hash position                */
+    RexxObject *removed;                 /* removed item value                */
 
-  position = hashIndex(_index);        /* calculate the hash slot           */
-  previous = NO_LINK;                  /* no previous slot yet              */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get a match?                      */
-      if (EQUAL_VALUE(_index, this->entries[position].index)) {
-                                       /* save the current value            */
-        removed = this->entries[position].value;
-                                       /* get the next pointer              */
-        _next = this->entries[position].next;
-        if (_next == NO_MORE) {        /* end of the chain?                 */
-                                       /* clear this slot entry             */
-          OrefSet(this,this->entries[position].index,OREF_NULL);
-          OrefSet(this,this->entries[position].value,OREF_NULL);
-          if (previous != NO_LINK)     /* if not the first of the chain     */
-          {
-              /* IH: In this special case we delete an item from the overhead and
-                     therefore might have to increase the free counter, otherwise
-                     hash table will be extended unnecessarily !!! */
-            if (position > this->free)
-                this->free = position;
-                                       /* break the link                    */
-            this->entries[previous].next = NO_MORE;
-          }
-        }                              /* non-terminal chain element        */
-        else {
-                                       /* close up the link                 */
-          this->entries[position].next = this->entries[_next].next;
-                                       /* copy value and index to current   */
-          OrefSet(this,this->entries[position].index,this->entries[_next].index);
-          OrefSet(this,this->entries[position].value,this->entries[_next].value);
-                                       /* clear the next entry              */
-          OrefSet(this,this->entries[_next].index,OREF_NULL);
-          OrefSet(this,this->entries[_next].value,OREF_NULL);
-                                       /* set to "pristine" condition       */
-          this->entries[_next].next = NO_MORE;
-          if (this->free < _next)       /* new-low water mark?               */
-            this->free = _next;         /* reset to this point               */
-        }
-        return removed;                /* return removed element value      */
-      }
-      else
-        previous = position;           /* remember previous member          */
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  return OREF_NULL;                    /* removed item not found            */
+    HashLink position = hashIndex(_index);        /* calculate the hash slot           */
+    HashLink previous = NO_LINK;                  /* no previous slot yet              */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get a match?                      */
+            if (EQUAL_VALUE(_index, this->entries[position].index))
+            {
+                /* save the current value            */
+                removed = this->entries[position].value;
+                /* get the next pointer              */
+                _next = this->entries[position].next;
+                if (_next == NO_MORE)
+                {        /* end of the chain?                 */
+                         /* clear this slot entry             */
+                    OrefSet(this,this->entries[position].index,OREF_NULL);
+                    OrefSet(this,this->entries[position].value,OREF_NULL);
+                    if (previous != NO_LINK)     /* if not the first of the chain     */
+                    {
+                        /* IH: In this special case we delete an item from the overhead and
+                               therefore might have to increase the free counter, otherwise
+                               hash table will be extended unnecessarily !!! */
+                        if (position > this->free)
+                        {
+                            this->free = position;
+                        }
+                        /* break the link                    */
+                        this->entries[previous].next = NO_MORE;
+                    }
+                }                              /* non-terminal chain element        */
+                else
+                {
+                    /* close up the link                 */
+                    this->entries[position].next = this->entries[_next].next;
+                    /* copy value and index to current   */
+                    OrefSet(this,this->entries[position].index,this->entries[_next].index);
+                    OrefSet(this,this->entries[position].value,this->entries[_next].value);
+                    /* clear the next entry              */
+                    OrefSet(this,this->entries[_next].index,OREF_NULL);
+                    OrefSet(this,this->entries[_next].value,OREF_NULL);
+                    /* set to "pristine" condition       */
+                    this->entries[_next].next = NO_MORE;
+                    if (this->free < _next)       /* new-low water mark?               */
+                    {
+                        this->free = _next;         /* reset to this point               */
+                    }
+                }
+                return removed;                /* return removed element value      */
+            }
+            else
+            {
+                previous = position;           /* remember previous member          */
+            }
+                                               /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    return OREF_NULL;                    /* removed item not found            */
 }
 
 RexxObject *RexxHashTable::primitiveRemove(
@@ -323,60 +332,69 @@ RexxObject *RexxHashTable::primitiveRemove(
 /* Function:  Remove an element from a hash table                             */
 /******************************************************************************/
 {
-  HashLink position;                   /* target hash position              */
-  HashLink previous;                   /* previous hash position            */
-  HashLink _next;                      /* next hash position                */
-  RexxObject *removed;                 /* removed item value                */
+    HashLink _next;                      /* next hash position                */
+    RexxObject *removed;                 /* removed item value                */
 
-  position = hashPrimitiveIndex(_index); /* calculate the hash slot           */
+    HashLink position = hashPrimitiveIndex(_index); /* calculate the hash slot           */
 
-  previous = NO_LINK;                  /* no previous slot yet              */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get a match?                      */
-      if (_index == this->entries[position].index) {
-                                       /* save the current value            */
-        removed = this->entries[position].value;
-                                       /* get the next pointer              */
-        _next = this->entries[position].next;
-        if (_next == NO_MORE) {         /* end of the chain?                 */
-                                       /* clear this slot entry             */
-          OrefSet(this,this->entries[position].index,OREF_NULL);
-          OrefSet(this,this->entries[position].value,OREF_NULL);
-          if (previous != NO_LINK)     /* if not the first of the chain     */
-          {
-              /* IH: In this special case we delete an item from the overhead and
-                     therefore might have to increase the free counter, otherwise
-                     hash table will be extended unnecessarily !!! */
-            if (position > this->free)
-                this->free = position;
-                                       /* break the link                    */
-            this->entries[previous].next = NO_MORE;
-          }
-        }                              /* non-terminal chain element        */
-        else {
-                                       /* close up the link                 */
-          this->entries[position].next = this->entries[_next].next;
-                                       /* copy value and index to current   */
-          OrefSet(this,this->entries[position].index,this->entries[_next].index);
-          OrefSet(this,this->entries[position].value,this->entries[_next].value);
-                                       /* clear the next entry              */
-          OrefSet(this,this->entries[_next].index,OREF_NULL);
-          OrefSet(this,this->entries[_next].value,OREF_NULL);
-                                       /* set to "pristine" condition       */
-          this->entries[_next].next = NO_MORE;
-          if (this->free < _next)      /* new-low water mark?               */
-            this->free = _next;         /* reset to this point               */
-        }
-        return removed;                /* return removed element value      */
-      }
-      else
-        previous = position;           /* remember previous member          */
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  return OREF_NULL;                    /* removed item not found            */
+    HashLink previous = NO_LINK;                  /* no previous slot yet              */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get a match?                      */
+            if (_index == this->entries[position].index)
+            {
+                /* save the current value            */
+                removed = this->entries[position].value;
+                /* get the next pointer              */
+                _next = this->entries[position].next;
+                if (_next == NO_MORE)
+                {         /* end of the chain?                 */
+                    /* clear this slot entry             */
+                    OrefSet(this,this->entries[position].index,OREF_NULL);
+                    OrefSet(this,this->entries[position].value,OREF_NULL);
+                    if (previous != NO_LINK)     /* if not the first of the chain     */
+                    {
+                        /* IH: In this special case we delete an item from the overhead and
+                               therefore might have to increase the free counter, otherwise
+                               hash table will be extended unnecessarily !!! */
+                        if (position > this->free)
+                        {
+                            this->free = position;
+                        }
+                        /* break the link                    */
+                        this->entries[previous].next = NO_MORE;
+                    }
+                }                              /* non-terminal chain element        */
+                else
+                {
+                    /* close up the link                 */
+                    this->entries[position].next = this->entries[_next].next;
+                    /* copy value and index to current   */
+                    OrefSet(this,this->entries[position].index,this->entries[_next].index);
+                    OrefSet(this,this->entries[position].value,this->entries[_next].value);
+                    /* clear the next entry              */
+                    OrefSet(this,this->entries[_next].index,OREF_NULL);
+                    OrefSet(this,this->entries[_next].value,OREF_NULL);
+                    /* set to "pristine" condition       */
+                    this->entries[_next].next = NO_MORE;
+                    if (this->free < _next)      /* new-low water mark?               */
+                    {
+                        this->free = _next;         /* reset to this point               */
+                    }
+                }
+                return removed;                /* return removed element value      */
+            }
+            else
+            {
+                previous = position;           /* remember previous member          */
+            }
+                                               /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    return OREF_NULL;                    /* removed item not found            */
 }
 
 RexxObject *RexxHashTable::removeItem(
@@ -387,53 +405,62 @@ RexxObject *RexxHashTable::removeItem(
 /*            the item is not found, .nil is returned.                        */
 /******************************************************************************/
 {
-  HashLink position;                   /* target hash position              */
-  HashLink previous;                   /* previous hash position            */
-  HashLink _next;                      /* next hash position                */
-  RexxObject * removed;                /* removed item value                */
+    HashLink _next;                      /* next hash position                */
+    RexxObject * removed;                /* removed item value                */
 
-  position = hashIndex(_index);         /* calculate the hash slot           */
-  previous = NO_LINK;                  /* no previous slot yet              */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get a match?                      */
-      if (EQUAL_VALUE(_index, this->entries[position].index) &&
-          EQUAL_VALUE(_value, this->entries[position].value)) {
-                                       /* save the current value            */
-        removed = this->entries[position].value;
-                                       /* get the next pointer              */
-        _next = this->entries[position].next;
-        if (_next == NO_MORE) {         /* end of the chain?                 */
-                                       /* clear this slot entry             */
-          OrefSet(this,this->entries[position].index,OREF_NULL);
-          OrefSet(this,this->entries[position].value,OREF_NULL);
-          if (previous != NO_LINK)     /* if not the first of the chain     */
-                                       /* break the link                    */
-            this->entries[previous].next = NO_MORE;
-        }                              /* non-terminal chain element        */
-        else {
-                                       /* close up the link                 */
-          this->entries[position].next = this->entries[_next].next;
-                                       /* copy value and index to current   */
-          OrefSet(this,this->entries[position].index,this->entries[_next].index);
-          OrefSet(this,this->entries[position].value,this->entries[_next].value);
-                                       /* clear the next entry              */
-          OrefSet(this,this->entries[_next].index,OREF_NULL);
-          OrefSet(this,this->entries[_next].value,OREF_NULL);
-                                       /* set to "pristine" condition       */
-          this->entries[_next].next = NO_MORE;
-          if (this->free < _next)       /* new-low water mark?               */
-            this->free = _next;         /* reset to this point               */
-        }
-        return removed;                /* return removed element value      */
-      }
-      else
-        previous = position;           /* remember previous member          */
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  return OREF_NULL;                    /* removed item not found            */
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    HashLink previous = NO_LINK;                  /* no previous slot yet              */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get a match?                      */
+            if (EQUAL_VALUE(_index, this->entries[position].index) &&
+                EQUAL_VALUE(_value, this->entries[position].value))
+            {
+                /* save the current value            */
+                removed = this->entries[position].value;
+                /* get the next pointer              */
+                _next = this->entries[position].next;
+                if (_next == NO_MORE)
+                {         /* end of the chain?                 */
+                    /* clear this slot entry             */
+                    OrefSet(this,this->entries[position].index,OREF_NULL);
+                    OrefSet(this,this->entries[position].value,OREF_NULL);
+                    if (previous != NO_LINK)     /* if not the first of the chain     */
+                    {
+                        /* break the link                    */
+                        this->entries[previous].next = NO_MORE;
+                    }
+                }                              /* non-terminal chain element        */
+                else
+                {
+                    /* close up the link                 */
+                    this->entries[position].next = this->entries[_next].next;
+                    /* copy value and index to current   */
+                    OrefSet(this,this->entries[position].index,this->entries[_next].index);
+                    OrefSet(this,this->entries[position].value,this->entries[_next].value);
+                    /* clear the next entry              */
+                    OrefSet(this,this->entries[_next].index,OREF_NULL);
+                    OrefSet(this,this->entries[_next].value,OREF_NULL);
+                    /* set to "pristine" condition       */
+                    this->entries[_next].next = NO_MORE;
+                    if (this->free < _next)       /* new-low water mark?               */
+                    {
+                        this->free = _next;         /* reset to this point               */
+                    }
+                }
+                return removed;                /* return removed element value      */
+            }
+            else
+            {
+                previous = position;           /* remember previous member          */
+            }
+                                               /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    return OREF_NULL;                    /* removed item not found            */
 }
 
 
@@ -445,52 +472,61 @@ RexxObject *RexxHashTable::primitiveRemoveItem(
 /*            the item is not found, .nil is returned.                        */
 /******************************************************************************/
 {
-  HashLink position;                   /* target hash position              */
-  HashLink previous;                   /* previous hash position            */
-  HashLink _next;                      /* next hash position                */
-  RexxObject * removed;                /* removed item value                */
+    HashLink _next;                      /* next hash position                */
+    RexxObject * removed;                /* removed item value                */
 
-  position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
-  previous = NO_LINK;                  /* no previous slot yet              */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get a match?                      */
-      if (_index == this->entries[position].index && _value == this->entries[position].value) {
-                                       /* save the current value            */
-        removed = this->entries[position].value;
-                                       /* get the next pointer              */
-        _next = this->entries[position].next;
-        if (_next == NO_MORE) {        /* end of the chain?                 */
-                                       /* clear this slot entry             */
-          OrefSet(this,this->entries[position].index,OREF_NULL);
-          OrefSet(this,this->entries[position].value,OREF_NULL);
-          if (previous != NO_LINK)     /* if not the first of the chain     */
-                                       /* break the link                    */
-            this->entries[previous].next = NO_MORE;
-        }                              /* non-terminal chain element        */
-        else {
-                                       /* close up the link                 */
-          this->entries[position].next = this->entries[_next].next;
-                                       /* copy value and index to current   */
-          OrefSet(this,this->entries[position].index,this->entries[_next].index);
-          OrefSet(this,this->entries[position].value,this->entries[_next].value);
-                                       /* clear the next entry              */
-          OrefSet(this,this->entries[_next].index,OREF_NULL);
-          OrefSet(this,this->entries[_next].value,OREF_NULL);
-                                       /* set to "pristine" condition       */
-          this->entries[_next].next = NO_MORE;
-          if (this->free < _next)       /* new-low water mark?               */
-            this->free = _next;         /* reset to this point               */
-        }
-        return removed;                /* return removed element value      */
-      }
-      else
-        previous = position;           /* remember previous member          */
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  return OREF_NULL;                    /* removed item not found            */
+    HashLink position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
+    HashLink previous = NO_LINK;                  /* no previous slot yet              */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get a match?                      */
+            if (_index == this->entries[position].index && _value == this->entries[position].value)
+            {
+                /* save the current value            */
+                removed = this->entries[position].value;
+                /* get the next pointer              */
+                _next = this->entries[position].next;
+                if (_next == NO_MORE)
+                {        /* end of the chain?                 */
+                         /* clear this slot entry             */
+                    OrefSet(this,this->entries[position].index,OREF_NULL);
+                    OrefSet(this,this->entries[position].value,OREF_NULL);
+                    if (previous != NO_LINK)     /* if not the first of the chain     */
+                    {
+                        /* break the link                    */
+                        this->entries[previous].next = NO_MORE;
+                    }
+                }                              /* non-terminal chain element        */
+                else
+                {
+                    /* close up the link                 */
+                    this->entries[position].next = this->entries[_next].next;
+                    /* copy value and index to current   */
+                    OrefSet(this,this->entries[position].index,this->entries[_next].index);
+                    OrefSet(this,this->entries[position].value,this->entries[_next].value);
+                    /* clear the next entry              */
+                    OrefSet(this,this->entries[_next].index,OREF_NULL);
+                    OrefSet(this,this->entries[_next].value,OREF_NULL);
+                    /* set to "pristine" condition       */
+                    this->entries[_next].next = NO_MORE;
+                    if (this->free < _next)       /* new-low water mark?               */
+                    {
+                        this->free = _next;         /* reset to this point               */
+                    }
+                }
+                return removed;                /* return removed element value      */
+            }
+            else
+            {
+                previous = position;           /* remember previous member          */
+            }
+                                               /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    return OREF_NULL;                    /* removed item not found            */
 }
 
 RexxObject *RexxHashTable::primitiveHasItem(
@@ -501,20 +537,22 @@ RexxObject *RexxHashTable::primitiveHasItem(
 /*            table.  Return true if found, false other wise.                 */
 /******************************************************************************/
 {
-  HashLink position;                   /* target hash position              */
-
-  position = hashPrimitiveIndex(_index);    /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get a match?                      */
-      if (_index == this->entries[position].index && _value == this->entries[position].value)
-                                       /* got the one we want               */
-        return (RexxObject *)TheTrueObject;
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  return (RexxObject *)TheFalseObject; /* item was not found                */
+    HashLink position = hashPrimitiveIndex(_index);    /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get a match?                      */
+            if (_index == this->entries[position].index && _value == this->entries[position].value)
+            {
+                /* got the one we want               */
+                return(RexxObject *)TheTrueObject;
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    return(RexxObject *)TheFalseObject; /* item was not found                */
 }
 
 RexxObject *RexxHashTable::hasItem(
@@ -525,21 +563,23 @@ RexxObject *RexxHashTable::hasItem(
 /*            table.  Return true if found, false other wise.                 */
 /******************************************************************************/
 {
-  HashLink position;                   /* target hash position              */
-
-  position = hashIndex(_index);         /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get a match?                      */
-      if (EQUAL_VALUE(_index, this->entries[position].index) &&
-          EQUAL_VALUE(_value, this->entries[position].value))
-                                       /* got the one we want               */
-        return (RexxObject *)TheTrueObject;
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  return (RexxObject *)TheFalseObject; /* item was not found                */
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get a match?                      */
+            if (EQUAL_VALUE(_index, this->entries[position].index) &&
+                EQUAL_VALUE(_value, this->entries[position].value))
+            {
+                /* got the one we want               */
+                return(RexxObject *)TheTrueObject;
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    return(RexxObject *)TheFalseObject; /* item was not found                */
 }
 
 
@@ -616,33 +656,40 @@ RexxObject *RexxHashTable::nextItem(
 /*            as possible, relying solely on object identify for a match.     */
 /******************************************************************************/
 {
-  HashLink position;                   /* target hash position              */
-  RexxObject *scope;                   /* returned scope                    */
+    RexxObject *scope;                   /* returned scope                    */
 
-  position = hashIndex(_index);         /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get a match?                      */
-      if (this->entries[position].index == _index && this->entries[position].value == _value) {
-        while ((position = this->entries[position].next) != NO_MORE) {
-                                       /* same index value?                 */
-          if (this->entries[position].index == _index)
-                                       /* this is the value we want         */
-            return this->entries[position].value;
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get a match?                      */
+            if (this->entries[position].index == _index && this->entries[position].value == _value)
+            {
+                while ((position = this->entries[position].next) != NO_MORE)
+                {
+                    /* same index value?                 */
+                    if (this->entries[position].index == _index)
+                    {
+                        /* this is the value we want         */
+                        return this->entries[position].value;
+                    }
+                }
+                return TheNilObject;           /* didn't find what we wanted        */
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+        /* must be added via setmethod, so   */
+        scope = this->primitiveGet(_index);/* return first one for this index   */
+                                           /* truely not there?                 */
+        if (scope == (RexxObject *)OREF_NULL)
+        {
+            return TheNilObject;             /* return a failure                  */
         }
-        return TheNilObject;           /* didn't find what we wanted        */
-      }
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-                                       /* must be added via setmethod, so   */
-    scope = this->primitiveGet(_index);/* return first one for this index   */
-                                       /* truely not there?                 */
-    if (scope == (RexxObject *)OREF_NULL)
-      return TheNilObject;             /* return a failure                  */
-    return scope;                      /* return the first scope            */
-  }
-  return TheNilObject;                 /* item was not found                */
+        return scope;                      /* return the first scope            */
+    }
+    return TheNilObject;                 /* item was not found                */
 }
 
 
@@ -656,33 +703,40 @@ RexxObject *RexxHashTable::primitiveNextItem(
 /*            as possible, relying solely on object identify for a match.     */
 /******************************************************************************/
 {
-  HashLink position;                   /* target hash position              */
-  RexxObject *scope;                   /* returned scope                    */
+    RexxObject *scope;                   /* returned scope                    */
 
-  position = hashPrimitiveIndex(_index); /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get a match?                      */
-      if (this->entries[position].index == _index && this->entries[position].value == _value) {
-        while ((position = this->entries[position].next) != NO_MORE) {
-                                       /* same index value?                 */
-          if (this->entries[position].index == _index)
-                                       /* this is the value we want         */
-            return this->entries[position].value;
+    HashLink position = hashPrimitiveIndex(_index); /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get a match?                      */
+            if (this->entries[position].index == _index && this->entries[position].value == _value)
+            {
+                while ((position = this->entries[position].next) != NO_MORE)
+                {
+                    /* same index value?                 */
+                    if (this->entries[position].index == _index)
+                    {
+                        /* this is the value we want         */
+                        return this->entries[position].value;
+                    }
+                }
+                return TheNilObject;           /* didn't find what we wanted        */
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+        /* must be added via setmethod, so   */
+        scope = this->primitiveGet(_index); /* return first one for this index   */
+        /* truely not there?                 */
+        if (scope == (RexxObject *)OREF_NULL)
+        {
+            return TheNilObject;             /* return a failure                  */
         }
-        return TheNilObject;           /* didn't find what we wanted        */
-      }
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-                                       /* must be added via setmethod, so   */
-    scope = this->primitiveGet(_index); /* return first one for this index   */
-                                       /* truely not there?                 */
-    if (scope == (RexxObject *)OREF_NULL)
-      return TheNilObject;             /* return a failure                  */
-    return scope;                      /* return the first scope            */
-  }
-  return TheNilObject;                 /* item was not found                */
+        return scope;                      /* return the first scope            */
+    }
+    return TheNilObject;                 /* item was not found                */
 }
 
 RexxArray  *RexxHashTable::getAll(
@@ -691,37 +745,41 @@ RexxArray  *RexxHashTable::getAll(
 /* Function:  Get all elements with a specified index as an array             */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-  size_t count;                        /* count of items to return          */
-  RexxArray  *result;                  /* returned result                   */
-  size_t i;                            /* loop counter                      */
+    size_t count = 0;                           /* no items found yet                */
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* if got a match                    */
+            if (EQUAL_VALUE(_index, this->entries[position].index))
+            {
+                count++;                       /* bump our counter                  */
+            }
+                                               /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    else
+    {
+        /* no elements found                 */
+        return(RexxArray *)TheNullArray->copy();
+    }
 
-  count = 0;                           /* no items found yet                */
-  position = hashIndex(_index);         /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* if got a match                    */
-      if (EQUAL_VALUE(_index, this->entries[position].index))
-        count++;                       /* bump our counter                  */
-                                       /* step to the next link             */
+    RexxArray *result = new_array(count);           /* get proper size result array      */
+    size_t i = 1;                               /* start at the first element        */
+    position = hashIndex(_index);         /* calculate the hash slot           */
+    do
+    {                                 /* while more items in chain         */
+                                      /* if got a match                    */
+        if (EQUAL_VALUE(_index, this->entries[position].index))
+        {
+            /* copy the value into our array     */
+            result->put(this->entries[position].value,i++);
+        }
+        /* step to the next link             */
     } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  else
-                                       /* no elements found                 */
-    return (RexxArray *)TheNullArray->copy();
-
-  result = new_array(count);           /* get proper size result array      */
-  i = 1;                               /* start at the first element        */
-  position = hashIndex(_index);         /* calculate the hash slot           */
-  do {                                 /* while more items in chain         */
-                                       /* if got a match                    */
-    if (EQUAL_VALUE(_index, this->entries[position].index))
-                                       /* copy the value into our array     */
-      result->put(this->entries[position].value,i++);
-                                       /* step to the next link             */
-  } while ((position = this->entries[position].next) != NO_MORE);
-  return result;                       /* return the result array           */
+    return result;                       /* return the result array           */
 }
 
 RexxArray  *RexxHashTable::primitiveGetAll(
@@ -730,37 +788,41 @@ RexxArray  *RexxHashTable::primitiveGetAll(
 /* Function:  Get all elements with a specified index as an array             */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-  size_t count;                        /* count of items to return          */
-  RexxArray  *result;                  /* returned result                   */
-  size_t i;                            /* loop counter                      */
+    size_t count = 0;                           /* no items found yet                */
+    HashLink position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* if got a match                    */
+            if (_index == this->entries[position].index)
+            {
+                count++;                       /* bump our counter                  */
+            }
+                                               /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    else
+    {
+        /* no elements found                 */
+        return(RexxArray *)TheNullArray->copy();
+    }
 
-  count = 0;                           /* no items found yet                */
-  position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* if got a match                    */
-      if (_index == this->entries[position].index)
-        count++;                       /* bump our counter                  */
-                                       /* step to the next link             */
+    RexxArray *result = new_array(count);           /* get proper size result array      */
+    size_t i = 1;                               /* start at the first element        */
+    position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
+    do
+    {                                 /* while more items in chain         */
+                                      /* if got a match                    */
+        if (_index == this->entries[position].index)
+        {
+            /* copy the value into our array     */
+            result->put(this->entries[position].value,i++);
+        }
+        /* step to the next link             */
     } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  else
-                                       /* no elements found                 */
-    return (RexxArray *)TheNullArray->copy();
-
-  result = new_array(count);           /* get proper size result array      */
-  i = 1;                               /* start at the first element        */
-  position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
-  do {                                 /* while more items in chain         */
-                                       /* if got a match                    */
-    if (_index == this->entries[position].index)
-                                       /* copy the value into our array     */
-      result->put(this->entries[position].value,i++);
-                                       /* step to the next link             */
-  } while ((position = this->entries[position].next) != NO_MORE);
-  return result;                       /* return the result array           */
+    return result;                       /* return the result array           */
 }
 
 RexxArray *RexxHashTable::stringGetAll(
@@ -770,46 +832,47 @@ RexxArray *RexxHashTable::stringGetAll(
 /*            lookup semantics)                                               */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-  size_t count;                        /* count of items to return          */
-  RexxArray *result;                   /* returned result                   */
-  size_t i;                            /* loop counter                      */
-  const char *data;                    /* string data                       */
-  size_t length;                       /* string length                     */
-  RexxString *entry;                   /* current compare entry             */
+    const char *data = _index->getStringData();      /* get the string data               */
+    size_t length = _index->getLength();        /* and the length also               */
+    size_t count = 0;                           /* no items found yet                */
+    HashLink position = hashStringIndex(_index);   /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get the entry                     */
+            RexxString *entry = (RexxString *)this->entries[position].index;
+            /* if got a match                    */
+            if (_index == entry || entry->memCompare(data, length))
+            {
+                count++;                       /* bump our counter                  */
+            }
+                                               /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    else
+    {
+        /* no elements found                 */
+        return(RexxArray *)TheNullArray->copy();
+    }
 
-  data = _index->getStringData();      /* get the string data               */
-  length = _index->getLength();        /* and the length also               */
-  count = 0;                           /* no items found yet                */
-  position = hashStringIndex(_index);   /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get the entry                     */
-      entry = (RexxString *)this->entries[position].index;
-                                       /* if got a match                    */
-      if (_index == entry || entry->memCompare(data, length))
-        count++;                       /* bump our counter                  */
-                                       /* step to the next link             */
+    RexxArray *result = new_array(count);           /* get proper size result array      */
+    size_t i = 1;                               /* start at the first element        */
+    position = hashIndex(_index);        /* calculate the hash slot           */
+    do
+    {                                 /* while more items in chain         */
+                                      /* get the entry                     */
+        RexxString *entry = (RexxString *)this->entries[position].index;
+        /* if got a match                    */
+        if (_index == entry || entry->memCompare(data, length))
+        {
+            /* copy the value into our array     */
+            result->put(this->entries[position].value,i++);
+        }
+        /* step to the next link             */
     } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  else
-                                       /* no elements found                 */
-    return (RexxArray *)TheNullArray->copy();
-
-  result = new_array(count);           /* get proper size result array      */
-  i = 1;                               /* start at the first element        */
-  position = hashIndex(_index);        /* calculate the hash slot           */
-  do {                                 /* while more items in chain         */
-                                       /* get the entry                     */
-    entry = (RexxString *)this->entries[position].index;
-                                       /* if got a match                    */
-    if (_index == entry || entry->memCompare(data, length))
-                                       /* copy the value into our array     */
-      result->put(this->entries[position].value,i++);
-                                       /* step to the next link             */
-  } while ((position = this->entries[position].next) != NO_MORE);
-  return result;                       /* return the result array           */
+    return result;                       /* return the result array           */
 }
 
 RexxArray  *RexxHashTable::allIndex(
@@ -819,35 +882,38 @@ RexxArray  *RexxHashTable::allIndex(
 /*            item.                                                           */
 /******************************************************************************/
 {
-  size_t count;                        /* count of items to return          */
-  RexxArray * result;                  /* returned result                   */
-  size_t i;                            /* loop counter                      */
-  size_t j;                            /* array index                       */
-
-  count = 0;                           /* no items found yet                */
-                                       /* loop through them all             */
-  for (i = this->totalSlotsSize(); i > 0; i--) {
-                                       /* real entry?                       */
-    if (this->entries[i - 1].index != OREF_NULL) {
-                                       /* is this the item we want?         */
-      if (EQUAL_VALUE(_value, this->entries[i - 1].value))
-        count++;                       /* bump our counter                  */
+    size_t count = 0;                           /* no items found yet                */
+    /* loop through them all             */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        /* real entry?                       */
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            /* is this the item we want?         */
+            if (EQUAL_VALUE(_value, this->entries[i - 1].value))
+            {
+                count++;                       /* bump our counter                  */
+            }
+        }
     }
-  }
 
-  result = new_array(count);           /* get proper size result array      */
-  j = 1;                               /* start at the first element        */
-                                       /* loop through them all             */
-  for (i = this->totalSlotsSize(); i > 0; i--) {
-                                       /* real entry?                       */
-    if (this->entries[i - 1].index != OREF_NULL) {
-                                       /* is this the item we want?         */
-      if (EQUAL_VALUE(_value, this->entries[i - 1].value))
-                                       /* copy the value into our array     */
-        result->put(this->entries[i - 1].index, j++);
+    RexxArray *result = new_array(count);           /* get proper size result array      */
+    size_t j = 1;                               /* start at the first element        */
+    /* loop through them all             */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        /* real entry?                       */
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            /* is this the item we want?         */
+            if (EQUAL_VALUE(_value, this->entries[i - 1].value))
+            {
+                /* copy the value into our array     */
+                result->put(this->entries[i - 1].index, j++);
+            }
+        }
     }
-  }
-  return result;                       /* return the result array           */
+    return result;                       /* return the result array           */
 }
 
 
@@ -859,23 +925,23 @@ RexxObject *RexxHashTable::getIndex(
 /*            indices.                                                        */
 /******************************************************************************/
 {
-  RexxObject *result;                  /* result index item                 */
-  size_t i;                            /* loop counter                      */
-
-  result = OREF_NULL;                  /* no item yet                       */
-                                       /* loop through them all             */
-  for (i = this->totalSlotsSize(); i > 0; i--) {
-                                       /* real entry?                       */
-    if (this->entries[i - 1].index != OREF_NULL) {
-                                       /* is this the item we want?         */
-      if (EQUAL_VALUE(_value, this->entries[i - 1].value)) {
-                                       /* get the index                     */
-        result = this->entries[i - 1].index;
-        break;                         /* finished                          */
-      }
+    RexxObject *result = OREF_NULL;                  /* no item yet                       */
+    /* loop through them all             */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        /* real entry?                       */
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            /* is this the item we want?         */
+            if (EQUAL_VALUE(_value, this->entries[i - 1].value))
+            {
+                /* get the index                     */
+                result = this->entries[i - 1].index;
+                break;                         /* finished                          */
+            }
+        }
     }
-  }
-  return result;                       /* return the count                  */
+    return result;                       /* return the count                  */
 }
 
 RexxObject *RexxHashTable::get(
@@ -884,20 +950,22 @@ RexxObject *RexxHashTable::get(
 /* Function:  Get an item from a hash table                                   */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-
-  position = hashIndex(_index);         /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* if got a match                    */
-      if (EQUAL_VALUE(_index, this->entries[position].index))
-                                       /* return this item's value          */
-        return this->entries[position].value;
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  return OREF_NULL;                    /* no value found                    */
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* if got a match                    */
+            if (EQUAL_VALUE(_index, this->entries[position].index))
+            {
+                /* return this item's value          */
+                return this->entries[position].value;
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    return OREF_NULL;                    /* no value found                    */
 }
 
 RexxObject *RexxHashTable::primitiveGet(
@@ -906,20 +974,22 @@ RexxObject *RexxHashTable::primitiveGet(
 /* Function:  Get an item from a hash table                                   */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-
-  position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* if got a match                    */
-      if (_index == this->entries[position].index)
-                                       /* return this item's value          */
-        return this->entries[position].value;
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  return OREF_NULL;                    /* no value found                    */
+    HashLink position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* if got a match                    */
+            if (_index == this->entries[position].index)
+            {
+                /* return this item's value          */
+                return this->entries[position].value;
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    return OREF_NULL;                    /* no value found                    */
 }
 
 RexxHashTable *RexxHashTable::insert(
@@ -931,72 +1001,77 @@ RexxHashTable *RexxHashTable::insert(
 /* Function:  Insert an element into an overflow location of a hash table     */
 /******************************************************************************/
 {
-  HashLink over;                       /* overflow slot location            */
-  HashLink low;                        /* low check bound                   */
-  RexxHashTable *newHash;              /* newly created hash table          */
-  TABENTRY *primeEntry = &(this->entries[position]);
+    HashLink over;                       /* overflow slot location            */
+    RexxHashTable *newHash;              /* newly created hash table          */
+    TABENTRY *primeEntry = &(this->entries[position]);
 
-  low = this->mainSlotsSize();         /* get low free bound                */
-  for (over = this->free;              /* look for overflow slot            */
-       over >= low;
-       over--) {
-    TABENTRY *entry = &(this->entries[over]);
-                                       /* find an empty slot?               */
-    if (entry->index == OREF_NULL) {
-                                       /* insert after hash slot            */
-      entry->next = primeEntry->next;
-                                       /* copy current index and value      */
-                                       /* to the overflow slot              */
-      OrefSet(this, entry->value, primeEntry->value);
-      OrefSet(this, entry->index, primeEntry->index);
-                                       /* set the new values in the first   */
-                                       /* chain entry                       */
-      OrefSet(this, primeEntry->value, _value);
-      OrefSet(this, primeEntry->index, _index);
-                                       /* set the overflow location         */
-      primeEntry->next = over;
-      this->free = over-1;             /* update free pointer               */
-      return OREF_NULL;                /* this was a successful addition    */
+    HashLink low = this->mainSlotsSize();         /* get low free bound                */
+    for (over = this->free;              /* look for overflow slot            */
+        over >= low;
+        over--)
+    {
+        TABENTRY *entry = &(this->entries[over]);
+        /* find an empty slot?               */
+        if (entry->index == OREF_NULL)
+        {
+            /* insert after hash slot            */
+            entry->next = primeEntry->next;
+            /* copy current index and value      */
+            /* to the overflow slot              */
+            OrefSet(this, entry->value, primeEntry->value);
+            OrefSet(this, entry->index, primeEntry->index);
+            /* set the new values in the first   */
+            /* chain entry                       */
+            OrefSet(this, primeEntry->value, _value);
+            OrefSet(this, primeEntry->index, _index);
+            /* set the overflow location         */
+            primeEntry->next = over;
+            this->free = over-1;             /* update free pointer               */
+            return OREF_NULL;                /* this was a successful addition    */
+        }
     }
-  }
-                                       /* allocate a larger hash table      */
-  newHash = new_hashtab(this->totalSlotsSize() * 2);
-  ProtectedObject p(newHash);
-  switch (type) {                      /* remerge based on the type         */
+    /* allocate a larger hash table      */
+    newHash = new_hashtab(this->totalSlotsSize() * 2);
+    ProtectedObject p(newHash);
+    switch (type)
+    {                      /* remerge based on the type         */
 
-    case STRING_TABLE:                 /* string based table                */
-      this->stringMerge(newHash);      /* do a string merge                 */
-      break;
+        case STRING_TABLE:                 /* string based table                */
+            this->stringMerge(newHash);      /* do a string merge                 */
+            break;
 
-    case PRIMITIVE_TABLE:              /* primitive object table            */
-      this->primitiveMerge(newHash);   /* do a primitive merge              */
-      break;
+        case PRIMITIVE_TABLE:              /* primitive object table            */
+            this->primitiveMerge(newHash);   /* do a primitive merge              */
+            break;
 
-    case FULL_TABLE:                   /* full table look ups               */
-      this->reMerge(newHash);          /* do a normal merge                 */
-      break;
-  }
+        case FULL_TABLE:                   /* full table look ups               */
+            this->reMerge(newHash);          /* do a normal merge                 */
+            break;
+    }
 
-  // primitive tables require a primitive index.
-  if (type == PRIMITIVE_TABLE)
-  {
-      position = newHash->hashPrimitiveIndex(_index);/* calculate the hash slot           */
-  }
-  else
-  {
+    // primitive tables require a primitive index.
+    if (type == PRIMITIVE_TABLE)
+    {
+        position = newHash->hashPrimitiveIndex(_index);/* calculate the hash slot           */
+    }
+    else
+    {
 
-      position = newHash->hashIndex(_index);/* calculate the hash slot           */
-  }
-                                       /* if the hash slot is empty         */
-  if (newHash->entries[position].index == OREF_NULL) {
-                                       /* fill in both the value and index  */
-    OrefSet(newHash, newHash->entries[position].value, _value);
-    OrefSet(newHash, newHash->entries[position].index, _index);
-  }
-  else
-                                       /* try to insert again               */
-    newHash->insert(_value, _index, position, type);
-  return newHash;                     /* return the new hash               */
+        position = newHash->hashIndex(_index);/* calculate the hash slot           */
+    }
+    /* if the hash slot is empty         */
+    if (newHash->entries[position].index == OREF_NULL)
+    {
+        /* fill in both the value and index  */
+        OrefSet(newHash, newHash->entries[position].value, _value);
+        OrefSet(newHash, newHash->entries[position].index, _index);
+    }
+    else
+    {
+        /* try to insert again               */
+        newHash->insert(_value, _index, position, type);
+    }
+    return newHash;                     /* return the new hash               */
 }
 
 RexxHashTable *RexxHashTable::stringAdd(
@@ -1006,19 +1081,20 @@ RexxHashTable *RexxHashTable::stringAdd(
 /* Function:  Add an element to a hash table, using only string searches      */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-
-  position = hashStringIndex(_index);   /* calculate the hash slot           */
-                                       /* if the hash slot is empty         */
-  if (this->entries[position].index == OREF_NULL) {
-                                       /* fill in both the value and index  */
-    OrefSet(this, this->entries[position].value, _value);
-    OrefSet(this, this->entries[position].index, _index);
-    return OREF_NULL;                  /* successful  addition              */
-  }
-  else                                 /* hash slot is full                 */
-                                       /* go insert                         */
-    return this->insert(_value, _index, position, STRING_TABLE);
+    HashLink position = hashStringIndex(_index);   /* calculate the hash slot           */
+    /* if the hash slot is empty         */
+    if (this->entries[position].index == OREF_NULL)
+    {
+        /* fill in both the value and index  */
+        OrefSet(this, this->entries[position].value, _value);
+        OrefSet(this, this->entries[position].index, _index);
+        return OREF_NULL;                  /* successful  addition              */
+    }
+    else                                 /* hash slot is full                 */
+    {
+        /* go insert                         */
+        return this->insert(_value, _index, position, STRING_TABLE);
+    }
 }
 
 RexxObject *RexxHashTable::stringGet(
@@ -1027,29 +1103,27 @@ RexxObject *RexxHashTable::stringGet(
 /* Function:  Search a hash table, restricting the search to string items.    */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-  const char *data;                    /* string data                       */
-  size_t length;                       /* string length                     */
-  RexxString *entry;                   /* current table entry               */
+    const char *data = _index->getStringData();            /* get the string data               */
+    size_t length = _index->getLength();              /* and the length also               */
 
-  data = _index->getStringData();            /* get the string data               */
-  length = _index->getLength();              /* and the length also               */
-
-  position = hashStringIndex(_index);  /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    do {                               /* while more items in chain         */
-                                       /* get the entry                     */
-      entry = (RexxString *)this->entries[position].index;
-                                       /* if got a match                    */
-      if (_index == entry || entry->memCompare(data, length)) {
-                                       /* return this item's value          */
-        return this->entries[position].value;
-      }
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-  }
-  return OREF_NULL;                    /* no value found                    */
+    HashLink position = hashStringIndex(_index);  /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* get the entry                     */
+            RexxString *entry = (RexxString *)this->entries[position].index;
+            /* if got a match                    */
+            if (_index == entry || entry->memCompare(data, length))
+            {
+                /* return this item's value          */
+                return this->entries[position].value;
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
+    return OREF_NULL;                    /* no value found                    */
 }
 
 RexxHashTable *RexxHashTable::stringPut(
@@ -1060,39 +1134,37 @@ RexxHashTable *RexxHashTable::stringPut(
 /*            matches.                                                        */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-  const char *data;                    /* string data                       */
-  size_t length;                       /* string length                     */
-  HashLink front;                      /* starting location                 */
-  RexxString *entry;                   /* current table entry               */
+    const char *data = _index->getStringData();            /* get the string data               */
+    size_t length = _index->getLength();              /* and the length also               */
 
-  data = _index->getStringData();            /* get the string data               */
-  length = _index->getLength();              /* and the length also               */
-
-  position = hashStringIndex(_index);   /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    front = position;                  /* save the starting location        */
-    do {                               /* while more items in chain         */
-                                       /* get the entry                     */
-      entry = (RexxString *)this->entries[position].index;
-                                       /* if got a match                    */
-      if (_index == entry || entry->memCompare(data, length)) {
-                                       /* set a new value                   */
-        OrefSet(this, this->entries[position].value, _value);
-        return OREF_NULL;              /* indicate success                  */
-      }
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-                                       /* go insert                         */
-    return this->insert(_value, _index, front, STRING_TABLE);
-  }
-  else {                               /* empty at this slot                */
-                                       /* fill in both the value and index  */
-    OrefSet(this,this->entries[position].value, _value);
-    OrefSet(this,this->entries[position].index, _index);
-    return OREF_NULL;                  /* successful  addition              */
-  }
+    HashLink position = hashStringIndex(_index);   /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        HashLink front = position;                  /* save the starting location        */
+        do
+        {                               /* while more items in chain         */
+                                        /* get the entry                     */
+            RexxString *entry = (RexxString *)this->entries[position].index;
+            /* if got a match                    */
+            if (_index == entry || entry->memCompare(data, length))
+            {
+                /* set a new value                   */
+                OrefSet(this, this->entries[position].value, _value);
+                return OREF_NULL;              /* indicate success                  */
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+        /* go insert                         */
+        return this->insert(_value, _index, front, STRING_TABLE);
+    }
+    else
+    {                               /* empty at this slot                */
+                                    /* fill in both the value and index  */
+        OrefSet(this,this->entries[position].value, _value);
+        OrefSet(this,this->entries[position].index, _index);
+        return OREF_NULL;                  /* successful  addition              */
+    }
 }
 
 RexxHashTable *RexxHashTable::put(
@@ -1103,31 +1175,32 @@ RexxHashTable *RexxHashTable::put(
 /*            a new hash table if there is an overflow situation.             */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-  HashLink front;                      /* starting hash position            */
-
-  position = hashIndex(_index);         /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    front = position;                  /* save the starting position        */
-    do {                               /* while more items in chain         */
-                                       /* if got a match                    */
-      if (EQUAL_VALUE(_index, this->entries[position].index)) {
-                                       /* set a new value                   */
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        HashLink front = position;                  /* save the starting position        */
+        do
+        {                               /* while more items in chain         */
+                                        /* if got a match                    */
+            if (EQUAL_VALUE(_index, this->entries[position].index))
+            {
+                /* set a new value                   */
+                OrefSet(this,this->entries[position].value, _value);
+                return OREF_NULL;              /* indicate success                  */
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+        /* go insert                         */
+        return this->insert(_value, _index, front, FULL_TABLE);
+    }
+    else
+    {                               /* empty at this slot                */
+                                    /* fill in both the value and index  */
         OrefSet(this,this->entries[position].value, _value);
-        return OREF_NULL;              /* indicate success                  */
-      }
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-                                       /* go insert                         */
-    return this->insert(_value, _index, front, FULL_TABLE);
-  }
-  else {                               /* empty at this slot                */
-                                       /* fill in both the value and index  */
-    OrefSet(this,this->entries[position].value, _value);
-    OrefSet(this,this->entries[position].index, _index);
-    return OREF_NULL;                  /* successful  addition              */
-  }
+        OrefSet(this,this->entries[position].index, _index);
+        return OREF_NULL;                  /* successful  addition              */
+    }
 }
 
 RexxHashTable *RexxHashTable::primitivePut(
@@ -1138,31 +1211,32 @@ RexxHashTable *RexxHashTable::primitivePut(
 /*            a new hash table if there is an overflow situation.             */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-  HashLink front;                      /* starting hash position            */
-
-  position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    front = position;                  /* save the starting position        */
-    do {                               /* while more items in chain         */
-                                       /* if got a match                    */
-      if (_index == this->entries[position].index) {
-                                       /* set a new value                   */
+    HashLink position = hashPrimitiveIndex(_index);  /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        HashLink front = position;                  /* save the starting position        */
+        do
+        {                               /* while more items in chain         */
+                                        /* if got a match                    */
+            if (_index == this->entries[position].index)
+            {
+                /* set a new value                   */
+                OrefSet(this,this->entries[position].value, _value);
+                return OREF_NULL;              /* indicate success                  */
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+        /* go insert                         */
+        return this->insert(_value, _index, front, PRIMITIVE_TABLE);
+    }
+    else
+    {                               /* empty at this slot                */
+                                    /* fill in both the value and index  */
         OrefSet(this,this->entries[position].value, _value);
-        return OREF_NULL;              /* indicate success                  */
-      }
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-                                       /* go insert                         */
-    return this->insert(_value, _index, front, PRIMITIVE_TABLE);
-  }
-  else {                               /* empty at this slot                */
-                                       /* fill in both the value and index  */
-    OrefSet(this,this->entries[position].value, _value);
-    OrefSet(this,this->entries[position].index, _index);
-    return OREF_NULL;                  /* successful  addition              */
-  }
+        OrefSet(this,this->entries[position].index, _index);
+        return OREF_NULL;                  /* successful  addition              */
+    }
 }
 
 RexxHashTable *RexxHashTable::putNodupe(
@@ -1173,29 +1247,30 @@ RexxHashTable *RexxHashTable::putNodupe(
 /*            duplicate entries.                                              */
 /******************************************************************************/
 {
-  HashLink position;                   /* current position                  */
-  HashLink front;                      /* starting hash position            */
-
-  position = hashIndex(_index);         /* calculate the hash slot           */
-                                       /* have an entry at this slot        */
-  if (this->entries[position].index != OREF_NULL) {
-    front = position;                  /* save the starting point           */
-    do {                               /* while more items in chain         */
-                                       /* if got match on index and value   */
-      if (EQUAL_VALUE(_index, this->entries[position].index) && this->entries[position].value == _value) {
-        return OREF_NULL;              /* indicate success                  */
-      }
-                                       /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
-                                       /* go insert                         */
-    return this->insert(_value, _index, front, FULL_TABLE);
-  }
-  else {                               /* empty at this slot                */
-                                       /* fill in both the value and index  */
-    OrefSet(this,this->entries[position].value, _value);
-    OrefSet(this,this->entries[position].index, _index);
-    return OREF_NULL;                  /* successful  addition              */
-  }
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        HashLink front = position;                  /* save the starting point           */
+        do
+        {                               /* while more items in chain         */
+                                        /* if got match on index and value   */
+            if (EQUAL_VALUE(_index, this->entries[position].index) && this->entries[position].value == _value)
+            {
+                return OREF_NULL;              /* indicate success                  */
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+        /* go insert                         */
+        return this->insert(_value, _index, front, FULL_TABLE);
+    }
+    else
+    {                               /* empty at this slot                */
+                                    /* fill in both the value and index  */
+        OrefSet(this,this->entries[position].value, _value);
+        OrefSet(this,this->entries[position].index, _index);
+        return OREF_NULL;                  /* successful  addition              */
+    }
 }
 
 RexxObject *RexxHashTable::value(
@@ -1204,12 +1279,16 @@ RexxObject *RexxHashTable::value(
 /* Function:  Return the value associated with a numeric index.               */
 /******************************************************************************/
 {
-                                       /* within the bounds?                */
-  if (position < this->totalSlotsSize())
-                                       /* return the entry value            */
-    return this->entries[position].value;
-  else
-    return OREF_NULL;                  /* return nothing                    */
+    /* within the bounds?                */
+    if (position < this->totalSlotsSize())
+    {
+        /* return the entry value            */
+        return this->entries[position].value;
+    }
+    else
+    {
+        return OREF_NULL;                  /* return nothing                    */
+    }
 }
 
 size_t RexxHashTable::totalEntries(void)
@@ -1217,17 +1296,17 @@ size_t RexxHashTable::totalEntries(void)
 /* Function:  Return the count of entries in a hash table.                    */
 /******************************************************************************/
 {
-  size_t result;                       /* count of items                    */
-  size_t i;                            /* loop counter                      */
-
-  result = 0;                          /* no items yet                      */
-                                       /* loop through them all             */
-  for (i = this->totalSlotsSize(); i > 0; i--) {
-                                       /* real entry?                       */
-    if (this->entries[i - 1].index != OREF_NULL)
-      result++;                        /* count it!                         */
-  }
-  return result;                       /* return the count                  */
+    size_t result = 0;                          /* no items yet                      */
+    /* loop through them all             */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        /* real entry?                       */
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            result++;                        /* count it!                         */
+        }
+    }
+    return result;                       /* return the count                  */
 }
 
 
@@ -1237,16 +1316,17 @@ RexxObject *RexxHashTable::merge(
 /* Function:  Merge a hash table into another collection target.              */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-
-                                       /* loop through them all             */
-  for (i = this->totalSlotsSize(); i > 0; i--) {
-                                       /* is this a real entry?             */
-    if (this->entries[i - 1].index != OREF_NULL)
-                                       /* merge into the target collection  */
-      target->mergeItem(this->entries[i - 1].value,this->entries[i - 1].index);
-  }
-  return OREF_NULL;                    /* always returns nothing            */
+    /* loop through them all             */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        /* is this a real entry?             */
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            /* merge into the target collection  */
+            target->mergeItem(this->entries[i - 1].value,this->entries[i - 1].index);
+        }
+    }
+    return OREF_NULL;                    /* always returns nothing            */
 }
 
 
@@ -1257,15 +1337,16 @@ void RexxHashTable::reMerge(
 /*             expansion.                                                     */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-
-                                       /* loop through them all             */
-  for (i = this->totalSlotsSize(); i > 0; i--) {
-                                       /* is this a real entry?             */
-    if (this->entries[i - 1].index != OREF_NULL)
-                                       /* add this item to the new hash     */
-      newHash->add(this->entries[i - 1].value, this->entries[i - 1].index);
-  }
+    /* loop through them all             */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        /* is this a real entry?             */
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            /* add this item to the new hash     */
+            newHash->add(this->entries[i - 1].value, this->entries[i - 1].index);
+        }
+    }
 }
 
 void RexxHashTable::primitiveMerge(
@@ -1275,15 +1356,16 @@ void RexxHashTable::primitiveMerge(
 /*             expansion.                                                     */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-
-                                       /* loop through them all             */
-  for (i = this->totalSlotsSize(); i > 0; i--) {
-                                       /* is this a real entry?             */
-    if (this->entries[i - 1].index != OREF_NULL)
-                                       /* add this item to the new hash     */
-      newHash->primitiveAdd(this->entries[i - 1].value, this->entries[i - 1].index);
-  }
+    /* loop through them all             */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        /* is this a real entry?             */
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            /* add this item to the new hash     */
+            newHash->primitiveAdd(this->entries[i - 1].value, this->entries[i - 1].index);
+        }
+    }
 }
 
 RexxObject *RexxHashTable::stringMerge(
@@ -1292,16 +1374,17 @@ RexxObject *RexxHashTable::stringMerge(
 /* Function:  Merge a string based hash table into another                    */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-
-                                       /* loop through them all             */
-  for (i = this->totalSlotsSize(); i > 0; i--) {
-                                       /* is this a real entry?             */
-    if (this->entries[i - 1].index != OREF_NULL)
-                                       /* merge into the target collection  */
-      target->stringAdd(this->entries[i - 1].value, (RexxString *)this->entries[i - 1].index);
-  }
-  return OREF_NULL;                    /* always returns nothing            */
+    /* loop through them all             */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        /* is this a real entry?             */
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            /* merge into the target collection  */
+            target->stringAdd(this->entries[i - 1].value, (RexxString *)this->entries[i - 1].index);
+        }
+    }
+    return OREF_NULL;                    /* always returns nothing            */
 }
 
 HashLink RexxHashTable::first(void)
@@ -1309,12 +1392,11 @@ HashLink RexxHashTable::first(void)
 /* Function:  Return the index of the first item in the hash table            */
 /******************************************************************************/
 {
-  size_t i;                            /* loop founter                      */
-
-                                       /* loop until first item is found or */
-                                       /* we reach the end of the table     */
-  for (i = 0; i < this->totalSlotsSize() && this->entries[i].index == OREF_NULL; i++) ;
-  return i;                            /* return the position               */
+    /* loop until first item is found or */
+    /* we reach the end of the table     */
+    HashLink i;
+    for (i = 0; i < this->totalSlotsSize() && this->entries[i].index == OREF_NULL; i++) ;
+    return i;                            /* return the position               */
 }
 
 HashLink RexxHashTable::next(
@@ -1323,12 +1405,11 @@ HashLink RexxHashTable::next(
 /* Function:  Return the index of the "next" item after an index              */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-
-                                       /* loop until first item is found or */
-                                       /* we reach the end of the table     */
-  for (i = position+1; i < this->totalSlotsSize() && this->entries[i].index == OREF_NULL; i++) ;
-  return i;                            /* return the position               */
+    /* loop until first item is found or */
+    /* we reach the end of the table     */
+    HashLink i;
+    for (i = position+1; i < this->totalSlotsSize() && this->entries[i].index == OREF_NULL; i++) ;
+    return i;                            /* return the position               */
 }
 
 RexxObject *RexxHashTable::mergeItem(
@@ -1338,8 +1419,8 @@ RexxObject *RexxHashTable::mergeItem(
 /* Function:  Merge an individual item into this hash table                   */
 /******************************************************************************/
 {
-  this->putNodupe(_value, _index);       /* add without duplicating           */
-  return OREF_NULL;                    /* always return nothing             */
+    this->putNodupe(_value, _index);       /* add without duplicating           */
+    return OREF_NULL;                    /* always return nothing             */
 }
 
 RexxObject *RexxHashTable::replace(
@@ -1350,8 +1431,8 @@ RexxObject *RexxHashTable::replace(
 /******************************************************************************/
 {
                                        /* just set the new value            */
-  OrefSet(this,this->entries[position].value, _value);
-  return OREF_NULL;                    /* always return nothing             */
+    OrefSet(this,this->entries[position].value, _value);
+    return OREF_NULL;                    /* always return nothing             */
 }
 
 RexxArray  *RexxHashTable::allItems()
@@ -1359,20 +1440,19 @@ RexxArray  *RexxHashTable::allItems()
 /* Function:  Create an array containing the hash table values                */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t j;                            /* loop counter                      */
-  RexxArray *result;                   /* result array                      */
-
-  result = new_array(items());         /* get a new array                   */
-  j = 0;                               /* set the insertion point           */
-                                       /* loop through all of the items     */
-  for (i = 0; i < this->totalSlotsSize(); i++) {
-                                       /* real entry?                       */
-    if (this->entries[i].index != OREF_NULL)
-                                       /* copy the value into the array     */
-      result->put(this->entries[i].value, ++j);
-  }
-  return result;                       /* return the result array           */
+    RexxArray *result = new_array(items());         /* get a new array                   */
+    size_t j = 0;                               /* set the insertion point           */
+    /* loop through all of the items     */
+    for (size_t i = 0; i < this->totalSlotsSize(); i++)
+    {
+        /* real entry?                       */
+        if (this->entries[i].index != OREF_NULL)
+        {
+            /* copy the value into the array     */
+            result->put(this->entries[i].value, ++j);
+        }
+    }
+    return result;                       /* return the result array           */
 }
 
 
@@ -1480,20 +1560,19 @@ RexxArray *RexxHashTable::allIndexes()
 /* Function:  Create an array containing the hash table indexes.              */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t j;                            /* loop counter                      */
-  RexxArray *result;                   /* result array                      */
-
-  result = new_array(items());         /* get a new array                   */
-  j = 0;                               /* set the insertion point           */
-                                       /* loop through all of the items     */
-  for (i = 0; i < this->totalSlotsSize(); i++) {
-                                       /* real entry?                       */
-    if (this->entries[i].index != OREF_NULL)
-                                       /* copy the index into the array     */
-      result->put(this->entries[i].index, ++j);
-  }
-  return result;                       /* return the result array           */
+    RexxArray *result = new_array(items());         /* get a new array                   */
+    size_t j = 0;                               /* set the insertion point           */
+    /* loop through all of the items     */
+    for (size_t i = 0; i < this->totalSlotsSize(); i++)
+    {
+        /* real entry?                       */
+        if (this->entries[i].index != OREF_NULL)
+        {
+            /* copy the index into the array     */
+            result->put(this->entries[i].index, ++j);
+        }
+    }
+    return result;                       /* return the result array           */
 }
 
 
@@ -1502,30 +1581,26 @@ RexxSupplier *RexxHashTable::supplier(void)
 /* Function:  create a supplier from a hash table                             */
 /******************************************************************************/
 {
-  size_t count;                        /* count of values                   */
-  size_t i;                            /* loop counter                      */
-  size_t j;                            /* loop counter                      */
-  RexxArray *values;                   /* value array                       */
-  RexxArray *indexes;                  /* index array                       */
+    size_t count = items();                     /* no items yet                      */
 
-  count = items();                     /* no items yet                      */
-
-  values = new_array(count);           /* get a new array                   */
-  indexes = new_array(count);          /* and an index array                */
-  j = 1;                               /* set the insertion point           */
-                                       /* loop through all of the items     */
-  for (i = 0; i < this->totalSlotsSize(); i++) {
-                                       /* real entry?                       */
-    if (this->entries[i].index != OREF_NULL) {
-                                       /* copy the index into the array     */
-      indexes->put(this->entries[i].index, j);
-                                       /* and the value                     */
-      values->put(this->entries[i].value, j);
-      j++;                             /* step the array location           */
+    RexxArray *values = new_array(count);           /* get a new array                   */
+    RexxArray *indexes = new_array(count);          /* and an index array                */
+    size_t j = 1;                               /* set the insertion point           */
+    /* loop through all of the items     */
+    for (size_t i = 0; i < this->totalSlotsSize(); i++)
+    {
+        /* real entry?                       */
+        if (this->entries[i].index != OREF_NULL)
+        {
+            /* copy the index into the array     */
+            indexes->put(this->entries[i].index, j);
+            /* and the value                     */
+            values->put(this->entries[i].value, j);
+            j++;                             /* step the array location           */
+        }
     }
-  }
-                                       /* return the supplier               */
-  return (RexxSupplier *)new_supplier(values, indexes);
+    /* return the supplier               */
+    return(RexxSupplier *)new_supplier(values, indexes);
 }
 
 RexxObject *RexxHashTable::index(
@@ -1534,33 +1609,37 @@ RexxObject *RexxHashTable::index(
 /* Function:  Return the item associated with a numeric hash table index      */
 /******************************************************************************/
 {
-                                       /* if within bounds                  */
-  if (position < this->totalSlotsSize())
-                                       /* return the index item             */
-    return this->entries[position].index;
-  else
-    return OREF_NULL;                  /* otherwise, no item for this       */
+    /* if within bounds                  */
+    if (position < this->totalSlotsSize())
+    {
+        /* return the index item             */
+        return this->entries[position].index;
+    }
+    else
+    {
+        return OREF_NULL;                  /* otherwise, no item for this       */
+    }
 }
 
 RexxHashTable *RexxHashTable::reHash(void)
 /******************************************************************************/
 /* Function:  Rehash the elements of a hash table because of a restore        */
-/**REXX************************************************************************/
+/******************************************************************************/
 {
-  size_t   i;
-  RexxHashTable *newHash;
-  RexxHashTable *expandHash;
-
-                                       /* Assume the same size will work,   */
-  newHash = new_hashtab(this->totalSlotsSize());
-                                       /* should in MOST cases....          */
-  for (i = this->totalSlotsSize(); i > 0; i--) {
-    if (this->entries[i - 1].index != OREF_NULL) {
-      expandHash = newHash->add(this->entries[i - 1].value, this->entries[i - 1].index);
-      if (expandHash != OREF_NULL)     /* have a reallocation occur?        */
-        newHash = expandHash;          /* finish up with the new table      */
+    /* Assume the same size will work,   */
+    RexxHashTable *newHash = new_hashtab(this->totalSlotsSize());
+    /* should in MOST cases....          */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            RexxHashTable *expandHash = newHash->add(this->entries[i - 1].value, this->entries[i - 1].index);
+            if (expandHash != OREF_NULL)     /* have a reallocation occur?        */
+            {
+                newHash = expandHash;          /* finish up with the new table      */
+            }
+        }
     }
-  }
-  return newHash;                      /* Return the updated(rehashed) hashtable*/
+    return newHash;                      /* Return the updated(rehashed) hashtable*/
 }
 

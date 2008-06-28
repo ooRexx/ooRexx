@@ -47,7 +47,7 @@
 #ifndef RexxCore_INCLUDED
 #define RexxCore_INCLUDED
 
-#include "rexx.h"                 // this is the core to everything
+#include "oorexxapi.h"                 // this is the core to everything
 
 /* ANSI C definitions */
 #include <stdio.h>
@@ -168,11 +168,7 @@ typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
 class RexxClass;
 class RexxDirectory;
 class RexxIntegerClass;
-class RexxListClass;
-class RexxMethodClass;
 class RexxArray;
-class RexxNumberStringClass;
-class RexxStringClass;
 class RexxMemory;
 
 // this one is special, and is truly global.
@@ -187,6 +183,8 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 #define TheListClass RexxList::classInstance
 #define TheMessageClass RexxMessage::classInstance
 #define TheMethodClass RexxMethod::classInstance
+#define TheRoutineClass RoutineClass::classInstance
+#define ThePackageClass PackageClass::classInstance
 #define TheNumberStringClass RexxNumberString::classInstance
 #define TheObjectClass RexxObject::classInstance
 #define TheQueueClass RexxQueue::classInstance
@@ -201,7 +199,6 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 #define TheWeakReferenceClass WeakReference::classInstance
 
 #define TheEnvironment RexxMemory::environment
-#define ThePublicRoutines RexxMemory::publicRoutines
 #define TheStaticRequires RexxMemory::staticRequires
 #define TheFunctionsDirectory RexxMemory::functionsDir
 #define TheCommonRetrievers RexxMemory::commonRetrievers
@@ -322,15 +319,91 @@ inline RexxString *REQUEST_STRING(RexxObject *object)
   return (isOfClass(String, object) ? (RexxString *)object : (object)->requestString());
 }
 
+
 /* The next routine is specifically for REQUESTing a STRING needed as a method*/
 /* argument.  This raises an error if the object cannot be converted to a     */
 /* string value.                                                              */
 inline RexxString * REQUIRED_STRING(RexxObject *object, size_t position)
 {
-  if (object == OREF_NULL)             /* missing argument?                 */
-    missing_argument(position);        /* raise an error                    */
-                                       /* force to a string value           */
-  return object->requiredString(position);
+    if (object == OREF_NULL)             /* missing argument?                 */
+    {
+        missing_argument(position);        /* raise an error                    */
+    }
+                                           /* force to a string value           */
+    return object->requiredString(position);
+}
+
+
+#include "ActivityManager.hpp"
+
+/* The next routine is specifically for REQUESTing an ARRAY needed as a method*/
+/* argument.  This raises an error if the object cannot be converted to a     */
+/* single dimensional array item                                              */
+inline RexxArray * REQUIRED_ARRAY(RexxObject *object, size_t position)
+{
+    if (object == OREF_NULL)             /* missing argument?                 */
+    {
+        missing_argument(position);      /* raise an error                    */
+    }
+    /* force to array form               */
+    RexxArray *array = object->requestArray();
+    /* not an array?                     */
+    if (array == TheNilObject || array->getDimension() != 1)
+    {
+        /* raise an error                    */
+        reportException(Error_Execution_noarray, object);
+    }
+    return array;
+}
+
+
+inline RexxArray * REQUIRED_ARRAY(RexxObject *object, const char *name)
+{
+    if (object == OREF_NULL)             /* missing argument?                 */
+    {
+        reportException(Error_Invalid_argument_noarg, name);
+    }
+
+    /* force to array form               */
+    RexxArray *array = object->requestArray();
+    /* not an array?                     */
+    if (array == TheNilObject || array->getDimension() != 1)
+    {
+        /* raise an error                    */
+        reportException(Error_Invalid_argument_noarray, name);
+    }
+    return array;
+}
+
+
+/* The next routine is specifically for REQUESTing a STRING needed as a method*/
+/* argument.  This raises an error if the object cannot be converted to a     */
+/* string value.                                                              */
+inline RexxString * REQUIRED_STRING(RexxObject *object, const char *name)
+{
+    if (object == OREF_NULL)             /* missing argument?                 */
+    {
+        reportException(Error_Invalid_argument_noarg, name);
+    }
+                                           /* force to a string value           */
+    return object->requiredString(name);
+}
+
+
+/* The next routine is specifically for REQUESTing a STRING needed as a method*/
+/* argument.  This raises an error if the object cannot be converted to a     */
+/* string value.                                                              */
+inline void REQUIRED_INSTANCE(RexxObject *object, RexxClass *clazz, const char *name)
+{
+    if (object == OREF_NULL)             /* missing argument?                 */
+    {
+        reportException(Error_Invalid_argument_noarg, name);
+    }
+
+    if (!object->isInstanceOf(clazz))
+    {
+        reportException(Error_Invalid_argument_noclass, name, clazz->getId());
+    }
 }
 
 
@@ -341,12 +414,6 @@ inline RexxArray * REQUEST_ARRAY(RexxObject *obj) { return ((obj)->requestArray(
 
 /* The next macro is specifically for REQUESTing an INTEGER,                  */
 inline RexxInteger * REQUEST_INTEGER(RexxObject *obj) { return ((obj)->requestInteger(Numerics::DEFAULT_DIGITS));}
-
-/******************************************************************************/
-/* Version number (okver.c)                                                   */
-/******************************************************************************/
-
-RexxString *version_number (void);
 
 /******************************************************************************/
 /* Typed method invocation macros                                             */

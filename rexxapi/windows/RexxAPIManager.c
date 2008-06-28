@@ -964,7 +964,7 @@ void * REXXENTRY RexxAllocateMemory(size_t size)
 /*  Return Value:    always returns 0 (ULONG)                        */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxFreeMemory(void * pMem)
+RexxReturnCode REXXENTRY RexxFreeMemory(void * pMem)
 {
     GlobalFree(pMem);
 return 0;

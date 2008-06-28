@@ -45,9 +45,10 @@
 #define Included_RexxVariableDictionary
 
 #include "RexxVariable.hpp"
-#include "RexxCompoundTail.hpp"
 #include "StemClass.hpp"
 #include "RexxHashTable.hpp"
+
+class RexxSupplier;
 
 #define DEFAULT_OBJECT_DICTIONARY_SIZE 7
 
@@ -103,28 +104,20 @@ class RexxVariableDictionary : public RexxInternalObject {
       return variable;                     /* return the stem                   */
     }
 
-  inline void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value)
-    {
-      RexxStem     *stem_table;            /* retrieved stem table              */
-                                           /* new tail for compound             */
-      RexxCompoundTail resolved_tail(this, tail, tailCount);
-
-      stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
-                                           /* and set the value                 */
-      stem_table->setCompoundVariable(&resolved_tail, value);
-    }
-
-  inline RexxArray *getAllVariables() { return contents->allItems(); }
+  void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value);
+  RexxSupplier *getAllVariables();
   inline void remove(RexxString *n) { contents->remove(n); }
 
   RexxVariable *nextVariable(RexxNativeActivation *);
   void         set(RexxString *, RexxObject *);
+  void         drop(RexxString *);
   void         reserve(RexxActivity *);
   void         release(RexxActivity *);
   bool         transfer(RexxActivity *);
 
   RexxCompoundElement *getCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
   RexxObject  *getCompoundVariableValue(RexxString *stemName, RexxObject **tail, size_t tailCount);
+  RexxObject  *getCompoundVariableRealValue(RexxString *stem, RexxObject **tail, size_t tailCount);
 
   RexxObject  *realStemValue(RexxString *stemName);
 

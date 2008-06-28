@@ -89,7 +89,8 @@ OTIOBJ6=$(OR_OUTDIR)\LeaveInstruction.$(OBJ) $(OR_OUTDIR)\MessageInstruction.$(O
 OTIOBJ7=$(OR_OUTDIR)\OptionsInstruction.$(OBJ) $(OR_OUTDIR)\OtherwiseInstruction.$(OBJ) $(OR_OUTDIR)\ParseInstruction.$(OBJ) \
         $(OR_OUTDIR)\ProcedureInstruction.$(OBJ)
 
-OTIOBJ8=$(OR_OUTDIR)\QueueInstruction.$(OBJ) $(OR_OUTDIR)\RaiseInstruction.$(OBJ)
+OTIOBJ8=$(OR_OUTDIR)\QueueInstruction.$(OBJ) $(OR_OUTDIR)\RaiseInstruction.$(OBJ) \
+	$(OR_OUTDIR)\RequiresDirective.$(OBJ) $(OR_OUTDIR)\LibraryDirective.$(OBJ)  $(OR_OUTDIR)\ClassDirective.$(OBJ)
 OTIOBJ9=$(OR_OUTDIR)\ReplyInstruction.$(OBJ) $(OR_OUTDIR)\ReturnInstruction.$(OBJ)   $(OR_OUTDIR)\SayInstruction.$(OBJ) \
         $(OR_OUTDIR)\SelectInstruction.$(OBJ)
 OTIOBJ10=$(OR_OUTDIR)\SignalInstruction.$(OBJ) $(OR_OUTDIR)\ThenInstruction.$(OBJ) $(OR_OUTDIR)\TraceInstruction.$(OBJ) \
@@ -107,7 +108,7 @@ OTPOBJS=$(OTSOBJ1)  $(OTSOBJ2) $(OTIOBJ1) $(OTIOBJ2) $(OTIOBJ3) \
 
 # Following all part of rexx
 OKCOBJ1=$(OR_OUTDIR)\Version.$(OBJ)
-OKCOBJ2= $(OR_OUTDIR)\RexxStartup.$(OBJ)  $(OR_OUTDIR)\Utilities.$(OBJ)
+OKCOBJ2= $(OR_OUTDIR)\Utilities.$(OBJ)
 OKAOBJS= $(OR_OUTDIR)\GlobalData.$(OBJ)  $(OR_OUTDIR)\GlobalNames.$(OBJ)
 OKLOBJS=$(OR_OUTDIR)\Setup.$(OBJ) $(OR_OUTDIR)\InstructionParser.$(OBJ) \
         $(OR_OUTDIR)\Scanner.$(OBJ)
@@ -117,12 +118,13 @@ OKCOBJS=$(OKCOBJ1) $(OKCOBJ2) $(OKLOBJS)
 OKPOBJ1=$(OR_OUTDIR)\RexxEnvelope.$(OBJ) $(OR_OUTDIR)\ArrayClass.$(OBJ) $(OR_OUTDIR)\RexxMisc.$(OBJ)   \
         $(OR_OUTDIR)\ClassClass.$(OBJ) $(OR_OUTDIR)\DeadObject.$(OBJ) $(OR_OUTDIR)\PointerClass.$(OBJ) \
 	$(OR_OUTDIR)\WeakReferenceClass.$(OBJ)
-OKPOBJ2=$(OR_OUTDIR)\DirectoryClass.$(OBJ) $(OR_OUTDIR)\MethodClass.$(OBJ)
+OKPOBJ2=$(OR_OUTDIR)\DirectoryClass.$(OBJ) $(OR_OUTDIR)\MethodClass.$(OBJ)  $(OR_OUTDIR)\RoutineClass.$(OBJ) \
+	 $(OR_OUTDIR)\PackageClass.$(OBJ)
 OKPOBJ3=$(OR_OUTDIR)\ListClass.$(OBJ)   $(OR_OUTDIR)\RexxMemory.$(OBJ) $(OR_OUTDIR)\MemorySegment.$(OBJ) \
          $(OR_OUTDIR)\MemoryStats.$(OBJ) $(OR_OUTDIR)\MessageClass.$(OBJ)    \
         $(OR_OUTDIR)\StemClass.$(OBJ)   $(OR_OUTDIR)\ObjectClass.$(OBJ) $(OR_OUTDIR)\RexxCompoundTail.$(OBJ) \
         $(OR_OUTDIR)\RexxCompoundElement.$(OBJ) $(OR_OUTDIR)\RexxCompoundTable.$(OBJ)
-OKPOBJ4=$(OR_OUTDIR)\QueueClass.$(OBJ)  $(OR_OUTDIR)\SupplierClass.$(OBJ)  \
+OKPOBJ4=$(OR_OUTDIR)\QueueClass.$(OBJ)  $(OR_OUTDIR)\SupplierClass.$(OBJ) $(OR_OUTDIR)\RexxQueueMethods.$(OBJ) \
         $(OR_OUTDIR)\RelationClass.$(OBJ)  $(OR_OUTDIR)\TableClass.$(OBJ) \
 	$(OR_OUTDIR)\PrimitiveBehaviours.$(OBJ) $(OR_OUTDIR)\VirtualFunctionTable.$(OBJ)
 OKPOBJ5=$(OR_OUTDIR)\IntegerClass.$(OBJ)    $(OR_OUTDIR)\NumberStringClass.$(OBJ)
@@ -130,23 +132,26 @@ OKIOBJ1=$(OR_OUTDIR)\RexxActivation.$(OBJ) $(OR_OUTDIR)\RexxActivity.$(OBJ) $(OR
         $(OR_OUTDIR)\RexxBehaviour.$(OBJ)  $(OR_OUTDIR)\BufferClass.$(OBJ) $(OR_OUTDIR)\ActivityManager.$(OBJ) \
 	$(OR_OUTDIR)\Interpreter.$(OBJ) $(OR_OUTDIR)\SystemInterpreter.$(OBJ) $(OR_OUTDIR)\RexxStartDispatcher.$(OBJ) \
 	$(OR_OUTDIR)\InterpreterInstance.$(OBJ) $(OR_OUTDIR)\ActivityDispatcher.$(OBJ) $(OR_OUTDIR)\TranslateDispatcher.$(OBJ) \
-	$(OR_OUTDIR)\CreateMethodDispatcher.$(OBJ) $(OR_OUTDIR)\CallbackDispatcher.$(OBJ)
-OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)  $(OR_OUTDIR)\RexxCode.$(OBJ) $(OR_OUTDIR)\LibraryManager.$(OBJ) \
+	$(OR_OUTDIR)\CreateRoutineDispatcher.$(OBJ) $(OR_OUTDIR)\CallbackDispatcher.$(OBJ) $(OR_OUTDIR)\SecurityManager.$(OBJ) \
+	$(OR_OUTDIR)\MessageDispatcher.$(OBJ) $(OR_OUTDIR)\SysInterpreterInstance.$(OBJ)
+OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)  $(OR_OUTDIR)\RexxCode.$(OBJ) $(OR_OUTDIR)\PackageManager.$(OBJ) \
         $(OR_OUTDIR)\RexxListTable.$(OBJ) $(OR_OUTDIR)\RexxNativeActivation.$(OBJ) $(OR_OUTDIR)\RexxNativeCode.$(OBJ) \
-	$(OR_OUTDIR)\CPPCode.$(OBJ)
+	$(OR_OUTDIR)\CPPCode.$(OBJ) $(OR_OUTDIR)\LibraryPackage.$(OBJ) $(OR_OUTDIR)\InternalPackage.$(OBJ)
 OKIOBJ3=$(OR_OUTDIR)\RexxCollection.$(OBJ)   $(OR_OUTDIR)\RexxSmartBuffer.$(OBJ) $(OR_OUTDIR)\StackClass.$(OBJ)  \
         $(OR_OUTDIR)\RexxVariable.$(OBJ)    $(OR_OUTDIR)\RexxVariableDictionary.$(OBJ) $(OR_OUTDIR)\RexxDateTime.$(OBJ) \
-	$(OR_OUTDIR)\Numerics.$(OBJ)
+	$(OR_OUTDIR)\Numerics.$(OBJ) $(OR_OUTDIR)\CallContextStubs.$(OBJ) $(OR_OUTDIR)\InterpreterAPI.$(OBJ) \
+	$(OR_OUTDIR)\InterpreterInstanceStubs.$(OBJ) $(OR_OUTDIR)\MethodContextStubs.$(OBJ) $(OR_OUTDIR)\ThreadContextStubs.$(OBJ)
 
 OKPOBJS=$(OKPOBJ1) $(OKPOBJ2) $(OKPOBJ3) $(OKPOBJ4) $(OKPOBJ5)
 OKIOBJS=$(OKIOBJ1) $(OKIOBJ2) $(OKIOBJ3)
 #part of rexx
 
-SYSOBJ1=$(OR_OUTDIR)\TimeSupport.$(OBJ)  $(OR_OUTDIR)\RexxQueues.$(OBJ) \
-        $(OR_OUTDIR)\FileSystem.$(OBJ)  $(OR_OUTDIR)\ValueFunction.$(OBJ) $(OR_OUTDIR)\UseridFunction.$(OBJ) $(OR_OUTDIR)\VariablePool.$(OBJ)
+SYSOBJ1=$(OR_OUTDIR)\TimeSupport.$(OBJ)  \
+        $(OR_OUTDIR)\FileSystem.$(OBJ)  $(OR_OUTDIR)\ValueFunction.$(OBJ) $(OR_OUTDIR)\UseridFunction.$(OBJ)
 
 SYSOBJ2=$(OR_OUTDIR)\ExternalFunctions.$(OBJ)  $(OR_OUTDIR)\RexxMain.$(OBJ)  $(OR_OUTDIR)\SystemCommands.$(OBJ)   \
-        $(OR_OUTDIR)\StreamNative.$(OBJ)   $(OR_OUTDIR)\StreamCommandParser.$(OBJ)    $(OR_OUTDIR)\StoredMetaData.$(OBJ)
+        $(OR_OUTDIR)\StreamNative.$(OBJ)   $(OR_OUTDIR)\StreamCommandParser.$(OBJ)    $(OR_OUTDIR)\ProgramMetaData.$(OBJ) \
+	$(OR_OUTDIR)\SysFile.$(OBJ) $(OR_OUTDIR)\SysFileSystem.$(OBJ) $(OR_OUTDIR)\SysLibrary.$(OBJ)
 
 SYSOBJ3=$(OR_OUTDIR)\MemorySupport.$(OBJ)   $(OR_OUTDIR)\MiscSystem.$(OBJ)  $(OR_OUTDIR)\SystemInitialization.$(OBJ)
 
@@ -161,15 +166,11 @@ OKSOBJS=$(OR_OUTDIR)\StringClass.$(OBJ) $(OR_OUTDIR)\StringClassUtil.$(OBJ) $(OR
         $(OR_OUTDIR)\StringClassWord.$(OBJ) $(OR_OUTDIR)\StringClassMisc.$(OBJ) $(OR_OUTDIR)\StringClassBit.$(OBJ)    \
         $(OR_OUTDIR)\StringClassConversion.$(OBJ) $(OR_OUTDIR)\MutableBufferClass.$(OBJ) $(OR_OUTDIR)\StringUtil.$(OBJ)
 
-# in rexx
-# OKNOBJS contain C methods, therefore have different dependancy rules.....
-OKNOBJS=$(OR_OUTDIR)\NativeRoot.$(OBJ)
-
 SYSERR= $(OR_OUTDIR)\ErrorMessages.$(OBJ)
 
 # rexx
 ORYXKOBJ= $(OKCOBJS) $(OKAOBJS) $(OKPOBJS) $(OKIOBJS) $(OKSOBJS) $(OEPOBJS)\
-          $(OTPOBJS) $(SYSOBJS) $(OKNOBJS) $(SYSERR)
+          $(OTPOBJS) $(SYSOBJS) $(SYSERR)
 
 #    Windows Universal Thunk 32-bit stub
 #    16-bit side must be built with 16-bit compiler
@@ -188,7 +189,7 @@ ORXFILES=$(OR_OUTDIR)\CoreClasses.orx  $(OR_OUTDIR)\StreamClasses.orx \
 	 $(OR_OUTDIR)\PlatformObjects.orx $(OR_OUTDIR)\orexxole.cls
 
 #define critical header files for forcing recomp
-ORXHEADERS=$(KMESSAGES)\RexxErrorCodes.h $(KMESSAGES)\RexxMessageNumbers.h $(KMESSAGES)\RexxMessageTable.h $(KCORE)\RexxCore.h \
+ORXHEADERS=$(OR_ORYXAPI)\oorexxerrors.h $(KMESSAGES)\RexxErrorCodes.h $(KMESSAGES)\RexxMessageNumbers.h $(KMESSAGES)\RexxMessageTable.h $(KCORE)\RexxCore.h \
     $(KCORE)\PrimitiveBehaviourNames.h $(KCORE)\ClassTypeCodes.h
 
 
@@ -290,6 +291,11 @@ $(KMESSAGES)\RexxMessageTable.h: $(KMESSAGES)\RexxMessageTable.xsl $(KMESSAGES)\
     @ECHO Generating $(@)
     xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxMessageTable.xsl
 
+$(OR_ORYXAPI)\api\oorexxerrors.h: $(KMESSAGES)\ApiErrorCodes.xsl $(KMESSAGES)\rexxmsg.xml
+    @ECHO .
+    @ECHO Generating $(@)
+    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\ApiErrorCodes.xsl
+
 $(KCORE)\PrimitiveBehaviourNames.h: $(KCORE)\PrimitiveBehaviourNames.xsl $(KCORE)\PrimitiveClasses.xml
     @ECHO .
     @ECHO Generating $(@)
@@ -314,6 +320,7 @@ $(OR_OUTDIR)\winmsgtb.res: $(KWINDOWS)\winmsgtb.rc $(KMESSAGES)\DocErrorMessages
     @ECHO .
     @ECHO ResourceCompiling $(@)
         $(rc) $(rcflags_common) $(OR_ORYXRCINCL) -r -fo$(@) $(KWINDOWS)\winmsgtb.rc
+
 
 # Update the version information block
 $(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc
@@ -412,6 +419,15 @@ ORXHEADERS: $(ORXHEADERS)
 # *** For .CPP files in OR_ORYXLSRC directory
 #
 {$(KCORE)}.cpp{$(OR_OUTDIR)}.obj:
+    @ECHO .
+    @ECHO Compiling $(**)
+    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
+
+#
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_ORYXLSRC directory
+#
+{$(KAPI)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)

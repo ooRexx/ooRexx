@@ -65,6 +65,7 @@ class RexxRelation : public RexxTable {
    RexxObject   *newRexx(RexxObject **, size_t);
 
    static RexxRelation *newInstance();
+   static void createInstance();
    static RexxClass *classInstance;
 };
 

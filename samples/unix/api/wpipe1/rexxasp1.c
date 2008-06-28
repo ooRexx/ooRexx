@@ -86,7 +86,7 @@ static const char *AspiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-APIRET REXXENTRY AspiLoadFuncs(
+RexxReturnCode REXXENTRY AspiLoadFuncs(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -118,7 +118,7 @@ APIRET REXXENTRY AspiLoadFuncs(
 * Return:    null string                                                 *
 *************************************************************************/
 
-APIRET REXXENTRY AspiDeregFunc(
+RexxReturnCode REXXENTRY AspiDeregFunc(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -155,7 +155,7 @@ APIRET REXXENTRY AspiDeregFunc(
 * Return:    Version of this ASPI support DLL                            *
 *************************************************************************/
 
-APIRET REXXENTRY Aspi_Output_From_C(
+RexxReturnCode REXXENTRY Aspi_Output_From_C(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -186,7 +186,7 @@ APIRET REXXENTRY Aspi_Output_From_C(
 * Return:    Version of this ASPI support DLL                            *
 *************************************************************************/
 
-APIRET REXXENTRY Aspi_Output_From_REXX(
+RexxReturnCode REXXENTRY Aspi_Output_From_REXX(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -217,7 +217,7 @@ APIRET REXXENTRY Aspi_Output_From_REXX(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-APIRET REXXENTRY Aspi_Exchange_Data(
+RexxReturnCode REXXENTRY Aspi_Exchange_Data(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */

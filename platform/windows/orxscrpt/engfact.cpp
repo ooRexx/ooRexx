@@ -53,47 +53,52 @@ STDMETHODIMP OrxEngineClassFactory::CreateInstance(IUnknown *punkOuter,
                                                    REFIID riid,
                                                    LPVOID *ppvObj)
 {
-  HRESULT      hr;
-  OrxScript   *pmyobject;
-  ListItem    *Next;
+    HRESULT      hr;
+    OrxScript   *pmyobject;
+    ListItem    *Next;
 
 
-  if (ppvObj == NULL)
-    return ResultFromScode(E_POINTER);
-
-  *ppvObj = NULL;
-
-  if (punkOuter != NULL)
-    return ResultFromScode(E_INVALIDARG);    // Aggregation not supported
-
-  pmyobject = new OrxScript;                 // create instance of engine
-                                             // and its associated COM Dispatcher.
-
-  if (pmyobject == NULL) {
-    if (pmyobject != NULL) delete pmyobject;
-    return E_OUTOFMEMORY;
+    if (ppvObj == NULL)
+    {
+        return ResultFromScode(E_POINTER);
     }
 
-  Next = EngineChain->AddItem("Don't care about a name",LinkedList::End,(void *)pmyobject);
-  //  Make sure the Event can tell people if it goes away prematurely.
-  pmyobject->SetDestructor(EngineChain, (void *)pmyobject);
+    *ppvObj = NULL;
 
-  hr = pmyobject->QueryInterface(riid, ppvObj);
+    if (punkOuter != NULL)
+    {
+        return ResultFromScode(E_INVALIDARG);    // Aggregation not supported
+    }
 
-  pmyobject->Release();   // ppvObj now is only reference
-                          // (if QI failed, object is destroyed)
+    pmyobject = new OrxScript;                 // create instance of engine
+                                               // and its associated COM Dispatcher.
 
-  return hr;
+    if (pmyobject == NULL)
+    {
+        if (pmyobject != NULL)
+        {
+            delete pmyobject;
+        }
+        return E_OUTOFMEMORY;
+    }
+
+    // add this to the global engine chain
+    ScriptProcessEngine::addScriptEngine(pmyojbect);
+
+    hr = pmyobject->QueryInterface(riid, ppvObj);
+    pmyobject->Release();   // ppvObj now is only reference
+                            // (if QI failed, object is destroyed)
+    return hr;
 }
 
 
 REFIID OrxEngineClassFactory::GetClassID()
 {
-  return CLSID_ObjectREXX;
+    return CLSID_ObjectREXX;
 }
 
 
 OrxClassFactory *CreateClassFactory()
 {
-  return new OrxEngineClassFactory();
+    return new OrxEngineClassFactory();
 }

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -42,27 +42,14 @@
 /*                                                                            */
 /******************************************************************************/
 
-#define  INCL_REXX_STREAM              /* include stream definitions        */
-#include "RexxCore.h"                    /* global REXX definitions           */
-#include "StringClass.hpp"
-#include "RexxNativeAPI.h"
-#include "StreamNative.h"
+#include "oorexxapi.h"
+#include "StreamNative.hpp"
 #include "StreamCommandParser.h"
-#include "StringUtil.hpp"
-
-#define full_name_parameter(stream_info) SysQualifyStreamName(stream_info)
-
-size_t stream_query_line_position(REXXOBJECT self, STREAM_INFO *stream_info, size_t current_position);
-size_t read_backward_by_line(REXXOBJECT self, STREAM_INFO *stream_info, size_t *line_count, size_t *current_line, size_t *current_position);
-size_t read_forward_by_line(REXXOBJECT self, STREAM_INFO *stream_info, size_t *line_count, size_t *current_line, size_t *current_position);
-size_t read_from_end_by_line(REXXOBJECT self, STREAM_INFO *stream_info, size_t *line_count, size_t *current_line, size_t *current_position);
-size_t set_line_position(REXXOBJECT self, STREAM_INFO *stream_info);
-int reclength_token(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms);
-void table_fixup(TTS *ttsp, size_t parse_fields[]);
-int    unknown_offset(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *user_parms);
-int    unknown_tr(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms);
-
-#define MAX_COUNTBUFFER ((1024*1024*2)-1)
+#include "Utilities.hpp"
+#include <io.h>
+#include <fcntl.h>
+#include <share.h>
+#include <sys/stat.h>
 
 /********************************************************************************/
 /*                                                                              */
@@ -70,566 +57,553 @@ int    unknown_tr(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *us
 /*                                                                              */
 /********************************************************************************/
 
-#define c_stream_info "CSELF"          /* name of REXX stream info variable */
-                                       /* name of REXX stream buffer var    */
-#define c_stream_buffer "C_STREAM_BUFFER"
-                                       /* get the stream information        */
-
-#define get_stream_info() get_verified_stream_info((STREAM_INFO *)StreamBuffer)
-
-inline STREAM_INFO * get_verified_stream_info(STREAM_INFO * StreamBuffer) {
-    if (!StreamBuffer) rexx_exception(Error_Incorrect_call);
-    return StreamBuffer; }
-
-
-#define temp_buffer(length) (char *)buffer_address(ooRexxBuffer(length))
-#define get_buffer(length)  allocate_stream_buffer(stream_info, length)
-
-#define errcode Error_Incorrect_call
-
-const int one = 1;
-const int zero = 0;
-const int minus_one = -1;
-
-/*****************************************************************/
-/* declares needed for command open                              */
-/*****************************************************************/
-#define oflag         Parse_Fields[0]
-#define pmode         Parse_Fields[1]
-#define fdopen_long   Parse_Fields[2]
-#define i_binary      Parse_Fields[3]
-#define i_nobuffer    Parse_Fields[4]
-#define rdonly        Parse_Fields[5]
-#define shared        Parse_Fields[6]
-
-#define oflag_index       0
-#define pmode_index       1
-#define fdopen_long_index 2
-#define i_binary_index    3
-#define i_nobuffer_index  4
-#define rdonly_index      5
-#define shared_index      6
-
-const int o_creat = O_CREAT;
-const int o_rdonly = O_RDONLY;
-const int o_wronly = O_WRONLY;
-const int o_rdwr = O_RDWR;
-const int rdwr_creat = O_RDWR | O_CREAT;
-const int wr_creat = O_WRONLY | O_CREAT;
-const int o_append = O_APPEND;
-
-
-const int sh_denyno = SH_DENYNO;
-const int sh_denyrd = SH_DENYRD;
-const int sh_denywr = SH_DENYWR;
-
-#if defined( O_BINARY )
-const int o_binary = O_BINARY;
-#else
-const int o_binary = 0;
-#endif
-
-#if defined( O_SYNC )
-const int o_sync = O_SYNC;
-#endif
-#if defined( O_RSHARE )
-const int o_rshare = O_RSHARE;
-#endif
-#if defined( O_NSHARE )
-const int o_nshare = O_NSHARE;
-#endif
-#if defined( O_DELAY )
-const int o_delay = O_DELAY;
-#endif
-
-const int o_trunc = O_TRUNC;
-
-const char c_read[] = "r";
-const char c_default_read[] = "rb";
-const char c_write[] = "w";
-const char c_default_write[] = "wb";
-const char c_both[] = "w+";
-const char c_default_both[] = "r+b";
-const char c_append[] = "a+";
-const char c_wr_append[] = "a";
-const char c_binary[] = "b";
-
-const int s_iwrite = S_IWRITE;
-const int s_iread  = S_IREAD;
-const int iread_iwrite = S_IREAD | S_IWRITE;
+// name of our stream object structure (automatically retrieved for us)
+const char *StreamInfoProperty = "CSELF";
 
 /*****************************************************************/
 /* declares needed for command seek/position                     */
 /*****************************************************************/
-#define from_current    Parse_Fields[0]
-#define from_start      Parse_Fields[1]
-#define from_end        Parse_Fields[2]
-#define forward         Parse_Fields[3]
-#define backward        Parse_Fields[4]
-#define by_line         Parse_Fields[5]
-#define position_flags  Parse_Fields[6]
 
-#define from_current_index    0
-#define from_start_index      1
-#define from_end_index        2
-#define forward_index         3
-#define backward_index        4
-#define by_line_index         5
-#define position_flags_index  6
-
-const size_t operation_read = 0x01;
-const size_t operation_write = 0x02;
-const size_t operation_nocreate = 0x04;
-const size_t position_by_char = 0x04;
-const size_t position_by_line = 0x08;
-const size_t position_offset_specified = 0x10;
+const int  operation_read = 0x01;
+const int  operation_write = 0x02;
+const int  operation_nocreate = 0x04;
+const int  position_by_char = 0x04;
+const int  position_by_line = 0x08;
+const int  position_offset_specified = 0x10;
 
 /*****************************************************************/
 /* declares needed for command query seek/position               */
 /*****************************************************************/
 
-#define query_position_flags Parse_Fields[0]
+const int  query_read_position = 0x01;
+const int  query_write_position = 0x02;
+const int  query_char_position = 0x04;
+const int  query_line_position = 0x08;
+const int  query_system_position = 0x10;
 
-#define query_position_flags_index 0
 
-const size_t query_read_position = 0x01;
-const size_t query_write_position = 0x02;
-const size_t query_char_position = 0x04;
-const size_t query_line_position = 0x08;
-const size_t query_system_position = 0x10;
+// short hand defines for some file states
+#define RDWR_CREAT  (O_RDWR | O_CREAT)
+#define WR_CREAT    (O_WRONLY | O_CREAT)
+#define IREAD_IWRITE (S_IREAD | S_IWRITE)
 
-char *allocate_stream_buffer(
-    STREAM_INFO *stream_info,          /* target stream information block   */
-    size_t length)                     /* length of buffer required         */
-/******************************************************************************/
-/* Function:  Get a buffer for a stream operation                             */
-/******************************************************************************/
+
+/**
+ * Token parsing routine for record length parsing.
+ *
+ * @param ttsp      The token action definition associated with this parse.
+ * @param token     The current token.
+ * @param userparms An opaque user parameter info.
+ *
+ * @return 0 for success, 1 for any failure.
+ */
+int reclength_token(TokenDefinition* ttsp, StreamToken &tokenizer, void *userparms)
 {
-  REXXOBJECT   buffer;                 /* retrieve buffer                   */
+                                        /* get the next token in TokenString */
+    if (tokenizer.nextToken())
+    {
+        int offset = 0;
 
-                                       /* can we reuse the current buffer?  */
-  if (stream_info->bufferAddress != NULL && stream_info->bufferLength >= length)
-    return stream_info->bufferAddress; /* return the existing one           */
-  if (length < default_buffer_size)    /* smaller than the minimum?         */
-    length = default_buffer_size;      /* get the larger one                */
-  buffer = ooRexxBuffer(length);       /* get a buffer                      */
-                                       /* save the start address            */
-  stream_info->bufferAddress = buffer_address(buffer);
-  stream_info->bufferLength = length;  /* and the length                    */
-  ooRexxVarSet(c_stream_buffer, buffer);/* associate with this instance      */
-  return stream_info->bufferAddress;   /* return the starting address       */
+        // must be convertable
+        if (!tokenizer.toNumber(offset))
+        {
+            return 1;   // non numeric token, error
+        }
+
+        *((size_t *)userparms) = offset;
+        return 0;
+    }
+
+    // we default the record length, so push this back into the stream
+    tokenizer.previousToken();
+    return 0;
 }
 
-void openStream(
-    STREAM_INFO *stream_info,          /* target stream information block   */
-    size_t       openFlags,            /* _sopen flags                      */
-    size_t       openMode,             /* _sopen mode                       */
-    const char  *fdopenMode,           /* fdopen mode information           */
-    size_t       sharedFlag )          /* flag for shared open              */
-/******************************************************************************/
-/* Function:  Open a stream in a specific mode                                */
-/******************************************************************************/
+/**
+ * Token parsing routine for position offsets.
+ *
+ * @param ttsp      The token action definition associated with this parse.
+ * @param token     The current token.
+ * @param userparms An opaque user parameter info.
+ *
+ * @return 0 for success, 1 for any failure.
+ */
+int position_offset(TokenDefinition* ttsp, StreamToken &tokenizer, void *userparms)
 {
-                                       /* first try a shared open           */
-  if ((stream_info->fh == 0) || (stream_info->fh == -1))
-#ifdef WIN32
-    /* CreateFile of COM ports on 95 requires specific conditions */
-    if (RUNNING_95)
-    {
-        DCB dcb;
-        HANDLE osf;
+                                       /* get the next token in TokenString */
+   if (tokenizer.nextToken())
+   {
+       int64_t offset = 0;
 
-        if (!strnicmp(stream_info->full_name_parameter, "com", 3)
-          && (stream_info->full_name_parameter[3] > '0') && (stream_info->full_name_parameter[3] <= '9'))
+       // must be convertable
+       if (!tokenizer.toNumber(offset))
+       {
+           return 1;   // non numeric token, error
+       }
+
+       *((int64_t *)userparms) = offset;
+       return 0;
+   }
+                                       /* no next token - position will     */
+                                       /* raise syntax                      */
+   return 1;
+}
+
+/**
+ * Token parsing routine for unknown tokens.  This just forces a parsing error.
+ *
+ * @param ttsp      The token action definition associated with this parse.
+ * @param token     The current token.
+ * @param userparms An opaque user parameter info.
+ *
+ * @return 0 for success, 1 for any failure.
+ */
+int unknown_tr(TokenDefinition* ttsp, StreamToken &tokenizer, void *userparms)
+{
+   return 1;
+}
+
+/**
+ * Get the buffer attached to this stream.  If the existing
+ * buffer is large enough for the requested usage, then use
+ * it.  Otherwise, allocate a larger one.
+ *
+ * @param length Required buffer length
+ *
+ * @return Pointer to the buffer area.
+ */
+char *StreamInfo::allocateBuffer(size_t length)
+{
+    // if we already have a sufficiently large buffer, just use it.
+    if (bufferAddress != NULL)
+    {
+        if (bufferLength >= length)
         {
-            openFlags &=~o_creat;      /* COM ports require OPEN_EXISTING... */
-            stream_info->fh = _sopen(stream_info->full_name_parameter, (int)openFlags, (int)sharedFlag, (int)openMode);  /* ... and exclusive access */
-            if (stream_info->fh != -1)
-                osf = (HANDLE)_get_osfhandle(stream_info->fh);
-            else osf = NULL;
-            /* The following functions must be called, otherwise reading from COM port won't work */
-            /* Note that the dcb is not modified but still Get and Set must be called, otherwise ReadFile hangs */
-            if (osf && GetCommState(osf, &dcb))
-                SetCommState(osf, &dcb);
+            return bufferAddress; /* return the existing one           */
         }
-        else stream_info->fh = _sopen(stream_info->full_name_parameter, (int)openFlags, (int)sharedFlag, (int)openMode);  /* allow sharing for normal files */
+        bufferAddress = (char *)realloc(bufferAddress, length);
     }
     else
-#endif
-#if defined( O_NSHARE ) && defined( O_RSHARE )
-  switch (sharedFlag)
-  {
-    case SH_DENYRW:
-      openFlags |= O_NSHARE;
-      break;
-    case SH_DENYWR:
-      openFlags |= O_RSHARE;
-      break;
-  }
-#endif
+    {
+        // make sure we get at least the minimum
+        if (length < DefaultBufferSize)
+        {
+            length = DefaultBufferSize;
+        }
 
-#ifdef WIN32
-    stream_info->fh = _sopen(stream_info->full_name_parameter, (int)(openFlags|_O_NOINHERIT), (int)sharedFlag, (int)openMode);
-#else
-    stream_info->fh = _sopen(stream_info->full_name_parameter, (int)openFlags, (int)sharedFlag, (int)openMode);
-#endif
-  if (stream_info->fh != -1)           /* have a handle?                    */
-                                       /* now get the FILE information      */
-    stream_info->stream_file = fdopen(stream_info->fh, fdopenMode);
+        bufferAddress = (char *)malloc(length);
+    }
+    bufferLength = length;
+    if (bufferAddress == NULL)
+    {
+        raiseException(Rexx_Error_System_service);
+    }
+    // and return the new buffer address
+    return bufferAddress;
 }
 
-size_t stream_size(
-    STREAM_INFO *stream_info)          /* target stream information block   */
-/******************************************************************************/
-/* Function:  Get the size of a stream                                        */
-/******************************************************************************/
+/**
+ * Get a buffer of at least the default size, returning a
+ * to the buffer and the current size.
+ *
+ * @param length The returned buffer length.
+ *
+ * @return The pointer to the allocated buffer.
+ */
+char *StreamInfo::getDefaultBuffer(size_t &length)
 {
-   struct stat stat_info;              /* stream information block          */
-
-                                       /* not set the size yet?             */
-   if (stream_info->pseudo_stream_size == 0) {
-                                       /* try to get file information       */
-     if (get_fstat(stream_info->fh, &stat_info) != 0) {
-       /* get file size failed, try using stat instead */
-       if (get_stat(stream_info->full_name_parameter, &stat_info) == 0)
-         stream_info->pseudo_stream_size = stat_info.st_size;
-       else                            /* transient stream, just use 1      */
-         stream_info->pseudo_stream_size = 1;
-     }
-     else {                            /* get the size                      */
-       stream_info->pseudo_stream_size = stat_info.st_size;
-                                       /* possible multithread problem?     */
-       if (stat_info.st_size == 0 && stat_info.st_mode&S_IFREG) {
-                                       /* try for the external stat info    */
-         if (get_stat(stream_info->full_name_parameter, &stat_info) == 0)
-                                       /* get the new size                  */
-           stream_info->pseudo_stream_size = stat_info.st_size;
-       }
-     }
-   }
-                                       /* return the new size               */
-   return stream_info->pseudo_stream_size;
+    // make sure we have at least a minimum size buffer allocated,
+    // then return the pointer and length
+    allocateBuffer(DefaultBufferSize);
+    length = bufferLength;
+    return bufferAddress;
 }
 
-void stream_error(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    int          error_code,           /* new error information             */
-    REXXOBJECT   result )              /* notready return result            */
-/******************************************************************************/
-/* Function:   Raise a notready condition for stream errors                   */
-/******************************************************************************/
+
+/**
+ * Extend the current I/O buffer, keeping any data in the
+ * buffer intact.
+ *
+ * @param length The length of the extended buffer.
+ *
+ * @return Pointer to the reallocated buffer.
+ */
+char *StreamInfo::extendBuffer(size_t &length)
 {
-  stream_info->error = error_code;     /* set the error information         */
-                                       /* place this in an error state      */
-  stream_info->state = stream_error_state;
-  if (stream_info->stream_file) {      /* clear any errors if file is open  */
-    clearerr(stream_info->stream_file);/* clear any errors                  */
-  } /* endif */                        /* change for defect 31, CHM         */
-                                       /* raise this as a notready condition*/
-  ooRexxRaiseCondition("NOTREADY", ooRexxString(stream_info->name_parameter), self, result);
+    // We need more room for reading...extend this by another allocation unit,
+    // keeping the data in the new buffer.
+    allocateBuffer(bufferLength + DefaultBufferSize);
+    length = bufferLength;
+    return bufferAddress;
 }
 
-void stream_eof(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    REXXOBJECT   result )              /* notready return result            */
-/******************************************************************************/
-/* Function:   Raise a notready condition for stream end-of-file              */
-/******************************************************************************/
+
+/**
+ * Release the buffer, if any, attached to this stream object.
+ */
+void StreamInfo::freeBuffer()
 {
-  stream_info->error = 0;              /* set the error information         */
-                                       /* place this in an eof state        */
-  stream_info->state = stream_eof_state;
-                                       /* raise this as a notready condition*/
-  ooRexxRaiseCondition("NOTREADY", ooRexxString(stream_info->name_parameter), self, result);
+    // Free file buffer so it can be collected next time garbage collection
+    // is invoked.
+    if (bufferAddress != NULL)
+    {
+        free(bufferAddress);
+        bufferAddress = NULL;
+        bufferLength = 0;
+    }
 }
 
-void stream_check_eof(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    int          error_code,           /* new error information             */
-    REXXOBJECT   result )              /* notready return result            */
-/******************************************************************************/
-/* Function:   Check for an eof or error condition and raise appropriate      */
-/*             notready condition                                             */
-/******************************************************************************/
+/**
+ * Open the stream in the specified mode.
+ *
+ * @param openFlags  Open flags as defined by the _sopen() library function
+ * @param openMode   Mode flags as defined by the _sopen() function.
+ * @param sharedFlag Sharing flags as defined by _sopen()
+ *
+ * @return true if the file is opened successfully, false for any failures.
+ */
+bool StreamInfo::open(int openFlags, int openMode, int sharedFlag)
 {
-  if (feof(stream_info->stream_file))  /* get an EOF condition?             */
-                                       /* raise that notready condition     */
-    stream_eof(self, stream_info, result);
-  else
-                                       /* raise an error condition          */
-    stream_error(self, stream_info, errno, result);
+     return fileInfo.open(qualified_name, openFlags, openMode, sharedFlag);
 }
 
-void get_stream_type(                  /* read a line from an I/O stream    */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    bool         binary )              /* binary flag                       */
-/******************************************************************************/
-/* Function:   get the type of a stream                                       */
-/******************************************************************************/
+/**
+ * Retrieve the size of the stream, if available.
+ *
+ * @return The 64-bit stream size of the target stream.
+ */
+int64_t StreamInfo::size()
 {
-   stream_info->flags.binary = false;  /* reset the binary flag             */
-                                       /* and the transient flag            */
-   stream_info->flags.transient = false;
-   if (!_transient) {                  /* not transient?                    */
-     if (binary) {                     /* is it binary?                     */
-                                       /* tag it as such                    */
-       stream_info->flags.binary = true;
-                                       /* if reclength was not entered      */
-       if (!stream_info->stream_reclength)
-                                       /* use the dataset size as reclength */
-         if (!(stream_info->stream_reclength = stream_size(stream_info)))
-                                       /* raise an error for zero size      */
-           rexx_exception(Error_Incorrect_call);
-     }
-   }
-   else {
-                                       /* record this as transient          */
-     stream_info->flags.transient = true;
-     if (binary) {                     /* binary specified?                 */
-                                       /* tag it as such                    */
-       stream_info->flags.binary = true;
-                                       /* if reclength was not entered      */
-       if (!stream_info->stream_reclength)
-                                       /* use one as the reclength          */
-         stream_info->stream_reclength = 1;
-     }
-   }
+    int64_t streamSize;
+    fileInfo.getSize(streamSize);
+    return streamSize;
 }
 
-/********************************************************************************************/
-/* close_stream                                                                             */
-/********************************************************************************************/
-void close_stream(
-    OSELF        self,                 /* target stream object              */
-    STREAM_INFO *stream_info )         /* stream information block          */
+/**
+ * Raise a stream error condition, including raising a NOTREADY
+ * condition.
+ */
+void StreamInfo::notreadyError()
 {
-   int rc = 0;                         /* close return code                 */
-
-   if (stream_info->flags.bstd) {      /* standard stream?                  */
-#if defined(AIX) || defined(LINUX)
-     if (stream_info->fh!=stdin_handle) { /* don't flush stdin              */
-#endif
-                                       /* return the flush information      */
-     rc = buffer_flush;                /* flush the buffer                  */
-     if (rc != 0)                      /* did this work?                    */
-                                       /* go raise a notready condition     */
-       stream_error(self, stream_info, rc, RexxInteger(rc));
-#if defined(AIX) || defined(LINUX)
-     }
-#endif
-   }
-   else if (stream_info->stream_file) {/* is this a file?                   */
-     rc = close_the_stream;            /* do the close                      */
-     if (rc != 0) {                    /* have an error?                    */
-                                       /* clear any errors                  */
-       clearerr(stream_info->stream_file);
-       rc = close_the_stream;          /* try the close again               */
-       if (rc != 0)                    /* have an error?                    */
-                                       /* go raise a notready condition     */
-         stream_error(self, stream_info, rc, RexxInteger(rc));
-     }
-     stream_info->flags.open = false;  /* this is now closed                */
-     stream_info->fh = -1;             /* closed is not 0 but -1 */
-     stream_info->stream_file = NULL;  /* mark stream as closed  */
-                                       /* don't really know                 */
-     stream_info->state = stream_unknown_state;
-   }
+    notreadyError(fileInfo.errorInfo(), defaultResult);
 }
 
-/********************************************************************************************/
-/* std_open                                                                                 */
-/********************************************************************************************/
-CSTRING std_open(
-  STREAM_INFO *stream_info,            /* stream information                */
-  CSTRING      ts )                    /* open parameters                   */
+/**
+ * Raise a stream error condition, including raising a NOTREADY
+ * condition.
+ *
+ * @param error_code The Rexx error condition to raise.
+ * @param result     A NOTREADY condition result object.
+ */
+void StreamInfo::notreadyError(int error_code, RexxObjectPtr result)
 {
-                                       /* is this standard in?              */
-   if (!stricmp(stream_info->name_parameter,"STDIN") ||
-       !stricmp(stream_info->name_parameter,"STDIN:")) {
-     stream_info->stream_file = SysBinaryFilemode(stdin, true);
-     stream_info->fh = 0;              /* this is handle zero               */
-     stream_info->flags.read_only = 1; /* this is a read-only file          */
+    // if we don't have a result specified, use the default one.
+    if (result == NULLOBJECT)
+    {
+        result = defaultResult;
+    }
+    state = StreamError;
+    fileInfo.clearErrors();              // clear any errors if the stream is open
+    // raise this as a notready condition
+    context->RaiseCondition("NOTREADY", stream_name, context->ArrayOfOne(self), result);
+    // throw the stream object as an exception to unwind
+    throw this;
+}
+
+/**
+ * Raise an exception for the stream code.
+ *
+ * @param err     The raised error code.
+ */
+void StreamInfo::raiseException(int err)
+{
+    context->RaiseException(err);
+    // and throw a C++ exception to go back to base camp.
+    throw err;
+}
+
+/**
+ * Raise an exception for the stream code.
+ *
+ * @param err     The raised error code.
+ * @param sub1    First error substitution value.
+ */
+void StreamInfo::raiseException(int err, RexxObjectPtr sub1)
+{
+    context->RaiseException1(err, sub1);
+    // and throw a C++ exception to go back to base camp.
+    throw err;
+}
+
+/**
+ * Raise an exception for the stream code.
+ *
+ * @param err     The raised error code.
+ * @param sub1    First error substitution value.
+ * @param sub2    Second error substitution value.
+ */
+void StreamInfo::raiseException(int err, RexxObjectPtr sub1, RexxObjectPtr sub2)
+{
+    context->RaiseException2(err, sub1, sub2);
+    // and throw a C++ exception to go back to base camp.
+    throw err;
+}
+
+/**
+ * Process an EOF condition for a stream.
+ *
+ * @param result  A result object returned with the NotReady condition.
+ */
+void StreamInfo::eof()
+{
+    /* place this in an eof state        */
+    state = StreamEof;
+    /* raise this as a notready condition*/
+    context->RaiseCondition("NOTREADY", stream_name, context->ArrayOfOne(self), defaultResult);
+
+    // if a result object was given, the caller's not expecting control back, so
+    // throw an exception to unwind.
+    throw this;
+}
+
+/**
+ * Raise the appropriate not ready condition, checking first for an eof
+ * condition.
+ *
+ * @param result     A result object to be passed with the Notready condition.
+ */
+void StreamInfo::checkEof()
+{
+      // if this is an eof condition, raise the eof not ready
+    if (fileInfo.atEof())
+    {
+        eof();
+    }
+    else
+    {
+        // must be an error, so raise the error not ready using the file error
+        // information
+        notreadyError();
+    }
+}
+
+
+/**
+ * Get the type of the stream in question.
+ *
+ * @param binary  Indicates whether we believe this to be a binary stream,
+ *                or not.
+ */
+void StreamInfo::checkStreamType()
+{
+    // reset the current type flags
+    transient = false;
+    // see if the system believes this is transient.
+    if (!fileInfo.isTransient())
+    {
+        // non-transient, now process this as binary or text based.
+        if (record_based)
+        {
+            // not given as a binary record length?
+            if (!binaryRecordLength)
+            {
+                // one stream, one record, up to the record size restriction
+                binaryRecordLength = (size_t)size();
+                if (binaryRecordLength == 0)
+                {
+                    // raise an exception for this
+                    raiseException(Rexx_Error_Incorrect_method);
+                }
+            }
+        }
+    }
+    else   // a transient stream
+    {
+        transient = true;
+        // for transient binary streams, if a record length was not provided,
+        // we default to 1.
+        if (record_based)
+        {
+            if (binaryRecordLength == 0)
+            {
+                binaryRecordLength = 1;
+            }
+        }
+    }
+}
+
+/**
+ * Close stream, performing any data flushes that might be
+ * required.
+ *
+ * This raises a NOTREADY condition if any errors occur on the
+ * close.
+ */
+void StreamInfo::close()
+{
+    // do the stream close
+    bool closed = fileInfo.close();
+    // free our data buffer
+    freeBuffer();
+    // and raise a NOTREADY condition if anything went amiss
+    if (!closed)
+    {
+        defaultResult = context->NumberToObject(fileInfo.errorInfo());
+        notreadyError();
+    }
+    // no longer open for business
+    isopen = false;
+    state = StreamUnknown;
+}
+
+/**
+ * Open a standard stream, using the provided options string.
+ *
+ * @param options Open parameters, in character string form.
+ *
+ * @return The open condition string.
+ */
+const char *StreamInfo::openStd(const char *options)
+{
+    // first check for the standard io streams
+   if (!Utilities::stricmp(stream_name, "STDIN") ||
+       !Utilities::stricmp(stream_name,"STDIN:"))
+   {
+       // indicate this is stdin
+       fileInfo.setStdIn();
+       // this is a read only file
+       read_only = 1;
    }
-                                       /* standard out?                     */
-   else if (!stricmp(stream_info->name_parameter,"STDOUT") ||
-            !stricmp(stream_info->name_parameter,"STDOUT:")) {
-     stream_info->stream_file = SysBinaryFilemode(stdout, false);
-     stream_info->fh = 1;              /* this is file handle one           */
-     stream_info->flags.append = 1;    /* this is an append only file       */
+
+   else if (!Utilities::stricmp(stream_name,"STDOUT") ||
+            !Utilities::stricmp(stream_name,"STDOUT:"))
+   {
+       // indicate this is stdout
+       fileInfo.setStdOut();
+       // stdout can only be appended to.
+       append = 1;
    }
-   else {                              /* must be standard error            */
-                                       /* flag it,                          */
-     stream_info->stream_file = SysBinaryFilemode(stderr, false);
-     stream_info->fh = 2;              /* tag as handle number 2            */
-     stream_info->flags.append = 1;    /* also opened for append            */
+   else                                /* must be standard error            */
+   {
+       // indicate this is stderr
+       fileInfo.setStdErr();
+       // stderr can only be appended to.
+       append = 1;
    }
-                                       /* copy name into stream info block  */
-   strcpy(stream_info->full_name_parameter,stream_info->name_parameter);
-                                       /* nobuffer requested?               */
-   if (ts != NO_CSTRING && !stricmp(ts,"NOBUFFER"))
-     stream_info->flags.nobuffer = 1;  /* tag this                          */
+
+   // check to see if buffering is allowed.
+   if (options != NULL && !Utilities::stricmp(options, "NOBUFFER"))
+   {
+       nobuffer = 1;
+   }
    else
-     stream_info->flags.nobuffer = 0;  /* buffering is used                 */
-   stream_info->flags.open = true;     /* this is now open                  */
-                                       /* this is now ready                 */
-   stream_info->state = stream_ready_state;
+   {
+       nobuffer = 0;  /* buffering is used                 */
+   }
 
-   if (_transient)                     /* transient stream?                 */
-                                       /* record this as transient          */
-     stream_info->flags.transient = true;
-   return "READY:";                    /* return successful open            */
+   // the resolved name is the same as the input name.
+   strcpy(qualified_name, stream_name);
+   // we're open, and ready
+   isopen = true;
+
+   state = StreamReady;
+
+   // and also record the transient nature of this
+   transient = fileInfo.isTransient();
+
+   // don't buffer if this is a transient stream or we've explicitly requested no buffering.
+   // in either case, make sure the initial buffer has been allocated.
+   if (transient || nobuffer)
+   {
+       // we do not buffer buffer file
+       fileInfo.setBuffering(false, 0);
+   }
+   else
+   {
+       // we buffer file
+       fileInfo.setBuffering(true, 0);
+   }
+   // this was successful.
+   return "READY:";
 }
 
-/********************************************************************************************/
-/* handle_open                                                                              */
-/********************************************************************************************/
-CSTRING handle_open(
-  REXXOBJECT   self,                   /* target stream                     */
-  STREAM_INFO *stream_info,            /* stream information                */
-  CSTRING      ts)                     /* open command string               */
+/**
+ * Do a stream open using a supplied file handle.  This
+ * open process parses all of the open parameters, setting
+ * the appropriate state
+ *
+ * @param options The character string open optins.
+ *
+ * @return The stream state (READY/NOTREADY)
+ */
+const char *StreamInfo::handleOpen(const char *options)
 {
+    int oflag = O_BINARY;                  // we always open in binary mode
 
-/* fields that parse will fill in */
-size_t Parse_Fields[7] = {
-  0,                                       /* oflag       */
-  0,                                       /* fdopen_long */
-  0,                                       /* i_binary    */
-  0,                                       /* i_nobuffer  */
- };
+    // reset the standard fields
+    resetFields();
 
-/* Action table for open parameters */
-ATS  OpenActionread[] = {
-      {ME,       sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_creat,0},
-      {BitOr,    sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_rdonly,0},
-      {CopyItem, sizeof(size_t),  (void *)rdonly_index, errcode,(void *)&one,0},
-      {CopyItem, sizeof(c_read), (void *)fdopen_long_index, errcode,(void *)c_read,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionwrite[] = {
-      {ME,       sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_rdwr,0},
-      {MF,       sizeof(size_t),  (void *)rdonly_index, errcode,0,0},
-      {BitOr,    sizeof(oflag), (void *)oflag_index, errcode,(void *)&wr_creat,0},
-      {CopyItem, sizeof(c_write), (void *)fdopen_long_index, errcode,(void *)c_write,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionboth[] = {
-      {ME,       sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_wronly,0},
-      {MF,       sizeof(size_t),  (void *)rdonly_index, errcode,0,0},
-      {BitOr,    sizeof(oflag), (void *)oflag_index, errcode,(void *)&rdwr_creat,0},
-      {CopyItem, sizeof(c_both), (void *)fdopen_long_index, errcode,(void *)c_both,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionnobuffer[] = {
-      {CopyItem,sizeof(i_nobuffer), (void *)i_nobuffer_index, errcode,(void *)&one,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionbinary[] = {
-      {MF,sizeof(i_binary), (void *)i_binary_index, errcode,0,0},
-      {BitOr,sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_binary,0},
-      {CopyItem,sizeof(i_binary), (void *)i_binary_index, errcode,(void *)&one,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionreclength[] = {
-      {MI,sizeof(i_binary), (void *)i_binary_index, errcode,(void *)&one,0},
-      {CallItem,sizeof(int),0, errcode,0,reclength_token},
-      {0,0,0,0,0,0}
-     };
+    /* copy into the full name from the name */
+    strcpy(qualified_name,stream_name);
 
-/* Token table for open parameters */
-TTS  tts[] = {
-      {"READ",3,     OpenActionread,0},
-      {"WRITE",1,    OpenActionwrite,0},
-      {"BOTH",2,     OpenActionboth,0},
-      {"NOBUFFER",3, OpenActionnobuffer,0},
-      {"BINARY",2,   OpenActionbinary,0},
-      {"RECLENGTH",3,OpenActionreclength,0},
-      {"\0",0,NULL, unknown_tr}
-    };
+    // do we have options?
+    if (options != NULL)
+    {
+    /* Action table for open parameters */
+        ParseAction  OpenActionread[] = {
+            ParseAction(MEB, write_only),
+            ParseAction(MEB, read_write),
+            ParseAction(BitOr, oflag, O_RDONLY),
+            ParseAction(SetBool, read_only, true),
+            ParseAction()
+        };
+        ParseAction OpenActionwrite[] = {
+            ParseAction(MEB, read_only),
+            ParseAction(MEB, read_write),
+            ParseAction(BitOr, oflag, WR_CREAT),
+            ParseAction(SetBool, write_only, true),
+            ParseAction()
+        };
+        ParseAction OpenActionboth[] = {
+            ParseAction(MEB, read_only),
+            ParseAction(MEB, write_only),
+            ParseAction(BitOr, oflag, RDWR_CREAT),
+            ParseAction(SetBool, read_write, true),
+            ParseAction()
+        };
+        ParseAction OpenActionnobuffer[] = {
+            ParseAction(SetBool, nobuffer, true),
+            ParseAction()
+        };
+        ParseAction OpenActionbinary[] = {
+            ParseAction(MEB, record_based),
+            ParseAction(SetBool, record_based, true),
+            ParseAction()
+        };
+        ParseAction OpenActionreclength[] = {
+            ParseAction(MIB, record_based, true),
+            ParseAction(CallItem, reclength_token, &binaryRecordLength),
+            ParseAction()
+        };
 
-char fdopen_type[4];
+    /* Token table for open parameters */
+        TokenDefinition tts[] = {
+            TokenDefinition("READ",3,     OpenActionread),
+            TokenDefinition("WRITE",1,    OpenActionwrite),
+            TokenDefinition("BOTH",2,     OpenActionboth),
+            TokenDefinition("NOBUFFER",3, OpenActionnobuffer),
+            TokenDefinition("BINARY",2,   OpenActionbinary),
+            TokenDefinition("RECLENGTH",3,OpenActionreclength),
+            TokenDefinition(unknown_tr)
+        };
+        /* call the parser to setup the input information */
+        /* the input string should be upper cased         */
+        if (parser(tts, options, NULL) != 0)
+        {
+            raiseException(Rexx_Error_Incorrect_method);
+        }
+    }
 
-TTS *ttsp;
-
-   char   char_buffer;                 /* single character buffer           */
-   char   work[30];                    /* error message buffer              */
-
-   i_nobuffer = 0;                     /* set default handle parameters     */
-   i_binary = 0;
-   oflag = 0;
-   fdopen_long = 0;
-   fdopen_type[0] = '\0';
-   ttsp = tts;
-
-                                       /* initialize the stream info        */
-                                       /* structure in case this is not the */
-                                       /* first open for this stream        */
-   strcpy(stream_info->full_name_parameter,"\0");
-   stream_info->stream_file = NULL;
-   stream_info->pseudo_stream_size = 0;
-   stream_info->stream_reclength = 0;
-   stream_info->flags.read_only = 0;
-   stream_info->flags.write_only = 0;
-   stream_info->flags.read_write = 0;
-   stream_info->flags.append = 0;
-   stream_info->flags.bstd = 0;
-   stream_info->char_read_position = 1;
-   stream_info->char_write_position = 1;
-   stream_info->line_read_position = 1;
-   stream_info->line_write_position = 1;
-   stream_info->line_read_char_position = 1;
-   stream_info->line_write_char_position = 1;
-   stream_info->flags.nobuffer = 0;
-   stream_info->flags.last_op_was_read = 1;
-
-                                             /* copy into the full name from the name */
-   strcpy(stream_info->full_name_parameter,stream_info->name_parameter);
-
-                                       /* change the offsets to addresses in the tables */
-   table_fixup(ttsp, Parse_Fields);
-   if (NO_CSTRING != ts) {             /* have parameters?                  */
-                                                 /* call the parser to setup the input information */
-                                                 /* the input string should be upper cased         */
-     if (parser(ttsp, ts, (void *)(&stream_info->stream_reclength)) != 0)
-                                       /* this is an error                  */
-       rexx_exception(Error_Incorrect_call);
-   }
-/********************************************************************************************/
-/*           move over parse parameters into the stream info block                          */
-/*           put the fdopen parameter into the correct casting to use for this code         */
-/********************************************************************************************/
-
-   strcpy(fdopen_type,(const char *)&fdopen_long);
-
-
-                                                  /* set up read only flag                       */
-   if (rdonly)
-      stream_info->flags.read_only = 1;
-                                                  /* set up read write flag                       */
-   else if (oflag & o_wronly)
-      stream_info->flags.read_write = 1;
-                                                 /* read/write/both/append not specified default both */
-   else {
-      stream_info->flags.read_write = 1;
-      strcpy(fdopen_type,c_both);
-   }
-                                                /* make sure all streams except transient are opened */
-                                                /*  in binary mode                                   */
-   if ((!i_binary && !_transient) || i_binary)
-      strcat(fdopen_type,c_binary);
-                                       /* open the stream by the handle     */
-   if (NULL == open_stream_by_handle(fdopen_type)) {
-     sprintf(work, "ERROR:%d", errno); /* format the error return           */
-                                       /* go raise a notready condition     */
-     stream_error(self, stream_info, errno, ooRexxString(work));
-   }
-                                             /* if nobuffer requested set it in the stream block */
-   if (i_nobuffer)
-     stream_info->flags.nobuffer = 1;
-   else
-     stream_info->flags.nobuffer = 0;
 /********************************************************************************************/
 /*          if it is a persistant stream put the write character pointer at the end         */
 /*   need to check if the last character is end of file and if so write over it             */
@@ -637,1713 +611,1531 @@ TTS *ttsp;
 /*          so set it to one                                                                */
 /********************************************************************************************/
 
-   if ((!_transient) && (stream_info->flags.write_only | stream_info->flags.read_write)) {
-     if (stream_size(stream_info)) {
-       if (!set_stream_position(stream_size(stream_info)-1))
-                                            /* if this isn't a repeat of the last op then         */
-                                            /* flush the buffer before doing the operation        */
-         if (!stream_info->flags.last_op_was_read) {
-           buffer_flush;
-           stream_info->flags.last_op_was_read = ~stream_info->flags.last_op_was_read;
-         }
-         if (binary_read(&char_buffer,1) && ctrl_z == char_buffer)
-           stream_info->char_write_position = stream_size(stream_info);
-         else
-                 {
-           stream_info->char_write_position = stream_size(stream_info) + 1;
-                   /* error on Windows so we had to put in that */
-                                       /* explicitly set the position       */
-                   set_stream_position(stream_info->char_write_position - 1);
-                   /* I'm not sure here */
-                 }
-     }
-     stream_info->line_write_position = 0;
-     stream_info->line_write_char_position = 0;
-   }
-   stream_info->flags.open = true;     /* this is now open                  */
-                                       /* this is now ready                 */
-   stream_info->state = stream_ready_state;
-                                       /* go process the stream type        */
-   get_stream_type(stream_info, i_binary != 0);
-   return "READY:";                    /* return success                    */
+    if (!fileInfo.isTransient() && (write_only | read_write))
+    {
+        if (size() > 0)
+        {
+            // if the stream is persistent, check the end position to see
+            // if there is an eof marker.  If there is, position to overwrite the
+            // eof character.
+            // position at the end, and set the write position
+            setPosition(size(), charWritePosition);
+
+            char   char_buffer;
+            size_t bytesRead;
+            // read the last character of the buffer
+            readBuffer(&char_buffer, 1, bytesRead);
+
+            // if the last character is not a ctrl_z, we need to
+            // step past it.
+            if (ctrl_z != char_buffer)
+            {
+                charWritePosition++;
+                /* error on Windows so we had to put in that */
+                /* explicitly set the position       */
+                setPosition(charWritePosition, charWritePosition);
+            }
+        }
+        lineWritePosition = 0;
+        lineWriteCharPosition = 0;
+    }
+    // ready to go here
+    isopen = true;
+    state = StreamReady;
+    /* go process the stream type        */
+    checkStreamType();
+    return "READY:";                    /* return success                    */
 }
 
-void implicit_open(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    size_t       type,                 /* type of open                      */
-    REXXOBJECT   result )              /* notready condition return value   */
-/******************************************************************************/
-/* Function:   Handle implicit opens on first stream access                   */
-/******************************************************************************/
+
+/**
+ * Reinitialize the stream fields to default values.
+ */
+void StreamInfo::resetFields()
 {
-   char   work[30];                    /* error message buffer              */
-   char   char_buffer;                 /* single character buffer           */
-   struct stat stat_info;              /* stream information block          */
-
-   if (stream_info->flags.bstd) {      /* standard stream?                  */
-     std_open(stream_info, NULL);      /* handle as a standard stream       */
-     return;                           /* finished                          */
-   }
-   else if (stream_info->flags.handle_stream) {
-                                       /* do a handle open                  */
-     handle_open(self, stream_info, NULL);
-     return;                           /* finished                          */
-   }
-
-                                       /* initialize the stream info        */
-                                       /*  in case this is not the first    */
-                                       /* open for this stream              */
-   strcpy(stream_info->full_name_parameter,"\0");
-   stream_info->stream_file = NULL;
-   stream_info->pseudo_stream_size = 0;
-   stream_info->pseudo_lines = 0;
-   stream_info->pseudo_max_lines = 0;
-   stream_info->stream_reclength = 0;
-   stream_info->flags.read_only = 0;
-   stream_info->flags.write_only = 0;
-   stream_info->flags.read_write = 1;  /* try for read/write                */
-   stream_info->flags.bstd = 0;
-   stream_info->flags.append = 0;
-   stream_info->char_read_position = 1;
-   stream_info->char_write_position = 1;
-   stream_info->line_read_position = 1;
-   stream_info->line_write_position = 1;
-   stream_info->line_read_char_position = 1;
-   stream_info->line_write_char_position = 1;
-   stream_info->flags.nobuffer = 0;
-   stream_info->flags.last_op_was_read = 1;
-   stream_info->flags.transient = false;
-   stream_info->flags.binary = false;
-   full_name_parameter(stream_info);   /* get the fully qualified name      */
-
-
-                                       /* first try for read/write          */
-   if (type == operation_nocreate)     /* open file without create          */
-      open_the_stream(o_rdwr | o_binary, iread_iwrite, c_default_both);
-   else
-       open_the_stream(rdwr_creat | o_binary, iread_iwrite, c_default_both);
-                                       /* if there was an open error and    */
-                                       /*  we have the info to try again -  */
-                                       /*  doit                             */
-   if ((stream_info->stream_file == NULL) ) {
-     stream_info->flags.read_write = 0;/* turn off the read/write flag      */
-     if (type == operation_write) {    /* this a write operation?           */
-                                       /* try opening again                 */
-       open_the_stream(o_rdwr | o_binary, iread_iwrite, c_default_write);
-       stream_info->flags.write_only = 1;
-     }
-     else {                            /* read operation                    */
-                                       /* try opening again                 */
-       open_the_stream(o_rdonly | o_binary, s_iread, c_default_read);
-                                       /* turn on the read only flag        */
-       stream_info->flags.read_only = 1;
-     }
-                                       /* if there was an error             */
-     if (stream_info->stream_file == NULL) {
-       if (result == NULLOBJECT) {     /* no result given?                  */
-                                       /* format the error return           */
-         sprintf(work, "ERROR:%d", errno);
-         result = ooRexxString(work);  /* go raise a notready condition     */
-       }
-                                       /* go raise a notready condition     */
-       stream_error(self, stream_info, errno, result);
-     }
-   }
-
-   fstat(stream_info->fh, &stat_info); /* get the file information          */
-   if (stat_info.st_mode&S_IFCHR) {    /* is this a device?                 */
-     set_nobuffer;                     /* turn off buffering                */
-#if defined(WIN32)
-     /* reset _bufsiz to 1 character for COM ports */
-     if (!strnicmp(stream_info->name_parameter, "COM", 3) &&
-         atoi(&stream_info->name_parameter[3]))
-       stream_info->stream_file->_bufsiz = 1;
-#endif
-   }
-   else
-   {
-       setvbuf(stream_info->stream_file, NULL,_IOFBF, 1024);
-   }
-
-                                       /* persistent writeable stream?      */
-   if (!_transient && !stream_info->flags.read_only) {
-     if (stream_size(stream_info)) {   /* existing stream?                  */
-                                       /* try to set to the end             */
-       if (!set_stream_position(stream_size(stream_info) - 1)) {
-                                       /* read the last character, and if   */
-                                       /* it is an EOF character            */
-         if (binary_read(&char_buffer,1) && ctrl_z == char_buffer)
-                                       /* position to overwrite it          */
-           stream_info->char_write_position = stream_size(stream_info);
-         else {                        /* write at the very end             */
-           stream_info->char_write_position = stream_size(stream_info) + 1;
-                   /* error on Windows so we had to put in that */
-                                       /* explicitly set the position       */
-                   set_stream_position(stream_info->char_write_position - 1);
-                 }
-       }
-     }
-                                       /* set default line positioning      */
-     stream_info->line_write_position = 0;
-     stream_info->line_write_char_position = 0;
-   }
-   stream_info->flags.open = true;     /* this is now open                  */
-                                       /* this is now ready                 */
-   stream_info->state = stream_ready_state;
-   get_stream_type(stream_info, false);/* go process the stream type        */
-
+    // initialize the stream info
+    //  in case this is not the first
+    // open for this stream
+    strcpy(qualified_name, "\0");
+    fileInfo.reset();
+    stream_line_size = 0;
+    binaryRecordLength = 0;
+    read_only = false;
+    write_only = false;
+    read_write = false;
+    stdstream = false;
+    append = false;
+    opened_as_handle = false;
+    charReadPosition = 1;
+    charWritePosition = 1;
+    lineReadPosition = 1;
+    lineWritePosition = 1;
+    lineReadCharPosition = 1;
+    lineWriteCharPosition = 1;
+    nobuffer = false;
+    last_op_was_read = true;
+    transient = false;
+    record_based = false;
+    isopen = false;
+    defaultResult = NULL;
 }
 
-void read_setup(                       /* setup for a read operation        */
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    REXXOBJECT   result )              /* notready condition return value   */
-/******************************************************************************/
-/* Function:   Do common stream read operation setup and checking             */
-/******************************************************************************/
+
+/**
+ * Do an implicit open of the stream...this fully parses
+ * the information to sort out how the open needs to proceed.
+ *
+ * @param type    The type of open operation.
+ */
+void StreamInfo::implicitOpen(int type)
 {
-   int     tell_position;              /* current stream position           */
+    // is this one of the standard streams?
+    // those have their own special open process.
+    if (stdstream)
+    {
+        openStd(NULL);
+        return;
+    }
+    // this could be a directly provided handle
+    else if (opened_as_handle)
+    {
+        handleOpen(NULL);
+        return;
+    }
 
-   if (!stream_info->flags.open)       /* not open yet?                     */
-                                       /* do the open                       */
-     implicit_open(self, stream_info, operation_nocreate, result);
-                                       /* reset to a ready state            */
-   stream_info->state = stream_ready_state;
+    // reset everything to the default.
+    resetFields();
 
-#if defined(AIX) || defined(LINUX)
-   if (!stream_info->flags.bstd ||     /* no standard stream?               */
-       stream_info->fh!=stdin_handle) {/* no stdin ?                        */
-#endif
-                                       /* get the current stream position   */
-   tell_position = tell_stream_position;
-                                       /* at the correct position?          */
-   if (tell_position != -1 && (stream_info->char_read_position - 1) != (size_t)tell_position) {
-                                       /* do a seek to char_read_position   */
-     if (set_stream_position(stream_info->char_read_position - 1))
-                                       /* go raise a notready condition     */
-       stream_error(self, stream_info, errno, result);
-   }
+    // get the fully qualified name
+    resolveStreamName();
 
-#if defined(AIX) || defined(LINUX)
-   }
-#endif
-                                       /* if this isn't a repeat of the last*/
-                                       /* operation, then we need to flush  */
-                                       /* the buffer before reading         */
-   if (!stream_info->flags.last_op_was_read) {
-     buffer_flush;                     /* flush the buffer                  */
-                                       /* set the read flag on              */
-     stream_info->flags.last_op_was_read = true;
-   }
-}
-
-                                       /* begin common read setup           */
-#define setup_read_stream(result) read_setup(self, stream_info, result)
-
-
-void write_setup(                      /* setup for a write operation       */
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    size_t       result )              /* notready return result            */
-/******************************************************************************/
-/* Function:   Do common stream write operation setup and checking            */
-/******************************************************************************/
-{
-   int  tell_position;                 /* current stream position           */
-
-
-   if (!stream_info->flags.open)       /* not open yet?                     */
-                                       /* do the open                       */
-     implicit_open(self, stream_info, operation_write, RexxInteger(result));
-                                       /* reset to a ready state            */
-   stream_info->state = stream_ready_state;
-                                       /* get the current stream position   */
-   tell_position = tell_stream_position;
-                                       /* at the correct position?          */
-   if (tell_position != -1 && (stream_info->char_write_position - 1) != (size_t)tell_position) {
-
-      if  (!stream_info->flags.append){/* not opened for append?            */
-                                       /* set stream back to write position */
-        if (set_stream_position(stream_info->char_write_position - 1))
-                                       /* go raise a notready condition     */
-          stream_error(self, stream_info, errno, RexxInteger(result));
-      }
-   }
-                                       /* if this isn't a repeat of the last*/
-                                       /* operation, then we need to flush  */
-                                       /* the buffer before reading         */
-   if (stream_info->flags.last_op_was_read) {
-     buffer_flush;                     /* flush the buffer                  */
-                                       /* set the read flag on              */
-     stream_info->flags.last_op_was_read = false;
-   }
-}
-
-                                       /* do common write setup             */
-#define setup_write_stream(result)  write_setup(self, stream_info, result)
-
-size_t write_stream_line(              /* write a line to an I/O stream     */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    const char  *buffer,               /* buffer to write                   */
-    size_t       length )              /* length to write                   */
-/******************************************************************************/
-/* Function:   write a line to a stream                                       */
-/******************************************************************************/
-{
-   size_t result;                      /* residual character count          */
-
-   result = line_write(buffer, length);/*   write out the buffer            */
-                                       /* make sure there wasn't an error   */
-   if (ferror(stream_info->stream_file))
-     stream_info->error = errno;       /* save any error information        */
-                                       /*   update the line_write_position  */
-   stream_info->char_write_position += result;
-                                       /*   update the stream size          */
-   update_stream_size(stream_info->char_write_position);
-   if (stream_info->flags.nobuffer)    /* no buffering requested?           */
-     buffer_flush;                     /* force it out                      */
-   return length - result;             /* return the residual count         */
-}
-
-REXXOBJECT read_stream_line(           /* read a line from an I/O stream    */
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    char        *buffer,               /* buffer to for output              */
-    size_t       length,               /* length to read                    */
-    bool         update_position )     /* update the read position          */
-/******************************************************************************/
-/* Function:   read a line from a stream                                      */
-/******************************************************************************/
-{
-   size_t     result;                  /* residual character count          */
-   REXXOBJECT string = NULL;           /* returned string                   */
-
-/* This is a patch for a defect in the Microsoft C++ Runtime-Library
-   If an odd number of bytes is written to a device without buffering,
-   the last character is internally bufferedand the IOWRT flag is set.
-   While this flag is set, read won't work and flush doesn't remove
-   the flag. */
-#ifdef WIN32
-   if ((stream_info->stream_file->_flag & _IOWRT) && (stream_info->flags.transient)
-          && (stream_info->flags.read_write))
-       stream_info->stream_file->_flag &=~_IOWRT;
-#endif
-
-   result = binary_read(buffer,length);/*  issue the read                   */
-                                       /* make sure there wasn't an error   */
-   if (ferror(stream_info->stream_file))
-                                       /* raise an error condition          */
-     stream_error(self, stream_info, errno, OREF_NULLSTRING);
-   if (result == 0)                    /* work ok?                          */
-                                       /* must be an eof condition          */
-     stream_eof(self, stream_info, OREF_NULLSTRING);
-   else {
-                                       /* create a result string            */
-     string = ooRexxStringL(buffer, result);
-     if (update_position)              /* need to move read position?       */
-                                       /* update the read position          */
-       stream_info->char_read_position += result;
-     if (result != length)             /* not get it all?                   */
-                                       /* go raise a notready condition     */
-       stream_eof(self, stream_info, string);
-   }
-   return string;                      /* return the string                 */
-}
-
-size_t read_stream_buffer(             /* read a buffer of data             */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    bool         non_binary,           /* binary/non-binary read            */
-    char        *buffer,               /* buffer to for output              */
-    size_t       length )              /* length to read                    */
-/******************************************************************************/
-/* Function:   read a buffer of data from a stream                            */
-/******************************************************************************/
-{
-   size_t     result;                  /* residual character count          */
-
-   stream_info->error = 0;             /* clear any error information       */
-   if (non_binary) {                   /* not a binary request?             */
-                                       /*  issue a non_binary_read          */
-     if (non_binary_read(buffer, length) != NULL)
-       result = strlen(buffer);        /* get the read length               */
-     else
-       result = 0;                     /* nothing returned                  */
-   }
-   else
-                                       /*  use a binary read                */
-     result = binary_read(buffer,length);
-                                       /* make sure there wasn't an error   */
-   if (ferror(stream_info->stream_file))
-     stream_info->error = errno;       /* save any error information        */
-   return result;                      /* return the read count             */
-}
-
-int get_file_statistics(               /* read a line from an I/O stream    */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    struct stat *stat_info )           /* returned stat information         */
-/******************************************************************************/
-/* Function:   get file statitics                                             */
-/******************************************************************************/
-{
-                                       /* not opened as a handle?           */
-   if (!stream_info->flags.handle_stream) {
-     full_name_parameter(stream_info); /* expand the name                   */
-                                       /* return the stream size            */
-                                       /* get the name statistics           */
-     return get_stat(stream_info->full_name_parameter, stat_info);
-   }
-   else                                /* have a handle                     */
-                                       /* get information via fstat         */
-     return get_fstat(stream_info->fh, stat_info);
-}
-
-void complete_line(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info)          /* current stream information        */
-/******************************************************************************/
-/* Function:   write out the rest of a line                                   */
-/******************************************************************************/
-{
-  char   *buffer;                      /* write buffer                      */
-  size_t  write_length;                /* length to write out               */
-
-                                       /* not on a line boundary?           */
-  if (0 != ((stream_info->char_write_position % stream_info->stream_reclength) - 1)) {
-                                       /* calculate length to write out     */
-    write_length = stream_info->stream_reclength - ((stream_info->char_write_position % stream_info->stream_reclength) - 1);
-    buffer = get_buffer(write_length); /* get a write buffer                */
-    memset(buffer, ' ', write_length); /* fill buffer with blanks           */
-                                       /*  keep the write out the info      */
-    if (write_stream_line(stream_info, buffer, write_length) != 0)
-                                       /* raise this as a notready condition*/
-      ooRexxRaiseCondition("NOTREADY", ooRexxString(stream_info->name_parameter), self, IntegerOne);
-  }
-}
-
-size_t write_fixed_line(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    const char  *data,                 /* data to write out                 */
-    size_t       length )              /* length to read                    */
-/******************************************************************************/
-/* Function:   write out a fixed length record                                */
-/******************************************************************************/
-{
-  size_t write_length;                 /* total length to write             */
-  char  *buffer;                       /* temporary write buffer            */
-
-                                       /* calculate the length needed       */
-  write_length = stream_info->stream_reclength - ((stream_info->char_write_position % stream_info->stream_reclength) - 1);
-  buffer = get_buffer(write_length);   /* get a write buffer                */
-  memset(buffer, ' ', write_length);   /* fill buffer with blanks           */
-  memcpy(buffer, data, length);        /* move the line_out into the buffer */
-                                       /* write out the info                */
-  return write_stream_line(stream_info, buffer, write_length);
-}
-
-void set_char_read_position(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    size_t       position,             /* target position                   */
-    REXXOBJECT   result )              /* notready return result            */
-/******************************************************************************/
-/* Function:   move the character position to a fixed offset                  */
-/******************************************************************************/
-{
-  if (position != SIZE_MAX) {          /* have a position specified?        */
-
-    if (stream_info->flags.transient)  /* trying to move a transient stream?*/
-                                       /* this is an error                  */
-      rexx_exception(Error_Incorrect_method_stream_type);
-    if (position < 1)                  /* too small?                        */
-                                       /* report an error also              */
-      rexx_exception2(Error_Incorrect_method_positive, IntegerOne, ooRexxInteger(position));
-                                       /* make sure we're within the bounds */
-    if (stream_size(stream_info) >= position) {
-                                       /* try to move to the new position   */
-      if (set_stream_position(position - 1))
-                                       /* go raise appropriate notready     */
-        stream_check_eof(self, stream_info, errno, result);
-                                       /* set the new read position         */
-      stream_info->char_read_position = position;
+    // first try for read/write and open file without create if specified
+    read_write = true;
+    if (type == operation_nocreate)
+    {
+        open(O_RDWR | O_BINARY, IREAD_IWRITE, SH_DENYRW);
     }
     else
-                                       /* beyond bounds, raise an EOF       */
-      stream_eof(self, stream_info, result);
-  }
+    {
+        open(RDWR_CREAT | O_BINARY, IREAD_IWRITE, SH_DENYRW);
+    }
+
+    // if there was an open error and we have the info to try again - doit
+    if (!fileInfo.isOpen())
+    {
+        // turn off the read/write flag and try opening as write only or read
+        // only, depending on the type specified.
+        read_write = false;
+        if (type == operation_write)
+        {
+            // In Windows, all files are readable. Therefore S_IWRITE is
+            // equivalent to S_IREAD | S_IWRITE.
+            open(O_WRONLY | O_BINARY, IREAD_IWRITE, SH_DENYRW);
+            write_only = true;
+        }
+        else
+        {
+            open(O_RDONLY | O_BINARY, S_IREAD, SH_DENYRW);
+            read_only = true;
+        }
+
+        // if there still was an error, raise notready condition
+        if (!fileInfo.isOpen())
+        {
+            // if no result given, format the error return
+            if (defaultResult == NULLOBJECT)
+            {
+                char work[30];
+                sprintf(work, "ERROR:%d", errno);
+                defaultResult = context->NewStringFromAsciiz(work);
+            }
+            notreadyError();
+            return;
+        }
+    }
+
+    // persistent writeable stream?
+    if (!fileInfo.isTransient() && !read_only)
+    {
+        // if the stream already exists, so we need to
+        // see if there is a terminationg eof marker.
+        if (size() > 0)
+        {
+            // position at the end, and set the write position
+            setPosition(size(), charWritePosition);
+
+            char   char_buffer;
+            size_t bytesRead;
+            // read the last character of the buffer.
+            // we don't call readBuffer() for this because it
+            // moves the read pointer
+            if (!fileInfo.read(&char_buffer, 1, bytesRead))
+            {
+                notreadyError();
+            }
+
+            // if the last character is not a ctrl_z, we need to
+            // step past it.
+            if (ctrl_z != char_buffer)
+            {
+                charWritePosition++;
+                /* error on Windows so we had to put in that */
+                /* explicitly set the position       */
+                setPosition(charWritePosition, charWritePosition);
+            }
+        }
+        // set default line positioning
+        lineWritePosition = 0;
+        lineWriteCharPosition = 0;
+    }
+    // ready to go
+    isopen = true;
+    state = StreamReady;
+
+    // go process the stream type
+    checkStreamType();
 }
 
-void set_line_read_position(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    size_t       position,             /* target position                   */
-    REXXOBJECT   result )              /* default failure result            */
-/******************************************************************************/
-/* Function:   move the character position to a fixed offset                  */
-/******************************************************************************/
+/**
+ * Set up the stream for reading.
+ */
+void StreamInfo::readSetup()
 {
-  if (position != SIZE_MAX) {          /* have a position specified?        */
+    // make sure we're open
+    if (!isopen)
+    {
+        implicitOpen(operation_nocreate);
+    }
 
-    if (stream_info->flags.transient)  /* trying to move a transient stream?*/
-                                       /* this is an error                  */
-      rexx_exception(Error_Incorrect_method_stream_type);
+    // reset to ready state until something goes bad.
+    state = StreamReady;
+
+    if (!fileInfo.isTransient())
+    {
+        // get the current stream position
+        int64_t tell_position;
+        fileInfo.getPosition(tell_position);
+                                            /* at the correct position?          */
+        if (tell_position != -1 && (charReadPosition - 1) != tell_position)
+        {
+                                            /* do a seek to charReadPosition   */
+            setPosition(charReadPosition, charReadPosition);
+        }
+    }
+}
+
+/**
+ * Set up the stream for a write operation.
+ */
+void StreamInfo::writeSetup()
+{
+    // make sure we are properly opened
+    if (!isopen)
+    {
+        implicitOpen(operation_write);
+    }
+    /* do the open                       */
+    /* reset to a ready state            */
+    state = StreamReady;
+    /* get the current stream position   */
+    int64_t tell_position;
+    fileInfo.getPosition(tell_position);
+    /* at the correct position?          */
+    if (tell_position != -1 && (charWritePosition - 1) != tell_position)
+    {
+        // not opened for append?
+        if (!append)
+        {
+            /* set stream back to write position */
+            setPosition(charWritePosition, charWritePosition);
+        }
+    }
+}
+
+
+/**
+ * Read a line from the stream
+ *
+ * @param buffer  The data to write to the stream
+ * @param length  The length of the data buffer.
+ * @param update_position
+ *                determines whether the read will also update the write position.
+ *
+ * @return A string object representing the line.
+ */
+RexxStringObject StreamInfo::readLine(char *buffer, size_t length, bool update_position)
+{
+    size_t bytesRead;
+
+    if (!fileInfo.read(buffer, length, bytesRead))
+    {
+        checkEof();
+    }
+
+    if (bytesRead == 0)                 /* work ok?                          */
+    {
+        // must be an eof condition
+        eof();
+    }
+    else
+    {
+        /* create a result string            */
+        RexxStringObject string = context->NewString(buffer, bytesRead);
+        if (update_position)              /* need to move read position?       */
+        {
+            /* update the read position          */
+            charReadPosition += bytesRead;
+        }
+        if (bytesRead != length)             /* not get it all?                   */
+        {
+            defaultResult = string;
+            eof();
+        }
+        return string;                      /* return the string                 */
+        /* go raise a notready condition     */
+    }
+    return context->NullString();       /* return the string                 */
+}
+
+
+/**
+ * Convert a specified stream name into it's fully qualified
+ * name.
+ */
+void StreamInfo::resolveStreamName()
+{
+    if (strlen(qualified_name) == 0)
+    {
+        SysFileSystem::qualifyStreamName(stream_name, qualified_name, sizeof(qualified_name));
+    }
+}
+
+/**
+ * Write a buffer of data to the stream, raising an notready
+ * condition if it fails.
+ *
+ * @param data   Pointer to the first byte of data
+ * @param length length of the data buffer
+ * @param bytesWritten
+ *               Actual number of bytes written to the stream.
+ */
+void StreamInfo::writeBuffer(const char *data, size_t length, size_t &bytesWritten)
+{
+    if (!fileInfo.write(data, length, bytesWritten))
+    {
+        notreadyError();
+    }
+    // make sure the current write position is updated after the write.
+    if (!fileInfo.getPosition(charWritePosition))
+    {
+        notreadyError();
+    }
+    // make sure we keep this origin 1
+    charWritePosition++;
+}
+
+/**
+ * Write a terminated line of data to the stream, raising an notready
+ * condition if it fails.
+ *
+ * @param data   Pointer to the first byte of data
+ * @param length length of the data buffer
+ * @param bytesWritten
+ *               Actual number of bytes written to the stream.
+ */
+void StreamInfo::writeLine(const char *data, size_t length, size_t &bytesWritten)
+{
+    if (!fileInfo.putLine(data, length, bytesWritten))
+    {
+        notreadyError();
+    }
+
+    // for non-transient streams, update the output position
+    if (!transient)
+    {
+        // make sure the current write position is updated after the write.
+        if (!fileInfo.getPosition(charWritePosition))
+        {
+            notreadyError();
+        }
+        // make sure we keep this origin 1
+        charWritePosition++;
+    }
+}
+
+/**
+ * Read a buffer of data from the current position for the
+ * given length.  This also updates our character input
+ * position information.
+ *
+ * @param data      The location to place the data.
+ * @param length    The length to read.
+ * @param bytesRead The number of bytes actually read.
+ */
+void StreamInfo::readBuffer(char *data, size_t length, size_t &bytesRead)
+{
+    if (!fileInfo.read(data, length, bytesRead))
+    {
+        notreadyError();
+    }
+    // we track the character read position whenever we do a read, so
+    // update the position for the actual number we've advanced.
+    charReadPosition += bytesRead;
+}
+
+
+/**
+ * Write out the remainder of an output line for a record oriented I/O operation.
+ */
+void StreamInfo::completeLine(size_t writeLength)
+{
+    // write this out in chunks
+    char buffer[256];
+    memset(buffer, ' ', sizeof(buffer)); /* fill buffer with blanks           */
+
+    while (writeLength > 0)
+    {
+        size_t bytesWritten;
+        writeBuffer(buffer, min(writeLength, sizeof(buffer)), bytesWritten);
+        writeLength -= bytesWritten;
+    }
+}
+
+/**
+ * Write out a fixed record line, padding with blanks if the
+ * line is not of the correct size.
+ *
+ * @param data    The data to write.
+ * @param length  length of the buffered data.
+ *
+ * @return The line residual count.
+ */
+void StreamInfo::writeFixedLine(const char *data, size_t length)
+{
+    /* calculate the length needed       */
+    size_t write_length = binaryRecordLength - (size_t)((charWritePosition % binaryRecordLength) - 1);
+    // make sure we don't go over the length of the record.
+    if (length > write_length)
+    {
+        length = write_length;
+    }
+    // get the padding amount
+    size_t padding = write_length - length;
+
+    // write the line, then complete with blanks up to the padding length.
+    writeBuffer(data, length, length);
+    completeLine(padding);
+}
+
+/**
+ * Move the stream position, with error checking.
+ *
+ * @param position The target position.
+ * @param newPosition
+ *                 The updated final position of the move.
+ */
+void StreamInfo::setPosition(int64_t position, int64_t &newPosition)
+{
+    // Seek to the target position, if possible.  The request position
+    // is a 1-based character number.  We need to convert this into
+    // a zero-based one before moving.
+    if (!fileInfo.seek(position - 1, SEEK_SET, newPosition))
+    {
+        // Failed, raise a not ready condition.
+        checkEof();
+    }
+    // convert the target position back to 1-based.
+    newPosition++;
+}
+
+/**
+ * Sets the current read position for the stream.  This
+ * updates charReadPosition to point to the target location.
+ *
+ * @param position The target character position (Rexx coordinates, which
+ *                 means 1 based rather than the native zero-based).
+ */
+void StreamInfo::setReadPosition(int64_t position)
+{
+    setPosition(position, charReadPosition);
+}
+
+/**
+ * Sets the current write position for the stream.  This
+ * updates charWritePosition to point to the target location.
+ *
+ * @param position The target character position (Rexx coordinates, which
+ *                 means 1 based rather than the native zero-based).
+ */
+void StreamInfo::setWritePosition(int64_t position)
+{
+    setPosition(position, charWritePosition);
+}
+
+
+/**
+ * Set the current character read position, raising a NOTREADY
+ * condition of there is a problem.
+ *
+ * @param position The target stream position.
+ * @param result   A result object returned to the caller after raising the
+ *                 condition.
+ */
+void StreamInfo::setCharReadPosition(int64_t position)
+{
+    if (transient)  /* trying to move a transient stream?*/
+    {
+        raiseException(Rexx_Error_Incorrect_method_stream_type);
+    }
+
     if (position < 1)                  /* too small?                        */
-                                       /* report an error also              */
-      rexx_exception2(Error_Incorrect_method_positive, IntegerOne, ooRexxInteger(position));
-    if (position == 1) {               /* going to the start?               */
-                                       /* set the position to the beginning */
-      stream_info->line_read_char_position = 1;
-      stream_info->line_read_position = 1;
-      stream_info->char_read_position = 1;
-                                       /* try to move to the new position   */
-      if (set_stream_position(stream_info->char_read_position - 1))
-                                       /* go raise appropriate notready     */
-        stream_check_eof(self, stream_info, errno, result);
+    {
+        raiseException(Rexx_Error_Incorrect_method_positive, context->NumberToObject(1), context->Int64ToObject(position));
     }
-                                       /* moving binary lines?              */
-    else if (stream_info->flags.binary) {
-                                       /* calculate the new position        */
-      stream_info->char_read_position = stream_info->stream_reclength * (position - 1) + 1;
-                                       /* try to move to the new position   */
-      if (set_stream_position(stream_info->char_read_position - 1))
-                                       /* go raise appropriate notready     */
-        stream_check_eof(self, stream_info, errno, result);
+                                       /* make sure we're within the bounds */
+    if (size() >= position)
+    {
+        // try to move to the new position, raising the appropriate NOTREADY
+        // if this is a failure.
+        setReadPosition(position);
     }
-    else {                             /* moving a non-binary stream        */
-                                       /* already at this line?             */
-      if (position == stream_info->line_read_position)
-        return;                        /* nothing to move                   */
-                                       /* moving forward?                   */
-      if (stream_info->line_read_position > 0 && position > stream_info->line_read_position)
-                                       /* just moving forward a little      */
-        position = position - stream_info->line_read_position;
-      else {
-        position--;                    /* make a relative offset from front */
-                                       /* set the position to the beginning */
-        stream_info->line_read_char_position = 1;
-        stream_info->line_read_position = 1;
-      }
-                                       /* now go read forward the proper    */
-                                       /* number of lines                   */
-      if (read_forward_by_line(self, stream_info, &position, &stream_info->line_read_position, &stream_info->line_read_char_position) == 0)
-                                       /* go raise appropriate notready     */
-        stream_eof(self, stream_info, result);
-                                       /* fix up the character read position*/
-      stream_info->char_read_position = stream_info->line_read_char_position;
-                                       /* try to move to the new position   */
-      if (set_stream_position(stream_info->char_read_position - 1))
-                                       /* go raise appropriate notready     */
-        stream_check_eof(self, stream_info, errno, result);
+    else
+    {
+        // I can't do that Dave...raise an eof NOTREADY.
+        eof();
     }
-  }
 }
 
-void set_char_write_position(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    size_t       position,             /* target position                   */
-    REXXOBJECT   result )              /* default failure result            */
-/******************************************************************************/
-/* Function:   move the character position to a fixed offset                  */
-/******************************************************************************/
+/**
+ * Set the line read position.
+ *
+ * @param position The target position.
+ */
+void StreamInfo::setLineReadPosition(int64_t position)
 {
-  if (position != SIZE_MAX) {          /* have a position specified?        */
-    if (stream_info->flags.transient)  /* trying to move a transient stream?*/
-                                       /* this is an error                  */
-      rexx_exception(Error_Incorrect_method_stream_type);
+    if (transient)  /* trying to move a transient stream?*/
+    {
+        raiseException(Rexx_Error_Incorrect_method_stream_type);
+    }
+
     if (position < 1)                  /* too small?                        */
-                                       /* report an error also              */
-      rexx_exception2(Error_Incorrect_method_positive, IntegerOne, ooRexxInteger(position));
-                                       /* try to move to the new position   */
-    if (set_stream_position(position - 1))
-                                       /* go raise appropriate notready     */
-      stream_check_eof(self, stream_info, errno, result);
-                                       /* set the new write position        */
-    stream_info->char_write_position = position;
-  }
+    {
+        raiseException(Rexx_Error_Incorrect_method_positive, context->NumberToObject(1), context->Int64ToObject(position));
+    }
+
+    // go set the new locations information.
+    setLinePosition(position, lineReadPosition, lineReadCharPosition);
+    // and go set our read position appropriately
+    setReadPosition(lineReadCharPosition);
 }
 
-void set_line_write_position(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    size_t       position,             /* target position                   */
-    REXXOBJECT   result )              /* default failure result            */
-/******************************************************************************/
-/* Function:   move the character position to a fixed offset                  */
-/******************************************************************************/
+/**
+ * Set the char write position.
+ *
+ * @param position The target position.
+ */
+void StreamInfo::setCharWritePosition(int64_t position)
 {
-  if (position != SIZE_MAX) {          /* have a position specified?        */
-    if (stream_info->flags.transient)  /* trying to move a transient stream?*/
-                                       /* this is an error                  */
-      rexx_exception(Error_Incorrect_method_stream_type);
+    if (transient)  /* trying to move a transient stream?*/
+    {
+        raiseException(Rexx_Error_Incorrect_method_stream_type);
+    }
     if (position < 1)                  /* too small?                        */
-                                       /* report an error also              */
-      rexx_exception2(Error_Incorrect_method_positive, IntegerOne, ooRexxInteger(position));
-    if (position == 1) {               /* going to the start?               */
-                                       /* set the position to the beginning */
-      stream_info->line_write_char_position = 1;
-      stream_info->line_write_position = 1;
-      stream_info->char_write_position = 1;
-                                       /* try to move to the new position   */
-      if (set_stream_position(stream_info->char_write_position - 1))
-                                       /* go raise appropriate notready     */
-        stream_check_eof(self, stream_info, errno, result);
+    {
+        raiseException(Rexx_Error_Incorrect_method_positive, context->NumberToObject(1), context->Int64ToObject(position));
     }
-                                       /* moving binary lines?              */
-    else if (stream_info->flags.binary) {
-                                       /* calculate the new position        */
-      stream_info->char_write_position = stream_info->stream_reclength * (position - 1) + 1;
-                                       /* try to move to the new position   */
-      if (set_stream_position(stream_info->char_write_position - 1))
-                                       /* go raise appropriate notready     */
-        stream_check_eof(self, stream_info, errno, result);
-    }
-    else {                             /* moving a non-binary stream        */
-                                       /* already at this line?             */
-      if (position == stream_info->line_write_position)
-        return;                        /* nothing to move                   */
-                                       /* moving forward?                   */
-      if (stream_info->line_write_position > 0 && position > stream_info->line_write_position) {
-                                       /* just moving forward a little      */
-        position = position - stream_info->line_write_position;
-      }
-      else {
-        position--;                    /* make a relative offset from front */
-                                       /* set the position to the beginning */
-        stream_info->line_write_char_position = 1;
-        stream_info->line_write_position = 1;
-      }
-                                       /* now go read forward the proper    */
-                                       /* number of lines                   */
-      if (read_forward_by_line(self, stream_info, &position, &stream_info->line_write_position, &stream_info->line_write_char_position) == 0)
-                                       /* go raise appropriate notready     */
-        stream_eof(self, stream_info, result);
-                                       /* fix up character write position   */
-      stream_info->char_write_position = stream_info->line_write_char_position;
-                                       /* try to move to the new position   */
-      if (set_stream_position(stream_info->char_write_position - 1))
-                                       /* go raise appropriate notready     */
-        stream_check_eof(self, stream_info, errno, result);
-    }
-  }
+    // go move to this position
+    setWritePosition(position);
 }
 
-size_t scan_forward_lines(             /* move forward a number of lines    */
-  char  *buffer,                       /* start of buffer                   */
-  size_t length,                       /* buffer length                     */
-  size_t*count,                        /* count to move                     */
-  const char  *end_char,               /* end-of-line marker                */
-  size_t end_size )                    /* size of end-of-line marker        */
-/******************************************************************************/
-/* Function: move forward a number of lines in a buffer                       */
-/******************************************************************************/
+/**
+ * Set the line write position.
+ *
+ * @param position The target position.
+ * @param result   A result value to be used when raising a condition.
+ */
+void StreamInfo::setLineWritePosition(int64_t position)
 {
-  const char *scan_pointer;                /* scanning pointer                  */
-  const char *last_scan;                   /* last scan position                */
-  const char *endptr;                      /* end of the buffer                 */
-  char    delimiters[] = { nl, '\0' }; /* delimiters                        */
-  size_t  buffer_index;                /* current buffer position           */
+    if (transient)  /* trying to move a transient stream?*/
+    {
+        /* this is an error                  */
+        raiseException(Rexx_Error_Incorrect_method_stream_type);
 
-  buffer_index = 0;                    /* get the buffer index              */
-
-  endptr = buffer + length;            /* set the end location              */
-  last_scan = buffer;                  /* save the start position           */
-                                       /* scan for a important character    */
-  scan_pointer = mempbrk(buffer, delimiters, length - buffer_index);
-  while (scan_pointer != NULL) {       /* found an important one?           */
-    switch (*scan_pointer) {           /* process the located character     */
-
-      case nl:                         /* either a new line or carriage     */
-          (*count)--;                  /* count the line                    */
-                                       /* step over the line end character  */
-          scan_pointer++;              /* - match checked size!             */
-          last_scan = scan_pointer;    /* save the last position            */
-          if (*count == 0)             /* count exhausted?                  */
-                                       /* return the offset                 */
-            return scan_pointer - buffer + 1;
-        break;
-
-      case '\0':                       /* null character                    */
-        scan_pointer++;                /* just step over this               */
-        break;
     }
-    length = endptr - scan_pointer;    /* calculate a new length            */
-                                       /* do the next scan                  */
-    scan_pointer = mempbrk(scan_pointer, delimiters, length - buffer_index );
-  }
-  if (last_scan != endptr - 1 )        /* last thing at the buffer end?     */
-    (*count)--;                        /* have an unterminated line         */
-  return endptr - buffer + 1;          /* return the final count            */
+    if (position < 1)                  /* too small?                        */
+    {
+        /* report an error also              */
+        raiseException(Rexx_Error_Incorrect_method_positive, context->NumberToObject(1), context->Int64ToObject(position));
+
+    }
+
+    // go set the new locations information.
+    setLinePosition(position, lineWritePosition, lineWriteCharPosition);
+    // and go set our read position appropriately
+    setWritePosition(lineWriteCharPosition);
 }
 
-size_t count_stream_lines(             /* count lines in a buffer           */
-  char  *buffer,                       /* start of buffer                   */
-  size_t length,                       /* buffer length                     */
-  const char  *end_char,               /* end-of-line marker                */
-  size_t end_size )                    /* size of end-of-line marker        */
-/******************************************************************************/
-/* Function: Return count of lines found in a buffer                          */
-/******************************************************************************/
+
+/**
+ * Read in a variable length line, searching for the eol marker
+ * for the line.
+ *
+ * @return The read line.
+ */
+RexxStringObject StreamInfo::readVariableLine()
 {
-  const char *scan_pointer;            /* scanning pointer                  */
-  const char *last_scan;               /* last scan position                */
-  const char *endptr;                  /* end of the buffer                 */
-  size_t  linecount;                   /* current linecount                 */
-  char    delimiters[] = { nl, '\0' }; /* delimiters                        */
+    // allocate a buffer for this line.  We get a pretty good size one, which will
+    // most likely be sufficient for most file lines.
+    size_t bufferSize;
+    char  *buffer = getDefaultBuffer(bufferSize);
+    size_t currentLength = 0;
 
-  linecount = 0;                       /* no lines yet                      */
-  endptr = buffer + length;            /* set the end location              */
-  last_scan = buffer;                  /* save the start position           */
-                                       /* scan for a important character    */
-  scan_pointer = mempbrk(buffer, delimiters, length);
-  while (scan_pointer != NULL) {       /* found an important one?           */
-    switch (*scan_pointer) {           /* process the located character     */
+    // now loop until get an entire line read in.
+    for (;;)
+    {
+        char *readPosition = buffer + currentLength;
+        size_t bytesRead = 0;
+        if (!fileInfo.gets(readPosition, bufferSize - currentLength, bytesRead))
+        {
+            checkEof();
+        }
 
-      case nl:                         /* either a new line or carriage     */
-          linecount++;                 /* count the line                    */
-                                       /* step over the line end character  */
-          scan_pointer++;              /* - match checked length!           */
-          last_scan = scan_pointer;    /* save the last position            */
-        break;
+        // Check for new line character first.  If we are at eof and the last
+        // line ended in a new line, we don't want the \n in the returned
+        // string.
 
-      case '\0':                       /* null character                    */
-        scan_pointer++;                /* just step over this               */
-        break;
+        // If we have a new line character in the last position, we have
+        // a line.  The gets() function has translated crlf sequences into
+        // single lf characters.
+        if (buffer[bytesRead - 1] == '\n')
+        {
+            lineReadIncrement();
+            return context->NewString(buffer, currentLength + bytesRead - 1);
+        }
+
+        // No new line but we hit end of file reading this?  This will be the
+        // entire line then.
+        if (fileInfo.atEof() && !fileInfo.hasBufferedInput())
+        {
+            lineReadIncrement();
+            return context->NewString(bufferAddress, currentLength + bytesRead);
+        }
+        currentLength += bytesRead;
+        buffer = extendBuffer(bufferSize);
     }
-    length = endptr - scan_pointer;    /* calculate a new length            */
-                                       /* do the next scan                  */
-    scan_pointer = mempbrk(scan_pointer, delimiters, length);
-  }
-  if (last_scan != endptr)             /* last thing at the buffer end?     */
-    linecount++;                       /* have an unterminated line         */
-  return linecount;                    /* return the final count            */
 }
 
-REXXOBJECT read_variable_line(
-    REXXOBJECT   self,                 /* target stream object              */
-    STREAM_INFO *stream_info,          /* current stream information        */
-    const char  *end_char,             /* end-of-line marker                */
-    size_t       end_size )            /* size of end-of-line marker        */
-/******************************************************************************/
-/* Function:   read in a variable length record                               */
-/******************************************************************************/
+/**
+ * Increments the read positions, including the line-orientated positions, after
+ * a single line has been read. Assumes one line has actually been read.
+ */
+void StreamInfo::lineReadIncrement()
 {
-   char   *read_buffer;                /* buffer used for reading           */
-   char   *new_buffer;                 /* extended buffer allocation        */
-   const char *scan_pointer;           /* location of a delimiter character */
-   size_t  read_count;                 /* count of characters read          */
-   size_t  read_index;                 /* location of the next read         */
-   size_t  line_length;                /* current line_length               */
-   size_t  buffer_length;              /* current length of the buffer      */
-   size_t  buffer_index;               /* index within the buffer           */
-   size_t  current_buffer_size;        /* current buffer size               */
-   char    delimiters[4];              /* search delimiters                 */
-   size_t  read_buffer_size;           /* buffer size                       */
-   size_t  delimiterLength;            /* length of the delimiter           */
+    // transient streams don't have moveable positions
+    if (transient)
+    {
+        return;
+    }
 
-   if (stream_info->flags.transient)   /* transient stream?                 */
-     read_buffer_size = 256;           /* read a larger buffer              */
-   else
-     read_buffer_size = 128;           /* use smaller buffer for files      */
+    if ( !fileInfo.getPosition(charReadPosition) )
+    {
+        notreadyError();
+    }
+    // Keep this 1-based.
+    charReadPosition++;
 
-   read_buffer = get_buffer(read_buffer_size);
-                                       /* record current buffer size        */
-   current_buffer_size = read_buffer_size;
-   line_length = 0;                    /* set the initial line length       */
-   buffer_index = 0;                   /* get the buffer index              */
-   read_index = 0;                     /* get the buffer index              */
-   buffer_length = 0;                  /* actual buffer length read         */
-   delimiters[0] = '\r';               /* fill in first line_end character  */
-   delimiters[1] = '\n';               /* and the line feed character       */
-   delimiters[2] = '\0';               /* add the string end                */
-   line_length = -1;                   /* set the "not found" indicator     */
-   delimiterLength = 0;                /* no delimiter found yet            */
-                                       /* read stream into read buffer      */
-                                       /* beg. code simplification          */
-   read_count = read_stream_buffer(stream_info, stream_info->flags.transient, read_buffer, read_buffer_size);
-   if (read_count > 0) {
-     buffer_length += read_count;      /* adjust the length read            */
+    lineReadPosition++;
+    lineReadCharPosition = charReadPosition;
+    last_op_was_read = true;
+}
 
-     while (delimiterLength == 0) {    /* scan for a important character    */
-       /* scan all data read to remove single character delimiters */
-       scan_pointer = mempbrk(&read_buffer[buffer_index], delimiters, buffer_length - buffer_index );
+/**
+ * Reset all line-oriented position information after an
+ * operation that will invalidate the values (for example, a
+ * charin() or charout() operation).
+ */
+void StreamInfo::resetLinePositions()
+{
+    // reset all cached line information after an invalidating operation.
+    lineReadCharPosition = 0;
+    lineReadPosition = 0;
+    stream_line_size = 0;
+}
 
-       /* now we need a special handling if we find a single     */
-       /* delimiter at the end of the buffer, we just ignore it and read    */
-       /* another block to make sure no delimiter is crossing the buffer    */
-       /* boundary                                                          */
-       if ( scan_pointer == read_buffer + current_buffer_size - 1 )
-          scan_pointer = NULL;
+/**
+ * Perform a charin() operation on the stream.
+ *
+ * @param setPosition
+ *                 Indicates whether it is necessary to move the read pointer
+ *                 before reading.
+ * @param position New target position.
+ * @param read_length
+ *                 Length to read.
+ *
+ * @return A string object containing the read characters.
+ */
+RexxStringObject StreamInfo::charin(bool setPosition, int64_t position, size_t read_length)
+{
+    readSetup();                        /* do needed setup                   */
+    // given a position?...go set it.
+    if (setPosition)
+    {
+       setCharReadPosition(position);
+    }
+    // reading nothing (silly, but allowed)
+    if (read_length == 0)
+    {
+        return context->NullString();
+    }
 
-       if (scan_pointer != NULL) {     /* found an important one?           */
-                                       /* calculate the new index           */
-         buffer_index = scan_pointer - read_buffer;
-         switch (*scan_pointer) {      /* process the located character     */
+    // a buffer string allows us to read the data into an actual string object
+    // without having to first read it into a separate buffer.  Since charin()
+    // is frequently used to read in entire files at one shot, this can be a
+    // fairly significant savings.
+    RexxBufferStringObject result = context->NewBufferString(read_length);
+    char *buffer = (char *)context->BufferStringData(result);
 
-           case '\0':                  /* null character                    */
-                                       /* just step over the position       */
-             buffer_index++;
-             continue;                 /* go around again                   */
+    // do the actual read
+    size_t bytesRead;
+    readBuffer(buffer, read_length, bytesRead);
 
-           case cr:                    /* carriage return                   */
-                                       /* record the line length            */
-             line_length = scan_pointer - read_buffer;
-                                       /* check for \r\n                    */
-             if ( *(scan_pointer +1) == nl )
-               delimiterLength = 2;    /* get the whole thing               */
-             else
-             {
-               buffer_index++;
-               continue;               /* go around again                   */
-             }
-             break;                    /* finished reading                  */
+    // invalidate all of the line positioning info
+    resetLinePositions();
 
-           case nl:                    /* new line character                */
-                                       /* record the line length            */
-             line_length = scan_pointer - read_buffer;
-             delimiterLength = 1;      /* just the single delimiter char    */
-
-             break;                    /* finished reading                  */
-         }
-       }
-       else {
-                                       /* set the new buffer index          */
-         buffer_index = buffer_length - end_size + 1;
-                                       /* is next char an EOF?              */
-         /* the following situation can happen on Windows 95 when pressing
-            Ctrl+Z after some characters where typed before */
-         if (feof(stream_info->stream_file) && (buffer_index < current_buffer_size))
-         {
-           line_length = buffer_length;
-           delimiterLength = 1;
-           stream_info->error = 0;              /* set the error information         */
-                                                /* place this in an eof state        */
-           stream_info->state = stream_eof_state;
-         }
-
-         else {                        /* need to read more info            */
-                                       /* save the index for reading        */
-           read_index = current_buffer_size;
-           read_buffer_size *=2;       /* duplicate buffer to reduce fragmentation on large lines */
-                                       /* without, large lines may cause system resources exhausted */
-
-                                       /* get a new buffer                  */
-           new_buffer = temp_buffer(current_buffer_size + read_buffer_size);
-                                       /* copy the old info over            */
-           memcpy(new_buffer, read_buffer, buffer_length);
-                                       /* bump the buffer size              */
-           current_buffer_size += read_buffer_size;
-           read_buffer = new_buffer;   /* and switch the pointers           */
-                                       /* now read more from the stream     */
-           read_count = read_stream_buffer(stream_info, stream_info->flags.transient, read_buffer + buffer_length, read_buffer_size);
-           buffer_length += read_count;/* adjust the length read            */
-           buffer_index--;             /* fixing x0A linein problem */
-         }
-       }
-     } /* endwhile */
-   }                                   /* end code simplification           */
-   if (read_count == 0) {              /* nothing read?                     */
-     if (stream_info->error != 0)      /* have a read problem?              */
-                                       /* raise a notready condition        */
-       stream_error(self, stream_info, stream_info->error, OREF_NULLSTRING);
-     if (buffer_length == 0)           /* failure on the first read?        */
-                                       /* this is an eof condition          */
-       stream_eof(self, stream_info, OREF_NULLSTRING);
-   }
-   if (line_length == (size_t)-1) {    /* no ending character found?        */
-     line_length = buffer_length;      /* get the buffer length             */
-     if (line_length == 1) {           /* exactly one character read?       */
-       if (*read_buffer == end_char[0])
-         line_length = 0;              /* actually a null string            */
-     }
-                                       /* set the new read position         */
-     stream_info->char_read_position += buffer_length;
-   }
-   else {                              /* found an end character            */
-     buffer_index = line_length;       /* set the current end point         */
-     if (delimiterLength != 0)         /* was it a linend character?        */
-                                       /* step past the line end            */
-       stream_info->char_read_position += buffer_index + delimiterLength;
-     else                              /* step over the EOF                 */
-       stream_info->char_read_position += buffer_index + 1;
-   }
-                                       /* need to keep the line read spot?  */
-   if (stream_info->line_read_position) {
-                                       /* set the location                  */
-     stream_info->line_read_char_position = stream_info->char_read_position;
-     stream_info->line_read_position++;/* we've moved one line              */
-   }
-                                       /* return the new string             */
-   return ooRexxStringL(read_buffer, line_length);
+    // now convert our buffered string into a real string object and return it.
+    return context->FinishBufferString(result, bytesRead);
 }
 
 /********************************************************************************************/
 /* stream_charin                                                                            */
 /********************************************************************************************/
-RexxMethod4(REXXOBJECT, stream_charin,
-     OSELF, self,                      /* target stream object              */
-     BUFFER, StreamBuffer,             /* stream information block          */
-     size_t,  position,                /* input position                    */
-     size_t,  read_length )            /* length to read                    */
+RexxMethod3(RexxStringObject, stream_charin, CSELF, streamPtr, OPTIONAL_int64_t, position, OPTIONAL_size_t, read_length)
 {
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-   STREAM_INFO *stream_info;           /* stream information                */
-   char        *buffer;                /* read buffer                       */
-   REXXOBJECT   result;                /* returned result string            */
+    try
+    {
+        return stream_info->charin(argumentExists(2), position, argumentOmitted(3) ? 1 : read_length);
+    }
+    catch (StreamInfo *)
+    {
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
 
-   stream_info = get_stream_info();    /* get the stream block              */
-   setup_read_stream(OREF_NULLSTRING); /* do needed setup                   */
-   if (position != SIZE_MAX)           /* have a position?                  */
-                                       /* set the proper position           */
-     set_char_read_position(self, stream_info, position, OREF_NULLSTRING);
-   if (read_length == 0)               /* nothing to read?                  */
-     return OREF_NULLSTRING;           /* just return a null string         */
-   else if (read_length == SIZE_MAX)   /* no read length specified?         */
-     read_length = 1;                  /* use the default length            */
-   else if (read_length < 0)           /* no read requested?                */
-                                       /* this is a bad count               */
-     rexx_exception(Error_Incorrect_method);
-   buffer = get_buffer(read_length);   /* get a read buffer                 */
-                                       /*  issue the read                   */
-   result = (REXXOBJECT)read_stream_line((RexxObject *)self, stream_info, buffer, read_length, !stream_info->flags.transient || stream_info->flags.binary);
-                                       /*  reset the line positionals       */
-   stream_info->line_read_char_position = 0;
-   stream_info->line_read_position = 0;
-   stream_info->pseudo_lines = 0;      /* reset the pseudo line count       */
-   stream_info->pseudo_max_lines = 0;  /* reset the pseudo max line count   */
-                                       /* this a binary transient stream?   */
-   if (stream_info->flags.binary && stream_info->flags.transient)
-                                       /*  make sure the count doesn't go   */
-                                       /* over the reclength                */
-     stream_info->char_read_position %= stream_info->stream_reclength;
-   return result;                      /* return the result                 */
+    // give default return in case there is an error
+    return context->NullString();
 }
 
-/********************************************************************************************/
-/* stream_charout                                                                           */
-/********************************************************************************************/
-RexxMethod4(size_t, stream_charout,
-     OSELF,  self,                     /* target stream object              */
-     BUFFER, StreamBuffer,             /* stream information block          */
-     STRING, string,                   /* string to write out               */
-     size_t, position )                /* output position                   */
+/**
+ * Write character data to the stream.
+ *
+ * @param data     The string object data we're writing.
+ * @param setPosition
+ *                 An order to reset the position information.
+ * @param position The new write position, if specified.
+ *
+ * @return The residual count on the write.
+ */
+size_t StreamInfo::charout(RexxStringObject data, bool setPosition, int64_t position)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
-   size_t result;                      /* read result                       */
-   size_t slength = 0;                 /* string length                     */
-   const char *sdata;                  /* string data pointer               */
+    // no data given?  This is really a close operation.
+    if (data == NULLOBJECT)
+    {
+        // do the setup operations
+        writeSetup();
+        // if no position was specified, close this out
+        if (!setPosition)
+        {
+            close();
+        }
+        else
+        {
+            setCharWritePosition(position);
+        }
+        // no data, no residual!
+        return 0;
+    }
 
-   stream_info = get_stream_info();    /* get the stream block              */
+    // get the string pointer and length info
+    size_t length = context->StringLength(data);
+    const char *stringData = context->StringData(data);
+    // errors from here return the residual count, so set up the default
+    // result based on the string size.
+    defaultResult = context->NumberToObject(length);
+    // and prepare for the write
+    writeSetup();
+    // set the output position to the new location, if given.
+    if (setPosition)
+    {
+        setCharWritePosition(position);
+    }
+    // now write everything out
+    size_t bytesWritten;
+    writeBuffer(stringData, length, bytesWritten);
+    // unable to write for some reason?
+    if (bytesWritten != length)
+    {
+        defaultResult = context->NumberToObject(length - bytesWritten);
+        notreadyError();
+    }
+    // reset any line positioning information.
+    resetLinePositions();
+    // all written...life is good.
+    return 0;
+}
 
-   if (string == NULLOBJECT) {         /* nothing to write?                 */
-     setup_write_stream(0);            /* do needed setup                   */
-     if (position == SIZE_MAX)         /* no positioning either?            */
-       close_stream(self, stream_info);/* go close this up                  */
-     else
-                                       /* set the proper position           */
-       set_char_write_position(self, stream_info, position, RexxInteger(slength));
-     return 0;                         /* no residual                       */
-   }
-   slength = string_length(string);    /* get the string length             */
-   sdata = string_data(string);        /* and the string pointer            */
-   setup_write_stream(slength);        /* do needed setup                   */
-   if (position != SIZE_MAX)           /* have a position?                  */
-                                       /* set the proper position           */
-     set_char_write_position(self, stream_info, position, RexxInteger(slength));
-                                       /*  keep the write out the info      */
-   result = write_stream_line(stream_info, sdata, slength);
-   if (result != 0)                    /* not write everything?             */
-                                       /* raise a notready condition        */
-     stream_error(self, stream_info, stream_info->error, RexxInteger(result));
-   reset_line_position                 /* reset the line counts             */
-   stream_info->pseudo_lines = 0;      /* reset pseudo line count           */
-   stream_info->pseudo_max_lines = 0;  /* reset pseudo max line count       */
-   return 0;                           /*  return the remaining write count */
+
+RexxMethod3(size_t, stream_charout, CSELF, streamPtr, OPTIONAL_RexxStringObject, data, OPTIONAL_int64_t, position)
+{
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->False());
+
+    try
+    {
+        return stream_info->charout(data, argumentExists(3), position);
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // return 0 for all exceptions...the result value has already been set.
+}
+
+/**
+ * Perform a linein() operation on the stream.
+ *
+ * @param setPosition
+ *                 Indicates whether it is necessary to move the read pointer
+ *                 before reading.
+ * @param position New target position.
+ * @param count    count of lines to read.
+ *
+ * @return A string object containing the read characters.
+ */
+RexxStringObject StreamInfo::linein(bool setPosition, int64_t position, size_t count)
+{
+    if (count != 1 && count != 0)       /* count out of range?               */
+    {
+        raiseException(Rexx_Error_Incorrect_method);
+    }
+
+    // do read setup
+    readSetup();
+    // set a position if we have one
+    if (setPosition)
+    {
+                                        /* set the proper position           */
+        setLineReadPosition(position);
+    }
+
+    if (count == 0)                     /* nothing to read?                  */
+    {
+        return context->NullString();   /* just return a null string         */
+    }
+
+    // reading fixed length records?
+    if (record_based)
+    {
+        // a buffer string allows us to read the data into an actual string object
+        // without having to first read it into a separate buffer.  Since charin()
+        // is frequently used to read in entire files at one shot, this can be a
+        // fairly significant savings.
+        RexxBufferStringObject temp = context->NewBufferString(count);
+        char *buffer = (char *)context->BufferStringData(temp);
+
+        // do the actual read
+        size_t bytesRead;
+        readBuffer(buffer, count, bytesRead);
+
+        // now convert our buffered string into a real string object and return it.
+        return context->FinishBufferString(temp, bytesRead);
+    }
+    else
+    {
+        // we need to read a variable length line
+        return readVariableLine();
+    }
 }
 
 /********************************************************************************************/
 /* stream_linein                                                                            */
 /********************************************************************************************/
-RexxMethod4(REXXOBJECT, stream_linein,
-     OSELF, self,                      /* target stream object              */
-     BUFFER, StreamBuffer,             /* stream information block          */
-     size_t,  position,                /* input position                    */
-     size_t,  count )                  /* count of lines to read            */
+RexxMethod3(RexxStringObject, stream_linein, CSELF, streamPtr, OPTIONAL_int64_t, position, OPTIONAL_size_t, count)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
-   char        *buffer;                /* buffer pointer                    */
-   size_t       read_length;           /* length read                       */
-   REXXOBJECT   result;                /* read result                       */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-   stream_info = get_stream_info();    /* get the stream block              */
-   if (count != SIZE_MAX) {            /* no read length specified?         */
-     if (count != 1 && count != 0)     /* count out of range?               */
-                                       /* this is a bad count               */
-       rexx_exception(Error_Incorrect_method);
-   }
-   setup_read_stream(OREF_NULLSTRING); /* do needed setup                   */
-   if (position != SIZE_MAX)           /* have a position?                  */
-                                       /* set the proper position           */
-     set_line_read_position(self, stream_info, position, OREF_NULLSTRING);
-   if (count == 0)                     /* nothing to read?                  */
-   {
-     if ( position > 0 )               /* calculate line position           */
-       stream_info->pseudo_lines =
-              stream_info->pseudo_max_lines -
-              stream_info->line_read_position + 1;
-     return OREF_NULLSTRING;           /* just return a null string         */
-   }
-   if (stream_info->flags.binary) {    /* binary stream?                    */
-                                       /*  get buffer the size of reclength */
-                                       /*   minus the charin's              */
-     read_length = stream_info->stream_reclength -
-         ((stream_info->char_read_position % stream_info->stream_reclength) == 0 ? 0 :
-         (stream_info->char_read_position % stream_info->stream_reclength) - 1);
-     buffer = get_buffer(read_length); /* get a read buffer                 */
-                                       /*  issue the read                   */
-     result = read_stream_line(self, stream_info, buffer, read_length, true);
-     if (stream_info->flags.transient) /* transient stream?                 */
-                                       /*  make sure the count doesn't go   */
-                                       /* over the reclength                */
-       stream_info->char_read_position %= stream_info->stream_reclength;
-   }
-   else {                              /* non-binary stream                 */
-     if (stream_info->flags.transient) /* transient stream?                 */
-                                       /* use transient line ends           */
-       result = read_variable_line(self, stream_info, nbt_line_end, nbt_line_end_size);
-     else
-                                       /* use persistent linend data        */
-       result = read_variable_line(self, stream_info, line_end, line_end_size);
-   }
-   if (stream_info->pseudo_lines)      /* have a pseudo line count?         */
-     if ( position > 0 )               /* calculate line position           */
-       stream_info->pseudo_lines =
-              stream_info->pseudo_max_lines -
-              stream_info->line_read_position + 1;
-     else
-       stream_info->pseudo_lines--;    /* we have one less line             */
-     return result;                    /* return the string                 */
+    try
+    {
+        return stream_info->linein(argumentExists(2), position, argumentOmitted(3) ? 1 : count);
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+
+    return context->NullString();
+}
+
+/**
+ * Count the number lines in the stream.
+ *
+ * @param quick  Controls whether we just return a 1/0 indicicator that
+ *               there is more data, or do an actualy count of the lines.
+ *
+ * @return Either a 1/0 indicator of more or the actual count of lines.
+ */
+int64_t StreamInfo::lines(bool quick)
+{
+    // if not open yet, open now, but don't create this if doesn't
+    // already exist.
+    if (!isopen)
+    {
+        implicitOpen(operation_nocreate);
+    }
+
+    // is this a non-persisent stream?
+    if (fileInfo.isTransient())
+    {
+        // just return a success/failure indicator
+        return fileInfo.hasData() ? 1 : 0;
+    }
+    // non-input stream?  Never have lines for those
+    if (!read_only && !read_write)
+    {
+        return 0;
+    }
+
+    // if opened with fixed length records, we just check against the character position.
+    if (record_based)      /* opened as a binary stream?        */
+    {
+        // get the current size
+        int64_t currentSize = size();
+        // already read past that point?
+        if (charReadPosition > currentSize)
+        {
+            return 0;
+        }
+
+        // now calculate the number of lines in the stream from the size,
+        // making sure we count any partial lines hanging off the end.
+        int64_t lines = currentSize / binaryRecordLength;
+        if ((currentSize % binaryRecordLength) > 0)
+        {
+            lines++;
+        }
+
+        // get the current line position.  We don't need to fudge this...since
+        // this still gives us the line we're currently within.
+        int64_t currentLine = (charReadPosition - 1) / binaryRecordLength;
+
+        // and return the delta count.
+        return lines - currentLine;
+    }
+    // non-binary persistent stream...these are a pain
+    else
+    {
+        int64_t lines = 0;               /* count of lines                    */
+        int64_t currentSize = size();
+
+        // if our read position is in no-man's land, this is zero
+        if (charReadPosition > currentSize)
+        {
+            return 0;
+        }
+        // if we're doing a quick check, we can return 1 now.
+        else if (quick)
+        {
+            return 1;
+        }
+
+        // do we have good line size information?
+        // This is pretty easy to calculate now.
+        if (stream_line_size > 0 && lineReadPosition > 0)
+        {
+            return(stream_line_size - lineReadPosition) + 1;
+        }
+
+        // need to do an actual scan (bummer)
+        readSetup();
+
+        // Now go count.  If our position is at the beginning,
+        // this reads everything.  Else, it counts from our current
+        // know line read point and returns the full count based on
+        // that.
+        return countStreamLines(lineReadPosition, charReadPosition);
+    }
 }
 
 /********************************************************************************************/
 /* stream_lines                                                                             */
 /********************************************************************************************/
-RexxMethod3(size_t, stream_lines,
-     OSELF, self,                      /* target stream object              */
-     BUFFER, StreamBuffer,             /* stream information block          */
-     CSTRING, strQuickFlag )           /* quick count for BIF         */
+RexxMethod2(int64_t, stream_lines, CSELF, streamPtr, OPTIONAL_CSTRING, option)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
-   int         quickflag=0;
+    bool quick = false;
+    if (option != NULL)
+    {
+        if (toupper(*option) == 'N')
+        {
+            quick = true;
+        }
+        else if (toupper(*option) != 'C')
+        {
+            context->RaiseException(Rexx_Error_Incorrect_method);
+            return 0;
+        }
+    }
 
-   if (strQuickFlag != NULL)
-   {
-     char ch = toupper(*strQuickFlag);
-     if (ch == 'N')
-       quickflag = 1;
-     else if (ch != 'C')
-       rexx_exception(Error_Incorrect_method);
-   }
-   stream_info = get_stream_info();    /* get the stream block              */
-   if (!stream_info->flags.open)       /* not open yet?                     */
-                                       /* do the open                       */
-     implicit_open(self, stream_info, operation_nocreate, IntegerZero);
-                                       /* reset to a ready state            */
-// stream_info->state = stream_ready_state;
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NumberToObject(0));
 
-   /* special handling for STDIN */
-   if (stream_info->flags.bstd && (stream_info->fh == 0))
-   {
-     if (SysFileIsDevice(stream_info->fh))
-#if defined(AIX) || defined(LINUX)
-//     return SysPeekSTDIN(stream_info);
-       return SysPeekSTD(stream_info);
-#else
-       return SysPeekKeyboard();
-#endif
-     else if (stream_info->flags.transient){/* transient stream?            */
-       if (stream_info->state == stream_eof_state)/* had an EOF?            */
-         return 0;                     /* the lines are zero                */
-       return 1;                       /* always return one                 */
-     }
-   }
-   else {
-                                       /* write only stream?                */
-     if (!stream_info->flags.read_only && !stream_info->flags.read_write)
-       return 0;                       /* lines is always zero              */
+    try
+    {
+        return stream_info->lines(quick);
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;
+}
 
-     if (stream_info->flags.transient) { /* transient stream?               */
-       if (stream_info->state == stream_eof_state)/* had an EOF?            */
-         return 0;                       /* the lines are zero              */
-       return 1;                         /* otherwise always return one     */
-     }
-   } /* endif */
+/**
+ * Return the remaining character indicator for a stream.
+ * For transient streams, this is a 1/0 value.  For persistent
+ * streams, this is the remaining data left in the stream.
+ *
+ * @return A count of characters in the stream.
+ */
+int64_t StreamInfo::chars()
+{
+    // if not open, we go ahead and open, but do not create implicitly.
+    if (!isopen)
+    {
+        implicitOpen(operation_nocreate);
+    }
 
-   if (stream_info->flags.binary) {    /* opened as a binary stream?        */
-     size_t fudge = 0;                 /* calculation fudge factor          */
-                                       /* at the last line?                 */
-     if (stream_size(stream_info) == stream_info->char_read_position - 1)
-       return 0;                       /* this is zero                      */
-                                       /* have a partially read line?       */
-     if (stream_size(stream_info) % stream_info->stream_reclength)
-        fudge = 1;                     /* add a fudge factor                */
-                                       /* return remaining line count       */
-     return ((stream_size(stream_info) / stream_info->stream_reclength)  + fudge) -
-         ((stream_info->char_read_position-1) / stream_info->stream_reclength);
-   }
-   else {                              /* non-binary persistent stream      */
-     size_t lines = 0;                 /* count of lines                    */
-     size_t buffer_size;               /* size of the buffer                */
-     char *buffer;                     /* read buffer                       */
-     size_t buffer_count;              /* amount of data in the buffer      */
+    // is this a non-persisent stream?
+    if (fileInfo.isTransient())
+    {
+        // just return a success/failure indicator
+        return fileInfo.hasData() ? 1 : 0;
+    }
+    // non-input stream?  Never have lines for those
+    if (!read_only && !read_write)
+    {
+        return 0;
+    }
 
-                                       /* if the stream size is equal to the*/
-                                       /*  current position return zero     */
-     if (stream_info->char_read_position > stream_size(stream_info))
-       return 0;                       /* this is always zero               */
-     if (stream_info->pseudo_lines)    /* have a pseudo line count?         */
-                                       /* just use it                       */
-       //return stream_info->pseudo_lines;
-       return (quickflag == 0) ? stream_info->pseudo_lines : 1;
-     setup_read_stream(IntegerZero);   /* do needed setup                   */
-
-     /* if the LINES method is called for the BIF then a quick   */
-     /* check is ok, else do the full line count as previously              */
-     if ( quickflag == 1 ) {
-       char    cReadChar;
-
-       /* if we are not yet at the end of the file return 1 */
-       if (stream_info->char_read_position < stream_size(stream_info))
-         return 1;
-
-       buffer_count = read_stream_buffer(stream_info, false, &cReadChar, 1);
-       if (stream_info->error != 0)      /* have a read problem?            */
-                                         /* raise a notready condition      */
-         stream_error(self, stream_info, stream_info->error, IntegerZero);
-                                         /* count the lines in the buffer   */
-//     if ( (buffer_count != 0) && (cReadChar != ctrl_z) )
-       if (buffer_count != 0)
-         lines = 1;
-       else
-         lines = 0;
-     } else {
-                                         /* calculate a large buffer        */
-       buffer_size = (stream_size(stream_info) - stream_info->char_read_position) + 2;
-       /* read very large files in chunks */
-       if (buffer_size > MAX_COUNTBUFFER) {
-         /* treat large read requests */
-         size_t chunk = MAX_COUNTBUFFER;
-         size_t remain = buffer_size;
-                                        /* using malloc instead of internal */
-                                        /* Rexx memory will save big        */
-                                        /* objects from being allocated     */
-                                        /* the buffer is one byte bigger    */
-                                        /* than normal read-in amount to    */
-                                        /* ensure that '0d0a'x will not be  */
-                                        /* cut in half (one extra byte will */
-                                        /* be read in that case)            */
-         buffer = (char*) malloc(sizeof(char)*(MAX_COUNTBUFFER+1));
-         while (remain) {
-           if (remain > chunk) {
-             buffer_count = read_stream_buffer(stream_info, false, buffer, chunk);
-             remain -= buffer_count;    /* subtract number of read bytes    */
-           }
-           else {
-             buffer_count = read_stream_buffer(stream_info, false, buffer, remain);
-             chunk = buffer_count;
-             remain = 0;
-           }
-
-           if (stream_info->error != 0) {
-             free(buffer);
-             stream_error(self, stream_info, stream_info->error, IntegerZero);
-           }
-                                        /* check if buffer ends with '0d'x  */
-           if (remain) {                /* (might be a truncated '0d0a'x!)  */
-             if (buffer[chunk-1] == 0x0d) {
-                                        /* read next byte also (completing  */
-                                        /* a possible '0d0a'x sequence)     */
-               read_stream_buffer(stream_info, false, buffer+chunk, 1);
-               remain--;
-               buffer_count++;
-                                        /* this check is needed, because    */
-                                        /* count_stream_lines() implies line*/
-                                        /* end in a block!                  */
-               if (buffer[chunk] != 0x0a) lines--;
-             }
-                                        /* see comment above                */
-             else if (buffer[chunk-1] != 0x0a) lines--;
-           }
-                                        /* sum up the lines                 */
-           lines += count_stream_lines(buffer, buffer_count, line_end, line_end_size);
-           stream_info->pseudo_lines = lines;
-         }
-         free(buffer);
-         if ( stream_info->pseudo_stream_size >= stream_info->line_read_char_position )
-            stream_info->pseudo_max_lines =
-                       lines + stream_info->line_read_position -
-                       ( stream_info->line_read_position > 0 );
-         else
-            lines = 0;
-       } else {
-         /* the "old" code will be executed if file is acceptably small */
-         buffer = temp_buffer(buffer_size);/* get a buffer                    */
-                                           /* read from stream up to the end  */
-         buffer_count = read_stream_buffer(stream_info, false, buffer, buffer_size);
-         if (stream_info->error != 0)      /* have a read problem?            */
-                                           /* raise a notready condition      */
-           stream_error(self, stream_info, stream_info->error, IntegerZero);
-                                           /* count the lines in the buffer   */
-         lines = count_stream_lines(buffer, buffer_count, line_end, line_end_size);
-         stream_info->pseudo_lines = lines; /* record the latest line count   */
-         if ( stream_info->pseudo_stream_size >= stream_info->line_read_char_position )
-            stream_info->pseudo_max_lines =    /* record the latest line count */
-                       lines + stream_info->line_read_position -
-                       ( stream_info->line_read_position > 0 );
-         else
-            lines = 0;
-       }
-     } /* endif */
-     return lines;                     /* return the line count             */
-   }
+    /* check for a negative return value and set it to 0 if neces.*/
+    int64_t remainder = size() - (charReadPosition - 1);
+    return remainder > 0 ? remainder : 0;
 }
 
 /********************************************************************************************/
 /* stream_chars                                                                             */
 /********************************************************************************************/
-RexxMethod2(size_t, stream_chars,
-     OSELF, self,                      /* target stream object              */
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(int64_t, stream_chars, CSELF, streamPtr)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
-   size_t rc;                          /* remaining characters              */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NumberToObject(0));
 
-   stream_info = get_stream_info();    /* get the stream block              */
-   if (!stream_info->flags.open)       /* not open yet?                     */
-                                       /* do the open                       */
-     implicit_open(self, stream_info, operation_nocreate, IntegerZero);
-                                       /* reset to a ready state            */
-// stream_info->state = stream_ready_state;
+    try
+    {
+        return stream_info->chars();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;
+}
 
-   /* special handling for STDIN */
-   if (stream_info->flags.bstd && (stream_info->fh == 0))
-   {
-     if (SysFileIsDevice(stream_info->fh))
-#if defined(AIX) || defined(LINUX)
-       return SysPeekSTD(stream_info);
-#else
-       return SysPeekKeyboard();
-#endif
-     else if (stream_info->flags.transient){/* transient stream?            */
-       if (stream_info->state == stream_eof_state)/* had an EOF?            */
-         return 0;                     /* the lines are zero                */
-       return 1;                       /* always return one                 */
-     }
-   }
-   else {
-                                       /* write only stream?                */
-     if (!stream_info->flags.read_only && !stream_info->flags.read_write)
-       return 0;                       /* always zero characters            */
-     if (stream_info->flags.transient) /* transient stream?                 */
-       return 1;                       /* always return one                 */
-   } /* endif */
-                                       /* return the remaining count        */
-   /* check for a negative return value and set it to 0 if neces.*/
-   rc = stream_size(stream_info) - (stream_info->char_read_position-1);
-   if ( rc < 0 )
-     rc = 0;
-   return rc;
+/**
+ * Write a line out to the stream.
+ *
+ * @param data     The string object to write.
+ * @param setPosition
+ *                 Indicates whether we've been given a line position to use
+ *                 for the write.
+ * @param position The provided line position.
+ *
+ * @return 0 if everything worked.  All failures result in notready
+ *         conditions, which throw an exception.
+ */
+int StreamInfo::lineout(RexxStringObject data, bool setPosition, int64_t position)
+{
+    // nothing to process?
+    if (data == NULLOBJECT)
+    {
+        writeSetup();
+        // if this is a binary stream, we may have a line to complete
+        if (record_based)
+        {
+            // calculate length to write out
+            size_t padding = binaryRecordLength - (size_t)((charWritePosition % binaryRecordLength) - 1);
+            completeLine(padding);
+        }
+        // not a line repositioning?  we need to close
+        if (!setPosition)
+        {
+            close();
+        }
+        else  // setting the line position
+        {
+            setLineWritePosition(position);
+        }
+        /* set the proper position           */
+        return 0;                       /* no residual                       */
+    }
+
+    // get the specifics
+    const char *stringData = context->StringData(data);
+    size_t length = context->StringLength(data);
+
+    writeSetup();
+    // set the position if needed
+    if (setPosition)
+    {
+        setLineWritePosition(position);
+    }
+
+
+    // binary mode write?
+    if (record_based)
+    {
+        /* if the line_out is longer than    */
+        /* reclength plus any char out data  */
+        /*  raise a syntax error - invalid   */
+        /* call to routine                   */
+        if (binaryRecordLength < length + ((charWritePosition % binaryRecordLength) - 1))
+        {
+            raiseException(Rexx_Error_Incorrect_method);
+        }
+
+        // write the line out, padding if necessary
+        writeFixedLine(stringData, length);
+        // not ready conditions won't return here, so this is successful.
+        return 0;
+    }
+    else
+    {
+        // are we keeping count of the lines?
+        if (stream_line_size > 0)
+        {
+            // appending?  Then we know we can increase the size
+            if (append || charWritePosition == size())
+            {
+                stream_line_size++;
+            }
+            else  // the counted number of lines can no longer be relied on.
+            {
+                stream_line_size = 0;
+            }
+        }
+        // write the data and line terminator.
+        writeLine(stringData, length, length);
+        /* need to adjust line positions?    */
+        if (lineWritePosition > 0)
+        {
+            ++lineWritePosition;
+            lineWriteCharPosition = charWritePosition;
+        }
+        return 0;                         /* line written correctly            */
+    }
 }
 
 /********************************************************************************************/
 /* stream_lineout                                                                           */
 /********************************************************************************************/
-RexxMethod4(size_t, stream_lineout,
-     OSELF,  self,                     /* target stream object              */
-     BUFFER, StreamBuffer,             /* stream information block          */
-     STRING, string,                   /* string to write out               */
-     size_t,   position)               /* position to write out             */
+RexxMethod3(int, stream_lineout, CSELF, streamPtr, OPTIONAL_RexxStringObject, string, OPTIONAL_int64_t, position)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
-   size_t  slength = 0;                /* string length                     */
-   const char *sdata;                  /* string data pointer               */
-   size_t  result;                     /* returned result                   */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    // we give a 1 residual count for all errors
+    stream_info->setContext(context, context->True());
 
-   stream_info = get_stream_info();    /* get the stream block              */
-   if (string == NULLOBJECT) {         /* nothing to write?                 */
-     setup_write_stream(0);            /* do needed setup                   */
-     if (stream_info->flags.binary)    /* opened in binary mode?            */
-                                       /* complete the line                 */
-       complete_line(self, stream_info);
-     if (position == SIZE_MAX)         /* no positioning either?            */
-       close_stream(self, stream_info);/* go close this up                  */
-     else
-                                       /* set the proper position           */
-       set_line_write_position(self, stream_info, position, RexxInteger(slength));
-     return 0;                         /* no residual                       */
-   }
-   setup_write_stream(1);              /* do needed setup                   */
-   if (position != SIZE_MAX)           /* have a position?                  */
-                                       /* set the proper position           */
-     set_line_write_position(self, stream_info, position, IntegerOne);
-/*
-   else                         // added by IH to get lines added to the end
-     set_stream_position(stream_info->char_write_position-1);    // up to here
-*/
-   reset_line_position;                /* reset the line counters           */
+    try
+    {
+        return stream_info->lineout(string, argumentExists(3), position);
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // return 0 for all exceptions...the result value has already been set.
+}
 
-   if (stream_info->flags.binary) {    /* opened in binary mode?            */
-     slength = string_length(string);  /* get the string length             */
-     sdata = string_data(string);      /* and the string pointer            */
-                                       /* if the line_out is longer than    */
-                                       /* reclength plus any char out data  */
-                                       /*  raise a syntax error - invalid   */
-                                       /* call to routine                   */
-     if (stream_info->stream_reclength < (signed)slength + ((stream_info->char_write_position % stream_info->stream_reclength) - 1))
-                                       /* this is an error                  */
-       rexx_exception(Error_Incorrect_call);
-                                       /* same length as record length?     */
-     if (stream_info->stream_reclength == slength)
-                                       /* just write out the line as is     */
-       result = write_stream_line(stream_info, sdata, stream_info->stream_reclength);
-     else                              /* write out the line                */
-       result = write_fixed_line(self, stream_info, sdata, slength);
-     if (result != 0)                  /* not write everything?             */
-                                       /* raise a notready condition        */
-       stream_error(self, stream_info, stream_info->error, IntegerOne);
-     return  0;                        /* the line was written              */
-   }
-   else {                              /* non-binary linein                 */
-     if (stream_info->pseudo_lines) {  /* have a pseudo-line count?         */
-                                       /* appending?                        */
-       if (stream_info->flags.append ||
-           stream_info->char_write_position == stream_size(stream_info))
-       {
-         ++stream_info->pseudo_lines;  /* update the count                  */
-         ++stream_info->pseudo_max_lines;  /* update the max count          */
-       }
-       else
-         stream_info->pseudo_lines = 0;/* reset this to zero                */
-     }
-     slength = string_length(string);  /* get the string length             */
-     sdata = string_data(string);      /* and the string pointer            */
-                                       /*  keep the write out the info      */
-     result = write_stream_line(stream_info, sdata, slength);
-     if (result == 0) {                /* write the line ok?                */
-//     if (stream_info->flags.std) {   /* need to fudge the linend?         */
-//       result = write_stream_line(stream_info, std_line_end, std_line_end_size);
-//                                     /* adjust by one                     */
-//       stream_info->char_write_position += 1;
-//     }
-//     else                            /* use normal linends                */
-       result = write_stream_line(stream_info, line_end, line_end_size);
-     }
-                                       /* need to adjust line positions?    */
-     if (stream_info->line_write_position) {
-       ++stream_info->line_write_position;
-       stream_info->line_write_char_position = stream_info->char_write_position;
-     }
-                                       /* all written?                      */
-     if (result != 0)                  /* not write everything?             */
-                                       /* raise a notready condition        */
-       stream_error(self, stream_info, stream_info->error, IntegerOne);
-     return 0;                         /* line written correctly            */
-   }
+/**
+ * Close the stream.
+ *
+ * @return The character string success/failure indicator.
+ */
+const char *StreamInfo::streamClose()
+{
+    // not open, just return a "" value
+    if (!isopen)
+    {
+        state = StreamUnknown;
+        return "";                        /* return empty string               */
+    }
+
+    close();                            /* go close the stream               */
+    return "READY:";                    /* return the success indicator      */
 }
 
 /********************************************************************************************/
 /* stream_close                                                                             */
 /********************************************************************************************/
-RexxMethod2(CSTRING, stream_close,
-    OSELF, self,                       /* target stream object              */
-    BUFFER, StreamBuffer )             /* stream information block          */
+RexxMethod1(CSTRING, stream_close, CSELF, streamPtr)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-   stream_info = get_stream_info();    /* get the stream block              */
-   if (stream_info == NULL)            /* not properly initialized?         */
-     return "";                        /* just get out of here              */
+    try
+    {
+        return stream_info->streamClose();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // return 0 for all exceptions...the result value has already been set.
+}
 
-   if (!stream_info->flags.open) {     /* not open yet?                     */
-     stream_info->state = stream_unknown_state;
-     return "";                        /* return empty string               */
-   }
-   close_stream(self, stream_info);    /* go close the stream               */
+/**
+ * Try to flush the stream, returning the appropriate error
+ * state if there is a problem.
+ *
+ * @return "READY" if everything works.  If this fails, a notready
+ *         condition is raised and an exception is thrown.
+ */
+const char *StreamInfo::streamFlush()
+{
+    // try to flush
+    if (!fileInfo.flush())
+    {
+        char         work[30];              /* error information buffer          */
+        sprintf(work, "ERROR:%d", fileInfo.errorInfo());   /* format the error return           */
+                                        /* go raise a notready condition     */
+        notreadyError(fileInfo.errorInfo(), context->NewStringFromAsciiz(work));
+    }
+    return "READY:";                    /* return success indicator          */
 
-   // Free file buffer so it can be collected next time garbage collection
-   // is invoked.
-   if (stream_info->bufferAddress)
-   {
-      stream_info->bufferAddress = NULL;
-      stream_info->bufferLength = 0;
-      ooRexxVarSet(c_stream_buffer, OREF_NULL);  // stream object now loses reference to buffer object
-   }
-
-   return "READY:";                    /* return the success indicator      */
 }
 
 /********************************************************************************************/
 /* stream_flush                                                                             */
 /********************************************************************************************/
-RexxMethod2(CSTRING, stream_flush,
-    OSELF, self,                       /* target stream object              */
-    BUFFER, StreamBuffer )             /* stream information block          */
+RexxMethod1(CSTRING, stream_flush, CSELF, streamPtr)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
-   char         work[30];              /* error information buffer          */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-   stream_info = get_stream_info();    /* get the stream block              */
-   if (buffer_flush != 0) {            /* try to flush                      */
-     sprintf(work, "ERROR:%d", errno); /* format the error return           */
-                                       /* go raise a notready condition     */
-     stream_error(self, stream_info, errno, ooRexxString(work));
-   }
-   return "READY:";                    /* return success indicator          */
+    try
+    {
+        return stream_info->streamFlush();
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // return 0 for all exceptions...the result value has already been set.
 }
 
-/********************************************************************************************/
-/* stream_open - open a stream                                                              */
-/********************************************************************************************/
-RexxMethod3(CSTRING, stream_open,
-     OSELF, self,                      /* target stream object              */
-     BUFFER, StreamBuffer,             /* stream information block          */
-     CSTRING, ts)                      /* open command string               */
+/**
+ * Process explicit stream open requests, handling all of the
+ * open option variations.
+ *
+ * @param options The specified option strings.
+ *
+ * @return The READY or NOTREADY strings.
+ */
+const char *StreamInfo::streamOpen(const char *options)
 {
+    int oflag = O_BINARY;               // we always open binary mode
+    int pmode = 0;                      /* and the protection mode           */
+    int shared = SH_DENYRW;             /* def. open is non shared           */
 
-/* fields that parse will fill in */
-size_t Parse_Fields[7] = {
-  0,                                   /* oflag                             */
-  0,                                   /* pmode                             */
-  0,                                   /* fdopen_long                       */
-  0,                                   /* i_binary                          */
-  0,                                   /* i_nobuffer                        */
-  0,                                   /* rdonly                            */
-  0                                    /* shared                            */
- };
-
-/* Action table for open parameters */
-ATS  OpenActionread[] = {
-      {ME,       sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_creat,0},
-      {BitOr,    sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_rdonly,0},
-      {CopyItem, sizeof(size_t), (void *)rdonly_index, errcode,(void *)&one,0},
-      {BitOr,    sizeof(pmode), (void *)pmode_index, errcode,(void *)&s_iread,0},
-      {CopyItem, sizeof(c_read), (void *)fdopen_long_index, errcode,(void *)c_read,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionwrite[] = {
-      {ME,       sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_rdwr,0},
-      {MF,       sizeof(size_t),  (void *)rdonly_index, errcode,0,0},
-      {BitOr,    sizeof(oflag), (void *)oflag_index, errcode,(void *)&wr_creat,0},
-      {BitOr,    sizeof(pmode), (void *)pmode_index, errcode,(void *)&s_iwrite,0},
-      {CopyItem, sizeof(c_write), (void *)fdopen_long_index, errcode,(void *)c_write,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionboth[] = {
-      {ME,       sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_wronly,0},
-      {MF,       sizeof(size_t),  (void *)rdonly_index, errcode,0,0},
-      {BitOr,    sizeof(oflag), (void *)oflag_index, errcode,(void *)&rdwr_creat,0},
-      {BitOr,    sizeof(pmode), (void *)pmode_index, errcode,(void *)&iread_iwrite,0},
-      {CopyItem, sizeof(c_both), (void *)fdopen_long_index, errcode,(void *)c_both,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionappend[] = {
-      {MF,       sizeof(size_t),  (void *)rdonly_index, errcode,0,0},
-      {BitOr,    sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_append,0},
-      {CopyItem, sizeof(c_append), (void *)fdopen_long_index, errcode,(void *)c_append,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionreplace[] = {
-      {BitOr,sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_trunc,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionnobuffer[] = {
-      {CopyItem,sizeof(i_nobuffer), (void *)i_nobuffer_index, errcode,(void *)&one,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionbinary[] = {
-      {MF,sizeof(i_binary), (void *)i_binary_index, errcode,0,0},
-      {BitOr,sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_binary,0},
-      {CopyItem,sizeof(i_binary), (void *)i_binary_index, errcode,(void *)&one,0},
-      {ConcatItem,sizeof(c_binary) - 1, (void *)fdopen_long_index, errcode,(void *)c_binary,0},
-      {0,0,0,0,0,0}
-     };
-ATS OpenActionreclength[] = {
-      {MI,sizeof(i_binary), (void *)i_binary_index, errcode,(void *)&one,0},
-      {CallItem,sizeof(int),0, errcode,0,reclength_token},
-      {0,0,0,0,0,0}
-     };
-
-ATS OpenActionshared[] = {
-      {CopyItem,sizeof(shared), (void *)shared_index, errcode,(void *)&sh_denyno,0},
-      {0,0,0,0,0,0}
-     };
-
-ATS OpenActionsharedread[] = {
-      {CopyItem,sizeof(shared), (void *)shared_index, errcode,(void *)&sh_denywr,0},
-      {0,0,0,0,0,0}
-     };
-
-ATS OpenActionsharedwrite[] = {
-      {CopyItem,sizeof(shared), (void *)shared_index, errcode,(void *)&sh_denyrd,0},
-      {0,0,0,0,0,0}
-     };
-
-#if defined( O_SYNC )
-ATS OpenActionautosync[] = {
-      {BitOr,sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_sync,0},
-      {0,0,0,0,0,0}
-     };
-#endif
-
-#if defined( O_RSHARE )
-ATS OpenActionshareread[] = {
-      {BitOr,sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_rshare,0},
-      {0,0,0,0,0,0}
-     };
-#endif
-
-#if defined( O_NSHARE )
-ATS OpenActionnoshare[] = {
-      {BitOr,sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_nshare,0},
-      {0,0,0,0,0,0}
-     };
-#endif
-
-#if defined( O_DELAY ) && defined( O_RSHARE ) && defined( O_NSHARE )
-ATS OpenActiondelay[] = {
-      {MI,   sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_rshare,0},
-      {MI,   sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_nshare,0},
-      {BitOr,sizeof(oflag), (void *)oflag_index, errcode,(void *)&o_delay,0},
-      {0,0,0,0,0,0}
-     };
-#endif
-
-/* Token table for open parameters */
-TTS  tts[] = {
-      {"READ",3,      OpenActionread,0},
-      {"WRITE",1,     OpenActionwrite,0},
-      {"BOTH",2,      OpenActionboth,0},
-      {"APPEND",2,    OpenActionappend,0},
-      {"REPLACE",3,   OpenActionreplace,0},
-      {"NOBUFFER",3,  OpenActionnobuffer,0},
-      {"BINARY",2,    OpenActionbinary,0},
-      {"RECLENGTH",3, OpenActionreclength,0},
-      {"SHARED",6,    OpenActionshared,0},
-      {"SHAREREAD",6, OpenActionsharedread,0},
-      {"SHAREWRITE",6,OpenActionsharedwrite,0},
-
-#if defined( O_SYNC )
-      {"AUTOSYNC",2, OpenActionautosync,0},
-#endif
-#if defined( O_RSHARE )
-      {"SHAREREAD",1,OpenActionshareread,0},
-#endif
-#if defined( O_NSHARE )
-      {"NOSHARE",3,  OpenActionnoshare,0},
-#endif
-#if defined( O_DELAY )
-      {"DELAY",1,    OpenActiondelay,0},
-#endif
-      {"\0",0,NULL, unknown_tr}
-    };
-
-size_t second_oflag;
-size_t second_pmode;
-char fdopen_type[4];
-char second_fdopen[4];
-
-TTS *ttsp;
-
-   STREAM_INFO *stream_info;           /* stream information                */
-   struct stat stat_info;              /* file statistics                   */
-   char   work[30];                    /* work buffer                       */
-   char   char_buffer;                 /* single character buffer           */
-
-   i_nobuffer = 0;                     /* default to buffered               */
-   i_binary = 0;                       /* non-binary,                       */
-   oflag = 0;                          /* clear the flags                   */
-   pmode = 0;                          /* and the protection mode           */
-   second_oflag = 0;                   /* for the secondary open mode as    */
-   second_pmode = 0;                   /* well                              */
-   fdopen_long = 0;                    /* clear the open types              */
-   shared = SH_DENYRW;                 /* def. open is non shared           */
-#ifdef JAPANESE
-   if (sharedOpen) shared = SH_DENYNO;
-#endif
-   fdopen_type[0] = '\0';
-   second_fdopen[0] = '\0';
-   ttsp = tts;
-
-   stream_info = get_stream_info();    /* get the stream block              */
-   if (stream_info->flags.open)        /* already open?                     */
-     close_stream(self, stream_info);  /* go close the stream               */
-   if (stream_info->flags.bstd)        /* standard stream?                  */
-     return std_open(stream_info, ts); /* handle as a standard stream       */
-   else if (stream_info->flags.handle_stream)
-                                       /* do a handle open                  */
-     return handle_open(self, stream_info, ts);
-
-
-                                          /* initialize the stream info structure           */
-                                          /*  in case this is not the first open for this stream */
-   strcpy(stream_info->full_name_parameter,"\0");
-   stream_info->stream_file = NULL;
-   stream_info->pseudo_stream_size = 0;
-   stream_info->pseudo_lines = 0;
-   stream_info->pseudo_max_lines = 0;
-   stream_info->stream_reclength = 0;
-   stream_info->flags.read_only = 0;
-   stream_info->flags.write_only = 0;
-   stream_info->flags.read_write = 0;
-   stream_info->flags.bstd = 0;
-   stream_info->flags.append = 0;
-   stream_info->char_read_position = 1;
-   stream_info->char_write_position = 1;
-   stream_info->line_read_position = 1;
-   stream_info->line_write_position = 1;
-   stream_info->line_read_char_position = 1;
-   stream_info->line_write_char_position = 1;
-   stream_info->flags.nobuffer = 0;
-   stream_info->flags.last_op_was_read = 1;
-   stream_info->flags.transient = false;
-   stream_info->flags.binary = false;
-
-   table_fixup(ttsp, Parse_Fields);    /* fix up the parsing tables         */
-   if (NO_CSTRING != ts) {             /* have parameters?                  */
-                                       /* go process the syntax             */
-     if (parser(ttsp, ts, (void *)(&stream_info->stream_reclength)) != 0)
-                                       /* this is an error                  */
-       rexx_exception(Error_Incorrect_call);
-   }
-                                       /* save the open parameters in the   */
-                                       /* stream block                      */
-   strcpy(fdopen_type,(const char *)&fdopen_long);
-   full_name_parameter(stream_info);   /* get the fully qualified name      */
-
-                                       /* if replace and binary specified,  */
-                                       /* but not reclength, give back a    */
-                                       /* syntax error - don't know what to */
-                                       /* do                                */
-   if (i_binary && (oflag & o_trunc) && !stream_info->stream_reclength)
-                                       /* this is an error                  */
-     rexx_exception(Error_Incorrect_call);
-                                       /* if write and append specified     */
-                                       /* make sure append won              */
-   if ((oflag & o_append) && (oflag & o_creat)) {
-     if (oflag & rdwr_creat)           /* need to replace?                  */
-       strcpy(fdopen_type,c_append);   /* this is create append             */
-     else                              /* this is a write append            */
-       strcpy(fdopen_type,c_wr_append);
-     if (i_binary)                     /* binary file?                      */
-       strcat(fdopen_type,c_binary);   /* add on the binary part            */
-   }
-                                       /* read/write/both/append not        */
-                                       /* specified default both            */
-   if (!(oflag & (o_wronly | rdwr_creat )) && !rdonly) {
-      oflag |= o_rdwr | rdwr_creat;    /* set this up for read/write mode   */
-      if (!(oflag & o_append)) {       /* not append mode?                  */
-        strcpy(fdopen_type,c_both);    /* open both ways                    */
-        if (i_binary)                  /* need it in binary mode?           */
-          strcat(fdopen_type,c_binary);/* tack on the binary indicator      */
-      }
-      pmode = iread_iwrite;            /* save the pmode info               */
-   }
-/********************************************************************************************/
-/*NonBinary persistant streams are opened binary. In order to know if it was user specified */
-/*            or not the i_binary field is used. If the user specified binary the stream    */
-/*            will be treated as binary, otherwise it will be treated as non - binary.      */
-/*            The difference is how imbedded nulls and line end's are handled.              */
-/*            If there is a non persistant stream type that does not end in a colon the     */
-/*            following check will need to be changed                                       */
-/********************************************************************************************/
-    if (!i_binary &&
-       !(stream_info->name_parameter[strlen(stream_info->name_parameter)-1] == ':')) {
-      strcat(fdopen_type,c_binary);    /* add on the binary indicator for   */
-      oflag |= o_binary;               /* devices and flip the binary flag  */
+    // if already open, make sure we close this
+    if (isopen)
+    {
+        close();
     }
-   if (rdonly) {                       /* read-only stream?                 */
-                                       /* check if the stream exists        */
-     if (get_stat(stream_info->full_name_parameter,&stat_info)) {
-                                       /* format the error return           */
-       sprintf(work, "ERROR:%d", errno);
-                                       /* go raise a notready condition     */
-       stream_error(self, stream_info, errno, ooRexxString(work));
-     }
-     stream_info->flags.read_only = 1; /* set the read_only flag            */
-                                       /* and clear all of the write        */
-                                       /* information                       */
-     stream_info->char_write_position = 0;
-     stream_info->line_write_position = 0;
-     stream_info->line_write_char_position = 0;
-   }
-   if (oflag & o_rdwr)                 /* read/write specified?             */
-                                       /* set the flag                      */
-      stream_info->flags.read_write = 1;
-    if (oflag & o_append)              /* appending?                        */
-      stream_info->flags.append = 1;   /* flag it also                      */
-                                       /* if write only specified           */
-                                       /*      - try both first             */
-   if (oflag & o_wronly) {
-                                       /* set both flags                    */
-      stream_info->flags.read_write = 1;
-      stream_info->flags.write_only = 1;
-      second_oflag = oflag;            /* copy the open information         */
-      second_pmode = pmode;
-      if (!(oflag & o_append)) {       /* no appending?                     */
-        strcpy(fdopen_type,c_both);    /* open both read and write          */
-        strcpy(second_fdopen,c_write); /* then write only                   */
-      }
-      else {
-        strcpy(fdopen_type,c_append);  /* open for appending in both        */
-                                       /* ways                              */
-        strcpy(second_fdopen,c_wr_append);
-      }
-      if (oflag & o_binary) {          /* binary requested?                 */
-        strcat(fdopen_type,c_binary);  /* add the binary flag to both       */
-        strcat(second_fdopen,c_binary);
-      }
-      oflag &= ~o_wronly;              /* turn off the write only flag      */
-      oflag |= rdwr_creat;             /* and turn on the read/write        */
-      pmode = iread_iwrite;            /* set the new pmode                 */
-   }
 
-   /* if opening a printer port, select second open flags */
-   /* to open the file in write-only mode                                   */
-   if (StringUtil::caselessCompare(stream_info->full_name_parameter, "\\DEV\\LPT", 8) == 0 ) {
-     /* this is a printer port on OS/2 (PRN will be converted to the        */
-     /* current LPTx port)                                                  */
-     second_oflag = o_binary | wr_creat;
-     second_pmode = s_iwrite;
-     strcpy(second_fdopen, c_default_write);    /* wb */
-   } /* endif */
-                                       /* now open the stream               */
-   open_the_stream_shared(oflag,pmode,fdopen_type,shared);
-                                       /* if there was an open error and    */
-                                       /*  we have the info to try again -  */
-                                       /*  doit                             */
-   if ((stream_info->stream_file == NULL) && second_oflag) {
-                                       /* try opening again                 */
-     open_the_stream_shared(second_oflag,second_pmode,second_fdopen,shared);
-     stream_info->flags.read_write = 0;/* turn off the read/write flag      */
-     stream_info->flags.write_only = 1;/* turn on the write only flag       */
-   }
-                                       /* if there was an error             */
-   if (stream_info->stream_file == NULL) {
-     sprintf(work, "ERROR:%d", errno); /* format the error return           */
-                                       /* go raise a notready condition     */
-     stream_error(self, stream_info, errno, ooRexxString(work));
-   }
+    // we sorted out the characteristics of this during the init.  Make
+    // sure we open this the appropriate way.
+    if (stdstream)        /* standard stream?                  */
+    {
+        return openStd(options); /* handle as a standard stream       */
+    }
+    else if (opened_as_handle)
+    {
+        /* do a handle open                  */
+        return handleOpen(options);
+    }
 
-   fstat(stream_info->fh, &stat_info); /* get the file information          */
-                                       /* is this a device or is            */
-                                       /* no buffering requested?           */
-   if (stat_info.st_mode&S_IFCHR || i_nobuffer)
-     set_nobuffer;                     /* turn it off                       */
-   else
-   {
-       setvbuf(stream_info->stream_file, NULL,_IOFBF, 1024);
-   }
+
+    // reset the standard fields
+    resetFields();
+
+    // if we have parameters, parse them
+    if (options != NULL)
+    {
+    /* Action table for open parameters */
+        ParseAction  OpenActionread[] = {
+            ParseAction(MEB, read_write),
+            ParseAction(MEB, write_only),
+            ParseAction(SetBool, read_only, true),
+            ParseAction(BitOr, oflag, O_RDONLY),
+            ParseAction(BitOr, pmode, S_IREAD),
+            ParseAction()
+        };
+
+        ParseAction OpenActionwrite[] = {
+            ParseAction(MEB, read_write),
+            ParseAction(MEB, read_only),
+            ParseAction(SetBool, write_only, true),
+            ParseAction(BitOr, oflag, WR_CREAT),
+            ParseAction(BitOr, pmode, S_IWRITE),
+            ParseAction()
+        };
+        ParseAction OpenActionboth[] = {
+            ParseAction(MEB, write_only),
+            ParseAction(MEB, read_only),
+            ParseAction(SetBool, read_write, true),
+            ParseAction(BitOr, oflag, RDWR_CREAT),
+            ParseAction(BitOr, pmode, IREAD_IWRITE),
+            ParseAction()
+        };
+        ParseAction OpenActionappend[] = {
+            ParseAction(MEB, read_only),
+            ParseAction(ME, oflag, O_TRUNC),
+            ParseAction(SetBool, append, true),
+            ParseAction(BitOr, oflag, O_APPEND),
+            ParseAction()
+        };
+        ParseAction OpenActionreplace[] = {
+            ParseAction(ME, oflag, O_APPEND),
+            ParseAction(BitOr, oflag, O_TRUNC),
+            ParseAction()
+        };
+        ParseAction OpenActionnobuffer[] = {
+            ParseAction(SetBool, nobuffer, true),
+            ParseAction()
+        };
+        ParseAction OpenActionbinary[] = {
+            ParseAction(MEB, record_based, true),
+            ParseAction(SetBool, record_based, true),
+            ParseAction()
+        };
+        ParseAction OpenActionreclength[] = {
+            ParseAction(MIB, record_based),
+            ParseAction(CallItem, reclength_token, &binaryRecordLength),
+            ParseAction()
+        };
+
+        ParseAction OpenActionshared[] = {
+            ParseAction(SetItem, shared, SH_DENYNO),
+            ParseAction()
+        };
+
+        ParseAction OpenActionsharedread[] = {
+            ParseAction(SetItem, shared, SH_DENYWR),
+            ParseAction()
+        };
+
+        ParseAction OpenActionsharedwrite[] = {
+            ParseAction(SetItem, shared, SH_DENYRD),
+            ParseAction()
+        };
+
+    #ifdef STREAM_AUTOSYNC
+        ParseAction OpenActionautosync[] = {
+            ParseAction(BitOr, oflag, O_SYNC),
+            ParseAction()
+        };
+    #endif
+
+    #ifdef STREAM_SHAREDOPEN
+        ParseAction OpenActionshareread[] = {
+            ParseAction(MI, oflag, O_DELAY),
+            ParseAction(BitOr, oflag, O_RSHARE),
+            ParseAction()
+        };
+        ParseAction OpenActionnoshare[] = {
+            ParseAction(MI, oflag, O_DELAY),
+            ParseAction(BitOr, oflag, O_NSHARE),
+            ParseAction()
+        };
+        ParseAction OpenActiondelay[] = {
+            ParseAction(MI, oflag, O_RSHARE),
+            ParseAction(MI, oflag, O_NSHARE),
+            ParseAction(BitOr, oflag, O_DELAY),
+            ParseAction()
+        };
+    #endif
+
+    /* Token table for open parameters */
+        TokenDefinition  tts[] = {
+            TokenDefinition("READ",3,      OpenActionread),
+            TokenDefinition("WRITE",1,     OpenActionwrite),
+            TokenDefinition("BOTH",2,      OpenActionboth),
+            TokenDefinition("APPEND",2,    OpenActionappend),
+            TokenDefinition("REPLACE",3,   OpenActionreplace),
+            TokenDefinition("NOBUFFER",3,  OpenActionnobuffer),
+            TokenDefinition("BINARY",2,    OpenActionbinary),
+            TokenDefinition("RECLENGTH",3, OpenActionreclength),
+            TokenDefinition("SHARED",6,    OpenActionshared),
+            TokenDefinition("SHAREREAD",6, OpenActionsharedread),
+            TokenDefinition("SHAREWRITE",6,OpenActionsharedwrite),
+
+    #ifdef STREAM_AUTOSYNC
+            TokenDefinition("AUTOSYNC",2, OpenActionautosync),
+    #endif
+
+    #ifdef STREAM_SHAREDOPEN
+            TokenDefinition("SHAREREAD",1,OpenActionshareread),
+            TokenDefinition("NOSHARE",3,  OpenActionnoshare),
+            TokenDefinition("DELAY",1,    OpenActiondelay),
+    #endif
+            TokenDefinition(unknown_tr)
+        };
+
+        if (parser(tts, options, NULL) != 0)
+        {
+            raiseException(Rexx_Error_Incorrect_method);
+        }
+    }
+    else
+    {
+        // No options, set the defaults.
+        read_write = true;
+        append = true;
+        oflag |= RDWR_CREAT | O_APPEND;
+        pmode |= IREAD_IWRITE;
+
+        // TODO: note that the docs say the default shared mode is SHARED.  But,
+        // the code on entry sets the default to not shared.  Need to either fix
+        // the docs or the code.
+    }
+
+
+    resolveStreamName();                /* get the fully qualified name      */
+
+                                        /* if replace and binary specified,  */
+                                        /* but not reclength, give back a    */
+                                        /* syntax error - don't know what to */
+                                        /* do                                */
+    if (record_based && (oflag & O_TRUNC) && !binaryRecordLength)
+    {
+        raiseException(Rexx_Error_Incorrect_method);
+    }
+
+    // If read/write/both/append not specified, the default is BOTH APPEND.
+    // (According to the current doc.)
+    if (!(oflag & (O_WRONLY | RDWR_CREAT )) && !read_only)
+    {
+        oflag |= O_RDWR | RDWR_CREAT;    /* set this up for read/write mode   */
+        pmode = IREAD_IWRITE;            /* save the pmode info               */
+        read_write = true;
+
+        if (!(oflag & (O_TRUNC | O_APPEND)))
+        {
+            oflag |= O_APPEND;
+            append = true;
+        }
+    }
+
+    if (read_only)
+    {                       /* read-only stream?                 */
+                            /* check if the stream exists        */
+        if (!SysFileSystem::fileExists(qualified_name))
+        {
+            char work[32];
+
+            /* format the error return           */
+            sprintf(work, "ERROR:%d", errno);
+            /* go raise a notready condition     */
+            notreadyError(errno, context->NewStringFromAsciiz(work));
+        }
+        /* and clear all of the write        */
+        /* information                       */
+        charWritePosition = 0;
+        lineWritePosition = 0;
+        lineWriteCharPosition = 0;
+    }
+    /* if write only specified           */
+    /*      - try both first             */
+    if (oflag & O_WRONLY)
+    {
+        /* set both flags                    */
+        read_write = true;
+        write_only = true;
+
+        oflag &= ~O_WRONLY;              /* turn off the write only flag      */
+        oflag |= RDWR_CREAT;             /* and turn on the read/write        */
+        pmode = IREAD_IWRITE;            /* set the new pmode                 */
+    }
+
+    /* now open the stream               */
+    if (!open(oflag, pmode, shared))
+    {
+        // if this is some sort of device, it might be output only (i.e., a
+        // printer).  Try opening again write only
+        if (fileInfo.isDevice())
+        {
+            if (!open(O_BINARY | WR_CREAT, S_IWRITE, shared))
+            {
+                char work[32];
+
+                sprintf(work, "ERROR:%d", fileInfo.errorInfo()); /* format the error return           */
+                /* go raise a notready condition     */
+                notreadyError(fileInfo.errorInfo(), context->NewStringFromAsciiz(work));
+            }
+            read_write = 0;/* turn off the read/write flag      */
+            write_only = 1;/* turn on the write only flag       */
+        }
+        else
+        {
+            char work[32];
+            sprintf(work, "ERROR:%d", fileInfo.errorInfo()); /* format the error return           */
+            /* go raise a notready condition     */
+            notreadyError(fileInfo.errorInfo(), context->NewStringFromAsciiz(work));
+        }
+    }
 
 /********************************************************************************************/
 /*          if it is a persistant stream put the write character pointer at the end         */
@@ -2351,1275 +2143,1240 @@ TTS *ttsp;
 /*   if the stream was created it will have a size of 0 but this will mess up the logic     */
 /*          so set it to one                                                                */
 /********************************************************************************************/
-   stream_size(stream_info);           /* set up the pseudo stream size     */
-                                       /* persistent writeable stream?      */
-   if (!_transient && (oflag & (o_wronly | rdwr_creat))) {
-     if (stream_size(stream_info)) {   /* existing stream?                  */
-                                       /* try to set to the end             */
-       if (!set_stream_position(stream_size(stream_info) - 1)) {
-                                       /* read the last character, and if   */
-                                       /* it is an EOF character            */
-         if (binary_read(&char_buffer,1) && ctrl_z == char_buffer)
-                                       /* position to overwrite it          */
-           stream_info->char_write_position = stream_size(stream_info);
-         else                          /* write at the very end             */
-         {
-           stream_info->char_write_position = stream_size(stream_info) + 1;
-                   /* error on Windows so we had to put in that */
-                                                                           /* explicitly set the position       */
-                   set_stream_position(stream_info->char_write_position - 1);
-         }
-       }
-     }
-                                       /* set default line positioning      */
-     stream_info->line_write_position = 0;
-     stream_info->line_write_char_position = 0;
-   }
-   stream_info->flags.open = true;     /* this is now open                  */
-                                       /* this is now ready                 */
-   stream_info->state = stream_ready_state;
-                                       /* go process the stream type        */
-   get_stream_type(stream_info, i_binary != 0);
-   return "READY:";                    /* return success                    */
+                                        /* persistent writeable stream?      */
+    if (!fileInfo.isTransient() && (oflag & (O_WRONLY | RDWR_CREAT)))
+    {
+        if (size() > 0)
+        {   /* existing stream?                  */
+            // position at the end, and set the write position
+            setPosition(size(), charWritePosition);
+
+            char   char_buffer;
+            size_t bytesRead;
+            // read the last character of the buffer
+            readBuffer(&char_buffer, 1, bytesRead);
+
+            // if the last character is not a ctrl_z, we need to
+            // step past it.
+            if (ctrl_z != char_buffer)
+            {
+                charWritePosition++;
+                /* error on Windows so we had to put in that */
+                /* explicitly set the position       */
+                setPosition(charWritePosition, charWritePosition);
+            }
+        }
+        /* set default line positioning      */
+        lineWritePosition = 0;
+        lineWriteCharPosition = 0;
+    }
+    isopen = true;     /* this is now open                  */
+    /* this is now ready                 */
+    state = StreamReady;
+    /* go process the stream type        */
+    checkStreamType();
+    return "READY:";                    /* return success                    */
+}
+
+
+/********************************************************************************************/
+/* stream_open - open a stream                                                              */
+/********************************************************************************************/
+RexxMethod2(CSTRING, stream_open, CSELF, streamPtr, OPTIONAL_CSTRING, options)
+{
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
+
+    try
+    {
+        return stream_info->streamOpen(options);
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // return 0 for all exceptions...the result value has already been set.
+}
+
+/**
+ * Set a stream to be opened with a specified handle.
+ *
+ * @param fh     The input file handle.
+ */
+void StreamInfo::setHandle(int fh)
+{
+    fileInfo.open(fh);
+    opened_as_handle = 1;
 }
 
 /********************************************************************************************/
 /* handle_set                                                                               */
 /*           sets the handle into the stream info block                                     */
 /********************************************************************************************/
-RexxMethod2(size_t, handle_set,
-     BUFFER, StreamBuffer,             /* stream information block          */
-     int, fh)                          /* target file handle                */
+RexxMethod2(int, handle_set, CSELF, streamPtr, int, fh)
 {
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-   STREAM_INFO *stream_info;           /* stream information                */
-
-   stream_info = get_stream_info();    /* get the stream block              */
-   stream_info->fh = fh;               /* set the handler                   */
-                                       /* this is a handle                  */
-   stream_info->flags.handle_stream = 1;
-   return stream_info->fh;             /* and return it as a result         */
+    try
+    {
+        stream_info->setHandle(fh);
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // return 0 for all exceptions...the result value has already been set.
 }
 
 /********************************************************************************************/
 /* std_set                                                                                  */
 /*           tags this as a standard I/O stream                                             */
 /********************************************************************************************/
-RexxMethod1(REXXOBJECT, std_set,
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(int, std_set, CSELF, streamPtr)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
-
-   stream_info = get_stream_info();    /* get the stream block              */
-   stream_info->flags.bstd = true;     /* turn on the std flag              */
-   return NULLOBJECT;                  /* and return nothing as a result    */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setStandard();
+    return 0;
 }
+
+/**
+ * Set the stream position as determined by the options.
+ *
+ * @param options The stream command string for positioning.
+ *
+ * @return The updated position.
+ */
+int64_t StreamInfo::streamPosition(const char *options)
+{
+    int style = SEEK_SET;    // default style is forward.
+    bool styleSet = false;
+    bool seekBack = false;
+    int position_flags = 0;
+
+    int64_t offset = -1;
+
+    if (options != NULL)
+    {             /* have parameters?                  */
+    /* Action table for position parameters */
+        ParseAction  Direction_From_Start[] = {
+            ParseAction(MEB, styleSet),         // anything set is bad
+            ParseAction(SetItem, style, SEEK_SET),
+            ParseAction(SetBool, styleSet, true),
+            ParseAction()
+        };
+        ParseAction Direction_From_End[] = {
+            ParseAction(MEB, styleSet),         // anything set is bad
+            ParseAction(SetItem, style, SEEK_END),
+            ParseAction(SetBool, styleSet, true),
+            ParseAction()
+        };
+        ParseAction Direction_Forward[] = {
+            ParseAction(MEB, styleSet),         // anything set is bad
+            ParseAction(SetItem, style, SEEK_CUR),
+            ParseAction(SetBool, styleSet, true),
+            ParseAction()
+        };
+        ParseAction Direction_Backward[] = {
+            ParseAction(MEB, styleSet),         // anything set is bad
+            ParseAction(SetItem, style, SEEK_CUR),
+            ParseAction(SetBool, seekBack, true),
+            ParseAction(SetBool, styleSet, true),
+            ParseAction()
+        };
+        ParseAction Operation_Read[] = {
+            ParseAction(ME, position_flags, operation_write),
+            ParseAction(BitOr, position_flags, operation_read),
+            ParseAction()
+        };
+        ParseAction Operation_Write[] = {
+            ParseAction(ME, position_flags, operation_read),
+            ParseAction(BitOr, position_flags, operation_write),
+            ParseAction()
+        };
+        ParseAction Position_By_Char[] = {
+            ParseAction(ME, position_flags, position_by_line),
+            ParseAction(BitOr, position_flags, position_by_char),
+            ParseAction()
+        };
+        ParseAction Position_By_Line[] = {
+            ParseAction(ME, position_flags, position_by_char),
+            ParseAction(BitOr, position_flags, position_by_line),
+            ParseAction()
+        };
+
+    /* Token table for position parameters */
+        TokenDefinition  tts[] = {
+            TokenDefinition("=",1,     Direction_From_Start),
+            TokenDefinition("<",1,     Direction_From_End),
+            TokenDefinition("+",1,     Direction_Forward),
+            TokenDefinition("-",1,     Direction_Backward),
+            TokenDefinition("READ",1,  Operation_Read),
+            TokenDefinition("WRITE",1, Operation_Write),
+            TokenDefinition("CHAR",1,  Position_By_Char),
+            TokenDefinition("LINE",1,  Position_By_Line),
+            TokenDefinition(position_offset)
+        };
+
+                  /* call the parser to fix up         */
+        if (parser(tts, options, (void *)(&offset)) != 0)
+        {
+            raiseException(Rexx_Error_Incorrect_method);
+        }
+    }
+
+    // trying to move a transient stream?
+    if (transient)
+    {
+        /* this is an error                  */
+        raiseException(Rexx_Error_Incorrect_method_stream_type);
+    }
+
+    /* position offset must be specified */
+    if (offset == -1)
+    {
+        raiseException(Rexx_Error_Incorrect_method_noarg, context->NewStringFromAsciiz("SEEK"), context->NewStringFromAsciiz("offset"));
+    }
+    /* if read or write was not specified*/
+    /* check the open flags for read and */
+    /* set read. check for write and set */
+    /* write. if open both then set both */
+    /* flags                             */
+    if (!(position_flags & operation_read) && !(position_flags & operation_write))
+    {
+        // if this is a read only stream, only one thing we can read
+        if (read_only)
+        {
+            position_flags |= operation_read;
+        }
+        /* opened write only?                */
+        else if (write_only)
+        {
+            position_flags |= operation_write;
+        }
+        else
+        {
+            position_flags |= operation_read | operation_write;
+
+            //TODO:  make sure the last op was recorded.
+            /* set both stream pointers to last active position          */
+            if (last_op_was_read)
+            {
+                charWritePosition = charReadPosition;
+                lineWritePosition = lineReadPosition;
+            }
+            else
+            {
+                charReadPosition = charWritePosition;
+                lineReadPosition = lineWritePosition;
+            }
+        }
+    }
+    /* if the write stream is being      */
+    /* repositioned                      */
+    if (position_flags & operation_write)
+    {
+        if (append)    /* opened append?                    */
+        {
+            return 0;                       /* cause a notready condition        */
+        }
+    }
+                                          /* if moving the read position -     */
+    if (position_flags & operation_read)
+    {
+        stream_line_size = 0;    /* reset the pseudo lines            */
+    }                                   /* if char or line not specified -   */
+
+    /* default to char                   */
+    if (!(position_flags & (position_by_char | position_by_line)))
+    {
+        position_flags |= position_by_char;
+    }
+
+    // if this is a backward seek from the current position, we need to negate
+    // the offset.
+    if (seekBack)
+    {
+        offset = -offset;
+    }
+
+    // character positioning
+    if (position_flags & position_by_char)
+    {
+        resetLinePositions();             /* reset all line positioning        */
+        // moving the read pointer?
+        if (position_flags & operation_read)
+        {
+            // make sure the file pointer is positioned appropriately.
+            setPosition(charReadPosition, charReadPosition);
+
+            // record the one-based position, and if moving both, update the
+            // write position too.
+            if (position_flags & operation_write)
+            {
+                charWritePosition = charReadPosition;
+            }
+            return charReadPosition;
+        }
+        else
+        {
+            // make sure the file pointer is positioned appropriately.
+            setPosition(charWritePosition, charWritePosition);
+
+            // We don't need to handle the
+            // read position here, since the case above catches both.
+            return charWritePosition;
+        }
+    }
+    else   // line positioning
+    {
+        /* if positioning by line and write  */
+        /* only stream, raise notready       */
+        /* because we can't do reads         */
+        if (!(read_write || read_only))
+        {
+            return 0;
+        }
+
+        // moving the read pointer?
+        if (position_flags & operation_read)
+        {
+            // make sure the file pointer is positioned appropriately.
+            setPosition(charReadPosition, charReadPosition);
+            seekLinePosition(offset, style, lineReadPosition, lineReadCharPosition);
+
+            if (position_flags & operation_write)
+            {
+                lineWriteCharPosition = lineReadCharPosition;
+                lineWritePosition = lineReadPosition;
+            }
+            return lineReadPosition;
+        }
+        else
+        {
+            // make sure the file pointer is positioned appropriately.
+            setPosition(charWritePosition, charWritePosition);
+            seekLinePosition(offset, style, lineWritePosition, lineWriteCharPosition);
+
+            return lineWritePosition;
+        }
+    }
+}
+
+/**
+ * Get the line size for this stream.  If we're using fixed
+ * length records, we can calculate this directly from the
+ * size.  If it is a variable-line stream, we might have
+ * already calculated the size and kept the information.  If
+ * not, we're going to have go and count every line.
+ *
+ * @return The number of lines in the stream.
+ */
+int64_t StreamInfo::getLineSize()
+{
+    //  using fixed length records?
+    if (record_based)
+    {
+        // this one is fairly simple.  Just get the size, and we can calculate
+        // the end position from that.
+        int64_t currentSize = size();
+        int64_t lastLine = currentSize / binaryRecordLength;
+        // if the current size doesn't have an exact fit, bump the line
+        // count up one.
+        if ((currentSize % binaryRecordLength) > 0)
+        {
+            lastLine++;
+        }
+        return lastLine;
+    }
+    else
+    {
+        // get a count from the beginning.  If we have full information
+        // already, this will just return that.
+        return countStreamLines(1, 1);
+    }
+}
+
+
+/**
+ * Perform a seek operation by line position instead of
+ * character.  The seek can be relative to either the front,
+ * end, or current positions.
+ *
+ * @param offset    The offset to move.  This can be negative for SEEK_CUR.
+ * @param direction The position to seek from.  This can be SEEK_SET, SEEK_CUR,
+ *                  or SEEK_END (using the stdio.h constants directly).
+ * @param current_line
+ *                  The current line position we're seeking from.  This can
+ *                  be either the stream read or write position.  This value
+ *                  is updated on completion of the seek.
+ * @param current_position
+ *                  The current character position associated with this
+ *                  operation.  This is also updated with the seek.
+ *
+ * @return The new line position.
+ */
+int64_t StreamInfo::seekLinePosition(int64_t offset, int direction, int64_t &current_line, int64_t &current_position)
+{
+    int64_t newLinePosition;
+
+    switch (direction)
+    {
+        case SEEK_END:
+        {
+            // end is a little more complicated.  We need to find the record #
+            // of the end position, and go from there.
+            int64_t lastLine = getLineSize();
+            newLinePosition = lastLine - offset;
+            break;
+        }
+
+        case SEEK_SET:
+        {
+            // set is easy, the offset is the new line position.  Handle
+            // everthing from there.
+            newLinePosition = offset;
+            break;
+        }
+
+        case SEEK_CUR:
+        {
+            // just add the offset to the current position.
+            // The offset can be either positive or negative.
+            newLinePosition = offset + current_line;
+            break;
+        }
+    }
+
+    // we can't seek past the first line.
+    if (newLinePosition < 1)
+    {
+        newLinePosition = 1;
+    }
+
+    // now go directly and set this.
+    return setLinePosition(newLinePosition, current_line, current_position);
+}
+
+
+/**
+ * Set a line position to an explicit line number.  This takes
+ * into account differences between record and variable line
+ * streams.
+ *
+ * @param new_line The target new_line position.
+ * @param current_line
+ *                 The current line position we're seeking from.
+ * @param current_position
+ *                 The current character position we're seeking from.
+ *
+ * @return The new line position.
+ */
+int64_t StreamInfo::setLinePosition(int64_t new_line, int64_t &current_line, int64_t &current_position)
+{
+    if (new_line <= 1)
+    {
+        /* set the position to the beginning */
+        current_position = 1;
+        current_line = 1;
+        return current_line;
+    }
+
+    if (record_based)
+    {
+        // calculate the character position using the record length.  +1 is
+        // added because we're not origin zero for Rexx streams.
+        current_position = binaryRecordLength * (new_line - 1) + 1;
+        current_line = new_line;
+        return current_line;
+    }
+    else
+    {
+        return seekToVariableLine(new_line, current_line, current_position);
+    }
+}
+
 
 /********************************************************************************************/
 /* stream_position                                                                          */
 /********************************************************************************************/
-RexxMethod3(size_t, stream_position,
-     OSELF, self,                      /* target stream object              */
-     BUFFER, StreamBuffer,             /* stream information block          */
-     CSTRING, ts)                      /* position command string           */
+RexxMethod2(int64_t, stream_position, CSELF, streamPtr, CSTRING, options)
 {
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NumberToObject(0));
 
-size_t Parse_Fields[7] = {             /* fields filled in by parse         */
-  0,                                   /* from_current                      */
-  0,                                   /* from_start                        */
-  0,                                   /* from_end                          */
-  0,                                   /* forward                           */
-  0,                                   /* backward                          */
-  0,                                   /* by_line                           */
-  0                                    /* position_flags                    */
- };
-
-size_t position_offset;                /* filled in by offset routine       */
-char   work[30];                       /* work buffer                       */
-
-/* parameter structure for unknown offset routine called from parser */
-POSITION_PARMS Parse_Parms = {
-   (size_t *)&position_flags,
-  &position_offset
- };
-
-/* Action table for position parameters */
-ATS  Direction_From_Start[] = {
-      {MF,       sizeof(from_end), (void *) from_end_index, errcode,0,0},
-      {MF,       sizeof(forward), (void *) forward_index, errcode,0,0},
-      {MF,       sizeof(backward), (void *) backward_index, errcode,0,0},
-      {MF,       sizeof(from_start), (void *) from_start_index, errcode,0,0},
-      {CopyItem, sizeof(from_start), (void *) from_start_index, errcode,(void *)&one,0},
-      {CopyItem, sizeof(forward), (void *) forward_index, errcode,(void *)&one,0},
-      {CopyItem, sizeof(backward), (void *) backward_index, errcode,(void *)&one,0},
-      {0,0,0,0,0,0}
-     };
-ATS Direction_From_End[] = {
-      {MF,       sizeof(from_start), (void *) from_start_index, errcode,0,0},
-      {MF,       sizeof(forward), (void *) forward_index, errcode,0,0},
-      {MF,       sizeof(backward), (void *) backward_index, errcode,0,0},
-      {MF,       sizeof(from_end), (void *) from_end_index, errcode,0,0},
-      {CopyItem, sizeof(from_end), (void *) from_end_index, errcode,(void *)&one,0},
-      {CopyItem, sizeof(backward), (void *) backward_index, errcode,(void *)&minus_one,0},
-      {0,0,0,0,0,0}
-     };
-ATS Direction_Forward[] = {
-      {MF,       sizeof(from_start), (void *) from_start_index, errcode,0,0},
-      {MF,       sizeof(from_end), (void *) from_end_index, errcode,0,0},
-      {MF,       sizeof(backward), (void *) backward_index, errcode,0,0},
-      {MF,       sizeof(forward), (void *) forward_index, errcode,0,0},
-      {CopyItem, sizeof(forward), (void *) forward_index, errcode,(void *)&one,0},
-      {CopyItem, sizeof(backward), (void *) backward_index, errcode,(void *)&one,0},
-      {CopyItem, sizeof(from_current), (void *) from_current_index, errcode,(void *)&one,0},
-      {0,0,0,0,0,0}
-     };
-ATS Direction_Backward[] = {
-      {MF,       sizeof(from_start), (void *) from_start_index, errcode,0,0},
-      {MF,       sizeof(from_end), (void *) from_end_index, errcode,0,0},
-      {MF,       sizeof(forward), (void *) forward_index, errcode,0,0},
-      {MF,       sizeof(backward), (void *) backward_index, errcode,0,0},
-      {CopyItem, sizeof(backward), (void *) backward_index, errcode,(void *)&minus_one,0},
-      {CopyItem, sizeof(from_current), (void *) from_current_index, errcode,(void *)&one,0},
-      {0,0,0,0,0,0}
-     };
-ATS Operation_Read[] = {
-      {ME,   sizeof(position_flags), (void *) position_flags_index, errcode,(void *)&operation_write,0},
-      {BitOr,sizeof(position_flags), (void *) position_flags_index, errcode,(void *)&operation_read,0},
-      {0,0,0,0,0,0}
-     };
-ATS Operation_Write[] = {
-      {ME,   sizeof(position_flags), (void *) position_flags_index, errcode,(void *)&operation_read,0},
-      {BitOr,sizeof(position_flags), (void *) position_flags_index, errcode,(void *)&operation_write,0},
-      {0,0,0,0,0,0}
-     };
-ATS Position_By_Char[] = {
-      {ME,   sizeof(position_flags), (void *) position_flags_index, errcode,(void *)&position_by_line,0},
-      {BitOr,sizeof(position_flags), (void *) position_flags_index, errcode,(void *)&position_by_char,0},
-      {0,0,0,0,0,0}
-     };
-ATS Position_By_Line[] = {
-      {ME,   sizeof(position_flags), (void *) position_flags_index, errcode,(void *)&position_by_char,0},
-      {BitOr,sizeof(position_flags), (void *) position_flags_index, errcode,(void *)&position_by_line,0},
-      {0,0,0,0,0,0}
-     };
-
-/* Token table for position parameters */
-TTS  tts[] = {
-      {"=",1,     Direction_From_Start,0},
-      {"<",1,     Direction_From_End,0},
-      {"+",1,     Direction_Forward,0},
-      {"-",1,     Direction_Backward,0},
-      {"READ",1,  Operation_Read,0},
-      {"WRITE",1, Operation_Write,0},
-      {"CHAR",1,  Position_By_Char,0},
-      {"LINE",1,  Position_By_Line,0},
-      {"\0",0,NULL, unknown_offset}
-    };
-
-TTS *ttsp;
-
-   STREAM_INFO *stream_info;           /* stream information                */
-   size_t new_position = 0;            /* new stream position               */
-   size_t result = 0;                  /* returned result                   */
-   position_offset = 0;                /* the position offset               */
-   position_flags = 0;                 /* positioning flags                 */
-   from_start = 0;                     /* from_start flag                   */
-   from_end = 0;                       /* from_end flag                     */
-   forward = 0;                        /* forward movement                  */
-   backward = 0;                       /* backward movement                 */
-   from_current = 0;                   /* move from current position        */
-   ttsp = tts;                         /* set up for parser call            */
-   size_t retpos = 0;                  /* position to return                */
-
-   stream_info = get_stream_info();    /* get the stream block              */
-
-   table_fixup(ttsp, Parse_Fields);    /* fix up the parse fields           */
-   if (NO_CSTRING != ts) {             /* have parameters?                  */
-                                       /* call the parser to fix up         */
-     if (parser(ttsp, ts, (void *)(&Parse_Parms)) != 0)
-                                       /* this is an error                  */
-       rexx_exception(Error_Incorrect_call);
-   }
-
-   if (stream_info->flags.transient)   /* trying to move a transient stream?*/
-                                       /* this is an error                  */
-     rexx_exception(Error_Incorrect_method_stream_type);
-
-/********************************************************************************************/
-/*           set up the defaults for parameters not specified                               */
-/********************************************************************************************/
-                                       /* position offset must be specified */
-   if (!(position_flags & position_offset_specified))
-                                       /* this is an error                  */
-     rexx_exception2(Error_Incorrect_call_noarg, ooRexxString("SEEK"), ooRexxString("offset"));
-                                       /* if direction was not specified    */
-                                       /*   default from start (absolute)   */
-   if (0 == from_start + from_end + forward + labs((signed)backward)) {
-     forward = 1;                      /* this is forward movement          */
-     from_start = 1;                   /* from the start                    */
-                                       /* for forward movement, backward is */
-                                       /* set to 1 ... -1 indicates backward*/
-     backward = 1;                     /* movement                          */
-   }
-                                       /* if read or write was not specified*/
-                                       /* check the open flags for read and */
-                                       /* set read. check for write and set */
-                                       /* write. if open both then set both */
-                                       /* flags                             */
-   if (!(position_flags & operation_read) && !(position_flags & operation_write)) {
-     if (stream_info->flags.read_only) /* opened read only?                 */
-                                       /* move the read position            */
-       position_flags |= operation_read;
-                                       /* opened write only?                */
-     else if (stream_info->flags.write_only)
-                                       /* move the write position           */
-       position_flags |= operation_write;
-    else {
-       position_flags |= operation_read | operation_write;
-
-       /* set both stream pointers to last active position          */
-       if (stream_info->flags.last_op_was_read) {
-         stream_info->char_write_position = stream_info->char_read_position;
-         stream_info->line_write_position = stream_info->line_read_position;
-       } else {
-         stream_info->char_read_position = stream_info->char_write_position;
-         stream_info->line_read_position = stream_info->line_write_position;
-       }
+    try
+    {
+        return stream_info->streamPosition(options);
     }
-   }
-                                       /* if the write stream is being      */
-                                       /* repositioned                      */
-   if (position_flags & operation_write) {
-     if (stream_info->flags.append)    /* opened append?                    */
-       return 0;                       /* cause a notready condition        */
-                                       /* else flush the buffer             */
-     buffer_flush;
-   }
-                                       /* if positioning by line and write  */
-                                       /* only stream, raise notready       */
-                                       /* because we can't do reads         */
-   if ((position_flags & position_by_line) && !(stream_info->flags.read_write || stream_info->flags.read_only))
-     return 0;                         /* raise the notready                */
-                                       /* if moving the read position -     */
-   if (position_flags & operation_read)
-   {
-     stream_info->pseudo_lines = 0;    /* reset the pseudo lines            */
-     stream_info->pseudo_max_lines = 0;  /* reset the pseudo lines          */
-   }                                   /* if char or line not specified -   */
-                                       /* default to char                   */
-   if (!(position_flags & position_by_char) && !(position_flags & position_by_line))
-     position_flags |= position_by_char;
-   if (from_end) {                     /* if setting from the end           */
-                                       /* resetting read?                   */
-     if (position_flags & operation_read) {
-                                       /* move the character position       */
-       stream_info->char_read_position = stream_size(stream_info);
-                                       /* and reset the line position       */
-       stream_info->line_read_position = stream_info->line_read_char_position = 0;
-     }
-
-     if (position_flags & operation_write) {
-                                       /* move the write position           */
-       stream_info->char_write_position = stream_size(stream_info);
-                                       /* and reset the line position       */
-       stream_info->line_write_position = stream_info->line_write_char_position = 0;
-     }
-   }
-                                       /* character positioning?            */
-   if (position_flags & position_by_char) {
-     reset_line_position               /* reset all line positioning        */
-   }
-                                       /* positioning non-binary line?      */
-   else if (!stream_info->flags.binary) {
-                                       /* go set up line positions          */
-     if (!(set_line_position(self, stream_info)))
-       return -1;                      /* and return all errors             */
-   }
-/********************************************************************************************/
-/*           time to start doing some actual positioning                                    */
-/********************************************************************************************/
-   if (!stream_info->stream_file) {    /* check file existence              */
-     sprintf(work, "ERROR:%d", ENOENT);
-                                       /* raise notready condition          */
-     stream_error(self, stream_info, ENOENT, ooRexxString(work));
-   }
-                                       /* if offset was specified as zero   */
-                                       /* set the system position according */
-                                       /* to the specified operation and    */
-                                       /* positioning parms                 */
-   if (position_offset == 0) {
-                                       /* moving the read position?         */
-     if (position_flags & operation_read) {
-                                       /* try to move this                  */
-       if (set_stream_position(stream_info->char_read_position - 1))
-                                       /* go check the failure              */
-         stream_check_eof(self, stream_info, errno, IntegerZero);
-                                       /* moving the character position?    */
-       if (position_flags & position_by_char)
-                                       /* just return current position      */
-         retpos = stream_info->char_read_position;
-       else {
-         if (stream_info->flags.binary)/* opened in binary mode?            */
-                                       /* return calculated line position   */
-           retpos = (stream_info->char_read_position/stream_info->stream_reclength) +
-             (stream_info->char_read_position % stream_info->stream_reclength ? 1 : 0);
-         else                          /* return setup line position        */
-           retpos = stream_info->line_read_position;
-       }
-     }
-                                       /* moving the write position         */
-     if (position_flags & operation_write) {
-                                       /* try to move this                  */
-       if (set_stream_position(stream_info->char_write_position - 1))
-                                       /* go check the failure              */
-         stream_check_eof(self, stream_info, errno, IntegerZero);
-                                       /* moving the character position?    */
-       if (position_flags & position_by_char)
-                                       /* just return current position      */
-         retpos = stream_info->char_write_position;
-       else {
-         if (stream_info->flags.binary)/* opened in binary mode?            */
-           retpos = (stream_info->char_write_position/stream_info->stream_reclength) +
-               (stream_info->char_write_position % stream_info->stream_reclength ? 1 : 0);
-         else                          /* return setup line position        */
-           retpos = stream_info->line_write_position;
-       }
-     }
-
-     return retpos;
-   }
-                                       /* if the offset was specified as one*/
-                                       /* set the system stream position to */
-                                       /* the beginning of the stream       */
-   if ((position_offset == 1) && (from_start)) {
-     if (set_stream_position(0))       /* try to move the position          */
-                                       /* go check the failure              */
-       stream_check_eof(self, stream_info, errno, IntegerZero);
-                                       /* moving the read position?         */
-     if (position_flags & operation_read) {
-                                       /* reset both the character and line */
-                                       /* read positions                    */
-       stream_info->char_read_position = 1;
-       stream_info->line_read_char_position = 1;
-       stream_info->line_read_position = 1;
-                                       /* and return the current position   */
-       retpos = stream_info->char_read_position;
-     }
-
-     if (position_flags & operation_write) {
-                                       /* reset both the character and line */
-                                       /* read positions                    */
-       stream_info->char_write_position = 1;
-       stream_info->line_write_char_position = 1;
-       stream_info->line_write_position = 1;
-                                       /* and return the current position   */
-       retpos = stream_info->char_write_position;
-     }
-
-     return retpos;
-   }
-                                       /* whatever the offset is now,       */
-                                       /*       go for it                   */
-                                       /* moving the character position?    */
-   if (position_flags & position_by_char) {
-                                       /* moving the read position?         */
-     if (position_flags & operation_read) {
-                                       /* make sure we're within the bounds */
-       new_position = (((position_offset - from_start) * (signed)backward) +
-           (--stream_info->char_read_position * from_current) + (stream_size(stream_info) * from_end));
-                                       /* try to move to the new position   */
-       if (set_stream_position(new_position))
-                                       /* go check the failure              */
-         stream_check_eof(self, stream_info, errno, IntegerZero);
-                                       /* set the new read position         */
-       stream_info->char_read_position = ++new_position;
-                                       /* and return it                     */
-       retpos = stream_info->char_read_position;
-     }
-                                       /* moving character write position   */
-     if (position_flags & operation_write) {
-                                       /* check the stream bounds           */
-       new_position = (((position_offset - from_start) * (signed)backward) +
-           (--stream_info->char_write_position * from_current) + (stream_size(stream_info) * from_end));
-                                       /* try to move to the new position   */
-       if (set_stream_position(new_position))
-                                       /* go check the failure              */
-         stream_check_eof(self, stream_info, errno, IntegerZero);
-                                       /* set the new read position         */
-       stream_info->char_write_position = ++new_position;
-                                       /* and return it                     */
-       retpos = stream_info->char_write_position;
-     }
-
-     return retpos;
-   }
-   if (stream_info->flags.binary) {    /* moving binary lines?              */
-                                       /* read positioning?                 */
-     if (position_flags & operation_read) {
-                                       /* calculate the new position        */
-       stream_info->char_read_position = (stream_info->stream_reclength * (position_offset - from_start) * (signed)backward) +
-           (stream_info->char_read_position * from_current) + ((stream_size(stream_info) + 1) * from_end);
-                                       /* try to move to the new position   */
-       if (from_start)
-       {
-         stream_info->char_read_position++;
-       }
-       if (set_stream_position(stream_info->char_read_position - 1))
-                                       /* go check the failure              */
-         stream_check_eof(self, stream_info, errno, IntegerZero);
-                                       /* return the line position          */
-       retpos = (stream_info->char_read_position/stream_info->stream_reclength) +
-           (stream_info->char_read_position % stream_info->stream_reclength ? 1 : 0);
-     }
-                                       /* moving the write position         */
-     if (position_flags & operation_write) {
-                                       /* calculate the new position        */
-       stream_info->char_write_position = (stream_info->stream_reclength * (position_offset - from_start) * (signed)backward) +
-           (stream_info->char_write_position * from_current) + ((stream_size(stream_info) + 1) * from_end);
-                                       /* try to move to the new position   */
-       if (from_start)
-       {
-         stream_info->char_write_position++;
-       }
-       if (set_stream_position(stream_info->char_write_position - 1))
-                                       /* go check the failure              */
-         stream_check_eof(self, stream_info, errno, IntegerZero);
-                                       /* return the line position          */
-       retpos = (stream_info->char_write_position/stream_info->stream_reclength) +
-           (stream_info->char_write_position % stream_info->stream_reclength ? 1 : 0);
-     }
-   }
-   else {                              /* moving a non-binary stream        */
-                                       /* if from the beginning it is not   */
-                                       /* an offset but an absolute         */
-                                       /* position, so only position to that*/
-                                       /* line                              */
-     if (from_start)
-       position_offset--;              /* reduce the offset 1               */
-                                       /* read positioning?                 */
-     if (position_flags & operation_read) {
-                                       /* if positioning is forward, do line*/
-       if (forward) {                  /* reads until the line is reached   */
-
-                                       /* if positioning is forward from    */
-                                       /* start, do line reads from the     */
-                                       /* beginning of the stream until the */
-         if (from_start) {             /* line is reached                   */
-                                       /* set the position to the beginning */
-           stream_info->line_read_char_position = 1;
-           stream_info->line_read_position = 1;
-         }
-                                       /* now go read forward the proper    */
-                                       /* number of lines                   */
-         result = read_forward_by_line(self, stream_info, &position_offset, &stream_info->line_read_position, &stream_info->line_read_char_position);
-       }
-       else {
-                                       /* if positioning from end, read     */
-                                       /* rlines backward from end until    */
-                                       /* line is reached                   */
-         if (from_end)
-           result = read_from_end_by_line(self, stream_info, &position_offset,
-               &stream_info->line_read_position, &stream_info->line_read_char_position);
-         else
-                                       /*  positioning is from current      */
-                                       /* backward--read lines backward     */
-                                       /* from current until line reached   */
-         result = read_backward_by_line(self, stream_info, &position_offset,
-             &stream_info->line_read_position, &stream_info->line_read_char_position);
-       }
-                                       /* fix up the character read position*/
-       stream_info->char_read_position = stream_info->line_read_char_position;
-       retpos = result;                /* return the read result            */
-     }
-                                       /* moving the write position         */
-     if (position_flags & operation_write) {
-                                       /* if positioning is forward, do line*/
-       if (forward) {                  /* reads until the line is reached   */
-
-                                       /* if positioning is forward from    */
-                                       /* start, do line reads from the     */
-                                       /* beginning of the stream until the */
-         if (from_start) {             /* line is reached                   */
-                                       /* set the position to the beginning */
-           stream_info->line_write_char_position = 1;
-           stream_info->line_write_position = 1;
-         }
-                                       /* now go read forward the proper    */
-                                       /* number of lines                   */
-         result = read_forward_by_line(self, stream_info, &position_offset, &stream_info->line_write_position, &stream_info->line_write_char_position);
-       }
-       else {
-                                       /* if positioning from end, read     */
-                                       /* rlines backward from end until    */
-                                       /* line is reached                   */
-         if (from_end)
-           result = read_from_end_by_line(self, stream_info, &position_offset,
-               &stream_info->line_write_position, &stream_info->line_write_char_position);
-         else
-                                       /*  positioning is from current      */
-                                       /* backward--read lines backward     */
-                                       /* from current until line reached   */
-         result = read_backward_by_line(self, stream_info, &position_offset,
-             &stream_info->line_write_position, &stream_info->line_write_char_position);
-       }
-                                       /* fix up the character read position*/
-       stream_info->char_write_position = stream_info->line_write_char_position;
-       retpos = result;                /* return the read result            */
-     }
-   }
-
-   return retpos;
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // return 0 for all exceptions...the result value has already been set.
 }
 
-/********************************************************************************************/
-/* stream_query_line_position                                                                  */
-/*             read from the current position a requested number of lines                   */
-/*             return the char position at the end of the line reads                        */
-/*                   or a zero if eof reached first                                         */
-/********************************************************************************************/
-
-size_t stream_query_line_position(REXXOBJECT self, STREAM_INFO *stream_info, size_t current_position)
+/**
+ * Determine the count of lines from the file beginning to
+ * specified stream location.
+ *
+ * @param current_position
+ *               The target position we're trying to convert for a char
+ *               position into a line position.
+ *
+ * @return A count indicating which logical line current_position lies
+ *         within.
+ */
+int64_t StreamInfo::queryLinePosition(int64_t current_position)
 {
-   char *buffer;                       /* file read buffer                  */
-   size_t buffer_count;                /* count read                        */
-   size_t extra;                       /* extra line count                  */
+    if (current_position == 0)            /* at the beginning?                 */
+    {
+        current_position = 1;             /* this is actually the start        */
+    }
 
-   setup_read_stream(IntegerZero);     /* do additional setup               */
-   extra = 0;                          /* no extra to count                 */
-   if (current_position == 0)          /* at the beginning?                 */
-     current_position = 1;             /* this is actually the start        */
-                                       /* get a buffer                      */
-   buffer = temp_buffer(current_position);
-   set_stream_position(0);             /* set position to the beginning     */
-                                       /* read from stream up to position   */
-   buffer_count = read_stream_buffer(stream_info, false, buffer, current_position);
-   if (buffer_count < current_position)/* is this beyound the end?          */
-     extra = 1;                        /* add in one extra line             */
-   if (stream_info->error != 0)        /* have a read problem?              */
-                                       /* raise a notready condition        */
-     stream_error(self, stream_info, stream_info->error, IntegerZero);
-                                       /* return the line count             */
-   return count_stream_lines(buffer, buffer_count, line_end, line_end_size) + extra;
+    int64_t lastLine;
+    int64_t count;
+    // try to count...raise notready if unable to
+    if (!fileInfo.countLines(0, current_position - 1, lastLine, count))
+    {
+        notreadyError();
+    }
+    return count;   // return the line count
+}
+
+/**
+ * process a method-level stream query call.
+ *
+ * @param options The string options that determine the requested options.
+ *
+ * @return The numeric position value as either a line or char position.
+ */
+RexxObjectPtr StreamInfo::queryStreamPosition(const char *options)
+{
+    int position_flags = 0;           /* clear the parseParms.position_flags          */
+
+    // if we have options, parse them into the flag values.
+    if (options != NULL)
+    {
+    /* Action table for query position parameters */
+
+        ParseAction Query_System_Position[] = {
+            ParseAction(ME, position_flags, query_write_position),
+            ParseAction(ME, position_flags, query_read_position),
+            ParseAction(BitOr, position_flags, query_system_position),
+            ParseAction()
+        };
+        ParseAction Query_Read_Position[] = {
+            ParseAction(ME, position_flags, query_write_position),
+            ParseAction(ME, position_flags, query_system_position),
+            ParseAction(BitOr, position_flags, query_read_position),
+            ParseAction()
+        };
+        ParseAction Query_Write_Position[] = {
+            ParseAction(ME, position_flags, query_read_position),
+            ParseAction(ME, position_flags, query_system_position),
+            ParseAction(BitOr, position_flags, query_write_position),
+            ParseAction()
+        };
+        ParseAction Query_Char_Position[] = {
+            ParseAction(ME, position_flags, query_line_position),
+            ParseAction(BitOr, position_flags, query_char_position),
+            ParseAction()
+        };
+        ParseAction Query_Line_Position[] = {
+            ParseAction(ME, position_flags, query_char_position),
+            ParseAction(BitOr, position_flags, query_line_position),
+            ParseAction()
+        };
+
+    /* Token table for open parameters */
+        TokenDefinition  tts[] = {
+            TokenDefinition("SYS",1,   Query_System_Position),
+            TokenDefinition("READ",1,  Query_Read_Position),
+            TokenDefinition("WRITE",1, Query_Write_Position),
+            TokenDefinition("CHAR",1,  Query_Char_Position),
+            TokenDefinition("LINE",1,  Query_Line_Position),
+            TokenDefinition(unknown_tr)
+        };
+                  /* parse the command string          */
+        if (parser(tts, options, NULL) != 0)
+        {
+            raiseException(Rexx_Error_Incorrect_method);
+        }
+    }
+
+    // the position of an unopened stream is a null string.
+    if (!isopen)
+    {
+        return context->NullString();
+    }
+    // transient streams alwasy return 1
+    if (transient)
+    {
+        return context->NumberToObject(1);   // always a position one
+    }
+    // querying the system position?
+    if (position_flags & query_system_position)
+    {
+        int64_t position;
+        // just get the stream position, raising not ready if it fails.
+        if (!fileInfo.getPosition(position))
+        {
+            notreadyError();
+        }
+        return context->Int64ToObject(position);
+    }
+    // no method specified?
+    if (!(position_flags && (query_read_position | query_write_position)))
+    {
+        // is this a write-only stream?  Return that
+        if (write_only)
+        {
+            position_flags |= query_write_position;
+        }
+        else  // query the read position by default
+        {
+            position_flags |= query_read_position;
+        }
+    }
+        /* asking for the write position?    */
+    if (position_flags & query_write_position)
+    {
+        /* check if line or char             */
+        if (position_flags & query_line_position)
+        {
+            return context->Int64ToObject(getLineWritePosition());
+        }
+        else
+        {
+            // just return the character write pointer
+            return context->Int64ToObject(charWritePosition);
+        }
+    }
+    else  // read position
+    {
+        if (position_flags & query_line_position)
+        {
+            return context->Int64ToObject(getLineReadPosition());
+        }
+        else
+        {
+            // just return the character write pointer
+            return context->Int64ToObject(charReadPosition);
+        }
+    }
+}
+
+
+/**
+ * Calculate the line position of the stream based on the
+ * position and the type.
+ *
+ * @return The 64-bit line position of the stream.
+ */
+int64_t StreamInfo::getLineReadPosition()
+{
+    // record-based I/O?
+    if (record_based)
+    {
+        // calculate this using the record length
+        return (charReadPosition / binaryRecordLength) + (charReadPosition % binaryRecordLength ? 1 : 0);
+    }
+    else
+    {
+        // no up-to-date line position?  Recalc this based on the character position.
+        if (lineReadPosition == 0)
+        {
+            lineReadPosition = queryLinePosition(charReadPosition);
+        }
+        // set the character position
+        lineReadCharPosition = charReadPosition;
+        // return the position.
+        return lineReadPosition;
+    }
+}
+
+
+
+/**
+ * Calculate the line position of the stream based on the
+ * defined I/O type.
+ *
+ * @return Calculated 64-bit stream line position.
+ */
+int64_t StreamInfo::getLineWritePosition()
+{
+    // using fixed length records?
+    if (record_based)
+    {
+        // the position is based on the size of the records.
+        return (charWritePosition / binaryRecordLength) +
+            (charWritePosition % binaryRecordLength ? 1 : 0);
+    }
+    // standard line-oriented text stream
+    else
+    {
+        // if our line write position has been invalidated, we need to
+        // recalculate (a real pain!).
+        if (lineWritePosition == 0)
+        {
+            // update the position based on the current character position
+            lineWritePosition = queryLinePosition(charWritePosition);
+        }
+        // synch up the character positioning
+        lineWriteCharPosition = charWritePosition;
+        // and return the position.
+        return lineWritePosition;
+    }
 }
 
 /********************************************************************************************/
 /* stream_query_position                                                                    */
 /********************************************************************************************/
-RexxMethod3(REXXOBJECT, stream_query_position,
-     OSELF, self,                      /* target stream object              */
-     BUFFER, StreamBuffer,             /* stream information block          */
-     CSTRING, ts)                      /* query command string              */
+RexxMethod2(RexxObjectPtr, stream_query_position, CSELF, streamPtr, OPTIONAL_CSTRING, options)
 {
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-/* fields that parse will fill in */
-size_t Parse_Fields[1] = {
-  0                                    /* query_position_flags              */
- };
-
-/* Action table for query position parameters */
-
-ATS Query_System_Position[] = {
-      {MF,   sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&one,0},
-      {BitOr,sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_system_position,0},
-      {0,0,0,0,0,0}
-     };
-ATS Query_Read_Position[] = {
-      {ME,   sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_write_position,0},
-      {ME   ,sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_system_position,0},
-      {BitOr,sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_read_position,0},
-      {0,0,0,0,0,0}
-     };
-ATS Query_Write_Position[] = {
-      {ME,   sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_read_position,0},
-      {ME   ,sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_system_position,0},
-      {BitOr,sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_write_position,0},
-      {0,0,0,0,0,0}
-     };
-ATS Query_Char_Position[] = {
-      {ME,   sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_line_position,0},
-      {BitOr,sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_char_position,0},
-      {0,0,0,0,0,0}
-     };
-ATS Query_Line_Position[] = {
-      {ME,   sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_char_position,0},
-      {BitOr,sizeof(query_position_flags), (void *)query_position_flags_index, errcode,(void *)&query_line_position,0},
-      {0,0,0,0,0,0}
-     };
-
-/* Token table for open parameters */
-TTS  tts[] = {
-      {"SYS",1,   Query_System_Position,0},
-      {"READ",1,  Query_Read_Position,0},
-      {"WRITE",1, Query_Write_Position,0},
-      {"CHAR",1,  Query_Char_Position,0},
-      {"LINE",1,  Query_Line_Position,0},
-      {"\0",0,NULL, unknown_tr}
-    };
-
-/* dummy parameter structure for call to parser */
-DUMMY_PARMS dummy_parms;
-
-TTS *ttsp;
-
-   STREAM_INFO *stream_info;           /* stream information                */
-   ttsp = tts;
-   query_position_flags = 0;           /* clear the position_flags          */
-
-   stream_info = get_stream_info();    /* get the stream block              */
-
-   table_fixup(ttsp, Parse_Fields);    /* fix up the parser tables          */
-   if (NO_CSTRING != ts) {             /* have parameters?                  */
-                                       /* parse the command string          */
-     if (parser(ttsp, ts, (void *)(&dummy_parms)) != 0)
-                                       /* this is an error                  */
-       rexx_exception(Error_Incorrect_call);
-   }
-
-   if (!stream_info->flags.open)       /* unopened stream?                  */
-     return OREF_NULLSTRING;           /* this is a null string             */
-
-   if (stream_info->flags.transient)   /* checking a transient stream?      */
-     return IntegerOne;                /* always at position one            */
-
-                                       /* querying the system position?     */
-   if (query_position_flags & query_system_position)
-                                       /* get directly from the stream      */
-     return RexxInteger(tell_stream_position);
-                                       /* no read position to query?        */
-   if (stream_info->flags.write_only && !stream_info->flags.read_write)
-     return IntegerZero;               /* just return zero                  */
-
-                                       /* no method specified?              */
-   if (!query_position_flags && (query_read_position | query_write_position))
-
-     if (stream_info->flags.write_only)/* this a write-only stream?         */
-                                       /* return the write position         */
-       query_position_flags |= query_write_position;
-                                       /* asking for the write position?    */
-   if (query_position_flags & query_write_position) {
-                                       /* check if line or char             */
-     if (query_position_flags & query_line_position) {
-       if (stream_info->flags.binary)  /* binary stream?                    */
-                                       /* return calculated stream position */
-         return RexxInteger((stream_info->char_write_position/stream_info->stream_reclength) +
-             (stream_info->char_write_position % stream_info->stream_reclength ? 1 : 0));
-       else {                          /* non-binary stream                 */
-                                       /* no up-to-date line position?      */
-         if (stream_info->line_write_position == 0)
-                                       /* update this                       */
-           stream_info->line_write_position = stream_query_line_position(self, stream_info, stream_info->char_write_position);
-                                       /* set the character position        */
-         stream_info->line_write_char_position = stream_info->char_write_position;
-       }
-                                       /* return this position              */
-       return RexxInteger(stream_info->line_write_position);
-     }
-     else                              /* just return the write position    */
-       return RexxInteger(stream_info->char_write_position);
-   }
-   else {                              /* return the read position          */
-                                       /* check if line or char             */
-     if (query_position_flags & query_line_position) {
-       if (stream_info->flags.binary)  /* binary stream?                    */
-                                       /* return calculated stream position */
-         return RexxInteger((stream_info->char_read_position/stream_info->stream_reclength) +
-             (stream_info->char_read_position % stream_info->stream_reclength ? 1 : 0));
-       else {                          /* non-binary stream                 */
-                                       /* no up-to-date line position?      */
-         if (stream_info->line_read_position == 0)
-                                       /* update this                       */
-           stream_info->line_read_position = stream_query_line_position(self, stream_info, stream_info->char_read_position);
-                                       /* set the character position        */
-         stream_info->line_read_char_position = stream_info->char_read_position;
-       }
-                                       /* return this position              */
-       return RexxInteger(stream_info->line_read_position);
-     }
-     else                              /* just return the read position     */
-       return RexxInteger(stream_info->char_read_position);
-   }
+    try
+    {
+        return stream_info->queryStreamPosition(options);
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+        return 0;
+    }
+    catch (StreamInfo *)
+    {
+    }
+    return 0;     // return 0 for all exceptions...the result value has already been set.
 }
 
-/********************************************************************************************/
-/* read_backward_by_line                                                                    */
-/*             read from the current position a requested number of lines                   */
-/*             return error, EOF or success indication                                      */
-/********************************************************************************************/
-
-size_t read_backward_by_line(REXXOBJECT self, STREAM_INFO *stream_info, size_t *line_count, size_t *current_line, size_t *current_position)
+/**
+ * Move forward the specified number of lines in the file.
+ *
+ * @param offset Number of lines to move.
+ * @param current_line
+ *               Current line position in the file.
+ * @param current_position
+ *               The current character position to read from.
+ *
+ * @return The new current line position.
+ */
+int64_t StreamInfo::readForwardByLine(int64_t offset, int64_t &current_line, int64_t &current_position)
 {
+    readSetup();                      /* do additional setup               */
 
-   char *buffer;                       /* buffer pointer                    */
-   size_t buffer_count;
-   size_t buffer_size;                 /* size of the buffer                */
-   size_t buffer_index;                /* position within the buffer        */
+    // make sure we're reading from the correct position
+    setPosition(current_position, current_position);
 
-   setup_read_stream(IntegerZero);     /* do additional setup               */
-   buffer_size = *current_position;    /* get the buffer size               */
-   buffer = temp_buffer(buffer_size);  /* get a buffer                      */
-   set_stream_position(0);             /* set position to beginning         */
-                                       /* read from stream up to the current*/
-   buffer_count = read_stream_buffer(stream_info, false, buffer, buffer_size);
-   if (stream_info->error != 0)        /* have a read problem?              */
-                                       /* raise a notready condition        */
-     stream_error(self, stream_info, stream_info->error, IntegerZero);
-                                       /* if char read count more than end  */
-   if (buffer_count >= line_end_size) {
-                                       /* count back thru lines in buffer   */
-     for (buffer_index = buffer_count - 1;
-           buffer_index >= 0 &&  *line_count >= 0;
-          buffer_index--) {
-                                       /* got a line-end?                   */
-        if (!memcmp(&buffer[buffer_index-line_end_size],(const char *)line_end,line_end_size)
-            || buffer[buffer_index-1] == nl){ /* or a single NL ?           */
-
-          (*line_count)--;             /* count this                        */
-          (*current_line)--;           /* and move the current line too     */
-        }
-     }
-   }
-                                       /* unable to do this?                */
-   if (( buffer_index < 0) ||  ( *line_count >= 0) || ( *current_line <= 0)) {
-                                       /*  set the stream to the beginning  */
-     *current_line = *current_position = 1;
-     set_stream_position(0);           /* move the stream position          */
-     if ( *line_count > 0)             /* under-run the stream?             */
-       return (0);                     /* return the eof indicator          */
-     return (1);                       /* return position number 1          */
-   }
-                                       /* set the new current position      */
-   *current_position = buffer_index + line_end_size;
-   return ++(*current_line);           /* and the current line              */
+    if (!fileInfo.seekForwardLines(current_position - 1, offset, current_position))
+    {
+        // no good, raise an error
+        notreadyError();
+    }
+    // set this to the number of lines actually moved
+    current_line += offset;            /* assume success                    */
+    // unable to read everything?  Then the current line is also the line size
+    if (offset != 0)
+    {
+        stream_line_size = current_line;
+    }
+    return current_line;                /* return current line count         */
 }
 
-/********************************************************************************************/
-/* read_forward_by_line                                                                     */
-/********************************************************************************************/
 
-size_t read_forward_by_line(
-  REXXOBJECT self,                     /* target stream object              */
-  STREAM_INFO *stream_info,            /* current stream block              */
-  size_t *line_count,                  /* count to move                     */
-  size_t *current_line,                /* current line position             */
-  size_t *current_position)            /* current character position        */
+/**
+ * Seek to a specific line position
+ *
+ * @param offset The new target position
+ * @param current_line
+ *               The starting line position
+ * @param current_position
+ *               The starting character position.
+ *
+ * @return
+ */
+int64_t StreamInfo::seekToVariableLine(int64_t offset, int64_t &current_line, int64_t &current_position)
 {
-   char *buffer;                       /* temp read buffer                  */
-   size_t buffer_count;                /* count of buffer data              */
-   size_t buffer_size;                 /* size of the buffer                */
+    if (current_line == offset)
+    {
+        return current_line;
+    }
+    // can we reach there by going forward?
+    if (offset > current_line)
+    {
+        // read forward from the beginning
+        return readForwardByLine(offset - current_line, current_line, current_position);
+    }
+    else
+    {
+        // read forward from the beginning
+        current_line = 1;
+        current_position = 1;
+        return readForwardByLine(offset, current_line, current_position);
+    }
+}
 
-   setup_read_stream(IntegerZero);     /* do additional setup               */
-                                       /* get the buffer size               */
-   buffer_size = (stream_size(stream_info) - (*current_position - 1));
-   buffer = temp_buffer(buffer_size);  /* get a buffer                      */
-                                       /* set the stream position           */
-   set_stream_position(*current_position - 1);
-                                       /* read from current position to end */
-   buffer_count = read_stream_buffer(stream_info, false, buffer, buffer_size);
-   if (stream_info->error != 0)        /* have a read problem?              */
-                                       /* raise a notready condition        */
-     stream_error(self, stream_info, stream_info->error, IntegerZero);
-   *current_line += *line_count;       /* assume success                    */
-                                       /* move it forward                   */
-   *current_position += scan_forward_lines(buffer, buffer_count, line_count, line_end, line_end_size) - 1;
-   *current_line -= *line_count;       /* adjust by incompleted lines       */
-   if (*line_count)                    /* not able read all?                */
+
+/**
+ * Make sure we have valid line positions set.  If we've just
+ * been doing character operations up to this point, our
+ * line positions will not be set.  This may require reading
+ * the file and counting up to the positions.
+ *
+ * @return
+ */
+int64_t StreamInfo::setLinePositions()
+{
+   // already have information?
+   if (lineReadPosition != 0 && lineWritePosition != 0)
    {
-     stream_info->pseudo_lines = 0;    /*       no lines left               */
-     return 0;                         /* this is an end of file            */
+       // just return the
+       return lineReadPosition;
    }
-   return *current_line;               /* return current line count         */
+   readSetup();                        // prepare to do reading
+   // still at the beginning?
+   if (charReadPosition == 1)
+   {
+      // set the line counts to match.
+      lineReadPosition = 1;
+      lineReadCharPosition = 1;
+   }
+   else
+   {
+       if (!fileInfo.countLines(0, charReadPosition - 1, lineReadCharPosition, lineReadPosition))
+       {
+           notreadyError();
+       }
+       // system positions are origin 0...Rexx ones are origin 1.
+       lineReadCharPosition++;
+   }
+   // now try the write position
+   if (charWritePosition == 1)
+   {
+     lineWritePosition = 1;
+     lineWriteCharPosition = 1;
+   }
+   else
+   {
+       if (!fileInfo.countLines(0, charWritePosition - 1, lineWriteCharPosition, lineWritePosition))
+       {
+           notreadyError();
+       }
+       // system positions are origin 0...Rexx ones are origin 1.
+       lineWriteCharPosition++;
+   }
+   return lineReadPosition;
 }
 
-
-/********************************************************************************************/
-/* read_from_end_by_line                                                                    */
-/*             read from the end of the stream a requested number of lines                  */
-/*             return error, EOF or success indication                                      */
-/********************************************************************************************/
-
-size_t read_from_end_by_line(
-  REXXOBJECT self,                     /* target stream object              */
-  STREAM_INFO *stream_info,            /* current stream block              */
-  size_t *line_count,                  /* count to move                     */
-  size_t *current_line,                /* current line position             */
-  size_t *current_position)            /* current character position        */
+/**
+ * Return the qualified name of a stream.
+ *
+ * @return The character string qualified name.
+ */
+const char *StreamInfo::getQualifiedName()
 {
-
-   char *buffer;                       /* read buffer                       */
-   size_t buffer_count;                /* count of characters read          */
-   size_t buffer_size;                 /* size of the buffer                */
-   size_t total_lines;                 /* total number of lines             */
-
-   setup_read_stream(IntegerZero);     /* do additional setup               */
-                                       /* get the stream size               */
-   buffer_size = stream_size(stream_info);
-   buffer = temp_buffer(buffer_size);  /* get a buffer                      */
-   set_stream_position(0);             /* set the stream position           */
-                                       /* read the stream into the buffer   */
-   buffer_count = read_stream_buffer(stream_info, false, buffer,buffer_size);
-   if (stream_info->error != 0)        /* have a read problem?              */
-                                       /* raise a notready condition        */
-     stream_error(self, stream_info, stream_info->error, IntegerZero);
-                                       /* count the lines                   */
-   total_lines = count_stream_lines(buffer, buffer_count, line_end, line_end_size);
-   if (*line_count >= total_lines) {   /* too many to move?                 */
-     set_stream_position(0);           /* set to the beginning              */
-                                       /* everything is at line 1           */
-     *current_line = *current_position = 1;
-     if (*line_count > total_lines)    /* too many lines?                   */
-       return (0);                     /* return the failure indicator      */
-     return (1);                       /* this worked ok                    */
-   }
-                                       /* compute new current line          */
-   *current_line = total_lines - (*line_count-1);
-   *line_count = *current_line - 1;    /* get count to move forward         */
-                                       /* move it forward                   */
-   *current_position = scan_forward_lines(buffer, buffer_count, line_count, line_end, line_end_size);
-   return *current_line;               /* return the line position          */
- }
-
-/********************************************************************************************/
-/* set_line_position                                                                        */
-/*             read from the beginning of the stream counting the lines                     */
-/********************************************************************************************/
-
-size_t set_line_position(
-  REXXOBJECT self,                     /* target stream object              */
-  STREAM_INFO *stream_info)            /* current stream position           */
-{
-
-   char *buffer;                       /* read buffer                       */
-   size_t buffer_count;                /* count of characters read          */
-                                       /* already set up?                   */
-   if (stream_info->line_read_position && stream_info->line_write_position)
-                                       /* return the read position          */
-      return stream_info->line_read_position;
-                                       /* at the beginning?                 */
-   if (1 == stream_info->char_read_position) {
-                                       /* move the line read counts too     */
-     stream_info->line_read_position = 1;
-     stream_info->line_read_char_position = 1;
-                                       /* write count the same?             */
-     if (1 == stream_info->char_write_position) {
-                                       /* just set line write counts to same*/
-       stream_info->line_write_position = 1;
-       stream_info->line_write_char_position = 1;
-       return 1;                       /* all setup, just return            */
-     }
-   }
-                                       /* if we can set up the write counts */
-   if (1 == stream_info->char_write_position) {
-                                       /* just reset the counter            */
-     stream_info->line_write_position = 1;
-     stream_info->line_write_char_position = 1;
-   }
-   setup_read_stream(IntegerZero);     /* do additional setup               */
-                                       /* calculate the buffer size         */
-   buffer = temp_buffer((stream_info->char_read_position > stream_info->char_write_position) ?
-                      stream_info->char_read_position : stream_info->char_write_position  + 1);
-   set_stream_position(0);             /* move to the beginning             */
-                                       /* read from stream up to char       */
-                                       /* position                          */
-                                       /* read position higher?             */
-   if (stream_info->char_read_position > stream_info->char_write_position)
-                                       /* use it                            */
-     buffer_count = stream_info->char_read_position;
-   else                                /* use the write position            */
-     buffer_count = stream_info->char_write_position;
-                                       /* read whats in the stream          */
-   buffer_count = read_stream_buffer(stream_info, false, buffer, buffer_count);
-   if (stream_info->error != 0)        /* have a read problem?              */
-                                       /* raise a notready condition        */
-     stream_error(self, stream_info, stream_info->error, IntegerZero);
-                                       /* count lines in the buffer         */
-   stream_info->line_read_position = count_stream_lines(buffer, stream_info->char_read_position, line_end, line_end_size);
-                                       /* update line char count to char    */
-   stream_info->line_read_char_position = stream_info->char_read_position;
-                                                 /* if the read and write char counts are the same */
-                                                 /*  make the line counts the same                */
-                                       /* positions the same?               */
-   if (stream_info->char_read_position == stream_info->char_write_position) {
-                                       /* make the same                     */
-       stream_info->line_write_position = stream_info->line_read_position;
-       stream_info->line_write_char_position = stream_info->line_read_char_position;
-       return 1;                       /* and return                        */
-   }
-                                       /* count lines in the buffer         */
-   stream_info->line_write_position = count_stream_lines(buffer, stream_info->char_write_position, line_end, line_end_size);
-                                       /* update the character position     */
-   stream_info->line_write_char_position = stream_info->char_write_position;
-   return 1;                           /* return success                    */
+    // resolve the stream name, if necesary, and return the fully qualified
+    // name.
+    resolveStreamName();
+    return qualified_name;
 }
 
 /********************************************************************************************/
 /* qualify                                                                                  */
 /********************************************************************************************/
-RexxMethod1(CSTRING, qualify,
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(CSTRING, qualify, CSELF, streamPtr)
 {
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-   STREAM_INFO *stream_info;           /* stream information                */
+    return stream_info->getQualifiedName();
+}
 
-   stream_info = get_stream_info();    /* get the stream block              */
-   if (!stream_info->flags.open)       /* not open yet?                     */
-     full_name_parameter(stream_info); /* expand the full name              */
-                                       /* return the name parameter         */
-   return (char *)&stream_info->full_name_parameter;
+
+/**
+ * Check if a stream exists.  If it does, the qualified name
+ * is returned.  This does not need to be an open stream for
+ * this to succeed.
+ *
+ * @return The resolved stream name, or "" if not resolvable.
+ */
+const char *StreamInfo::streamExists()
+{
+    // opened with a provided handle?  We have no name.
+    if (opened_as_handle)
+    {
+        return "";
+    }
+
+    // are we successfully open?  We've already resolved this then
+    if (isopen)
+    {
+        // is this a device of some sort?  result is the original name
+        if (fileInfo.isDevice())
+        {
+            return stream_name;
+        }
+        else  // return the fully qualified stream name.
+        {
+            return qualified_name;
+        }
+    }
+
+    // make sure we have the fully resolved stream name.
+    resolveStreamName();
+    if (SysFileSystem::fileExists(qualified_name))
+    {
+        return qualified_name;
+    }
+    // can't find this, sorry.
+    return "";
 }
 
 /********************************************************************************************/
 /* query_exists                                                                             */
 /********************************************************************************************/
-RexxMethod1(CSTRING, query_exists,
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(CSTRING, query_exists, CSELF, streamPtr)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
-   struct stat stat_info;
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-   stream_info = get_stream_info();    /* get the stream block              */
-                                       /* check if persistant and return the*/
-                                       /* name. if not return null string   */
-   if (get_file_statistics(stream_info, &stat_info) == 0 && !(stat_info.st_mode&S_IFDIR)) {
-                                       /* opened as a stream?               */
-     if (stream_info->flags.handle_stream)
-                                       /* just return the name              */
-       return (CSTRING)&stream_info->name_parameter;
-     else                              /* give the fully expanded name      */
-       return (CSTRING)&stream_info->full_name_parameter;
-   }
-   else
-   if (!stream_info->flags.handle_stream &&
-       ((strchr(stream_info->full_name_parameter,'*') != NULL) || (strchr(stream_info->full_name_parameter,'?') != NULL)))
-   {
-      if (SearchFirstFile(stream_info->full_name_parameter))
-             return (CSTRING)&stream_info->full_name_parameter;
-          else
-             return "";
-   }
-   else
-     return "";                        /* don't return anything             */
+    return stream_info->streamExists();
+}
+
+/**
+ * Return the handle value for the stream.
+ *
+ * @return The binary handle for the stream.
+ */
+int64_t StreamInfo::queryHandle()
+{
+    if (!isopen)       /* unopened stream?                  */
+    {
+        return 0;
+    }
+    return (int64_t)fileInfo.getHandle();
 }
 
 /********************************************************************************************/
 /* query_handle                                                                             */
 /********************************************************************************************/
-RexxMethod1(REXXOBJECT, query_handle,
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(uint64_t, query_handle, CSELF, streamPtr)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    return stream_info->queryHandle();
+}
 
-   stream_info = get_stream_info();    /* get the stream block              */
 
-   if (!stream_info->flags.open)       /* unopened stream?                  */
-     return OREF_NULLSTRING;           /* this is a null string             */
-   return RexxInteger(stream_info->fh);/* return the handle                 */
+/**
+ * Return the type of stream (persistent or transient).
+ *
+ * @return String value of the type.  Returns either "PERSISTENT",
+ *         "TRANSIENT", or "UNKNOWN", if the stream is not open.
+ */
+const char *StreamInfo::getStreamType()
+{
+    if (!isopen)       /* not open?                         */
+    {
+        return "UNKNOWN";                 /* don't know the type               */
+    }
+    else if (transient)
+    {
+        return "TRANSIENT";               /* return the transient type         */
+    }
+    else
+    {
+        return "PERSISTENT";              /* this is a persistent stream       */
+    }
 }
 
 /********************************************************************************************/
 /* query_streamtype                                                                         */
 /********************************************************************************************/
-RexxMethod1(CSTRING, query_streamtype,
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(CSTRING, query_streamtype, CSELF, streamPtr)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
 
-   stream_info = get_stream_info();    /* get the stream block              */
-   if (!stream_info->flags.open)       /* not open?                         */
-     return "UNKNOWN";                 /* don't know the type               */
-                                       /* transient stream?                 */
-   else if (stream_info->flags.transient)
-     return "TRANSIENT";               /* return the transient type         */
-   else
-     return "PERSISTENT";              /* this is a persistent stream       */
+    return stream_info->getStreamType();
 }
+
+/**
+ * Get the size of the stream, regardless of whether it is
+ * open or not.
+ *
+ * @return The int64_t size of the stream.  Devices return a 0 size.
+ */
+int64_t StreamInfo::getStreamSize()
+{
+    // if we're open, return the current fstat() information,
+    // otherwise, we do this without a handle
+    if (isopen)
+    {
+        int64_t size;
+        fileInfo.getSize(size);
+        return size;
+    }
+    else
+    {
+        resolveStreamName();
+        int64_t size;
+        fileInfo.getSize(qualified_name, size);
+        return size;
+    }
+}
+
+/**
+ * Get the time stamp of the stream (in character form),
+ * regardless of whether it is open or not.
+ *
+ * @return A character string time stamp for the stream.  Returns ""
+ *         for streams where a time stamp is meaningless.
+ */
+const char *StreamInfo::getTimeStamp()
+{
+    char *time;
+    // if we're open, return the current fstat() information,
+    // otherwise, we do this without a handle
+    if (isopen)
+    {
+        fileInfo.getTimeStamp(time);
+        return time;
+    }
+    else
+    {
+        resolveStreamName();
+        fileInfo.getTimeStamp(qualified_name, time);
+        return time;
+    }
+}
+
 
 /********************************************************************************************/
 /* query_size                                                                               */
 /********************************************************************************************/
-RexxMethod1(REXXOBJECT, query_size,
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(int64_t, query_size, CSELF, streamPtr)
 {
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-   STREAM_INFO *stream_info;           /* stream information                */
-   struct stat stat_info;
-
-   stream_info = get_stream_info();    /* get the stream block              */
-                                       /* return the stream size            */
-   return get_file_statistics(stream_info, &stat_info) ? ooRexxString("") : ooRexxInteger(stat_info.st_size);
+    return stream_info->getStreamSize();
 }
+
 
 /********************************************************************************************/
 /* query_time                                                                               */
 /********************************************************************************************/
-RexxMethod1(CSTRING, query_time,
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(CSTRING, query_time, CSELF, streamPtr)
 {
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-   STREAM_INFO *stream_info;           /* stream information                */
-   struct stat stat_info;
+    return stream_info->getTimeStamp();
+}
 
-   stream_info = get_stream_info();    /* get the stream block              */
-                                       /* return the stream time            */
-   return get_file_statistics(stream_info, &stat_info) ? ""  : stream_time;
+/**
+ * Get the stream state as a string.  This value is a constant,
+ * and does not contain any addtional information.
+ *
+ * @return A string token with the stream state.
+ */
+const char *StreamInfo::getState()
+{
+    switch (state)
+    {        /* process the different states      */
+        case StreamUnknown:                /* unknown stream status             */
+            return "UNKNOWN";
+
+        case StreamNotready:               /* both notready and an eof condition*/
+        case StreamEof:                    /* return the same thing             */
+            return "NOTREADY";
+
+        case StreamError:                  /* had a stream error                */
+            return "ERROR";
+
+        case StreamReady:                  /* stream is ready to roll           */
+            return "READY";
+    }
+    return "";
 }
 
 /********************************************************************************************/
 /* stream_state -- return state of the stream                                               */
 /********************************************************************************************/
-
-RexxMethod1(CSTRING, stream_state,
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(CSTRING, stream_state, CSELF, streamPtr)
 {
-  STREAM_INFO *stream_info;            /* stream information                */
-  const char  *result = NULL;          /* returned result                   */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-  stream_info = get_stream_info();     /* get the stream block              */
-  switch (stream_info->state) {        /* process the different states      */
-    case stream_unknown_state:         /* unknown stream status             */
-      result = "UNKNOWN";
-      break;
+    return stream_info->getState();
+}
 
-    case stream_notready_state:        /* both notready and an eof condition*/
-    case stream_eof_state:             /* return the same thing             */
-      result = "NOTREADY";
-      break;
 
-    case stream_error_state:           /* had a stream error                */
-      result = "ERROR";
-      break;
+/**
+ * Retrieve a description string for the stream.
+ *
+ * @return A string describing the stream state and error information.
+ */
+RexxStringObject StreamInfo::getDescription()
+{
+    char work[100];
 
-    case stream_ready_state:           /* stream is ready to roll           */
-      result = "READY";
-      break;
-  }
-  return result;                       /* return the descriptor             */
+    switch (state) {        /* process the different states      */
+
+        case StreamUnknown:                /* unknown stream status             */
+        return context->NewStringFromAsciiz("UNKNOWN:");
+        break;
+
+        case StreamEof:                    /* had an end-of-file condition      */
+        return context->NewStringFromAsciiz("NOTREADY:EOF");
+        break;
+
+        case StreamNotready:               /* had some sort of notready         */
+        {
+            const char *errorString = NULL;
+
+            int errorInfo = fileInfo.errorInfo();
+
+            if (errorInfo != 0)
+            {
+                errorString = strerror(errorInfo);
+            }
+
+            if (errorString != NULL)
+            {
+                                                 /* format the result string          */
+                sprintf(work, "NOTREADY:%d %s", errorInfo, errorString);
+            }
+            else
+            {
+                                                 /* format the result string          */
+                sprintf(work, "NOTREADY:%d", errorInfo);
+
+            }
+            return context->NewStringFromAsciiz(work);
+        }
+
+        case StreamError:                  /* had a stream error                */
+        {
+            const char *errorString = NULL;
+            int errorInfo = fileInfo.errorInfo();
+
+            if (errorInfo != 0)
+            {
+                errorString = strerror(errorInfo);
+            }
+
+            if (errorString != NULL)
+            {
+                                                 /* format the result string          */
+                sprintf(work, "ERROR:%d %s", errorInfo, errorString);
+            }
+            else
+            {
+                                                 /* format the result string          */
+                sprintf(work, "ERROR:%d", errorInfo);
+
+            }
+            return context->NewStringFromAsciiz(work);
+        }
+
+        case StreamReady:                  /* stream is ready to roll           */
+        return context->NewStringFromAsciiz("READY:");
+        break;
+    }
+    return NULLOBJECT;
 }
 
 /********************************************************************************************/
 /* stream_description -- return description of the stream                                   */
 /********************************************************************************************/
 
-RexxMethod1(REXXOBJECT, stream_description,
-     BUFFER, StreamBuffer )            /* stream information block          */
+RexxMethod1(RexxStringObject, stream_description, CSELF, streamPtr)
 {
-  STREAM_INFO *stream_info;            /* stream information                */
-  char         work[200];              /* temp buffer                       */
-  const char  *result = NULL;          /* result string                     */
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
 
-  stream_info = get_stream_info();     /* get the stream block              */
-  switch (stream_info->state) {        /* process the different states      */
+    return stream_info->getDescription();
+}
 
-    case stream_unknown_state:         /* unknown stream status             */
-      result = "UNKNOWN:";
-      break;
+/**
+ * Constructor for a StreamInfo object.
+ *
+ * @param s         The Stream object this is attached to.
+ * @param inputName The initial input name specified on the new call.
+ */
+StreamInfo::StreamInfo(RexxObjectPtr s, const char *inputName)
+{
+    self = s;
 
-    case stream_eof_state:             /* had an end-of-file condition      */
-      result = "NOTREADY:EOF";
-      break;
+    // buffer needs to be allocated
+    bufferAddress = NULL;
+    bufferLength = 0;
 
-    case stream_notready_state:        /* had some sort of notready         */
-    {
-        result = (char *)work;         /* use the work buffer               */
-        char *error = NULL;
-
-        if (stream_info->error != 0)
-        {
-            error = strerror(stream_info->error);
-        }
-
-        if (error != NULL)
-        {
-                                             /* format the result string          */
-            sprintf(work, "NOTREADY:%d %s", stream_info->error, error);
-        }
-        else
-        {
-                                             /* format the result string          */
-            sprintf(work, "NOTREADY:%d", stream_info->error);
-
-        }
-        result = work;
-        break;
-    }
-
-    case stream_error_state:           /* had a stream error                */
-    {
-        char *error = NULL;
-
-        if (stream_info->error != 0)
-        {
-            error = strerror(stream_info->error);
-        }
-
-        if (error != NULL)
-        {
-                                             /* format the result string          */
-            sprintf(work, "ERROR:%d %s", stream_info->error, error);
-        }
-        else
-        {
-                                             /* format the result string          */
-            sprintf(work, "ERROR:%d", stream_info->error);
-
-        }
-        result = work;
-        break;
-
-    }
-
-    case stream_ready_state:           /* stream is ready to roll           */
-      result = "READY:";
-      break;
-  }
-  return ooRexxString(result);         /* return as a string value          */
+    // initialize the default values
+    resetFields();
+    strncpy(stream_name, inputName, SysFileSystem::MaximumPathLength);
+    // this stream is in an unknown state now.
+    state = StreamUnknown;
 }
 
 /********************************************************************************************/
 /* stream_init                                                                              */
 /********************************************************************************************/
 
-RexxMethod1(REXXOBJECT, stream_init,
-  CSTRING, name)                       /* name of the stream                */
+RexxMethod2(RexxObjectPtr, stream_init, OSELF, self, CSTRING, name)
 {
-   STREAM_INFO *stream_info;           /* stream information                */
-   REXXOBJECT   stream_block;          /* allocated stream block            */
+    // create a new stream info member
+    StreamInfo *stream_info = new StreamInfo(self, name);
+    RexxPointerObject streamPtr = context->NewPointer(stream_info);
+    context->SetObjectVariable("CSELF", streamPtr);
 
-                                       /* get a stream block                */
-   stream_block = ooRexxBuffer(sizeof(STREAM_INFO));
-                                       /* associate with this instance      */
-   ooRexxVarSet(c_stream_info, stream_block);
-                                       /* address the block                 */
-   stream_info = (STREAM_INFO *)buffer_address(stream_block);
-                                       /* clear out the block               */
-   memset(stream_info, 0, sizeof(STREAM_INFO));
-                                       /* initialize stream info structure  */
-   strncpy(stream_info->name_parameter,name,path_length+10);
-   strcpy(&stream_info->name_parameter[path_length+11],"\0");
-   stream_info->stream_file = NULL;
-   stream_info->stream_reclength = 0;
-   stream_info->pseudo_stream_size = 0;
-   stream_info->pseudo_lines = 0;
-   stream_info->pseudo_max_lines = 0;
-   stream_info->flags.read_only = 0;
-   stream_info->flags.write_only = 0;
-   stream_info->flags.read_write = 0;
-   stream_info->flags.append = 0;
-   stream_info->flags.bstd = 0;
-   stream_info->char_read_position = 1;
-   stream_info->char_write_position = 1;
-   stream_info->line_read_position = 1;
-   stream_info->line_write_position = 1;
-   stream_info->line_read_char_position = 1;
-   stream_info->line_write_char_position = 1;
-   stream_info->flags.nobuffer = 0;
-   stream_info->flags.last_op_was_read = 1;
-                                       /* set this as unknown               */
-   stream_info->state = stream_unknown_state;
-   return NULL;
+    return NULLOBJECT;
 }
 
-/***********************************************************************************************/
-/* reclength_token will check the next token for numeric and if it is will put it in reclength */
-/***********************************************************************************************/
-
-int reclength_token(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms)
+/**
+ * Count the number of lines in the file.  If we already have
+ * a pseudo line count, we can just return that.
+ *
+ * @param currentLinePosition
+ *               The current line position we're scanning from.
+ * @param currentPosition
+ *               The position to start counting from.
+ *
+ * @return The number of lines in the file.
+ */
+int64_t StreamInfo::countStreamLines(int64_t currentLinePosition, int64_t currentPosition)
 {
-   char  *end_character;               /* conversion end character          */
-   size_t result = 0;                  /* conversion result                 */
-   size_t number;                      /* converted number result           */
+    // we already had to calculate this...just return the previous value.
+    if (stream_line_size > 0)
+    {
+        return stream_line_size;
+    }
+    // go to the current position
+    setPosition(currentPosition, currentPosition);
 
-                                       /* get the next token in TokenString */
-   if (!(result = gettoken(TokenString,tsp))) {
-                                       /* convert to a long                 */
-     number = strtol(tsp->string, &end_character, 10);
-     if (*end_character != '\0') {     /* find a non-numeric character?     */
-                                       /* next token was not numeric - but  */
-                                       /* since we can default the reclength*/
-                                       /* if everything else is ok back up  */
-                                       /* the string and let the parser see */
-                                       /* if it knows what the next token is*/
-       ungettoken(TokenString,tsp);
-       return 0;                       /* this worked ok                    */
-     }
-     else
-                                       /* pass back converted number        */
-       *((size_t *)userparms) = number;
-   }
-   return 0;                           /* no next token...just default      */
+    int64_t count;
+    // ask for the count from this point.
+    if (!fileInfo.countLines(count))
+    {
+        notreadyError();
+    }
+
+    // update the position and also set the pseudo line count, since we know this now.
+    count = count + currentLinePosition - 1;
+    stream_line_size = count;
+    return count;
 }
-
-/***********************************************************************************************/
-/* table_fixup                                                                                 */
-/*                 will change the structure offsets in the action tables to be field address  */
-/***********************************************************************************************/
-
-void table_fixup(TTS *ttsp, size_t parse_fields[])
-{
-                                                  /* get the tokentablestruct work pointer */
-   TTS *work_ttsp;
-
-                                                 /* get the actiontablestruct work pointer */
-   ATS *work_atsp;
-
-   size_t i;
-
-   size_t *work_parse_fields;
-                                                /* loop thru the action tables in the token table */
-   for (work_ttsp = ttsp;
-       (*(work_ttsp->token));
-       work_ttsp++ ) {
-
-                                                 /* change output pointers from offsets to addresses */
-     for (work_atsp = (ATS *)work_ttsp->ATSP, work_parse_fields = parse_fields;
-          work_atsp->actions; work_atsp++, work_parse_fields = parse_fields) {
-       // TODO:  64-bit issue here
-       for (i = (size_t)work_atsp->output; i > 0; i--, work_parse_fields++);
-       work_atsp->output = work_parse_fields;
-     }
-
-   }                                         /* endfor */
-
-}
-/***********************************************************************************************/
-/* unknown_offset                                                                              */
-/*                 will check the next token for numeric and if it is will put it in offset    */
-/***********************************************************************************************/
-
-int unknown_offset(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms)
-{
-                                                /* loop increment variable */
-   size_t i = 0;
-   int result = 0;
-
-                                       /* get the next token in TokenString */
-   if (!(result = gettoken(TokenString,tsp))) {
-                                       /* convert string into long for later*/
-     while (i < tsp->length && tsp->string[i] >= '0' && tsp->string[i] <= '9' ) {
-
-      *(((POSITION_PARMS *)userparms)->position_offset_pointer) = (tsp->string[i] - '0') +
-                                               (*(((POSITION_PARMS *)userparms)->position_offset_pointer) * 10);
-
-       i++;
-     }
-     if (i == tsp->length) {
-                                       /* set the position was specified    */
-                                       /*flag and return                    */
-        *(((POSITION_PARMS *)userparms)->position_flags_pointer) |= position_offset_specified;
-        return result;
-     }
-     else
-        return errcode;                /* have an error here - non-numeric  */
-   }
-                                       /* no next token - position will     */
-                                       /* raise syntax                      */
-   return errcode;
-}
-
-/********************************************************************************************/
-/* unknown_tr will be called if a token is passed to open that is not in the token table    */
-/********************************************************************************************/
-int unknown_tr(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms)
-{
-   return errcode;
-}
-

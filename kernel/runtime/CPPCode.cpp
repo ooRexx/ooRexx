@@ -101,12 +101,12 @@ RexxObject *CPPCode::unflatten(RexxEnvelope *envelope)
  * @param receiver The receiver object.
  * @param messageName
  *                 The name used to invoke the message.
- * @param count    The argument count.
  * @param argPtr   The actual arguments.
+ * @param count    The argument count.
  * @param result   The returned result.
  */
 void CPPCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
-    size_t count, RexxObject **argPtr, ProtectedObject &result)
+    RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     PCPPM methodEntry = this->cppEntry;  /* get the entry point               */
                                        /* expecting an array?               */
@@ -225,12 +225,12 @@ void AttributeGetterCode::flatten(RexxEnvelope *envelope)
  * @param receiver The receiver object.
  * @param messageName
  *                 The name of the message used to invoke the method.
- * @param count    The argument count.
  * @param argPtr   The pointer to the arguments.
+ * @param count    The argument count.
  * @param result   The returned result.
  */
 void AttributeGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
-    size_t count, RexxObject **argPtr, ProtectedObject &result)
+    RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
     if (count > 0)
@@ -263,12 +263,12 @@ void *AttributeSetterCode::operator new(size_t size)
  * @param receiver The receiver object.
  * @param messageName
  *                 The name of the message used to invoke the method.
- * @param count    The argument count.
  * @param argPtr   The pointer to the arguments.
+ * @param count    The argument count.
  * @param result   The returned result.
  */
 void AttributeSetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
-    size_t count, RexxObject **argPtr, ProtectedObject &result)
+    RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
     if (count > 1)
@@ -336,12 +336,12 @@ void ConstantGetterCode::flatten(RexxEnvelope *envelope)
  * @param receiver The receiver object.
  * @param messageName
  *                 The name of the message used to invoke the method.
- * @param count    The argument count.
  * @param argPtr   The pointer to the arguments.
+ * @param count    The argument count.
  * @param result   The returned result.
  */
 void ConstantGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
-    size_t count, RexxObject **argPtr, ProtectedObject &result)
+    RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     // validate the number of arguments
     if (count > 0)
@@ -374,12 +374,12 @@ void *AbstractCode::operator new(size_t size)
  * @param receiver The receiver object.
  * @param messageName
  *                 The name of the message used to invoke the method.
- * @param count    The argument count.
  * @param argPtr   The pointer to the arguments.
+ * @param count    The argument count.
  * @param result   The returned result.
  */
 void AbstractCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
-    size_t count, RexxObject **argPtr, ProtectedObject &result)
+    RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
     reportException(Error_Incorrect_method_abstract, messageName);
 }
@@ -401,6 +401,8 @@ void AbstractCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *r
 #include "QueueClass.hpp"
 #include "SupplierClass.hpp"
 #include "MethodClass.hpp"
+#include "RoutineClass.hpp"
+#include "PackageClass.hpp"
 #include "RexxEnvelope.hpp"
 #include "MessageClass.hpp"
 #include "StemClass.hpp"
@@ -585,8 +587,8 @@ CPPM(RexxList::index),
 CPPM(RexxList::hasItem),
 CPPM(RexxList::removeItem),
 
-CPPM(RexxListClass::newRexx),
-CPPM(RexxListClass::classOf),
+CPPM(RexxList::newRexx),
+CPPM(RexxList::classOf),
 
 CPPM(RexxMessage::notify),             /* Message methods                   */
 CPPM(RexxMessage::result),
@@ -603,7 +605,8 @@ CPPM(RexxMessage::newRexx),
 
 CPPM(RexxMethod::setUnGuardedRexx),    /* Method methods                    */
 CPPM(RexxMethod::setGuardedRexx),
-CPPM(RexxMethod::source),
+CPPM(BaseExecutable::source),
+CPPM(BaseExecutable::getPackage),
 CPPM(RexxMethod::setPrivateRexx),
 CPPM(RexxMethod::setProtectedRexx),
 CPPM(RexxMethod::setSecurityManager),
@@ -611,8 +614,37 @@ CPPM(RexxMethod::isGuardedRexx),
 CPPM(RexxMethod::isPrivateRexx),
 CPPM(RexxMethod::isProtectedRexx),
 
-CPPM(RexxMethodClass::newFileRexx),
-CPPM(RexxMethodClass::newRexx),
+CPPM(RexxMethod::newFileRexx),
+CPPM(RexxMethod::newRexx),
+
+CPPM(RoutineClass::setSecurityManager),
+CPPM(RoutineClass::callRexx),
+CPPM(RoutineClass::callWithRexx),
+
+CPPM(RoutineClass::newFileRexx),
+CPPM(RoutineClass::newRexx),
+
+CPPM(PackageClass::setSecurityManager),
+CPPM(PackageClass::getSource),
+CPPM(PackageClass::getSourceLineRexx),
+CPPM(PackageClass::getSourceSize),
+CPPM(PackageClass::getClasses),
+CPPM(PackageClass::getPublicClasses),
+CPPM(PackageClass::getImportedClasses),
+CPPM(PackageClass::getMethods),
+CPPM(PackageClass::getRoutines),
+CPPM(PackageClass::getPublicRoutines),
+CPPM(PackageClass::getImportedPackages),
+CPPM(PackageClass::loadPackage),
+CPPM(PackageClass::addPackage),
+CPPM(PackageClass::findClass),
+CPPM(PackageClass::findRoutine),
+CPPM(PackageClass::addRoutine),
+CPPM(PackageClass::addPublicRoutine),
+CPPM(PackageClass::addClass),
+CPPM(PackageClass::addPublicClass),
+
+CPPM(PackageClass::newRexx),
 
 CPPM(RexxNumberString::formatRexx),    /* NumberString methods              */
 CPPM(RexxNumberString::trunc),

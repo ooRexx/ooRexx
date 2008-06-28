@@ -55,9 +55,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "rexx.h"
-#include "RexxNativeAPI.h"
-#include "RexxErrorCodes.h"
+#include "oorexxapi.h"
 #include "OLEVariant.h"
 
 /**
@@ -80,22 +78,22 @@
  *
  * @return             This method returns .nil.
  */
-RexxMethod4(REXXOBJECT, OLEVariant_Init,
+RexxMethod4(int, OLEVariant_Init,
             OSELF, self,
-            REXXOBJECT, v_value,
-            REXXOBJECT, v_type,
-            REXXSTRING, param_flags)
+            RexxObjectPtr, v_value,
+            RexxObjectPtr, v_type,
+            RexxStringObject, param_flags)
 {
-    REXXOBJECT  vtString = NULL;
+    RexxObjectPtr  vtString = NULL;
 
-    convertToVT(v_type, 2);
-    convertToParamFlag(param_flags, 3);
+    convertToVT(context, v_type, 2);
+    convertToParamFlag(context, param_flags, 3);
 
-    REXX_SETVAR("!_VAR_VALUE_", v_value);
-    REXX_SETVAR("!_CLEAR_VARIANT_", ooRexxTrue);
-    REXX_SETVAR("!_VARIANT_PTR_", ooRexxPointer(NULL));
+    context->SetObjectVariable("!_VAR_VALUE_", v_value);
+    context->SetObjectVariable("!_CLEAR_VARIANT_", context->True());
+    context->SetObjectVariable("!_VARIANT_PTR_", context->NewPointer(NULL));
 
-    return ooRexxNil;
+    return 0;
 }
 
 /**
@@ -108,17 +106,13 @@ RexxMethod4(REXXOBJECT, OLEVariant_Init,
  *
  * @return         This method returns .nil.
  */
-RexxMethod2(REXXOBJECT, OLEVariant_VarValueEquals,
+RexxMethod2(RexxObjectPtr, OLEVariant_VarValueEquals,
             OSELF, self,
-            REXXOBJECT, v_value)
+            RexxObjectPtr, v_value)
 {
-    if ( !v_value )
-    {
-        rexx_exception1(Error_Incorrect_method_noarg, ooRexxString("1"));
-    }
-    REXX_SETVAR("!_VAR_VALUE_", v_value);
+    context->SetObjectVariable("!_VAR_VALUE_", v_value);
 
-    return ooRexxNil;
+    return context->Nil();
 }
 
 /**
@@ -130,12 +124,12 @@ RexxMethod2(REXXOBJECT, OLEVariant_VarValueEquals,
  *
  * @return        This method returns .nil.
  */
-RexxMethod2(REXXOBJECT, OLEVariant_VarTypeEquals,
+RexxMethod2(RexxObjectPtr, OLEVariant_VarTypeEquals,
             OSELF, self,
-            REXXOBJECT, v_type)
+            RexxObjectPtr, v_type)
 {
-    convertToVT(v_type, 1);
-    return ooRexxNil;
+    convertToVT(context, v_type, 1);
+    return context->Nil();
 }
 
 /**
@@ -147,12 +141,12 @@ RexxMethod2(REXXOBJECT, OLEVariant_VarTypeEquals,
  *
  * @return             This method returns .nil.
  */
-RexxMethod2(REXXOBJECT, OLEVariant_ParamFlagsEquals,
+RexxMethod2(RexxObjectPtr, OLEVariant_ParamFlagsEquals,
             OSELF, self,
-            REXXOBJECT, param_flags)
+            RexxObjectPtr, param_flags)
 {
-    convertToParamFlag(param_flags, 1);
-    return ooRexxNil;
+    convertToParamFlag(context, param_flags, 1);
+    return context->Nil();
 }
 
 /**
@@ -163,28 +157,21 @@ RexxMethod2(REXXOBJECT, OLEVariant_ParamFlagsEquals,
  * @param v_type
  * @param position
  */
-static void convertToVT( REXXOBJECT v_type, int position )
+static void convertToVT(RexxMethodContext *context,  RexxObjectPtr v_type, int position )
 {
-    REXXOBJECT  vtString = NULL;
-
-    if ( v_type != NULL && v_type != ooRexxNil )
+    RexxObjectPtr vtString = context->ObjectToString(v_type);
+    if ( v_type != NULL && v_type != context->Nil() )
     {
-        vtString = ooRexxSend0(v_type, "STRING");
-        if ( ! _isstring(vtString) )
-        {
-            rexx_exception1(Error_Incorrect_method_string, ooRexxInteger(position));
-        }
-
-        vtString = stringToVT(vtString);
+        vtString = context->ObjectToString(v_type);
+        vtString = stringToVT(context, vtString);
         if ( ! vtString )
         {
-            rexx_exception2(Error_Incorrect_method_argType, ooRexxInteger(position), ooRexxString("VARTYPE"));
+            context->RaiseException2(Rexx_Error_Incorrect_method_argType, context->NumberToObject(position), context->NewStringFromAsciiz("VARTYPE"));
         }
     }
 
-    REXX_SETVAR("!_VAR_TYPE_", vtString == NULL ? ooRexxNil : vtString);
-    REXX_SETVAR("!_VAR_TYPE_STR_",
-                vtString == NULL ? ooRexxString("default") : v_type);
+    context->SetObjectVariable("!_VAR_TYPE_", vtString == NULL ? context->Nil() : vtString);
+    context->SetObjectVariable("!_VAR_TYPE_STR_", vtString == NULL ? context->NewStringFromAsciiz("default") : v_type);
 }
 
 /**
@@ -195,31 +182,26 @@ static void convertToVT( REXXOBJECT v_type, int position )
  *
  * @param param_flags  The ooRexx object to convert.
  *
- * @param position     The argument position of param_flags in the OLEVariant
- *                     method.
+ * @param position     The argument position of param_flags in
+ *                     the OLEVariant method.
  */
-static void convertToParamFlag( REXXOBJECT param_flags, int position )
+static void convertToParamFlag(RexxMethodContext *context,  RexxObjectPtr param_flags, int position )
 {
-    REXXOBJECT  flagsString = NULL;
+    RexxObjectPtr  flagsString = NULL;
 
-    if ( param_flags != NULL && param_flags != ooRexxNil )
+    if ( param_flags != NULL && param_flags != context->Nil() )
     {
-        flagsString = ooRexxSend0(param_flags, "STRING");
-        if ( ! _isstring(flagsString) )
-        {
-            rexx_exception1(Error_Incorrect_method_string, ooRexxInteger(position));
-        }
-
-        flagsString = stringToFlags(flagsString);
+        flagsString = context->ObjectToString(param_flags);
+        flagsString = stringToFlags(context, flagsString);
         if ( ! flagsString )
         {
-            rexx_exception2(Error_Incorrect_method_argType, ooRexxInteger(position), ooRexxString("PARAMFLAG"));
+            context->RaiseException2(Rexx_Error_Incorrect_method_argType, context->NumberToObject(position), context->NewStringFromAsciiz("PARAMFLAG"));
         }
     }
 
-    REXX_SETVAR("!_PARAM_FLAGS_", flagsString == NULL ? ooRexxNil : flagsString);
-    REXX_SETVAR("!_PARAM_FLAGS_STR_",
-                flagsString == NULL ? ooRexxString("default") : param_flags);
+    context->SetObjectVariable("!_PARAM_FLAGS_", flagsString == NULL ? context->Nil() : flagsString);
+    context->SetObjectVariable("!_PARAM_FLAGS_STR_",
+                flagsString == NULL ? context->NewStringFromAsciiz("default") : param_flags);
 }
 
 /**
@@ -232,17 +214,19 @@ static void convertToParamFlag( REXXOBJECT param_flags, int position )
  * @return       The numerical value of the VARIANTARG corresponding to rxStr,
  *               or null if the string is not valid.
  */
-static REXXOBJECT stringToVT(REXXOBJECT rxStr )
+static RexxObjectPtr stringToVT(RexxMethodContext *context, RexxObjectPtr rxStr )
 {
-    REXXOBJECT  rxResult = NULL;
+    RexxObjectPtr  rxResult = NULL;
     CHAR       *pszRxStr;
     CHAR       *pTmp;
     CHAR        szBuffer[6];  // Largest value is 0xFFFF == 65535.
     VARENUM     v1, v2;
 
-    pszRxStr = pszStringDupe(string_data(rxStr));
+    pszRxStr = pszStringDupe(context->ObjectToStringValue(rxStr));
     if ( !pszRxStr )
-        rexx_exception(Error_System_resources);
+    {
+        context->RaiseException(Rexx_Error_System_resources);
+    }
 
     // Allow case insensitive.
     pszRxStr = strupr(pszRxStr);
@@ -256,7 +240,7 @@ static REXXOBJECT stringToVT(REXXOBJECT rxStr )
                  v1 != VT_ARRAY )
             {
                 sprintf(szBuffer, "%d", v1);
-                rxResult = ooRexxString(szBuffer);
+                rxResult = context->NumberToObject(v1);
             }
             break;
 
@@ -270,7 +254,7 @@ static REXXOBJECT stringToVT(REXXOBJECT rxStr )
             if ( v1 != VT_ILLEGAL && v2 != VT_ILLEGAL && areValidVTs(v1, v2) )
             {
                 sprintf(szBuffer, "%d", v1 | v2);
-                rxResult = ooRexxString(szBuffer);
+                rxResult = context->NumberToObject(v1 | v2);
             }
             break;
 
@@ -295,18 +279,19 @@ static REXXOBJECT stringToVT(REXXOBJECT rxStr )
  * @return  The integer value (as a string) of the wParamFlags, or null if the
  *          string to convert was not valid.
  */
-static REXXOBJECT stringToFlags( REXXOBJECT rxStr )
+static RexxObjectPtr stringToFlags(RexxMethodContext *context, RexxObjectPtr rxStr )
 {
-    REXXOBJECT  rxResult = NULL;  // Return null if invalid.
+    RexxObjectPtr  rxResult = NULL;  // Return null if invalid.
     CHAR       *pszRxStr;
     CHAR       *ptr;
-    CHAR        szBuffer[4];      // Largest possible value is 0x7F == 127
     int         tmp, count, i;
     int         val = 0;
 
-    pszRxStr = pszStringDupe(string_data(rxStr));
+    pszRxStr = pszStringDupe(context->ObjectToStringValue(rxStr));
     if ( !pszRxStr )
-        rexx_exception(Error_System_resources);
+    {
+        context->RaiseException(Rexx_Error_System_resources);
+    }
 
     // Allow case insensitive.
     pszRxStr = strupr(pszRxStr);
@@ -334,8 +319,7 @@ static REXXOBJECT stringToFlags( REXXOBJECT rxStr )
         tmp = findFlag(stripNonCSyms(pszRxStr));
         if ( tmp != PARAMFLAG_ILLEGAL )
         {
-            sprintf(szBuffer, "%d", val | tmp);
-            rxResult = ooRexxString(szBuffer);
+            rxResult = context->NumberToObject(val | tmp);
         }
     }
 

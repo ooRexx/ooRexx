@@ -38,10 +38,10 @@
 #ifndef Included_ActivityManager
 #define Included_ActivityManager
 
-class RexxActivity;
 class RexxObjectTable;
 class RexxStack;
 class RexxCode;
+
 
 class ActivityManager
 {
@@ -71,7 +71,8 @@ public:
     static void createLocks();
     static void closeLocks();
     static void init();
-    static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code, RexxActivation *parent, RexxString *calltype, RexxString *environment, int context);
+    static RexxActivation *newActivation(RexxActivity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, int context);
+    static RexxActivation *newActivation(RexxActivity *activity, RexxActivation *parent, RexxCode *code, int context);
     static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code);
     static void cacheActivation(RexxActivation *activation);
     static RexxActivity *newActivity(int priority);
@@ -185,6 +186,11 @@ inline void reportException(wholenumber_t error, RexxObject *a1, const char *a2)
 inline void reportException(wholenumber_t error, const char *a1)
 {
     ActivityManager::currentActivity->reportAnException(error, a1);
+}
+
+inline void reportException(wholenumber_t error, const char *a1, const char *a2)
+{
+    ActivityManager::currentActivity->reportAnException(error, a1, a2);
 }
 
 inline void reportException(wholenumber_t error, const char *a1, wholenumber_t a2)

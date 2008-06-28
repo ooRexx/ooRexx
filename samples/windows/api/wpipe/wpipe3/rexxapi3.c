@@ -160,7 +160,7 @@ LONG REXXENTRY Api_Read_All_Variables_From_REXX_VP(
 {
    SHVBLOCK rxshv;
    SHVBLOCK *prxshv = &rxshv;
-   APIRET rc;
+   RexxReturnCode rc;
    int i = 1;
 
    strcpy(retstr->strptr, "0");
@@ -252,7 +252,7 @@ LONG REXXENTRY Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
 {
    SHVBLOCK rxshv;
    SHVBLOCK *prxshv = &rxshv, *temp, *interim;
-   APIRET rc;
+   RexxReturnCode rc;
    char array[20], value[10];
    char pch[64], *result;
 

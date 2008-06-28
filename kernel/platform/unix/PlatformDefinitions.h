@@ -336,10 +336,6 @@ inline char **getEnvironment()
                                        // threading package
 #endif
 
-#ifdef AIX
-#define SysIsThreadEqual(pth1, pth2) (pthread_equal(pth1, pth2))
-#endif
-
 #define SysThreadArg(a) a->args
 #define SysInitialAddressName() OREF_INITIALADDRESS
 

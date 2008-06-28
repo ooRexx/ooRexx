@@ -40,18 +40,4 @@
 
 #include "orxscrpt_main.hpp"
 #include "engfact.hpp"       // Builds the ClassFactory object (which can contain the Engine)
-// #include "classfactory.hpp"
-
-#ifdef DLLFUNCS_CPP
-#  define DEFAULTnumSUFFIX = 0
-#  define DEFAULTPREFIX
-#else
-#  define DEFAULTnumSUFFIX
-#  define DEFAULTPREFIX extern
-#  endif
-
-//  There is a single copy of these globals for the whole *.dll,
-// regardless of how many engines are started.
-DEFAULTPREFIX LooseLinkedList *EngineChain DEFAULTnumSUFFIX;
-
 #endif     //  ifndef DLLFUNCS_HPP

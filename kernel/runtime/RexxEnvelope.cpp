@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                             RexxEnvelope.c     */
+/* REXX Kernel                                             RexxEnvelope.cpp   */
 /*                                                                            */
 /* Primitive Envelope Class                                                   */
 /*                                                                            */
@@ -74,7 +74,6 @@ void RexxEnvelope::live(size_t liveMark)
   memory_mark(this->savetable);
   memory_mark(this->buffer);
   memory_mark(this->rehashtable);
-  memory_mark(this->objectVariables);
 
 }
 
@@ -91,43 +90,6 @@ void RexxEnvelope::liveGeneral(int reason)
   memory_mark_general(this->savetable);
   memory_mark_general(this->buffer);
   memory_mark_general(this->rehashtable);
-  memory_mark_general(this->objectVariables);
-}
-
-void RexxEnvelope::flatten(RexxEnvelope *envelope)
-/******************************************************************************/
-/* Function:  Flatten an object                                               */
-/******************************************************************************/
-{
-  setUpFlatten(RexxEnvelope)
-
-     flatten_reference(newThis->home, envelope);
-     flatten_reference(newThis->receiver, envelope);
-     flatten_reference(newThis->rehashtable, envelope);
-     flatten_reference(newThis->objectVariables, envelope);
-
-                                          /* following if test determines if this */
-                                          /* envelope is the top level, or if the */
-                                          /* envelope is actually part of another */
-                                          /* Top level envelope, no need to send  */
-     this->buffer = OREF_NULL;            /* dupTable or smartbuffer, useless on  */
-                                          /* other side ...                       */
-
-                                          /* Special self reference so that we get*/
-                                          /* Marked (SetLive) correctly during the*/
-                                          /* unpacking of the envelope on the     */
-                                          /* remote system                        */
-                                          /* compute our offset.                  */
-     this->duptable = (RexxObjectTable *)((char *)this - envelope->bufferStart());
-  cleanUpFlatten
-}
-
-RexxObject *RexxEnvelope::unflatten(RexxEnvelope * envelope)
-/******************************************************************************/
-/* Function:  unflatten an object                                             */
-/******************************************************************************/
-{
-   return this;                        /* this does nothing                 */
 }
 
 
@@ -204,7 +166,7 @@ void RexxEnvelope::flattenReference(
 }
 
 
-RexxEnvelope *RexxEnvelope::pack(
+RexxBuffer *RexxEnvelope::pack(
     RexxObject *_receiver)              /* the receiver object               */
 /******************************************************************************/
 /* Function:  Pack an envelope item                                           */
@@ -261,7 +223,11 @@ RexxEnvelope *RexxEnvelope::pack(
         flattenObj->flatten(this);         /* let this obj flatten its refs     */
     }
     memoryObject.returnFlattenStack();   /* done with the flatten stack       */
-    return this;
+    // now unwrap the smart buffer and fix the length of the real buffer
+    // behind it to the size we've written to it.
+    RexxBuffer *letter = buffer->getBuffer();
+    letter->setLength(buffer->getLength());
+    return letter;
 }
 
 void RexxEnvelope::puff(
@@ -293,7 +259,7 @@ void RexxEnvelope::puff(
         {
 
             /* Yes, lets get the behaviour Object*/
-            RexxBehaviour *objBehav = (RexxBehaviour *)(((uintptr_t)(puffObject->behaviour) & ~BEHAVIOUR_NON_PRIMITIVE) + sourceBuffer->address());
+            RexxBehaviour *objBehav = (RexxBehaviour *)(((uintptr_t)(puffObject->behaviour) & ~BEHAVIOUR_NON_PRIMITIVE) + sourceBuffer->getData());
             /* Resolve the static behaviour info */
             objBehav->resolveNonPrimitiveBehaviour();
             /* Set this objects behaviour.       */
@@ -390,7 +356,7 @@ size_t RexxEnvelope::copyBuffer(
     // resize itself.
     size_t objOffset = this->buffer->copyData((void *)obj, obj->getObjectSize());
     // get a reference to the copied object
-    RexxObject *newObj = (RexxObject *) (this->buffer->getBuffer()->address() + objOffset);
+    RexxObject *newObj = (RexxObject *) (this->buffer->getBuffer()->getData() + objOffset);
     // if this is a non-primative behaviour, we need to flatten it as well.  The
     // offset is tagged as being a non-primitive behaviour that needs later inflating.
     if (newObj->behaviour->isNonPrimitive())
@@ -425,17 +391,19 @@ void  RexxEnvelope::rehash()
 /* Function:  Rehash flattened tables                                         */
 /******************************************************************************/
 {
-  HashLink     i;                      /* loop index                        */
-  RexxTable    * index;                /* table to flatten                  */
+    HashLink     i;                      /* loop index                        */
+    RexxTable    * index;                /* table to flatten                  */
 
-  if (this->rehashtable != OREF_NULL) {/* tables to rehash here?            */
-                                       /* Before we run the method we need  */
-                                       /* to give the tables a chance to    */
-                                       /* rehash...                         */
-    for (i = this->rehashtable->first(); (index = (RexxTable *)this->rehashtable->index(i)) != OREF_NULL; i = this->rehashtable->next(i)) {
-      index->reHash();                 /* rehash the table                  */
+    if (this->rehashtable != OREF_NULL)
+    {/* tables to rehash here?            */
+     /* Before we run the method we need  */
+     /* to give the tables a chance to    */
+     /* rehash...                         */
+        for (i = this->rehashtable->first(); (index = (RexxTable *)this->rehashtable->index(i)) != OREF_NULL; i = this->rehashtable->next(i))
+        {
+            index->reHash();                 /* rehash the table                  */
+        }
     }
-  }
 }
 
 char *RexxEnvelope::bufferStart()
@@ -443,7 +411,7 @@ char *RexxEnvelope::bufferStart()
 /* Return the start of the envelope buffer                                    */
 /******************************************************************************/
 {
-  return this->buffer->getBuffer()->address();
+    return this->buffer->getBuffer()->getData();
 }
 
 void  RexxEnvelope::associateObject(
@@ -464,22 +432,24 @@ void RexxEnvelope::addTable(
 /* Function:  Add an object to the rehash table for later processing          */
 /******************************************************************************/
 {
-                                       /*  the following table will be used */
-                                       /* by the table_unflatten method.    */
-                                       /*                                   */
-                                       /* Every table that gets unflattened */
-                                       /* place itself in this table.  Once */
-                                       /* every object has been unflattened */
-                                       /* we traverse this table and allow  */
-                                       /* the hashtables to re-hash their   */
-                                       /* since some hash value may have    */
-                                       /* change                            */
-  if (this->rehashtable == OREF_NULL)  /* first table added?                */
-                                       /* create the table now              */
-    OrefSet(this, this->rehashtable, new_object_table());
-                                       /* use put to make sure we only get  */
-                                       /* a single version of each table    */
-  this->rehashtable->put(TheNilObject, obj);
+    /*  the following table will be used */
+    /* by the table_unflatten method.    */
+    /*                                   */
+    /* Every table that gets unflattened */
+    /* place itself in this table.  Once */
+    /* every object has been unflattened */
+    /* we traverse this table and allow  */
+    /* the hashtables to re-hash their   */
+    /* since some hash value may have    */
+    /* change                            */
+    if (this->rehashtable == OREF_NULL)  /* first table added?                */
+    {
+        /* create the table now              */
+        OrefSet(this, this->rehashtable, new_object_table());
+    }
+    /* use put to make sure we only get  */
+    /* a single version of each table    */
+    this->rehashtable->put(TheNilObject, obj);
 }
 
 
@@ -488,12 +458,12 @@ void *RexxEnvelope::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
+    RexxObject *newObject;               /* newly created object              */
 
-                                       /* Get new object                    */
-  newObject = new_object(sizeof(RexxEnvelope));
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheEnvelopeBehaviour);
-  return newObject;                    /* return the new object             */
+    /* Get new object                    */
+    newObject = new_object(sizeof(RexxEnvelope));
+    /* Give new object its behaviour     */
+    newObject->setBehaviour(TheEnvelopeBehaviour);
+    return newObject;                    /* return the new object             */
 }
 

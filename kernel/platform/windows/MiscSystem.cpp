@@ -171,24 +171,6 @@ RexxPointer * SysLoadLibrary(
     reportException(Error_Execution_library, Library);
   return new_pointer(Handle);          /* return the new handle info         */
 }
-RexxString * SysGetCurrentQueue(void)
-/******************************************************************************/
-/* Function:  Return the current queue object name                            */
-/******************************************************************************/
-{
-  RexxString * queue;                  /* current queue object              */
-  RexxString * queue_name;             /* name of the queue object          */
-
-                                       /* get the default queue             */
-  queue = (RexxString *)ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
-
-  if (queue == OREF_NULL)              /* no queue?                         */
-    queue_name = OREF_SESSION;         /* use the default name              */
-  else
-    queue_name = queue->stringValue(); /* get the actual queue name         */  // retrofit by IH
-  return queue_name;                   /* return the name                   */
-}
-
 
 
 /*********************************************************************/

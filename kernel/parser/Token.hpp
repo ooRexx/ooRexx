@@ -188,6 +188,7 @@
 #define KEYWORD_INSTRUCTION        KEYWORD_CLASS             + 1
 #define KEYWORD_FORWARD            KEYWORD_INSTRUCTION       + 1
 #define KEYWORD_LOOP               KEYWORD_FORWARD           + 1
+#define KEYWORD_LIBRARY            KEYWORD_LOOP              + 1
 
 /* token extended types - instruction option keywords */
 #define SUBKEY_ARG         1
@@ -269,6 +270,7 @@
 #define SUBDIRECTIVE_UNPROTECTED 2514
 #define SUBDIRECTIVE_GET         2515
 #define SUBDIRECTIVE_SET         2516
+#define SUBDIRECTIVE_LIBRARY     2517
 
 
 /* condition keywords */
@@ -358,6 +360,12 @@
 #define  BUILTIN_X2C               BUILTIN_X2B              + 1
 #define  BUILTIN_X2D               BUILTIN_X2C              + 1
 #define  BUILTIN_XRANGE            BUILTIN_X2D              + 1
+#define  BUILTIN_RXFUNCADD         BUILTIN_XRANGE           + 1
+#define  BUILTIN_RXFUNCDROP        BUILTIN_RXFUNCADD        + 1
+#define  BUILTIN_RXFUNCQUERY       BUILTIN_RXFUNCDROP       + 1
+#define  BUILTIN_ENDLOCAL          BUILTIN_RXFUNCQUERY      + 1
+#define  BUILTIN_SETLOCAL          BUILTIN_ENDLOCAL         + 1
+#define  BUILTIN_QUEUEEXIT         BUILTIN_SETLOCAL         + 1
 // not sorted in alphabetically for security reasons...
 // WARNING: this makes tokenized scripts incomptabile with
 //          previous tokenized scripts (new tokenized scripts

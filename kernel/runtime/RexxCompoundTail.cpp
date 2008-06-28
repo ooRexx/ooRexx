@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                            RexxCompoundTail.c  */
+/* REXX Kernel                                           RexxCompoundTail.cpp */
 /*                                                                            */
 /* Support class for building a compound variable tail.                       */
 /*                                                                            */
@@ -46,7 +46,44 @@
 #include "StringClass.hpp"
 #include "RexxCompoundTail.hpp"
 #include "BufferClass.hpp"
+#include "Numerics.hpp"
 #include "ExpressionVariable.hpp"
+
+
+void RexxCompoundTail::buildUnresolvedTail(
+    RexxObject **tails,                /* tail elements                     */
+    size_t count)                      /* number of tail elements           */
+/******************************************************************************/
+/* Function:  Build a tail value from a set of tail elements without doing    */
+/*            variable resolution.                                            */
+/******************************************************************************/
+{
+    bool         first = true;           /* first tail piece indicator        */
+
+    for (size_t i = 0; i < count; i++)
+    {
+        if (!first)
+        {                    /* if not the first tail piece       */
+            addDot();                    /* add a dot to the buffer           */
+        }
+        first = false;                   /* we need to add a dot from here on */
+        RexxObject *part = tails[i];
+        // this could be ommitted
+        if (part != OREF_NULL)
+        {
+            // if this is a variable, just copy the name.  Otherwixe, copy the value
+            if (isOfClass(VariableTerm, part))
+            {
+                ((RexxParseVariable *)part)->getName()->copyIntoTail(this);
+            }
+            else
+            {
+                part->stringValue()->copyIntoTail(this);
+            }
+        }
+    }
+    length = current - tail;             /* set the final, updated length     */
+}
 
 
 void RexxCompoundTail::buildTail(
@@ -57,13 +94,16 @@ void RexxCompoundTail::buildTail(
 /* Function:  Construct a tail from its elements                              */
 /******************************************************************************/
 {
-  if (tailCount == 1) {
+  if (tailCount == 1)
+  {
       /* get the tail value */
-      RexxObject *tailPiece = tails[0]->getValue(dictionary);
+      RexxObject *tail = tails[0]->getValue(dictionary);
       /* if it is an integer type, we might be able to address the string representation directly. */
-      if (isOfClass(Integer, tailPiece)) {
-          RexxString *rep = ((RexxInteger *)tailPiece)->getStringrep();
-          if (rep != OREF_NULL) {
+      if (isInteger(tail))
+      {
+          RexxString *rep = ((RexxInteger *)tail)->getStringrep();
+          if (rep != OREF_NULL)
+          {
               /* point directly to the value       */
               /* and the length */
               this->tail = rep->getWritableData();
@@ -74,26 +114,26 @@ void RexxCompoundTail::buildTail(
           }
       }
       /* if this is directly a string, we can use this directly */
-      if (isOfClass(String, tailPiece)) {
+      if (isString(tail))
+      {
           /* point directly to the value       */
           /* and the length */
-          this->tail = ((RexxString *)tailPiece)->getWritableData();
-          length = ((RexxString *)tailPiece)->getLength();
+          this->tail = ((RexxString *)tail)->getWritableData();
+          length = ((RexxString *)tail)->getLength();
           remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
-          value = (RexxString *)tailPiece;     /* save this reference in case we're asked for it later */
+          value = (RexxString *)tail;          /* save this reference in case we're asked for it later */
           return;
       }
       /* some other type of object, or an integer without a string */
       /* rep.  We need to have it do the copy operation. */
-      tailPiece->copyIntoTail(this);
+      tail->copyIntoTail(this);
       length = current - this->tail;             /* set the final, updated length     */
   }
-  else {
-
-      size_t       i;                      /* loop counter                      */
-                                           /* tail building buffer              */
+  else
+  {
       tails[0]->getValue(dictionary)->copyIntoTail(this);
-      for (i = 1; i < tailCount; i++) {    /* process each element              */
+      for (size_t i = 1; i < tailCount; i++)      /* process each element              */
+      {
           addDot();                        /* add a dot to the buffer           */
           tails[i]->getValue(dictionary)->copyIntoTail(this);
       }
@@ -111,49 +151,53 @@ void RexxCompoundTail::buildTail(
 /* Function:  Construct a tail from its elements                              */
 /******************************************************************************/
 {
-  if (tailCount == 1) {
-      /* get the tail value */
-      RexxObject *tailPiece = tails[0]->getValue(context);
-      /* if it is an integer type, we might be able to address the string representation directly. */
-      if (isOfClass(Integer, tailPiece)) {
-          RexxString *rep = ((RexxInteger *)tailPiece)->getStringrep();
-          if (rep != OREF_NULL) {
-              /* point directly to the value       */
-              /* and the length */
-              this->tail = rep->getWritableData();
-              length = rep->getLength();
-              remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
-              value = rep;                         /* save this reference in case we're asked for it later */
-              return;
-          }
-      }
-      /* if this is directly a string, we can use this directly */
-      if (isOfClass(String, tailPiece)) {
-          /* point directly to the value       */
-          /* and the length */
-          this->tail = ((RexxString *)tailPiece)->getWritableData();
-          length = ((RexxString *)tailPiece)->getLength();
-          remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
-          value = (RexxString *)tailPiece;     /* save this reference in case we're asked for it later */
-          return;
-      }
-      /* some other type of object, or an integer without a string */
-      /* rep.  We need to have it do the copy operation. */
-      tailPiece->copyIntoTail(this);
-      length = current - this->tail;             /* set the final, updated length     */
-  }
-  else {
+    if (tailCount == 1)
+    {
+        /* get the tail value */
+        RexxObject *tail = tails[0]->getValue(context);
+        /* if it is an integer type, we might be able to address the string representation directly. */
+        if (isInteger(tail))
+        {
+            RexxString *rep = ((RexxInteger *)tail)->getStringrep();
+            if (rep != OREF_NULL)
+            {
+                /* point directly to the value       */
+                /* and the length */
+                this->tail = rep->getWritableData();
+                length = rep->getLength();
+                remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
+                value = rep;                         /* save this reference in case we're asked for it later */
+                return;
+            }
+        }
+        /* if this is directly a string, we can use this directly */
+        if (isString(tail))
+        {
+            /* point directly to the value       */
+            /* and the length */
+            this->tail = ((RexxString *)tail)->getWritableData();
+            length = ((RexxString *)tail)->getLength();
+            remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
+            value = (RexxString *)tail;          /* save this reference in case we're asked for it later */
+            return;
+        }
+        /* some other type of object, or an integer without a string */
+        /* rep.  We need to have it do the copy operation. */
+        tail->copyIntoTail(this);
+        length = current - this->tail;             /* set the final, updated length     */
+    }
+    else
+    {
+        /* tail building buffer              */
+        tails[0]->getValue(context)->copyIntoTail(this);
+        for (size_t i = 1; i < tailCount; i++)      /* process each element              */
+        {
+            addDot();                        /* add a dot to the buffer           */
+            tails[i]->getValue(context)->copyIntoTail(this);
+        }
 
-      size_t       i;                      /* loop counter                      */
-                                           /* tail building buffer              */
-      tails[0]->getValue(context)->copyIntoTail(this);
-      for (i = 1; i < tailCount; i++) {    /* process each element              */
-          addDot();                        /* add a dot to the buffer           */
-          tails[i]->getValue(context)->copyIntoTail(this);
-      }
-
-      length = current - tail;             /* set the final, updated length     */
-  }
+        length = current - tail;             /* set the final, updated length     */
+    }
 }
 
 
@@ -165,85 +209,68 @@ void RexxCompoundTail::buildTail(
 /*            name.                                                           */
 /******************************************************************************/
 {
-  RexxString * part;                   /* added part of tail                */
-  size_t       i;                      /* loop counter                      */
-  bool         first = true;           /* first tail piece indicator        */
+    bool         first = true;           /* first tail piece indicator        */
 
-  for (i = 0; i < count; i++) {
-      if (!first) {                    /* if not the first tail piece       */
-          addDot();                    /* add a dot to the buffer           */
-      }
-      first = false;                   /* we need to add a dot from here on */
-      part = (RexxString *)tails[i];   /* get the next element              */
-      if (part == OREF_NULL)           /* omitted piece?                    */
-          part = OREF_NULLSTRING;      /* use a null string                 */
-      part->copyIntoTail(this);        /* add this to our tail              */
-  }
-  length = current - tail;             /* set the final, updated length     */
-}
-
-
-void RexxCompoundTail::buildUnresolvedTail(
-    RexxObject **tails,                /* tail elements                     */
-    size_t count)                      /* number of tail elements           */
-/******************************************************************************/
-/* Function:  Build a tail value from a set of tail elements without doing    */
-/*            variable resolution.                                            */
-/******************************************************************************/
-{
-  bool         first = true;           /* first tail piece indicator        */
-
-  for (size_t i = 0; i < count; i++) {
-      if (!first) {                    /* if not the first tail piece       */
-          addDot();                    /* add a dot to the buffer           */
-      }
-      first = false;                   /* we need to add a dot from here on */
-      RexxObject *part = tails[i];
-      // this could be ommitted
-      if (part != OREF_NULL)
-      {
-          // if this is a variable, just copy the name.  Otherwixe, copy the value
-          if (isOfClass(VariableTerm, part))
-          {
-              ((RexxParseVariable *)part)->getName()->copyIntoTail(this);
-          }
-          else
-          {
-              part->stringValue()->copyIntoTail(this);
-          }
-      }
-  }
-  length = current - tail;             /* set the final, updated length     */
+    for (size_t i = 0; i < count; i++)
+    {
+        if (!first)                      /* if not the first tail piece       */
+        {
+            addDot();                    /* add a dot to the buffer           */
+        }
+        first = false;                   /* we need to add a dot from here on */
+        RexxString *part = (RexxString *)tails[i];   /* get the next element              */
+        if (part == OREF_NULL)           /* omitted piece?                    */
+        {
+            part = OREF_NULLSTRING;      /* use a null string                 */
+        }
+        part->copyIntoTail(this);        /* add this to our tail              */
+    }
+    length = current - tail;             /* set the final, updated length     */
 }
 
 
 void RexxCompoundTail::buildTail(
-    RexxString *tailPiece)                  /* the single string index */
+    RexxString *tail)                        /* the single string index */
 /******************************************************************************/
 /* Function:  Construct a tail from a single string index                     */
 /******************************************************************************/
 {
   /* point directly to the value       */
-  this->tail = tailPiece->getWritableData();
-  length = tailPiece->getLength();           /* and the length */
-  remainder = 0;                             /* belt and braces...this will force a reallocation if we append */
-  value = tailPiece;                         /* save this reference in case we're asked for it later */
+  this->tail = tail->getWritableData();
+  length = tail->getLength();               /* and the length */
+  remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
+  value = tail;                        /* save this reference in case we're asked for it later */
+}
+
+
+/**
+ * Build a tail directly from a single character string value.
+ *
+ * @param t      The pointer to the tail name (as an asciiz string);
+ */
+void RexxCompoundTail::buildTail(const char *t)
+{
+    this->tail = const_cast<char *>(t);
+    length = strlen(t);
+    remainder = 0;
 }
 
 
 void RexxCompoundTail::buildTail(
-    RexxString *tailPiece, size_t index)     /* the single string index */
+    RexxString *tail, size_t index)                        /* the single string index */
 /******************************************************************************/
 /* Function:  Construct a tail from a string and an index                     */
 /******************************************************************************/
 {
-  /* point directly to the value       */
-  tailPiece->copyIntoTail(this);        /* add this to our tail              */
-  length = length + tailPiece->getLength();
-  sprintf(current, "%d", index);
-  length = length + strlen(current);
-  current += length;
-  remainder -= length;
+    /* point directly to the value       */
+    if (tail->getStringData() != OREF_NULL)
+    {
+        tail->copyIntoTail(this);        /* add this to our tail              */
+    }
+    length = length + tail->getLength();
+    length = length + Numerics::formatWholeNumber(index, current);
+    current += length;
+    remainder -= length;
 }
 
 void RexxCompoundTail::buildTail(
@@ -252,10 +279,10 @@ void RexxCompoundTail::buildTail(
 /* Function:  Construct a tail from a single numeric index                    */
 /******************************************************************************/
 {
-  sprintf(current, "%d", index);
-  length = strlen(current);
-  current += length;
-  remainder -= length;
+    length = Numerics::formatWholeNumber(index, current);
+    length = strlen((char *)current);
+    current += length;
+    remainder -= length;
 }
 
 
@@ -267,19 +294,21 @@ void RexxCompoundTail::expandCapacity(
 {
     length = current - tail;             /* update the accumulated length */
 
-    if (temp != OREF_NULL) {             /* have we already allocated a buffer? */
+    if (temp != OREF_NULL)               /* have we already allocated a buffer? */
+    {
                                          /* expand the size of our existing buffer  */
         temp->expand(needed + ALLOCATION_PAD);
-        tail = temp->address();
+        tail = temp->getData();
         current = tail + length;
         remainder += needed + ALLOCATION_PAD;
     }
-    else {
+    else
+    {
                                          /* get a new buffer size */
         size_t newLength = length + needed + ALLOCATION_PAD;
         temp = (RexxBuffer *)new_buffer(newLength);
-        saveObject(temp);                /* this is protected until the destructor releases it */
-        tail = temp->address();
+        p = temp;                  // this protects the buffer
+        tail = temp->getData();
         current = tail + length;
         memcpy(tail, buffer, length);    /* make sure we copy the old data */
         remainder = newLength - length;  /* set the new remainder       */
@@ -292,23 +321,31 @@ RexxString *RexxCompoundTail::createCompoundName(RexxString *stem)
 /* Function:  Create a fully resolved compound name from a tail buffer        */
 /******************************************************************************/
 {
-  size_t len1;                         /* length of stem                    */
-  RexxString *result;                  /* result string                     */
-  char *data;                          /* character pointer                 */
-
-  len1 = stem->getLength();            /* get the stem length               */
-                                       /* create a new string               */
-  result = (RexxString *)raw_string(len1 + length);
-  data = result->getWritableData();    /* point to the string data          */
-  if (len1 != 0) {                     /* have real data?                   */
-                                       /* copy the front part               */
-    memcpy(data, stem->getStringData(), len1);
-    data += len1;                      /* step past the length              */
-  }
-  if (length != 0)                     /* have a second length              */
-                                       /* and the second part               */
-    memcpy(data, tail, length);
-  return result;                       /* return the result                 */
+    size_t len1 = stem->getLength();                 /* get the stem length               */
+    /* create a new string               */
+    RexxString *result = (RexxString *)raw_string(len1 + length);
+    char *data = result->getWritableData(); /* point to the string data          */
+    if (len1 != 0)                       /* have real data?                   */
+    {
+        /* copy the front part               */
+        memcpy(data, stem->getStringData(), len1);
+        data += len1;                      /* step past the length              */
+    }
+    if (length != 0)                     /* have a second length              */
+    {
+        /* and the second part               */
+        memcpy(data, tail, length);
+    }
+    return result;                       /* return the result                 */
 
 }
 
+RexxString *RexxCompoundTail::makeString()
+{
+    if (value == NULL)
+    {
+                                             /* create a new string               */
+        value = (RexxString *)new_string(tail, length);
+    }
+    return value;                            /* return the result                 */
+}

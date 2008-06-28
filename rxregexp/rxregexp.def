@@ -39,8 +39,4 @@ LIBRARY RXREGEXP BASE=0x6B1F0000
 
 EXPORTS
 ;  DllMain
-  RegExp_Init
-  RegExp_Uninit
-  RegExp_Parse
-  RegExp_Pos
-  RegExp_Match
+  RexxGetPackage

@@ -45,9 +45,14 @@
 
 #include "RexxCore.h"
 #include "ExitHandler.hpp"
+#include "ActivationApiContexts.hpp"
+#include "SysInterpreterInstance.hpp"
 
 class InterpreterInstance : public RexxInternalObject
 {
+// the SysInterpreterInstance is essentially an extension of this class,
+// so it is given full access to the interpreter instance fields.
+friend class SysInterpreterInstance;
 public:
 
     // methods associated with actual interpreter instances
@@ -61,18 +66,19 @@ public:
     void        live(size_t);
     void        liveGeneral(int);
 
-    RexxString *getDefaultAddress() { return defaultAddress; }
+    RexxString *getDefaultEnvironment() { return defaultEnvironment; }
     RexxActivity *getRootActivity() { return rootActivity; }
 
     InterpreterInstance(ExitHandler *handlers);
     void addActivity(RexxActivity *);
     void removeActivity(RexxActivity *);
-    void initialize(RexxActivity *activity, PRXSYSEXIT handlers, const char *defaultEnvironment);
+    void initialize(RexxActivity *activity, RexxOption *options);
     bool terminate();
     void waitForCompletion();
     void attachToProcess();
     RexxActivity *enterOnCurrentThread();
     RexxActivity *attachThread();
+    int attachThread(RexxThreadContext *&attachedContext);
     bool detachThread();
     RexxActivity *spawnActivity(RexxActivity *parent);
     void exitCurrentThread();
@@ -83,25 +89,41 @@ public:
     void activityDeactivated(RexxActivity *activity);
     void addGlobalReference(RexxObject *o);
     void removeGlobalReference(RexxObject *o);
-    inline RexxString *getDefaultCommandEnvironment() { return getDefaultAddress(); }
     bool poolActivity(RexxActivity *activity);
     ExitHandler &getExitHandler(int exitNum) {  return exits[exitNum - 1]; }
     void setExitHandler(int exitNum, REXXPFN e) { getExitHandler(exitNum).setEntryPoint(e); }
     void setExitHandler(int exitNum, const char *e) { getExitHandler(exitNum).resolve(e); }
     void setExitHandler(RXSYSEXIT &e) { getExitHandler(e.sysexit_code).resolve(e.sysexit_name); }
+    void setExitHandler(RexxContextExit &e) { getExitHandler(e.sysexit_code).resolve(e.handler); }
     void removeInactiveActivities();
     void haltAllActivities();
     void traceAllActivities(bool on);
+    inline RexxString *resolveProgramName(RexxString *name, RexxString *dir, RexxString *ext) { return sysInstance.resolveProgramName(name, dir, ext); }
+    inline SecurityManager *getSecurityManager() { return securityManager; }
+    void setSecurityManager(RexxObject *m);
+    RexxInstance *getInstanceContext() { return &context.instanceContext; }
+    RexxThreadContext *getRootThreadContext();
+
 
 protected:
 
+    bool processOptions(RexxOption *options);
+
+
+    InstanceContext      context;            // our externalizied instance context
+    SysInterpreterInstance sysInstance;      // our platform specific helper
+
     RexxActivity        *rootActivity;       // the initial activity
+    SecurityManager     *securityManager;    // the security manager for our instance
     RexxList            *allActivities;      // all activities associated with this instance
     RexxList            *activeActivities;   // the activity table
     RexxList            *attachedActivities; // our list of attached vs. spawned activities
     RexxList            *spawnedActivities;  // activities this instance has spawned off
     RexxObjectTable     *globalReferences;   // our global reference table
-    RexxString          *defaultAddress;     // the default address environment
+    RexxString          *defaultEnvironment; // the default address environment
+    RexxString          *searchPath;         // additional Rexx search path
+    RexxList            *searchExtensions;   // extensions to search on for external calls
+    void                *applicationData;    // application specific data
 
     bool terminating;                // shutdown indicator
     bool terminated;                 // last thread cleared indicator
@@ -109,6 +131,8 @@ protected:
 
     // array of system exits
     ExitHandler exits[RXNOOFEXITS + 1];
+
+    static RexxInstanceInterface interfaceVector;   // single interface vector instance
 };
 
 #endif

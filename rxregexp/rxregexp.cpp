@@ -44,179 +44,181 @@
 #include "automaton.hpp"
 #include "regexp.hpp"
 
-#include "rexx.h"
-#include "RexxNativeAPI.h"                      // REXX native interface
-#include "RexxErrorCodes.h"
+#include "oorexxapi.h"
 #include <string.h>
 
-RexxMethod3(REXXOBJECT,                // Return type
+RexxMethod2(int,                          // Return type
             RegExp_Init,               // Object_method name
-            OSELF, self,               // Pointer to self
-            REXXSTRING, expression,    // optional regular expression
-            REXXSTRING, matchtype)     // optional match type (MAXIMAL (def.) or MINIMAL)
+            OPTIONAL_CSTRING, expression,    // optional regular expression
+            OPTIONAL_CSTRING, matchtype)     // optional match type (MAXIMAL (def.) or MINIMAL)
 {
-  int         iResult = 0;
-  automaton  *pAutomaton;
+    int         iResult = 0;
+    automaton  *pAutomaton;
 
-  pAutomaton = new automaton();
+    pAutomaton = new automaton();
 
-  // optional matchtype given?
-  if (matchtype)
-  {
-    if ( strcmp(string_data(matchtype), "MINIMAL") == 0) {
-      pAutomaton->setMinimal(true);
-    }
-  }
-
-  // optional expression given?
-  if (expression)
-  {
-    iResult = pAutomaton->parse( string_data(expression) );
-  }
-
-  REXX_SETVAR("!AUTOMATON", ooRexxPointer(pAutomaton));
-
-  if (iResult)
-    rexx_exception(Error_Invalid_template);
-
-  return ooRexxNil;
-}
-
-RexxMethod1(REXXOBJECT,                // Return type
-            RegExp_Uninit,             // Object_method name
-            OSELF, self)               // Pointer to self
-{
-  automaton  *pAutomaton = NULL;
-
-  pAutomaton = (automaton *)pointer_value(REXX_GETVAR("!AUTOMATON") );
-  if (pAutomaton) delete pAutomaton;
-
-  return ooRexxNil;
-}
-
-RexxMethod3(REXXOBJECT,                // Return type
-            RegExp_Parse,              // Object_method name
-            OSELF, self,               // Pointer to self
-            REXXSTRING, expression,    // regular expression to parse
-            REXXSTRING, matchtype)     // optional match type (MAXIMAL (def.) or MINIMAL)
-{
-  automaton  *pAutomaton = NULL;
-  REXXOBJECT  result;
-
-  if (!expression)
-    rexx_exception1(Error_Incorrect_method_noarg, ooRexxString("1"));
-
-  REXXOBJECT value = REXX_GETVAR("!AUTOMATON");
-  if (value != NULLOBJECT)
-  {
-      pAutomaton = (automaton *)pointer_value(value);
-  }
-
-  if (pAutomaton) {
-    const char *pszString = string_data(expression);
-    // moved some ptrs to re-use variables
     // optional matchtype given?
-    if (matchtype) {
-      if ( strcmp(string_data(matchtype), "MINIMAL") == 0) {
-        pAutomaton->setMinimal(true); // set minimal matching
-      } else if (strcmp(string_data(matchtype), "CURRENT") != 0) {
-        pAutomaton->setMinimal(false); // set maximal matching
-      }
-    }
-    int i = pAutomaton->parse( pszString );
-    REXX_SETVAR("!POS", ooRexxInteger(pAutomaton->getCurrentPos()));
-    result = ooRexxInteger(i);
-  } else {
-    result = ooRexxInteger(-1);
-  }
-
-  return result;
-}
-
-RexxMethod2(REXXOBJECT,                // Return type
-            RegExp_Match,              // Object_method name
-            OSELF, self,               // Pointer to self
-            REXXSTRING, string)        // string to match
-{
-  automaton  *pAutomaton = NULL;
-  REXXOBJECT  result;
-
-  if (!string)
-    rexx_exception1(Error_Incorrect_method_noarg, ooRexxString("1"));
-
-  REXXOBJECT value = REXX_GETVAR("!AUTOMATON");
-  if (value != NULLOBJECT)
-  {
-      pAutomaton = (automaton *)pointer_value(value);
-  }
-  if (pAutomaton) {
-    int i = pAutomaton->match( string_data(string), (int)string_length(string) );
-    REXX_SETVAR("!POS", ooRexxInteger(pAutomaton->getCurrentPos()));
-    result = ooRexxInteger(i);
-  } else {
-    result = ooRexxInteger(0);
-  }
-
-  return result;
-}
-
-RexxMethod2(REXXOBJECT,                // Return type
-            RegExp_Pos,                // Object_method name
-            OSELF, self,               // Pointer to self
-            REXXSTRING, string)        // string to match
-{
-  automaton  *pAutomaton = NULL;
-  bool        fOldState;
-  const char *pszString;
-  size_t      strlength;
-  REXXOBJECT  result;
-  REXXOBJECT  pArgString = NULL;
-  int         i;
-
-  REXXOBJECT value = REXX_GETVAR("!AUTOMATON");
-  if (value != NULLOBJECT)
-  {
-      pAutomaton = (automaton *)pointer_value(value);
-  }
-
-  pszString = string_data(string);
-  strlength = string_length(string);
-  int matchPosition = 0;
-
-  if (pAutomaton && strlength > 0) {  /* only check when input > 0 */
-    fOldState = pAutomaton->getMinimal();
-
-    // we start out matching minimal
-    pAutomaton->setMinimal(true);
-    do {
-      i = pAutomaton->match(pszString, (int)strlength);
-      strlength--;
-      pszString++;
-    } while (i == 0 && strlength != 0);
-    // can we match at all?
-    if (i != 0) {
-      i = (int) (pszString - string_data(pArgString));
-      // want a maximal match within string?
-      if (fOldState == false) {
-        pAutomaton->setMinimal(false);
-        pszString--; // correct starting pos
-        strlength++; // correct starting len
-        while (strlength != 0) {
-          if (pAutomaton->match(pszString, (int)strlength) != 0) {
-            break;
-          }
-          strlength--;
+    if (matchtype)
+    {
+        if ( strcmp(matchtype, "MINIMAL") == 0)
+        {
+            pAutomaton->setMinimal(true);
         }
-      }
-      matchPosition = i + pAutomaton->getCurrentPos() - 1;
     }
 
-    REXX_SETVAR("!POS", ooRexxInteger(matchPosition));
-    result =  ooRexxInteger(i);
-    pAutomaton->setMinimal(fOldState);  // restore to state at POS invocation time
-  } else {
-    result = ooRexxInteger(0);
-  }
+    // optional expression given?
+    if (expression)
+    {
+        iResult = pAutomaton->parse(expression);
+        if (iResult != 0)
+        {
+            context->RaiseException(Rexx_Error_Invalid_template);
+        }
+    }
 
-  return result;
+    // this will be passed back into us on calls
+    context->SetObjectVariable("CSELF", context->NewPointer(pAutomaton));
+    return 0;
 }
+
+RexxMethod1(int,                          // Return type
+            RegExp_Uninit,             // Object_method name
+            CSELF, self)               // Pointer to self
+{
+    automaton  *pAutomaton = (automaton *)self;
+    if (pAutomaton)
+    {
+        delete pAutomaton;
+    }
+    // ensure we don't do this twice
+    context->DropObjectVariable("CSELF");
+    return 0;
+}
+
+RexxMethod3(int,                          // Return type
+            RegExp_Parse,              // Object_method name
+            CSELF, self,               // Pointer to automaton control block
+            CSTRING, expression,       // regular expression to parse
+            OPTIONAL_CSTRING, matchtype)     // optional match type (MAXIMAL (def.) or MINIMAL)
+{
+    automaton  *pAutomaton = (automaton *)self;
+    if (pAutomaton)
+    {
+        // moved some ptrs to re-use variables
+        // optional matchtype given?
+        if (matchtype != NULL)
+        {
+            if ( strcmp(matchtype, "MINIMAL") == 0)
+            {
+                pAutomaton->setMinimal(true); // set minimal matching
+            }
+            else if (strcmp(matchtype, "CURRENT") != 0)
+            {
+                pAutomaton->setMinimal(false); // set maximal matching
+            }
+        }
+        int i = pAutomaton->parse( expression);
+        context->SetObjectVariable("!POS", context->NumberToObject(pAutomaton->getCurrentPos()));
+        return i;
+    }
+    return -1;
+}
+
+RexxMethod2(int,                          // Return type
+            RegExp_Match,              // Object_method name
+            CSELF, self,               // Pointer to self
+            RexxStringObject, string)        // string to match
+{
+    automaton  *pAutomaton = (automaton *)self;
+    if (pAutomaton)
+    {
+        int i = pAutomaton->match( context->StringData(string), (int)context->StringLength(string));
+        context->SetObjectVariable("!POS", context->NumberToObject(pAutomaton->getCurrentPos()));
+        return i;
+    }
+    return 0;
+}
+
+RexxMethod2(int,                          // Return type
+            RegExp_Pos,                // Object_method name
+            CSELF, self,               // Pointer to self
+            RexxStringObject, string)        // string to match
+{
+    automaton  *pAutomaton = (automaton *)self;
+    bool        fOldState;
+    const char *pszString;
+    size_t      strlength;
+    int         i;
+
+    pszString = context->StringData(string);
+    strlength = context->StringLength(string);
+    int matchPosition = 0;
+
+    /* only check when input > 0 */
+    if (pAutomaton && strlength > 0)
+    {
+        fOldState = pAutomaton->getMinimal();
+
+        // we start out matching minimal
+        pAutomaton->setMinimal(true);
+        do
+        {
+            i = pAutomaton->match(pszString, (int)strlength);
+            strlength--;
+            pszString++;
+        } while (i == 0 && strlength != 0);
+        // can we match at all?
+        if (i != 0)
+        {
+            i = (int) (pszString - context->StringData(string));
+            // want a maximal match within string?
+            if (fOldState == false)
+            {
+                pAutomaton->setMinimal(false);
+                pszString--; // correct starting pos
+                strlength++; // correct starting len
+                while (strlength != 0)
+                {
+                    if (pAutomaton->match(pszString, (int)strlength) != 0)
+                    {
+                        break;
+                    }
+                    strlength--;
+                }
+            }
+            matchPosition = i + pAutomaton->getCurrentPos() - 1;
+        }
+
+        context->SetObjectVariable("!POS", context->NumberToObject(matchPosition));
+        pAutomaton->setMinimal(fOldState);  // restore to state at POS invocation time
+        return i;
+    }
+
+    return 0;
+}
+
+// now build the actual entry list
+RexxMethodEntry rxregexp_methods[] =
+{
+    REXX_METHOD(RegExp_Init,    RegExp_Init),
+    REXX_METHOD(RegExp_Uninit,  RegExp_Uninit),
+    REXX_METHOD(RegExp_Parse,   RegExp_Parse),
+    REXX_METHOD(RegExp_Pos,     RegExp_Pos),
+    REXX_METHOD(RegExp_Match,   RegExp_Match),
+    REXX_LAST_METHOD()
+};
+
+
+RexxPackageEntry rxregexp_package_entry =
+{
+    STANDARD_PACKAGE_HEADER
+    "RXREGEXP",                          // name of the package
+    "4.0",                               // package information
+    NULL,                                // no load/unload functions
+    NULL,
+    NULL,                                // no functions in this package
+    rxregexp_methods                     // the exported methods
+};
+
+// package loading stub.
+OOREXX_GET_PACKAGE(rxregexp);

@@ -84,6 +84,7 @@
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
 #include "SystemInterpreter.hpp"
+#include "PackageManager.hpp"
 
 
 #define CMDBUFSIZE      1024                 /* Max size of executable cmd     */
@@ -101,8 +102,6 @@
 #define SYSENV          "bash"               /* Default AIX  cmd environment   */
 #endif
 
-
-#define DEFEXT          ".CMD"              /* Default OS/2 REXX program ext  */
 #define DRVNUM          0x40                /* drive number subtractor        */
 #define DIRLEN          256                 /* length of a directory          */
 #define FULLSEG         65536L              /* ^4K constant                   */
@@ -132,67 +131,11 @@ void RestoreEnvironment( void * );
 /*                      the screen                                   */
 /*********************************************************************/
 
-RexxMethod2(REXXOBJECT, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
+RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
 {
                                         /* console beep for Unix     */
   printf("\a");
-  return ooRexxString("");              /* always returns a null     */
-}
-
-/*********************************************************************/
-/*                                                                   */
-/*   Method Name : sysSetLocal                                       */
-/*                                                                   */
-/*   Descriptive Name:  SETLOCAL                                     */
-/*                                                                   */
-/*   Function:          Save all environment variables, drive and    */
-/*                      directory of current drive.                  */
-/*                                                                   */
-/*********************************************************************/
-
-RexxMethod1(REXXOBJECT, sysSetLocal, OSELF, self)
-{
-  REXXOBJECT     Current;              /* new save block                    */
-  REXXOBJECT     Retval;               /* return result                     */
-
-  Current = BuildEnvlist();            /* build the new save block          */
-  if (NULLOBJECT == Current)           /* if unsuccessful return zero       */
-    Retval = TheFalseObject;
-  else {
-                                       /* Have Native Actiovation           */
-    REXX_PUSH_ENVIRONMENT(Current);    /*  update environemnt list          */
-    Retval = TheTrueObject;            /* this returns one                  */
-  }
-  return Retval;                       /* return success/failure            */
-}
-
-
-/*********************************************************************/
-/*                                                                   */
-/*   method Name:  sysEndLocal                                       */
-/*                                                                   */
-/*   Descriptive Name:  ENDLOCAL                                     */
-/*                                                                   */
-/*   Function:          restore all previous environment variables   */
-/*                      drive and current directory.                 */
-/*                                                                   */
-/*********************************************************************/
-
-RexxMethod0(REXXOBJECT, sysEndLocal)
-{
-  REXXOBJECT     Current;              /* new save block                    */
-  REXXOBJECT     Retval;               /* return result                     */
-
-                                       /* retrieve top environment          */
-  Current =  REXX_POP_ENVIRONMENT();   /*  block, if ixisted.               */
-  if (TheNilObject == Current)         /* nothing saved?                    */
-    Retval = TheFalseObject;           /* return failure value              */
-  else {
-                                       /* restore everything                */
-    RestoreEnvironment(buffer_address(Current));
-    Retval = TheTrueObject;            /* this worked ok                    */
-  }
-  return Retval;                       /* return function result            */
+  return "";                            /* always returns a null     */
 }
 
 
@@ -288,14 +231,16 @@ char *resolve_tilde(const char *path)
 /****************************************************************************/
 /* sysDirectory                                                             */
 /****************************************************************************/
-RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
+RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 {
-  APIRET rc;
+  RexxReturnCode rc;
   char  *rdir;                         /* resolved path */
 
   rc = 0;
-  if (dir != NO_CSTRING){              /* if new directory is not null,     */
-    if(*dir == '~'){
+  if (dir != NO_CSTRING)               /* if new directory is not null,     */
+  {
+    if(*dir == '~')
+    {
       rdir = resolve_tilde(dir);
       rc = chdir(rdir);
       free(rdir);
@@ -303,64 +248,60 @@ RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
     else
       rc = chdir(dir);                   /* change to the new directory     */
   }
-  // update our working directory and return it. 
-  if (rc == 0)
-  {
-      SystemInterpreter::updateCurrentWorkingDirectory(); 
-  }
-  return ooRexxString(SystemInterpreter::currentWorkingDirectory); 
+
+  // get the current working directory and return it
+  char temp[CCHMAXPATH + 2];
+  SystemInterpreter::getCurrentWorkingDirectory(temp);
+  return context->NewStringFromAsciiz(temp);
 }
 
 
 /*****************************************************************************/
 /* sysFilespec                                                               */
 /*****************************************************************************/
-RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
+RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 {
-  size_t     NameLength;               /* file name length                  */
-  const char *EndPtr;                  /* end of string                     */
-  const char *PathEnd;                 /* path end pointer                  */
-  REXXOBJECT Retval;                   /* return value                      */
+  size_t nameLength = strlen(name);     /* get filename length               */
 
-                                       /* required arguments missing?       */
-  if (Option == NO_CSTRING || strlen(Option) == 0 || Name == NO_CSTRING)
-                                       /* raise an error                    */
-    rexx_exception(Error_Incorrect_call);
+  const char *endPtr = name + nameLength;          /* point to last character           */
+  const char *pathEnd = strrchr(name, '/');        /* find the last slash in Name       */
 
-  NameLength = strlen(Name);           /* get filename length               */
-
-  EndPtr = Name + (NameLength - 1);    /* point to last character           */
-  PathEnd = strrchr(Name, '/');        /* find the last slash in Name       */
-
-
-  Retval = OREF_NULLSTRING;            /* set the default return value      */
-
-
-  switch (toupper(*Option)) {            /* process each option               */
+  switch (toupper(*Option))              /* process each option               */
+  {
       case FILESPEC_PATH:                /* extract the path                  */
       {
-         if (PathEnd)                    /* if there is a path spec. , return */
+         if (pathEnd != NULL)            /* if there is a path spec. , return */
                                          /* up to and including last slash.   */
                                          /* else return OREF_NULLSTRING       */
-           Retval = ooRexxStringL(Name, PathEnd - Name + 1);
+         {
+             return context->newString(name, pathEnd - name + 1);
+         }
+         else
+         {
+             return context->NullString();
+         }
       }
       break;                           /* finished                            */
 
       case FILESPEC_NAME:              /* extract the file name               */
       {                                /* everything to right of slash        */
-         if ((PathEnd) && (PathEnd != EndPtr))
-            Retval = ooRexxStringL(PathEnd + 1, EndPtr - PathEnd);
-
-         if (!PathEnd)                 /* there was no path spec.             */
-            Retval = ooRexxString(Name);
+         if (pathEnd != NULL)
+         {
+             return context->NewString(pathEnd + 1, endPtr - pathEnd);
+         }
+         else
+         {
+             // this is all name
+             return context->NewStringFromAsciiz(name);
+         }
       }
       break;                           /* finished                          */
 
     default:                           /* unknown option                    */
                                        /* raise an error                    */
-      rexx_exception(Error_Incorrect_call);
+      context->IncorrectCall();
+      return NULLOBJECT;
   }
-  return Retval;                       /* return extracted part             */
 }
 
 
@@ -379,7 +320,6 @@ bool SysExternalFunction(
   RexxActivation * activation,         /* Current Activation                */
   RexxActivity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
-  RexxString     * parent,             /* Parent program                    */
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* count of arguments                */
   RexxString     * calltype,           /* Type of call                      */
@@ -390,12 +330,12 @@ bool SysExternalFunction(
       return true;
   }
                                        /* no luck try for a registered func */
-  if (activation->callRegisteredExternalFunction(target, arguments, argcount, calltype, result))
+  if (PackageManager::callNativeFunction(activation, activity, target, arguments, argcount, result))
   {
       return true;
   }
                                        /* have activation do the call       */
-  if (activation->callExternalRexx(target, parent, arguments, argcount, calltype, result))
+  if (activation->callExternalRexx(target, arguments, argcount, calltype, result))
   {
       return true;
   }
@@ -440,10 +380,8 @@ REXXOBJECT BuildEnvlist()
   if (!(curr_dir=(char *)malloc(CCHMAXPATH+2)))/* malloc storage for cwd*/
     reportException(Error_System_service);
 
-  // make sure we have a working directory
-  SystemInterpreter::updateCurrentWorkingDirectory(); 
-  // start with a copy of that 
-  strcpy(curr_dir, SystemInterpreter::currentWorkingDirectory); 
+  // start with a copy of the current working directory
+  SystemInterpreter::getCurrentWorkingDirectory(curr_dir);
 
   size += strlen(curr_dir);            /* add the space for curr dir */
   size++;                              /* and its terminating '\0'   */

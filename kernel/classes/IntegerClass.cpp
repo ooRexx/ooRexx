@@ -52,6 +52,7 @@
 #include "RexxActivity.hpp"
 #include "RexxBuiltinFunctions.h"
 #include "Numerics.hpp"
+#include "RexxCompoundTail.hpp"
 
 
 
@@ -1024,6 +1025,26 @@ RexxObject  *RexxInteger::getValue(
   return (RexxObject *)this;           /* just return this value            */
 }
 
+
+RexxObject  *RexxInteger::getRealValue(
+    RexxActivation *context)           /* current activation context        */
+/******************************************************************************/
+/* Function:  Polymorphic get_value function used with expression terms       */
+/******************************************************************************/
+{
+  return (RexxObject *)this;           /* just return this value            */
+}
+
+
+RexxObject  *RexxInteger::getRealValue(
+    RexxVariableDictionary *context)   /* current activation context        */
+/******************************************************************************/
+/* Function:  Polymorphic get_value function used with expression terms       */
+/******************************************************************************/
+{
+  return (RexxObject *)this;           /* just return this value            */
+}
+
 /* **************************************** */
 /*  Integer class methods begin here .....  */
 /* **************************************** */
@@ -1096,21 +1117,20 @@ void *RexxInteger::operator new(size_t size)
   return newObject;                    /* return the new object.            */
 }
 
-void RexxInteger::createClass()
+void RexxInteger::createInstance()
 /******************************************************************************/
 /* Function:  Create the integer class and set up the integer cache           */
 /******************************************************************************/
 {
-                                       /* Create the Integer class object   */
-                                       /*  its asubclass of the CLASS class,*/
-                                       /*  and needs to override the NEW    */
-                                       /*  method to provide caching        */
-                                       /*  support for integers.            */
-  CLASS_CREATE(Integer, "String", RexxIntegerClass);
-                                       /*  initialize our static array of   */
-                                       /*  cached integers                  */
-  new (TheIntegerClass) RexxIntegerClass();
-
+    /* Create the Integer class object   */
+    /*  its asubclass of the CLASS class,*/
+    /*  and needs to override the NEW    */
+    /*  method to provide caching        */
+    /*  support for integers.            */
+    CLASS_CREATE(Integer, "String", RexxIntegerClass);
+    /*  initialize our static array of   */
+    /*  cached integers                  */
+    new (TheIntegerClass) RexxIntegerClass();
 }
 
 
@@ -1153,27 +1173,3 @@ PCPPM RexxInteger::operatorMethods[] =
    (PCPPM)&RexxInteger::operatorNot,
 };
 
-
-#include "RexxNativeAPI.h"
-
-wholenumber_t REXXENTRY REXX_INTEGER_VALUE(REXXOBJECT self)
-/******************************************************************************/
-/* Function:  External interface to the object method                         */
-/******************************************************************************/
-{
-/******************************************************************************/
-/* NOTE:  This method does not reaquire kernel access                         */
-/******************************************************************************/
-                                       /* forward the method                */
-  return ((RexxInteger *)self)->getValue();
-}
-
-REXXOBJECT REXXENTRY REXX_INTEGER_NEW(wholenumber_t value)
-/******************************************************************************/
-/* Function:  External interface to the nativeact object method               */
-/******************************************************************************/
-{
-    NativeContextBlock context;
-                                       /* just forward and return           */
-    return context.protect(new_integer(value));
-}

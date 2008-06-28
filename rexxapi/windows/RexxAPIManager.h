@@ -228,7 +228,7 @@ extern "C" {
 #endif
 
 void RxFreeProcessSubcomList(process_id_t pid);
-APIRET RxQueueDetach(process_id_t pid);
+RexxReturnCode RxQueueDetach(process_id_t pid);
 ULONG RxInterProcessInit(BOOL sessionqueue);
 
 #ifdef __cplusplus

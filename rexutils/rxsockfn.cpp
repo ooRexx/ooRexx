@@ -53,7 +53,7 @@
 /*------------------------------------------------------------------
  * rexx includes
  *------------------------------------------------------------------*/
-# include "rexx.h"
+# include "oorexxapi.h"
 /*------------------------------------------------------------------
  * tcp/ip includes
  *------------------------------------------------------------------*/
@@ -105,7 +105,7 @@
 /*------------------------------------------------------------------
  * sock_errno()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockSock_Errno(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockSock_Errno(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     retStr->strlength = 0;
     int2rxs(sock_errno(),retStr);
@@ -118,7 +118,7 @@ APIRET REXXENTRY SockSock_Errno(const char *name, size_t argc, PCONSTRXSTRING ar
 /*------------------------------------------------------------------
  * psock_errno()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockPSock_Errno(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockPSock_Errno(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
 
     retStr->strlength = 0;
@@ -135,7 +135,7 @@ APIRET REXXENTRY SockPSock_Errno(const char *name, size_t argc, PCONSTRXSTRING a
 /*------------------------------------------------------------------
  * accept()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockAccept(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockAccept(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     sockaddr_in  addr;
     int          sock;
@@ -187,7 +187,7 @@ APIRET REXXENTRY SockAccept(const char *name, size_t argc, PCONSTRXSTRING argv, 
 /*------------------------------------------------------------------
  * bind()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockBind(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockBind(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     sockaddr_in  addr;
     int          sock;
@@ -236,7 +236,7 @@ APIRET REXXENTRY SockBind(const char *name, size_t argc, PCONSTRXSTRING argv, co
 /*------------------------------------------------------------------
  * close()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockClose(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockClose(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     return SockSoClose(name,argc,argv,qName,retStr);
 }
@@ -247,7 +247,7 @@ APIRET REXXENTRY SockClose(const char *name, size_t argc, PCONSTRXSTRING argv, c
 /*------------------------------------------------------------------
  * connect()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockConnect(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockConnect(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     sockaddr_in  addr;
     int          sock;
@@ -296,7 +296,7 @@ APIRET REXXENTRY SockConnect(const char *name, size_t argc, PCONSTRXSTRING argv,
 /*------------------------------------------------------------------
  * gethostbyaddr()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockGetHostByAddr(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockGetHostByAddr(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
 
     struct hostent *pHostEnt;
@@ -353,7 +353,7 @@ APIRET REXXENTRY SockGetHostByAddr(const char *name, size_t argc, PCONSTRXSTRING
 /*------------------------------------------------------------------
  *  gethostbyname()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockGetHostByName(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockGetHostByName(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     struct hostent *pHostEnt;
     const char *    pszName;
@@ -400,7 +400,7 @@ APIRET REXXENTRY SockGetHostByName(const char *name, size_t argc, PCONSTRXSTRING
 /*------------------------------------------------------------------
  *  gethostid()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     in_addr ia;
     char    *addr;
@@ -468,7 +468,7 @@ APIRET REXXENTRY SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING arg
 /*------------------------------------------------------------------
  * getpeername()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockGetPeerName(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockGetPeerName(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     sockaddr_in  addr;
     int          sock;
@@ -519,7 +519,7 @@ APIRET REXXENTRY SockGetPeerName(const char *name, size_t argc, PCONSTRXSTRING a
 /*------------------------------------------------------------------
  *  getsockname()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockGetSockName(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockGetSockName(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     sockaddr_in  addr;
     int          sock;
@@ -570,7 +570,7 @@ APIRET REXXENTRY SockGetSockName(const char *name, size_t argc, PCONSTRXSTRING a
 /*------------------------------------------------------------------
  *  getsockopt()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockGetSockOpt(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockGetSockOpt(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int            sock;
     int            rc;
@@ -706,7 +706,7 @@ APIRET REXXENTRY SockGetSockOpt(const char *name, size_t argc, PCONSTRXSTRING ar
 /*------------------------------------------------------------------
  *  ioctl()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockIoctl(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockIoctl(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int        sock;
     int        cmd;
@@ -809,7 +809,7 @@ APIRET REXXENTRY SockIoctl(const char *name, size_t argc, PCONSTRXSTRING argv, c
 /*------------------------------------------------------------------
  *  listen()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockListen(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockListen(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int  sock;
     int  rc;
@@ -860,7 +860,7 @@ APIRET REXXENTRY SockListen(const char *name, size_t argc, PCONSTRXSTRING argv, 
 /*------------------------------------------------------------------
  *  recv()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockRecv(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockRecv(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int       sock;
     int       dataLen;
@@ -968,7 +968,7 @@ APIRET REXXENTRY SockRecv(const char *name, size_t argc, PCONSTRXSTRING argv, co
 /*------------------------------------------------------------------
  *  recvfrom()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockRecvFrom(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockRecvFrom(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int       sock;
     int       dataLen;
@@ -1094,7 +1094,7 @@ APIRET REXXENTRY SockRecvFrom(const char *name, size_t argc, PCONSTRXSTRING argv
 /*------------------------------------------------------------------
  *  select()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     struct timeval  timeOutS;
     struct timeval *timeOutP;
@@ -1268,13 +1268,13 @@ APIRET REXXENTRY SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, 
 /*------------------------------------------------------------------
  * send()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockSend(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockSend(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int      sock;
     size_t   dataLen;
     const char *data;
     int      flags;
-    APIRET   rc;
+    RexxReturnCode   rc;
     int      chk;
 
     /*---------------------------------------------------------------
@@ -1346,13 +1346,13 @@ APIRET REXXENTRY SockSend(const char *name, size_t argc, PCONSTRXSTRING argv, co
 /*------------------------------------------------------------------
  * sendto()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockSendTo(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockSendTo(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int      sock;
     size_t   dataLen;
     const char *data;
     int      flags;
-    APIRET   rc;
+    RexxReturnCode   rc;
     int      chk;
     sockaddr_in addr;
     const char *pStem;
@@ -1435,7 +1435,7 @@ APIRET REXXENTRY SockSendTo(const char *name, size_t argc, PCONSTRXSTRING argv, 
 /*------------------------------------------------------------------
  * setsockopt()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockSetSockOpt(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockSetSockOpt(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int            sock;
     int            rc;
@@ -1544,7 +1544,7 @@ APIRET REXXENTRY SockSetSockOpt(const char *name, size_t argc, PCONSTRXSTRING ar
 /*------------------------------------------------------------------
  * shutdown()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockShutDown(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockShutDown(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int sock;
     int how;
@@ -1595,7 +1595,7 @@ APIRET REXXENTRY SockShutDown(const char *name, size_t argc, PCONSTRXSTRING argv
 /*------------------------------------------------------------------
  *  sock_init()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockInit(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockInit(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int rc;
 #ifdef WIN32
@@ -1628,7 +1628,7 @@ APIRET REXXENTRY SockInit(const char *name, size_t argc, PCONSTRXSTRING argv, co
 /*------------------------------------------------------------------
  * socket()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockSocket(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockSocket(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int domain;
     int type;
@@ -1702,7 +1702,7 @@ APIRET REXXENTRY SockSocket(const char *name, size_t argc, PCONSTRXSTRING argv, 
 /*------------------------------------------------------------------
  * soclose()
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockSoClose(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockSoClose(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
     int sock;
     int rc;

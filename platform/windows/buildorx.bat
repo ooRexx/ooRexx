@@ -90,7 +90,7 @@ if ERRORLEVEL 1 goto error
 
 @ECHO Building REXX.IMG ...
 CD %OR_OUTDIR%
-IF %USELOGFILE% equ 1 ( REXXIMAGe >>%OR_ERRLOG% 2>&1 ) else ( REXXIMAGE )
+IF %USELOGFILE% equ 1 ( REXXIMAGE >>%OR_ERRLOG% 2>&1 ) else ( REXXIMAGE )
 if ERRORLEVEL 1 goto error
 
 @ECHO Building RXSUBCOM and RXQUEUE..
@@ -146,26 +146,16 @@ if ERRORLEVEL 1 goto error
 
 ECHO Building OODIALOG classes
 CD %OR_OUTDIR%
-IF %USELOGFILE% equ 1 ( REXX %OR_ORYXOODSRC%\M_OODCLS >>%OR_ERRLOG% 2>&1 ) else ( REXX %OR_ORYXOODSRC%\M_OODCLS )
+IF %USELOGFILE% equ 1 ( REXX %OR_ORYXOODSRC%\M_OODCLS.REX >>%OR_ERRLOG% 2>&1 ) else ( REXX %OR_ORYXOODSRC%\M_OODCLS.REX )
 if ERRORLEVEL 1 goto error
 
 
-REM *** orxscrpt
-REM
-ECHO Generating security manager code for script engine
-CD %OR_OUTDIR%
-
-IF %USELOGFILE% equ 1 (
-  REXX %OR_ORYXAXSCRIPT%\rexx2inc.rex %OR_ORYXAXSCRIPT%\security.rex %OR_ORYXAXSCRIPT%\security.inc szSecurityCode >> rexx2inc.log 2>&1
-) else (
-  REXX %OR_ORYXAXSCRIPT%\rexx2inc.rex %OR_ORYXAXSCRIPT%\security.rex %OR_ORYXAXSCRIPT%\security.inc szSecurityCode
-)
 CD %SRC_DIR%
 
-@ECHO Building ORXSCRPT..
-CD  %OR_ORYXAXSCRIPT%
-IF %USELOGFILE% equ 1 ( NMAKE /F ORXSCRPT.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F ORXSCRPT.MAK )
-if ERRORLEVEL 1 goto error
+REM @ECHO Building ORXSCRPT..
+REM CD  %OR_ORYXAXSCRIPT%
+REM IF %USELOGFILE% equ 1 ( NMAKE /F ORXSCRPT.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F ORXSCRPT.MAK )
+REM if ERRORLEVEL 1 goto error
 
 
 REM *** API samples

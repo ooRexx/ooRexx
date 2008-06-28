@@ -87,7 +87,7 @@ static const char *AspiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-APIRET REXXENTRY AspiLoadFuncs3(
+RexxReturnCode REXXENTRY AspiLoadFuncs3(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -118,7 +118,7 @@ APIRET REXXENTRY AspiLoadFuncs3(
 * Return:    null string                                                 *
 *************************************************************************/
 
-APIRET REXXENTRY AspiDeregFunc3(
+RexxReturnCode REXXENTRY AspiDeregFunc3(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -162,7 +162,7 @@ APIRET REXXENTRY AspiDeregFunc3(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-APIRET REXXENTRY Aspi_Read_All_Variables_From_REXX_VP(
+RexxReturnCode REXXENTRY Aspi_Read_All_Variables_From_REXX_VP(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -170,7 +170,7 @@ APIRET REXXENTRY Aspi_Read_All_Variables_From_REXX_VP(
     PRXSTRING retstr )                   /* Return RXSTRING            */
 {
    SHVBLOCK *prxshv;
-   APIRET rc;
+   RexxReturnCode rc;
    int i = 1;
 
    strcpy(retstr->strptr, "0");
@@ -262,7 +262,7 @@ APIRET REXXENTRY Aspi_Read_All_Variables_From_REXX_VP(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-APIRET REXXENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
+RexxReturnCode REXXENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -270,7 +270,7 @@ APIRET REXXENTRY Aspi_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
     PRXSTRING retstr )                   /* Return RXSTRING            */
 {
    SHVBLOCK *prxshv, *temp, *interim, rxshv;
-   APIRET rc;
+   RexxReturnCode rc;
    char array[20], value[10];
    char *pch, *result;
    int chars;

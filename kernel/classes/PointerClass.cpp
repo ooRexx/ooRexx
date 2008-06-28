@@ -144,27 +144,3 @@ RexxString *RexxPointer::stringValue()
     return new_string(buffer);
 }
 
-
-#include "RexxNativeAPI.h"
-
-void *REXXENTRY REXX_POINTER_VALUE(REXXOBJECT self)
-/******************************************************************************/
-/* Function:  External interface to the object method                         */
-/******************************************************************************/
-{
-/******************************************************************************/
-/* NOTE:  This method does not reaquire kernel access                         */
-/******************************************************************************/
-                                       /* forward the method                */
-  return ((RexxPointer *)self)->pointer();
-}
-
-REXXOBJECT REXXENTRY REXX_POINTER_NEW(void *value)
-/******************************************************************************/
-/* Function:  External interface to the nativeact object method               */
-/******************************************************************************/
-{
-    NativeContextBlock context;
-                                       /* just forward and return           */
-    return context.protect(new_pointer(value));
-}

@@ -48,8 +48,6 @@
 #include "OrxDispID.hpp"
 #include "OrxEvents.hpp"
 #include "OrxScrptError.hpp"
-static int iEngineCount = 0;
-
 
 // defines & macros
 #define STD_THREADID 1    // script engine will only have one thread - and this is it (number)!
@@ -64,8 +62,18 @@ typedef struct REXX_CODE_BLOCK_Struct {
   OLECHAR    *Name;          //  Item Name (or NULL) this is associated with.  (WhoKnows() may eventually need this, and the flags.)
   DWORD       Flags;         //  Received at the same time as the source.
   ULONG       StartingLN;    //  Line number the code started on.
-  REXXOBJECT  Code;          //  Pointer to the tokenized code block.
+  RexxRoutineObject  Code;   //  Pointer to the executable object.
   } RCB, *PRCB;
+
+
+class CreateCodeData
+{
+public:
+    OrxScript *engine;      // the hosting script engine
+    LPCOLESTR  strCode;     // the code string
+    RexxRoutineObject routine;  // the create routine
+    RexxConditionData *condData;  // returned condition data
+};
 
 
 // class definition
@@ -254,12 +262,12 @@ class OrxScript : public LLLContent,
 
 
   /****** NON-INTERFACE PUBLIC METHODS ******/
-  void __stdcall insertVariable(const char *name, REXXOBJECT value);
-  char* getEngineName() { return EngineName; }
-  REXXOBJECT  getSecurityManager() { return securityManager.Code; }
-  REXXOBJECT  getSecurityObject() { return securityObject; }
+  void insertVariable(RexxThreadContext *, const char *name, RexxObjectPtr value);
+  RexxObjectPtr  getSecurityManager() { return securityManager.Code; }
+  RexxObjectPtr  getSecurityObject() { return securityObject; }
   DWORD getSafetyOptions() { return dwSafetyOptions; }
   OrxNamedItem* getNamedItems() { return NamedItemList; }
+  FILE *getLogFile() { return logfile; }
 
   IActiveScriptSite* getScriptSitePtr() { return pActiveScriptSite; }
   VARIANT *GetExternalProperty(const char *PropName) {
@@ -275,9 +283,12 @@ class OrxScript : public LLLContent,
     return NULL;
   }
 
+  void runMethod(RexxThreadContext *context, RCB *RexxCode, RexxArrayObject args, RexxObjectPtr &targetResult, RexxConditionData &condData);
+  int createRoutine(LPCOLESTR strCode, ULONG startingLineNumber, RexxRoutineObject &routine);
+
   inline IInternetHostSecurityManager* getIESecurityManager() { return pIESecurityManager; }
-  inline BOOL checkObjectCreation() { return fCheckObjectCreation; }
-  inline void setObjectCreation(bool f) { fCheckObjectCreation = f; }
+  inline bool checkObjectCreation() { return checkObjectCreation; }
+  inline void setObjectCreation(bool f) { checkObjectCreation = f; }
 
   STDMETHODIMP GetSourceIDispatch(LPCOLESTR   ItemName,
                                   LPCOLESTR   SubItemName,
@@ -319,26 +330,26 @@ STDMETHODIMP LocalParseProcedureText(
     /* [in]  */ OLECHAR    *Name,
     /* [in]  */ DWORD       Flags,
     /* [in]  */ ULONG       StartingLN,
-    /* [in]  */ REXXOBJECT  Code,
+    /* [in]  */ RexxObjectPtr  Code,
     /* [out] */ PRCB       *CodeBlock);
 
 
     ULONG              ulRefCount;                 // reference count
-    BOOL               fCheckObjectCreation;       // turn off IE security manager checking on special occasions
-    BOOL               fInitNew;                   // true if IPersistInitStream::Load, IPersistInitStream::InitNew or IActiveScriptParse::InitNew have been called
-    BOOL               fIsConnected;               // to change between CONNECTED/DISCONNECTED without having to really
+    bool               checkObjectCreation;       // turn off IE security manager checking on special occasions
+    bool               enableVariableCapture;      // enables variable capture in termination exit
+    bool               initNew;                   // true if IPersistInitStream::Load, IPersistInitStream::InitNew or IActiveScriptParse::InitNew have been called
+    bool               isConnected;               // to change between CONNECTED/DISCONNECTED without having to really
                                                    // unhook from event source...
     SCRIPTSTATE        engineState;                // state of script engine
     SCRIPTTHREADSTATE  threadState;                // state of thread (just one supported)
     IActiveScriptSite *pActiveScriptSite;          // the active script site
     IInternetHostSecurityManager *pIESecurityManager; // Internet Explorer security manager (*not* REXX's!)
     DWORD              dwBaseThread;               // the base thread of the engine
-    char               EngineName[16];             // name of engine (for REXX)
     FILE              *logfile;                    // Our private log file
-    int                iEngineCount;               // Our Creation number.
+    int                engineId;                   // Our Creation number.
     DWORD              dwSafetyOptions;            // Flags for Internet Explorer to allow scripts to execute.
     RCB                securityManager;            // REXX code for security manager
-    REXXOBJECT         securityObject;             // Object produced by running the Security Manager Code.
+    RexxObjectPtr      securityObject;             // Object produced by running the Security Manager Code.
     OrxDispID          DispID;                     // The head of the chain of DispIDs that we support.
     OrxNamedItem      *NamedItemList;              // The head of the chain of NamedItems.
     VariantLList       PropertyList;               // The head of the chain of potential Properties.

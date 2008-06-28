@@ -68,18 +68,18 @@ void RexxClass::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->objectVariables);
-  memory_mark(this->id);
-  memory_mark(this->classMethodDictionary);
-  memory_mark(this->instanceBehaviour);
-  memory_mark(this->instanceMethodDictionary);
-  memory_mark(this->baseClass);
-  memory_mark(this->metaClass);
-  memory_mark(this->metaClassMethodDictionary);
-  memory_mark(this->metaClassScopes);
-  memory_mark(this->classSuperClasses);
-  memory_mark(this->instanceSuperClasses);
-  memory_mark(this->subClasses);
+    memory_mark(this->objectVariables);
+    memory_mark(this->id);
+    memory_mark(this->classMethodDictionary);
+    memory_mark(this->instanceBehaviour);
+    memory_mark(this->instanceMethodDictionary);
+    memory_mark(this->baseClass);
+    memory_mark(this->metaClass);
+    memory_mark(this->metaClassMethodDictionary);
+    memory_mark(this->metaClassScopes);
+    memory_mark(this->classSuperClasses);
+    memory_mark(this->instanceSuperClasses);
+    memory_mark(this->subClasses);
 }
 
 void RexxClass::liveGeneral(int reason)
@@ -87,18 +87,18 @@ void RexxClass::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->objectVariables);
-  memory_mark_general(this->id);
-  memory_mark_general(this->classMethodDictionary);
-  memory_mark_general(this->instanceBehaviour);
-  memory_mark_general(this->instanceMethodDictionary);
-  memory_mark_general(this->baseClass);
-  memory_mark_general(this->metaClass);
-  memory_mark_general(this->metaClassMethodDictionary);
-  memory_mark_general(this->metaClassScopes);
-  memory_mark_general(this->classSuperClasses);
-  memory_mark_general(this->instanceSuperClasses);
-  memory_mark_general(this->subClasses);
+    memory_mark_general(this->objectVariables);
+    memory_mark_general(this->id);
+    memory_mark_general(this->classMethodDictionary);
+    memory_mark_general(this->instanceBehaviour);
+    memory_mark_general(this->instanceMethodDictionary);
+    memory_mark_general(this->baseClass);
+    memory_mark_general(this->metaClass);
+    memory_mark_general(this->metaClassMethodDictionary);
+    memory_mark_general(this->metaClassScopes);
+    memory_mark_general(this->classSuperClasses);
+    memory_mark_general(this->instanceSuperClasses);
+    memory_mark_general(this->subClasses);
 }
 
 void RexxClass::flatten(RexxEnvelope *envelope)
@@ -114,7 +114,7 @@ RexxObject *RexxClass::unflatten(RexxEnvelope *envelope)
 /* Function:  unflaatten an object                                            */
 /******************************************************************************/
 {
- return this;
+    return this;
 }
 
 RexxObject *RexxClass::makeProxy(RexxEnvelope *envelope)
@@ -244,7 +244,7 @@ RexxInteger *RexxClass::queryMixinClass()
 /*****************************************************************************/
 {
                                        /* return true/false indicator       */
-  return this->isMixinClass() ? TheTrueObject : TheFalseObject;
+    return this->isMixinClass() ? TheTrueObject : TheFalseObject;
 }
 
 RexxString *RexxClass::getId()
@@ -252,7 +252,7 @@ RexxString *RexxClass::getId()
 /* Function:  Return the ID for the class                                    */
 /*****************************************************************************/
 {
-  return this->id;
+    return this->id;
 }
 
 RexxObject *RexxClass::setRexxDefined(void)
@@ -260,8 +260,8 @@ RexxObject *RexxClass::setRexxDefined(void)
 /* Function:  Set a class as a Rexx defined class                            */
 /*****************************************************************************/
 {
-  this->classFlags |= REXX_DEFINED;    /* flag the class                    */
-  return OREF_NULL;
+    this->classFlags |= REXX_DEFINED;    /* flag the class                    */
+    return OREF_NULL;
 }
 
 RexxClass *RexxClass::getBaseClass()
@@ -269,7 +269,7 @@ RexxClass *RexxClass::getBaseClass()
 /* Function:  Return the classes base class                                  */
 /*****************************************************************************/
 {
-  return this->baseClass;              /* return the base class for this    */
+    return this->baseClass;              /* return the base class for this    */
 }
 
 RexxClass *RexxClass::getMetaClass()
@@ -277,14 +277,14 @@ RexxClass *RexxClass::getMetaClass()
 /* Function:   return the classes metaclass                                  */
 /*****************************************************************************/
 {
-  if (this->isPrimitiveClass())        /* primitive class?                  */
-  {
-      return TheClassClass;              /* this is always .class             */
-  }
-  else                                 /* return first member of the list   */
-  {
-      return (RexxClass *)this->metaClass->get(1);
-  }
+    if (this->isPrimitiveClass())        /* primitive class?                  */
+    {
+        return TheClassClass;              /* this is always .class             */
+    }
+    else                                 /* return first member of the list   */
+    {
+        return(RexxClass *)this->metaClass->get(1);
+    }
 }
 
 void  RexxClass::setInstanceBehaviour(
@@ -293,7 +293,7 @@ void  RexxClass::setInstanceBehaviour(
 /* Function:  Give a class a new instance behaviour                          */
 /*****************************************************************************/
 {
-  OrefSet(this, this->instanceBehaviour, b);
+    OrefSet(this, this->instanceBehaviour, b);
 }
 
 RexxClass *RexxClass::getSuperClass()
@@ -317,7 +317,7 @@ RexxArray *RexxClass::getSuperClasses()
 /*****************************************************************************/
 {
                                        /* return a copy of the list          */
-  return (RexxArray *)this->instanceSuperClasses->copy();
+    return (RexxArray *)this->instanceSuperClasses->copy();
 }
 
 
@@ -371,14 +371,12 @@ RexxString *RexxClass::defaultName()
 /* Function:  retrieve a classes default name value                           */
 /******************************************************************************/
 {
-  RexxString * defaultname;            /* returned default name             */
-
-  defaultname = this->id;              /* use the id directly               */
-                                       /* prefix with "The"                 */
-  defaultname = defaultname->concatToCstring("The ");
-                                       /* add on "class"                    */
-  defaultname = defaultname->concatWithCstring(" class");
-  return defaultname;                  /* return that value                 */
+    RexxString *defaultname = this->id;  /* use the id directly               */
+                                         /* prefix with "The"                 */
+    defaultname = defaultname->concatToCstring("The ");
+    /* add on "class"                    */
+    defaultname = defaultname->concatWithCstring(" class");
+    return defaultname;                  /* return that value                 */
 }
 
 RexxTable *RexxClass::getInstanceBehaviourDictionary()
@@ -578,7 +576,7 @@ RexxObject *RexxClass::defineMethod(
     else if (TheNilObject != method_object && !isOfClass(Method, method_object))
     {
         /* make one from a string            */
-        method_object = TheMethodClass->newRexxCode(method_name, method_object, IntegerTwo);
+        method_object = RexxMethod::newMethodObject(method_name, method_object, IntegerTwo, OREF_NULL);
     }
     if (TheNilObject != method_object)   /* if the method is not TheNilObject */
     {
@@ -731,33 +729,31 @@ void  RexxClass::updateSubClasses()
 /* Function: Update my behaviours and call each subclass to do the same       */
 /******************************************************************************/
 {
-  size_t       index;                  /* subclass index number             */
-  RexxArray   *subClassList;           /* array of class subclasses         */
-                                       /* start out the class mdict with    */
-                                       /* a clear mdict and scopes tables   */
-  this->behaviour->setMethodDictionary(OREF_NULL);
-  this->behaviour->setScopes(OREF_NULL);
-                                       /* create the instance behaviour from*/
-                                       /* the instance superclass list      */
-  this->instanceBehaviour->setMethodDictionary(OREF_NULL);
-  this->instanceBehaviour->setScopes(OREF_NULL);
-  this->createInstanceBehaviour(this->instanceBehaviour);
-                                       // This time, we update the class behaviour
-                                       // after building the instance behaviour
-                                       // because the added methods may have an
-                                       // impact on metaclasses.
-  this->createClassBehaviour(this->behaviour);
+                                         /* start out the class mdict with    */
+                                         /* a clear mdict and scopes tables   */
+    this->behaviour->setMethodDictionary(OREF_NULL);
+    this->behaviour->setScopes(OREF_NULL);
+    /* create the instance behaviour from*/
+    /* the instance superclass list      */
+    this->instanceBehaviour->setMethodDictionary(OREF_NULL);
+    this->instanceBehaviour->setScopes(OREF_NULL);
+    this->createInstanceBehaviour(this->instanceBehaviour);
+    // This time, we update the class behaviour
+    // after building the instance behaviour
+    // because the added methods may have an
+    // impact on metaclasses.
+    this->createClassBehaviour(this->behaviour);
 
-  subClassList = this->getSubClasses(); /* get the subclasses list           */
-  ProtectedObject p(subClassList);
-                                       /* loop thru the subclass doing the  */
-                                       /* same for each of them             */
-  for (index = 1; index <= subClassList->size(); index++)
-  {
-                                       /* get the next subclass             */
-                                       /* and recursively update them       */
-    ((RexxClass *)subClassList->get(index))->updateSubClasses();
-  }
+    RexxArray *subClassList = this->getSubClasses(); /* get the subclasses list           */
+    ProtectedObject p(subClassList);
+    /* loop thru the subclass doing the  */
+    /* same for each of them             */
+    for (size_t index = 1; index <= subClassList->size(); index++)
+    {
+        /* get the next subclass             */
+        /* and recursively update them       */
+        ((RexxClass *)subClassList->get(index))->updateSubClasses();
+    }
 }
 
 void RexxClass::updateInstanceSubClasses()
@@ -765,21 +761,21 @@ void RexxClass::updateInstanceSubClasses()
 /* Function: Update my instance behaviour and have the subclasses do the same */
 /******************************************************************************/
 {
-                                       /* create the instance behaviour from*/
-                                       /* the instance superclass list      */
-  this->instanceBehaviour->setMethodDictionary(OREF_NULL);
-  this->instanceBehaviour->setScopes(OREF_NULL);
-  this->createInstanceBehaviour(this->instanceBehaviour);
-  RexxArray *subClassList = this->getSubClasses(); /* get the subclasses list           */
-  ProtectedObject p(subClassList);
-                                       /* loop thru the subclass doing the  */
-                                       /* same for each of them             */
-  for (size_t index = 1; index <= subClassList->size(); index++)
-  {
-                                       /* get the next subclass             */
-                                       /* recursively update these          */
-    ((RexxClass *)subClassList->get(index))->updateInstanceSubClasses();
-  }
+    /* create the instance behaviour from*/
+    /* the instance superclass list      */
+    this->instanceBehaviour->setMethodDictionary(OREF_NULL);
+    this->instanceBehaviour->setScopes(OREF_NULL);
+    this->createInstanceBehaviour(this->instanceBehaviour);
+    RexxArray *subClassList = this->getSubClasses(); /* get the subclasses list           */
+    ProtectedObject p(subClassList);
+    /* loop thru the subclass doing the  */
+    /* same for each of them             */
+    for (size_t index = 1; index <= subClassList->size(); index++)
+    {
+        /* get the next subclass             */
+        /* recursively update these          */
+        ((RexxClass *)subClassList->get(index))->updateInstanceSubClasses();
+    }
 }
 
 void RexxClass::createClassBehaviour(
@@ -960,7 +956,7 @@ RexxTable *RexxClass::methodDictionaryCreate(
             if (!isOfClass(Method, newMethod))   /* object                            */
             {
                 /* make it into a method object      */
-                newMethod = TheMethodClass->newRexxCode(method_name, newMethod, IntegerOne);
+                newMethod = RexxMethod::newMethodObject(method_name, newMethod, IntegerOne, OREF_NULL);
                 newMethod->setScope(scope);   /* and set the scope to the given    */
             }
             else
@@ -1201,19 +1197,18 @@ RexxClass  *RexxClass::mixinclass(
 /*            to be used for multiple inheritance .                          */
 /*****************************************************************************/
 {
-  RexxClass * mixin_subclass;          /* new mixin subclass                */
-                                       /* call subclass with the parameters */
-  mixin_subclass = this->subclass(mixin_id, meta_class, enhancing_class_methods);
-  mixin_subclass->setMixinClass();     /* turn on the mixin info            */
-                                       /* change the base class to the base */
-                                       /* class of the reciever             */
-  OrefSet(mixin_subclass, mixin_subclass->baseClass, this->baseClass);
-  /* If the mixin's parent class has an uninit defined, the new mixin class must have one, too */
-  if (this->hasUninitDefined() || this->parentHasUninitDefined())
-  {
-     mixin_subclass->setParentHasUninitDefined();
-  }
-  return mixin_subclass;               /* return the new mixin class        */
+    /* call subclass with the parameters */
+    RexxClass *mixin_subclass = this->subclass(mixin_id, meta_class, enhancing_class_methods);
+    mixin_subclass->setMixinClass();     /* turn on the mixin info            */
+                                         /* change the base class to the base */
+                                         /* class of the reciever             */
+    OrefSet(mixin_subclass, mixin_subclass->baseClass, this->baseClass);
+    /* If the mixin's parent class has an uninit defined, the new mixin class must have one, too */
+    if (this->hasUninitDefined() || this->parentHasUninitDefined())
+    {
+        mixin_subclass->setParentHasUninitDefined();
+    }
+    return mixin_subclass;               /* return the new mixin class        */
 }
 
 
@@ -1396,7 +1391,7 @@ RexxString *RexxClass::defaultNameRexx()
 /* Function:  Exported access to an object virtual function                   */
 /******************************************************************************/
 {
-  return this->defaultName();          /* forward to the virtual function   */
+    return this->defaultName();          /* forward to the virtual function   */
 }
 
 
@@ -1539,24 +1534,24 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     return new_class;                    /* return the new class              */
 }
 
-void RexxClass::createClass()
+void RexxClass::createInstance()
 /******************************************************************************/
 /* Function:  Create the initial class object                                 */
 /******************************************************************************/
 {
-                                       /* create a class object             */
-  TheClassClass = (RexxClass *)new_object(sizeof(RexxClass));
-                                       /* set the instance behaviour         */
-  TheClassClass->setBehaviour(TheClassClassBehaviour);
-                                       /* set the instance behaviour         */
-  TheClassClass->setInstanceBehaviour(TheClassBehaviour);
+    /* create a class object             */
+    TheClassClass = (RexxClass *)new_object(sizeof(RexxClass));
+    /* set the instance behaviour         */
+    TheClassClass->setBehaviour(TheClassClassBehaviour);
+    /* set the instance behaviour         */
+    TheClassClass->setInstanceBehaviour(TheClassBehaviour);
 
-  // the initial class needs to have an ID before it can be used for
-  // other purposes.
-  TheClassClass->id = new_string("Class");
+    // the initial class needs to have an ID before it can be used for
+    // other purposes.
+    TheClassClass->id = new_string("Class");
 
-                                       /* tell the mobile support to just    */
-                                       /* make a proxy for this class        */
-  TheClassClass->makeProxiedObject();
-  new (TheClassClass) RexxClass;
+    /* tell the mobile support to just    */
+    /* make a proxy for this class        */
+    TheClassClass->makeProxiedObject();
+    new (TheClassClass) RexxClass;
 }

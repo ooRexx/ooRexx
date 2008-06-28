@@ -52,6 +52,7 @@
 #include "ParseTrigger.hpp"
 #include "ParseTarget.hpp"
 #include "Token.hpp"
+#include "Interpreter.hpp"
 
 
 RexxInstructionParse::RexxInstructionParse(
@@ -124,12 +125,7 @@ void RexxInstructionParse::execute(
 
     case SUBKEY_VERSION:               /* PARSE VERSION instruction         */
                                        /* retrieve the version string       */
-      value = TheKernel->fastAt(OREF_VERSION);
-      if (value == OREF_NULL) {        /* missing for some reason?          */
-        value = version_number();      /* reconstruct this                  */
-                                       /* save this again                   */
-        TheKernel->put(value, OREF_VERSION);
-      }
+      value = Interpreter::getVersionNumber();
       break;
 
     case SUBKEY_VAR:                   /* PARSE VAR name instruction        */

@@ -106,8 +106,8 @@ extern BOOL MapComBlock(int chain);
 extern void UnmapComBlock(int chain);
 
 /* functions called by RXAPI.EXE */
-extern _declspec(dllexport) APIRET APIAddQueue(void);
-extern _declspec(dllexport) APIRET APIPullQueue(void);
+extern _declspec(dllexport) RexxReturnCode APIAddQueue(void);
+extern _declspec(dllexport) RexxReturnCode APIPullQueue(void);
 extern _declspec(dllexport) PQUEUEHEADER APICreateQueue(process_id_t Pid, BOOL newProcess);
 extern _declspec(dllexport) size_t APISessionQueue(process_id_t Pid, BOOL newProcess);
 extern _declspec(dllexport) size_t APIDeleteQueue(process_id_t Pid, BOOL SessionQ);
@@ -681,13 +681,13 @@ int    alloc_queue_entry(
 /*  Effects:         New queue created.                              */
 /*                                                                   */
 /*********************************************************************/
-APIRET  REXXENTRY RexxCreateQueue(
+RexxReturnCode  REXXENTRY RexxCreateQueue(
   char   *name,                        /* Internal name (returned).  */
   size_t  size,                        /* Length of name buffer.     */
   const char *usrrequest,              /* Desired name.              */
   size_t *pdup)                        /* Duplicate name flag.       */
 {
-  APIRET       rc= RXQUEUE_OK;
+  RexxReturnCode       rc= RXQUEUE_OK;
   RXQUEUE_TALK * intercom;
 
   if (usrrequest) {                    /* given a name?              */
@@ -717,7 +717,7 @@ APIRET  REXXENTRY RexxCreateQueue(
   if (!intercom)
      rc = RXQUEUE_MEMFAIL;         /* out of memory, stop        */
   else
-     rc = (APIRET)MySendMessage(RXAPI_QUEUECREATE,
+     rc = (RexxReturnCode)MySendMessage(RXAPI_QUEUECREATE,
                              (WPARAM)0,
                              (LPARAM)0);
   if (rc == RXQUEUE_OK)
@@ -801,7 +801,7 @@ PQUEUEHEADER APICreateQueue(process_id_t Pid, BOOL newProcess)
 /*  Effects:          Queue and all its entries deleted.             */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxDeleteQueue(
+RexxReturnCode REXXENTRY RexxDeleteQueue(
   const char *name)                    /* name of queue to delete    */
 {
   ULONG        rc = RXQUEUE_NOTREG;    /* return code from call      */
@@ -898,7 +898,7 @@ size_t APIDeleteQueue(ULONG Pid, BOOL SessionQ)
 /*  Effects:          Count of queue elements.                       */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxQueryQueue(
+RexxReturnCode REXXENTRY RexxQueryQueue(
   const char *name,                   /* Queue to query.             */
   size_t *count)                      /* Length of queue (returned)  */
 {
@@ -1001,12 +1001,12 @@ HANDLE GetAccessToHandle(ULONG procid, HANDLE hnd)
 /*                    queue.                                         */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxAddQueue(
+RexxReturnCode REXXENTRY RexxAddQueue(
   const char *name,
   PCONSTRXSTRING data,
   size_t    flag)
 {
-  APIRET rc;
+  RexxReturnCode rc;
   process_id_t pid;
   size_t count;
   RXQUEUE_TALK * intercom;
@@ -1033,7 +1033,7 @@ APIRET REXXENTRY RexxAddQueue(
   if (!intercom)
      rc = RXQUEUE_MEMFAIL;         /* out of memory, stop        */
   else
-     rc = (APIRET)MySendMessage(RXAPI_QUEUEADD, (WPARAM)0, (LPARAM)GetCurrentProcessId());
+     rc = (RexxReturnCode)MySendMessage(RXAPI_QUEUEADD, (WPARAM)0, (LPARAM)GetCurrentProcessId());
   APICLEANUP_QUEUE();
 
   return (rc);                        /* return with return code    */
@@ -1042,9 +1042,9 @@ APIRET REXXENTRY RexxAddQueue(
 
 
 
-APIRET APIAddQueue()
+RexxReturnCode APIAddQueue()
 {
-    APIRET result = RXQUEUE_OK;
+    RexxReturnCode result = RXQUEUE_OK;
     PQUEUEITEM item;
     PQUEUEHEADER current;
     RXQUEUE_TALK * intercom;
@@ -1119,20 +1119,20 @@ APIRET APIAddQueue()
 /*                    queued to the queue data manager.              */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxPullQueue(
+RexxReturnCode REXXENTRY RexxPullQueue(
   const char *name,
   PRXSTRING   data_buf,
   SYSTEMTIME * dt,
   size_t      waitflag)
 {
 
-  APIRET rc = RXQUEUE_OK;
+  RexxReturnCode rc = RXQUEUE_OK;
   PQUEUEITEM   item;
   size_t envvalue;
   process_id_t pid=0;
   RXQUEUE_TALK * intercom;
   HANDLE wsem;
-  APIRET result;
+  RexxReturnCode result;
                                        /* got a good wait flag?      */
   if (waitflag!=RXQUEUE_NOWAIT && waitflag!=RXQUEUE_WAIT)
     return (RXQUEUE_BADWAITFLAG);      /* no, just exit              */
@@ -1152,7 +1152,7 @@ APIRET REXXENTRY RexxPullQueue(
 
   intercom = FillQueueComBlock(FALSE, 0, waitflag, NULL, 0, NULL, name, pid);
 
-  result = (APIRET)MySendMessage(RXAPI_QUEUEPULL,
+  result = (RexxReturnCode)MySendMessage(RXAPI_QUEUEPULL,
                                    (WPARAM)0,
                                    (LPARAM)GetCurrentProcessId());
 
@@ -1192,7 +1192,7 @@ APIRET REXXENTRY RexxPullQueue(
       /* name must be set again to com block because other queue API could have overwritten it */
       intercom = FillQueueComBlock(FALSE, 0, RXQUEUE_ENDWAIT, NULL, 0, NULL, name, pid);
 
-      result = (APIRET)MySendMessage(RXAPI_QUEUEPULL,
+      result = (RexxReturnCode)MySendMessage(RXAPI_QUEUEPULL,
                                     (WPARAM)0,
                                     (LPARAM)GetCurrentProcessId());
       intercom->PullFlag = (WORD)waitflag;  /* put back the real flag */
@@ -1217,9 +1217,12 @@ APIRET REXXENTRY RexxPullQueue(
                item->size);
                              /* set the proper length      */
      data_buf->strlength = item->size;
-     memcpy((PUCHAR)dt,      // set the systemtime info    */
-            (PUCHAR)&item->addtime,
-            sizeof(SYSTEMTIME));
+     if (dt != NULL)
+     {
+         memcpy((PUCHAR)dt,      // set the systemtime info    */
+                (PUCHAR)&item->addtime,
+                sizeof(SYSTEMTIME));
+     }
                             /* get rid if the queue item  */
   } else {                   /* give up memory directly    */
      if (item->size) {        /* if not a null string       */
@@ -1234,10 +1237,13 @@ APIRET REXXENTRY RexxPullQueue(
      } else                   /* set a non-null pointer     */
          data_buf->strptr=NULL;    /* was (PUCHAR)1 before but trapped in SysReleaseResultMemory */
                                /* set the length             */
-     memcpy((PUCHAR)dt,       // set the systemtime info    */
-            (PUCHAR)&item->addtime,
-            sizeof(SYSTEMTIME));
-     data_buf->strlength =item->size;
+     if (dt != NULL)
+     {
+         memcpy((PUCHAR)dt,       // set the systemtime info    */
+                (PUCHAR)&item->addtime,
+                sizeof(SYSTEMTIME));
+     }
+     data_buf->strlength = item->size;
   }
   APICLEANUP_QUEUE();
   return (rc);                         /* return with return code    */
@@ -1245,7 +1251,7 @@ APIRET REXXENTRY RexxPullQueue(
 
 
 
-APIRET APIPullQueue()
+RexxReturnCode APIPullQueue()
 {
     ULONG result = RXQUEUE_OK;
     PQUEUEITEM item;
@@ -1317,14 +1323,14 @@ BOOL CheckQueueComBlock()
 /*  Description:     Close the session queue                         */
 /*                                                                   */
 /*********************************************************************/
-APIRET RxQueueDetach(process_id_t pid)
+RexxReturnCode RxQueueDetach(process_id_t pid)
 {
    size_t envcount;
 
    if (!API_RUNNING()) return (RXQUEUE_MEMFAIL);
 
    if (!pid) pid = queue_get_pid(&envcount);
-   return (APIRET)MySendMessage(RXAPI_QUEUESESSIONDEL,
+   return (RexxReturnCode)MySendMessage(RXAPI_QUEUESESSIONDEL,
                                          (WPARAM)pid,
                                          (LPARAM)0);
 }

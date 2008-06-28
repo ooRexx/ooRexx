@@ -600,6 +600,17 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Symbol_or_string_constant    "String or symbol expected as ::CONSTANT directive name"
    Error_Symbol_or_string_constant_value    "String or symbol expected as ::CONSTANT value"
    Error_Translation_duplicate_constant    "Duplicate ::CONSTANT directive instruction"
+   Error_Execution_library_method    "Unable to load method ""&1"" from library ""&1"""
+   Error_Execution_library_routine    "Unable to load routine ""&1"" from library ""&1"""
+   Error_Execution_native_routine    "Unable to load native routine ""&1"""
+   Error_Incorrect_call_signature    "Invalid native function signature specification"
+   Error_Incorrect_method_signature    "Invalid native method signature specification"
+   Error_Incorrect_call_nostem    "Argument &1 must have a stem object or stem name value; found ""&2"""
+   Error_Incorrect_method_nostem    "Method argument &1 must have a stem object value; found ""&2"""
+   Error_Invalid_argument_pointer    "Argument &1 is not in valid pointer format; found ""&2"""
+   Error_Invalid_argument_nostem    "Argument &1 must have a stem object or stem name value; found ""&2"""
+   Error_Invalid_argument_double    "Argument &1 must be a valid double value; found ""&2"""
+   Error_Invalid_argument_maxarg    "Too many arguments in invocation; &1 expected"
    
 END
 

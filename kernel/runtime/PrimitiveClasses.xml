@@ -54,13 +54,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Pointer" class="RexxPointer" include="PointerClass.hpp"/>
 <Class id="Buffer" class="RexxBuffer" include="BufferClass.hpp"/>
 <Class id="WeakReference" class="WeakReference" include="WeakReferenceClass.hpp"/>
+<Class id="Routine" class="RoutineClass" include="RoutineClass.hpp"/>
+<Class id="Package" class="PackageClass" include="PackageClass.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>
 <Class id="Behaviour" class="RexxBehaviour" include="RexxBehaviour.hpp"/>
 <Class id="RexxSource" class="RexxSource" include="SourceFile.hpp"/>
+<Class id="LibraryPackage" class="LibraryPackage" include="LibraryPackage.hpp"/>
 <Class id="RexxCode" class="RexxCode" include="RexxCode.hpp"/>
-<Class id="NativeCode" class="RexxNativeCode" include="RexxNativeCode.hpp"/>
+<Class id="NativeMethod" class="RexxNativeMethod" include="RexxNativeCode.hpp"/>
+<Class id="NativeRoutine" class="RexxNativeRoutine" include="RexxNativeCode.hpp"/>
+<Class id="RegisteredRoutine" class="RegisteredRoutine" include="RexxNativeCode.hpp"/>
 <Class id="CPPCode" class="CPPCode" include="CPPCode.hpp"/>
 <Class id="AttributeGetterCode" class="AttributeGetterCode" include="CPPCode.hpp"/>
 <Class id="AttributeSetterCode" class="AttributeSetterCode" include="CPPCode.hpp"/>
@@ -120,6 +125,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="TraceInstruction" class="RexxInstructionTrace" include="TraceInstruction.hpp"/>
 <Class id="UseInstruction" class="RexxInstructionUseStrict" include="UseStrictInstruction.hpp"/>
 
+<Class id="ClassDirective" class="ClassDirective" include="ClassDirective.hpp"/>
+<Class id="LibraryDirective" class="LibraryDirective" include="LibraryDirective.hpp"/>
+<Class id="RequiresDirective" class="RequiresDirective" include="RequiresDirective.hpp"/>
+
 <Class id="CompoundElement" class="RexxCompoundElement" include="RexxCompoundElement.hpp"/>
 <Class id="ParseTrigger" class="RexxTrigger" include="ParseTrigger.hpp"/>
 </Internal>
@@ -136,6 +145,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Token" class="RexxToken" include="Token.hpp"/>
 <Class id="DoBlock" class="RexxDoBlock" include="DoBlock.hpp"/>
 <Class id="InterpreterInstance" class="InterpreterInstance" include="InterpreterInstance.hpp"/>
+<Class id="SecurityManager" class="SecurityManager" include="SecurityManager.hpp"/>
 </Transient>
 </Classes>
 </RexxClasses>

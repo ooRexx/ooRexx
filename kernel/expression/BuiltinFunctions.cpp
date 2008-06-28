@@ -57,6 +57,8 @@
 #include "RexxDateTime.hpp"
 #include "Numerics.hpp"
 #include "ProtectedObject.hpp"
+#include "PackageManager.hpp"
+#include "SystemInterpreter.hpp"
 
 
 /* checks if pad is a single character string */
@@ -1832,29 +1834,28 @@ BUILTIN(MIN) {
 #define SOURCELINE_n   1
 
 BUILTIN(SOURCELINE) {
-  size_t line_number;                  /* requested error number            */
-  RexxObject  *result;                 /* function result                   */
-  RexxSource  *source;                 /* current program source            */
-  size_t size;                         /* size of source program            */
-
-  fix_args(SOURCELINE);                /* check on required number of args  */
-  source = context->getSource();       /* get current source object         */
-  size = source->sourceSize();         /* get the program size              */
-  if (argcount == 1) {                 /* asking for a specific line?       */
-                                       /* get the line number               */
-    line_number = required_integer(SOURCELINE, n)->getValue();
-                                       /* must be a positive integer        */
-    positive_integer((ssize_t)line_number, SOURCELINE, IntegerOne);
-    if (line_number > size)            /* larger than program source?       */
-                                       /* this is an error too?             */
-      reportException(Error_Incorrect_call_sourceline, line_number, size);
-                                       /* get the specific line             */
-    result = (RexxObject *)source->get(line_number);
-  }
-  else
-                                       /* just return the source size       */
-    result = (RexxObject *)new_integer(size);
-  return result;                       /* finished                          */
+    fix_args(SOURCELINE);                /* check on required number of args  */
+    RexxSource *source = context->getSourceObject(); /* get current source object         */
+    size_t size = source->sourceSize();  /* get the program size              */
+    if (argcount == 1)                   /* asking for a specific line?       */
+    {
+        /* get the line number               */
+        size_t line_number = required_integer(SOURCELINE, n)->getValue();
+        /* must be a positive integer        */
+        positive_integer((ssize_t)line_number, SOURCELINE, IntegerOne);
+        if (line_number > size)            /* larger than program source?       */
+        {
+            /* this is an error too?             */
+            reportException(Error_Incorrect_call_sourceline, line_number, size);
+        }
+        /* get the specific line             */
+        return (RexxObject *)source->get(line_number);
+    }
+    else
+    {
+        /* just return the source size       */
+        return (RexxObject *)new_integer(size);
+    }
 }
 
 #define TRACE_MIN 0
@@ -1886,84 +1887,88 @@ RexxObject *resolve_stream(            /* resolve a stream name             */
 /* Function:  Convert a stream name into a stream object                      */
 /******************************************************************************/
 {
-  RexxObject    *stream;               /* associated stream                 */
-  RexxDirectory *streamTable;          /* current set of open streams       */
-  RexxObject    *streamClass;          /* current stream class              */
-  RexxString    *qualifiedName;        /* qualified file name               */
-  RexxDirectory *securityArgs;         /* security check arguments          */
+    RexxObject    *stream;               /* associated stream                 */
+    RexxDirectory *streamTable;          /* current set of open streams       */
+    RexxObject    *streamClass;          /* current stream class              */
+    RexxString    *qualifiedName;        /* qualified file name               */
 
-  if (added) *added = false;           /* when caller requires stream table entry then initialize */
-  streamTable = context->getStreams(); /* get the current stream set        */
-  if (fullName)                        /* fullName requested?               */
-    *fullName = name;                  /* initialize to name                */
-  /* if length of name is 0, then it's the same as omitted */
-  if (name == OREF_NULL || name->getLength() == 0) { /* no name?                 */
-    if (input) {                       /* input operation?                  */
-                                       /* get the default output stream     */
-      stream = ActivityManager::localEnvironment->at(OREF_INPUT);
+    if (added) *added = false;           /* when caller requires stream table entry then initialize */
+    streamTable = context->getStreams(); /* get the current stream set        */
+    if (fullName)                        /* fullName requested?               */
+    {
+        *fullName = name;                  /* initialize to name                */
     }
-    else {
-                                       /* get the default output stream     */
-      stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
-    }
-  }
-                                       /* standard input stream?            */
-  else if (name->strICompare(CHAR_STDIN) || name->strICompare(CHAR_CSTDIN))
-                                       /* get the default output stream     */
-    stream = ActivityManager::localEnvironment->at(OREF_INPUT);
-                                       /* standard output stream?           */
-  else if (name->strICompare(CHAR_STDOUT) || name->strICompare(CHAR_CSTDOUT))
-                                       /* get the default output stream     */
-    stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
-                                       /* standard error stream?            */
-  else if (name->strICompare(CHAR_STDERR) || name->strICompare(CHAR_CSTDERR))
-                                       /* get the default output stream     */
-    stream = ActivityManager::localEnvironment->at(OREF_ERRORNAME);
-  else {
-//  stream = streamTable->at(name);    /* first try supplied name           */
-//  if (stream != OREF_NULL)           /* get one?                          */
-//    return stream;                   /* get out of here                   */
-                                       /* go get the qualified name         */
-    qualifiedName = (RexxString *)SysQualifyFileSystemName(name);
-    if (fullName)                      /* fullName requested?               */
-      *fullName = qualifiedName;       /* provide qualified name            */
-    stack->push(qualifiedName);        /* Protect from GC.                  */
-    /* Note: stream name is pushed to the stack to be protected from GC;    */
-    /* e.g. it is used by the caller to remove stream from stream table.    */
-    /* The stack will be reset after the function was executed and the      */
-    /* protection is released                                               */
-                                       /* see if we've already opened this  */
-    stream = streamTable->at(qualifiedName);
-    if (stream == OREF_NULL) {         /* not open                          */
-                                       /* need to secure this?              */
-      if (context->hasSecurityManager()) {
-        securityArgs = new_directory();/* get the information directory     */
-                                       /* put the name in the directory     */
-        securityArgs->put(qualifiedName, OREF_NAME);
-        if (context->callSecurityManager(OREF_STREAM, securityArgs)) {
-          stream = securityArgs->fastAt(OREF_STREAM);
-          if (stream == OREF_NULL)     /* in an expression and need a result*/
-                                       /* need to raise an exception        */
-            reportException(Error_No_result_object_message, OREF_STREAM);
-                                       /* add to the streams table          */
-          streamTable->put(stream, qualifiedName);
-          return stream;               /* return the stream object          */
+    /* if length of name is 0, then it's the same as omitted */
+    if (name == OREF_NULL || name->getLength() == 0)   /* no name?                 */
+    {
+        if (input)                         /* input operation?                  */
+        {
+            /* get the default output stream     */
+            stream = ActivityManager::localEnvironment->at(OREF_INPUT);
         }
-      }
-                                       /* get the stream class              */
-      streamClass = TheEnvironment->at(OREF_STREAM);
-                                       /* create a new stream object        */
-      stream = streamClass->sendMessage(OREF_NEW, name);
-
-      if (added) {                     /* open the stream?   begin          */
-                                       /* add to the streams table          */
-        streamTable->put(stream, qualifiedName);
-        *added = true;                 /* mark it as added to stream table  */
-      }
+        else
+        {
+            /* get the default output stream     */
+            stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
+        }
     }
-  }
+    /* standard input stream?            */
+    else if (name->strICompare(CHAR_STDIN) || name->strICompare(CHAR_CSTDIN))
+    {
+        /* get the default output stream     */
+        stream = ActivityManager::localEnvironment->at(OREF_INPUT);
+    }
+    /* standard output stream?           */
+    else if (name->strICompare(CHAR_STDOUT) || name->strICompare(CHAR_CSTDOUT))
+    {
+        /* get the default output stream     */
+        stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
+    }
+    /* standard error stream?            */
+    else if (name->strICompare(CHAR_STDERR) || name->strICompare(CHAR_CSTDERR))
+    {
+        /* get the default output stream     */
+        stream = ActivityManager::localEnvironment->at(OREF_ERRORNAME);
+    }
+    else
+    {
+                                       /* go get the qualified name         */
+        qualifiedName = (RexxString *)SystemInterpreter::qualifyFileSystemName(name);
+        if (fullName)                      /* fullName requested?               */
+        {
+            *fullName = qualifiedName;       /* provide qualified name            */
+        }
+        stack->push(qualifiedName);        /* Protect from GC.                  */
+        /* Note: stream name is pushed to the stack to be protected from GC;    */
+        /* e.g. it is used by the caller to remove stream from stream table.    */
+        /* The stack will be reset after the function was executed and the      */
+        /* protection is released                                               */
+        /* see if we've already opened this  */
+        stream = streamTable->at(qualifiedName);
+        if (stream == OREF_NULL)           /* not open                          */
+        {
+            SecurityManager *manager = context->getEffectiveSecurityManager();
+            stream = manager->checkStreamAccess(qualifiedName);
+            if (stream != OREF_NULL)
+            {
+                streamTable->put(stream, qualifiedName);
+                return stream;               /* return the stream object          */
+            }
+            /* get the stream class              */
+            streamClass = TheEnvironment->at(OREF_STREAM);
+            /* create a new stream object        */
+            stream = streamClass->sendMessage(OREF_NEW, name);
 
-  return stream;                       /* return the stream object          */
+            if (added)                       /* open the stream?   begin          */
+            {
+                /* add to the streams table          */
+                streamTable->put(stream, qualifiedName);
+                *added = true;                 /* mark it as added to stream table  */
+            }
+        }
+    }
+
+    return stream;                       /* return the stream object          */
 }
 
 bool check_queue(                      /* check to see if stream is to queue*/
@@ -2515,6 +2520,107 @@ BUILTIN(COUNTSTR) {
   return new_integer(count);           /* return the new count              */
 }
 
+
+#define RXFUNCADD_MIN 2
+#define RXFUNCADD_MAX 3
+#define RXFUNCADD_name   1
+#define RXFUNCADD_module 2
+#define RXFUNCADD_proc   3
+
+BUILTIN(RXFUNCADD)
+{
+  fix_args(RXFUNCADD);                 /* check on required number of args  */
+
+  // we require a name and module, but the
+  // procedure is optional.  If not specified, we
+  // use the function name directly.
+  RexxString *name = required_string(RXFUNCADD, name);
+  RexxString *module = required_string(RXFUNCADD, module);
+  RexxString *proc = optional_string(RXFUNCADD, proc);
+
+  if (proc == OREF_NULL)
+  {
+      proc = name;
+  }
+
+  // hand this off to the package manager.
+  return PackageManager::addRegisteredRoutine(name, module, proc);
+}
+
+#define RXFUNCDROP_MIN 1
+#define RXFUNCDROP_MAX 1
+#define RXFUNCDROP_name   1
+
+BUILTIN(RXFUNCDROP)
+{
+  fix_args(RXFUNCDROP);                 /* check on required number of args  */
+
+  // only a name is required.
+  RexxString *name = required_string(RXFUNCDROP, name);
+
+  // hand this off to the package manager.
+  return PackageManager::dropRegisteredRoutine(name);
+}
+
+#define RXFUNCQUERY_MIN 1
+#define RXFUNCQUERY_MAX 1
+#define RXFUNCQUERY_name   1
+
+BUILTIN(RXFUNCQUERY)
+{
+  fix_args(RXFUNCQUERY);                 /* check on required number of args  */
+
+  // only a name is required.
+  RexxString *name = required_string(RXFUNCQUERY, name);
+
+  // hand this off to the package manager.
+  return PackageManager::dropRegisteredRoutine(name);
+}
+
+
+#define QUEUEEXIT_MIN 1
+#define QUEUEEXIT_MAX 1
+#define QUEUEEXIT_name   1
+
+
+// This somewhat funny function is implemented as a builtin because it
+// requires quite a bit of internal access.
+BUILTIN(QUEUEEXIT)
+{
+  fix_args(QUEUEEXIT);                   /* check on required number of args  */
+
+  // only a name is required.
+  RexxString *name = required_string(QUEUEEXIT, name);
+                                       /* call the exit                     */
+  context->getActivity()->callQueueNameExit(context, name);
+  // make sure we have real object to return
+  if (name == OREF_NULL)
+  {
+      name = OREF_NULLSTRING;
+  }
+  return name;
+}
+
+#define SETLOCAL_MIN 0
+#define SETLOCAL_MAX 0
+
+BUILTIN(SETLOCAL)
+{
+  check_args(SETLOCAL);              /* check on required number of args  */
+  // the external environment implements this
+  return SystemInterpreter::pushEnvironment(context);
+}
+
+#define ENDLOCAL_MIN 0
+#define ENDLOCAL_MAX 0
+
+BUILTIN(ENDLOCAL)
+{
+  check_args(ENDLOCAL);              /* check on required number of args  */
+  // the external environment implements this
+  return SystemInterpreter::popEnvironment(context);
+}
+
                                        /* the following builtin function    */
                                        /* table must maintain the same order*/
                                        /* as the builtin function codes used*/
@@ -2595,5 +2701,11 @@ pbuiltin builtin_table[] = {
   &builtin_function_USERID           ,
   &builtin_function_LOWER            ,
   &builtin_function_UPPER            ,
+  &builtin_function_RXFUNCADD        ,
+  &builtin_function_RXFUNCDROP       ,
+  &builtin_function_RXFUNCQUERY      ,
+  &builtin_function_ENDLOCAL         ,
+  &builtin_function_SETLOCAL         ,
+  &builtin_function_QUEUEEXIT        ,
 };
 

@@ -60,7 +60,7 @@
 # include <nl_types.h>
 #endif
 
-#include "rexx.h" 
+#include "rexx.h"
 #include "PlatformDefinitions.h"        /* added for cat name + defs          */
 #include "RexxMessageNumbers.h"
 

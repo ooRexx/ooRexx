@@ -62,55 +62,59 @@
 RexxString *RexxString::center(RexxInteger *_length,
                                RexxString  *pad)
 {
-  char     PadChar;                    /* pad character                     */
-  size_t   LeftPad;                    /* required left pads                */
-  size_t   RightPad;                   /* required right pads               */
-  size_t   Space;                      /* result string size                */
-  size_t   Width;                      /* centering width                   */
-  size_t   Len;                        /* string length                     */
-  RexxString *Retval;                  /* return string                     */
+    char     PadChar;                    /* pad character                     */
+    size_t   LeftPad;                    /* required left pads                */
+    size_t   RightPad;                   /* required right pads               */
+    size_t   Space;                      /* result string size                */
+    size_t   Width;                      /* centering width                   */
+    size_t   Len;                        /* string length                     */
+    RexxString *Retval;                  /* return string                     */
 
-                                       /* see how long result should be     */
-  Width = get_length(_length, ARG_ONE);
+                                         /* see how long result should be     */
+    Width = get_length(_length, ARG_ONE);
 
-                                       /* Get pad character (optional) blank*/
-                                       /*  is used if omitted.              */
-  PadChar = get_pad(pad, ' ', ARG_TWO);
-  Len = this->getLength();                  /* get length of input to center     */
-  if (Width == Len)                    /* if input length and               */
-                                       /* requested are  the same           */
-    Retval = this;                     /* then copy input                   */
-
-  else if (!Width)                     /* centered in zero?                 */
-    Retval = OREF_NULLSTRING;          /* return a null string              */
-  else {
-    if (Width > Len) {                 /* otherwise                         */
-                                       /* if requested larger               */
-      LeftPad = (Width - Len) / 2;     /* get left pad count                */
-      RightPad = (Width - Len)-LeftPad;/* and right pad count               */
-      Space = RightPad + LeftPad + Len;/* total space required              */
-                                       /* allocate space                    */
-      Retval = (RexxString *)raw_string(Space);
-                                       /* set left pad characters           */
-      memset(Retval->getWritableData(), PadChar, LeftPad);
-      if (Len)                         /* something to copy?                */
-                                       /* copy the string                   */
-        memcpy(Retval->getWritableData() + LeftPad,
-               this->getStringData(),
-               Len);
-                                       /* now the trailing pad chars        */
-      memset(Retval->getWritableData() + LeftPad + Len,
-             PadChar,
-             RightPad);
+    /* Get pad character (optional) blank*/
+    /*  is used if omitted.              */
+    PadChar = get_pad(pad, ' ', ARG_TWO);
+    Len = this->getLength();                  /* get length of input to center     */
+    if (Width == Len)                    /* if input length and               */
+    {
+        /* requested are  the same           */
+        Retval = this;                     /* then copy input                   */
     }
-    else {                             /* requested smaller than            */
-                                       /* input                             */
-      LeftPad = (Len - Width) / 2;     /* get left truncate count           */
-                                       /* copy the data                     */
-      Retval = (RexxString *)new_string(this->getStringData() + LeftPad, Width);
+    else if (!Width)                     /* centered in zero?                 */
+    {
+        Retval = OREF_NULLSTRING;          /* return a null string              */
     }
-  }
-  return Retval;                       /* done, return output buffer        */
+    else
+    {
+        if (Width > Len)
+        {                 /* otherwise                         */
+                          /* if requested larger               */
+            LeftPad = (Width - Len) / 2;     /* get left pad count                */
+            RightPad = (Width - Len)-LeftPad;/* and right pad count               */
+            Space = RightPad + LeftPad + Len;/* total space required              */
+                                             /* allocate space                    */
+            Retval = (RexxString *)raw_string(Space);
+            /* set left pad characters           */
+            memset(Retval->getWritableData(), PadChar, LeftPad);
+            if (Len)                         /* something to copy?                */
+            {
+                /* copy the string                   */
+                memcpy(Retval->getWritableData() + LeftPad, this->getStringData(), Len);
+            }
+            /* now the trailing pad chars        */
+            memset(Retval->getWritableData() + LeftPad + Len, PadChar, RightPad);
+        }
+        else
+        {                             /* requested smaller than            */
+                                      /* input                             */
+            LeftPad = (Len - Width) / 2;     /* get left truncate count           */
+                                             /* copy the data                     */
+            Retval = (RexxString *)new_string(this->getStringData() + LeftPad, Width);
+        }
+    }
+    return Retval;                       /* done, return output buffer        */
 }
 
 /* the DELSTR function */
@@ -122,45 +126,53 @@ RexxString *RexxString::center(RexxInteger *_length,
 RexxString *RexxString::delstr(RexxInteger *position,
                                RexxInteger *_length)
 {
-  RexxString *Retval;                  /* return value:                     */
-  size_t   BackLen;                    /* end string section                */
-  size_t   StringLen;                  /* original string length            */
-  size_t   DeleteLen;                  /* deleted length                    */
-  size_t   DeletePos;                  /* delete position                   */
-  char    *Current;                    /* current copy position             */
+    RexxString *Retval;                  /* return value:                     */
+    size_t   BackLen;                    /* end string section                */
+    size_t   StringLen;                  /* original string length            */
+    size_t   DeleteLen;                  /* deleted length                    */
+    size_t   DeletePos;                  /* delete position                   */
+    char    *Current;                    /* current copy position             */
 
-  StringLen = this->getLength();            /* get string length                 */
-                                       /* get start string position         */
-  DeletePos = get_position(position, ARG_ONE);
-                                       /* get the length to delete          */
-  DeleteLen = optional_length(_length, StringLen - DeletePos + 1, ARG_TWO);
+    StringLen = this->getLength();            /* get string length                 */
+    /* get start string position         */
+    DeletePos = get_position(position, ARG_ONE);
+    /* get the length to delete          */
+    DeleteLen = optional_length(_length, StringLen - DeletePos + 1, ARG_TWO);
 
-  if (DeletePos > StringLen)           /* beyond string bounds?             */
-    Retval = this;                     /* return string unchanged           */
-
-  else {                               /* need to actually delete           */
-    DeletePos--;                       /* make position origin zero         */
-                                       /* deleting more than string?        */
-    if (DeleteLen >= (StringLen - DeletePos))
-      BackLen = 0;                     /* no back part                      */
-    else                               /* find length to delete             */
-      BackLen = StringLen - (DeletePos + DeleteLen);
-                                       /* allocate result string            */
-    Retval = (RexxString *)raw_string(DeletePos + BackLen);
-                                       /* point to string part              */
-    Current = Retval->getWritableData();
-    if (DeletePos) {                   /* have a front part?                */
-                                       /* copy it                           */
-      memcpy(Current, this->getStringData(), DeletePos);
-      Current += DeletePos;            /* step past the front               */
+    if (DeletePos > StringLen)           /* beyond string bounds?             */
+    {
+        Retval = this;                     /* return string unchanged           */
     }
+    else
+    {                               /* need to actually delete           */
+        DeletePos--;                       /* make position origin zero         */
+                                           /* deleting more than string?        */
+        if (DeleteLen >= (StringLen - DeletePos))
+        {
+            BackLen = 0;                     /* no back part                      */
+        }
+        else                               /* find length to delete             */
+        {
+            BackLen = StringLen - (DeletePos + DeleteLen);
+        }
+        /* allocate result string            */
+        Retval = (RexxString *)raw_string(DeletePos + BackLen);
+        /* point to string part              */
+        Current = Retval->getWritableData();
+        if (DeletePos)
+        {                   /* have a front part?                */
+                            /* copy it                           */
+            memcpy(Current, this->getStringData(), DeletePos);
+            Current += DeletePos;            /* step past the front               */
+        }
 
-    if (BackLen) {                     /* have a trailing part              */
-                                       /* copy that over                    */
-      memcpy(Current, this->getStringData() + DeletePos + DeleteLen, BackLen);
+        if (BackLen)
+        {                     /* have a trailing part              */
+                              /* copy that over                    */
+            memcpy(Current, this->getStringData() + DeletePos + DeleteLen, BackLen);
+        }
     }
-  }
-  return Retval;                       /* return the new string             */
+    return Retval;                       /* return the new string             */
 }
 
 /* the INSERT function */
@@ -176,88 +188,96 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
                                RexxInteger *_length,
                                RexxString  *pad)
 {
-  RexxString *Retval;                  /* return string                     */
-  RexxString *newStr;                  /* return string                     */
-  char     PadChar;                    /* HugeString for Padding char       */
-  size_t   ReqLenChar;                 /* Actual req char len of new.       */
-  size_t   ReqPadChar;                 /* Actual req char len of new.       */
-  size_t   ReqLeadPad;                 /* Actual req char len of new.       */
-  size_t   TargetSize;                 /* byte size of target string        */
-  size_t   NCharLen;                   /* Char len of new HugeString.       */
-  size_t   TCharLen;                   /* Char len of target HugeStr.       */
-  size_t   FCharLen;                   /* Char len of front portion.        */
-  size_t   BCharLen;                   /* Char len of back portion.         */
-  size_t   BuffSiz;                    /* Estimated result area size.       */
-  size_t   NChar;                      /* Character position.               */
-  char *   Current;                    /* current copy location             */
+    RexxString *Retval;                  /* return string                     */
+    RexxString *newStr;                  /* return string                     */
+    char     PadChar;                    /* HugeString for Padding char       */
+    size_t   ReqLenChar;                 /* Actual req char len of new.       */
+    size_t   ReqPadChar;                 /* Actual req char len of new.       */
+    size_t   ReqLeadPad;                 /* Actual req char len of new.       */
+    size_t   TargetSize;                 /* byte size of target string        */
+    size_t   NCharLen;                   /* Char len of new HugeString.       */
+    size_t   TCharLen;                   /* Char len of target HugeStr.       */
+    size_t   FCharLen;                   /* Char len of front portion.        */
+    size_t   BCharLen;                   /* Char len of back portion.         */
+    size_t   BuffSiz;                    /* Estimated result area size.       */
+    size_t   NChar;                      /* Character position.               */
+    char *   Current;                    /* current copy location             */
 
-  TCharLen = this->getLength();             /* get the target string length      */
-                                       /* get the needle string (and length)*/
-  newStr = (RexxString *)get_string(newStrObj, ARG_ONE);
-  NCharLen = newStr->getLength();
-                                       /* use optional_length for starting  */
-                                       /* position becase a value of 0 IS   */
-                                       /* valid for INSERT                  */
-  NChar = optional_length(position, 0, ARG_TWO);
-                                       /* get the optional length, using the*/
-                                       /* needle length as the defaul       */
-  ReqLenChar = optional_length(_length, NCharLen, ARG_THREE);
+    TCharLen = this->getLength();             /* get the target string length      */
+    /* get the needle string (and length)*/
+    newStr = (RexxString *)get_string(newStrObj, ARG_ONE);
+    NCharLen = newStr->getLength();
+    /* use optional_length for starting  */
+    /* position becase a value of 0 IS   */
+    /* valid for INSERT                  */
+    NChar = optional_length(position, 0, ARG_TWO);
+    /* get the optional length, using the*/
+    /* needle length as the defaul       */
+    ReqLenChar = optional_length(_length, NCharLen, ARG_THREE);
 
-                                       /*  is used if omitted.              */
-  PadChar = get_pad(pad, ' ', ARG_FOUR);
-  ReqLeadPad = 0;                      /* set lead pad to zero              */
-  TargetSize = TCharLen;               /* copy the target size              */
+    /*  is used if omitted.              */
+    PadChar = get_pad(pad, ' ', ARG_FOUR);
+    ReqLeadPad = 0;                      /* set lead pad to zero              */
+    TargetSize = TCharLen;               /* copy the target size              */
 
-  if (NChar == 0) {                    /* inserting at the front?           */
-    ReqLeadPad = 0;                    /* no leading pads                   */
-    FCharLen = 0;                      /* no front part                     */
-    BCharLen = TCharLen;               /* trailer is entire target          */
-  }
-  else if (NChar >= TCharLen) {        /* need leading pads?                */
-    ReqLeadPad = (NChar - TCharLen);   /* calculate needed                  */
-    FCharLen = TCharLen;               /* front part is all                 */
-    BCharLen = 0;                      /* trailer is nothing                */
-  }
-  else {                               /* have a split                      */
-    ReqLeadPad = 0;                    /* no leading pad                    */
-    FCharLen = NChar;                  /* NChar front chars                 */
-    BCharLen = TCharLen - NChar;       /* and some trailer too              */
-  }
-  NCharLen = Numerics::minVal(NCharLen, ReqLenChar);/* truncate new, if needed           */
-  ReqPadChar = ReqLenChar - NCharLen;  /* calculate pad chars               */
-                                       /* calculate result size             */
-  BuffSiz = NCharLen + TargetSize + ReqPadChar + ReqLeadPad;
-  Retval = raw_string(BuffSiz);        /* allocate the result               */
-  Current = Retval->getWritableData(); /* point to start                    */
+    if (NChar == 0)
+    {                    /* inserting at the front?           */
+        ReqLeadPad = 0;                    /* no leading pads                   */
+        FCharLen = 0;                      /* no front part                     */
+        BCharLen = TCharLen;               /* trailer is entire target          */
+    }
+    else if (NChar >= TCharLen)
+    {        /* need leading pads?                */
+        ReqLeadPad = (NChar - TCharLen);   /* calculate needed                  */
+        FCharLen = TCharLen;               /* front part is all                 */
+        BCharLen = 0;                      /* trailer is nothing                */
+    }
+    else
+    {                               /* have a split                      */
+        ReqLeadPad = 0;                    /* no leading pad                    */
+        FCharLen = NChar;                  /* NChar front chars                 */
+        BCharLen = TCharLen - NChar;       /* and some trailer too              */
+    }
+    NCharLen = Numerics::minVal(NCharLen, ReqLenChar);/* truncate new, if needed           */
+    ReqPadChar = ReqLenChar - NCharLen;  /* calculate pad chars               */
+                                         /* calculate result size             */
+    BuffSiz = NCharLen + TargetSize + ReqPadChar + ReqLeadPad;
+    Retval = raw_string(BuffSiz);        /* allocate the result               */
+    Current = Retval->getWritableData(); /* point to start                    */
 
-  if (FCharLen) {                      /* have leading chars                */
-                                       /* copy the leading part             */
-    memcpy(Current, this->getStringData(), FCharLen);
-    Current += FCharLen;               /* step copy location                */
-  }
-  if (ReqLeadPad) {                    /* if required leading pads          */
-                                       /* add the pads now                  */
-    memset(Current, PadChar, ReqLeadPad);
-    Current += ReqLeadPad;             /* step the output pointer           */
-  }
+    if (FCharLen)
+    {                      /* have leading chars                */
+                           /* copy the leading part             */
+        memcpy(Current, this->getStringData(), FCharLen);
+        Current += FCharLen;               /* step copy location                */
+    }
+    if (ReqLeadPad)
+    {                    /* if required leading pads          */
+                         /* add the pads now                  */
+        memset(Current, PadChar, ReqLeadPad);
+        Current += ReqLeadPad;             /* step the output pointer           */
+    }
 
-  if (NCharLen) {                      /* new string to copy?               */
-                                       /* copy the inserted part            */
-    memcpy(Current, newStr->getStringData(), NCharLen);
-    Current += NCharLen;               /* step copy location                */
-  }
+    if (NCharLen)
+    {                      /* new string to copy?               */
+                           /* copy the inserted part            */
+        memcpy(Current, newStr->getStringData(), NCharLen);
+        Current += NCharLen;               /* step copy location                */
+    }
 
-  if (ReqPadChar) {                    /* if required trailing pads         */
-                                       /* add the pads now                  */
-    memset(Current, PadChar, ReqPadChar);
-    Current += ReqPadChar;             /* step the output pointer           */
-  }
+    if (ReqPadChar)
+    {                    /* if required trailing pads         */
+                         /* add the pads now                  */
+        memset(Current, PadChar, ReqPadChar);
+        Current += ReqPadChar;             /* step the output pointer           */
+    }
 
-  if (BCharLen) {                      /* have trailing chars               */
-                                       /* copy the leading part             */
-    memcpy(Current, this->getStringData() + FCharLen, BCharLen);
-  }
-  return Retval;                       /* Return the new string             */
+    if (BCharLen)
+    {                      /* have trailing chars               */
+                           /* copy the leading part             */
+        memcpy(Current, this->getStringData() + FCharLen, BCharLen);
+    }
+    return Retval;                       /* Return the new string             */
 }
 
 /* the LEFT function */
@@ -269,37 +289,43 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
 RexxString *RexxString::left(RexxInteger *_length,
                              RexxString  *pad)
 {
-  char      PadChar;                   /* pad character                     */
-  size_t    Size;                      /* requested size                    */
-  size_t    Length;                    /* string length                     */
-  RexxString *Retval;                  /* returned result                   */
-  char *    Current;                   /* current copy location             */
-  size_t    CopyLength;                /* length to copy                    */
+    char      PadChar;                   /* pad character                     */
+    size_t    Size;                      /* requested size                    */
+    size_t    Length;                    /* string length                     */
+    RexxString *Retval;                  /* returned result                   */
+    char *    Current;                   /* current copy location             */
+    size_t    CopyLength;                /* length to copy                    */
 
-                                       /* get the target length             */
-  Size = get_length(_length, ARG_ONE);
+                                         /* get the target length             */
+    Size = get_length(_length, ARG_ONE);
 
-                                       /*  is used if omitted.              */
-  PadChar = get_pad(pad, ' ', ARG_TWO);
-  Length = this->getLength();               /* get input length                  */
+    /*  is used if omitted.              */
+    PadChar = get_pad(pad, ' ', ARG_TWO);
+    Length = this->getLength();               /* get input length                  */
 
-  if (!Size)                           /* requesting zero bytes?            */
-    Retval = OREF_NULLSTRING;          /* return a null string              */
-  else {
-    Retval = raw_string(Size);         /* allocate a result string          */
-    CopyLength = Numerics::minVal(Length, Size);    /* adjust the length                 */
-                                       /* point to data part                */
-    Current = Retval->getWritableData();
-    if (CopyLength) {                  /* have real data?                   */
-                                       /* copy it                           */
-      memcpy(Current, this->getStringData(), CopyLength);
-      Current += CopyLength;           /* bump the pointer                  */
+    if (!Size)                           /* requesting zero bytes?            */
+    {
+        Retval = OREF_NULLSTRING;          /* return a null string              */
     }
-    if (Size > Length)                 /* need to pad?                      */
-                                       /* pad the string                    */
-      memset(Current, PadChar, Size - Length);
-  }
-  return Retval;                       /* return string piece               */
+    else
+    {
+        Retval = raw_string(Size);         /* allocate a result string          */
+        CopyLength = Numerics::minVal(Length, Size);    /* adjust the length                 */
+        /* point to data part                */
+        Current = Retval->getWritableData();
+        if (CopyLength)
+        {                  /* have real data?                   */
+                           /* copy it                           */
+            memcpy(Current, this->getStringData(), CopyLength);
+            Current += CopyLength;           /* bump the pointer                  */
+        }
+        if (Size > Length)                 /* need to pad?                      */
+        {
+            /* pad the string                    */
+            memset(Current, PadChar, Size - Length);
+        }
+    }
+    return Retval;                       /* return string piece               */
 }
 
 /******************************************************************************/
@@ -311,85 +337,97 @@ RexxString *RexxString::overlay(
     RexxInteger *_length,               /* overlay length                    */
     RexxString  *pad)                  /* pad character to use.             */
 {
-  RexxString *Retval;                  /* return string                     */
-  RexxString *newStr;                  /* return string                     */
-  size_t   OverlayPos;                 /* overlay position                  */
-  size_t   OverlayLen;                 /* overlay length                    */
-  size_t   NewLen;                     /* length of overlay string          */
-  size_t   TargetLen;                  /* target length                     */
-  size_t   FrontLen;                   /* front length                      */
-  size_t   BackLen;                    /* back length                       */
-  size_t   FrontPad;                   /* front pad length                  */
-  size_t   BackPad;                    /* back pad length                   */
-  char     PadChar;                    /* pad character                     */
-  char    *Current;                    /* current copy location             */
+    RexxString *Retval;                  /* return string                     */
+    RexxString *newStr;                  /* return string                     */
+    size_t   OverlayPos;                 /* overlay position                  */
+    size_t   OverlayLen;                 /* overlay length                    */
+    size_t   NewLen;                     /* length of overlay string          */
+    size_t   TargetLen;                  /* target length                     */
+    size_t   FrontLen;                   /* front length                      */
+    size_t   BackLen;                    /* back length                       */
+    size_t   FrontPad;                   /* front pad length                  */
+    size_t   BackPad;                    /* back pad length                   */
+    char     PadChar;                    /* pad character                     */
+    char    *Current;                    /* current copy location             */
 
-  TargetLen = this->getLength();       /* get the haystack length           */
-                                       /* get the overlay string value      */
-  newStr = (RexxString *)get_string(newStrObj, ARG_ONE);
-  NewLen = newStr->getLength();
-                                       /* get the overlay position          */
-  OverlayPos = optional_position(position, 1, ARG_TWO);
-                                       /* get final overlay length          */
-  OverlayLen = optional_length(_length, NewLen, ARG_THREE);
-                                       /*  is used if omitted.              */
-  PadChar = get_pad(pad, ' ', ARG_FOUR);
+    TargetLen = this->getLength();       /* get the haystack length           */
+                                         /* get the overlay string value      */
+    newStr = (RexxString *)get_string(newStrObj, ARG_ONE);
+    NewLen = newStr->getLength();
+    /* get the overlay position          */
+    OverlayPos = optional_position(position, 1, ARG_TWO);
+    /* get final overlay length          */
+    OverlayLen = optional_length(_length, NewLen, ARG_THREE);
+    /*  is used if omitted.              */
+    PadChar = get_pad(pad, ' ', ARG_FOUR);
 
-  if (OverlayLen > NewLen)             /* need to pad?                      */
-    BackPad = OverlayLen - NewLen;     /* get the pad size                  */
-  else {                               /* need to truncate                  */
-    NewLen = OverlayLen;               /* used specified length             */
-    BackPad = 0;                       /* no back padding                   */
-  }
+    if (OverlayLen > NewLen)             /* need to pad?                      */
+        BackPad = OverlayLen - NewLen;     /* get the pad size                  */
+    else
+    {                               /* need to truncate                  */
+        NewLen = OverlayLen;               /* used specified length             */
+        BackPad = 0;                       /* no back padding                   */
+    }
 
-  if (OverlayPos > TargetLen) {        /* overlaying past the end?          */
-                                       /* get front padding                 */
-    FrontPad = OverlayPos - TargetLen - 1;
-    FrontLen = TargetLen;              /* copy entire string                */
-  }
-  else {                               /* overlay is within bounds          */
-    FrontPad = 0;                      /* no padding here                   */
-    FrontLen = OverlayPos - 1;         /* just copy the front part          */
-  }
-                                       /* fall off the back side?           */
-  if (OverlayPos + OverlayLen > TargetLen)
-    BackLen = 0;                       /* no back part                      */
-  else
-                                       /* calculate the back part           */
-    BackLen = TargetLen - (OverlayPos + OverlayLen - 1);
-                                       /* allocate result string            */
-  Retval = raw_string(FrontLen + BackLen + FrontPad + OverlayLen);
+    if (OverlayPos > TargetLen)
+    {        /* overlaying past the end?          */
+             /* get front padding                 */
+        FrontPad = OverlayPos - TargetLen - 1;
+        FrontLen = TargetLen;              /* copy entire string                */
+    }
+    else
+    {                               /* overlay is within bounds          */
+        FrontPad = 0;                      /* no padding here                   */
+        FrontLen = OverlayPos - 1;         /* just copy the front part          */
+    }
+    /* fall off the back side?           */
+    if (OverlayPos + OverlayLen > TargetLen)
+    {
+        BackLen = 0;                       /* no back part                      */
+    }
+    else
+    {
+        /* calculate the back part           */
+        BackLen = TargetLen - (OverlayPos + OverlayLen - 1);
+    }
+    /* allocate result string            */
+    Retval = raw_string(FrontLen + BackLen + FrontPad + OverlayLen);
 
-  Current = Retval->getWritableData(); /* get copy location                 */
+    Current = Retval->getWritableData(); /* get copy location                 */
 
-  if (FrontLen) {                      /* something in front?               */
-                                       /* copy the front part               */
-    memcpy(Current, this->getStringData(), FrontLen);
-    Current += FrontLen;               /* step the pointer                  */
-  }
+    if (FrontLen)
+    {                      /* something in front?               */
+                           /* copy the front part               */
+        memcpy(Current, this->getStringData(), FrontLen);
+        Current += FrontLen;               /* step the pointer                  */
+    }
 
-  if (FrontPad) {                      /* padded in front?                  */
-    memset(Current, PadChar, FrontPad);/* set the pad characters            */
-    Current += FrontPad;               /* step the pointer                  */
-  }
+    if (FrontPad)
+    {                      /* padded in front?                  */
+        memset(Current, PadChar, FrontPad);/* set the pad characters            */
+        Current += FrontPad;               /* step the pointer                  */
+    }
 
-  if (NewLen) {                        /* non-null new string?              */
-                                       /* copy the string                   */
-    memcpy(Current, newStr->getStringData(), NewLen);
-    Current += NewLen;                 /* step the pointer                  */
-  }
+    if (NewLen)
+    {                        /* non-null new string?              */
+                             /* copy the string                   */
+        memcpy(Current, newStr->getStringData(), NewLen);
+        Current += NewLen;                 /* step the pointer                  */
+    }
 
-  if (BackPad) {                       /* padded in back?                   */
-                                       /* set the pad characters            */
-    memset(Current, PadChar, BackPad);
-    Current += BackPad;                /* step the pointer                  */
-  }
+    if (BackPad)
+    {                       /* padded in back?                   */
+                            /* set the pad characters            */
+        memset(Current, PadChar, BackPad);
+        Current += BackPad;                /* step the pointer                  */
+    }
 
-  if (BackLen) {                       /* trailing part?                    */
-                                       /* copy the string                   */
-    memcpy(Current, this->getStringData() + OverlayPos + OverlayLen - 1, BackLen);
-  }
-  return Retval;                       /* return new string                 */
+    if (BackLen)
+    {                       /* trailing part?                    */
+                            /* copy the string                   */
+        memcpy(Current, this->getStringData() + OverlayPos + OverlayLen - 1, BackLen);
+    }
+    return Retval;                       /* return new string                 */
 }
 
 /* the REVERSE function */
@@ -400,26 +438,31 @@ RexxString *RexxString::overlay(
 /******************************************************************************/
 RexxString *RexxString::reverse()
 {
-  RexxString *Retval;                  /* temp pointer for reversal       */
-  size_t     Length;                   /* string length                   */
-  char      *String;                   /* current location                */
-  const char *End;                      /* string end position             */
+    RexxString *Retval;                  /* temp pointer for reversal       */
+    size_t     Length;                   /* string length                   */
+    char      *String;                   /* current location                */
+    const char *End;                      /* string end position             */
 
-  Length = this->getLength();               /* get first argument              */
-  if (Length) {                        /* if really data                  */
-    Retval = raw_string(Length);       /* get result storage              */
-                                       /* get new string pointer          */
-    String = Retval->getWritableData();
-                                       /* point to end of original        */
-    End = this->getStringData() + Length - 1;
+    Length = this->getLength();               /* get first argument              */
+    if (Length)
+    {                        /* if really data                  */
+        Retval = raw_string(Length);       /* get result storage              */
+                                           /* get new string pointer          */
+        String = Retval->getWritableData();
+        /* point to end of original        */
+        End = this->getStringData() + Length - 1;
 
-    while (Length--)                   /* reverse entire string           */
-      *String++ = *End--;              /* copy a single char              */
-                                       /* done building the string          */
-  }
-  else                                 /* if null input                     */
-    Retval = OREF_NULLSTRING;          /* return null output                */
-  return Retval;                       /* return the reversed string        */
+        while (Length--)                   /* reverse entire string           */
+        {
+            *String++ = *End--;              /* copy a single char              */
+        }
+                                             /* done building the string          */
+    }
+    else                                 /* if null input                     */
+    {
+        Retval = OREF_NULLSTRING;          /* return null output                */
+    }
+    return Retval;                       /* return the reversed string        */
 }
 
 /* the RIGHT function */
@@ -432,38 +475,44 @@ RexxString *RexxString::reverse()
 RexxString *RexxString::right(RexxInteger *_length,
                               RexxString  *pad)
 {
-  char      PadChar;                   /* pad character                     */
-  size_t    Size;                      /* requested size                    */
-  size_t    Length;                    /* string length                     */
-  RexxString *Retval;                  /* returned result                   */
-  char *    Current;                   /* current copy location             */
-  size_t    CopyLength;                /* length to copy                    */
+    char      PadChar;                   /* pad character                     */
+    size_t    Size;                      /* requested size                    */
+    size_t    Length;                    /* string length                     */
+    RexxString *Retval;                  /* returned result                   */
+    char *    Current;                   /* current copy location             */
+    size_t    CopyLength;                /* length to copy                    */
 
-                                       /* get the target length             */
-  Size = get_length(_length, ARG_ONE);
+                                         /* get the target length             */
+    Size = get_length(_length, ARG_ONE);
 
-                                       /*  is used if omitted.              */
-  PadChar = get_pad(pad, ' ', ARG_TWO);
-  Length = this->getLength();               /* get input length                  */
+    /*  is used if omitted.              */
+    PadChar = get_pad(pad, ' ', ARG_TWO);
+    Length = this->getLength();               /* get input length                  */
 
-  if (!Size)                           /* requesting zero bytes?            */
-                                       /* return a null string              */
-    Retval = OREF_NULLSTRING;
-  else {
-    Retval = raw_string(Size);         /* allocate a result string          */
-    CopyLength = Numerics::minVal(Length, Size);    /* adjust the length                 */
-                                       /* point to data part                */
-    Current = Retval->getWritableData();
-    if (Size > Length) {               /* need to pad?                      */
-                                       /* pad the string                    */
-      memset(Current, PadChar, Size - Length);
-      Current += Size - Length;        /* bump the pointer                  */
+    if (!Size)                           /* requesting zero bytes?            */
+    {
+        /* return a null string              */
+        Retval = OREF_NULLSTRING;
     }
-    if (CopyLength)                    /* have real data?                   */
-                                       /* copy it                           */
-      memcpy(Current, this->getStringData() + Length - CopyLength, CopyLength);
-  }
-  return Retval;                       /* return string piece               */
+    else
+    {
+        Retval = raw_string(Size);         /* allocate a result string          */
+        CopyLength = Numerics::minVal(Length, Size);    /* adjust the length                 */
+        /* point to data part                */
+        Current = Retval->getWritableData();
+        if (Size > Length)
+        {               /* need to pad?                      */
+                        /* pad the string                    */
+            memset(Current, PadChar, Size - Length);
+            Current += Size - Length;        /* bump the pointer                  */
+        }
+        if (CopyLength)                    /* have real data?                   */
+        {
+            /* copy it                           */
+            memcpy(Current, this->getStringData() + Length - CopyLength, CopyLength);
+        }
+    }
+    return Retval;                       /* return string piece               */
 }
 
 /* the STRIP function */
@@ -488,7 +537,9 @@ RexxString *RexxString::strip(RexxString *option,
     if (Option != STRIP_TRAILING &&      /* must be a valid option            */
         Option != STRIP_LEADING &&
         Option != STRIP_BOTH )
+    {
         reportException(Error_Incorrect_method_option, "BLT", option);
+    }
     // get the strip character.  This is a phony default, as the
     // real default strips the entire set of recognized whitespace characters.
     RemoveChar = get_pad(stripchar, ' ', ARG_TWO);
@@ -521,7 +572,9 @@ RexxString *RexxString::strip(RexxString *option,
             while (Length > 0)
             {                   /* while more string                 */
                 if (*Front != RemoveChar)        /* done stripping?                   */
+                {
                     break;                         /* quit                              */
+                }
                 Front++;                         /* step the pointer                  */
                 Length--;                        /* reduce the length                 */
             }
@@ -550,7 +603,9 @@ RexxString *RexxString::strip(RexxString *option,
             while (Length > 0)
             {                   /* while more string                 */
                 if (*Back != RemoveChar)         /* done stripping?                   */
+                {
                     break;                         /* quit                              */
+                }
                 Back--;                          /* step the pointer back             */
                 Length--;                        /* reduce the length                 */
             }
@@ -558,9 +613,13 @@ RexxString *RexxString::strip(RexxString *option,
     }
 
     if (Length > 0)                      /* have anything left?               */
+    {
         Retval = new_string(Front, Length);/* extract remaining piece           */
+    }
     else
+    {
         Retval = OREF_NULLSTRING;          /* nothing left, us a null           */
+    }
     return Retval;                       /* return stripped string            */
 }
 

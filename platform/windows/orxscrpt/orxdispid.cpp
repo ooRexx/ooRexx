@@ -50,125 +50,133 @@ OrxDispID::~OrxDispID(){
 *     AddDispID
 *
 ******************************************************************************/
-STDMETHODIMP OrxDispID::AddDispID(OLECHAR *pName, DWORD Flags, DID::DType Type, void *RexxCode, DISPID *pbDispID) {          /* Method */
-  size_t    Len;
-  PDID      Next;
-  ListItem *Item;
-  OLECHAR  *lName;
-  HRESULT   RetCode;
-  char      Name[MAX_PATH];
-  int       lCount;
+STDMETHODIMP OrxDispID::AddDispID(OLECHAR *pName, DWORD Flags, DID::DType Type, void *RexxCode, DISPID *pbDispID)
+{
+    size_t    Len;
+    PDID      Next;
+    ListItem *Item;
+    OLECHAR  *lName;
+    HRESULT   RetCode;
+    char      Name[MAX_PATH];
+    int       lCount;
 
 
-  InterlockedIncrement((long *)&Count);
-  lCount = Count;
+    InterlockedIncrement((long *)&Count);
+    lCount = Count;
 
-  //  Save the DispIDName to print when this DispID is Invoke(Ex)d.
-  //  Leave it in wide characters for IDispatchEx and other functions.
-  Len = wcslen(pName);
-  Next = (PDID)GlobalAlloc(GMEM_FIXED,(sizeof(wchar_t)*(Len+2))+sizeof(DID));
-  sprintf(Name,"%d",lCount);
-  Item = Chain.AddItem(Name,LinkedList::End,(void *)Next);
-  if(Next && Item) {
-    lName = (OLECHAR *)((char *)Next+sizeof(DID));
-    wcscpy(lName,pName);
-    Next->Name   = lName;
-    Next->Flags  = Flags;
-    Next->Type   = Type;
-    Next->RexxCode = RexxCode;  // warning, might be NULL because not all functions (e.g. AS) are implemented yet
-    *pbDispID = (DISPID)lCount;
-    RetCode = S_OK;
+    //  Save the DispIDName to print when this DispID is Invoke(Ex)d.
+    //  Leave it in wide characters for IDispatchEx and other functions.
+    Len = wcslen(pName);
+    Next = (PDID)GlobalAlloc(GMEM_FIXED,(sizeof(wchar_t)*(Len+2))+sizeof(DID));
+    sprintf(Name,"%d",lCount);
+    Item = Chain.AddItem(Name,LinkedList::End,(void *)Next);
+    if (Next && Item)
+    {
+        lName = (OLECHAR *)((char *)Next+sizeof(DID));
+        wcscpy(lName,pName);
+        Next->Name   = lName;
+        Next->Flags  = Flags;
+        Next->Type   = Type;
+        Next->RexxCode = RexxCode;  // warning, might be NULL because not all functions (e.g. AS) are implemented yet
+        *pbDispID = (DISPID)lCount;
+        RetCode = S_OK;
     }
-  else {
-    if(Next) GlobalFree((HGLOBAL)Next);
-    if(Item) Chain.DropItem(Item);
-    RetCode = E_OUTOFMEMORY;
-    *pbDispID = (DISPID)0;
+    else
+    {
+        if (Next)
+        {
+            GlobalFree((HGLOBAL)Next);
+        }
+        if (Item)
+        {
+            Chain.DropItem(Item);
+        }
+        RetCode = E_OUTOFMEMORY;
+        *pbDispID = (DISPID)0;
     }
 
-#if defined(DEBUGZ)
-FPRINTF2(CurrentObj_logfile,"AddDispID() Leaving with a HRESULT of %08x\n",RetCode);
-#endif
-  return RetCode;
-  }
+    FPRINTF2(CurrentObj_logfile,"AddDispID() Leaving with a HRESULT of %08x\n",RetCode);
+    return RetCode;
+}
 
 /******************************************************************************
 *
 *     FindDispID
 *
 ******************************************************************************/
-STDMETHODIMP OrxDispID::FindDispID(OLECHAR *pName, DISPID *pbDispID) {          /* Method */
-  ListItem *CurrItem;
-  PDID      CurrDID;
-  int       DispID;
+STDMETHODIMP OrxDispID::FindDispID(OLECHAR *pName, DISPID *pbDispID)
+{
+    ListItem *CurrItem;
+    PDID      CurrDID;
+    int       DispID;
 
 
-  *pbDispID = (DISPID)0;
-  CurrItem = Chain.FindItem(0);
-  while(CurrItem){
-    CurrDID = (PDID)CurrItem->GetContent();
-    if(CurrDID->Name != NULL) if(wcsicmp(pName,CurrDID->Name) == 0){
-      sscanf(CurrItem->GetName(),"%d",&DispID);
-      *pbDispID = (DISPID)DispID;
-#if defined(DEBUGZ)
-FPRINTF2(CurrentObj_logfile,"OrxDisp::FindDispID() Found %S, DispID %d\n",pName,DispID);
-#endif
-      return S_OK;
-      }
-    CurrItem = Chain.FindItem();
+    *pbDispID = (DISPID)0;
+    CurrItem = Chain.FindItem(0);
+    while (CurrItem)
+    {
+        CurrDID = (PDID)CurrItem->GetContent();
+        if (CurrDID->Name != NULL) if (wcsicmp(pName,CurrDID->Name) == 0)
+            {
+                sscanf(CurrItem->GetName(),"%d",&DispID);
+                *pbDispID = (DISPID)DispID;
+                FPRINTF2(CurrentObj_logfile,"OrxDisp::FindDispID() Found %S, DispID %d\n",pName,DispID);
+                return S_OK;
+            }
+        CurrItem = Chain.FindItem();
     }
-  return DISP_E_UNKNOWNNAME;
-  }
+    return DISP_E_UNKNOWNNAME;
+}
 
 /******************************************************************************
 *
 *     FindName
 *
 ******************************************************************************/
-STDMETHODIMP OrxDispID::FindName(OLECHAR **pbName, DISPID pDispID) {          /* Method */
-  HRESULT   RetCode;
-  PDID      Current;
-  char      Name[MAX_PATH];
+STDMETHODIMP OrxDispID::FindName(OLECHAR **pbName, DISPID pDispID)
+{
+    HRESULT   RetCode;
+    PDID      Current;
+    char      Name[MAX_PATH];
 
 
-  *pbName = NULL;
-  sprintf(Name,"%d",(int)pDispID);
-  Current = (PDID)Chain.FindContent(Name);
-  if(Current) {
-    *pbName = Current->Name;
-    RetCode = S_OK;
+    *pbName = NULL;
+    sprintf(Name,"%d",(int)pDispID);
+    Current = (PDID)Chain.FindContent(Name);
+    if (Current)
+    {
+        *pbName = Current->Name;
+        RetCode = S_OK;
     }
-  else RetCode = DISP_E_UNKNOWNNAME;
-#if defined(DEBUGZ)
-FPRINTF2(CurrentObj_logfile,"OrxDisp::FindName() Leaving with a HRESULT of %08x\n",RetCode);
-#endif
-  return RetCode;
-  }
+    else RetCode = DISP_E_UNKNOWNNAME;
+    FPRINTF2(CurrentObj_logfile,"OrxDisp::FindName() Leaving with a HRESULT of %08x\n",RetCode);
+    return RetCode;
+}
 
 /******************************************************************************
 *
 *     FindDID
 *
 ******************************************************************************/
-STDMETHODIMP OrxDispID::FindDID(DISPID pDispID, PDID *pbDispIDData) {          /* Method */
-  HRESULT   RetCode;
-  PDID      Current;
-  char      Name[MAX_PATH];
+STDMETHODIMP OrxDispID::FindDID(DISPID pDispID, PDID *pbDispIDData)
+{
+    HRESULT   RetCode;
+    PDID      Current;
+    char      Name[MAX_PATH];
 
 
-  *pbDispIDData = NULL;
-  sprintf(Name,"%d",(int)pDispID);
-  Current = (PDID)Chain.FindContent(Name);
-  if(Current) {
-    *pbDispIDData = Current;
-    RetCode = S_OK;
+    *pbDispIDData = NULL;
+    sprintf(Name,"%d",(int)pDispID);
+    Current = (PDID)Chain.FindContent(Name);
+    if (Current)
+    {
+        *pbDispIDData = Current;
+        RetCode = S_OK;
     }
-  else RetCode = DISP_E_UNKNOWNNAME;
-#if defined(DEBUGZ)
-FPRINTF2(CurrentObj_logfile,"OrxDisp::FindDID() Leaving with a HRESULT of %08x\n",RetCode);
-#endif
-  return RetCode;
-  }
+    else RetCode = DISP_E_UNKNOWNNAME;
+    FPRINTF2(CurrentObj_logfile,"OrxDisp::FindDID() Leaving with a HRESULT of %08x\n",RetCode);
+    return RetCode;
+}
 
 
 
@@ -178,29 +186,32 @@ FPRINTF2(CurrentObj_logfile,"OrxDisp::FindDID() Leaving with a HRESULT of %08x\n
 STDMETHODIMP OrxDispID::GetNextDispID(
   /* [in]  */ DWORD pFlags,               // Derived from fdexEnum... defines.
   /* [in]  */ DISPID pDispID,             // Previous DispID returned.
-  /* [out] */ DISPID __RPC_FAR *pbDispID){  // Next DispID or -1.
-  ListItem *Current;
-  char      Name[MAX_PATH];
+  /* [out] */ DISPID __RPC_FAR *pbDispID)   // Next DispID or -1.
+{
+    ListItem *Current;
+    char      Name[MAX_PATH];
 
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(CurrentObj_logfile,"OrxDispID::GetNextDispID\n");
-  FPRINTF2(CurrentObj_logfile,"DispID %ld   Flags %08x\n ",pDispID,pFlags);
-#endif
-  if(!pbDispID) return E_POINTER;
-  *pbDispID = -1;
-  sprintf(Name,"%d",(int)pDispID);
-  Current = (ListItem *)Chain.FindItem(Name);
-  if(Current) {
-    if(pDispID != -1) Current = (ListItem *)Chain.FindItem(); // Get the Next DispID.
-    // *pbDispID = Current->DispID;
-    sscanf(Current->GetName(),"%d",pbDispID);
+    FPRINTF(CurrentObj_logfile,"OrxDispID::GetNextDispID\n");
+    FPRINTF2(CurrentObj_logfile,"DispID %ld   Flags %08x\n ",pDispID,pFlags);
+    if (!pbDispID)
+    {
+        return E_POINTER;
+    }
+    *pbDispID = -1;
+    sprintf(Name,"%d",(int)pDispID);
+    Current = (ListItem *)Chain.FindItem(Name);
+    if (Current)
+    {
+        if (pDispID != -1)
+        {
+            Current = (ListItem *)Chain.FindItem(); // Get the Next DispID.
+        }
+        // *pbDispID = Current->DispID;
+        sscanf(Current->GetName(),"%d",pbDispID);
     }
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(CurrentObj_logfile,"OrxDispID::GetNextDispID - returning %d\n",*pbDispID);
-#endif
-
-  return S_OK;
-  }
+    FPRINTF2(CurrentObj_logfile,"OrxDispID::GetNextDispID - returning %d\n",*pbDispID);
+    return S_OK;
+}
 

@@ -90,6 +90,7 @@
    inline void          setStartPending()   { this->dataFlags |= flagStartPending;   };
    inline void          setMsgSent()        { this->dataFlags |= flagMsgSent;        };
 
+   static void createInstance();
    static RexxClass *classInstance;
 
  protected:

@@ -45,6 +45,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <sys/types.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "RexxActivity.hpp"
@@ -52,6 +54,7 @@
 #include "ArrayClass.hpp"
 #include "RexxNativeActivation.hpp"
 #include "ProtectedObject.hpp"
+#include "Utilities.hpp"
 
 void logic_error (const char *desc)
 /******************************************************************************/
@@ -163,3 +166,117 @@ const char *mempbrk(
   return NULL;                         /* return matched position           */
 }
 
+
+/**
+ * Portable implementation of an ascii-z caseless string compare.
+ *
+ * @param opt1   First string argument
+ * @param opt2   Second string argument.
+ *
+ * @return The compare result.  Returns 0, negative, or positive depending
+ *         one the ordering compare result.
+ */
+int Utilities::stricmp(const char *op1, const char *op2)
+{
+    while (tolower(*op1) == tolower(*op2))
+    {
+        if (*op1 == 0)
+        {
+            return 0;
+        }
+        op1++;
+        op2++;
+    }
+
+    return(tolower(*op1) - tolower(*op2));
+}
+
+/**
+ * Portable implementation of a caseless memory compare.
+ *
+ * @param opt1   First memory location to compare.
+ * @param opt2   Second memory location.
+ * @param len    Length to compare.
+ *
+ * @return The compare result.  Returns 0, negative, or positive depending
+ *         one the ordering compare result.
+ */
+int Utilities::memicmp(void *mem1, void *mem2, size_t len)
+{
+    char *op1 = (char *)mem1;
+    char *op2 = (char *)mem2;
+    while(len != 0)
+    {
+        if (tolower(*((char *)op1)) != tolower(*((char *)op2)))
+        {
+            return tolower(*((char *)op1)) - tolower(*((char *)op2));
+
+        }
+        op1++;
+        op2++;
+        len--;
+    }
+    return 0;
+
+}
+
+/**
+ * Portable implementation of an ascii-z string to uppercase (in place).
+ *
+ * @param str    String argument
+ *
+ * @return The address of the str unput argument.
+ */
+void Utilities::strupper(char *str)
+{
+    while (*str)
+    {
+        *str = toupper(*str);
+        str++;
+    }
+
+    return;
+}
+
+
+/**
+ * Portable implementation of an ascii-z string to uppercase (in place).
+ *
+ * @param str    String argument
+ *
+ * @return The address of the str unput argument.
+ */
+void Utilities::strlower(char *str)
+{
+    while (*str)
+    {
+        *str = tolower(*str);
+        str++;
+    }
+
+    return;
+}
+
+
+/**
+ * Bounded strchr() function.
+ *
+ * @param data   The data pointer.
+ * @param n      The maximum length to scan.
+ * @param ch     The character of interest.
+ *
+ * @return The pointer to the located character, or NULL if it isn't found.
+ */
+const char *Utilities::strnchr(const char *data, size_t n, char ch)
+{
+    const char *endPtr = data + n;
+    while (data < endPtr && *data != '\0')
+    {
+        if (*data == ch)
+        {
+            return data;
+        }
+        data++;
+    }
+    return NULL;
+}

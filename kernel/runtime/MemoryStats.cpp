@@ -36,9 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxMemorystats.c */
+/* REXX Kernel                                              Memorystats.cpp   */
 /*                                                                            */
-/* Support classes for managing memory profiling                              *//*ibm@29652*/
+/* Support classes for managing memory profiling                              */
 /*                                                                            */
 /******************************************************************************/
 #include "RexxCore.h"
@@ -69,18 +69,20 @@ void SegmentStats::recordObject(MemoryStats *memStats, char *obj)
     size_t bytes = ((RexxObject *)obj)->getObjectSize();
     totalBytes += bytes;
     /* Is this object alive?             */
-    if (((RexxObject *)obj)->isObjectLive(memoryObject.markWord)) {
-      /* update the type specific counters */
-      memStats->logObject((RexxObject *)obj);
-      /* update total live bytes           */
-      liveBytes += bytes;
-      /* and total number of live objs     */
-      liveObjects++;
+    if (((RexxObject *)obj)->isObjectLive(memoryObject.markWord))
+    {
+        /* update the type specific counters */
+        memStats->logObject((RexxObject *)obj);
+        /* update total live bytes           */
+        liveBytes += bytes;
+        /* and total number of live objs     */
+        liveObjects++;
     }
-    else {
-      /* its a dead object, update total dead objects */
-      deadObjects++;
-      deadBytes += bytes;
+    else
+    {
+        /* its a dead object, update total dead objects */
+        deadObjects++;
+        deadBytes += bytes;
     }
 }
 
@@ -90,15 +92,13 @@ void MemoryStats::printSavedImageStats()
 /* Function:  Print out accumulated image statistics                          */
 /******************************************************************************/
 {
-  int i;
+    printf("    ObjectTypeNum         Total Objects       TotalBytes\n");
+    printf("    =============         ==============      ==========\n");
 
-  printf("    ObjectTypeNum         Total Objects       TotalBytes\n");
-  printf("    =============         ==============      ==========\n");
-
-  for (i = 0; i <= T_Last_Class_Type; i++)
-  {
-      objectStats[i].printStats(i);
-  }
+    for (int i = 0; i <= T_Last_Class_Type; i++)
+    {
+        objectStats[i].printStats(i);
+    }
 }
 
 
@@ -107,21 +107,21 @@ void MemoryStats::printMemoryStats()
 /* Function:  Print out statistics for a memory snapshot                      */
 /******************************************************************************/
 {
-  printf("All Objects in Object Memory, by allocation type\n\n");
+    printf("All Objects in Object Memory, by allocation type\n\n");
 
-  printf("    ObjectTypeNum         Total Objects       TotalBytes\n");
-  printf("    =============         ==============      ==========\n");
-  int i;
+    printf("    ObjectTypeNum         Total Objects       TotalBytes\n");
+    printf("    =============         ==============      ==========\n");
+    int i;
 
-  for (i = 0; i <= T_Last_Class_Type; i++)
-  {
-      objectStats[i].printStats(i);
-  }
+    for (i = 0; i <= T_Last_Class_Type; i++)
+    {
+        objectStats[i].printStats(i);
+    }
 
-  printf("\nSegment set allocation statistics\n\n");
+    printf("\nSegment set allocation statistics\n\n");
 
-  normalStats.printStats();
-  largeStats.printStats();
+    normalStats.printStats();
+    largeStats.printStats();
 }
 
 
@@ -151,12 +151,10 @@ void MemoryStats::clear()
 /* Function:  clear out the memory statistics.                                */
 /******************************************************************************/
 {
-    int i;
-
     normalStats.clear();
     largeStats.clear();
 
-    for (i = 0; i <= T_Last_Class_Type; i++)
+    for (int i = 0; i <= T_Last_Class_Type; i++)
     {
         objectStats[i].clear();
     }

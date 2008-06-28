@@ -46,6 +46,7 @@
 
 #include "SourceFile.hpp"
 #include "MethodClass.hpp"
+#include "RoutineClass.hpp"
 
                                        /* various types of call or function */
                                        /* calls                             */
@@ -82,14 +83,17 @@ class RexxCode : public BaseCode
    inline bool isTraceable() { return source->isTraceable(); }
    inline bool isInterpret() { return source->isInterpret(); }
    inline RexxString *extract(SourceLocation &l) { return source->extract(l); }
-   inline RexxObject *getSecurityManager() { return source->getSecurityManager(); }
+   inline SecurityManager *getSecurityManager() { return source->getSecurityManager(); }
    inline void        install(RexxActivation *activation) { source->install(activation); }
-   inline RexxMethod *interpret(RexxString *s, size_t n) { return source->interpret(s, labels, n); }
+   inline RexxCode *interpret(RexxString *s, size_t n) { return source->interpret(s, labels, n); }
    inline RexxDirectory *getMethods() { return source->getMethods(); };
-   inline RexxMethod *resolveRoutine(RexxString *n) { return source->resolveRoutine(n); }
+   inline RexxDirectory *getRoutines() { return source->getRoutines(); };
+   inline RoutineClass *findRoutine(RexxString *n) { return source->findRoutine(n); }
+   inline RexxString *resolveProgramName(RexxActivity *activity, RexxString *name) { return source->resolveProgramName(activity, name); }
    inline void        mergeRequired(RexxSource *s) { source->mergeRequired(s); }
-   virtual void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *,  size_t, RexxObject **, ProtectedObject &);
-   virtual void call(RexxActivity *, RexxMethod *, RexxObject *,  RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+   virtual void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *, RexxObject **,  size_t, ProtectedObject &);
+   virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, RexxString *, RexxString *, int, ProtectedObject &);
+   virtual void call(RexxActivity *, RoutineClass *, RexxString *,  RexxObject **, size_t, ProtectedObject &);
 
 protected:
 

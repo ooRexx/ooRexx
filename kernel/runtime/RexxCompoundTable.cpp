@@ -44,6 +44,7 @@
 #include "RexxCore.h"
 #include "RexxCompoundTable.hpp"
 #include "RexxCompoundElement.hpp"
+#include "RexxCompoundTail.hpp"
 
 void RexxCompoundTable::init(
     RexxStem *parentStem)              /* the parent object we're embedded in */
@@ -62,10 +63,11 @@ void RexxCompoundTable::copyFrom(
     RexxCompoundTable &other)
 {
     RexxCompoundElement *entry = other.first();/* grab the first element */
-    while (entry != NULL) {            /* while we have more entry to process */
-                                       /* insert an entry in our table     */
+    while (entry != NULL)
+    {            /* while we have more entry to process */
+                 /* insert an entry in our table     */
         RexxCompoundElement *newEntry = findEntry(entry->getName(), true);
-                                       /* copy over the value */
+        /* copy over the value */
         newEntry->setValue(entry->variableValue);
         entry = other.next(entry);
     }
@@ -89,7 +91,6 @@ RexxCompoundElement *RexxCompoundTable::findEntry(
     RexxCompoundTail *tail,            /* our tail search target     */
     bool create)                       /* we're creating a variable  */
 {
-
     int          rc = 0;               /* comparison result          */
     RexxCompoundElement *previous;     /* pointer for tree traversal */
     RexxCompoundElement *anchor;       /* pointer to current block   */
@@ -97,45 +98,56 @@ RexxCompoundElement *RexxCompoundTable::findEntry(
     anchor = root;                     /* get root block             */
     previous = anchor;                 /* save starting point        */
                                        /* loop through on left branch*/
-    while (anchor) {
-                                       /* do the name comparison */
+    while (anchor)
+    {
+        /* do the name comparison */
         rc = tail->compare(anchor->getName());
-        if (rc > 0) {                  /* left longer?               */
-           previous = anchor;          /* save the previous          */
-                                       /* take the right branch      */
-           anchor =  anchor->right;
-           continue;                   /* loop                       */
-         }
-         else if (rc < 0) {            /* left shorter?              */
-             previous = anchor;        /* save the previous          */
-                                       /* the the left branch        */
-             anchor = anchor->left;
-             continue;                 /* loop                       */
-         }
-         else {                        /* names match                */
-             return anchor;            /* return the anchor          */
-         }
+        if (rc > 0)
+        {                  /* left longer?               */
+            previous = anchor;          /* save the previous          */
+                                        /* take the right branch      */
+            anchor =  anchor->right;
+            continue;                   /* loop                       */
+        }
+        else if (rc < 0)
+        {            /* left shorter?              */
+            previous = anchor;        /* save the previous          */
+                                      /* the the left branch        */
+            anchor = anchor->left;
+            continue;                 /* loop                       */
+        }
+        else
+        {                        /* names match                */
+            return anchor;            /* return the anchor          */
+        }
     }
-    if (!create) {                     /* not a SET operation,       */
-      return OREF_NULL;                /* return var not found       */
+    if (!create)
+    {                     /* not a SET operation,       */
+        return OREF_NULL;                /* return var not found       */
     }
-                                       /* create a new compound variable */
+    /* create a new compound variable */
     anchor = new_compoundElement(tail->makeString());
 
-    if (!previous) {                   /* if first insertion         */
-      anchor->setParent(OREF_NULL);    /* no parent                  */
-      setRoot(anchor);                 /* set the tree top           */
+    if (!previous)
+    {                   /* if first insertion         */
+        anchor->setParent(OREF_NULL);    /* no parent                  */
+        setRoot(anchor);                 /* set the tree top           */
     }
-    else {                             /* real insertion             */
+    else
+    {                             /* real insertion             */
 
-      anchor->setParent(previous);     /* set our parent entry       */
-      if (rc > 0)                      /* should this be left or     */
-                                       /* right on parent tree       */
-        previous->setRight(anchor);    /* right                      */
-      else
-        previous->setLeft(anchor);     /* left                       */
-      balance(anchor);                 /* Balance the tree from here */
-                                       /* up                         */
+        anchor->setParent(previous);     /* set our parent entry       */
+        if (rc > 0)                      /* should this be left or     */
+        {
+            /* right on parent tree       */
+            previous->setRight(anchor);    /* right                      */
+        }
+        else
+        {
+            previous->setLeft(anchor);     /* left                       */
+        }
+        balance(anchor);                 /* Balance the tree from here */
+                                         /* up                         */
     }
     return anchor;                     /* return new block pointer   */
 }
@@ -144,47 +156,59 @@ RexxCompoundElement *RexxCompoundTable::findEntry(
 void RexxCompoundTable::balance(
     RexxCompoundElement *node)         /* starting point             */
 {
+    RexxCompoundElement *_parent;     /* block parent pointer       */
+    unsigned short depth;             /* current depth              */
+    unsigned short wd;                /* working depth              */
 
-     RexxCompoundElement *_parent;     /* block parent pointer       */
-     unsigned short depth;             /* current depth              */
-     unsigned short wd;                /* working depth              */
+    if (node == root)                 /* this the root?             */
+    {
+        return;                       /* nothing to Balance         */
+    }
 
-     if (node == root)                 /* this the root?             */
-         return;                       /* nothing to Balance         */
+    _parent = node->parent;           /* step up to block's parent  */
+    depth = 1;                        /* initial depth is 1         */
 
-     _parent = node->parent;           /* step up to block's parent  */
-     depth = 1;                        /* initial depth is 1         */
+    while (_parent != OREF_NULL)
+    {    /* while still have a parent  */
 
-     while (_parent != OREF_NULL) {    /* while still have a parent  */
-
-         if (_parent->right == node) {      /* if on right branch         */
-             _parent->rightdepth = depth;   /* set right depth            */
-                                            /* deeper on left?            */
-             if (depth > (wd = _parent->leftdepth + (unsigned short)1)) {
-                 moveNode(&_parent, false);   /* adjust right branch        */
-                 depth = _parent->rightdepth; /* readjust depth             */
-             }
-             else {
-                 if (wd < depth)           /* left shorter               */
-                     return ;              /* done                       */
-             }
-         }
-         else {
-             _parent->leftdepth = depth;    /* set left depth             */
-                                            /* if right shorter           */
-             if (depth > (wd = _parent->rightdepth + (unsigned short)1)) {
-                 moveNode(&_parent, true);       /* adjust left branch         */
-                 depth = _parent->leftdepth;     /* readjust depth             */
-             }
-             else {
-                 if (wd < depth)           /* right shorter              */
-                     return ;              /* done                       */
-             }
-         }
-         depth++;                           /* increment the depth        */
-         node = _parent;                    /* step up to current         */
-         _parent = _parent->parent;         /* and lift up one more       */
-     }
+        if (_parent->right == node)
+        {      /* if on right branch         */
+            _parent->rightdepth = depth;   /* set right depth            */
+                                           /* deeper on left?            */
+            if (depth > (wd = _parent->leftdepth + (unsigned short)1))
+            {
+                moveNode(&_parent, false);   /* adjust right branch        */
+                depth = _parent->rightdepth; /* readjust depth             */
+            }
+            else
+            {
+                if (wd < depth)           /* left shorter               */
+                {
+                    return ;              /* done                       */
+                }
+            }
+        }
+        else
+        {
+            _parent->leftdepth = depth;    /* set left depth             */
+                                           /* if right shorter           */
+            if (depth > (wd = _parent->rightdepth + (unsigned short)1))
+            {
+                moveNode(&_parent, true);       /* adjust left branch         */
+                depth = _parent->leftdepth;     /* readjust depth             */
+            }
+            else
+            {
+                if (wd < depth)           /* right shorter              */
+                {
+                    return ;              /* done                       */
+                }
+            }
+        }
+        depth++;                           /* increment the depth        */
+        node = _parent;                    /* step up to current         */
+        _parent = _parent->parent;         /* and lift up one more       */
+    }
 }
 
 void RexxCompoundTable::moveNode(
@@ -198,21 +222,27 @@ void RexxCompoundTable::moveNode(
 
     temp = *anchor;                        /* save where we are          */
 
-    if (toright) {                         /* move right?                */
+    if (toright)
+    {                         /* move right?                */
         work = temp->left;                 /* get left branch pointer    */
         work1 = temp->left = work->right;  /* move right to left         */
         temp->leftdepth = work->rightdepth;/* adjust left depth value    */
         if (work1)                         /* was a right moved          */
+        {
             work1->setParent(temp);        /* set its parent correctly   */
+        }
         work->setRight(temp);              /* set new right              */
         work->rightdepth++;                /* adjust its depth           */
     }
-    else {
+    else
+    {
         work = temp->right;                /* get right node             */
         work1 = temp->right = work->left;  /* move rights left node      */
         temp->rightdepth = work->leftdepth;/* set correct depth on left  */
         if (work1)                         /* moved a node               */
+        {
             work1->setParent(temp);        /* set its parent correctly   */
+        }
         work->setLeft(temp);               /* set left node              */
         work->leftdepth++;                 /* adjust its depth           */
     }
@@ -220,21 +250,29 @@ void RexxCompoundTable::moveNode(
     work2 = temp->parent;
     temp->setParent(work);                 /* so that top is correct     */
     if (work2 == OREF_NULL)                /* is this new root?          */
+    {
         setRoot(work);                     /* yes, adjust the root       */
+    }
     else if (work2->left == temp)          /* was it on left             */
+    {
         work2->setLeft(work);              /* make it left               */
+    }
     else
+    {
         work2->setRight(work);             /* else make it right         */
+    }
     *anchor = work;                        /* return correct position    */
 }
 
 
 RexxCompoundElement *RexxCompoundTable::first()
 {
-    if (root == OREF_NULL) {
+    if (root == OREF_NULL)
+    {
         return OREF_NULL;
     }
-    else {
+    else
+    {
         return findLeaf(root);
     }
 }
@@ -243,11 +281,14 @@ RexxCompoundElement *RexxCompoundTable::first()
 RexxCompoundElement *RexxCompoundTable::findLeaf(
     RexxCompoundElement *node)             /* starting point we're drilling from */
 {
-    for (;;) {
-        while (node->left != OREF_NULL) {  /* go as far left as we can */
+    for (;;)
+    {
+        while (node->left != OREF_NULL)
+        {  /* go as far left as we can */
             node = node->left;
         }
-        if (node->right == OREF_NULL) {    /* if there is no right child, stop here */
+        if (node->right == OREF_NULL)
+        {    /* if there is no right child, stop here */
             return node;
         }
         node = node->right;                /* go right one level and repeat */
@@ -258,13 +299,16 @@ RexxCompoundElement *RexxCompoundTable::findLeaf(
 RexxCompoundElement *RexxCompoundTable::next(
     RexxCompoundElement *node)             /* starting point we're drilling from */
 {
-                                           /* get the parent node */
+    /* get the parent node */
     RexxCompoundElement *_parent = node->parent;
-    if (_parent != OREF_NULL) {
-        if (_parent->right == node) {      /* if coming back up from the right */
+    if (_parent != OREF_NULL)
+    {
+        if (_parent->right == node)
+        {      /* if coming back up from the right */
             return _parent;                /* this node's turn has come */
         }
-        if (_parent->right != OREF_NULL) {  /* if no right child, do this one immediately */
+        if (_parent->right != OREF_NULL)
+        {  /* if no right child, do this one immediately */
             return findLeaf(_parent->right);/* drill down the other branch */
         }
         return _parent;
@@ -304,4 +348,40 @@ void RexxCompoundTable::setRoot(
     // checker won't recognize our address as being a valid object because it's
     // embedded within another Rexx object.
     OrefSet(parent, parent->tails.root, newRoot);
+}
+
+
+RexxCompoundElement *RexxCompoundTable::findEntry(RexxCompoundTail *tail)
+/******************************************************************************/
+/* Function:  Search for a compound entry.  This version is optimized for     */
+/*            "find-but-don't create" usage.                                  */
+/******************************************************************************/
+{
+    int          rc;                   /* comparison result          */
+    RexxCompoundElement *anchor;       /* pointer to current block   */
+
+    anchor = root;                     /* get root block             */
+                                       /* loop through on left branch*/
+    while (anchor != NULL)
+    {
+        /* do the name comparison */
+        rc = tail->compare(anchor->getName());
+        if (rc > 0)
+        {                  /* left longer?               */
+                           /* take the right branch      */
+            anchor =  anchor->right;
+            continue;                   /* loop                       */
+        }
+        else if (rc < 0)
+        {            /* left shorter?              */
+                     /* the the left branch        */
+            anchor = anchor->left;
+            continue;                 /* loop                       */
+        }
+        else
+        {                        /* names match                */
+            return anchor;            /* return the anchor          */
+        }
+    }
+    return OREF_NULL;                  /* return var not found       */
 }

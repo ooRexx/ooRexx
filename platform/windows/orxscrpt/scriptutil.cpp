@@ -47,64 +47,48 @@
  *
  *
  *******************************************************************************/
-ListItem::ListItem() {
-  Name = NULL;
-  Content = NULL;
-  FwdPtr = this;
-  BckPtr = this;
+ListItem::ListItem()
+{
+    Name = NULL;
+    Content = NULL;
+    FwdPtr = this;
+    BckPtr = this;
 
-  return;
-  }
-
-
-
+    return;
+}
 
 
-
-ListItem::~ListItem() {
-  ListItem *Previous,*Next;
-
-
-  if(Name) free(Name);
-  Name = NULL;
-  Content = NULL;
-  Next = FwdPtr;
-  Previous = BckPtr;
-  Previous->FwdPtr = Next;
-  Next->BckPtr = Previous;
-  }
+ListItem::~ListItem()
+{
+    ListItem *Previous,*Next;
 
 
+    if (Name)
+    {
+        free(Name);
+    }
+    Name = NULL;
+    Content = NULL;
+    Next = FwdPtr;
+    Previous = BckPtr;
+    Previous->FwdPtr = Next;
+    Next->BckPtr = Previous;
+}
 
 
+void *ListItem::GetContent(void)
+{
 
-
-void *ListItem::GetContent(void){
-
-  return Content;
-  }
+    return Content;
+}
 
 
 
-char *ListItem::GetName(void){
+const char *ListItem::GetName(void)
+{
 
-  return Name;
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return Name;
+}
 
 
 /*******************************************************************************
@@ -118,104 +102,109 @@ char *ListItem::GetName(void){
 LinkedList::LinkedList() : FixedSize(0),
                            ListSize(0),
                            CurrIndex(-1)
-                           {
-  InitList();
-  }
+{
+    InitList();
+}
 
-LinkedList::~LinkedList(){
-  FixedSize=0;
-  DeleteList();
-  }
-
-
-ListItem *LinkedList::FindItem(
-  /*  in   */ const char *Name) {
-
-  return NameSearch(Name);
-  }
+LinkedList::~LinkedList()
+{
+    FixedSize=0;
+    DeleteList();
+}
 
 
-
-
-ListItem *LinkedList::FindItem(
-  /*  in   */ int Index) {
-
-
-  return IndexSearch(Index);
-  }
+ListItem *LinkedList::FindItem(const char *Name)
+{
+    return NameSearch(Name);
+}
 
 
 
 
-ListItem *LinkedList::FindItem(void) {
-
-  return IndexIncrement();
-  }
-
-
-
-char *LinkedList::GetName(
-  /*  in   */ ListItem *Item) {
-
-  return Item->Name;
-  }
+ListItem *LinkedList::FindItem(int Index)
+{
+    return IndexSearch(Index);
+}
 
 
+ListItem *LinkedList::FindItem(void)
+{
+    return IndexIncrement();
+}
 
-void *LinkedList::FindContent(
-  /*  in   */ const char *Name) {
-  ListItem *Item;
+
+const char *LinkedList::GetName(ListItem *Item)
+{
+    return Item->Name;
+}
 
 
-  //  This has to be seperated out so that a check for the existence
-  //  is made before the pointer for Content is obtained.  Otherwise,
-  //  getting the Content of NULL can be very rude.
-  if(Item = NameSearch(Name)) return Item->Content;
-  return NULL;
-  }
+
+void *LinkedList::FindContent(const char *Name)
+{
+    ListItem *Item;
+
+    //  This has to be seperated out so that a check for the existence
+    //  is made before the pointer for Content is obtained.  Otherwise,
+    //  getting the Content of NULL can be very rude.
+    if (Item = NameSearch(Name))
+    {
+        return Item->Content;
+    }
+    return NULL;
+}
 
 
 
 void *LinkedList::FindContent(
-  /*  in   */ int Index) {
-  ListItem *Item;
+  /*  in   */ int Index)
+{
+    ListItem *Item;
 
 
-  //  This has to be seperated out so that a check for the existence
-  //  is made before the pointer for Content is obtained.  Otherwise,
-  //  getting the Content of NULL can be very rude.
-  if(Item = IndexSearch(Index)) return Item->Content;
-  return NULL;
-  }
-
-
-
-void *LinkedList::FindContent(void){
-  ListItem *Item;
-
-
-  //  This has to be seperated out so that a check for the existence
-  //  is made before the pointer for Content is obtained.  Otherwise,
-  //  getting the Content of NULL can be very rude.
-  if(Item = IndexIncrement()) return Item->Content;
-  return NULL;
-  }
+    //  This has to be seperated out so that a check for the existence
+    //  is made before the pointer for Content is obtained.  Otherwise,
+    //  getting the Content of NULL can be very rude.
+    if (Item = IndexSearch(Index))
+    {
+        return Item->Content;
+    }
+    return NULL;
+}
 
 
 
-void *LinkedList::GetContent(
-  /*  in   */ ListItem *Item) {
+void *LinkedList::FindContent(void)
+{
+    ListItem *Item;
 
-  return Item->Content;
-  }
+    //  This has to be seperated out so that a check for the existence
+    //  is made before the pointer for Content is obtained.  Otherwise,
+    //  getting the Content of NULL can be very rude.
+    if (Item = IndexIncrement())
+    {
+        return Item->Content;
+    }
+    return NULL;
+}
 
 
 
-void LinkedList::DropContent(
-  /*  in   */ void *Content) {
+void *LinkedList::GetContent(ListItem *Item)
+{
+    return Item->Content;
+}
 
-  if(Content) GlobalFree((HGLOBAL)Content);
-  }
+
+
+void LinkedList::DropContent(void *Content)
+{
+
+    if (Content)
+    {
+        GlobalFree((HGLOBAL)Content);
+    }
+}
 
 
 /*  The non-trivial methods follow.   */
@@ -231,45 +220,66 @@ void LinkedList::DropContent(
 ListItem *LinkedList::AddItem(
   /*  in   */ char          *Name,
   /*  in   */ InsertionPoint Place,
-  /*  in   */ void          *Content){
-  ListItem *Current,*Next;
-  int       Len;
+  /*  in   */ void          *Content)
+{
+    ListItem *Current,*Next;
+    int       Len;
 
+    if (Name)
+    {
+        Len = strlen(Name);
+    }
+    else
+    {
+        Len = 0;
+    }
+    Current = new ListItem;
+    if (!Current)
+    {
+        return Current;
+    }
+    Current->Name = (char *)malloc(Len+2);
+    if (!Current->Name)
+    {
+        delete Current;
+        Current = NULL;
+        return Current;
+    }
+    if (Name)
+    {
+        strcpy(Current->Name,Name);
+    }
+    else
+    {
+        Current->Name[0] = '\0';
+    }
+    Current->Content = Content;
 
-  if(Name) Len = strlen(Name);
-  else Len = 0;
-  Current = new ListItem;
-  if(!Current) return Current;
-  Current->Name = (char *)malloc(Len+2);
-  if(!Current->Name) {
-    delete Current;
-    Current = NULL;
+    if (Place == Beginning)
+    {
+        Next = MasterLink.FwdPtr;
+        MasterLink.FwdPtr = Current;
+        Current->FwdPtr = Next;
+        Current->BckPtr = Next->BckPtr;
+        Next->BckPtr = Current;
+        //  Keep the index with the item it points to.
+        if (CurrIndex != -1)
+        {
+            ++CurrIndex;
+        }
+    }
+    else
+    {
+        Next = MasterLink.BckPtr;
+        MasterLink.BckPtr = Current;
+        Current->BckPtr = Next;
+        Current->FwdPtr = Next->FwdPtr;
+        Next->FwdPtr = Current;
+    }
+
+    ListSize++;
     return Current;
-    }
-  if(Name) strcpy(Current->Name,Name);
-  else Current->Name[0] = '\0';
-  Current->Content = Content;
-
-  if(Place == Beginning) {
-    Next = MasterLink.FwdPtr;
-    MasterLink.FwdPtr = Current;
-    Current->FwdPtr = Next;
-    Current->BckPtr = Next->BckPtr;
-    Next->BckPtr = Current;
-    //  Keep the index with the item it points to.
-    if(CurrIndex != -1) ++CurrIndex;
-    }
-  else {
-    Next = MasterLink.BckPtr;
-    MasterLink.BckPtr = Current;
-    Current->BckPtr = Next;
-    Current->FwdPtr = Next->FwdPtr;
-    Next->FwdPtr = Current;
-    }
-
-  ListSize++;
-  return Current;
-  }
+}
 
 
 
@@ -281,27 +291,27 @@ ListItem *LinkedList::AddItem(
  *
  *
  *******************************************************************************/
-void LinkedList::DropItem(
-  /*  in   */ ListItem *Item) {
+void LinkedList::DropItem(ListItem *Item)
+{
+    if (Item == &MasterLink || Item == NULL)
+        return;
 
-
-  if(Item == &MasterLink || Item == NULL) return;
-
-  if(Item->Content) this->DropContent(Item->Content);
-  ListSize--;
+    if (Item->Content)
+        this->DropContent(Item->Content);
+    ListSize--;
 /*
   //  This check insures that the Index item is not the one being deleted,
   if(IndexItem == Item) CurrIndex = -1;
   //  Or that the list is not shrunk passed the index.
   else if(CurrIndex <= ListSize) CurrIndex = ListSize - 1;
 */
-  //  Actually, any time an item is deleted from the list, we are at risk.
-  //  It cannot be detetected if the item being deleted is before the Index.
-  //  If it is, then the index must be decremented.  Since we don't know
-  //  when to do this, it is best to just invalidate the index.
-  CurrIndex = -1;
-  delete Item;
-  }
+    //  Actually, any time an item is deleted from the list, we are at risk.
+    //  It cannot be detetected if the item being deleted is before the Index.
+    //  If it is, then the index must be decremented.  Since we don't know
+    //  when to do this, it is best to just invalidate the index.
+    CurrIndex = -1;
+    delete Item;
+}
 
 
 /*******************************************************************************
@@ -312,55 +322,67 @@ void LinkedList::DropItem(
  *
  *
  *******************************************************************************/
-void LinkedList::DropItem(
-  /*  in   */ void *Content) {
-  ListItem *Current;
-  int CIndex = 0;
+void LinkedList::DropItem(void *Content)
+{
+    ListItem *Current;
+    int CIndex = 0;
 
 
-  Current = MasterLink.FwdPtr;
-  while(Current != &MasterLink) {
-    if(Current->Content == Content) break;
-    Current = Current->FwdPtr;
+    Current = MasterLink.FwdPtr;
+    while (Current != &MasterLink)
+    {
+        if (Current->Content == Content)
+        {
+            break;
+        }
+        Current = Current->FwdPtr;
     }
 
-  //  If we don't find what we are looking for, leave the index alone.
-  if(Current == &MasterLink) return;
-
-  // Else, update the Index info, and return the Item pointer.
-  this->DropContent(Current->Content);
-  ListSize--;
-  //  Actually, any time an item is deleted from the list, we are at risk.
-  //  It cannot be detetected if the item being deleted is before the Index.
-  //  If it is, then the index must be decremented.  Since we don't know
-  //  when to do this, it is best to just invalidate the index.
-  CurrIndex = -1;
-  delete Current;
-  return;
-  }
-
-void LinkedList::DeleteList(void){
-  ListItem *Next;
-
-
-  for(;;){
-    Next = MasterLink.FwdPtr;
-    if(Next == &MasterLink) return;
-    DropItem(Next);
+    //  If we don't find what we are looking for, leave the index alone.
+    if (Current == &MasterLink)
+    {
+        return;
     }
 
-  }
+    // Else, update the Index info, and return the Item pointer.
+    this->DropContent(Current->Content);
+    ListSize--;
+    //  Actually, any time an item is deleted from the list, we are at risk.
+    //  It cannot be detetected if the item being deleted is before the Index.
+    //  If it is, then the index must be decremented.  Since we don't know
+    //  when to do this, it is best to just invalidate the index.
+    CurrIndex = -1;
+    delete Current;
+    return;
+}
 
 
-void LinkedList::InitList(void){
+void LinkedList::DeleteList(void)
+{
+    ListItem *Next;
+    for (;;)
+    {
+        Next = MasterLink.FwdPtr;
+        if (Next == &MasterLink)
+        {
+            return;
+        }
+        DropItem(Next);
+    }
 
-  MasterLink.Name = NULL;
-  MasterLink.Content = NULL;
-  MasterLink.FwdPtr = &MasterLink;
-  MasterLink.BckPtr = &MasterLink;
+}
 
-  return;
-  }
+
+void LinkedList::InitList(void)
+{
+
+    MasterLink.Name = NULL;
+    MasterLink.Content = NULL;
+    MasterLink.FwdPtr = &MasterLink;
+    MasterLink.BckPtr = &MasterLink;
+
+    return;
+}
 
 
 /*******************************************************************************
@@ -375,26 +397,34 @@ void LinkedList::InitList(void){
  *
  *
  *******************************************************************************/
-ListItem *LinkedList::NameSearch(const char *Name){
-  ListItem *Current;
-  int CIndex = 0;
+ListItem *LinkedList::NameSearch(const char *Name)
+{
+    ListItem *Current;
+    int CIndex = 0;
 
 
-  Current = MasterLink.FwdPtr;
-  while(Current != &MasterLink) {
-    if(stricmp(Current->Name,Name) == 0) break;
-    CIndex++;
-    Current = Current->FwdPtr;
+    Current = MasterLink.FwdPtr;
+    while (Current != &MasterLink)
+    {
+        if (stricmp(Current->Name,Name) == 0)
+        {
+            break;
+        }
+        CIndex++;
+        Current = Current->FwdPtr;
     }
 
-  //  If we don't find what we are looking for, leave the index alone.
-  if(Current == &MasterLink) return NULL;
+    //  If we don't find what we are looking for, leave the index alone.
+    if (Current == &MasterLink)
+    {
+        return NULL;
+    }
 
-  // Else, update the Index info, and return the Item pointer.
-  CurrIndex = CIndex;
-  IndexItem = Current;
-  return Current;
-  }
+    // Else, update the Index info, and return the Item pointer.
+    CurrIndex = CIndex;
+    IndexItem = Current;
+    return Current;
+}
 
 
 
@@ -406,51 +436,70 @@ ListItem *LinkedList::NameSearch(const char *Name){
  *
  *
  *******************************************************************************/
-ListItem *LinkedList::IndexSearch(int Index){
-  int       EndDifference,MidDifference;
-  int       StartPoint,Counter;
-  ListItem *StartItem;
+ListItem *LinkedList::IndexSearch(int Index)
+{
+    int       EndDifference,MidDifference;
+    int       StartPoint,Counter;
+    ListItem *StartItem;
 
 
-  if(Index < 0 || Index >= ListSize) {
-    CurrIndex = -1;
-    return NULL;
+    if (Index < 0 || Index >= ListSize)
+    {
+        CurrIndex = -1;
+        return NULL;
     }
 
-  if(CurrIndex < 0) {
-    CurrIndex = 0;
-    IndexItem = MasterLink.FwdPtr;
+    if (CurrIndex < 0)
+    {
+        CurrIndex = 0;
+        IndexItem = MasterLink.FwdPtr;
     }
 
 
-  //  Determine if the index is closer to the beginning, or end.
-  EndDifference = ListSize - Index;
-  if(EndDifference > Index) {
-    Counter = 1;
-    StartItem = MasterLink.FwdPtr;
-    StartPoint = 0;
+    //  Determine if the index is closer to the beginning, or end.
+    EndDifference = ListSize - Index;
+    if (EndDifference > Index)
+    {
+        Counter = 1;
+        StartItem = MasterLink.FwdPtr;
+        StartPoint = 0;
     }
-  else {
-    Counter = -1;
-    StartItem = MasterLink.BckPtr;
-    StartPoint = ListSize-1;
-    }
-
-  MidDifference = Index-CurrIndex;
-
-  if(abs(MidDifference) < EndDifference) {
-    Counter = MidDifference < 0 ? -1 : 1;
-    }
-  else {
-    IndexItem = StartItem;
-    CurrIndex = StartPoint;
+    else
+    {
+        Counter = -1;
+        StartItem = MasterLink.BckPtr;
+        StartPoint = ListSize-1;
     }
 
-  if(Counter > 0) for(;CurrIndex < Index; CurrIndex+=Counter) IndexItem = IndexItem->FwdPtr;
-  else for(;CurrIndex > Index; CurrIndex+=Counter) IndexItem = IndexItem->BckPtr;
+    MidDifference = Index-CurrIndex;
 
-  return IndexItem;
-  }
+    if (abs(MidDifference) < EndDifference)
+    {
+        Counter = MidDifference < 0 ? -1 : 1;
+    }
+    else
+    {
+        IndexItem = StartItem;
+        CurrIndex = StartPoint;
+    }
+
+    if (Counter > 0)
+    {
+        for (;CurrIndex < Index; CurrIndex+=Counter)
+        {
+            IndexItem = IndexItem->FwdPtr;
+        }
+    }
+    else
+    {
+        for (;CurrIndex > Index; CurrIndex+=Counter)
+        {
+            IndexItem = IndexItem->BckPtr;
+        }
+    }
+
+    return IndexItem;
+}
 
 
 
@@ -462,19 +511,27 @@ ListItem *LinkedList::IndexSearch(int Index){
  *
  *
  *******************************************************************************/
-ListItem *LinkedList::IndexIncrement(void){
+ListItem *LinkedList::IndexIncrement(void)
+{
 
 
-  CurrIndex++;
-  if(CurrIndex >= ListSize) {
-    CurrIndex =  -1;
-    IndexItem = NULL;
+    CurrIndex++;
+    if (CurrIndex >= ListSize)
+    {
+        CurrIndex =  -1;
+        IndexItem = NULL;
     }
-  else if(CurrIndex) IndexItem = IndexItem->FwdPtr;
-    else IndexItem = MasterLink.FwdPtr;
+    else if (CurrIndex)
+    {
+        IndexItem = IndexItem->FwdPtr;
+    }
+    else
+    {
+        IndexItem = MasterLink.FwdPtr;
+    }
 
-  return IndexItem;
-  }
+    return IndexItem;
+}
 
 
 
@@ -486,20 +543,19 @@ ListItem *LinkedList::IndexIncrement(void){
  *
  *
  *******************************************************************************/
-void LinkedList::PrintList(void) {
-  ListItem *Current;
+void LinkedList::PrintList(void)
+{
+    ListItem *Current;
 
-
-  Current = MasterLink.FwdPtr;
-  printf("\nMasterLink --- ");
-  PrintItem(&MasterLink);
-  while(Current != &MasterLink) {
-    PrintItem(Current);
-    Current = Current->FwdPtr;
+    Current = MasterLink.FwdPtr;
+    printf("\nMasterLink --- ");
+    PrintItem(&MasterLink);
+    while (Current != &MasterLink)
+    {
+        PrintItem(Current);
+        Current = Current->FwdPtr;
     }
-
-
-  }
+}
 
 
 
@@ -511,24 +567,15 @@ void LinkedList::PrintList(void) {
  *
  *
  *******************************************************************************/
-void LinkedList::PrintItem(
-  /*  in   */ ListItem *Item) {
-
-
-  printf("Item   %p:\n",Item);
-  fflush(stdout);
-  printf("   FwdPtr %p\n",Item->FwdPtr);
-  fflush(stdout);
-  printf("   BckPtr %p\n",Item->BckPtr);
-  fflush(stdout);
-  printf("   Name %p\n",Item->Name);
-  fflush(stdout);
-  printf("   Content %p\n",Item->Content);
-  fflush(stdout);
-
-
-
-  }
+void LinkedList::PrintItem(ListItem *Item)
+{
+    printf("Item   %p:\n",Item);
+    printf("   FwdPtr %p\n",Item->FwdPtr);
+    printf("   BckPtr %p\n",Item->BckPtr);
+    printf("   Name %p\n",Item->Name);
+    printf("   Content %p\n",Item->Content);
+    fflush(stdout);
+}
 
 
 /*============================vvvvvvvvv Specialty DropContent()'s vvvvvvvvv=================*/
@@ -543,14 +590,18 @@ void LinkedList::PrintItem(
  *
  *
  *******************************************************************************/
-void BSTRLinkedList::DropContent(
-  /*  in   */ void *Content) {
+void BSTRLinkedList::DropContent(void *Content)
+{
 
-  if(Content) {
-    if(((PGBSTR)Content)->String) SysFreeString(((PGBSTR)Content)->String);
-    delete Content;
+    if (Content)
+    {
+        if (((PGBSTR)Content)->String)
+        {
+            SysFreeString(((PGBSTR)Content)->String);
+        }
+        delete Content;
     }
-  }
+}
 
 
 
@@ -562,15 +613,15 @@ void BSTRLinkedList::DropContent(
  *
  *
  *******************************************************************************/
-void VariantLList::DropContent(
-  /*  in   */ void *Content) {
-
-  if(Content) {
-    // if(((PGVARIANT)Content)->Mutant) VariantClear(&((PGVARIANT)Content)->Mutant);
-    VariantClear(&((PGVARIANT)Content)->Mutant);
-    delete Content;
+void VariantLList::DropContent(void *Content)
+{
+    if (Content)
+    {
+        // if(((PGVARIANT)Content)->Mutant) VariantClear(&((PGVARIANT)Content)->Mutant);
+        VariantClear(&((PGVARIANT)Content)->Mutant);
+        delete Content;
     }
-  }
+}
 
 
 
@@ -586,11 +637,13 @@ void VariantLList::DropContent(
  *  been defined resolves all name conflicts.
  *
  *******************************************************************************/
-LLLContent::~LLLContent() {
-
-
-  if(ListState == Exists) ListRoot->DropItem((void *)Ourselves);
-  }
+LLLContent::~LLLContent()
+{
+    if (ListState == Exists)
+    {
+        ListRoot->DropItem((void *)Ourselves);
+    }
+}
 
 
 
@@ -602,13 +655,12 @@ LLLContent::~LLLContent() {
  *
  *
  *******************************************************************************/
-void LLLContent::SetDestructor(LooseLinkedList *Root, void *Container){
-
-
-  ListState = Exists;
-  ListRoot = Root;
-  Ourselves = Container;
-  }
+void LLLContent::SetDestructor(LooseLinkedList *Root, void *Container)
+{
+    ListState = Exists;
+    ListRoot = Root;
+    Ourselves = Container;
+}
 
 
 
@@ -636,18 +688,13 @@ void LLLContent::SetDestructor(LooseLinkedList *Root, void *Container){
  *
  *
  *****************************************************************************/
-STDMETHODIMP GetProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID Lang, VARIANT *RetInfo){
-  DISPID     DispID;
+STDMETHODIMP GetProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID Lang, VARIANT *RetInfo)
+{
+    DISPID     DispID;
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(Stream,"GetProperty() by name NOT returning DispID\n");
-#endif
-  return GetProperty(Stream,Disp,Property,Lang,RetInfo,&DispID);
-  }
-
-
-
-
+    FPRINTF2(Stream,"GetProperty() by name NOT returning DispID\n");
+    return GetProperty(Stream,Disp,Property,Lang,RetInfo,&DispID);
+}
 
 
 /****************************************************************************
@@ -655,34 +702,27 @@ STDMETHODIMP GetProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID
  *
  *
  *****************************************************************************/
-STDMETHODIMP GetProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID Lang, VARIANT *RetInfo,DISPID *DispID){
-  HRESULT    RetCode;
+STDMETHODIMP GetProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID Lang, VARIANT *RetInfo,DISPID *DispID)
+{
+    HRESULT    RetCode;
 
 
 
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(Stream,"GetProperty() by name returning DispID\n");
-#endif
-  VariantInit(RetInfo);
-  *DispID = (DISPID) -1;
-  //  Use an array on one name to find the DispID.
-  RetCode = Disp->GetIDsOfNames(IID_NULL, (OLECHAR **)&Property, 1, Lang, DispID);
-#if defined(DEBUGZ)
-FPRINTF2(Stream,"GetProperty()  GetIDsOfNames() for \"%S\" returned: DispId %d HRESULT %08x\n",
-Property,*DispID,RetCode);
-#endif
+    FPRINTF2(Stream,"GetProperty() by name returning DispID\n");
+    VariantInit(RetInfo);
+    *DispID = (DISPID) -1;
+    //  Use an array on one name to find the DispID.
+    RetCode = Disp->GetIDsOfNames(IID_NULL, (OLECHAR **)&Property, 1, Lang, DispID);
+    FPRINTF2(Stream,"GetProperty()  GetIDsOfNames() for \"%S\" returned: DispId %d HRESULT %08x\n", Property,*DispID,RetCode);
 
-  if(SUCCEEDED(RetCode)){
-    RetCode = GetProperty(Stream,Disp,Lang,RetInfo,*DispID);
+    if (SUCCEEDED(RetCode))
+    {
+        RetCode = GetProperty(Stream,Disp,Lang,RetInfo,*DispID);
     }
 
-  return RetCode;
-  }
-
-
-
-
+    return RetCode;
+}
 
 
 /****************************************************************************
@@ -690,125 +730,35 @@ Property,*DispID,RetCode);
  *
  *
  *****************************************************************************/
-STDMETHODIMP GetProperty(FILE *Stream, IDispatch *Disp, LCID Lang, VARIANT *RetInfo,DISPID DispID){
-  HRESULT    RetCode;
-  DISPPARAMS DispParms;
-  EXCEPINFO  ExcepInfo;
-  UINT       ErrCode;
+STDMETHODIMP GetProperty(FILE *Stream, IDispatch *Disp, LCID Lang, VARIANT *RetInfo,DISPID DispID)
+{
+    HRESULT    RetCode;
+    DISPPARAMS DispParms;
+    EXCEPINFO  ExcepInfo;
+    UINT       ErrCode;
 
 
-
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(Stream,"GetProperty() by DispID\n");
-#endif
-  VariantInit(RetInfo);
-  ErrCode = 0;
-  DispParms.rgvarg = NULL;
-  DispParms.rgdispidNamedArgs = NULL;
-  DispParms.cArgs = 0;
-  DispParms.cNamedArgs = 0;
-
-  RetCode = Disp->Invoke(DispID, IID_NULL, Lang, DISPATCH_PROPERTYGET,
-   &DispParms, RetInfo, &ExcepInfo, &ErrCode);
-#if defined(DEBUGZ)
-  FPRINTF2(Stream,"GetProperty() -- Back from ProperyGet. HRESULT %08x\n",RetCode);
-  PrntMutant(Stream,RetInfo);
-  FPRINTF2(Stream,"GetProperty() -- end of parms.\n");
-#endif
-
-
-  // VariantClear(RetInfo);
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(Stream,"GetProperty() exiting HRESULT %08x \n",RetCode);
-#endif
-
-  return RetCode;
-
-
-/*
- *    We no longer wish to used the IDispatchEx to retrieve a property, since not all
- *  objects support it.  However, the code is left here as a good sample of the
- *  extended IDispathEx methods to enumerate through the DispID's printing all names and
- *  values.
-
-  BSTR       lName;
-  static int once=0;
-  IDispatchEx *DispEx;
-
-  FPRINTF2(Stream,"---- debug --- GetProperty()  \n");
-  DispEx = (IDispatchEx *)Disp;
-  //  fdexEnumAll
-  //  fdexEnumDefault
-  if(once == 0) {
-    RetCode = DispEx->GetNextDispID(fdexEnumAll,-1,&DispID);
-    FPRINTF2(Stream,"GetProperty() -- Back from GetNextDispID(). DispID %d HRESULT %08x\n",DispID,RetCode);
-    while(DispID != -1) {
-      RetCode = DispEx->GetMemberName(DispID,&lName);
-      FPRINTF2(Stream,"GetProperty() -- Back from GetNextDispID(). Name \"%S\" HRESULT %08x\n",lName,RetCode);
-      SysFreeString(lName);
-      if(SUCCEEDED(RetCode)){
-        ErrCode = 0;
-        DispParms.rgvarg = NULL;
-        DispParms.rgdispidNamedArgs = NULL;
-        DispParms.cArgs = 0;
-        DispParms.cNamedArgs = 0;
-
-        RetCode = DispEx->InvokeEx(DispID,Lang,DISPATCH_PROPERTYGET,&DispParms,RetInfo,&ExcepInfo,NULL);
-#if defined(DEBUGC)+defined(DEBUGZ)
-      FPRINTF2(Stream,"GetProperty() -- Back from ProperyGet. HRESULT %08x\n",RetCode);
-        PrntMutant(Stream,RetInfo);
-      FPRINTF2(Stream,"GetProperty() -- end of parms.\n");
-#endif
-
-
-        VariantClear(RetInfo);
-        }  // GetIDsOfNames()
-      RetCode = DispEx->GetNextDispID(fdexEnumAll,DispID,&DispID);
-      FPRINTF2(Stream,"GetProperty() -- Back from GetNextDispID(). DispID %d HRESULT %08x\n",DispID,RetCode);
-      }
-    }
-
-  once = 1;
-
-
-  VariantInit(RetInfo);
-  //  Use an array on one name to find the DispID.
-  lName = SysAllocString(Property);
-  RetCode = DispEx->GetDispID(lName,fdexNameCaseInsensitive,&DispID);
-  SysFreeString(lName);
-#if defined(DEBUGC)+defined(DEBUGZ)
-FPRINTF2(Stream,"GetProperty()  GetIDsOfNames() for \"%S\" returned: DispId %d HRESULT %08x\n",
-Property,DispID,RetCode);
-#endif
-
-  if(SUCCEEDED(RetCode)){
+    FPRINTF2(Stream,"GetProperty() by DispID\n");
+    VariantInit(RetInfo);
     ErrCode = 0;
     DispParms.rgvarg = NULL;
     DispParms.rgdispidNamedArgs = NULL;
     DispParms.cArgs = 0;
     DispParms.cNamedArgs = 0;
 
-    RetCode = DispEx->InvokeEx(DispID,Lang,DISPATCH_PROPERTYGET,&DispParms,RetInfo,&ExcepInfo,NULL);
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(Stream,"GetProperty() -- Back from ProperyGet. HRESULT %08x\n",RetCode);
+    RetCode = Disp->Invoke(DispID, IID_NULL, Lang, DISPATCH_PROPERTYGET,
+                           &DispParms, RetInfo, &ExcepInfo, &ErrCode);
+
+    FPRINTF2(Stream,"GetProperty() -- Back from ProperyGet. HRESULT %08x\n",RetCode);
     PrntMutant(Stream,RetInfo);
-  FPRINTF2(Stream,"GetProperty() -- end of parms.\n");
-#endif
+    FPRINTF2(Stream,"GetProperty() -- end of parms.\n");
 
 
     // VariantClear(RetInfo);
-    }  // GetIDsOfNames()
+    FPRINTF2(Stream,"GetProperty() exiting HRESULT %08x \n",RetCode);
 
-  return RetCode;
-
- *
- *
- *
- */
-
-
-  }
+    return RetCode;
+}
 
 
 
@@ -818,18 +768,13 @@ Property,DispID,RetCode);
  *
  *
  *****************************************************************************/
-STDMETHODIMP PutProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID Lang, VARIANT *NewValue){
-  DISPID     DispID;
+STDMETHODIMP PutProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID Lang, VARIANT *NewValue)
+{
+    DISPID     DispID;
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(Stream,"PutProperty() by name NOT returning DispID\n");
-#endif
-  return PutProperty(Stream,Disp,Property,Lang,NewValue,&DispID);
-  }
-
-
-
-
+    FPRINTF2(Stream,"PutProperty() by name NOT returning DispID\n");
+    return PutProperty(Stream,Disp,Property,Lang,NewValue,&DispID);
+}
 
 
 /****************************************************************************
@@ -837,34 +782,25 @@ STDMETHODIMP PutProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID
  *
  *
  *****************************************************************************/
-STDMETHODIMP PutProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID Lang, VARIANT *NewValue,DISPID *DispID){
-  HRESULT    RetCode;
+STDMETHODIMP PutProperty(FILE *Stream, IDispatch *Disp, LPCOLESTR Property, LCID Lang, VARIANT *NewValue,DISPID *DispID)
+{
+    HRESULT    RetCode;
 
+    FPRINTF2(Stream,"PutProperty() by name returning DispID\n");
+    VariantInit(NewValue);
+    *DispID = (DISPID) -1;
+    //  Use an array on one name to find the DispID.
+    RetCode = Disp->GetIDsOfNames(IID_NULL, (OLECHAR **)&Property, 1, Lang, DispID);
+    FPRINTF2(Stream,"PutProperty()  GetIDsOfNames() for \"%S\" returned: DispId %d HRESULT %08x\n",
+             Property,*DispID,RetCode);
 
-
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(Stream,"PutProperty() by name returning DispID\n");
-#endif
-  VariantInit(NewValue);
-  *DispID = (DISPID) -1;
-  //  Use an array on one name to find the DispID.
-  RetCode = Disp->GetIDsOfNames(IID_NULL, (OLECHAR **)&Property, 1, Lang, DispID);
-#if defined(DEBUGZ)
-FPRINTF2(Stream,"PutProperty()  GetIDsOfNames() for \"%S\" returned: DispId %d HRESULT %08x\n",
-Property,*DispID,RetCode);
-#endif
-
-  if(SUCCEEDED(RetCode)){
-    RetCode = PutProperty(Stream,Disp,Lang,NewValue,*DispID);
+    if (SUCCEEDED(RetCode))
+    {
+        RetCode = PutProperty(Stream,Disp,Lang,NewValue,*DispID);
     }
 
-  return RetCode;
-  }
-
-
-
-
+    return RetCode;
+}
 
 
 /****************************************************************************
@@ -872,41 +808,30 @@ Property,*DispID,RetCode);
  *
  *
  *****************************************************************************/
-STDMETHODIMP PutProperty(FILE *Stream, IDispatch *Disp, LCID Lang, VARIANT *NewValue,DISPID DispID){
-  HRESULT    RetCode;
-  DISPPARAMS DispParms;
-  EXCEPINFO  ExcepInfo;
-  UINT       ErrCode;
+STDMETHODIMP PutProperty(FILE *Stream, IDispatch *Disp, LCID Lang, VARIANT *NewValue,DISPID DispID)
+{
+    HRESULT    RetCode;
+    DISPPARAMS DispParms;
+    EXCEPINFO  ExcepInfo;
+    UINT       ErrCode;
 
+    FPRINTF2(Stream,"PutProperty() by DispID\n");
+    VariantInit(NewValue);
+    ErrCode = 0;
+    DispParms.rgvarg = NULL;
+    DispParms.rgdispidNamedArgs = NULL;
+    DispParms.cArgs = 0;
+    DispParms.cNamedArgs = 0;
 
+    RetCode = Disp->Invoke(DispID, IID_NULL, Lang, DISPATCH_PROPERTYPUT,
+                           &DispParms, NewValue, &ExcepInfo, &ErrCode);
+    FPRINTF2(Stream,"PutProperty() -- Back from ProperyGet. HRESULT %08x\n",RetCode);
+    PrntMutant(Stream,NewValue);
+    FPRINTF2(Stream,"PutProperty() -- end of parms.\n");
 
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(Stream,"PutProperty() by DispID\n");
-#endif
-  VariantInit(NewValue);
-  ErrCode = 0;
-  DispParms.rgvarg = NULL;
-  DispParms.rgdispidNamedArgs = NULL;
-  DispParms.cArgs = 0;
-  DispParms.cNamedArgs = 0;
-
-  RetCode = Disp->Invoke(DispID, IID_NULL, Lang, DISPATCH_PROPERTYPUT,
-   &DispParms, NewValue, &ExcepInfo, &ErrCode);
-#if defined(DEBUGZ)
-  FPRINTF2(Stream,"PutProperty() -- Back from ProperyGet. HRESULT %08x\n",RetCode);
-  PrntMutant(Stream,NewValue);
-  FPRINTF2(Stream,"PutProperty() -- end of parms.\n");
-#endif
-
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(Stream,"PutProperty() exiting HRESULT %08x \n",RetCode);
-#endif
-
-  return RetCode;
-
-  }
+    FPRINTF2(Stream,"PutProperty() exiting HRESULT %08x \n",RetCode);
+    return RetCode;
+}
 
 
 
@@ -925,116 +850,24 @@ STDMETHODIMP PutProperty(FILE *Stream, IDispatch *Disp, LCID Lang, VARIANT *NewV
  *  strings such as "Arg(1), Arg(2)...Arg(Number)"
  *
  *****************************************************************************/
-int CharsRequired(int Number){
-int  i,Digits, Required=0,Base=0,Multiplier=9;
-char lNumber[124];
+int CharsRequired(int Number)
+{
+    int  i,Digits, Required=0,Base=0,Multiplier=9;
+    char lNumber[124];
 
 
-  sprintf(lNumber,"%d",Number);
-  Digits = strlen(lNumber);
-  for(i=1;i < Digits; i++) {
-    Required += Multiplier * (i);
-    Base += Multiplier;
-    Multiplier *= 10;
+    sprintf(lNumber,"%d",Number);
+    Digits = strlen(lNumber);
+    for (i=1;i < Digits; i++)
+    {
+        Required += Multiplier * (i);
+        Base += Multiplier;
+        Multiplier *= 10;
     }
 
-  Required += (Number - Base) * Digits;
-  return Required;
-  }
-
-
-
-
-
-
-/****************************************************************************
- *
- *
- *
- *****************************************************************************/
-STDMETHODIMP BuildRXCallString(char    *Function, char    EndChar, int ArgCount, char    *NameList,
-                             char    **CallString, int *MaxStrLen){
-  char       *String,Prefix[MAX_PATH+29],Suffix[MAX_PATH],*Sep,*Arg,ExpandedArg[MAX_PATH];
-  char        Syntax5[]="RAISE SYNTAX 5";
-  char        CallPre[]="Call %s ",CallSuf[]="; exit";
-  // char        RoutPre[]="Return %s(",RoutSuf[]=")";
-  char        RoutPre[]="Call %s ",RoutSuf[]="; If Symbol('RESULT') = 'VAR' Then Return Result; Exit;";
-  char        *OrigStr,*OldStr;
-  HRESULT     RetCode=S_OK;
-  int         CurrLen,Forecast,i;
-
-
-  if(!Function) RetCode = E_POINTER;
-  if(!CallString) RetCode = E_POINTER;
-  if(ArgCount < 0) RetCode = E_UNEXPECTED;
-  if(FAILED(RetCode)) return RetCode;
-  if(!(*CallString)) RetCode = E_POINTER;
-  if(strlen(Function) > MAX_PATH) RetCode = E_UNEXPECTED;
-  //  All of these checks are fatal, do not procede beyond this point.
-  if(FAILED(RetCode)) return RetCode;
-  CurrLen = strlen(*CallString);
-  switch (EndChar) {
-  case 0:
-    sprintf(Prefix,CallPre,Function);
-    strcpy(Suffix,CallSuf);
-    Sep = ",";
-    Arg = "Arg(%d)";
-    break;
-  case ')':
-    sprintf(Prefix,RoutPre,Function);
-    strcpy(Suffix,RoutSuf);
-    Sep = ",";
-    Arg = "Arg(%d)";
-    break;
-  default:
-    // RetCode = ....
-    ;
-    }
-
-  if(ArgCount == 0) {
-    Sep = "";
-    Arg = "";
-    }
-
-  if(FAILED(RetCode)) return RetCode;
-
-  OrigStr = *CallString;
-  // -2 for the %d, -1 last arg does not get a separator, +1 since the count starts at 2 not 1(this means our count will have 1 extra byte).
-  Forecast = CharsRequired(ArgCount+1) + (ArgCount*(strlen(Arg)-2)) + ((ArgCount>0?ArgCount-1:0)*strlen(Sep));
-  // +1 for the trailing Null character.
-  Forecast += strlen(Suffix) + strlen(Prefix) + +1;
-  while(Forecast+CurrLen > *MaxStrLen) {
-    OldStr = *CallString;
-    RetCode = NewBuffer(CallString,MaxStrLen);
-    // if there are too many arguments, raise error (maybe we need a
-    //  different way of passing the args?)
-    if(FAILED(RetCode)) {
-      String = new char   [sizeof(Syntax5)];
-      if(String) {
-        strcpy(String,&Syntax5[0]);
-        *CallString = String;
-        }
-      return RetCode;
-      }
-    if(OldStr != OrigStr) delete OldStr;
-    }
-
-  String = &((*CallString)[CurrLen]);
-  strcat(String,Prefix);
-
-  for (i=0; i<ArgCount; i++) {
-    sprintf(&ExpandedArg[0],Arg,i+2); // +2,because 1st argument is the string we are generating...
-    strcat(String,ExpandedArg);
-    // not the last argument?
-    if (i<ArgCount-1 || strlen(NameList) > 0) strcat(String,Sep);
-    }
-  strcat(String,NameList);
-  strcat(String,Suffix);
-
-  return RetCode;
-  }
-
-
+    Required += (Number - Base) * Digits;
+    return Required;
+}
 
 
 /****************************************************************************
@@ -1043,69 +876,87 @@ STDMETHODIMP BuildRXCallString(char    *Function, char    EndChar, int ArgCount,
  *
  *****************************************************************************/
 STDMETHODIMP InvokeNamedParms(DISPPARAMS *Params, char    **CallString, int *MaxStrLen,
-                              char    **NameList, int *MaxListLen){
-  int      i,lNACount;
-  HRESULT  RetCode=S_OK;
-  // Commands
-  char    *Command;
-  char     Set[]="%s = .OLEObject~new(\"IDISPATCH=%p\");";
-  // Names
-  char    *Name;
-  char     lTHIS[]="this";
-  char     lPUT[]="\"PUT\"";
-  char    *OrigStr,*OldStr,*OrigList,*OldList;
-  int      BaseLen=sizeof(Set)-4;  // -4 length of %s and %p.
-  int      CurrLen,Forecast,ListLen;
+                              char    **NameList, int *MaxListLen)
+{
+    int      i,lNACount;
+    HRESULT  RetCode=S_OK;
+    // Commands
+    char    *Command;
+    char     Set[]="%s = .OLEObject~new(\"IDISPATCH=%p\");";
+    // Names
+    char    *Name;
+    char     lTHIS[]="this";
+    char     lPUT[]="\"PUT\"";
+    char    *OrigStr,*OldStr,*OrigList,*OldList;
+    int      BaseLen=sizeof(Set)-4;  // -4 length of %s and %p.
+    int      CurrLen,Forecast,ListLen;
 
 
-  if(!CallString) RetCode = E_POINTER;
-  if(Params->cNamedArgs > 0 && Params->rgdispidNamedArgs == NULL) {
-    lNACount = 0;
-    RetCode = E_UNEXPECTED;
+    if (!CallString) RetCode = E_POINTER;
+    if (Params->cNamedArgs > 0 && Params->rgdispidNamedArgs == NULL)
+    {
+        lNACount = 0;
+        RetCode = E_UNEXPECTED;
     }
-  if(SUCCEEDED(RetCode)) {
-    OrigStr = *CallString;
-    OrigList = *NameList;
-    for(i=0; (unsigned)i < Params->cNamedArgs; i++) {
-      CurrLen = strlen(*CallString);
-      ListLen = strlen(*NameList);
-      switch (Params->rgdispidNamedArgs[i]) {
-      case DISPID_THIS:
-        Name = lTHIS;
-        BaseLen = sizeof(Set)-4;  // -4 length of %s and %p.
-        Command = Set;
-        break;
-      case DISPID_PROPERTYPUT:
-        Name = lPUT;
-        Command = NULL;
-        break;
-      default:
-        Name = "\"Unknown Named Parm\"";
-        Command = NULL;
+    if (SUCCEEDED(RetCode))
+    {
+        OrigStr = *CallString;
+        OrigList = *NameList;
+        for (i=0; (unsigned)i < Params->cNamedArgs; i++)
+        {
+            CurrLen = strlen(*CallString);
+            ListLen = strlen(*NameList);
+            switch (Params->rgdispidNamedArgs[i])
+            {
+                case DISPID_THIS:
+                    Name = lTHIS;
+                    BaseLen = sizeof(Set)-4;  // -4 length of %s and %p.
+                    Command = Set;
+                    break;
+                case DISPID_PROPERTYPUT:
+                    Name = lPUT;
+                    Command = NULL;
+                    break;
+                default:
+                    Name = "\"Unknown Named Parm\"";
+                    Command = NULL;
+            }
+            if (Command)
+            {
+                Forecast = BaseLen + strlen(Name) + 8;     // 8 possible length of pointer.
+                while (Forecast+CurrLen > *MaxStrLen)
+                {
+                    OldStr = *CallString;
+                    RetCode = NewBuffer(CallString,MaxStrLen);
+                    if (FAILED(RetCode))
+                    {
+                        return RetCode;
+                    }
+                    if (OldStr != OrigStr)
+                    {
+                        delete OldStr;
+                    }
+                }
+                sprintf(&(*CallString[CurrLen]),Set,Name, (Params->rgvarg[i].pdispVal));
+            }
+            while (strlen(Name)+ListLen > *MaxListLen)
+            {
+                OldList = *NameList;
+                RetCode = NewBuffer(NameList,MaxListLen);
+                if (FAILED(RetCode))
+                {
+                    return RetCode;
+                }
+                if (OldList != OrigList)
+                {
+                    delete OldList;
+                }
+            }
+            sprintf(&(*NameList[ListLen]),"%s%s",i?",":"",Name);
         }
-      if(Command) {
-        Forecast = BaseLen + strlen(Name) + 8;     // 8 possible length of pointer.
-        while(Forecast+CurrLen > *MaxStrLen) {
-          OldStr = *CallString;
-          RetCode = NewBuffer(CallString,MaxStrLen);
-          if(FAILED(RetCode)) return RetCode;
-          if(OldStr != OrigStr) delete OldStr;
-          }
-        sprintf(&(*CallString[CurrLen]),Set,Name, (Params->rgvarg[i].pdispVal));
-        }
-      while(strlen(Name)+ListLen > *MaxListLen) {
-        OldList = *NameList;
-        RetCode = NewBuffer(NameList,MaxListLen);
-        if(FAILED(RetCode)) return RetCode;
-        if(OldList != OrigList) delete OldList;
-        }
-      sprintf(&(*NameList[ListLen]),"%s%s",i?",":"",Name);
-      }  //  for(i=0; i < Params->cNamedArgs; i++)
     }
-  return RetCode;
-  }
-
-
+    return RetCode;
+}
 
 
 /****************************************************************************
@@ -1113,22 +964,23 @@ STDMETHODIMP InvokeNamedParms(DISPPARAMS *Params, char    **CallString, int *Max
  *
  *
  *****************************************************************************/
-STDMETHODIMP NewBuffer(char    **OldBuffer, int *MaxBufLen){
-  int      NewLen;
-  char    *NewBuffer;
+STDMETHODIMP NewBuffer(char    **OldBuffer, int *MaxBufLen)
+{
+    int      NewLen;
+    char    *NewBuffer;
 
 
-  NewLen = *MaxBufLen + 4096;
-  NewBuffer = new char[NewLen];
-  if(!NewBuffer) return E_OUTOFMEMORY;
-  strncpy(NewBuffer,*OldBuffer,*MaxBufLen);
-  *MaxBufLen = NewLen;
-  *OldBuffer = NewBuffer;
-  return S_OK;
-  }
-
-
-
+    NewLen = *MaxBufLen + 4096;
+    NewBuffer = new char[NewLen];
+    if (!NewBuffer)
+    {
+        return E_OUTOFMEMORY;
+    }
+    strncpy(NewBuffer,*OldBuffer,*MaxBufLen);
+    *MaxBufLen = NewLen;
+    *OldBuffer = NewBuffer;
+    return S_OK;
+}
 
 
 /******************************************************************************
@@ -1140,33 +992,40 @@ STDMETHODIMP NewBuffer(char    **OldBuffer, int *MaxBufLen){
 STDMETHODIMP AddMutant(
   /*  [in]  */ OLECHAR     *FirstArg,
   /*  [in]  */ DISPPARAMS  *OrigDP,
-  /*[in/out]*/ DISPPARAMS  *DP){
-  VARIANTARG    *FCmd,*OCmd;
-  int           ArgCount;
+  /*[in/out]*/ DISPPARAMS  *DP)
+{
+    VARIANTARG    *FCmd,*OCmd;
+    int           ArgCount;
 
 
-  ArgCount = OrigDP->cArgs-OrigDP->cNamedArgs;
-  FCmd = new VARIANTARG[ArgCount + 1];
-  if(!FCmd) return E_OUTOFMEMORY;
+    ArgCount = OrigDP->cArgs-OrigDP->cNamedArgs;
+    FCmd = new VARIANTARG[ArgCount + 1];
+    if (!FCmd)
+    {
+        return E_OUTOFMEMORY;
+    }
 
-  OCmd = OrigDP->rgvarg;               //  In case OrigDP and DP are the same.
-  DP->cNamedArgs = OrigDP->cNamedArgs;
-  DP->cArgs = OrigDP->cArgs + 1;
-  DP->rgvarg = FCmd;
-  DP->rgdispidNamedArgs = OrigDP->rgdispidNamedArgs;
+    OCmd = OrigDP->rgvarg;               //  In case OrigDP and DP are the same.
+    DP->cNamedArgs = OrigDP->cNamedArgs;
+    DP->cArgs = OrigDP->cArgs + 1;
+    DP->rgvarg = FCmd;
+    DP->rgdispidNamedArgs = OrigDP->rgdispidNamedArgs;
 
 
-  //  This is where things get a bit messy.  Variants are passed in reverse
-  // order.  Therefore, the parm that we generated must be put on at the end.
-  // First, copy the args that the Host gave us.
-  if(ArgCount > 0) memcpy(&FCmd[0],&(OCmd[0]),sizeof(VARIANTARG)*ArgCount);
-  //  Then tack on the OLECHAR* at the end.
-  VariantInit(&FCmd[ArgCount]);
-  V_VT(&FCmd[ArgCount]) = VT_BSTR;
-  V_BSTR(&FCmd[ArgCount]) = SysAllocString(FirstArg);
+    //  This is where things get a bit messy.  Variants are passed in reverse
+    // order.  Therefore, the parm that we generated must be put on at the end.
+    // First, copy the args that the Host gave us.
+    if (ArgCount > 0)
+    {
+        memcpy(&FCmd[0],&(OCmd[0]),sizeof(VARIANTARG)*ArgCount);
+    }
+    //  Then tack on the OLECHAR* at the end.
+    VariantInit(&FCmd[ArgCount]);
+    V_VT(&FCmd[ArgCount]) = VT_BSTR;
+    V_BSTR(&FCmd[ArgCount]) = SysAllocString(FirstArg);
 
-  return S_OK;
-  }
+    return S_OK;
+}
 
 
 
@@ -1180,35 +1039,54 @@ STDMETHODIMP AddMutant(
 ******************************************************************************/
 STDMETHODIMP DropNamedPut(
   /*  [in]  */ DISPPARAMS  *OrigDP,
-  /*[in/out]*/ DISPPARAMS  *DP){
-  DISPID       *FDispID;
-  unsigned int  ArgCount,i;
+  /*[in/out]*/ DISPPARAMS  *DP)
+{
+    DISPID       *FDispID;
+    unsigned int  ArgCount,i;
 
 
-  ArgCount = OrigDP->cNamedArgs;
+    ArgCount = OrigDP->cNamedArgs;
 
-  DP->cNamedArgs = OrigDP->cNamedArgs;
-  DP->cArgs = OrigDP->cArgs;
-  DP->rgvarg = OrigDP->rgvarg;
-  DP->rgdispidNamedArgs = OrigDP->rgdispidNamedArgs;
+    DP->cNamedArgs = OrigDP->cNamedArgs;
+    DP->cArgs = OrigDP->cArgs;
+    DP->rgvarg = OrigDP->rgvarg;
+    DP->rgdispidNamedArgs = OrigDP->rgdispidNamedArgs;
 
-  for(i=0; i<OrigDP->cNamedArgs; ++i)
-   if(OrigDP->rgdispidNamedArgs[i] == DISPID_PROPERTYPUT) break;
-
-  if(i == OrigDP->cNamedArgs) return S_OK;
-
-  --ArgCount;
-  DP->cNamedArgs = ArgCount;
-  --DP->cArgs;
-  if(!ArgCount) {
-    DP->rgdispidNamedArgs = NULL;
-    return S_OK;
+    for (i=0; i<OrigDP->cNamedArgs; ++i)
+    {
+        if (OrigDP->rgdispidNamedArgs[i] == DISPID_PROPERTYPUT)
+        {
+            break;
+        }
     }
-  FDispID = new DISPID[ArgCount];
-  if(!FDispID) return E_OUTOFMEMORY;
-  if(i > 0) memcpy(&FDispID[0],&(OrigDP->rgdispidNamedArgs[0]),sizeof(DISPID)*i);
-  if(i < ArgCount) memcpy(&FDispID[i],&(OrigDP->rgdispidNamedArgs[i+1]),sizeof(DISPID)*(ArgCount-i));
-  DP->rgdispidNamedArgs = FDispID;
 
-  return S_OK;
-  }
+    if (i == OrigDP->cNamedArgs)
+    {
+        return S_OK;
+    }
+
+    --ArgCount;
+    DP->cNamedArgs = ArgCount;
+    --DP->cArgs;
+    if (!ArgCount)
+    {
+        DP->rgdispidNamedArgs = NULL;
+        return S_OK;
+    }
+    FDispID = new DISPID[ArgCount];
+    if (!FDispID)
+    {
+        return E_OUTOFMEMORY;
+    }
+    if (i > 0)
+    {
+        memcpy(&FDispID[0],&(OrigDP->rgdispidNamedArgs[0]),sizeof(DISPID)*i);
+    }
+    if (i < ArgCount)
+    {
+        memcpy(&FDispID[i],&(OrigDP->rgdispidNamedArgs[i+1]),sizeof(DISPID)*(ArgCount-i));
+    }
+    DP->rgdispidNamedArgs = FDispID;
+
+    return S_OK;
+}

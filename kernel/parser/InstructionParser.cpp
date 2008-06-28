@@ -112,51 +112,54 @@ RexxInstruction *RexxSource::addressNew()
 /* Function:  Create a new ADDRESS translator object                        */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxObject *_expression;             /* expression to evaluate            */
-  RexxString *environment;             /* environment name                  */
-  RexxObject *command;                 /* command to issue                  */
-  RexxToken  *token;                   /* current working token             */
-
-  _expression = OREF_NULL;             /* initialize import state variables */
-  environment = OREF_NULL;
-  command = OREF_NULL;
-  token = nextReal();                  /* get the next token                */
-  if (!token->isEndOfClause()) {        /* something other than a toggle?    */
-                                       /* something other than a symbol or  */
-                                       /* string?...implicit value form     */
-    if (!token->isSymbolOrLiteral()) {
-      previousToken();                 /* back up one token                 */
-                                       /* process the expression            */
-      _expression = this->expression(TERM_EOC);
-    }
-    else {                             /* have a constant address target    */
-                                       /* may be value keyword, however...  */
-      if (this->subKeyword(token) == SUBKEY_VALUE) {
-                                       /* process the expression            */
-        _expression = this->expression(TERM_EOC);
-        if (_expression == OREF_NULL)   /* no expression?                    */
-                                       /* expression is required after value*/
-          syntaxError(Error_Invalid_expression_address);
-      }
-      else {                           /* have a real constant target       */
-        environment = token->value;    /* get the actual name value         */
-        token = nextReal();            /* get the next token                */
-                                       /* have a command following name?    */
-        if (!token->isEndOfClause()) {
-          previousToken();             /* step back a token                 */
-                                       /* process the expression            */
-          command = this->expression(TERM_EOC);
+    RexxObject *_expression = OREF_NULL;             /* initialize import state variables */
+    RexxString *environment = OREF_NULL;
+    RexxObject *command = OREF_NULL;
+    RexxToken *token = nextReal();                  /* get the next token                */
+    if (!token->isEndOfClause())
+    {        /* something other than a toggle?    */
+        /* something other than a symbol or  */
+        /* string?...implicit value form     */
+        if (!token->isSymbolOrLiteral())
+        {
+            previousToken();                 /* back up one token                 */
+                                             /* process the expression            */
+            _expression = this->expression(TERM_EOC);
         }
-      }
-    }                                  /* resolve the subkeyword            */
-  }
-                                       /* create a new translator object    */
-  newObject = new_instruction(ADDRESS, Address);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionAddress(_expression, environment, command);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+        else
+        {                             /* have a constant address target    */
+                                      /* may be value keyword, however...  */
+            if (this->subKeyword(token) == SUBKEY_VALUE)
+            {
+                /* process the expression            */
+                _expression = this->expression(TERM_EOC);
+                if (_expression == OREF_NULL)   /* no expression?                    */
+                {
+                    /* expression is required after value*/
+                    syntaxError(Error_Invalid_expression_address);
+                }
+            }
+            else
+            {                           /* have a real constant target       */
+                environment = token->value;    /* get the actual name value         */
+                token = nextReal();            /* get the next token                */
+                                               /* have a command following name?    */
+                if (!token->isEndOfClause())
+                {
+                    previousToken();             /* step back a token                 */
+                                                 /* process the expression            */
+                    command = this->expression(TERM_EOC);
+                }
+            }
+        }                                  /* resolve the subkeyword            */
+    }
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(ADDRESS, Address);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionAddress(_expression, environment, command);
+    return newObject; /* done, return this                 */
 }
+
 
 RexxInstruction *RexxSource::assignmentNew(
      RexxToken  *target )              /* target variable instruction       */
@@ -164,19 +167,18 @@ RexxInstruction *RexxSource::assignmentNew(
 /* Function:  Create a new ASSIGNMENT translator object                     */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxObject *_expression;             /* expression to evaluate            */
-
-  this->needVariable(target);          /* must be a variable                */
-                                       /* process the expression            */
-  _expression = this->expression(TERM_EOC);
-  if (_expression == OREF_NULL)        /* no expression here?               */
-                                       /* this is invalid                   */
-    syntaxError(Error_Invalid_expression_assign);
-                                       /* create a new translator object    */
-  newObject = new_instruction(ASSIGNMENT, Assignment);
-  new ((void *)newObject) RexxInstructionAssignment((RexxVariableBase *)(this->addText(target)), _expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    this->needVariable(target);          /* must be a variable                */
+                                         /* process the expression            */
+    RexxObject *_expression = this->expression(TERM_EOC);
+    if (_expression == OREF_NULL)        /* no expression here?               */
+    {
+        /* this is invalid                   */
+        syntaxError(Error_Invalid_expression_assign);
+    }
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
+    new ((void *)newObject) RexxInstructionAssignment((RexxVariableBase *)(this->addText(target)), _expression);
+    return newObject; /* done, return this                 */
 }
 
 
@@ -205,9 +207,9 @@ RexxInstruction *RexxSource::assignmentOpNew(RexxToken *target, RexxToken *opera
     _expression = (RexxObject *)new RexxBinaryOperator(operation->subclass, variable, _expression);
 
     // now everything is the same as an assignment operator
-    RexxObject *newObject = new_instruction(ASSIGNMENT, Assignment);
+    RexxInstruction *newObject = new_instruction(ASSIGNMENT, Assignment);
     new ((void *)newObject) RexxInstructionAssignment((RexxVariableBase *)variable, _expression);
-    return (RexxInstruction *)newObject; /* done, return this                 */
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::callNew()
@@ -215,178 +217,209 @@ RexxInstruction *RexxSource::callNew()
 /* Function:  Create a new CALL translator object                           */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  size_t      argCount;                /* call arguments                    */
-  RexxToken  *token;                   /* current working token             */
-  RexxObject *name;                    /* call name                         */
-  int         _keyword;                /* call subkeyword                   */
-  RexxString *_condition;              /* created USER condition            */
-  size_t      _flags;                  /* final CALL flags                  */
-  size_t      builtin_index;           /* builtin function call index       */
+    size_t _flags = 0;                          /* clear the flags                   */
+    size_t builtin_index = 0;                   /* clear the builtin index           */
+    RexxString *_condition = OREF_NULL;              /* clear the condition               */
+    RexxObject *name = OREF_NULL;                    /* no name yet                       */
+    size_t argCount = 0;                        /* no arguments yet                  */
 
-  _flags = 0;                          /* clear the flags                   */
-  builtin_index = 0;                   /* clear the builtin index           */
-  _condition = OREF_NULL;              /* clear the condition               */
-  name = OREF_NULL;                    /* no name yet                       */
-  argCount = 0;                        /* no arguments yet                  */
+    RexxToken *token = nextReal();                  /* get the next token                */
+    if (token->isEndOfClause())     /* no target specified?              */
+    {
+        /* this is an error                  */
+        syntaxError(Error_Symbol_or_string_call);
+    }
+    /* may have to process ON/OFF forms  */
+    else if (token->isSymbol())
+    {
+        int _keyword = this->subKeyword(token); /* check for the subkeywords         */
+        if (_keyword == SUBKEY_ON)
+        {        /* CALL ON instruction?              */
+            _flags |= RexxInstructionCall::call_on_off;  /* this is a CALL ON                 */
+            token = nextReal();              /* get the next token                */
+                                             /* no condition specified or not a   */
+                                             /* symbol?                           */
+            if (!token->isSymbol())
+            {
+                /* this is an error                  */
+                syntaxError(Error_Symbol_expected_on);
+            }
+            _keyword = this->condition(token);/* get the condition involved        */
+            if (_keyword == 0 ||              /* invalid condition specified?      */
+                _keyword == CONDITION_SYNTAX ||
+                _keyword == CONDITION_NOVALUE ||
+                _keyword == CONDITION_PROPAGATE ||
+                _keyword == CONDITION_LOSTDIGITS ||
+                _keyword == CONDITION_NOMETHOD ||
+                _keyword == CONDITION_NOSTRING)
+            {
+                /* got an error here                 */
+                syntaxError(Error_Invalid_subkeyword_callon, token);
+            }
 
-  token = nextReal();                  /* get the next token                */
-  if (token->isEndOfClause())     /* no target specified?              */
-                                       /* this is an error                  */
-    syntaxError(Error_Symbol_or_string_call);
-                                       /* may have to process ON/OFF forms  */
-  else if (token->isSymbol()) {
-    _keyword = this->subKeyword(token); /* check for the subkeywords         */
-    if (_keyword == SUBKEY_ON) {        /* CALL ON instruction?              */
-      _flags |= RexxInstructionCall::call_on_off;  /* this is a CALL ON                 */
-      token = nextReal();              /* get the next token                */
-                                       /* no condition specified or not a   */
-                                       /* symbol?                           */
-      if (!token->isSymbol())
-                                       /* this is an error                  */
-        syntaxError(Error_Symbol_expected_on);
-      _keyword = this->condition(token);/* get the condition involved        */
-      if (_keyword == 0 ||              /* invalid condition specified?      */
-          _keyword == CONDITION_SYNTAX ||
-          _keyword == CONDITION_NOVALUE ||
-          _keyword == CONDITION_PROPAGATE ||
-          _keyword == CONDITION_LOSTDIGITS ||
-          _keyword == CONDITION_NOMETHOD ||
-          _keyword == CONDITION_NOSTRING)
-                                       /* got an error here                 */
-        syntaxError(Error_Invalid_subkeyword_callon, token);
+            /* actually a USER condition request?*/
+            else if (_keyword == CONDITION_USER)
+            {
+                token = nextReal();            /* get the next token                */
+                                               /* no condition specified or not a   */
+                                               /* symbol?                           */
+                if (!token->isSymbol())
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Symbol_expected_user);
+                }
+                /* set the builtin index for later   */
+                /* resolution step                   */
+                builtin_index = this->builtin(token);
+                _condition = token->value;     /* get the token string value        */
+                name = _condition;             /* set the default target            */
+                                               /* condition name is "USER condition"*/
+                _condition = _condition->concatToCstring(CHAR_USER_BLANK);
+                /* save the condition name           */
+                _condition = this->commonString(_condition);
+            }
+            else
+            {                           /* language defined condition        */
+                name = token->value;           /* set the default target            */
+                _condition = token->value;     /* condition is the same as target   */
+                                               /* set the builtin index for later   */
+                                               /* resolution step                   */
+                builtin_index = this->builtin(token);
+            }
+            token = nextReal();              /* get the next token                */
+                                             /* anything real here?               */
+            if (!token->isEndOfClause())
+            {
+                /* not a symbol?                     */
+                if (!token->isSymbol())
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Invalid_subkeyword_callonname, token);
+                }
+                /* not the name token?               */
+                if (this->subKeyword(token) != SUBKEY_NAME)
+                {
+                    /* got an error here                 */
+                    syntaxError(Error_Invalid_subkeyword_callonname, token);
+                }
+                token = nextReal();            /* get the next token                */
+                if (token->classId != TOKEN_SYMBOL && token->classId != TOKEN_LITERAL)
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Symbol_or_string_name);
+                }
+                name = token->value;           /* set the default target            */
+                                               /* set the builtin index for later   */
+                                               /* resolution step                   */
+                builtin_index = this->builtin(token);
+                token = nextReal();            /* get the next token                */
+                                               /* must have the clause end here     */
+                if (!token->isEndOfClause())
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Invalid_data_name, token);
+                }
+            }
+        }
+        else if (_keyword == SUBKEY_OFF)
+        { /* CALL OFF instruction?             */
+            token = nextReal();              /* get the next token                */
+                                             /* no condition specified or not a   */
+                                             /* symbol?                           */
+            if (!token->isSymbol())
+            {
+                /* this is an error                  */
+                syntaxError(Error_Symbol_expected_off);
+            }
+            /* get the condition involved        */
+            _keyword = this->condition(token);
+            if (_keyword == 0 ||              /* invalid condition specified?      */
+                _keyword == CONDITION_SYNTAX ||
+                _keyword == CONDITION_NOVALUE ||
+                _keyword == CONDITION_PROPAGATE ||
+                _keyword == CONDITION_LOSTDIGITS ||
+                _keyword == CONDITION_NOMETHOD ||
+                _keyword == CONDITION_NOSTRING)
+            {
+                /* got an error here                 */
+                syntaxError(Error_Invalid_subkeyword_calloff, token);
+            }
+            /* actually a USER condition request?*/
+            else if (_keyword == CONDITION_USER)
+            {
+                token = nextReal();            /* get the next token                */
+                                               /* no condition specified or not a   */
+                                               /* symbol?                           */
+                if (!token->isSymbol())
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Symbol_expected_user);
+                }
+                _condition = token->value;      /* get the token string value        */
+                /* condition name is "USER condition"*/
+                _condition = _condition->concatToCstring(CHAR_USER_BLANK);
+                /* save the condition name           */
+                _condition = this->commonString(_condition);
+            }
+            else                             /* language defined condition        */
+            {
+                _condition = token->value;      /* set the condition name            */
+            }
+            token = nextReal();              /* get the next token                */
+            if (!token->isEndOfClause()) /* must have the clause end here     */
+            {
+                /* this is an error                  */
+                syntaxError(Error_Invalid_data_condition, token);
+            }
+        }
+        else
+        {                             /* normal CALL instruction           */
+                                      /* set the default target            */
+            name = (RexxString *)token->value;
+            /* set the builtin index for later   */
+            /* resolution step                   */
+            builtin_index = this->builtin(token);
+            /* get the argument list             */
+            argCount = this->argList(OREF_NULL, TERM_EOC);
+        }
+    }
+    /* call with a string target         */
+    else if (token->isLiteral())
+    {
+        name = token->value;               /* set the default target            */
+                                           /* set the builtin index for later   */
+                                           /* resolution step                   */
+        builtin_index = this->builtin(token);
+        /* process the argument list         */
+        argCount = this->argList(OREF_NULL, TERM_EOC);
+        _flags |= RexxInstructionCall::call_nointernal;          /* do not check for internal routines*/
+    }
+    /* indirect call case?               */
+    else if (token->classId == TOKEN_LEFT)
+    {
+        _flags |= RexxInstructionCall::call_dynamic;             /* going to be indirect              */
+        name = this->parenExpression(token); // this is a full expression
+        /* process the argument list         */
+        argCount = this->argList(OREF_NULL, TERM_EOC);
+        /* NOTE:  this call is not added to  */
+        /* the resolution list because it    */
+        /* cannot be resolved until run time */
+    }
+    else
+    {
+        /* this is an error                  */
+        syntaxError(Error_Symbol_or_string_call);
+    }
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_variable_instruction(CALL, Call, sizeof(RexxInstructionCallBase) + argCount * sizeof(RexxObject *));
+    /* Initialize this new object        */
+    new ((void *)newObject) RexxInstructionCall(name, _condition, argCount, this->subTerms, _flags, builtin_index);
 
-                                       /* actually a USER condition request?*/
-      else if (_keyword == CONDITION_USER) {
-        token = nextReal();            /* get the next token                */
-                                       /* no condition specified or not a   */
-                                       /* symbol?                           */
-        if (!token->isSymbol())
-                                       /* this is an error                  */
-          syntaxError(Error_Symbol_expected_user);
-                                       /* set the builtin index for later   */
-                                       /* resolution step                   */
-        builtin_index = this->builtin(token);
-        _condition = token->value;     /* get the token string value        */
-        name = _condition;             /* set the default target            */
-                                       /* condition name is "USER condition"*/
-        _condition = _condition->concatToCstring(CHAR_USER_BLANK);
-                                       /* save the condition name           */
-        _condition = this->commonString(_condition);
-      }
-      else {                           /* language defined condition        */
-        name = token->value;           /* set the default target            */
-        _condition = token->value;     /* condition is the same as target   */
-                                       /* set the builtin index for later   */
-                                       /* resolution step                   */
-        builtin_index = this->builtin(token);
-      }
-      token = nextReal();              /* get the next token                */
-                                       /* anything real here?               */
-      if (!token->isEndOfClause()) {
-                                       /* not a symbol?                     */
-        if (!token->isSymbol())
-                                       /* this is an error                  */
-          syntaxError(Error_Invalid_subkeyword_callonname, token);
-                                       /* not the name token?               */
-        if (this->subKeyword(token) != SUBKEY_NAME)
-                                       /* got an error here                 */
-          syntaxError(Error_Invalid_subkeyword_callonname, token);
-        token = nextReal();            /* get the next token                */
-        if (token->classId != TOKEN_SYMBOL &&
-            token->classId != TOKEN_LITERAL)
-                                       /* this is an error                  */
-          syntaxError(Error_Symbol_or_string_name);
-        name = token->value;           /* set the default target            */
-                                       /* set the builtin index for later   */
-                                       /* resolution step                   */
-        builtin_index = this->builtin(token);
-        token = nextReal();            /* get the next token                */
-                                       /* must have the clause end here     */
-        if (!token->isEndOfClause())
-                                       /* this is an error                  */
-          syntaxError(Error_Invalid_data_name, token);
-      }
+    if (!(flags&RexxInstructionCall::call_dynamic))           /* static name resolution?           */
+    {
+        this->addReference((RexxObject *)newObject);     /* add to table of references        */
     }
-    else if (_keyword == SUBKEY_OFF) { /* CALL OFF instruction?             */
-      token = nextReal();              /* get the next token                */
-                                       /* no condition specified or not a   */
-                                       /* symbol?                           */
-      if (!token->isSymbol())
-                                       /* this is an error                  */
-        syntaxError(Error_Symbol_expected_off);
-                                       /* get the condition involved        */
-      _keyword = this->condition(token);
-      if (_keyword == 0 ||              /* invalid condition specified?      */
-          _keyword == CONDITION_SYNTAX ||
-          _keyword == CONDITION_NOVALUE ||
-          _keyword == CONDITION_PROPAGATE ||
-          _keyword == CONDITION_LOSTDIGITS ||
-          _keyword == CONDITION_NOMETHOD ||
-          _keyword == CONDITION_NOSTRING)
-                                       /* got an error here                 */
-        syntaxError(Error_Invalid_subkeyword_calloff, token);
-                                       /* actually a USER condition request?*/
-      else if (_keyword == CONDITION_USER) {
-        token = nextReal();            /* get the next token                */
-                                       /* no condition specified or not a   */
-                                       /* symbol?                           */
-        if (!token->isSymbol())
-                                       /* this is an error                  */
-          syntaxError(Error_Symbol_expected_user);
-        _condition = token->value;      /* get the token string value        */
-                                       /* condition name is "USER condition"*/
-        _condition = _condition->concatToCstring(CHAR_USER_BLANK);
-                                       /* save the condition name           */
-        _condition = this->commonString(_condition);
-      }
-      else                             /* language defined condition        */
-        _condition = token->value;      /* set the condition name            */
-      token = nextReal();              /* get the next token                */
-      if (!token->isEndOfClause()) /* must have the clause end here     */
-                                       /* this is an error                  */
-        syntaxError(Error_Invalid_data_condition, token);
-    }
-    else {                             /* normal CALL instruction           */
-                                       /* set the default target            */
-      name = (RexxString *)token->value;
-                                       /* set the builtin index for later   */
-                                       /* resolution step                   */
-      builtin_index = this->builtin(token);
-                                       /* get the argument list             */
-      argCount = this->argList(OREF_NULL, TERM_EOC);
-    }
-  }
-                                       /* call with a string target         */
-  else if (token->isLiteral()) {
-    name = token->value;               /* set the default target            */
-                                       /* set the builtin index for later   */
-                                       /* resolution step                   */
-    builtin_index = this->builtin(token);
-                                       /* process the argument list         */
-    argCount = this->argList(OREF_NULL, TERM_EOC);
-    _flags |= RexxInstructionCall::call_nointernal;          /* do not check for internal routines*/
-  }
-                                       /* indirect call case?               */
-  else if (token->classId == TOKEN_LEFT) {
-    _flags |= RexxInstructionCall::call_dynamic;             /* going to be indirect              */
-    name = this->parenExpression(token); // this is a full expression
-                                       /* process the argument list         */
-    argCount = this->argList(OREF_NULL, TERM_EOC);
-                                       /* NOTE:  this call is not added to  */
-                                       /* the resolution list because it    */
-                                       /* cannot be resolved until run time */
-  }
-  else
-                                       /* this is an error                  */
-    syntaxError(Error_Symbol_or_string_call);
-                                       /* create a new translator object    */
-  newObject = new_variable_instruction(CALL, Call, sizeof(RexxInstructionCallBase) + argCount * sizeof(RexxObject *));
-                                       /* Initialize this new object        */
-  new ((void *)newObject) RexxInstructionCall(name, _condition, argCount, this->subTerms, _flags, builtin_index);
-  if (!(flags&RexxInstructionCall::call_dynamic))           /* static name resolution?           */
-    this->addReference(newObject);     /* add to table of references        */
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::commandNew()
@@ -394,16 +427,13 @@ RexxInstruction *RexxSource::commandNew()
 /* Function:  Create a new COMMAND instruction object                       */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxObject *_expression;             /* expression to evaluate            */
-
-                                       /* process the expression            */
-  _expression = this->expression(TERM_EOC);
-                                       /* create a new translator object    */
-  newObject = new_instruction(COMMAND, Command);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionCommand(_expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* process the expression            */
+    RexxObject *_expression = this->expression(TERM_EOC);
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(COMMAND, Command);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionCommand(_expression);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::doNew()
@@ -435,9 +465,9 @@ RexxInstruction *RexxSource::loopNew()
 RexxInstruction *RexxSource::createLoop()
 {
     // NOTE:  we create a DO instruction for both DO and LOOP
-    RexxObject *newObject = new_instruction(DO, Do); /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(DO, Do); /* create a new translator object    */
     new((void *)newObject) RexxInstructionDo;
-    return (RexxInstruction *)newObject;
+    return newObject;
 }
 
 
@@ -736,17 +766,13 @@ RexxInstruction *RexxSource::dropNew()
 /* Function:  Create a new DROP translator object                           */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  size_t      variableCount;           /* count of variables                */
-
-                                       /* go process the list               */
-  variableCount = this->processVariableList(KEYWORD_DROP);
-                                       /* create a new translator object    */
-  newObject = (RexxObject *)new_variable_instruction(DROP, Drop, sizeof(RexxInstructionDrop)
-              + (variableCount - 1) * sizeof(RexxObject *));
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionDrop(variableCount, this->subTerms);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* go process the list               */
+    size_t variableCount = this->processVariableList(KEYWORD_DROP);
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_variable_instruction(DROP, Drop, sizeof(RexxInstructionDrop) + (variableCount - 1) * sizeof(RexxObject *));
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionDrop(variableCount, this->subTerms);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::elseNew(
@@ -755,13 +781,11 @@ RexxInstruction *RexxSource::elseNew(
 /* Function:  Create a new ELSE translator object                           */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
-                                       /* create a new translator object    */
-  newObject = (RexxObject *)new_instruction(ELSE, Else);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionElse(token);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(ELSE, Else);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionElse(token);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::endNew()
@@ -769,27 +793,28 @@ RexxInstruction *RexxSource::endNew()
 /* Function:  Create a new END translator object                            */
 /****************************************************************************/
 {
-  RexxObject   *newObject;             /* newly created object              */
-  RexxToken    *token;                 /* current working token             */
-  RexxString   *name;                  /* the end control name              */
-
-  name = OREF_NULL;                    /* no name yet                       */
-  token = nextReal();                  /* get the next token                */
-  if (!token->isEndOfClause()) {   /* have a name specified?            */
-    if (!token->isSymbol())/* must have a symbol here           */
-                                       /* this is an error                  */
-      syntaxError(Error_Symbol_expected_end);
-    name = token->value;               /* get the name pointer              */
-    token = nextReal();                /* get the next token                */
-    if (!token->isEndOfClause())   /* end of the instruction?           */
-                                       /* this is an error                  */
-      syntaxError(Error_Invalid_data_end, token);
-  }
-                                       /* create a new translator object    */
-  newObject = (RexxObject *)new_instruction(END, End);
-                                       /* now complete this                 */
-  new((void *)newObject) RexxInstructionEnd(name);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    RexxString *name = OREF_NULL;                    /* no name yet                       */
+    RexxToken *token = nextReal();                  /* get the next token                */
+    if (!token->isEndOfClause())
+    {   /* have a name specified?            */
+        if (!token->isSymbol())/* must have a symbol here           */
+        {
+            /* this is an error                  */
+            syntaxError(Error_Symbol_expected_end);
+        }
+        name = token->value;               /* get the name pointer              */
+        token = nextReal();                /* get the next token                */
+        if (!token->isEndOfClause())   /* end of the instruction?           */
+        {
+            /* this is an error                  */
+            syntaxError(Error_Invalid_data_end, token);
+        }
+    }
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(END, End);
+    /* now complete this                 */
+    new((void *)newObject) RexxInstructionEnd(name);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::endIfNew(
@@ -798,13 +823,11 @@ RexxInstruction *RexxSource::endIfNew(
 /* Function:  Create a new DUMMY END IF translator object                   */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
-                                       /* create a new translator object    */
-  newObject = (RexxObject *)new_instruction(ENDIF, EndIf);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionEndIf(parent);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(ENDIF, EndIf);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionEndIf(parent);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::exitNew()
@@ -812,16 +835,13 @@ RexxInstruction *RexxSource::exitNew()
 /* Function:  Create a EXIT instruction object                              */
 /****************************************************************************/
 {
-  RexxObject   *newObject;             /* newly created object              */
-  RexxObject   *_expression;            /* expression to evaluate            */
-
-                                       /* process the expression            */
-  _expression = this->expression(TERM_EOC);
-                                       /* create a new translator object    */
-  newObject = (RexxObject *)new_instruction(EXIT, Exit);
-                                       /* now complete this                 */
-  new((void *)newObject) RexxInstructionExit(_expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* process the expression            */
+    RexxObject *_expression = this->expression(TERM_EOC);
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(EXIT, Exit);
+    /* now complete this                 */
+    new((void *)newObject) RexxInstructionExit(_expression);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::exposeNew()
@@ -829,17 +849,14 @@ RexxInstruction *RexxSource::exposeNew()
 /* Function:  Create a new EXPOSE translator object                         */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  size_t      variableCount;           /* count of variables                */
-
-  this->isExposeValid();               /* validate the placement            */
-                                       /* go process the list               */
-  variableCount = this->processVariableList(KEYWORD_EXPOSE);
-                                       /* Get new object                    */
-  newObject = (RexxObject *)new_variable_instruction(EXPOSE, Expose, sizeof(RexxInstructionExpose) + (variableCount - 1) * sizeof(RexxObject *));
-                                       /* Initialize this new method        */
-  new ((void *)newObject) RexxInstructionExpose(variableCount, this->subTerms);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    this->isExposeValid();               /* validate the placement            */
+                                         /* go process the list               */
+    size_t variableCount = this->processVariableList(KEYWORD_EXPOSE);
+    /* Get new object                    */
+    RexxInstruction *newObject = new_variable_instruction(EXPOSE, Expose, sizeof(RexxInstructionExpose) + (variableCount - 1) * sizeof(RexxObject *));
+    /* Initialize this new method        */
+    new ((void *)newObject) RexxInstructionExpose(variableCount, this->subTerms);
+    return newObject; /* done, return this                 */
 }
 
 void RexxSource::RexxInstructionForwardCreate(
@@ -848,101 +865,123 @@ void RexxSource::RexxInstructionForwardCreate(
 /* Function:  Create a FORWARD instruction object                           */
 /****************************************************************************/
 {
-  RexxToken *token;                    /* current working token             */
-  bool       returnContinue;           /* return or continue found          */
+    bool returnContinue = false;              /* no return or continue yet         */
+    RexxToken *token = nextReal();                  /* get the next token                */
 
-  returnContinue = false;              /* no return or continue yet         */
-  token = nextReal();                  /* get the next token                */
-
-  while (!token->isEndOfClause()) {/* while still more to process       */
-    if (!token->isSymbol())/* not a symbol token?               */
-                                       /* this is an error                  */
-      syntaxError(Error_Invalid_subkeyword_forward_option, token);
-    switch (this->subKeyword(token)) { /* get the keyword value             */
-
-      case SUBKEY_TO:                  /* FORWARD TO expr                   */
-                                       /* have a description already?       */
-        if (newObject->target != OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_to);
-                                       /* get the keyword value             */
-        OrefSet(newObject, newObject->target, this->constantExpression());
-                                       /* no expression here?               */
-        if (newObject->target == OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_expression_forward_to);
-        break;
-
-      case SUBKEY_CLASS:               /* FORWARD CLASS expr                */
-                                       /* have a class over ride already?   */
-        if (newObject->superClass != OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_forward_class);
-                                       /* get the keyword value             */
-        OrefSet(newObject, newObject->superClass, this->constantExpression());
-                                       /* no expression here?               */
-        if (newObject->superClass == OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_expression_forward_class);
-        break;
-
-      case SUBKEY_MESSAGE:             /* FORWARD MESSAGE expr              */
-                                       /* have a message over ride already? */
-        if (newObject->message != OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_message);
-                                       /* get the keyword value             */
-        OrefSet(newObject, newObject->message, this->constantExpression());
-                                       /* no expression here?               */
-        if (newObject->message == OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_expression_forward_message);
-        break;
-
-      case SUBKEY_ARGUMENTS:           /* FORWARD ARGUMENTS expr            */
-                                       /* have a additional already?        */
-        if (newObject->arguments != OREF_NULL || newObject->array != OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_arguments);
-                                       /* get the keyword value             */
-        OrefSet(newObject, newObject->arguments, this->constantExpression());
-                                       /* no expression here?               */
-        if (newObject->arguments == OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_expression_forward_arguments);
-        break;
-
-      case SUBKEY_ARRAY:               /* FORWARD ARRAY (expr, expr)        */
-                                       /* have arguments already?           */
-        if (newObject->arguments != OREF_NULL || newObject->array != OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_arguments);
-        token = nextReal();            /* get the next token                */
-                                       /* not an expression list starter?   */
-        if (token->classId != TOKEN_LEFT) {
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_expression_raise_list);
+    while (!token->isEndOfClause())
+    {/* while still more to process       */
+        if (!token->isSymbol())/* not a symbol token?               */
+        {
+            /* this is an error                  */
+            syntaxError(Error_Invalid_subkeyword_forward_option, token);
         }
-                                       /* process the array list            */
-        OrefSet(newObject, newObject->array, this->argArray(token, TERM_RIGHT));
-        break;
+        switch (this->subKeyword(token))
+        { /* get the keyword value             */
 
-      case SUBKEY_CONTINUE:            /* FORWARD CONTINUE                  */
-        if (returnContinue)            /* already had the return action?    */
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_continue);
-        returnContinue = true;         /* not valid again                   */
-                                       /* remember this                     */
-        newObject->instructionFlags |= forward_continue;
-        break;
+            case SUBKEY_TO:                  /* FORWARD TO expr                   */
+                /* have a description already?       */
+                if (newObject->target != OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_to);
+                }
+                /* get the keyword value             */
+                OrefSet(newObject, newObject->target, this->constantExpression());
+                /* no expression here?               */
+                if (newObject->target == OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_expression_forward_to);
+                }
+                break;
 
-      default:                         /* invalid subkeyword                */
-                                       /* this is a sub keyword error       */
-        syntaxError(Error_Invalid_subkeyword_forward_option, token);
-        break;
+            case SUBKEY_CLASS:               /* FORWARD CLASS expr                */
+                /* have a class over ride already?   */
+                if (newObject->superClass != OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_forward_class);
+                }
+                /* get the keyword value             */
+                OrefSet(newObject, newObject->superClass, this->constantExpression());
+                /* no expression here?               */
+                if (newObject->superClass == OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_expression_forward_class);
+                }
+                break;
+
+            case SUBKEY_MESSAGE:             /* FORWARD MESSAGE expr              */
+                /* have a message over ride already? */
+                if (newObject->message != OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_message);
+                }
+                /* get the keyword value             */
+                OrefSet(newObject, newObject->message, this->constantExpression());
+                /* no expression here?               */
+                if (newObject->message == OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_expression_forward_message);
+                }
+                break;
+
+            case SUBKEY_ARGUMENTS:           /* FORWARD ARGUMENTS expr            */
+                /* have a additional already?        */
+                if (newObject->arguments != OREF_NULL || newObject->array != OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_arguments);
+                }
+                /* get the keyword value             */
+                OrefSet(newObject, newObject->arguments, this->constantExpression());
+                /* no expression here?               */
+                if (newObject->arguments == OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_expression_forward_arguments);
+                }
+                break;
+
+            case SUBKEY_ARRAY:               /* FORWARD ARRAY (expr, expr)        */
+                /* have arguments already?           */
+                if (newObject->arguments != OREF_NULL || newObject->array != OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_arguments);
+                }
+                token = nextReal();            /* get the next token                */
+                                               /* not an expression list starter?   */
+                if (token->classId != TOKEN_LEFT)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_expression_raise_list);
+                }
+                /* process the array list            */
+                OrefSet(newObject, newObject->array, this->argArray(token, TERM_RIGHT));
+                break;
+
+            case SUBKEY_CONTINUE:            /* FORWARD CONTINUE                  */
+                if (returnContinue)            /* already had the return action?    */
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_continue);
+                }
+                returnContinue = true;         /* not valid again                   */
+                                               /* remember this                     */
+                newObject->instructionFlags |= forward_continue;
+                break;
+
+            default:                         /* invalid subkeyword                */
+                /* this is a sub keyword error       */
+                syntaxError(Error_Invalid_subkeyword_forward_option, token);
+                break;
+        }
+        token = nextReal();                /* step to the next keyword          */
     }
-    token = nextReal();                /* step to the next keyword          */
-  }
 }
 
 RexxInstruction *RexxSource::forwardNew()
@@ -950,13 +989,11 @@ RexxInstruction *RexxSource::forwardNew()
 /* Function:  Create a new RAISE translator object                             */
 /****************************************************************************/
 {
-  RexxObject   *newObject;             /* newly created object              */
-
-                                       /* create a new translator object    */
-  newObject = new_instruction(FORWARD, Forward);
-  new((void *)newObject) RexxInstructionForward;
-  this->RexxInstructionForwardCreate((RexxInstructionForward *)newObject);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(FORWARD, Forward);
+    new((void *)newObject) RexxInstructionForward;
+    this->RexxInstructionForwardCreate((RexxInstructionForward *)newObject);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::guardNew()
@@ -964,71 +1001,75 @@ RexxInstruction *RexxSource::guardNew()
 /* Function:  Create a new GUARD translator object                            */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxArray  *variable_list;           /* list of variables                 */
-  RexxToken  *token;                   /* current working token             */
-  bool        on_off = false;          /* ON or OFF version                 */
-  RexxObject *_expression;             /* WHEN expression                   */
-  size_t      variable_count;          /* count of variables                */
-
-  _expression = OREF_NULL;             /* default no expression             */
-  variable_list = OREF_NULL;           /* no variable either                */
-  variable_count = 0;                  /* no variables yet                  */
-  token = nextReal();                  /* get the next token                */
-  if (!token->isSymbol())  /* must have a symbol here           */
-                                       /* raise the error                   */
-    syntaxError(Error_Symbol_expected_numeric, token);
-
-                                       /* resolve the subkeyword and        */
-                                       /* process the subkeyword            */
-  switch (this->subKeyword(token)) {
-    case SUBKEY_OFF:                   /* GUARD OFF instruction             */
-      on_off = false;                  /* this is the guard off form        */
-      break;
-
-    case SUBKEY_ON:                    /* GUARD ON instruction              */
-      on_off = true;                   /* remember it is the on form        */
-      break;
-
-    default:
-                                       /* raise an error                    */
-      syntaxError(Error_Invalid_subkeyword_guard, token);
-      break;
-  }
-  token = nextReal();                  /* get the next token                */
-  if (token->isSymbol()) {/* have the keyword form?            */
-                                       /* resolve the subkeyword            */
-    switch (this->subKeyword(token)) { /* and process                       */
-
-      case SUBKEY_WHEN:                /* GUARD ON WHEN expr                */
-        this->setGuard();              /* turn on guard variable collection */
-                                       /* process the expression            */
-        _expression = this->expression(TERM_EOC);
-        if (_expression == OREF_NULL)   /* no expression?                    */
-                                       /* expression is required after value*/
-          syntaxError(Error_Invalid_expression_guard);
-                                       /* retrieve the guard variable list  */
-        variable_list = this->getGuard();
-                                       /* get the size                      */
-        variable_count = variable_list->size();
-        break;
-
-      default:                         /* invalid subkeyword                */
-                                       /* raise an error                    */
-        syntaxError(Error_Invalid_subkeyword_guard_on, token);
-        break;
+    RexxObject *_expression = OREF_NULL;             /* default no expression             */
+    RexxArray *variable_list = OREF_NULL;           /* no variable either                */
+    size_t variable_count = 0;                  /* no variables yet                  */
+    RexxToken *token = nextReal();                  /* get the next token                */
+    if (!token->isSymbol())  /* must have a symbol here           */
+    {
+        /* raise the error                   */
+        syntaxError(Error_Symbol_expected_numeric, token);
     }
-  }
-  else if (!token->isEndOfClause())/* not the end?                      */
-                                       /* raise an error                    */
-    syntaxError(Error_Invalid_subkeyword_guard_on, token);
 
-                                       /* Get new object                    */
-  newObject = (RexxObject *)new_variable_instruction(GUARD, Guard, sizeof(RexxInstructionGuard)
-               + (variable_count - 1) * sizeof(RexxObject *));
-                                       /* Initialize this new method        */
-  new ((void *)newObject) RexxInstructionGuard(_expression, variable_list, on_off);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    bool on_off;
+
+    /* resolve the subkeyword and        */
+    /* process the subkeyword            */
+    switch (this->subKeyword(token))
+    {
+        case SUBKEY_OFF:                   /* GUARD OFF instruction             */
+            on_off = false;                  /* this is the guard off form        */
+            break;
+
+        case SUBKEY_ON:                    /* GUARD ON instruction              */
+            on_off = true;                   /* remember it is the on form        */
+            break;
+
+        default:
+            /* raise an error                    */
+            syntaxError(Error_Invalid_subkeyword_guard, token);
+            break;
+    }
+    token = nextReal();                  /* get the next token                */
+    if (token->isSymbol())
+    {/* have the keyword form?            */
+        /* resolve the subkeyword            */
+        switch (this->subKeyword(token))
+        { /* and process                       */
+
+            case SUBKEY_WHEN:                /* GUARD ON WHEN expr                */
+                this->setGuard();              /* turn on guard variable collection */
+                                               /* process the expression            */
+                _expression = this->expression(TERM_EOC);
+                if (_expression == OREF_NULL)   /* no expression?                    */
+                {
+                    /* expression is required after value*/
+                    syntaxError(Error_Invalid_expression_guard);
+                }
+                /* retrieve the guard variable list  */
+                variable_list = this->getGuard();
+                /* get the size                      */
+                variable_count = variable_list->size();
+                break;
+
+            default:                         /* invalid subkeyword                */
+                /* raise an error                    */
+                syntaxError(Error_Invalid_subkeyword_guard_on, token);
+                break;
+        }
+    }
+    else if (!token->isEndOfClause())/* not the end?                      */
+    {
+        /* raise an error                    */
+        syntaxError(Error_Invalid_subkeyword_guard_on, token);
+    }
+
+    /* Get new object                    */
+    RexxInstruction *newObject = new_variable_instruction(GUARD, Guard, sizeof(RexxInstructionGuard)
+                                                       + (variable_count - 1) * sizeof(RexxObject *));
+    /* Initialize this new method        */
+    new ((void *)newObject) RexxInstructionGuard(_expression, variable_list, on_off);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::ifNew(
@@ -1037,29 +1078,31 @@ RexxInstruction *RexxSource::ifNew(
 /* Function:  Create a new INTERPRET instruction object                     */
 /****************************************************************************/
 {
-  RexxInstruction *newObject;          /* newly created object              */
-  RexxObject *_condition;               /* expression to evaluate            */
-  RexxToken  *token;                   /* working token                     */
-
-                                       /* process the expression            */
-  _condition = this->parseLogical(OREF_NULL, TERM_IF);
-  if (_condition == OREF_NULL) {        /* no expression here?               */
-    if (type == KEYWORD_IF)            /* IF form?                          */
-                                       /* issue the IF message              */
-      syntaxError(Error_Invalid_expression_if);
-    else
-                                       /* issue the WHEN message            */
-      syntaxError(Error_Invalid_expression_when);
-  }
-  token = nextReal();                  /* get terminator token              */
-  previousToken();                     /* push the terminator back          */
-                                       /* create a new translator object    */
-  newObject = (RexxInstruction *)new_instruction(IF, If);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionIf(_condition, token);
-  newObject->setType(type);            /* set the IF/WHEN type              */
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* process the expression            */
+    RexxObject *_condition = this->parseLogical(OREF_NULL, TERM_IF);
+    if (_condition == OREF_NULL)
+    {        /* no expression here?               */
+        if (type == KEYWORD_IF)            /* IF form?                          */
+        {
+            /* issue the IF message              */
+            syntaxError(Error_Invalid_expression_if);
+        }
+        else
+        {
+            /* issue the WHEN message            */
+            syntaxError(Error_Invalid_expression_when);
+        }
+    }
+    RexxToken *token = nextReal();                  /* get terminator token              */
+    previousToken();                     /* push the terminator back          */
+                                         /* create a new translator object    */
+    RexxInstruction *newObject =  new_instruction(IF, If);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionIf(_condition, token);
+    newObject->setType(type);            /* set the IF/WHEN type              */
+    return newObject; /* done, return this                 */
 }
+
 
 RexxInstruction *RexxSource::instructionNew(
      int type )                        /* instruction type                  */
@@ -1067,12 +1110,10 @@ RexxInstruction *RexxSource::instructionNew(
 /* Function:  Create a new INSTRUCTION translator object                    */
 /****************************************************************************/
 {
-  RexxInstruction *newObject;          /* newly created object              */
-
-                                       /* create a new translator object    */
-  newObject = (RexxInstruction *)this->sourceNewObject(sizeof(RexxInstruction), TheInstructionBehaviour, KEYWORD_INSTRUCTION);
-  newObject->setType(type);            /* set the given type                */
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* create a new translator object    */
+    RexxInstruction *newObject =  this->sourceNewObject(sizeof(RexxInstruction), TheInstructionBehaviour, KEYWORD_INSTRUCTION);
+    newObject->setType(type);            /* set the given type                */
+    return newObject;                    /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::interpretNew()
@@ -1080,19 +1121,18 @@ RexxInstruction *RexxSource::interpretNew()
 /* Function:  Create a new INTERPRET instruction object                     */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxObject *_expression;              /* expression to evaluate            */
-
-                                       /* process the expression            */
-  _expression = this->expression(TERM_EOC);
-  if (_expression == OREF_NULL)         /* no expression here?               */
-                                       /* this is invalid                   */
-    syntaxError(Error_Invalid_expression_interpret);
-                                       /* create a new translator object    */
-  newObject = new_instruction(INTERPRET, Interpret);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionInterpret(_expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* process the expression            */
+    RexxObject *_expression = this->expression(TERM_EOC);
+    if (_expression == OREF_NULL)         /* no expression here?               */
+    {
+        /* this is invalid                   */
+        syntaxError(Error_Invalid_expression_interpret);
+    }
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(INTERPRET, Interpret);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionInterpret(_expression);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::labelNew()
@@ -1100,24 +1140,19 @@ RexxInstruction *RexxSource::labelNew()
 /* Function:  Create a new LABEL instruction translator object                */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly create object               */
-  RexxToken  *token;                   /* current working token             */
-  RexxString *name;                    /* label name                        */
-  SourceLocation location;             /* location information              */
+    RexxToken *token = nextToken();                 /* get the next token                */
+    RexxString *name = token->value;                 /* get the label name                */
+    /* allocate a new object             */
+    RexxInstruction *newObject = new_instruction(LABEL, Label);
+    /* add to the label list             */
+    this->addLabel( newObject, name);
+    token = nextReal();                  /* get the colon token               */
 
-  token = nextToken();                 /* get the next token                */
-  name = token->value;                 /* get the label name                */
-                                       /* allocate a new object             */
-  newObject = new_instruction(LABEL, Label);
-                                       /* add to the label list             */
-  this->addLabel((RexxInstruction *)newObject, name);
-  token = nextReal();                  /* get the colon token               */
-
-  location = token->getLocation();     /* get the token location            */
-                                       /* the clause ends with the colon    */
-  ((RexxInstruction *)newObject)->setEnd(location.getEndLine(), location.getEndOffset());
-  new ((void *)newObject) RexxInstructionLabel();
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    SourceLocation location = token->getLocation();     /* get the token location            */
+    /* the clause ends with the colon    */
+    newObject->setEnd(location.getEndLine(), location.getEndOffset());
+    new ((void *)newObject) RexxInstructionLabel();
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::leaveNew(
@@ -1126,38 +1161,45 @@ RexxInstruction *RexxSource::leaveNew(
 /* Function:  Create a new LEAVE/ITERATE instruction translator object      */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly create object               */
-  RexxToken  *token;                   /* current working token             */
-  RexxString *name;                    /* LEAVE/ITERATE control name        */
-
-  name = OREF_NULL;                    /* no name yet                       */
-  token = nextReal();                  /* get the next token                */
-  if (!token->isEndOfClause()) {   /* have a name specified?            */
-                                       /* must have a symbol here           */
-    if (!token->isSymbol()) {
-      if (type == KEYWORD_LEAVE)       /* is it a LEAVE?                    */
-                                       /* this is an error                  */
-        syntaxError(Error_Symbol_expected_leave);
-      else
-                                       /* this is an iterate error          */
-        syntaxError(Error_Symbol_expected_iterate);
+    RexxString *name = OREF_NULL;                    /* no name yet                       */
+    RexxToken *token = nextReal();                  /* get the next token                */
+    if (!token->isEndOfClause())
+    {   /* have a name specified?            */
+        /* must have a symbol here           */
+        if (!token->isSymbol())
+        {
+            if (type == KEYWORD_LEAVE)       /* is it a LEAVE?                    */
+            {
+                /* this is an error                  */
+                syntaxError(Error_Symbol_expected_leave);
+            }
+            else
+            {
+                /* this is an iterate error          */
+                syntaxError(Error_Symbol_expected_iterate);
+            }
+        }
+        name = token->value;               /* get the name pointer              */
+        token = nextReal();                /* get the next token                */
+        if (!token->isEndOfClause())
+        { /* end of the instruction?           */
+            if (type == KEYWORD_LEAVE)       /* is it a LEAVE?                    */
+            {
+                /* this is an error                  */
+                syntaxError(Error_Invalid_data_leave, token);
+            }
+            else
+            {
+                /* this is an iterate error          */
+                syntaxError(Error_Invalid_data_iterate, token);
+            }
+        }
     }
-    name = token->value;               /* get the name pointer              */
-    token = nextReal();                /* get the next token                */
-    if (!token->isEndOfClause()) { /* end of the instruction?           */
-      if (type == KEYWORD_LEAVE)       /* is it a LEAVE?                    */
-                                       /* this is an error                  */
-        syntaxError(Error_Invalid_data_leave, token);
-      else
-                                       /* this is an iterate error          */
-        syntaxError(Error_Invalid_data_iterate, token);
-    }
-  }
-                                       /* allocate a new object             */
-  newObject = new_instruction(LEAVE, Leave);
-                                       /* Initialize this new method        */
-  new ((void *)newObject) RexxInstructionLeave(type, name);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* allocate a new object             */
+    RexxInstruction *newObject = new_instruction(LEAVE, Leave);
+    /* Initialize this new method        */
+    new ((void *)newObject) RexxInstructionLeave(type, name);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::messageNew(
@@ -1166,12 +1208,12 @@ RexxInstruction *RexxSource::messageNew(
 /* Function:  Create a new MESSAGE instruction translator object            */
 /****************************************************************************/
 {
-  ProtectedObject p(_message);
-                                       /* allocate a new object             */
-  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount - 1) * sizeof(RexxObject *));
-                                       /* Initialize this new method        */
-  new ((void *)newObject) RexxInstructionMessage(_message);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    ProtectedObject p(_message);
+    /* allocate a new object             */
+    RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount - 1) * sizeof(RexxObject *));
+    /* Initialize this new method        */
+    new ((void *)newObject) RexxInstructionMessage(_message);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::messageAssignmentNew(
@@ -1182,12 +1224,12 @@ RexxInstruction *RexxSource::messageAssignmentNew(
 /****************************************************************************/
 {
     ProtectedObject p(_message);        // protect this
-  _message->makeAssignment(this);       // convert into an assignment message
-  // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
-  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount) * sizeof(RexxObject *));
-                                       /* Initialize this new method        */
-  new ((void *)newObject) RexxInstructionMessage(_message, _expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    _message->makeAssignment(this);       // convert into an assignment message
+    // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
+    RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount) * sizeof(RexxObject *));
+    /* Initialize this new method        */
+    new ((void *)newObject) RexxInstructionMessage(_message, _expression);
+    return newObject; /* done, return this                 */
 }
 
 
@@ -1205,21 +1247,21 @@ RexxInstruction *RexxSource::messageAssignmentNew(
  */
 RexxInstruction *RexxSource::messageAssignmentOpNew(RexxExpressionMessage *_message, RexxToken *operation, RexxObject *_expression)
 {
-  ProtectedObject p(_message);        // protect this
-  // make a copy of the message term for use in the expression
-  RexxObject *retriever = _message->copy();
+    ProtectedObject p(_message);        // protect this
+    // make a copy of the message term for use in the expression
+    RexxObject *retriever = _message->copy();
 
-  _message->makeAssignment(this);       // convert into an assignment message (the original message term)
+    _message->makeAssignment(this);       // convert into an assignment message (the original message term)
 
 
-  // now add a binary operator to this expression tree
-  _expression = (RexxObject *)new RexxBinaryOperator(operation->subclass, retriever, _expression);
+    // now add a binary operator to this expression tree
+    _expression = (RexxObject *)new RexxBinaryOperator(operation->subclass, retriever, _expression);
 
-  // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
-  RexxObject *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount) * sizeof(RexxObject *));
-                                       /* Initialize this new method        */
-  new ((void *)newObject) RexxInstructionMessage(_message, _expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    // allocate a new object.  NB:  a message instruction gets an extra argument, so we don't subtract one.
+    RexxInstruction *newObject = new_variable_instruction(MESSAGE, Message, sizeof(RexxInstructionMessage) + (_message->argumentCount) * sizeof(RexxObject *));
+    /* Initialize this new method        */
+    new ((void *)newObject) RexxInstructionMessage(_message, _expression);
+    return newObject; /* done, return this                 */
 }
 
 
@@ -1228,18 +1270,17 @@ RexxInstruction *RexxSource::nopNew()
 /* Function:  Create a NOP instruction object                               */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxToken  *token;                   /* current working token             */
-
-  token = nextReal();                  /* get the next token                */
-  if (!token->isEndOfClause())     /* not at the end-of-clause?         */
-                                       /* bad NOP instruction               */
-    syntaxError(Error_Invalid_data_nop, token);
-                                       /* create a new translator object    */
-  newObject = new_instruction(NOP, Nop);
-                                       /* dummy new to consruct VFT         */
-  new ((void *)newObject) RexxInstructionNop;
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    RexxToken *token = nextReal();                  /* get the next token                */
+    if (!token->isEndOfClause())     /* not at the end-of-clause?         */
+    {
+        /* bad NOP instruction               */
+        syntaxError(Error_Invalid_data_nop, token);
+    }
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(NOP, Nop);
+    /* dummy new to consruct VFT         */
+    new ((void *)newObject) RexxInstructionNop;
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::numericNew()
@@ -1247,91 +1288,99 @@ RexxInstruction *RexxSource::numericNew()
 /* Function:  Create a NUMERIC instruction object                           */
 /****************************************************************************/
 {
-  RexxObject  *newObject;              /* newly created object              */
-  RexxObject  *_expression;            /* expression to evaluate            */
-  RexxToken   *token;                  /* current working token             */
-  unsigned short type;                 /* type of instruction               */
-  size_t      _flags;                  /* numeric flags                     */
+    RexxObject *_expression = OREF_NULL;              /* clear the expression              */
+    size_t _flags = 0;                           /* and the flags                     */
+    RexxToken *token = nextReal();                  /* get the next token                */
+    if (!token->isSymbol())  /* must have a symbol here           */
+    {
+        /* raise the error                   */
+        syntaxError(Error_Symbol_expected_numeric, token);
+    }
 
-  _expression = OREF_NULL;              /* clear the expression              */
-  _flags = 0;                           /* and the flags                     */
-  token = nextReal();                  /* get the next token                */
-  if (!token->isSymbol())  /* must have a symbol here           */
-                                       /* raise the error                   */
-    syntaxError(Error_Symbol_expected_numeric, token);
-
-  type = this->subKeyword(token);      /* resolve the subkeyword            */
-  switch (type) {                      /* process the subkeyword            */
-    case SUBKEY_DIGITS:                /* NUMERIC DIGITS instruction        */
-                                       /* process the expression            */
-      _expression = this->expression(TERM_EOC);
-      break;
-
-    case SUBKEY_FORM:                  /* NUMERIC FORM instruction          */
-      token = nextReal();              /* get the next token                */
-      if (token->isEndOfClause()) /* just NUMERIC FORM?                */
-        break;                         /* we're all finished                */
-                                       /* have the keyword form?            */
-      else if (token->isSymbol()) {
-                                       /* resolve the subkeyword            */
-                                       /* and process                       */
-        switch (this->subKeyword(token)) {
-
-          case SUBKEY_SCIENTIFIC:      /* NUMERIC FORM SCIENTIFIC           */
-            token = nextReal();        /* get the next token                */
-                                       /* end of the instruction?           */
-            if (!token->isEndOfClause())
-                                       /* this is an error                  */
-              syntaxError(Error_Invalid_data_form, token);
-            break;
-
-          case SUBKEY_ENGINEERING:     /* NUMERIC FORM ENGINEERING          */
-                                       /* switch to engineering             */
-            _flags |= numeric_engineering;
-            token = nextReal();        /* get the next token                */
-                                       /* end of the instruction?           */
-            if (!token->isEndOfClause())
-                                       /* this is an error                  */
-              syntaxError(Error_Invalid_data_form, token);
-            break;
-
-          case SUBKEY_VALUE:           /* NUMERIC FORM VALUE expr           */
-                                       /* process the expression            */
+    unsigned short type = this->subKeyword(token);      /* resolve the subkeyword            */
+    switch (type)
+    {                      /* process the subkeyword            */
+        case SUBKEY_DIGITS:                /* NUMERIC DIGITS instruction        */
+            /* process the expression            */
             _expression = this->expression(TERM_EOC);
-                                       /* no expression?                    */
-            if (_expression == OREF_NULL)
-                                       /* expression is required after value*/
-              syntaxError(Error_Invalid_expression_form);
             break;
 
-          default:                     /* invalid subkeyword                */
-                                       /* raise an error                    */
-            syntaxError(Error_Invalid_subkeyword_form, token);
+        case SUBKEY_FORM:                  /* NUMERIC FORM instruction          */
+            token = nextReal();              /* get the next token                */
+            if (token->isEndOfClause()) /* just NUMERIC FORM?                */
+            {
+                break;                         /* we're all finished                */
+            }
+                                               /* have the keyword form?            */
+            else if (token->isSymbol())
+            {
+                /* resolve the subkeyword            */
+                /* and process                       */
+                switch (this->subKeyword(token))
+                {
+
+                    case SUBKEY_SCIENTIFIC:      /* NUMERIC FORM SCIENTIFIC           */
+                        token = nextReal();        /* get the next token                */
+                                                   /* end of the instruction?           */
+                        if (!token->isEndOfClause())
+                        {
+                            /* this is an error                  */
+                            syntaxError(Error_Invalid_data_form, token);
+                        }
+                        break;
+
+                    case SUBKEY_ENGINEERING:     /* NUMERIC FORM ENGINEERING          */
+                        /* switch to engineering             */
+                        _flags |= numeric_engineering;
+                        token = nextReal();        /* get the next token                */
+                                                   /* end of the instruction?           */
+                        if (!token->isEndOfClause())
+                        {
+                            /* this is an error                  */
+                            syntaxError(Error_Invalid_data_form, token);
+                        }
+                        break;
+
+                    case SUBKEY_VALUE:           /* NUMERIC FORM VALUE expr           */
+                        /* process the expression            */
+                        _expression = this->expression(TERM_EOC);
+                        /* no expression?                    */
+                        if (_expression == OREF_NULL)
+                        {
+                            /* expression is required after value*/
+                            syntaxError(Error_Invalid_expression_form);
+                        }
+                        break;
+
+                    default:                     /* invalid subkeyword                */
+                        /* raise an error                    */
+                        syntaxError(Error_Invalid_subkeyword_form, token);
+                        break;
+
+                }
+            }
+            else
+            {                           /* NUMERIC FORM expr                 */
+                previousToken();               /* step back a token                 */
+                                               /* process the expression            */
+                _expression = this->expression(TERM_EOC);
+            }
             break;
 
-        }
-      }
-      else {                           /* NUMERIC FORM expr                 */
-        previousToken();               /* step back a token                 */
-                                       /* process the expression            */
-        _expression = this->expression(TERM_EOC);
-      }
-      break;
+        case SUBKEY_FUZZ:                  /* NUMERIC FUZZ instruction          */
+            /* process the expression            */
+            _expression = this->expression(TERM_EOC);
+            break;
 
-    case SUBKEY_FUZZ:                  /* NUMERIC FUZZ instruction          */
-                                       /* process the expression            */
-      _expression = this->expression(TERM_EOC);
-      break;
-
-    default:                           /* invalid subkeyword                */
-      syntaxError(Error_Invalid_subkeyword_numeric, token);
-      break;
-  }
-                                       /* create a new translator object    */
-  newObject = new_instruction(NUMERIC, Numeric);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionNumeric(_expression, type, _flags);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+        default:                           /* invalid subkeyword                */
+            syntaxError(Error_Invalid_subkeyword_numeric, token);
+            break;
+    }
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(NUMERIC, Numeric);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionNumeric(_expression, type, _flags);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::optionsNew()
@@ -1339,23 +1388,19 @@ RexxInstruction *RexxSource::optionsNew()
 /* Function:  Create an OPTIONS instruction object                          */
 /****************************************************************************/
 {
-  RexxObject   *newObject;             /* newly created object              */
-  RexxObject   *_expression;            /* expression to evaluate            */
-  RexxToken    *_first;                 /* first token of the clause         */
-
-                                       /* process the expression            */
-  _expression = this->expression(TERM_EOC);
-  if (_expression == OREF_NULL)         /* no expression here?               */
-                                       /* this is invalid                   */
-    syntaxError(Error_Invalid_expression_options);
-  firstToken();                        /* reset the clause to beginning     */
-  nextToken();                         /* step past the first token         */
-  _first = nextReal();                  /* get the first token               */
-                                       /* create a new translator object    */
-  newObject = new_instruction(OPTIONS, Options);
-                                       /* now complete this                 */
-  new((void *)newObject) RexxInstructionOptions(_expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* process the expression            */
+    RexxObject *_expression = this->expression(TERM_EOC);
+    if (_expression == OREF_NULL)         /* no expression here?               */
+        /* this is invalid                   */
+        syntaxError(Error_Invalid_expression_options);
+    firstToken();                        /* reset the clause to beginning     */
+    nextToken();                         /* step past the first token         */
+    RexxToken *_first = nextReal();                  /* get the first token               */
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(OPTIONS, Options);
+    /* now complete this                 */
+    new((void *)newObject) RexxInstructionOptions(_expression);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::otherwiseNew(
@@ -1364,13 +1409,11 @@ RexxInstruction *RexxSource::otherwiseNew(
 /* Function:  Create an OTHERWISE instruction object                        */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
-                                       /* create a new translator object    */
-  newObject = new_instruction(OTHERWISE, Otherwise);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionOtherwise(token);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(OTHERWISE, Otherwise);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionOtherwise(token);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::parseNew(
@@ -1379,253 +1422,287 @@ RexxInstruction *RexxSource::parseNew(
 /* Function:  Create a PARSE instruction object                             */
 /****************************************************************************/
 {
-  RexxObject       *newObject;         /* newly created object              */
-  RexxObject       *_expression;        /* expression for parse value        */
-  RexxQueue        *parse_template;    /* parsing template                  */
-  RexxToken        *token;             /* current working token             */
-  RexxQueue        *_variables;        /* template variables                */
-  int               _keyword;          /* located keyword                   */
-  RexxTrigger      *trigger;           /* current working trigger           */
-  int               trigger_type = 0;  /* type of the current trigger       */
-  unsigned short    string_source;     /* source of string data             */
-  size_t            _flags;            /* parsing flags                     */
-  int               templateCount;     /* number of template items          */
-  int               variableCount;     /* number of variable items          */
 
-  _flags = 0;                           /* new flag values                   */
-  _expression = OREF_NULL;              /* zero out the expression           */
-  if (argpull != KEYWORD_PARSE) {       /* have one of the short forms?      */
-    string_source = argpull;            /* set the proper source location    */
-    _flags |= parse_upper;              /* we're uppercasing                 */
-  }
-  else {                               /* need to parse source keywords     */
-    for (;;) {                         /* loop through for multiple keywords*/
-      token = nextReal();              /* get a token                       */
-                                       /* not a symbol here?                */
-      if (!token->isSymbol())
-                                       /* this is an error                  */
-        syntaxError(Error_Symbol_expected_parse);
-                                       /* resolve the keyword               */
-      _keyword = this->parseOption(token);
+    RexxToken        *token;             /* current working token             */
+    unsigned short    string_source;     /* source of string data             */
 
-      switch (_keyword) {               /* process potential modifiers       */
-
-        case SUBKEY_UPPER:             /* doing uppercasing?                */
-          if (_flags&parse_translate)   /* already had a translation option? */
-            break;                     /* this is an unrecognized keyword   */
-          _flags |= parse_upper;        /* set the translate option          */
-          continue;                    /* go around for another one         */
-
-        case SUBKEY_LOWER:             /* doing lowercasing?                */
-          if (_flags&parse_translate)   /* already had a translation option? */
-            break;                     /* this is an unrecognized keyword   */
-                                       /* set the translate option          */
-          _flags |= parse_lower;        /* set the translate option          */
-          continue;                    /* go around for another one         */
-
-        case SUBKEY_CASELESS:          /* caseless comparisons?             */
-          if (_flags&parse_caseless)    /* already had this options?         */
-            break;                     /* this is an unrecognized keyword   */
-                                       /* set the translate option          */
-          _flags |= parse_caseless;     /* set the scan option               */
-          continue;                    /* go around for another one         */
-      }
-      break;                           /* fall out into source processing   */
-    }
-
-    string_source = _keyword;          /* set the source                    */
-    switch (_keyword) {                 /* now process the parse option      */
-
-      case SUBKEY_PULL:                /* PARSE PULL instruction            */
-      case SUBKEY_LINEIN:              /* PARSE LINEIN instruction          */
-      case SUBKEY_ARG:                 /* PARSE ARG instruction             */
-      case SUBKEY_SOURCE:              /* PARSE SOURCE instruction          */
-      case SUBKEY_VERSION:             /* PARSE VERSION instruction         */
-        break;                         /* this is already done              */
-
-      case SUBKEY_VAR:                 /* PARSE VAR name instruction        */
-        token = nextReal();            /* get the next token                */
-                                       /* not a symbol token                */
-        if (!token->isSymbol())
-                                       /* this is an error                  */
-          syntaxError(Error_Symbol_expected_var);
-                                       /* get the variable retriever        */
-        _expression = (RexxObject *)this->addVariable(token);
-        this->saveObject(_expression);  /* protect it in the saveTable (required for large PARSE statements) */
-        break;
-
-      case SUBKEY_VALUE:               /* need to process an expression     */
-        _expression = this->expression(TERM_WITH | TERM_KEYWORD);
-		if (_expression == OREF_NULL )       /* If script not complete, report error RI0001 */
-          //syntaxError(Error_Invalid_template_with);
-		  _expression = OREF_NULLSTRING ;             // Set to NULLSTRING if not coded in script
-        this->saveObject(_expression);  /* protecting in the saveTable is better for large PARSE statements */
-
-        token = nextToken();           /* get the terminator                */
-        if (!token->isSymbol() || this->subKeyword(token) != SUBKEY_WITH)
-                                       /* got another error                 */
-          syntaxError(Error_Invalid_template_with);
-        break;
-
-      default:                         /* unknown (or duplicate) keyword    */
-                                       /* report an error                   */
-        syntaxError(Error_Invalid_subkeyword_parse, token);
-        break;
-    }
-  }
-
-  parse_template = this->subTerms;     /* use the sub terms list template   */
-  templateCount = 0;                   /* no template items                 */
-  _variables = this->terms;            /* and the terms list for variables  */
-  variableCount = 0;                   /* no variable items                 */
-  token = nextReal();                  /* get the next token                */
-
-  for (;;) {                           /* while still in the template       */
-                                       /* found the end?                    */
-    if (token->isEndOfClause()) {
-                                       /* string trigger, null target       */
-      trigger = new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables);
-      variableCount = 0;               /* have a new set of variables       */
-                                       /* add this to the trigger list      */
-      parse_template->push((RexxObject *)trigger);
-      templateCount++;                 /* and step the count                */
-      break;                           /* done processing                   */
-    }
-                                       /* comma in the template?            */
-    else if (token->classId == TOKEN_COMMA) {
-      trigger = new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables);
-      variableCount = 0;               /* have a new set of variables       */
-                                       /* add this to the trigger list      */
-      parse_template->push((RexxObject *)trigger);
-      parse_template->push(OREF_NULL); /* add an empty entry in the list    */
-      templateCount += 2;              /* count both of these               */
-    }
-                                       /* some variety of special trigger?  */
-    else if (token->classId == TOKEN_OPERATOR) {
-      switch (token->subclass) {       /* process the operator character    */
-
-        case  OPERATOR_PLUS:           /* +num or +(var) form               */
-          trigger_type = TRIGGER_PLUS; /* positive relative trigger         */
-          break;
-
-        case  OPERATOR_SUBTRACT:       /* -num or -(var) form               */
-          trigger_type = TRIGGER_MINUS;/* negative relative trigger         */
-          break;
-
-        case  OPERATOR_EQUAL:          /* =num or =(var) form               */
-                                       /* absolute column trigger           */
-          trigger_type = TRIGGER_ABSOLUTE;
-          break;
-
-        case OPERATOR_LESSTHAN:        // <num or <(var)
-          trigger_type = TRIGGER_MINUS_LENGTH;
-          break;
-
-        case OPERATOR_GREATERTHAN:     // >num or >(var)
-          trigger_type = TRIGGER_PLUS_LENGTH;
-          break;
-
-        default:                       /* something unrecognized            */
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_template_trigger, token);
-          break;
-      }
-      token = nextReal();              /* get the next token                */
-                                       /* have a variable trigger?          */
-      if (token->classId == TOKEN_LEFT) {
-        // parse off an expression in the parens.
-        RexxObject *subExpr = this->parenExpression(token);
-                                       /* create the appropriate trigger    */
-        trigger = new (variableCount) RexxTrigger(trigger_type, subExpr, variableCount, _variables);
-        variableCount = 0;             /* have a new set of variables       */
-                                       /* add this to the trigger list      */
-        parse_template->push((RexxObject *)trigger);
-        templateCount++;               /* add this one in                   */
-      }
-                                       /* have a symbol?                    */
-      else if (token->isSymbol()) {
-                                       /* non-variable symbol?              */
-        if (token->subclass != SYMBOL_CONSTANT)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_template_position, token);
-                                       /* set the trigger type              */
-                                       /* create the appropriate trigger    */
-        trigger = new (variableCount) RexxTrigger(trigger_type, this->addText(token), variableCount, _variables);
-        variableCount = 0;             /* have a new set of variables       */
-                                       /* add this to the trigger list      */
-        parse_template->push((RexxObject *)trigger);
-        templateCount++;               /* step the counter                  */
-      }
-                                       /* at the end?                       */
-      else if (token->isEndOfClause())
-                                       /* report the missing piece          */
-        syntaxError(Error_Invalid_template_missing);
-      else
-                                       /* general position error            */
-        syntaxError(Error_Invalid_template_position, token);
-    }
-                                       /* variable string trigger?          */
-    else if (token->classId == TOKEN_LEFT) {
-      // parse off an expression in the parens.
-      RexxObject *subExpr = this->parenExpression(token);
-                                       /* create the appropriate trigger    */
-      trigger = new (variableCount) RexxTrigger(_flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING, subExpr, variableCount, _variables);
-      variableCount = 0;               /* have a new set of variables       */
-                                       /* add this to the trigger list      */
-      parse_template->push((RexxObject *)trigger);
-      templateCount++;                 /* step the counter                  */
-    }
-    else if (token->isLiteral()) {     /* non-variable string trigger?      */
-                                       /* create the appropriate trigger    */
-      trigger = new (variableCount) RexxTrigger(_flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING,
-          this->addText(token), variableCount, _variables);
-      variableCount = 0;               /* have a new set of variables       */
-                                       /* add this to the trigger list      */
-      parse_template->push((RexxObject *)trigger);
-      templateCount++;                 /* step the counter                  */
-    }
-    else if (token->isSymbol()) {      /* symbol in the template?           */
-                                       /* non-variable symbol?              */
-      if (token->subclass == SYMBOL_CONSTANT) {
-                                       /* create the appropriate trigger    */
-        trigger = new (variableCount) RexxTrigger(TRIGGER_ABSOLUTE, this->addText(token), variableCount, _variables);
-        variableCount = 0;             /* have a new set of variables       */
-                                       /* add this to the trigger list      */
-        parse_template->push((RexxObject *)trigger);
-        templateCount++;               /* step the counter                  */
-      }
-                                       /* place holder period?              */
-      else {
-        if (token->subclass == SYMBOL_DUMMY)
-        {
-            _variables->push(OREF_NULL);   /* just add an empty item            */
-            variableCount++;               /* step the variable counter         */
-        }
-        else                           /* have a variable, add to list      */
-        {
-            // this is potentially a message term
-            previousToken();
-            RexxObject *term = variableOrMessageTerm();
-            if (term == OREF_NULL)
-            {
-                syntaxError(Error_Variable_expected_PARSE, token);
-            }
-            _variables->push(term);
-            variableCount++;               /* step the variable counter         */
-        }
-      }
+    size_t _flags = 0;                           /* new flag values                   */
+    RexxObject *_expression = OREF_NULL;              /* zero out the expression           */
+    if (argpull != KEYWORD_PARSE)
+    {       /* have one of the short forms?      */
+        string_source = argpull;            /* set the proper source location    */
+        _flags |= parse_upper;              /* we're uppercasing                 */
     }
     else
-                                       /* this is invalid                   */
-      syntaxError(Error_Invalid_template_trigger, token);
-    token = nextReal();                /* get the next token                */
-  }
-                                       /* create a new translator object    */
-  newObject = new_variable_instruction(PARSE, Parse, sizeof(RexxInstructionParse) + (templateCount - 1) * sizeof(RexxObject *));
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionParse(_expression, string_source, _flags, templateCount, parse_template);
-  this->toss(_expression);             /* release the expression, it is saved by newObject */
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    {                               /* need to parse source keywords     */
+        int _keyword;
+        for (;;)
+        {                         /* loop through for multiple keywords*/
+            token = nextReal();              /* get a token                       */
+                                             /* not a symbol here?                */
+            if (!token->isSymbol())
+            {
+                /* this is an error                  */
+                syntaxError(Error_Symbol_expected_parse);
+            }
+            /* resolve the keyword               */
+            _keyword = this->parseOption(token);
+
+            switch (_keyword)
+            {               /* process potential modifiers       */
+
+                case SUBKEY_UPPER:             /* doing uppercasing?                */
+                    if (_flags&parse_translate)   /* already had a translation option? */
+                    {
+                        break;                     /* this is an unrecognized keyword   */
+                    }
+                    _flags |= parse_upper;        /* set the translate option          */
+                    continue;                    /* go around for another one         */
+
+                case SUBKEY_LOWER:             /* doing lowercasing?                */
+                    if (_flags&parse_translate)   /* already had a translation option? */
+                    {
+                        break;                     /* this is an unrecognized keyword   */
+                    }
+                                                   /* set the translate option          */
+                    _flags |= parse_lower;        /* set the translate option          */
+                    continue;                    /* go around for another one         */
+
+                case SUBKEY_CASELESS:          /* caseless comparisons?             */
+                    if (_flags&parse_caseless)    /* already had this options?         */
+                    {
+                        break;                     /* this is an unrecognized keyword   */
+                    }
+                                                   /* set the translate option          */
+                    _flags |= parse_caseless;     /* set the scan option               */
+                    continue;                    /* go around for another one         */
+            }
+            break;                           /* fall out into source processing   */
+        }
+
+        string_source = _keyword;          /* set the source                    */
+        switch (_keyword)
+        {                 /* now process the parse option      */
+
+            case SUBKEY_PULL:                /* PARSE PULL instruction            */
+            case SUBKEY_LINEIN:              /* PARSE LINEIN instruction          */
+            case SUBKEY_ARG:                 /* PARSE ARG instruction             */
+            case SUBKEY_SOURCE:              /* PARSE SOURCE instruction          */
+            case SUBKEY_VERSION:             /* PARSE VERSION instruction         */
+                break;                         /* this is already done              */
+
+            case SUBKEY_VAR:                 /* PARSE VAR name instruction        */
+                token = nextReal();            /* get the next token                */
+                                               /* not a symbol token                */
+                if (!token->isSymbol())
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Symbol_expected_var);
+                }
+                /* get the variable retriever        */
+                _expression = (RexxObject *)this->addVariable(token);
+                this->saveObject(_expression);  /* protect it in the saveTable (required for large PARSE statements) */
+                break;
+
+            case SUBKEY_VALUE:               /* need to process an expression     */
+                _expression = this->expression(TERM_WITH | TERM_KEYWORD);
+                if (_expression == OREF_NULL )       /* If script not complete, report error RI0001 */
+                {
+                    //syntaxError(Error_Invalid_template_with);
+                    _expression = OREF_NULLSTRING ;             // Set to NULLSTRING if not coded in script
+                }
+                this->saveObject(_expression);  /* protecting in the saveTable is better for large PARSE statements */
+
+                token = nextToken();           /* get the terminator                */
+                if (!token->isSymbol() || this->subKeyword(token) != SUBKEY_WITH)
+                {
+                    /* got another error                 */
+                    syntaxError(Error_Invalid_template_with);
+                }
+                break;
+
+            default:                         /* unknown (or duplicate) keyword    */
+                /* report an error                   */
+                syntaxError(Error_Invalid_subkeyword_parse, token);
+                break;
+        }
+    }
+
+    RexxQueue *parse_template = this->subTerms;     /* use the sub terms list template   */
+    int templateCount = 0;                   /* no template items                 */
+    RexxQueue *_variables = this->terms;            /* and the terms list for variables  */
+    int variableCount = 0;                   /* no variable items                 */
+    token = nextReal();                  /* get the next token                */
+
+    RexxTrigger *trigger;
+
+    for (;;)
+    {                           /* while still in the template       */
+                                /* found the end?                    */
+        if (token->isEndOfClause())
+        {
+            /* string trigger, null target       */
+            trigger = new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables);
+            variableCount = 0;               /* have a new set of variables       */
+                                             /* add this to the trigger list      */
+            parse_template->push((RexxObject *)trigger);
+            templateCount++;                 /* and step the count                */
+            break;                           /* done processing                   */
+        }
+        /* comma in the template?            */
+        else if (token->classId == TOKEN_COMMA)
+        {
+            trigger = new (variableCount) RexxTrigger(TRIGGER_END, (RexxObject *)OREF_NULL, variableCount, _variables);
+            variableCount = 0;               /* have a new set of variables       */
+                                             /* add this to the trigger list      */
+            parse_template->push((RexxObject *)trigger);
+            parse_template->push(OREF_NULL); /* add an empty entry in the list    */
+            templateCount += 2;              /* count both of these               */
+        }
+        /* some variety of special trigger?  */
+        else if (token->classId == TOKEN_OPERATOR)
+        {
+            int trigger_type;
+            switch (token->subclass)
+            {       /* process the operator character    */
+
+                case  OPERATOR_PLUS:           /* +num or +(var) form               */
+                    trigger_type = TRIGGER_PLUS; /* positive relative trigger         */
+                    break;
+
+                case  OPERATOR_SUBTRACT:       /* -num or -(var) form               */
+                    trigger_type = TRIGGER_MINUS;/* negative relative trigger         */
+                    break;
+
+                case  OPERATOR_EQUAL:          /* =num or =(var) form               */
+                    /* absolute column trigger           */
+                    trigger_type = TRIGGER_ABSOLUTE;
+                    break;
+
+                case OPERATOR_LESSTHAN:        // <num or <(var)
+                    trigger_type = TRIGGER_MINUS_LENGTH;
+                    break;
+
+                case OPERATOR_GREATERTHAN:     // >num or >(var)
+                    trigger_type = TRIGGER_PLUS_LENGTH;
+                    break;
+
+                default:                       /* something unrecognized            */
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_template_trigger, token);
+                    break;
+            }
+            token = nextReal();              /* get the next token                */
+                                             /* have a variable trigger?          */
+            if (token->classId == TOKEN_LEFT)
+            {
+                // parse off an expression in the parens.
+                RexxObject *subExpr = this->parenExpression(token);
+                /* create the appropriate trigger    */
+                trigger = new (variableCount) RexxTrigger(trigger_type, subExpr, variableCount, _variables);
+                variableCount = 0;             /* have a new set of variables       */
+                                               /* add this to the trigger list      */
+                parse_template->push((RexxObject *)trigger);
+                templateCount++;               /* add this one in                   */
+            }
+            /* have a symbol?                    */
+            else if (token->isSymbol())
+            {
+                /* non-variable symbol?              */
+                if (token->subclass != SYMBOL_CONSTANT)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_template_position, token);
+                }
+                /* set the trigger type              */
+                /* create the appropriate trigger    */
+                trigger = new (variableCount) RexxTrigger(trigger_type, this->addText(token), variableCount, _variables);
+                variableCount = 0;             /* have a new set of variables       */
+                                               /* add this to the trigger list      */
+                parse_template->push((RexxObject *)trigger);
+                templateCount++;               /* step the counter                  */
+            }
+            /* at the end?                       */
+            else if (token->isEndOfClause())
+            {
+                /* report the missing piece          */
+                syntaxError(Error_Invalid_template_missing);
+            }
+            else
+            {
+                /* general position error            */
+                syntaxError(Error_Invalid_template_position, token);
+            }
+        }
+        /* variable string trigger?          */
+        else if (token->classId == TOKEN_LEFT)
+        {
+            // parse off an expression in the parens.
+            RexxObject *subExpr = this->parenExpression(token);
+            /* create the appropriate trigger    */
+            trigger = new (variableCount) RexxTrigger(_flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING, subExpr, variableCount, _variables);
+            variableCount = 0;               /* have a new set of variables       */
+                                             /* add this to the trigger list      */
+            parse_template->push((RexxObject *)trigger);
+            templateCount++;                 /* step the counter                  */
+        }
+        else if (token->isLiteral())
+        {     /* non-variable string trigger?      */
+              /* create the appropriate trigger    */
+            trigger = new (variableCount) RexxTrigger(_flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING,
+                                                      this->addText(token), variableCount, _variables);
+            variableCount = 0;               /* have a new set of variables       */
+                                             /* add this to the trigger list      */
+            parse_template->push((RexxObject *)trigger);
+            templateCount++;                 /* step the counter                  */
+        }
+        else if (token->isSymbol())
+        {      /* symbol in the template?           */
+               /* non-variable symbol?              */
+            if (token->subclass == SYMBOL_CONSTANT)
+            {
+                /* create the appropriate trigger    */
+                trigger = new (variableCount) RexxTrigger(TRIGGER_ABSOLUTE, this->addText(token), variableCount, _variables);
+                variableCount = 0;             /* have a new set of variables       */
+                                               /* add this to the trigger list      */
+                parse_template->push((RexxObject *)trigger);
+                templateCount++;               /* step the counter                  */
+            }
+            /* place holder period?              */
+            else
+            {
+                if (token->subclass == SYMBOL_DUMMY)
+                {
+                    _variables->push(OREF_NULL);   /* just add an empty item            */
+                    variableCount++;               /* step the variable counter         */
+                }
+                else                           /* have a variable, add to list      */
+                {
+                    // this is potentially a message term
+                    previousToken();
+                    RexxObject *term = variableOrMessageTerm();
+                    if (term == OREF_NULL)
+                    {
+                        syntaxError(Error_Variable_expected_PARSE, token);
+                    }
+                    _variables->push(term);
+                    variableCount++;               /* step the variable counter         */
+                }
+            }
+        }
+        else
+        {
+            /* this is invalid                   */
+            syntaxError(Error_Invalid_template_trigger, token);
+        }
+        token = nextReal();                /* get the next token                */
+    }
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_variable_instruction(PARSE, Parse, sizeof(RexxInstructionParse) + (templateCount - 1) * sizeof(RexxObject *));
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionParse(_expression, string_source, _flags, templateCount, parse_template);
+    this->toss(_expression);             /* release the expression, it is saved by newObject */
+    return newObject;                    /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::procedureNew()
@@ -1633,27 +1710,28 @@ RexxInstruction *RexxSource::procedureNew()
 /* Function:  Create a new PROCEDURE translator object                      */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  size_t      variableCount;           /* list of variables                 */
-  RexxToken  *token;                   /* current working token             */
-
-  token = nextReal();                  /* get the next token                */
-  variableCount = 0;                   /* no variables allocated yet        */
-  if (!token->isEndOfClause()) {   /* potentially PROCEDURE EXPOSE?     */
-    if (!token->isSymbol())/* not a symbol?                     */
-                                       /* must be a symbol here             */
-      syntaxError(Error_Invalid_subkeyword_procedure, token);
-                                       /* not the EXPOSE keyword?           */
-    if (this->subKeyword(token) != SUBKEY_EXPOSE)
-      syntaxError(Error_Invalid_subkeyword_procedure, token);
-                                       /* go process the list               */
-    variableCount = this->processVariableList(KEYWORD_PROCEDURE);
-  }
-                                       /* create a new translator object    */
-  newObject = new_variable_instruction(PROCEDURE, Procedure, sizeof(RexxInstructionProcedure) + (variableCount - 1) * sizeof(RexxObject *));
-                                       /* Initialize this new method        */
-  new ((void *)newObject) RexxInstructionProcedure(variableCount, this->subTerms);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    RexxToken *token = nextReal();                  /* get the next token                */
+    size_t variableCount = 0;                   /* no variables allocated yet        */
+    if (!token->isEndOfClause())
+    {   /* potentially PROCEDURE EXPOSE?     */
+        if (!token->isSymbol())/* not a symbol?                     */
+        {
+            /* must be a symbol here             */
+            syntaxError(Error_Invalid_subkeyword_procedure, token);
+        }
+        /* not the EXPOSE keyword?           */
+        if (this->subKeyword(token) != SUBKEY_EXPOSE)
+        {
+            syntaxError(Error_Invalid_subkeyword_procedure, token);
+        }
+        /* go process the list               */
+        variableCount = this->processVariableList(KEYWORD_PROCEDURE);
+    }
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_variable_instruction(PROCEDURE, Procedure, sizeof(RexxInstructionProcedure) + (variableCount - 1) * sizeof(RexxObject *));
+    /* Initialize this new method        */
+    new ((void *)newObject) RexxInstructionProcedure(variableCount, this->subTerms);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::queueNew(
@@ -1662,182 +1740,202 @@ RexxInstruction *RexxSource::queueNew(
 /* Function:  Create a QUEUE instruction object                             */
 /****************************************************************************/
 {
-  RexxObject   *newObject;             /* newly created object              */
-  RexxObject   *_expression;            /* expression to evaluate            */
-
-                                       /* process the expression            */
-  _expression = this->expression(TERM_EOC);
-                                       /* create a new translator object    */
-  newObject = new_instruction(QUEUE, Queue);
-                                       /* now complete this                 */
-  new((void *)newObject) RexxInstructionQueue(_expression, type);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* process the expression            */
+    RexxObject *_expression = this->expression(TERM_EOC);
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(QUEUE, Queue);
+    /* now complete this                 */
+    new((void *)newObject) RexxInstructionQueue(_expression, type);
+    return newObject;  /* done, return this                 */
 }
 RexxInstruction *RexxSource::raiseNew()
 /****************************************************************************/
 /* Function:  Create a new RAISE translator object                             */
 /****************************************************************************/
 {
-  RexxObject            *newObject;    /* newly created object              */
-  RexxToken             *token;        /* current working token             */
-  RexxString            *_condition;   /* constructed user condition name   */
-  RexxObject            *_expression;  /* condition extra expression        */
-  RexxObject            *description;  /* description expression            */
-  RexxObject            *additional;   /* additional expression             */
-  size_t                 arrayCount;   /* array expressions                 */
-  RexxObject            *result;       /* result expression                 */
-  int                    _keyword;     /* type of condition found           */
-  RexxQueue             *saveQueue;    /* temporary save queue              */
-  bool                   raiseReturn;  /* return form                       */
+    size_t arrayCount = SIZE_MAX;               /* clear out the temporaries         */
+    RexxObject *_expression = OREF_NULL;
+    RexxObject *description = OREF_NULL;
+    RexxObject *additional = OREF_NULL;
+    RexxObject *result = OREF_NULL;
+    bool raiseReturn = false;                 /* default is exit form              */
 
-
-  arrayCount = SIZE_MAX;               /* clear out the temporaries         */
-  _expression = OREF_NULL;
-  description = OREF_NULL;
-  additional = OREF_NULL;
-  result = OREF_NULL;
-  raiseReturn = false;                 /* default is exit form              */
-
-  saveQueue = new_queue();             /* get a new queue item              */
-  this->saveObject(saveQueue);         /* protect it                        */
-  token = nextReal();                  /* get the next token                */
-                                       /* no target specified or have a     */
-  if (!token->isSymbol())  /* bad token type?                   */
-                                       /* this is an error                  */
-    syntaxError(Error_Symbol_expected_raise);
-  _condition = token->value;           /* use the condition string value    */
-  saveQueue->push(_condition);         /* save the condition name           */
-  _keyword = this->condition(token);   /* check for the subkeywords         */
-  switch (_keyword) {                  /* process the different conditions  */
-
-    case CONDITION_FAILURE:            /* RAISE FAILURE returncode          */
-    case CONDITION_ERROR:              /* RAISE ERROR   returncode          */
-    case CONDITION_SYNTAX:             /* RAISE SYNTAX  number              */
-                                       /* go get the keyword value expr.    */
-      _expression = this->constantExpression();
-      if (_expression == OREF_NULL) {   /* no expression given?              */
-        token = nextToken();           /* get the terminator token          */
-                                       /* this is an invalid expression     */
-        syntaxError(Error_Invalid_expression_general, token);
-      }
-      saveQueue->queue(_expression);   /* protect it                        */
-      break;
-
-    case CONDITION_USER:               /* CONDITION USER usercondition      */
-      token = nextReal();              /* get the next token                */
-                                       /* bad token type?                   */
-      if (!token->isSymbol())
-                                       /* this is an error                  */
-        syntaxError(Error_Symbol_expected_user);
-      _condition = token->value;        /* get the token string value        */
-                                       /* condition name is "USER condition"*/
-      _condition = _condition->concatToCstring(CHAR_USER_BLANK);
-                                       /* get the common version            */
-      _condition = this->commonString(_condition);
-      saveQueue->queue(_condition);    /* save the condition                */
-      break;
-
-    case CONDITION_HALT:               /* CONDITION HALT                    */
-    case CONDITION_NOMETHOD:           /* CONDITION NOMETHOD                */
-    case CONDITION_NOSTRING:           /* CONDITION NOSTRING                */
-    case CONDITION_NOTREADY:           /* CONDITION NOTREADY                */
-    case CONDITION_NOVALUE:            /* CONDITION NOVALUE                 */
-    case CONDITION_LOSTDIGITS:         /* CONDITION NUMERIC                 */
-    case CONDITION_PROPAGATE:          /* CONDITION PROPAGATE               */
-      break;                           /* this is already processed above   */
-
-    default:                           /* invalid condition specified       */
-                                       /* this is a sub keyword error       */
-      syntaxError(Error_Invalid_subkeyword_raise, token);
-      break;
-  }
-  token = nextReal();                  /* get the next token                */
-  while (!token->isEndOfClause()) {/* while still more to process       */
-    if (!token->isSymbol())/* not a symbol token?               */
-                                       /* this is an error                  */
-      syntaxError(Error_Invalid_subkeyword_raiseoption, token);
-    _keyword = this->subKeyword(token); /* get the keyword value             */
-    switch (_keyword) {                /* process the subkeywords           */
-
-      case SUBKEY_DESCRIPTION:         /* RAISE ... DESCRIPTION expr        */
-        if (description != OREF_NULL)  /* have a description already?       */
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_description);
-                                       /* get the keyword value             */
-        description = this->constantExpression();
-        if (description == OREF_NULL)  /* no expression here?               */
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_expression_raise_description);
-        saveQueue->queue(description); /* protect this                      */
-        break;
-
-      case SUBKEY_ADDITIONAL:          /* RAISE ... ADDITIONAL expr         */
-                                       /* have a additional already?        */
-        if (additional != OREF_NULL || arrayCount != SIZE_MAX)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_additional);
-                                       /* get the keyword value             */
-        additional = this->constantExpression();
-                                       /* no expression here?               */
-        if (additional == OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_expression_raise_additional);
-        saveQueue->queue(additional);  /* protect this                      */
-        break;
-
-      case SUBKEY_ARRAY:               /* RAISE ... ARRAY expr              */
-                                       /* have a additional already?        */
-        if (additional != OREF_NULL || arrayCount != SIZE_MAX)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_additional);
-        token = nextReal();            /* get the next token                */
-                                       /* not an expression list starter?   */
-        if (token->classId != TOKEN_LEFT) {
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_expression_raise_list);
-        }
-                                       /* process the array list            */
-        arrayCount = this->argList(token, TERM_RIGHT);
-        break;
-
-      case SUBKEY_RETURN:              /* RAISE ... RETURN expr             */
-                                       /* have a result already?            */
-        if (result != OREF_NULL)
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_result);
-        raiseReturn = true;            /* remember this                     */
-                                       /* get the keyword value             */
-        result = this->constantExpression();
-        if (result != OREF_NULL)       /* actually have one?                */
-          saveQueue->queue(result);    /* protect this                      */
-        break;
-
-      case SUBKEY_EXIT:                /* RAISE ... EXIT expr               */
-        if (result != OREF_NULL)       /* have a result already?            */
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_subkeyword_result);
-                                       /* get the keyword value             */
-        result = this->constantExpression();
-        if (result != OREF_NULL)       /* actually have one?                */
-          saveQueue->queue(result);    /* protect this                      */
-        break;
-
-      default:                         /* invalid subkeyword                */
-                                       /* this is a sub keyword error       */
-        syntaxError(Error_Invalid_subkeyword_raiseoption, token);
-        break;
+    RexxQueue *saveQueue = new_queue();             /* get a new queue item              */
+    this->saveObject(saveQueue);         /* protect it                        */
+    RexxToken *token = nextReal();                  /* get the next token                */
+    /* no target specified or have a     */
+    if (!token->isSymbol())  /* bad token type?                   */
+    {
+        /* this is an error                  */
+        syntaxError(Error_Symbol_expected_raise);
     }
-    token = nextReal();                /* step to the next keyword          */
-  }
-  if (arrayCount != SIZE_MAX)          /* have the array version?           */
-                                       /* create a new translator object    */
-    newObject = new_variable_instruction(RAISE, Raise, sizeof(RexxInstructionRaise) + (arrayCount - 1) * sizeof(RexxObject *));
-  else                                 /* static instruction size           */
-    newObject = new_instruction(RAISE, Raise);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionRaise(_condition, _expression, description, additional, result, arrayCount, this->subTerms, raiseReturn);
-  this->toss(saveQueue);               /* release the GC lock               */
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    RexxString *_condition = token->value;           /* use the condition string value    */
+    saveQueue->push(_condition);         /* save the condition name           */
+    int _keyword = this->condition(token);   /* check for the subkeywords         */
+    switch (_keyword)
+    {                  /* process the different conditions  */
+
+        case CONDITION_FAILURE:            /* RAISE FAILURE returncode          */
+        case CONDITION_ERROR:              /* RAISE ERROR   returncode          */
+        case CONDITION_SYNTAX:             /* RAISE SYNTAX  number              */
+            /* go get the keyword value expr.    */
+            _expression = this->constantExpression();
+            if (_expression == OREF_NULL)
+            {   /* no expression given?              */
+                token = nextToken();           /* get the terminator token          */
+                                               /* this is an invalid expression     */
+                syntaxError(Error_Invalid_expression_general, token);
+            }
+            saveQueue->queue(_expression);   /* protect it                        */
+            break;
+
+        case CONDITION_USER:               /* CONDITION USER usercondition      */
+            token = nextReal();              /* get the next token                */
+                                             /* bad token type?                   */
+            if (!token->isSymbol())
+            {
+                /* this is an error                  */
+                syntaxError(Error_Symbol_expected_user);
+            }
+            _condition = token->value;        /* get the token string value        */
+            /* condition name is "USER condition"*/
+            _condition = _condition->concatToCstring(CHAR_USER_BLANK);
+            /* get the common version            */
+            _condition = this->commonString(_condition);
+            saveQueue->queue(_condition);    /* save the condition                */
+            break;
+
+        case CONDITION_HALT:               /* CONDITION HALT                    */
+        case CONDITION_NOMETHOD:           /* CONDITION NOMETHOD                */
+        case CONDITION_NOSTRING:           /* CONDITION NOSTRING                */
+        case CONDITION_NOTREADY:           /* CONDITION NOTREADY                */
+        case CONDITION_NOVALUE:            /* CONDITION NOVALUE                 */
+        case CONDITION_LOSTDIGITS:         /* CONDITION NUMERIC                 */
+        case CONDITION_PROPAGATE:          /* CONDITION PROPAGATE               */
+            break;                           /* this is already processed above   */
+
+        default:                           /* invalid condition specified       */
+            /* this is a sub keyword error       */
+            syntaxError(Error_Invalid_subkeyword_raise, token);
+            break;
+    }
+    token = nextReal();                  /* get the next token                */
+    while (!token->isEndOfClause())
+    {/* while still more to process       */
+        if (!token->isSymbol())/* not a symbol token?               */
+        {
+            /* this is an error                  */
+            syntaxError(Error_Invalid_subkeyword_raiseoption, token);
+        }
+        _keyword = this->subKeyword(token); /* get the keyword value             */
+        switch (_keyword)
+        {                /* process the subkeywords           */
+
+            case SUBKEY_DESCRIPTION:         /* RAISE ... DESCRIPTION expr        */
+                if (description != OREF_NULL)  /* have a description already?       */
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_description);
+                }
+                /* get the keyword value             */
+                description = this->constantExpression();
+                if (description == OREF_NULL)  /* no expression here?               */
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_expression_raise_description);
+                }
+                saveQueue->queue(description); /* protect this                      */
+                break;
+
+            case SUBKEY_ADDITIONAL:          /* RAISE ... ADDITIONAL expr         */
+                /* have a additional already?        */
+                if (additional != OREF_NULL || arrayCount != SIZE_MAX)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_additional);
+                }
+                /* get the keyword value             */
+                additional = this->constantExpression();
+                /* no expression here?               */
+                if (additional == OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_expression_raise_additional);
+                }
+                saveQueue->queue(additional);  /* protect this                      */
+                break;
+
+            case SUBKEY_ARRAY:               /* RAISE ... ARRAY expr              */
+                /* have a additional already?        */
+                if (additional != OREF_NULL || arrayCount != SIZE_MAX)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_additional);
+                }
+                token = nextReal();            /* get the next token                */
+                                               /* not an expression list starter?   */
+                if (token->classId != TOKEN_LEFT)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_expression_raise_list);
+                }
+                /* process the array list            */
+                arrayCount = this->argList(token, TERM_RIGHT);
+                break;
+
+            case SUBKEY_RETURN:              /* RAISE ... RETURN expr             */
+                /* have a result already?            */
+                if (result != OREF_NULL)
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_result);
+                }
+                raiseReturn = true;            /* remember this                     */
+                                               /* get the keyword value             */
+                result = this->constantExpression();
+                if (result != OREF_NULL)       /* actually have one?                */
+                {
+                    saveQueue->queue(result);    /* protect this                      */
+                }
+                break;
+
+            case SUBKEY_EXIT:                /* RAISE ... EXIT expr               */
+                if (result != OREF_NULL)       /* have a result already?            */
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_subkeyword_result);
+                }
+                /* get the keyword value             */
+                result = this->constantExpression();
+                if (result != OREF_NULL)       /* actually have one?                */
+                {
+                    saveQueue->queue(result);    /* protect this                      */
+                }
+                break;
+
+            default:                         /* invalid subkeyword                */
+                /* this is a sub keyword error       */
+                syntaxError(Error_Invalid_subkeyword_raiseoption, token);
+                break;
+        }
+        token = nextReal();                /* step to the next keyword          */
+    }
+
+    RexxInstruction *newObject;
+
+    if (arrayCount != SIZE_MAX)          /* have the array version?           */
+    {
+        /* create a new translator object    */
+        newObject = new_variable_instruction(RAISE, Raise, sizeof(RexxInstructionRaise) + (arrayCount - 1) * sizeof(RexxObject *));
+    }
+    else                                 /* static instruction size           */
+    {
+        newObject = new_instruction(RAISE, Raise);
+    }
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionRaise(_condition, _expression, description, additional, result, arrayCount, this->subTerms, raiseReturn);
+    this->toss(saveQueue);               /* release the GC lock               */
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::replyNew()
@@ -1845,15 +1943,12 @@ RexxInstruction *RexxSource::replyNew()
 /* Function:  Create a REPLY instruction object                             */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxObject *_expression;             /* expression to evaluate            */
-                                       /* process the expression            */
-  _expression = this->expression(TERM_EOC);
-                                       /* create a new translator object    */
-  newObject = new_instruction(REPLY, Reply);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionReply(_expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    RexxObject *_expression = this->expression(TERM_EOC);
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(REPLY, Reply);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionReply(_expression);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::returnNew()
@@ -1861,16 +1956,13 @@ RexxInstruction *RexxSource::returnNew()
 /* Function:  Create a RETURN instruction object                            */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxObject *_expression;             /* expression to evaluate            */
-
-                                       /* process the expression            */
-  _expression = this->expression(TERM_EOC);
-                                       /* create a new translator object    */
-  newObject = new_instruction(RETURN, Return);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionReturn(_expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* process the expression            */
+    RexxObject *_expression = this->expression(TERM_EOC);
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(RETURN, Return);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionReturn(_expression);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::sayNew()
@@ -1878,15 +1970,12 @@ RexxInstruction *RexxSource::sayNew()
 /* Function:  Create a SAY instruction object                               */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxObject *_expression;              /* expression to evaluate            */
-                                       /* process the expression            */
-  _expression = this->expression(TERM_EOC);
-                                       /* create a new translator object    */
-  newObject = new_instruction(SAY, Say);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionSay(_expression);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    RexxObject *_expression = this->expression(TERM_EOC);
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(SAY, Say);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionSay(_expression);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::selectNew()
@@ -1902,9 +1991,9 @@ RexxInstruction *RexxSource::selectNew()
     if (token->isEndOfClause())
     {
         // just a simple SELECT type
-        RexxObject *newObject = new_instruction(SELECT, Select);
+        RexxInstruction *newObject = new_instruction(SELECT, Select);
         new ((void *)newObject) RexxInstructionSelect(OREF_NULL);
-        return (RexxInstruction *)newObject;
+        return newObject;
     }
     else if (!token->isSymbol())
     {
@@ -1935,9 +2024,9 @@ RexxInstruction *RexxSource::selectNew()
     }
 
     // ok, finally allocate this and return
-    RexxObject *newObject = new_instruction(SELECT, Select);
+    RexxInstruction *newObject = new_instruction(SELECT, Select);
     new ((void *)newObject) RexxInstructionSelect(label);
-    return (RexxInstruction *)newObject;
+    return  newObject;
 }
 
 RexxInstruction *RexxSource::signalNew()
@@ -1945,159 +2034,197 @@ RexxInstruction *RexxSource::signalNew()
 /* Function:  Create a SIGNAL instruction object                            */
 /****************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-  RexxToken  *token;                   /* current working token             */
-  RexxString *_condition;               /* constructed USER condition name   */
-  int         _keyword;                 /* signal subkeyword                 */
-  RexxObject *_expression;              /* signal expression                 */
-  size_t      _flags;                   /* option flags                      */
-  RexxString *name;                    /* signal name                       */
-  bool        signalOff;               /* signal off form                   */
+    bool signalOff = false;                   /* not a SIGNAL OFF instruction      */
+    RexxObject *_expression = OREF_NULL;              /* no expression yet                 */
+    RexxString *name = OREF_NULL;                    /* no name                           */
+    RexxString *_condition = OREF_NULL;               /* and no condition                  */
+    size_t _flags = 0;                           /* no flags                          */
+    RexxToken *token = nextReal();                  /* get the next token                */
 
-  signalOff = false;                   /* not a SIGNAL OFF instruction      */
-  _expression = OREF_NULL;              /* no expression yet                 */
-  name = OREF_NULL;                    /* no name                           */
-  _condition = OREF_NULL;               /* and no condition                  */
-  _flags = 0;                           /* no flags                          */
-  token = nextReal();                  /* get the next token                */
-  if (token->isEndOfClause())     /* no target specified?              */
-                                       /* this is an error                  */
-    syntaxError(Error_Symbol_or_string_signal);
-                                       /* implicit value form?              */
-  else if (!token->isSymbolOrLiteral()) {
-    previousToken();                   /* step back a token                 */
-                                       /* go process the expression         */
-    _expression = this->expression(TERM_EOC);
-  }
-  else {                               /* have a real target                */
-                                       /* may have to process ON/OFF forms  */
-    if (token->isSymbol()) {
-                                       /* check for the subkeywords         */
-      _keyword = this->subKeyword(token);
-      if (_keyword == SUBKEY_ON) {      /* SIGNAL ON instruction?            */
-        _flags |= signal_on;            /* this is a SIGNAL ON               */
-        token = nextReal();            /* get the next token                */
-                                       /* no condition specified or not a   */
-                                       /* symbol?                           */
-        if (!token->isSymbol())
-                                       /* this is an error                  */
-          syntaxError(Error_Symbol_expected_on);
-                                       /* get the condition involved        */
-        _keyword = this->condition(token);
-                                       /* invalid condition specified?      */
-        if (_keyword == 0 || _keyword == CONDITION_PROPAGATE)
-                                       /* got an error here                 */
-          syntaxError(Error_Invalid_subkeyword_signalon, token);
-                                       /* actually a USER condition request?*/
-        else if (_keyword == CONDITION_USER) {
-          token = nextReal();          /* get the next token                */
-                                       /* no condition specified or not a   */
-                                       /* symbol?                           */
-          if (!token->isSymbol())
-                                       /* this is an error                  */
-            syntaxError(Error_Symbol_expected_user);
-          name = token->value;         /* set the default target            */
-                                       /* condition name is "USER condition"*/
-          _condition = name->concatToCstring(CHAR_USER_BLANK);
-                                       /* save the condition name           */
-          _condition = this->commonString(_condition);
-        }
-        else {                         /* language defined condition        */
-          name = token->value;         /* set the default target            */
-          _condition = name;           /* condition is the same as target   */
-        }
-        token = nextReal();            /* get the next token                */
-                                       /* anything real here?               */
-        if (!token->isEndOfClause()) {
-                                       /* not a symbol?                     */
-          if (!token->isSymbol())
-                                       /* this is an error                  */
-            syntaxError(Error_Invalid_subkeyword_signalonname, token);
-                                       /* not the name token?               */
-          if (this->subKeyword(token) != SUBKEY_NAME)
-                                       /* got an error here                 */
-            syntaxError(Error_Invalid_subkeyword_signalonname, token);
-          token = nextReal();          /* get the next token                */
-                                       /* not got a symbol here?            */
-          if (!token->isSymbolOrLiteral())
-                                       /* this is an error                  */
-            syntaxError(Error_Symbol_or_string_name);
-          name = token->value;         /* set the new target location       */
-          token = nextReal();          /* get the next token                */
-                                       /* must have the clause end here     */
-          if (!token->isEndOfClause())
-                                       /* this is an error                  */
-            syntaxError(Error_Invalid_data_name, token);
-        }
-      }
-      else if (_keyword == SUBKEY_OFF) {/* SIGNAL OFF instruction?           */
-        signalOff = true;              /* doing a SIGNAL OFF                */
-        token = nextReal();            /* get the next token                */
-                                       /* no condition specified or not a   */
-                                       /* symbol?                           */
-        if (!token->isSymbol())
-                                       /* this is an error                  */
-          syntaxError(Error_Symbol_expected_off);
-                                       /* get the condition involved        */
-        _keyword = this->condition(token);
-                                       /* invalid condition specified?      */
-        if (_keyword == 0 || _keyword == CONDITION_PROPAGATE)
-                                       /* got an error here                 */
-          syntaxError(Error_Invalid_subkeyword_signaloff, token);
-                                       /* actually a USER condition request?*/
-        else if (_keyword == CONDITION_USER) {
-          token = nextReal();          /* get the next token                */
-                                       /* no condition specified or not a   */
-                                       /* symbol?                           */
-          if (!token->isSymbol())
-                                       /* this is an error                  */
-            syntaxError(Error_Symbol_expected_user);
-          _condition = token->value;    /* get the token string value        */
-                                       /* condition name is "USER condition"*/
-          _condition = _condition->concatToCstring(CHAR_USER_BLANK);
-                                       /* save the condition name           */
-          _condition = this->commonString(_condition);
-        }
-        else                           /* language defined condition        */
-          _condition = token->value;    /* set the condition name            */
-        token = nextReal();            /* get the next token                */
-                                       /* must have the clause end here     */
-        if (!token->isEndOfClause())
-                                       /* this is an error                  */
-          syntaxError(Error_Invalid_data_condition, token);
-      }
-                                       /* is this the value keyword form?   */
-      else if (_keyword == SUBKEY_VALUE) {
-                                       /* get the expression                */
+    if (token->isEndOfClause())     /* no target specified?              */
+    {
+        /* this is an error                  */
+        syntaxError(Error_Symbol_or_string_signal);
+    }
+    /* implicit value form?              */
+    else if (!token->isSymbolOrLiteral())
+    {
+        previousToken();                   /* step back a token                 */
+                                           /* go process the expression         */
         _expression = this->expression(TERM_EOC);
-        if (_expression == OREF_NULL)   /* no expression here?               */
-                                       /* this is invalid                   */
-          syntaxError(Error_Invalid_expression_signal);
-      }
-      else {                           /* normal SIGNAL instruction         */
-        name = token->value;           /* set the signal target             */
-        token = nextReal();            /* step to the next token            */
-                                       /* not the end?                      */
-        if (!token->isEndOfClause())
-                                       /* have an error                     */
-          syntaxError(Error_Invalid_data_signal, token);
-      }
     }
-    else {                             /* signal with a string target       */
-      name = token->value;             /* set the signal target             */
-      token = nextReal();              /* step to the next token            */
-      if (!token->isEndOfClause()) /* not the end?                      */
-                                       /* have an error                     */
-        syntaxError(Error_Invalid_data_signal, token);
+    else
+    {                               /* have a real target                */
+                                    /* may have to process ON/OFF forms  */
+        if (token->isSymbol())
+        {
+            /* check for the subkeywords         */
+            int _keyword = this->subKeyword(token);
+            if (_keyword == SUBKEY_ON)
+            {      /* SIGNAL ON instruction?            */
+                _flags |= signal_on;            /* this is a SIGNAL ON               */
+                token = nextReal();            /* get the next token                */
+                                               /* no condition specified or not a   */
+                                               /* symbol?                           */
+                if (!token->isSymbol())
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Symbol_expected_on);
+                }
+                /* get the condition involved        */
+                _keyword = this->condition(token);
+                /* invalid condition specified?      */
+                if (_keyword == 0 || _keyword == CONDITION_PROPAGATE)
+                {
+                    /* got an error here                 */
+                    syntaxError(Error_Invalid_subkeyword_signalon, token);
+                }
+                /* actually a USER condition request?*/
+                else if (_keyword == CONDITION_USER)
+                {
+                    token = nextReal();          /* get the next token                */
+                                                 /* no condition specified or not a   */
+                                                 /* symbol?                           */
+                    if (!token->isSymbol())
+                    {
+                        /* this is an error                  */
+                        syntaxError(Error_Symbol_expected_user);
+                    }
+                    name = token->value;         /* set the default target            */
+                                                 /* condition name is "USER condition"*/
+                    _condition = name->concatToCstring(CHAR_USER_BLANK);
+                    /* save the condition name           */
+                    _condition = this->commonString(_condition);
+                }
+                else
+                {                         /* language defined condition        */
+                    name = token->value;         /* set the default target            */
+                    _condition = name;           /* condition is the same as target   */
+                }
+                token = nextReal();            /* get the next token                */
+                                               /* anything real here?               */
+                if (!token->isEndOfClause())
+                {
+                    /* not a symbol?                     */
+                    if (!token->isSymbol())
+                    {
+                        /* this is an error                  */
+                        syntaxError(Error_Invalid_subkeyword_signalonname, token);
+                    }
+                    /* not the name token?               */
+                    if (this->subKeyword(token) != SUBKEY_NAME)
+                    {
+                        /* got an error here                 */
+                        syntaxError(Error_Invalid_subkeyword_signalonname, token);
+                    }
+                    token = nextReal();          /* get the next token                */
+                                                 /* not got a symbol here?            */
+                    if (!token->isSymbolOrLiteral())
+                    {
+                        /* this is an error                  */
+                        syntaxError(Error_Symbol_or_string_name);
+                    }
+                    name = token->value;         /* set the new target location       */
+                    token = nextReal();          /* get the next token                */
+                                                 /* must have the clause end here     */
+                    if (!token->isEndOfClause())
+                    {
+                        /* this is an error                  */
+                        syntaxError(Error_Invalid_data_name, token);
+                    }
+                }
+            }
+            else if (_keyword == SUBKEY_OFF)
+            {/* SIGNAL OFF instruction?           */
+                signalOff = true;              /* doing a SIGNAL OFF                */
+                token = nextReal();            /* get the next token                */
+                                               /* no condition specified or not a   */
+                                               /* symbol?                           */
+                if (!token->isSymbol())
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Symbol_expected_off);
+                }
+                /* get the condition involved        */
+                _keyword = this->condition(token);
+                /* invalid condition specified?      */
+                if (_keyword == 0 || _keyword == CONDITION_PROPAGATE)
+                {
+                    /* got an error here                 */
+                    syntaxError(Error_Invalid_subkeyword_signaloff, token);
+                }
+                /* actually a USER condition request?*/
+                else if (_keyword == CONDITION_USER)
+                {
+                    token = nextReal();          /* get the next token                */
+                                                 /* no condition specified or not a   */
+                                                 /* symbol?                           */
+                    if (!token->isSymbol())
+                    {
+                        /* this is an error                  */
+                        syntaxError(Error_Symbol_expected_user);
+                    }
+                    _condition = token->value;    /* get the token string value        */
+                    /* condition name is "USER condition"*/
+                    _condition = _condition->concatToCstring(CHAR_USER_BLANK);
+                    /* save the condition name           */
+                    _condition = this->commonString(_condition);
+                }
+                else                           /* language defined condition        */
+                {
+                    _condition = token->value;    /* set the condition name            */
+                }
+                token = nextReal();            /* get the next token                */
+                                               /* must have the clause end here     */
+                if (!token->isEndOfClause())
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Invalid_data_condition, token);
+                }
+            }
+            /* is this the value keyword form?   */
+            else if (_keyword == SUBKEY_VALUE)
+            {
+                /* get the expression                */
+                _expression = this->expression(TERM_EOC);
+                if (_expression == OREF_NULL)   /* no expression here?               */
+                {
+                    /* this is invalid                   */
+                    syntaxError(Error_Invalid_expression_signal);
+                }
+            }
+            else
+            {                           /* normal SIGNAL instruction         */
+                name = token->value;           /* set the signal target             */
+                token = nextReal();            /* step to the next token            */
+                                               /* not the end?                      */
+                if (!token->isEndOfClause())
+                {
+                    /* have an error                     */
+                    syntaxError(Error_Invalid_data_signal, token);
+                }
+            }
+        }
+        else
+        {                             /* signal with a string target       */
+            name = token->value;             /* set the signal target             */
+            token = nextReal();              /* step to the next token            */
+            if (!token->isEndOfClause()) /* not the end?                      */
+            {
+                /* have an error                     */
+                syntaxError(Error_Invalid_data_signal, token);
+            }
+        }
     }
-  }
-                                       /* create a new translator object    */
-  newObject = new_instruction(SIGNAL, Signal);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionSignal(_expression, _condition, name, _flags);
-  if (!signalOff)                      /* need to resolve later?            */
-    this->addReference(newObject);     /* add to table of references        */
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(SIGNAL, Signal);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionSignal(_expression, _condition, name, _flags);
+    if (!signalOff)                      /* need to resolve later?            */
+    {
+        this->addReference((RexxObject *)newObject);     /* add to table of references        */
+    }
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::thenNew(
@@ -2107,13 +2234,11 @@ RexxInstruction *RexxSource::thenNew(
 /* Function:  Create a THEN instruction object                              */
 /****************************************************************************/
 {
-  RexxObject   *newObject;             /* newly created object              */
-
-                                       /* create a new translator object    */
-  newObject = new_instruction(THEN, Then);
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionThen(token, parent);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(THEN, Then);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionThen(token, parent);
+    return newObject; /* done, return this                 */
 }
 
 RexxInstruction *RexxSource::traceNew()
@@ -2121,99 +2246,114 @@ RexxInstruction *RexxSource::traceNew()
 /* Function:  Create a TRACE instruction object                             */
 /****************************************************************************/
 {
-  RexxToken  *token;                   /* current working token             */
-  RexxString *value;                   /* string value of symbol            */
-  RexxObject *_expression;             /* trace expression                  */
-  RexxObject *newObject;               /* newly created object              */
-  size_t      setting;                 /* new trace setting                 */
-  size_t      debug;                   /* new debug setting                 */
-  wholenumber_t debug_skip;            /* amount to skip                    */
-  size_t      debug_flags;             /* current debug flags               */
+    size_t setting = TRACE_NORMAL;              /* set default trace mode            */
+    wholenumber_t debug_skip = 0;                      /* no skipping                       */
+    size_t debug_flags = 0;                     /* no debug flags                    */
+    RexxObject *_expression = OREF_NULL;              /* not expression form               */
+    RexxToken *token = nextReal();                  /* get the next token                */
+    size_t      debug;                   /* new debug setting                 */
 
-  setting = TRACE_NORMAL;              /* set default trace mode            */
-  debug_skip = 0;                      /* no skipping                       */
-  debug_flags = 0;                     /* no debug flags                    */
-  _expression = OREF_NULL;              /* not expression form               */
-  token = nextReal();                  /* get the next token                */
-  if (!token->isEndOfClause()) {   /* more than just TRACE?             */
-                                       /* is this a symbol?                 */
-    if (token->isSymbol()) {
-                                       /* TRACE VALUE expr?                 */
-      if (this->subKeyword(token) == SUBKEY_VALUE) {
-                                       /* process the expression            */
-        _expression = this->expression(TERM_EOC);
-        if (_expression == OREF_NULL)   /* no expression?                    */
-                                       /* expression is required after value*/
-          syntaxError(Error_Invalid_expression_trace);
-      }
-      else {                           /* must have a symbol here           */
-        value = token->value;          /* get the string value              */
-        token = nextReal();            /* get the next token                */
-                                       /* end of the instruction?           */
-        if (!token->isEndOfClause())
-                                       /* this is an error                  */
-          syntaxError(Error_Invalid_data_trace, token);
-        if (!value->requestNumber(debug_skip, number_digits()))
+    if (!token->isEndOfClause())
+    {   /* more than just TRACE?             */
+        /* is this a symbol?                 */
+        if (token->isSymbol())
         {
-          debug_skip = 0;              /* belt and braces                   */
-                                       /* process the setting               */
-          this->parseTraceSetting(value, &setting, &debug);
-          debug_flags |= debug;        /* for execution time                */
+            /* TRACE VALUE expr?                 */
+            if (this->subKeyword(token) == SUBKEY_VALUE)
+            {
+                /* process the expression            */
+                _expression = this->expression(TERM_EOC);
+                if (_expression == OREF_NULL)   /* no expression?                    */
+                {
+                    /* expression is required after value*/
+                    syntaxError(Error_Invalid_expression_trace);
+                }
+            }
+            else
+            {                           /* must have a symbol here           */
+                RexxString *value = token->value;          /* get the string value              */
+                token = nextReal();            /* get the next token                */
+                                               /* end of the instruction?           */
+                if (!token->isEndOfClause())
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Invalid_data_trace, token);
+                }
+                if (!value->requestNumber(debug_skip, number_digits()))
+                {
+                    debug_skip = 0;              /* belt and braces                   */
+                                                 /* process the setting               */
+                    this->parseTraceSetting(value, &setting, &debug);
+                    debug_flags |= debug;        /* for execution time                */
+                }
+                else
+                {
+                    setting = 0;                 /* not a normal setting situation    */
+                }
+            }
+        }
+        else if (token->isLiteral())
+        {     /* is this a string?                 */
+            RexxString *value = token->value;            /* get the string value              */
+            token = nextReal();              /* get the next token                */
+            if (!token->isEndOfClause()) /* end of the instruction?           */
+            {
+                /* this is an error                  */
+                syntaxError(Error_Invalid_data_trace, token);
+            }
+            if (!value->requestNumber(debug_skip, number_digits()))
+            {
+                debug_skip = 0;                /* belt and braces                   */
+                                               /* process the setting               */
+                this->parseTraceSetting(value, &setting, &debug);
+                debug_flags |= debug;          /* for execution time                */
+            }
+            else
+            {
+                setting = 0;                   /* not a normal setting situation    */
+            }
+        }
+        /* is this a minus sign?             */
+        else if (token->subclass == OPERATOR_SUBTRACT || token->subclass == OPERATOR_PLUS)
+        {
+            /* minus form?                       */
+            if (token->subclass == OPERATOR_SUBTRACT)
+            {
+                debug_flags |= trace_notrace;  /* turn on the notrace flag          */
+            }
+            setting = 0;                     /* indicate a debug version          */
+            token = nextReal();              /* get the next token                */
+            if (token->isEndOfClause()) /* end of the instruction?           */
+            {
+                /* this is an error                  */
+                syntaxError(Error_Invalid_expression_general, token);
+            }
+            RexxString *value = token->value;            /* get the string value              */
+            token = nextReal();              /* get the next token                */
+
+            if (!token->isEndOfClause())     /* end of the instruction?           */
+            {
+                /* this is an error                  */
+                syntaxError(Error_Invalid_data_trace);
+            }
+            if (!value->requestNumber(debug_skip, number_digits()))
+            {
+                /* have an error                     */
+                syntaxError(Error_Invalid_whole_number_trace, value);
+            }
         }
         else
-          setting = 0;                 /* not a normal setting situation    */
-      }
+        {                             /* implicit value form               */
+            previousToken();                 /* step back a token                 */
+                                             /* process the expression            */
+            _expression = this->expression(TERM_EOC);
+        }
     }
-    else if (token->isLiteral()) {     /* is this a string?                 */
-      value = token->value;            /* get the string value              */
-      token = nextReal();              /* get the next token                */
-      if (!token->isEndOfClause()) /* end of the instruction?           */
-                                       /* this is an error                  */
-        syntaxError(Error_Invalid_data_trace, token);
-      if (!value->requestNumber(debug_skip, number_digits()))
-      {
-        debug_skip = 0;                /* belt and braces                   */
-                                       /* process the setting               */
-        this->parseTraceSetting(value, &setting, &debug);
-        debug_flags |= debug;          /* for execution time                */
-      }
-      else
-        setting = 0;                   /* not a normal setting situation    */
-    }
-                                       /* is this a minus sign?             */
-    else if (token->subclass == OPERATOR_SUBTRACT || token->subclass == OPERATOR_PLUS) {
-                                       /* minus form?                       */
-      if (token->subclass == OPERATOR_SUBTRACT)
-        debug_flags |= trace_notrace;  /* turn on the notrace flag          */
-      setting = 0;                     /* indicate a debug version          */
-      token = nextReal();              /* get the next token                */
-      if (token->isEndOfClause()) /* end of the instruction?           */
-                                       /* this is an error                  */
-        syntaxError(Error_Invalid_expression_general, token);
-      value = token->value;            /* get the string value              */
-      token = nextReal();              /* get the next token                */
-
-      if (!token->isEndOfClause())     /* end of the instruction?           */
-                                       /* this is an error                  */
-        syntaxError(Error_Invalid_data_trace);
-      if (!value->requestNumber(debug_skip, number_digits()))
-      {
-                                       /* have an error                     */
-        syntaxError(Error_Invalid_whole_number_trace, value);
-      }
-    }
-    else {                             /* implicit value form               */
-      previousToken();                 /* step back a token                 */
-                                       /* process the expression            */
-      _expression = this->expression(TERM_EOC);
-    }
-  }
-                                       /* create a new translator object    */
-  newObject = new_instruction(TRACE, Trace);
-                                       /* now complete this                 */
-                                       /* now complete this                 */
-  new ((void *)newObject) RexxInstructionTrace(_expression, setting, debug_flags, debug_skip);
-  return (RexxInstruction *)newObject; /* done, return this                 */
+    /* create a new translator object    */
+    RexxInstruction *newObject = new_instruction(TRACE, Trace);
+    /* now complete this                 */
+    new ((void *)newObject) RexxInstructionTrace(_expression, setting, debug_flags, debug_skip);
+    return newObject; /* done, return this                 */
 }
 
 /**
@@ -2349,12 +2489,12 @@ RexxInstruction *RexxSource::useNew()
         }
     }
 
-    RexxObject *newObject = new_variable_instruction(USE, Use, sizeof(RexxInstructionUseStrict) + (variableCount == 0 ? 0 : (variableCount - 1)) * sizeof(UseVariable));
+    RexxInstruction *newObject = new_variable_instruction(USE, Use, sizeof(RexxInstructionUseStrict) + (variableCount == 0 ? 0 : (variableCount - 1)) * sizeof(UseVariable));
     new ((void *)newObject) RexxInstructionUseStrict(variableCount, strictChecking, allowOptionals, variable_list, defaults_list);
 
     // release the object locks and return;
     removeObj(variable_list);
     removeObj(defaults_list);
-    return(RexxInstruction *)newObject;
+    return newObject;
 }
 

@@ -37,15 +37,5 @@
 ;/*----------------------------------------------------------------------------*/
 LIBRARY RXWINSYS BASE=0x6B150000  ; @HOL for feature 421
 EXPORTS
-   INSTWINSYSFUNCS = InstWinSysFuncs
-   REMOVEWINSYSFUNCS = RemoveWinSysFuncs
-   WSREGISTRYKEY = WSRegistryKey
-   WSREGISTRYVALUE = WSRegistryValue
-   WSREGISTRYFILE = WSRegistryFile
-   WSPROGMANAGER = WSProgManager
-   WSEVENTLOG = WSEventLog ;DOE for feature 530 (98/06/23)
-   WSCTRLWINDOW = WSCtrlWindow ; HOL (98/07/28)
-   WSCTRLSEND = WSCtrlSend     ; HOL (98/07/28)
-   WSCTRLMENU = WSCtrlMenu     ; HOL (98/07/28)
-   WSCLIPBOARD = WSClipboard   ; HOL (98/07/28)
+  RexxGetPackage
 

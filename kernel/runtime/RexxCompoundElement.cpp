@@ -98,13 +98,9 @@ RexxCompoundElement *RexxCompoundElement::newInstance(
 /* Function:  Create a new REXX compound variable object                    */
 /****************************************************************************/
 {
-                                       /* created variable object           */
-  RexxCompoundElement *newObj;
-
-                                       /* Get new object                    */
-  newObj = (RexxCompoundElement *)new_object(sizeof(RexxCompoundElement), T_CompoundElement);
-  newObj->clearObject();               /* clear everything out              */
-  newObj->variable_name = name;        /* fill in the name                  */
-
-  return newObj;                       /* return the new object             */
+    /* Get new object                    */
+    RexxCompoundElement *newObj = (RexxCompoundElement *)new_object(sizeof(RexxCompoundElement), T_CompoundElement);
+    newObj->clearObject();               /* clear everything out              */
+    newObj->variable_name = name;        /* fill in the name                  */
+    return newObj;                       /* return the new object             */
 }

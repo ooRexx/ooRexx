@@ -81,7 +81,7 @@
 /*------------------------------------------------------------------
  * rexx includes
  *------------------------------------------------------------------*/
-#include "rexx.h"
+#include "oorexxapi.h"
 
 /*------------------------------------------------------------------
  * tcp/ip includes
@@ -101,50 +101,6 @@
  *------------------------------------------------------------------*/
 #include "rxsock.h"
 
-/*------------------------------------------------------------------
- * function table
- *------------------------------------------------------------------*/
-#define TABLEENTRY(fun) { #fun , fun},
-
-typedef struct
-{
-    const char *                   pszName;
-    RexxFunctionHandler  *pRxFunction;
-} RxSockFuncTableEntry;
-
-RxSockFuncTableEntry RxSockFuncTable[] =
-{
-    TABLEENTRY( SockDropFuncs             )
-    TABLEENTRY( SockAccept                )
-    TABLEENTRY( SockBind                  )
-    TABLEENTRY( SockClose                 )
-    TABLEENTRY( SockConnect               )
-    TABLEENTRY( SockGetHostByAddr         )
-    TABLEENTRY( SockGetHostByName         )
-    TABLEENTRY( SockGetHostId             )
-    TABLEENTRY( SockGetPeerName           )
-    TABLEENTRY( SockGetSockName           )
-    TABLEENTRY( SockGetSockOpt            )
-    TABLEENTRY( SockInit                  )
-    TABLEENTRY( SockIoctl                 )
-    TABLEENTRY( SockListen                )
-    TABLEENTRY( SockPSock_Errno           )
-    TABLEENTRY( SockRecv                  )
-    TABLEENTRY( SockRecvFrom              )
-    TABLEENTRY( SockSelect                )
-    TABLEENTRY( SockSend                  )
-    TABLEENTRY( SockSendTo                )
-    TABLEENTRY( SockSetSockOpt            )
-    TABLEENTRY( SockShutDown              )
-    TABLEENTRY( SockSock_Errno            )
-    TABLEENTRY( SockSocket                )
-    TABLEENTRY( SockSoClose               )
-    TABLEENTRY( SockVersion               )
-};
-
-#define RxSockFuncTableSize \
-   (sizeof RxSockFuncTable / sizeof RxSockFuncTable[0] )
-
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
 /*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
 
@@ -161,6 +117,18 @@ int stricmp(const char *op1, const char *op2)
     return(tolower(*op1) - tolower(*op2));
 }
 #endif
+
+bool string2socket(RXSTRING *string, SOCKET *socket)
+{
+    return sscanf(string->strptr, "0x%p", socket) == 1;
+}
+
+
+void socket2string(PRXSTRING result, SOCKET socket)
+{
+    sprintf(result->strptr, "0x%p", socket);
+    result->strlength = strlen(result->strptr);
+}
 
 /*------------------------------------------------------------------
  * strip blanks from a line
@@ -836,118 +804,27 @@ void SetH_Errno(void)
 
 static int Initialized = 0;
 
-/*------------------------------------------------------------------
- * Rexx external function gateway
- *------------------------------------------------------------------*/
-APIRET REXXENTRY SockFunctionGateWay(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
-{
-    size_t                       i;
-    APIRET                       ulRc;
-    RexxFunctionHandler         *pRxFunc;
-#ifdef WIN32
-    WORD wVersionRequested;
-    WSADATA wsaData;
-#endif
-
-
-    /*---------------------------------------------------------------
-     * initialize return value to empty string
-     *---------------------------------------------------------------*/
-    retStr->strlength = 0;
-
-    /*---------------------------------------------------------------
-     * call sock_init(), if we need to
-     *---------------------------------------------------------------*/
-    if (!Initialized)
-    {
-        Initialized = 1;
-
-#if defined(WIN32)
-        wVersionRequested = MAKEWORD( 1, 1 );
-        WSAStartup( wVersionRequested, &wsaData );
-#endif
-    }
-
-    /*---------------------------------------------------------------
-     * get function
-     *---------------------------------------------------------------*/
-    for (pRxFunc=NULL, i=0; !pRxFunc && i<RxSockFuncTableSize; i++)
-        if (!stricmp(name,RxSockFuncTable[i].pszName))
-            pRxFunc = RxSockFuncTable[i].pRxFunction;
-
-        /*---------------------------------------------------------------
-         * if not found, return syntax error
-         *---------------------------------------------------------------*/
-    if (!pRxFunc)
-    {
-        ulRc = 40;
-        goto cleanUp;
-    }
-
-    /*---------------------------------------------------------------
-     * call function
-     *---------------------------------------------------------------*/
-    ulRc = pRxFunc(name,argc,argv,qName,retStr);
-
-    /*---------------------------------------------------------------
-     * set errno and h_errno
-     *---------------------------------------------------------------*/
-    cleanUp:
-    SetErrno();
-    SetH_Errno();
-
-    return ulRc;
-}
-
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
 /*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
 
 /*------------------------------------------------------------------
  *
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockVersion(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockVersion(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
 {
-    sprintf(retStr->strptr, "%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD);
-    retStr->strlength = strlen(retStr->strptr);
+    sprintf(retstr->strptr, "%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD);
+    retstr->strlength = strlen(retstr->strptr);
     return 0;
 }
 
-/*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
-/*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
-#if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
-APIRET REXXENTRY SOCKLOADFUNCS(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
-{
-    return(SockLoadFuncs( name, argc, argv, qName, retStr ));
-}
-    #endif
 
 /*------------------------------------------------------------------
  * load the function package
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockLoadFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockLoadFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
 {
-    size_t i;
-
-    /*---------------------------------------------------------------
-     * initialize return value to empty string
-     *---------------------------------------------------------------*/
-    retStr->strlength = 0;
-
-    if (!argc)
-    {
-        printf("%s %d.%d.%d - %s\n",
-               PROG_NAME, ORX_VER, ORX_REL, ORX_MOD, PROG_DESC);
-/*      printf("  by %s  (%s)\n\n",PROG_AUTH,PROG_ADDR); */
-        printf("%s\n",PROG_COPY);
-        printf("%s\n",PROG_COPY1);
-        printf("%s\n",PROG_ALRRa);
-        printf("%s\n",PROG_ALRRb);
-        printf("%s\n",PROG_ALRRc);
-        printf("\n");
-    }
-
-    for (i=0; i<RxSockFuncTableSize; i++)
-        RexxRegisterFunctionDll(RxSockFuncTable[i].pszName, PROG_NAME, "SockFunctionGateWay");
+    // this is a NOP now
+    retstr->strlength = 0;               /* set return value           */
     return 0;
 }
 
@@ -957,25 +834,10 @@ APIRET REXXENTRY SockLoadFuncs(const char *name, size_t argc, PCONSTRXSTRING arg
 /*------------------------------------------------------------------
  * drop the function package
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockDropFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockDropFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
 {
-    size_t i;
-
-    /*---------------------------------------------------------------
-     * initialize return value to empty string
-     *---------------------------------------------------------------*/
-    retStr->strlength = 0;
-
-    RexxDeregisterFunction("SockLoadFuncs");
-
-    for (i=0; i<RxSockFuncTableSize; i++)
-    {
-        RexxDeregisterFunction(RxSockFuncTable[i].pszName);
-    }
-
-#ifdef WIN32
-    WSACleanup();                       // deregister from Windows Sockets
-#endif
+    // this is a NOP now
+    retstr->strlength = 0;               /* set return value           */
     return 0;
 }
 
@@ -985,7 +847,7 @@ APIRET REXXENTRY SockDropFuncs(const char *name, size_t argc, PCONSTRXSTRING arg
 /*------------------------------------------------------------------
  * cause a trap to unload the DLL
  *------------------------------------------------------------------*/
-APIRET REXXENTRY SockDie(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
+size_t RexxEntry SockDie(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
 {
     int *p;
 
@@ -997,3 +859,50 @@ APIRET REXXENTRY SockDie(const char *name, size_t argc, PCONSTRXSTRING argv, con
 
 
 
+
+
+// now build the actual entry list
+RexxRoutineEntry rxsock_functions[] =
+{
+    REXX_CLASSIC_ROUTINE( SockDropFuncs,      SockDropFuncs),
+    REXX_CLASSIC_ROUTINE( SockAccept,         SockAccept),
+    REXX_CLASSIC_ROUTINE( SockBind,           SockBind),
+    REXX_CLASSIC_ROUTINE( SockClose,          SockClose),
+    REXX_CLASSIC_ROUTINE( SockConnect,        SockConnect),
+    REXX_CLASSIC_ROUTINE( SockGetHostByAddr,  SockGetHostByAddr),
+    REXX_CLASSIC_ROUTINE( SockGetHostByName,  SockGetHostByName),
+    REXX_CLASSIC_ROUTINE( SockGetHostId,      SockGetHostId),
+    REXX_CLASSIC_ROUTINE( SockGetPeerName,    SockGetPeerName),
+    REXX_CLASSIC_ROUTINE( SockGetSockName,    SockGetSockName),
+    REXX_CLASSIC_ROUTINE( SockGetSockOpt,     SockGetSockOpt),
+    REXX_CLASSIC_ROUTINE( SockInit,           SockInit),
+    REXX_CLASSIC_ROUTINE( SockIoctl,          SockIoctl),
+    REXX_CLASSIC_ROUTINE( SockListen,         SockListen),
+    REXX_CLASSIC_ROUTINE( SockPSock_Errno,    SockPSock_Errno),
+    REXX_CLASSIC_ROUTINE( SockRecv,           SockRecv),
+    REXX_CLASSIC_ROUTINE( SockRecvFrom,       SockRecvFrom),
+    REXX_CLASSIC_ROUTINE( SockSelect,         SockSelect),
+    REXX_CLASSIC_ROUTINE( SockSend,           SockSend),
+    REXX_CLASSIC_ROUTINE( SockSendTo,         SockSendTo),
+    REXX_CLASSIC_ROUTINE( SockSetSockOpt,     SockSetSockOpt),
+    REXX_CLASSIC_ROUTINE( SockShutDown,       SockShutDown),
+    REXX_CLASSIC_ROUTINE( SockSock_Errno,     SockSock_Errno),
+    REXX_CLASSIC_ROUTINE( SockSocket,         SockSocket),
+    REXX_CLASSIC_ROUTINE( SockSoClose,        SockSoClose),
+    REXX_CLASSIC_ROUTINE( SockVersion,        SockVersion),
+    REXX_LAST_ROUTINE()
+};
+
+RexxPackageEntry rxsock_package_entry =
+{
+    STANDARD_PACKAGE_HEADER
+    "RXSOCK",                            // name of the package
+    "4.0",                               // package information
+    NULL,                                // no load/unload functions
+    NULL,
+    rxsock_functions,                    // the exported functions
+    NULL                                 // no methods in this package
+};
+
+// package loading stub.
+OOREXX_GET_PACKAGE(rxsock);

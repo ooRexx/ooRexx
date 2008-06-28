@@ -86,11 +86,13 @@ void RexxVariable::inform(
 /* Function:  Set up an activity notification for a variable change         */
 /****************************************************************************/
 {
-  if (this->dependents == OREF_NULL)   /* no dependents yet?                */
-                                       /* set this up as an object table    */
-    OrefSet(this, this->dependents, new_object_table());
-                                       /* add this to the table             */
-  this->dependents->put(TheNilObject, (RexxObject *)informee);
+    if (this->dependents == OREF_NULL)   /* no dependents yet?                */
+    {
+        /* set this up as an object table    */
+        OrefSet(this, this->dependents, new_object_table());
+    }
+    /* add this to the table             */
+    this->dependents->put(TheNilObject, (RexxObject *)informee);
 }
 
 void RexxVariable::uninform(
@@ -99,11 +101,13 @@ void RexxVariable::uninform(
 /* Function:  Remove a dependent from the notification list                 */
 /****************************************************************************/
 {
-                                       /* remove the entry                  */
-  this->dependents->remove((RexxObject *)informee);
-  if (this->dependents->items() == 0)  /* last one?                         */
-                                       /* drop the dependents list          */
-    OrefSet(this, this->dependents, OREF_NULL);
+    /* remove the entry                  */
+    this->dependents->remove((RexxObject *)informee);
+    if (this->dependents->items() == 0)  /* last one?                         */
+    {
+        /* drop the dependents list          */
+        OrefSet(this, this->dependents, OREF_NULL);
+    }
 }
 
 void RexxVariable::drop()
@@ -111,10 +115,12 @@ void RexxVariable::drop()
 /* Function:  Drop a variable                                               */
 /****************************************************************************/
 {
-                                       /* clear out the value               */
-  OrefSet(this, this->variableValue, OREF_NULL);
-  if (this->dependents != OREF_NULL)   /* have notifications to process?    */
-    this->notify();                    /* notify any dependents             */
+    /* clear out the value               */
+    OrefSet(this, this->variableValue, OREF_NULL);
+    if (this->dependents != OREF_NULL)   /* have notifications to process?    */
+    {
+        this->notify();                    /* notify any dependents             */
+    }
 }
 
 void RexxVariable::notify()
@@ -122,21 +128,21 @@ void RexxVariable::notify()
 /* Function:  Process all variable notifications                            */
 /****************************************************************************/
 {
-  HashLink       i;                    /* loop variable                     */
-  RexxActivity *activity;              /* current activity                  */
-
-  if (this->dependents != OREF_NULL) { /* any dependents?                   */
-                                       /* loop through the table            */
-    for (i = this->dependents->first(); this->dependents->available(i); i = this->dependents->next(i)) {
-                                       /* post the event to the dependent   */
-      ((RexxActivity *)this->dependents->index(i))->guardPost();
+    if (this->dependents != OREF_NULL)
+    { /* any dependents?                   */
+      /* loop through the table            */
+        for (HashLink i = this->dependents->first(); this->dependents->available(i); i = this->dependents->next(i))
+        {
+            /* post the event to the dependent   */
+            ((RexxActivity *)this->dependents->index(i))->guardPost();
+        }
+        /* yield control and allow the       */
+        /* waiting guard to run too          */
+        /* get the current activity          */
+        RexxActivity *activity = ActivityManager::currentActivity;
+        activity->releaseAccess();         /* release the lock                  */
+        activity->requestAccess();         /* get it back again                 */
     }
-                                       /* yield control and allow the       */
-                                       /* waiting guard to run too          */
-    activity = ActivityManager::currentActivity;        /* get the current activity          */
-    activity->releaseAccess();         /* release the lock                  */
-    activity->requestAccess();         /* get it back again                 */
-  }
 }
 
 
@@ -146,14 +152,12 @@ RexxVariable *RexxVariable::newInstance(
 /* Function:  Create a new REXX variable object                             */
 /****************************************************************************/
 {
-  RexxVariable *newObj;                /* created variable object           */
-
-                                       /* Get new object                    */
-  newObj = (RexxVariable *)new_object(sizeof(RexxVariable), T_Variable);
-  newObj->variableValue = OREF_NULL;   /* clear out the hash value          */
-  newObj->creator = OREF_NULL;         /* clear out creator field           */
-  newObj->variable_name = name;        /* fill in the name                  */
-  newObj->dependents = OREF_NULL;      /* and the dependents                */
-  return newObj;                       /* return the new object             */
+    /* Get new object                    */
+    RexxVariable *newObj = (RexxVariable *)new_object(sizeof(RexxVariable), T_Variable);
+    newObj->variableValue = OREF_NULL;   /* clear out the hash value          */
+    newObj->creator = OREF_NULL;         /* clear out creator field           */
+    newObj->variable_name = name;        /* fill in the name                  */
+    newObj->dependents = OREF_NULL;      /* and the dependents                */
+    return newObj;                       /* return the new object             */
 }
 

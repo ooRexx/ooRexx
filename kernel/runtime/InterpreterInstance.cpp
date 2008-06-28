@@ -45,6 +45,7 @@
 #include "SystemInterpreter.hpp"
 #include "ActivityManager.hpp"
 #include "RexxActivation.hpp"
+#include "PackageManager.hpp"
 
 /**
  * Create a new Package object instance.
@@ -67,6 +68,12 @@ InterpreterInstance::InterpreterInstance()
     // this needs to be created and set
     EVCR(terminationSem);
     EVSET(terminationSem);
+
+    // fill in the interface vectore
+    context.instanceContext.functions = &interfaceVector;
+    // this back-link allows us to recover the instance pointer on the
+    // API callbacks.
+    context.instance = this;
 }
 
 
@@ -78,7 +85,10 @@ void InterpreterInstance::live(size_t liveMark)
     memory_mark(rootActivity);
     memory_mark(allActivities);
     memory_mark(globalReferences);
-    memory_mark(defaultAddress);
+    memory_mark(defaultEnvironment);
+    memory_mark(searchPath);
+    memory_mark(searchExtensions);
+    memory_mark(securityManager);
 }
 
 
@@ -90,7 +100,10 @@ void InterpreterInstance::liveGeneral(int reason)
     memory_mark_general(rootActivity);
     memory_mark_general(allActivities);
     memory_mark_general(globalReferences);
-    memory_mark_general(defaultAddress);
+    memory_mark_general(defaultEnvironment);
+    memory_mark_general(searchPath);
+    memory_mark_general(searchExtensions);
+    memory_mark_general(securityManager);
 }
 
 
@@ -103,31 +116,53 @@ void InterpreterInstance::liveGeneral(int reason)
  *                 The default address environment for this interpreter instance.  Each
  *                 active interpreter instance can define its own default environment.
  */
-void InterpreterInstance::initialize(RexxActivity *activity, PRXSYSEXIT handlers, const char *defaultEnvironment)
+void InterpreterInstance::initialize(RexxActivity *activity, RexxOption *options)
 {
     rootActivity = activity;
     allActivities = new_list();
+    searchExtensions = new_list();     // this will be filled in during options processing
     // this gets added to the entire active list.
     allActivities->append((RexxObject *)activity);
     globalReferences = new_object_table();
-    if (defaultEnvironment != NULL)
-    {
-        defaultAddress = new_string(defaultEnvironment);
-    }
-
-    // if we have handlers, initialize the array
-    if (handlers != NULL)
-    {
-                                       /* while not the list ender          */
-        for (int i= 0; handlers[i].sysexit_code != RXENDLST; i++)
-        {
-            /* enable this exit                  */
-            setExitHandler(handlers[i]);
-        }
-    }
+    // create a default wrapper for this security manager
+    securityManager = new SecurityManager(OREF_NULL);
+    // set the default system address environment (can be overridden by options)
+    defaultEnvironment = SysInitialAddressName();
+    processOptions(options);
+    // do system specific initialization
+    sysInstance.initialize(this, options);
 
     // associate the thread with this instance
     activity->setupAttachedActivity(this);
+
+}
+
+
+/**
+ * Set a new security manager object for this instance.
+ *
+ * @param m      The security manager to set.
+ */
+void InterpreterInstance::setSecurityManager(RexxObject *m)
+{
+    securityManager = new SecurityManager(m);
+}
+
+
+/**
+ * Attach a thread to an interpreter instance, returning the
+ * activity thread context.
+ *
+ * @param attachedContext
+ *               The pointer for returning the thread context.
+ *
+ * @return 0 indicates success.
+ */
+int InterpreterInstance::attachThread(RexxThreadContext *&attachedContext)
+{
+    RexxActivity *activity = attachThread();
+    attachedContext = activity->getThreadContext();
+    return 0;
 }
 
 
@@ -476,4 +511,120 @@ void InterpreterInstance::traceAllActivities(bool on)
         RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
         activity->setTrace(on);
     }
+}
+
+
+/**
+ * Process interpreter instance options.
+ *
+ * @param options The list of defined options.
+ *
+ * @return True if the options were processed correctly, false otherwise.
+ */
+bool InterpreterInstance::processOptions(RexxOption *options)
+{
+    // options are, well, optional...if nothing specified, we're done.
+    if (options == NULL)
+    {
+        return true;
+    }
+    // loop until we get to the last option item
+    while (options->optionName != NULL)
+    {
+        // an initial address environment
+        if (strcmp(options->optionName, INITIAL_ADDRESS_ENVIRONMENT) == 0)
+        {
+            defaultEnvironment = new_string(options->option.value.value_CSTRING);
+        }
+        // application data
+        else if (strcmp(options->optionName, APPLICATION_DATA) == 0)
+        {
+            // this is filled in to the instance context vector
+            context.instanceContext.applicationData = options->option.value.value_POINTER;
+        }
+        // an additional search path
+        else if (strcmp(options->optionName, EXTERNAL_CALL_PATH) == 0)
+        {
+            searchPath = new_string(options->option.value.value_CSTRING);
+        }
+        // additional extensions for processing
+        else if (strcmp(options->optionName, EXTERNAL_CALL_EXTENSIONS) == 0)
+        {
+            const char *extStart = options->option.value.value_CSTRING;
+            const char *extEnd = extStart + strlen(extStart);
+
+            while (extStart < extEnd)
+            {
+                const char *delim = strchr(extStart, ',');
+                if (delim == NULL)
+                {
+                    delim = extEnd;
+                }
+                // make this into a string value and append
+                RexxString *ext = new_string(extStart, delim - extStart);
+                searchExtensions->append(ext);
+
+                // step past the delimiter and loop
+                extStart = delim + 1;
+            }
+        }
+        // old-style registered exit
+        else if (strcmp(options->optionName, REGISTERED_EXITS) == 0)
+        {
+            RXSYSEXIT *handlers = (RXSYSEXIT *)options->option.value.value_POINTER;
+            // if we have handlers, initialize the array
+            if (handlers != NULL)
+            {
+                                               /* while not the list ender          */
+                for (int i= 0; handlers[i].sysexit_code != RXENDLST; i++)
+                {
+                    /* enable this exit                  */
+                    setExitHandler(handlers[i]);
+                }
+            }
+        }
+        // new-style context exit
+        else if (strcmp(options->optionName, DIRECT_EXITS) == 0)
+        {
+            RexxContextExit *handlers = (RexxContextExit *)options->option.value.value_POINTER;
+            // if we have handlers, initialize the array
+            if (handlers != NULL)
+            {
+                                               /* while not the list ender          */
+                for (int i= 0; handlers[i].sysexit_code != RXENDLST; i++)
+                {
+                    /* enable this exit                  */
+                    setExitHandler(handlers[i]);
+                }
+            }
+        }
+        // a package to load at startup
+        else if (strcmp(options->optionName, LOAD_REQUIRED_LIBRARY) == 0)
+        {
+            RexxString *libraryName = new_string(options->option.value.value_CSTRING);
+
+            // this must load ok in order for this to work
+            PackageManager::getLibrary(libraryName);
+        }
+        else
+        {
+            // unknown option
+            return false;
+        }
+        // step to the next option value
+        options++;
+    }
+    return true;
+}
+
+
+/**
+ * Get the thread context vector for the root activity of the
+ * instance.
+ *
+ * @return The root RexxThreadContext environment;
+ */
+RexxThreadContext *InterpreterInstance::getRootThreadContext()
+{
+    return rootActivity->getThreadContext();
 }

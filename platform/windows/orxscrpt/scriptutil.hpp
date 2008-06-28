@@ -368,14 +368,6 @@ STDMETHODIMP PutProperty(FILE *Stream, IDispatch *Disp, LCID Lang, VARIANT *NewV
 
 int CharsRequired(int Number);
 
-STDMETHODIMP BuildRXCallString(
-  /*  in   */ char *Function,
-  /*  in   */ char EndChar,
-  /*  in   */ int ArgCount,
-  /*  in   */ char *NameList,
-  /*in/out */ char **CallString,
-  /*in/out */ int  *MaxStrLen);
-
 STDMETHODIMP InvokeNamedParms(
   /*  in   */ DISPPARAMS *Params,
   /*in/out */ char **CallString,

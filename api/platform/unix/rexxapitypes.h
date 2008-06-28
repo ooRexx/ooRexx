@@ -54,15 +54,11 @@
 #undef __REXX64__
 #endif
 
-#define REXXENTRY    
+#define REXXENTRY
 
 typedef void *REXXPFN;
 typedef pid_t process_id_t;
-#ifndef LINUX
-typedef tid_t thread_id_t;
-#else
 typedef pthread_t thread_id_t;
-#endif
 
 #define VLARexxEntry                   /* external entry points       */
 #endif /* REXXAPITYPES_INCLUDED */

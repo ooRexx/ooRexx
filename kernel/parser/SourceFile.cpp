@@ -43,7 +43,6 @@
 /******************************************************************************/
 #include <ctype.h>
 #include <string.h>
-#define INCL_REXX_STREAM               /* bring in all stream defines       */
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
@@ -76,10 +75,15 @@
 #include "EndIf.hpp"
 #include "DoInstruction.hpp"
 #include "CallInstruction.hpp"
-#include "StreamNative.h"
 #include "ProtectedObject.hpp"
-#include "LibraryManager.hpp"
 #include "CPPCode.hpp"
+#include "SystemInterpreter.hpp"
+#include "PackageClass.hpp"
+#include "InterpreterInstance.hpp"
+#include "ClassDirective.hpp"
+#include "LibraryDirective.hpp"
+#include "RequiresDirective.hpp"
+#include "PackageManager.hpp"
 
 #define HOLDSIZE         60            /* room for 60 temporaries           */
 
@@ -88,138 +92,251 @@ typedef struct _LINE_DESCRIPTOR {
   size_t length;                       /* length of the line                */
 } LINE_DESCRIPTOR;                     /* line within a source buffer       */
 
-#define CLASS_NAME          1          /* location of class name information*/
-#define CLASS_PUBLIC_NAME   2          /* class public name (uppercase)     */
-#define CLASS_SUBCLASS_NAME 3          /* location of class subclass        */
-#define CLASS_METACLASS     4          /* location of class metaclass       */
-#define CLASS_INHERIT       5          /* class inheritance info            */
-#define CLASS_PUBLIC        6          /* class public info                 */
-#define CLASS_METHODS       7          /* classes instance methods          */
-#define CLASS_CLASS_METHODS 8          /* classes class methods             */
-#define CLASS_EXTERNAL_NAME 9          /* class external name               */
-#define CLASS_MIXINCLASS    10         /* class mixinclass flag             */
-#define CLASS_DIRECTIVE     11         /* class directive instruction       */
-                                       /* size of the class info array      */
-#define CLASS_INFO_SIZE CLASS_DIRECTIVE
-
 #define line_delimiters "\r\n"         /* stream file line end characters   */
+#define ctrl_z 0x1a                    // the end of file marker
+
+
+/**
+ * Create a source object with source provided from an array.
+ *
+ * @param programname
+ *               The name of the program.
+ * @param source_array
+ *               The array of the source lines.
+ */
+RexxSource::RexxSource(RexxString *programname, RexxArray  *source_array)
+{
+    this->clearObject();                 /* start completely clean            */
+                                         /* fill in the name                  */
+    OrefSet(this, this->programName, programname);
+    /* fill in the source array          */
+    OrefSet(this, this->sourceArray, source_array);
+    /* fill in the source size           */
+    this->line_count = sourceArray->size();
+    this->position(1, 0);              /* set position at the first line    */
+}
+
+
+/**
+ * Create a source object with source provided from a buffer.
+ *
+ * @param programname
+ *               The name of the program.
+ * @param source_buffer
+ *               The source buffer holding the source data.
+ */
+RexxSource::RexxSource(RexxString *programname, RexxBuffer *source_buffer)
+{
+    this->clearObject();                 /* start completely clean            */
+                                         /* fill in the name                  */
+    OrefSet(this, this->programName, programname);
+    // we require a bit of protection while doing this
+    ProtectedObject p(this);
+    // initialize from the buffer data
+    initBuffered(source_buffer);
+}
+
+
+/**
+ * Create a source object with source provided from a a data buffer
+ * (not a buffer object).
+ *
+ * @param programname
+ *               The name of the program.
+ * @param data   The data buffer pointer.
+ * @param length the size of the source buffer.
+ */
+RexxSource::RexxSource(RexxString *programname, const char *data, size_t length)
+{
+    this->clearObject();                 /* start completely clean            */
+                                         /* fill in the name                  */
+    OrefSet(this, this->programName, programname);
+    // we require a bit of protection while doing this
+    ProtectedObject p(this);
+    // initialize from the buffer data
+    initBuffered(new_buffer(data, length));
+}
+
+
+/**
+ * Create a source object with source provided from a filo.
+ *
+ * @param programname
+ *               The name of the program (also the file name)
+ */
+RexxSource::RexxSource(RexxString *programname)
+{
+    this->clearObject();                 /* start completely clean            */
+                                         /* fill in the name                  */
+    OrefSet(this, this->programName, programname);
+    // we require a bit of protection while doing this
+    ProtectedObject p(this);
+    // read the file data and initialize.
+    initFile();
+}
+
 
 void RexxSource::initBuffered(
-    RexxObject *source_buffer)         /* containing source buffer          */
+    RexxBuffer *source_buffer)         /* containing source buffer          */
 /******************************************************************************/
 /* Function:  Initialize a source object using the entire source as a         */
 /*            stream buffer                                                   */
 /******************************************************************************/
 {
-  LINE_DESCRIPTOR     descriptor;      /* line description                  */
-  const char *scan;                    /* line scanning pointer             */
-  const char *_current;                /* current scan location             */
-        char *start;                   /* start of the buffer               */
-  size_t length;                       /* length of the buffer              */
+    LINE_DESCRIPTOR     descriptor;      /* line description                  */
+    const char *scan;                    /* line scanning pointer             */
+    const char *_current;                /* current scan location             */
+    char *start;                   /* start of the buffer               */
+    size_t length;                       /* length of the buffer              */
 
-                                       /* set the source buffer             */
-  OrefSet(this, this->sourceBuffer, (RexxBuffer *)source_buffer);
-  OrefSet(this, this->sourceIndices, (RexxBuffer *)new RexxSmartBuffer(1024));
-                                       /* point to the data part            */
-  start = ((RexxBuffer *)this->sourceBuffer)->address();
-                                       /* get the buffer length             */
-  length = ((RexxBuffer *)this->sourceBuffer)->getLength();
+    extractNameInformation();            // make sure we have name information to work with
+                                         /* set the source buffer             */
+    OrefSet(this, this->sourceBuffer, source_buffer);
+    RexxSmartBuffer *indices = new RexxSmartBuffer(1024);
+    ProtectedObject p(indices);
+    /* point to the data part            */
+    start = this->sourceBuffer->getData();
+    /* get the buffer length             */
+    length = this->sourceBuffer->getLength();
 
-  if (start[0] == '#' &&
-      start[1] == '!') {               // neutralize shell '#!...'
-    memcpy(start, "--", 2);
-  }
-
-  descriptor.position = 0;             /* fill in the "zeroth" position     */
-  descriptor.length = 0;               /* and the length                    */
-                                       /* add to the line list              */
-  (((RexxSmartBuffer *)(this->sourceIndices)))->copyData(&descriptor, sizeof(descriptor));
-  this->line_count = 0;                /* start with zero lines             */
-                                       /* look for an EOF mark              */
-  scan = (const char *)memchr(start, ctrl_z, length);
-  if (scan != NULL)                    /* found one?                        */
-    length = scan - start;             /* reduce the length                 */
-  _current = start;                    /* start at the beginning            */
-  while (length != 0) {                /* loop until all done               */
-    this->line_count++;                /* add in another line               */
-                                       /* set the start position            */
-    descriptor.position = _current - start;
-                                       /* scan for a important character    */
-    scan = mempbrk(_current, line_delimiters, length);
-                                       /* need to skip over null chars      */
-    while (scan != OREF_NULL && *scan == '\0') {
-                                       /* scan for a linend                 */
-      scan = mempbrk(scan + 1, line_delimiters, length - (scan - _current - 1));
+    // neutralize shell '#!...'
+    if (start[0] == '#' && start[1] == '!')
+    {
+        memcpy(start, "--", 2);
     }
-    if (scan == NULL) {                /* not found, go to the end          */
-      _current = _current + length;    /* step to the end                   */
-      descriptor.length = length;      /* use the entire line               */
-      length = 0;                      /* nothing left to process           */
-    }
-    else {
-                                       /* calculate this line length        */
-      descriptor.length = scan - _current;
-                                       /* adjust scan at line end           */
-      if (*scan == line_delimiters[0]) {/* CR encountered                   */
-        scan++;                        /* step the scan position            */
-        /* now check for LF */
-        if (length > (size_t)(scan - _current))
-          if (*scan != '\0' && *scan == line_delimiters[1])     /*          */
-            scan++;                    /* step again, if required           */
-      }
-      else                             /* just a LF                         */
-        scan++;                        /* step the scan position            */
 
-      length -= scan - _current;       /* reduce the length                 */
-      _current = scan;                 /* copy the scan pointer             */
+    descriptor.position = 0;             /* fill in the "zeroth" position     */
+    descriptor.length = 0;               /* and the length                    */
+                                         /* add to the line list              */
+    indices->copyData(&descriptor, sizeof(descriptor));
+    this->line_count = 0;                /* start with zero lines             */
+                                         /* look for an EOF mark              */
+    scan = (const char *)memchr(start, ctrl_z, length);
+    if (scan != NULL)                    /* found one?                        */
+    {
+        length = scan - start;             /* reduce the length                 */
     }
-                                       /* add to the line list              */
-    (((RexxSmartBuffer *)(this->sourceIndices)))->copyData(&descriptor, sizeof(descriptor));
-  }
-                                       /* throw away the buffer "wrapper"   */
-  OrefSet(this, this->sourceIndices, (((RexxSmartBuffer *)(this->sourceIndices)))->buffer);
-  this->position(1, 0);                /* set position at the first line    */
+    _current = start;                    /* start at the beginning            */
+    while (length != 0)
+    {                /* loop until all done               */
+        this->line_count++;                /* add in another line               */
+                                           /* set the start position            */
+        descriptor.position = _current - start;
+        /* scan for a important character    */
+        scan = mempbrk(_current, line_delimiters, length);
+        /* need to skip over null chars      */
+        while (scan != OREF_NULL && *scan == '\0')
+        {
+            /* scan for a linend                 */
+            scan = mempbrk(scan + 1, line_delimiters, length - (scan - _current - 1));
+        }
+        if (scan == NULL)
+        {                /* not found, go to the end          */
+            _current = _current + length;    /* step to the end                   */
+            descriptor.length = length;      /* use the entire line               */
+            length = 0;                      /* nothing left to process           */
+        }
+        else
+        {
+            /* calculate this line length        */
+            descriptor.length = scan - _current;
+            /* adjust scan at line end           */
+            if (*scan == line_delimiters[0])
+            {/* CR encountered                   */
+                scan++;                        /* step the scan position            */
+                /* now check for LF */
+                if (length > (size_t)(scan - _current))
+                {
+                    if (*scan != '\0' && *scan == line_delimiters[1])     /*          */
+                    {
+                        scan++;                    /* step again, if required           */
+                    }
+                }
+            }
+            else                             /* just a LF                         */
+            {
+                scan++;                        /* step the scan position            */
+            }
+
+            length -= scan - _current;       /* reduce the length                 */
+            _current = scan;                 /* copy the scan pointer             */
+        }
+        /* add to the line list              */
+        indices->copyData(&descriptor, sizeof(descriptor));
+    }
+    /* throw away the buffer "wrapper"   */
+    OrefSet(this, this->sourceIndices, indices->getBuffer());
+    this->position(1, 0);                /* set position at the first line    */
 }
+
 
 void RexxSource::initFile()
 /******************************************************************************/
 /* Function:  Initialize a source object, reading the source from a file      */
 /******************************************************************************/
 {
-  const char *file_name;               /* ASCII-Z version of the file name  */
-  RexxBuffer *program_source;          /* read in program source object     */
-
-                                       /* get the file name pointer         */
-  file_name = this->programName->getStringData();
-                                       /* load the program file             */
-  program_source = (RexxBuffer *)SysReadProgram(file_name);
-  if (program_source == OREF_NULL) {   /* Program not found or read error?  */
-                                       /* report this                       */
-    reportException(Error_Program_unreadable_name, this->programName);
-  }
+                                         /* load the program file             */
+    RexxBuffer *program_source = (RexxBuffer *)SysReadProgram(programName->getStringData());
+    if (program_source == OREF_NULL)     /* Program not found or read error?  */
+    {
+        /* report this                       */
+        reportException(Error_Program_unreadable_name, this->programName);
+    }
 
 #ifdef SCRIPTING
-  else if (program_source->getLength() > 9) {
-    char begin[10];
-    char end[4];
-    // check, if XML comments have to be removed from the script... (engine situation)
-    memcpy(begin,program_source->address(), 9);
-    // hashvalue is the length of the buffer
-    memcpy(end, program_source->address()+ (program_source->getLength()-3), 3);
-    begin[9]=end[3]=0x00;
-    if (!stricmp("<![CDATA[",begin) && !stricmp("]]>",end)) {
-      memcpy(program_source->address(), "         ", 9);
-      memcpy(program_source->address() + (program_source->getLength() - 3), "   ", 3);
+    if (program_source->getLength() > 9)
+    {
+        char begin[10];
+        char end[4];
+        // check, if XML comments have to be removed from the script... (engine situation)
+        memcpy(begin,program_source->getData(), 9);
+        // hashvalue is the length of the buffer
+        memcpy(end, program_source->getData()+ (program_source->getLength()-3), 3);
+        begin[9]=end[3]=0x00;
+        if (!stricmp("<![CDATA[",begin) && !stricmp("]]>",end))
+        {
+            memcpy(program_source->getData(), "         ", 9);
+            memcpy(program_source->getData() + (program_source->getLength() - 3), "   ", 3);
+        }
     }
-  }
 #endif
 
-                                       /* save the returned buffer          */
-  OrefSet(this, this->sourceBuffer, program_source);
-  memoryObject.removeSavedObject((RexxObject *)program_source);
+    /* save the returned buffer          */
+    OrefSet(this, this->sourceBuffer, program_source);
+    /* go process the buffer now         */
+    this->initBuffered(this->sourceBuffer);
+}
 
-                                       /* go process the buffer now         */
-  this->initBuffered((RexxObject *)this->sourceBuffer);
+
+/**
+ * Extract various bits of the source name to give us directory,
+ * extension and file portions to be used for searches for additional
+ * files.
+ */
+void RexxSource::extractNameInformation()
+{
+    if (programName == OREF_NULL)
+    {
+        return;
+    }
+
+    OrefSet(this, this->programDirectory, SystemInterpreter::extractDirectory(programName));
+    OrefSet(this, this->programExtension, SystemInterpreter::extractExtension(programName));
+    OrefSet(this, this->programFile, SystemInterpreter::extractFile(programName));
+}
+
+
+/**
+ * Set a program name for this source object.  Usually used after
+ * a program restore to update the restored routine object.  This
+ * will also update the extension and directory information.
+ *
+ * @param name   The new program name.
+ */
+void RexxSource::setProgramName(RexxString *name)
+{
+    OrefSet(this, this->programName, name);
+    extractNameInformation();
 }
 
 bool RexxSource::reconnect()
@@ -227,10 +344,12 @@ bool RexxSource::reconnect()
 /* Function:  Attempt to reconnect to the original source code file           */
 /******************************************************************************/
 {
-  if (!(this->flags&reclaim_possible)) /* no chance of getting this?        */
-    return false;                      /* just get out of here              */
-  this->initFile();                    /* go reinit this                    */
-  return true;                         /* give back the success return      */
+    if (!(this->flags&reclaim_possible)) /* no chance of getting this?        */
+    {
+        return false;                      /* just get out of here              */
+    }
+    this->initFile();                    /* go reinit this                    */
+    return true;                         /* give back the success return      */
 }
 
 void RexxSource::setReconnect()
@@ -264,13 +383,19 @@ void RexxSource::needVariable(
 /* Function:  validate that the current token is a variable token             */
 /******************************************************************************/
 {
-  if (!token->isVariable()) {          /* not a variable token?             */
-                                       /* begin with a dot?                 */
-    if (token->value->getChar(0) == '.')
-      syntaxError(Error_Invalid_variable_period, token);
-    else
-      syntaxError(Error_Invalid_variable_number, token);
-  }
+    /* not a variable token?             */
+    if (!token->isVariable())
+    {
+        /* begin with a dot?                 */
+        if (token->value->getChar(0) == '.')
+        {
+            syntaxError(Error_Invalid_variable_period, token);
+        }
+        else
+        {
+            syntaxError(Error_Invalid_variable_number, token);
+        }
+    }
 }
 
 void RexxSource::needVariableOrDotSymbol(
@@ -292,77 +417,85 @@ bool RexxSource::terminator(
 /* Function:  test for a terminator token in the given context                */
 /******************************************************************************/
 {
-  bool    endtoken;                    /* found the end flag                */
+    bool    endtoken;                    /* found the end flag                */
 
-  endtoken = false;                    /* not found the end yet             */
+    endtoken = false;                    /* not found the end yet             */
 
-  switch (token->classId) {            /* process based on terminator class */
+    /* process based on terminator class */
+    switch (token->classId)
+    {
 
-    case  TOKEN_EOC:                   /* found the end-of-clause           */
-      endtoken = true;                 /* this is always an end marker      */
-      break;
-
-    case  TOKEN_RIGHT:                 /* found a right paren               */
-      if (terminators&TERM_RIGHT)      /* terminate on this?                */
-        endtoken = true;               /* set the flag                      */
-      break;
-
-    case  TOKEN_SQRIGHT:               /* found a right square bracket      */
-      if (terminators&TERM_SQRIGHT)    /* terminate on this?                */
-        endtoken = true;               /* set the flag                      */
-      break;
-
-    case  TOKEN_COMMA:                 /* found a comma                     */
-      if (terminators&TERM_COMMA)      /* terminate on this?                */
-        endtoken = true;               /* set the flag                      */
-      break;
-
-    case  TOKEN_SYMBOL:                /* have a symbol, need to resolve    */
-      if (terminators&TERM_KEYWORD) {  /* need to do keyword checks?        */
-                                       /* process based on the keyword      */
-        switch (this->subKeyword(token)) {
-
-          case SUBKEY_TO:              /* TO subkeyword                     */
-            if (terminators&TERM_TO)   /* terminate on this?                */
-              endtoken = true;         /* set the flag                      */
+        case  TOKEN_EOC:                   /* found the end-of-clause           */
+            endtoken = true;                 /* this is always an end marker      */
             break;
 
-          case SUBKEY_BY:              /* BY subkeyword                     */
-            if (terminators&TERM_BY)   /* terminate on this?                */
-              endtoken = true;         /* set the flag                      */
+        case  TOKEN_RIGHT:                 /* found a right paren               */
+            if (terminators&TERM_RIGHT)      /* terminate on this?                */
+                endtoken = true;               /* set the flag                      */
             break;
 
-          case SUBKEY_FOR:             /* FOR subkeyword                    */
-            if (terminators&TERM_FOR)  /* terminate on this?                */
-              endtoken = true;         /* set the flag                      */
+        case  TOKEN_SQRIGHT:               /* found a right square bracket      */
+            if (terminators&TERM_SQRIGHT)    /* terminate on this?                */
+                endtoken = true;               /* set the flag                      */
             break;
 
-          case SUBKEY_WHILE:           /* WHILE subkeyword                  */
-          case SUBKEY_UNTIL:           /* UNTIL subkeyword                  */
-            if (terminators&TERM_WHILE)/* terminate on this?                */
-              endtoken = true;         /* set the flag                      */
+        case  TOKEN_COMMA:                 /* found a comma                     */
+            if (terminators&TERM_COMMA)      /* terminate on this?                */
+                endtoken = true;               /* set the flag                      */
             break;
 
-          case SUBKEY_WITH:            /* WITH subkeyword                   */
-            if (terminators&TERM_WITH) /* terminate on this?                */
-              endtoken = true;         /* set the flag                      */
-            break;
+        case  TOKEN_SYMBOL:                /* have a symbol, need to resolve    */
+            if (terminators&TERM_KEYWORD)
+            {  /* need to do keyword checks?        */
+               /* process based on the keyword      */
+                switch (this->subKeyword(token))
+                {
 
-          case SUBKEY_THEN:            /* THEN subkeyword                   */
-            if (terminators&TERM_THEN) /* terminate on this?                */
-              endtoken = true;         /* set the flag                      */
-            break;
+                    case SUBKEY_TO:              /* TO subkeyword                     */
+                        if (terminators&TERM_TO)   /* terminate on this?                */
+                            endtoken = true;         /* set the flag                      */
+                        break;
 
-          default:                     /* not a terminator for others       */
+                    case SUBKEY_BY:              /* BY subkeyword                     */
+                        if (terminators&TERM_BY)   /* terminate on this?                */
+                            endtoken = true;         /* set the flag                      */
+                        break;
+
+                    case SUBKEY_FOR:             /* FOR subkeyword                    */
+                        if (terminators&TERM_FOR)  /* terminate on this?                */
+                        {
+                            endtoken = true;         /* set the flag                      */
+                        }
+                        break;
+
+                    case SUBKEY_WHILE:           /* WHILE subkeyword                  */
+                    case SUBKEY_UNTIL:           /* UNTIL subkeyword                  */
+                        if (terminators&TERM_WHILE)/* terminate on this?                */
+                            endtoken = true;         /* set the flag                      */
+                        break;
+
+                    case SUBKEY_WITH:            /* WITH subkeyword                   */
+                        if (terminators&TERM_WITH) /* terminate on this?                */
+                            endtoken = true;         /* set the flag                      */
+                        break;
+
+                    case SUBKEY_THEN:            /* THEN subkeyword                   */
+                        if (terminators&TERM_THEN) /* terminate on this?                */
+                            endtoken = true;         /* set the flag                      */
+                        break;
+
+                    default:                     /* not a terminator for others       */
+                        break;
+                }
+            }
+        default:                           /* not a terminator for others       */
             break;
-        }
-      }
-      default:                           /* not a terminator for others       */
-        break;
-  }
-  if (endtoken)                        /* found the end one?                */
-    previousToken();                   /* push it back on the clause        */
-  return endtoken;                     /* return the true/false flag        */
+    }
+    if (endtoken)                        /* found the end one?                */
+    {
+        previousToken();                   /* push it back on the clause        */
+    }
+    return endtoken;                     /* return the true/false flag        */
 }
 
 void RexxSource::nextLine()
@@ -370,11 +503,13 @@ void RexxSource::nextLine()
 /* Function:  Advance the current position to the next source line            */
 /******************************************************************************/
 {
-  if (this->clause)                    /* have a clause object?             */
-                                       /* record current position in clause */
-    this->clause->setEnd(this->line_number, this->line_offset);
-                                       /* move to the start of the next line*/
-  this->position(this->line_number + 1, 0);
+    if (this->clause)                    /* have a clause object?             */
+    {
+        /* record current position in clause */
+        this->clause->setEnd(this->line_number, this->line_offset);
+    }
+    /* move to the start of the next line*/
+    this->position(this->line_number + 1, 0);
 }
 
 void RexxSource::position(
@@ -384,52 +519,68 @@ void RexxSource::position(
 /* Function:  Move the current scan position to a new spot                    */
 /******************************************************************************/
 {
-   LINE_DESCRIPTOR *descriptors;       /* line descriptors                  */
-   const char      *buffer_start;      /* start of source buffer            */
-   RexxString       *new_line;         /* new line to scan                  */
+    LINE_DESCRIPTOR *descriptors;       /* line descriptors                  */
+    const char      *buffer_start;      /* start of source buffer            */
+    RexxString       *new_line;         /* new line to scan                  */
 
-   this->line_number = line;           /* set the line number               */
-   this->line_offset = offset;         /* and the offset                    */
-   if (line > this->line_count) {      /* past the end?                     */
-     this->current = OREF_NULL;        /* null out the current line         */
-     this->current_length = 0;         /* tag this as a null line           */
-   }
-   else {
-                                       /* working from an array?            */
-     if (this->sourceArray != OREF_NULL) {
-                                       /* get the next line                 */
-       new_line = (RexxString *)(this->sourceArray->get(line - this->interpret_adjust));
-       if (new_line == OREF_NULL)      /* missing line?                     */
-                                       /* this is an error                  */
-         reportException(Error_Translation_invalid_line);
-       if (!isOfClass(String, new_line)) { /* not working with a string?        */
-                                       /* get this as a string              */
-         new_line = (RexxString *)new_line->stringValue();
-         if (new_line == TheNilObject) /* got back .nil?                    */
-                                       /* this is an error                  */
-           reportException(Error_Translation_invalid_line);
-       }
-                                       /* set the program pointer           */
-       this->current = new_line->getStringData();
-                                       /* get the string length             */
-       this->current_length = new_line->getLength();
-     }
-     else {                            /* single buffer source              */
-                                       /* get the descriptors pointer       */
-       descriptors = (LINE_DESCRIPTOR *)(this->sourceIndices->address());
-                                       /* source buffered in a string?      */
-       if (isOfClass(String, this->sourceBuffer))
-                                       /* point to the data part            */
-         buffer_start = ((RexxString *)(this->sourceBuffer))->getStringData();
-       else
-                                       /* point to the data part            */
-         buffer_start = this->sourceBuffer->address();
-                                       /* calculate the line start          */
-       this->current = buffer_start + descriptors[line - this->interpret_adjust].position;
-                                       /* and get the length                */
-       this->current_length = descriptors[line - this->interpret_adjust].length;
-     }
-   }
+    this->line_number = line;           /* set the line number               */
+    this->line_offset = offset;         /* and the offset                    */
+    /* past the end?                     */
+    if (line > this->line_count)
+    {
+        this->current = OREF_NULL;        /* null out the current line         */
+        this->current_length = 0;         /* tag this as a null line           */
+    }
+    else
+    {
+        /* working from an array?            */
+        if (this->sourceArray != OREF_NULL)
+        {
+            /* get the next line                 */
+            new_line = (RexxString *)(this->sourceArray->get(line - this->interpret_adjust));
+            if (new_line == OREF_NULL)      /* missing line?                     */
+            {
+                /* this is an error                  */
+                reportException(Error_Translation_invalid_line);
+            }
+            /* not working with a string?        */
+            if (!isOfClass(String, new_line))
+            {
+                /* get this as a string              */
+                new_line = (RexxString *)new_line->stringValue();
+                if (new_line == TheNilObject) /* got back .nil?                    */
+                {
+                    /* this is an error                  */
+                    reportException(Error_Translation_invalid_line);
+                }
+            }
+            /* set the program pointer           */
+            this->current = new_line->getStringData();
+            /* get the string length             */
+            this->current_length = new_line->getLength();
+        }
+        /* single buffer source              */
+        else
+        {
+            /* get the descriptors pointer       */
+            descriptors = (LINE_DESCRIPTOR *)(this->sourceIndices->getData());
+            /* source buffered in a string?      */
+            if (isOfClass(String, this->sourceBuffer))
+            {
+                /* point to the data part            */
+                buffer_start = ((RexxString *)(this->sourceBuffer))->getStringData();
+            }
+            else
+            {
+                /* point to the data part            */
+                buffer_start = this->sourceBuffer->getData();
+            }
+            /* calculate the line start          */
+            this->current = buffer_start + descriptors[line - this->interpret_adjust].position;
+            /* and get the length                */
+            this->current_length = descriptors[line - this->interpret_adjust].length;
+        }
+    }
 }
 
 void RexxSource::live(size_t liveMark)
@@ -437,8 +588,12 @@ void RexxSource::live(size_t liveMark)
 /* Perform garbage collection marking of a source object                      */
 /******************************************************************************/
 {
+  memory_mark(this->parentSource);
   memory_mark(this->sourceArray);
   memory_mark(this->programName);
+  memory_mark(this->programDirectory);
+  memory_mark(this->programExtension);
+  memory_mark(this->programFile);
   memory_mark(this->clause);
   memory_mark(this->securityManager);
   memory_mark(this->sourceBuffer);
@@ -463,6 +618,9 @@ void RexxSource::live(size_t liveMark)
   memory_mark(this->public_routines);
   memory_mark(this->class_dependencies);
   memory_mark(this->requires);
+  memory_mark(this->libraries);
+  memory_mark(this->loadedPackages);
+  memory_mark(this->package);
   memory_mark(this->classes);
   memory_mark(this->installed_public_classes);
   memory_mark(this->installed_classes);
@@ -489,6 +647,7 @@ void RexxSource::liveGeneral(int reason)
     OrefSet(this, this->requires, OREF_NULL);
     OrefSet(this, this->classes, OREF_NULL);
     OrefSet(this, this->routines, OREF_NULL);
+    OrefSet(this, this->libraries, OREF_NULL);
     OrefSet(this, this->installed_classes, OREF_NULL);
     OrefSet(this, this->installed_public_classes, OREF_NULL);
     OrefSet(this, this->merged_public_classes, OREF_NULL);
@@ -497,7 +656,11 @@ void RexxSource::liveGeneral(int reason)
   }
 #endif
   memory_mark_general(this->sourceArray);
+  memory_mark_general(this->parentSource);
   memory_mark_general(this->programName);
+  memory_mark_general(this->programDirectory);
+  memory_mark_general(this->programExtension);
+  memory_mark_general(this->programFile);
   memory_mark_general(this->clause);
   memory_mark_general(this->securityManager);
   memory_mark_general(this->sourceBuffer);
@@ -522,6 +685,9 @@ void RexxSource::liveGeneral(int reason)
   memory_mark_general(this->public_routines);
   memory_mark_general(this->class_dependencies);
   memory_mark_general(this->requires);
+  memory_mark_general(this->libraries);
+  memory_mark_general(this->loadedPackages);
+  memory_mark_general(this->package);
   memory_mark_general(this->classes);
   memory_mark_general(this->installed_public_classes);
   memory_mark_general(this->installed_classes);
@@ -547,7 +713,11 @@ void RexxSource::flatten (RexxEnvelope *envelope)
     this->sourceIndices = OREF_NULL;
     this->securityManager = OREF_NULL;
     flatten_reference(newThis->sourceArray, envelope);
+    flatten_reference(newThis->parentSource, envelope);
     flatten_reference(newThis->programName, envelope);
+    flatten_reference(newThis->programDirectory, envelope);
+    flatten_reference(newThis->programExtension, envelope);
+    flatten_reference(newThis->programFile, envelope);
     flatten_reference(newThis->clause, envelope);
     flatten_reference(newThis->securityManager, envelope);
     flatten_reference(newThis->sourceBuffer, envelope);
@@ -572,6 +742,9 @@ void RexxSource::flatten (RexxEnvelope *envelope)
     flatten_reference(newThis->public_routines, envelope);
     flatten_reference(newThis->class_dependencies, envelope);
     flatten_reference(newThis->requires, envelope);
+    flatten_reference(newThis->libraries, envelope);
+    flatten_reference(newThis->loadedPackages, envelope);
+    flatten_reference(newThis->package, envelope);
     flatten_reference(newThis->classes, envelope);
     flatten_reference(newThis->installed_public_classes, envelope);
     flatten_reference(newThis->installed_classes, envelope);
@@ -590,12 +763,15 @@ size_t RexxSource::sourceSize()
 /*            available, return 0                                             */
 /******************************************************************************/
 {
-                                       /* currently no source?              */
-  if ((this->sourceArray == OREF_NULL && this->sourceBuffer == OREF_NULL)) {
-    if (!this->reconnect())            /* unable to recover the source?     */
-      return 0;                        /* we have no source lines           */
-  }
-  return this->line_count;             /* return the line count             */
+    /* currently no source?              */
+    if ((this->sourceArray == OREF_NULL && this->sourceBuffer == OREF_NULL))
+    {
+        if (!this->reconnect())            /* unable to recover the source?     */
+        {
+            return 0;                        /* we have no source lines           */
+        }
+    }
+    return this->line_count;             /* return the line count             */
 }
 
 
@@ -605,11 +781,12 @@ bool RexxSource::isTraceable()
 /*            is available)                                                   */
 /******************************************************************************/
 {
-                                       /* currently no source?              */
-  if ((this->sourceArray == OREF_NULL && this->sourceBuffer == OREF_NULL)) {
-    return this->reconnect();          /* unable to recover the source?     */
-  }
-  return true;                         /* return the line count             */
+    /* currently no source?              */
+    if ((this->sourceArray == OREF_NULL && this->sourceBuffer == OREF_NULL))
+    {
+        return this->reconnect();          /* unable to recover the source?     */
+    }
+    return true;                         /* return the line count             */
 }
 
 RexxString *RexxSource::get(
@@ -618,32 +795,42 @@ RexxString *RexxSource::get(
 /* Function:  Extract a give source line from the source program              */
 /******************************************************************************/
 {
-  LINE_DESCRIPTOR *descriptors;        /* line descriptors                  */
-  const char *buffer_start;            /* start of source buffer            */
+    LINE_DESCRIPTOR *descriptors;        /* line descriptors                  */
+    const char *buffer_start;            /* start of source buffer            */
 
-  if (_position > this->line_count)     /* beyond last line?                 */
-    return OREF_NULLSTRING;            /* just return a null string         */
-                                       /* working from an array?            */
-  if (this->sourceArray != OREF_NULL) {
-                                       /* return the array line             */
-    return (RexxString *)(this->sourceArray->get(_position));
-  }
-                                       /* buffered version?                 */
-  else if (this->sourceBuffer != OREF_NULL) {
-                                       /* get the descriptors pointer       */
-    descriptors = (LINE_DESCRIPTOR *)(this->sourceIndices->address());
-                                       /* source buffered in a string?      */
-    if (isOfClass(String, this->sourceBuffer))
-                                       /* point to the data part            */
-      buffer_start = ((RexxString *)(this->sourceBuffer))->getStringData();
+    if (_position > this->line_count)     /* beyond last line?                 */
+    {
+        return OREF_NULLSTRING;            /* just return a null string         */
+    }
+                                           /* working from an array?            */
+    if (this->sourceArray != OREF_NULL)
+    {
+        /* return the array line             */
+        return(RexxString *)(this->sourceArray->get(_position));
+    }
+    /* buffered version?                 */
+    else if (this->sourceBuffer != OREF_NULL)
+    {
+        /* get the descriptors pointer       */
+        descriptors = (LINE_DESCRIPTOR *)(this->sourceIndices->getData());
+        /* source buffered in a string?      */
+        if (isOfClass(String, this->sourceBuffer))
+        {
+            /* point to the data part            */
+            buffer_start = ((RexxString *)(this->sourceBuffer))->getStringData();
+        }
+        else
+        {
+            /* point to the data part            */
+            buffer_start = this->sourceBuffer->getData();
+        }
+        /* create a new string version       */
+        return new_string(buffer_start + descriptors[_position].position, descriptors[_position].length);
+    }
     else
-                                       /* point to the data part            */
-      buffer_start = this->sourceBuffer->address();
-                                       /* create a new string version       */
-    return new_string(buffer_start + descriptors[_position].position, descriptors[_position].length);
-  }
-  else
-    return OREF_NULLSTRING;            /* we have no line                   */
+    {
+        return OREF_NULLSTRING;            /* we have no line                   */
+    }
 }
 
 void RexxSource::nextClause()
@@ -654,46 +841,58 @@ void RexxSource::nextClause()
 /* type of instruction and create the instruction parse tree.        */
 /*********************************************************************/
 {
-  RexxToken   *token;                  /* current token being processed     */
-  SourceLocation location;             /* location of the clause            */
-  SourceLocation token_location;       /* location of each token            */
+    RexxToken   *token;                  /* current token being processed     */
+    SourceLocation location;             /* location of the clause            */
+    SourceLocation token_location;       /* location of each token            */
 
-  if (!(this->flags&reclaimed)) {      /* need to scan off a clause?        */
-    this->clause->newClause();         /* reset the clause object           */
-    for (;;) {                         /* loop until we get an non-null     */
-                                       /* record the start position         */
-      this->clause->setStart(this->line_number, this->line_offset);
-                                       /* get the next source token         */
-                                       /* (blanks are not significant here) */
-      token = this->sourceNextToken(OREF_NULL);
-      if (token == OREF_NULL) {        /* hit the end of the file?          */
-        this->flags |= no_clause;      /* flag this as a no clause          */
-        return;                        /* we're finished                    */
-      }
-                                       /* is this the end of the clause?    */
-      if (!token->isEndOfClause())
-        break;                         /* we've got what we need            */
-      this->clause->newClause();       /* reset the clause object           */
+    /* need to scan off a clause?        */
+    if (!(this->flags&reclaimed))
+    {
+        this->clause->newClause();         /* reset the clause object           */
+        /* loop until we get an non-null     */
+        for (;;)
+        {
+            /* record the start position         */
+            this->clause->setStart(this->line_number, this->line_offset);
+            /* get the next source token         */
+            /* (blanks are not significant here) */
+            token = this->sourceNextToken(OREF_NULL);
+            /* hit the end of the file?          */
+            if (token == OREF_NULL)
+            {
+                this->flags |= no_clause;      /* flag this as a no clause          */
+                return;                        /* we're finished                    */
+            }
+            /* is this the end of the clause?    */
+            if (!token->isEndOfClause())
+            {
+                break;                         /* we've got what we need            */
+            }
+            this->clause->newClause();       /* reset the clause object           */
+        }
+        /* get the start position            */
+        token_location = token->getLocation();
+        location = token_location;         /* copy the location info            */
+                                           /* record in clause for errors       */
+        this->clause->setLocation(location);
+        /* loop until physical end of clause */
+        for (;;)
+        {
+            /* get the next token of real clause */
+            /* (blanks can be significant)       */
+            token = this->sourceNextToken(token);
+            /* get this tokens location          */
+            token_location = token->getLocation();
+            if (token->isEndOfClause()) /* end of the clause now?            */
+            {
+                break;                         /* hit the physical end of clause    */
+            }
+        }
+        location.setEnd(token_location);
+        /* record the clause position        */
+        this->clause->setLocation(location);
     }
-                                       /* get the start position            */
-    token_location = token->getLocation();
-    location = token_location;         /* copy the location info            */
-                                       /* record in clause for errors       */
-    this->clause->setLocation(location);
-    for (;;) {                         /* loop until physical end of clause */
-                                       /* get the next token of real clause */
-                                       /* (blanks can be significant)       */
-      token = this->sourceNextToken(token);
-                                       /* get this tokens location          */
-      token_location = token->getLocation();
-      if (token->isEndOfClause()) /* end of the clause now?            */
-        break;                         /* hit the physical end of clause    */
-    }
-    location.setEnd(token_location);
-                                       /* record the clause position        */
-    this->clause->setLocation(location);
-  }
-  this->flags &= ~reclaimed;           /* no reclaimed clause               */
+    this->flags &= ~reclaimed;           /* no reclaimed clause               */
 }
                                        /* extra space required to format a  */
                                        /* result line.  This overhead is    */
@@ -720,39 +919,45 @@ RexxString *RexxSource::traceBack(
 /* Function:  Format a source line for traceback or tracing                   */
 /******************************************************************************/
 {
-  RexxString  *buffer;                 /* buffer for building result        */
-  RexxString  *line;                   /* actual line data                  */
-  size_t       outlength;              /* output length                     */
-  char        *linepointer;            /* pointer to the line number        */
-  char         linenumber[11];         /* formatted line number             */
+    RexxString  *buffer;                 /* buffer for building result        */
+    RexxString  *line;                   /* actual line data                  */
+    size_t       outlength;              /* output length                     */
+    char        *linepointer;            /* pointer to the line number        */
+    char         linenumber[11];         /* formatted line number             */
 
-  line = this->extract(location);      /* extract the source string         */
-                                       /* doesn't exist and this isn't a    */
-                                       /* trace instruction format?         */
-  if (line == OREF_NULLSTRING && !trace)
-    return OREF_NULL;                  /* don't trace this either           */
-                                       /* format the value                  */
-  sprintf(linenumber,"%u", location.getLineNumber());
-  if (indent < 0)                      /* possible negative indentation?    */
-    indent = 0;                        /* just reset it                     */
-                                       /* get an output string              */
-  buffer = raw_string(line->getLength() + INSTRUCTION_OVERHEAD + indent * INDENT_SPACING);
-                                       /* blank out the first part          */
-  buffer->set(0, ' ', INSTRUCTION_OVERHEAD + indent * INDENT_SPACING);
-                                       /* copy in the line                  */
-  buffer->put(INSTRUCTION_OVERHEAD + indent * INDENT_SPACING, line->getStringData(), line->getLength());
-  outlength = strlen(linenumber);      /* get the line number length        */
-  linepointer = linenumber;            /* point to number start             */
-  if (outlength > LINENUMBER) {        /* too long for defined field?       */
-                                       /* step over extra numbers           */
-    linepointer += outlength - LINENUMBER;
-    *linepointer = '?';                /* overlay a question mark           */
-    outlength = LINENUMBER;            /* shorten the length                */
-  }
-                                       /* copy in the line number           */
-  buffer->put(LINENUMBER - outlength, linepointer, outlength);
-  buffer->put(PREFIX_OFFSET, "*-*", PREFIX_LENGTH);
-  return buffer;                       /* return formatted buffer           */
+    line = this->extract(location);      /* extract the source string         */
+                                         /* doesn't exist and this isn't a    */
+                                         /* trace instruction format?         */
+    if (line == OREF_NULLSTRING && !trace)
+    {
+        return OREF_NULL;                  /* don't trace this either           */
+    }
+                                           /* format the value                  */
+    sprintf(linenumber,"%u", location.getLineNumber());
+    if (indent < 0)                      /* possible negative indentation?    */
+    {
+        indent = 0;                        /* just reset it                     */
+    }
+                                           /* get an output string              */
+    buffer = raw_string(line->getLength() + INSTRUCTION_OVERHEAD + indent * INDENT_SPACING);
+    /* blank out the first part          */
+    buffer->set(0, ' ', INSTRUCTION_OVERHEAD + indent * INDENT_SPACING);
+    /* copy in the line                  */
+    buffer->put(INSTRUCTION_OVERHEAD + indent * INDENT_SPACING, line->getStringData(), line->getLength());
+    outlength = strlen(linenumber);      /* get the line number length        */
+    linepointer = linenumber;            /* point to number start             */
+    /* too long for defined field?       */
+    if (outlength > LINENUMBER)
+    {
+        /* step over extra numbers           */
+        linepointer += outlength - LINENUMBER;
+        *linepointer = '?';                /* overlay a question mark           */
+        outlength = LINENUMBER;            /* shorten the length                */
+    }
+    /* copy in the line number           */
+    buffer->put(LINENUMBER - outlength, linepointer, outlength);
+    buffer->put(PREFIX_OFFSET, "*-*", PREFIX_LENGTH);
+    return buffer;                       /* return formatted buffer           */
 }
 
 RexxString *RexxSource::extract(
@@ -761,39 +966,60 @@ RexxString *RexxSource::extract(
 /* Extrace a line from the source using the given location information        */
 /******************************************************************************/
 {
-  RexxString *line;                    /* returned source line              */
-  RexxString *source_line;             /* current extracting line           */
-  size_t  counter;                     /* line counter                      */
+    RexxString *line;                    /* returned source line              */
+    RexxString *source_line;             /* current extracting line           */
+    size_t  counter;                     /* line counter                      */
 
-                                       /* currently no source?              */
-  if ((this->sourceArray == OREF_NULL && this->sourceBuffer == OREF_NULL)) {
-    if (!this->reconnect())            /* unable to recover the source?     */
-      return OREF_NULLSTRING;          /* return a null array               */
-  }
-                                       /* is the location out of bounds?    */
-  if (location.getLineNumber() == 0 || location.getLineNumber() > this->line_count)
-    line = OREF_NULLSTRING;            /* just give back a null string      */
-                                       /* all on one line?                  */
-  else if (location.getLineNumber() >= location.getEndLine())
-                                       /* just extract the string           */
-    line = this->get(location.getLineNumber() - this->interpret_adjust)->extract(location.getOffset(),
-        location.getEndOffset() - location.getOffset());
-                                       /* multiple line clause              */
-  else {
-                                       /* get the source line               */
-    source_line = this->get(location.getLineNumber());
-                                       /* extract the first part            */
-    line = source_line->extract(location.getOffset(), source_line->getLength() - location.getOffset());
-                                       /* loop down to end line             */
-    for (counter = location.getLineNumber() + 1 - this->interpret_adjust; counter < location.getEndLine(); counter++) {
-                                       /* concatenate the next line on      */
-      line = line->concat(this->get(counter));
+                                         /* currently no source?              */
+    if ((this->sourceArray == OREF_NULL && this->sourceBuffer == OREF_NULL))
+    {
+        if (!this->reconnect())            /* unable to recover the source?     */
+            return OREF_NULLSTRING;          /* return a null array               */
     }
-                                       /* now add on the last part          */
-    line = line->concat(this->get(counter)->extract(0, location.getEndOffset()));
-  }
-  return line;                         /* return the extracted line         */
+    /* is the location out of bounds?    */
+    if (location.getLineNumber() == 0 || location.getLineNumber() > this->line_count)
+        line = OREF_NULLSTRING;            /* just give back a null string      */
+                                           /* all on one line?                  */
+    else if (location.getLineNumber() >= location.getEndLine())
+        /* just extract the string           */
+        line = this->get(location.getLineNumber() - this->interpret_adjust)->extract(location.getOffset(),
+                                                                                     location.getEndOffset() - location.getOffset());
+    /* multiple line clause              */
+    else
+    {
+        /* get the source line               */
+        source_line = this->get(location.getLineNumber());
+        /* extract the first part            */
+        line = source_line->extract(location.getOffset(), source_line->getLength() - location.getOffset());
+        /* loop down to end line             */
+        for (counter = location.getLineNumber() + 1 - this->interpret_adjust; counter < location.getEndLine(); counter++)
+        {
+            /* concatenate the next line on      */
+            line = line->concat(this->get(counter));
+        }
+        /* now add on the last part          */
+        line = line->concat(this->get(counter)->extract(0, location.getEndOffset()));
+    }
+    return line;                         /* return the extracted line         */
 }
+
+
+/**
+ * Extract all of the source from the package.
+ *
+ * @return An array of the source lines.
+ */
+RexxArray *RexxSource::extractSource()
+{
+    SourceLocation location;
+
+    location.setLineNumber(1);
+    location.setEndLine(0);
+
+    return extractSource(location);
+}
+
+
 
 RexxArray *RexxSource::extractSource(
     SourceLocation &location )         /* target retrieval structure        */
@@ -802,71 +1028,87 @@ RexxArray *RexxSource::extractSource(
 /*            the created bounds for the method.                              */
 /******************************************************************************/
 {
-  RexxArray  *source;                  /* returned source array             */
-  RexxString *source_line;             /* current extracting line           */
-  size_t      counter;                 /* line counter                      */
-  size_t      i;                       /* loop counter                      */
+                                         /* currently no source?              */
+    if ((this->sourceArray == OREF_NULL && this->sourceBuffer == OREF_NULL))
+    {
+        if (!this->reconnect())            /* unable to recover the source?     */
+        {
+            /* return a null array               */
+            return(RexxArray *)TheNullArray->copy();
+        }
+    }
+    /* is the location out of bounds?    */
+    if (location.getLineNumber() == 0 || location.getLineNumber() - this->interpret_adjust > this->line_count)
+    {
+        /* just give back a null array       */
+        return (RexxArray *)TheNullArray->copy();
+    }
+    else
+    {
+        if (location.getEndLine() == 0)
+        {  /* no ending line?                   */
+           /* use the last line                 */
+            location.setEnd(this->line_count, this->get(line_count)->getLength());
+        }
+        /* end at the line start?            */
+        else if (location.getEndOffset() == 0)
+        {
+            // step back a line
+            location.setEndLine(location.getEndLine() - 1); /* step back a line                  */
+            /* end at the line end               */
+            location.setEndOffset(this->get(location.getEndLine())->getLength());
+        }
+        /* get the result array              */
+        RexxArray *source = new_array(location.getEndLine() - location.getLineNumber() + 1);
+        /* all on one line?                  */
+        if (location.getLineNumber() == location.getEndLine())
+        {
+            /* get the line                      */
+            RexxString *source_line = this->get(location.getLineNumber());
+            /* extract the line segment          */
+            source_line = source_line->extract(location.getOffset(), location.getEndOffset() - location.getOffset());
+            source->put(source_line, 1);     /* insert the trailing piece         */
+            return source;                   /* all done                          */
+        }
+        if (location.getOffset() == 0)     /* start on the first location?      */
+        {
+            /* copy over the entire line         */
+            source->put(this->get(location.getLineNumber()), 1);
+        }
+        else
+        {
+            /* get the line                      */
+            RexxString *source_line = this->get(location.getLineNumber());
+            /* extract the end portion           */
+            source_line = source_line->extract(location.getOffset(), source_line->getLength() - location.getOffset());
+            source->put(source_line, 1);     /* insert the trailing piece         */
+        }
 
-                                       /* currently no source?              */
-  if ((this->sourceArray == OREF_NULL && this->sourceBuffer == OREF_NULL)) {
-    if (!this->reconnect())            /* unable to recover the source?     */
-                                       /* return a null array               */
-      return (RexxArray *)TheNullArray->copy();
-  }
-                                       /* is the location out of bounds?    */
-  if (location.getLineNumber() == 0 || location.getLineNumber() - this->interpret_adjust > this->line_count)
-                                       /* just give back a null array       */
-    source = (RexxArray *)TheNullArray->copy();
-  else {
-    if (location.getEndLine() == 0) {  /* no ending line?                   */
-                                       /* use the last line                 */
-      location.setEnd(this->line_count, this->get(line_count)->getLength());
+        size_t i = 2;
+        /* loop until the last line          */
+        for (size_t counter = location.getLineNumber() + 1; counter < location.getEndLine(); counter++, i++)
+        {
+            /* copy over the entire line         */
+            source->put(this->get(counter), i);
+        }
+        /* get the last line                 */
+        RexxString *source_line = this->get(location.getEndLine());
+        /* more than one line?               */
+        if (location.getEndLine() > location.getLineNumber())
+        {
+            /* need the entire line?             */
+            if (location.getEndOffset() >= source_line->getLength())
+            {
+                source->put(source_line, i);   /* just use it                       */
+            }
+            else
+            {
+                /* extract the tail part             */
+                source->put(source_line->extract(0, location.getEndOffset() - 1), i);
+            }
+        }
+        return source;
     }
-                                       /* end at the line start?            */
-    else if (location.getEndOffset() == 0) {
-      // step back a line
-      location.setEndLine(location.getEndLine() - 1); /* step back a line                  */
-                                       /* end at the line end               */
-      location.setEndOffset(this->get(location.getEndLine())->getLength());
-    }
-                                       /* get the result array              */
-    source = new_array(location.getEndLine() - location.getLineNumber() + 1);
-                                       /* all on one line?                  */
-    if (location.getLineNumber() == location.getEndLine()) {
-                                       /* get the line                      */
-      source_line = this->get(location.getLineNumber());
-                                       /* extract the line segment          */
-      source_line = source_line->extract(location.getOffset(), location.getEndOffset() - location.getOffset());
-      source->put(source_line, 1);     /* insert the trailing piece         */
-      return source;                   /* all done                          */
-    }
-    if (location.getOffset() == 0)     /* start on the first location?      */
-                                       /* copy over the entire line         */
-      source->put(this->get(location.getLineNumber()), 1);
-    else {
-                                       /* get the line                      */
-      source_line = this->get(location.getLineNumber());
-                                       /* extract the end portion           */
-      source_line = source_line->extract(location.getOffset(), source_line->getLength() - location.getOffset());
-      source->put(source_line, 1);     /* insert the trailing piece         */
-    }
-                                       /* loop until the last line          */
-    for (counter = location.getLineNumber() + 1, i = 2; counter < location.getEndLine(); counter++, i++)
-                                       /* copy over the entire line         */
-      source->put(this->get(counter), i);
-                                       /* get the last line                 */
-    source_line = this->get(location.getEndLine());
-                                       /* more than one line?               */
-    if (location.getEndLine() > location.getLineNumber()) {
-                                       /* need the entire line?             */
-      if (location.getEndOffset() >= source_line->getLength())
-        source->put(source_line, i);   /* just use it                       */
-      else
-                                       /* extract the tail part             */
-        source->put(source_line->extract(0, location.getEndOffset() - 1), i);
-    }
-  }
-  return source;                       /* return the extracted lines        */
 }
 
 void RexxSource::globalSetup()
@@ -896,38 +1138,35 @@ void RexxSource::globalSetup()
   OrefSet(this, this->clause, new RexxClause());
 }
 
-RexxMethod *RexxSource::method()
+
+RexxCode *RexxSource::generateCode()
 /******************************************************************************/
 /* Function:  Convert a source object into an executable method               */
 /******************************************************************************/
 {
-  RexxMethod *newMethod;               /* returned method                   */
-
   this->globalSetup();                 /* do the global setup part          */
                                        /* translate the source program      */
-  newMethod = this->translate(OREF_NULL);
-  ProtectedObject p(newMethod);
+  RexxCode *newCode = this->translate(OREF_NULL);
+  ProtectedObject p(newCode);
   this->cleanup();                     /* release temporary tables          */
-  return newMethod;                    /* return the method                 */
+  return newCode;                      /* return the method                 */
 }
 
-RexxMethod *RexxSource::interpretMethod(
+RexxCode *RexxSource::interpretMethod(
     RexxDirectory *_labels )            /* parent label set                  */
 /******************************************************************************/
 /* Function:  Convert a source object into an executable interpret method     */
 /******************************************************************************/
 {
-  RexxMethod  *newMethod;              /* returned method                   */
-
   this->globalSetup();                 /* do the global setup part          */
   this->flags |= _interpret;           /* this is an interpret              */
-  newMethod = this->translate(_labels); /* translate the source program      */
-  ProtectedObject p(newMethod);
+  RexxCode *newCode = this->translate(_labels); /* translate the source program      */
+  ProtectedObject p(newCode);
   this->cleanup();                     /* release temporary tables          */
-  return newMethod;                    /* return the method                 */
+  return newCode;                      /* return the method                 */
 }
 
-RexxMethod *RexxSource::interpret(
+RexxCode *RexxSource::interpret(
     RexxString    *string,             /* interpret string value            */
     RexxDirectory *_labels,             /* parent labels                     */
     size_t         _line_number )       /* line number of interpret          */
@@ -935,16 +1174,12 @@ RexxMethod *RexxSource::interpret(
 /* Function:   Interpret a string in the current activation context           */
 /******************************************************************************/
 {
-  RexxSource *source;                  /* created source object             */
-  RexxMethod *_method;                  /* new method for interpret          */
-
                                        /* create a source object            */
-  source = new RexxSource (this->programName, new_array(string));
+  RexxSource *source = new RexxSource (this->programName, new_array(string));
   ProtectedObject p(source);
   source->interpretLine(_line_number);  /* fudge the line numbering          */
                                        /* convert to executable form        */
-  _method = source->interpretMethod(_labels);
-  return _method;                       /* return this method                */
+  return source->interpretMethod(_labels);
 }
 
 void RexxSource::checkDirective()
@@ -953,18 +1188,27 @@ void RexxSource::checkDirective()
 /*            directive instructions.                                         */
 /******************************************************************************/
 {
-  RexxToken *token;                    /* first token of the clause         */
+                                       /* get the clause location           */
+    SourceLocation location = this->clause->getLocation();
 
-  this->nextClause();                  /* get the next clause               */
-  if (!(this->flags&no_clause)) {      /* have a next clause?               */
-    token = nextReal();                /* get the first token               */
-                                       /* not a directive start?            */
-    if (token->classId != TOKEN_DCOLON)
-                                       /* this is an error                  */
-      syntaxError(Error_Translation_bad_directive);
-    firstToken();                      /* reset to the first token          */
-    this->reclaimClause();             /* give back to the source object    */
-  }
+    this->nextClause();                  /* get the next clause               */
+    /* have a next clause?               */
+    if (!(this->flags&no_clause))
+    {
+        RexxToken *token = nextReal();     /* get the first token               */
+                                           /* not a directive start?            */
+        if (token->classId != TOKEN_DCOLON)
+        {
+            /* this is an error                  */
+            syntaxError(Error_Translation_bad_directive);
+        }
+        firstToken();                      /* reset to the first token          */
+        this->reclaimClause();             /* give back to the source object    */
+    }
+    // this resets the current clause location so that any errors on the current
+    // clause detected after the clause check reports this on the correct line
+    // number
+    this->clause->setLocation(location);
 }
 
 
@@ -1002,11 +1246,13 @@ RexxObject *RexxSource::toss(
 /* Function:  Remove an object from the save list                             */
 /******************************************************************************/
 {
-  if (object != OREF_NULL) {           /* have a real object                */
-    this->savelist->remove(object);    /* remove from the save table        */
-    this->holdObject(object);          /* return this object as held        */
-  }
-  return object;                       /* return the object                 */
+    /* have a real object                */
+    if (object != OREF_NULL)
+    {
+        this->savelist->remove(object);    /* remove from the save table        */
+        this->holdObject(object);          /* return this object as held        */
+    }
+    return object;                       /* return the object                 */
 }
 
 void RexxSource::cleanup()
@@ -1039,149 +1285,308 @@ void RexxSource::cleanup()
   OrefSet(this, this->currentInstruction, OREF_NULL);
 }
 
-void RexxSource::mergeRequired(
-    RexxSource *source)                /* source to merge into              */
+
+/**
+ * Merge a parent source context into our context so all of the
+ * bits that are visible in the parent are also resolvable in our
+ * context.  This is mostly used for dynamically created methods.
+ *
+ * @param parent The parent source context.
+ */
+void RexxSource::inheritSourceContext(RexxSource *source)
+{
+    // set this as a parent
+    OrefSet(this, this->parentSource, source);
+}
+
+
+void RexxSource::mergeRequired(RexxSource *source)
 /******************************************************************************/
 /* Function:  Merge all public class and routine information from a called    */
 /*            program into the full public information of this program.       */
 /******************************************************************************/
 {
-  size_t i;                            /* loop index                        */
+    // has the source already merged in some public routines?  pull those in first,
+    // so that the direct set will override
+    if (source->merged_public_routines != OREF_NULL)
+    {
+        /* first merged attempt?             */
+        if (this->merged_public_routines == OREF_NULL)
+        {
+            /* get the directory                 */
+            OrefSet(this, this->merged_public_routines, new_directory());
+        }
+        /* loop through the list of routines */
+        for (HashLink i = source->merged_public_routines->first(); source->merged_public_routines->available(i); i = source->merged_public_routines->next(i))
+        {
+            /* copy the routine over             */
+            this->merged_public_routines->setEntry((RexxString *)source->merged_public_routines->index(i), source->merged_public_routines->value(i));
+        }
 
-                                       /* have routines?                    */
-  if (source->public_routines != OREF_NULL || source->merged_public_routines) {
-                                       /* first merged attempt?             */
-    if (this->merged_public_routines == OREF_NULL)
-                                       /* get the directory                 */
-      OrefSet(this, this->merged_public_routines, new_directory());
-                                       /* do the merged set first           */
-    if (source->merged_public_routines != OREF_NULL) {
-                                       /* loop through the list of routines */
-      for (i = source->merged_public_routines->first(); source->merged_public_routines->available(i); i = source->merged_public_routines->next(i)) {
-                                       /* copy the routine over             */
-        this->merged_public_routines->setEntry((RexxString *)source->merged_public_routines->index(i), source->merged_public_routines->value(i));
-      }
     }
-                                       /* have public routines              */
-    if (source->public_routines != OREF_NULL) {
-                                       /* loop through the list of routines */
-      for (i = source->public_routines->first(); source->public_routines->available(i); i = source->public_routines->next(i)) {
-                                       /* copy the routine over             */
-        this->merged_public_routines->setEntry((RexxString *)source->public_routines->index(i), source->public_routines->value(i));
-      }
-    }
-  }
 
-                                       /* have classes also?                */
-  if (source->installed_public_classes != OREF_NULL || source->merged_public_classes != OREF_NULL) {
-                                       /* first merged attempt?             */
-    if (this->merged_public_classes == OREF_NULL)
-                                       /* get the directory                 */
-      OrefSet(this, this->merged_public_classes, new_directory());
-                                       /* do the merged classes first       */
-    if (source->merged_public_classes != OREF_NULL) {
-                                       /* loop through the list of classes, */
-      for (i = source->merged_public_classes->first(); source->merged_public_classes->available(i); i = source->merged_public_classes->next(i)) {
-                                       /* copy the routine over             */
-        this->merged_public_classes->setEntry((RexxString *)source->merged_public_classes->index(i), source->merged_public_classes->value(i));
-      }
+    // now process the direct set
+    if (source->public_routines != OREF_NULL)
+    {
+        /* first merged attempt?             */
+        if (this->merged_public_routines == OREF_NULL)
+        {
+            /* get the directory                 */
+            OrefSet(this, this->merged_public_routines, new_directory());
+        }
+        /* loop through the list of routines */
+        for (HashLink i = source->public_routines->first(); source->public_routines->available(i); i = source->public_routines->next(i))
+        {
+            /* copy the routine over             */
+            this->merged_public_routines->setEntry((RexxString *)source->public_routines->index(i), source->public_routines->value(i));
+        }
     }
-                                       /* have public classes?              */
-    if (source->installed_public_classes != OREF_NULL) {
-                                       /* loop through the list of classes, */
-      for (i = source->installed_public_classes->first(); source->installed_public_classes->available(i); i = source->installed_public_classes->next(i)) {
-                                       /* copy the routine over             */
-        this->merged_public_classes->setEntry((RexxString *)source->installed_public_classes->index(i), source->installed_public_classes->value(i));
-      }
+
+
+    // now do the same process for any of the class contexts
+    if (source->merged_public_classes != OREF_NULL)
+    {
+        if (this->merged_public_classes == OREF_NULL)
+        {
+            /* get the directory                 */
+            OrefSet(this, this->merged_public_classes, new_directory());
+        }
+        /* loop through the list of classes, */
+        for (HashLink i = source->merged_public_classes->first(); source->merged_public_classes->available(i); i = source->merged_public_classes->next(i))
+        {
+            /* copy the routine over             */
+            this->merged_public_classes->setEntry((RexxString *)source->merged_public_classes->index(i), source->merged_public_classes->value(i));
+        }
     }
-  }
-}
 
-RexxMethod *RexxSource::resolveRoutine(
-    RexxString *routineName )          /* target routine name               */
-/******************************************************************************/
-/* Function:  Try to resolve a routine name from the information held by this */
-/*            source object.                                                  */
-/******************************************************************************/
-{
-  RexxMethod *routineObject;           /* resolved class object             */
-
-  routineObject = OREF_NULL;           /* no routine found yet              */
-  if (this->routines != OREF_NULL) {   /* have locally defined routines?    */
-                                       /* try for a local one first         */
-    routineObject = (RexxMethod *)(this->routines->entry(routineName));
-    if (routineObject != OREF_NULL)    /* did this work?                    */
-      return routineObject;            /* return now                        */
-  }
-                                       /* have publically defined routines? */
-  if (this->merged_public_routines != OREF_NULL)
-                                       /* try for a public one now          */
-    routineObject = (RexxMethod *)(this->merged_public_routines->entry(routineName));
-  return routineObject;                /* return the object                 */
+    // the installed ones are processed second as they will overwrite the imported one, which
+    // is the behaviour we want
+    if (source->installed_public_classes != OREF_NULL)
+    {
+        if (this->merged_public_classes == OREF_NULL)
+        {
+            /* get the directory                 */
+            OrefSet(this, this->merged_public_classes, new_directory());
+        }
+        /* loop through the list of classes, */
+        for (HashLink i = source->installed_public_classes->first(); source->installed_public_classes->available(i); i = source->installed_public_classes->next(i))
+        {
+            /* copy the routine over             */
+            this->merged_public_classes->setEntry((RexxString *)source->installed_public_classes->index(i), source->installed_public_classes->value(i));
+        }
+    }
 }
 
 
-RexxClass *RexxSource::resolveClass(
-    RexxString     *className,         /* name of the target class          */
-    RexxActivation *context )          /* the execution context             */
-/******************************************************************************/
-/* Function:  Try to resolve a class name from the information held by this   */
-/*            source object.                                                  */
-/******************************************************************************/
+/**
+ * Resolve a directly defined class object in this or a parent
+ * context.
+ *
+ * @param name   The name we're searching for (all uppercase).
+ *
+ * @return A resolved class object, if found.
+ */
+RoutineClass *RexxSource::findLocalRoutine(RexxString *name)
 {
-  RexxClass *classObject;              /* resolved class object             */
-  RexxDirectory * securityArgs;        /* security check arguments          */
-  RexxString *internalName;            /* upper cased class name            */
+    // if we have one locally, then return it.
+    if (this->routines != OREF_NULL)
+    {
+        /* try for a local one first         */
+        RoutineClass *result = (RoutineClass *)(this->routines->fastAt(name));
+        if (result != OREF_NULL)
+        {
+            return result;
+        }
+    }
 
-  internalName = className->upper();   /* upper case it                     */
-  classObject = OREF_NULL;             /* default to not found              */
-                                       /* have locally defined classes?     */
-  if (this->installed_classes != OREF_NULL) {
-                                       /* try for a local one first         */
-    classObject = (RexxClass *)(this->installed_classes->fastAt(internalName));
-    if (classObject != OREF_NULL)      /* did this work?                    */
-      return classObject;              /* return now                        */
-  }
-                                       /* have publically defined classes?  */
-  if (this->merged_public_classes != OREF_NULL) {
-                                       /* try for a local one first         */
-    classObject = (RexxClass *)(this->merged_public_classes->fastAt(internalName));
-    if (classObject != OREF_NULL)      /* did this work?                    */
-      return classObject;              /* return now                        */
-  }
+    // we might have a chained context, so check it also
+    if (parentSource != OREF_NULL)
+    {
+        return parentSource->findLocalRoutine(name);
+    }
+    // nope, no got one
+    return OREF_NULL;
+}
 
-                                       /* normal execution?                 */
-  if (this->securityManager == OREF_NULL) {
-                                       /* send message to .local            */
+
+/**
+ * Resolve a public routine in this source context
+ *
+ * @param name   The target name.
+ *
+ * @return A resolved Routine object, if found.
+ */
+RoutineClass *RexxSource::findPublicRoutine(RexxString *name)
+{
+    // if we have one locally, then return it.
+    if (this->merged_public_routines != OREF_NULL)
+    {
+        /* try for a local one first         */
+        RoutineClass *result = (RoutineClass *)(this->merged_public_routines->fastAt(name));
+        if (result != OREF_NULL)
+        {
+            return result;
+        }
+    }
+
+    // we might have a chained context, so check it also
+    if (parentSource != OREF_NULL)
+    {
+        return parentSource->findPublicRoutine(name);
+    }
+    // nope, no got one
+    return OREF_NULL;
+}
+
+
+/**
+ * Resolve a routine from this source files base context.
+ *
+ * @param routineName
+ *               The routine name of interest.
+ *
+ * @return A RoutineClass instance if located.  Returns OREF_NULL if this
+ *         is not known at this level.
+ */
+RoutineClass *RexxSource::findRoutine(RexxString *routineName)
+{
+    RoutineClass *routineObject = findLocalRoutine(routineName);
+    if (routineObject != OREF_NULL)
+    {
+        return routineObject;
+    }
+
+    // now try for one pulled in from ::REQUIRES objects
+    return findPublicRoutine(routineName);
+}
+
+
+/**
+ * Resolve an external call in the context of the program making the
+ * call.  This will use the directory and extension of the context
+ * program to modify the search order.
+ *
+ * @param activity The current activity
+ * @param name     The target name
+ *
+ * @return The fully resolved string name of the target program, if one is
+ *         located.
+ */
+RexxString *RexxSource::resolveProgramName(RexxActivity *activity, RexxString *name)
+{
+    return activity->getInstance()->resolveProgramName(name, programDirectory, programExtension);
+}
+
+
+/**
+ * Resolve a directly defined class object in this or a parent
+ * context.
+ *
+ * @param name   The name we're searching for (all uppercase).
+ *
+ * @return A resolved class object, if found.
+ */
+RexxClass *RexxSource::findInstalledClass(RexxString *name)
+{
+    // if we have one locally, then return it.
+    if (this->installed_classes != OREF_NULL)
+    {
+        /* try for a local one first         */
+        RexxClass *result = (RexxClass *)(this->installed_classes->fastAt(name));
+        if (result != OREF_NULL)
+        {
+            return result;
+        }
+    }
+
+    // we might have a chained context, so check it also
+    if (parentSource != OREF_NULL)
+    {
+        return parentSource->findInstalledClass(name);
+    }
+    // nope, no got one
+    return OREF_NULL;
+}
+
+
+RexxClass *RexxSource::findPublicClass(RexxString *name)
+{
+    // if we have one locally, then return it.
+    if (this->merged_public_classes != OREF_NULL)
+    {
+        /* try for a local one first         */
+        RexxClass *result = (RexxClass *)(this->merged_public_classes->fastAt(name));
+        if (result != OREF_NULL)
+        {
+            return result;
+        }
+    }
+
+    // we might have a chained context, so check it also
+    if (parentSource != OREF_NULL)
+    {
+        return parentSource->findPublicClass(name);
+    }
+    // nope, no got one
+    return OREF_NULL;
+}
+
+
+/**
+ * Resolve a class from this source file context (including any
+ * chained parent contexts).
+ *
+ * @param className The target name of the class.
+ *
+ * @return The resolved class object, if any.
+ */
+RexxClass *RexxSource::findClass(RexxString *className)
+{
+    RexxString *internalName = className->upper();   /* upper case it                     */
+    // check for a directly defined one in the source context chain
+    RexxClass *classObject = findInstalledClass(internalName);
+    // return if we got one
+    if (classObject != OREF_NULL)
+    {
+        return classObject;
+    }
+    // now try for public classes we pulled in from other contexts
+    classObject = findPublicClass(internalName);
+    // return if we got one
+    if (classObject != OREF_NULL)
+    {
+        return classObject;
+    }
+
+    // give the security manager a go
+    if (this->securityManager != OREF_NULL)
+    {
+        classObject = (RexxClass *)securityManager->checkLocalAccess(internalName);
+        if (classObject != OREF_NULL)
+        {
+            return classObject;
+        }
+    }
+
+    /* send message to .local            */
     classObject = (RexxClass *)(ActivityManager::localEnvironment->at(internalName));
-    if (classObject == OREF_NULL)      /* still not found?                  */
-                                       /* last chance, try the environment  */
-      classObject = (RexxClass *)(TheEnvironment->at(internalName));
-    return classObject;                /* return the object                 */
-  }
-                                       /* protected execution               */
-  securityArgs = new_directory();      /* get the information directory     */
-                                       /* put the name in the directory     */
-  securityArgs->put(internalName, OREF_NAME);
-                                       /* did manager handle this?          */
-  if (context->callSecurityManager(OREF_LOCAL, securityArgs))
-                                       /* get the resolved name             */
-    classObject = (RexxClass *)securityArgs->fastAt(OREF_RESULT);
-  else
-                                       /* send message to .local            */
-    classObject = (RexxClass *)(ActivityManager::localEnvironment->at(internalName));
-  if (classObject == OREF_NULL) {      /* still not found?                  */
-                                       /* put the name in the directory     */
-    securityArgs->put(internalName, OREF_NAME);
-                                       /* did manager handle this?          */
-    if (context->callSecurityManager(OREF_ENVIRONMENT, securityArgs))
-                                       /* get the resolved name             */
-      classObject = (RexxClass *)securityArgs->fastAt(OREF_RESULT);
-    else
-                                       /* last chance, try the environment  */
-      classObject = (RexxClass *)(TheEnvironment->at(internalName));
-  }
-  return classObject;                  /* return the object                 */
+    if (classObject != OREF_NULL)
+    {
+        return classObject;
+    }
+
+    /* normal execution?                 */
+    if (this->securityManager != OREF_NULL)
+    {
+        classObject = (RexxClass *)securityManager->checkEnvironmentAccess(internalName);
+        if (classObject != OREF_NULL)
+        {
+            return classObject;
+        }
+    }
+
+    /* last chance, try the environment  */
+    return(RexxClass *)(TheEnvironment->at(internalName));
 }
 
 
@@ -1193,175 +1598,104 @@ void RexxSource::processInstall(
 /*            processing all ::routines.                                      */
 /******************************************************************************/
 {
-  RexxString    *this_required;        /* working ::requires item           */
-  RexxString    *name;                 /* working name                      */
-  RexxString    *metaclass_name;       /* class meta class                  */
-  RexxString    *subclass_name;        /* class subclass                    */
-  RexxArray     *inherits;             /* additional inheritance            */
-  RexxDirectory *_instanceMethods;     /* instance methods for a class      */
-  RexxObject    *Public;               /* public flag                       */
-  RexxClass     *metaclass;            /* class metaclass                   */
-  RexxClass     *subclass;             /* class subclass                    */
-  RexxDirectory *class_methods;        /* class method list                 */
-  RexxArray     *current_class;        /* current class information         */
-  size_t         size;                 /* number of required objects        */
-  size_t         i;                    /* loop counter                      */
-  size_t         j;                    /* loop counter                      */
-  RexxObject    *mixin;                /* MIXINCLASS flag                   */
-  RexxString    *class_id;             /* class id name                     */
-  RexxClass     *classObject;          /* created class                     */
+    /* turn the install flag off         */
+    /* immediately, otherwise we may     */
+    /* run into a recursion problem      */
+    /* when class init methods are       */
+    /* processed                         */
+    this->flags &= ~_install;            /* we are now installed              */
 
-                                       /* turn the install flag off         */
-                                       /* immediately, otherwise we may     */
-                                       /* run into a recursion problem      */
-                                       /* when class init methods are       */
-                                       /* processed                         */
-  this->flags &= ~_install;            /* we are now installed              */
-
-  if (this->requires != OREF_NULL) {   /* need to process ::requires?       */
-                                       /* for each REQUIRES, call the       */
-                                       /* program and merge in the public   */
-                                       /* classes and routines              */
-    size = this->requires->size();     /* get the number to install         */
-
-    for (i = 1; i <= size; i += 2) {   /* loop through the requires names   */
-                                       /* get the next required item        */
-      this_required = (RexxString *)(this->requires->get(i));
-                                       /* try to load this up               */
-      activation->loadRequired(this_required, (RexxInstruction *)this->requires->get(i + 1));
-    }
-  }
-
-  if (this->classes != OREF_NULL) {    /* have classes to process?          */
-                                       /* get an installed classes directory*/
-    OrefSet(this, this->installed_classes, new_directory());
-                                       /* and the public classes            */
-    OrefSet(this, this->installed_public_classes, new_directory());
-    size = this->classes->size();      /* get the number of classes         */
-    for (i = 1; i <= size; i++) {      /* process each class                */
-                                       /* get the class info                */
-      current_class = (RexxArray *)(this->classes->get(i));
-                                       /* get the public (uppercase) name   */
-      name = (RexxString *)(current_class->get(CLASS_PUBLIC_NAME));
-                                       /* get the public flag               */
-      Public = current_class->get(CLASS_PUBLIC);
-                                       /* get the mixingclass flag          */
-      mixin = current_class->get(CLASS_MIXINCLASS);
-                                       /* the metaclass                     */
-      metaclass_name = (RexxString *)(current_class->get(CLASS_METACLASS));
-                                       /* and subclass                      */
-      subclass_name = (RexxString *)(current_class->get(CLASS_SUBCLASS_NAME));
-                                       /* set the current line for errors   */
-      activation->setCurrent((RexxInstruction *)current_class->get(CLASS_DIRECTIVE));
-                                       /* get the class id                  */
-      class_id = (RexxString *)(current_class->get(CLASS_NAME));
-      if (metaclass_name == OREF_NULL) /* no metaclass?                     */
-        metaclass = OREF_NULL;         /* flag this                         */
-      else {                           /* have a real metaclass             */
-                                       /* resolve the class                 */
-        metaclass = this->resolveClass(metaclass_name, activation);
-        if (metaclass == OREF_NULL)    /* nothing found?                    */
-                                       /* not found in environment, error!  */
-          reportException(Error_Execution_nometaclass, metaclass_name);
-      }
-
-      if (subclass_name == OREF_NULL)  /* no subclass?                      */
-                                       /* flag this                         */
-        subclass = (RexxClass *)TheNilObject;
-      else {                           /* have a real subclass              */
-                                       /* resolve the class                 */
-        subclass = this->resolveClass(subclass_name, activation);
-        if (subclass == OREF_NULL)     /* nothing found?                    */
-                                       /* not found in environment, error!  */
-          reportException(Error_Execution_noclass, subclass_name);
-      }
-                                       /* get the inherits information      */
-      inherits = (RexxArray *)(current_class->get(CLASS_INHERIT));
-                                       /* instance methods                  */
-      _instanceMethods = (RexxDirectory *)(current_class->get(CLASS_METHODS));
-                                       /* and class methods                 */
-      class_methods = (RexxDirectory *)(current_class->get(CLASS_CLASS_METHODS));
-      if (subclass == TheNilObject)  /* no subclass?                      */
-                                     /* use .object for the subclass      */
-        subclass = (RexxClass *)TheEnvironment->fastAt(OREF_OBJECTSYM);
-      if (metaclass == TheNilObject) /* no metaclass?                     */
-        metaclass = OREF_NULL;       /* just null out                     */
-      if (mixin != OREF_NULL)        /* this a mixin class?               */
-        classObject = (RexxClass *)(subclass->mixinclass(class_id, metaclass, (RexxTable *)class_methods));
-      else
-                                     /* doing a subclassing               */
-        classObject = (RexxClass *)(subclass->subclass(class_id, metaclass, (RexxTable *)class_methods));
-                                       /* add the class to the directory    */
-      this->installed_classes->put(classObject, name);
-      if (inherits != OREF_NULL) {     /* have inherits to process?         */
-                                       /* establish remainder of inheritance*/
-        for (j = 1; j <= inherits->size(); j++) {
-                                       /* get the next inherits name        */
-          subclass_name = (RexxString *)(inherits->get(j));
-                                       /* go resolve the entry              */
-          subclass = this->resolveClass(subclass_name, activation);
-          if (subclass == OREF_NULL)   /* not found?                        */
-                                       /* not found in environment, error!  */
-            reportException(Error_Execution_noclass, subclass_name);
-                                       /* do the actual inheritance         */
-          classObject->sendMessage(OREF_INHERIT, subclass);
+    // native packages are processed first.  The requires might actually need
+    // functons loaded by the packages
+    if (this->libraries != OREF_NULL)
+    {
+        /* classes and routines              */
+        // now loop through the requires items
+        for (size_t i = libraries->firstIndex(); i != LIST_END; i = libraries->nextIndex(i))
+        {
+            // and have it do the installs processing
+            LibraryDirective *library = (LibraryDirective *)this->libraries->getValue(i);
+            library->install(activation);
         }
-      }
-      if (_instanceMethods != OREF_NULL)/* have instance methods to add?     */
-                                       /* define them to the class object   */
-        classObject->defineMethods((RexxTable *)_instanceMethods);
-                                       /* make public if required           */
-      if (Public != OREF_NULL)         /* need to make this public?         */
-                                       /* add to public directory           */
-        this->installed_public_classes->setEntry(name, classObject);
     }
-  }
+
+    // native methods and routines are lazy resolved on first use, so we don't
+    // need to process them here.
+
+    if (this->requires != OREF_NULL)     /* need to process ::requires?       */
+    {
+        /* classes and routines              */
+        // now loop through the requires items
+        for (size_t i = requires->firstIndex(); i != LIST_END; i = requires->nextIndex(i))
+        {
+            // and have it do the installs processing.  This is a little roundabout, but
+            // we end up back in our own context while processing this, and the merge
+            // of the information happens then.
+            RequiresDirective *requires = (RequiresDirective *)this->requires->getValue(i);
+            requires->install(activation);
+        }
+    }
+
+    // and finally process classes
+    if (this->classes != OREF_NULL)
+    {
+        /* get an installed classes directory*/
+        OrefSet(this, this->installed_classes, new_directory());
+        /* and the public classes            */
+        OrefSet(this, this->installed_public_classes, new_directory());
+        for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
+        {
+            /* get the class info                */
+            ClassDirective *current_class = (ClassDirective *)this->classes->getValue(i);
+            current_class->install(this, activation);
+        }
+    }
 }
 
-RexxMethod *RexxSource::translate(
+RexxCode *RexxSource::translate(
     RexxDirectory *_labels)             /* interpret labels                  */
 /******************************************************************************/
 /* Function:  Translate a source object into a method object                  */
 /******************************************************************************/
 {
-  RexxMethod *newMethod;               /* new parent method                 */
+    /* go translate the lead block       */
+    RexxCode *newMethod = this->translateBlock(_labels);
+    this->saveObject((RexxObject *)newMethod);  /* make this safe                    */
+    if (!this->atEnd())                  /* have directives to process?       */
+    {
+        /* create the routines directory     */
+        OrefSet(this, this->routines, new_directory());
+        /* create the routines directory     */
+        OrefSet(this, this->public_routines, new_directory());
+        /* and a directory of dependencies   */
+        OrefSet(this, this->class_dependencies, new_directory());
+        /* create the requires directory     */
+        OrefSet(this, this->requires, new_list());
+        // and a list of load libraries requiring loading.
+        OrefSet(this, this->libraries, new_list());
+        /* create the classes list           */
+        OrefSet(this, this->classes, new_list());
+        /* no active class definition        */
+        OrefSet(this, this->active_class, OREF_NULL);
+                                           /* translation stopped by a directive*/
+        if (this->flags&_interpret)        /* is this an interpret?             */
+        {
+            this->nextClause();              /* get the directive clause          */
+                                             /* raise an error                    */
+            syntaxError(Error_Translation_directive_interpret);
+        }
+        /* create a directory for ..methods  */
+        OrefSet(this, this->methods, new_directory());
 
-                                       /* go translate the lead block       */
-  newMethod = this->translateBlock(_labels);
-  this->saveObject(newMethod);         /* make this safe                    */
-  if (!this->atEnd()) {                /* have directives to process?       */
-                                       /* create the routines directory     */
-    OrefSet(this, this->routines, new_directory());
-                                       /* create the routines directory     */
-    OrefSet(this, this->public_routines, new_directory());
-                                       /* and a directory of dependencies   */
-    OrefSet(this, this->class_dependencies, new_directory());
-                                       /* create the requires directory     */
-    OrefSet(this, this->requires, (RexxArray *)new_list());
-                                       /* create the classes list           */
-    OrefSet(this, this->classes, (RexxArray *)new_list());
-                                       /* no active class definition        */
-    OrefSet(this, this->active_class, OREF_NULL);
-    this->flags |= requires_allowed;   /* still allow ::REQUIRES directives */
-                                       /* translation stopped by a directive*/
-    if (this->flags&_interpret) {      /* is this an interpret?             */
-      this->nextClause();              /* get the directive clause          */
-                                       /* raise an error                    */
-      syntaxError(Error_Translation_directive_interpret);
+        while (!this->atEnd())             /* loop until end of source          */
+        {
+            this->directive();               /* process the directive             */
+        }
+        this->resolveDependencies();       /* go resolve class dependencies     */
     }
-                                       /* create a directory for ..methods  */
-    OrefSet(this, this->methods, new_directory());
-
-    while (!this->atEnd()) {           /* loop until end of source          */
-      this->directive();               /* process the directive             */
-    }
-                                       /* have a class already active?      */
-    if (this->active_class != OREF_NULL)
-      this->completeClass();           /* finish off currently active one   */
-    this->resolveDependencies();       /* go resolve class dependencies     */
-  }
-  return newMethod;                    /* return the method                 */
+    return newMethod;                    /* return the method                 */
 }
+
 
 void RexxSource::resolveDependencies()
 /*********************************************************************/
@@ -1373,159 +1707,100 @@ void RexxSource::resolveDependencies()
 /*            order                                                  */
 /*********************************************************************/
 {
-  RexxArray     *class_order;          /* class ordering array              */
-  RexxArray     *current_class;        /* current class definition          */
-  RexxDirectory *dependencies;         /* dependencies list                 */
-  RexxString    *metaclass_name;       /* name of the metaclass             */
-  RexxString    *subclass_name;        /* name of the subclass              */
-  RexxArray     *inherits;             /* set of inherits                   */
-  RexxArray     *next_install;         /* next class to install             */
-  RexxString    *class_name;           /* name of the class                 */
-  RexxArray     *_classes;             /* array of classes                  */
-  size_t         size;                 /* count of classes                  */
-  size_t         i;                    /* loop counter                      */
-  size_t         j;                    /* loop counter                      */
-  size_t         next_class;           /* next class position               */
-
-                                       /* first convert class list to array */
-  _classes = ((RexxList *)(this->classes))->makeArray();
-                                       /* and cast off the list             */
-  OrefSet(this, this->classes, _classes);
-  size = _classes->size();              /* get the array size                */
-  if (size == 0)                       /* nothing to process?               */
-  {
-                                       /* clear out the classes list        */
-    OrefSet(this, this->classes, OREF_NULL);
-  }
-  else {                               /* have classes to process           */
-                                       /* now traverse the classes array,   */
-    for (i = 1; i <= size; i++) {      /* building up a dependencies list   */
-                                       /* get the next class                */
-      current_class = (RexxArray *)(_classes->get(i));
-                                       /* get the dependencies              */
-      dependencies = (RexxDirectory *)(this->class_dependencies->fastAt((RexxString *)current_class->get(CLASS_PUBLIC_NAME)));
-                                       /* get the subclassing info          */
-      metaclass_name = (RexxString *)(current_class->get(CLASS_METACLASS));
-      subclass_name = (RexxString *)(current_class->get(CLASS_SUBCLASS_NAME));
-      inherits = (RexxArray *)(current_class->get(CLASS_INHERIT));
-                                       /* have a metaclass?                 */
-      if (metaclass_name != OREF_NULL) {
-                                       /* in our list to install?           */
-        if (this->class_dependencies->entry(metaclass_name) != OREF_NULL)
-                                       /* add to our pending list           */
-          dependencies->setEntry(metaclass_name, metaclass_name);
-      }
-      if (subclass_name != OREF_NULL) {/* have a subclass?                  */
-                                       /* in our list to install?           */
-        if (this->class_dependencies->entry(subclass_name) != OREF_NULL)
-                                       /* add to our pending list           */
-          dependencies->setEntry(subclass_name, subclass_name);
-      }
-      if (inherits != OREF_NULL) {
-                                       /* process each inherits             */
-        for (j = 1; j <= inherits->size(); j++) {
-                                       /* get the next class name           */
-          subclass_name = (RexxString *)(inherits->get(j));
-                                       /* in our list to install?           */
-          if (this->class_dependencies->entry(subclass_name) != OREF_NULL)
-                                       /* add to our pending list           */
-            dependencies->setEntry(subclass_name, subclass_name);
-        }
-      }
+    // get our class list
+    if (classes->items() == 0)           /* nothing to process?               */
+    {
+        /* clear out the classes list        */
+        OrefSet(this, this->classes, OREF_NULL);
     }
-    class_order = new_array(size);     /* get the ordering array            */
+    else                                 /* have classes to process           */
+    {
+        // run through the class list having each directive set up its
+        // dependencies
+        for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
+        {
+            /* get the next class                */
+            ClassDirective *current_class = (ClassDirective *)(classes->getValue(i));
+            // have the class figure out it's in-package dependencies
+            current_class->addDependencies(class_dependencies);
+        }
+
+        RexxList *class_order = new_list();  // get a list for doing the order
+        ProtectedObject p(class_order);
 
 /* now we repeatedly scan the pending directory looking for a class         */
 /* with no in-program dependencies - it's an error if there isn't one       */
 /* as we build the classes we have to remove them (their names) from        */
 /* pending list and from the remaining dependencies                         */
-    next_class = 1;                    /* inserting at the beginning        */
-    while (next_class <= size) {       /* while still more to process       */
-      next_install = OREF_NULL;        /* nothing located yet               */
-      for (i = 1; i <= size; i++) {    /* loop through the list             */
-                                       /* get the next class                */
-        current_class = (RexxArray *)(_classes->get(i));
-        if (current_class == OREF_NULL)/* already processed?                */
-          continue;                    /* go do the next one                */
-                                       /* get the dependencies              */
-        dependencies = (RexxDirectory *)(this->class_dependencies->fastAt((RexxString *)current_class->get(CLASS_PUBLIC_NAME)));
-                                       /* no dependencies?                  */
-        if (dependencies->items() == 0) {
-          next_install = current_class;/* get the next one                  */
-          break;                       /* go process this one               */
+        while (classes->items() > 0)
+        {
+            // this is the next one we process
+            ClassDirective *next_install = OREF_NULL;
+            for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
+            {
+                 /* get the next class                */
+                ClassDirective *current_class = (ClassDirective *)(classes->getValue(i));
+                // if this class doesn't have any additional dependencies, pick it next.
+                if (current_class->dependenciesResolved())
+                {
+                    next_install = current_class;
+                    // add this to the class ordering
+                    class_order->append((RexxObject *)next_install);
+                    // remove this from the processing list
+                    classes->removeIndex(i);
+                }
+            }
+            if (next_install == OREF_NULL)   /* nothing located?                  */
+            {
+                /* raise an error                    */
+                syntaxError(Error_Execution_cyclic, this->programName);
+            }
+            RexxString *class_name = next_install->getName();
+
+            // now go through the pending list telling each of the remaining classes that
+            // they can remove this dependency from their list
+            for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
+            {    /* go remove the dependencies        */
+                 /* get a class                       */
+                ClassDirective *current_class = (ClassDirective *)classes->getValue(i);
+                current_class->removeDependency(class_name);
+            }
         }
-      }
-      if (next_install == OREF_NULL)   /* nothing located?                  */
-                                       /* raise an error                    */
-        syntaxError(Error_Execution_cyclic, this->programName);
-                                       /* get the class name                */
-      class_name = (RexxString *)(current_class->get(CLASS_PUBLIC_NAME));
-      for (j = 1; j <= size; j++) {    /* go remove the dependencies        */
-                                       /* get a class                       */
-        current_class = (RexxArray *)(_classes->get(j));
-                                       /* not installed yet?                */
-        if (current_class != OREF_NULL) {
-                                       /* get the dependencies list         */
-          dependencies = (RexxDirectory *)(this->class_dependencies->fastAt((RexxString *)current_class->get(CLASS_PUBLIC_NAME)));
-                                       /* remove from the dependencies      */
-          dependencies->remove(class_name);
-        }
-      }
-                                       /* insert into the install order     */
-      class_order->put(next_install, next_class);
-      next_class++;                    /* and step the position             */
-      _classes->put(OREF_NULL, i);     /* remove the installed one          */
+
+        /* replace the original class list   */
+        OrefSet(this, this->classes, class_order);
+        /* don't need the dependencies now   */
+        OrefSet(this, this->class_dependencies, OREF_NULL);
     }
-                                       /* replace the original class list   */
-    OrefSet(this, this->classes, class_order);
-                                       /* don't need the dependencies now   */
-    OrefSet(this, this->class_dependencies, OREF_NULL);
-  }
-                                       /* convert requires list to an array */
-  OrefSet(this, this->requires, this->requires->makeArray());
-  if (this->requires->size() == 0)     /* nothing there?                    */
-                                       /* just clear it out                 */
-    OrefSet(this, this->requires, OREF_NULL);
-  if (this->routines->items() == 0)    /* no routines to process?           */
-                                       /* just clear it out also            */
-    OrefSet(this, this->routines, OREF_NULL);
-                                       /* now finally the public routines   */
-  if (this->public_routines->items() == 0)
-                                       /* just clear it out also            */
-    OrefSet(this, this->public_routines, OREF_NULL);
-  if (this->methods->items() == 0)     /* and also the methods directory    */
-                                       /* just clear it out also            */
-    OrefSet(this, this->methods, OREF_NULL);
+
+    if (this->requires->items() == 0)     /* nothing there?                    */
+    {
+        /* just clear it out                 */
+        OrefSet(this, this->requires, OREF_NULL);
+    }
+    if (this->libraries->items() == 0)     /* nothing there?                    */
+    {
+        /* just clear it out                 */
+        OrefSet(this, this->libraries, OREF_NULL);
+    }
+    if (this->routines->items() == 0)    /* no routines to process?           */
+    {
+        /* just clear it out also            */
+        OrefSet(this, this->routines, OREF_NULL);
+    }
+    /* now finally the public routines   */
+    if (this->public_routines->items() == 0)
+    {
+        /* just clear it out also            */
+        OrefSet(this, this->public_routines, OREF_NULL);
+    }
+    if (this->methods->items() == 0)     /* and also the methods directory    */
+    {
+        /* just clear it out also            */
+        OrefSet(this, this->methods, OREF_NULL);
+    }
 }
 
-void RexxSource::completeClass()
-/*********************************************************************/
-/* Function:  complete create of the active class definition         */
-/*********************************************************************/
-{
-  RexxArray     *inherits;             /* the inherits information          */
-  RexxDirectory *classMethods;         /* methods directory                 */
-
-                                       /* get the inherits list             */
-  inherits = (RexxArray *)(this->active_class->get(CLASS_INHERIT));
-  if (inherits != OREF_NULL) {         /* have an inherits list?            */
-                                       /* convert to an array               */
-    inherits = ((RexxList *)inherits)->makeArray();
-                                       /* replace the original list         */
-    this->active_class->put(inherits, CLASS_INHERIT);
-  }
-                                       /* get the class methods             */
-  classMethods = (RexxDirectory *)(this->active_class->get(CLASS_METHODS));
-  if (classMethods->items() == 0)      /* have any methods?                 */
-                                       /* through away the directory        */
-    this->active_class->put(OREF_NULL, CLASS_METHODS);
-                                       /* now repeat for class methods      */
-  classMethods = (RexxDirectory *)(this->active_class->get(CLASS_CLASS_METHODS));
-
-  if (classMethods->items() == 0)           /* have any methods?                 */
-                                       /* throw away the directory          */
-    this->active_class->put(OREF_NULL, CLASS_CLASS_METHODS);
-}
 
 #define DEFAULT_GUARD    0             /* using defualt guarding            */
 #define GUARDED_METHOD   1             /* method is a guarded one           */
@@ -1544,16 +1819,8 @@ void RexxSource::completeClass()
  */
 void RexxSource::classDirective()
 {
-    RexxToken    *token;                 /* current token under processing    */
-    /* have a class already active?      */
-    if (this->active_class != OREF_NULL)
-    {
-        this->completeClass();         /* go finish this up                 */
-    }
-
-    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
-    token = nextReal();              /* get the next token                */
-                                     /* not a symbol or a string          */
+    RexxToken *token = nextReal();       /* get the next token                */
+    /* not a symbol or a string          */
     if (!token->isSymbolOrLiteral())
     {
         /* report an error                   */
@@ -1569,23 +1836,15 @@ void RexxSource::classDirective()
         syntaxError(Error_Translation_duplicate_class);
     }
     /* create a dependencies list        */
-    this->class_dependencies->put(new_directory(), public_name);
     this->flags |= _install;         /* have information to install       */
-                                     /* create the class definition       */
-    OrefSet(this, this->active_class, new_array(CLASS_INFO_SIZE));
-    /* add this to the class table       */
-    ((RexxList *)(this->classes))->addLast(this->active_class);
-    /* add the name to the information   */
-    this->active_class->put(name, CLASS_NAME);
-    /* add the name to the information   */
-    this->active_class->put(public_name, CLASS_PUBLIC_NAME);
-    /* create the method table           */
-    this->active_class->put(new_directory(), CLASS_METHODS);
-    /* and the class method tabel        */
-    this->active_class->put(new_directory(), CLASS_CLASS_METHODS);
-    /* save the ::class location         */
-    this->active_class->put((RexxObject *)new RexxInstruction(this->clause, KEYWORD_CLASS), CLASS_DIRECTIVE);
-    int  Public = DEFAULT_ACCESS_SCOPE;          /* haven't seen the keyword yet      */
+
+    // create a class directive and add this to the dependency list
+    OrefSet(this, this->active_class, new ClassDirective(name, public_name, this->clause));
+    this->class_dependencies->put((RexxObject *)active_class, public_name);
+    // and also add to the classes list
+    this->classes->append((RexxObject *)this->active_class);
+
+    int  Public = DEFAULT_ACCESS_SCOPE;   /* haven't seen the keyword yet      */
     bool subclass = false;                /* no subclass keyword yet           */
     RexxString *metaclass = OREF_NULL;    /* no metaclass yet                  */
     for (;;)
@@ -1593,11 +1852,15 @@ void RexxSource::classDirective()
         token = nextReal();            /* get the next token                */
                                        /* reached the end?                  */
         if (token->isEndOfClause())
+        {
             break;                       /* get out of here                   */
+        }
                                          /* not a symbol token?               */
         else if (!token->isSymbol())
+        {
             /* report an error                   */
             syntaxError(Error_Invalid_subkeyword_class, token);
+        }
         else
         {                         /* have some sort of option keyword  */
                                   /* get the keyword type              */
@@ -1607,16 +1870,19 @@ void RexxSource::classDirective()
                     /* ::CLASS name METACLASS metaclass  */
                 case SUBDIRECTIVE_METACLASS:
                     /* already had a METACLASS?          */
-                    if (metaclass != OREF_NULL)
+                    if (active_class->getMetaClass() != OREF_NULL)
+                    {
                         syntaxError(Error_Invalid_subkeyword_class, token);
+                    }
                     token = nextReal();      /* get the next token                */
                                              /* not a symbol or a string          */
                     if (!token->isSymbolOrLiteral())
+                    {
                         /* report an error                   */
                         syntaxError(Error_Symbol_or_string_metaclass, token);
-                    metaclass = token->value;/* external name is token value      */
+                    }
                                              /* tag the active class              */
-                    this->active_class->put(metaclass, CLASS_METACLASS);
+                    this->active_class->setMetaClass(token->value);
                     break;
 
 
@@ -1628,7 +1894,7 @@ void RexxSource::classDirective()
                     }
                     Public = PUBLIC_SCOPE;   /* turn on the seen flag             */
                                              /* just set this as a public object  */
-                    this->active_class->put((RexxObject *)TheTrueObject, CLASS_PUBLIC);
+                    this->active_class->setPublic();
                     break;
 
                 case SUBDIRECTIVE_PRIVATE: /* ::CLASS name PUBLIC               */
@@ -1641,53 +1907,59 @@ void RexxSource::classDirective()
                     break;
                     /* ::CLASS name SUBCLASS sclass      */
                 case SUBDIRECTIVE_SUBCLASS:
-                    if (subclass)            /* already had one of these?         */
+                    // If we have a subclass set already, this is an error
+                    if (active_class->getSubClass() != OREF_NULL)
+                    {
                                              /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_class, token);
-                    subclass = true;         /* turn on the seen flag             */
+                    }
                     token = nextReal();      /* get the next token                */
                                              /* not a symbol or a string          */
                     if (!token->isSymbolOrLiteral())
+                    {
                         /* report an error                   */
                         syntaxError(Error_Symbol_or_string_subclass);
+                    }
                     /* set the subclass information      */
-                    this->active_class->put(token->value, CLASS_SUBCLASS_NAME);
+                    this->active_class->setSubClass(token->value);
                     break;
                     /* ::CLASS name MIXINCLASS mclass    */
                 case SUBDIRECTIVE_MIXINCLASS:
-                    if (subclass)            /* already had one of these?         */
+                    // If we have a subclass set already, this is an error
+                    if (active_class->getSubClass() != OREF_NULL)
+                    {
                                              /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_class, token);
-                    subclass = true;         /* turn on the seen flag             */
+                    }
                     token = nextReal();      /* get the next token                */
                                              /* not a symbol or a string          */
                     if (!token->isSymbolOrLiteral())
+                    {
                         /* report an error                   */
                         syntaxError(Error_Symbol_or_string_mixinclass);
+                    }
                     /* set the subclass information      */
-                    this->active_class->put(token->value, CLASS_SUBCLASS_NAME);
-                    /* this a mixin?                     */
-                    if (type == SUBDIRECTIVE_MIXINCLASS)
-                        /* just set this as a public object  */
-                        this->active_class->put((RexxObject *)TheTrueObject, CLASS_MIXINCLASS);
+                    this->active_class->setMixinClass(token->value);
                     break;
                     /* ::CLASS name INHERIT iclasses     */
                 case SUBDIRECTIVE_INHERIT:
                     token = nextReal();      /* get the next token                */
                                              /* nothing after the keyword?        */
                     if (token->isEndOfClause())
+                    {
                         /* report an error                   */
                         syntaxError(Error_Symbol_or_string_inherit, token);
-                    /* add an inherits list              */
-                    this->active_class->put(new_list(), CLASS_INHERIT);
+                    }
                     while (!token->isEndOfClause())
                     {
                         /* not a symbol or a string          */
                         if (!token->isSymbolOrLiteral())
+                        {
                             /* report an error                   */
                             syntaxError(Error_Symbol_or_string_inherit, token);
+                        }
                         /* add to the inherit list           */
-                        ((RexxList *)(this->active_class->get(CLASS_INHERIT)))->addLast(token->value);
+                        this->active_class->addInherits(token->value);
                         token = nextReal();    /* step to the next token            */
                     }
                     previousToken();         /* step back a token                 */
@@ -1704,11 +1976,69 @@ void RexxSource::classDirective()
 
 
 /**
+ * check for a duplicate method.
+ *
+ * @param name   The name to check.
+ * @param classMethod
+ *               Indicates whether this is a check for a CLASS or INSTANCE method.
+ * @param errorMsg
+ *               The error code to use if there is a duplicate.
+ */
+void RexxSource::checkDuplicateMethod(RexxString *name, bool classMethod, int errorMsg)
+{
+    /* no previous ::CLASS directive?    */
+    if (this->active_class == OREF_NULL)
+    {
+        if (classMethod)             /* supposed to be a class method?    */
+        {
+                                     /* this is an error                  */
+            syntaxError(Error_Translation_missing_class);
+        }
+        /* duplicate method name?            */
+        if (this->methods->entry(name) != OREF_NULL)
+        {
+            /* this is an error                  */
+            syntaxError(errorMsg);
+        }
+    }
+    else
+    {                                /* add the method to the active class*/
+        if (active_class->checkDuplicateMethod(name, classMethod))
+        {
+            /* this is an error                  */
+            syntaxError(errorMsg);
+        }
+    }
+}
+
+
+/**
+ * Add a new method to this compilation.
+ *
+ * @param name   The directory name of the method.
+ * @param method The method object.
+ * @param classMethod
+ *               The class/instance method indicator.
+ */
+void RexxSource::addMethod(RexxString *name, RexxMethod *method, bool classMethod)
+{
+    if (this->active_class == OREF_NULL)
+    {
+        this->methods->setEntry(name, method);
+    }
+    else
+    {
+        active_class->addMethod(name, method, classMethod);
+    }
+}
+
+
+
+/**
  * Process a ::METHOD directive in a source file.
  */
 void RexxSource::methodDirective()
 {
-    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
     int  Private = DEFAULT_ACCESS_SCOPE;    /* this is a public method           */
     int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
     int guard = DEFAULT_GUARD;       /* default is guarding               */
@@ -1876,56 +2206,29 @@ void RexxSource::methodDirective()
         }
     }
 
-    RexxDirectory *methodsDir;
-    /* no previous ::CLASS directive?    */
-    if (this->active_class == OREF_NULL)
-    {
-        if (Class)                   /* supposed to be a class method?    */
-        {
-                                     /* this is an error                  */
-            syntaxError(Error_Translation_missing_class);
-        }
-        methodsDir = this->methods;  /* adding to the global set          */
-    }
-    else
-    {                                /* add the method to the active class*/
-        if (Class)                   /* class method?                     */
-        {
-                                     /* add to the class method list      */
-            methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_CLASS_METHODS)));
-        }
-        else
-        {
-            /* add to the method list            */
-            methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_METHODS)));
-        }
-    }
-    /* duplicate method name?            */
-    if (methodsDir->entry(internalname) != OREF_NULL)
-    {
-        /* this is an error                  */
-        syntaxError(Error_Translation_duplicate_method);
-    }
+    // go check for a duplicate and validate the use of the CLASS modifier
+    checkDuplicateMethod(internalname, Class, Error_Translation_duplicate_method);
+
 
     RexxMethod *_method = OREF_NULL;
     // is this an attribute method?
     if (Attribute)
     {
+        // now get this as the setter method.
+        RexxString *setterName = commonString(internalname->concatWithCstring("="));
+        // need to check for duplicates on that too
+        checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_method);
+
+                                       /* Go check the next clause to make  */
+        this->checkDirective();        /* sure that no code follows         */
+
         // now get a variable retriever to get the property
         RexxVariableBase *retriever = this->getRetriever(name);
 
         // create the method pair and quit.
-        createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+        createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
             Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
-        // now get this as the setter method.
-        internalname = commonString(internalname->concatWithCstring("="));
-        // make sure we don't have one of these define already.
-        if (methodsDir->entry(internalname) != OREF_NULL)
-        {
-            /* this is an error                  */
-            syntaxError(Error_Translation_duplicate_method);
-        }
-        createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+        createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
             Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
         return;
     }
@@ -1935,22 +2238,45 @@ void RexxSource::methodDirective()
                                        /* Go check the next clause to make  */
         this->checkDirective();        /* sure that no code follows         */
         // this uses a special code block
-        _method = new_method(new AbstractCode());
+        _method = new RexxMethod(name, new AbstractCode());
     }
     /* not an external method?           */
     else if (externalname == OREF_NULL)
     {
+        // NOTE:  It is necessary to translate the block and protect the code
+        // before allocating the RexxMethod object.  The new operator allocates the
+        // the object first, then evaluates the constructor arguments after the allocation.
+        // Since the translateBlock() call will allocate a lot of new objects before returning,
+        // there's a high probability that the method object can get garbage collected before
+        // there is any opportunity to protect the object.
+        RexxCode *code = this->translateBlock(OREF_NULL);
+        this->saveObject((RexxObject *)code);
+
         /* go do the next block of code      */
-        _method = this->translateBlock(OREF_NULL);
+        _method = new RexxMethod(name, code);
     }
     else
-    {                           /* have an external method           */
-        /* convert external into words       */
-        RexxArray *_words = this->words(externalname);
-        /* not 'LIBRARY library entry' form? */
-        if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
+    {
+                                /* convert external into words       */
+        RexxArray *words = this->words(externalname);
+        /* not 'PACKAGE library [entry]' form? */
+        if (((RexxString *)(words->get(1)))->strCompare(CHAR_LIBRARY))
         {
-            if (_words->size() != 3)     /* wrong number of tokens?           */
+            RexxString *library;
+            // the default entry point name is the internal name
+            RexxString *entry = internalname;
+
+            // full library with entry name version?
+            if (words->size() == 3)
+            {
+                library = (RexxString *)words->get(2);
+                entry = (RexxString *)words->get(3);
+            }
+            else if (words->size() == 2)
+            {
+                library = (RexxString *)words->get(2);
+            }
+            else  // wrong number of tokens
             {
                                          /* this is an error                  */
                 syntaxError(Error_Translation_bad_external, externalname);
@@ -1959,34 +2285,15 @@ void RexxSource::methodDirective()
             /* go check the next clause to make  */
             this->checkDirective();      /* sure no code follows              */
                                          /* create a new native method        */
-            RexxNativeCode *nmethod = new_native_code((RexxString *)(_words->get(3)), (RexxString *)(_words->get(2)));
-            /* turn into a real method object    */
-            _method = new_method(nmethod);
-        }
-        /* is it 'REXX entry' form?          */
-        else if (((RexxString *)(_words->get(1)))->strCompare(CHAR_REXX))
-        {
-            if (_words->size() != 2)     /* wrong number of tokens?           */
+            RexxNativeCode *nmethod = PackageManager::resolveMethod(library, entry);
+            // raise an exception if this entry point is not found.
+            if (nmethod == OREF_NULL)
             {
-                                         /* this is an error                  */
-                syntaxError(Error_Translation_bad_external, externalname);
+                 syntaxError(Error_External_name_not_found_method, entry);
             }
-
-            /* go check the next clause to make  */
-            this->checkDirective();      /* sure no code follows              */
-                                         /* point to the entry name           */
-            RexxString *entryName = (RexxString *)_words->get(2);
-            // locate this in the internal table
-            size_t index = LibraryManager::resolveInternalMethod(entryName);
-            if (index == SIZE_MAX)
-            {
-                // this is an error
-                syntaxError(Error_Translation_bad_external, externalname);
-            }
-            /* create a new native method        */
-            RexxNativeCode *nmethod = new RexxNativeCode(NULL, index);
+            nmethod->setSourceObject(this);
             /* turn into a real method object    */
-            _method = new_method(nmethod);
+            _method = new RexxMethod(name, nmethod);
         }
         else
         {
@@ -1994,21 +2301,9 @@ void RexxSource::methodDirective()
             syntaxError(Error_Translation_bad_external, externalname);
         }
     }
-    if (Private == PRIVATE_SCOPE)                   /* is this a private method?         */
-    {
-        _method->setPrivate();        /* turn on the private attribute     */
-    }
-    if (Protected == PROTECTED_METHOD)   /* is this a protected method?       */
-    {
-        _method->setProtected();      /* turn on the protected attribute   */
-    }
-    if (guard == UNGUARDED_METHOD) /* is this unguarded?                */
-    {
-        _method->setUnGuarded();      /* turn on the unguarded attribute   */
-    }
-
-    /* add the method to the table       */
-    methodsDir->put(_method, internalname);
+    _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+    // add to the compilation
+    addMethod(internalname, _method, Class);
 }
 
 #define ATTRIBUTE_BOTH 0
@@ -2021,7 +2316,6 @@ void RexxSource::methodDirective()
  */
 void RexxSource::attributeDirective()
 {
-    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
     int  Private = DEFAULT_ACCESS_SCOPE;    /* this is a public method           */
     int  Protected = DEFAULT_PROTECTION;  /* and is not protected yet          */
     int  guard = DEFAULT_GUARD;       /* default is guarding               */
@@ -2150,31 +2444,6 @@ void RexxSource::attributeDirective()
         }
     }
 
-    RexxDirectory *methodsDir;
-    // now figure out which dictionary we need to add the methods to.
-    if (this->active_class == OREF_NULL)
-    {
-        if (Class)                   /* supposed to be a class method?    */
-        {
-                                     /* this is an error                  */
-            syntaxError(Error_Translation_missing_class);
-        }
-        methodsDir = this->methods;  /* adding to the global set          */
-    }
-    else
-    {                                /* add the method to the active class*/
-        if (Class)                   /* class method?                     */
-        {
-                                     /* add to the class method list      */
-            methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_CLASS_METHODS)));
-        }
-        else
-        {
-            /* add to the method list            */
-            methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_METHODS)));
-        }
-    }
-
     // both attributes same default properties?
 
     // now get a variable retriever to get the property (do this before checking the body
@@ -2185,24 +2454,18 @@ void RexxSource::attributeDirective()
     {
         case ATTRIBUTE_BOTH:
         {
-            // make sure we don't have one of these define already.
-            if (methodsDir->entry(internalname) != OREF_NULL)
-            {
-                /* this is an error                  */
-                syntaxError(Error_Translation_duplicate_attribute);
-            }
-            // create the method pair and quit.
-            createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
-                Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+            checkDuplicateMethod(internalname, Class, Error_Translation_duplicate_attribute);
             // now get this as the setter method.
-            internalname = commonString(internalname->concatWithCstring("="));
-            // make sure we don't have one of these define already.
-            if (methodsDir->entry(internalname) != OREF_NULL)
-            {
-                /* this is an error                  */
-                syntaxError(Error_Translation_duplicate_attribute);
-            }
-            createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+            RexxString *setterName = commonString(internalname->concatWithCstring("="));
+            checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_attribute);
+
+            // no code can follow the automatically generated methods
+            this->checkDirective();
+
+            // create the method pair and quit.
+            createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
+                Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+            createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
                 Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
             break;
 
@@ -2210,21 +2473,15 @@ void RexxSource::attributeDirective()
 
         case ATTRIBUTE_GET:       // just the getter method
         {
-            // make sure we don't have one of these define already.
-            if (methodsDir->entry(internalname) != OREF_NULL)
-            {
-                /* this is an error                  */
-                syntaxError(Error_Translation_duplicate_attribute);
-            }
-
+            checkDuplicateMethod(internalname, Class, Error_Translation_duplicate_attribute);
             if (hasBody())
             {
-                createMethod(methodsDir, internalname, Private == PRIVATE_SCOPE,
+                createMethod(internalname, Class, Private == PRIVATE_SCOPE,
                     Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
             }
             else
             {
-                createAttributeGetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+                createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
                     Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
             }
             break;
@@ -2233,21 +2490,16 @@ void RexxSource::attributeDirective()
         case ATTRIBUTE_SET:
         {
             // now get this as the setter method.
-            internalname = commonString(internalname->concatWithCstring("="));
-            // make sure we don't have one of these define already.
-            if (methodsDir->entry(internalname) != OREF_NULL)
-            {
-                /* this is an error                  */
-                syntaxError(Error_Translation_duplicate_attribute);
-            }
+            RexxString *setterName = commonString(internalname->concatWithCstring("="));
+            checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_attribute);
             if (hasBody())        // just the getter method
             {
-                createMethod(methodsDir, internalname, Private == PRIVATE_SCOPE,
+                createMethod(setterName, Class, Private == PRIVATE_SCOPE,
                     Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
             }
             else
             {
-                createAttributeSetterMethod(methodsDir, internalname, retriever, Private == PRIVATE_SCOPE,
+                createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
                     Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
             }
             break;
@@ -2261,7 +2513,6 @@ void RexxSource::attributeDirective()
  */
 void RexxSource::constantDirective()
 {
-    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
     RexxToken *token = nextReal();   /* get the next token                */
 
                                      /* not a symbol or a string          */
@@ -2292,31 +2543,28 @@ void RexxSource::constantDirective()
         /* report an error                   */
         syntaxError(Error_Invalid_data_constant_dir, token);
     }
+    // this directive does not allow a body
+    this->checkDirective();
 
-    RexxDirectory *methodsDir = OREF_NULL;
-    RexxDirectory *classesDir = OREF_NULL;
-    // now figure out which dictionary we need to add the methods to.
-    // if there's no active class, then we only define this in the methods dir
-    if (this->active_class == OREF_NULL)
+    // check for duplicates.  We only do the class duplicate check if there
+    // is an active class, otherwise we'll get a syntax error
+    checkDuplicateMethod(internalname, false, Error_Translation_duplicate_constant);
+    if (this->active_class != OREF_NULL)
     {
-        methodsDir = this->methods;  /* adding to the global set          */
+        checkDuplicateMethod(internalname, true, Error_Translation_duplicate_constant);
     }
-    else
-    {
-        // we add methods to both directories
-        classesDir = ((RexxDirectory *)(this->active_class->get(CLASS_CLASS_METHODS)));
-        methodsDir = ((RexxDirectory *)(this->active_class->get(CLASS_METHODS)));
-    }
+
     // create the method pair and quit.
-    createConstantGetterMethod(classesDir, methodsDir, internalname, value);
+    createConstantGetterMethod(internalname, value);
 }
 
 
 /**
  * Create a Rexx method body.
  *
- * @param target The target method directory.
  * @param name   The name of the attribute.
+ * @param classMethod
+ *               Indicates whether we are creating a class or instance method.
  * @param privateMethod
  *               The method's private attribute.
  * @param protectedMethod
@@ -2324,73 +2572,57 @@ void RexxSource::constantDirective()
  * @param guardedMethod
  *               The method's guarded attribute.
  */
-void RexxSource::createMethod(RexxDirectory *target, RexxString *name,
+void RexxSource::createMethod(RexxString *name, bool classMethod,
     bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
-    // translate the method block
-    RexxMethod *_method = translateBlock(OREF_NULL);
+    // NOTE:  It is necessary to translate the block and protect the code
+    // before allocating the RexxMethod object.  The new operator allocates the
+    // the object first, then evaluates the constructor arguments after the allocation.
+    // Since the translateBlock() call will allocate a lot of new objects before returning,
+    // there's a high probability that the method object can get garbage collected before
+    // there is any opportunity to protect the object.
+    RexxCode *code = this->translateBlock(OREF_NULL);
+    this->saveObject((RexxObject *)code);
 
-    // set the method properties
-    if (privateMethod)
-    {
-        _method->setPrivate();
-    }
-    if (protectedMethod)
-    {
-        _method->setProtected();
-    }
-    if (guardedMethod)
-    {
-        _method->setUnGuarded();
-    }
-    // and finally add to the target method directory.
-    target->put(_method, name);
+    /* go do the next block of code      */
+    RexxMethod *_method = new RexxMethod(name, code);
+    _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
+    // go add the method to the accumulator
+    addMethod(name, _method, classMethod);
 }
 
 
 /**
  * Create an ATTRIBUTE "get" method.
  *
- * @param target The target method directory.
- * @param name   The name of the attribute.
+ * @param name      The name of the attribute.
+ * @param retriever
+ * @param classMethod
+ *                  Indicates we're adding a class or instance method.
  * @param privateMethod
- *               The method's private attribute.
+ *                  The method's private attribute.
  * @param protectedMethod
- *               The method's protected attribute.
+ *                  The method's protected attribute.
  * @param guardedMethod
- *               The method's guarded attribute.
+ *                  The method's guarded attribute.
  */
-void RexxSource::createAttributeGetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever,
-    bool privateMethod, bool protectedMethod, bool guardedMethod)
+void RexxSource::createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever,
+    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
-    // no code can follow the automatically generated methods
-    this->checkDirective();
-
     // create the kernel method for the accessor
-    RexxMethod *_method = new_method(new AttributeGetterCode(retriever));
-
-    if (privateMethod)
-    {
-        _method->setPrivate();
-    }
-    if (protectedMethod)
-    {
-        _method->setProtected();
-    }
-    if (guardedMethod)
-    {
-        _method->setUnGuarded();
-    }
-    // and finally add to the target method directory.
-    target->put(_method, name);
+    RexxMethod *_method = new RexxMethod(name, new AttributeGetterCode(retriever));
+    _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
+    // add this to the target
+    addMethod(name, _method, classMethod);
 }
 
 
 /**
  * Create an ATTRIBUTE "set" method.
  *
- * @param target The target method directory.
  * @param name   The name of the attribute.
+ * @param classMethod
+ *                  Indicates we're adding a class or instance method.
  * @param privateMethod
  *               The method's private attribute.
  * @param protectedMethod
@@ -2398,29 +2630,14 @@ void RexxSource::createAttributeGetterMethod(RexxDirectory *target, RexxString *
  * @param guardedMethod
  *               The method's guarded attribute.
  */
-void RexxSource::createAttributeSetterMethod(RexxDirectory *target, RexxString *name, RexxVariableBase *retriever,
-    bool privateMethod, bool protectedMethod, bool guardedMethod)
+void RexxSource::createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever,
+    bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
-    // no code can follow the automatically generated methods
-    this->checkDirective();
-
     // create the kernel method for the accessor
-    RexxMethod *_method = new_method(new AttributeSetterCode(retriever));
-
-    if (privateMethod)
-    {
-        _method->setPrivate();
-    }
-    if (protectedMethod)
-    {
-        _method->setProtected();
-    }
-    if (guardedMethod)
-    {
-        _method->setUnGuarded();
-    }
-    // and finally add to the target method directory.
-    target->put(_method, name);
+    RexxMethod *_method = new RexxMethod(name, new AttributeSetterCode(retriever));
+    _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
+    // add this to the target
+    addMethod(name, _method, classMethod);
 }
 
 
@@ -2430,29 +2647,16 @@ void RexxSource::createAttributeSetterMethod(RexxDirectory *target, RexxString *
  * @param target The target method directory.
  * @param name   The name of the attribute.
  */
-void RexxSource::createConstantGetterMethod(RexxDirectory *classTarget, RexxDirectory *target, RexxString *name, RexxObject *value)
+void RexxSource::createConstantGetterMethod(RexxString *name, RexxObject *value)
 {
-    // no code can follow the automatically generated methods
-    this->checkDirective();
-    // make sure we don't have one of these define already.
-    if (target->entry(name) != OREF_NULL)
-    {
-        /* this is an error                  */
-        syntaxError(Error_Translation_duplicate_constant);
-    }
-
     ConstantGetterCode *code = new ConstantGetterCode(value);
-    // and finally add to both method directories.
-    target->put(new_method(code), name);
-    if (classTarget != OREF_NULL)
+    if (active_class == OREF_NULL)
     {
-        // make sure we don't have one of these define already.
-        if (classTarget->entry(name) != OREF_NULL)
-        {
-            /* this is an error                  */
-            syntaxError(Error_Translation_duplicate_constant);
-        }
-        classTarget->put(new_method(code), name);
+        addMethod(name, new RexxMethod(name, code), false);
+    }
+    else
+    {
+        active_class->addConstantMethod(name, new RexxMethod(name, code));
     }
 }
 
@@ -2462,136 +2666,206 @@ void RexxSource::createConstantGetterMethod(RexxDirectory *classTarget, RexxDire
  */
 void RexxSource::routineDirective()
 {
-    this->flags &= ~requires_allowed;/* ::REQUIRES no longer valid        */
+    RexxString *externalName = OREF_NULL;
+
     RexxToken *token = nextReal();   /* get the next token                */
                                      /* not a symbol or a string          */
     if (!token->isSymbolOrLiteral())
-                                     /* report an error                   */
-      syntaxError(Error_Symbol_or_string_routine, token);
+    {
+        /* report an error                   */
+        syntaxError(Error_Symbol_or_string_routine, token);
+    }
     RexxString *name = token->value; /* get the routine name              */
                                      /* does this already exist?          */
     if (this->routines->entry(name) != OREF_NULL)
-                                     /* have an error here                */
-      syntaxError(Error_Translation_duplicate_routine);
+    {
+        /* have an error here                */
+        syntaxError(Error_Translation_duplicate_routine);
+    }
     this->flags |= _install;         /* have information to install       */
     RexxString *externalname = OREF_NULL;        /* no external name yet              */
     int Public = DEFAULT_ACCESS_SCOPE;      /* not a public routine yet          */
-    for (;;) {                       /* now loop on the option keywords   */
-      token = nextReal();            /* get the next token                */
-                                     /* reached the end?                  */
-      if (token->isEndOfClause())
-        break;                       /* get out of here                   */
-                                     /* not a symbol token?               */
-      else if (!token->isSymbol())
-                                     /* report an error                   */
-        syntaxError(Error_Invalid_subkeyword_routine, token);
-                                     /* process each sub keyword          */
-      switch (this->subDirective(token)) {
-#if 0
-                                     /* ::ROUTINE name EXTERNAL []*/
-        case SUBDIRECTIVE_EXTERNAL:
-                                     /* already had an external?          */
-          if (externalname != OREF_NULL)
-                                     /* duplicates are invalid            */
-            syntaxError(Error_Invalid_subkeyword_class, token);
-          token = nextReal();        /* get the next token                */
-                                   /* not a string?                     */
-          if (!token->isSymbolOrLiteral())
-          {
-              /* report an error                   */
-              syntaxError(Error_Symbol_or_string_requires, token);
-          }
-                               /* external name is token value      */
-          externalname = token->value;
-          break;
-#endif
-                                     /* ::ROUTINE name PUBLIC             */
-        case SUBDIRECTIVE_PUBLIC:
-          if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
-          {
-                                     /* duplicates are invalid            */
-              syntaxError(Error_Invalid_subkeyword_routine, token);
+    for (;;)                         /* now loop on the option keywords   */
+    {
+        token = nextReal();            /* get the next token                */
+                                       /* reached the end?                  */
+        if (token->isEndOfClause())
+        {
+            break;                       /* get out of here                   */
+        }
+        /* not a symbol token?               */
+        else if (!token->isSymbol())
+        {
+            /* report an error                   */
+            syntaxError(Error_Invalid_subkeyword_routine, token);
+        }
+        /* process each sub keyword          */
+        switch (this->subDirective(token))
+        {
+            /* ::ROUTINE name EXTERNAL []*/
+            case SUBDIRECTIVE_EXTERNAL:
+                /* already had an external?          */
+                if (externalname != OREF_NULL)
+                {
+                    /* duplicates are invalid            */
+                    syntaxError(Error_Invalid_subkeyword_class, token);
+                }
+                token = nextReal();        /* get the next token                */
+                /* not a string?                     */
+                if (!token->isSymbolOrLiteral())
+                {
+                    /* report an error                   */
+                    syntaxError(Error_Symbol_or_string_requires, token);
+                }
+                /* external name is token value      */
+                externalname = token->value;
+                break;
+                /* ::ROUTINE name PUBLIC             */
+            case SUBDIRECTIVE_PUBLIC:
+                if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
+                {
+                    /* duplicates are invalid            */
+                    syntaxError(Error_Invalid_subkeyword_routine, token);
 
-          }
-          Public = PUBLIC_SCOPE;     /* turn on the seen flag             */
-          break;
-                                     /* ::ROUTINE name PUBLIC             */
-        case SUBDIRECTIVE_PRIVATE:
-          if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
-          {
-                                     /* duplicates are invalid            */
-              syntaxError(Error_Invalid_subkeyword_routine, token);
+                }
+                Public = PUBLIC_SCOPE;     /* turn on the seen flag             */
+                break;
+                /* ::ROUTINE name PUBLIC             */
+            case SUBDIRECTIVE_PRIVATE:
+                if (Public != DEFAULT_ACCESS_SCOPE)   /* already had one of these?         */
+                {
+                    /* duplicates are invalid            */
+                    syntaxError(Error_Invalid_subkeyword_routine, token);
 
-          }
-          Public = PRIVATE_SCOPE;    /* turn on the seen flag             */
-          break;
+                }
+                Public = PRIVATE_SCOPE;    /* turn on the seen flag             */
+                break;
 
-        default:                     /* invalid keyword                   */
-                                     /* this is an error                  */
-          syntaxError(Error_Invalid_subkeyword_routine, token);
-          break;
-      }
+            default:                     /* invalid keyword                   */
+                /* this is an error                  */
+                syntaxError(Error_Invalid_subkeyword_routine, token);
+                break;
+        }
     }
     {
-        RexxMethod *_method = OREF_NULL;
+        RexxCode *_method = OREF_NULL;
 
         this->saveObject(name);          /* protect the name                  */
 
         if (externalname != OREF_NULL)   /* have an external routine?         */
         {
-#if 0
-                                    /* convert external into words       */
+            /* convert external into words       */
             RexxArray *words = this->words(externalname);
-            /* not 'PACKAGE library [entry]' form? */
-            if (((RexxString *)(words->get(1)))->strCompare(CHAR_PACKAGE))
+            // ::ROUTINE foo EXTERNAL "PACKAGE libbar [foo]"
+            if (((RexxString *)(words->get(1)))->strCompare(CHAR_LIBRARY))
             {
-                RexxString *package;
+                RexxString *library;
                 // the default entry point name is the internal name
                 RexxString *entry = name;
 
                 // full library with entry name version?
                 if (words->size() == 3)
                 {
-                    package = (RexxString *)words->get(2);
+                    library = (RexxString *)words->get(2);
                     entry = (RexxString *)words->get(3);
                 }
                 else if (words->size() == 2)
                 {
-                    package = (RexxString *)words->get(2);
+                    library = (RexxString *)words->get(2);
                 }
                 else  // wrong number of tokens
                 {
-                                             /* this is an error                  */
+                    /* this is an error                  */
                     syntaxError(Error_Translation_bad_external, externalname);
                 }
 
                 /* go check the next clause to make  */
                 this->checkDirective();      /* sure no code follows              */
                                              /* create a new native method        */
-                RexxNativeCode *nmethod = ThePackageManager->resolveNativeFunction(name, package, entry);
-                // NEED to figure this out....
-                /* turn into a real method object    */
-                _method = new RexxMethod(nmethod);
-                // attach this to the source
-                _method->setSource(this);
+                RoutineClass *routine = PackageManager::resolveRoutine(library, entry);
+                // raise an exception if this entry point is not found.
+                if (routine == OREF_NULL)
+                {
+                     syntaxError(Error_External_name_not_found_routine, entry);
+                }
+                // make sure this is attached to the source object for context information
+                routine->setSourceObject(this);
+                /* add to the routine directory      */
+                this->routines->setEntry(name, routine);
+                if (Public == PUBLIC_SCOPE)    /* a public routine?                 */
+                {
+                    /* add to the public directory too   */
+                    this->public_routines->setEntry(name, routine);
+                }
+            }
+
+            // ::ROUTINE foo EXTERNAL "REGISTERED libbar [foo]"
+            else if (((RexxString *)(words->get(1)))->strCompare(CHAR_REGISTERED))
+            {
+                RexxString *library;
+                // the default entry point name is the internal name
+                RexxString *entry = name;
+
+                // full library with entry name version?
+                if (words->size() == 3)
+                {
+                    library = (RexxString *)words->get(2);
+                    entry = (RexxString *)words->get(3);
+                }
+                else if (words->size() == 2)
+                {
+                    library = (RexxString *)words->get(2);
+                }
+                else  // wrong number of tokens
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Translation_bad_external, externalname);
+                }
+
+                /* go check the next clause to make  */
+                this->checkDirective();      /* sure no code follows              */
+                                             /* create a new native method        */
+                RoutineClass *routine = PackageManager::resolveRoutine(name, library, entry);
+                // raise an exception if this entry point is not found.
+                if (routine == OREF_NULL)
+                {
+                     syntaxError(Error_External_name_not_found_routine, entry);
+                }
+                // make sure this is attached to the source object for context information
+                routine->setSourceObject(this);
+                /* add to the routine directory      */
+                this->routines->setEntry(name, routine);
+                if (Public == PUBLIC_SCOPE)    /* a public routine?                 */
+                {
+                    /* add to the public directory too   */
+                    this->public_routines->setEntry(name, routine);
+                }
             }
             else
+            {
                 /* unknown external type             */
                 syntaxError(Error_Translation_bad_external, externalname);
-#endif
+            }
         }
         else
         {
-                                         /* go do the next block of code      */
-          _method = this->translateBlock(OREF_NULL);
-                                         /* add to the routine directory      */
-          this->routines->setEntry(name, _method);
-          if (Public == PUBLIC_SCOPE)    /* a public routine?                 */
-          {
-                                         /* add to the public directory too   */
-              this->public_routines->setEntry(name, _method);
+            // NOTE:  It is necessary to translate the block and protect the code
+            // before allocating the RexxMethod object.  The new operator allocates the
+            // the object first, then evaluates the constructor arguments after the allocation.
+            // Since the translateBlock() call will allocate a lot of new objects before returning,
+            // there's a high probability that the method object can get garbage collected before
+            // there is any opportunity to protect the object.
+            RexxCode *code = this->translateBlock(OREF_NULL);
+            this->saveObject((RexxObject *)code);
+            RoutineClass *routine = new RoutineClass(name, code);
+            /* add to the routine directory      */
+            this->routines->setEntry(name, routine);
+            if (Public == PUBLIC_SCOPE)    /* a public routine?                 */
+            {
+                /* add to the public directory too   */
+                this->public_routines->setEntry(name, routine);
 
-          }
+            }
         }
         this->toss(name);                /* release the "Gary Cole" (GC) lock */
     }
@@ -2602,12 +2876,6 @@ void RexxSource::routineDirective()
  */
 void RexxSource::requiresDirective()
 {
-    /* no longer valid?                  */
-    if (!(this->flags&requires_allowed))
-    {
-        /* this is an error                  */
-        syntaxError(Error_Translation_requires);
-    }
     RexxToken *token = nextReal();   /* get the next token                */
                                      /* not a symbol or a string          */
     if (!token->isSymbolOrLiteral())
@@ -2615,19 +2883,44 @@ void RexxSource::requiresDirective()
         /* report an error                   */
         syntaxError(Error_Symbol_or_string_requires, token);
     }
-    this->flags |= _install;         /* have information to install       */
     RexxString *name = token->value; /* get the requires name             */
-    RexxString *internalname = name; /* get the name form                 */
     token = nextReal();              /* get the next token                */
     if (!token->isEndOfClause()) /* something appear after this?      */
     {
-                                     /* this is a syntax error            */
+        // this is potentially a library directive
+        libraryDirective(name, token);
+    }
+    this->flags |= _install;         /* have information to install       */
+    /* save the ::requires location      */
+    this->requires->append((RexxObject *)new RequiresDirective(name, this->clause));
+}
+
+
+/**
+ * Process a ::REQUIRES name LIBRARY directive.
+ */
+void RexxSource::libraryDirective(RexxString *name, RexxToken *token)
+{
+    // we have an extra token on a ::REQUIRES directive.  The only thing accepted here
+    // is the token LIBRARY.
+    if (!token->isSymbol())
+    {
         syntaxError(Error_Invalid_subkeyword_requires, token);
     }
-    /* add this name to the table        */
-    ((RexxList *)(this->requires))->addLast(internalname);
-    /* save the ::requires location      */
-    ((RexxList *)(this->requires))->addLast((RexxObject *)new RexxInstruction(this->clause, KEYWORD_REQUIRES));
+                                   /* process each sub keyword          */
+    if (subDirective(token) != SUBDIRECTIVE_LIBRARY)
+    {
+        syntaxError(Error_Invalid_subkeyword_requires, token);
+    }
+    token = nextReal();              /* get the next token                */
+    if (!token->isEndOfClause()) /* something appear after this?      */
+    {
+        // nothing else allowed after this
+        syntaxError(Error_Invalid_subkeyword_requires, token);
+    }
+    this->flags |= _install;         /* have information to install       */
+    // add this to the library list
+    this->libraries->append((RexxObject *)new LibraryDirective(name, this->clause));
 }
 
 
@@ -2691,319 +2984,390 @@ void RexxSource::flushControl(
 /*            for new added instructions                                      */
 /******************************************************************************/
 {
-  size_t           type;               /* instruction type                  */
-  RexxInstruction *second;             /* additional created instructions   */
+    size_t           type;               /* instruction type                  */
+    RexxInstruction *second;             /* additional created instructions   */
 
-  for (;;) {                           /* loop through the control stack    */
-    type = this->topDo()->getType();   /* get the instruction type          */
-    if (type == KEYWORD_ELSE) {        /* pending ELSE close?               */
-      second = this->popDo();          /* pop the item off of the control   */
-                                       /* create a new end marker           */
-      second = this->endIfNew((RexxInstructionIf *)second);
-      if (_instruction != OREF_NULL) {  /* have an instruction?              */
-        this->addClause(_instruction);  /* add this here                     */
-        _instruction = OREF_NULL;       /* don't process more instructions   */
-      }
-      this->addClause(second);         /* add the clause to the list        */
+    /* loop through the control stack    */
+    for (;;)
+    {
+        type = this->topDo()->getType();   /* get the instruction type          */
+        /* pending ELSE close?               */
+        if (type == KEYWORD_ELSE)
+        {
+            second = this->popDo();          /* pop the item off of the control   */
+                                             /* create a new end marker           */
+            second = this->endIfNew((RexxInstructionIf *)second);
+            /* have an instruction?              */
+            if (_instruction != OREF_NULL)
+            {
+                this->addClause(_instruction);  /* add this here                     */
+                _instruction = OREF_NULL;       /* don't process more instructions   */
+            }
+            this->addClause(second);         /* add the clause to the list        */
+        }
+        /* nested IF-THEN situation?         */
+        else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN)
+        {
+            second = this->popDo();          /* pop the item off of the control   */
+            /* have an instruction?              */
+            if (_instruction != OREF_NULL)
+            {
+                this->addClause(_instruction); /* add this here                     */
+                _instruction = OREF_NULL;      /* don't process more instructions   */
+                                               /* create a new end marker           */
+                second = this->endIfNew((RexxInstructionIf *)second);
+                this->addClause(second);       /* add the clause to the list        */
+                this->pushDo(second);          /* add to the control stack too      */
+            }
+            else
+            {
+                /* create a new end marker           */
+                second = this->endIfNew((RexxInstructionIf *)second);
+                this->addClause(second);       /* add the clause to the list        */
+                this->pushDo(second);          /* add to the control stack too      */
+            }
+            break;                           /* finish up here                    */
+        }
+        /* some other type of construct      */
+        else
+        {
+            if (_instruction != OREF_NULL)    /* have an instruction?              */
+            {
+                this->addClause(_instruction);  /* add this here                     */
+            }
+            break;                           /* finished flushing                 */
+        }
     }
-                                       /* nested IF-THEN situation?         */
-    else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN) {
-      second = this->popDo();          /* pop the item off of the control   */
-      if (_instruction != OREF_NULL) { /* have an instruction?              */
-        this->addClause(_instruction); /* add this here                     */
-        _instruction = OREF_NULL;      /* don't process more instructions   */
-                                       /* create a new end marker           */
-        second = this->endIfNew((RexxInstructionIf *)second);
-        this->addClause(second);       /* add the clause to the list        */
-        this->pushDo(second);          /* add to the control stack too      */
-      }
-      else {
-                                       /* create a new end marker           */
-        second = this->endIfNew((RexxInstructionIf *)second);
-        this->addClause(second);       /* add the clause to the list        */
-        this->pushDo(second);          /* add to the control stack too      */
-      }
-      break;                           /* finish up here                    */
-    }
-    else {                             /* some other type of construct      */
-      if (_instruction != OREF_NULL)    /* have an instruction?              */
-        this->addClause(_instruction);  /* add this here                     */
-      break;                           /* finished flushing                 */
-    }
-  }
 }
 
-RexxMethod *RexxSource::translateBlock(
+RexxCode *RexxSource::translateBlock(
     RexxDirectory *_labels )            /* labels (for interpret)            */
 /******************************************************************************/
 /* Function:  Translate a block of REXX code (delimited by possible           */
 /*            directive instructions                                          */
 /******************************************************************************/
 {
-  RexxInstruction *_instruction;        /* created instruction item          */
-  RexxInstruction *second;             /* secondary clause for IF/WHEN      */
-  RexxToken       *token;              /* current working token             */
-  RexxCode        *newCode;            /* newly created method              */
-  size_t           type;               /* instruction type information      */
-  size_t           controltype;        /* type on the control stack         */
+    RexxInstruction *_instruction;        /* created instruction item          */
+    RexxInstruction *second;             /* secondary clause for IF/WHEN      */
+    RexxToken       *token;              /* current working token             */
+    size_t           type;               /* instruction type information      */
+    size_t           controltype;        /* type on the control stack         */
 
-                                       /* no instructions yet               */
-  OrefSet(this, this->first, OREF_NULL);
-  OrefSet(this, this->last, OREF_NULL);
-                                       /* allocate the call list            */
-  OrefSet(this, this->calls, new_list());
-                                       /* create variables and lit tables   */
-  OrefSet(this, this->variables, (RexxDirectory *)TheCommonRetrievers->copy());
-                                       /* restart the variable index        */
-  this->variableindex = FIRST_VARIABLE_INDEX;
-  OrefSet(this, this->exposed_variables, new_directory());
-  if (this->flags&_interpret)          /* this an interpret?                */
-  {
-                                       /* just use the existing label set   */
-    OrefSet(this, this->labels, _labels);
-  }
-  else {
-                                       /* create a new labels directory     */
-    OrefSet(this, this->labels, new_directory());
-  }
-                                       /* not collecting guard variables yet*/
-  OrefSet(this, this->guard_variables, OREF_NULL);
-  this->maxstack = 0;                  /* clear all of the stack accounting */
-  this->currentstack = 0;              /* fields                            */
-  this->flags &= ~no_clause;           /* not reached the end yet           */
-
-                                       /* add the first dummy instruction   */
-  _instruction = new RexxInstruction(OREF_NULL, KEYWORD_FIRST);
-  this->pushDo(_instruction);           /* set bottom of control stack       */
-  this->addClause(_instruction);        /* add to the instruction list       */
-  this->nextClause();                  /* get the next physical clause      */
-  for (;;) {                           /* process all clauses               */
-    _instruction = OREF_NULL;           /* zero the instruction pointer      */
-    while (!(this->flags&no_clause)) { /* scan through all labels           */
-                                       /* resolve the instruction type      */
-      _instruction = this->instruction();
-      if (_instruction == OREF_NULL)    /* found a directive clause?         */
-        break;                         /* return to higher level            */
-                                       /* is this a label?                  */
-      if (_instruction->getType() != KEYWORD_LABEL)
-        break;                         /* have a non-label clause           */
-      this->addClause(_instruction);    /* add this to clause list           */
-      this->nextClause();              /* get the next physical clause      */
-      _instruction = OREF_NULL;         /* no instruction any more           */
+                                         /* no instructions yet               */
+    OrefSet(this, this->first, OREF_NULL);
+    OrefSet(this, this->last, OREF_NULL);
+    /* allocate the call list            */
+    OrefSet(this, this->calls, new_list());
+    /* create variables and lit tables   */
+    OrefSet(this, this->variables, (RexxDirectory *)TheCommonRetrievers->copy());
+    /* restart the variable index        */
+    this->variableindex = FIRST_VARIABLE_INDEX;
+    OrefSet(this, this->exposed_variables, new_directory());
+    if (this->flags&_interpret)          /* this an interpret?                */
+    {
+        /* just use the existing label set   */
+        OrefSet(this, this->labels, _labels);
     }
-                                       /* get an end-of-clause?             */
-    if (this->flags&no_clause || _instruction == OREF_NULL) {
-                                       /* get the control stack type        */
-      controltype = this->topDo()->getType();
-                                       /* while end of an IF or WHEN        */
-      while (controltype == KEYWORD_ENDTHEN || controltype == KEYWORD_ENDWHEN) {
-        this->popDo();                 /* pop pending closing IFs           */
-        this->flushControl(OREF_NULL); /* flush any IFs or ELSEs            */
-                                       /* get the control stack type        */
-        controltype = this->topDo()->getType();
-      }
-                                       /* any unclosed composite clauses?   */
-      if (this->topDo()->getType() != KEYWORD_FIRST)
-                                       /* report the block error            */
-        blockSyntaxError(this->topDo());
-      this->popDo();                   /* remove the top one                */
-      break;                           /* done parsing this section         */
-    }
-    type = _instruction->getType();     /* get the top instruction type      */
-    if (type != KEYWORD_ELSE) {        /* have a pending THEN to finish     */
-                                       /* get the control stack type        */
-      controltype = this->topDo()->getType();
-                                       /* while end of an IF or WHEN        */
-      while (controltype == KEYWORD_ENDTHEN || controltype == KEYWORD_ENDWHEN) {
-        this->popDo();                 /* pop pending closing IFs           */
-        this->flushControl(OREF_NULL); /* flush any IFs or ELSEs            */
-                                       /* get the control stack type        */
-        controltype = this->topDo()->getType();
-      }
-    }
-    if (type == KEYWORD_IF || type == KEYWORD_SELECT || type == KEYWORD_DO)
-      this->addClause(_instruction);   /* add to instruction heap           */
-    else if (type != KEYWORD_ELSE)     /* not a new control level           */
-      this->flushControl(_instruction); /* flush any IFs or ELSEs            */
-                                       /* have a bad instruction within a   */
-                                       /* SELECT instruction?               */
-    if (this->topDo()->getType() == KEYWORD_SELECT &&
-        (type != KEYWORD_WHEN && type != KEYWORD_OTHERWISE && type != KEYWORD_END ))
-      syntaxError(Error_When_expected_whenotherwise, this->topDo());
-
-    switch (type) {                    /* post process the instructions     */
-
-      case KEYWORD_WHEN:               /* WHEN clause of SELECT             */
-        second = this->topDo();        /* get the top of the queue          */
-                                       /* not working on a SELECT?          */
-        if (second->getType() != KEYWORD_SELECT)
-          syntaxError(Error_Unexpected_when_when);
-                                       /* add this to the select list       */
-        ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)_instruction);
-                                       /* just fall into IF logic           */
-
-      case  KEYWORD_IF:                /* start of an IF instruction        */
-        token = nextReal();            /* get the terminator token          */
-                                       /* have a terminator before the THEN?*/
-        if (token->isEndOfClause()) {
-          this->nextClause();          /* get the next physical clause      */
-          if (this->flags&no_clause)   /* get an end-of-file?               */
-                                       /* raise an error                    */
-            syntaxError(Error_Then_expected_if, _instruction);
-          token = nextReal();          /* get the first token               */
-                                       /* not a THEN keyword?               */
-          if (!token->isSymbol() || this->keyword(token) != KEYWORD_THEN)
-                                       /* have an error                     */
-            syntaxError(Error_Then_expected_if, _instruction);
-                                       /* create a new then clause          */
-          second = this->thenNew(token, (RexxInstructionIf *)_instruction);
-          token = nextReal();          /* get token after THEN keyword      */
-                                       /* terminator here?                  */
-          if (token->isEndOfClause()) {
-            this->nextClause();        /* get the next physical clause      */
-            if (this->flags&no_clause) /* get an end-of-file?               */
-                                       /* raise an error                    */
-              syntaxError(Error_Incomplete_do_then, _instruction);
-          }
-          else {
-            previousToken();           /* step back a token                 */
-            trimClause();              /* make this start of the clause     */
-          }
-        }
-        else {                         /* if expr THEN form                 */
-                                       /* create a new then clause          */
-          second = this->thenNew(token, (RexxInstructionIf *)_instruction);
-          token = nextReal();          /* get token after THEN keyword      */
-                                       /* terminator here?                  */
-          if (token->isEndOfClause()) {
-            this->nextClause();        /* get the next physical clause      */
-            if (this->flags&no_clause) /* get an end-of-file?               */
-                                       /* raise an error                    */
-              syntaxError(Error_Incomplete_do_then, _instruction);
-          }
-          else {
-            previousToken();           /* step back a token                 */
-            trimClause();              /* make this start of the clause     */
-          }
-        }
-        this->addClause(second);       /* add this to the instruction list  */
-        this->pushDo(second);          /* add to top of control queue       */
-        continue;                      /* straight around to process clause */
-                                       /* remainder                         */
-      case  KEYWORD_ELSE:              /* have an ELSE instruction          */
-        second = this->topDo();        /* get the top block                 */
-        if (this->topDo()->getType() != KEYWORD_ENDTHEN)
-                                       /* have an error                     */
-          syntaxError(Error_Unexpected_then_else);
-        this->addClause(_instruction); /* add to instruction heap           */
-        second = this->popDo();        /* pop the ENDTHEN item              */
-        this->pushDo(_instruction);     /* add to the control list           */
-                                       /* join the THEN and ELSE together   */
-        ((RexxInstructionElse *)_instruction)->setParent((RexxInstructionEndIf *)second);
-        ((RexxInstructionEndIf *)second)->setEndInstruction((RexxInstructionEndIf *)_instruction);
-        token = nextReal();            /* get the next token                */
-                                       /* have an ELSE keyword alone?       */
-        if (token->isEndOfClause()) {
-          this->nextClause();          /* get the next physical clause      */
-          if (this->flags&no_clause)   /* get an end-of-file?               */
-                                       /* raise an error                    */
-            syntaxError(Error_Incomplete_do_else, _instruction);
-        }
-        else {                         /* ELSE instruction form             */
-          previousToken();             /* step back a token                 */
-          trimClause();                /* make this start of the clause     */
-        }
-        continue;                      /* straight around to process clause */
-                                       /* remainder                         */
-
-      case  KEYWORD_OTHERWISE:         /* start of an OTHERWISE group       */
-        second = this->topDo();        /* get the top of the queue          */
-                                       /* not working on a SELECT?          */
-        if (second->getType() != KEYWORD_SELECT)
-          syntaxError(Error_Unexpected_when_otherwise);
-                                       /* hook up the OTHERWISE instruction */
-        ((RexxInstructionSelect *)second)->setOtherwise((RexxInstructionOtherwise *)_instruction);
-        this->pushDo(_instruction);     /* add this to the control queue     */
-        token = nextReal();            /* get the next token                */
-                                       /* OTHERWISE instr form?             */
-        if (!token->isEndOfClause()) {
-          previousToken();             /* step back a token                 */
-          trimClause();                /* make this start of the clause     */
-          continue;                    /* straight around to process clause */
-                                       /* remainder                         */
-        }
-        break;                         /* normal OTHERWISE processing       */
-
-
-      case  KEYWORD_END:               /* END instruction for DO or SELECT  */
-        second = this->popDo();        /* get the top of the queue          */
-        type = second->getType();      /* get the instruction type          */
-                                       /* not working on a block?           */
-        if (type != KEYWORD_SELECT &&
-            type != KEYWORD_OTHERWISE &&
-            type != KEYWORD_DO) {
-          if (type == KEYWORD_ELSE)    /* on an else?                       */
-                                       /* give the specific error           */
-            syntaxError(Error_Unexpected_end_else);
-          else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN)
-                                       /* this is a different error         */
-            syntaxError(Error_Unexpected_end_then);
-          else
-                                       /* have a misplaced END              */
-            syntaxError(Error_Unexpected_end_nodo);
-        }
-        if (type == KEYWORD_OTHERWISE) /* OTHERWISE part of a SELECT?       */
-          second = this->popDo();      /* need to pop one more item off     */
-                                       /* matching a select?                */
-        if (second->getType() == KEYWORD_SELECT)
-                                       /* match up the instruction          */
-          ((RexxInstructionSelect *)second)->matchEnd((RexxInstructionEnd *)_instruction, this);
-        else                           /* must be a DO block                */
-                                       /* match up the instruction          */
-          ((RexxInstructionDo *)second)->matchEnd((RexxInstructionEnd *)_instruction, this);
-        this->flushControl(OREF_NULL); /* finish pending IFs or ELSEs       */
-        break;
-
-      case  KEYWORD_DO:                // start of new DO group (also picks up LOOP instruction)
-        this->pushDo(_instruction);    /* add this to the control queue     */
-        break;
-
-      case  KEYWORD_SELECT:            /* start of new SELECT group         */
-        this->pushDo(_instruction);    /* and also to the control queue     */
-        break;
-
-      default:                         /* other types of instruction        */
-        break;
-    }
-    this->nextClause();                /* get the next physical clause      */
-  }
-                                       /* now go resolve any label targets  */
-  _instruction = (RexxInstruction *)(this->calls->removeFirst());
-                                       /* while still more references       */
-  while (_instruction != (RexxInstruction *)TheNilObject) {
-                                       /* actually a function call?         */
-    if (isOfClass(FunctionCallTerm, _instruction))
-                                       /* resolve the function call         */
-      ((RexxExpressionFunction *)_instruction)->resolve(this->labels);
     else
-                                       /* resolve the CALL/SIGNAL/FUNCTION  */
-                                       /* label targets                     */
-      ((RexxInstructionCallBase *)_instruction)->resolve(this->labels);
-                                       /* now get the next instruction      */
+    {
+        /* create a new labels directory     */
+        OrefSet(this, this->labels, new_directory());
+    }
+    /* not collecting guard variables yet*/
+    OrefSet(this, this->guard_variables, OREF_NULL);
+    this->maxstack = 0;                  /* clear all of the stack accounting */
+    this->currentstack = 0;              /* fields                            */
+    this->flags &= ~no_clause;           /* not reached the end yet           */
+
+                                         /* add the first dummy instruction   */
+    _instruction = new RexxInstruction(OREF_NULL, KEYWORD_FIRST);
+    this->pushDo(_instruction);           /* set bottom of control stack       */
+    this->addClause(_instruction);        /* add to the instruction list       */
+    this->nextClause();                  /* get the next physical clause      */
+    for (;;)                             /* process all clauses               */
+    {
+        _instruction = OREF_NULL;           /* zero the instruction pointer      */
+        while (!(this->flags&no_clause))   /* scan through all labels           */
+        {
+            /* resolve the instruction type      */
+            _instruction = this->instruction();
+            if (_instruction == OREF_NULL)    /* found a directive clause?         */
+            {
+                break;                         /* return to higher level            */
+            }
+            /* is this a label?                  */
+            if (_instruction->getType() != KEYWORD_LABEL)
+            {
+                break;                         /* have a non-label clause           */
+            }
+            this->addClause(_instruction);    /* add this to clause list           */
+            this->nextClause();              /* get the next physical clause      */
+            _instruction = OREF_NULL;         /* no instruction any more           */
+        }
+        /* get an end-of-clause?             */
+        if (this->flags&no_clause || _instruction == OREF_NULL)
+        {
+            /* get the control stack type        */
+            controltype = this->topDo()->getType();
+            /* while end of an IF or WHEN        */
+            while (controltype == KEYWORD_ENDTHEN || controltype == KEYWORD_ENDWHEN)
+            {
+                this->popDo();                 /* pop pending closing IFs           */
+                this->flushControl(OREF_NULL); /* flush any IFs or ELSEs            */
+                                               /* get the control stack type        */
+                controltype = this->topDo()->getType();
+            }
+            /* any unclosed composite clauses?   */
+            if (this->topDo()->getType() != KEYWORD_FIRST)
+            {
+                /* report the block error            */
+                blockSyntaxError(this->topDo());
+            }
+            this->popDo();                   /* remove the top one                */
+            break;                           /* done parsing this section         */
+        }
+        type = _instruction->getType();     /* get the top instruction type      */
+        if (type != KEYWORD_ELSE)          /* have a pending THEN to finish     */
+        {
+            /* get the control stack type        */
+            controltype = this->topDo()->getType();
+            /* while end of an IF or WHEN        */
+            while (controltype == KEYWORD_ENDTHEN || controltype == KEYWORD_ENDWHEN)
+            {
+                this->popDo();                 /* pop pending closing IFs           */
+                this->flushControl(OREF_NULL); /* flush any IFs or ELSEs            */
+                                               /* get the control stack type        */
+                controltype = this->topDo()->getType();
+            }
+        }
+        if (type == KEYWORD_IF || type == KEYWORD_SELECT || type == KEYWORD_DO)
+        {
+            this->addClause(_instruction);   /* add to instruction heap           */
+        }
+        else if (type != KEYWORD_ELSE)     /* not a new control level           */
+        {
+            this->flushControl(_instruction); /* flush any IFs or ELSEs            */
+        }
+        /* have a bad instruction within a   */
+        /* SELECT instruction?               */
+        if (this->topDo()->getType() == KEYWORD_SELECT &&
+            (type != KEYWORD_WHEN && type != KEYWORD_OTHERWISE && type != KEYWORD_END ))
+        {
+            syntaxError(Error_When_expected_whenotherwise, this->topDo());
+        }
+
+        switch (type)                      /* post process the instructions     */
+        {
+            case KEYWORD_WHEN:               /* WHEN clause of SELECT             */
+                second = this->topDo();        /* get the top of the queue          */
+                                               /* not working on a SELECT?          */
+                if (second->getType() != KEYWORD_SELECT)
+                {
+                    syntaxError(Error_Unexpected_when_when);
+                }
+                /* add this to the select list       */
+                ((RexxInstructionSelect *)second)->addWhen((RexxInstructionIf *)_instruction);
+                /* just fall into IF logic           */
+
+            case  KEYWORD_IF:                /* start of an IF instruction        */
+                token = nextReal();            /* get the terminator token          */
+                                               /* have a terminator before the THEN?*/
+                if (token->isEndOfClause())
+                {
+                    this->nextClause();          /* get the next physical clause      */
+                    if (this->flags&no_clause)   /* get an end-of-file?               */
+                    {
+                        /* raise an error                    */
+                        syntaxError(Error_Then_expected_if, _instruction);
+                    }
+                    token = nextReal();          /* get the first token               */
+                                                 /* not a THEN keyword?               */
+                    if (!token->isSymbol() || this->keyword(token) != KEYWORD_THEN)
+                    {
+                        /* have an error                     */
+                        syntaxError(Error_Then_expected_if, _instruction);
+                    }
+                    /* create a new then clause          */
+                    second = this->thenNew(token, (RexxInstructionIf *)_instruction);
+                    token = nextReal();          /* get token after THEN keyword      */
+                                                 /* terminator here?                  */
+                    if (token->isEndOfClause())
+                    {
+                        this->nextClause();        /* get the next physical clause      */
+                        if (this->flags&no_clause) /* get an end-of-file?               */
+                        {
+                            /* raise an error                    */
+                            syntaxError(Error_Incomplete_do_then, _instruction);
+                        }
+                    }
+                    else
+                    {
+                        previousToken();           /* step back a token                 */
+                        trimClause();              /* make this start of the clause     */
+                    }
+                }
+                else                           /* if expr THEN form                 */
+                {
+                    /* create a new then clause          */
+                    second = this->thenNew(token, (RexxInstructionIf *)_instruction);
+                    token = nextReal();          /* get token after THEN keyword      */
+                                                 /* terminator here?                  */
+                    if (token->isEndOfClause())
+                    {
+                        this->nextClause();        /* get the next physical clause      */
+                        if (this->flags&no_clause) /* get an end-of-file?               */
+                        {
+                            /* raise an error                    */
+                            syntaxError(Error_Incomplete_do_then, _instruction);
+                        }
+                    }
+                    else
+                    {
+                        previousToken();           /* step back a token                 */
+                        trimClause();              /* make this start of the clause     */
+                    }
+                }
+                this->addClause(second);       /* add this to the instruction list  */
+                this->pushDo(second);          /* add to top of control queue       */
+                continue;                      /* straight around to process clause */
+                                               /* remainder                         */
+            case  KEYWORD_ELSE:              /* have an ELSE instruction          */
+                second = this->topDo();        /* get the top block                 */
+                if (this->topDo()->getType() != KEYWORD_ENDTHEN)
+                {
+                    /* have an error                     */
+                    syntaxError(Error_Unexpected_then_else);
+                }
+                this->addClause(_instruction); /* add to instruction heap           */
+                second = this->popDo();        /* pop the ENDTHEN item              */
+                this->pushDo(_instruction);     /* add to the control list           */
+                /* join the THEN and ELSE together   */
+                ((RexxInstructionElse *)_instruction)->setParent((RexxInstructionEndIf *)second);
+                ((RexxInstructionEndIf *)second)->setEndInstruction((RexxInstructionEndIf *)_instruction);
+                token = nextReal();            /* get the next token                */
+                                               /* have an ELSE keyword alone?       */
+                if (token->isEndOfClause())
+                {
+                    this->nextClause();          /* get the next physical clause      */
+                    if (this->flags&no_clause)   /* get an end-of-file?               */
+                    {
+                        /* raise an error                    */
+                        syntaxError(Error_Incomplete_do_else, _instruction);
+                    }
+                }
+                else                           /* ELSE instruction form             */
+                {
+                    previousToken();             /* step back a token                 */
+                    trimClause();                /* make this start of the clause     */
+                }
+                continue;                      /* straight around to process clause */
+                                               /* remainder                         */
+
+            case  KEYWORD_OTHERWISE:         /* start of an OTHERWISE group       */
+                second = this->topDo();        /* get the top of the queue          */
+                                               /* not working on a SELECT?          */
+                if (second->getType() != KEYWORD_SELECT)
+                {
+                    syntaxError(Error_Unexpected_when_otherwise);
+                }
+                /* hook up the OTHERWISE instruction */
+                ((RexxInstructionSelect *)second)->setOtherwise((RexxInstructionOtherwise *)_instruction);
+                this->pushDo(_instruction);     /* add this to the control queue     */
+                token = nextReal();            /* get the next token                */
+                                               /* OTHERWISE instr form?             */
+                if (!token->isEndOfClause())
+                {
+                    previousToken();             /* step back a token                 */
+                    trimClause();                /* make this start of the clause     */
+                    continue;                    /* straight around to process clause */
+                                                 /* remainder                         */
+                }
+                break;                         /* normal OTHERWISE processing       */
+
+
+            case  KEYWORD_END:               /* END instruction for DO or SELECT  */
+                second = this->popDo();        /* get the top of the queue          */
+                type = second->getType();      /* get the instruction type          */
+                                               /* not working on a block?           */
+                if (type != KEYWORD_SELECT && type != KEYWORD_OTHERWISE && type != KEYWORD_DO)
+                {
+                    if (type == KEYWORD_ELSE)    /* on an else?                       */
+                    {
+                        /* give the specific error           */
+                        syntaxError(Error_Unexpected_end_else);
+                    }
+                    else if (type == KEYWORD_IFTHEN || type == KEYWORD_WHENTHEN)
+                    {
+                        /* this is a different error         */
+                        syntaxError(Error_Unexpected_end_then);
+                    }
+                    else
+                    {
+                        /* have a misplaced END              */
+                        syntaxError(Error_Unexpected_end_nodo);
+                    }
+                }
+                if (type == KEYWORD_OTHERWISE) /* OTHERWISE part of a SELECT?       */
+                {
+                    second = this->popDo();      /* need to pop one more item off     */
+                }
+                /* matching a select?                */
+                if (second->getType() == KEYWORD_SELECT)
+                {
+                    /* match up the instruction          */
+                    ((RexxInstructionSelect *)second)->matchEnd((RexxInstructionEnd *)_instruction, this);
+                }
+                else                           /* must be a DO block                */
+                {
+                    /* match up the instruction          */
+                    ((RexxInstructionDo *)second)->matchEnd((RexxInstructionEnd *)_instruction, this);
+                }
+                this->flushControl(OREF_NULL); /* finish pending IFs or ELSEs       */
+                break;
+
+            case  KEYWORD_DO:                // start of new DO group (also picks up LOOP instruction)
+                this->pushDo(_instruction);    /* add this to the control queue     */
+                break;
+
+            case  KEYWORD_SELECT:            /* start of new SELECT group         */
+                this->pushDo(_instruction);    /* and also to the control queue     */
+                break;
+
+            default:                         /* other types of instruction        */
+                break;
+        }
+        this->nextClause();                /* get the next physical clause      */
+    }
+    /* now go resolve any label targets  */
     _instruction = (RexxInstruction *)(this->calls->removeFirst());
-  }
-                                       /* remove the first instruction      */
-  OrefSet(this, this->first, this->first->nextInstruction);
-                                       /* no labels needed?                 */
-  if (this->labels != OREF_NULL && this->labels->items() == 0)
-                                       /* release that directory also       */
-    OrefSet(this, this->labels, OREF_NULL);
-                                       /* create a rexx code object         */
-  newCode = new RexxCode(this, this->first, this->labels,
-                               (this->maxstack+ 10),
-                               this->variableindex);
-                                       /* now return as a method object     */
-  return new_method(newCode);
+    /* while still more references       */
+    while (_instruction != (RexxInstruction *)TheNilObject)
+    {
+        /* actually a function call?         */
+        if (isOfClass(FunctionCallTerm, _instruction))
+        {
+            /* resolve the function call         */
+            ((RexxExpressionFunction *)_instruction)->resolve(this->labels);
+        }
+        else
+        {
+            /* resolve the CALL/SIGNAL/FUNCTION  */
+            /* label targets                     */
+            ((RexxInstructionCallBase *)_instruction)->resolve(this->labels);
+        }
+        /* now get the next instruction      */
+        _instruction = (RexxInstruction *)(this->calls->removeFirst());
+    }
+    /* remove the first instruction      */
+    OrefSet(this, this->first, this->first->nextInstruction);
+    /* no labels needed?                 */
+    if (this->labels != OREF_NULL && this->labels->items() == 0)
+    {
+        /* release that directory also       */
+        OrefSet(this, this->labels, OREF_NULL);
+    }
+    /* create a rexx code object         */
+    return new RexxCode(this, this->first, this->labels, (this->maxstack+ 10), this->variableindex);
 }
 
 RexxInstruction *RexxSource::instruction()
@@ -3034,8 +3398,10 @@ RexxInstruction *RexxSource::instruction()
         if ((_first->classId == TOKEN_SYMBOL || _first->classId == TOKEN_LITERAL) && second->classId == TOKEN_COLON)
         {
             if (this->flags&_interpret)      /* is this an interpret?             */
+            {
                                              /* this is an error                  */
                 syntaxError(Error_Unexpected_label_interpret, _first);
+            }
             firstToken();                    /* reset to the beginning            */
             _instruction = this->labelNew(); /* create a label instruction        */
             second = nextToken();            /* get the next token                */
@@ -3349,29 +3715,34 @@ RexxVariableBase *RexxSource::addVariable(
 /*            per method                                                      */
 /******************************************************************************/
 {
-  RexxVariableBase *retriever;         /* variable retriever                */
-
-                                       /* check the directory for an entry  */
-  retriever = (RexxVariableBase *)this->variables->fastAt(varname);
-  if (retriever == OREF_NULL) {        /* not in the table yet?             */
-    if (!(this->flags&_interpret)) {   /* not in an interpret?              */
-      this->variableindex++;           /* step the counter                  */
-                                       /* create a new variable retriever   */
-      retriever = new RexxParseVariable(varname, this->variableindex);
+                                         /* check the directory for an entry  */
+    RexxVariableBase *retriever = (RexxVariableBase *)this->variables->fastAt(varname);
+    if (retriever == OREF_NULL)          /* not in the table yet?             */
+    {
+        if (!(this->flags&_interpret))     /* not in an interpret?              */
+        {
+            this->variableindex++;           /* step the counter                  */
+                                             /* create a new variable retriever   */
+            retriever = new RexxParseVariable(varname, this->variableindex);
+        }
+        else                               /* force dynamic lookup each time    */
+        {
+            retriever = new RexxParseVariable(varname, 0);
+        }
+        /* add to the variable table         */
+        this->variables->put((RexxObject *)retriever, varname);
     }
-    else                               /* force dynamic lookup each time    */
-      retriever = new RexxParseVariable(varname, 0);
-                                       /* add to the variable table         */
-    this->variables->put((RexxObject *)retriever, varname);
-  }
-                                       /* collecting guard variables?       */
-  if (this->guard_variables != OREF_NULL) {
-                                       /* in the list of exposed variables? */
-    if (this->exposed_variables != OREF_NULL && this->exposed_variables->fastAt(varname) != OREF_NULL)
-                                       /* add this to the guard list        */
-      this->guard_variables->put((RexxObject *)retriever, (RexxObject *)retriever);
-  }
-  return retriever;                    /* return variable accesser          */
+    /* collecting guard variables?       */
+    if (this->guard_variables != OREF_NULL)
+    {
+        /* in the list of exposed variables? */
+        if (this->exposed_variables != OREF_NULL && this->exposed_variables->fastAt(varname) != OREF_NULL)
+        {
+            /* add this to the guard list        */
+            this->guard_variables->put((RexxObject *)retriever, (RexxObject *)retriever);
+        }
+    }
+    return retriever;                    /* return variable accesser          */
 }
 
 RexxStemVariable *RexxSource::addStem(
@@ -3380,29 +3751,34 @@ RexxStemVariable *RexxSource::addStem(
 /* Function:  Process creation of stem variables                              */
 /******************************************************************************/
 {
-  RexxStemVariable *retriever;         /* variable retriever                */
-
-                                       /* check the table for an entry      */
-  retriever = (RexxStemVariable *)(this->variables->fastAt(stemName));
-  if (retriever == OREF_NULL) {        /* not in the table yet?             */
-    if (!(this->flags&_interpret)) {   /* not in an interpret?              */
-      this->variableindex++;           /* step the counter                  */
-                                       /* create a new variable retriever   */
-      retriever = new RexxStemVariable(stemName, this->variableindex);
+    /* check the table for an entry      */
+    RexxStemVariable *retriever = (RexxStemVariable *)(this->variables->fastAt(stemName));
+    if (retriever == OREF_NULL)          /* not in the table yet?             */
+    {
+        if (!(this->flags&_interpret))     /* not in an interpret?              */
+        {
+            this->variableindex++;           /* step the counter                  */
+                                             /* create a new variable retriever   */
+            retriever = new RexxStemVariable(stemName, this->variableindex);
+        }
+        else                               /* force dynamic lookup each time    */
+        {
+            retriever = new RexxStemVariable(stemName, 0);
+        }
+        /* add to the variable table         */
+        this->variables->put((RexxObject *)retriever, stemName);
     }
-    else                               /* force dynamic lookup each time    */
-      retriever = new RexxStemVariable(stemName, 0);
-                                       /* add to the variable table         */
-    this->variables->put((RexxObject *)retriever, stemName);
-  }
-                                       /* collecting guard variables?       */
-  if (this->guard_variables != OREF_NULL) {
-                                       /* in the list of exposed variables? */
-    if (this->exposed_variables != OREF_NULL && this->exposed_variables->fastAt(stemName) != OREF_NULL)
-                                       /* add this to the guard list        */
-      this->guard_variables->put((RexxObject *)retriever, (RexxObject *)retriever);
-  }
-  return retriever;                    /* return variable accesser          */
+    /* collecting guard variables?       */
+    if (this->guard_variables != OREF_NULL)
+    {
+        /* in the list of exposed variables? */
+        if (this->exposed_variables != OREF_NULL && this->exposed_variables->fastAt(stemName) != OREF_NULL)
+        {
+            /* add this to the guard list        */
+            this->guard_variables->put((RexxObject *)retriever, (RexxObject *)retriever);
+        }
+    }
+    return retriever;                    /* return variable accesser          */
 }
 
 
@@ -3412,60 +3788,66 @@ RexxCompoundVariable *RexxSource::addCompound(
 /* Function:  Parse to completion a compound variable                         */
 /******************************************************************************/
 {
-  RexxStemVariable     *stemRetriever; /* retriever for the stem value      */
-  RexxString           *stemName;      /* stem part of compound variable    */
-  RexxString           *tail;          /* tail section string value         */
-  const char *          start;         /* starting scan position            */
-  size_t                length;        /* length of tail section            */
-  const char *          _position;     /* current position                  */
-  const char *          end;           // the end scanning position
-  size_t                tailCount;     /* count of tails in compound        */
+    RexxStemVariable     *stemRetriever; /* retriever for the stem value      */
+    RexxString           *stemName;      /* stem part of compound variable    */
+    RexxString           *tail;          /* tail section string value         */
+    const char *          start;         /* starting scan position            */
+    size_t                length;        /* length of tail section            */
+    const char *          _position;     /* current position                  */
+    const char *          end;           // the end scanning position
+    size_t                tailCount;     /* count of tails in compound        */
 
-  length = name->getLength();          /* get the string length             */
-  _position = name->getStringData();   /* start scanning at first character */
-  start = _position;                   /* save the starting point           */
-  end = _position + length;            // save our end marker
+    length = name->getLength();          /* get the string length             */
+    _position = name->getStringData();   /* start scanning at first character */
+    start = _position;                   /* save the starting point           */
+    end = _position + length;            // save our end marker
 
-  // we know this is a compound, so there must be at least one period.
-  while (*_position != '.') {          /* scan to the first period          */
-    _position++;                       /* step to the next character        */
-  }
-                                       /* get the stem string               */
-  stemName = new_string(start, _position - start + 1);
-  stemRetriever = this->addStem(stemName); /* get a retriever item for this     */
-
-  tailCount = 0;                       /* no tails yet                      */
-  do                                   /* process rest of the variable      */
-  {
-    // we're here because we just saw a previous period.  that's either the
-    // stem variable period or the last tail element we processed.
-    // either way, we step past it.  If this period is a trailing one,
-    // we'll add a null tail element, which is exactly what we want.
-    _position++;                       /* step past previous period         */
-    start = _position;                 /* save the start position           */
-                                       /* scan for the next period          */
-    while (_position < end)
+    // we know this is a compound, so there must be at least one period.
+    /* scan to the first period          */
+    while (*_position != '.')
     {
-        if (*_position == '.')         // found the next one?
-        {
-           break;                      // stop scanning now
-        }
-        _position++;                   // continue looking
+        _position++;                       /* step to the next character        */
     }
-                                       /* extract the tail piece            */
-    tail = new_string(start, _position - start);
-                                       /* have a null tail piece or         */
-                                       /* section begin with a digit?       */
-    if (!(tail->getLength() == 0 || (*start >= '0' && *start <= '9')))
-                                       /* push onto the term stack          */
-      this->subTerms->push((RexxObject *)(this->addVariable(tail)));
-    else
-                                       /* just use the string value directly*/
-      this->subTerms->push(this->commonString(tail));
-    tailCount++;                       /* up the tail count                 */
-  } while (_position < end);
-                                       /* finally, create the compound var  */
-  return new (tailCount) RexxCompoundVariable(stemName, stemRetriever->index, this->subTerms, tailCount);
+    /* get the stem string               */
+    stemName = new_string(start, _position - start + 1);
+    stemRetriever = this->addStem(stemName); /* get a retriever item for this     */
+
+    tailCount = 0;                       /* no tails yet                      */
+    do                                   /* process rest of the variable      */
+    {
+        // we're here because we just saw a previous period.  that's either the
+        // stem variable period or the last tail element we processed.
+        // either way, we step past it.  If this period is a trailing one,
+        // we'll add a null tail element, which is exactly what we want.
+        _position++;                       /* step past previous period         */
+        start = _position;                 /* save the start position           */
+                                           /* scan for the next period          */
+        while (_position < end)
+        {
+            if (*_position == '.')         // found the next one?
+            {
+                break;                      // stop scanning now
+            }
+            _position++;                   // continue looking
+        }
+        /* extract the tail piece            */
+        tail = new_string(start, _position - start);
+        /* have a null tail piece or         */
+        /* section begin with a digit?       */
+        if (!(tail->getLength() == 0 || (*start >= '0' && *start <= '9')))
+        {
+            /* push onto the term stack          */
+            this->subTerms->push((RexxObject *)(this->addVariable(tail)));
+        }
+        else
+        {
+            /* just use the string value directly*/
+            this->subTerms->push(this->commonString(tail));
+        }
+        tailCount++;                       /* up the tail count                 */
+    } while (_position < end);
+    /* finally, create the compound var  */
+    return new (tailCount) RexxCompoundVariable(stemName, stemRetriever->index, this->subTerms, tailCount);
 }
 
 
@@ -3477,7 +3859,7 @@ void RexxSource::expose(
 /******************************************************************************/
 {
                                        /* add to the exposed variables list */
-  this->exposed_variables->put(name, name);
+    this->exposed_variables->put(name, name);
 }
 
 
@@ -3488,15 +3870,15 @@ RexxString *RexxSource::commonString(
 /*            a single, common set of strings.                                */
 /******************************************************************************/
 {
-  RexxString *result;                  /* resulting common string           */
-
-                                       /* check the global table first      */
-  result = (RexxString *)this->strings->fastAt(string);
-  if (result == OREF_NULL) {           /* not in the table                  */
-    this->strings->put(string, string);/* add this to the table             */
-    result = string;                   /* also the final value              */
-  }
-  return result;                       /* return the string                 */
+    /* check the global table first      */
+    RexxString *result = (RexxString *)this->strings->fastAt(string);
+    /* not in the table                  */
+    if (result == OREF_NULL)
+    {
+        this->strings->put(string, string);/* add this to the table             */
+        result = string;                   /* also the final value              */
+    }
+    return result;                       /* return the string                 */
 }
 
 
@@ -3513,102 +3895,114 @@ RexxObject *RexxSource::addText(
 /* Function:  Generalized text token addition                                 */
 /******************************************************************************/
 {
-  RexxObject       *retriever;         /* created retriever                 */
-  RexxObject       *value;             /* evaluated literal value           */
-  RexxString       *name;              /* name of the added literal string  */
+    RexxObject       *retriever;         /* created retriever                 */
+    RexxObject       *value;             /* evaluated literal value           */
 
-  name = token->value;                 /* get the string value for this     */
-  switch (token->classId) {            /* process different token types     */
+    RexxString *name = token->value;     /* get the string value for this     */
+    switch (token->classId)
+    {
 
-    case TOKEN_SYMBOL:                 /* various types of symbols          */
-                                       /* each symbol subtype requires a    */
-      switch (token->subclass) {       /* different retrieval method        */
+        case TOKEN_SYMBOL:                 /* various types of symbols          */
+            /* each symbol subtype requires a    */
+            /* different retrieval method        */
+            switch (token->subclass)
+            {
 
-        case SYMBOL_DUMMY:             /* just a dot symbol                 */
-        case SYMBOL_CONSTANT:          /* a literal symbol                  */
+                case SYMBOL_DUMMY:             /* just a dot symbol                 */
+                case SYMBOL_CONSTANT:          /* a literal symbol                  */
 
-                                       /* see if we've had this before      */
-          retriever = this->literals->fastAt(name);
-          if (retriever == OREF_NULL) {/* first time literal?               */
-                                       /* can we create an integer object?  */
-            if (token->numeric == INTEGER_CONSTANT) {
-                                       /* create this as an integer         */
-              value = name->requestInteger(Numerics::DEFAULT_DIGITS);
-                                       /* conversion error?                 */
-              if (value == TheNilObject)
-                value = name;          /* just go with the string value     */
-              else
-                                       /* snip off the string number string */
-                                       /* value that was created when the   */
-                                       /* integer value was created.  This  */
-                                       /* is rarely used, but contributes   */
-                                       /* to the saved program size         */
-                name->setNumberString(OREF_NULL);
+                    /* see if we've had this before      */
+                    retriever = this->literals->fastAt(name);
+                    /* first time literal?               */
+                    if (retriever == OREF_NULL)
+                    {
+                        /* can we create an integer object?  */
+                        if (token->numeric == INTEGER_CONSTANT)
+                        {
+                            /* create this as an integer         */
+                            value = name->requestInteger(Numerics::DEFAULT_DIGITS);
+                            /* conversion error?                 */
+                            if (value == TheNilObject)
+                            {
+                                value = name;          /* just go with the string value     */
+                            }
+                            else
+                                /* snip off the string number string */
+                                /* value that was created when the   */
+                                /* integer value was created.  This  */
+                                /* is rarely used, but contributes   */
+                                /* to the saved program size         */
+                                name->setNumberString(OREF_NULL);
+                        }
+                        else
+                        {
+                            value = name;            /* just use the string value         */
+                                                     /* give it a number string value     */
+                            name->setNumberString((RexxObject *)value->numberString());
+                        }
+                        /* the constant is the retriever     */
+                        this->literals->put(value, name);
+                        retriever = value;         /* the retriever is the value itthis */
+                    }
+                    break;
+
+                case SYMBOL_VARIABLE:          /* simple variable symbol            */
+                    /* add variable to proper dictionary */
+                    retriever = (RexxObject *)this->addVariable(name);
+                    break;
+
+                case SYMBOL_STEM:              /* stem variable                     */
+                    /* add variable to proper dictionary */
+                    retriever = (RexxObject *)this->addStem(name);
+                    break;
+
+                case SYMBOL_COMPOUND:          /* compound variable, need more      */
+                    /* add variable to proper dictionary */
+                    retriever = (RexxObject *)this->addCompound(name);
+                    break;
+
+                case SYMBOL_DOTSYMBOL:         /* variable with a leading dot       */
+                    /* get a lookup object               */
+                    /* see if we've had this before      */
+                    retriever = this->variables->fastAt(name);
+                    /* first time dot variable?          */
+                    if (retriever == OREF_NULL)
+                    {
+                        /* create the shorter name           */
+                        value = name->extract(1, name->getLength() - 1);
+                        /* add this to the common pile       */
+                        value = this->commonString((RexxString *)value);
+                        /* create a retriever for this       */
+                        retriever = (RexxObject *)new RexxDotVariable((RexxString *)value);
+                        /* add this to the common table      */
+                        this->variables->put(retriever, name);
+                    }
+                    break;
+
+                default:                       /* all other types (shouldn't happen)*/
+                    retriever = OREF_NULL;       /* return nothing                    */
+                    break;
             }
-            else {
-              value = name;            /* just use the string value         */
-                                       /* give it a number string value     */
-              name->setNumberString((RexxObject *)value->numberString());
+            break;
+
+        case TOKEN_LITERAL:                /* literal strings                   */
+            /* get a lookup object               */
+            /* see if we've had this before      */
+            retriever = this->literals->fastAt(name);
+            /* first time literal?               */
+            if (retriever == OREF_NULL)
+            {
+                /* the constant is the retriever     */
+                this->literals->put(name,  name);
+                retriever = name;              /* use the name directly             */
             }
-                                       /* the constant is the retriever     */
-            this->literals->put(value, name);
-            retriever = value;         /* the retriever is the value itthis */
-          }
-          break;
+            break;
 
-        case SYMBOL_VARIABLE:          /* simple variable symbol            */
-                                       /* add variable to proper dictionary */
-          retriever = (RexxObject *)this->addVariable(name);
-          break;
-
-        case SYMBOL_STEM:              /* stem variable                     */
-                                       /* add variable to proper dictionary */
-          retriever = (RexxObject *)this->addStem(name);
-          break;
-
-        case SYMBOL_COMPOUND:          /* compound variable, need more      */
-                                       /* add variable to proper dictionary */
-          retriever = (RexxObject *)this->addCompound(name);
-          break;
-
-        case SYMBOL_DOTSYMBOL:         /* variable with a leading dot       */
-                                       /* get a lookup object               */
-                                       /* see if we've had this before      */
-          retriever = this->variables->fastAt(name);
-          if (retriever == OREF_NULL) {/* first time dot variable?          */
-                                       /* create the shorter name           */
-            value = name->extract(1, name->getLength() - 1);
-                                       /* add this to the common pile       */
-            value = this->commonString((RexxString *)value);
-                                       /* create a retriever for this       */
-            retriever = (RexxObject *)new RexxDotVariable((RexxString *)value);
-                                       /* add this to the common table      */
-            this->variables->put(retriever, name);
-          }
-          break;
-
-        default:                       /* all other types (shouldn't happen)*/
-          retriever = OREF_NULL;       /* return nothing                    */
-          break;
-      }
-      break;
-
-    case TOKEN_LITERAL:                /* literal strings                   */
-                                       /* get a lookup object               */
-                                       /* see if we've had this before      */
-      retriever = this->literals->fastAt(name);
-      if (retriever == OREF_NULL) {    /* first time literal?               */
-                                       /* the constant is the retriever     */
-        this->literals->put(name,  name);
-        retriever = name;              /* use the name directly             */
-      }
-      break;
-
-    default:                           /* all other tokens                  */
-      retriever = OREF_NULL;           /* don't return anything             */
-      break;
-  }
-  return retriever;                    /* return created retriever          */
+        default:                           /* all other tokens                  */
+            retriever = OREF_NULL;           /* don't return anything             */
+            break;
+    }
+    return retriever;                    /* return created retriever          */
 }
 
 RexxVariableBase *RexxSource::getRetriever(
@@ -3617,30 +4011,32 @@ RexxVariableBase *RexxSource::getRetriever(
 /* Function:  Generalized method attribute retriever                          */
 /******************************************************************************/
 {
-  RexxVariableBase *retriever = OREF_NULL; /* created retriever                 */
+    RexxVariableBase *retriever = OREF_NULL; /* created retriever                 */
 
-  switch (name->isSymbol()) {          /* go validate the symbol            */
+    /* go validate the symbol            */
+    switch (name->isSymbol())
+    {
 
-    case STRING_NAME:                  /* valid simple name                 */
-                                       /* get a simple dynamic retriever    */
-      retriever = (RexxVariableBase *)new RexxParseVariable(name, 0);
-      break;
+        case STRING_NAME:                  /* valid simple name                 */
+            /* get a simple dynamic retriever    */
+            retriever = (RexxVariableBase *)new RexxParseVariable(name, 0);
+            break;
 
-    case STRING_STEM:                  /* this is a stem name               */
-                                       /* force dynamic lookup each time    */
-      retriever = (RexxVariableBase *)new RexxStemVariable(name, 0);
-      break;
+        case STRING_STEM:                  /* this is a stem name               */
+            /* force dynamic lookup each time    */
+            retriever = (RexxVariableBase *)new RexxStemVariable(name, 0);
+            break;
 
-    case STRING_COMPOUND_NAME:         /* compound variable name            */
-                                       /* get a direct retriever for this   */
-      retriever = (RexxVariableBase *)buildCompoundVariable(name, true);
-      break;
+        case STRING_COMPOUND_NAME:         /* compound variable name            */
+            /* get a direct retriever for this   */
+            retriever = (RexxVariableBase *)buildCompoundVariable(name, true);
+            break;
 
-    default:                           /* all other invalid cases           */
-                                       /* have an invalid attribute         */
-      syntaxError(Error_Translation_invalid_attribute, name);
-  }
-  return retriever;                    /* return created retriever          */
+        default:                           /* all other invalid cases           */
+            /* have an invalid attribute         */
+            syntaxError(Error_Translation_invalid_attribute, name);
+    }
+    return retriever;                    /* return created retriever          */
 }
 
 
@@ -3650,19 +4046,23 @@ void RexxSource::addClause(
 /* Add an instruction to the tree code execution stream                       */
 /******************************************************************************/
 {
-  if (this->first == OREF_NULL) {      /* is this the first one?            */
-                                       /* make this the first one           */
-    OrefSet(this, this->first, _instruction);
-                                       /* and the last one                  */
-    OrefSet(this, this->last, _instruction);
-  }
-  else {                               /* non-root instruction              */
-    this->last->setNext(_instruction);  /* add on to the last instruction    */
-                                       /* this is the new last instruction  */
-    OrefSet(this, this->last, _instruction);
-  }
-                                       /* now safe from garbage collection  */
-  this->toss((RexxObject *)_instruction);
+    /* is this the first one?            */
+    if (this->first == OREF_NULL)
+    {
+        /* make this the first one           */
+        OrefSet(this, this->first, _instruction);
+        /* and the last one                  */
+        OrefSet(this, this->last, _instruction);
+    }
+    /* non-root instruction              */
+    else
+    {
+        this->last->setNext(_instruction);  /* add on to the last instruction    */
+        /* this is the new last instruction  */
+        OrefSet(this, this->last, _instruction);
+    }
+    /* now safe from garbage collection  */
+    this->toss((RexxObject *)_instruction);
 }
 
 
@@ -3673,10 +4073,12 @@ void RexxSource::addLabel(
 /* Function:  add a label to the global label table.                          */
 /******************************************************************************/
 {
-                                       /* not already in the table?         */
-  if (this->labels->fastAt(labelname) == OREF_NULL)
-                                       /* add this item                     */
-    this->labels->put((RexxObject *)label, labelname);
+    /* not already in the table?         */
+    if (this->labels->fastAt(labelname) == OREF_NULL)
+    {
+        /* add this item                     */
+        this->labels->put((RexxObject *)label, labelname);
+    }
 }
 
 
@@ -3686,11 +4088,15 @@ RexxInstruction *RexxSource::findLabel(
 /* Search the label table for a label name match                              */
 /******************************************************************************/
 {
-  if (this->labels != OREF_NULL)       /* have labels?                      */
-                                       /* just return entry from the table  */
-    return (RexxInstruction *)this->labels->fastAt(labelname);
-  else
-    return OREF_NULL;                  /* don't return anything             */
+    if (this->labels != OREF_NULL)       /* have labels?                      */
+    {
+        /* just return entry from the table  */
+        return(RexxInstruction *)this->labels->fastAt(labelname);
+    }
+    else
+    {
+        return OREF_NULL;                  /* don't return anything             */
+    }
 }
 
 void RexxSource::setGuard()
@@ -3698,10 +4104,12 @@ void RexxSource::setGuard()
 /* Function:  Set on guard expression variable "gathering"                    */
 /******************************************************************************/
 {
-                                       /* just starting to trap?            */
-  if (this->guard_variables == OREF_NULL)
-                                       /* create the guard table            */
-    OrefSet(this, this->guard_variables, new_object_table());
+    /* just starting to trap?            */
+    if (this->guard_variables == OREF_NULL)
+    {
+        /* create the guard table            */
+        OrefSet(this, this->guard_variables, new_object_table());
+    }
 }
 
 RexxArray *RexxSource::getGuard()
@@ -3710,14 +4118,12 @@ RexxArray *RexxSource::getGuard()
 /*            table of variables.                                             */
 /******************************************************************************/
 {
-  RexxArray *guards;                   /* returned guard variable list      */
-
-                                       /* convert into an array             */
-  guards = this->guard_variables->makeArray();
-                                       /* discard the table                 */
-  OrefSet(this, this->guard_variables, OREF_NULL);
-                                       /* just starting to trap?            */
-  return guards;                       /* return the guards array           */
+    /* convert into an array             */
+    RexxArray *guards = this->guard_variables->makeArray();
+    /* discard the table                 */
+    OrefSet(this, this->guard_variables, OREF_NULL);
+    /* just starting to trap?            */
+    return guards;                       /* return the guards array           */
 }
 
 RexxObject *RexxSource::constantExpression()
@@ -3727,36 +4133,45 @@ RexxObject *RexxSource::constantExpression()
 /*            symbol, or an expression enclosed in parentheses.               */
 /******************************************************************************/
 {
-  RexxToken  *token;                   /* current token                     */
-  RexxToken  *second;                  /* second token                      */
-  RexxObject *_expression = OREF_NULL; /* parse expression                  */
+    RexxToken  *token;                   /* current token                     */
+    RexxToken  *second;                  /* second token                      */
+    RexxObject *_expression = OREF_NULL; /* parse expression                  */
 
-  token = nextReal();                  /* get the first token               */
-  if (token->isLiteral())              /* literal string expression?        */
-
-    _expression = this->addText(token); /* get the literal retriever         */
-  else if (token->isConstant())        /* how about a constant symbol?      */
-    _expression = this->addText(token); /* get the literal retriever         */
-                                       /* got an end of expression?         */
-  else if (token->isEndOfClause()) {
-    previousToken();                   /* push the token back               */
-    return OREF_NULL;                  /* nothing here (may be optional)    */
-  }
-                                       /* not a left paren here?            */
-  else if (token->classId != TOKEN_LEFT)
-                                       /* this is an invalid expression     */
-    syntaxError(Error_Invalid_expression_general, token);
-  else {
-                                       /* get the subexpression             */
-    _expression = this->subExpression(TERM_EOC | TERM_RIGHT);
-    second = nextToken();              /* get the terminator token          */
-                                       /* not terminated by a right paren?  */
-    if (second->classId != TOKEN_RIGHT)
-                                       /* this is an error                  */
-      syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
-  }
-  this->holdObject(_expression);        /* protect the expression            */
-  return _expression;                   /* and return it                     */
+    token = nextReal();                  /* get the first token               */
+    if (token->isLiteral())              /* literal string expression?        */
+    {
+        _expression = this->addText(token); /* get the literal retriever         */
+    }
+    else if (token->isConstant())        /* how about a constant symbol?      */
+    {
+        _expression = this->addText(token); /* get the literal retriever         */
+    }
+    /* got an end of expression?         */
+    else if (token->isEndOfClause())
+    {
+        previousToken();                   /* push the token back               */
+        return OREF_NULL;                  /* nothing here (may be optional)    */
+    }
+    /* not a left paren here?            */
+    else if (token->classId != TOKEN_LEFT)
+    {
+        /* this is an invalid expression     */
+        syntaxError(Error_Invalid_expression_general, token);
+    }
+    else
+    {
+        /* get the subexpression             */
+        _expression = this->subExpression(TERM_EOC | TERM_RIGHT);
+        second = nextToken();              /* get the terminator token          */
+                                           /* not terminated by a right paren?  */
+        if (second->classId != TOKEN_RIGHT)
+        {
+            /* this is an error                  */
+            syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
+        }
+    }
+    this->holdObject(_expression);        /* protect the expression            */
+    return _expression;                   /* and return it                     */
 }
 
 RexxObject *RexxSource::constantLogicalExpression()
@@ -3767,36 +4182,46 @@ RexxObject *RexxSource::constantLogicalExpression()
 /*            expression inside parens can be a complex logical expression.   */
 /******************************************************************************/
 {
-  RexxToken  *token;                   /* current token                     */
-  RexxToken  *second;                  /* second token                      */
-  RexxObject *_expression = OREF_NULL; /* parse expression                  */
+    RexxToken  *token;                   /* current token                     */
+    RexxToken  *second;                  /* second token                      */
+    RexxObject *_expression = OREF_NULL; /* parse expression                  */
 
-  token = nextReal();                  /* get the first token               */
-  if (token->isLiteral())              /* literal string expression?        */
+    token = nextReal();                  /* get the first token               */
+    if (token->isLiteral())              /* literal string expression?        */
+    {
 
-    _expression = this->addText(token); /* get the literal retriever         */
-  else if (token->isConstant())        /* how about a constant symbol?      */
-    _expression = this->addText(token); /* get the literal retriever         */
-                                       /* got an end of expression?         */
-  else if (token->isEndOfClause()) {
-    previousToken();                   /* push the token back               */
-    return OREF_NULL;                  /* nothing here (may be optional)    */
-  }
-                                       /* not a left paren here?            */
-  else if (token->classId != TOKEN_LEFT)
-                                       /* this is an invalid expression     */
-    syntaxError(Error_Invalid_expression_general, token);
-  else {
-                                       /* get the subexpression             */
-    _expression = this->parseLogical(token, TERM_EOC | TERM_RIGHT);
-    second = nextToken();              /* get the terminator token          */
-                                       /* not terminated by a right paren?  */
-    if (second->classId != TOKEN_RIGHT)
-                                       /* this is an error                  */
-      syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
-  }
-  this->holdObject(_expression);        /* protect the expression            */
-  return _expression;                   /* and return it                     */
+        _expression = this->addText(token); /* get the literal retriever         */
+    }
+    else if (token->isConstant())        /* how about a constant symbol?      */
+    {
+        _expression = this->addText(token); /* get the literal retriever         */
+    }
+    /* got an end of expression?         */
+    else if (token->isEndOfClause())
+    {
+        previousToken();                   /* push the token back               */
+        return OREF_NULL;                  /* nothing here (may be optional)    */
+    }
+    /* not a left paren here?            */
+    else if (token->classId != TOKEN_LEFT)
+    {
+        /* this is an invalid expression     */
+        syntaxError(Error_Invalid_expression_general, token);
+    }
+    else
+    {
+        /* get the subexpression             */
+        _expression = this->parseLogical(token, TERM_EOC | TERM_RIGHT);
+        second = nextToken();              /* get the terminator token          */
+                                           /* not terminated by a right paren?  */
+        if (second->classId != TOKEN_RIGHT)
+        {
+            /* this is an error                  */
+            syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
+        }
+    }
+    this->holdObject(_expression);        /* protect the expression            */
+    return _expression;                   /* and return it                     */
 }
 
 RexxObject *RexxSource::parenExpression(RexxToken *start)
@@ -3842,143 +4267,170 @@ RexxObject *RexxSource::subExpression(
 /*            placed back on the token queue.                                 */
 /******************************************************************************/
 {
-  RexxObject    *left;                 /* left term of operation            */
-  RexxObject    *right;                /* right term of operation           */
-  RexxToken     *token;                /* current working token             */
-  RexxToken     *second;               /* look ahead token                  */
-  RexxObject    *subexpression;        /* final subexpression               */
-  SourceLocation location;             /* token location info               */
+    RexxObject    *left;                 /* left term of operation            */
+    RexxObject    *right;                /* right term of operation           */
+    RexxToken     *token;                /* current working token             */
+    RexxToken     *second;               /* look ahead token                  */
+    RexxObject    *subexpression;        /* final subexpression               */
+    SourceLocation location;             /* token location info               */
 
-                                       /* get the left term                 */
-  left = this->messageSubterm(terminators);
-  if (left == OREF_NULL)               /* end of the expression?            */
-    return OREF_NULL;                  /* done processing here              */
-  this->pushTerm(left);                /* add the term to the term stack    */
-                                       /* add a fence item to operator stack*/
-  this->pushOperator((RexxToken *)TheNilObject);
-  token = nextToken();                 /* get the next token                */
-                                       /* loop until end of expression      */
-  while (!this->terminator(terminators, token)) {
-    switch (token->classId) {          /* switch based on token type        */
-
-      case  TOKEN_TILDE:               /* have a message send operation     */
-      case  TOKEN_DTILDE:              /* have a double twiddle operation   */
-        left = this->popTerm();        /* get the left term from the stack  */
-        if (left == OREF_NULL)         /* not there?                        */
-                                       /* this is an invalid expression     */
-          syntaxError(Error_Invalid_expression_general, token);
-                                       /* process a message term            */
-        subexpression = this->message(left, token->classId == TOKEN_DTILDE, terminators);
-        this->pushTerm(subexpression); /* push this back on the term stack  */
-        break;
-
-      case  TOKEN_SQLEFT:              /* collection syntax message         */
-        left = this->popTerm();        /* get the left term from the stack  */
-        if (left == OREF_NULL)         /* not there?                        */
-                                       /* this is an invalid expression     */
-          syntaxError(Error_Invalid_expression_general, token);
-                                       /* process a message term            */
-        subexpression = this->collectionMessage(token, left, terminators);
-        this->pushTerm(subexpression); /* push this back on the term stack  */
-        break;
-
-      case  TOKEN_SYMBOL:              /* Symbol in the expression          */
-      case  TOKEN_LITERAL:             /* Literal in the expression         */
-      case  TOKEN_LEFT:                /* start of subexpression            */
-
-        location = token->getLocation(); /* get the token start position      */
-                                         /* abuttal ends on the same line     */
-        location.setEnd(location.getLineNumber(), location.getOffset());
-                                       /* This is actually an abuttal       */
-        token = new RexxToken (TOKEN_OPERATOR, OPERATOR_ABUTTAL, OREF_NULLSTRING, location);
-        previousToken();               /* step back on the token list       */
-
-      case  TOKEN_BLANK:               /* possible blank concatenate        */
-        second = nextReal();           /* get the next token                */
-                                       /* blank prior to a terminator?      */
-        if (this->terminator(terminators, second))
-          break;                       /* not a real operator               */
-        else                           /* have a blank operator             */
-          previousToken();             /* push this back                    */
-                                       /* fall through to operator logic    */
-
-      case  TOKEN_OPERATOR:            /* have a dyadic operator            */
-                                       /* actually a prefix only one?       */
-        if (token->subclass == OPERATOR_BACKSLASH)
-                                       /* this is an invalid expression     */
-            syntaxError(Error_Invalid_expression_general, token);
-        for (;;) {                     /* handle operator precedence        */
-          second = this->topOperator();/* get the top term                  */
-                                       /* hit the fence term?               */
-          if (second == (RexxToken *)TheNilObject)
-            break;                     /* out of here                       */
-                                       /* current have higher precedence?   */
-          if (this->precedence(token) > this->precedence(second))
-            break;                     /* finished also                     */
-          right = this->popTerm();     /* get the right term                */
-          left = this->popTerm();      /* and the left term                 */
-                                       /* not enough terms?                 */
-          if (right == OREF_NULL || left == OREF_NULL)
-                                       /* this is an invalid expression     */
-            syntaxError(Error_Invalid_expression_general, token);
-                                       /* create a new operation            */
-          RexxToken *op = popOperator();
-          subexpression = (RexxObject *)new RexxBinaryOperator(op->subclass, left, right);
-                                       /* push this back on the term stack  */
-          this->pushTerm(subexpression);
-        }
-        this->pushOperator(token);     /* push this operator onto stack     */
-        right = this->messageSubterm(terminators);
-                                       /* end of the expression?            */
-        if (right == OREF_NULL && token->subclass != OPERATOR_BLANK)
-                                       /* have a bad expression             */
-          syntaxError(Error_Invalid_expression_general, token);
-        this->pushTerm(right);         /* add the term to the term stack    */
-        break;
-
-      case TOKEN_ASSIGNMENT:
-      // special assignment token in a bad context.  We report this as an error.
-                                       /* this is an invalid expression     */
-        syntaxError(Error_Invalid_expression_general, token);
-        break;
-
-      case TOKEN_COMMA:                /* found a comma in the expression   */
-                                       /* should have been trapped as an    */
-                                       /* expression terminator, so this is */
-                                       /* not a valid expression            */
-        syntaxError(Error_Unexpected_comma_comma);
-        break;
-
-      case TOKEN_RIGHT:                /* found a paren in the expression   */
-        syntaxError(Error_Unexpected_comma_paren);
-        break;
-
-      case TOKEN_SQRIGHT:              /* found a bracket in the expression */
-        syntaxError(Error_Unexpected_comma_bracket);
-        break;
-
-      default:                         /* something unexpected              */
-                                       /* not a valid expression            */
-        syntaxError(Error_Invalid_expression_general, token);
-        break;
+                                         /* get the left term                 */
+    left = this->messageSubterm(terminators);
+    if (left == OREF_NULL)               /* end of the expression?            */
+    {
+        return OREF_NULL;                  /* done processing here              */
     }
-    token = nextToken();               /* get the next token                */
-  }
-  token= this->popOperator();          /* get top operator token            */
-                                       /* process pending operations        */
-  while (token != (RexxToken *)TheNilObject) {
-    right = this->popTerm();           /* get the right term                */
-    left = this->popTerm();            /* now get the left term             */
-                                       /* missing any terms?                */
-    if (left == OREF_NULL || right == OREF_NULL)
-                                       /* this is an invalid expression     */
-      syntaxError(Error_Invalid_expression_general, token);
-                                       /* create a new operation            */
-    subexpression = (RexxObject *)new RexxBinaryOperator(token->subclass, left, right);
-    this->pushTerm(subexpression);     /* push this back on the term stack  */
-    token = this->popOperator();       /* get top operator token            */
-  }
-  return this->popTerm();              /* expression is top of term stack   */
+    this->pushTerm(left);                /* add the term to the term stack    */
+                                         /* add a fence item to operator stack*/
+    this->pushOperator((RexxToken *)TheNilObject);
+    token = nextToken();                 /* get the next token                */
+                                         /* loop until end of expression      */
+    while (!this->terminator(terminators, token))
+    {
+        switch (token->classId)
+        {
+
+            case  TOKEN_TILDE:               /* have a message send operation     */
+            case  TOKEN_DTILDE:              /* have a double twiddle operation   */
+                left = this->popTerm();        /* get the left term from the stack  */
+                if (left == OREF_NULL)         /* not there?                        */
+                {
+                    /* this is an invalid expression     */
+                    syntaxError(Error_Invalid_expression_general, token);
+                }
+                /* process a message term            */
+                subexpression = this->message(left, token->classId == TOKEN_DTILDE, terminators);
+                this->pushTerm(subexpression); /* push this back on the term stack  */
+                break;
+
+            case  TOKEN_SQLEFT:              /* collection syntax message         */
+                left = this->popTerm();        /* get the left term from the stack  */
+                if (left == OREF_NULL)         /* not there?                        */
+                {
+                    /* this is an invalid expression     */
+                    syntaxError(Error_Invalid_expression_general, token);
+                }
+                /* process a message term            */
+                subexpression = this->collectionMessage(token, left, terminators);
+                this->pushTerm(subexpression); /* push this back on the term stack  */
+                break;
+
+            case  TOKEN_SYMBOL:              /* Symbol in the expression          */
+            case  TOKEN_LITERAL:             /* Literal in the expression         */
+            case  TOKEN_LEFT:                /* start of subexpression            */
+
+                location = token->getLocation(); /* get the token start position      */
+                                                 /* abuttal ends on the same line     */
+                location.setEnd(location.getLineNumber(), location.getOffset());
+                /* This is actually an abuttal       */
+                token = new RexxToken (TOKEN_OPERATOR, OPERATOR_ABUTTAL, OREF_NULLSTRING, location);
+                previousToken();               /* step back on the token list       */
+
+            case  TOKEN_BLANK:               /* possible blank concatenate        */
+                second = nextReal();           /* get the next token                */
+                                               /* blank prior to a terminator?      */
+                if (this->terminator(terminators, second))
+                {
+                    break;                       /* not a real operator               */
+                }
+                else                           /* have a blank operator             */
+                {
+                    previousToken();             /* push this back                    */
+                }
+                                                 /* fall through to operator logic    */
+
+            case  TOKEN_OPERATOR:            /* have a dyadic operator            */
+                /* actually a prefix only one?       */
+                if (token->subclass == OPERATOR_BACKSLASH)
+                {
+                    /* this is an invalid expression     */
+                    syntaxError(Error_Invalid_expression_general, token);
+                }
+                /* handle operator precedence        */
+                for (;;)
+                {
+                    second = this->topOperator();/* get the top term                  */
+                                                 /* hit the fence term?               */
+                    if (second == (RexxToken *)TheNilObject)
+                    {
+                        break;                     /* out of here                       */
+                    }
+                                                   /* current have higher precedence?   */
+                    if (this->precedence(token) > this->precedence(second))
+                    {
+                        break;                     /* finished also                     */
+                    }
+                    right = this->popTerm();     /* get the right term                */
+                    left = this->popTerm();      /* and the left term                 */
+                                                 /* not enough terms?                 */
+                    if (right == OREF_NULL || left == OREF_NULL)
+                    {
+                        /* this is an invalid expression     */
+                        syntaxError(Error_Invalid_expression_general, token);
+                    }
+                    /* create a new operation            */
+                    RexxToken *op = popOperator();
+                    subexpression = (RexxObject *)new RexxBinaryOperator(op->subclass, left, right);
+                    /* push this back on the term stack  */
+                    this->pushTerm(subexpression);
+                }
+                this->pushOperator(token);     /* push this operator onto stack     */
+                right = this->messageSubterm(terminators);
+                /* end of the expression?            */
+                if (right == OREF_NULL && token->subclass != OPERATOR_BLANK)
+                {
+                    /* have a bad expression             */
+                    syntaxError(Error_Invalid_expression_general, token);
+                }
+                this->pushTerm(right);         /* add the term to the term stack    */
+                break;
+
+            case TOKEN_ASSIGNMENT:
+                // special assignment token in a bad context.  We report this as an error.
+                /* this is an invalid expression     */
+                syntaxError(Error_Invalid_expression_general, token);
+                break;
+
+            case TOKEN_COMMA:                /* found a comma in the expression   */
+                /* should have been trapped as an    */
+                /* expression terminator, so this is */
+                /* not a valid expression            */
+                syntaxError(Error_Unexpected_comma_comma);
+                break;
+
+            case TOKEN_RIGHT:                /* found a paren in the expression   */
+                syntaxError(Error_Unexpected_comma_paren);
+                break;
+
+            case TOKEN_SQRIGHT:              /* found a bracket in the expression */
+                syntaxError(Error_Unexpected_comma_bracket);
+                break;
+
+            default:                         /* something unexpected              */
+                /* not a valid expression            */
+                syntaxError(Error_Invalid_expression_general, token);
+                break;
+        }
+        token = nextToken();               /* get the next token                */
+    }
+    token= this->popOperator();          /* get top operator token            */
+                                         /* process pending operations        */
+    while (token != (RexxToken *)TheNilObject)
+    {
+        right = this->popTerm();           /* get the right term                */
+        left = this->popTerm();            /* now get the left term             */
+                                           /* missing any terms?                */
+        if (left == OREF_NULL || right == OREF_NULL)
+        {
+            /* this is an invalid expression     */
+            syntaxError(Error_Invalid_expression_general, token);
+        }
+        /* create a new operation            */
+        subexpression = (RexxObject *)new RexxBinaryOperator(token->subclass, left, right);
+        this->pushTerm(subexpression);     /* push this back on the term stack  */
+        token = this->popOperator();       /* get top operator token            */
+    }
+    return this->popTerm();              /* expression is top of term stack   */
 }
 
 RexxArray *RexxSource::argArray(
@@ -3988,17 +4440,19 @@ RexxArray *RexxSource::argArray(
 /* Function:  Parse off an array of argument expressions                      */
 /******************************************************************************/
 {
-  size_t     argCount;                 /* count of arguments                */
-  RexxArray *_argArray;                 /* returned array                    */
+    size_t     argCount;                 /* count of arguments                */
+    RexxArray *_argArray;                 /* returned array                    */
 
-                                       /* scan off the argument list        */
-  argCount = this->argList(_first, terminators);
-  _argArray = new_array(argCount);      /* get a new argument list           */
-  while (argCount > 0) {               /* now copy the argument pointers    */
-                                       /* in reverse order                  */
-    _argArray->put(this->subTerms->pop(), argCount--);
-  }
-  return _argArray;                     /* return the argument array         */
+    /* scan off the argument list        */
+    argCount = this->argList(_first, terminators);
+    _argArray = new_array(argCount);      /* get a new argument list           */
+    /* now copy the argument pointers    */
+    while (argCount > 0)
+    {
+        /* in reverse order                  */
+        _argArray->put(this->subTerms->pop(), argCount--);
+    }
+    return _argArray;                     /* return the argument array         */
 }
 
 size_t RexxSource::argList(
@@ -4008,44 +4462,56 @@ size_t RexxSource::argList(
 /* Function:  Parse off a list of argument expressions                        */
 /******************************************************************************/
 {
-  RexxQueue    *arglist;               /* argument list                     */
-  RexxObject   *subexpr;               /* current subexpression             */
-  RexxToken    *token;                 /* current working token             */
-  size_t        realcount;             /* count of real arguments           */
-  size_t        total;                 /* total arguments                   */
+    RexxQueue    *arglist;               /* argument list                     */
+    RexxObject   *subexpr;               /* current subexpression             */
+    RexxToken    *token;                 /* current working token             */
+    size_t        realcount;             /* count of real arguments           */
+    size_t        total;                 /* total arguments                   */
 
-  arglist = this->subTerms;            /* use the subterms list             */
-  realcount = 0;                       /* no arguments yet                  */
-  total = 0;
-                                       /* get the first real token, which   */
-  nextReal();                          /* skips any leading blanks on CALL  */
-  previousToken();                     /* now put it back                   */
-  for (;;) {                           /* loop until get a full terminator  */
-                                       /* parse off next argument expression*/
-    subexpr = this->subExpression(terminators | TERM_COMMA);
-    arglist->push(subexpr);            /* add next argument to list         */
-    this->pushTerm(subexpr);           /* add the term to the term stack    */
-    total++;                           /* increment the total               */
-    if (subexpr != OREF_NULL)          /* real expression?                  */
-      realcount = total;               /* update the real count             */
-    token = nextToken();               /* get the next token                */
-    if (token->classId != TOKEN_COMMA) /* start of next argument?           */
-      break;                           /* no, all finished                  */
-  }
-                                       /* not closed with expected ')'?     */
-  if (terminators & TERM_RIGHT && token->classId != TOKEN_RIGHT)
-                                       /* raise an error                    */
-    syntaxErrorAt(Error_Unmatched_parenthesis_paren, _first);
-                                       /* not closed with expected ']'?     */
-  if (terminators&TERM_SQRIGHT && token->classId != TOKEN_SQRIGHT)
-                                       /* have an unmatched bracket         */
-    syntaxErrorAt(Error_Unmatched_parenthesis_square, _first);
-  this->popNTerms(total);              /* pop all items off the term stack  */
-  while (total > realcount) {          /* pop off any trailing omitteds     */
-    arglist->pop();                    /* just pop off the dummy            */
-    total--;                           /* reduce the total                  */
-  }
-  return realcount;                    /* return the argument count         */
+    arglist = this->subTerms;            /* use the subterms list             */
+    realcount = 0;                       /* no arguments yet                  */
+    total = 0;
+    /* get the first real token, which   */
+    nextReal();                          /* skips any leading blanks on CALL  */
+    previousToken();                     /* now put it back                   */
+    /* loop until get a full terminator  */
+    for (;;)
+    {
+        /* parse off next argument expression*/
+        subexpr = this->subExpression(terminators | TERM_COMMA);
+        arglist->push(subexpr);            /* add next argument to list         */
+        this->pushTerm(subexpr);           /* add the term to the term stack    */
+        total++;                           /* increment the total               */
+        if (subexpr != OREF_NULL)          /* real expression?                  */
+        {
+            realcount = total;               /* update the real count             */
+        }
+        token = nextToken();               /* get the next token                */
+        if (token->classId != TOKEN_COMMA) /* start of next argument?           */
+        {
+            break;                           /* no, all finished                  */
+        }
+    }
+    /* not closed with expected ')'?     */
+    if (terminators & TERM_RIGHT && token->classId != TOKEN_RIGHT)
+    {
+        /* raise an error                    */
+        syntaxErrorAt(Error_Unmatched_parenthesis_paren, _first);
+    }
+    /* not closed with expected ']'?     */
+    if (terminators&TERM_SQRIGHT && token->classId != TOKEN_SQRIGHT)
+    {
+        /* have an unmatched bracket         */
+        syntaxErrorAt(Error_Unmatched_parenthesis_square, _first);
+    }
+    this->popNTerms(total);              /* pop all items off the term stack  */
+    /* pop off any trailing omitteds     */
+    while (total > realcount)
+    {
+        arglist->pop();                    /* just pop off the dummy            */
+        total--;                           /* reduce the total                  */
+    }
+    return realcount;                    /* return the argument count         */
 }
 
 RexxObject *RexxSource::function(
@@ -4100,16 +4566,17 @@ RexxToken  *RexxSource::getToken(
 /* Function:  Get a token, checking to see if this is a terminatore token     */
 /******************************************************************************/
 {
-  RexxToken   *token;                  /* retrieved token                   */
-
-  token = nextToken();                 /* get the next token                */
-                                       /* this a terminator token?          */
-  if (this->terminator(terminators, token)) {
-    if (errorcode != 0)                /* want an error raised?             */
-      syntaxError(errorcode);         /* report this                       */
-    return OREF_NULL;                  /* just return a null                */
-  }
-  return token;                        /* return the token                  */
+    RexxToken *token = nextToken();                 /* get the next token                */
+    /* this a terminator token?          */
+    if (this->terminator(terminators, token))
+    {
+        if (errorcode != 0)                /* want an error raised?             */
+        {
+            syntaxError(errorcode);         /* report this                       */
+        }
+        return OREF_NULL;                  /* just return a null                */
+    }
+    return token;                        /* return the token                  */
 }
 
 RexxObject *RexxSource::message(
@@ -4120,58 +4587,71 @@ RexxObject *RexxSource::message(
 /* Function:  Parse a full message send expression term                       */
 /******************************************************************************/
 {
-  size_t        argCount;              /* list of function arguments        */
-  RexxString   *messagename = OREF_NULL;  /* message name                      */
-  RexxObject   *super;                 /* super class target                */
-  RexxToken    *token;                 /* current working token             */
-  RexxExpressionMessage *_message;     /* new message term                  */
+    size_t        argCount;              /* list of function arguments        */
+    RexxString   *messagename = OREF_NULL;  /* message name                      */
+    RexxObject   *super;                 /* super class target                */
+    RexxToken    *token;                 /* current working token             */
+    RexxExpressionMessage *_message;     /* new message term                  */
 
-  super = OREF_NULL;                   /* default no super class            */
-  argCount = 0;                        /* and no arguments                  */
-  this->saveObject(target);   /* save target until it gets connected to message */
+    super = OREF_NULL;                   /* default no super class            */
+    argCount = 0;                        /* and no arguments                  */
+    this->saveObject(target);   /* save target until it gets connected to message */
 
-  /* add the term to the term stack so that the calculations */
-  /* include this in the processing. */
-  this->pushTerm(target);
-                                       /* get the next token                */
-  token = this->getToken(terminators, Error_Symbol_or_string_tilde);
-                                       /* unexpected type?                  */
-  if (token->isSymbolOrLiteral())
-    messagename = token->value;        /* get the message name              */
-  else
-                                       /* error!                            */
-    syntaxError(Error_Symbol_or_string_tilde);
-                                       /* get the next token                */
-  token = this->getToken(terminators, 0);
-  if (token != OREF_NULL) {            /* not reached the clause end?       */
-                                       /* have a super class?               */
-    if (token->classId == TOKEN_COLON) {
-                                       /* get the next token                */
-      token = this->getToken(terminators, Error_Symbol_expected_colon);
-                                       /* not a variable symbol?            */
-      if (!token->isVariable() && token->subclass != SYMBOL_DOTSYMBOL)
-                                       /* have an error                     */
-        syntaxError(Error_Symbol_expected_colon);
-      super = this->addText(token);    /* get the variable retriever        */
-                                       /* get the next token                */
-      token = this->getToken(terminators, 0);
+    /* add the term to the term stack so that the calculations */
+    /* include this in the processing. */
+    this->pushTerm(target);
+    /* get the next token                */
+    token = this->getToken(terminators, Error_Symbol_or_string_tilde);
+    /* unexpected type?                  */
+    if (token->isSymbolOrLiteral())
+    {
+        messagename = token->value;        /* get the message name              */
     }
-  }
-  if (token != OREF_NULL) {            /* not reached the clause end?       */
-    if (token->classId == TOKEN_LEFT)  /* have an argument list?            */
-                                       /* process the argument list         */
-      argCount = this->argList(token, ((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
     else
-      previousToken();                 /* something else, step back         */
-  }
+    {
+        /* error!                            */
+        syntaxError(Error_Symbol_or_string_tilde);
+    }
+    /* get the next token                */
+    token = this->getToken(terminators, 0);
+    if (token != OREF_NULL)
+    {            /* not reached the clause end?       */
+                 /* have a super class?               */
+        if (token->classId == TOKEN_COLON)
+        {
+            /* get the next token                */
+            token = this->getToken(terminators, Error_Symbol_expected_colon);
+            /* not a variable symbol?            */
+            if (!token->isVariable() && token->subclass != SYMBOL_DOTSYMBOL)
+            {
+                /* have an error                     */
+                syntaxError(Error_Symbol_expected_colon);
+            }
+            super = this->addText(token);    /* get the variable retriever        */
+                                             /* get the next token                */
+            token = this->getToken(terminators, 0);
+        }
+    }
+    if (token != OREF_NULL)
+    {            /* not reached the clause end?       */
+        if (token->classId == TOKEN_LEFT)  /* have an argument list?            */
+        {
+            /* process the argument list         */
+            argCount = this->argList(token, ((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
+        }
+        else
+        {
+            previousToken();                 /* something else, step back         */
+        }
+    }
 
-  this->popTerm();                     /* it is now safe to pop the message target */
-                                       /* create a message send node        */
-  _message =  new (argCount) RexxExpressionMessage(target, messagename, super, argCount, this->subTerms, doubleTilde);
-                                       /* protect for a bit                 */
-  this->holdObject((RexxObject *)_message);
-  this->removeObj(target);   /* target is now connected to message, remove from savelist without hold */
-  return (RexxObject *)_message;        /* return the message item           */
+    this->popTerm();                     /* it is now safe to pop the message target */
+                                         /* create a message send node        */
+    _message =  new (argCount) RexxExpressionMessage(target, messagename, super, argCount, this->subTerms, doubleTilde);
+    /* protect for a bit                 */
+    this->holdObject((RexxObject *)_message);
+    this->removeObj(target);   /* target is now connected to message, remove from savelist without hold */
+    return(RexxObject *)_message;        /* return the message item           */
 }
 
 
@@ -4221,37 +4701,42 @@ RexxObject *RexxSource::messageTerm()
 /* Function:  Parse off an instruction leading message term element           */
 /******************************************************************************/
 {
-  RexxToken   *token;                  /* current working token             */
-  RexxObject  *term;                   /* working term                      */
-  RexxObject  *start;                  /* starting term                     */
-  int          classId;                /* token class                       */
+    RexxToken   *token;                  /* current working token             */
+    RexxObject  *term;                   /* working term                      */
+    RexxObject  *start;                  /* starting term                     */
+    int          classId;                /* token class                       */
 
-  size_t mark = markPosition();       // save the current position so we can reset cleanly
+    size_t mark = markPosition();       // save the current position so we can reset cleanly
 
-  start = this->subTerm(TERM_EOC);     /* get the first term of instruction */
-  this->holdObject(start);             /* save the starting term            */
-  term = OREF_NULL;                    /* default to no term                */
-  token = nextToken();                 /* get the next token                */
-  classId = token->classId;            /* get the token class               */
-                                       /* while cascading message sends     */
-  while (classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT ) {
-    if (classId == TOKEN_SQLEFT)       /* left bracket form?                */
-      term = this->collectionMessage(token, start, TERM_EOC);
-    else
-                                       /* process a message term            */
-      term = this->message(start, classId == TOKEN_DTILDE, TERM_EOC);
-    start = term;                      /* set for the next pass             */
-    token = nextToken();               /* get the next token                */
-    classId = token->classId;          /* get the token class               */
-  }
-  previousToken();                     /* push this term back               */
-  // if this was not a valid message term, reset the position to the beginning
-  if (term == OREF_NULL)
-  {
-      resetPosition(mark);                 // reset back to the entry conditions
-  }
-                                       /* return the message term (returns  */
-  return term;                         /* OREF_NULL if not a message term)  */
+    start = this->subTerm(TERM_EOC);     /* get the first term of instruction */
+    this->holdObject(start);             /* save the starting term            */
+    term = OREF_NULL;                    /* default to no term                */
+    token = nextToken();                 /* get the next token                */
+    classId = token->classId;            /* get the token class               */
+                                         /* while cascading message sends     */
+    while (classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT )
+    {
+        if (classId == TOKEN_SQLEFT)       /* left bracket form?                */
+        {
+            term = this->collectionMessage(token, start, TERM_EOC);
+        }
+        else
+        {
+            /* process a message term            */
+            term = this->message(start, classId == TOKEN_DTILDE, TERM_EOC);
+        }
+        start = term;                      /* set for the next pass             */
+        token = nextToken();               /* get the next token                */
+        classId = token->classId;          /* get the token class               */
+    }
+    previousToken();                     /* push this term back               */
+    // if this was not a valid message term, reset the position to the beginning
+    if (term == OREF_NULL)
+    {
+        resetPosition(mark);                 // reset back to the entry conditions
+    }
+    /* return the message term (returns  */
+    return term;                         /* OREF_NULL if not a message term)  */
 }
 
 RexxObject *RexxSource::messageSubterm(
@@ -4260,59 +4745,70 @@ RexxObject *RexxSource::messageSubterm(
 /* Function:  Parse off a message subterm within an expression                */
 /******************************************************************************/
 {
-  RexxToken   *token;                  /* current working token             */
-  RexxObject  *term = OREF_NULL;       /* working term                      */
-  int          classId;                /* token class                       */
+    RexxToken   *token;                  /* current working token             */
+    RexxObject  *term = OREF_NULL;       /* working term                      */
+    int          classId;                /* token class                       */
 
-  token = nextToken();                 /* get the next token                */
-                                       /* this the expression end?          */
-  if (this->terminator(terminators, token))
-    return OREF_NULL;                  /* nothing to do here                */
-                                       /* have potential prefix operator?   */
-  if (token->classId == TOKEN_OPERATOR) {
-
-    switch (token->subclass) {         /* handle prefix operators as terms  */
-
-      case OPERATOR_PLUS:              /* prefix plus                       */
-      case OPERATOR_SUBTRACT:          /* prefix minus                      */
-      case OPERATOR_BACKSLASH:         /* prefix backslash                  */
-                                       /* handle following term             */
-        term = this->messageSubterm(terminators);
-        if (term == OREF_NULL)         /* nothing found?                    */
-                                       /* this is an error                  */
-          syntaxError(Error_Invalid_expression_prefix, token);
-                                       /* create the new operator term      */
-        term = (RexxObject *)new RexxUnaryOperator(token->subclass, term);
-        break;
-
-      default:                         /* other operators not allowed here  */
-                                       /* this is an error                  */
-        syntaxError(Error_Invalid_expression_general, token);
+    token = nextToken();                 /* get the next token                */
+                                         /* this the expression end?          */
+    if (this->terminator(terminators, token))
+    {
+        return OREF_NULL;                  /* nothing to do here                */
     }
-  }
+                                           /* have potential prefix operator?   */
+    if (token->classId == TOKEN_OPERATOR)
+    {
 
-  else {                               /* non-prefix operator code          */
-    previousToken();                   /* put back the first token          */
-    term = this->subTerm(TERM_EOC);    /* get the first term of instruction */
-    this->holdObject(term);            /* save the starting term            */
-    token = nextToken();               /* get the next token                */
-    classId = token->classId;          /* get the token class               */
-                                       /* while cascading message sends     */
-    while (classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT ) {
-      if (classId == TOKEN_SQLEFT)     /* left bracket form?                */
-        term = this->collectionMessage(token, term, TERM_EOC);
-      else
-                                       /* process a message term            */
-        term = this->message(term, classId == TOKEN_DTILDE, TERM_EOC);
-//      this->holdObject(term);          /* lock the term                   */
-      /* The above hold is obsolete (even bad) because both collectionMessage and message "hold" the new term */
-      token = nextToken();             /* get the next token                */
-      classId = token->classId;        /* get the token class               */
+        /* handle prefix operators as terms  */
+        switch (token->subclass)
+        {
+
+            case OPERATOR_PLUS:              /* prefix plus                       */
+            case OPERATOR_SUBTRACT:          /* prefix minus                      */
+            case OPERATOR_BACKSLASH:         /* prefix backslash                  */
+                /* handle following term             */
+                term = this->messageSubterm(terminators);
+                if (term == OREF_NULL)         /* nothing found?                    */
+                {
+                    /* this is an error                  */
+                    syntaxError(Error_Invalid_expression_prefix, token);
+                }
+                /* create the new operator term      */
+                term = (RexxObject *)new RexxUnaryOperator(token->subclass, term);
+                break;
+
+            default:                         /* other operators not allowed here  */
+                /* this is an error                  */
+                syntaxError(Error_Invalid_expression_general, token);
+        }
     }
-    previousToken();                   /* push this term back               */
-  }
-                                       /* return the message term (returns  */
-  return term;                         /* OREF_NULL if not a message term)  */
+    /* non-prefix operator code          */
+    else
+    {
+        previousToken();                   /* put back the first token          */
+        term = this->subTerm(TERM_EOC);    /* get the first term of instruction */
+        this->holdObject(term);            /* save the starting term            */
+        token = nextToken();               /* get the next token                */
+        classId = token->classId;          /* get the token class               */
+                                           /* while cascading message sends     */
+        while (classId == TOKEN_TILDE || classId == TOKEN_DTILDE || classId == TOKEN_SQLEFT )
+        {
+            if (classId == TOKEN_SQLEFT)     /* left bracket form?                */
+            {
+                term = this->collectionMessage(token, term, TERM_EOC);
+            }
+            else
+            {
+                /* process a message term            */
+                term = this->message(term, classId == TOKEN_DTILDE, TERM_EOC);
+            }
+            token = nextToken();             /* get the next token                */
+            classId = token->classId;        /* get the token class               */
+        }
+        previousToken();                   /* push this term back               */
+    }
+    /* return the message term (returns  */
+    return term;                         /* OREF_NULL if not a message term)  */
 }
 
 RexxObject *RexxSource::subTerm(
@@ -4322,78 +4818,89 @@ RexxObject *RexxSource::subTerm(
 /*            variable names, to more complex such as message sends           */
 /******************************************************************************/
 {
-  RexxToken    *token;                 /* current token being processed     */
-  RexxObject   *term = OREF_NULL;      /* parsed out term                   */
-  RexxToken    *second;                /* second token of term              */
+    RexxToken    *token;                 /* current token being processed     */
+    RexxObject   *term = OREF_NULL;      /* parsed out term                   */
+    RexxToken    *second;                /* second token of term              */
 
-  token = nextToken();                 /* get the next token                */
-                                       /* this the expression end?          */
-  if (this->terminator(terminators, token))
-    return OREF_NULL;                  /* nothing to do here                */
+    token = nextToken();                 /* get the next token                */
+                                         /* this the expression end?          */
+    if (this->terminator(terminators, token))
+    {
+        return OREF_NULL;                  /* nothing to do here                */
+    }
 
-  switch (token->classId) {            /* process based on token type       */
+    switch (token->classId)
+    {
 
-    case  TOKEN_LEFT:                  /* have a left parentheses           */
-                                       /* get the subexpression             */
-      term = this->subExpression(((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
-      if (term == OREF_NULL)           /* nothing found?                    */
-                                       /* this is an error                  */
-        syntaxError(Error_Invalid_expression_general, token);
-      second = nextToken();            /* get the terminator token          */
-                                       /* not terminated by a right paren?  */
-      if (second->classId != TOKEN_RIGHT)
-                                       /* this is an error                  */
-        syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
-      break;
+        case  TOKEN_LEFT:                  /* have a left parentheses           */
+            /* get the subexpression             */
+            term = this->subExpression(((terminators | TERM_RIGHT) & ~TERM_SQRIGHT));
+            if (term == OREF_NULL)           /* nothing found?                    */
+            {
+                /* this is an error                  */
+                syntaxError(Error_Invalid_expression_general, token);
+            }
+            second = nextToken();            /* get the terminator token          */
+                                             /* not terminated by a right paren?  */
+            if (second->classId != TOKEN_RIGHT)
+            {
+                /* this is an error                  */
+                syntaxErrorAt(Error_Unmatched_parenthesis_paren, token);
+            }
+            break;
 
-    case  TOKEN_SYMBOL:                /* Symbol in the expression          */
-    case  TOKEN_LITERAL:               /* Literal in the expression         */
-      second = nextToken();            /* get the next token                */
-                                       /* have a function call?             */
-      if (second->classId == TOKEN_LEFT)
-                                       /* process the function call         */
-        term = this->function(second, token, terminators);
-      else {
-        previousToken();               /* push the token back               */
-        term = this->addText(token);   /* variable or literal access        */
-      }
-      break;
+        case  TOKEN_SYMBOL:                /* Symbol in the expression          */
+        case  TOKEN_LITERAL:               /* Literal in the expression         */
+            second = nextToken();            /* get the next token                */
+                                             /* have a function call?             */
+            if (second->classId == TOKEN_LEFT)
+            {
+                /* process the function call         */
+                term = this->function(second, token, terminators);
+            }
+            else
+            {
+                previousToken();               /* push the token back               */
+                term = this->addText(token);   /* variable or literal access        */
+            }
+            break;
 
-    case  TOKEN_RIGHT:                 /* have a right parentheses          */
-                                       /* this is an error here             */
-      syntaxError(Error_Unexpected_comma_paren);
-      break;
+        case  TOKEN_RIGHT:                 /* have a right parentheses          */
+            /* this is an error here             */
+            syntaxError(Error_Unexpected_comma_paren);
+            break;
 
-    case  TOKEN_COMMA:                 /* have a comma                      */
-                                       /* this is an error here             */
-      syntaxError(Error_Unexpected_comma_comma);
-      break;
+        case  TOKEN_COMMA:                 /* have a comma                      */
+            /* this is an error here             */
+            syntaxError(Error_Unexpected_comma_comma);
+            break;
 
-    case  TOKEN_SQRIGHT:               /* have a right square bracket       */
-                                       /* this is an error here             */
-      syntaxError(Error_Unexpected_comma_bracket);
-      break;
+        case  TOKEN_SQRIGHT:               /* have a right square bracket       */
+            /* this is an error here             */
+            syntaxError(Error_Unexpected_comma_bracket);
+            break;
 
-    case  TOKEN_OPERATOR:              /* operator token                    */
-      switch (token->subclass) {       /* handle prefix operators as terms  */
+        case  TOKEN_OPERATOR:              /* operator token                    */
+            switch (token->subclass)
+            {       /* handle prefix operators as terms  */
 
-        case OPERATOR_PLUS:            /* prefix plus                       */
-        case OPERATOR_SUBTRACT:        /* prefix minus                      */
-        case OPERATOR_BACKSLASH:       /* prefix backslash                  */
-          previousToken();             /* put the token back                */
-          return OREF_NULL;            /* just return null (processed later)*/
+                case OPERATOR_PLUS:            /* prefix plus                       */
+                case OPERATOR_SUBTRACT:        /* prefix minus                      */
+                case OPERATOR_BACKSLASH:       /* prefix backslash                  */
+                    previousToken();             /* put the token back                */
+                    return OREF_NULL;            /* just return null (processed later)*/
 
-        default:                       /* other operators not allowed here  */
-                                       /* this is an error                  */
-          syntaxError(Error_Invalid_expression_general, token);
-      }
-      break;
+                default:                       /* other operators not allowed here  */
+                    /* this is an error                  */
+                    syntaxError(Error_Invalid_expression_general, token);
+            }
+            break;
 
-    default:                           /* unknown thing in expression       */
-                                       /* this is an error                  */
-      syntaxError(Error_Invalid_expression_general, token);
-  }
-  return term;                         /* return this term                  */
+        default:                           /* unknown thing in expression       */
+            /* this is an error                  */
+            syntaxError(Error_Invalid_expression_general, token);
+    }
+    return term;                         /* return this term                  */
 }
 
 void RexxSource::pushTerm(
@@ -4402,12 +4909,14 @@ void RexxSource::pushTerm(
 /* Function:  Push a term onto the expression term stack                      */
 /******************************************************************************/
 {
-  this->terms->push(term);             /* push the term on the stack      */
-  this->currentstack++;                /* step the stack depth              */
-                                       /* new "high water" mark?            */
-  if (this->currentstack > this->maxstack)
-                                       /* make it the highest point         */
-    this->maxstack = this->currentstack;
+    this->terms->push(term);             /* push the term on the stack      */
+    this->currentstack++;                /* step the stack depth              */
+                                         /* new "high water" mark?            */
+    if (this->currentstack > this->maxstack)
+    {
+        /* make it the highest point         */
+        this->maxstack = this->currentstack;
+    }
 }
 
 RexxObject *RexxSource::popTerm()
@@ -4429,13 +4938,15 @@ RexxObject *RexxSource::popNTerms(
 /* Function:  Pop multiple terms off of the operator stack                    */
 /******************************************************************************/
 {
-  RexxObject *result = OREF_NULL;                  /* final popped element              */
+    RexxObject *result = OREF_NULL;                  /* final popped element              */
 
-  this->currentstack -= count;         /* reduce the size count             */
-  while (count--)                      /* while more to remove              */
-    result = this->terms->pop();       /* pop the next item               */
-  this->holdObject(result);            /* protect this a little             */
-  return result;                       /* and return it                     */
+    this->currentstack -= count;         /* reduce the size count             */
+    while (count--)                      /* while more to remove              */
+    {
+        result = this->terms->pop();       /* pop the next item               */
+    }
+    this->holdObject(result);            /* protect this a little             */
+    return result;                       /* and return it                     */
 }
 
 void RexxSource::isExposeValid()
@@ -4447,13 +4958,17 @@ void RexxSource::isExposeValid()
 /*            invalid EXPOSE execution.                                       */
 /******************************************************************************/
 {
-  if (this->flags&_interpret)          /* is this an interpret?             */
-                                       /* give the interpret error          */
-    syntaxError(Error_Translation_expose_interpret);
-                                       /* not the first instruction?        */
-  if (this->last->getType() != KEYWORD_FIRST)
-                                       /* general placement error           */
-    syntaxError(Error_Translation_expose);
+    if (this->flags&_interpret)          /* is this an interpret?             */
+    {
+        /* give the interpret error          */
+        syntaxError(Error_Translation_expose_interpret);
+    }
+    /* not the first instruction?        */
+    if (this->last->getType() != KEYWORD_FIRST)
+    {
+        /* general placement error           */
+        syntaxError(Error_Translation_expose);
+    }
 }
 
 RexxArray  *RexxSource::words(
@@ -4463,31 +4978,34 @@ RexxArray  *RexxSource::words(
 /*            interpretation.                                                 */
 /******************************************************************************/
 {
-  RexxQueue  *wordlist;                /* created list of words             */
-  RexxArray  *wordarray;               /* array version of the list         */
-  RexxString *word;                    /* current word                      */
-  size_t      count;                   /* count of words                    */
-  size_t      i;                       /* loop counter                      */
+    RexxQueue  *wordlist;                /* created list of words             */
+    RexxArray  *wordarray;               /* array version of the list         */
+    RexxString *word;                    /* current word                      */
+    size_t      count;                   /* count of words                    */
+    size_t      i;                       /* loop counter                      */
 
-  wordlist = this->subTerms;           /* use the subterms list             */
-                                       /* get the first word                */
-  word = ((RexxString *)(string->word(IntegerOne)))->upper();
-  word = this->commonString(word);     /* get the common version of this    */
-  wordlist->push(word);                /* add to the word list              */
-  count = 1;                           /* one word so far                   */
-                                       /* while still more words            */
-  for (i = 3, word = (RexxString *)(string->word(IntegerTwo)); word->getLength() != 0; i++) {
-    count++;                           /* have another word                 */
-    word = this->commonString(word);   /* get the common version of this    */
-    wordlist->push(word);              /* add this word to the list         */
-                                       /* get the next word                 */
-    word = (RexxString *)string->word(new_integer(i));
-  }
-  wordarray = new_array(count);        /* get an array return value         */
-  while (count > 0)                    /* while more words                  */
-                                       /* copy into the array               */
-    wordarray->put(wordlist->pop(), count--);
-  return wordarray;                    /* return as an array                */
+    wordlist = this->subTerms;           /* use the subterms list             */
+                                         /* get the first word                */
+    word = ((RexxString *)(string->word(IntegerOne)))->upper();
+    word = this->commonString(word);     /* get the common version of this    */
+    wordlist->push(word);                /* add to the word list              */
+    count = 1;                           /* one word so far                   */
+                                         /* while still more words            */
+    for (i = 3, word = (RexxString *)(string->word(IntegerTwo)); word->getLength() != 0; i++)
+    {
+        count++;                           /* have another word                 */
+        word = this->commonString(word);   /* get the common version of this    */
+        wordlist->push(word);              /* add this word to the list         */
+                                           /* get the next word                 */
+        word = (RexxString *)string->word(new_integer(i));
+    }
+    wordarray = new_array(count);        /* get an array return value         */
+    while (count > 0)                    /* while more words                  */
+    {
+        /* copy into the array               */
+        wordarray->put(wordlist->pop(), count--);
+    }
+    return wordarray;                    /* return as an array                */
 }
 
 void RexxSource::errorCleanup()
@@ -4551,67 +5069,69 @@ void RexxSource::errorToken(
 /*            message.                                                        */
 /******************************************************************************/
 {
-  RexxString     *value;               /* token value                       */
+    RexxString     *value;               /* token value                       */
 
-  SourceLocation location = this->clause->getLocation();/* get the clause location           */
+    SourceLocation location = this->clause->getLocation();/* get the clause location           */
 
-  value = token->value;                /* get the token value               */
-  if (value == OREF_NULL) {            /* no value?                         */
-    switch (token->classId) {
+    value = token->value;                /* get the token value               */
+    if (value == OREF_NULL)
+    {
+        switch (token->classId)
+        {
 
-      case TOKEN_BLANK:                /* blank operator                    */
-        value = new_string(" ", 1);    /* use a blank                       */
-        break;
+            case TOKEN_BLANK:                /* blank operator                    */
+                value = new_string(" ", 1);    /* use a blank                       */
+                break;
 
-      case TOKEN_EOC:                  /* source terminator                 */
-        value = new_string(";", 1);    /* use a semicolon                   */
-        break;
+            case TOKEN_EOC:                  /* source terminator                 */
+                value = new_string(";", 1);    /* use a semicolon                   */
+                break;
 
-      case TOKEN_COMMA:                /* comma                             */
-        value = new_string(",", 1);    /* display a comma                   */
-        break;
+            case TOKEN_COMMA:                /* comma                             */
+                value = new_string(",", 1);    /* display a comma                   */
+                break;
 
-      case TOKEN_LEFT:                 /* left parentheses                  */
-        value = new_string("(", 1);    /* display that                      */
-        break;
+            case TOKEN_LEFT:                 /* left parentheses                  */
+                value = new_string("(", 1);    /* display that                      */
+                break;
 
-      case TOKEN_RIGHT:                /* right parentheses                 */
-        value = new_string(")", 1);    /* display that                      */
-        break;
+            case TOKEN_RIGHT:                /* right parentheses                 */
+                value = new_string(")", 1);    /* display that                      */
+                break;
 
-      case TOKEN_SQLEFT:               /* left square bracket               */
-        value = new_string("[", 1);    /* display that                      */
-        break;
+            case TOKEN_SQLEFT:               /* left square bracket               */
+                value = new_string("[", 1);    /* display that                      */
+                break;
 
-      case TOKEN_SQRIGHT:              /* right square bracket              */
-        value = new_string("]", 1);    /* display that                      */
-        break;
+            case TOKEN_SQRIGHT:              /* right square bracket              */
+                value = new_string("]", 1);    /* display that                      */
+                break;
 
-      case TOKEN_COLON:                /* colon                             */
-        value = new_string(":", 1);    /* display that                      */
-        break;
+            case TOKEN_COLON:                /* colon                             */
+                value = new_string(":", 1);    /* display that                      */
+                break;
 
-      case TOKEN_TILDE:                /* twiddle operator                  */
-        value = new_string("~", 1);    /* display that                      */
-        break;
+            case TOKEN_TILDE:                /* twiddle operator                  */
+                value = new_string("~", 1);    /* display that                      */
+                break;
 
-      case TOKEN_DTILDE:               /* double twiddle operator           */
-        value = new_string("~~", 2);   /* display that                      */
-        break;
+            case TOKEN_DTILDE:               /* double twiddle operator           */
+                value = new_string("~~", 2);   /* display that                      */
+                break;
 
-      case TOKEN_DCOLON:               /* double colon operator             */
-        value = new_string("::", 2);   /* display that                      */
-        break;
+            case TOKEN_DCOLON:               /* double colon operator             */
+                value = new_string("::", 2);   /* display that                      */
+                break;
 
-      default:                         /* ????? token                       */
-                                       /* just use a null string            */
-        value = (RexxString *)OREF_NULLSTRING;
-        break;
+            default:                         /* ????? token                       */
+                /* just use a null string            */
+                value = (RexxString *)OREF_NULLSTRING;
+                break;
+        }
     }
-  }
-  this->errorCleanup();                /* release any saved objects         */
-                                       /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
+    this->errorCleanup();                /* release any saved objects         */
+                                         /* pass on the exception info        */
+    ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -4662,33 +5182,34 @@ void RexxSource::blockError(
 /* Function:  Raise an error for an unclosed block instruction.               */
 /******************************************************************************/
 {
-  SourceLocation location = this->last->getLocation();  /* get the instruction location      */
-  this->clause->setLocation(location);/* report as the last instruction    */
+    SourceLocation location = this->last->getLocation();  /* get the instruction location      */
+    this->clause->setLocation(location);/* report as the last instruction    */
 
-  switch (_instruction->getType()) {   /* issue proper message type         */
-    case KEYWORD_DO:                   /* incomplete DO                     */
-                                       /* raise an error                    */
-      syntaxError(Error_Incomplete_do_do, _instruction);
-      break;
+    switch (_instruction->getType())
+    {   /* issue proper message type         */
+        case KEYWORD_DO:                   /* incomplete DO                     */
+            /* raise an error                    */
+            syntaxError(Error_Incomplete_do_do, _instruction);
+            break;
 
-    case KEYWORD_SELECT:               /* incomplete SELECT                 */
-      syntaxError(Error_Incomplete_do_select, _instruction);
-      break;
+        case KEYWORD_SELECT:               /* incomplete SELECT                 */
+            syntaxError(Error_Incomplete_do_select, _instruction);
+            break;
 
-    case KEYWORD_OTHERWISE:            /* incomplete SELECT                 */
-      syntaxError(Error_Incomplete_do_otherwise, _instruction);
-      break;
+        case KEYWORD_OTHERWISE:            /* incomplete SELECT                 */
+            syntaxError(Error_Incomplete_do_otherwise, _instruction);
+            break;
 
-    case KEYWORD_IF:                   /* incomplete IF                     */
-    case KEYWORD_IFTHEN:               /* incomplete IF                     */
-    case KEYWORD_WHENTHEN:             /* incomplete IF                     */
-      syntaxError(Error_Incomplete_do_then, _instruction);
-      break;
+        case KEYWORD_IF:                   /* incomplete IF                     */
+        case KEYWORD_IFTHEN:               /* incomplete IF                     */
+        case KEYWORD_WHENTHEN:             /* incomplete IF                     */
+            syntaxError(Error_Incomplete_do_then, _instruction);
+            break;
 
-    case KEYWORD_ELSE:                 /* incomplete ELSE                   */
-      syntaxError(Error_Incomplete_do_else, _instruction);
-      break;
-  }
+        case KEYWORD_ELSE:                 /* incomplete ELSE                   */
+            syntaxError(Error_Incomplete_do_else, _instruction);
+            break;
+    }
 }
 
 void *RexxSource::operator new (size_t size)
@@ -4706,39 +5227,26 @@ void *RexxSource::operator new (size_t size)
   return newObject;                    /* return the new object             */
 }
 
-RexxSource *RexxSource::classNewBuffered(
-    RexxString *programname,           /* name of the program               */
-    RexxBuffer *source_buffer )        /* buffer containing the source      */
-/******************************************************************************/
-/* Function:  Create a new source object, using buffered input                */
-/******************************************************************************/
-{
-  RexxSource *newObject;               /* newly created source object       */
 
-  ProtectedObject p(source_buffer);
-  newObject = new RexxSource (programname, OREF_NULL);
-  ProtectedObject p1(newObject);
-                                       /* process the buffering             */
-  newObject->initBuffered((RexxObject *)source_buffer);
-  return newObject;                    /* return the new source object      */
+/**
+ * Generate a code object from a source file.
+ *
+ * @param programname
+ *               The name of the program file.
+ *
+ * @return A RexxCode object for this source file.
+ */
+RexxCode *RexxSource::generateCodeFromFile(RexxString *programname )
+{
+    // create a new source object from the file
+    RexxSource *newObject = new RexxSource(programname);
+    ProtectedObject p(newObject);
+    // now generate a code object from this file
+    return newObject->generateCode();
 }
 
-RexxSource *RexxSource::classNewFile(
-    RexxString *programname )          /* program file name                 */
-/******************************************************************************/
-/* Function:  Create a source object from a file.                             */
-/******************************************************************************/
-{
-  RexxSource *newObject;               /* newly created source object       */
 
-                                       /* create a new source object        */
-  newObject = new RexxSource (programname, OREF_NULL);
-  ProtectedObject p(newObject);
-  newObject->initFile();               /* go process the file               */
-  return newObject;                    /* return the new object             */
-}
-
-RexxObject *RexxSource::sourceNewObject(
+RexxInstruction *RexxSource::sourceNewObject(
     size_t        size,                /* Object size                       */
     RexxBehaviour *_behaviour,         /* Object's behaviour                */
     int            type )              /* Type of instruction               */
@@ -4746,15 +5254,13 @@ RexxObject *RexxSource::sourceNewObject(
 /* Function:  Create a "raw" translator instruction object                    */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
-  newObject = new_object(size);        /* Get new object                    */
+  RexxObject *newObject = new_object(size);        /* Get new object                    */
   newObject->setBehaviour(_behaviour); /* Give new object its behaviour     */
                                        /* do common initialization          */
   new ((void *)newObject) RexxInstruction (this->clause, type);
                                        /* now protect this                  */
   OrefSet(this, this->currentInstruction, (RexxInstruction *)newObject);
-  return newObject;                    /* return the new object             */
+  return (RexxInstruction *)newObject; /* return the new object             */
 }
 
 void RexxSource::parseTraceSetting(
@@ -4765,90 +5271,104 @@ void RexxSource::parseTraceSetting(
 /* Function:  Process a trace setting                                         */
 /******************************************************************************/
 {
-  size_t   length;                     /* length of value string            */
-  size_t   _position;                  /* position within the string        */
+    size_t   length;                     /* length of value string            */
+    size_t   _position;                  /* position within the string        */
 
-  *setting = TRACE_IGNORE;             /* don't change trace setting yet    */
-  *debug = DEBUG_IGNORE;               /* and the default debug change      */
+    *setting = TRACE_IGNORE;             /* don't change trace setting yet    */
+    *debug = DEBUG_IGNORE;               /* and the default debug change      */
 
-  length = value->getLength();              /* get the string length             */
-  if (length == 0) {                   /* null string?                      */
-    *setting = TRACE_NORMAL;           /* use default trace setting         */
-    *debug = DEBUG_OFF;                /* turn off debug mode               */
-  }
-  else {
-    for (_position = 0;                 /* start at the beginning            */
-         _position < length;            /* while more length to process      */
-         _position++) {                 /* step one each character           */
-
-                                       /* process the next character        */
-      switch (value->getChar(_position)) {
-
-        case '?':                      /* debug toggle character            */
-                                       /* already toggling?                 */
-          if (*debug == (size_t)DEBUG_TOGGLE)
-            *debug = DEBUG_IGNORE;     /* this is back to no change at all  */
-          else
-            *debug = DEBUG_TOGGLE;     /* need to toggle the debug mode     */
-          continue;                    /* go loop again                     */
-
-        case 'a':                      /* TRACE ALL                         */
-        case 'A':
-          *setting = TRACE_ALL;
-          break;
-
-        case 'c':                      /* TRACE COMMANDS                    */
-        case 'C':
-          *setting = TRACE_COMMANDS;
-          break;
-
-        case 'l':                      /* TRACE LABELS                      */
-        case 'L':
-          *setting = TRACE_LABELS;
-          break;
-
-        case 'e':                      /* TRACE ERRORS                      */
-        case 'E':
-          *setting = TRACE_ERRORS;
-          break;
-
-        case 'f':                      /* TRACE FAILURES                    */
-        case 'F':
-          *setting = TRACE_FAILURES;
-          break;
-
-        case 'n':                      /* TRACE NORMAL                      */
-        case 'N':
-          *setting = TRACE_NORMAL;
-          break;
-
-        case 'o':                      /* TRACE OFF                         */
-        case 'O':
-          *setting = TRACE_OFF;
-          break;
-
-        case 'r':                      /* TRACE RESULTS                     */
-        case 'R':
-          *setting = TRACE_RESULTS;
-          break;
-
-        case 'i':                      /* TRACE INTERMEDIATES               */
-        case 'I':
-          *setting = TRACE_INTERMEDIATES;
-          break;
-
-        default:                       /* unknown trace setting             */
-          /* call report_error1 instead of report_exception1 to  */
-          /* include line number and source information          */
-          if (this->clause)           /* call different error routines      */
-            syntaxError(Error_Invalid_trace_trace, value->extract(_position, 1));
-          else
-            reportException(Error_Invalid_trace_trace, value->extract(_position, 1));
-          break;
-      }
-      break;                           /* non-prefix char found             */
+    length = value->getLength();              /* get the string length             */
+    /* null string?                      */
+    if (length == 0)
+    {
+        *setting = TRACE_NORMAL;           /* use default trace setting         */
+        *debug = DEBUG_OFF;                /* turn off debug mode               */
     }
-  }
+    else
+    {
+        /* start at the beginning            */
+        /* while more length to process      */
+        /* step one each character           */
+        for (_position = 0; _position < length; _position++)
+        {
+
+            /* process the next character        */
+            switch (value->getChar(_position))
+            {
+
+                case '?':                      /* debug toggle character            */
+                    /* already toggling?                 */
+                    if (*debug == (size_t)DEBUG_TOGGLE)
+                    {
+                        *debug = DEBUG_IGNORE;     /* this is back to no change at all  */
+                    }
+                    else
+                    {
+                        *debug = DEBUG_TOGGLE;     /* need to toggle the debug mode     */
+                    }
+                    continue;                    /* go loop again                     */
+
+                case 'a':                      /* TRACE ALL                         */
+                case 'A':
+                    *setting = TRACE_ALL;
+                    break;
+
+                case 'c':                      /* TRACE COMMANDS                    */
+                case 'C':
+                    *setting = TRACE_COMMANDS;
+                    break;
+
+                case 'l':                      /* TRACE LABELS                      */
+                case 'L':
+                    *setting = TRACE_LABELS;
+                    break;
+
+                case 'e':                      /* TRACE ERRORS                      */
+                case 'E':
+                    *setting = TRACE_ERRORS;
+                    break;
+
+                case 'f':                      /* TRACE FAILURES                    */
+                case 'F':
+                    *setting = TRACE_FAILURES;
+                    break;
+
+                case 'n':                      /* TRACE NORMAL                      */
+                case 'N':
+                    *setting = TRACE_NORMAL;
+                    break;
+
+                case 'o':                      /* TRACE OFF                         */
+                case 'O':
+                    *setting = TRACE_OFF;
+                    break;
+
+                case 'r':                      /* TRACE RESULTS                     */
+                case 'R':
+                    *setting = TRACE_RESULTS;
+                    break;
+
+                case 'i':                      /* TRACE INTERMEDIATES               */
+                case 'I':
+                    *setting = TRACE_INTERMEDIATES;
+                    break;
+
+                default:                       /* unknown trace setting             */
+                    /* call report_error1 instead of report_exception1 to  */
+                    /* include line number and source information          */
+                    if (this->clause)           /* call different error routines      */
+                    {
+                        syntaxError(Error_Invalid_trace_trace, value->extract(_position, 1));
+                    }
+                    else
+                    {
+                        reportException(Error_Invalid_trace_trace, value->extract(_position, 1));
+                    }
+                    break;
+            }
+            break;                           /* non-prefix char found             */
+        }
+    }
 }
 
 size_t RexxSource::processVariableList(
@@ -4857,78 +5377,108 @@ size_t RexxSource::processVariableList(
 /* Function:  Process a variable list for PROCEDURE, DROP, and USE          */
 /****************************************************************************/
 {
-  RexxToken   *token;                  /* current working token             */
-  int          list_count;             /* count of variables in list        */
-  RexxObject  *retriever;              /* variable retriever object         */
+    RexxToken   *token;                  /* current working token             */
+    int          list_count;             /* count of variables in list        */
+    RexxObject  *retriever;              /* variable retriever object         */
 
-  list_count = 0;                      /* no variables yet                  */
-  token = nextReal();                  /* get the first variable            */
+    list_count = 0;                      /* no variables yet                  */
+    token = nextReal();                  /* get the first variable            */
 
-  while (!token->isEndOfClause()) {/* while not at the end of the clause*/
-                                       /* have a variable name?             */
-    if (token->isSymbol()) {
-                                       /* non-variable symbol?              */
-      if (token->subclass == SYMBOL_CONSTANT)
-                                       /* report the error                  */
-        syntaxError(Error_Invalid_variable_number, token);
-      else if (token->subclass == SYMBOL_DUMMY)
-                                       /* report the error                  */
-        syntaxError(Error_Invalid_variable_period, token);
-      retriever = this->addText(token);/* get a retriever for this          */
-      this->subTerms->push(retriever); /* add to the variable list          */
-      if (type == KEYWORD_EXPOSE)      /* this an expose operation?         */
-        this->expose(token->value);    /* add to the expose list too        */
-      list_count++;                    /* record the variable               */
+    /* while not at the end of the clause*/
+    while (!token->isEndOfClause())
+    {
+        /* have a variable name?             */
+        if (token->isSymbol())
+        {
+            /* non-variable symbol?              */
+            if (token->subclass == SYMBOL_CONSTANT)
+            {
+                /* report the error                  */
+                syntaxError(Error_Invalid_variable_number, token);
+            }
+            else if (token->subclass == SYMBOL_DUMMY)
+            {
+                /* report the error                  */
+                syntaxError(Error_Invalid_variable_period, token);
+            }
+            retriever = this->addText(token);/* get a retriever for this          */
+            this->subTerms->push(retriever); /* add to the variable list          */
+            if (type == KEYWORD_EXPOSE)      /* this an expose operation?         */
+            {
+                this->expose(token->value);    /* add to the expose list too        */
+            }
+            list_count++;                    /* record the variable               */
+        }
+        /* have a variable reference         */
+        else if (token->classId == TOKEN_LEFT)
+        {
+            list_count++;                    /* record the variable               */
+            token = nextReal();              /* get the next token                */
+                                             /* not a symbol?                     */
+            if (!token->isSymbol())
+            {
+                /* must be a symbol here             */
+                syntaxError(Error_Symbol_expected_varref);
+            }
+            /* non-variable symbol?              */
+            if (token->subclass == SYMBOL_CONSTANT)
+            {
+                /* report the error                  */
+                syntaxError(Error_Invalid_variable_number, token);
+            }
+            else if (token->subclass == SYMBOL_DUMMY)
+            {
+                /* report the error                  */
+                syntaxError(Error_Invalid_variable_period, token);
+            }
+
+            retriever = this->addText(token);/* get a retriever for this          */
+                                             /* make this an indirect reference   */
+            retriever = (RexxObject *)new RexxVariableReference((RexxVariableBase *)retriever);
+            this->subTerms->queue(retriever);/* add to the variable list          */
+            this->currentstack++;            /* account for the varlists          */
+
+            token = nextReal();              /* get the next token                */
+            if (token->isEndOfClause()) /* nothing following?                */
+            {
+                /* report the missing paren          */
+                syntaxError(Error_Variable_reference_missing);
+            }
+            /* must be a right paren here        */
+            else if (token->classId != TOKEN_RIGHT)
+            {
+                /* this is an error                  */
+                syntaxError(Error_Variable_reference_extra, token);
+            }
+        }
+        /* something bad....                 */
+        else
+        {                             /* this is invalid                   */
+            if (type == KEYWORD_DROP)        /* DROP form?                        */
+            {
+                /* give appropriate message          */
+                syntaxError(Error_Symbol_expected_drop);
+            }
+            else                             /* else give message for EXPOSEs     */
+            {
+                syntaxError(Error_Symbol_expected_expose);
+            }
+        }
+        token = nextReal();                /* get the next variable             */
     }
-                                       /* have a variable reference         */
-    else if (token->classId == TOKEN_LEFT) {
-      list_count++;                    /* record the variable               */
-      token = nextReal();              /* get the next token                */
-                                       /* not a symbol?                     */
-      if (!token->isSymbol())
-                                       /* must be a symbol here             */
-        syntaxError(Error_Symbol_expected_varref);
-                                       /* non-variable symbol?              */
-      if (token->subclass == SYMBOL_CONSTANT)
-                                       /* report the error                  */
-        syntaxError(Error_Invalid_variable_number, token);
-      else if (token->subclass == SYMBOL_DUMMY)
-                                       /* report the error                  */
-        syntaxError(Error_Invalid_variable_period, token);
-
-      retriever = this->addText(token);/* get a retriever for this          */
-                                       /* make this an indirect reference   */
-      retriever = (RexxObject *)new RexxVariableReference((RexxVariableBase *)retriever);
-      this->subTerms->queue(retriever);/* add to the variable list          */
-      this->currentstack++;            /* account for the varlists          */
-
-      token = nextReal();              /* get the next token                */
-      if (token->isEndOfClause()) /* nothing following?                */
-                                       /* report the missing paren          */
-        syntaxError(Error_Variable_reference_missing);
-                                       /* must be a right paren here        */
-      else if (token->classId != TOKEN_RIGHT)
-                                       /* this is an error                  */
-        syntaxError(Error_Variable_reference_extra, token);
+    if (list_count == 0)
+    {               /* no variables?                     */
+        if (type == KEYWORD_DROP)          /* DROP form?                        */
+        {
+            /* give appropriate message          */
+            syntaxError(Error_Symbol_expected_drop);
+        }
+        else                               /* else give message for EXPOSEs     */
+        {
+            syntaxError(Error_Symbol_expected_expose);
+        }
     }
-                                       /* something bad....                 */
-    else {                             /* this is invalid                   */
-      if (type == KEYWORD_DROP)        /* DROP form?                        */
-                                       /* give appropriate message          */
-        syntaxError(Error_Symbol_expected_drop);
-      else                             /* else give message for EXPOSEs     */
-        syntaxError(Error_Symbol_expected_expose);
-    }
-    token = nextReal();                /* get the next variable             */
-  }
-  if (list_count == 0) {               /* no variables?                     */
-    if (type == KEYWORD_DROP)          /* DROP form?                        */
-                                       /* give appropriate message          */
-      syntaxError(Error_Symbol_expected_drop);
-    else                               /* else give message for EXPOSEs     */
-      syntaxError(Error_Symbol_expected_expose);
-  }
-  return list_count;                   /* return the count                  */
+    return list_count;                   /* return the count                  */
 }
 
 RexxObject *RexxSource::parseConditional(
@@ -4940,58 +5490,72 @@ RexxObject *RexxSource::parseConditional(
 /*            the caller that a conditional has been used.                    */
 /******************************************************************************/
 {
-  RexxToken  *token;                   /* current working token             */
-  int         _keyword;                /* keyword of parsed conditional     */
-  RexxObject *_condition;              /* parsed out condition              */
+    RexxToken  *token;                   /* current working token             */
+    int         _keyword;                /* keyword of parsed conditional     */
+    RexxObject *_condition;              /* parsed out condition              */
 
-  _condition = OREF_NULL;               /* default to no condition           */
-  _keyword = 0;                         /* no conditional yet                */
-  token = nextReal();                  /* get the terminator token          */
+    _condition = OREF_NULL;               /* default to no condition           */
+    _keyword = 0;                         /* no conditional yet                */
+    token = nextReal();                  /* get the terminator token          */
 
-  if (!token->isEndOfClause()) {   /* real end of instruction?          */
-                                       /* may have WHILE/UNTIL              */
-    if (token->isSymbol()) {
-                                       /* process the symbol                */
-       switch (this->subKeyword(token) ) {
+    /* real end of instruction?          */
+    if (!token->isEndOfClause())
+    {
+        /* may have WHILE/UNTIL              */
+        if (token->isSymbol())
+        {
+            /* process the symbol                */
+            switch (this->subKeyword(token) )
+            {
 
-       case SUBKEY_WHILE:              /* DO WHILE exprw                    */
-                                       /* get next subexpression            */
-         _condition = this->parseLogical(OREF_NULL, TERM_COND);
-         if (_condition == OREF_NULL) /* nothing really there?             */
-                                       /* another invalid DO                */
-           syntaxError(Error_Invalid_expression_while);
-         token = nextToken();          /* get the terminator token          */
-                                       /* must be end of instruction        */
-         if (!token->isEndOfClause())
-           syntaxError(Error_Invalid_do_whileuntil);
-         _keyword = SUBKEY_WHILE;       /* this is the WHILE form            */
-         break;
+                case SUBKEY_WHILE:              /* DO WHILE exprw                    */
+                    /* get next subexpression            */
+                    _condition = this->parseLogical(OREF_NULL, TERM_COND);
+                    if (_condition == OREF_NULL) /* nothing really there?             */
+                    {
+                        /* another invalid DO                */
+                        syntaxError(Error_Invalid_expression_while);
+                    }
+                    token = nextToken();          /* get the terminator token          */
+                                                  /* must be end of instruction        */
+                    if (!token->isEndOfClause())
+                    {
+                        syntaxError(Error_Invalid_do_whileuntil);
+                    }
+                    _keyword = SUBKEY_WHILE;       /* this is the WHILE form            */
+                    break;
 
-       case SUBKEY_UNTIL:              /* DO UNTIL expru                    */
-                                       /* get next subexpression            */
-                                       /* get next subexpression            */
-         _condition = this->parseLogical(OREF_NULL, TERM_COND);
+                case SUBKEY_UNTIL:              /* DO UNTIL expru                    */
+                    /* get next subexpression            */
+                    /* get next subexpression            */
+                    _condition = this->parseLogical(OREF_NULL, TERM_COND);
 
-         if (_condition == OREF_NULL)   /* nothing really there?             */
-                                       /* another invalid DO                */
-           syntaxError(Error_Invalid_expression_until);
-         token = nextToken();          /* get the terminator token          */
-                                       /* must be end of instruction        */
-         if (!token->isEndOfClause())
-           syntaxError(Error_Invalid_do_whileuntil);
-         _keyword = SUBKEY_UNTIL;       /* this is the UNTIL form            */
-         break;
+                    if (_condition == OREF_NULL)   /* nothing really there?             */
+                    {
+                        /* another invalid DO                */
+                        syntaxError(Error_Invalid_expression_until);
+                    }
+                    token = nextToken();          /* get the terminator token          */
+                                                  /* must be end of instruction        */
+                    if (!token->isEndOfClause())
+                    {
+                        syntaxError(Error_Invalid_do_whileuntil);
+                    }
+                    _keyword = SUBKEY_UNTIL;       /* this is the UNTIL form            */
+                    break;
 
-       default:                        /* nothing else is valid here!       */
-                                       /* raise an error                    */
-         syntaxError(error_message, token);
-         break;
-       }
+                default:                        /* nothing else is valid here!       */
+                    /* raise an error                    */
+                    syntaxError(error_message, token);
+                    break;
+            }
+        }
     }
-  }
-  if (condition_type != NULL)          /* need the condition type?          */
-    *condition_type = _keyword;        /* set the keyword                   */
-  return _condition;                   /* return the condition expression   */
+    if (condition_type != NULL)          /* need the condition type?          */
+    {
+        *condition_type = _keyword;        /* set the keyword                   */
+    }
+    return _condition;                   /* return the condition expression   */
 }
 
 
@@ -5026,3 +5590,137 @@ RexxObject *RexxSource::parseLogical(RexxToken *_first, int terminators)
                                        /* create a new function item        */
     return (RexxObject *)new (count) RexxExpressionLogical(this, count, this->subTerms);
 }
+
+
+/**
+ * Load a ::REQUIRES directive when the source file is first
+ * invoked.
+ *
+ * @param target The name of the ::REQUIRES
+ * @param instruction
+ *               The directive instruction being processed.
+ */
+PackageClass *RexxSource::loadRequired(RexxString *target)
+{
+    // get a fully resolved name for this....we might locate this under either name, but the
+    // fully resolved name is generated from this source file context.
+    RexxString *fullName = resolveProgramName(ActivityManager::currentActivity, target);
+
+    ProtectedObject p;
+    PackageClass *requiresFile = PackageManager::loadRequires(ActivityManager::currentActivity, target, fullName, p);
+
+    if (requiresFile == OREF_NULL)             /* couldn't create this?             */
+    {
+        /* report an error                   */
+        reportException(Error_Routine_not_found_requires, target);
+    }
+    // add this to the source context
+    addPackage(requiresFile);
+
+    return requiresFile;
+}
+
+
+/**
+ * Load a ::REQUIRES directive from an provided source target
+ *
+ * @param target The name of the ::REQUIRES
+ */
+PackageClass *RexxSource::loadRequired(RexxString *target, RexxArray *s)
+{
+    ProtectedObject p;
+    PackageClass *requiresFile = PackageManager::loadRequires(ActivityManager::currentActivity, target, s, p);
+
+    if (requiresFile == OREF_NULL)             /* couldn't create this?             */
+    {
+        /* report an error                   */
+        reportException(Error_Routine_not_found_requires, target);
+    }
+    // add this to the source context
+    addPackage(requiresFile);
+    return requiresFile;
+}
+
+
+/**
+ * Add a package to a source file context.  This allows new
+ * packages to be imported into a source.
+ *
+ * @param p
+ */
+void RexxSource::addPackage(PackageClass *p)
+{
+    // we only create this on the first use
+    if (loadedPackages == OREF_NULL)
+    {
+        loadedPackages = new_list();
+    }
+    else {
+        // we only add a given package item once.
+        if (loadedPackages->hasItem(p) == TheTrueObject)
+        {
+            return;
+        }
+    }
+
+    // add this to the list and merge the information
+    loadedPackages->append(p);
+    // not merge all of the info from the imported package
+    mergeRequired(p->getSourceObject());
+}
+
+
+/**
+ * Retrieve the package wrapper associated with this source.
+ *
+ * @return The package instance that fronts for this source in Rexx code.
+ */
+PackageClass *RexxSource::getPackage()
+{
+    if (package == OREF_NULL)
+    {
+        OrefSet(this, this->package, new PackageClass(this));
+    }
+    return package;
+}
+
+
+/**
+ * Add an installed class to this source package
+ *
+ * @param name   The class name
+ * @param classObject
+ *               The class object
+ * @param publicClass
+ *               Indicates whether this needs to be added to the public list as well.
+ */
+void RexxSource::addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass)
+{
+    installed_classes->setEntry(name, classObject);
+    if (publicClass)
+    {
+        installed_public_classes->setEntry(name, classObject);
+    }
+}
+
+
+/**
+ * Add an installed routine to this source package
+ *
+ * @param name   The routine name
+ * @param classObject
+ *               The routine object
+ * @param publicClass
+ *               Indicates whether this needs to be added to the public list as well.
+ */
+void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine)
+{
+    routines->setEntry(name, routineObject);
+    if (publicRoutine)
+    {
+        public_routines->setEntry(name, routineObject);
+    }
+}
+
+
+

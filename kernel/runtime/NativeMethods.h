@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,11 +36,14 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  okimeth.h     */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* list of REXX internal native methods                                       */
 /*                                                                            */
 /******************************************************************************/
+
+//NOTE:  This file gets included multiple times to define different tables, so
+// it does not have standard #ifndef multiple include protections.
    INTERNAL_METHOD(alarm_startTimer)
    INTERNAL_METHOD(alarm_stopTimer)
    INTERNAL_METHOD(stream_init)
@@ -65,11 +68,10 @@
    INTERNAL_METHOD(query_streamtype)
    INTERNAL_METHOD(stream_close)
    INTERNAL_METHOD(stream_open)
-   INTERNAL_METHOD(rexx_push_queue)
-   INTERNAL_METHOD(rexx_queue_queue)
    INTERNAL_METHOD(rexx_create_queue)
    INTERNAL_METHOD(rexx_delete_queue)
-   INTERNAL_METHOD(rexx_pull_queue)
    INTERNAL_METHOD(rexx_query_queue)
+   INTERNAL_METHOD(rexx_push_queue)
+   INTERNAL_METHOD(rexx_queue_queue)
+   INTERNAL_METHOD(rexx_pull_queue)
    INTERNAL_METHOD(rexx_linein_queue)
-   SYSTEM_INTERNAL_METHODS()           /* now include the system set        */

@@ -83,13 +83,15 @@ public:
         MTXCL(resourceLock);
     }
 
+    static int createInstance(RexxInstance *&instance, RexxThreadContext *&threadContext, RexxOption *options);
     static bool terminateInterpreter();
     static void startInterpreter(InterpreterStartupMode mode);
     static inline bool isTerminated() { return !active; }
     static inline bool isActive() { return active; }
-    static InterpreterInstance *createInterpreterInstance(PRXSYSEXIT exits, const char *defaultEnvironment);
-    static inline InterpreterInstance *createInterpreterInstance() { return createInterpreterInstance(NULL, NULL); }
+    static InterpreterInstance *createInterpreterInstance(RexxOption *options);
+    static inline InterpreterInstance *createInterpreterInstance() { return createInterpreterInstance(NULL); }
     static bool terminateInterpreterInstance(InterpreterInstance *instance);
+    static RexxString *getVersionNumber();
 
     static inline bool hasTimeSliceElapsed()
     {
@@ -103,10 +105,27 @@ public:
         return false;
     }
 
+    static inline int getWordSize()
+    {
+        return sizeof(void *) * 8;
+    }
+
+    static inline bool isBigEndian()
+    {
+        static  const  int mfcone=1;                 // constant 1
+        static  const  char *mfctop=(char *)&mfcone; // -> top byte
+        #define LITEND *mfctop             // named flag; 1=little-endian
+
+        return LITEND == 0;
+    }
+
 
     static inline void setTimeSliceElapsed() { timeSliceElapsed = true; }
     static inline void clearTimeSliceElapsed() { timeSliceElapsed = false; }
     static void haltAllActivities();
+    static void decodeConditionData(RexxDirectory *conditionObj, RexxCondition *condData);
+    static RexxClass *findClass(RexxString *className);
+    static RexxString *getCurrentQueue();
 
     static RexxObject *localServer;         // local environment initialization server
 
@@ -117,6 +136,7 @@ protected:
     static bool   timeSliceElapsed;  // indicates we've had a timer interrupt
     static RexxList *interpreterInstances;  // the set of interpreter instances
     static bool   active;            // indicates whether the interpreter is initialized
+    static RexxString *versionNumber;  // our version number information
 };
 
 
@@ -170,7 +190,8 @@ class InstanceBlock
 {
 public:
     InstanceBlock();
-    InstanceBlock(PRXSYSEXIT exits, const char *defaultEnvironment);
+    InstanceBlock(RexxOption *options);
+    InstanceBlock(PRXSYSEXIT exits, const char *env);
     ~InstanceBlock();
 
     RexxActivity         *activity;    // our current activity

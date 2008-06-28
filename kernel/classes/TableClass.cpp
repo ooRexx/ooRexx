@@ -46,10 +46,19 @@
 #include "TableClass.hpp"
 #include "RexxActivity.hpp"
 #include "ActivityManager.hpp"
-#include "RexxNativeAPI.h"
 
 // singleton class instance
 RexxClass *RexxTable::classInstance = OREF_NULL;
+
+
+/**
+ * Create initial class object at bootstrap time.
+ */
+void RexxTable::createInstance()
+{
+    CLASS_CREATE(Table, "Table", RexxClass);
+}
+
 
 RexxObject *RexxTable::addOffset(
   size_t      _value,                   /* object to add                     */
@@ -64,22 +73,21 @@ RexxObject *RexxTable::addOffset(
 /*    (Collect) the offset values.                                            */
 /******************************************************************************/
 {
-  RexxHashTable *newHash;              /* newly created hash table          */
-
-  memoryObject.disableOrefChecks();    /* Turn off OrefSet Checking.        */
-                                       /* try to place in existing hashtab  */
-  newHash = this->contents->primitiveAdd((RexxObject *)_value, _index);
-  if (newHash  != OREF_NULL) {         /* have a reallocation occur?        */
-                                       /* mark the hash as not having refere*/
-                                       /* even though the indices are objs  */
-                                       /* we don't need to mark this Hash.  */
-                                       /* Trust me !!!                      */
-    newHash->setHasNoReferences();
-                                       /* hook on the new hash table        */
-    OrefSet(this, this->contents, newHash);
-  }
-  memoryObject.enableOrefChecks();     /* Turn OrefSet Checking.            */
-  return OREF_NULL;                    /* always return nothing             */
+    memoryObject.disableOrefChecks();    /* Turn off OrefSet Checking.        */
+                                         /* try to place in existing hashtab  */
+    RexxHashTable *newHash = this->contents->primitiveAdd((RexxObject *)_value, _index);
+    if (newHash  != OREF_NULL)
+    {         /* have a reallocation occur?        */
+              /* mark the hash as not having refere*/
+              /* even though the indices are objs  */
+              /* we don't need to mark this Hash.  */
+              /* Trust me !!!                      */
+        newHash->setHasNoReferences();
+        /* hook on the new hash table        */
+        OrefSet(this, this->contents, newHash);
+    }
+    memoryObject.enableOrefChecks();     /* Turn OrefSet Checking.            */
+    return OREF_NULL;                    /* always return nothing             */
 }
 
 RexxObject *RexxTable::stringAdd(
@@ -89,16 +97,16 @@ RexxObject *RexxTable::stringAdd(
 /* Function:  Add an object to a table using a string index.                  */
 /******************************************************************************/
 {
-  RexxHashTable *newHash;              /* newly created hash table          */
-
-  required_arg(_value, ONE);            /* make sure we have an value        */
-  required_arg(_index, TWO);            /* make sure we have an index        */
-                                       /* try to place in existing hashtab  */
-  newHash = this->contents->stringAdd(_value, _index);
-  if (newHash != OREF_NULL)            /* have a reallocation occur?        */
-                                       /* hook on the new hash table        */
-    OrefSet(this, this->contents, newHash);
-  return OREF_NULL;                    /* always return nothing             */
+    required_arg(_value, ONE);            /* make sure we have an value        */
+    required_arg(_index, TWO);            /* make sure we have an index        */
+    /* try to place in existing hashtab  */
+    RexxHashTable *newHash = this->contents->stringAdd(_value, _index);
+    if (newHash != OREF_NULL)            /* have a reallocation occur?        */
+    {
+        /* hook on the new hash table        */
+        OrefSet(this, this->contents, newHash);
+    }
+    return OREF_NULL;                    /* always return nothing             */
 }
 
 RexxObject *RexxTable::stringPut(
@@ -108,16 +116,16 @@ RexxObject *RexxTable::stringPut(
 /* Function:  Put an object into the table using a string index               */
 /******************************************************************************/
 {
-  RexxHashTable *newHash;              /* newly created hash table          */
-
-  required_arg(_value, ONE);            /* make sure we have an value        */
-  required_arg(_index, TWO);            /* make sure we have an index        */
-                                       /* try to place in existing hashtab  */
-  newHash = this->contents->stringPut(_value, _index);
-  if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
-                                       /* hook on the new hash table        */
-    OrefSet(this, this->contents, newHash);
-  return OREF_NULL;                    /* always return nothing             */
+    required_arg(_value, ONE);            /* make sure we have an value        */
+    required_arg(_index, TWO);            /* make sure we have an index        */
+    /* try to place in existing hashtab  */
+    RexxHashTable *newHash = this->contents->stringPut(_value, _index);
+    if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
+    {
+        /* hook on the new hash table        */
+        OrefSet(this, this->contents, newHash);
+    }
+    return OREF_NULL;                    /* always return nothing             */
 }
 
 RexxArray  *RexxTable::requestArray()
@@ -125,12 +133,14 @@ RexxArray  *RexxTable::requestArray()
 /* Function:  Primitive level request('ARRAY') fast path                      */
 /******************************************************************************/
 {
-  if (isOfClass(Table, this))              /* primitive level object?           */
-    return this->makeArray();          /* just do the makearray             */
-  else                                 /* need to so full request mechanism */
-  {
-      return (RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
-  }
+    if (isOfClass(Table, this))              /* primitive level object?           */
+    {
+        return this->makeArray();          /* just do the makearray             */
+    }
+    else                                 /* need to so full request mechanism */
+    {
+        return(RexxArray *)this->sendMessage(OREF_REQUEST, OREF_ARRAYSYM);
+    }
 }
 
 RexxObject *RexxTable::itemsRexx(void)
@@ -138,10 +148,8 @@ RexxObject *RexxTable::itemsRexx(void)
 /* Function:  Return the count of items in the table                          */
 /******************************************************************************/
 {
-  size_t  numEntries;
-
-  numEntries = this->contents->totalEntries();
-  return (RexxObject *)new_integer(numEntries);
+    size_t numEntries = this->contents->totalEntries();
+    return(RexxObject *)new_integer(numEntries);
 }
 
 void RexxTable::reset()
@@ -149,7 +157,7 @@ void RexxTable::reset()
 /* Function:  Reset a table by clearing out the old contents table            */
 /******************************************************************************/
 {
-  OrefSet(this, this->contents, new_hashtab(RexxHashTable::DEFAULT_HASH_SIZE));
+    OrefSet(this, this->contents, new_hashtab(RexxHashTable::DEFAULT_HASH_SIZE));
 }
 
 RexxObject *RexxTable::putNodupe(RexxObject *_value, RexxObject *_index)
@@ -157,14 +165,14 @@ RexxObject *RexxTable::putNodupe(RexxObject *_value, RexxObject *_index)
 /* Function:  Put an object into a table, ensuring no duplicates.             */
 /******************************************************************************/
 {
-  RexxHashTable *newHash;              /* newly created hash table          */
-
-                                       /* try to place in existing hashtab  */
-  newHash = this->contents->putNodupe(_value, _index);
-  if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
-                                       /* hook on the new hash table        */
-    OrefSet(this, this->contents, newHash);
-  return OREF_NULL;
+    /* try to place in existing hashtab  */
+    RexxHashTable *newHash = this->contents->putNodupe(_value, _index);
+    if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
+    {
+        /* hook on the new hash table        */
+        OrefSet(this, this->contents, newHash);
+    }
+    return OREF_NULL;
 }
 
 void RexxTable::reHash(void)
@@ -172,7 +180,7 @@ void RexxTable::reHash(void)
 /* Function:  Create an instance of a table                                   */
 /******************************************************************************/
 {
-   OrefSet(this, this->contents, this->contents->reHash());
+    OrefSet(this, this->contents, this->contents->reHash());
 }
 
 RexxObject *RexxTable::newRexx(
@@ -182,17 +190,16 @@ RexxObject *RexxTable::newRexx(
 /* Function:  Create an instance of a table                                   */
 /******************************************************************************/
 {
-  RexxTable * newObj;                  /* newly created table object        */
-
-  newObj = new_table();                /* get a new table                   */
-  newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-                                       /* does object have an UNINT method  */
-  if (((RexxClass *)this)->hasUninitDefined()) {
-     newObj->hasUninit();              /* Make sure everyone is notified.   */
-  }
-                                       /* call any rexx level init's        */
-  newObj->sendMessage(OREF_INIT, args, argCount);
-  return newObj;                       /* return the new object             */
+    RexxTable *newObj = new_table();                /* get a new table                   */
+    newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
+    /* does object have an UNINT method  */
+    if (((RexxClass *)this)->hasUninitDefined())
+    {
+        newObj->hasUninit();              /* Make sure everyone is notified.   */
+    }
+    /* call any rexx level init's        */
+    newObj->sendMessage(OREF_INIT, args, argCount);
+    return newObj;                       /* return the new object             */
 }
 
 RexxTable *RexxTable::newInstance()
@@ -200,7 +207,7 @@ RexxTable *RexxTable::newInstance()
 /* Function:  Create an instance of a table                                   */
 /******************************************************************************/
 {
-  return (RexxTable *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxTable), T_Table);
+    return (RexxTable *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxTable), T_Table);
 }
 
 RexxObjectTable *RexxObjectTable::newInstance(size_t size)
@@ -209,7 +216,7 @@ RexxObjectTable *RexxObjectTable::newInstance(size_t size)
 /******************************************************************************/
 {
                                        /* get a new object                  */
-  return (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable), T_Table);
+    return (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable), T_Table);
 }
 
 RexxObject *RexxObjectTable::put(
@@ -219,14 +226,14 @@ RexxObject *RexxObjectTable::put(
 /* Function:  Do a put operation into a primitive object table                */
 /******************************************************************************/
 {
-  RexxHashTable *newHash;              /* newly created hash table          */
-
-                                       /* try to place in existing hashtab  */
-  newHash = this->contents->primitivePut(_value, _index);
-  if (newHash != OREF_NULL)            /* have a reallocation occur?        */
-                                       /* hook on the new hash table        */
-    OrefSet(this, this->contents, newHash);
-  return OREF_NULL;                    /* always return nothing             */
+    /* try to place in existing hashtab  */
+    RexxHashTable *newHash = this->contents->primitivePut(_value, _index);
+    if (newHash != OREF_NULL)            /* have a reallocation occur?        */
+    {
+        /* hook on the new hash table        */
+        OrefSet(this, this->contents, newHash);
+    }
+    return OREF_NULL;                    /* always return nothing             */
 }
 
 RexxObject *RexxObjectTable::add(
@@ -236,50 +243,14 @@ RexxObject *RexxObjectTable::add(
 /* Function:  do an add operation into a primitive object table               */
 /******************************************************************************/
 {
-  RexxHashTable *newHash;              /* newly created hash table          */
-
-                                       /* try to place in existing hashtab  */
-  newHash  = this->contents->primitiveAdd(_value, _index);
-  if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
-                                       /* hook on the new hash table        */
-    OrefSet(this, this->contents, newHash);
-  return OREF_NULL;                    /* always return nothing             */
+    /* try to place in existing hashtab  */
+    RexxHashTable *newHash  = this->contents->primitiveAdd(_value, _index);
+    if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
+    {
+        /* hook on the new hash table        */
+        OrefSet(this, this->contents, newHash);
+    }
+    return OREF_NULL;                    /* always return nothing             */
 }
 
-#define this ((RexxTable *)self)
-
-/* ========================================================================== */
-/* ===                                                                    === */
-/* ========================================================================== */
-
-
-REXXOBJECT REXXENTRY REXX_TABLE_ADD(REXXOBJECT self, REXXOBJECT object, REXXOBJECT index)
-/******************************************************************************/
-/* Function:  External interface to the nativeact object method               */
-/******************************************************************************/
-{
-    NativeContextBlock context;
-                                       /* just forward and return           */
-    return context.protect(this->add((RexxObject *)object, (RexxObject *)index));
-}
-
-REXXOBJECT REXXENTRY REXX_TABLE_REMOVE(REXXOBJECT self, REXXOBJECT index)
-/******************************************************************************/
-/* Function:  External interface to the nativeact object method               */
-/******************************************************************************/
-{
-    NativeContextBlock context;
-                                       /* just forward and return           */
-    return context.protect(this->remove((RexxObject *)index));
-}
-
-REXXOBJECT REXXENTRY REXX_TABLE_GET(REXXOBJECT self, REXXOBJECT index)
-/******************************************************************************/
-/* Function:  External interface to the nativeact object method               */
-/******************************************************************************/
-{
-    NativeContextBlock context;
-                                       /* just forward and return           */
-    return context.protect(this->get((RexxObject *)index));
-}
 

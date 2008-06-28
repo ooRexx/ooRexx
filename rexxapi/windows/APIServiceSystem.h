@@ -84,7 +84,6 @@ typedef unsigned short int SLENTYPE;
 typedef unsigned short int LENSTRING;  /* # of chars in a data block */
 
 /* Environment */
-#define SYSEXT              "REX"  /* default file extension for OS2 */
 #define MAXENVSIZE          250
 #undef far
 #undef near

@@ -42,258 +42,375 @@
 /*                                                                            */
 /******************************************************************************/
 
-#define  INCL_REXX_STREAM
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
-#include "RexxNativeAPI.h"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "SystemInterpreter.hpp"
+#include "InterpreterInstance.hpp"
+#include "SysFileSystem.hpp"
 #include <string.h>
 #include <io.h>
 #include <fcntl.h>
 #include <conio.h>
-#define DEFEXT ".REX"
-#define TEMPEXT ".CMD"                 /* Alternate extension   */
 #define MAX_STDOUT_LENGTH     32767    /* max. amount of data to push to STDOUT @THU007A */ /* @HOL007M */
-#include "StreamNative.h"              /* include the stream information    */
 
 #define COMPILE_NEWAPIS_STUBS          /* Allows GetLongPathName to run on  */
 #define WANT_GETLONGPATHNAME_WRAPPER   /* NT and Windows 95                 */
 #include <NewAPIs.h>
 
-RexxString * LocateProgram(RexxString *, const char *[], int);
-bool  SearchFileName(const char *, char *);
-void GetLongName(char *, DWORD);
 bool FindFirstFile(const char *Name);
-FILE * SysBinaryFilemode(FILE *, bool);
-int SysFFlush(FILE *);
-bool SysFileIsDevice(int fhandle);
-int  SysPeekKeyboard(void);
-int SysStat(const char * path, struct stat *buffer);
-bool SysFileIsPipe(STREAM_INFO * stream_info);
 
-
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysResolveProgramName                        */
-/*                                                                   */
-/*   Function:          Expand a filename to a fully resolved REXX   */
-/*                                                                   */
-/*                                                                   */
-/*********************************************************************/
-RexxString * SysResolveProgramName(
-   RexxString * Name,                  /* starting filename                 */
-   RexxString * Parent )               /* parent program                    */
+/**
+ * Extract directory information from a file name.
+ *
+ * @param file   The input file name.  If this represents a real source file,
+ *               this will be fully resolved.
+ *
+ * @return The directory portion of the file name.  If the file name
+ *         does not include a directory portion, then OREF_NULL is returned.
+ */
+RexxString *SystemInterpreter::extractDirectory(RexxString *file)
 {
-  const char *Extension;               /* parent file extensions            */
-  const char *ExtensionArray[3];       /* array of extensions to check      */
-  LONG      ExtensionCount;            /* count of extensions               */
+    const char *pathName = file->getStringData();
+    const char *endPtr = pathName + file->getLength() - 1;
 
-  ExtensionCount = 0;                  /* Count of extensions               */
-  if (Parent != OREF_NULL) {           /* have one from a parent activation?*/
-                       /* check for a file extension        */
-    Extension = SysFileExtension(Parent->getStringData());
-    if (Extension != NULL)             /* have an extension?                */
-                       /* record this                       */
-      ExtensionArray[ExtensionCount++] = Extension;
-  }
-                       /* next check for .REX               */
-  ExtensionArray[ExtensionCount++] = DEFEXT;
-                       /* then check for .CMD               */
-  ExtensionArray[ExtensionCount++] = TEMPEXT;
-                       /* go do the search                  */
-  return LocateProgram(Name, ExtensionArray, ExtensionCount);
-}
-
-/*********************************************************************/
-/*                                                                   */
-/* FUNCTION    : SysFileExtension                                    */
-/*                                                                   */
-/* DESCRIPTION : Looks for a file extension in given string. Returns */
-/*               the ext in null-terminated string form. If no file  */
-/*               ext returns an empty pointer.                       */
-/*                                                                   */
-/*********************************************************************/
-
-const char *SysFileExtension(
-  const char *Name )                   /* file name                         */
-{
-  const char *Scan;                    /* scanning pointer                  */
-  size_t    Length;                    /* extension length                  */
-
-  Scan = strrchr(Name, '\\');          /* have a path?                      */
-  if (Scan)                            /* find one?                         */
-    Scan++;                            /* step over last backspace          */
-  else
-    Scan = Name;                       /* no path, use name                 */
-
-    /* Look for the last occurence of period in the name. If not            */
-    /* found OR if found and the chars after the last period are all        */
-    /* periods or spaces, then we do not have an extension.                 */
-
-  if ((!(Scan = strrchr(Scan, '.'))) || strspn(Scan, ". ") == strlen(Scan))
-    return NULL;                       /* just return a null                */
-
-  Scan++;                              /* step over the period              */
-  Length = strlen(Scan);               /* calculate residual length         */
-  if (Length == 0)                     /* if no residual length             */
-    return  NULL;                      /* so return null extension          */
-  return --Scan;                       /* return extension position         */
-}
-
-/*********************************************************************/
-/*                                                                   */
-/* FUNCTION    : LocateProgram                                       */
-/*                                                                   */
-/* DESCRIPTION : Finds out if file name is minimally correct. Finds  */
-/*               out if file exists. If it exists, then produce      */
-/*               fullpath name.                                      */
-/*                                                                   */
-/*********************************************************************/
-RexxString * LocateProgram(
-  RexxString * InName,                 /* name of rexx proc to check        */
-  const char  *Extensions[],           /* array of extensions to check      */
-  int          ExtensionCount )        /* count of extensions               */
-{
-  char       TempName[CCHMAXPATH + 2]; /* temporary name buffer             */
-  char       FullName[CCHMAXPATH + 2]; /* temporary name buffer             */
-  const char  *Name;                   /* ASCII-Z version of the name       */
-  const char  *Extension;              /* start of file extension           */
-  RexxString * Result;                 /* returned name                     */
-  int          i;                      /* loop counter                      */
-  size_t       ExtensionSpace;         /* room for an extension             */
-
-  // retrofit by IH
-  bool         Found;                  /* found the file                    */
-
-  {
-      UnsafeBlock releaser;
-
-      Name = InName->getStringData();      /* point to the string data          */
-      Found = false;                       /* no name found yet                 */
-      Extension = SysFileExtension(Name);  /* locate the file extension start   */
-
-      if (!Extension) {                    /* have an extension?                */
-                           /* get space left for an extension   */
-        ExtensionSpace = sizeof(TempName) - strlen(Name);
-                           /* loop through the extensions list  */
-        for (i = 0; !Found && i < ExtensionCount; i++) {
-                           /* copy over the name                */
-          strncpy(TempName, Name, sizeof(TempName));
-                           /* copy over the extension           */
-          strncat(TempName, Extensions[i], ExtensionSpace);
-                           /* check this version of the name    */
-          Found = SearchFileName(TempName, FullName);
+    // scan backwards looking for a directory delimiter.  This name should
+    // be fully qualified, so we don't have to deal with drive letters
+    while (pathName < endPtr)
+    {
+        // find the first directory element?
+        if (*endPtr == '\\')
+        {
+            // extract the directory information, including the final delimiter
+            // and return as a string object.
+            return new_string(pathName, endPtr - pathName + 1);
         }
-      }
-      if (!Found)                          /* not found?  try without extensions*/
-                           /* check on the "raw" name last      */
-        Found = SearchFileName(Name, FullName);
-  }
-  if (Found)                           /* got one?                          */
-                       /* get as a string object            */
-    Result = new_string(FullName);
-  else
-    Result = OREF_NULL;                /* this wasn't found                 */
-  return Result;                       /* return the name                   */
+        endPtr--;
+    }
+    return OREF_NULL;      // not available
 }
 
-/*********************************************************************/
-/*                                                                   */
-/* FUNCTION    : SearchFileName                                      */
-/*                                                                   */
-/* DESCRIPTION : Search for a given filename, returning the fully    */
-/*               resolved name if it is found.                       */
-/*                                                                   */
-/*********************************************************************/
 
-bool SearchFileName(
-  const char *Name,                    /* name of rexx proc to check        */
-  char       *FullName )               /* fully resolved name               */
+/**
+ * Extract extension information from a file name.
+ *
+ * @param file   The input file name.  If this represents a real source file,
+ *               this will be fully resolved.
+ *
+ * @return The extension portion of the file name.  If the file
+ *         name does not include an extension portion, then
+ *         OREF_NULL is returned.
+ */
+RexxString *SystemInterpreter::extractExtension(RexxString *file)
 {
-  size_t     NameLength;               /* length of name                    */
+    const char *pathName = file->getStringData();
+    const char *endPtr = pathName + file->getLength() - 1;
 
-  DWORD dwFileAttrib;             // file attributes
-  LPTSTR ppszFilePart=NULL;            // file name only in buffer
-  unsigned int errorMode;
-
-  NameLength = strlen(Name);           /* get length of incoming name       */
-
-                       /* if name is too small or big       */
-  if (NameLength < 1 || NameLength > CCHMAXPATH)
-    return false;                  /* then Not a rexx proc name         */
-                       /* now try for original name         */
-  errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-  if (GetFullPathName(Name, CCHMAXPATH, (LPTSTR)FullName, &ppszFilePart)) {
-                       /* make sure it really exists        */
-                       // make sure it's not a directory
-     if (-1 != (dwFileAttrib=GetFileAttributes((LPTSTR)FullName))
-    && (dwFileAttrib != FILE_ATTRIBUTE_DIRECTORY))
-     {
-                       /* got it! get its case-preserved long file name */
-       GetLongName(FullName, CCHMAXPATH);
-       SetErrorMode(errorMode);
-       return true;
-     }
-  }
-                       /* try searching the path            */
-  if ( SearchPath(NULL,                // search default order
-          (LPCTSTR)Name,       // @ of filename
-          NULL,                // @ of extension, no default
-          CCHMAXPATH,          // len of buffer
-          (LPTSTR)FullName,    // buffer for found
-          &ppszFilePart) )
-                       // make sure it's not a directory
-     if (-1 != (dwFileAttrib=GetFileAttributes((LPTSTR)FullName))
-    && (dwFileAttrib != FILE_ATTRIBUTE_DIRECTORY))
-     {
-                       /* got it! get its case-preserved long file name */
-       GetLongName(FullName, CCHMAXPATH);
-       SetErrorMode(errorMode);
-       return true;
-     }
-
-  SetErrorMode(errorMode);
-  return false;                    /* not found                         */
+    // scan backwards looking for a directory delimiter.  This name should
+    // be fully qualified, so we don't have to deal with drive letters
+    while (pathName < endPtr)
+    {
+        // find the first directory element?
+        if (*endPtr == '\\')
+        {
+            return OREF_NULL;    // found a directory portion before an extension...we're extensionless
+        }
+        // is this the extension dot?
+        else if (*endPtr == '.')
+        {
+            // return everything from the period on.  Keeping the period on is a convenience.
+            return new_string(endPtr);
+        }
+        endPtr--;
+    }
+    return OREF_NULL;      // not available
 }
 
-/****************************************************************************/
-/* Function:  GetLongName()                                                 */
-/*                                                                          */
-/* Convert FullName to the original, case-preserved, long file name stored  */
-/* by the file system.                                                      */
-/*                                                                          */
-/* Note:  The converted name is returned in the FullName buffer.  If any    */
-/*        error occurs, the buffer remains unchanged.                       */
-/****************************************************************************/
-void GetLongName(
-  char      *FullName,    /* buffer containing a fully resolved path name   */
-  DWORD      nSize )      /* size of FullName buffer must be >= CCHMAXPATH  */
+
+/**
+ * Extract file nformation from a file name.
+ *
+ * @param file   The input file name.  If this represents a real source file,
+ *               this will be fully resolved.
+ *
+ * @return The file portion of the file name.  If the file name
+ *         does not include a directory portion, then the entire
+ *         string is returned
+ */
+RexxString *SystemInterpreter::extractFile(RexxString *file)
 {
-  DWORD           length;
-  WIN32_FIND_DATA findData;
-  HANDLE          hFind;
+    const char *pathName = file->getStringData();
+    const char *endPtr = pathName + file->getLength() - 1;
+
+    // scan backwards looking for a directory delimiter.  This name should
+    // be fully qualified, so we don't have to deal with drive letters
+    while (pathName < endPtr)
+    {
+        // find the first directory element?
+        if (*endPtr == '\\')
+        {
+            // extract the directory information, including the final delimiter
+            // and return as a string object.
+            return new_string(endPtr);
+        }
+        endPtr--;
+    }
+    return file;     // this is all filename
+}
+
+
+/**
+ * Resolve a program for intial loading or a subroutine call.
+ *
+ * @param _name      The target name.  This can be fully qualified, or a simple name
+ *                   without an extension.
+ * @param _parentDir The directory of the file of our calling program.  The first place
+ *                   we'll look is in the same directory as the program.
+ * @param _parentExtension
+ *                   The extension our calling program has.  If there is an extension,
+ *                   we'll use that version first before trying any of the default
+ *                   extensions.
+ *
+ * @return A string version of the file name, if found.  Returns OREF_NULL if
+ *         the program cannot be found.
+ */
+RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension)
+{
+    char resolvedName[CCHMAXPATH + 2];    // finally resolved name
+
+    const char *name = _name->getStringData();
+    const char *parentDir = _parentDir == OREF_NULL ? NULL : _parentDir->getStringData();
+    const char *parentExtension = _parentExtension == OREF_NULL ? NULL : _parentExtension->getStringData();
+    const char *pathExtension = instance->searchPath == OREF_NULL ? NULL : instance->searchPath->getStringData();
+
+    SysSearchPath searchPath(parentDir, pathExtension);
+
+
+    // if the file already has an extension, this dramatically reduces the number
+    // of searches we need to make.
+    if (hasExtension(name))
+    {
+        if (searchName(name, searchPath.path, NULL, resolvedName))
+        {
+            return new_string(resolvedName);
+        }
+        return OREF_NULL;
+    }
+
+    // if we have a parent extension provided, use that in preference to any default searches
+    if (parentExtension != NULL)
+    {
+        if (searchName(name, searchPath.path, parentExtension, resolvedName))
+        {
+            return new_string(resolvedName);
+        }
+
+    }
+
+    // ok, now time to try each of the individual extensions along the way.
+    for (size_t i = instance->searchExtensions->firstIndex(); i != LIST_END; i = instance->searchExtensions->nextIndex(i))
+    {
+        RexxString *ext = (RexxString *)instance->searchExtensions->getValue(i);
+
+        if (searchName(name, searchPath.path, ext->getStringData(), resolvedName))
+        {
+            return new_string(resolvedName);
+        }
+    }
+
+    // The file may purposefully have no extension.
+    if (searchName(name, searchPath.path, NULL, resolvedName))
+    {
+        return new_string(resolvedName);
+    }
+
+    return OREF_NULL;
+}
+
+
+/**
+ * Test if a filename has an extension.
+ *
+ * @param name   The name to check.
+ *
+ * @return true if an extension was found on the file, false if there
+ *         is no extension.
+ */
+bool SysInterpreterInstance::hasExtension(const char *name)
+{
+    const char *endPtr = name + strlen(name) - 1;
+
+    // scan backwards looking for a directory delimiter.  This name should
+    // be fully qualified, so we don't have to deal with drive letters
+    while (name < endPtr)
+    {
+        // find the first directory element?
+        if (*endPtr == '/')
+        {
+            return false;        // found a directory portion before an extension...we're extensionless
+        }
+        // is this the extension dot?
+        else if (*endPtr == '.')
+        {
+            // return everything from the period on.  Keeping the period on is a convenience.
+            return true;
+        }
+        endPtr--;
+    }
+    return false;          // not available
+}
+
+
+/**
+ * Do a search for a single variation of a filename.
+ *
+ * @param name      The name to search for.
+ * @param directory A specific directory to look in first (can be NULL).
+ * @param extension A potential extension to add to the file name (can be NULL).
+ * @param resolvedName
+ *                  The buffer used to return the resolved file name.
+ *
+ * @return true if the file was located.  A true returns indicates the
+ *         resolved file name has been placed in the provided buffer.
+ */
+bool SysInterpreterInstance::searchName(const char *name, const char *path, const char *extension, char *resolvedName)
+{
+    UnsafeBlock releaser;
+    // this is for building a temporary name
+    char       tempName[CCHMAXPATH + 2];
+
+    // construct the search name, potentially adding on an extension
+    strncpy(tempName, name, sizeof(tempName));
+    if (extension != NULL)
+    {
+        strncat(tempName, extension, sizeof(tempName));
+    }
+
+    // check the file as is first
+    if (checkCurrentFile(tempName, resolvedName))
+    {
+        return true;
+    }
+
+    *resolvedName = '\0';
+    if (searchPath(name, path, extension, resolvedName))
+    {
+        return true;
+    }
+    return false;
+}
+
+
+
+/**
+ * Try to locate a file using just the raw name passed in, as
+ * opposed to searching along a path for the name.
+ *
+ * @param name   The name to use for the search.
+ *
+ * @return An RexxString version of the file name, iff the file was located. Returns
+ *         OREF_NULL if the file did not exist.
+ */
+bool SysInterpreterInstance::checkCurrentFile(const char *name, char *resolvedName)
+{
+    size_t nameLength = strlen(name); /* get length of incoming name       */
+
+    // make sure we have a valid length for even searching
+    if (nameLength < 1 || nameLength > CCHMAXPATH)
+    {
+        return false;
+    }
+
+    // check the name in the current directory
+    unsigned int errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    LPTSTR ppszFilePart=NULL;            // file name only in buffer
+
+    if (GetFullPathName(name, CCHMAXPATH, (LPTSTR)resolvedName, &ppszFilePart))
+    {
+        DWORD fileAttrib = GetFileAttributes((LPTSTR)resolvedName);
+
+        // if this is a real file vs. a directory, make sure we return
+        // the long name value in the correct casing
+        if (fileAttrib != INVALID_FILE_ATTRIBUTES && fileAttrib != FILE_ATTRIBUTE_DIRECTORY)
+        {
+            getLongName(resolvedName, CCHMAXPATH);
+            SetErrorMode(errorMode);
+            return true;
+        }
+    }
+    return false;        // not found
+}
+
+
+/**
+ * Do a path search for a file.
+ *
+ * @param name      The name to search for.
+ * @param path      The search path to use.
+ * @param extension Any extension that should be added to the search (can be NULL).
+ * @param resolvedName
+ *                  A buffer used for returning the resolved name.
+ *
+ * @return Returns true if the file was located.  If true, the resolvedName
+ *         buffer will contain the returned name.
+ */
+bool SysInterpreterInstance::searchPath(const char *name, const char *path, const char *extension, char *resolvedName)
+{
+    unsigned int errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+
+    LPTSTR ppszFilePart=NULL;            // file name only in buffer
+    if (SearchPath((LPCTSTR)path, (LPCTSTR)name, (LPCTSTR)extension, CCHMAXPATH, (LPTSTR)resolvedName, &ppszFilePart))
+    {
+        DWORD fileAttrib = GetFileAttributes((LPTSTR)resolvedName);
+
+        // if this is a real file vs. a directory, make sure we return
+        // the long name value in the correct casing
+        if (fileAttrib != INVALID_FILE_ATTRIBUTES && fileAttrib != FILE_ATTRIBUTE_DIRECTORY)
+        {
+            getLongName(resolvedName, CCHMAXPATH);
+            SetErrorMode(errorMode);
+            return true;
+        }
+    }
+    return false;        // not found
+}
+
+
+/**
+ * Get the actual name value of a located file, in the exact case
+ * used on the harddrive.
+ *
+ * @param fullName The buffer used for the name.
+ * @param size     The size of the buffer.
+ */
+void SysInterpreterInstance::getLongName(char *fullName, size_t size)
+{
   char           *p;
 
-  if ( nSize >= CCHMAXPATH ) {
-    length = GetLongPathName(FullName, FullName, nSize);
+  if (size >= CCHMAXPATH)
+  {
+      DWORD length = GetLongPathName(fullName, fullName, (DWORD)size);
 
-    if ( 0 < length && length <= nSize )  {
-      hFind = FindFirstFile(FullName, &findData);
-      if ( hFind != INVALID_HANDLE_VALUE )  {
-        p = strrchr(FullName, '\\');
-
-        if ( p )
-          strcpy(++p, findData.cFileName);
-        FindClose(hFind);
+      if ( 0 < length && length <= size )
+      {
+          WIN32_FIND_DATA findData;
+          HANDLE hFind = FindFirstFile(fullName, &findData);
+          if ( hFind != INVALID_HANDLE_VALUE )
+          {
+              p = strrchr(fullName, '\\');
+              if ( p )
+              {
+                  strcpy(++p, findData . cFileName);
+              }
+              FindClose(hFind);
+          }
       }
-    }
   }
   return;
 }
 
-// retrofit by IH
 void SysLoadImage(
   char **imageBuffer,                  /* returned start of the image       */
   size_t *imageSize )                  /* size of the image                 */
@@ -363,7 +480,7 @@ RexxBuffer *SysReadProgram(
       UnsafeBlock releaser;
 
                            /* read in a buffer of data   */
-      if (ReadFile(fileHandle, buffer->address(), (DWORD)buffersize, &bytesRead, NULL) == 0) {
+      if (ReadFile(fileHandle, buffer->getData(), (DWORD)buffersize, &bytesRead, NULL) == 0) {
         return OREF_NULL;                  /* return nothing                    */
       }
       CloseHandle(fileHandle);                /* close the file now         */
@@ -371,68 +488,22 @@ RexxBuffer *SysReadProgram(
   }
 }
 
-void SysQualifyStreamName(
-  STREAM_INFO *stream_info )           /* stream information block          */
-/*******************************************************************/
-/* Function:  Qualify a stream name for this system                */
-/*******************************************************************/
-{
-  LPTSTR  lpszLastNamePart;
-  unsigned int errorMode;
-                       /* already expanded?                 */
-  if (stream_info->full_name_parameter[0] != '\0')
-    return;                            /* nothing more to do                */
-                       /* copy the name to full area        */
-  strcpy(stream_info->full_name_parameter, stream_info->name_parameter);
 
-  size_t namelen = strlen(stream_info->full_name_parameter);
-                       /* name end in a colon?              */
-  if (stream_info->full_name_parameter[namelen - 1] == ':') {
-      // this could be the drive letter.  If so, make it the root of the current drive.
-      if (namelen == 2)
-      {
-          strcat(stream_info->full_name_parameter, "\\");
-      }
-      else
-      {
-          // potentially a device, we need to remove the colon.
-          stream_info->full_name_parameter[namelen - 1] = '\0';
-          return;                            /* all finished                      */
-
-      }
-  }
-
-  /* GetFullPathName doesn't work for COM? names without colon */
-  if (RUNNING_95)
-  {
-      if (!strnicmp(stream_info->full_name_parameter, "com",3)
-          && (stream_info->full_name_parameter[3] > '0') && (stream_info->full_name_parameter[3] <= '9'))
-          return;
-  }
-                       /* get the fully expanded name       */
-  errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-  GetFullPathName(stream_info->full_name_parameter, sizeof(stream_info->full_name_parameter), stream_info->full_name_parameter, &lpszLastNamePart);
-  SetErrorMode(errorMode);
-}
-
-RexxString *SysQualifyFileSystemName(
+RexxString *SystemInterpreter::qualifyFileSystemName(
   RexxString * name)                   /* stream information block          */
 /*******************************************************************/
 /* Function:  Qualify a stream name for this system                */
 /*******************************************************************/
 {
-   STREAM_INFO stream_info;            /* stream information                */
+   char nameBuffer[SysFileSystem::MaximumFileNameBuffer];
 
                        /* clear out the block               */
-   memset(&stream_info, 0, sizeof(STREAM_INFO));
-                       /* initialize stream info structure  */
-   strncpy(stream_info.name_parameter, name->getStringData(), path_length+10);
-   strcpy(&stream_info.name_parameter[path_length+11], "\0");
-   SysQualifyStreamName(&stream_info); /* expand the full name              */
+   memset(nameBuffer, 0, sizeof(nameBuffer));
+   SysFileSystem::qualifyStreamName((char *)name->getStringData(), nameBuffer, sizeof(nameBuffer)); /* expand the full name              */
                        /* uppercase this                    */
-   strupr(stream_info.full_name_parameter);
+   strupr(nameBuffer);
                        /* get the qualified file name       */
-   return new_string(stream_info.full_name_parameter);
+   return new_string(nameBuffer);
 }
 
 
@@ -460,76 +531,6 @@ bool SearchFirstFile(
 }
 
 
-FILE * SysBinaryFilemode(FILE * sfh, bool fRead)
-{
-     _setmode( _fileno( sfh ), _O_BINARY );
-     return sfh;
-}
 
 
-bool SysFileIsDevice(int fhandle)
-{
-  if( _isatty( fhandle ) )
-     return true;
-   else
-     return false;
-}
 
-int SysPeekKeyboard(void)
-{
-   return (_kbhit() != 0) ? 1 : 0;
-}
-
-
-int SysStat(const char * path, struct stat *buffer)
-{
-   unsigned int errorMode;
-   int    retstat;
-
-   errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-   retstat = stat(path, buffer);
-   SetErrorMode(errorMode);
-   return retstat;
-}
-
-
-bool SysFileIsPipe(STREAM_INFO * stream_info)
-{
-   struct _stat buf;
-
-   if (_fstat( stream_info->fh, &buf )) return false;
-   else
-       return (buf.st_mode & _S_IFIFO) != 0;
-}
-
-
-int  SysTellPosition(STREAM_INFO * stream_info)
-{
-    if (SysFileIsDevice(stream_info->fh) || SysFileIsPipe(stream_info)) return -1;
-    return ftell(stream_info->stream_file);
-}
-
-/* strem_info->stream_file -> sfile, tesul != length */
-size_t line_write_check(const char * buffer, size_t length, FILE * sfile)
-{
-   size_t result;
-   result = fwrite(buffer,1,length,sfile);
-   if ((result != length) && (ferror(sfile)) && (errno == ENOMEM))
-   {
-     size_t ulMod;
-     size_t ulTempValue;
-     const char *pTemp = buffer;
-     clearerr(sfile);  /* clear memory err, give a new chance */
-     ulTempValue  = length / MAX_STDOUT_LENGTH;
-     ulMod        = length % MAX_STDOUT_LENGTH;
-     while ((ulTempValue > 0) && (!ferror(sfile)))
-     {
-        result += fwrite(pTemp,1,MAX_STDOUT_LENGTH, sfile);
-        pTemp += MAX_STDOUT_LENGTH;
-        ulTempValue--;
-     }
-     if (!ferror(sfile))
-       result += fwrite(pTemp,1,ulMod, sfile);
-   }
-   return result;
-}

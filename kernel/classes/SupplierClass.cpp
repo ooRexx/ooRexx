@@ -53,6 +53,15 @@
 RexxClass *RexxSupplier::classInstance = OREF_NULL;
 
 
+/**
+ * Create initial class object at bootstrap time.
+ */
+void RexxSupplier::createInstance()
+{
+    CLASS_CREATE(Supplier, "Supplier", RexxClass);
+}
+
+
 RexxSupplier::RexxSupplier(
   RexxArray  *_values,                 /* array of values                   */
   RexxArray  *_indexes )               /* array of indexes                  */
@@ -137,17 +146,19 @@ RexxObject  *RexxSupplier::value()
 /* Function:  Retrieve the value of a collection item                       */
 /****************************************************************************/
 {
-  RexxObject *_value;                   /* supplier value                    */
-
-                                       /* already gone past the end?        */
-  if (this->position > this->values->size())
-                                       /* oops, give an error               */
-    reportException(Error_Incorrect_method_supplier);
-                                       /* get the value                     */
-  _value = this->values->get(this->position);
-  if (_value == OREF_NULL)              /* returned nothing?                 */
-    _value = TheNilObject;              /* change this to .nil               */
-  return _value;                        /* return this value                 */
+    /* already gone past the end?        */
+    if (this->position > this->values->size())
+    {
+        /* oops, give an error               */
+        reportException(Error_Incorrect_method_supplier);
+    }
+    /* get the value                     */
+    RexxObject *_value = this->values->get(this->position);
+    if (_value == OREF_NULL)              /* returned nothing?                 */
+    {
+        _value = TheNilObject;              /* change this to .nil               */
+    }
+    return _value;                        /* return this value                 */
 }
 
 RexxObject  *RexxSupplier::index()
@@ -155,25 +166,34 @@ RexxObject  *RexxSupplier::index()
 /* Function:  Retrieve the index of a collection item                       */
 /****************************************************************************/
 {
-  RexxObject *_value;                   /* supplier value                    */
+    RexxObject *_value;                   /* supplier value                    */
 
-                                       /* already gone past the end?        */
-  if (this->position > this->values->size())
-                                       /* oops, give an error               */
-    reportException(Error_Incorrect_method_supplier);
-  if (this->indexes == OREF_NULL)      /* no index array given?             */
-                                       /* just return current position      */
-    return (RexxObject *)new_integer(this->position);
-                                       /* already gone past the end?        */
-  if (this->position > this->indexes->size())
-    _value = TheNilObject;              /* no value to return                */
-  else {
-                                       /* get the value                     */
-    _value = this->indexes->get(this->position);
-    if (_value == OREF_NULL)            /* returned nothing?                 */
-      _value = TheNilObject;            /* change this to .nil               */
-  }
-  return _value;                        /* and return the value              */
+    /* already gone past the end?        */
+    if (this->position > this->values->size())
+    {
+        /* oops, give an error               */
+        reportException(Error_Incorrect_method_supplier);
+    }
+    if (this->indexes == OREF_NULL)      /* no index array given?             */
+    {
+        /* just return current position      */
+        return(RexxObject *)new_integer(this->position);
+    }
+    /* already gone past the end?        */
+    if (this->position > this->indexes->size())
+    {
+        _value = TheNilObject;              /* no value to return                */
+    }
+    else
+    {
+        /* get the value                     */
+        _value = this->indexes->get(this->position);
+        if (_value == OREF_NULL)            /* returned nothing?                 */
+        {
+            _value = TheNilObject;            /* change this to .nil               */
+        }
+    }
+    return _value;                        /* and return the value              */
 }
 
 void *RexxSupplier::operator new(size_t size)

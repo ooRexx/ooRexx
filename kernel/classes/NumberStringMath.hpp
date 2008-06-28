@@ -89,7 +89,7 @@ char * MultiplyBaseTen(char *, char *);
 #define NOROUND                false                  /* no Rounding                */
 
                                        /* temporary buffer allocation       */
-#define buffer_alloc(s)  (new_buffer(s)->address())
+#define buffer_alloc(s)  (new_buffer(s)->getData())
 /* define the digits limit for "fast path" processing */
 #define FASTDIGITS 35
 

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  GlobalNames.h     */
+/* REXX Kernel                                              GlobalNames.h     */
 /*                                                                            */
 /* Definitions of all name objects created at startup time.  All these        */
 /* Name objects are addressible via OREF_ global names                        */
@@ -137,6 +137,7 @@
   GLOBAL_NAME(POWER, CHAR_POWER)
   GLOBAL_NAME(ASSIGNMENT_POWER, CHAR_ASSIGNMENT_POWER)
   GLOBAL_NAME(PROGRAM, CHAR_PROGRAM)
+  GLOBAL_NAME(PACKAGE, CHAR_PACKAGE)
   GLOBAL_NAME(PROPAGATE, CHAR_PROPAGATE)
   GLOBAL_NAME(PROPAGATED, CHAR_PROPAGATED)
   GLOBAL_NAME(PULL, CHAR_PULL)
@@ -147,16 +148,19 @@
   GLOBAL_NAME(QUERY, CHAR_QUERY)
   GLOBAL_NAME(RC, CHAR_RC)
   GLOBAL_NAME(REMAINDER, CHAR_REMAINDER)
+  GLOBAL_NAME(REXX, CHAR_REXX)
   GLOBAL_NAME(ASSIGNMENT_REMAINDER, CHAR_ASSIGNMENT_REMAINDER)
   GLOBAL_NAME(REQUEST, CHAR_REQUEST)
   GLOBAL_NAME(REQUIRES, CHAR_REQUIRES)
   GLOBAL_NAME(RESULT, CHAR_RESULT)
   GLOBAL_NAME(REXXQUEUE, CHAR_REXXQUEUE)
+  GLOBAL_NAME(REXXUTIL, CHAR_REXXUTIL)
   GLOBAL_NAME(ROUTINENAME, CHAR_ROUTINENAME)
   GLOBAL_NAME(RUN, CHAR_RUN)
   GLOBAL_NAME(SAY, CHAR_SAY)
   GLOBAL_NAME(SCIENTIFIC, CHAR_SCIENTIFIC)
   GLOBAL_NAME(SCRIPT, CHAR_SCRIPT)
+  GLOBAL_NAME(SECURITYMANAGER, CHAR_SECURITYMANAGER)
   GLOBAL_NAME(SELF, CHAR_SELF)
   GLOBAL_NAME(SEND, CHAR_SEND)
   GLOBAL_NAME(SERVER, CHAR_SERVER)

@@ -126,9 +126,9 @@ int CreateEventSem(int *);
 void CloseMutexSem(int);
 void CloseEventSem(int);
 void PostEventSem(int);
-int  RequestMutexSem(int, int); 
+int  RequestMutexSem(int, int);
 void ResetEventSem(int);
-int  WaitEventSem(int, int); 
+int  WaitEventSem(int, int);
 void ReleaseMutexSem(int);
 
 char rxqueue_name_mask[]="S%02dQ%010u";
@@ -288,10 +288,10 @@ static int    queue_allocate(
                                       /* copy the name over          */
         strcpy(newname, name);
                                       /* make it uppercase           */
-        while(*newname != '\0')                 
+        while(*newname != '\0')
         {
-            *newname = toupper(*newname); 
-            newname++; 
+            *newname = toupper(*newname);
+            newname++;
         }
       }
       return (0);                     /* worked fine                 */
@@ -352,7 +352,7 @@ static int create_queue_sem(
 /*  Effects:         Memory deleted.                                 */
 /*                                                                   */
 /*********************************************************************/
-static void   release_queue_item(size_t item, int flag, size_t current) 
+static void   release_queue_item(size_t item, int flag, size_t current)
 {
   /* Release header and data together to increase performance of the */
   /* memory manager                                                  */
@@ -591,7 +591,7 @@ static int alloc_queue_entry(
 
    if (size == 0)
    {
-      QIDATA(*element)->queue_element = 0;    
+      QIDATA(*element)->queue_element = 0;
    }
    else
    {
@@ -680,13 +680,13 @@ void GetDateTime(REXXDATETIME *datetime){
 /*  Effects:         New queue created.                              */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxCreateQueue(
+RexxReturnCode REXXENTRY RexxCreateQueue(
   char *name,                          /* Internal name (returned).  */
   size_t  size,                        /* Length of name buffer.     */
   const char *usrrequest,              /* Desired name.              */
   size_t *pdup)                        /* Duplicate name flag.       */
 {
-  APIRET       rc;
+  RexxReturnCode       rc;
   size_t       temp;
 
   APISTARTUP(QUEUECHAIN);              /* do common entry code       */
@@ -749,10 +749,10 @@ APIRET REXXENTRY RexxCreateQueue(
 /*  Effects:          Queue and all its entries deleted.             */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxDeleteQueue(
+RexxReturnCode REXXENTRY RexxDeleteQueue(
   const char * name)                   /* name of queue to delete    */
 {
-  APIRET       rc;                     /* return code from call      */
+  RexxReturnCode       rc;                     /* return code from call      */
   size_t       curr_item;              /* current queue item         */
   size_t       next_item;              /* next queue item            */
   size_t       previous;               /* previous list entry        */
@@ -820,11 +820,11 @@ APIRET REXXENTRY RexxDeleteQueue(
 /*  Effects:          Count of queue elements.                       */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxQueryQueue(
+RexxReturnCode REXXENTRY RexxQueryQueue(
   const char *name,                    /* Queue to query.             */
   size_t *count)                       /* Length of queue (returned)  */
 {
-  APIRET       rc;
+  RexxReturnCode       rc;
   size_t current;
 
   if (!val_queue_name(name))           /* Did the user supply a      */
@@ -871,12 +871,12 @@ APIRET REXXENTRY RexxQueryQueue(
 /*                    queue.                                         */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxAddQueue(
+RexxReturnCode REXXENTRY RexxAddQueue(
   const char *name,
   PCONSTRXSTRING data,
   size_t    flag)
 {
-  APIRET       rc;
+  RexxReturnCode       rc;
   size_t       current;
   size_t       item;                   /* Local (allocation) pointer.*/
 
@@ -973,13 +973,13 @@ APIRET REXXENTRY RexxAddQueue(
 /*                    queued to the queue data manager.              */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxPullQueue(
+RexxReturnCode REXXENTRY RexxPullQueue(
   const char *name,
   PRXSTRING   data_buf,
   REXXDATETIME *dt,
   size_t      waitflag)
 {
-  APIRET       rc = RXQUEUE_OK;
+  RexxReturnCode       rc = RXQUEUE_OK;
   size_t       current;
   size_t       item;
   int          mutexsem;               /* semaphore to wait on       */
@@ -1077,9 +1077,12 @@ APIRET REXXENTRY RexxPullQueue(
                  QIDATA(item)->size);
                                        /* set the proper length      */
         data_buf->strlength = QIDATA(item)->size;
-        memcpy((char *)dt,    /* set the datetime info      */
-               (char *)&(QIDATA(item)->addtime),
-               sizeof(REXXDATETIME));
+        if (dt != NULL)
+        {
+            memcpy((char *)dt,    /* set the datetime info      */
+                   (char *)&(QIDATA(item)->addtime),
+                   sizeof(REXXDATETIME));
+        }
         release_queue_item(item, sessionflag, current);      /* get rid if the queue item  */
       }
       else {                           /* give up memory directly    */
@@ -1099,9 +1102,12 @@ APIRET REXXENTRY RexxPullQueue(
                                        /* set the length             */
         data_buf->strlength =QIDATA(item)->size;
 
-        memcpy((char *)dt,    /* set the datetime info      */
-               (const char *)&(QIDATA(item)->addtime),
-               sizeof(REXXDATETIME));
+        if (dt != NULL)
+        {
+            memcpy((char *)dt,    /* set the datetime info      */
+                   (const char *)&(QIDATA(item)->addtime),
+                   sizeof(REXXDATETIME));
+        }
         release_queue_item(item, sessionflag, current);      /* free up the queue item     */
       }
     }

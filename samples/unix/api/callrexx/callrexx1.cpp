@@ -68,7 +68,7 @@ int main()
     RXSTRING rexxretval;                  /* return value from Rexx     */
     RXSTRING instore[2];                  /* in storage parms           */
     char     *pszTemp;
-    APIRET   rc = 0;                      /* return code from Rexx      */
+    RexxReturnCode   rc = 0;                      /* return code from Rexx      */
     short    rexxrc = 0;                  /* return code from function  */
 
     char    val;

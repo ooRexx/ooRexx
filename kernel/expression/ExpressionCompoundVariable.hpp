@@ -66,6 +66,8 @@ class RexxCompoundVariable : public RexxVariableBase {
   RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
   RexxObject *getValue(RexxActivation *context);
   RexxObject *getValue(RexxVariableDictionary *context);
+  RexxObject *getRealValue(RexxVariableDictionary *);
+  RexxObject *getRealValue(RexxActivation *);
   bool exists(RexxActivation *);
   void set(RexxActivation *, RexxObject *) ;
   void set(RexxVariableDictionary *, RexxObject *);

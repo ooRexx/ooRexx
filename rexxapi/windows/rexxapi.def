@@ -58,7 +58,7 @@ EXPORTS
      RexxRegisterFunctionExe
      RexxDeregisterFunction
      RexxQueryFunction
-     RexxCallFunction
+     RexxResolveRoutine
      RexxAddMacro
      RexxDropMacro
      RexxClearMacroSpace

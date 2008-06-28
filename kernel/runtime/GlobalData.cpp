@@ -49,6 +49,5 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "MethodClass.hpp"
-#include "RexxNativeAPI.h"
 
 

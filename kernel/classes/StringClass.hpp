@@ -64,11 +64,6 @@
 #define  INITIAL_NAME_SIZE     10      /* first name table allocation       */
 #define  EXTENDED_NAME_SIZE    10      /* amount to extend table by         */
 
-class RexxStringClass : public RexxClass {
- public:
-   RexxStringClass(RESTORETYPE restoreType) { ; };
-   void *operator new(size_t size, void *ptr) {return ptr;};
-};
 
  class RexxString : public RexxObject {
   public:
@@ -177,8 +172,10 @@ class RexxStringClass : public RexxClass {
    RexxObject *logicalOperation(RexxObject *, RexxObject *, unsigned int);
    RexxString *extract(size_t offset, size_t sublength) { return newString(this->getStringData() + offset, sublength); }
    RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
-   RexxObject *getValue(RexxActivation *context) {return this;}
-   RexxObject *getValue(RexxVariableDictionary *context) {return this;}
+   RexxObject *getValue(RexxActivation *);
+   RexxObject *getValue(RexxVariableDictionary *);
+   RexxObject *getRealValue(RexxActivation *);
+   RexxObject *getRealValue(RexxVariableDictionary *);
                                        /* the following methods are in    */
                                        /* OKBSUBS                         */
    RexxString  *center(RexxInteger *, RexxString *);
@@ -275,6 +272,7 @@ class RexxStringClass : public RexxClass {
 
    inline size_t  getLength() { return this->length; };
    inline void    setLength(size_t l) { this->length = l; };
+   inline void finish(stringsize_t l) { length = l; }
    inline const char *getStringData() { return this->stringData; };
    inline char *getWritableData() { return this->stringData; };
    inline void put(size_t s, const void *b, size_t l) { memcpy((this->stringData+s), b, l); };
@@ -416,10 +414,13 @@ class RexxStringClass : public RexxClass {
    static RexxString *rawString(size_t);
    static RexxString *newUpperString(const char *, stringsize_t);
    static RexxString *newString(double d);
+   static RexxString *newString(double d, size_t precision);
    static RexxString *newProxy(const char *);
    // NB:  newRexx() cannot be static and exported as an ooRexx method.
           RexxString *newRexx(RexxObject **, size_t);
    static PCPPM operatorMethods[];
+
+   static void createInstance();
    static RexxClass *classInstance;
 
  protected:
@@ -475,6 +476,11 @@ inline RexxString *raw_string(stringsize_t l)
 inline RexxString *new_string(double d)
 {
     return RexxString::newString(d);
+}
+
+inline RexxString *new_string(double d, size_t p)
+{
+    return RexxString::newString(d, p);
 }
 
 

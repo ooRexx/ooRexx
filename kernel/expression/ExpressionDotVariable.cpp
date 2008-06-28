@@ -93,21 +93,22 @@ RexxObject * RexxDotVariable::evaluate(
 /* Function:  Evaluate a REXX dot variable                                  */
 /****************************************************************************/
 {
-  RexxObject *result;                  /* dot variable value                */
-
-                                       /* get this from the source          */
-  result = context->getSource()->resolveClass(this->variableName, context);
-  if (result == OREF_NULL)             /* not there?                        */
-                                       /* try for a REXX defined name       */
-    result = context->rexxVariable(this->variableName);
-  if (result == OREF_NULL) {           /* not there?                        */
-                                       /* add a period to the name          */
-    result = this->variableName->concatToCstring(CHAR_PERIOD);
-  }
-  stack->push(result);                 /* place on the evaluation stack     */
-                                       /* trace if necessary                */
-  context->traceDotVariable(variableName, result);
-  return result;                       /* also return the result            */
+    /* get this from the source          */
+    RexxObject *result = context->findClass(this->variableName);
+    if (result == OREF_NULL)             /* not there?                        */
+    {
+        /* try for a REXX defined name       */
+        result = context->rexxVariable(this->variableName);
+    }
+    if (result == OREF_NULL)             /* not there?                        */
+    {
+        /* add a period to the name          */
+        result = this->variableName->concatToCstring(CHAR_PERIOD);
+    }
+    stack->push(result);                 /* place on the evaluation stack     */
+                                         /* trace if necessary                */
+    context->traceDotVariable(variableName, result);
+    return result;                       /* also return the result            */
 }
 
 
@@ -117,18 +118,19 @@ RexxObject * RexxDotVariable::getValue(
 /* Function:  Evaluate a REXX dot variable                                  */
 /****************************************************************************/
 {
-  RexxObject *result;                  /* dot variable value                */
-
-                                       /* get this from the source          */
-  result = context->getSource()->resolveClass(this->variableName, context);
-  if (result == OREF_NULL)             /* not there?                        */
-                                       /* try for a REXX defined name       */
-    result = context->rexxVariable(this->variableName);
-  if (result == OREF_NULL) {           /* not there?                        */
-                                       /* add a period to the name          */
-    result = this->variableName->concatToCstring(CHAR_PERIOD);
-  }
-  return result;                       /* also return the result            */
+    /* get this from the source          */
+    RexxObject *result = context->findClass(this->variableName);
+    if (result == OREF_NULL)             /* not there?                        */
+    {
+        /* try for a REXX defined name       */
+        result = context->rexxVariable(this->variableName);
+    }
+    if (result == OREF_NULL)             /* not there?                        */
+    {
+        /* add a period to the name          */
+        result = this->variableName->concatToCstring(CHAR_PERIOD);
+    }
+    return result;                       /* also return the result            */
 }
 
 void * RexxDotVariable::operator new(size_t size)

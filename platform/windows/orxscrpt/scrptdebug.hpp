@@ -95,35 +95,15 @@ typedef struct FLAGLISTstruct {
                                                w,                           \
                                                (int)(cb))
 
-//
-// WINBASEAPI
-// int
-// WINAPI
-// MultiByteToWideChar(
-//     UINT     CodePage,
-//     DWORD    dwFlags,
-//     LPCSTR   lpMultiByteStr,
-//     int      cchMultiByte,
-//     LPWSTR   lpWideCharStr,
-//     int      cchWideChar);
-//
-// WINBASEAPI
-// int
-// WINAPI
-// WideCharToMultiByte(
-//     UINT     CodePage,
-//     DWORD    dwFlags,
-//     LPCWSTR  lpWideCharStr,
-//     int      cchWideChar,
-//     LPSTR    lpMultiByteStr,
-//     int      cchMultiByte,
-//     LPCSTR   lpDefaultChar,
-//     LPBOOL   lpUsedDefaultChar);
-
-int __cdecl FPRINTF(FILE *Stream, const char *Format,...);
-int __cdecl FPRINTF2(FILE *Stream, const char *Format, ...);
-int __cdecl FPRINTF3(FILE *Stream, const char *Format, ...);
-
+#ifdef SCRIPTDEBUG
+void FPRINTF(FILE *Stream, const char *Format,...);
+void FPRINTF2(FILE *Stream, const char *Format, ...);
+void FPRINTF3(FILE *Stream, const char *Format, ...);
+#else
+inline void FPRINTF(FILE *Stream, const char *Format,...) { }
+inline void FPRINTF2(FILE *Stream, const char *Format, ...) { }
+inline void FPRINTF3(FILE *Stream, const char *Format, ...) { }
+#endif
 
 /****************************************************************************
  *

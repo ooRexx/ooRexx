@@ -126,7 +126,7 @@
           void         removeSubclass(RexxClass *c);
 
 
-   static void createClass();
+   static void createInstance();
    // singleton class instance;
    static RexxClass *classInstance;
 

@@ -49,13 +49,11 @@ void RexxListTable::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  size_t     index;                    /* working index                     */
-                                       /* loop through our table            */
-  for (index = 0; index < this->size; index++)
-  {
-                                       /* mark an element                   */
-      memory_mark(this->elements[index].value);
-  }
+    for (size_t index = 0; index < this->size; index++)
+    {
+        /* mark an element                   */
+        memory_mark(this->elements[index].value);
+    }
 }
 
 void RexxListTable::liveGeneral(int reason)
@@ -63,14 +61,12 @@ void RexxListTable::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  size_t     index;                    /* working index                     */
-
-                                       /* loop through our table            */
-  for (index = 0; index < this->size; index++)
-  {
-                                       /* mark an element                   */
-      memory_mark_general(this->elements[index].value);
-  }
+    /* loop through our table            */
+    for (size_t index = 0; index < this->size; index++)
+    {
+        /* mark an element                   */
+        memory_mark_general(this->elements[index].value);
+    }
 }
 
 void   RexxListTable::flatten(RexxEnvelope *envelope)
@@ -80,9 +76,7 @@ void   RexxListTable::flatten(RexxEnvelope *envelope)
 {
  setUpFlatten(RexxListTable)
 
- size_t i;
-
-   for (i = this->size - 1; i >= 0 ; i--)
+   for (size_t i = this->size - 1; i >= 0 ; i--)
    {
        flatten_reference(newThis->elements[i].value, envelope);
    }
@@ -96,15 +90,13 @@ void *RexxListTable::operator new(size_t size, size_t initialSize)
 /* Function:  Construct and initialized a new list item                       */
 /******************************************************************************/
 {
-  RexxListTable *newTable;             /* newly created list                */
-
-                                       /* Get new object                    */
-  newTable = (RexxListTable *)new_object(size + sizeof(LISTENTRY) * (initialSize - 1));
-                                       /* Give new object its behaviour     */
-  newTable->setBehaviour(TheListTableBehaviour);
-  newTable->clearObject();
-  newTable->size = initialSize;
-  return newTable;                     /* return the new list item          */
+    /* Get new object                    */
+    RexxListTable *newTable = (RexxListTable *)new_object(size + sizeof(LISTENTRY) * (initialSize - 1));
+    /* Give new object its behaviour     */
+    newTable->setBehaviour(TheListTableBehaviour);
+    newTable->clearObject();
+    newTable->size = initialSize;
+    return newTable;                     /* return the new list item          */
 }
 
 
@@ -113,35 +105,31 @@ void *RexxListTable::operator new(size_t size, size_t initialSize, size_t compan
 /* Function:  Construct and initialized a new list item                       */
 /******************************************************************************/
 {
-  RexxListTable *newTable;             /* newly created list                */
-  RexxList      *newList;              /* associated list object            */
-  size_t bytes;                        /* size of the allocated object      */
+    /* Compute size of hash tab object   */
+    size_t bytes = roundObjectBoundary(size + (sizeof(LISTENTRY) * (initialSize - 1)));
+    /* make sure we've got proper sizes for each of the object parts. */
+    companionSize = roundObjectBoundary(companionSize);
+    /* Get space for two objects         */
+    /* Get new object                    */
+    RexxList *newList  = (RexxList *)new_object(bytes + companionSize);
+    newList->clearObject();              /* clear the entire lot              */
+                                         /* address the list table            */
+    RexxListTable *newTable = (RexxListTable *)(((char *)newList) + companionSize);
+    /* compute total size of the list    */
+    /* table (allowing for possible      */
+    /* over allocation by the memory     */
+    /* manager                           */
+    bytes = newList->getObjectSize() - companionSize;
 
-                                       /* Compute size of hash tab object   */
-  bytes = roundObjectBoundary(size + (sizeof(LISTENTRY) * (initialSize - 1)));
-  /* make sure we've got proper sizes for each of the object parts. */
-  companionSize = roundObjectBoundary(companionSize);
-                                       /* Get space for two objects         */
-                                       /* Get new object                    */
-  newList  = (RexxList *)new_object(bytes + companionSize);
-  newList->clearObject();              /* clear the entire lot              */
-                                       /* address the list table            */
-  newTable = (RexxListTable *)(((char *)newList) + companionSize);
-                                       /* compute total size of the list    */
-                                       /* table (allowing for possible      */
-                                       /* over allocation by the memory     */
-                                       /* manager                           */
-  bytes = newList->getObjectSize() - companionSize;
-
-  // initialize the hash table object
-  ((RexxObject *)newTable)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::virtualFunctionTable[T_ListTable], TheListTableBehaviour);
-                                       /* reduce the companion size         */
-  newList->setObjectSize(companionSize);
-  newTable->size = initialSize;        /* fill in the initial size          */
-                                       /* hook the list into the companion  */
-                                       /* OrefSet is not used, because the  */
-                                       /* companion object is not fully set */
-  newList->table = newTable;           /* up yet (no behaviour)             */
-  return newList;                      /* return the new list item          */
+    // initialize the hash table object
+    ((RexxObject *)newTable)->initializeNewObject(bytes, memoryObject.markWord, RexxMemory::virtualFunctionTable[T_ListTable], TheListTableBehaviour);
+    /* reduce the companion size         */
+    newList->setObjectSize(companionSize);
+    newTable->size = initialSize;        /* fill in the initial size          */
+                                         /* hook the list into the companion  */
+                                         /* OrefSet is not used, because the  */
+                                         /* companion object is not fully set */
+    newList->table = newTable;           /* up yet (no behaviour)             */
+    return newList;                      /* return the new list item          */
 }
 

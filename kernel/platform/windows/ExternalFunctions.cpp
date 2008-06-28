@@ -68,13 +68,13 @@
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
-#include "RexxNativeAPI.h"                  /* Lot's of useful REXX macros    */
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "RexxAPIManager.h"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
+#include "PackageManager.hpp"
+#include "SystemInterpreter.hpp"
 
-#define DEFEXT "REX"                        /* Default OS/2 REXX program ext  */
 #define DIRLEN        256                   /* length of a directory          */
 
 #define  MAX_FREQUENCY 32767
@@ -108,54 +108,24 @@ void RestoreEnvironment( void * );
 /*                      specified duration (in milliseconds)         */
 /*********************************************************************/
 
-RexxMethod2(REXXOBJECT, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
+RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
 {
                                        /* out of range?              */
   if (Frequency > MAX_FREQUENCY || Frequency < MIN_FREQUENCY || Duration > MAX_DURATION || Duration < MIN_DURATION)
-                                       /* raise an error             */
-    rexx_exception(Error_Incorrect_call);
+  {
+      context->InvalidRoutine();
+      return NULLOBJECT;
+  }
 
   Beep((DWORD)Frequency, (DWORD)Duration);  /* sound beep                 */
-  return ooRexxString("");             /* always returns a null      */
-}
-
-/*********************************************************************/
-/*                                                                   */
-/*   Method Name : sysSetLocal                                       */
-/*                                                                   */
-/*   Descriptive Name:  SETLOCAL                                     */
-/*                                                                   */
-/*   Function:          Save all environment variables, drive and    */
-/*                      directory of current drive.                  */
-/*                                                                   */
-/*********************************************************************/
-
-RexxMethod1(REXXOBJECT, sysSetLocal, OSELF, self)
-{
-  return TheFalseObject;               /* return failure             */
-}
-
-/*********************************************************************/
-/*                                                                   */
-/*   method Name:  sysEndLocal                                       */
-/*                                                                   */
-/*   Descriptive Name:  ENDLOCAL                                     */
-/*                                                                   */
-/*   Function:          restore all previous environment variables   */
-/*                      drive and current directory.                 */
-/*                                                                   */
-/*********************************************************************/
-
-RexxMethod0(REXXOBJECT, sysEndLocal)
-{
-  return TheFalseObject;               /* return failure             */
+  return "";                           /* always returns a null      */
 }
 
 
 /********************************************************************************************/
 /* sysDirectory                                                                             */
 /********************************************************************************************/
-RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
+RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 {
   char buffer[CCHMAXPATH+1];  // retrofit by IH
   int rc = 0;
@@ -168,131 +138,139 @@ RexxMethod1(REXXOBJECT, sysDirectory, CSTRING, dir)
          rc = _chdir(dir);
   }
                                        /* Return the current directory    */
-  return (rc != 0) || (_getcwd(buffer,CCHMAXPATH) == NULL) ? ooRexxString("") : ooRexxString(buffer);
+  if (rc != 0 || _getcwd(buffer, MAX_PATH) == NULL)
+  {
+      return context->NullString();
+  }
+  else
+  {
+      return context->NewStringFromAsciiz(buffer);
+  }
 }
 
 
 /********************************************************************************************/
 /* sysFilespec                                                                              */
 /********************************************************************************************/
-RexxMethod2 (REXXOBJECT, sysFilespec, CSTRING, Option, CSTRING, Name)
+RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 {
-  size_t     NameLength;               /* file name length                  */
-  const char *ScanPtr;                 /* scanning pointer                  */
-  const char *EndPtr;                  /* end of string                     */
-  const char *PathPtr;                 /* path pointer                      */
-  const char *PathEnd;                 /* path end pointer                  */
-  REXXOBJECT Retval;                   /* return value                      */
+  size_t nameLength;                   /* file name length                  */
+  const char *scanPtr;                 /* scanning pointer                  */
+  const char *endPtr;                  /* end of string                     */
+  const char *pathPtr;                 /* path pointer                      */
+  const char *pathEnd;                 /* path end pointer                  */
 
-                                       /* required arguments missing?       */
-  if (Option == NO_CSTRING || strlen(Option) == 0 || Name == NO_CSTRING)
-                                       /* raise an error                    */
-    rexx_exception(Error_Incorrect_call);
+  nameLength = strlen(name);           /* get filename length               */
 
-  NameLength = strlen(Name);           /* get filename length               */
+  endPtr = name + nameLength;          /* point to last character           */
 
-  EndPtr = Name + NameLength;          /* point to last character           */
-  Retval = OREF_NULLSTRING;            /* set the default return value      */
-
-  switch (toupper(*Option)) {          /* process each option               */
+  switch (toupper(*option)) {          /* process each option               */
 
     case FILESPEC_DRIVE:               /* extract the drive                 */
-      if (NameLength) {                /* have a real string?               */
+      if (nameLength > 0) {            /* have a real string?               */
                                        /* scan for the character            */
-        ScanPtr = (const char *)memchr(Name, ':', NameLength);
-        if (ScanPtr)                   /* found one?                        */
-                                       /* create result string              */
-          Retval = ooRexxStringL(Name, ScanPtr - Name + 1);
+        scanPtr = (char *)memchr(name, ':', nameLength);
+        if (scanPtr != NULL)           /* found one?                        */
+        {
+            return context->NewString(name, scanPtr - name + 1);
+        }
       }
       break;
 
     case FILESPEC_PATH:                /* extract the path                  */
-      if (NameLength) {
+      if (nameLength > 0) {            /* have a real string?               */
                                        /* find colon or backslash           */
-        ScanPtr = mempbrk(Name, ":\\/", NameLength);
-        if (ScanPtr) {
-          if (*ScanPtr == ':') {       /* found a colon?                    */
-            ScanPtr++;                 /* step past the colon               */
-            if (ScanPtr < EndPtr) {    /* not last character?               */
-              PathEnd = NULL;          /* no end here                       */
+        scanPtr = mempbrk(name, ":\\/", nameLength);
+        if (scanPtr != NULL) {
+          if (*scanPtr == ':') {       /* found a colon?                    */
+            scanPtr++;                 /* step past the colon               */
+            if (scanPtr < endPtr) {    /* not last character?               */
+              pathEnd = NULL;          /* no end here                       */
                                        /* search for backslashes            */
-              PathPtr = mempbrk(ScanPtr, "\\/", EndPtr - ScanPtr);
-              while (PathPtr) {        /* while more backslashes            */
-                PathEnd = PathPtr;     /* save the position                 */
+              pathPtr = mempbrk(scanPtr, "\\/", endPtr - scanPtr);
+              while (pathPtr != NULL) {  /* while more backslashes            */
+                pathEnd = pathPtr;     /* save the position                 */
                                        /* search for more backslashes       */
-                PathPtr++;             /* step past the last match          */
-                PathPtr = mempbrk(PathPtr, "\\/", EndPtr-PathPtr);
+                pathPtr++;             /* step past the last match          */
+                pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
               }
-              if (PathEnd)             /* have backslashes?                 */
-                                       /* extract the path                  */
-                Retval = ooRexxStringL(ScanPtr, PathEnd - ScanPtr + 1);
+              if (pathEnd != NULL)     /* have backslashes?                 */
+              {
+                  return context->NewString(scanPtr, pathEnd - scanPtr + 1);
+              }
             }
           }
           else {
-            PathPtr = ScanPtr;         /* save start position               */
-            PathEnd = PathPtr;         /* CHM - defect 85: save end pos.    */
-            PathPtr++;                 /* step past first one               */
+            pathPtr = scanPtr;         /* save start position               */
+            pathEnd = pathPtr;         /* CHM - defect 85: save end pos.    */
+            pathPtr++;                 /* step past first one               */
                                        /* search for backslashes            */
-            PathPtr = mempbrk(PathPtr, "\\/", EndPtr - PathPtr);
-            while (PathPtr) {          /* while more backslashes            */
-              PathEnd = PathPtr;       /* save the position                 */
-              PathPtr++;               /* step past the last match          */
+            pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
+            while (pathPtr) {          /* while more backslashes            */
+              pathEnd = pathPtr;       /* save the position                 */
+              pathPtr++;               /* step past the last match          */
                                        /* search for more backslashes       */
-              PathPtr = mempbrk(PathPtr, "\\/", EndPtr-PathPtr);
+              pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
             }
                                        /* extract the path                  */
-            Retval = ooRexxStringL(Name, PathEnd - Name + 1); //retrofit by IH
+            return context->NewString(name, pathEnd - name + 1);
           }
         }
       }
       break;                           /* finished                          */
 
     case FILESPEC_NAME:                /* extract the file name             */
-      if (NameLength) {                /* filename null string?             */
+      if (nameLength > 0) {            /* filename null string?             */
                                        /* find colon or backslash           */
-        ScanPtr = mempbrk(Name, ":\\/", NameLength);
-        if (ScanPtr) {
-          if (*ScanPtr == ':') {       /* found a colon?                    */
-            ScanPtr++;                 /* step past the colon               */
-            PathEnd = ScanPtr;         /* save current position             */
-            PathPtr = mempbrk(ScanPtr, "\\/", EndPtr - ScanPtr);
-            while (PathPtr) {          /* while more backslashes            */
-              PathPtr++;               /* step past the last match          */
-              PathEnd = PathPtr;       /* save the position                 */
+        scanPtr = mempbrk(name, ":\\/", nameLength);
+        if (scanPtr != NULL) {
+          if (*scanPtr == ':') {       /* found a colon?                    */
+            scanPtr++;                 /* step past the colon               */
+            pathEnd = scanPtr;         /* save current position             */
+            pathPtr = mempbrk(scanPtr, "\\/", endPtr - scanPtr);
+            while (pathPtr) {          /* while more backslashes            */
+              pathPtr++;               /* step past the last match          */
+              pathEnd = pathPtr;       /* save the position                 */
                                        /* search for more backslashes       */
-              PathPtr = mempbrk(PathPtr, "\\/", EndPtr-PathPtr);
+              pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
             }
-            if (PathEnd < EndPtr)      /* stuff to return?                  */
-                                       /* extract the name                  */
-              Retval = ooRexxStringL(PathEnd, EndPtr - PathEnd);
+            if (pathEnd < endPtr)      /* stuff to return?                  */
+            {
+                return context->NewString(pathEnd, endPtr - pathEnd);
+            }
           }
           else {
-            PathPtr = ScanPtr + 1;     /* save start position               */
-            PathEnd = PathPtr;         /* step past first one               */
+            pathPtr = scanPtr + 1;     /* save start position               */
+            pathEnd = pathPtr;         /* step past first one               */
                                        /* search for backslashes            */
-            PathPtr = mempbrk(PathPtr, "\\/", EndPtr - PathPtr);
-            while (PathPtr) {          /* while more backslashes            */
-              PathPtr++;               /* step past the last match          */
-              PathEnd = PathPtr;       /* save the position                 */
+            pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
+            while (pathPtr != NULL) {  /* while more backslashes            */
+              pathPtr++;               /* step past the last match          */
+              pathEnd = pathPtr;       /* save the position                 */
                                        /* search for more backslashes       */
-              PathPtr = mempbrk(PathPtr, "\\/", EndPtr-PathPtr);
+              pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
             }
-            if (PathEnd < EndPtr)      /* stuff to return?                  */
-                                       /* extract the name                  */
-              Retval = ooRexxStringL(PathEnd, EndPtr - PathEnd);
+            if (pathEnd < endPtr)      /* stuff to return?                  */
+            {
+                return context->NewString(pathEnd, endPtr - pathEnd);
+            }
           }
         }
         else
-          Retval = ooRexxString(Name); /* entire string is a name           */
+        {
+            // entire string is the result
+            return context->NewStringFromAsciiz(name);
+        }
       }
       break;                           /* finished                          */
 
     default:                           /* unknown option                    */
-                                       /* raise an error                    */
-      rexx_exception(Error_Incorrect_call);
+      context->InvalidRoutine();       // this is an error
+      return NULLOBJECT;
   }
-  return Retval;                       /* return extracted part             */
+  return context->NullString();        // nothing found, return the empty string
 }
+
 
 /******************************************************************************/
 /* Name:       SysExternalFunction                                            */
@@ -309,7 +287,6 @@ bool SysExternalFunction(
   RexxActivation * activation,         /* Current Activation                */
   RexxActivity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */
-  RexxString     * parent,             /* Parent program                    */
   RexxObject    ** arguments,          /* Argument array                    */
   size_t           argcount,           /* count of arguments                */
   RexxString     * calltype,           /* Type of call                      */
@@ -320,12 +297,12 @@ bool SysExternalFunction(
       return true;
   }
                                        /* no luck try for a registered func */
-  if (activation->callRegisteredExternalFunction(target, arguments, argcount, calltype, result))
+  if (PackageManager::callNativeRoutine(activity, target, arguments, argcount, result))
   {
       return true;
   }
                                        /* have activation do the call       */
-  if (activation->callExternalRexx(target, parent, arguments, argcount, calltype, result))
+  if (activation->callExternalRexx(target, arguments, argcount, calltype, result))
   {
       return true;
   }
@@ -387,14 +364,13 @@ void RestoreEnvironment(
 /*                      Icon   = The message box icon style.         */
 /*                                                                   */
 /*********************************************************************/
-RexxMethod4(REXXOBJECT,sysMessageBox,CSTRING,Text,CSTRING,Title, CSTRING,Button,CSTRING,Icon)
+RexxRoutine4(int, sysMessageBox, CSTRING, text, OPTIONAL_CSTRING, title, OPTIONAL_CSTRING, button, OPTIONAL_CSTRING, icon)
 {
-  ULONG       Style;                   /* window style flags         */
-  size_t      MaxCnt;                  /* Max loop count             */
-  size_t      Index;                   /* table index                */
-  ULONG       rc;                      /* WinMessageBox return code  */
+  ULONG       style;                   /* window style flags         */
+  int         maxCnt;                  /* Max loop count             */
+  int         index;                   /* table index                */
 
-  char * Button_Styles[] =             /* message box button styles  */
+  PSZ    Button_Styles[] =             /* message box button styles  */
     {"OK",
      "OKCANCEL",
      "RETRYCANCEL",
@@ -402,83 +378,113 @@ RexxMethod4(REXXOBJECT,sysMessageBox,CSTRING,Text,CSTRING,Title, CSTRING,Button,
      "YESNO",
      "YESNOCANCEL"};
 
-ULONG  Button_Flags[] =                /* message box button styles  */
-    {MB_OK,
-     MB_OKCANCEL,
-     MB_RETRYCANCEL,
-     MB_ABORTRETRYIGNORE,
-     MB_YESNO,
-     MB_YESNOCANCEL};
+   ULONG  Button_Flags[] =                /* message box button styles  */
+       {MB_OK,
+        MB_OKCANCEL,
+        MB_RETRYCANCEL,
+        MB_ABORTRETRYIGNORE,
+        MB_YESNO,
+        MB_YESNOCANCEL};
 
-char * Icon_Styles[] =                 /* message box icon styles    */
-    {"HAND",
-     "QUESTION",
-     "EXCLAMATION",
-     "ASTERISK",
-     "INFORMATION",
-     "WARNING",
-     "ERROR",
-     "QUERY",
-     "NONE",
-     "STOP"};
+   PSZ    Icon_Styles[] =                 /* message box icon styles    */
+       {"HAND",
+        "QUESTION",
+        "EXCLAMATION",
+        "ASTERISK",
+        "INFORMATION",
+        "WARNING",
+        "ERROR",
+        "QUERY",
+        "NONE",
+        "STOP"};
 
-ULONG  Icon_Flags[] =                  /* message box icon styles    */
-    {MB_ICONHAND,
-     MB_ICONQUESTION,
-     MB_ICONEXCLAMATION,
-     MB_ICONASTERISK,
-     MB_ICONINFORMATION,
-     MB_ICONWARNING,
-     MB_ICONERROR,
-     MB_ICONQUESTION,
-     0,
-     MB_ICONSTOP};
-
-  if (Text == NULL)                    /* raise an error if empty    */
-    rexx_exception(Error_Incorrect_call);
-
+   ULONG  Icon_Flags[] =                  /* message box icon styles    */
+       {MB_ICONHAND,
+        MB_ICONQUESTION,
+        MB_ICONEXCLAMATION,
+        MB_ICONASTERISK,
+        MB_ICONINFORMATION,
+        MB_ICONWARNING,
+        MB_ICONERROR,
+        MB_ICONQUESTION,
+        0,
+        MB_ICONSTOP};
 
                                        /* set initial style flags    */
-  Style = MB_SETFOREGROUND;            /* make this foreground       */
+  style = MB_SETFOREGROUND;            /* make this foreground       */
 
-  if (Button == NULL) Style += MB_OK;  /* set default button style?  */
+  if (button == NULL)
+  {
+      style |= MB_OK;                  /* set default button style?  */
+  }
   else {                               /* check various button styles*/
                                        /* get the number of styles   */
                                        /* search style table         */
-    MaxCnt = sizeof(Button_Styles)/sizeof(char *);
+    maxCnt = sizeof(Button_Styles) / sizeof(PSZ);
 
-    for (Index = 0; Index < MaxCnt; Index++) {
+    for (index = 0; index < maxCnt; index++) {
                                        /* find a match?               */
-      if (!stricmp(Button, Button_Styles[Index])) {
-        Style += Button_Flags[Index];  /* add to the style            */
+      if (!stricmp(button, Button_Styles[index])) {
+        style += Button_Flags[index];  /* add to the style            */
         break;
       }
     }
-    if (Index == MaxCnt)               /* if not found raise error          */
-      rexx_exception(Error_Incorrect_call);
+    if (index == maxCnt)               /* if not found raise error          */
+    {
+        context->InvalidRoutine();
+        return 0;
+    }
+  }
 
-  }//end else
-
-  if (Icon == NULL) Style += MB_OK;    /* set default icon style?           */
+  if (icon == NULL)
+  {
+      style |= MB_OK;    /* set default icon style?           */
+  }
   else {                               /* check various button styles*/
-    MaxCnt = sizeof(Icon_Styles)/sizeof(char *);
+    maxCnt = sizeof(Icon_Styles)/sizeof(PSZ);
                                        /* search style table                */
-    for (Index = 0; Index < MaxCnt; Index++) {
+    for (index = 0; index < maxCnt; index++) {
                                        /* find a match?                     */
-      if (!stricmp(Icon,Icon_Styles[Index])) {
-        Style += Icon_Flags[Index];    /* add to the style                  */
+      if (!stricmp(icon,Icon_Styles[index])) {
+        style |= Icon_Flags[index];    /* add to the style                  */
         break;
       }
     }
-    if (Index == MaxCnt)               /* if not found raise error          */
-      rexx_exception(Error_Incorrect_call);
+    if (index == maxCnt)               /* if not found raise error          */
+    {
+        context->InvalidRoutine();
+        return 0;
+    }
+  }
 
-  }// end else
+  return MessageBox(NULL,                //hWndOwner
+                  text,                // Text
+                  title,               // Title
+                  style);              // Styles
+}
 
-  rc = MessageBox(NULL,                //hWndOwner
-                  Text,                // Text
-                  Title,               // Title
-                  Style);              // Styles
 
-  return RexxInteger( rc );}           // convert to return code
 
+/**
+ * Push a new environment for the SysSetLocal() BIF.
+ *
+ * @param context The current activation context.
+ *
+ * @return Returns TRUE if the environment was successfully pushed.
+ */
+RexxObject *SystemInterpreter::pushEnvironment(RexxActivation *context)
+{
+    return TheFalseObject;
+}
+
+/**
+ * Pop an environment for the SysEndLocal() BIF.
+ *
+ * @param context The current activation context.
+ *
+ * @return Always returns FALSE.  This is a NOP on Windows.
+ */
+RexxObject *SystemInterpreter::popEnvironment(RexxActivation *context)
+{
+    return TheFalseObject;             /* return failure value              */
+}

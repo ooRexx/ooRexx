@@ -169,25 +169,6 @@ void SysValidateAddressName(
     reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, Name);
 }
 
-RexxString * SysGetCurrentQueue(void)
-/******************************************************************************/
-/* Function:  Return the current queue object name                            */
-/******************************************************************************/
-{
-  RexxString * queue;                  /* current queue object              */
-  RexxString * queue_name;             /* name of the queue object          */
-
-                                       /* get the default queue             */
-  queue = (RexxString *)ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
-
-  if (queue == OREF_NULL)              /* no queue?                         */
-    queue_name = OREF_SESSION;         /* use the default name              */
-  else
-                                       /* get the actual queue name         */
-    queue_name = (RexxString *)queue->sendMessage(OREF_GET);
-  return queue_name;                   /* return the name                   */
-}
-
 void SysSetupProgram(
   RexxActivation *activation)          /* current running program           */
 /******************************************************************************/

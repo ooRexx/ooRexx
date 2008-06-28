@@ -57,11 +57,11 @@ RexxToken::RexxToken(
 /* Function:  Complete set up of a TOKEN object                               */
 /******************************************************************************/
 {
-  this->clearObject();                  /* initialize the object             */
-  OrefSet(this, this->value, _value);   /* use the provided string value     */
-  this->classId = _classId;             /* no assigned token class           */
-  this->subclass = _subclass;           /* no specialization yet             */
-  this->tokenLocation = _location;      /* copy it over                      */
+    this->clearObject();                  /* initialize the object             */
+    OrefSet(this, this->value, _value);   /* use the provided string value     */
+    this->classId = _classId;             /* no assigned token class           */
+    this->subclass = _subclass;           /* no specialization yet             */
+    this->tokenLocation = _location;      /* copy it over                      */
 }
 
 void RexxToken::live(size_t liveMark)
@@ -69,7 +69,7 @@ void RexxToken::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->value);
+    memory_mark(this->value);
 }
 
 void RexxToken::liveGeneral(int reason)
@@ -77,7 +77,7 @@ void RexxToken::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->value);
+    memory_mark_general(this->value);
 }
 
 void RexxToken::flatten(RexxEnvelope *envelope)
@@ -87,7 +87,7 @@ void RexxToken::flatten(RexxEnvelope *envelope)
 {
   setUpFlatten(RexxToken)
 
-  flatten_reference(newThis->value, envelope);
+    flatten_reference(newThis->value, envelope);
 
   cleanUpFlatten
 }
@@ -117,12 +117,7 @@ void *RexxToken::operator new(size_t size)
 /* Function:  Create a new token object                                       */
 /******************************************************************************/
 {
-  RexxObject *newToken;                /* newly created object              */
-
                                        /* Get new object                    */
-  newToken = new_object(sizeof(RexxToken));
-                                       /* Give new object its behaviour     */
-  newToken->setBehaviour(TheTokenBehaviour);
-  return newToken;                     /* and return                        */
+    return new_object(sizeof(RexxToken), T_Token);
 }
 

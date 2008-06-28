@@ -150,6 +150,17 @@ extern DWORD ComCtl32Version;
                    return 0; \
                 }
 
+
+#define RETPTR(retvalue)  { \
+                   pointer2string(retstr, (void *)retvalue); \
+                   return 0; \
+                }
+
+#define RETHANDLE(retvalue)  { \
+                   pointer2string(retstr, (void *)retvalue); \
+                   return 0; \
+                }
+
 /* macros for searching and checking the bitmap table */
 #define SEARCHBMP(addr, ndx, id) \
    {                     \
@@ -226,8 +237,37 @@ extern DWORD ComCtl32Version;
        while ((i<StoredDialogs) && (DialogTab[i]->TheDlg != hDlg) && (DialogTab[i]->AktChild != hDlg)) i++; \
        if (i<StoredDialogs) addressedTo = DialogTab[i]; else addressedTo = NULL;   } \
 
+void *string2pointer(const char *string);
+inline void *string2pointer(CONSTRXSTRING *string) { return string2pointer(string->strptr); }
+inline void *string2pointer(CONSTRXSTRING &string) { return string2pointer(string.strptr); }
+void pointer2string(char *, void *pointer);
+inline void pointer2string(PRXSTRING result, void *pointer) { pointer2string(result->strptr, pointer); result->strlength = strlen(result->strptr); }
+
 #define DEF_ADM     DIALOGADMIN * dlgAdm = NULL
-#define GET_ADM     dlgAdm = (DIALOGADMIN *)atol(argv[0].strptr)
+#define GET_ADM     dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0])
+
+#define GET_HANDLE(p) string2pointer(p)
+#define GET_HWND(p)   ((HWND)string2pointer(p))
+#define GET_POINTER(p) string2pointer(p)
+
+
+inline void safeLocalFree(void *p)
+{
+    if (p != NULL)
+    {
+        LocalFree(p);
+    }
+}
+
+
+inline void safeDeleteObject(HANDLE h)
+{
+    if (h != NULL)
+    {
+        DeleteObject(h);
+    }
+}
+
 
 /* structures to manage the dialogs */
 typedef struct {
@@ -392,16 +432,16 @@ typedef struct
 
 #ifdef EXTERNALFUNCS
 typedef LONG REXXENTRY GETITEMDATAEXTERNALFN (HANDLE, ULONG, UINT, PCHAR, ULONG);
-typedef LONG REXXENTRY SETITEMDATAEXTERNALFN (DIALOGADMIN *, HANDLE, ULONG, UINT, PCHAR);
+typedef LONG REXXENTRY SETITEMDATAEXTERNALFN (DIALOGADMIN *, HANDLE, ULONG, UINT, const char *);
 typedef LONG REXXENTRY GETSTEMDATAEXTERNALFN (HANDLE, ULONG, ULONG, PCHAR, ULONG);
-typedef LONG REXXENTRY SETSTEMDATAEXTERNALFN (DIALOGADMIN *, HANDLE, ULONG, ULONG, PCHAR);
+typedef LONG REXXENTRY SETSTEMDATAEXTERNALFN (DIALOGADMIN *, HANDLE, ULONG, ULONG, const char *);
 #endif
 
 #ifdef CREATEDLL
 /* tools */
-extern void rxstrlcpy(CHAR * tar, RXSTRING src);
-extern void rxdatacpy(CHAR * tar, RXSTRING src);
-extern BOOL IsYes(CHAR * s);
+extern void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
+extern void rxdatacpy(CHAR * tar, RXSTRING &src);
+extern bool IsYes(const char *s);
 
 /* global variables */
 #ifndef NOGLOBALVARIABLES

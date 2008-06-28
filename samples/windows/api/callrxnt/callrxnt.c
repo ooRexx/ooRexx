@@ -62,7 +62,7 @@ int main()
 
     char     *str = "These words will be swapped"; /* text to swap   */
 
-    APIRET   rc;                        /* return code from REXX     */
+    RexxReturnCode   rc;                        /* return code from REXX     */
     short    rexxrc = 0;                /* return code from function */
 
     printf("\nThis program will call the REXX interpreter ");

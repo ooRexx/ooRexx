@@ -60,6 +60,21 @@ public:
     static RexxArray *makearray(const char *start, size_t length, RexxString *separator);
     static const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static int caselessCompare(const char *, const char *, size_t);
+    static int hexDigitToInt(char  ch);
+    static char packByte(const char *String);
+    static void unpackNibble(int Val, char *p);
+    static char packNibble(const char *String);
+    static RexxString *packHex(const char *String, size_t StringLength);
+    static size_t chGetSm(char *Destination, const char *Source, size_t Length, size_t Count, const char *Set, size_t *ScannedSize);
+    static size_t validateSet(const char *String, size_t Length, const char *Set, int Modulus, bool Hex);
+    static char packByte2(const char *Byte);
+    static int valSet(const char *String, size_t Length, const char *Set, int Modulus, size_t *PackedSize );
+    static const char *memcpbrk(const char *String, const char *Set, size_t Length);
+    static RexxObject *dataType(RexxString *String, char Option );
+    static size_t wordCount(const char *String, size_t   StringLength );
+    static void skipNonBlanks(const char **String, size_t *StringLength);
+    static void skipBlanks(const char **String, size_t *StringLength);
+    static size_t nextWord(const char **String, size_t *StringLength, const char **NextString );
 };
 
 #endif

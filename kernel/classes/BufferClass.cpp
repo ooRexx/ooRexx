@@ -66,41 +66,43 @@ RexxBuffer *RexxBuffer::expand(
 /* Function:  Create a larger buffer and copy existing data into it           */
 /******************************************************************************/
 {
-  RexxBuffer * newBuffer;              /* returned new buffer               */
+    RexxBuffer * newBuffer;              /* returned new buffer               */
 
-                                       /* we will either return a buffer    */
-                                       /* twice the size of the current     */
-                                       /* buffer, or this size of           */
-                                       /* current(this)buffer + requested   */
-                                       /* minimum length.                   */
-  if (length > this->getLength())      /* need more than double?            */
-                                       /* increase by the requested amount  */
-    newBuffer = new_buffer(this->getLength() + length);
-  else                                 /* just double the existing length   */
-    newBuffer = new_buffer(this->getLength() * 2);
-                                       /* have new buffer, so copy data from*/
-                                       /* current buffer into new buffer.   */
-  memcpy(newBuffer->address(), this->data, this->getLength());
-  return newBuffer;                    /* all done, return new buffer       */
+                                         /* we will either return a buffer    */
+                                         /* twice the size of the current     */
+                                         /* buffer, or this size of           */
+                                         /* current(this)buffer + requested   */
+                                         /* minimum length.                   */
+    if (length > this->getLength())      /* need more than double?            */
+    {
+        /* increase by the requested amount  */
+        newBuffer = new_buffer(this->getLength() + length);
+    }
+    else                                 /* just double the existing length   */
+    {
+        newBuffer = new_buffer(this->getLength() * 2);
+    }
+    /* have new buffer, so copy data from*/
+    /* current buffer into new buffer.   */
+    memcpy(newBuffer->getData(), this->data, this->getLength());
+    return newBuffer;                    /* all done, return new buffer       */
 
 }
 
-void *RexxBuffer::operator new(size_t size,
-    size_t length)                     /* buffer length                     */
+void *RexxBuffer::operator new(size_t size, size_t _length)
 /******************************************************************************/
 /* Function:  Create a new buffer object                                      */
 /******************************************************************************/
 {
-  RexxBuffer *newBuffer;               /* new object                        */
-
-                                       /* Get new object                    */
-  newBuffer = (RexxBuffer *) new_object(size + length - sizeof(char[4]));
-                                       /* Give new object its behaviour     */
-  newBuffer->setBehaviour(TheBufferBehaviour);
-                                       /* Initialize this new buffer        */
-  newBuffer->size = length;            /* set the length of the buffer      */
-  newBuffer->setHasNoReferences();     /* this has no references            */
-  return (void *)newBuffer;            /* return the new buffer             */
+                                         /* Get new object                    */
+    RexxBuffer *newBuffer = (RexxBuffer *) new_object(size + _length - sizeof(char[4]));
+    /* Give new object its behaviour     */
+    newBuffer->setBehaviour(TheBufferBehaviour);
+    /* Initialize this new buffer        */
+    newBuffer->size = _length;           /* set the length of the buffer      */
+    newBuffer->length = _length;         // by default, the data length and size are the same
+    newBuffer->setHasNoReferences();     /* this has no references            */
+    return(void *)newBuffer;            /* return the new buffer             */
 }
 
 
@@ -114,51 +116,3 @@ RexxObject *RexxBuffer::newRexx(RexxObject **args, size_t argc)
     return TheNilObject;
 }
 
-
-#include "RexxNativeAPI.h"
-
-#define this ((RexxBuffer *)self)
-
-char *REXXENTRY REXX_BUFFER_ADDRESS(REXXOBJECT self)
-/******************************************************************************/
-/* Function:  External interface to the object method                         */
-/******************************************************************************/
-{
-/******************************************************************************/
-/* NOTE:  This method does not reaquire kernel access                         */
-/******************************************************************************/
-  return this->address();              /* just return this directly         */
-}
-
-size_t REXXENTRY REXX_BUFFER_LENGTH(REXXOBJECT self)
-/******************************************************************************/
-/* Function:  External interface to the object method                         */
-/******************************************************************************/
-{
-/******************************************************************************/
-/* NOTE:  This method does not reaquire kernel access                         */
-/******************************************************************************/
-  return this->getLength();               /* just return this directly         */
-}
-
-REXXOBJECT REXXENTRY REXX_BUFFER_EXTEND(REXXOBJECT self, size_t length)
-/******************************************************************************/
-/* Function:  Extend the length of a buffer                                   */
-/******************************************************************************/
-{
-    NativeContextBlock context;
-                                       /* return new expanded buffer        */
-    return context.protect((RexxObject *)this->expand(length));
-}
-
-#undef RexxBuffer
-
-REXXOBJECT REXXENTRY REXX_BUFFER_NEW(size_t length)
-/******************************************************************************/
-/* Function:  External interface to the nativeact object method               */
-/******************************************************************************/
-{
-    NativeContextBlock context;
-                                       /* just forward and return           */
-    return context.protect((RexxObject *)new (length) RexxBuffer());
-}

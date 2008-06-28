@@ -54,62 +54,9 @@ RexxTerminate                  @16
 ;
 RexxTranslateProgram           @24
 ;
-REXX_ARRAY_AT                @30
-REXX_ARRAY_HASINDEX          @31
-REXX_ARRAY_PUT               @32
-REXX_ARRAY_SIZE              @33
-REXX_ARRAY_NEW               @34
-REXX_ARRAY_NEW1              @35
-REXX_ARRAY_NEW2              @36
-REXX_BUFFER_ADDRESS          @37
-REXX_BUFFER_LENGTH           @38
-REXX_BUFFER_NEW              @39
-REXX_INTEGER_VALUE           @42
-REXX_INTEGER_NEW             @43
-REXX_DOUBLE                  @44
-REXX_ISDOUBLE                @45
-REXX_EXCEPT                  @46
-REXX_CONDITION               @47
-REXX_RAISE                   @48
-REXX_INTEGER                 @49
-REXX_ISINTEGER               @50
-REXX_STRING                  @51
-REXX_MSGNAME                 @52
-REXX_RECEIVER                @53
-REXX_ISSTRING                @54
-REXX_SEND                    @55
-REXX_SUPER                   @56
-REXX_SETVAR                  @57
-REXX_GETVAR                  @58
-REXX_VARIABLEPOOL            @59
-REXX_OBJECT_NEW              @63
-REXX_STRING_GET              @64
-REXX_STRING_DATA             @65
-REXX_STRING_LENGTH           @67
-REXX_STRING_NEW              @68
-REXX_STRING_NEW_UPPER        @69
-REXX_STRING_NEWD             @70
-REXX_TABLE_ADD               @71
-REXX_TABLE_GET               @72
-REXX_TABLE_REMOVE            @73
-REXX_NIL                     @74
-REXX_TRUE                    @75
-REXX_FALSE                   @76
-REXX_ENVIRONMENT             @77
-REXX_LOCAL                   @78
-REXX_EXCEPT1                 @79
-REXX_EXCEPT2                 @80
-REXX_POINTER_NEW             @81
-REXX_POINTER_VALUE           @82
-REXX_ISINSTANCE              @83
 ;
-;
-RexxCreateMethod               @92
-RexxRunMethod                  @93
 RexxCreateInterpreterImage     @94
 RexxGetCurrentPrecision        @95
-RexxCreateScriptContext        @96
-RexxDestroyScriptContext       @97
 ;
 ; Windows Specific
 ;
@@ -118,13 +65,7 @@ RexxSetProcessMessages        @110
 ; for feature 249
 
 RexxGetVersionInformation     @114
-REXX_GETFUNCTIONNAMES         @116
-WinEnterKernel                @120
-WinLeaveKernel                @121
-WinGetVariables               @122
 RexxStemSort                  @124
-REXX_GUARD_ON                 @125
-REXX_GUARD_OFF                @126
 
 SECTIONS
    .sdata READ WRITE SHARED

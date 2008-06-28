@@ -138,6 +138,10 @@ call 'PlatformObjects.orx'                   -- now load platform-specific built
 
 say ('Base objects created')
 
+-- add all of the defined routine functions into our global list
+.kernel~functions~putAll(.routines)
+
+
 exit
 
 /* ********************************************************************************************* */
@@ -1416,7 +1420,7 @@ nomethod:
  syntax:
    raise propagate                     /* just propagate the error          */
 
-::METHOD !startTimer PRIVATE unguarded EXTERNAL 'REXX alarm_startTimer'
+::METHOD !startTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX alarm_startTimer'
 
  /**************************************************************************/
  /* Class  Alarm                                                           */
@@ -1443,7 +1447,7 @@ nomethod:
    end
  return
 
-::METHOD !stopTimer PRIVATE unguarded EXTERNAL 'REXX alarm_stopTimer'
+::METHOD !stopTimer PRIVATE unguarded EXTERNAL 'LIBRARY REXX alarm_stopTimer'
 
 
 
@@ -3372,3 +3376,46 @@ Output:
       raise syntax 88.914 array(name, class~id)
   end
 
+
+
+/* **************************************** */
+/*    F U N C T I O N S                     */
+/* **************************************** */
+
+::routine rxqueue
+  use arg keyword, queue_name
+  parse upper var keyword keyword
+  signal on syntax
+  if arg() > 2 then
+     raise syntax 40.004 array ('RXQUEUE', 2)
+
+  if substr(keyword,1,1) = 'G' then
+    if arg() > 1 then
+      raise syntax 40.004 array ('RXQUEUE', 1)
+    else
+      return .stdque~get
+
+  if substr(keyword,1,1) = 'S' then do
+    queue_name = !queueexit(queue_name)/* give the exit a pass     */
+    if symbol(queue_name) = 'BAD' then
+      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
+    return .stdque~set(queue_name)
+  end
+
+  if substr(keyword,1,1) = 'C' then do
+    if symbol(queue_name) = 'BAD' then
+      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
+    if (Arg(2,'o') = 1) then
+      queue_name = 'S00001Q0000000001'
+    return .RexxQueue~create(queue_name)
+  end
+
+  if substr(keyword,1,1) = 'D' then do
+    if symbol(queue_name) = 'BAD' then
+      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
+    return .RexxQueue~delete(queue_name)
+  end
+  raise syntax 40.904 array ('RXQUEUE', 1, 'CDGS', keyword)
+  return
+
+syntax: raise propagate

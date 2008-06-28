@@ -137,15 +137,14 @@ class MemorySegmentPool : public MemorySegmentPoolHeader
 #include "MemoryStats.hpp"
 #include "MemorySegment.hpp"
 
-class RexxMemory : public RexxObject {
+class RexxMemory : public RexxInternalObject
+{
 #ifdef _DEBUG
   friend class RexxInstructionOptions;
 #endif
  public:
   inline RexxMemory();
   inline RexxMemory(RESTORETYPE restoreType) { ; };
-
-  inline void *operator new(size_t size, void *ptr) {return ptr; };
 
   inline operator RexxObject*() { return (RexxObject *)this; };
   inline RexxObject *operator=(DeadObject *d) { return (RexxObject *)this; };
@@ -266,8 +265,6 @@ class RexxMemory : public RexxObject {
   RexxVariable *variableCache;         /* our cache of variable objects     */
 
   static RexxDirectory *environment;      // global environment
-  static RexxDirectory *publicRoutines;   // statically defined public routines
-  static RexxDirectory *staticRequires;   // statically defined requires
   static RexxDirectory *functionsDir;     // statically defined requires
   static RexxDirectory *commonRetrievers; // statically defined requires
   static RexxDirectory *kernel;           // the kernel directory
@@ -291,15 +288,13 @@ enum
     saveArray_GLOBAL_STRINGS,
     saveArray_CLASS,
     saveArray_PBEHAV,
-    saveArray_LIBRARIES,
+    saveArray_PACKAGES,
     saveArray_NULLA,
     saveArray_NULLPOINTER,
     saveArray_SYSTEM,
     saveArray_FUNCTIONS,
     saveArray_COMMON_RETRIEVERS,
-    saveArray_STATIC_REQ,
-    saveArray_PUBLIC_RTN,
-    saveArray_highest = saveArray_PUBLIC_RTN
+    saveArray_highest = saveArray_COMMON_RETRIEVERS
 };
 
 
@@ -334,12 +329,9 @@ enum
   bool objectReferenceOK(RexxObject *o);
   void restoreImage();
 
-  static RexxMethod *createKernelMethod(PCPPM entryPoint, size_t arguments);
-  static RexxMethod *createProtectedKernelMethod(PCPPM entryPoint, size_t arguments);
-  static RexxMethod *createPrivateKernelMethod(PCPPM entryPoint, size_t arguments);
-  static void        defineKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-  static void        defineProtectedKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
-  static void        definePrivateKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+  static void defineKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+  static void defineProtectedKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
+  static void definePrivateKernelMethod(const char *name, RexxBehaviour * behaviour, PCPPM entryPoint, size_t arguments);
 
   RexxStack  *liveStack;
   RexxStack  *flattenStack;

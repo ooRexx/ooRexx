@@ -75,7 +75,7 @@
 #define SECOND_PARAMETER 0             /* 0 for no  NL_CAT_LOCALE    */
 #endif
 
-void parmerr(int ); 
+void parmerr(int );
 
 int main(                              /* Program Begins             */
 int     argc,                          /* Argument count             */
@@ -104,7 +104,7 @@ char    **envp )                       /* Ptr to array of env strings*/
    CASE("QUERY"){                      /* Query Check                */
      if(argc<3)parmerr(Error_RXSUBC_query_msg);   /* requires 3 parameters */
      if(argc>=4)funcname = argv[3];    /* if only 3 passed, dummy 4  */
-     unsigned short exists = 0; 
+     unsigned short exists = 0;
      return(                           /* Call query and return      */
         RexxQuerySubcom(               /* code.                      */
                  argv[2],              /* Should be Dll Name         */

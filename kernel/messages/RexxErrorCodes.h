@@ -352,6 +352,8 @@
 #define Error_Incorrect_call_queue_no_char                 40915
 #define Error_Incorrect_call_read_from_writeonly           40916
 #define Error_Incorrect_call_write_to_readonly             40917
+#define Error_Incorrect_call_signature                     40918
+#define Error_Incorrect_call_nostem                        40919
 #define Error_Conversion                                   41000
 #define Error_Conversion_operator                          41001
 #define Error_Conversion_prefix                            41003
@@ -411,6 +413,10 @@
 #define Error_Invalid_argument_list                        88916
 #define Error_Invalid_argument_general                     88917
 #define Error_Invalid_argument_format                      88918
+#define Error_Invalid_argument_pointer                     88919
+#define Error_Invalid_argument_nostem                      88920
+#define Error_Invalid_argument_double                      88921
+#define Error_Invalid_argument_maxarg                      88922
 #define Error_Variable_expected                            89000
 #define Error_Variable_expected_USE                        89001
 #define Error_Variable_expected_PARSE                      89002
@@ -498,6 +504,8 @@
 #define Error_Incorrect_method_abstract                    93965
 #define Error_Incorrect_method_queue_index                 93966
 #define Error_Unsupported_new_method                       93967
+#define Error_Incorrect_method_signature                   93968
+#define Error_Incorrect_method_nostem                      93969
 #define Error_No_method                                    97000
 #define Error_No_method_name                               97001
 #define Error_No_method_user_defined                       97900
@@ -535,6 +543,9 @@
 #define Error_Execution_no_concurrency                     98951
 #define Error_Execution_sparse_array                       98975
 #define Error_Execution_nostem                             98976
+#define Error_Execution_library_method                     98978
+#define Error_Execution_library_routine                    98979
+#define Error_Execution_native_routine                     98980
 #define Error_Translation                                  99000
 #define Error_Translation_user_defined                     99900
 #define Error_Translation_duplicate_class                  99901

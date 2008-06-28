@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                      LabelInstruction.c    */
+/* REXX Translator                                      LabelInstruction.cpp  */
 /*                                                                            */
 /* Primitive Label Parse Class                                                */
 /*                                                                            */

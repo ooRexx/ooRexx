@@ -195,13 +195,13 @@ static BOOL CheckMacroComBlock();
 
 
 /* functions that are called from rxapi.exe */
-extern _declspec(dllexport) APIRET APIAddMacro(BOOL updateIfExists);
-extern _declspec(dllexport) APIRET APIDropMacro(void);
-extern _declspec(dllexport) APIRET APIClearMacroSpace(void);
-extern _declspec(dllexport) APIRET APIQueryMacro(void);
-extern _declspec(dllexport) APIRET APIReorderMacro(void);
-extern _declspec(dllexport) APIRET APIExecuteMacroFunction(void);
-extern _declspec(dllexport) APIRET APIList(int kind);
+extern _declspec(dllexport) RexxReturnCode APIAddMacro(BOOL updateIfExists);
+extern _declspec(dllexport) RexxReturnCode APIDropMacro(void);
+extern _declspec(dllexport) RexxReturnCode APIClearMacroSpace(void);
+extern _declspec(dllexport) RexxReturnCode APIQueryMacro(void);
+extern _declspec(dllexport) RexxReturnCode APIReorderMacro(void);
+extern _declspec(dllexport) RexxReturnCode APIExecuteMacroFunction(void);
+extern _declspec(dllexport) RexxReturnCode APIList(int kind);
 
 /*********************************************************************/
 
@@ -222,7 +222,7 @@ extern _declspec(dllexport) APIRET APIList(int kind);
 /*                                                                   */
 /*********************************************************************/
 
-APIRET
+RexxReturnCode
 REXXENTRY
 RexxAddMacro(
   const char *n,                       /* name of macro function     */
@@ -230,7 +230,7 @@ RexxAddMacro(
   size_t pos )                         /* search order pos request   */
 {
   MACRO  p;
-  APIRET  rc;
+  RexxReturnCode  rc;
 
   if (pos != RXMACRO_SEARCH_BEFORE &&  /* if pos flag not before and */
        pos != RXMACRO_SEARCH_AFTER )   /*   not after, then          */
@@ -243,7 +243,7 @@ RexxAddMacro(
   if (!(rc=callrexx(s, &p))) {        /* call REXXSAA to get image  */
       APISTARTUP_MACRO();                        /* do common entry code       */
       if (FillMacroComBlock(TRUE, n, p.image.strptr, p.i_size, pos))
-          rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_ADD,1 /* update if exists */);
+          rc = (RexxReturnCode)MySendMessage(RXAPI_MACRO,MACRO_ADD,1 /* update if exists */);
       else rc = RXMACRO_NO_STORAGE;
       GlobalFree(p.image.strptr);
       APICLEANUP_MACRO();                        /* release shared resources   */
@@ -253,7 +253,7 @@ RexxAddMacro(
 }
 
 
-APIRET APIAddMacro(BOOL updateIfExists)
+RexxReturnCode APIAddMacro(BOOL updateIfExists)
 {
   PCHAR   str;
   PMACRO  p;                           /* existing macro             */
@@ -309,11 +309,11 @@ APIRET APIAddMacro(BOOL updateIfExists)
 /*                                                                   */
 /*********************************************************************/
 
-APIRET
+RexxReturnCode
 REXXENTRY
 RexxDropMacro(const char *n)                       /* name of macro to delete    */
 {
-  APIRET rc;                           /* return code from function  */
+  RexxReturnCode rc;                           /* return code from function  */
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -324,7 +324,7 @@ RexxDropMacro(const char *n)                       /* name of macro to delete   
   APISTARTUP_MACRO();                        /* do common entry code       */
 
   if (FillMacroComBlock(FALSE, n, NULL, 0, 0))    /* just put the name into com port */
-      rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_DROP,0);
+      rc = (RexxReturnCode)MySendMessage(RXAPI_MACRO,MACRO_DROP,0);
   else rc = RXMACRO_NO_STORAGE;
 
   APICLEANUP_MACRO();                        /* release shared resources   */
@@ -333,7 +333,7 @@ RexxDropMacro(const char *n)                       /* name of macro to delete   
 
 
 
-APIRET APIDropMacro(void)
+RexxReturnCode APIDropMacro(void)
 {
   PMACRO p = NULL;                     /* pointer to function struct */
   PMACRO prev = NULL;
@@ -367,11 +367,11 @@ APIRET APIDropMacro(void)
 /*                                                                   */
 /*********************************************************************/
 
-APIRET
+RexxReturnCode
 REXXENTRY
 RexxClearMacroSpace(void)
 {
-  APIRET rc;                           /* return code from function  */
+  RexxReturnCode rc;                           /* return code from function  */
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -379,13 +379,13 @@ RexxClearMacroSpace(void)
   if (!CheckMacroComBlock()) return(RXMACRO_NO_STORAGE);
 
   APISTARTUP_MACRO();                        /* do common entry code       */
-  rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_CLEAR,0);
+  rc = (RexxReturnCode)MySendMessage(RXAPI_MACRO,MACRO_CLEAR,0);
   APICLEANUP_MACRO();                        /* release shared resources   */
   return (rc);                         /* and exit with return code  */
 }
 
 
-APIRET APIClearMacroSpace(void)
+RexxReturnCode APIClearMacroSpace(void)
 {
   if (eraselst((PMACRO)RX.macrobase))           /* free all entries in list   */
   {
@@ -417,7 +417,7 @@ APIRET APIClearMacroSpace(void)
 /*  Output:             return code                                  */
 /*                                                                   */
 /*********************************************************************/
-APIRET
+RexxReturnCode
 REXXENTRY
 RexxSaveMacroSpace(
   size_t   ac,                         /* count of arguments         */
@@ -429,7 +429,7 @@ RexxSaveMacroSpace(
   HFILE f;
 
   LRESULT found;
-  APIRET rc = 0;
+  RexxReturnCode rc = 0;
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -536,7 +536,7 @@ static BOOL getNextMacro(ULONG kind)
 }
 
 
-APIRET APIList(int kind)
+RexxReturnCode APIList(int kind)
 {
   RXMACRO_TALK * intercom;
   ULONG i, size = 0;
@@ -595,7 +595,7 @@ APIRET APIList(int kind)
 /*  Output:             return code                                  */
 /*                                                                   */
 /*********************************************************************/
-APIRET
+RexxReturnCode
 REXXENTRY
 RexxLoadMacroSpace(
   size_t   ac,                         /* argument count             */
@@ -637,13 +637,13 @@ RexxLoadMacroSpace(
 /*                                                                   */
 /*********************************************************************/
 
-APIRET
+RexxReturnCode
 REXXENTRY
 RexxQueryMacro(
   const char *name,                    /* name to search for         */
   unsigned short *pos )                /* pointer for return of pos  */
 {
-  APIRET rc;                           /* return code from call      */
+  RexxReturnCode rc;                           /* return code from call      */
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -654,7 +654,7 @@ RexxQueryMacro(
 
   if (FillMacroComBlock(FALSE, name, NULL, 0, 0))    /* just put the name into com port */
   {
-      rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_QUERY,0);
+      rc = (RexxReturnCode)MySendMessage(RXAPI_MACRO,MACRO_QUERY,0);
       if (rc == RXMACRO_OK) *pos = (USHORT) ((RXMACRO_TALK *)LRX.comblock[API_MACRO])->srch_pos;
   }
   else rc = RXMACRO_NO_STORAGE;
@@ -664,7 +664,7 @@ RexxQueryMacro(
 }
 
 
-APIRET APIQueryMacro(void)
+RexxReturnCode APIQueryMacro(void)
 {
   PMACRO tmp;                          /* temp pointer to record     */
   RXMACRO_TALK * intercom;
@@ -693,13 +693,13 @@ APIRET APIQueryMacro(void)
 /*                                                                   */
 /*********************************************************************/
 
-APIRET
+RexxReturnCode
 REXXENTRY
 RexxReorderMacro(
   const char *name,                    /* name of function to change */
   size_t pos )                         /* new position for function  */
 {
-  APIRET rc;                           /* return code from call      */
+  RexxReturnCode rc;                           /* return code from call      */
 
   if ( pos != RXMACRO_SEARCH_BEFORE && /* if pos flag not before and */
        pos != RXMACRO_SEARCH_AFTER )   /*   not after, then          */
@@ -713,7 +713,7 @@ RexxReorderMacro(
   APISTARTUP_MACRO();                        /* do common entry code       */
 
   if (FillMacroComBlock(FALSE, name, NULL, 0, pos))    /* just put the name and pos into com port */
-      rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_REORDER,0);
+      rc = (RexxReturnCode)MySendMessage(RXAPI_MACRO,MACRO_REORDER,0);
   else rc = RXMACRO_NO_STORAGE;
 
   APICLEANUP_MACRO();                        /* release shared resources   */
@@ -721,7 +721,7 @@ RexxReorderMacro(
 }
 
 
-APIRET APIReorderMacro()
+RexxReturnCode APIReorderMacro()
 {
   PMACRO tmp;                          /* temp pointer to record     */
   RXMACRO_TALK * intercom;
@@ -752,12 +752,12 @@ APIRET APIReorderMacro()
 /*                                                                   */
 /*********************************************************************/
 
-APIRET REXXENTRY RexxExecuteMacroFunction(
+RexxReturnCode REXXENTRY RexxExecuteMacroFunction(
   const char *name,                    /* name of func to find       */
   PRXSTRING p )                        /* storage for image return   */
 {
   MACRO tmp;                           /* temp macro pointer         */
-  APIRET rc=RXMACRO_OK;                /* return code from function  */
+  RexxReturnCode rc=RXMACRO_OK;                /* return code from function  */
 
   if (!API_RUNNING()) return (RXMACRO_NO_STORAGE);
 
@@ -767,7 +767,7 @@ APIRET REXXENTRY RexxExecuteMacroFunction(
   APISTARTUP_MACRO();                        /* do common entry code       */
 
   if (FillMacroComBlock(FALSE, name, NULL, 0, 0))    /* just put the name into com port */
-      rc = (APIRET)MySendMessage(RXAPI_MACRO,MACRO_EXECUTE,0);
+      rc = (RexxReturnCode)MySendMessage(RXAPI_MACRO,MACRO_EXECUTE,0);
   else rc = RXMACRO_NO_STORAGE;
 
   p->strptr = NULL;
@@ -787,7 +787,7 @@ APIRET REXXENTRY RexxExecuteMacroFunction(
 
 
 
-APIRET APIExecuteMacroFunction(void)
+RexxReturnCode APIExecuteMacroFunction(void)
 {
   PMACRO tmp;                          /* temp macro pointer         */
   ULONG  rc=RXMACRO_OK;                /* return code from function  */

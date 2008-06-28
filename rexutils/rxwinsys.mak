@@ -48,6 +48,14 @@ SOURCEF=$(OR_OUTDIR)\rxwinsys.obj
 {$(XPLATFORM)}.c{$(OR_OUTDIR)}.obj:
     $(C) $(OPTIONS) $(cflags_dll) $(ORYXINCL) /DINCL_32  -c $(**) /Fo$(@)
 
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_ORYXLSRC directory
+#
+{$(XPLATFORM)}.cpp{$(OR_OUTDIR)}.obj:
+    @ECHO .
+    @ECHO Compiling $(**)
+    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
+
 $(OR_OUTDIR)\rxwinsys.dll:     $(SOURCEF)
     $(OR_LINK) \
         $(SOURCEF)  \

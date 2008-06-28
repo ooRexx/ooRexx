@@ -50,19 +50,17 @@
 #include <dispex.h>
 #include <agtctl_i.c> /* include to get the ID of ControlAgent events */
 
-#include "rexx.h"
-#include "RexxNativeAPI.h"                        // REXX native interface
+#include "oorexxapi.h"
 #include "events.h"
 
 extern VOID ORexxOleFree(PVOID ptr);
-extern BOOL fIsRexxArray(REXXOBJECT TestObject);
-extern REXXOBJECT Variant2Rexx(VARIANT *pVariant);
-extern VOID Rexx2Variant(REXXOBJECT RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
+extern RexxObjectPtr Variant2Rexx(RexxThreadContext *, VARIANT *pVariant);
+extern VOID Rexx2Variant(RexxThreadContext *, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
 
 // CTOR
 // set reference count to one
-OLEObjectEvent::OLEObjectEvent( POLEFUNCINFO2 pEL, REXXOBJECT slf, GUID guid) :
-  ulRefCounter(1), pEventList(pEL), self(slf), interfaceID(guid)
+OLEObjectEvent::OLEObjectEvent( POLEFUNCINFO2 pEL, RexxObjectPtr slf, RexxInstance *c, GUID guid) :
+  ulRefCounter(1), pEventList(pEL), self(slf), interpreter(c), interfaceID(guid)
 {
   //fprintf(stderr,"OLEObjectEvent::OLEObjectEvent() ");
 }
@@ -70,25 +68,28 @@ OLEObjectEvent::OLEObjectEvent( POLEFUNCINFO2 pEL, REXXOBJECT slf, GUID guid) :
 // DTOR
 OLEObjectEvent::~OLEObjectEvent()
 {
-  POLEFUNCINFO2 pTemp;
-  int i;
+    POLEFUNCINFO2 pTemp;
+    int i;
 
 //  fprintf(stderr,"OLEObjectEvent::~OLEObjectEvent() (%p)\n",this);
 
-  // remove event list from memory
-  while (pEventList) {
-    pTemp = pEventList;
-    pEventList = pEventList->pNext;
-    //fprintf(stderr,"releasing event map entry: %s (%s)\n",pTemp->pszFuncName,pTemp->pszDocString);
-    ORexxOleFree( pTemp->pszFuncName );
-    ORexxOleFree( pTemp->pszDocString );
-    ORexxOleFree( pTemp->pOptVt );
-    ORexxOleFree( pTemp->pusOptFlags );
-    for (i=0;i<pTemp->iParmCount;i++)
-      ORexxOleFree (pTemp->pszName[i]);
-    ORexxOleFree( pTemp->pszName );
-    ORexxOleFree( pTemp );
-  }
+    // remove event list from memory
+    while (pEventList)
+    {
+        pTemp = pEventList;
+        pEventList = pEventList->pNext;
+        //fprintf(stderr,"releasing event map entry: %s (%s)\n",pTemp->pszFuncName,pTemp->pszDocString);
+        ORexxOleFree( pTemp->pszFuncName );
+        ORexxOleFree( pTemp->pszDocString );
+        ORexxOleFree( pTemp->pOptVt );
+        ORexxOleFree( pTemp->pusOptFlags );
+        for (i=0;i<pTemp->iParmCount;i++)
+        {
+            ORexxOleFree (pTemp->pszName[i]);
+        }
+        ORexxOleFree( pTemp->pszName );
+        ORexxOleFree( pTemp );
+    }
 
 }
 
@@ -98,28 +99,28 @@ STDMETHODIMP OLEObjectEvent::QueryInterface(
     /* [in]  */ REFIID riid,
     /* [out] */ void **ppvObj)
 {
-  if (!ppvObj)
-    return ResultFromScode(E_INVALIDARG);
-  *ppvObj = NULL;
+    if (!ppvObj)
+        return ResultFromScode(E_INVALIDARG);
+    *ppvObj = NULL;
 
-  if (IsEqualIID(riid, IID_IUnknown))
-    *ppvObj = (LPVOID) (IUnknown *) this;
-  else if (IsEqualIID(riid, IID_IDispatch))
-    *ppvObj = (LPVOID) (IDispatch *) this;
-  else if ( IsEqualIID( riid, interfaceID) )
-    *ppvObj = (LPVOID) (IDispatch *) this;
+    if (IsEqualIID(riid, IID_IUnknown))
+        *ppvObj = (LPVOID) (IUnknown *) this;
+    else if (IsEqualIID(riid, IID_IDispatch))
+        *ppvObj = (LPVOID) (IDispatch *) this;
+    else if ( IsEqualIID( riid, interfaceID) )
+        *ppvObj = (LPVOID) (IDispatch *) this;
 
 
-  if (*ppvObj != NULL)
-  {
-    /* we found an interface that can be returned, add reference */
-    AddRef();
-    return NOERROR;
-  }
-  else
-  {
-    return ResultFromScode(E_NOINTERFACE);
-  } /* endif */
+    if (*ppvObj != NULL)
+    {
+        /* we found an interface that can be returned, add reference */
+        AddRef();
+        return NOERROR;
+    }
+    else
+    {
+        return ResultFromScode(E_NOINTERFACE);
+    }
 }
 
 
@@ -171,89 +172,110 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                                VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
                                unsigned int *puArgErr)
 {
-  HRESULT      hResult = S_OK; //DISP_E_MEMBERNOTFOUND;   // default return value
-  POLEFUNCINFO2 pList = pEventList;
-  BOOL         fFound = false;
-//  fprintf(stderr,"OLEObjectEvent::Invoke %08x PID %08x TID %08x\n",dispIdMember,GetCurrentProcessId(),GetCurrentThreadId());
+    HRESULT      hResult = S_OK; //DISP_E_MEMBERNOTFOUND;   // default return value
+    POLEFUNCINFO2 pList = pEventList;
+    BOOL         fFound = false;
+    RexxThreadContext *context;
 
-  // is this a method ?
-  if (wFlags & DISPATCH_METHOD) {
-    while (!fFound && pList) {
-      if (pList->memId == dispIdMember) fFound = true;
-      else pList = pList->pNext;
+    if (!interpreter->AttachThread(&context))
+    {
+        return DISP_E_MEMBERNOTFOUND;
     }
 
-    if (fFound) {
-      REXXOBJECT  rxResult;
-      REXXOBJECT  rxArray;
-      int         i;
-      int         j;
-      //fprintf(stderr,"%08x %s\n",dispIdMember,pList->pszFuncName);
+//  fprintf(stderr,"OLEObjectEvent::Invoke %08x PID %08x TID %08x\n",dispIdMember,GetCurrentProcessId(),GetCurrentThreadId());
 
-      // does argument count match? does object have method?
-      if ( (pList->iParmCount == (int) pDispParams->cArgs) &&
-           (ooRexxSend1(self, "HASMETHOD", ooRexxString(pList->pszFuncName)) == ooRexxTrue) ) {
-        char upperBuffer[128];
-
-        rxArray=ooRexxArray(pDispParams->cArgs);
-        // convert VARIANTs to Rexx Objects...
-        for (i=0;i<(int) pDispParams->cArgs;i++) {
-          rxResult = Variant2Rexx(&pDispParams->rgvarg[i]);
-          array_put(rxArray, rxResult, i+1);
+    // is this a method ?
+    if (wFlags & DISPATCH_METHOD)
+    {
+        while (!fFound && pList)
+        {
+            if (pList->memId == dispIdMember) fFound = true;
+            else pList = pList->pNext;
         }
-        strcpy(upperBuffer,pList->pszFuncName);
-        strupr(upperBuffer);
-        rxResult = ooRexxSend(self,upperBuffer,rxArray);
 
-        // if method returned something, see if out paramters can be filled in
-        // otherwise ignore them
-        if ( !(rxResult == NULL) && !(rxResult == ooRexxNil) ) {
-          for (i=j=0;i<(int) pDispParams->cArgs;i++)
-            if (pList->pusOptFlags[i] & PARAMFLAG_FOUT) j++;
+        if (fFound)
+        {
+            RexxObjectPtr  rxResult;
+            RexxArrayObject rxArray;
+            int         i;
+            int         j;
+            //fprintf(stderr,"%08x %s\n",dispIdMember,pList->pszFuncName);
 
-          // out parameters exist
-          if (j>0) {
-            // if there is just a single out parameter, the return
-            // value will go into it directly
-            if (j==1) {
-              i=0;
-              while ( (i<(int) pDispParams->cArgs) && !(pList->pusOptFlags[i] & PARAMFLAG_FOUT)) i++;
-              // put value into out parameter
-              Rexx2Variant(rxResult,&pDispParams->rgvarg[i],pDispParams->rgvarg[i].vt,-1);
-            }
-            else if (fIsRexxArray(rxResult))
+            // does argument count match? does object have method?
+            if ( (pList->iParmCount == (int) pDispParams->cArgs) && context->HasMethod(self, pList->pszFuncName))
             {
-              REXXOBJECT rxArray = rxResult;
-              REXXOBJECT  RexxStr = NULL;
-              const char *pString = NULL;
-              int         k;
+                char upperBuffer[128];
 
-              k = (int)REXX_INTEGER(ooRexxSend0(rxArray,"DIMENSION"));
-              if (k == 1) {
-                  k = (int)REXX_INTEGER(ooRexxSend0(rxArray,"SIZE"));
-                for (i=1,j=0; i <= k && j < (int)pDispParams->cArgs; j++)
+                rxArray = context->NewArray(pDispParams->cArgs);
+                // convert VARIANTs to Rexx Objects...
+                for (i=0;i<(int) pDispParams->cArgs;i++)
                 {
-                  if (pList->pusOptFlags[j] & PARAMFLAG_FOUT)
-                  {
-                    Rexx2Variant(ooRexxSend1(rxArray,"AT",ooRexxInteger(i)),&pDispParams->rgvarg[j],pDispParams->rgvarg[j].vt,-1);
-                    i++;
-                  }
+                    rxResult = Variant2Rexx(context, &pDispParams->rgvarg[i]);
+                    context->ArrayPut(rxArray, rxResult, i + 1);
                 }
-              }
+                strcpy(upperBuffer,pList->pszFuncName);
+                strupr(upperBuffer);
+                rxResult = context->SendMessage(self, upperBuffer, rxArray);
+
+                // if method returned something, see if out paramters can be filled in
+                // otherwise ignore them
+                if ( !(rxResult == NULL) && !(rxResult == context->Nil()) )
+                {
+                    for (i=j=0;i<(int) pDispParams->cArgs;i++)
+                    {
+                        if (pList->pusOptFlags[i] & PARAMFLAG_FOUT) j++;
+                    }
+
+                        // out parameters exist
+                    if (j>0)
+                    {
+                        // if there is just a single out parameter, the return
+                        // value will go into it directly
+                        if (j==1)
+                        {
+                            i=0;
+                            while ( (i<(int) pDispParams->cArgs) && !(pList->pusOptFlags[i] & PARAMFLAG_FOUT))
+                            {
+                                i++;
+                            }
+                            // put value into out parameter
+                            Rexx2Variant(context, rxResult,&pDispParams->rgvarg[i],pDispParams->rgvarg[i].vt,-1);
+                        }
+                        else if (context->IsArray(rxResult))
+                        {
+                            RexxArrayObject rxArray = (RexxArrayObject)rxResult;
+                            RexxObjectPtr  RexxStr = NULL;
+                            const char *pString = NULL;
+                            wholenumber_t k;
+
+                            context->ObjectToNumber(context->SendMessage0(rxArray,"DIMENSION"), &k);
+                            if (k == 1)
+                            {
+                                k = (int)context->ArraySize(rxArray);
+                                for (i=1,j=0; i <= k && j < (int)pDispParams->cArgs; j++)
+                                {
+                                    if (pList->pusOptFlags[j] & PARAMFLAG_FOUT)
+                                    {
+                                        Rexx2Variant(context, context->ArrayAt(rxArray, i),&pDispParams->rgvarg[j],pDispParams->rgvarg[j].vt,-1);
+                                        i++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                hResult = S_OK;
             }
-          }
-
+            else
+            {
+                hResult = DISP_E_MEMBERNOTFOUND;
+            }
         }
+    }
 
-        hResult = S_OK;
-      } else hResult = DISP_E_MEMBERNOTFOUND;
+    context->DetachThread();     // make sure we detach this thread, which will clean up our stack frame entries.
 
-    } /* end if */
-    //else fprintf(stderr,"unknown event\n");
-
-  } /* end if */
-  //else fprintf(stderr,"not a method invocation!\n");
-
-
-  return hResult;
+    return hResult;
 }

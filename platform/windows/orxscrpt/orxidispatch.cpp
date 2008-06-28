@@ -162,23 +162,6 @@ FL DispExInvokDispID[] = {        // H - orizontal flags
   };
 
 
-/*
-DISPID_Name    -800
-DISPID_Delete    -801
-DISPID_Object    -802
-DISPID_Parent    -803
-
-from OAIDL.H
-DISPID_UNKNOWN  ( -1 )
-DISPID_VALUE    ( 0 )
-DISPID_PROPERTYPUT      ( -3 )
-DISPID_NEWENUM  ( -4 )
-DISPID_EVALUATE ( -5 )
-DISPID_CONSTRUCTOR      ( -6 )
-DISPID_DESTRUCTOR       ( -7 )
-DISPID_COLLECT  ( -8 )
-*/
-
 FL MSDispIDs[] = {        // V - ertical flags
   {DISPID_UNKNOWN,"IUnknown pointer"},
   {DISPID_VALUE,"Activate default value or property"},
@@ -219,17 +202,14 @@ extern FL ScriptProc[];                // H - orizontal flags
 *   information interfaces or not.  It places 1 in iTInfo if the class supports
 *   type information and 0 if it doesn't.
 ******************************************************************************/
-STDMETHODIMP OrxScript::GetTypeInfoCount(UINT *pTInfo) {
+STDMETHODIMP OrxScript::GetTypeInfoCount(UINT *pTInfo)
+{
+    FPRINTF2(logfile,"\n");
+    FPRINTF(logfile,"OrxScript::GetTypeInfoCount  -- NOT IMPLEMENTED!!!\n\n");
 
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(logfile,"\n");
-  FPRINTF(logfile,"OrxScript::GetTypeInfoCount  -- NOT IMPLEMENTED!!!\n\n");
-#endif
-
-   //This object doesn't support type information
-   *pTInfo = 0;
-   return E_NOTIMPL;
+    //This object doesn't support type information
+    *pTInfo = 0;
+    return E_NOTIMPL;
 }
 
 /******************************************************************************
@@ -238,18 +218,15 @@ STDMETHODIMP OrxScript::GetTypeInfoCount(UINT *pTInfo) {
 *   It would be preferable to return E_NOTIMPL, but that is not one of our options.
 ******************************************************************************/
 STDMETHODIMP OrxScript::GetTypeInfo(UINT pTInfo, LCID plcid,
-                                         ITypeInfo **pTypeInfo) {
+                                         ITypeInfo **pTypeInfo)
+{
+    FPRINTF2(logfile,"\n");
+    FPRINTF(logfile,"OrxScript::GetTypeInfo  -- NOT IMPLEMENTED!!!\n\n");
 
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(logfile,"\n");
-  FPRINTF(logfile,"OrxScript::GetTypeInfo  -- NOT IMPLEMENTED!!!\n\n");
-#endif
-
-  //This object doesn't support type information
-  *pTypeInfo = NULL;
-  return DISP_E_BADINDEX;
-  }
+    //This object doesn't support type information
+    *pTypeInfo = NULL;
+    return DISP_E_BADINDEX;
+}
 
 
 /******************************************************************************
@@ -262,36 +239,42 @@ STDMETHODIMP OrxScript::GetTypeInfo(UINT pTInfo, LCID plcid,
 STDMETHODIMP OrxScript::GetIDsOfNames(REFIID riid,
                                           OLECHAR **pNames,
                                           UINT pNamesCount,  LCID plcid,
-                                          DISPID *pbDispID) {
-  HRESULT RetCode = S_OK,RC;
-  UINT    i;
-  char    lIID[100];
+                                          DISPID *pbDispID)
+{
+    HRESULT RetCode = S_OK,RC;
+    UINT    i;
+    char    lIID[100];
 
 
-  StringFromGUID2(riid,(LPOLESTR)lIID,sizeof(lIID)/2);
-#ifdef DEBUGZ
-  FPRINTF(logfile,"OrxScript::GetIDsOfNames\n");
-  FPRINTF2(logfile,"pNamesCount %d   riid %S \n",pNamesCount,lIID);
-#endif
+    StringFromGUID2(riid,(LPOLESTR)lIID,sizeof(lIID)/2);
+    FPRINTF(logfile,"OrxScript::GetIDsOfNames\n");
+    FPRINTF2(logfile,"pNamesCount %d   riid %S \n",pNamesCount,lIID);
 
-
-  //check parameters
-  if (riid != IID_NULL) RetCode = E_INVALIDARG;
-
-  else {
-    //loop through all the pNames that were passed in, and pass
-    //them to the routine that deals with one name at a time.
-    for (i = 0; i < pNamesCount; i++){
-
-      RC = GetDispID(pNames[i],fdexNameCaseInsensitive,&pbDispID[i]);
-      if(RC != S_OK) RetCode = RC;     //  The only returns the last bad error code.
-
-      }
+    //check parameters
+    if (riid != IID_NULL)
+    {
+        RetCode = E_INVALIDARG;
     }
 
-  //  RetCode = S_OK;
-  return RetCode;
-  }
+    else
+    {
+        //loop through all the pNames that were passed in, and pass
+        //them to the routine that deals with one name at a time.
+        for (i = 0; i < pNamesCount; i++)
+        {
+
+            RC = GetDispID(pNames[i],fdexNameCaseInsensitive,&pbDispID[i]);
+            if (RC != S_OK)
+            {
+                RetCode = RC;     //  The only returns the last bad error code.
+            }
+
+        }
+    }
+
+    //  RetCode = S_OK;
+    return RetCode;
+}
 
 /******************************************************************************
 *  Invoke -- Takes a dispid and uses it to call a method or property defined
@@ -300,26 +283,24 @@ STDMETHODIMP OrxScript::GetIDsOfNames(REFIID riid,
 STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
                                     WORD pFlags, DISPPARAMS* pDispParams,
                                     VARIANT* pVarResult, EXCEPINFO* pExcepInfo,
-                                    UINT* pArgErr) {
+                                    UINT* pArgErr)
+{
+    FPRINTF(logfile,"OrxScript::Invoke\n");
 
+    OLECHAR    lIID[100];
+    StringFromGUID2(riid, lIID, sizeof(lIID));
+    FPRINTF2(logfile,"riid %S \n",lIID);
+    FPRINTF2(logfile,"pArgErr %p\n",pArgErr);
 
+    //  check parameters
+    //  According to the Doc, this should always be IID_NULL.
+    if (riid != IID_NULL)
+    {
+        return E_INVALIDARG;
+    }
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"OrxScript::Invoke\n");
-#endif
-#if defined(DEBUGZ)          // Parms unique to Invoke(), & ignored by CommonInvoke().
-  OLECHAR    lIID[100];
-  StringFromGUID2(riid, lIID, sizeof(lIID));
-  FPRINTF2(logfile,"riid %S \n",lIID);
-  FPRINTF2(logfile,"pArgErr %p\n",pArgErr);
-#endif
-
-  //  check parameters
-  //  According to the Doc, this should always be IID_NULL.
-  if (riid != IID_NULL) return E_INVALIDARG;
-
-  return CommonInvoke(pDispID, plcid, pFlags, pDispParams, pVarResult, pExcepInfo);
-  }
+    return CommonInvoke(pDispID, plcid, pFlags, pDispParams, pVarResult, pExcepInfo);
+}
 
 
 
@@ -338,95 +319,111 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
   STDMETHODIMP OrxScript::GetDispID(
     /* [in] */ BSTR pName,
     /* [in] */ DWORD pFlags,               // Derived from fdexName... defines.
-    /* [out] */ DISPID __RPC_FAR *pbDispID){
-  HRESULT   RetCode= S_OK;
-  void     *Property;
-  DISPID    PropertyDispID;
-  char      lName[MAX_PATH];
-  PDID          DispIDData;
+    /* [out] */ DISPID __RPC_FAR *pbDispID)
+{
+    HRESULT   RetCode= S_OK;
+    void     *Property;
+    DISPID    PropertyDispID;
+    char      lName[MAX_PATH];
+    PDID          DispIDData;
 
 
-  //    N.B. (Nota Bene - Latin for read this, your life may depend on it.)
-  //  The flags are ignored, and all comparisons are case sensative.
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"OrxScript::GetDispID\n");
-  FPRINTF2(logfile,"Name \"%S\" Flags 0x%08x\n",pName,pFlags);
-  FPRINTF2(logfile,"In english the pFlags signifies:\n");
-  FPRINTF2(logfile,"%s\n",FlagMeaning('H',pFlags,DispExGetDispID));
-#endif
+    //    N.B. (Nota Bene - Latin for read this, your life may depend on it.)
+    //  The flags are ignored, and all comparisons are case sensative.
+    FPRINTF(logfile,"OrxScript::GetDispID\n");
+    FPRINTF2(logfile,"Name \"%S\" Flags 0x%08x\n",pName,pFlags);
+    FPRINTF2(logfile,"In english the pFlags signifies:\n");
+    FPRINTF2(logfile,"%s\n",FlagMeaning('H',pFlags,DispExGetDispID));
 
-  do {
-    if(pFlags & fdexNameEnsure) {      // We are not supporting the Dynamic ability to add
-      RetCode = E_NOTIMPL;             // properties or methods.
-      break;
-      }
-    if(pbDispID == NULL) {
-      RetCode = E_POINTER;
-      break;
-      }
-
-    *pbDispID = -1;
-    //    Generalities are OK, it is the special cases that kill you.
-    if(EventState == Searching && EventSourceName != NULL) {
-#if defined(DEBUGZ)
-  FPRINTF2(logfile,"Searching for an event name?  \n");
-#endif
-      if(wcsicmp(EventSourceName,pName) == 0) {
-        //  Yes, we are being queried for an Event that we are looking for!
-        //  We must deny knowing this, or we will be forced to provided information
-        //  that we really don't have.
-        RetCode = DISP_E_UNKNOWNNAME;
-        break;
+    do
+    {
+        if (pFlags & fdexNameEnsure)
+        {      // We are not supporting the Dynamic ability to add
+            RetCode = E_NOTIMPL;             // properties or methods.
+            break;
         }
-      // For now, if it looks like we had an event call, but didn't
-      // then do normal processing.  Later it may be decided that this
-      // is an error.
-      }
-    //    This is to help enforce Rexx scoping rules.  This is set during a NoValue check.
-    //  During this, Mr. Phelps, we deny all knowledge of ourserves.
-    if(EventState == IMF) {
-      RetCode = DISP_E_UNKNOWNNAME;
-      break;
-      }
-
-
-
-    // Do we already have this name?
-#if defined(DEBUGZ)
-  FPRINTF2(logfile,"Searching through the list.  \n");
-#endif
-    RetCode = DispID.FindDispID(pName,pbDispID);
-    if(EventState != NoProperties) {
-      //  No, then see if it could be a Property.
-      if(FAILED(RetCode)) {
-        //  Using W2C() instead of sprintf() since the max length specification is easier.
-        W2C(lName,pName,sizeof(lName));
-        Property = PropertyList.FindContent(lName);
-        if(Property) RetCode = DispID.AddDispID(pName,0,DID::Property,Property,&PropertyDispID);
-        if(SUCCEEDED(RetCode)) *pbDispID = PropertyDispID;
+        if (pbDispID == NULL)
+        {
+            RetCode = E_POINTER;
+            break;
         }
-      }
-    else {
-      //  Yes, then ensure it is not a Property.
-      if(SUCCEEDED(RetCode)) {
-        RetCode = DispID.FindDID(*pbDispID,&DispIDData);
-        if(DispIDData->Type == DID::Property) {
-          RetCode = DISP_E_UNKNOWNNAME;
-          *pbDispID = -1;
-          }
+
+        *pbDispID = -1;
+        //    Generalities are OK, it is the special cases that kill you.
+        if (EventState == Searching && EventSourceName != NULL)
+        {
+            FPRINTF2(logfile,"Searching for an event name?  \n");
+            if (wcsicmp(EventSourceName,pName) == 0)
+            {
+                //  Yes, we are being queried for an Event that we are looking for!
+                //  We must deny knowing this, or we will be forced to provided information
+                //  that we really don't have.
+                RetCode = DISP_E_UNKNOWNNAME;
+                break;
+            }
+            // For now, if it looks like we had an event call, but didn't
+            // then do normal processing.  Later it may be decided that this
+            // is an error.
         }
-      }
+        //    This is to help enforce Rexx scoping rules.  This is set during a NoValue check.
+        //  During this, Mr. Phelps, we deny all knowledge of ourserves.
+        if (EventState == IMF)
+        {
+            RetCode = DISP_E_UNKNOWNNAME;
+            break;
+        }
 
-    } while(0==1);
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(SUCCEEDED(RetCode)) FPRINTF2(logfile,"%03d - *%S*\n",(int)*pbDispID,pName);
-  if(FAILED(RetCode)) FPRINTF2(logfile,"A DispID for \"%S\" was not found, or created.  HRESULT = %08x\n",pName,RetCode);
-#endif
 
-  return RetCode;
+        // Do we already have this name?
+        FPRINTF2(logfile,"Searching through the list.  \n");
+        RetCode = DispID.FindDispID(pName,pbDispID);
+        if (EventState != NoProperties)
+        {
+            //  No, then see if it could be a Property.
+            if (FAILED(RetCode))
+            {
+                //  Using W2C() instead of sprintf() since the max length specification is easier.
+                W2C(lName,pName,sizeof(lName));
+                Property = PropertyList.FindContent(lName);
+                if (Property)
+                {
+                    RetCode = DispID.AddDispID(pName,0,DID::Property,Property,&PropertyDispID);
+                }
+                if (SUCCEEDED(RetCode))
+                {
+                    *pbDispID = PropertyDispID;
+                }
+            }
+        }
+        else
+        {
+            //  Yes, then ensure it is not a Property.
+            if (SUCCEEDED(RetCode))
+            {
+                RetCode = DispID.FindDID(*pbDispID,&DispIDData);
+                if (DispIDData->Type == DID::Property)
+                {
+                    RetCode = DISP_E_UNKNOWNNAME;
+                    *pbDispID = -1;
+                }
+            }
+        }
 
-  }
+    } while (0==1);
+
+    if (SUCCEEDED(RetCode))
+    {
+        FPRINTF2(logfile,"%03d - *%S*\n",(int)*pbDispID,pName);
+    }
+    if (FAILED(RetCode))
+    {
+        FPRINTF2(logfile,"A DispID for \"%S\" was not found, or created.  HRESULT = %08x\n",pName,RetCode);
+    }
+
+    return RetCode;
+
+}
 
 
 /******************************************************************************
@@ -439,19 +436,12 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
     /* [in] */ DISPPARAMS __RPC_FAR *pArgs,
     /* [out] */ VARIANT __RPC_FAR *pbResults,
     /* [out] */ EXCEPINFO __RPC_FAR *pbErrInfo,
-    /* [unique][in] */ IServiceProvider __RPC_FAR *pCaller){
-
-
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"OrxScript::InvokeEx\n");
-#endif
-#if defined(DEBUGZ)          // Parms unique to InvokeEx(), & ignored by CommonInvoke().
-  FPRINTF2(logfile,"IServiceProvider %p\n",pCaller);
-#endif
-
-  return CommonInvoke(pDispID, lcid, pFlags, pArgs, pbResults, pbErrInfo);
-  }
+    /* [unique][in] */ IServiceProvider __RPC_FAR *pCaller)
+{
+    FPRINTF(logfile,"OrxScript::InvokeEx\n");
+    FPRINTF2(logfile,"IServiceProvider %p\n",pCaller);
+    return CommonInvoke(pDispID, lcid, pFlags, pArgs, pbResults, pbErrInfo);
+}
 
 
 
@@ -462,15 +452,14 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
 ******************************************************************************/
   STDMETHODIMP OrxScript::DeleteMemberByName(
     /* [in] */ BSTR pName,
-    /* [in] */ DWORD pFlags){               // Derived from fdexName... defines.
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"OrxScript::DeleteMemberByName\n");
-  FPRINTF2(logfile,"Name \"%S\" Flags 0x%08x\n",pName,pFlags);
-  FPRINTF2(logfile,"In english the pFlags signifies:\n");
-  FPRINTF2(logfile,"%s\n",FlagMeaning('H',pFlags,DispExGetDispID));
-#endif
-  return E_NOTIMPL;
-  }
+    /* [in] */ DWORD pFlags)                // Derived from fdexName... defines.
+{
+    FPRINTF(logfile,"OrxScript::DeleteMemberByName\n");
+    FPRINTF2(logfile,"Name \"%S\" Flags 0x%08x\n",pName,pFlags);
+    FPRINTF2(logfile,"In english the pFlags signifies:\n");
+    FPRINTF2(logfile,"%s\n",FlagMeaning('H',pFlags,DispExGetDispID));
+    return E_NOTIMPL;
+}
 
 
 
@@ -478,14 +467,13 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
 *                 DeleteMemberByDispID
 ******************************************************************************/
   STDMETHODIMP OrxScript::DeleteMemberByDispID(
-    /* [in] */ DISPID pDispID){
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(logfile,"\n");
-  FPRINTF(logfile,"OrxScript::DeleteMemberByDispID  -- NOT IMPLEMENTED!!!\n\n");
-  FPRINTF2(logfile,"DispID %ld \n",pDispID);
-#endif
-  return E_NOTIMPL;
-  }
+    /* [in] */ DISPID pDispID)
+{
+    FPRINTF2(logfile,"\n");
+    FPRINTF(logfile,"OrxScript::DeleteMemberByDispID  -- NOT IMPLEMENTED!!!\n\n");
+    FPRINTF2(logfile,"DispID %ld \n",pDispID);
+    return E_NOTIMPL;
+}
 
 
 
@@ -495,15 +483,13 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
   STDMETHODIMP OrxScript::GetMemberProperties(
     /* [in] */ DISPID pDispID,
     /* [in] */ DWORD pFetchFlag,           // Derived from ???... defines.
-    /* [out] */ DWORD __RPC_FAR *pbProperties){ // Derived from fdexProp... defines.
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(logfile,"\n");
-  FPRINTF(logfile,"OrxScript::GetMemberProperties  -- NOT IMPLEMENTED!!!\n\n");
-  FPRINTF2(logfile,"DispID %ld   Flags %08x\n ",pDispID,pFetchFlag);
-#endif
-  return E_NOTIMPL;
-  }
-
+    /* [out] */ DWORD __RPC_FAR *pbProperties)  // Derived from fdexProp... defines.
+{
+    FPRINTF2(logfile,"\n");
+    FPRINTF(logfile,"OrxScript::GetMemberProperties  -- NOT IMPLEMENTED!!!\n\n");
+    FPRINTF2(logfile,"DispID %ld   Flags %08x\n ",pDispID,pFetchFlag);
+    return E_NOTIMPL;
+}
 
 
 /******************************************************************************
@@ -511,33 +497,30 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
 ******************************************************************************/
   STDMETHODIMP OrxScript::GetMemberName(
     /* [in] */ DISPID pDispID,
-    /* [out] */ BSTR __RPC_FAR *pbName){
-  HRESULT RetCode;
-  OLECHAR *Name;
+    /* [out] */ BSTR __RPC_FAR *pbName)
+{
+    HRESULT RetCode;
+    OLECHAR *Name;
 
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"OrxScript::GetMemberName\n");
-  FPRINTF2(logfile,"DispID %ld ",pDispID);
-#endif
-  //  Print the saved DispIDName.
-  RetCode = DispID.FindName(&Name,pDispID);
-  if(SUCCEEDED(RetCode)){
-#ifdef DEBUGZ
-    FPRINTF2(logfile,"\"%S\"\n",Name);
-#endif
-    *pbName = SysAllocString(Name);
-    RetCode = S_OK;
+    FPRINTF(logfile,"OrxScript::GetMemberName\n");
+    FPRINTF2(logfile,"DispID %ld ",pDispID);
+    //  Print the saved DispIDName.
+    RetCode = DispID.FindName(&Name,pDispID);
+    if (SUCCEEDED(RetCode))
+    {
+        FPRINTF2(logfile,"\"%S\"\n",Name);
+        *pbName = SysAllocString(Name);
+        RetCode = S_OK;
     }
-   else {
-    *pbName = SysAllocString(L"");
-    RetCode = DISP_E_MEMBERNOTFOUND;
+    else
+    {
+        *pbName = SysAllocString(L"");
+        RetCode = DISP_E_MEMBERNOTFOUND;
     }
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"OrxScript::GetMemberName - returning \"%S\"\n",*pbName);
-#endif
-  return RetCode;
-  }
+    FPRINTF(logfile,"OrxScript::GetMemberName - returning \"%S\"\n",*pbName);
+    return RetCode;
+}
 
 
 
@@ -547,15 +530,13 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
   STDMETHODIMP OrxScript::GetNextDispID(
     /* [in] */ DWORD pFlags,               // Derived from fdexEnum... defines.
     /* [in] */ DISPID pDispID,             // Previous DispID returned.
-    /* [out] */ DISPID __RPC_FAR *pbDispID){
+    /* [out] */ DISPID __RPC_FAR *pbDispID)
+{
+    FPRINTF(logfile,"OrxScript::GetNextDispID\n");
+    FPRINTF2(logfile,"DispID %ld   Flags %08x\n ",pDispID,pFlags);
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"OrxScript::GetNextDispID\n");
-  FPRINTF2(logfile,"DispID %ld   Flags %08x\n ",pDispID,pFlags);
-#endif
-
-  return DispID.GetNextDispID(pFlags,pDispID,pbDispID);
-  }
+    return DispID.GetNextDispID(pFlags,pDispID,pbDispID);
+}
 
 
 
@@ -563,14 +544,13 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
 *                 GetNameSpaceParent
 ******************************************************************************/
   STDMETHODIMP OrxScript::GetNameSpaceParent(
-    /* [out] */ IUnknown __RPC_FAR *__RPC_FAR *pbIUnknown){
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(logfile,"\n");
-  FPRINTF(logfile,"OrxScript::GetNameSpaceParent  -- NOT IMPLEMENTED!!!\n\n");
-#endif
+    /* [out] */ IUnknown __RPC_FAR *__RPC_FAR *pbIUnknown)
+{
+    FPRINTF2(logfile,"\n");
+    FPRINTF(logfile,"OrxScript::GetNameSpaceParent  -- NOT IMPLEMENTED!!!\n\n");
 
-  return E_NOTIMPL;
-  }
+    return E_NOTIMPL;
+}
 
 
 
@@ -587,164 +567,205 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
     /* [in] */ WORD pFlags,                // Derived from ... defines.
     /* [in] */ DISPPARAMS __RPC_FAR *pArgs,
     /* [out] */ VARIANT __RPC_FAR *pbResults,
-    /* [out] */ EXCEPINFO __RPC_FAR *pbErrInfo) {
-  HRESULT       RetCode;
-  int           State,ArgCount;
-  DISPPARAMS    DP;
-  VARIANT      *FCmd;
-  DISPID       *FDispID;
-  PDID          DispIDData;
-  DWORD         lFlags;
+    /* [out] */ EXCEPINFO __RPC_FAR *pbErrInfo)
+{
+    HRESULT       RetCode;
+    int           State,ArgCount;
+    DISPPARAMS    DP;
+    VARIANT      *FCmd;
+    DISPID       *FDispID;
+    PDID          DispIDData;
+    DWORD         lFlags;
 
 
-  RetCode = DispID.FindDID(pDispID,&DispIDData);
+    RetCode = DispID.FindDID(pDispID,&DispIDData);
 
-#if defined(DEBUGZ)          // Only print if all of the details are wanted.
-  FPRINTF2(logfile,"DispID %ld ",pDispID);
-  //  Print the saved DispIDName.
-  if(SUCCEEDED(RetCode))
-    FPRINTF2(logfile,"\"%S\"\n",DispIDData->Name);
-  else FPRINTF2(logfile,">>>> This DispID is not defined!\n");
-  FPRINTF2(logfile,"In english the pFlags signifies: %s\n",
-   FlagMeaning('H',pFlags,DispatchInvoke));
-  FPRINTF2(logfile,"pArgs %p\n",pArgs);
-  FPRINTF2(logfile,"pbResults %p\n",pbResults);
-  FPRINTF2(logfile,"pbErrInfo %p\n",pbErrInfo);
+    FPRINTF2(logfile,"DispID %ld ",pDispID);
+    //  Print the saved DispIDName.
+    if (SUCCEEDED(RetCode))
+    {
+        FPRINTF2(logfile,"\"%S\"\n",DispIDData->Name);
+    }
+    else
+    {
+        FPRINTF2(logfile,">>>> This DispID is not defined!\n");
+    }
+    FPRINTF2(logfile,"In english the pFlags signifies: %s\n", FlagMeaning('H',pFlags,DispatchInvoke));
+    FPRINTF2(logfile,"pArgs %p\n",pArgs);
+    FPRINTF2(logfile,"pbResults %p\n",pbResults);
+    FPRINTF2(logfile,"pbErrInfo %p\n",pbErrInfo);
 
 
 
-  if(pArgs != NULL) {
-    PrntDispParams(logfile, pArgs);
+    if (pArgs != NULL)
+    {
+        PrntDispParams(logfile, pArgs);
 
     }  //  if(pArgs != NULL)
-#endif
 
-
-  /*   >>>>???<<<<
-    Need to add code to examine the pExcepInfo and pArgErr parameters.
-  */
+    /*   >>>>???<<<<
+      Need to add code to examine the pExcepInfo and pArgErr parameters.
+    */
 
 
 
 
-  if(SUCCEEDED(RetCode)) {
-    // Put the flags in local storage so we can whack them.
-    //  See if this is a property opertation.  If it is, ignore all other flags.
-    //  The code below knows if this is really a simple variable, or a method.
-    // If somebody calls us with both of these on, then this will fail.
-    if(pFlags & (DISPATCH_PROPERTYGET+DISPATCH_PROPERTYPUT))
-     lFlags = pFlags &(DISPATCH_PROPERTYGET+DISPATCH_PROPERTYPUT);
-    else lFlags = pFlags & DISPATCH_METHOD;      //  Otherwise, ignore all flags, but method.
-
-    // BUT wait!!!  If this is a Method, And its really a property, we have some thinking to do.
-    // This happens when someone codes: Object~Property("New Value")
-    if(lFlags == DISPATCH_METHOD && DispIDData->Type == DID::Property) {
-      ArgCount = pArgs->cArgs - pArgs->cNamedArgs;
-      /*   >>>>???<<<<
-        Currently, there is a BIG BUG in the DISPPARAMS the WSH passes us.  cArgs is
-      the number of arguments only, not the total of arguments and named arguments.
-      DETECT and correct for this bug!
-      */
-      if(pArgs->cNamedArgs > 0)
-       if(pArgs->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT) ++ArgCount;
-      /*   >>>>???<<<<
-         End BIG BUG fix.....
-      */
-      if(ArgCount > 0) lFlags = DISPATCH_PROPERTYPUT;
-      else lFlags = DISPATCH_PROPERTYGET;
-      }
-
-    switch (lFlags) {
-    case DISPATCH_METHOD:
-      //  IActiveScriptSite OnEnterScript()/OnLeaveScript() called by InvokeMethod().
-      RetCode = InvokeMethod(DispIDData, pArgs, pbResults, pbErrInfo);
-      break;
-    //  This satisfies someone asking us for properties.  See Eng2Rexx for when
-    // Rexx wants a a property.
-    case DISPATCH_PROPERTYGET:
-      RetCode = E_FAIL;
-      if (pbResults) V_VT(pbResults) = VT_ERROR;
-      else break;
-      // If this is a function, let the user take care of it.
-      if(DispIDData->Type == DID::Function) {
-        RetCode = AddMutant(L"GET",pArgs,&DP);
-        if(SUCCEEDED(RetCode))
-         RetCode = InvokeMethod(DispIDData, &DP, pbResults, pbErrInfo);
-        FCmd = DP.rgvarg;
-        VariantClear(&FCmd[pArgs->cArgs]);  // freestring
-        delete FCmd;                        // Remove the created command list
+    if (SUCCEEDED(RetCode))
+    {
+        // Put the flags in local storage so we can whack them.
+        //  See if this is a property opertation.  If it is, ignore all other flags.
+        //  The code below knows if this is really a simple variable, or a method.
+        // If somebody calls us with both of these on, then this will fail.
+        if (pFlags & (DISPATCH_PROPERTYGET+DISPATCH_PROPERTYPUT))
+        {
+            lFlags = pFlags &(DISPATCH_PROPERTYGET+DISPATCH_PROPERTYPUT);
         }
-      if(DispIDData->Type == DID::Property) {
-        VariantInit(pbResults);
-        // Copy the Variant pointed to by RexxCode to pbResults.
-        RetCode = VariantCopy(pbResults,(VARIANT *)&(((PGVARIANT)(DispIDData->RexxCode))->Mutant));
-      }
-      break;
-    //  This satisfies someone sets one of our properties.  See Eng2Rexx for when
-    // Rexx sets a a property.
-    case DISPATCH_PROPERTYPUT:
-      RetCode = E_FAIL;
-      if (pbResults) V_VT(pbResults) = VT_ERROR;
-      // If this is a function, let the user take care of it.
-      if(DispIDData->Type == DID::Function) {
-        /*   >>>>???<<<<
-          Currently, there is a BIG BUG in the DISPPARAMS the WSH passes us.  cArgs is
-        the number of arguments only, not the total of arguments and named arguments.
-        DETECT and correct for this bug!
-        */
-        if(DISPATCH_PROPERTYPUT == pFlags && pArgs->cNamedArgs > 0)
-         if(pArgs->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT) ++(pArgs->cArgs);
-        /*   >>>>???<<<<
-           End BIG BUG fix.....
-        */
-        State = 0;
-        RetCode = DropNamedPut(pArgs,&DP);
-        if(SUCCEEDED(RetCode)) {
-          State = 1;
-          RetCode = AddMutant(L"PUT",&DP,&DP);
-          }
-        if(SUCCEEDED(RetCode)) {
-          State = 2;
-          RetCode = InvokeMethod(DispIDData, &DP, pbResults, pbErrInfo);
-          }
-        FDispID = DP.rgdispidNamedArgs;
-        FCmd = DP.rgvarg;
-        if(State == 1 && FDispID && DP.cNamedArgs != pArgs->cNamedArgs) delete FDispID;
-        if(State == 2) {
-          VariantClear(&FCmd[DP.cArgs-DP.cNamedArgs]);  // freestring
-          delete FCmd;                                  // Remove the created command list
-          }
+        else
+        {
+            lFlags = pFlags & DISPATCH_METHOD;      //  Otherwise, ignore all flags, but method.
         }
-      if(DispIDData->Type == DID::Property) {
-        if (pbResults) {     //  If they are looking for something back, then give them the prePUT version.
-          VariantInit(pbResults);
-          VariantCopy(pbResults,(VARIANT *)&(((PGVARIANT)(DispIDData->RexxCode))->Mutant));
-          }
-        VariantClear((VARIANT *) &(((PGVARIANT)(DispIDData->RexxCode))->Mutant));
-        // Copy the Variant pointed to by RexxCode to pbResults.
-        FCmd = pArgs->rgvarg;
-        RetCode = VariantCopy((VARIANT *) &(((PGVARIANT)(DispIDData->RexxCode))->Mutant),&FCmd[pArgs->cArgs - 1]);
+
+        // BUT wait!!!  If this is a Method, And its really a property, we have some thinking to do.
+        // This happens when someone codes: Object~Property("New Value")
+        if (lFlags == DISPATCH_METHOD && DispIDData->Type == DID::Property)
+        {
+            ArgCount = pArgs->cArgs - pArgs->cNamedArgs;
+            /*   >>>>???<<<<
+              Currently, there is a BIG BUG in the DISPPARAMS the WSH passes us.  cArgs is
+            the number of arguments only, not the total of arguments and named arguments.
+            DETECT and correct for this bug!
+            */
+            if (pArgs->cNamedArgs > 0)
+                if (pArgs->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT)
+                {
+                    ++ArgCount;
+                }
+                /*   >>>>???<<<<
+                   End BIG BUG fix.....
+                */
+            if (ArgCount > 0)
+            {
+                lFlags = DISPATCH_PROPERTYPUT;
+            }
+            else
+            {
+                lFlags = DISPATCH_PROPERTYGET;
+            }
         }
-      break;
-    case DISPATCH_PROPERTYPUTREF:
-    case DISPATCH_CONSTRUCT:
-    default:
-      RetCode = E_NOTIMPL;   // Let the caller know we did not do anything.
-#if defined(DEBUGZ)          // Only print if all of the details are wanted.
-      FPRINTF2(logfile,"This type of Invoke is not currently supported.\n");
-#endif
-      }
 
-    }  // if(SUCCEEDED(RetCode))
+        switch (lFlags)
+        {
+            case DISPATCH_METHOD:
+                //  IActiveScriptSite OnEnterScript()/OnLeaveScript() called by InvokeMethod().
+                RetCode = InvokeMethod(DispIDData, pArgs, pbResults, pbErrInfo);
+                break;
+                //  This satisfies someone asking us for properties.  See Eng2Rexx for when
+                // Rexx wants a a property.
+            case DISPATCH_PROPERTYGET:
+                RetCode = E_FAIL;
+                if (pbResults)
+                {
+                    V_VT(pbResults) = VT_ERROR;
+                }
+                else
+                {
+                    break;
+                }
+                // If this is a function, let the user take care of it.
+                if (DispIDData->Type == DID::Function)
+                {
+                    RetCode = AddMutant(L"GET",pArgs,&DP);
+                    if (SUCCEEDED(RetCode))
+                    {
+                        RetCode = InvokeMethod(DispIDData, &DP, pbResults, pbErrInfo);
+                    }
+                    FCmd = DP.rgvarg;
+                    VariantClear(&FCmd[pArgs->cArgs]);  // freestring
+                    delete FCmd;                        // Remove the created command list
+                }
+                if (DispIDData->Type == DID::Property)
+                {
+                    VariantInit(pbResults);
+                    // Copy the Variant pointed to by RexxCode to pbResults.
+                    RetCode = VariantCopy(pbResults,(VARIANT *)&(((PGVARIANT)(DispIDData->RexxCode))->Mutant));
+                }
+                break;
+                //  This satisfies someone sets one of our properties.  See Eng2Rexx for when
+                // Rexx sets a a property.
+            case DISPATCH_PROPERTYPUT:
+                RetCode = E_FAIL;
+                if (pbResults)
+                {
+                    V_VT(pbResults) = VT_ERROR;
+                }
+                // If this is a function, let the user take care of it.
+                if (DispIDData->Type == DID::Function)
+                {
+                    /*   >>>>???<<<<
+                      Currently, there is a BIG BUG in the DISPPARAMS the WSH passes us.  cArgs is
+                    the number of arguments only, not the total of arguments and named arguments.
+                    DETECT and correct for this bug!
+                    */
+                    if (DISPATCH_PROPERTYPUT == pFlags && pArgs->cNamedArgs > 0)
+                    {
+                        if (pArgs->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT)
+                        {
+                            ++(pArgs->cArgs);
+                        }
+                    }
+                        /*   >>>>???<<<<
+                           End BIG BUG fix.....
+                        */
+                    State = 0;
+                    RetCode = DropNamedPut(pArgs,&DP);
+                    if (SUCCEEDED(RetCode))
+                    {
+                        State = 1;
+                        RetCode = AddMutant(L"PUT",&DP,&DP);
+                    }
+                    if (SUCCEEDED(RetCode))
+                    {
+                        State = 2;
+                        RetCode = InvokeMethod(DispIDData, &DP, pbResults, pbErrInfo);
+                    }
+                    FDispID = DP.rgdispidNamedArgs;
+                    FCmd = DP.rgvarg;
+                    if (State == 1 && FDispID && DP.cNamedArgs != pArgs->cNamedArgs)
+                    {
+                        delete FDispID;
+                    }
+                    if (State == 2)
+                    {
+                        VariantClear(&FCmd[DP.cArgs-DP.cNamedArgs]);  // freestring
+                        delete FCmd;                                  // Remove the created command list
+                    }
+                }
+                if (DispIDData->Type == DID::Property)
+                {
+                    if (pbResults)
+                    {     //  If they are looking for something back, then give them the prePUT version.
+                        VariantInit(pbResults);
+                        VariantCopy(pbResults,(VARIANT *)&(((PGVARIANT)(DispIDData->RexxCode))->Mutant));
+                    }
+                    VariantClear((VARIANT *) &(((PGVARIANT)(DispIDData->RexxCode))->Mutant));
+                    // Copy the Variant pointed to by RexxCode to pbResults.
+                    FCmd = pArgs->rgvarg;
+                    RetCode = VariantCopy((VARIANT *) &(((PGVARIANT)(DispIDData->RexxCode))->Mutant),&FCmd[pArgs->cArgs - 1]);
+                }
+                break;
+            case DISPATCH_PROPERTYPUTREF:
+            case DISPATCH_CONSTRUCT:
+            default:
+                RetCode = E_NOTIMPL;   // Let the caller know we did not do anything.
+                FPRINTF2(logfile,"This type of Invoke is not currently supported.\n");
+        }
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF2(logfile,"CommonInvoke()  Exit  HRESULT = %08x\n",RetCode);
-#endif
+    }
 
-  return RetCode;
-  }
+    FPRINTF2(logfile,"CommonInvoke()  Exit  HRESULT = %08x\n",RetCode);
 
-
+    return RetCode;
+}
 
 
 /******************************************************************************
@@ -758,212 +779,164 @@ STDMETHODIMP OrxScript::Invoke(DISPID pDispID, REFIID riid, LCID plcid,
     /* [in]  */ PDID pDIDData,
     /* [in]  */ DISPPARAMS __RPC_FAR *pArgs,
     /* [out] */ VARIANT __RPC_FAR *pbResults,
-    /* [out] */ EXCEPINFO __RPC_FAR *pbErrInfo) {
-  HRESULT       RetCode=S_OK;
-  OLECHAR       invokeString[4096],*Invocation = invokeString;
-  char          lName[251],tInvokeString[4096],*FInvokeString,*Temp=NULL,NameList[MAX_PATH],*tNL;
-  char          *CallType,Function=')',Procedure='\0';
-  LPVOID        arguments[8];
-  RexxConditionData cd;
-  DISPPARAMS    dp;
-  VARIANT       sResult,*mResult;
-  VARIANTARG    *FCmd=NULL;
-  int           ArgCount,ISMaxLen,NameListLen;
+    /* [out] */ EXCEPINFO __RPC_FAR *pbErrInfo)
+{
+    HRESULT       RetCode=S_OK;
+    OLECHAR       invokeString[4096],*Invocation = invokeString;
+    char          lName[251],tInvokeString[4096],*FInvokeString,*Temp=NULL,NameList[MAX_PATH],*tNL;
+    LPVOID        arguments[8];
+    RexxConditionData cd;
+    DISPPARAMS    dp;
+    VARIANT       sResult,*mResult;
+    VARIANTARG    *FCmd=NULL;
+    int           ArgCount,ISMaxLen,NameListLen;
 
+    RexxThreadContext *context = ScriptProcessEngine::getThreadContext();
 
-  // There had better be some RexxCode to execute.
-  if(NULL == pDIDData->RexxCode) {
-    if (pbResults) V_VT(pbResults) = VT_ERROR;
-    return E_UNEXPECTED;
+    // There had better be some RexxCode to execute.
+    if (NULL == pDIDData->RexxCode)
+    {
+        if (pbResults)
+        {
+            V_VT(pbResults) = VT_ERROR;
+        }
+        return E_UNEXPECTED;
     }
 
-  pActiveScriptSite->OnEnterScript();
+    pActiveScriptSite->OnEnterScript();
 
-  //  If things work right, the invocation string will be generated onto
-  // the local storage.  If not, such as when a genetic mutant tries to
-  // pass 900 arguments, then there are provisions to build it in dynamic
-  // memory.
-  //   When the routines that are building the parms encounter a situation
-  // where dynamic memory must be used, they do not delete the pointer to
-  // the string that was passed to them.  They leave that for the caller.
-  // This was local area's can be passed.  As the caller, we only need to
-  // delete the string if its pointer is not that of the local area.
-  FInvokeString = tInvokeString;
-  FInvokeString[0] = '\0';
-  tNL = NameList;
-  tNL[0] = '\0';
-  ISMaxLen = sizeof(tInvokeString);
-  NameListLen = sizeof(NameList);
-  RetCode = InvokeNamedParms(pArgs,&FInvokeString,&ISMaxLen,&tNL,&NameListLen);
-#ifdef DEBUGZ
-  FPRINTF2(logfile,"InvokeString \"%s\" \n",FInvokeString);
-#endif
-  Temp = FInvokeString;
-  //  ArgCount is the number of args that we are passing to the routine.
-  //  This is the number of args passed to us, minus any named args.
-  ArgCount = pArgs->cArgs - pArgs->cNamedArgs;
-
-  /*
-   *   The following executes code that is specific to each type of entrypoint that received code.
-   */
-  if(SUCCEEDED(RetCode)) switch (pDIDData->Type) {
-  case DID::Function:
-#if defined(DEBUGZ)
-    FPRINTF2(logfile,"InvokeMethod()  Processing a function (METHOD in MS parlance), ParseScriptText flags were %s. \n",
-     FlagMeaning('H',pDIDData->Flags,ScriptText));
-    FPRINTF2(logfile,"RexxCodeBlock is %p. Running it:\n",pDIDData->RexxCode);
-#endif
-    // The %.250S says to convert the wide char string to native char, up to a
-    // maximum of 250 characters (the Rexx limit on the size of a variable name.
-    // I apologize that this is hard coded here.  The only alternative is to build
-    // the string pattern at run time using defined constant.
-    sprintf(lName,"%.250S",pDIDData->Name);
-    if (pbResults) CallType = &Function;
-    else CallType = &Procedure;
-    RetCode = BuildRXCallString(&lName[0], *CallType, ArgCount, tNL, &FInvokeString,&ISMaxLen);
-#ifdef DEBUGZ
+    //  If things work right, the invocation string will be generated onto
+    // the local storage.  If not, such as when a genetic mutant tries to
+    // pass 900 arguments, then there are provisions to build it in dynamic
+    // memory.
+    //   When the routines that are building the parms encounter a situation
+    // where dynamic memory must be used, they do not delete the pointer to
+    // the string that was passed to them.  They leave that for the caller.
+    // This was local area's can be passed.  As the caller, we only need to
+    // delete the string if its pointer is not that of the local area.
+    FInvokeString = tInvokeString;
+    FInvokeString[0] = '\0';
+    tNL = NameList;
+    tNL[0] = '\0';
+    ISMaxLen = sizeof(tInvokeString);
+    NameListLen = sizeof(NameList);
+    RetCode = InvokeNamedParms(pArgs,&FInvokeString,&ISMaxLen,&tNL,&NameListLen);
     FPRINTF2(logfile,"InvokeString \"%s\" \n",FInvokeString);
-#endif
-    break;
 
-  //  At the moment the two types of events are seperated out because the interpretation
-  // of the flags are different.  (Even though the flag is not currently used for anything)
-  case DID::ASEvent :
-#if defined(DEBUGZ)
-    FPRINTF2(logfile,"InvokeMethod()  Processing an AddScriptlet EVENT, Event flags were %s. \n",
-     FlagMeaning('H',pDIDData->Flags,ScriptText));
-#endif
-    if(pArgs->cArgs != 1 && pArgs->cNamedArgs != 1) { RetCode = E_FAIL; break; }
-    if(pArgs->rgdispidNamedArgs[0] != DISPID_THIS) { RetCode = E_FAIL; break; }
-    break;
+    Temp = FInvokeString;
+    //  ArgCount is the number of args that we are passing to the routine.
+    //  This is the number of args passed to us, minus any named args.
+    ArgCount = pArgs->cArgs - pArgs->cNamedArgs;
 
-  case DID::LPPEvent:
-#if defined(DEBUGZ)
-    FPRINTF2(logfile,"InvokeMethod()  Processing a LocalParseProcedure EVENT\n");
-    FPRINTF2(logfile,"RexxCodeBlock is %p. Running it:\n",pDIDData->RexxCode);
-#endif
-    CallType = &Function;
-    sprintf(lName,"%.250S",pDIDData->Name);
-    RetCode = BuildRXCallString(&lName[0], *CallType, ArgCount, tNL, &FInvokeString,&ISMaxLen);
-#ifdef DEBUGZ
-    FPRINTF2(logfile,"New InvokeString \"%s\" \n",FInvokeString);
-#endif
-    break;
+    RexxThreadContext *context = ScriptProcessEngine::getThreadContext();
 
-  case DID::PPEvent :
-#if defined(DEBUGZ)
-    FPRINTF2(logfile,"InvokeMethod()  Processing an ParseProcedure EVENT, Event flags were %s. \n",
-     FlagMeaning('H',pDIDData->Flags,ScriptProc));
-    FPRINTF2(logfile,"RexxCodeBlock is %p. Running it:\n",pDIDData->RexxCode);
-#endif
-    // if(pArgs->cArgs != 1 && pArgs->cNamedArgs != 1) { RetCode = E_FAIL; break; }
-    // if(pArgs->rgdispidNamedArgs[0] != DISPID_THIS) { RetCode = E_FAIL; break; }
+    /*
+     *   The following executes code that is specific to each type of entrypoint that received code.
+     */
+    if (SUCCEEDED(RetCode)) switch (pDIDData->Type)
+        {
+            case DID::Function:
+                FPRINTF2(logfile,"InvokeMethod()  Processing a function (METHOD in MS parlance), ParseScriptText flags were %s. \n",
+                         FlagMeaning('H',pDIDData->Flags,ScriptText));
+                FPRINTF2(logfile,"RexxCodeBlock is %p. Running it:\n",pDIDData->RexxCode);
+                break;
 
-    break;
-  default:                   // Theoretically we shouldn't get here.
-    RetCode = E_FAIL;        //  So, if we do, make theory match reality.
+                //  At the moment the two types of events are seperated out because the interpretation
+                // of the flags are different.  (Even though the flag is not currently used for anything)
+            case DID::ASEvent :
+                FPRINTF2(logfile,"InvokeMethod()  Processing an AddScriptlet EVENT, Event flags were %s. \n",
+                         FlagMeaning('H',pDIDData->Flags,ScriptText));
+                if (pArgs->cArgs != 1 && pArgs->cNamedArgs != 1)
+                {
+                    RetCode = E_FAIL; break;
+                }
+                if (pArgs->rgdispidNamedArgs[0] != DISPID_THIS)
+                {
+                    RetCode = E_FAIL; break;
+                }
+                break;
+
+            case DID::LPPEvent:
+                FPRINTF2(logfile,"InvokeMethod()  Processing a LocalParseProcedure EVENT\n");
+                FPRINTF2(logfile,"RexxCodeBlock is %p. Running it:\n",pDIDData->RexxCode);
+                break;
+
+            case DID::PPEvent :
+                FPRINTF2(logfile,"InvokeMethod()  Processing an ParseProcedure EVENT, Event flags were %s. \n",
+                         FlagMeaning('H',pDIDData->Flags,ScriptProc));
+                FPRINTF2(logfile,"RexxCodeBlock is %p. Running it:\n",pDIDData->RexxCode);
+                break;
+            default:                   // Theoretically we shouldn't get here.
+                RetCode = E_FAIL;        //  So, if we do, make theory match reality.
+        }
+
+    /*
+     *   Continuation of the joint code.
+     */
+    if (SUCCEEDED(RetCode))
+    {
+        if (pbResults != NULL)
+        {
+            mResult = pbResults;
+        }
+        else
+        {
+            mResult = &sResult;
+        }
+        VariantInit(mResult);
+
+        // convert the arguments to Rexx objects for the call
+        RexxArrayObject args = dispParms2RexxArray(&dp);
+
+        runMethod(context, this, pDIDData->RexxCode, args, mResult, cd);
+        FPRINTF2(logfile,"Rexx returned the following:\n");
+        PrntMutant(logfile, mResult);
+
+        if (FCmd)
+        {
+            if (pArgs->cNamedArgs > 0)
+            {
+                // only release THIS if the execution was caused by an event -
+                // for a call as a method, THIS is probably not AddRef'd by us.
+                if (pArgs->rgdispidNamedArgs[0] == DISPID_THIS && pDIDData->Type != DID::Function)
+                {
+                    // >>> ??? <<<  If we keep this code, in the AddScriptlet Events where it build THIS, AddRef() it.
+                    pArgs->rgvarg[0].pdispVal->Release();
+                    FPRINTF2(logfile,"I have released THIS!!! \n");
+                }
+            }
+            VariantClear(&FCmd[ArgCount]);  // freestring
+            delete FCmd;
+        }
+        if (tNL != NameList)
+        {
+            delete tNL;
+        }
+
+        if (cd.rc == 0)
+        {
+            FPRINTF2(logfile,"done running RCB %p\n",pDIDData->RexxCode);
+            //  If the call was made as a Return ???(), and it did not actually return
+            // anything, then Rexx sets the return to VT_ERROR with the condition code 0.
+            // We do not know how the caller invoked us, so we turn this back into VT_EMPTY.
+            if (pbResults)
+            {
+                if (V_VT(pbResults) == VT_ERROR)
+                {
+                    pbResults->vt = VT_EMPTY;
+                }
+            }
+        }
+    }
+    else if (pbResults)
+    {
+        V_VT(pbResults) = VT_ERROR;
     }
 
-  /*
-   *   Continuation of the joint code.
-   */
-  if(SUCCEEDED(RetCode)) {
-    // Now convert it to wide characters.
-    ISMaxLen = (int)strlen(FInvokeString)+1;
-    //   >>> ??? <<< Code for the case where this has no invocation string.
-    if(ISMaxLen > 1) {
-      if(ISMaxLen > (sizeof(invokeString)/sizeof(OLECHAR))) {
-        Invocation = new OLECHAR[ISMaxLen];
-        }
-      else {
-        Invocation = &(invokeString[0]);
-        }
-      C2W(Invocation,FInvokeString,ISMaxLen);
+    // we're done with this thread context
+    context->DetachThread();
 
-      FCmd = new VARIANTARG[ArgCount + 1];
+    pActiveScriptSite->OnLeaveScript();
 
-
-      dp.cNamedArgs = 0;
-      dp.cArgs = ArgCount + 1;
-      dp.rgvarg = FCmd;
-      dp.rgdispidNamedArgs = NULL;
-
-      //  This is where things get a bit messy.  Variants are passed in reverse
-      // order.  Therefore, the parm that we generated must be put on at the end.
-      // First, copy the non-named args that the Host gave us.
-      if(ArgCount > 0) memcpy(&FCmd[0],&(pArgs->rgvarg[pArgs->cNamedArgs]),sizeof(VARIANTARG)*(ArgCount));
-      //  Then tack on the command to invoke Rexx at the end.
-      VariantInit(&FCmd[ArgCount]);
-      V_VT(&FCmd[ArgCount]) = VT_BSTR;
-      V_BSTR(&FCmd[ArgCount]) = SysAllocString(Invocation);
-      }
-    else {
-      dp.cNamedArgs = 0;
-      dp.cArgs = 0;
-      dp.rgvarg = NULL;
-      dp.rgdispidNamedArgs = NULL;
-      }
-
-    if(pbResults != NULL) {
-      mResult = pbResults;
-      }
-    else {
-      mResult = &sResult;
-      }
-    VariantInit(mResult);
-
-    arguments[0] = (void*) this;    // engine that is running this code
-    arguments[1] = (void*) pDIDData->RexxCode; // method to run
-    arguments[2] = &dp;             // we have COM arguments
-    arguments[3] = (void*) NULL;    // no REXX arguments
-    arguments[4] = (void*) &mResult;// COM result object
-    arguments[5] = (void*) &cd;     // condition information
-    arguments[6] = (void*) false;   // don't end this thread
-    arguments[7] = (void*) false;   // don't need variables after execution
-    runMethod(arguments);
-#if defined(DEBUGZ)
-    FPRINTF2(logfile,"Rexx returned the following:\n");
-    PrntMutant(logfile, mResult);
-#endif
-
-    if(FCmd) {
-      if(pArgs->cNamedArgs > 0)
-        // only release THIS if the execution was caused by an event -
-        // for a call as a method, THIS is probably not AddRef'd by us.
-        if(pArgs->rgdispidNamedArgs[0] == DISPID_THIS && pDIDData->Type != DID::Function) {
-          // >>> ??? <<<  If we keep this code, in the AddScriptlet Events where it build THIS, AddRef() it.
-          (IDispatch *)(pArgs->rgvarg[0]).pdispVal->Release();
-          FPRINTF2(logfile,"I have released THIS!!! \n");
-          }
-      VariantClear(&FCmd[ArgCount]);  // freestring
-      delete FCmd;
-      }
-    if(FInvokeString != tInvokeString) delete FInvokeString;
-    if(FInvokeString != Temp && Temp != tInvokeString) delete Temp;
-    if(tNL != NameList) delete tNL;
-    if(Invocation != invokeString) delete Invocation;
-
-    if (cd.rc) {
-      RetCode = E_FAIL;
-#if defined(DEBUGZ)
-      FPRINTF2(logfile,"execution produced an error! (rc = %d)\n",cd.rc);
-#endif
-      }
-    else {
-#if defined(DEBUGZ)
-      FPRINTF2(logfile,"done running RCB %p\n",pDIDData->RexxCode);
-#endif
-      //  If the call was made as a Return ???(), and it did not actually return
-      // anything, then Rexx sets the return to VT_ERROR with the condition code 0.
-      // We do not know how the caller invoked us, so we turn this back into VT_EMPTY.
-      if (pbResults)
-        if (V_VT(pbResults) == VT_ERROR)
-          pbResults->vt = VT_EMPTY;
-      }
-    }  // if(SUCCEEDED(RetCode))
-  else if (pbResults) V_VT(pbResults) = VT_ERROR;
-
-  pActiveScriptSite->OnLeaveScript();
-
-  return RetCode;
-  }
+    return RetCode;
+}

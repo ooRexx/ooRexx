@@ -54,18 +54,18 @@
 
 class RexxSmartBuffer;
 
- class RexxEnvelope : public RexxObject {
+class RexxEnvelope : public RexxInternalObject
+{
   public:
    void *operator new(size_t);
-   inline void *operator new(size_t size, void *ptr) {return ptr;};
+   inline void *operator new(size_t size, void *ptr) {return ptr;}
    RexxEnvelope();
    inline RexxEnvelope(RESTORETYPE restoreType) { ; };
    void live(size_t);
    void liveGeneral(int reason);
-   void flatten(RexxEnvelope*);
-   RexxObject *unflatten(RexxEnvelope *);
+
    void flattenReference(void *, size_t, void *);
-   RexxEnvelope *pack(RexxObject *);
+   RexxBuffer *pack(RexxObject *);
    void        puff(RexxBuffer *, char *);
    size_t queryObj(RexxObject *);
    size_t copyBuffer(RexxObject *);
@@ -80,6 +80,9 @@ class RexxSmartBuffer;
    inline RexxObjectTable *getDuptable() {return this->duptable;}
    inline RexxObjectTable *getRehashtable() {return this->rehashtable;}
 
+   size_t      currentOffset;          /* current flattening offset         */
+
+protected:
    RexxObject *home;
    RexxObject *receiver;               /* object to receive the message     */
    RexxObjectTable  *duptable;         /* table of duplicates               */
@@ -87,6 +90,5 @@ class RexxSmartBuffer;
    RexxSmartBuffer *buffer;            /* smart buffer wrapper              */
    RexxObjectTable  *rehashtable;      /* table to rehash                   */
    RexxStack  *flattenStack;           /* the flattening stack              */
-   size_t      currentOffset;          /* current flattening offset         */
- };
+};
 #endif

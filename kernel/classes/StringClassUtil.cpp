@@ -107,16 +107,16 @@ char get_pad_character(
     RexxObject *argument,              /* method argument                   */
     size_t position )                  /* argument position                 */
 {
- RexxString *parameter;                /* converted string argument         */
-                                       /* convert parameter to a string     */
- parameter = (RexxString *)REQUIRED_STRING(argument, position);
-                                       /* is the string only 1 character?   */
- if (parameter->getLength() != 1)
-                                       /* argument not good, so raise an    */
-                                       /*error                              */
-   reportException(Error_Incorrect_method_pad, argument);
-                                       /* yes, return the character.        */
- return parameter->getChar(0);
+    RexxString *parameter = (RexxString *)REQUIRED_STRING(argument, position);
+    /* is the string only 1 character?   */
+    if (parameter->getLength() != 1)
+    {
+        /* argument not good, so raise an    */
+        /*error                              */
+        reportException(Error_Incorrect_method_pad, argument);
+    }
+    /* yes, return the character.        */
+    return parameter->getChar(0);
 }
 
 /******************************************************************************/
@@ -128,10 +128,8 @@ char get_option_character(
     RexxObject *argument,              /* method argument                   */
     size_t position )                  /* argument position                 */
 {
- RexxString *parameter;                /* converted string argument         */
-
-                                       /* force option to string            */
- parameter = (RexxString *)REQUIRED_STRING(argument, position);
-                                       /* return the first character        */
- return toupper(parameter->getChar(0));
+    /* force option to string            */
+    RexxString *parameter = (RexxString *)REQUIRED_STRING(argument, position);
+    /* return the first character        */
+    return toupper(parameter->getChar(0));
 }

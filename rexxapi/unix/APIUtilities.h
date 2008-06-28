@@ -48,6 +48,6 @@ int RxAPIStartUp(int);
 void RxAPICleanUp(int, int);
 int  CheckForMemory();
 int  RxFreeMemQue(size_t, size_t, int, size_t);
-int  RxAllocAPIBlock(PAPIBLOCK *, const char *, const char *, const char *); 
+int  RxAllocAPIBlock(PAPIBLOCK *, const char *, const char *, const char *);
 void RxFreeAPIBlock(size_t,size_t);
 

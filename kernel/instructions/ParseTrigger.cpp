@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ParseTrigger.c    */
+/* REXX Translator                                          ParseTrigger.cpp  */
 /*                                                                            */
 /* Primitive Procedure Parse Trigger Class                                    */
 /*                                                                            */
@@ -106,101 +106,124 @@ void RexxTrigger::parse(
 /* Function:  Apply a parsing trigger against a parsing target                */
 /******************************************************************************/
 {
-  RexxObject       *_value = OREF_NULL;/* evaluated trigger part            */
-  RexxString       *stringvalue;       /* new string value                  */
-  stringsize_t      integer;           /* target integer value              */
-  size_t            i;                 /* loop counter                      */
-  size_t            size;              /* size of variables array           */
-  RexxVariableBase *variable;          /* current variable processing       */
+    RexxObject       *_value = OREF_NULL;/* evaluated trigger part            */
+    RexxString       *stringvalue;       /* new string value                  */
+    stringsize_t      integer;           /* target integer value              */
+    size_t            i;                 /* loop counter                      */
+    size_t            size;              /* size of variables array           */
+    RexxVariableBase *variable;          /* current variable processing       */
 
-  if (this->value != OREF_NULL) {      /* need a value processed?           */
-                                       /* evaluate the expression part      */
-    _value = this->value->evaluate(context, stack);
-    context->traceResult(_value);      /* trace if necessary                */
-    stack->pop();                      /* Get rid of the value off the stack*/
-  }
-  switch (this->getType()) {           /* perform the trigger operations    */
-
-    case TRIGGER_END:                  /* just match to the end             */
-      target->moveToEnd();             /* move the pointers                 */
-      break;
-
-    case TRIGGER_PLUS:                 /* positive relative target          */
-      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-      target->forward(integer);        /* move the position                 */
-      break;
-
-    case TRIGGER_MINUS:                /* negative relative target          */
-      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-      target->backward(integer);       /* move the position                 */
-      break;
-
-    case TRIGGER_PLUS_LENGTH:          /* positive length                   */
-      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-      target->forwardLength(integer);  /* move the position                 */
-      break;
-
-    case TRIGGER_MINUS_LENGTH:         /* negative relative target          */
-      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-      target->backwardLength(integer); /* move the position                 */
-      break;
-
-    case TRIGGER_ABSOLUTE:             /* absolute column position          */
-      integer = this->integerTrigger(_value);  /* get binary version of trigger     */
-      target->absolute(integer);       /* move the position                 */
-      break;
-
-    case TRIGGER_STRING:               /* string search                     */
-                                       /* force to string form              */
-      stringvalue = this->stringTrigger(_value);
-      target->search(stringvalue);     /* perform the search                */
-      break;
-
-    case TRIGGER_MIXED:                /* string search                     */
-                                       /* force to string form              */
-      stringvalue = this->stringTrigger(_value);
-                                       /* and go search                     */
-      target->caselessSearch(stringvalue);
-      break;
-  }
-  if (context->tracingResults()) {     /* are we tracing?                   */
-                                       /* loop through the entire list      */
-    for (i = 0, size = this->variableCount; i < size; i++) {
-      if (i + 1 == size)               /* last variable?                    */
-        _value = target->remainder();  /* extract the remainder             */
-      else
-        _value = target->getWord();    /* just get the next word            */
-      variable = this->variables[i];   /* get the next variable retriever   */
-      if (variable != OREF_NULL) {     /* not a place holder dummy?         */
-                                       /* set the value                     */
-        // NOTE:  The different variable tpes handle their own assignment tracing
-        variable->assign(context, stack, _value);
-      }
-      else                             /* dummy variable, just trace it     */
-                                       /* trace if necessary                */
-        context->traceIntermediate(_value, TRACE_PREFIX_DUMMY);
+    if (this->value != OREF_NULL)
+    {      /* need a value processed?           */
+           /* evaluate the expression part      */
+        _value = this->value->evaluate(context, stack);
+        context->traceResult(_value);      /* trace if necessary                */
+        stack->pop();                      /* Get rid of the value off the stack*/
     }
-  }
-  else {                               /* not tracing, can optimize         */
-                                       /* loop through the entire list      */
-    for (i = 0, size = this->variableCount; i < size; i++) {
-      variable = this->variables[i];   /* get the next variable retriever   */
-      if (variable != OREF_NULL) {     /* not a place holder dummy?         */
-        if (i + 1 == size)             /* last variable?                    */
-          _value = target->remainder(); /* extract the remainder             */
-        else
-          _value = target->getWord();   /* just get the next word            */
-                                       /* set the value                     */
-        variable->assign(context, stack, _value);
-      }
-      else {                           /* dummy variable, just skip it      */
-        if (i + 1 == size)              /* last variable?                    */
-          target->skipRemainder();     /* skip the remainder                */
-        else
-          target->skipWord();          /* just skip the next word           */
-      }
+    switch (this->getType())
+    {           /* perform the trigger operations    */
+
+        case TRIGGER_END:                  /* just match to the end             */
+            target->moveToEnd();             /* move the pointers                 */
+            break;
+
+        case TRIGGER_PLUS:                 /* positive relative target          */
+            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
+            target->forward(integer);        /* move the position                 */
+            break;
+
+        case TRIGGER_MINUS:                /* negative relative target          */
+            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
+            target->backward(integer);       /* move the position                 */
+            break;
+
+        case TRIGGER_PLUS_LENGTH:          /* positive length                   */
+            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
+            target->forwardLength(integer);  /* move the position                 */
+            break;
+
+        case TRIGGER_MINUS_LENGTH:         /* negative relative target          */
+            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
+            target->backwardLength(integer); /* move the position                 */
+            break;
+
+        case TRIGGER_ABSOLUTE:             /* absolute column position          */
+            integer = this->integerTrigger(_value);  /* get binary version of trigger     */
+            target->absolute(integer);       /* move the position                 */
+            break;
+
+        case TRIGGER_STRING:               /* string search                     */
+            /* force to string form              */
+            stringvalue = this->stringTrigger(_value);
+            target->search(stringvalue);     /* perform the search                */
+            break;
+
+        case TRIGGER_MIXED:                /* string search                     */
+            /* force to string form              */
+            stringvalue = this->stringTrigger(_value);
+            /* and go search                     */
+            target->caselessSearch(stringvalue);
+            break;
     }
-  }
+    if (context->tracingResults())
+    {     /* are we tracing?                   */
+          /* loop through the entire list      */
+        for (i = 0, size = this->variableCount; i < size; i++)
+        {
+            if (i + 1 == size)               /* last variable?                    */
+            {
+                _value = target->remainder();  /* extract the remainder             */
+            }
+            else
+            {
+                _value = target->getWord();    /* just get the next word            */
+            }
+            variable = this->variables[i];   /* get the next variable retriever   */
+            if (variable != OREF_NULL)
+            {     /* not a place holder dummy?         */
+                  /* set the value                     */
+                // NOTE:  The different variable tpes handle their own assignment tracing
+                variable->assign(context, stack, _value);
+            }
+            else                             /* dummy variable, just trace it     */
+            {
+                /* trace if necessary                */
+                context->traceIntermediate(_value, TRACE_PREFIX_DUMMY);
+            }
+        }
+    }
+    else
+    {                               /* not tracing, can optimize         */
+                                    /* loop through the entire list      */
+        for (i = 0, size = this->variableCount; i < size; i++)
+        {
+            variable = this->variables[i];   /* get the next variable retriever   */
+            if (variable != OREF_NULL)
+            {     /* not a place holder dummy?         */
+                if (i + 1 == size)             /* last variable?                    */
+                {
+                    _value = target->remainder(); /* extract the remainder             */
+                }
+                else
+                {
+                    _value = target->getWord();   /* just get the next word            */
+                }
+                /* set the value                     */
+                variable->assign(context, stack, _value);
+            }
+            else
+            {                           /* dummy variable, just skip it      */
+                if (i + 1 == size)              /* last variable?                    */
+                {
+                    target->skipRemainder();     /* skip the remainder                */
+                }
+                else
+                {
+                    target->skipWord();          /* just skip the next word           */
+                }
+            }
+        }
+    }
 }
 
 void RexxTrigger::live(size_t liveMark)

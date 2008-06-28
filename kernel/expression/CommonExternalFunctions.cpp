@@ -37,54 +37,38 @@
 /*----------------------------------------------------------------------------*/
 
 #include "RexxCore.h"                         /* global REXX definitions        */
-#include "RexxNativeAPI.h"                  /* Lot's of useful REXX macros    */
+#include "oorexxapi.h"                      /* Lot's of useful REXX macros    */
 
 
 /******************************************************************************/
 /* activation_rxfuncadd - Method to support RXFUNCADD function                */
 /******************************************************************************/
-RexxMethod3(REXXOBJECT,sysRxfuncadd,CSTRING,name,CSTRING,module,CSTRING,proc)
+RexxRoutine3(logical_t, sysRxfuncadd, CSTRING,name, CSTRING,module, OPTIONAL_CSTRING, proc)
 {
-    /* must have two arguments           */
-    if (name == NO_CSTRING || module == NO_CSTRING)
-    {
-        /* raise an error                    */
-        rexx_exception(Error_Incorrect_call);
-    }
     if (proc == NO_CSTRING)              /* no procedure given?               */
     {
         proc = name;                       /* use the defined name              */
     }
     /* try to register the function      */
-    return RexxRegisterFunctionDll(name, module, proc) != 0 ? ooRexxTrue : ooRexxFalse;
+    return RexxRegisterFunctionDll(name, module, proc) != 0;
 }
 
 
 /******************************************************************************/
 /* activation_rxfuncdrop - Method to support RXFUNCDROP function              */
 /******************************************************************************/
-RexxMethod1(REXXOBJECT,sysRxfuncdrop,CSTRING,name)
+RexxRoutine1(logical_t, sysRxfuncdrop, CSTRING, name)
 {
-    if (name == NO_CSTRING)              /* must have a name                  */
-    {
-        /* raise an error                    */
-        rexx_exception(Error_Incorrect_call);
-    }
     /* try to drop the function          */
-    return RexxDeregisterFunction(name) != 0 ? ooRexxTrue : ooRexxFalse;
+    return RexxDeregisterFunction(name) != 0;
 }
 
 
 /******************************************************************************/
 /* activation_rxfuncquery - Method to support RXFUNCQUERY function            */
 /******************************************************************************/
-RexxMethod1(REXXOBJECT,sysRxfuncquery,CSTRING,name)
+RexxRoutine1(logical_t, sysRxfuncquery, CSTRING,name)
 {
-    if (name == NO_CSTRING)              /* must have a name                  */
-    {
-        /* raise an error                    */
-        rexx_exception(Error_Incorrect_call);
-    }
-    /* try to drop the function          */
-    return RexxQueryFunction(name) != 0 ? ooRexxTrue : ooRexxFalse;
+    // see if the function is there
+    return RexxQueryFunction(name) != 0;
 }

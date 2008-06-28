@@ -35,8 +35,6 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-return .engineSecurity~new(flags)
-
 ::CLASS engineSecurity
 
 /********************************************************************/
@@ -58,43 +56,37 @@ syntax:
   RAISE PROPAGATE
 
 ::METHOD init
-  expose flags
-  use arg flags
+  expose untrustedCaller untrustedData
+  use strict arg flags
 
--- bitSet returns non-zero if any of the requested bits are set
-::METHOD bitSet
-  expose flags
-  use arg what
-  /* UNTRUSTED_DATA == 1, UNTRUSTED_CALLER == 2 */
-  mask = 0
-  if what~pos("UNTRUSTED_DATA")   > 0 then mask = mask + 1
-  if what~pos("UNTRUSTED_CALLER") > 0 then mask = mask + 2
-  return BITAND(flags~d2c,mask~d2c)~c2d>0  -- true, when any matches!!
+  untrustedCaller = .false
+  untrustedData = .false
+
+  flags = flags~d2x~x2b    -- convert into a bit pattern
+  if flags~subchar(flags~length) == '1' then untrustedData = .true
+  if flags~subchar(flags~length - 1) == '1' then untrustedCaller = .true
+
 
 -- sent for all external function calls
 ::METHOD call
-/*  use arg directory
-  say 'method call'
-  if self~bitSet("UNTRUSTED_CALLER") then
+   expose untrustedCaller
+  if untrustedCaller then
     RAISE SYNTAX 48.1 ARRAY ('External function call not allowed in sandbox mode!')
 --  directory~setentry('RESULT', "ACCESS DENIED")*/
   return 0
 
 -- sent for all host command instructions
 ::METHOD command
-  use arg directory
-  SIGNAL ON syntax
-  if self~bitSet("UNTRUSTED_CALLER") then
+   expose untrustedCaller
+  if untrustedCaller then
     RAISE SYNTAX 48.1 ARRAY ('Host command invocation not allowed in sandbox mode!')
   return 0
 
-syntax:
-  RAISE PROPAGATE
-
 -- sent whenever a ::REQUIRES directive in the file is processed
 ::METHOD requires
+   expose untrustedCaller
   use arg directory
-  if self~bitSet("UNTRUSTED_CALLER") then do
+  if untrustedCaller then do
 -- set the security manager for the required file as well
     directory~setentry("SECURITYMANAGER", self)
   end
@@ -104,9 +96,9 @@ syntax:
 -- sent whenever REXX is going to access an entry in the .LOCAL
 -- directory as part of the resolution of the environment symbol name
 ::METHOD local
+   expose untrustedCaller
   use arg directory
-  SIGNAL ON syntax
-  if self~bitSet("UNTRUSTED_CALLER") then do
+  if untrustedCaller then do
     request = directory~name
     if (request == "OUTPUT") | (request == "STDOUT") | (request == "STDQUE") |,
        (request == "STDERR") | (request == "ERROR") then
@@ -114,49 +106,36 @@ syntax:
   end
   return 0
 
-syntax:
-  RAISE PROPAGATE
-
 -- sent whenever REXX is going to access an entry in the .ENVIRONMENT
 -- directory as part of the resolution of the environment symbol name.
 ::METHOD environment
+  expose untrustedCaller
   use arg directory
-  SIGNAL ON syntax
-  if self~bitSet("UNTRUSTED_CALLER") then do
+  if untrustedCaller then do
     request = directory~name
     if (request == "QUEUE") | (request == "STREAM") | (request == "RX_QUEUE") then
       RAISE SYNTAX 48.1 ARRAY ('.ENVIRONMENT access ('request') limited in sandbox mode!')
   end
   return 0
 
-syntax:
-  RAISE PROPAGATE
-
 -- sent whenever one of the REXX input and output built-in functions
 -- (CHARIN, CHAROUT, CHARS, LINEIN, LINEOUT, LINES, or STREAM) needs
 -- to resolve a stream name
 ::METHOD stream
+  expose untrustedCaller
   use arg directory
-  SIGNAL ON syntax
-  if self~bitSet("UNTRUSTED_CALLER") then
+  if untrustedCaller then
     RAISE SYNTAX 48.1 ARRAY ('File I/O operation not allowed in sandbox mode!')
   return 0
-
-syntax:
-  RAISE PROPAGATE
 
 -- sent whenever a secure program attempts to send a message for a
 -- protected method (see the ::METHOD directive ::METHOD) to an object.
 ::METHOD method
+  expose untrustedCaller
   use arg directory
-  SIGNAL ON syntax
-  if self~bitSet("UNTRUSTED_CALLER") then do
+  if untrustedCaller then do
     request = directory~name
     if request == "SETSECURITYMANAGER" then
       RAISE SYNTAX 48.1 ARRAY ('Change of the security manager not allowed in sandbox mode!')
   end
-
   return 0
-
-syntax:
-  RAISE PROPAGATE

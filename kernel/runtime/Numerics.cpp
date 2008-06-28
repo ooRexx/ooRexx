@@ -68,6 +68,7 @@ stringsize_t Numerics::DEFAULT_DIGITS  = ((stringsize_t)9);
     // for the full binary value range
 stringsize_t Numerics::ARGUMENT_DIGITS  = ((stringsize_t)9);
 #endif
+stringsize_t  Numerics::MAX_STRINGSIZE = SIZE_MAX;
     // max numeric digits value for explicit 64-bit conversions
 stringsize_t Numerics::DIGITS64 = ((stringsize_t)20);
 bool Numerics::FORM_SCIENTIFIC    = false;
@@ -101,6 +102,7 @@ NumericSettings::NumericSettings()
     form = Numerics::DEFAULT_FORM;
 }
 
+
 /**
  * Convert a signed int64 object into the appropriate Rexx
  * object type.
@@ -115,6 +117,27 @@ RexxObject *Numerics::toObject(int64_t v)
     if (v <= MAX_WHOLENUMBER && v >= MIN_WHOLENUMBER)
     {
         return new_integer((wholenumber_t)v);
+    }
+    // out of range, we need to use a numberstring for this, using the full
+    // allowable digits range
+    return new_numberstring(v);
+}
+
+
+/**
+ * Convert a signed int64 object into the appropriate Rexx
+ * object type.
+ *
+ * @param v      The value to convert.
+ *
+ * @return The Rexx object version of this number.
+ */
+RexxObject *Numerics::toObject(uint64_t v)
+{
+    // in the range for an integer object?
+    if (v <= MAX_WHOLENUMBER)
+    {
+        return new_integer((stringsize_t)v);
     }
     // out of range, we need to use a numberstring for this, using the full
     // allowable digits range
@@ -225,6 +248,7 @@ bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stri
     return true;
 }
 
+
 /**
  * Convert an object into a signed int64 value.
  *
@@ -259,6 +283,83 @@ bool Numerics::objectToInt64(RexxObject *source, int64_t &result)
 
         // if not a valid whole number, reject this too
         return nString->int64Value(&result, DIGITS64);
+    }
+}
+
+
+/**
+ * Convert an object into an unsigned int64 value.
+ *
+ * @param source   The source object.
+ * @param result   The returned converted value.
+ *
+ * @return true if the number converted properly, false for any
+ *         conversion errors.
+ */
+bool Numerics::objectToUnsignedInt64(RexxObject *source, uint64_t &result)
+/******************************************************************************/
+/* Function:  Convert a Rexx object into a numeric value within the specified */
+/* value range.  If the value is not convertable to an integer value or is    */
+/* outside of the specified range, false is returned.                         */
+/******************************************************************************/
+{
+    // is this an integer value (very common)
+    if (isInteger(source))
+    {
+        result = ((RexxInteger *)source)->stringSize();
+        return true;
+    }
+    else
+    {
+        // get this as a numberstring (which it might already be)
+        RexxNumberString *nString = source->numberString();
+        // not convertible to number string?  get out now
+        if (nString == OREF_NULL)
+        {
+            return false;
+        }
+
+        // if not a valid whole number, reject this too
+        return nString->unsignedInt64Value(&result, DIGITS64);
+    }
+}
+
+
+/**
+ * Convert an object into an uintptr_t values.  Used for values
+ * that are numbers masking as pointers.
+ *
+ * @param source The source object.
+ * @param result The returned value.
+ *
+ * @return true if this converted, false for any conversion failures.
+ */
+bool Numerics::objectToUintptr(RexxObject *source, uintptr_t &result)
+{
+    // is this an integer value (very common)
+    if (isInteger(source))
+    {
+        result = ((RexxInteger *)source)->stringSize();
+        return true;
+    }
+    else
+    {
+        // get this as a numberstring (which it might already be)
+        RexxNumberString *nString = source->numberString();
+        // not convertible to number string?  get out now
+        if (source == OREF_NULL)
+        {
+            return false;
+        }
+        uint64_t temp;
+
+        // if not a valid whole number, reject this too
+        if (nString->unsignedInt64Value(&temp, ARGUMENT_DIGITS))
+        {
+            result = (uintptr_t)temp;
+            return true;
+        }
+        return false;
     }
 }
 
@@ -400,4 +501,66 @@ stringsize_t Numerics::formatInt64(int64_t integer, char *dest)
     // make sure we have a terminating null
     dest[length] = '\0';
     return length + sign;
+}
+
+
+/**
+ * Do portable formatting of a uint64_t value into an ascii
+ * string.
+ *
+ * @param integer The value to convert.
+ * @param dest    The location to store the formatted string.
+ *
+ * @return The length of the converted number.
+ */
+stringsize_t Numerics::formatUnsignedInt64(uint64_t integer, char *dest)
+{
+    // zero? this is pretty easy
+    if (integer == 0)
+    {
+        strcpy(dest, "0");
+        return 1;
+    }
+
+    // we convert this directly because portable numeric-to-ascii routines
+    // don't really exist for the various 32/64 bit values.
+    char buffer[32];
+    size_t index = sizeof(buffer);
+
+    while (integer > 0)
+    {
+        // get the digit and reduce the size of the integer
+        int digit = (int)(integer % 10) + '0';
+        integer = integer / 10;
+        // store the digit
+        buffer[--index] = digit;
+    }
+
+    // copy into the buffer and set the length
+    stringsize_t length = sizeof(buffer) - index;
+    memcpy(dest, &buffer[index], length);
+    // make sure we have a terminating null
+    dest[length] = '\0';
+    return length;
+}
+
+
+/**
+ * Convert an unsigned ptr value into the appropriate Rexx
+ * object type.
+ *
+ * @param v      The value to convert.
+ *
+ * @return The Rexx object version of this number.
+ */
+RexxObject *Numerics::ptrToObject(uintptr_t v)
+{
+    // in the range for an integer object?
+    if (v <= (uintptr_t)MAX_WHOLENUMBER)
+    {
+        return new_integer((wholenumber_t)v);
+    }
+    // out of range, we need to use a numberstring for this, using the full
+    // allowable digits range
+    return new_numberstring(v);
 }

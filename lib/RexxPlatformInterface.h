@@ -51,7 +51,7 @@ class RexxString;
 class RexxInteger;
 class RexxActivity;
 class RexxActivation;
-class RexxMethod;
+class RoutineClass;
 class RexxDateTime;
 class RexxNativeActivation;
 class RexxBuffer;
@@ -60,16 +60,6 @@ class ProtectedObject;
 
 #ifndef SysGetCurrentTime
 void SysGetCurrentTime(RexxDateTime *);/* get the current time              */
-#endif
-
-#ifndef SysVariablePool
-                                       /* process external vpool requests   */
-extern int SysVariablePool(RexxNativeActivation *, void *, bool);
-#endif
-
-#ifndef SysResolveProgramName
-                                       /* resolve rexx program file names   */
-RexxString *SysResolveProgramName(RexxString *, RexxString *);
 #endif
 
 #ifndef SysRelinquish
@@ -140,7 +130,7 @@ void SysReleaseResultMemory(void *);   /* release a result memory block     */
 
 #ifndef SysExternalFunction
                                        /* call an external function         */
-bool SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+bool SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
 #endif
 
 #ifndef SysCommand
@@ -192,34 +182,8 @@ RexxString *SysMessageHeader(wholenumber_t);    /* get the header for an error m
 RexxBuffer *SysReadProgram (const char *); /* read a program into storage       */
 #endif
 
-#ifndef SysGetCurrentQueue
-RexxString *SysGetCurrentQueue(void);  /* Get the current queue name        */
-#endif
-
 #ifndef SysSetupProgram
 void SysSetupProgram(RexxActivation *);/* System specific program setup     */
-#endif
-
-#ifndef SysRestoreProgram
-                                       /* Restore a program image           */
-RexxMethod *SysRestoreProgram(RexxString *);
-#endif
-
-#ifndef SysRestoreProgramBuffer
-RexxMethod *SysRestoreProgramBuffer(PRXSTRING, RexxString *);
-#endif
-
-#ifndef SysSaveProgram
-                                       /* Save a program image              */
-void SysSaveProgram(RexxString *, RexxMethod *);
-#endif
-
-#ifndef SysSaveProgramBuffer
-void SysSaveProgramBuffer(PRXSTRING , RexxMethod *);
-#endif
-
-#ifndef SysSaveTranslatedProgram
-void SysSaveTranslatedProgram(const char *, RexxMethod *);
 #endif
 
 #ifndef SysSourceString
@@ -229,16 +193,6 @@ RexxString *SysSourceString(RexxString *, RexxString *);
 
 #ifndef SysInitialAddressName
 RexxString *SysInitialAddressName();   /* get the initial address name      */
-#endif
-
-#ifndef SysQualifyFileSystemName
-                                       /* Qualify a file name               */
-RexxString *SysQualifyFileSystemName(RexxString *);
-#endif
-
-#ifndef SysFileExtension
-
-const char *SysFileExtension(const char *);
 #endif
 
 #ifndef SysClauseBoundary
@@ -259,10 +213,6 @@ void SysLoadImage(char **, size_t *);    /* load the image file               */
 #ifndef SysTerminateThread
                                        /* thread being terminated           */
 void SysTerminateThread(thread_id_t threadid);
-#endif
-
-#ifndef SysIsThreadEqual
-#define SysIsThreadEqual(t1, t2) (((thread_id_t)(t1)) == ((thread_id_t)(t2)))
 #endif
 
 #ifndef SysInitializeThread

@@ -464,3 +464,729 @@ int  StringUtil::caselessCompare(const char *string1, const char *string2, size_
     }
     return 0;                            /* fall through, these are equal     */
 }
+
+
+
+/**
+ * Convert a hex digit to it's integer value equivalent.
+ *
+ * @param ch     The input character.
+ *
+ * @return the integer value of the digit.
+ */
+int StringUtil::hexDigitToInt(char  ch)
+{
+    int   Retval;                        /* return value                      */
+
+    if (isdigit(ch))                     /* if real digit                     */
+    {
+        Retval = ch - '0';                 /* convert that                      */
+    }
+    else
+    {
+        Retval = toupper(ch) - 'A' + 10;   /* convert alphabetic                */
+    }
+    return Retval;                       /* return conversion                 */
+}
+
+/**
+ * The value of the buffer contents
+ * interpreted as the binary expansion
+ * of a byte, with most significant
+ * bit in s[0] and least significant
+ * bit in s[7].
+ *
+ * @param String The string to pack
+ *
+ * @return The single packed character.
+ */
+char StringUtil::packByte(const char *String )
+{
+    char Result = 0;                   /* start off at zero                 */
+    for (int i = 0; i < 8; i++)        /* loop thru 8 chars                 */
+    {
+        if (String[i] == '1')          /* if 'bit' set                      */
+        {
+            Result |= (1<<(7-i));      /* or with mask                      */
+        }
+    }
+    return Result;                     /* return packed byte                */
+}
+
+/**
+ * The value of the buffer contents
+ * interpreted as the binary expansion
+ * of a byte, with most significant
+ * bit in s[0] and least significant
+ * bit in s[7].
+ *
+ * @param String Pack 4 characters into a hex string value.
+ *
+ * @return The hex character representing the nibble value.
+ */
+char StringUtil::packNibble(const char *String)
+{
+    char  Buf[8];                        /* temporary buffer                  */
+    int   i;                             /* table index                       */
+
+    memset(Buf, '0', 4);                 /* set first 4 bytes to zero         */
+    memcpy(Buf+4, String, 4);            /* copy next 4 bytes                 */
+    i = packByte(Buf);                   /* pack to a single byte             */
+    return "0123456789ABCDEF"[i];        /* convert to a printable character  */
+}
+
+/**
+ * Pack 2 0123456789ABCDEFabcdef chars into
+ * byte
+ *
+ * The value of the buffer contents
+ * interpreted as the hex expansion
+ * of a byte, with most significant
+ * nibble in s[0] and least significant
+ * nibble in s[2].
+ *
+ * @param Byte   The pointer to the hex digit pair to pack.
+ *
+ * @return The single byte encoding of the pair of digits.
+ */
+char StringUtil::packByte2(const char *Byte)
+{
+    int      Nibble1;                    /* first nibble                      */
+    int      Nibble2;                    /* second nibble                     */
+
+                                         /* convert each digit                */
+    Nibble1 = hexDigitToInt(Byte[0]);
+    Nibble2 = hexDigitToInt(Byte[1]);
+    /* combine the two digits            */
+
+    return((Nibble1 << 4) | Nibble2);
+}
+
+/**
+ * Validate blocks in string
+ *
+ * A string is considered valid if consists
+ * of zero or more characters belonging to
+ * the null-terminated C string set in
+ * groups of size modulus.  The first group
+ * may have fewer than modulus characters.
+ * The groups are optionally separated by
+ * one or more blanks.
+ *
+ * @param String  The string to validate.
+ * @param Length  The string length.
+ * @param Set     The valid characters in the set.
+ * @param Modulus The size of the smallest allowed grouping.
+ * @param Hex     Indicates this is a hex or binary string.  Used for issuing
+ *                the correct error type.
+ *
+ * @return The number of valid digits found.
+ */
+size_t StringUtil::validateSet(const char *String, size_t Length, const char *Set, int Modulus, bool Hex)
+{
+    char     c;                          /* current character                 */
+    size_t   Count;                      /* # set members found               */
+    const char *Current;                 /* current location                  */
+    const char *SpaceLocation = NULL;    /* location of last space            */
+    int      SpaceFound;                 /* space found yet?                  */
+    size_t   Residue = 0;                /* if space_found, # set             */
+                                         /* members                           */
+
+    if (*String == ch_SPACE)             /* if no leading blank               */
+    {
+        if (Hex)                           /* hex version?                      */
+        {
+            /* raise the hex message             */
+            reportException(Error_Incorrect_method_hexblank, IntegerOne);
+        }
+        else
+        {
+            /* need the binary version           */
+            reportException(Error_Incorrect_method_binblank, IntegerOne);
+        }
+    }
+    SpaceFound = 0;                      /* set initial space flag            */
+    Count = 0;                           /* start count with zero             */
+    Current = String;                    /* point to start                    */
+
+    for (; Length; Length--)
+    {           /* process entire string             */
+        c = *Current++;                    /* get char and step pointer         */
+                                           /* if c in set                       */
+        if (c != '\0' && strchr(Set, c) != NULL)
+        {
+            Count++;                         /* bump count                        */
+        }
+        else
+        {
+            if (c == ch_SPACE)
+            {             /* if c blank                        */
+                SpaceLocation = Current;       /* save the space location           */
+                if (!SpaceFound)
+                {             /* if 1st blank                      */
+                              /* save position                     */
+                    Residue = (Count % Modulus);
+                    SpaceFound = 1;              /* we have the first space           */
+                }
+                /* else if bad position              */
+                else if (Residue != (Count % Modulus))
+                {
+                    if (Hex)                     /* hex version?                      */
+                    {
+                        /* raise the hex message             */
+                        reportException(Error_Incorrect_method_hexblank, SpaceLocation - String);
+                    }
+                    else
+                    {
+                        /* need the binary version           */
+                        reportException(Error_Incorrect_method_binblank, SpaceLocation - String);
+                    }
+                }
+            }
+            else
+            {
+
+                if (Hex)                       /* hex version?                      */
+                {
+                    /* raise the hex message             */
+                    reportException(Error_Incorrect_method_invhex, new_string((char *)&c, 1));
+                }
+                else
+                {
+                    reportException(Error_Incorrect_method_invbin, new_string((char *)&c, 1));
+                }
+            }
+        }
+    }
+    /* if trailing blank or grouping bad */
+    if (c == ch_SPACE || SpaceFound && (Count % Modulus) != Residue)
+    {
+        if (Hex)                           /* hex version?                      */
+        {
+            /* raise the hex message             */
+            reportException(Error_Incorrect_method_hexblank, SpaceLocation - String);
+        }
+        else
+        {
+            /* need the binary version           */
+            reportException(Error_Incorrect_method_binblank, SpaceLocation - String);
+        }
+    }
+    return Count;                        /* return count of chars             */
+}
+
+/**
+ * Scan string for next members of
+ * character set
+ *
+ * @param Destination
+ *               The string where the characters are packed.
+ * @param Source The source for the string data.
+ * @param Length The length of the input string.
+ * @param Count  The number of valid characters in the string.
+ * @param Set    The set of allowed characters.
+ * @param ScannedSize
+ *               The returned scan size.
+ *
+ * @return
+ */
+size_t  StringUtil::chGetSm(char *Destination, const char *Source, size_t Length, size_t Count, const char *Set, size_t *ScannedSize)
+{
+    char      c;                         /* current scanned character  */
+    const char *Current;                 /* current scan pointer       */
+    size_t    Found;                     /* number of characters found */
+    size_t    Scanned;                   /* number of character scanned*/
+
+    Scanned = 0;                         /* nothing scanned yet        */
+    Found = 0;                           /* nothing found yet          */
+    Current = Source;                    /* get pointer to string      */
+
+    for (; Length; Length--)
+    {           /* scan entire string         */
+        c = *Current++;                    /* get char and step pointer  */
+        Scanned++;                         /* remember scan count        */
+                                           /* if c in set                       */
+        if (c != '\0' && strchr(Set, c) != NULL)
+        {
+            *Destination++ = c;              /* copy c                     */
+            if (++Found == Count)            /* if all found               */
+            {
+                break;                         /* we are all done            */
+            }
+        }
+    }
+    *ScannedSize = Scanned;              /* return characters scanned  */
+    return Found;                        /* and number found           */
+}
+
+/**
+ * pack a string of 'hex' digits in place
+ *
+ * take two alpha chars and make into one byte
+ *
+ * @param String The string to pack
+ * @param StringLength
+ *               The length of the string.
+ *
+ * @return The resulting packed string.
+ */
+RexxString *StringUtil::packHex(const char *String, size_t StringLength)
+{
+    size_t   Nibbles;                    /* count of nibbles to pack          */
+    size_t   n;
+    const char *Source;                  /* pack source                       */
+    char *    Destination;               /* packing destination               */
+    size_t   b;                          /* nibble odd count                  */
+    char     Buf[8];                     /* temp pack buffer                  */
+    size_t   jjj;                        /* copies nibbles                    */
+    RexxString *Retval;                  /* result value                      */
+
+    if (StringLength)
+    {                  /* if not a null string              */
+        Source = String;                   /* get pointer                       */
+        /* validate the information          */
+        Nibbles = validateSet(Source, StringLength, "0123456789ABCDEFabcdef", 2, true);
+        /* get a result string               */
+        Retval = raw_string((Nibbles + 1) / 2);
+        /* initialize destination            */
+        Destination = Retval->getWritableData();
+
+        while (Nibbles > 0)
+        {              /* while chars to process            */
+
+            b = Nibbles%2;                   /* get nibbles for next byte         */
+            if (b == 0)                      /* even number                       */
+            {
+                b = 2;                         /* use two bytes                     */
+            }
+            else                             /* odd number,                       */
+            {
+                memset(Buf, '0', 2);           /* pad with zeroes                   */
+            }
+
+            jjj = 2 - b;                     /* copy nibbles into buff            */
+            chGetSm(Buf+jjj, Source, StringLength, b, "0123456789ABCDEFabcdef", &n);
+            *Destination++ = packByte2(Buf); /* pack into destination             */
+            Source += n;                     /* advance source location           */
+            StringLength -= n;               /* reduce the length                 */
+            Nibbles -= b;                    /* decrement the count               */
+        }
+    }
+    else
+    {
+        /* this is a null string             */
+        Retval = OREF_NULLSTRING;
+    }
+    return Retval;                       /* return the packed string          */
+}
+
+/**
+ * convert nibble to 4 '0'/'1' chars
+ *
+ * p[0], ..., p[3]: the four '0'/'1'
+ * chars representing the nibble
+ *
+ * No terminating null character is
+ * produced
+ *
+ * @param Val    The nibble to unpack.
+ * @param p      The location to unpack into.
+ */
+void StringUtil::unpackNibble(int Val, char *p)
+{
+    p[0] = (Val & 0x08) != 0 ?'1':'0';
+    p[1] = (Val & 0x04) != 0 ?'1':'0';
+    p[2] = (Val & 0x02) != 0 ?'1':'0';
+    p[3] = (Val & 0x01) != 0 ?'1':'0';
+}
+
+
+/**
+ * Find the first occurrence of the set non-member in a string.
+ *
+ * @param String The string to search.
+ * @param Set    The character set.
+ * @param Length The length to search.
+ *
+ * @return The position of a match.
+ */
+const char *StringUtil::memcpbrk(const char *String, const char *Set, size_t Length)
+{
+    const char *Retval;                  /* returned value                    */
+
+    Retval = NULL;                       /* nothing found yet                 */
+    while (Length--)
+    {                   /* search through string             */
+                        /* find a match in ref set?          */
+        if (*String == '\0' || !strchr(Set, *String))
+        {
+            Retval = String;                 /* copy position                     */
+            break;                           /* quit the loop                     */
+        }
+        String++;                          /* step the pointer                  */
+    }
+    return Retval;                       /* return matched position           */
+}
+
+
+/**
+ * Validate blocks in string
+ *
+ * A string is considered valid if consists
+ * of zero or more characters belonging to
+ * the null-terminated C string set in
+ * groups of size modulus.  The first group
+ * may have fewer than modulus characters.
+ * The groups are optionally separated by
+ * one or more blanks.
+ *
+ * @param String     The string to validate.
+ * @param Length     The string length.
+ * @param Set        The validation set.
+ * @param Modulus    The set modulus
+ * @param PackedSize The final packed size.
+ *
+ * @return The count of located characters.
+ */
+int StringUtil::valSet(const char *String, size_t Length, const char *Set, int Modulus, size_t *PackedSize )
+{
+    char     c = '\0';                   /* current character                 */
+    size_t   Count;                      /* # set members found               */
+    const char *Current;                 /* current location                  */
+    int      SpaceFound;                 /* space found yet?                  */
+    size_t   Residue = 0;                /* if space_found, # set members     */
+    int      rc;                         /* return code                       */
+
+    rc = false;                          /* default to failure                */
+    if (*String != ' ' && *String != '\t')
+    {    /* if no leading blank               */
+        SpaceFound = 0;                    /* set initial space flag            */
+        Count = 0;                         /* start count with zero             */
+        Current = String;                  /* point to start                    */
+
+        rc = true;                         /* default to good now               */
+        for (; Length; Length--)
+        {         /* process entire string             */
+            c = *Current++;                  /* get char and step pointer         */
+                                             /* if c in set                       */
+            if (c != '\0' && strchr(Set, c) != NULL)
+            {
+                Count++;                       /* bump count                        */
+            }
+            else
+            {
+                if (c == ' ' || c == '\t')
+                {   /* if c blank                        */
+                    if (!SpaceFound)
+                    {           /* if 1st blank                      */
+                                /* save position                     */
+                        Residue = (Count % Modulus);
+                        SpaceFound = 1;            /* we have the first space           */
+                    }
+                    /* else if bad position              */
+                    else if (Residue != (Count % Modulus))
+                    {
+                        rc = false;                /* this is an error                  */
+                        break;                     /* report error                      */
+                    }
+                }
+                else
+                {
+                    rc = false;                  /* this is an error                  */
+                    break;                       /* report error                      */
+                }
+            }
+        }
+        if (rc)
+        {                          /* still good?                       */
+            if (c == ' ' || c == '\t')       /* if trailing blank                 */
+            {
+                rc = false;                    /* report error                      */
+            }
+            else if (SpaceFound && (Count % Modulus) != Residue)
+            {
+                rc = false;                    /* grouping problem                  */
+            }
+            else
+            {
+                *PackedSize = Count;           /* return count of chars             */
+            }
+        }
+    }
+    return rc;                           /* return success/failure            */
+}
+
+
+/**
+ * Perform primitive datatype validation.
+ *
+ * @param String The target string.
+ * @param Option The type of data to validate.
+ *
+ * @return True if this is of the indicated type, false for any mismatch.
+ */
+RexxObject *StringUtil::dataType(RexxString *String, char Option )
+{
+    size_t      Len;                     /* validated string length           */
+    RexxObject *Answer;                  /* validation result                 */
+    RexxObject *Temp;                    /* temporary value                   */
+    const char *Scanp;                   /* string data pointer               */
+    size_t      Count;                   /* hex nibble count                  */
+    int         Type;                    /* validated symbol type             */
+    RexxNumberString *TempNum;
+
+    Len = String->getLength();           /* get validated string len          */
+    Option = toupper(Option);            /* get the first character           */
+
+                                         /* assume failure on checking        */
+    Answer = TheFalseObject;
+    /* get a scan pointer                */
+    Scanp = String->getStringData();
+
+    switch (Option)
+    {                    /* based on type to confirm          */
+
+        case DATATYPE_ALPHANUMERIC:        /* Alphanumeric                      */
+            /* all in the set?                   */
+            if (Len != 0 && !memcpbrk(Scanp, ALPHANUM, Len))
+            {
+                /* this is a good string             */
+                Answer = TheTrueObject;
+            }
+            break;
+
+        case DATATYPE_BINARY:              /* Binary string                     */
+            /* validate the string               */
+            if (Len == 0 || valSet(Scanp, Len, BINARI, 4, &Count))
+            {
+                /* this is a good string             */
+                Answer = TheTrueObject;
+            }
+            break;
+
+        case DATATYPE_LOWERCASE:           /* Lowercase                         */
+            if (Len != 0 && !memcpbrk(Scanp, LOWER_ALPHA, Len))
+            {
+                /* this is a good string             */
+                Answer = TheTrueObject;
+            }
+            break;
+
+        case DATATYPE_UPPERCASE:           /* Uppercase                         */
+            if (Len != 0 && !memcpbrk(Scanp, UPPER_ALPHA, Len))
+            {
+                /* this is a good string             */
+                Answer = TheTrueObject;
+            }
+            break;
+
+        case DATATYPE_MIXEDCASE:           /* Mixed case                        */
+            if (Len != 0 && !memcpbrk(Scanp, MIXED_ALPHA, Len))
+            {
+                /* this is a good string             */
+                Answer = TheTrueObject;
+            }
+            break;
+
+        case DATATYPE_WHOLE_NUMBER:        /* Whole number                      */
+            /* validate as a number              */
+            TempNum = String->numberString();
+            if (TempNum != OREF_NULL)
+            {      /* valid number?                     */
+                   /* force rounding to current digits  */
+                TempNum = (RexxNumberString *)TempNum->plus(IntegerZero);
+                /* check for integer then            */
+                Answer = TempNum->isInteger();
+            }
+            break;
+
+        case DATATYPE_NUMBER:              /* Number                            */
+            /* validate as a number              */
+            Temp = (RexxObject *)String->numberString();
+            if (Temp != OREF_NULL)           /* valid number?                     */
+            {
+                /* got a good one                    */
+                Answer = TheTrueObject;
+            }
+            break;
+
+        case DATATYPE_9DIGITS:             /* NUMERIC DIGITS 9 number           */
+            {                                  /* good long number                  */
+                wholenumber_t temp;
+                if (String->numberValue(temp))
+                {
+                    Answer = TheTrueObject;
+                }
+                break;
+            }
+
+        case DATATYPE_HEX:                 /* heXadecimal                       */
+            /* validate the string               */
+            if (Len == 0 || valSet(Scanp, Len, HEX_CHAR_STR, 2, &Count))
+            {
+                /* valid hexadecimal                 */
+                Answer = TheTrueObject;
+            }
+            break;
+
+        case DATATYPE_SYMBOL:              /* Symbol                            */
+            /* validate the symbol               */
+            if (String->isSymbol() != STRING_BAD_VARIABLE)
+            {
+                /* is a valid symbol                 */
+                Answer = TheTrueObject;
+            }
+            break;
+
+        case DATATYPE_VARIABLE:            /* Variable                          */
+
+            /* validate the symbol               */
+            Type = String->isSymbol();
+            /* a valid variable type?            */
+            if (Type == STRING_NAME ||
+                Type == STRING_STEM ||
+                Type == STRING_COMPOUND_NAME)
+            {
+                /* is a valid symbol                 */
+                Answer = TheTrueObject;
+            }
+            break;
+
+        case DATATYPE_LOGICAL:           // Test for a valid logical.
+            if (Len != 1 || (*Scanp != '1' && *Scanp != '0'))
+            {
+                Answer = TheFalseObject;
+            }
+            else
+            {
+                Answer = TheTrueObject;
+            }
+
+            break;
+
+        default  :                         /* unsupported option                */
+            reportException(Error_Incorrect_method_option, "ABCDLMNOSUVWX9", new_string((const char *)&Option,1));
+    }
+    return Answer;                       /* return validation answer          */
+}
+
+
+/**
+ * Skip leading blanks in a string.
+ *
+ * @param String The target string.
+ * @param StringLength
+ *               The length of the string segment.
+ */
+void StringUtil::skipBlanks(const char **String, size_t *StringLength )
+{
+    const char *Scan;                    /* scan pointer               */
+    size_t   Length;                     /* length to scan             */
+
+    Scan = *String;                      /* point to data              */
+    Length = *StringLength;              /* get the length             */
+
+    for (;Length; Length--)
+    {            /* scan entire string         */
+        if (*Scan != ' ' && *Scan != '\t') /* if not a space             */
+        {
+            break;                           /* just quit the loop         */
+        }
+        Scan++;                            /* step to next character     */
+    }
+    /* fell through, all blanks   */
+    *String = Scan;                      /* set pointer one past       */
+    *StringLength = Length;              /* update the length          */
+}
+
+/**
+ * Skip non-blank characters to the next whitespace char.
+ *
+ * @param String The source string.
+ * @param StringLength
+ *               The string length (update on return);
+ */
+void StringUtil::skipNonBlanks(const char **String, size_t   *StringLength )
+{
+    const char *Scan;                    /* scan pointer               */
+    size_t   Length;                     /* length to scan             */
+
+    Scan = *String;                      /* point to data              */
+    Length = *StringLength;              /* get the length             */
+
+    for (;Length; Length--)
+    {            /* scan entire string         */
+        if (*Scan == ' ' || *Scan == '\t') /* if not a space             */
+        {
+            break;                           /* just quit the loop         */
+        }
+        Scan++;                            /* step to next character     */
+    }
+    /* fell through, all blanks   */
+    *String = Scan;                      /* set pointer one past       */
+    *StringLength = Length;              /* update the length          */
+}
+
+
+/**
+ * Count the number of words in a string.
+ *
+ * @param String The string to count.
+ * @param StringLength
+ *               The length of the string.
+ *
+ * @return The count of white-space delimited words.
+ */
+size_t  StringUtil::wordCount(const char *String, size_t   StringLength )
+{
+    size_t Count = 0;                           /* default to nothing         */
+    if (StringLength)
+    {                  /* if not a null string       */
+        skipBlanks(&String, &StringLength);/* skip any leading blanks    */
+
+        while (StringLength)
+        {             /* while still string ...     */
+            Count++;                         /* account for this word      */
+                                             /* now skip the non-blanks    */
+            skipNonBlanks(&String, &StringLength);
+            if (!StringLength)               /* if done with the string    */
+            {
+                break;                         /* we are finished            */
+            }
+                                               /* skip to the next word      */
+            skipBlanks(&String, &StringLength);
+        }                                  /* loop while still have chars*/
+    }
+    return  Count;                       /* done looping, return the   */
+                                         /* count of words             */
+}
+
+
+/**
+ * Find the next word in the string.
+ *
+ * @param String     The source string.
+ * @param StringLength
+ *                   The length of the string (update on return).
+ * @param NextString The next word position.
+ *
+ * @return The length of the located word.
+ */
+size_t StringUtil::nextWord(const char **String, size_t *StringLength, const char **NextString )
+{
+    size_t WordStart = 0;                       /* nothing moved yet          */
+    if (*StringLength)
+    {                 /* Something there?           */
+        skipBlanks(String, StringLength);  /* skip any leading blanks    */
+
+        if (*StringLength)
+        {               /* if still string ...        */
+            WordStart = *StringLength;       /* save current length        */
+            *NextString = *String;           /* save start position now    */
+                                             /* skip the non-blanks        */
+            skipNonBlanks(NextString, StringLength);
+            WordStart -= *StringLength;      /* adjust the word length     */
+        }
+    }
+    return WordStart;                    /* return word length         */
+}

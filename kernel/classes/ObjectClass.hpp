@@ -61,6 +61,8 @@
   class RexxMethod;
   class RexxMessage;
   class ProtectedObject;
+  class SecurityManager;
+  class BaseExecutable;
 
 
   enum
@@ -193,7 +195,9 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
 
      void * operator new(size_t, RexxClass *);
      void * operator new(size_t, RexxClass *, RexxObject **, size_t);
+     inline void *operator new(size_t size, void *ptr) {return ptr;}
      inline void   operator delete(void *) { ; }
+     inline void operator delete(void *p, void *ptr) { }
      inline RexxInternalObject() {;};
                                        /* Following constructor used to     */
                                        /*  reconstruct the Virtual          */
@@ -259,6 +263,8 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
      virtual RexxObject  *evaluate(RexxActivation *, RexxExpressionStack *) { return OREF_NULL; }
      virtual RexxObject  *getValue(RexxActivation *) { return OREF_NULL; }
      virtual RexxObject  *getValue(RexxVariableDictionary *) { return OREF_NULL; }
+     virtual RexxObject  *getRealValue(RexxActivation *) { return OREF_NULL; }
+     virtual RexxObject  *getRealValue(RexxVariableDictionary *) { return OREF_NULL; }
      virtual void         uninit() {;}
      virtual HashCode     hash()  { return getHashValue(); }
      virtual HashCode     getHashValue()  { return identityHash(); }
@@ -386,6 +392,7 @@ class RexxObject : public RexxInternalObject {
      bool         requestUnsignedNumber(stringsize_t &, size_t);
      RexxArray   *requestArray();
      RexxString  *requiredString(size_t);
+     RexxString  *requiredString(const char *);
      RexxString  *requiredString();
      RexxInteger *requiredInteger(size_t, size_t);
      wholenumber_t requiredNumber(size_t position, size_t precision = Numerics::DEFAULT_DIGITS);
@@ -410,16 +417,16 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *pmdict();
      RexxObject  *run(RexxObject **, size_t);
 
-     void         messageSend(RexxString *, size_t, RexxObject **, ProtectedObject &);
-     void         messageSend(RexxString *, size_t, RexxObject **, RexxObject *, ProtectedObject &);
+     void         messageSend(RexxString *, RexxObject **, size_t, ProtectedObject &);
+     void         messageSend(RexxString *, RexxObject **, size_t, RexxObject *, ProtectedObject &);
      RexxMethod  *checkPrivate(RexxMethod *);
-     void         processUnknown(RexxString *, size_t, RexxObject **, ProtectedObject &);
-     void         processProtectedMethod(RexxString *, RexxMethod *, size_t, RexxObject **, ProtectedObject &);
+     void         processUnknown(RexxString *, RexxObject **, size_t, ProtectedObject &);
+     void         processProtectedMethod(RexxString *, RexxMethod *, RexxObject **, size_t, ProtectedObject &);
      void         sendMessage(RexxString *, RexxArray *, ProtectedObject &);
      inline void  sendMessage(RexxString *message, ProtectedObject &result) { this->messageSend(message, 0, OREF_NULL, result); };
-     inline void  sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { this->messageSend(message, argCount, args, result); };
+     inline void  sendMessage(RexxString *message, RexxObject **args, size_t argCount, ProtectedObject &result) { this->messageSend(message, args, argCount, result); };
      inline void  sendMessage(RexxString *message, RexxObject *argument1, ProtectedObject &result)
-         { this->messageSend(message, 1, &argument1, result); }
+         { this->messageSend(message, &argument1, 1, result); }
      void         sendMessage(RexxString *, RexxObject *, RexxObject *, ProtectedObject &);
      void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
      void         sendMessage(RexxString *, RexxObject *, RexxObject *, RexxObject *, RexxObject *, ProtectedObject &);
@@ -468,8 +475,6 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *copyRexx();
      RexxObject  *unknownRexx(RexxString *, RexxArray *);
      RexxObject  *hasMethodRexx(RexxString *);
-     RexxObject  *initProxyRexx(RexxInteger *);
-     bool         callSecurityManager(RexxString *, RexxDirectory *);
      // compare 2 values for equality, potentially falling back on the
      // "==" method for the test.
      bool inline equalValue(RexxObject *other)
@@ -517,6 +522,7 @@ class RexxObject : public RexxInternalObject {
    RexxVariableDictionary *objectVariables;   /* set of object variables           */
    static PCPPM operatorMethods[];
 
+   static void createInstance();
    static RexxClass *classInstance;
 };
 
@@ -557,21 +563,25 @@ public:
     virtual bool form() {return Numerics::DEFAULT_FORM;};
     virtual NumericSettings *getNumericSettings() { return Numerics::getDefaultSettings(); }
     virtual RexxActivation *getRexxContext() { return OREF_NULL; }
+    virtual RexxActivation *findRexxContext() { return OREF_NULL; }
     virtual void setDigits(size_t) {;};
     virtual void setFuzz(size_t) {;};
     virtual void setForm(bool) {;}
     virtual bool trap(RexxString *, RexxDirectory *) {return false;};
     virtual void setObjNotify(RexxMessage *) {;};
     virtual void termination(){;};
-    virtual bool hasSecurityManager() { return false; }
+    virtual SecurityManager *getSecurityManager() = 0;
     virtual bool isForwarded() { return false; }
     virtual bool isStackBase() { return false; }
+    virtual bool isRexxContext() { return false; }
     virtual RexxObject *getReceiver() { return OREF_NULL; }
     inline void setPreviousStackFrame(RexxActivationBase *p) { previous = p; }
     inline RexxActivationBase *getPreviousStackFrame() { return previous; }
+    inline BaseExecutable *getExecutable() { return executable; }
 
 protected:
     RexxActivationBase *previous;
+    BaseExecutable     *executable;
 
 };
 #endif

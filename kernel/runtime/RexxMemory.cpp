@@ -55,7 +55,6 @@
 #include "TableClass.hpp"
 #include "RexxActivation.hpp"
 #include "ActivityManager.hpp"
-#include "LibraryManager.hpp"
 #include "MessageClass.hpp"
 #include "MethodClass.hpp"
 #include "RelationClass.hpp"
@@ -65,6 +64,7 @@
 #include "WeakReferenceClass.hpp"
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
+#include "PackageManager.hpp"
 
 // restore a class from its
 // associated primitive behaviour
@@ -86,8 +86,6 @@ RexxMemory memoryObject;
 
 RexxDirectory *RexxMemory::globalStrings = OREF_NULL;
 RexxDirectory *RexxMemory::environment = OREF_NULL;       // global environment
-RexxDirectory *RexxMemory::publicRoutines = OREF_NULL;    // statically defined public routines
-RexxDirectory *RexxMemory::staticRequires = OREF_NULL;    // statically defined requires
 RexxDirectory *RexxMemory::functionsDir = OREF_NULL;      // statically defined requires
 RexxDirectory *RexxMemory::commonRetrievers = OREF_NULL;
 RexxDirectory *RexxMemory::kernel = OREF_NULL;
@@ -116,40 +114,40 @@ RexxMemory::RexxMemory()
 /*  initialization.  Will create the initial memory Pool(s), etc.             */
 /******************************************************************************/
 {
-  /* we need to set a valid size for this object.  We round it up */
-  /* to the minimum allocation boundary, even though that might be */
-  /* a lie.  Since this never participates in a sweep operation, */
-  /* this works ok in the end. */
-  this->setObjectSize(roundObjectBoundary(sizeof(RexxMemory)));
-  // our first pool is the current one
-  currentPool = firstPool;
+    /* we need to set a valid size for this object.  We round it up */
+    /* to the minimum allocation boundary, even though that might be */
+    /* a lie.  Since this never participates in a sweep operation, */
+    /* this works ok in the end. */
+    this->setObjectSize(roundObjectBoundary(sizeof(RexxMemory)));
+    // our first pool is the current one
+    currentPool = firstPool;
 
-                                       /* make sure we hand craft memory's  */
-                                       /*  header information.              */
+    /* make sure we hand craft memory's  */
+    /*  header information.              */
 
-                                       /* See if we want this debug info    */
-                                       /*or not by default, its always      */
-                                       /*setable from OREXX code.           */
+    /* See if we want this debug info    */
+    /*or not by default, its always      */
+    /*setable from OREXX code.           */
 #ifdef CHECKOREFS
-  this->orphanCheck = true;            /* default value for OREF checking   */
+    this->orphanCheck = true;            /* default value for OREF checking   */
 #else
-  this->orphanCheck = false;           /* default value for OREF checking   */
+    this->orphanCheck = false;           /* default value for OREF checking   */
 #endif
-                                       /* OR'ed into object headers to      */
-                                       /*mark                               */
-  this->markWord = 1;
-                                       /* objects as being alive in mark    */
-                                       /*phase                              */
-  this->saveStack = NULL;
-  this->saveTable = NULL;
-  this->dumpEnable = false;
-  this->objOffset = 0;
-  this->envelope = NULL;
+    /* OR'ed into object headers to      */
+    /*mark                               */
+    this->markWord = 1;
+    /* objects as being alive in mark    */
+    /*phase                              */
+    this->saveStack = NULL;
+    this->saveTable = NULL;
+    this->dumpEnable = false;
+    this->objOffset = 0;
+    this->envelope = NULL;
 
-  // we always start out with an empty list.  WeakReferences that are in the
-  // saved image will (MUST) never be set to a new value, so it's not necessary
-  // to hook those back up again.
-  weakReferenceList = OREF_NULL;
+    // we always start out with an empty list.  WeakReferences that are in the
+    // saved image will (MUST) never be set to a new value, so it's not necessary
+    // to hook those back up again.
+    weakReferenceList = OREF_NULL;
 }
 
 
@@ -234,13 +232,13 @@ void RexxMemory::logVerboseOutput(const char *message, void *sub1, void *sub2)
 
 void RexxMemory::dumpMemoryProfile()
 {
-  FILE *outFile;                       /* memory stat output file           */
+    FILE *outFile;                       /* memory stat output file           */
 
-  outFile = fopen("memory.prf","wb");  /* open the file                     */
-  /* have each of the memory segments dump their own profile information */
-  newSpaceNormalSegments.dumpMemoryProfile(outFile);
-  newSpaceLargeSegments.dumpMemoryProfile(outFile);
-  fclose(outFile);                     /* close the file                    */
+    outFile = fopen("memory.prf","wb");  /* open the file                     */
+    /* have each of the memory segments dump their own profile information */
+    newSpaceNormalSegments.dumpMemoryProfile(outFile);
+    newSpaceLargeSegments.dumpMemoryProfile(outFile);
+    fclose(outFile);                     /* close the file                    */
 }
 
 
@@ -252,13 +250,14 @@ void RexxMemory::dumpObject(RexxObject *objectRef, FILE *outfile)
 /*       a file.                                                              */
 /******************************************************************************/
 {
- void    **dmpPtr;
- void    **ObjEnd;
+    void    **dmpPtr;
+    void    **ObjEnd;
 
- ObjEnd = (void    **)((char *)objectRef + objectRef->getObjectSize());
- for (dmpPtr = (void **)objectRef; dmpPtr <= ObjEnd ; dmpPtr++) {
-    logMemoryCheck(outfile, "  >Parent Dump -->%p   %p   %p   %p \n", *dmpPtr, *(dmpPtr+1), *(dmpPtr+2), *(dmpPtr+3));
- }
+    ObjEnd = (void    **)((char *)objectRef + objectRef->getObjectSize());
+    for (dmpPtr = (void **)objectRef; dmpPtr <= ObjEnd ; dmpPtr++)
+    {
+        logMemoryCheck(outfile, "  >Parent Dump -->%p   %p   %p   %p \n", *dmpPtr, *(dmpPtr+1), *(dmpPtr+2), *(dmpPtr+3));
+    }
 }
 
 bool RexxMemory::inSharedObjectStorage(RexxObject *object)
@@ -268,20 +267,26 @@ bool RexxMemory::inSharedObjectStorage(RexxObject *object)
 /*  Returned:  true if object is in object storage, else false                */
 /******************************************************************************/
 {
-  /* 1st Check Old Space. */
-  if (oldSpaceSegments.isInSegmentSet(object))
-      return true;
+    /* 1st Check Old Space. */
+    if (oldSpaceSegments.isInSegmentSet(object))
+    {
+        return true;
+    }
 
-  /* Now Check New Space.              */
-  if (newSpaceNormalSegments.isInSegmentSet(object))
-      return true;
+    /* Now Check New Space.              */
+    if (newSpaceNormalSegments.isInSegmentSet(object))
+    {
+        return true;
+    }
 
-  /* Now Check New Space large segments*/
-  if (newSpaceLargeSegments.isInSegmentSet(object))
-      return true;
+    /* Now Check New Space large segments*/
+    if (newSpaceLargeSegments.isInSegmentSet(object))
+    {
+        return true;
+    }
 
-  /* this is bad, definitely very bad... */
-  return false;
+    /* this is bad, definitely very bad... */
+    return false;
 }
 
 
@@ -292,13 +297,14 @@ bool RexxMemory::inObjectStorage(RexxObject *object)
 /*  Returned:  true if object is in object storage, else false                */
 /******************************************************************************/
 {
-  /* check for a few valid locations in 'C' storage                     */
-  if ((object >= (RexxObject *)RexxBehaviour::getPrimitiveBehaviour(0) && object <= (RexxObject *)RexxBehaviour::getPrimitiveBehaviour(T_Last_Class_Type)) ||
-      (object == (RexxObject *)this)) {
-    return true;
-  }
+    /* check for a few valid locations in 'C' storage                     */
+    if ((object >= (RexxObject *)RexxBehaviour::getPrimitiveBehaviour(0) && object <= (RexxObject *)RexxBehaviour::getPrimitiveBehaviour(T_Last_Class_Type)) ||
+        (object == (RexxObject *)this))
+    {
+        return true;
+    }
 
-  return inSharedObjectStorage(object);
+    return inSharedObjectStorage(object);
 }
 
 
@@ -309,11 +315,13 @@ bool RexxMemory::objectReferenceOK(RexxObject *o)
 /* references.                                                                */
 /******************************************************************************/
 {
-    if (!inObjectStorage(o)) {
+    if (!inObjectStorage(o))
+    {
         return false;
     }
     RexxBehaviour *type = o->getObjectType();
-    if (inObjectStorage((RexxObject *)type) && type->getObjectType() == TheBehaviourBehaviour) {
+    if (inObjectStorage((RexxObject *)type) && type->getObjectType() == TheBehaviourBehaviour)
+    {
         return true;
     }
     /* these last two checks are for very early checking...we can */
@@ -329,32 +337,33 @@ void RexxMemory::markObjectsMain(RexxObject *rootObject)
 /* Function:  Main memory_mark driving loop                                   */
 /******************************************************************************/
 {
-  // for some of the root objects, we get called to mark them before they get allocated.
-  // make sure we don't process any null references.
-  if (rootObject == OREF_NULL)
-  {
-      return;
-  }
+    // for some of the root objects, we get called to mark them before they get allocated.
+    // make sure we don't process any null references.
+    if (rootObject == OREF_NULL)
+    {
+        return;
+    }
 
-  RexxObject *markObject;
+    RexxObject *markObject;
 
-  // set up the live marking word passed to the live() routines
-  size_t liveMark = markWord | OldSpaceBit;
+    // set up the live marking word passed to the live() routines
+    size_t liveMark = markWord | OldSpaceBit;
 
-  allocations = 0;
-  pushLiveStack(OREF_NULL);            /* push a unique terminator          */
-  mark(rootObject);                    /* OREF_ENV or old2new               */
-  for (markObject = popLiveStack();
-       markObject != OREF_NULL;        /* test for unique terminator        */
-       markObject = popLiveStack()) {
-                                       /* mark behaviour live               */
-    memory_mark((RexxObject *)markObject->behaviour);
-    /* Mark other referenced obj.  We can do this without checking */
-    /* the references flag because we only push the object on to */
-    /* the stack if it has references. */
-    allocations++;
-    markObject->live(liveMark);
-  }
+    allocations = 0;
+    pushLiveStack(OREF_NULL);            /* push a unique terminator          */
+    mark(rootObject);                    /* OREF_ENV or old2new               */
+    for (markObject = popLiveStack();
+        markObject != OREF_NULL;        /* test for unique terminator        */
+        markObject = popLiveStack())
+    {
+        /* mark behaviour live               */
+        memory_mark((RexxObject *)markObject->behaviour);
+        /* Mark other referenced obj.  We can do this without checking */
+        /* the references flag because we only push the object on to */
+        /* the stack if it has references. */
+        allocations++;
+        markObject->live(liveMark);
+    }
 }
 
 
@@ -363,61 +372,64 @@ void  RexxMemory::killOrphans(RexxObject *rootObject)
 /* Function:  Garbage collection validity check routine                       */
 /******************************************************************************/
 {
-  // for some of the root objects, we get called to mark them before they get allocated.
-  // make sure we don't process any null references.
-  if (rootObject == OREF_NULL)
-  {
-      return;
-  }
-
-  RexxObject *mref;
-
-  markReason = LIVEMARK;
-  /* This is the debugging mark code that traverses the object tree from          */
-  /* OREF_ENV, verifying that the objects and their OREFs look OK, specifically   */
-  /* that each one is in object storage, and has a behaviour whose behaviour      */
-  /* is OREF_BEHAV_B, behaviour's behaviour.                                      */
-
-  /* push a unique terminator          */
-  pushLiveStack(OREF_NULL);
-                                       /*Push an extra marktable            */
-  pushLiveStack(rootObject);
-  memory_mark_general(rootObject);     /* start from the very tip-top       */
-  memory_mark_general(TheNilObject);   /* use .nil to mark the stack        */
-                                       /* mark .nil behaviour live          */
-  memory_mark_general(TheNilObject->behaviour);
-                                       /* mark .nil ovds      live          */
-  memory_mark_general(TheNilObject->objectVariables);
-  for (mref = popLiveStack();
-       mref != OREF_NULL;              /* test for unique terminator        */
-                                       /* get the next marked item          */
-       mref = popLiveStack()) {
-
-    /* OREF_NIL is used as a marker on the stack.  These markers will be used to  */
-    /* recreate the ancestry of any broken object found.  At this point though,   */
-    /* finding one indicates that we've already marked all of the descendants of  */
-    /* the object just below the OREF_NIL, so we'll leave the OREF_NIL popped,    */
-    /* and pop off the parent object which is no longer of any interest.          */
-    if (mref == TheNilObject) {        /* found a marker                    */
-                                       /* pop off the completed parent      */
-       popLiveStack();
-       continue;                       /* and back to top of loop           */
+    // for some of the root objects, we get called to mark them before they get allocated.
+    // make sure we don't process any null references.
+    if (rootObject == OREF_NULL)
+    {
+        return;
     }
-                                       /* mark behaviour live               */
-    memory_mark_general(mref->behaviour);
-                                       /* object have any references?       */
-    if (mref->hasReferences()){
-       /* Though this guy is already marked, and as far as gc, we're done with him,    */
-       /* we'll now push him back onto the livestack followed by an OREF_NIL marker.   */
-       /* If we find an invalid object later, we'll be able to find all the ancestors  */
-       /* by looking for the OREF_NIL objects on the livestack.                        */
-                                       /* push the ancestor object          */
-       pushLiveStack(mref);
-                                       /* push an ancestor marker           */
-       pushLiveStack(TheNilObject);
-       mref->liveGeneral(LIVEMARK);    /* tell the ancestor to mark his kids*/
-    }                                  /* object have any references?      */
-  }
+
+    RexxObject *mref;
+
+    markReason = LIVEMARK;
+    /* This is the debugging mark code that traverses the object tree from          */
+    /* OREF_ENV, verifying that the objects and their OREFs look OK, specifically   */
+    /* that each one is in object storage, and has a behaviour whose behaviour      */
+    /* is OREF_BEHAV_B, behaviour's behaviour.                                      */
+
+    /* push a unique terminator          */
+    pushLiveStack(OREF_NULL);
+    /*Push an extra marktable            */
+    pushLiveStack(rootObject);
+    memory_mark_general(rootObject);     /* start from the very tip-top       */
+    memory_mark_general(TheNilObject);   /* use .nil to mark the stack        */
+                                         /* mark .nil behaviour live          */
+    memory_mark_general(TheNilObject->behaviour);
+    /* mark .nil ovds      live          */
+    memory_mark_general(TheNilObject->objectVariables);
+    for (mref = popLiveStack();
+        mref != OREF_NULL;              /* test for unique terminator        */
+        /* get the next marked item          */
+        mref = popLiveStack())
+    {
+
+        /* OREF_NIL is used as a marker on the stack.  These markers will be used to  */
+        /* recreate the ancestry of any broken object found.  At this point though,   */
+        /* finding one indicates that we've already marked all of the descendants of  */
+        /* the object just below the OREF_NIL, so we'll leave the OREF_NIL popped,    */
+        /* and pop off the parent object which is no longer of any interest.          */
+        if (mref == TheNilObject)
+        {        /* found a marker                    */
+                 /* pop off the completed parent      */
+            popLiveStack();
+            continue;                       /* and back to top of loop           */
+        }
+        /* mark behaviour live               */
+        memory_mark_general(mref->behaviour);
+        /* object have any references?       */
+        if (mref->hasReferences())
+        {
+            /* Though this guy is already marked, and as far as gc, we're done with him,    */
+            /* we'll now push him back onto the livestack followed by an OREF_NIL marker.   */
+            /* If we find an invalid object later, we'll be able to find all the ancestors  */
+            /* by looking for the OREF_NIL objects on the livestack.                        */
+            /* push the ancestor object          */
+            pushLiveStack(mref);
+            /* push an ancestor marker           */
+            pushLiveStack(TheNilObject);
+            mref->liveGeneral(LIVEMARK);    /* tell the ancestor to mark his kids*/
+        }                                  /* object have any references?      */
+    }
 }
 
 void RexxMemory::checkUninit()
@@ -465,10 +477,9 @@ void RexxMemory::collectAndUninit()
 }
 
 
-
 void  RexxMemory::forceUninits()
 /******************************************************************************/
-/* FUNCTION: we will run the UNINIT method of all objetcs in the UNINIT       */
+/* FUNCTION: we will run the UNINIT method of all objects in the UNINIT       */
 /*  table for our process.  Even if the object is "dead", this is because the */
 /*  process is going away an its our last chance.  Instead of removing the    */
 /*  objects as we go, we run the entire table and then reset table.           */
@@ -536,6 +547,10 @@ void  RexxMemory::runUninits()
     for (iterTable = uninitTable->first();
         (zombieObj = uninitTable->index(iterTable)) != OREF_NULL;)
     {
+        // TODO:  Ther's a bug here.  Removing the object can cause the
+        // iterator to skip over an entry....something should be done to
+        // prevent this.
+
         /* is this object readyfor UNINIT?   */
         if (uninitTable->value(iterTable) == TheTrueObject)
         {
@@ -614,38 +629,41 @@ void RexxMemory::markObjects()
 /*  Determines which mark routine to call and does all additional processing  */
 /******************************************************************************/
 {
-  verboseMessage("Beginning mark operation\n");
+    verboseMessage("Beginning mark operation\n");
 
-  if (this->orphanCheck) {             /* debugging bad OREF's?             */
-                                       /* yup, call debugging mark          */
-    this->killOrphans(this);
-    // now process the weak reference queue...We check this before the
-    // uninit list is processed so that the uninit list doesn't mark any of the
-    // weakly referenced items.  We don't want an object placed on the uninit queue
-    // to end up strongly referenced later.
-    checkWeakReferences();
-    this->checkUninit();               /* flag all objects about to be dead */
-    this->killOrphans(uninitTable);    /* the uninit table                  */
-  } else {
-                                       /* call normal,speedy,efficient mark */
-    this->markObjectsMain(this);
-    // now process the weak reference queue...We check this before the
-    // uninit list is processed so that the uninit list doesn't mark any of the
-    // weakly referenced items.  We don't want an object placed on the uninit queue
-    // to end up strongly referenced later.
-    checkWeakReferences();
-    this->checkUninit();               /* flag all objects about to be dead */
-                                       /* now mark the unInit table and the */
-    this->markObjectsMain(uninitTable);
-  }
-                                       /* have to expand the live stack?    */
-  if (this->liveStack != this->originalLiveStack)
-  {
-    free((void *)this->liveStack);     /* release the old one               */
-                                       /* and set back to the original      */
-    this->liveStack = this->originalLiveStack;
-  }
-  verboseMessage("Mark operation completed\n");
+    if (this->orphanCheck)
+    {             /* debugging bad OREF's?             */
+                  /* yup, call debugging mark          */
+        this->killOrphans((RexxObject *)this);
+        // now process the weak reference queue...We check this before the
+        // uninit list is processed so that the uninit list doesn't mark any of the
+        // weakly referenced items.  We don't want an object placed on the uninit queue
+        // to end up strongly referenced later.
+        checkWeakReferences();
+        this->checkUninit();               /* flag all objects about to be dead */
+        this->killOrphans(uninitTable);    /* the uninit table                  */
+    }
+    else
+    {
+        /* call normal,speedy,efficient mark */
+        this->markObjectsMain((RexxObject *)this);
+        // now process the weak reference queue...We check this before the
+        // uninit list is processed so that the uninit list doesn't mark any of the
+        // weakly referenced items.  We don't want an object placed on the uninit queue
+        // to end up strongly referenced later.
+        checkWeakReferences();
+        this->checkUninit();               /* flag all objects about to be dead */
+                                           /* now mark the unInit table and the */
+        this->markObjectsMain(uninitTable);
+    }
+    /* have to expand the live stack?    */
+    if (this->liveStack != this->originalLiveStack)
+    {
+        free((void *)this->liveStack);     /* release the old one               */
+                                           /* and set back to the original      */
+        this->liveStack = this->originalLiveStack;
+    }
+    verboseMessage("Mark operation completed\n");
 }
 
 
@@ -714,31 +732,32 @@ MemorySegment *RexxMemory::newSegment(size_t requestedBytes, size_t minBytes)
 /* added.                                                                     */
 /******************************************************************************/
 {
-  MemorySegment *segment;
+    MemorySegment *segment;
 
 #ifdef MEMPROFILE
-  printf("Allocating a new segment of %d bytes\n", requestedBytes);
+    printf("Allocating a new segment of %d bytes\n", requestedBytes);
 #endif
-  /* first make sure we've got enough space for the control */
-  /* information, and round this to a proper boundary */
-  requestedBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
+    /* first make sure we've got enough space for the control */
+    /* information, and round this to a proper boundary */
+    requestedBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
 #ifdef MEMPROFILE
-  printf("Allocating boundary a new segment of %d bytes\n", requestedBytes);
+    printf("Allocating boundary a new segment of %d bytes\n", requestedBytes);
 #endif
-                                       /*Get a new segment                  */
-  segment = currentPool->newSegment(requestedBytes);
-                                       /* Did we get a segment              */
-  if (segment == NULL) {
-      /* Segmentsize is the minimum size request we handle.  If */
-      /* minbytes is small, then we're just adding a segment to the */
-      /* small pool.  Reduce the request to SegmentSize and try again. */
-      /* For all other requests, try once more with the minimum. */
-      minBytes = roundSegmentBoundary(minBytes + MemorySegmentOverhead);
-      /* try to allocate once more...if this fails, the caller will */
-      /* have to handle it. */
-      segment = currentPool->newSegment(minBytes);
-  }
-  return segment;                      /* return the allocated segment      */
+    /*Get a new segment                  */
+    segment = currentPool->newSegment(requestedBytes);
+    /* Did we get a segment              */
+    if (segment == NULL)
+    {
+        /* Segmentsize is the minimum size request we handle.  If */
+        /* minbytes is small, then we're just adding a segment to the */
+        /* small pool.  Reduce the request to SegmentSize and try again. */
+        /* For all other requests, try once more with the minimum. */
+        minBytes = roundSegmentBoundary(minBytes + MemorySegmentOverhead);
+        /* try to allocate once more...if this fails, the caller will */
+        /* have to handle it. */
+        segment = currentPool->newSegment(minBytes);
+    }
+    return segment;                      /* return the allocated segment      */
 }
 
 
@@ -753,31 +772,32 @@ MemorySegment *RexxMemory::newLargeSegment(size_t requestedBytes, size_t minByte
 /* added.                                                                     */
 /******************************************************************************/
 {
-  MemorySegment *segment;
+    MemorySegment *segment;
 
 #ifdef MEMPROFILE
-  printf("Allocating large new segment of %d bytes\n", requestedBytes);
+    printf("Allocating large new segment of %d bytes\n", requestedBytes);
 #endif
-  /* first make sure we've got enough space for the control */
-  /* information, and round this to a proper boundary */
-  requestedBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
+    /* first make sure we've got enough space for the control */
+    /* information, and round this to a proper boundary */
+    requestedBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
 #ifdef MEMPROFILE
-  printf("Allocating large boundary new segment of %d bytes\n", requestedBytes);
+    printf("Allocating large boundary new segment of %d bytes\n", requestedBytes);
 #endif
-                                       /*Get a new segment                  */
-  segment = currentPool->newLargeSegment(requestedBytes);
-                                       /* Did we get a segment              */
-  if (segment == NULL) {
-      /* Segmentsize is the minimum size request we handle.  If */
-      /* minbytes is small, then we're just adding a segment to the */
-      /* small pool.  Reduce the request to SegmentSize and try again. */
-      /* For all other requests, try once more with the minimum. */
-      minBytes = roundSegmentBoundary(minBytes + MemorySegmentOverhead);
-      /* try to allocate once more...if this fails, the caller will */
-      /* have to handle it. */
-      segment = currentPool->newLargeSegment(minBytes);
-  }
-  return segment;                      /* return the allocated segment      */
+    /*Get a new segment                  */
+    segment = currentPool->newLargeSegment(requestedBytes);
+    /* Did we get a segment              */
+    if (segment == NULL)
+    {
+        /* Segmentsize is the minimum size request we handle.  If */
+        /* minbytes is small, then we're just adding a segment to the */
+        /* small pool.  Reduce the request to SegmentSize and try again. */
+        /* For all other requests, try once more with the minimum. */
+        minBytes = roundSegmentBoundary(minBytes + MemorySegmentOverhead);
+        /* try to allocate once more...if this fails, the caller will */
+        /* have to handle it. */
+        segment = currentPool->newLargeSegment(minBytes);
+    }
+    return segment;                      /* return the allocated segment      */
 }
 
 
@@ -786,109 +806,110 @@ void RexxMemory::restoreImage()
 /* Function:  Restore a saved image to usefulness.                            */
 /******************************************************************************/
 {
-  // Nothing to restore if we have a buffer already
-  if (image_buffer != NULL)
-  {
-      return;
-  }
-
-  markReason = RESTORINGIMAGE;         // we're doing an image restore
-
-  size_t imagesize;                    /* size of the image                 */
-  char *objectPointer, *endPointer;
-  RexxBehaviour *imageBehav;           /*behaviour of OP object in image    */
-  RexxArray  *primitiveBehaviours;     /* saved array of behaviours         */
-  size_t primitiveTypeNum;
-  int i;
-
-  /* go load the image */
-  SysLoadImage(&image_buffer, &imagesize);
-                                     /* get the relocation factor         */
-  relocation = (size_t)image_buffer - sizeof(size_t);
-  objectPointer = image_buffer;      /* address the start of the image    */
-                                     /* and the ending location           */
-  endPointer = image_buffer + imagesize;
-                                     /* the save Array is the 1st object  */
-  RexxArray *saveArray = (RexxArray *)image_buffer;
-  restoreimage = true;               /* we are now restoring              */
-                                     /* loop through the image buffer     */
-  while (objectPointer < endPointer) {
-
-                                     /*Fixup Behaviour pointer for obj.   */
-                                     /* We don't do an OrefSet here, since*/
-                                     /* too early, and we don't need to be*/
-                                     /* concerned about object in pbehav  */
-
-                                     /* Retrieve the behaviour obj        */
-                                     /* or a copy?                        */
-    if (((RexxObject *)objectPointer)->isNonPrimitive())
+    // Nothing to restore if we have a buffer already
+    if (image_buffer != NULL)
     {
-                                     /* Working with a copy, don't use    */
-                                     /* PBEHAV version.                   */
-                                     /* Make sure static behaviour inf    */
-                                     /* is resolved before using the      */
-                                     /* Behaviour.                        */
-      imageBehav = (RexxBehaviour *)(relocation + (uintptr_t)((RexxObject *)objectPointer)->behaviour);
-                                     /* give this object it behaviour.    */
-      ((RexxObject *)objectPointer)->behaviour = (RexxBehaviour *)imageBehav;
-      primitiveTypeNum = imageBehav->getClassType();
+        return;
     }
-    else
+
+    markReason = RESTORINGIMAGE;         // we're doing an image restore
+
+    size_t imagesize;                    /* size of the image                 */
+    char *objectPointer, *endPointer;
+    RexxBehaviour *imageBehav;           /*behaviour of OP object in image    */
+    RexxArray  *primitiveBehaviours;     /* saved array of behaviours         */
+    size_t primitiveTypeNum;
+    int i;
+
+    /* go load the image */
+    SysLoadImage(&image_buffer, &imagesize);
+    /* get the relocation factor         */
+    relocation = (size_t)image_buffer - sizeof(size_t);
+    objectPointer = image_buffer;      /* address the start of the image    */
+                                       /* and the ending location           */
+    endPointer = image_buffer + imagesize;
+    /* the save Array is the 1st object  */
+    RexxArray *saveArray = (RexxArray *)image_buffer;
+    restoreimage = true;               /* we are now restoring              */
+                                       /* loop through the image buffer     */
+    while (objectPointer < endPointer)
     {
-        // the original behaviour pointer has been encoded as a type number and class
-        // category to allow us to convert back to the appropriate type.
-        ((RexxObject *)objectPointer)->behaviour = RexxBehaviour::restoreSavedPrimitiveBehaviour(((RexxObject *)objectPointer)->behaviour);
-        primitiveTypeNum = ((RexxObject *)objectPointer)->behaviour->getClassType();
+
+        /*Fixup Behaviour pointer for obj.   */
+        /* We don't do an OrefSet here, since*/
+        /* too early, and we don't need to be*/
+        /* concerned about object in pbehav  */
+
+        /* Retrieve the behaviour obj        */
+        /* or a copy?                        */
+        if (((RexxObject *)objectPointer)->isNonPrimitive())
+        {
+            /* Working with a copy, don't use    */
+            /* PBEHAV version.                   */
+            /* Make sure static behaviour inf    */
+            /* is resolved before using the      */
+            /* Behaviour.                        */
+            imageBehav = (RexxBehaviour *)(relocation + (uintptr_t)((RexxObject *)objectPointer)->behaviour);
+            /* give this object it behaviour.    */
+            ((RexxObject *)objectPointer)->behaviour = (RexxBehaviour *)imageBehav;
+            primitiveTypeNum = imageBehav->getClassType();
+        }
+        else
+        {
+            // the original behaviour pointer has been encoded as a type number and class
+            // category to allow us to convert back to the appropriate type.
+            ((RexxObject *)objectPointer)->behaviour = RexxBehaviour::restoreSavedPrimitiveBehaviour(((RexxObject *)objectPointer)->behaviour);
+            primitiveTypeNum = ((RexxObject *)objectPointer)->behaviour->getClassType();
+        }
+        /* This will be an OldSpace object.  We delay setting this */
+        /* until now, because the oldspace bit is overloaded with the */
+        /* NonPrimitive bit.  Since the we are done with the */
+        /* non-primitive bit now, we can use this for the oldspace */
+        /* flag too. */
+        ((RexxObject *)objectPointer)->setOldSpace();
+        /* Force fix-up of                   */
+        /*VirtualFunctionTable,              */
+        ((RexxObject *)objectPointer)->setVirtualFunctions(virtualFunctionTable[primitiveTypeNum]);
+
+        /* Do this object have any           */
+        /*references?                        */
+        if (((RexxObject *)objectPointer)->hasReferences())
+            /*  Yes, mark other referenced objs  */
+            ((RexxObject *)objectPointer)->liveGeneral(RESTORINGIMAGE);
+        /* Point to next object in image..   */
+        objectPointer += ((RexxObject *)objectPointer)->getObjectSize();
+
     }
-    /* This will be an OldSpace object.  We delay setting this */
-    /* until now, because the oldspace bit is overloaded with the */
-    /* NonPrimitive bit.  Since the we are done with the */
-    /* non-primitive bit now, we can use this for the oldspace */
-    /* flag too. */
-    ((RexxObject *)objectPointer)->setOldSpace();
-                                     /* Force fix-up of                   */
-                                     /*VirtualFunctionTable,              */
-    ((RexxObject *)objectPointer)->setVirtualFunctions(virtualFunctionTable[primitiveTypeNum]);
 
-                                     /* Do this object have any           */
-                                     /*references?                        */
-    if (((RexxObject *)objectPointer)->hasReferences())
-                                     /*  Yes, mark other referenced objs  */
-      ((RexxObject *)objectPointer)->liveGeneral(RESTORINGIMAGE);
-                                     /* Point to next object in image..   */
-    objectPointer += ((RexxObject *)objectPointer)->getObjectSize();
+    restoreimage = false;
+    /* OREF_ENV is the first element of  */
+    /*array                              */
+    TheEnvironment = (RexxDirectory *)saveArray->get(saveArray_ENV);
+    /* get the primitive behaviours      */
+    primitiveBehaviours = (RexxArray *)saveArray->get(saveArray_PBEHAV);
+    /* restore all of the saved primitive*/
+    for (i = 0; i <= T_Last_Exported_Class; i++)
+    {
+        /* behaviours into this array        */
+        RexxBehaviour::primitiveBehaviours[i].restore((RexxBehaviour *)primitiveBehaviours->get(i + 1));
+    }
 
-  }
+    TheKernel      = (RexxDirectory *)saveArray->get(saveArray_KERNEL);
+    TheSystem      = (RexxDirectory *)saveArray->get(saveArray_SYSTEM);
+    TheFunctionsDirectory = (RexxDirectory *)saveArray->get(saveArray_FUNCTIONS);
+    TheTrueObject  = (RexxInteger *)saveArray->get(saveArray_TRUE);
+    TheFalseObject = (RexxInteger *)saveArray->get(saveArray_FALSE);
+    TheNilObject   = saveArray->get(saveArray_NIL);
+    TheNullArray   = (RexxArray *)saveArray->get(saveArray_NULLA);
+    TheNullPointer   = (RexxPointer *)saveArray->get(saveArray_NULLPOINTER);
+    TheClassClass  = (RexxClass *)saveArray->get(saveArray_CLASS);
+    TheCommonRetrievers = (RexxDirectory *)saveArray->get(saveArray_COMMON_RETRIEVERS);
 
-  restoreimage = false;
-                                     /* OREF_ENV is the first element of  */
-                                     /*array                              */
-  TheEnvironment = (RexxDirectory *)saveArray->get(saveArray_ENV);
-                                     /* get the primitive behaviours      */
-  primitiveBehaviours = (RexxArray *)saveArray->get(saveArray_PBEHAV);
-                                     /* restore all of the saved primitive*/
-  for (i = 0; i <= T_Last_Exported_Class; i++)
-  {
-                                     /* behaviours into this array        */
-      RexxBehaviour::primitiveBehaviours[i].restore((RexxBehaviour *)primitiveBehaviours->get(i + 1));
-  }
-
-  TheKernel      = (RexxDirectory *)saveArray->get(saveArray_KERNEL);
-  TheSystem      = (RexxDirectory *)saveArray->get(saveArray_SYSTEM);
-  TheFunctionsDirectory = (RexxDirectory *)saveArray->get(saveArray_FUNCTIONS);
-  TheTrueObject  = (RexxInteger *)saveArray->get(saveArray_TRUE);
-  TheFalseObject = (RexxInteger *)saveArray->get(saveArray_FALSE);
-  TheNilObject   = saveArray->get(saveArray_NIL);
-  TheNullArray   = (RexxArray *)saveArray->get(saveArray_NULLA);
-  TheNullPointer   = (RexxPointer *)saveArray->get(saveArray_NULLPOINTER);
-  TheClassClass  = (RexxClass *)saveArray->get(saveArray_CLASS);
-  TheCommonRetrievers = (RexxDirectory *)saveArray->get(saveArray_COMMON_RETRIEVERS);
-  TheStaticRequires   = (RexxDirectory *)saveArray->get(saveArray_STATIC_REQ);
-  ThePublicRoutines   = (RexxDirectory *)saveArray->get(saveArray_PUBLIC_RTN);
-
-  /* restore the global strings        */
-  memoryObject.restoreStrings((RexxArray *)saveArray->get(saveArray_NAME_STRINGS));
-  LibraryManager::restore((RexxDirectory *)saveArray->get(saveArray_LIBRARIES));
+    /* restore the global strings        */
+    memoryObject.restoreStrings((RexxArray *)saveArray->get(saveArray_NAME_STRINGS));
+    // make sure we have a working thread context
+    RexxActivity::initializeThreadContext();
+    PackageManager::restore((RexxArray *)saveArray->get(saveArray_PACKAGES));
 }
 
 
@@ -915,7 +936,7 @@ void RexxMemory::live(size_t liveMark)
   Interpreter::live(liveMark);
   SystemInterpreter::live(liveMark);
   ActivityManager::live(liveMark);
-  LibraryManager::live(liveMark);
+  PackageManager::live(liveMark);
 }
 
 void RexxMemory::liveGeneral(int reason)
@@ -937,7 +958,7 @@ void RexxMemory::liveGeneral(int reason)
   Interpreter::liveGeneral(reason);
   SystemInterpreter::liveGeneral(reason);
   ActivityManager::liveGeneral(reason);
-  LibraryManager::liveGeneral(reason);
+  PackageManager::liveGeneral(reason);
 }
 
 void RexxMemory::flatten(RexxEnvelope *env)
@@ -990,30 +1011,30 @@ void RexxMemory::collect()
 /* objects, followed by sweep of each of the segment sets.                    */
 /******************************************************************************/
 {
-  collections++;
-  verboseMessage("Begin collecting memory, cycle #%d after %d allocations.\n", collections, allocations);
-  allocations = 0;
+    collections++;
+    verboseMessage("Begin collecting memory, cycle #%d after %d allocations.\n", collections, allocations);
+    allocations = 0;
 
-  /* change our marker to the next value so we can distinguish */
-  /* between objects marked on this cycle from the objects marked */
-  /* in the pervious cycles. */
-  bumpMarkWord();
+    /* change our marker to the next value so we can distinguish */
+    /* between objects marked on this cycle from the objects marked */
+    /* in the pervious cycles. */
+    bumpMarkWord();
 
-  /* do the object marking now...followed by a sweep of all of the */
-  /* segments. */
-  markObjects();
-  newSpaceNormalSegments.sweep();
-  newSpaceLargeSegments.sweep();
+    /* do the object marking now...followed by a sweep of all of the */
+    /* segments. */
+    markObjects();
+    newSpaceNormalSegments.sweep();
+    newSpaceLargeSegments.sweep();
 
-  /* The space segments are now in a known, completely clean state. */
-  /* Now based on the context that caused garbage collection to be */
-  /* initiated, the segment sets may be expanded to add additional */
-  /* free memory.  The decision to expand the object space requires */
-  /* the usage statistics collected by the mark-and-sweep */
-  /* operation. */
+    /* The space segments are now in a known, completely clean state. */
+    /* Now based on the context that caused garbage collection to be */
+    /* initiated, the segment sets may be expanded to add additional */
+    /* free memory.  The decision to expand the object space requires */
+    /* the usage statistics collected by the mark-and-sweep */
+    /* operation. */
 
-  verboseMessage("End collecting memory\n");
-  verboseMessage("Object save table contains %d objects\n", this->saveTable->items());
+    verboseMessage("End collecting memory\n");
+    verboseMessage("Object save table contains %d objects\n", this->saveTable->items());
 }
 
 RexxObject *RexxMemory::oldObject(size_t requestLength)
@@ -1023,24 +1044,23 @@ RexxObject *RexxMemory::oldObject(size_t requestLength)
 /*  Returned:  New object, or OREF_NULL if requested length was too large     */
 /******************************************************************************/
 {
-  RexxObject *newObj;
+    /* Compute size of new object and determine where we should */
+    /* allocate from */
+    requestLength = roundObjectBoundary(requestLength);
+    RexxObject *newObj = oldSpaceSegments.allocateObject(requestLength);
 
-  /* Compute size of new object and determine where we should */
-  /* allocate from */
-  requestLength = roundObjectBoundary(requestLength);
-  newObj = oldSpaceSegments.allocateObject(requestLength);
+    /* if we got a new object, then perform the final setup steps. */
+    /* Since the oldspace objects are special, we don't push them on */
+    /* to the save stack.  Also, we don't set the oldspace flag, as */
+    /* those are a separate category of object. */
+    if (newObj != OREF_NULL)
+    {
+        // initialize the hash table object
+        newObj->initializeNewObject(requestLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
+    }
 
-  /* if we got a new object, then perform the final setup steps. */
-  /* Since the oldspace objects are special, we don't push them on */
-  /* to the save stack.  Also, we don't set the oldspace flag, as */
-  /* those are a separate category of object. */
-  if (newObj != OREF_NULL) {
-      // initialize the hash table object
-      newObj->initializeNewObject(requestLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
-  }
-
-  /* return the newly allocated object to our caller */
-  return newObj;
+    /* return the newly allocated object to our caller */
+    return newObj;
 }
 
 char *RexxMemory::allocateImageBuffer(size_t imageSize)
@@ -1062,51 +1082,57 @@ RexxObject *RexxMemory::newObject(size_t requestLength, size_t type)
 /*  Returned:  New object, or OREF_NULL if requested length was too large     */
 /******************************************************************************/
 {
-  RexxObject *newObj;
+    RexxObject *newObj;
 
-  allocations++;
+    allocations++;
 
-  /* Compute size of new object and determine where we should */
-  /* allocate from */
-  requestLength = roundObjectBoundary(requestLength);
+    /* Compute size of new object and determine where we should */
+    /* allocate from */
+    requestLength = roundObjectBoundary(requestLength);
 
-  /* is this a typical small object? */
-  if (requestLength <= LargeBlockThreshold) {
-      /* make sure we don't go below our minimum size. */
-      if (requestLength < MinimumObjectSize) {
-          requestLength = MinimumObjectSize;
-      }
-      newObj = newSpaceNormalSegments.allocateObject(requestLength);
-      /* feat. 1061 moves the handleAllocationFailure code into the initial */
-      /* allocation parts; this way an "if" instruction can be saved.       */
-      if (newObj == NULL) {
-          newObj = newSpaceNormalSegments.handleAllocationFailure(requestLength);
-      }
-  }
-  /* we keep the big objects in a separate cage */
-  else {
-      /* round this allocation up to the appropriate large boundary */
-      requestLength = roundLargeObjectAllocation(requestLength);
-      newObj = newSpaceLargeSegments.allocateObject(requestLength);
-      if (newObj == NULL) {
-          newObj = newSpaceLargeSegments.handleAllocationFailure(requestLength);
-      }
-  }
+    /* is this a typical small object? */
+    if (requestLength <= LargeBlockThreshold)
+    {
+        /* make sure we don't go below our minimum size. */
+        if (requestLength < MinimumObjectSize)
+        {
+            requestLength = MinimumObjectSize;
+        }
+        newObj = newSpaceNormalSegments.allocateObject(requestLength);
+        /* feat. 1061 moves the handleAllocationFailure code into the initial */
+        /* allocation parts; this way an "if" instruction can be saved.       */
+        if (newObj == NULL)
+        {
+            newObj = newSpaceNormalSegments.handleAllocationFailure(requestLength);
+        }
+    }
+    /* we keep the big objects in a separate cage */
+    else
+    {
+        /* round this allocation up to the appropriate large boundary */
+        requestLength = roundLargeObjectAllocation(requestLength);
+        newObj = newSpaceLargeSegments.allocateObject(requestLength);
+        if (newObj == NULL)
+        {
+            newObj = newSpaceLargeSegments.handleAllocationFailure(requestLength);
+        }
+    }
 
-  newObj->initializeNewObject(markWord, virtualFunctionTable[type], RexxBehaviour::getPrimitiveBehaviour(type));
+    newObj->initializeNewObject(markWord, virtualFunctionTable[type], RexxBehaviour::getPrimitiveBehaviour(type));
 
-  if (this->saveStack != OREF_NULL) {
-                                       /* saveobj doesn't get turned on     */
-                                       /*until the system is initialized    */
-                                       /*far enough but once its on, push   */
-                                       /*this new obj on the save stack to  */
-                                       /*keep him from being garbage        */
-                                       /*collected, before it can be used   */
-                                       /*and safely anchored by caller.     */
-      pushSaveStack(newObj);
-  }
-  /* return the newly allocated object to our caller */
-  return newObj;
+    if (this->saveStack != OREF_NULL)
+    {
+        /* saveobj doesn't get turned on     */
+        /*until the system is initialized    */
+        /*far enough but once its on, push   */
+        /*this new obj on the save stack to  */
+        /*keep him from being garbage        */
+        /*collected, before it can be used   */
+        /*and safely anchored by caller.     */
+        pushSaveStack(newObj);
+    }
+    /* return the newly allocated object to our caller */
+    return newObj;
 }
 
 
@@ -1125,98 +1151,104 @@ RexxArray  *RexxMemory::newObjects(
 /*                                                                            */
 /******************************************************************************/
 {
-  size_t i;
-  size_t objSize = roundObjectBoundary(size);
-  size_t totalSize;                      /* total size allocated              */
-  RexxObject *prototype;                 /* our first prototype object        */
+    size_t i;
+    size_t objSize = roundObjectBoundary(size);
+    size_t totalSize;                      /* total size allocated              */
+    RexxObject *prototype;                 /* our first prototype object        */
 
-  RexxArray  *arrayOfObjects;
-  RexxObject *largeObject;
+    RexxArray  *arrayOfObjects;
+    RexxObject *largeObject;
 
-  /* Get array object to contain all the objects.. */
-  arrayOfObjects = (RexxArray *)new_array(count);
+    /* Get array object to contain all the objects.. */
+    arrayOfObjects = (RexxArray *)new_array(count);
 
-  /* Get one LARGE object, that we will parcel up into the smaller */
-  /* objects over allocate by the size of one minimum object so we */
-  /* can handle any potential overallocations */
-  totalSize = objSize * count;         /* first get the total object size   */
-  /* We make the decision on which heap this should be allocated */
-  /* from based on the size of the object request rather than the */
-  /* total size of the aggregate object.  Since our normal usage of */
-  /* this is for allocating large collections of small objects, we */
-  /* don't want those objects coming from the large block heap, */
-  /* even if the aggregate size would suggest this should happen. */
-  if (objSize <= LargeBlockThreshold) {
-    largeObject = newSpaceNormalSegments.allocateObject(totalSize);
-    if (largeObject == OREF_NULL) {
-        largeObject = newSpaceNormalSegments.handleAllocationFailure(totalSize);
+    /* Get one LARGE object, that we will parcel up into the smaller */
+    /* objects over allocate by the size of one minimum object so we */
+    /* can handle any potential overallocations */
+    totalSize = objSize * count;         /* first get the total object size   */
+    /* We make the decision on which heap this should be allocated */
+    /* from based on the size of the object request rather than the */
+    /* total size of the aggregate object.  Since our normal usage of */
+    /* this is for allocating large collections of small objects, we */
+    /* don't want those objects coming from the large block heap, */
+    /* even if the aggregate size would suggest this should happen. */
+    if (objSize <= LargeBlockThreshold)
+    {
+        largeObject = newSpaceNormalSegments.allocateObject(totalSize);
+        if (largeObject == OREF_NULL)
+        {
+            largeObject = newSpaceNormalSegments.handleAllocationFailure(totalSize);
+        }
     }
-  }
-  /* we keep the big objects in a separate cage */
-  else {
-    largeObject = newSpaceLargeSegments.allocateObject(totalSize);
-    if (largeObject == OREF_NULL) {
-        largeObject = newSpaceLargeSegments.handleAllocationFailure(totalSize);
+    /* we keep the big objects in a separate cage */
+    else
+    {
+        largeObject = newSpaceLargeSegments.allocateObject(totalSize);
+        if (largeObject == OREF_NULL)
+        {
+            largeObject = newSpaceLargeSegments.handleAllocationFailure(totalSize);
+        }
     }
-  }
 
-  largeObject->initializeNewObject(markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
+    largeObject->initializeNewObject(markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
 
-  if (this->saveStack != OREF_NULL) {
-                                       /* saveobj doesn't get turned on     */
-                                       /*until the system is initialized    */
-                                       /*far enough but once its on, push   */
-                                       /*this new obj on the save stack to  */
-                                       /*keep him from being garbage        */
-                                       /*collected, before it can be used   */
-                                       /*and safely anchored by caller.     */
-      pushSaveStack(largeObject);
-  }
+    if (this->saveStack != OREF_NULL)
+    {
+        /* saveobj doesn't get turned on     */
+        /*until the system is initialized    */
+        /*far enough but once its on, push   */
+        /*this new obj on the save stack to  */
+        /*keep him from being garbage        */
+        /*collected, before it can be used   */
+        /*and safely anchored by caller.     */
+        pushSaveStack(largeObject);
+    }
 
-  /* Description of defect 318:  IH:
+    /* Description of defect 318:  IH:
 
-  The problem is caused by the constructor of RexxClause which is calling newObjects.
-  NewObjects allocates one large Object. Immediately after this large Object is allocated,
-  an array is allocated as well. It then can happen that while allocating the array
-  the largeObject shall be marked. This causes a trap when objectVariables is != NULL.
+    The problem is caused by the constructor of RexxClause which is calling newObjects.
+    NewObjects allocates one large Object. Immediately after this large Object is allocated,
+    an array is allocated as well. It then can happen that while allocating the array
+    the largeObject shall be marked. This causes a trap when objectVariables is != NULL.
 
-  Solution: Set objectVariables to NULL before allocating the array. In order to make
-  OrefOK (called if CHECKOREF is defined) work properly, the largeObject has to be
-  set to a valid object state before calling new_array. Therefore the behaviour assignement
-  and the virtual functions assignement has to be done in advance. */
+    Solution: Set objectVariables to NULL before allocating the array. In order to make
+    OrefOK (called if CHECKOREF is defined) work properly, the largeObject has to be
+    set to a valid object state before calling new_array. Therefore the behaviour assignement
+    and the virtual functions assignement has to be done in advance. */
 
-  /* get the remainder object size...this is used to manage the */
-  /* dangling piece on the end of the allocation. */
-  totalSize = largeObject->getObjectSize() - totalSize;
+    /* get the remainder object size...this is used to manage the */
+    /* dangling piece on the end of the allocation. */
+    totalSize = largeObject->getObjectSize() - totalSize;
 
-  /* Clear out the entire object... */
-  largeObject->clearObject();
+    /* Clear out the entire object... */
+    largeObject->clearObject();
 
-  prototype = largeObject;
+    prototype = largeObject;
 
-  /* IH: Object gets a valid state for the mark and sweep process. */
-  /* Otherwise OrefOK (CHECKOREFS) will fail */
+    /* IH: Object gets a valid state for the mark and sweep process. */
+    /* Otherwise OrefOK (CHECKOREFS) will fail */
 
-  // initialize the hash table object
-  largeObject->initializeNewObject(objSize, markWord, virtualFunctionTable[objectType], RexxBehaviour::getPrimitiveBehaviour(objectType));
+    // initialize the hash table object
+    largeObject->initializeNewObject(objSize, markWord, virtualFunctionTable[objectType], RexxBehaviour::getPrimitiveBehaviour(objectType));
 
-  for (i=1 ;i < count ; i++ ) {
-    /* IH: Loop one time less than before because first object is initialized
-       outside of the loop. I had to move the following 2 statements
-       in front of the object initialization */
-    /* add this object to the array of objs */
-    arrayOfObjects->put(largeObject, i);
-    /* point to the next object space. */
-    largeObject = (RexxObject *)((char *)largeObject + objSize);
-    /* copy the information from the prototype */
-    memcpy(largeObject, prototype, sizeof(RexxInternalObject));
-  }
-  arrayOfObjects->put(largeObject, i);  /* put the last Object */
+    for (i=1 ;i < count ; i++ )
+    {
+        /* IH: Loop one time less than before because first object is initialized
+           outside of the loop. I had to move the following 2 statements
+           in front of the object initialization */
+        /* add this object to the array of objs */
+        arrayOfObjects->put(largeObject, i);
+        /* point to the next object space. */
+        largeObject = (RexxObject *)((char *)largeObject + objSize);
+        /* copy the information from the prototype */
+        memcpy(largeObject, prototype, sizeof(RexxInternalObject));
+    }
+    arrayOfObjects->put(largeObject, i);  /* put the last Object */
 
-  /* adjust the size of the last one to account for any remainder */
-  largeObject->setObjectSize(totalSize + objSize);
+    /* adjust the size of the last one to account for any remainder */
+    largeObject->setObjectSize(totalSize + objSize);
 
-  return arrayOfObjects;               /* Return our array of objects.      */
+    return arrayOfObjects;               /* Return our array of objects.      */
 }
 
 
@@ -1232,34 +1264,35 @@ void RexxMemory::reSize(RexxObject *shrinkObj, size_t requestSize)
 /*                                                                            */
 /******************************************************************************/
 {
-  DeadObject *newDeadObj;
+    DeadObject *newDeadObj;
 
-  size_t newSize = roundObjectResize(requestSize);
+    size_t newSize = roundObjectResize(requestSize);
 
-  /* is the rounded size smaller and is remainder at least the size */
-  /* of the smallest OBJ MINOBJSIZE */
-  if (newSize < requestSize && (shrinkObj->getObjectSize() - newSize) >= MinimumObjectSize) {
-      size_t deadObjectSize = shrinkObj->getObjectSize() - newSize;
-      /* Yes, then we can shrink the object.  Get starting point of */
-      /* the extra, this will be the new Dead obj */
-      newDeadObj = new ((void *)((char *)shrinkObj + newSize)) DeadObject (deadObjectSize);
-      /* if an object is larger than 16 MB, the last 8 bits (256) are */
-      /* truncated and therefore the object must have a size */
-      /* dividable by 256 and the rest must be put to the dead chain. */
-      /* If the resulting dead object is smaller than the size we */
-      /* gave, then we've got a truncated remainder we need to turn */
-      /* into a dead object. */
-      deadObjectSize -= newDeadObj->getObjectSize();
-      if (deadObjectSize != 0)
-      {
-          /* create difference object.  Note:  We don't bother */
-          /* putting this back on the dead chain.  It will be */
-          /* picked up during the next GC cycle. */
-          new ((char *)newDeadObj + newDeadObj->getObjectSize()) DeadObject (deadObjectSize);
-      }
-      /* Adjust size of original object */
-      shrinkObj->setObjectSize(newSize);
-  }
+    /* is the rounded size smaller and is remainder at least the size */
+    /* of the smallest OBJ MINOBJSIZE */
+    if (newSize < requestSize && (shrinkObj->getObjectSize() - newSize) >= MinimumObjectSize)
+    {
+        size_t deadObjectSize = shrinkObj->getObjectSize() - newSize;
+        /* Yes, then we can shrink the object.  Get starting point of */
+        /* the extra, this will be the new Dead obj */
+        newDeadObj = new ((void *)((char *)shrinkObj + newSize)) DeadObject (deadObjectSize);
+        /* if an object is larger than 16 MB, the last 8 bits (256) are */
+        /* truncated and therefore the object must have a size */
+        /* dividable by 256 and the rest must be put to the dead chain. */
+        /* If the resulting dead object is smaller than the size we */
+        /* gave, then we've got a truncated remainder we need to turn */
+        /* into a dead object. */
+        deadObjectSize -= newDeadObj->getObjectSize();
+        if (deadObjectSize != 0)
+        {
+            /* create difference object.  Note:  We don't bother */
+            /* putting this back on the dead chain.  It will be */
+            /* picked up during the next GC cycle. */
+            new ((char *)newDeadObj + newDeadObj->getObjectSize()) DeadObject (deadObjectSize);
+        }
+        /* Adjust size of original object */
+        shrinkObj->setObjectSize(newSize);
+    }
 }
 
 
@@ -1278,17 +1311,20 @@ void RexxMemory::scavengeSegmentSets(
     MemorySegmentSet *donor;
 
     /* first determine the donor/requester relationships. */
-    if (requestor->is(MemorySegmentSet::SET_NORMAL)) {
+    if (requestor->is(MemorySegmentSet::SET_NORMAL))
+    {
         donor = &newSpaceLargeSegments;
     }
-    else {
+    else
+    {
         donor = &newSpaceNormalSegments;
     }
 
     /* first look for an unused segment.  We might be able to steal */
     /* one and just move it over. */
     MemorySegment *newSeg = donor->donateSegment(allocationLength);
-    if (newSeg != NULL) {
+    if (newSeg != NULL)
+    {
         requestor->addSegment(newSeg);
         return;
     }
@@ -1297,7 +1333,8 @@ void RexxMemory::scavengeSegmentSets(
     /* we can find that will satisfy this allocation.  If found, we */
     /* can insert it into the normal deadchains. */
     DeadObject *largeObject = donor->donateObject(allocationLength);
-    if (largeObject != NULL) {
+    if (largeObject != NULL)
+    {
         /* we need to insert this into the normal dead chain */
         /* locations. */
         requestor->addDeadObject(largeObject);
@@ -1310,16 +1347,18 @@ void RexxMemory::liveStackFull()
 /* Function:  Process a live-stack overflow situation                         */
 /******************************************************************************/
 {
-  RexxStack *newLiveStack;             /* new temporary live stack          */
+    RexxStack *newLiveStack;             /* new temporary live stack          */
 
-                                       /* create a temporary stack          */
-  newLiveStack = new (this->liveStack->size * 2, true) RexxStack (this->liveStack->size * 2);
-                                       /* copy the live stack entries       */
-  newLiveStack->copyEntries(this->liveStack);
-                                       /* has this already been expanded?   */
-  if (this->liveStack != this->originalLiveStack)
-    free((void *)this->liveStack);     /* release the old one               */
-  this->liveStack = newLiveStack;      /* and set the new stack             */
+                                         /* create a temporary stack          */
+    newLiveStack = new (this->liveStack->size * 2, true) RexxStack (this->liveStack->size * 2);
+    /* copy the live stack entries       */
+    newLiveStack->copyEntries(this->liveStack);
+    /* has this already been expanded?   */
+    if (this->liveStack != this->originalLiveStack)
+    {
+        free((void *)this->liveStack);     /* release the old one               */
+    }
+    this->liveStack = newLiveStack;      /* and set the new stack             */
 }
 
 void RexxMemory::mark(RexxObject *markObject)
@@ -1327,30 +1366,33 @@ void RexxMemory::mark(RexxObject *markObject)
 /* Function:  Perform a memory management mark operation                      */
 /******************************************************************************/
 {
-  size_t liveMark = markWord | OldSpaceBit;
+    size_t liveMark = markWord | OldSpaceBit;
 
-  markObject->setObjectLive(markWord); /* Then Mark this object as live.    */
-                                       /* object have any references?       */
-                                       /* if there are no references, we don't */
-                                       /* need to push this on the stack, but */
-                                       /* we might need to push the behavior */
-                                       /* on the stack.  Since behaviors are */
-                                       /* we can frequently skip that step as well */
-  if (markObject->hasNoReferences()) {
-      if (ObjectNeedsMarking(markObject->behaviour)) {
-          /* mark the behaviour now to keep us from processing this */
-          /* more than once. */
-          markObject->behaviour->setObjectLive(markWord);
-                                       /* push him to livestack, to mark    */
-                                       /* later.                            */
-          pushLiveStack((RexxObject *)markObject->behaviour);
-      }
-  }
-  else {
-                                       /* push him to livestack, to mark    */
-                                       /* later.                            */
-      pushLiveStack(markObject);
-  }
+    markObject->setObjectLive(markWord); /* Then Mark this object as live.    */
+                                         /* object have any references?       */
+                                         /* if there are no references, we don't */
+                                         /* need to push this on the stack, but */
+                                         /* we might need to push the behavior */
+                                         /* on the stack.  Since behaviors are */
+                                         /* we can frequently skip that step as well */
+    if (markObject->hasNoReferences())
+    {
+        if (ObjectNeedsMarking(markObject->behaviour))
+        {
+            /* mark the behaviour now to keep us from processing this */
+            /* more than once. */
+            markObject->behaviour->setObjectLive(markWord);
+            /* push him to livestack, to mark    */
+            /* later.                            */
+            pushLiveStack((RexxObject *)markObject->behaviour);
+        }
+    }
+    else
+    {
+        /* push him to livestack, to mark    */
+        /* later.                            */
+        pushLiveStack(markObject);
+    }
 }
 
 RexxObject *RexxMemory::temporaryObject(size_t requestLength)
@@ -1360,22 +1402,21 @@ RexxObject *RexxMemory::temporaryObject(size_t requestLength)
 /*            expand the size of the live stack during a garbage collection.  */
 /******************************************************************************/
 {
-  RexxObject *newObj;                  /* the new object                    */
-  size_t allocationLength;             /* length to allocate                */
-
-                                       /* get the rounded size of the object*/
-  allocationLength = roundObjectBoundary(requestLength);
-                                       /* allocate a new object             */
-  newObj = (RexxObject *)malloc(allocationLength);
-  if (newObj == OREF_NULL)             /* unable to allocate a new one?     */
-                                       /* can't allocate, report resource   */
-                                       /* error.                            */
-    reportException(Error_System_resources);
-                                       /* setup the new object header for   */
-                                       /*use                                */
-  // initialize the hash table object
-  newObj->initializeNewObject(allocationLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
-  return newObj;                       /* and return it                     */
+    /* get the rounded size of the object*/
+    size_t allocationLength = roundObjectBoundary(requestLength);
+    /* allocate a new object             */
+    RexxObject *newObj = (RexxObject *)malloc(allocationLength);
+    if (newObj == OREF_NULL)             /* unable to allocate a new one?     */
+    {
+        /* can't allocate, report resource   */
+        /* error.                            */
+        reportException(Error_System_resources);
+    }
+    /* setup the new object header for   */
+    /*use                                */
+    // initialize the hash table object
+    newObj->initializeNewObject(allocationLength, markWord, virtualFunctionTable[T_Object], TheObjectBehaviour);
+    return newObj;                       /* and return it                     */
 }
 
 void RexxMemory::markGeneral(void *obj)
@@ -1384,51 +1425,58 @@ void RexxMemory::markGeneral(void *obj)
 /*            image restore, object unflatten, and debug garbage collection   */
 /******************************************************************************/
 {
-  RexxObject **pMarkObject = (RexxObject **)obj;
-  RexxObject *markObject = *pMarkObject;
+    RexxObject **pMarkObject = (RexxObject **)obj;
+    RexxObject *markObject = *pMarkObject;
 
 
-  if (markObject == OREF_NULL)         /* is this a null reference?         */
-    return;                            /* always return immediately         */
+    if (markObject == OREF_NULL)         /* is this a null reference?         */
+    {
+        return;                            /* always return immediately         */
+    }
 
-  /* If its a restore image mark       */
-  if (restoreimage) {
-      /* we update the object's location   */
-      restoreMark(markObject, pMarkObject);
-      return;                            /* finished                          */
-  }
+    /* If its a restore image mark       */
+    if (restoreimage)
+    {
+        /* we update the object's location   */
+        restoreMark(markObject, pMarkObject);
+        return;                            /* finished                          */
+    }
 
-  if (objOffset != 0) {                /* restoring an object?              */
-      /* we update the object's location   */
-      restoreObjectMark(markObject, pMarkObject);
-      return;                            /* finished                          */
-  }
+    if (objOffset != 0)
+    {                /* restoring an object?              */
+        /* we update the object's location   */
+        restoreObjectMark(markObject, pMarkObject);
+        return;                            /* finished                          */
+    }
 
-  if (this->envelope) {                /* processing an envelope?           */
-      /* do the unflatten */
-      unflattenMark(markObject, pMarkObject);
-      return;                          /* and out                           */
-  }
-
-
-  /* The OrphanCheck code is complete mark from OREF_ENV, which checks the           */
-  /* validity of each object in the entire object tree.  Any invalid objects will be */
-  /* cause the mark to terminate and output information about the invalid object and */
-  /* its ancestry.                                                                   */
-  if ((this->orphanCheck) && !saveimage) {
-      /* do the special validity check mark. */
-      orphanCheckMark(markObject, pMarkObject);
-      /*  all done here, so return         */
-      return;
-  }
+    if (this->envelope)
+    {                /* processing an envelope?           */
+        /* do the unflatten */
+        unflattenMark(markObject, pMarkObject);
+        return;                          /* and out                           */
+    }
 
 
-  if (!saveimage) {
-    logic_error("Wrong mark routine called");
-  }
+    /* The OrphanCheck code is complete mark from OREF_ENV, which checks the           */
+    /* validity of each object in the entire object tree.  Any invalid objects will be */
+    /* cause the mark to terminate and output information about the invalid object and */
+    /* its ancestry.                                                                   */
+    if ((this->orphanCheck) && !saveimage)
+    {
+        /* do the special validity check mark. */
+        orphanCheckMark(markObject, pMarkObject);
+        /*  all done here, so return         */
+        return;
+    }
 
-  /* we're doing the image construction work */
-  saveImageMark(markObject, pMarkObject);
+
+    if (!saveimage)
+    {
+        logic_error("Wrong mark routine called");
+    }
+
+    /* we're doing the image construction work */
+    saveImageMark(markObject, pMarkObject);
 }
 
 
@@ -1441,7 +1489,8 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
     size_t size;
     /* Regular GC or Saveimage processing. if a REAL object and not */
     /* already marked and not in Old Space. */
-    if (markObject != OREF_NULL && !markObject->isObjectLive(markWord) && markObject->isNewSpace()) {
+    if (markObject != OREF_NULL && !markObject->isObjectLive(markWord) && markObject->isNewSpace())
+    {
         /* Then Mark this object as live.    */
         markObject->setObjectLive(markWord);
         /* push him to livestack, so we can mark (at a later time) his */
@@ -1468,8 +1517,10 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
         behaviour = bufferReference->behaviour;
         /* Working with a primitive behaviour or a copy? */
         if (behaviour->isNonPrimitive())
+        {
             /* tag this as a non-primitive behav */
             bufferReference->setNonPrimitive();
+        }
         else
         {
             if (behaviour->isTransientClass())
@@ -1509,7 +1560,8 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
     const char *objectClassName;
 
     /* check for invalid objects         */
-    if (!objectReferenceOK(markObject)) {
+    if (!objectReferenceOK(markObject))
+    {
         /* Get a temporary file name for out */
         outFileName = SysGetTempFileName();
         /* Open the temp file for the dump. */
@@ -1519,7 +1571,8 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
         /*  more info about first guy...     */
         firstnode = true;
         /* If the object is in object storage*/
-        if (inObjectStorage(markObject)) {
+        if (inObjectStorage(markObject))
+        {
             /* DIsplay a few words of the object's storage. */
             logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *(int32_t *)markObject,      *((int32_t *)markObject+1) , *((int32_t *)markObject+2) , *((int32_t *)markObject+3));
             logMemoryCheck(outfile, " non-Object dump -->%8.8X   %8.8X   %8.8X   %8.8X \n", *((int32_t *)markObject+4) , *((int32_t *)markObject+5) , *((int32_t *)markObject+6) , *((int32_t *)markObject+7));
@@ -1531,10 +1584,12 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
         /* information for debugging this type of problem.                            */
         for (markObject = popLiveStack();
             markObject != OREF_NULL;     /* test for unique terminator        */
-            markObject = popLiveStack()) {
+            markObject = popLiveStack())
+        {
 
             /* OREF_NIL marks an ancestor        */
-            if (markObject == TheNilObject) {
+            if (markObject == TheNilObject)
+            {
                 /* pop the ancestor                  */
                 markObject  = popLiveStack();
                 className = markObject->id();
@@ -1542,16 +1597,18 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
                     objectClassName = "";
                 else
                     objectClassName = className->getStringData();
-                if (firstnode) {             /* is this the first node??          */
+                if (firstnode)
+                {             /* is this the first node??          */
                     printf("-->Parent node was marking offset '%u'x \n", (char *)pMarkObject - (char *)markObject);
                     dumpObject(markObject, outfile);
                     firstnode = false;
                     logMemoryCheck(outfile, "Parent node is at %p, of type %s(%d) \n",
-                        markObject, objectClassName, markObject->behaviour->getClassType());
+                                   markObject, objectClassName, markObject->behaviour->getClassType());
                 }
-                else {
+                else
+                {
                     logMemoryCheck(outfile, "Next node is at %p, of type %s(%d) \n",
-                        markObject, objectClassName, markObject->behaviour->getClassType());
+                                   markObject, objectClassName, markObject->behaviour->getClassType());
                 }
             }
         }
@@ -1566,11 +1623,12 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
         logic_error("Bad Object found during GC !\n");
     }
 
-    if (!markObject->isObjectLive(markWord) && markObject->isNewSpace()) {
+    if (!markObject->isObjectLive(markWord) && markObject->isNewSpace())
+    {
         markObject->setObjectLive(markWord); /* Mark this object as live          */
-                                         /* push him to livestack, so we can  */
-                                         /*mark (at a later time) his         */
-                                         /*references.                        */
+        /* push him to livestack, so we can  */
+        /*mark (at a later time) his         */
+        /*references.                        */
         pushLiveStack(markObject);
     }
 }
@@ -1601,7 +1659,7 @@ RexxObject *RexxMemory::setParms(RexxObject *deadSegs, RexxObject *notUsed)
 /* Arguments:  Maximum and minimum allocations between reclamations           */
 /******************************************************************************/
 {
-  return OREF_NULL;
+    return OREF_NULL;
 }
 
 void RexxMemory::saveImage(void)
@@ -1609,113 +1667,112 @@ void RexxMemory::saveImage(void)
 /* Function:  Save the memory image as part of interpreter build              */
 /******************************************************************************/
 {
-  FILE *image;
-  RexxObject *markObject;
-  MemoryStats _imageStats;
-                                       /* array of objects needed at front  */
-                                       /*of image for faster restore.       */
-  int   i;                             /* loop counter                      */
-  RexxArray *primitive_behaviours;     /* saved array of behaviours         */
-  RexxArray *saveArray;                /* array of objects needed at front  */
+    FILE *image;
+    RexxObject *markObject;
+    MemoryStats _imageStats;
+    /* array of objects needed at front  */
+    /*of image for faster restore.       */
+    int   i;                             /* loop counter                      */
+    RexxArray *primitive_behaviours;     /* saved array of behaviours         */
+    RexxArray *saveArray;                /* array of objects needed at front  */
 
-  this->imageStats = &_imageStats;     /* set the pointer to the current collector */
-                                       /* of image for faster restore.      */
-  _imageStats.clear();                 /* clear out image counters          */
+    this->imageStats = &_imageStats;     /* set the pointer to the current collector */
+                                         /* of image for faster restore.      */
+    _imageStats.clear();                 /* clear out image counters          */
 
-  markReason = SAVINGIMAGE;            // this is an image save
+    markReason = SAVINGIMAGE;            // this is an image save
 
-  globalStrings = OREF_NULL;
-                                       /* memory Object not saved           */
-  TheKernel->remove(getGlobalName(CHAR_MEMORY));
+    globalStrings = OREF_NULL;
+    /* memory Object not saved           */
+    TheKernel->remove(getGlobalName(CHAR_MEMORY));
 
-  // this has been protecting every thing critical
-  // from GC events thus far, but now we remove it because
-  // it contains things we don't want to save in the image.
-  TheEnvironment->remove(getGlobalName(CHAR_KERNEL));
+    // this has been protecting every thing critical
+    // from GC events thus far, but now we remove it because
+    // it contains things we don't want to save in the image.
+    TheEnvironment->remove(getGlobalName(CHAR_KERNEL));
 
-                                       /* remove any programs left over in  */
-                                       /* Get an array to hold all special  */
-                                       /*objs                               */
-  saveArray = new_array(saveArray_highest);
-  // Note:  A this point, we don't have an activity we can use ProtectedObject to save
-  // this with, so we need to use saveObject();
-  saveObject(saveArray);
-                                       /* Add all elements needed in        */
-                                       /*saveArray                          */
-  saveArray->put((RexxObject *)TheEnvironment,   saveArray_ENV);
-  saveArray->put((RexxObject *)TheKernel,        saveArray_KERNEL);
-  saveArray->put((RexxObject *)TheTrueObject,    saveArray_TRUE);
-  saveArray->put((RexxObject *)TheFalseObject,   saveArray_FALSE);
-  saveArray->put((RexxObject *)TheNilObject,     saveArray_NIL);
-  saveArray->put((RexxObject *)TheNullArray,     saveArray_NULLA);
-  saveArray->put((RexxObject *)TheNullPointer,   saveArray_NULLPOINTER);
-  saveArray->put((RexxObject *)TheClassClass,    saveArray_CLASS);
-  saveArray->put((RexxObject *)LibraryManager::getLibraries(), saveArray_LIBRARIES);
-  saveArray->put((RexxObject *)TheSystem,       saveArray_SYSTEM);
-  saveArray->put((RexxObject *)TheFunctionsDirectory,  saveArray_FUNCTIONS);
-  saveArray->put((RexxObject *)TheCommonRetrievers,    saveArray_COMMON_RETRIEVERS);
-  saveArray->put((RexxObject *)saveStrings(), saveArray_NAME_STRINGS);
-  saveArray->put((RexxObject *)TheStaticRequires,       saveArray_STATIC_REQ);
-  saveArray->put((RexxObject *)ThePublicRoutines,       saveArray_PUBLIC_RTN);
+    /* remove any programs left over in  */
+    /* Get an array to hold all special  */
+    /*objs                               */
+    saveArray = new_array(saveArray_highest);
+    // Note:  A this point, we don't have an activity we can use ProtectedObject to save
+    // this with, so we need to use saveObject();
+    saveObject(saveArray);
+    /* Add all elements needed in        */
+    /*saveArray                          */
+    saveArray->put((RexxObject *)TheEnvironment,   saveArray_ENV);
+    saveArray->put((RexxObject *)TheKernel,        saveArray_KERNEL);
+    saveArray->put((RexxObject *)TheTrueObject,    saveArray_TRUE);
+    saveArray->put((RexxObject *)TheFalseObject,   saveArray_FALSE);
+    saveArray->put((RexxObject *)TheNilObject,     saveArray_NIL);
+    saveArray->put((RexxObject *)TheNullArray,     saveArray_NULLA);
+    saveArray->put((RexxObject *)TheNullPointer,   saveArray_NULLPOINTER);
+    saveArray->put((RexxObject *)TheClassClass,    saveArray_CLASS);
+    saveArray->put((RexxObject *)PackageManager::getImageData(), saveArray_PACKAGES);
+    saveArray->put((RexxObject *)TheSystem,       saveArray_SYSTEM);
+    saveArray->put((RexxObject *)TheFunctionsDirectory,  saveArray_FUNCTIONS);
+    saveArray->put((RexxObject *)TheCommonRetrievers,    saveArray_COMMON_RETRIEVERS);
+    saveArray->put((RexxObject *)saveStrings(), saveArray_NAME_STRINGS);
 
-                                       /* create the behaviour array        */
-  primitive_behaviours= (RexxArray *)new_array(T_Last_Exported_Class + 1);
-                                       /* copy all of the primitive         */
-  for (i = 0; i <= T_Last_Exported_Class; i++)
-  {
-                                       /* behaviours into this array        */
-      primitive_behaviours->put((RexxObject *)RexxBehaviour::getPrimitiveBehaviour(i), i + 1);
-  }
-                                       /* add to the save array             */
-  saveArray->put(primitive_behaviours, saveArray_PBEHAV);
+    /* create the behaviour array        */
+    primitive_behaviours= (RexxArray *)new_array(T_Last_Exported_Class + 1);
+    /* copy all of the primitive         */
+    for (i = 0; i <= T_Last_Exported_Class; i++)
+    {
+        /* behaviours into this array        */
+        primitive_behaviours->put((RexxObject *)RexxBehaviour::getPrimitiveBehaviour(i), i + 1);
+    }
+    /* add to the save array             */
+    saveArray->put(primitive_behaviours, saveArray_PBEHAV);
 
-  image_buffer = (char *)malloc(MaxImageSize);
-  image_offset = sizeof(size_t);
-  saveimage = true;
-  disableOrefChecks();                 /* Don't try to check OrefSets now.  */
-  bumpMarkWord();
-                                       /* push a unique terminator          */
-  pushLiveStack(OREF_NULL);
-                                       /* don't want to save                */
-                                       /*savestack/savetabl                 */
-  saveStack = OREF_NULL;
-                                       /* or any of there references in the */
-  saveTable = OREF_NULL;
-                                       /* image, which will become OldSpace */
-  OrefSet(&memoryObject, old2new, OREF_NULL);
+    image_buffer = (char *)malloc(MaxImageSize);
+    image_offset = sizeof(size_t);
+    saveimage = true;
+    disableOrefChecks();                 /* Don't try to check OrefSets now.  */
+    bumpMarkWord();
+    /* push a unique terminator          */
+    pushLiveStack(OREF_NULL);
+    /* don't want to save                */
+    /*savestack/savetabl                 */
+    saveStack = OREF_NULL;
+    /* or any of there references in the */
+    saveTable = OREF_NULL;
+    /* image, which will become OldSpace */
+    OrefSet(&memoryObject, old2new, OREF_NULL);
 
-  pushLiveStack(OREF_NULL);            /* push a unique terminator          */
-  memory_mark_general(saveArray);      /* push live root                    */
+    pushLiveStack(OREF_NULL);            /* push a unique terminator          */
+    memory_mark_general(saveArray);      /* push live root                    */
 
-  for (markObject = popLiveStack();
-       markObject != OREF_NULL;        /*   test for unique terminator      */
-       markObject = popLiveStack()) {
-                                       /* The mark of this object moved it  */
-                                       /*to the image, its behaviour now    */
-                                       /*contains its offset in the image   */
-                                       /* so point to the object in the     */
-                                       /*image.                             */
-                                       /* the buffer copy                   */
-    RexxObject *copyObject = (RexxObject *)(image_buffer+(uintptr_t)markObject->behaviour);
+    for (markObject = popLiveStack();
+        markObject != OREF_NULL;        /*   test for unique terminator      */
+        markObject = popLiveStack())
+    {
+        /* The mark of this object moved it  */
+        /*to the image, its behaviour now    */
+        /*contains its offset in the image   */
+        /* so point to the object in the     */
+        /*image.                             */
+        /* the buffer copy                   */
+        RexxObject *copyObject = (RexxObject *)(image_buffer+(uintptr_t)markObject->behaviour);
 
-    copyObject->liveGeneral(SAVINGIMAGE); /* mark other referenced objs        */
-                                       /* non-primitive behaviour?          */
-    if (copyObject->isNonPrimitive())
-                                       /* mark/move behaviour live      */
-      memory_mark_general(copyObject->behaviour);
-  }
+        copyObject->liveGeneral(SAVINGIMAGE); /* mark other referenced objs        */
+        /* non-primitive behaviour?          */
+        if (copyObject->isNonPrimitive())
+            /* mark/move behaviour live      */
+            memory_mark_general(copyObject->behaviour);
+    }
 
-  image = fopen(BASEIMAGE,"wb");
-                                       /* PLace actual size at beginning of buffer*/
-  memcpy(image_buffer, &image_offset, sizeof(size_t));
-                                       /* Write out buffer (image)      */
-  fwrite(image_buffer, 1, image_offset, image);
-  fclose(image);
-  free(image_buffer);
+    image = fopen(BASEIMAGE,"wb");
+    /* PLace actual size at beginning of buffer*/
+    memcpy(image_buffer, &image_offset, sizeof(size_t));
+    /* Write out buffer (image)      */
+    fwrite(image_buffer, 1, image_offset, image);
+    fclose(image);
+    free(image_buffer);
 
-  printf("Object stats for this image save are \n");
-  _imageStats.printSavedImageStats();
-  printf("\n\n Total bytes for this image %d bytes \n", image_offset);
+    printf("Object stats for this image save are \n");
+    _imageStats.printSavedImageStats();
+    printf("\n\n Total bytes for this image %d bytes \n", image_offset);
 }
 
 
@@ -1725,53 +1782,55 @@ RexxObject *RexxMemory::dump(void)
 /******************************************************************************/
 {
 #ifdef _DEBUG
-  FILE *dumpfile;
-  FILE *keyfile;
-  MemorySegmentPool *currentPool = this->firstPool;
-  int   i;
+    FILE *dumpfile;
+    FILE *keyfile;
+    MemorySegmentPool *currentPool = this->firstPool;
+    int   i;
 
-  if (dumpEnable) {
-                                       /* don't allow another dump unless   */
-                                       /*reset by user                      */
-    memoryObject.dumpEnable = false;
-                                       /* first generate the dump by writing*/
-                                       /*  each segment to the dumpfile     */
-    printf("Dumping object memory to orexdump.dmp\n");
-                                       /* open for binary write             */
-    dumpfile = fopen("orexdump.dmp","wb");
-                                       /* now generate the key file which   */
-                                       /*is a series of REXX statements     */
-    printf("Creating dump key file in orexdump.key\n");
-                                       /* open for text write               */
-    keyfile = fopen("orexdump.key","w");
-    fprintf(keyfile, "/* Object REXX dump key file */\n");
-    fprintf(keyfile, "memoryaddr = %p\n", this);
-    fprintf(keyfile, "marker = %d\n", markWord);
-    /* dump the oldspace segments */
-    oldSpaceSegments.dumpSegments(keyfile, dumpfile);
-    /* followed by the newer allocations */
-    newSpaceNormalSegments.dumpSegments(keyfile, dumpfile);
-    newSpaceLargeSegments.dumpSegments(keyfile, dumpfile);
-
-    i = 0;
-    while (currentPool) {
-      i++;
-      fprintf(keyfile, "Pool addr.%d = %p\n", i, currentPool);
-      fprintf(keyfile, "Pool size.%d = %d\n", i, currentPool->reserved);
-      currentPool = currentPool->nextPool();
-    }
-
-    for (i = 0; i <= T_Last_Exported_Class; i++)
+    if (dumpEnable)
     {
-        fprintf(keyfile, "Behaviour type %d = %p\n", i, RexxBehaviour::getPrimitiveBehaviour(i));
-    }
+        /* don't allow another dump unless   */
+        /*reset by user                      */
+        memoryObject.dumpEnable = false;
+        /* first generate the dump by writing*/
+        /*  each segment to the dumpfile     */
+        printf("Dumping object memory to orexdump.dmp\n");
+        /* open for binary write             */
+        dumpfile = fopen("orexdump.dmp","wb");
+        /* now generate the key file which   */
+        /*is a series of REXX statements     */
+        printf("Creating dump key file in orexdump.key\n");
+        /* open for text write               */
+        keyfile = fopen("orexdump.key","w");
+        fprintf(keyfile, "/* Object REXX dump key file */\n");
+        fprintf(keyfile, "memoryaddr = %p\n", this);
+        fprintf(keyfile, "marker = %d\n", markWord);
+        /* dump the oldspace segments */
+        oldSpaceSegments.dumpSegments(keyfile, dumpfile);
+        /* followed by the newer allocations */
+        newSpaceNormalSegments.dumpSegments(keyfile, dumpfile);
+        newSpaceLargeSegments.dumpSegments(keyfile, dumpfile);
 
-                                       /* now close actual dump and key file*/
-    fclose(dumpfile);
-    fclose(keyfile);
-  }
+        i = 0;
+        while (currentPool)
+        {
+            i++;
+            fprintf(keyfile, "Pool addr.%d = %p\n", i, currentPool);
+            fprintf(keyfile, "Pool size.%d = %d\n", i, currentPool->reserved);
+            currentPool = currentPool->nextPool();
+        }
+
+        for (i = 0; i <= T_Last_Exported_Class; i++)
+        {
+            fprintf(keyfile, "Behaviour type %d = %p\n", i, RexxBehaviour::getPrimitiveBehaviour(i));
+        }
+
+        /* now close actual dump and key file*/
+        fclose(dumpfile);
+        fclose(keyfile);
+    }
 #endif
-  return OREF_NULL;
+    return OREF_NULL;
 }
 
 
@@ -1782,11 +1841,11 @@ RexxObject *RexxMemory::setDump(RexxObject *selection)
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-  if (selection != OREF_NULL)
-  {
-      dumpEnable = selection->truthValue(Error_Logical_value_method);
-  }
-  return selection;
+    if (selection != OREF_NULL)
+    {
+        dumpEnable = selection->truthValue(Error_Logical_value_method);
+    }
+    return selection;
 }
 
 RexxObject *RexxMemory::gutCheck(void)
@@ -1796,74 +1855,80 @@ RexxObject *RexxMemory::gutCheck(void)
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-  wholenumber_t  count, testcount;
-  HashLink j;
-  bool restoreimagesave;
-  RexxInteger *value;
-  RexxInteger *testValue;
-  RexxObject *index;
-                                       /* temp OREF used to hold original   */
-                                       /*and test versions                  */
-  RexxObjectTable *tempold2new;
+    wholenumber_t  count, testcount;
+    HashLink j;
+    bool restoreimagesave;
+    RexxInteger *value;
+    RexxInteger *testValue;
+    RexxObject *index;
+    /* temp OREF used to hold original   */
+    /*and test versions                  */
+    RexxObjectTable *tempold2new;
 
-  printf("Comparing old2new with the current system.\n");
+    printf("Comparing old2new with the current system.\n");
 
-                                       /* build a test remembered set       */
-  tempold2new = new_object_table();
-  restoreimagesave = restoreimage;
-  restoreimage = true;                 /* setting both of these to true will*/
-                                       /* traverse System OldSpace and live */
-                                       /*mark all objects                   */
-  oldSpaceSegments.markOldSpaceObjects();
+    /* build a test remembered set       */
+    tempold2new = new_object_table();
+    restoreimagesave = restoreimage;
+    restoreimage = true;                 /* setting both of these to true will*/
+                                         /* traverse System OldSpace and live */
+                                         /*mark all objects                   */
+    oldSpaceSegments.markOldSpaceObjects();
 
-  restoreimage = restoreimagesave;     /* all done building remembered set  */
-                                       /* For all object in old2new table   */
-  for (j = old2new->first();
-       (index = (RexxObject *)old2new->index(j)) != OREF_NULL;
-       j = old2new->next(j)) {
-                                       /* Get refCount for this obj old2new */
-    value = (RexxInteger *)this->old2new->get(index);
-                                       /* new refcount for obj in newly     */
-                                       /*build old2new table                */
-    testValue = (RexxInteger *)tempold2new->get(index);
-                                       /* Was object found in new table?    */
-    if (testValue == OREF_NULL) {
-                                       /* nope, extra stuff in orig.        */
-       printf("object:  %p,  type:  %d, is extra in old2new.\n\n",
-               index, index->behaviour->getClassType());
-    } else {
-                                       /* now make sure both refCounts are  */
-                                       /* the same.                         */
-       count = value->getValue();
-       testcount = testValue->getValue();
-       if (count != testcount) {
-         printf("object:  %p,  type:  %d, has an incorrect refcount.\n",
-                 index, index->behaviour->getClassType());
-         printf("Refcount for object is %d, should be %d.\n\n", count, testcount);
-       }
-                                       /* now remove object from new table  */
-       tempold2new->remove(index);
+    restoreimage = restoreimagesave;     /* all done building remembered set  */
+                                         /* For all object in old2new table   */
+    for (j = old2new->first();
+        (index = (RexxObject *)old2new->index(j)) != OREF_NULL;
+        j = old2new->next(j))
+    {
+        /* Get refCount for this obj old2new */
+        value = (RexxInteger *)this->old2new->get(index);
+        /* new refcount for obj in newly     */
+        /*build old2new table                */
+        testValue = (RexxInteger *)tempold2new->get(index);
+        /* Was object found in new table?    */
+        if (testValue == OREF_NULL)
+        {
+            /* nope, extra stuff in orig.        */
+            printf("object:  %p,  type:  %d, is extra in old2new.\n\n",
+                   index, index->behaviour->getClassType());
+        }
+        else
+        {
+            /* now make sure both refCounts are  */
+            /* the same.                         */
+            count = value->getValue();
+            testcount = testValue->getValue();
+            if (count != testcount)
+            {
+                printf("object:  %p,  type:  %d, has an incorrect refcount.\n",
+                       index, index->behaviour->getClassType());
+                printf("Refcount for object is %d, should be %d.\n\n", count, testcount);
+            }
+            /* now remove object from new table  */
+            tempold2new->remove(index);
+        }
     }
-  }
-                                       /* Anything left in new table was    */
-                                       /* missing from original old2new     */
-                                       /* so iterate through it and report  */
-                                       /* the missing objects               */
-  for (j = tempold2new->first();
-       (index = (RexxObject *)tempold2new->index(j)) != OREF_NULL;
-       j = tempold2new->next(j)) {
-    printf("object:  %p,  type:  %d, is missing from old2new.\n\n",
-            index,index->behaviour->getClassType());
-  }
+    /* Anything left in new table was    */
+    /* missing from original old2new     */
+    /* so iterate through it and report  */
+    /* the missing objects               */
+    for (j = tempold2new->first();
+        (index = (RexxObject *)tempold2new->index(j)) != OREF_NULL;
+        j = tempold2new->next(j))
+    {
+        printf("object:  %p,  type:  %d, is missing from old2new.\n\n",
+               index,index->behaviour->getClassType());
+    }
 
-                                       /* now take a dump so that we can    */
-                                       /*  diagnose any problems we just    */
-                                       /*uncovered                          */
-  printf("Dumping object memory.\n");  /* tell the user what's happening    */
-  this->dumpEnable = true;             /* turn dumps on                     */
-  this->dump();                        /* take the dump                     */
+    /* now take a dump so that we can    */
+    /*  diagnose any problems we just    */
+    /*uncovered                          */
+    printf("Dumping object memory.\n");  /* tell the user what's happening    */
+    this->dumpEnable = true;             /* turn dumps on                     */
+    this->dump();                        /* take the dump                     */
 
-  return OREF_NULL;
+    return OREF_NULL;
 }
 
 
@@ -1876,27 +1941,30 @@ void RexxMemory::setObjectOffset(size_t offset)
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-  /* Starting or ending? */
-  if (offset != 0) {
-
-   /* have a value, starting unflatten.  See if we can get MUTEX */
-   /* immed */
-   if (MTXRI(this->unflattenMutex)) {
+    /* Starting or ending? */
+    if (offset != 0)
     {
-        UnsafeBlock releaser;
-        /* wait for current unflatten to end */
-        MTXRQ(this->unflattenMutex);
-    }
-   }
-  }
-  else {
-     /* no value, ending an unflatten */
-      /* Release the MUTEX.                */
-     MTXRL(this->unflattenMutex);
-  }
 
-  /* setup offSet value.               */
-  this->objOffset = offset;
+        /* have a value, starting unflatten.  See if we can get MUTEX */
+        /* immed */
+        if (MTXRI(this->unflattenMutex))
+        {
+            {
+                UnsafeBlock releaser;
+                /* wait for current unflatten to end */
+                MTXRQ(this->unflattenMutex);
+            }
+        }
+    }
+    else
+    {
+        /* no value, ending an unflatten */
+        /* Release the MUTEX.                */
+        MTXRL(this->unflattenMutex);
+    }
+
+    /* setup offSet value.               */
+    this->objOffset = offset;
 }
 
 void      RexxMemory::setEnvelope(RexxEnvelope *_envelope)
@@ -1908,25 +1976,28 @@ void      RexxMemory::setEnvelope(RexxEnvelope *_envelope)
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-                                       /* Starting or ending?               */
-  if (_envelope != OREF_NULL) {
-                                       /* have a value, starting unflatt    */
-                                       /* See if we can get MUTEX immed     */
-   if (MTXRI(this->envelopeMutex)) {
-                                       /* Nope, have to wait for it.        */
-                                       /* release kernel access.            */
+    /* Starting or ending?               */
+    if (_envelope != OREF_NULL)
     {
-        UnsafeBlock releaser;
-        MTXRQ(this->envelopeMutex);        /* wait for current unflat to end    */
+        /* have a value, starting unflatt    */
+        /* See if we can get MUTEX immed     */
+        if (MTXRI(this->envelopeMutex))
+        {
+            /* Nope, have to wait for it.        */
+            /* release kernel access.            */
+            {
+                UnsafeBlock releaser;
+                MTXRQ(this->envelopeMutex);        /* wait for current unflat to end    */
+            }
+        }
     }
-   }
-  }
-  else {
-                                       /* no value, ending an unflatten     */
-     MTXRL(this->envelopeMutex);       /* Release the MUTEX.                */
-  }
+    else
+    {
+        /* no value, ending an unflatten     */
+        MTXRL(this->envelopeMutex);       /* Release the MUTEX.                */
+    }
 
-  this->envelope = _envelope;          /* set the envelope object           */
+    this->envelope = _envelope;          /* set the envelope object           */
 }
 
 
@@ -1938,55 +2009,65 @@ RexxObject *RexxMemory::setOref(void *oldValue, RexxObject *value)
 /*                                                                            */
 /******************************************************************************/
 {
-  RexxInteger *refcount;
-  RexxObject **oldValueLoc = (RexxObject **)oldValue;
-  RexxObject *index = *oldValueLoc;
+    RexxInteger *refcount;
+    RexxObject **oldValueLoc = (RexxObject **)oldValue;
+    RexxObject *index = *oldValueLoc;
 
-  if (old2new != OREF_NULL) {
-    if (index != OREF_NULL && index->isNewSpace()) {
-                                       /* decrement reference count for     */
-                                       /**index                             */
-      refcount = (RexxInteger *)this->old2new->get(index);
-      if (refcount != OREF_NULL) {
-                                       /* found a value for refcount, now   */
-                                       /*decrement the count                */
-        refcount->decrementValue();
-                                       /* if the new value is 0, *index is  */
-                                       /*no longer ref'ed from oldspace     */
-        if (refcount->getValue() == 0) {
-                                       /* delete the entry for *index       */
-          this->old2new->remove(index);
+    if (old2new != OREF_NULL)
+    {
+        if (index != OREF_NULL && index->isNewSpace())
+        {
+            /* decrement reference count for     */
+            /**index                             */
+            refcount = (RexxInteger *)this->old2new->get(index);
+            if (refcount != OREF_NULL)
+            {
+                /* found a value for refcount, now   */
+                /*decrement the count                */
+                refcount->decrementValue();
+                /* if the new value is 0, *index is  */
+                /*no longer ref'ed from oldspace     */
+                if (refcount->getValue() == 0)
+                {
+                    /* delete the entry for *index       */
+                    this->old2new->remove(index);
+                }
+            }
+            else
+            {
+                /* naughty, naughty, someone didn't use SetOref */
+                printf("******** error in memory_setoref, unable to decrement refcount\n");
+                printf("Naughty object reference is from:  %p\n", oldValueLoc);
+                printf("Naughty object reference is at:  %p\n", index);
+                printf("Naughty object reference type is:  %d\n", (index)->behaviour->getClassType());
+            }
         }
-      } else {
-        /* naughty, naughty, someone didn't use SetOref */
-        printf("******** error in memory_setoref, unable to decrement refcount\n");
-        printf("Naughty object reference is from:  %p\n", oldValueLoc);
-        printf("Naughty object reference is at:  %p\n", index);
-        printf("Naughty object reference type is:  %d\n", (index)->behaviour->getClassType());
-      }
+        if (value != OREF_NULL && value->isNewSpace())
+        {
+            /* increment reference count for     */
+            /*value                              */
+            refcount = (RexxInteger *)this->old2new->get(value);
+            /* was there a reference here        */
+            /*already?                           */
+            if (refcount)
+            {
+                /* yep, found one, so just increment */
+                /*it                                 */
+                refcount->incrementValue();
+            }
+            else
+            {
+                /* nope, this is the first, so set   */
+                /*the refcount to 1                  */
+                // NOTE:  We don't use new_integer here because we need a mutable
+                // integer and can't use the one out of the cache.
+                this->old2new->put(new RexxInteger(1), value);
+            }
+        }
     }
-    if (value != OREF_NULL && value->isNewSpace()) {
-                                       /* increment reference count for     */
-                                       /*value                              */
-      refcount = (RexxInteger *)this->old2new->get(value);
-                                       /* was there a reference here        */
-                                       /*already?                           */
-      if (refcount) {
-                                       /* yep, found one, so just increment */
-                                       /*it                                 */
-        refcount->incrementValue();
-      } else {
-                                       /* nope, this is the first, so set   */
-                                       /*the refcount to 1                  */
-        // NOTE:  We don't use new_integer here because we need a mutable
-        // integer and can't use the one out of the cache.
-        this->old2new->put(new RexxInteger(1), value);
-      }
-    }
-  }
-                                       /* now make the assignment, just     */
-                                       /*like all this stuff never happened!*/
-  return *oldValueLoc = value;
+    /* now make the assignment, just     */
+    /*like all this stuff never happened!*/
+    return *oldValueLoc = value;
 }
 
 
@@ -2003,49 +2084,53 @@ RexxObject *RexxMemory::checkSetOref(
 /*                                                                            */
 /******************************************************************************/
 {
-  bool allOK = true;
-  const char *outFileName;
-  FILE *outfile;
-                                       /* Skip all checks during saveimage  */
- if (checkSetOK) {                     /* and initial part of restore Image */
-  if (!inObjectStorage(setter)) {      /* Is the setter object invalid      */
-    allOK = false;                     /* No, just put out setters addr.    */
-    outFileName = SysGetTempFileName();/* Get a temporary file name for out */
-    outfile = fopen(outFileName,"wb");
-    logMemoryCheck(outfile, "The Setter object at %p is invalid...\n");
+    bool allOK = true;
+    const char *outFileName;
+    FILE *outfile;
+    /* Skip all checks during saveimage  */
+    if (checkSetOK)
+    {                     /* and initial part of restore Image */
+        if (!inObjectStorage(setter))
+        {      /* Is the setter object invalid      */
+            allOK = false;                     /* No, just put out setters addr.    */
+            outFileName = SysGetTempFileName();/* Get a temporary file name for out */
+            outfile = fopen(outFileName,"wb");
+            logMemoryCheck(outfile, "The Setter object at %p is invalid...\n");
 
-                                       /* Is the new value a real object?   */
-  }
-  else if (value && (RexxBehaviour *)value != TheBehaviourBehaviour && (RexxBehaviour *)value != RexxBehaviour::getPrimitiveBehaviour(T_Behaviour) && !objectReferenceOK(value))
-  {
-    allOK = false;                     /* No, put out the info              */
-    outFileName = SysGetTempFileName();/* Get a temporary file name for out */
-    outfile = fopen(outFileName,"wb");
-    logMemoryCheck(outfile, "The Setter object at %p attempted to put a non object %p, at offset %p\n",setter, value, (char *)index - (char *)setter);
-    logMemoryCheck(outfile, " A dump of the Setting object follows: \n");
-    dumpObject(setter, outfile);
+            /* Is the new value a real object?   */
+        }
+        else if (value && (RexxBehaviour *)value != TheBehaviourBehaviour && (RexxBehaviour *)value != RexxBehaviour::getPrimitiveBehaviour(T_Behaviour) && !objectReferenceOK(value))
+        {
+            allOK = false;                     /* No, put out the info              */
+            outFileName = SysGetTempFileName();/* Get a temporary file name for out */
+            outfile = fopen(outFileName,"wb");
+            logMemoryCheck(outfile, "The Setter object at %p attempted to put a non object %p, at offset %p\n",setter, value, (char *)index - (char *)setter);
+            logMemoryCheck(outfile, " A dump of the Setting object follows: \n");
+            dumpObject(setter, outfile);
 
-  }
-  else if (index >= (RexxObject **)((char *)setter + setter->getObjectSize())) {
-    allOK = false;                     /* Yes, let them know                */
-    outFileName = SysGetTempFileName();/* Get a temporary file name for out */
-    outfile = fopen(outFileName,"wb");
-    logMemoryCheck(outfile, "The Setter object at %p has tried to store at offset, which is  outside his object range\n",setter, (char *)index - (char *)setter);
-    logMemoryCheck(outfile, " A dump of the Setting object follows: \n");
-    dumpObject(setter, outfile);
-  }
+        }
+        else if (index >= (RexxObject **)((char *)setter + setter->getObjectSize()))
+        {
+            allOK = false;                     /* Yes, let them know                */
+            outFileName = SysGetTempFileName();/* Get a temporary file name for out */
+            outfile = fopen(outFileName,"wb");
+            logMemoryCheck(outfile, "The Setter object at %p has tried to store at offset, which is  outside his object range\n",setter, (char *)index - (char *)setter);
+            logMemoryCheck(outfile, " A dump of the Setting object follows: \n");
+            dumpObject(setter, outfile);
+        }
 
 
- }
+    }
 
-  if (!allOK) {
-    logMemoryCheck(outfile, " The error occurred in line %u of file %s\n", lineNum, fileName);
-    printf("The dump data has been written to file %s \n",outFileName);
-    fclose(outfile);
-    logic_error("Something went really wrong in SetOref ...\n");
-  }
-                                       /* now do the normal SetOref() stuff */
-  return (setter->isOldSpace() ? (this->setOref(index, value)) : (*index = value));
+    if (!allOK)
+    {
+        logMemoryCheck(outfile, " The error occurred in line %u of file %s\n", lineNum, fileName);
+        printf("The dump data has been written to file %s \n",outFileName);
+        fclose(outfile);
+        logic_error("Something went really wrong in SetOref ...\n");
+    }
+    /* now do the normal SetOref() stuff */
+    return(setter->isOldSpace() ? (this->setOref(index, value)) : (*index = value));
 
 }
 
@@ -2054,17 +2139,18 @@ RexxStack *RexxMemory::getFlattenStack(void)
 /* Function:  Allocate and lock the flatten stack capability.                 */
 /******************************************************************************/
 {
-   if (MTXRI(this->flattenMutex)) {
-                                       /* Nope, have to wait for it.        */
-                                       /* release kernel access.            */
+    if (MTXRI(this->flattenMutex))
     {
-        UnsafeBlock releaser;
-        MTXRQ(this->flattenMutex);         /* wait for current flattento end    */
+        /* Nope, have to wait for it.        */
+        /* release kernel access.            */
+        {
+            UnsafeBlock releaser;
+            MTXRQ(this->flattenMutex);         /* wait for current flattento end    */
+        }
     }
-  }
-                                       /* create a temporary stack          */
-  this->flattenStack = new (LiveStackSize, true) RexxStack (LiveStackSize);
-  return this->flattenStack;           /* return flatten Stack              */
+    /* create a temporary stack          */
+    this->flattenStack = new (LiveStackSize, true) RexxStack (LiveStackSize);
+    return this->flattenStack;           /* return flatten Stack              */
 }
 
 void RexxMemory::returnFlattenStack(void)
@@ -2081,17 +2167,17 @@ RexxObject *RexxMemory::dumpImageStats(void)
 /*                                                                            */
 /******************************************************************************/
 {
-  MemoryStats _imageStats;
+    MemoryStats _imageStats;
 
-  /* clear all of the statistics */
-  _imageStats.clear();
-  /* gather a fresh set of stats for all of the segments */
-  newSpaceNormalSegments.gatherStats(&_imageStats, &_imageStats.normalStats);
-  newSpaceLargeSegments.gatherStats(&_imageStats, &_imageStats.largeStats);
+    /* clear all of the statistics */
+    _imageStats.clear();
+    /* gather a fresh set of stats for all of the segments */
+    newSpaceNormalSegments.gatherStats(&_imageStats, &_imageStats.normalStats);
+    newSpaceLargeSegments.gatherStats(&_imageStats, &_imageStats.largeStats);
 
-  /* print out the memory statistics */
-  _imageStats.printMemoryStats();
-  return TheNilObject;
+    /* print out the memory statistics */
+    _imageStats.printMemoryStats();
+    return TheNilObject;
 }
 
 
@@ -2134,31 +2220,32 @@ void RexxMemory::setUpMemoryTables(RexxObjectTable *old2newTable)
 /* Function:  Set up the initial memory table.                                */
 /******************************************************************************/
 {
-  /* fix up the previously allocated live stack to have the correct */
-  /* characteristics...we're almost ready to go on the air. */
-  liveStack->setBehaviour(TheStackBehaviour);
-  liveStack->init(LiveStackSize);
-  /* set up the old 2 new table provided for us */
-  old2new = old2newTable;
-  /* if we have a table (this is NULL if we're not running from a */
-  /* restored image), then add the first entry to the table. */
-  if (old2new != NULL) {
-     /* now add old2new itself to the old2new table! */
-      // NOTE:  We don't use new_integer here because we need a mutable
-      // integer and can't use the one out of the cache.
-     old2new->put(new RexxInteger(1), old2new);
-  }
-  /* first official OrefSet!! */
-  OrefSet(this, markTable, old2new);
-  /* Now get our savestack and savetable */
-  /* allocate savestack with usable and allocated size */
-  /* NOTE:  We do not use OREF_SET here.  We want to control the */
-  /* order in which these two are marked in the live(size_t) method of */
-  /* RexxMemory.  If these are added to the mark table, they'll be */
-  /* processed earlier than we'd like. */
-  saveStack = new (SaveStackAllocSize) RexxSaveStack(SaveStackSize, SaveStackAllocSize);
-  /* from this point on, we push things on to the save stack */
-  saveTable = new_object_table();
+    /* fix up the previously allocated live stack to have the correct */
+    /* characteristics...we're almost ready to go on the air. */
+    liveStack->setBehaviour(TheStackBehaviour);
+    liveStack->init(LiveStackSize);
+    /* set up the old 2 new table provided for us */
+    old2new = old2newTable;
+    /* if we have a table (this is NULL if we're not running from a */
+    /* restored image), then add the first entry to the table. */
+    if (old2new != NULL)
+    {
+        /* now add old2new itself to the old2new table! */
+        // NOTE:  We don't use new_integer here because we need a mutable
+        // integer and can't use the one out of the cache.
+        old2new->put(new RexxInteger(1), old2new);
+    }
+    /* first official OrefSet!! */
+    OrefSet(this, markTable, old2new);
+    /* Now get our savestack and savetable */
+    /* allocate savestack with usable and allocated size */
+    /* NOTE:  We do not use OREF_SET here.  We want to control the */
+    /* order in which these two are marked in the live(size_t) method of */
+    /* RexxMemory.  If these are added to the mark table, they'll be */
+    /* processed earlier than we'd like. */
+    saveStack = new (SaveStackAllocSize) RexxSaveStack(SaveStackSize, SaveStackAllocSize);
+    /* from this point on, we push things on to the save stack */
+    saveTable = new_object_table();
 }
 
 void RexxMemory::createLocks()
@@ -2226,10 +2313,8 @@ void RexxMemory::create()
 /* Function:  Initial memory setup during image build                         */
 /******************************************************************************/
 {
-    RexxClass::createClass();            /* get the CLASS class created       */
-    RexxInteger::createClass();
-    // initializer for native libraries
-    LibraryManager::init();
+    RexxClass::createInstance();         /* get the CLASS class created       */
+    RexxInteger::createInstance();
     /* Now get our savestack and         */
     /*savetable                          */
     memoryObject.setUpMemoryTables(OREF_NULL);
@@ -2252,14 +2337,14 @@ void RexxMemory::restore()
     RESTORE_CLASS(Object, RexxClass);
     RESTORE_CLASS(Class, RexxClass);
                                          /* (CLASS is already restored)       */
-    RESTORE_CLASS(String, RexxStringClass);
+    RESTORE_CLASS(String, RexxClass);
     RESTORE_CLASS(Array, RexxClass);
     RESTORE_CLASS(Directory, RexxClass);
     RESTORE_CLASS(Integer, RexxIntegerClass);
-    RESTORE_CLASS(List, RexxListClass);
+    RESTORE_CLASS(List, RexxClass);
     RESTORE_CLASS(Message, RexxClass);
-    RESTORE_CLASS(Method, RexxMethodClass);
-    RESTORE_CLASS(NumberString, RexxNumberStringClass);
+    RESTORE_CLASS(Method, RexxClass);
+    RESTORE_CLASS(NumberString, RexxClass);
     RESTORE_CLASS(Queue, RexxClass);
     RESTORE_CLASS(Stem, RexxClass);
     RESTORE_CLASS(Supplier, RexxClass);
@@ -2290,8 +2375,8 @@ void RexxMemory::restore()
     // stream classes.  We need to get the external libraries reloaded before
     // that happens.
     Interpreter::init();
-    LibraryManager::reload();
     ActivityManager::init();             /* do activity restores              */
+    PackageManager::restore();           // finish restoration of the packages.
     memoryObject.enableOrefChecks();     /* enable setCheckOrefs...           */
 }
 

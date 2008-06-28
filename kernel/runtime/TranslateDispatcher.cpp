@@ -38,7 +38,7 @@
 
 #include "RexxCore.h"
 #include "TranslateDispatcher.hpp"
-#include "MethodClass.hpp"
+#include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
 
 
@@ -50,9 +50,9 @@ void TranslateDispatcher::run()
 {
     ProtectedSet savedObjects;
 
-    RexxString *name = OREF_NULLSTRING;     // name of the invoked program
-    RexxMethod *method;
+    RoutineClass *program;
 
+    RexxString *name = OREF_NULLSTRING;     // name of the invoked program
     if (programName != NULL)       /* have an actual name?              */
     {
         /* get string version of the name    */
@@ -64,7 +64,7 @@ void TranslateDispatcher::run()
     if (instore == NULL)                     /* no instore request?               */
     {
         /* go resolve the name               */
-        RexxString *fullname = SysResolveProgramName(name, OREF_NULL);
+        RexxString *fullname = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
         if (fullname == OREF_NULL)         /* not found?                        */
         {
             /* got an error here                 */
@@ -72,25 +72,24 @@ void TranslateDispatcher::run()
         }
         savedObjects.add(fullname);
         /* go translate the image            */
-        method = TheMethodClass->newFile(fullname);
-        savedObjects.add(method);
-        SysSaveProgram(fullname, method);/* go save this method               */
+        program = new RoutineClass(fullname);
+        savedObjects.add(program);
     }
     else                                 /* have an instore program           */
     {
         /* go handle instore parms           */
-        method = RexxMethod::processInstore(instore, name);
-        if (method == OREF_NULL)           /* couldn't get it?                  */
+        program = RoutineClass::processInstore(instore, name);
+        if (program == OREF_NULL)           /* couldn't get it?                  */
         {
             /* got an error here                 */
             reportException(Error_Program_unreadable_name, name);
         }
-        savedObjects.add(method);
+        savedObjects.add(program);
     }
     if (outputName != NULL)              /* want to save this to a file?      */
     {
-                                         /* go save this method               */
-        SysSaveTranslatedProgram(outputName, method);
+        /* go save this method               */
+        program->save(outputName);
     }
 }
 

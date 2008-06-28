@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -41,105 +41,246 @@
 /* Data areas for parse.c                                                     */
 /*                                                                            */
 /******************************************************************************/
-#ifndef parse
-#define parse
+#ifndef StreamCommandParser_Included
+#define StreamCommandParser_Included
                                                 /* return code for gettoken at the end of input string */
 #define no_token  1
-                                                /* return code for gettoken malloc call failure */
-#define no_storage 2
 
                     /************************************************************************/
                     /* Bit values to be used in the actions field of the actiontablestruct  */
                     /************************************************************************/
-
-                                                /* BitOr - used when item is to be or'd with output  */
-#define BitOr       0x01
-                                                /* BitAnd - when item is to be and'd with output     */
-#define BitAnd      0x02
-                                                /* MF - when checking output for not zero            */
-#define MF          0x04
-                                                /* ME - when checking output using item as a mask    */
-                                                /*      to specify what should not be on in output   */
-#define ME          0x08
-                                                /* MI - when checking output using item as a mask    */
-                                                /*      to specify what should be on in output       */
-#define MI          0x10
-                                                /* CopyItem - when copying item to output            */
-#define CopyItem    0x20
-                                                /* ConcatItem - when concatenating item to output    */
-#define ConcatItem  0x40
-                                                /* CallItem - when a call to a specialized function  */
-                                                /*            needs to be done. The function pointer */
-                                                /*            goes in item                           */
-#define CallItem    0x80
+typedef enum
+{
+    NoAction,                 // table terminator element
+    BitOr,                    // or a value into an integer
+    BitAnd,                   // and a value into an integer
+    MF,                       // Mutual exclusion field
+    ME,                       // Mutual exclusion flag
+    MI,                       // Mutual inclusion flag
+    MEB,                      // Mutual exclusion bool
+    MIB,                      // Mutual inclusion bool
+    SetBool,                  // set a boolean item
+    SetItem,                  // set an int item to a value
+    CallItem,                 // additional processing required
+} ActionType;
 
                     /************************************************************************/
                     /* Single token structure                                               */
                     /************************************************************************/
 
-typedef struct  tokenstruct{                      /* single token structure */
-                                                  /* pointer to the single token parsed from input */
-    const char *string;
-                                                  /* length of the single token */
-    size_t length;
-                                                  /* offset into input for the single token */
-    size_t offset;
-   } TOKENSTRUCT;
+// single parsing token
+class StreamToken
+{
+public:
+    StreamToken(const char *data)
+    {
+        sourceData = data;
+        string = NULL;
+        length = 0;
+        offset = 0;
+    }
 
-                    /************************************************************************/
-                    /* parse user parameters - this is for any user parms passed            */
-                    /************************************************************************/
-typedef void *userparms;
+    bool nextToken();
+    void previousToken();
+    inline void skipBlanks()
+    {
+        while(sourceData[offset] == ' ')
+        {
+            offset++;
+        }
+    }
 
+
+    inline bool equals(char *token)
+    {
+        return memicmp(token, string, length) == 0;
+    }
+
+    inline bool atEnd() { return sourceData[offset] == '\0'; }
+
+    inline bool toNumber(int64_t &num)
+    {
+        int64_t offset = 0;
+
+        /* convert string into long for later*/
+        for (size_t i = 0; i < length; i++)
+        {
+            char ch = sourceData[i];
+
+            if (!isdigit(ch))
+            {
+                return false;
+            }
+
+            offset = (offset * 10) + (ch - '0');
+        }
+        num = offset;
+        return true;
+    }
+
+
+    inline bool toNumber(int &num)
+    {
+        int offset = 0;
+
+        /* convert string into long for later*/
+        for (size_t i = 0; i < length; i++)
+        {
+            char ch = sourceData[i];
+
+            if (!isdigit(ch))
+            {
+                return false;
+            }
+
+            offset = (offset * 10) + (ch - '0');
+        }
+        num = offset;
+        return true;
+    }
+
+    inline size_t getLength() { return length; }
+
+protected:
+
+    const char *sourceData;// the source parsing data
+    const char *string;    // token data
+    size_t length;         // length of the token
+    size_t offset;         // offset into the input string for this token
+};
+
+
+class ParseAction;
                     /***********************************************************************/
                     /* token table - holds parameter token and pointer to the action table */
                     /*                and the address of an unknown token function         */
                     /***********************************************************************/
 
-typedef struct tokentablestruct {
-  const char *token;
-  size_t minlength;           /* minimum length for token to be a valid match with the input token */
-  void *ATSP;                 /* this is a pointer to void to get past c's limitations */
-                              /* of not being able to specify control blocks that point to each other */
-                              /* otherwise it would be typecast to ATS */
+class TokenDefinition
+{
+public:
+    inline TokenDefinition(char *t, size_t l, ParseAction *a)
+    {
+        token = t;
+        minlength = l;
+        actions = a;
+        actionRoutine = NULL;
+    }
 
-                                             /* type cast for calling unknown token routine */
-  int (*utp)(struct tokentablestruct *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms);
- } TTS;
+    inline TokenDefinition(int (*a)(TokenDefinition *, StreamToken &, void *))
+    {
+        token = NULL;
+        minlength = 0;
+        actions = NULL;
+        actionRoutine = a;
+    }
+
+    bool isValid() { return token != NULL; }
+    int callUnknown(StreamToken &tokenizer, void *parms)
+    {
+        return (*actionRoutine)(this, tokenizer, parms);
+    }
+  char *token;                // token value
+  size_t minlength;           // minimum length for token to be a valid match with the input token
+  ParseAction *actions;       // token action definition
+
+  // the action routine for processing this token.
+  int (*actionRoutine)(TokenDefinition *, StreamToken &, void *);
+};
 
                     /************************************************************************/
                     /* action table - information of what to do with what and to who        */
                     /************************************************************************/
 
-typedef struct actiontablestruct {
-                                                /* actions as defined by action bit defines    */
-    short actions;
-                                                /* length of the item that will be used against output */
-    size_t itemlength;
-                                                /* area to modify as specified by action */
-    void  *output;
-                                                /* errorcode to return when actions are in error */
-    int   errorcode;
-                                                /* area to be used as specified by action */
-    void  *item;
-                                                /* type cast for a call action-call */
-    int (*afp)(TTS *ttsp, const char *TokenString, TOKENSTRUCT *tsp, void *userparms);
- }  ATS;
+class ParseAction
+{
+public:
+    inline ParseAction()
+    {
+        action = NoAction;
+        int_output = NULL;
+        int_value = 0;
+        bool_output = NULL;
+        bool_value = false;
+        afp = NULL;
+        actionParm = NULL;
+    }
+
+    inline ParseAction(ActionType a, int &target, int source)
+    {
+        action = a;
+        int_output = &target;
+        int_value = source;
+        bool_output = NULL;
+        bool_value = false;
+        afp = NULL;
+        actionParm = NULL;
+    }
+
+    inline ParseAction(ActionType a, int &target)
+    {
+        action = a;
+        int_output = &target;
+        int_value = 0;
+        bool_output = NULL;
+        bool_value = false;
+        afp = NULL;
+        actionParm = NULL;
+    }
+
+    inline ParseAction(ActionType a, bool &target, bool source)
+    {
+        action = a;
+        bool_output = &target;
+        bool_value = source;
+        int_output = NULL;
+        int_value = false;
+        afp = NULL;
+        actionParm = NULL;
+    }
+
+    inline ParseAction(ActionType a, bool &target)
+    {
+        action = a;
+        bool_output = &target;
+        bool_value = false;
+        int_value = 0;
+        int_output = NULL;
+        afp = NULL;
+        actionParm = NULL;
+    }
+
+    inline ParseAction(ActionType a, int (*act)(TokenDefinition *, StreamToken &, void *), void *parm)
+    {
+        action = a;
+        int_output = NULL;
+        int_value = 0;
+        bool_output = NULL;
+        bool_value = false;
+        afp = act;
+        actionParm = parm;
+    }
+
+    inline bool isValid() { return action != NoAction; }
+    int applyAction(TokenDefinition *def, StreamToken &token, void *userparms);
+
+protected:
+
+    ActionType action;          // the actions to process (defined by bit flags)
+    size_t itemlength;          // length of the output item
+    int   *int_output;          // address of the filled in item
+    bool  *bool_output;         // address of the filled in item
+    int   int_value;            // value used for any int manipulations
+    bool  bool_value;           // integer valued output
+                                // type cast for a call action-call
+    int (*afp)(TokenDefinition *, StreamToken &, void *);
+    void *actionParm;           // opaque value passed to action
+};
 
                     /************************************************************************/
                     /* parse routine prototype                                              */
                     /************************************************************************/
-int parser(TTS *ttsp, const char *TokenString, void *userparms);
-
-                    /************************************************************************/
-                    /* gettoken routine prototype                                           */
-                    /************************************************************************/
-int gettoken(const char *TokenString, TOKENSTRUCT *tsp);
-
-                    /************************************************************************/
-                    /* ungettoken routine prototype                                         */
-                    /************************************************************************/
-void ungettoken(const char *TokenString, TOKENSTRUCT *tsp);
+int parser(TokenDefinition *ttsp, const char *TokenString, void *userparms);
 
 
 #endif

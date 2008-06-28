@@ -50,6 +50,14 @@ SOURCEF= $(OR_OUTDIR)\oovutil.obj $(OR_OUTDIR)\oovdata.obj $(OR_OUTDIR)\oovtext.
 .c{$(OR_OUTDIR)}.obj:
     $(C) $(OPTIONS)  /DINCL_32  -c $(@B).c /DCREATEDLL /Fo$(OR_OUTDIR)\$(@B).obj
 
+#
+# *** .cpp -> .obj rules
+#
+{$(OR_ORYXOODSRC)}.cpp{$(OR_OUTDIR)}.obj:
+    @ECHO .
+    @ECHO Compiling $(@B).cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /DCREATEDLL /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OR_ORYXOODSRC)\$(@B).cpp
+
 
 {$(OR_ORYXOODSRC)}.c{$(OR_OUTDIR)}.obj:
     @ECHO .

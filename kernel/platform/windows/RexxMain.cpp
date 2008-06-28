@@ -61,7 +61,6 @@
 #include "DirectoryClass.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "IntegerClass.hpp"
-#include "RexxNativeAPI.h"                      /* REXX interface/native method code */
 #include "APIServiceTables.h"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "RexxAPIManager.h"
@@ -69,12 +68,13 @@
 #include "ProtectedObject.hpp"
 #include "PointerClass.hpp"
 #include "InterpreterInstance.hpp"
+#include "SupplierClass.hpp"
 
 #include <fcntl.h>
 #include <io.h>
 
 #ifdef TIMESLICE                       /* System Yielding function prototype*/
-APIRET REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
+RexxReturnCode REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
 #endif /*timeslice*/
 
 
@@ -84,41 +84,6 @@ extern bool UseMessageLoop;  /* speciality for VAC++ */
 bool HandleException = true;           /* Global switch for Exception Handling */
 
 extern "C" {
-
-// this function can be used to retrieve the value of "top level" variables
-// on exit (RXTER). for each variable name that is found a call to the passed-in
-// function is made [a pair ((char*) varname,(RexxObject*) varvalue)].
-// please note that this does not work for multi-threaded environments!
-void REXXENTRY WinGetVariables(void (REXXENTRY *f)(const char *, REXXOBJECT))
-{
-    NativeContextBlock context;
-
-    RexxArray *result = context.self->getRexxContext()->getAllLocalVariables();
-
-    for (size_t i=result->size(); i>0; i--)
-    {
-        RexxVariable *variable = (RexxVariable *)result->get(i);
-        f(variable->getName()->getStringData(), (REXXOBJECT)variable->getResolvedValue());
-    }
-}
-
-void REXXENTRY WinEnterKernel()
-{
-    // Get an instance.  This also gives the root activity of the instance
-    // the kernel lock.
-    InterpreterInstance *instance = Interpreter::createInterpreterInstance();
-}
-
-void REXXENTRY WinLeaveKernel()
-{
-    RexxActivity *activity = ActivityManager::currentActivity;
-    InterpreterInstance *instance = activity->getInstance();
-
-    activity->exitCurrentThread();
-    // terminate the instance
-    instance->terminate();
-}
-
 
 BOOL REXXENTRY RexxSetProcessMessages(BOOL onoff)
 {
@@ -145,7 +110,7 @@ BOOL REXXENTRY RexxSetProcessMessages(BOOL onoff)
 /*         a system yield via activity_relinquish.                            */
 /*                                                                            */
 /******************************************************************************/
-APIRET REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid)
+RexxReturnCode REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid)
 {
   if (RexxQuery()) {                        /* Are we up?                     */
     if (ActivityManager::yieldActivity(threadid))    /* Set yield condition?           */

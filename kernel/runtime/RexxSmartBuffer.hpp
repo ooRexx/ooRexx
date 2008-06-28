@@ -59,10 +59,12 @@
   size_t copyData(void *, size_t);
 
   inline size_t getCurrent() {return this->current;}
+  inline size_t getLength() { return this->current; }
   inline RexxBuffer *getBuffer() {return this->buffer;}
   inline void setBuffer(RexxBuffer *b) {this->buffer = b;}
   size_t space();
 
+ protected:
   size_t current;                     /* current offset for copies         */
   RexxBuffer *buffer;                 /* current buffer object             */
  };

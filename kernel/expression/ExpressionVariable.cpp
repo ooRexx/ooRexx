@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                  ExpressionVariable.c      */
+/* REXX Translator                                  ExpressionVariable.cpp    */
 /*                                                                            */
 /* Primitive Translator Expression Parsing Variable Reference Class           */
 /*                                                                            */
@@ -149,6 +149,39 @@ RexxObject  *RexxParseVariable::getValue(
   if (value == OREF_NULL)              /* no value yet?                     */
     value = this->variableName;        /* just use the name                 */
   return value;                        /* return the located variable       */
+}
+
+/**
+ * Retrieve an object variable value, returning OREF_NULL if
+ * the variable does not have a value.
+ *
+ * @param dictionary The source variable dictionary.
+ *
+ * @return The variable value, or OREF_NULL if the variable is not
+ *         assigned.
+ */
+RexxObject  *RexxParseVariable::getRealValue(RexxVariableDictionary *dictionary)
+{
+                                       /* look up the name                  */
+  RexxVariable *variable = dictionary->getVariable(variableName);
+  return variable->getVariableValue();/* get the value                     */
+}
+
+
+/**
+ * Get the value of a variable without applying a default value
+ * to it.  Used in the apis so the caller can more easily
+ * detect an uninitialized variable.
+ *
+ * @param context The current context.
+ *
+ * @return The value of the variable.  Returns OREF_NULL if the variable
+ *         has not been assigned a value.
+ */
+RexxObject  *RexxParseVariable::getRealValue(RexxActivation *context)
+{
+  RexxVariable *variable = context->getLocalVariable(variableName, index);
+  return variable->getVariableValue();/* get the value                     */
 }
 
 void RexxParseVariable::set(

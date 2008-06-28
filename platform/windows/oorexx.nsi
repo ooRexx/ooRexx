@@ -149,13 +149,14 @@ Section "${LONGNAME} Core (required)" SecMain
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx README.lnk" "$INSTDIR\doc\readme.pdf" "" "$INSTDIR\doc\readme.pdf" 0
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx CHANGES.lnk" "$INSTDIR\doc\CHANGES.txt" "" "$INSTDIR\doc\CHANGES.txt" 0
 
+;;;;  Comment out orxscrpt stuff temporarily
   ; Set output path to the installation directory just in case
-  SetOutPath $INSTDIR
+;;  SetOutPath $INSTDIR
   ; orxscrpt.dll needs to be registered
-  !insertmacro InstallLib REGDLL NOTSHARED REBOOT_PROTECTED "${BINDIR}\orxscrpt.dll" "$INSTDIR\orxscrpt.dll" "$INSTDIR"
+;;  !insertmacro InstallLib REGDLL NOTSHARED REBOOT_PROTECTED "${BINDIR}\orxscrpt.dll" "$INSTDIR\orxscrpt.dll" "$INSTDIR"
   ;
   ; Stop rxapi.exe (again!) the registration process starts rxapi.exe GRRRR!!!
-  KillProcDLL::KillProc "rxapi.exe"
+;;  KillProcDLL::KillProc "rxapi.exe"
 
   ; add the Install directory to the PATH env variable; either system wide or user-specific
   Push $INSTDIR
@@ -617,8 +618,9 @@ FunctionEnd
 
 Section "Uninstall"
 
+;;;; temporarily comment out orxscrpt stuff while it is disabled in the build.
   ; orxscrpt.dll needs to be degistered
-  !insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_PROTECTED "$INSTDIR\orxscrpt.dll"
+;;  !insertmacro UnInstallLib REGDLL NOTSHARED REBOOT_PROTECTED "$INSTDIR\orxscrpt.dll"
   ;
   ; Stop rxapi.exe (again!) the de-registration process starts rxapi.exe GRRRR!!!
   KillProcDLL::KillProc "rxapi.exe"

@@ -81,11 +81,10 @@ do j over Arrax
     do jj over ArrClasses[i]
         NewFile~lineout(".Environment~put(."jj",'"jj"')")
     end
-    NewFile~lineout('.STATIC_REQUIRES~put(time("C"), REQ_FILE)')
     if i = 1 then call ProcessUtils
     else NewFile~lineout('::requires "'outname[i-1]'.CLS"')
     do file over j
-       say inpdir || file
+       say (inpdir || file)
        ReadFile = .stream~new(inpdir || File)
        ReadFile~open("READ")
        do while ReadFile~lines() > 0
@@ -120,12 +119,8 @@ ProcessUtils:
         say "Couldn't process" inpdir || UtilName
         exit
     end
-    NewFile~Lineout("do PUB_RTN over .METHODS")
-    NewFile~Lineout("   .PUBLIC_ROUTINES~put(.METHODS[PUB_RTN], PUB_RTN)");
-    NewFile~Lineout("end")
     do while UtilFile~lines > 0
         s = UtilFile~Linein
-        s = s~changestr("::routine", "::METHOD")~changestr("::ROUTINE", "::METHOD")~changestr("public", "")~changestr("PUBLIC", "")
         NewFile~lineout(s)
     end
     return

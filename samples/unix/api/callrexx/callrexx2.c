@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     char     *pszTemp;
     PFNREXXSTART FuncAddress;
     void    *pLibHandle = NULL;             /* Library handle             */
-    APIRET   rc = 0;                        /* return code from Rexx      */
+    RexxReturnCode   rc = 0;                        /* return code from Rexx      */
     short    rexxrc = 0;                    /* return code from function  */
     const char *pszLibraryName = "librexx.so"; /* define the library name    */
 
@@ -493,6 +493,6 @@ int main(int argc, char **argv)
     scanf("%c", &val);
 
     system("clear");
-    return 0; 
+    return 0;
 }
 

@@ -58,12 +58,24 @@
  */
 int ExitHandler::call(RexxActivity *activity, RexxActivation *activation, int function, int subfunction, void *parms)
 {
-    ExitHandlerDispatcher dispatcher(entryPoint, function, subfunction, parms);
+    if (type == REGISTERED)
+    {
+        ExitHandlerDispatcher dispatcher(entryPoint, function, subfunction, parms);
 
-    // run this and give back the return code
-    activity->run(dispatcher);
-    return dispatcher.rc;
+        // run this and give back the return code
+        activity->run(dispatcher);
+        return dispatcher.rc;
+    }
+    else
+    {
+        ContextExitHandlerDispatcher dispatcher(entryPoint, function, subfunction, parms);
+
+        // run this and give back the return code
+        activity->run(dispatcher);
+        return dispatcher.rc;
+    }
 }
+
 
 /**
  * Resolve a classic-style exit handler to the actual target
@@ -74,6 +86,20 @@ int ExitHandler::call(RexxActivity *activity, RexxActivation *activation, int fu
 void ExitHandler::resolve(const char *name)
 {
     RexxResolveExit(name, &entryPoint);
+    type = REGISTERED_NAME;
+}
+
+
+/**
+ * Resolve a classic-style exit handler to the actual target
+ * entry point address and invocation style.
+ *
+ * @param name   The registered exit name.
+ */
+void ExitHandler::resolve(RexxContextExitHandler *handler)
+{
+    entryPoint = (REXXPFN)handler;
+    type = (ExitType)DIRECT;
 }
 
 
@@ -85,4 +111,21 @@ void ExitHandlerDispatcher::run()
 {
     RexxExitHandler *exit_address = (RexxExitHandler *)entryPoint;
     rc = (int)(*exit_address)(major, minor, (PEXIT)parms);
+}
+
+
+
+/**
+ * Process a callout to a system exit function.
+ */
+void ContextExitHandlerDispatcher::run()
+{
+    RexxContextExitHandler *exit_address = (RexxContextExitHandler *)entryPoint;
+
+    ExitContext context;
+
+    // build a context pointer to pass out
+    activity->createExitContext(context, activation);
+
+    rc = (int)(*exit_address)(&context.threadContext, major, minor, (PEXIT)parms);
 }

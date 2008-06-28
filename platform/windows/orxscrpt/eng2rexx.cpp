@@ -73,479 +73,309 @@ struct CONFIRMSAFETY
 #endif
 static const GUID GUID_CUSTOM_CONFIRMOBJECTSAFETY = { 0x10200490, 0xfa38, 0x11d0, { 0xac, 0xe, 0x0, 0xa0, 0xc9, 0xf, 0xff, 0xc0 } };
 
-OrxScript* findEngineForThread(DWORD);
-
-OrxScript *CurrentEngine;
-
-REXXOBJECT __stdcall DispParms2RexxArray(void *arguments)
-{
-  REXXOBJECT result = NULL;
-  REXXOBJECT temp;
-  DISPPARAMS *dp = (DISPPARAMS*) arguments;
-  int j;
-
-  //   Thanks to the wonderful way that Windows passes variants,
-  // this routine must reverse the args....
-  if (dp)
-  {
-    j = dp->cArgs;
-    result = ooRexxArray(j);
-    for (int i=0; i<j; i++)
-    {
-      temp = Variant2Rexx(&dp->rgvarg[j-i-1]);
-      array_put(result,temp,i+1);
-    }
-
-  }
-  // no arguments? set in default empty string
-  else
-  {
-    result = ooRexxArray(1);
-    array_put(result, ooRexxString(""),1);
-  }
-
-  return result;
-}
-
-/* Exit handler to find out the names of any functions in currently parsed script */
-LONG REXXENTRY RexxCatchExit(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
-{
-   char **names;
-   size_t iCount;
-   REXXOBJECT rxString = NULL;
-   LinkedList *myList = NULL;
-
-   // get LISTOFNAMES, containing a pointer to the list that will
-   // store all names we find out here...
-   rxString = REXX_GETVAR("LISTOFNAMES");
-   if ( rxString )
-   {
-     sscanf(string_data(rxString),"%p",&myList);
-   }
-
-   if (myList)
-   {
-     /* obtain all PUBLIC routines from the current activation */
-     REXX_GETFUNCTIONNAMES(&names,&iCount);
-     // if there were any, add to the list
-     if (iCount)
-     {
-       while (iCount)
-       {
-         iCount--;
-         myList->AddItem(names[iCount],LinkedList::Beginning,NULL);
-         GlobalFree(names[iCount]);
-       }
-       GlobalFree(names);
-     }
-   }
-
-   // always return with NOT_HANDLED...
-   return RXEXIT_NOT_HANDLED;
-}
-
-void REXXENTRY fillVariables(const char *name, REXXOBJECT value)
-{
-  //  Why can't we use this here?
-  // OrxScript  *engine = findEngineForThread(GetCurrentThreadId());
-  CurrentEngine->insertVariable(name, value);
-}
 
 /* Exit handler to find out the values of variables of "immediate code" */
-LONG REXXENTRY RexxRetrieveVariables(LONG ExitNumber, LONG Subfunction, PEXIT parmblock)
+int RexxEntry RexxRetrieveVariables(RexxExitContext *, int ExitNumber, int Subfunction, PEXIT parmblock)
 {
-  OrxScript     *engine    = findEngineForThread(GetCurrentThreadId());
+    OrxScript *engine = ScriptProcessEngine::findEngineForThread();
 
-  if (engine)
-  {
-    // we need to pass a function, a member of an object doesn't work...
-    // therefore a global variable that is holding the pointer to the
-    // current engine. beware: this doesn't work in multi-threads...
-    // >>> ??? <<< Can we put a mutex check on this?
-    CurrentEngine = engine;
-    WinGetVariables(fillVariables);
-  }
+    // if we're capturing variable values on exit, grab the entire set now
+    if (engine && enginethis->enableVariableCapture)
+    {
+        // request all of the context variables
+        RexxSupplierObject supplier = context->GetAllContextVariables();
 
-  // always return with NOT_HANDLED...
-  return RXEXIT_NOT_HANDLED;
+        // now iterate through the directory, saving the list of routines (and the names).
+        while (context->SupplierAvailable(supplier))
+        {
+            RexxStringObject name = (RexxStringObject)context->SupplierIndex(supplier);
+            RexxObjectPtr value = context->SupplierValue(supplier);
+            context->RequestGlobalReference(value);
+            CurrentEngine->insertVariable(context->StringData(name), value);
+        }
+    }
+
+    // always return with NOT_HANDLED...
+    return RXEXIT_NOT_HANDLED;
 }
+
 
 /* Exit handler for external function calls */
-LONG REXXENTRY RexxCatchExternalFunc(LONG ExitNumber, LONG Subfunction, PEXIT pblock)
+int RexxEntry RexxCatchExternalFunc(RexxExitContext *context, int ExitNumber, int Subfunction, PEXIT parmblock)
 {
-  RXEXFCAL_PARM *parmblock = (RXEXFCAL_PARM*) pblock;
-  REXXOBJECT     result    = ooRexxNil;
-  const char    *fncname   = parmblock->rxfnc_name.strptr;
-  OrxScript     *engine    = findEngineForThread(GetCurrentThreadId());
-  PRCB           pImage    = NULL;
-  RXSTRING      *pCode     = NULL;
-  LONG           state = RXEXIT_NOT_HANDLED;
-  bool           function = !parmblock->rxfnc_flags.rxffsub;  // called as function?
+    RXEXFCAL_PARM *parmblock = (RXEXFCAL_PARM*) pblock;
+    RexxObjectPtr     result    = ooRexxNil;
+    const char    *fncname   = parmblock->rxfnc_name.strptr;
+    OrxScript *engine = ScriptProcessEngine::findEngineForThread();
+    RXSTRING      *pCode     = NULL;
+    LONG           state = RXEXIT_NOT_HANDLED;
+    bool           function = !parmblock->rxfnc_flags.rxffsub;  // called as function?
 
-  HRESULT        hResult;
-  DISPID         dispID;
-  DWORD          flags;
-  IDispatch     *pDispatch = NULL;
-  ITypeInfo     *pTypeInfo = NULL;
-  DISPPARAMS     dp;
-  VARIANT        sResult;
-  VARIANT       *pResult;
-  EXCEPINFO      sExc;
-  unsigned int   uArgErr;
-  bool           test = false;
+    HRESULT        hResult;
+    DISPID         dispID;
+    DWORD          flags;
+    IDispatch     *pDispatch = NULL;
+    ITypeInfo     *pTypeInfo = NULL;
+    DISPPARAMS     dp;
+    VARIANT        sResult;
+    VARIANT       *pResult;
+    EXCEPINFO      sExc;
+    unsigned int   uArgErr;
+    bool           test = false;
+    FILE *logfile = NULL;
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  static int ecount = 0;
-  char fname[64];
-  FILE *logfile;
+    // have an engine to work with?
+    if (engine)
+    {
+        // get the logfile for debugging purposes
+        logfile = engine->getLogFile();
 
-  sprintf(fname,"c:\\temp\\extfunc%d.log",++ecount);
-  logfile = fopen(fname,"w");
-#endif
-
-  // have an engine to work with?
-  if (engine) {
-#if defined(DEBUGZ)
-    FPRINTF(logfile,"using engine %s, looking for %s\n",engine->getEngineName(),fncname);
-#endif
-    // is the function we're looking for a REXX method that was defined for this
-    // script engine earlier?
-    pImage = (RCB*) engine->findRexxFunction(fncname);
-    if (pImage) {
-      // the function that needs to be called is a REXX method NOT defined
-      // in the current REXX script scope
-
-      // argument array for runMethod
-      LPVOID    arguments[8];
-      char      invString[256];
-      char      buffer[8];
-      RexxConditionData cd;
-
-      // build argument array of REXX objects...
-      REXXOBJECT args = ooRexxArray(1+parmblock->rxfnc_argc);
-      REXXOBJECT temp;
-
-      // ...and invocation string
-      if (function)
-      {
-          sprintf(invString,"return %s(",fncname);
-      }
-      else
-      {
-          sprintf(invString,"call %s ",fncname);
-      }
-      for (size_t i=0;i<parmblock->rxfnc_argc;i++)
-      {
-        temp = parmblock->rxfnc_argv[i];
-        array_put(args,temp,i+2); // does this change current activity?? seems to be NULL when we run into okarray.c
-        sprintf(buffer,"arg(%d)",i+2); // +2,because 1st argument is "CALL %s..." string
-        strcat(invString,buffer);
-        // not the last argument?
-        if (i < parmblock->rxfnc_argc-1)
+        FPRINTF(logfile,"using engine %s, looking for %s\n",engine->getEngineName(),fncname);
+        // is the function we're looking for a REXX method that was defined for this
+        // script engine earlier?
+        RCB *pImage = engine->findRexxFunction(fncname);
+        if (pImage)
         {
-            strcat(invString,",");
-        }
-      }
-      if (function)
-      {
-          strcat(invString,")");
-      }
-      else
-      {
-          strcat(invString,"; exit");
-      }
+            // the function that needs to be called is a REXX method NOT defined
+            // in the current REXX script scope
 
-#if defined(DEBUGZ)
-      FPRINTF2(logfile,"invoke string: %s\n",invString);
-#endif
-      // invocation statement
-      array_put(args, ooRexxString(invString),1);
+            // argument array for runMethod
+            LPVOID    arguments[8];
+            char      invString[256];
+            char      buffer[8];
+            RexxConditionData cd;
 
-      arguments[0] = (void*) engine; // engine that is running this code
-      arguments[1] = (void*) pImage; // method to run
-      arguments[2] = NULL;           // no COM arguments
-      arguments[3] = (void*) args;   // we have REXX arguments
-      arguments[4] = (void*) &result;// result object
-      arguments[5] = (void*) &cd;    // condition information
-      arguments[6] = (void*) false;  // don't end this thread
-      arguments[7] = (void*) false;  // don't care about variables at the end
-      runMethod(arguments);
-      state = RXEXIT_HANDLED;
-      parmblock->rxfnc_retc = (REXXOBJECT)result;
-#if defined(DEBUGZ)
-      FPRINTF2(logfile,"invocation result %p (rc = %d)\n",result,cd.rc);
-#endif
-      // if something went wrong, indicate an error to REXX
-      if (cd.rc != 0) {
-        // indicate error in parmblock...
-        parmblock->rxfnc_flags.rxfferr = 1;
-        // we don't need to notify the engine of the error
-        // here, because this was already done by the part
-        // of the code that invoked the REXX codeblock
-      }
-    } else {
-      // ask the named items if one of them knows this function
-      hResult = engine->getNamedItems()->WhoKnows(parmblock->rxfnc_name.strptr, engine->Lang,&dispID,&flags,&pDispatch,&pTypeInfo);
-      if (hResult == S_OK) {
-        // found something...
-        // build DISPPARAMS structure for the invoke
-        dp.cNamedArgs = 0;
-        dp.cArgs = (UINT)parmblock->rxfnc_argc;
-        VariantInit(&sResult);
-        pResult = &sResult;
+            // build argument array of REXX objects...
+            RexxArrayObjectPtr args = context->NewArray(parmblock->rxfnc_argc);
 
-        // do we have to build an argument array?
-        if (parmblock->rxfnc_argc)
-        {
-          REXXOBJECT  temp;
-          VARIANTARG *pVarArgs = (VARIANTARG*) GlobalAlloc(GMEM_FIXED,(sizeof(VARIANTARG) * dp.cArgs));
+            for (size_t i=0; i < parmblock->rxfnc_argc; i++)
+            {
+                RexxObjectPtr temp = parmblock->rxfnc_argv[i];
+                context->ArrayPut(args, temp, i + 1);
+            }
 
-          dp.rgvarg = pVarArgs;
-          for (UINT i = 0; i < dp.cArgs; i++)
-          {
-            // get the REXX object
-            temp = parmblock->rxfnc_argv[i];
-
-            // arguments must be filled in from the end of the array...
-            VariantInit(&(pVarArgs[dp.cArgs - i - 1]));
-            Rexx2Variant(temp, &(pVarArgs[dp.cArgs - i - 1]), VT_EMPTY /*(try your best)*/, 0 /*dummy argument?!*/);
-          }
-        }
-        else
-          dp.rgvarg = NULL; // no argument array needed
-
-        if (dispID != -1)
-        {
-          hResult = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dp, pResult, &sExc, &uArgErr);
+            runMethod(context->threadContext, engine, pImage, args, result, cd);
+            state = RXEXIT_HANDLED;
+            parmblock->rxfnc_retc = (RexxObjectPtr)result;
+            FPRINTF2(logfile,"invocation result %p (rc = %d)\n",result,cd.rc);
+            // if something went wrong, indicate an error to REXX
+            if (cd.rc != 0)
+            {
+                // indicate error in parmblock...
+                parmblock->rxfnc_flags.rxfferr = 1;
+                // we don't need to notify the engine of the error
+                // here, because this was already done by the part
+                // of the code that invoked the REXX codeblock
+            }
         }
         else
         {
-          // call the default method of a named item object
-          unsigned short wFlags = DISPATCH_METHOD;
-          DISPID         PropPutDispId = DISPID_PROPERTYPUT;
+            // ask the named items if one of them knows this function
+            hResult = engine->getNamedItems()->WhoKnows(parmblock->rxfnc_name.strptr, engine->Lang,&dispID,&flags,&pDispatch,&pTypeInfo);
+            if (hResult == S_OK)
+            {
+                // found something...
+                // build DISPPARAMS structure for the invoke
+                dp.cNamedArgs = 0;
+                dp.cArgs = (UINT)parmblock->rxfnc_argc;
+                VariantInit(&sResult);
+                pResult = &sResult;
 
-          pTypeInfo = NULL;
-          hResult = pDispatch->GetTypeInfo(0, LOCALE_USER_DEFAULT, &pTypeInfo);
+                // do we have to build an argument array?
+                if (parmblock->rxfnc_argc > 0)
+                {
+                    VARIANTARG *pVarArgs = (VARIANTARG*) GlobalAlloc(GMEM_FIXED,(sizeof(VARIANTARG) * dp.cArgs));
 
-          if (SUCCEEDED(hResult)) {
-            TYPEATTR *pTypeAttr = NULL;
-            FUNCDESC *pFuncDesc = NULL;
-            bool      found = false;
+                    dp.rgvarg = pVarArgs;
+                    for (UINT i = 0; i < dp.cArgs; i++)
+                    {
+                        // get the REXX object
+                        RexxObjectPtr =temp = parmblock->rxfnc_argv[i];
 
-            hResult = pTypeInfo->GetTypeAttr(&pTypeAttr);
-            if (SUCCEEDED(hResult)) {
-              for (int l = 0; (l < pTypeAttr->cFuncs) && !found; l++) {
-                hResult = pTypeInfo->GetFuncDesc(l, &pFuncDesc);
-                if (SUCCEEDED(hResult)) {
-                  if ((pFuncDesc->cParams + pFuncDesc->cParamsOpt >= parmblock->rxfnc_argc) &&
-                    pFuncDesc->memid == 0) {
-                    wFlags = pFuncDesc->invkind;
-                    found = true;
-                  }
-                  pTypeInfo->ReleaseFuncDesc(pFuncDesc);
+                        // arguments must be filled in from the end of the array...
+                        VariantInit(&(pVarArgs[dp.cArgs - i - 1]));
+                        Rexx2Variant(context->threadContext, temp, &(pVarArgs[dp.cArgs - i - 1]), VT_EMPTY /*(try your best)*/, 0 /*dummy argument?!*/);
+                    }
                 }
-              }
+                else
+                {
+                    dp.rgvarg = NULL; // no argument array needed
+                }
 
-              pTypeInfo->ReleaseTypeAttr(pTypeAttr);
-              pTypeInfo->Release();
+                if (dispID != -1)
+                {
+                    hResult = pDispatch->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dp, pResult, &sExc, &uArgErr);
+                }
+                else
+                {
+                    // call the default method of a named item object
+                    unsigned short wFlags = DISPATCH_METHOD;
+                    DISPID         PropPutDispId = DISPID_PROPERTYPUT;
+
+                    pTypeInfo = NULL;
+                    hResult = pDispatch->GetTypeInfo(0, LOCALE_USER_DEFAULT, &pTypeInfo);
+
+                    if (SUCCEEDED(hResult))
+                    {
+                        TYPEATTR *pTypeAttr = NULL;
+                        FUNCDESC *pFuncDesc = NULL;
+                        bool      found = false;
+
+                        hResult = pTypeInfo->GetTypeAttr(&pTypeAttr);
+                        if (SUCCEEDED(hResult))
+                        {
+                            for (int l = 0; (l < pTypeAttr->cFuncs) && !found; l++)
+                            {
+                                hResult = pTypeInfo->GetFuncDesc(l, &pFuncDesc);
+                                if (SUCCEEDED(hResult))
+                                {
+                                    if ((pFuncDesc->cParams + pFuncDesc->cParamsOpt >= parmblock->rxfnc_argc) &&
+                                        pFuncDesc->memid == 0)
+                                    {
+                                        wFlags = pFuncDesc->invkind;
+                                        found = true;
+                                    }
+                                    pTypeInfo->ReleaseFuncDesc(pFuncDesc);
+                                }
+                            }
+
+                            pTypeInfo->ReleaseTypeAttr(pTypeAttr);
+                            pTypeInfo->Release();
+                        }
+                        if (wFlags == DISPATCH_PROPERTYPUT)
+                        {
+                            dp.cNamedArgs = 1;
+                            dp.rgdispidNamedArgs = &PropPutDispId;
+                        }
+                    }
+
+                    hResult = pDispatch->Invoke((DISPID) 0, IID_NULL, LOCALE_USER_DEFAULT, wFlags, &dp, pResult, &sExc, &uArgErr);
+                }
+
+                if (SUCCEEDED(hResult))
+                {
+                    // success, make REXX object from VARIANT
+                    parmblock->rxfnc_retc = Variant2Rexx(context->threadContext, &sResult);
+                    state = RXEXIT_HANDLED;
+                    FPRINTF2(logfile,"COM invoke ok, got back rexx object %p\n", parmblock->rxfnc_retc);
+                }
+                else
+                {
+                    result = NULL; // this is an error. behave accordingly
+                    parmblock->rxfnc_flags.rxfferr = 1;
+                }
+
+                // clear argument array, free memory:
+                if (dp.rgvarg)
+                {
+                    for (UINT i = 0; i < dp.cArgs; i++)
+                    {
+                        VariantClear(&(dp.rgvarg[i]));
+                    }
+                    GlobalFree(dp.rgvarg);
+                }
+
+                // free result
+                VariantClear(&sResult);
             }
-            if (wFlags == DISPATCH_PROPERTYPUT) {
-              dp.cNamedArgs = 1;
-              dp.rgdispidNamedArgs = &PropPutDispId;
-            }
-          }
-
-          hResult = pDispatch->Invoke((DISPID) 0, IID_NULL, LOCALE_USER_DEFAULT, wFlags, &dp, pResult, &sExc, &uArgErr);
         }
-
-        if (SUCCEEDED(hResult)) {
-          // success, make REXX object from VARIANT
-          result = Variant2Rexx(&sResult);
-          state = RXEXIT_HANDLED;
-          parmblock->rxfnc_retc = (REXXOBJECT)result;
-#if defined(DEBUGZ)
-          FPRINTF2(logfile,"COM invoke ok, got back rexx object %p\n",result);
-#endif
-        } else {
-          result = NULL; // this is an error. behave accordingly
-          parmblock->rxfnc_flags.rxfferr = 1;
-        }
-
-        // clear argument array, free memory:
-        if (dp.rgvarg) {
-          for (UINT i = 0; i < dp.cArgs; i++)
-          {
-              VariantClear(&(dp.rgvarg[i]));
-          }
-          GlobalFree(dp.rgvarg);
-        }
-
-        // free result
-        VariantClear(&sResult);
-      }
+        FPRINTF(logfile,"I %s this function - exiting now.\n",state==RXEXIT_HANDLED?"knew":"didn't know");
+        return state;
     }
-  }
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"I %s this function - exiting now.\n",state==RXEXIT_HANDLED?"knew":"didn't know");
-  fclose(logfile);
-#endif
-
-  return state;
 }
 
-// insert engine pointer into thread list so that
-// the string unknown can find out which engine to use
-// this may be additional work if REXX code is only run
-// from one thread. if we have to go to "multithread"
-// (again) this will be usefull, there we just leave it
-// in here...
-void registerEngineForCallback(OrxScript *engine)
-{
-  char       string[9];
-#if defined(DEBUG_EXTRA)
-  FILE *logfile;
-
-  logfile = fopen("c:\\temp\\threadtable.log","a");
-#endif
-
-  sprintf(string,"%08x",GetCurrentThreadId());
-  // exclusive access to this region
-  WaitForSingleObject(mutex,INFINITE);
-  thread2EngineList->AddItem(string,LinkedList::Beginning,engine);
-#if defined(DEBUG_EXTRA)
-  {
-    int i = 0;
-    ListItem *item;
-    FPRINTF(logfile,"register\nthread<->engine association (we are %s):\n",string);
-    while ( item = thread2EngineList->FindItem(i++) )
-      FPRINTF2(logfile,"%2d %s %p\n",i,item->GetName(),item->GetContent());
-  }
-  fclose(logfile);
-#endif
-  ReleaseMutex(mutex);
-}
-
-// remove engine pointer from thread list
-void deregisterEngineForCallback()
-{
-  char       string[9];
-#if defined(DEBUG_EXTRA)
-  FILE *logfile;
-
-  logfile = fopen("c:\\temp\\threadtable.log","a");
-#endif
-
-  sprintf(string,"%08x",GetCurrentThreadId());
-  // exclusive access to this region
-  WaitForSingleObject(mutex,INFINITE);
-
-  thread2EngineList->DropItem(thread2EngineList->FindItem(string));
-#if defined(DEBUG_EXTRA)
-  {
-    int i = 0;
-    ListItem *item;
-    FPRINTF(logfile,"deregister\nthread<->engine association (we were %s):\n",string);
-    while ( item = thread2EngineList->FindItem(i++) )
-      FPRINTF2(logfile,"%2d %s %p\n",i,item->GetName(),item->GetContent());
-    FPRINTF2(logfile,"list ends\n");
-  }
-  fclose(logfile);
-#endif
-  ReleaseMutex(mutex);
-}
-
-
-/* this function looks for the engine that is associated with the */
-/* given thread id. on failure it returns NULL.                   */
-/* the list used to find this information is process-global.      */
-OrxScript* findEngineForThread(DWORD id)
-{
-  char       string[9];
-  ListItem  *result = NULL;
-  OrxScript *engine = NULL;
-
-  sprintf(string,"%08x",id);
-
-  // exclusive access to this region
-  WaitForSingleObject(mutex,INFINITE);
-  result = thread2EngineList->FindItem(string);
-
-  if (result)
-    engine = (OrxScript*) result->GetContent();
-
-  ReleaseMutex(mutex);
-
-  return engine;
-}
 
 int __stdcall scriptSecurity(CLSID clsid, IUnknown *pObject)
 {
-  int result = 1; // assume OK
-  OrxScript  *engine = findEngineForThread(GetCurrentThreadId());
+    int result = 1; // assume OK
+    OrxScript *engine = ScriptProcessEngine::findEngineForThread();
 
-  // have an engine?
-  if (engine) {
-    HRESULT hResult;
-    DWORD dwPolicy;
-    IInternetHostSecurityManager *pSecurityManager;
+    // have an engine?
+    if (engine)
+    {
+        HRESULT hResult;
+        DWORD dwPolicy;
+        IInternetHostSecurityManager *pSecurityManager;
 
-    // script host object should be considered safe at all time (acc. to Joel Alley, MS)
-    // this is achieved by turning of the security check for objects that
-    // have been added by the script host and will be instantiated by the
-    // script at the time of need. a flag is used to find out if a check
-    // has to be made
-    if (engine->checkObjectCreation() == false) return result;
+        // script host object should be considered safe at all time (acc. to Joel Alley, MS)
+        // this is achieved by turning of the security check for objects that
+        // have been added by the script host and will be instantiated by the
+        // script at the time of need. a flag is used to find out if a check
+        // has to be made
+        if (engine->checkObjectCreation() == false)
+        {
+            return result;
+        }
 
-    pSecurityManager = engine->getIESecurityManager();
+        pSecurityManager = engine->getIESecurityManager();
 
-    // found a security manager?
-    if (pSecurityManager) {
-      // only clsid given? check if we're allowed to create this
-      if (pObject == NULL) {
-        hResult = pSecurityManager->ProcessUrlAction(URLACTION_ACTIVEX_RUN,
-                                                     (BYTE*) &dwPolicy,
-                                                     sizeof(dwPolicy),
-                                                     (BYTE*) &clsid,
-                                                     sizeof(clsid),
-                                                     PUAF_DEFAULT,
-                                                     0);
-        if (SUCCEEDED(hResult)) {
-          if (dwPolicy != URLPOLICY_ALLOW)
-            result = 0; // not allowed to create
-        } else
-          result = 0;   // not allowed to create
-      } else {
-        // an object was given, check if it is safe to run it
-        DWORD        *pdwPolicy;
-        DWORD         cbPolicy;
-        CONFIRMSAFETY csafe;
+        // found a security manager?
+        if (pSecurityManager)
+        {
+            // only clsid given? check if we're allowed to create this
+            if (pObject == NULL)
+            {
+                hResult = pSecurityManager->ProcessUrlAction(URLACTION_ACTIVEX_RUN,
+                                                             (BYTE*) &dwPolicy,
+                                                             sizeof(dwPolicy),
+                                                             (BYTE*) &clsid,
+                                                             sizeof(clsid),
+                                                             PUAF_DEFAULT,
+                                                             0);
+                if (SUCCEEDED(hResult))
+                {
+                    if (dwPolicy != URLPOLICY_ALLOW)
+                    {
+                        result = 0; // not allowed to create
+                    }
+                }
+                else
+                {
+                    result = 0;   // not allowed to create
+                }
+            }
+            else
+            {
+                // an object was given, check if it is safe to run it
+                DWORD        *pdwPolicy;
+                DWORD         cbPolicy;
+                CONFIRMSAFETY csafe;
 
-        csafe.pUnk  = pObject;
-        csafe.clsid = clsid;
-        csafe.dwFlags = CONFIRMSAFETYACTION_LOADOBJECT;
+                csafe.pUnk  = pObject;
+                csafe.clsid = clsid;
+                csafe.dwFlags = CONFIRMSAFETYACTION_LOADOBJECT;
 
-        hResult = pSecurityManager->QueryCustomPolicy(GUID_CUSTOM_CONFIRMOBJECTSAFETY,
-                                                      (BYTE**) &pdwPolicy,
-                                                      &cbPolicy,
-                                                      (BYTE*) &csafe,
-                                                      sizeof(csafe),
-                                                      0);
-        if (SUCCEEDED(hResult)) {
-          dwPolicy = URLPOLICY_DISALLOW;
-          if (pdwPolicy) {
-            if (sizeof(DWORD) <= cbPolicy)
-              dwPolicy = *pdwPolicy;
-            CoTaskMemFree(pdwPolicy);
-          }
-          if (dwPolicy != URLPOLICY_ALLOW)
-            result = 0; // not allowed to run
-        } else
-          result = 0;   // not allowed to run
-      }
+                hResult = pSecurityManager->QueryCustomPolicy(GUID_CUSTOM_CONFIRMOBJECTSAFETY,
+                                                              (BYTE**) &pdwPolicy,
+                                                              &cbPolicy,
+                                                              (BYTE*) &csafe,
+                                                              sizeof(csafe),
+                                                              0);
+                if (SUCCEEDED(hResult))
+                {
+                    dwPolicy = URLPOLICY_DISALLOW;
+                    if (pdwPolicy)
+                    {
+                        if (sizeof(DWORD) <= cbPolicy)
+                        {
+                            dwPolicy = *pdwPolicy;
+                        }
+                        CoTaskMemFree(pdwPolicy);
+                    }
+                    if (dwPolicy != URLPOLICY_ALLOW)
+                    {
+                        result = 0; // not allowed to run
+                    }
+                }
+                else
+                {
+                    result = 0;   // not allowed to run
+                }
+            }
+        }
     }
-  }
-  return result;
+    return result;
 }
 
 /******************************************************************************
@@ -559,16 +389,16 @@ int __stdcall scriptSecurity(CLSID clsid, IUnknown *pObject)
 *  it will be handled by OrxIDispatch, just as if JScript called.
 *
 ******************************************************************************/
-LONG REXXENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pblock)
+int RexxEntry RexxValueExtension(RexxExitContext *context, int ExitNumber, int Subfunction, PEXIT parmblock)
 {
     RXVALCALL_PARM *parmblock = (RXVALCALL_PARM*) pblock;
     int SelectorType = 0;
     int RetCode = -1;
     const char *selectorName = parmblock->selector.strptr;
-    REXXOBJECT  result = NULL;
-    OrxScript  *engine = findEngineForThread(GetCurrentThreadId());
+    RexxObjectPtr  result = NULL;
+    OrxScript *engine = ScriptProcessEngine::findEngineForThread();
     const char *PropName = parmblock->variable_name.strptr;
-    REXXOBJECT  newvalue = parmblock->value;
+    RexxObjectPtr  newvalue = parmblock->value;
     HRESULT     hResult;
     DISPID      dispID;
     DWORD       flags;
@@ -640,7 +470,7 @@ LONG REXXENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pbloc
                             // This property is part of a Typelib.
                             TYPEATTR *pTypeAttr;
                             VARDESC  *pVarDesc;
-                            BOOL      found = false;
+                            bool      found = false;
 
 
                             if (newvalue)
@@ -761,295 +591,309 @@ LONG REXXENTRY RexxValueExtension(LONG ExitNumber, LONG Subfunction, PEXIT pbloc
     else ;  // >>> ??? <<< Good question, what do we do? Error, or return NULL string?
     // result = RexxString("");
 
-    parmblock->value = (REXXOBJECT)result;
+    parmblock->value = (RexxObjectPtr)result;
     return RetCode == 0 ? RXEXIT_HANDLED : RXEXIT_RAISE_ERROR;
 }
 
 /* unknown callback                                                     */
 /* this will deal with objects that REXX is unaware of, but the engine  */
 /* is...                                                                */
-LONG REXXENTRY RexxNovalueHandler(LONG ExitNumber, LONG Subfunction, PEXIT pblock)
+int RexxEntry RexxNovalueHandler(RexxExitContext *, int ExitNumber, int Subfunction, PEXIT parmblock)
 {
-  RXVARNOVALUE_PARM *parmblock = (RXVARNOVALUE_PARM*) pblock;
-  const char *objname = parmblock->variable_name.strptr;
-  REXXOBJECT  result = NULL; // NULL indicates error
-  OrxScript  *engine = findEngineForThread(GetCurrentThreadId());
-  HRESULT    hResult;
-  DISPID     dispID;
-  DWORD      flags;
-  IDispatch *pDispatch = NULL;
-  ITypeInfo *pTypeInfo = NULL;
-  VARIANT    temp;
+    RXVARNOVALUE_PARM *parmblock = (RXVARNOVALUE_PARM*) pblock;
+    const char *objname = parmblock->variable_name.strptr;
+    RexxObjectPtr  result = NULL; // NULL indicates error
+    OrxScript *engine = ScriptProcessEngine::findEngineForThread();
+    HRESULT    hResult;
+    DISPID     dispID;
+    DWORD      flags;
+    IDispatch *pDispatch = NULL;
+    ITypeInfo *pTypeInfo = NULL;
+    VARIANT    temp;
 
-  // do we have an engine to work with?
-  if (engine) {
-    engine->setObjectCreation(false); // turn off IE security manager checking
-    engine->PreventCallBack();        // Don't pick up properties.  This stops our GetDispID() from returning DispID's for properties.
-    hResult = engine->getNamedItems()->WhoKnows(objname,engine->Lang,&dispID,&flags,&pDispatch,&pTypeInfo);
-    engine->ReleaseCallBack();
-    if (SUCCEEDED(hResult)) {
-      VariantInit(&temp);
-      // do we have a real named item?
-      if (dispID == -1) {
+    // do we have an engine to work with?
+    if (engine)
+    {
+        engine->setObjectCreation(false); // turn off IE security manager checking
+        engine->PreventCallBack();        // Don't pick up properties.  This stops our GetDispID() from returning DispID's for properties.
+        hResult = engine->getNamedItems()->WhoKnows(objname,engine->Lang,&dispID,&flags,&pDispatch,&pTypeInfo);
+        engine->ReleaseCallBack();
+        if (SUCCEEDED(hResult))
+        {
+            VariantInit(&temp);
+            // do we have a real named item?
+            if (dispID == -1)
+            {
 
-        V_VT(&temp) = VT_DISPATCH;
-        temp.pdispVal = pDispatch;
-        // convert it to an OLEObject
-        // because the top activation on the activity might not be
-        // "native", we have to make sure that it is
-        // (Win...Kernel() must never be executed concurrently!)
-        result = Variant2Rexx(&temp);
-        // this must be a variable / constant
-      } else {
-        if(pDispatch == engine) {
-          hResult = engine->LocalParseProcedureText(objname,0,&pDispatch);
-          V_VT(&temp) = VT_DISPATCH;
-          temp.pdispVal = pDispatch;
-          }
-        else hResult = GetProperty(NULL,pDispatch,engine->Lang,&temp,dispID);
-        if (SUCCEEDED(hResult)) {
-          result = Variant2Rexx(&temp);
+                V_VT(&temp) = VT_DISPATCH;
+                temp.pdispVal = pDispatch;
+                // convert it to an OLEObject
+                // because the top activation on the activity might not be
+                // "native", we have to make sure that it is
+                // (Win...Kernel() must never be executed concurrently!)
+                result = Variant2Rexx(&temp);
+                // this must be a variable / constant
+            }
+            else
+            {
+                if (pDispatch == engine)
+                {
+                    hResult = engine->LocalParseProcedureText(objname,0,&pDispatch);
+                    V_VT(&temp) = VT_DISPATCH;
+                    temp.pdispVal = pDispatch;
+                }
+                else
+                {
+                    hResult = GetProperty(NULL,pDispatch,engine->Lang,&temp,dispID);
+                }
+                if (SUCCEEDED(hResult))
+                {
+                    result = Variant2Rexx(&temp);
+                }
+                VariantClear(&temp);
+            }
         }
-        VariantClear(&temp);
-      }
-    }
-    engine->setObjectCreation(true); // turn on possible IE security manager checking
+        engine->setObjectCreation(true); // turn on possible IE security manager checking
 
-  } /* endif engine to work with */
-  parmblock->value = (REXXOBJECT)result;
-  return result != NULLOBJECT ? RXEXIT_HANDLED : RXEXIT_NOT_HANDLED;
+    } /* endif engine to work with */
+    parmblock->value = (RexxObjectPtr)result;
+    return result != NULLOBJECT ? RXEXIT_HANDLED : RXEXIT_NOT_HANDLED;
 }
 
-/* here we "parse" the text and retrieve the names of all */
-/* (public) routines mentioned in there.                  */
-/* the name retrieval is done with the exit handler that  */
-/* will call back into the engine to add the names...     */
-/* parameters: 0 - script text in wide charachters (in)   */
-/*             1 - pointer to script engine (in)          */
-/*             2 - return code (out)                      */
-// this is running in a thread of its own...
-void __stdcall parseText(void *arguments)
-{
-  // get the info that was passed to us
-  LPCOLESTR   pStrCode = ((LPCOLESTR*) arguments)[0]; // script text
-  LinkedList *pList = ((LinkedList**) arguments)[1];  // pointer to list for names
-  int        *result = ((int**) arguments)[2];
 
-  // "normal" local variables
-  RXSTRING instore[2];
-  RXSYSEXIT exit_list[9];
-  RXSTRING  rexxretval;
-  APIRET    rc;
-  SHORT     rexxrc = 0;
-
-  char funcHandler[128];
-  char *script = NULL;
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  static int parsecount = 0;
-  char fname[64];
-  FILE *logfile;
-
-  sprintf(fname,"c:\\temp\\parsetext%d.log",++parsecount);
-  logfile = fopen(fname,"wb");
-#endif
-  // build "our" version of the script text that does "nothing"...
-  sprintf(funcHandler,"LISTOFNAMES='%p'; exit;",pList);
-  script = (char*) malloc(sizeof(char)*(1+wcslen(pStrCode)+strlen(funcHandler)));
-  sprintf(script,"%s%S",funcHandler,pStrCode);
-
-  // by setting the strlength of the output RXSTRING to zero, we
-  // force the interpreter to allocate memory and return it to us
-  rexxretval.strptr = NULL;
-  rexxretval.strlength = 0;
-
-  // provide script in instore mode, we will simply discard the
-  // resulting image...
-  MAKERXSTRING(instore[0], script, strlen(script));
-  instore[1].strptr = NULL;
-  instore[1].strlength = 0;
-
-
-  // initialize exit list
-  exit_list[0].sysexit_name = "RexxCatchExit";
-  exit_list[0].sysexit_code = RXTER;
-  exit_list[1].sysexit_name = "RexxNovalueHandler";
-  exit_list[1].sysexit_code = RXVAR;
-  exit_list[2].sysexit_name = "RexxValueExtension";
-  exit_list[2].sysexit_code = RXVAL;
-  exit_list[3].sysexit_code = RXENDLST;
-#if defined(DEBUGZ)
-  FPRINTF(logfile,"RexxStart()\n");
-#endif
-  // run this
-  rc = RexxStart(0,                     // no arguments
-                 NULL,                  // the argument pointer
-                 "Rexx/ParseText",      // name of script
-                 instore,               // instore parameters
-                 NULL,                  // command environment name
-                 RXSUBROUTINE,          // invoke as COMMAND
-                 exit_list,             // exit list (catch exit only)
-                 &rexxrc,               // rexx result code
-                 &rexxretval);          // rexx program result
-#if defined(DEBUGZ)
-  FPRINTF2(logfile,"done with RexxStart (RC = %d)\n",rexxrc);
-#endif
-  *result = (int) rexxrc;
-
-  // we do not need any return value...
-  if (rexxretval.strptr) GlobalFree(rexxretval.strptr);
-
-  // we throw away the image, we need a special one anyway...
-  if (instore[1].strptr) GlobalFree(instore[1].strptr);
-
-  free(script);
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"parseText ends\n");
-  fclose(logfile);
-#endif
-
-  _endthreadex(0);
-}
-
-/* this creates a (flattened) method from the source    */
-/* that is passed to us.                                */
-/* a "handler" is prepended to allow for execution of   */
-/* the immediate code (once) and calls for functions    */
-/* inside this method (many times). this is done with   */
-/* an interpret statement.                              */
-/* parameters: 0 - script text in wide charachters (in) */
-/*             1 - pointer to script engine (in)        */
-/*             2 - pointer to RXSTRING for result image */
-/*                 (out)                                */
 void __stdcall createCode(void *arguments)
 {
-  // get the info that was passed to us
-  LPCOLESTR  pStrCode = ((LPCOLESTR*) arguments)[0]; // script text
-  OrxScript *pEngine = ((OrxScript**) arguments)[1]; // pointer to engine
-  REXXOBJECT *pImage = ((REXXOBJECT **) arguments)[2];   // result object (a string containing the image)
-  RexxConditionData *condData = ((RexxConditionData**) arguments)[3]; // condition info
+    CreateCodeData * args = (CreateCodeData *)arguments;
 
-  // "normal" local variables
-  char        funcHandler[128];
-  char       *script = NULL;
-  CONSTRXSTRING source;
-  APIRET      rc;
-
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  static int codecount = 0;
-  char fname[64];
-  FILE *logfile;
-
-  sprintf(fname,"c:\\temp\\createcode%d.log",++codecount);
-  logfile = fopen(fname,"wb");
-  FPRINTF(logfile,"createCode() started\n");
-  FPRINTF(logfile,"code:\n%S\n",pStrCode);
-#endif
-
-  // build "our" version of the script text that does allows us "dispatch" function
-  // calls and to run "immediate" code
-  sprintf(funcHandler,"if arg(1) \\='' then interpret arg(1)\n");
-  script = (char*) malloc(sizeof(char)*(1+wcslen(pStrCode)+strlen(funcHandler)));
-  sprintf(script,"%s%S",funcHandler,pStrCode);
-
-  MAKERXSTRING(source,script,strlen(script));
-
-  condData->rc = 0;  // clear to ok
-  rc = RexxCreateMethod(pEngine->getEngineName(),&source,pImage,condData);
-  if (condData->rc == 0) {
-#if defined(DEBUGZ)
-    FPRINTF2(logfile,"RexxCreateMethod success\n");
-#endif
-  }
-  else {
-#if defined(DEBUGZ)
-    FPRINTF2(logfile,"RexxCreateMethod with %s failed: %s\n",script,condData->errortext.strptr);
-#endif
-  }
-
-  free(script);
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"stored in RXSTRING at %p\ncreateCode ends\n",pImage);
-  fclose(logfile);
-#endif
-
-  _endthreadex(0);
+    args->engine->convertTextToCode(args->strCode, &args->routine, args->condData);
+    // and explicitly terminate
+    _endthreadex(0);
 }
 
 
-
-REXXOBJECT Create_securityObject(OrxScript  *pEngine,
-                                  FILE       *logfile)
+int OrxScript::createRoutine(LPCOLESTR strCode, ULONG startingLineNumber, RexxRoutineObject &routine)
 {
-  REXXOBJECT securityObject = NULL;
-#define DEBUGC
-#define DEBUGZ
+    CreateCodeData createArgs;
+    RexxConditionData cd;
+    cd.rc = 0;
+
+    // fill in the args for calling the interpreter to handle all of this
+    createArgs.engine = this;
+    createArgs.strCode = strCode;
+    createArgs.routine = NULLOBJECT;
+    createArgs.condData = &cd;
+
+    EnterCriticalSection(&EngineSection);
+    pActiveScriptSite->OnEnterScript();
+
+    FPRINTF2(logfile,"create method\n");
+
+        // now create the method (runs in a different thread)
+    HANDLE execution = (HANDLE)_beginthreadex(NULL, 0, (unsigned int (__stdcall *) (void*) ) createCode, (LPVOID) createArgs, 0, &dummy);
+    // could not start thread?
+    if (execution == 0)
+    {
+        return -1;
+    }
+    else
+    {
+        WaitForSingleObject(execution, INFINITE);
+        CloseHandle(execution);
+    }
+    cd.position += startingLineNumber;
+    //    The following code HAS to be after the _endthreadex(), or
+    //  bad things will happen.  None of the COM calls that result
+    //  from the following function calls will work.
+    if (cd.rc != 0)
+    {
+        // an error occured: init excep info
+        ErrObj = new OrxScriptError(logfile, &cd, &ErrObj_Exists);
+        hResult = pActiveScriptSite->OnScriptError((IActiveScriptError*) ErrObj);
+        // init to empty again....
+        if (ErrObj_Exists)
+        {
+            ErrObj->UDRelease();
+        }
+    }
+    return cd.rc;
+}
+
+
+void OrxScript::rexxError(RexxConditionData *condData)
+{
+    BOOL errObj_Exists;
+    // an error occured: init excep info
+    OrxScriptError *errObj = new OrxScriptError(logfile, condData, &errObj_Exists);
+    pActiveScriptSite->OnScriptError((IActiveScriptError*) errObj);
+    // init to empty again....
+    if (errObj_Exists)
+    {
+        errObj->UDRelease();
+    }
+}
+
+/**
+ * Convert a fragment of ooRexx script code into an
+ * executable routine.
+ *
+ * @param context  The instance thread context.
+ * @param strCode  The raw string code to convert.
+ * @param locationOffset
+ *                 The line offset for the script starting location.
+ * @param routine  The created routine.
+ * @param condData The condition data for any errors.
+ */
+void OrxScript::convertTextToCode(RexxThreadContext *context, LPCOLESTR strCode, int locationOffset, RexxRoutineObject &routine, RexxConditionData *condData)
+{
+    condData->rc = 0;            // clear the return code for return
+
+    size_t scriptSize = scslen(pStrCode);
+
+    // we need to convert this script into ascii characters before converting
+    char *script = (char *) malloc(sizeof(char) * (1 + scriptSize));
+    sprintf(script,"%S",pStrCode);
+
+    routine = context->NewRoutine(getEngineName(), script, scriptSize);
+    free(script);
+    // convert this into a routine
+    if (context->checkException())
+    {
+        // if we had an exception, then get the decoded exception information and
+        RexxDirectoryObject cond = context->GetConditionInfo();
+        context->DecodeConditionInfo(cond, condData);
+        // adjust this for the position within the script file context.
+        condData->position += locationOffset;
+        context->ClearException();
+    }
+}
+
+
+void OrxScript::processScriptFragment(RexxThreadContext *context, int locationOffset, RexxRoutineObject routine, PRBC &codeBlock, RexxCondition *condData)
+{
+    //store in global list that will be used
+    //in DTOR when leaving engine
+    hResult = BuildRCB(RCB::ParseScript, NULL, dwFlags, locationOffset, coutine, &codeBlock);
+    if (FAILED(hResult))
+    {
+        break;
+    }
+    FPRINTF2(logfile,"The Rexx Routine %p is now in the CodeBlock %p \n", routine, codeBlock);
+    // now retrieve all of the public routines defined in this code block and add this to our external
+    // table of available routines.
+
+    RexxPackageObject package = context->GetRoutinePackage(routine);
+    RexxDirectoryObject routines = context->GetPackagePublicRoutines(package);
+    RexxSupplierObject supplier = (RexxSupplierObject)context->SendMessage0(routines, "SUPPLIER");
+
+    int i = 0;
+    while (context->SupplierAvailable(supplier))
+    {
+        PRCB  functionBlock = NULL;
+        RexxStringObject name = (RexxStringObject)context->SupplierIndex(supplier);
+        RexxRoutineObject routine = (RexxRoutineObject)context->SupplierValue(supplier);
+        const char *functionName = context->StringData(name);
+
+        hResult = BuildRCB(RCB::ParseScript, NULL, dwFlags, locationOffset, routine, &functionBlock);
+        if (FAILED(hResult))
+        {
+            return;
+        }
+
+        RexxFunctions->AddItem(functionName, LinkedList::Beginning, (void*)functionBlock);
+
+        C2W(lName, functionName, strlen(functionName) + 1);
+        hResult = DispID.AddDispID(lName,dwFlags, DID::Function, functionBlock, &lDispID);
+        FPRINTF2(logfile,"associating method %s with rexx block %p, DispID %d %08x\n", functionName, functionBlock, (int)lDispID, lDispID);
+
+        if (FAILED(hResult))
+        {
+            break;
+        }
+    }
+
+}
+
+
+void OrxScript::queueOrExecuteFragment(RexxThreadContext *context, PRCB codeBlock, RexxConditionData *condData)
+
+    // what to do with the script text we have:
+    if (engineState == SCRIPTSTATE_INITIALIZED || engineState == SCRIPTSTATE_UNINITIALIZED)
+    {
+        //store with stack to exec when connecting...
+        RexxExecStack->AddItem(NULL, LinkedList::Beginning, (void*)codeBlock);
+        FPRINTF2(logfile,"storing method %p for later execution\n", codeBlock);
+    }
+    else
+    {
+        //we are STARTED or CONNECTED: run right away...
+
+        RexxObjectPtr resultDummy;
+        this->enableVariableCapture = true;
+        runMethod(context, this, codeBlock, NULL, resultDummy, condData);
+        this->enableVariableCapture = false;
+        //  Do not need to check the ConditionData here.  That was done for us by runMethod().
+        if (cd.rc)
+        {
+            FPRINTF2(logfile,"ParseScriptText - immediate code execution produced an error! (rc = %d)\n",cd.rc);
+        }
+    }
+}
+
+
+RexxObjectPtr OrxScript::createSecurityObject()
+{
+    RexxObjectPtr securityObject = NULL;
     FPRINTF2(logfile,"Create_securityObject - start Engine %p \n",pEngine);
 
 
-  /* create an instance of a security manager object */
-  if (pEngine->getSafetyOptions()) {
-    DISPPARAMS dp;
-    VARIANT temp;
-    OLECHAR invokeString[32];
-    char args[32];
-    RexxConditionData condData; // condition info
-    OrxScriptError *ErrObj;
-    bool        ErrObj_Exists;
-    APIRET      rc;
-    HRESULT     hResult=S_OK;
+    /* create an instance of a security manager object */
+    if (getSafetyOptions())
+    {
+        RexxConditionData condData; // condition info
+        bool        ErrObj_Exists;
+        HRESULT     hResult=S_OK;
 
+        RexxThreadContext *context = ScriptProcessEngine::getThreadContext();
 
-    memset((void*) &condData,0,sizeof(RexxConditionData));
-    sprintf(args,"FLAGS=%d",pEngine->getSafetyOptions());
-    C2W(invokeString,args,32);
-    VariantInit(&temp);
-    V_VT(&temp) = VT_BSTR;
-    V_BSTR(&temp) = SysAllocString(invokeString);
-    dp.cArgs = 1;
-    dp.cNamedArgs = 0;
-    dp.rgdispidNamedArgs = NULL;
-    dp.rgvarg = &temp;
-    FPRINTF2(logfile,"Create_securityObject - About to use SecurityManager %p\n",pEngine->getSecurityManager());
-#if defined(DEBUGZ)
-    FPRINTF2(logfile,"Create_securityObject - About to use SecurityManager %p\n",pEngine->getSecurityManager());
-#endif
-    rc = RexxRunMethod(pEngine->getEngineName(),pEngine->getSecurityManager(),&dp,DispParms2RexxArray,NULL,&securityObject,NULL,&condData);
-    VariantClear(&temp);
-    if (condData.rc) {
-      // an error occured: init excep info
-#if defined(DEBUGZ)
-      ErrObj = new OrxScriptError(logfile,&condData,&ErrObj_Exists);
-#else
-      ErrObj = new OrxScriptError(NULL,&condData,&ErrObj_Exists);
-#endif
-      hResult = pEngine->getScriptSitePtr()->OnScriptError((IActiveScriptError*) ErrObj);
-#if defined(DEBUGZ)
-      FPRINTF2(logfile,"Create_securityObject - Error encountered: OnScriptError returned %08x.\n",hResult);
-#endif
-      if (FAILED(hResult)) {
-#if defined(DEBUGZ)
-        FPRINTF2(logfile,"Create_securityObject -  Something is unexpected.\n");
-#endif
+        memset((void*) &condData,0,sizeof(RexxConditionData));
+
+        RexxObjectPtr flags = context->NumberToObject(getSafetyOptions());
+
+        FPRINTF2(logfile,"Create_securityObject - About to use SecurityManager %p\n", getSecurityManager());
+
+        securityObject = context->SendMessage1(ScriptProcessEngine::getSecurityManagerClass(), "NEW", flags);
+
+        if (context->CheckCondition())
+        {
+            // if we had an exception, then get the decoded exception information and
+            RexxDirectoryObject cond = context->GetConditionInfo();
+            context->DecodeConditionInfo(cond, &condData);
+            context->ClearException();
+            // an error occured: init excep info
+            ErrObj = new OrxScriptError(logfile,&condData,&ErrObj_Exists);
+
+            hResult = pEngine->getScriptSitePtr()->OnScriptError((IActiveScriptError*) ErrObj);
+            FPRINTF2(logfile,"Create_securityObject - Error encountered: OnScriptError returned %08x.\n",hResult);
+            if (FAILED(hResult))
+            {
+                FPRINTF2(logfile,"Create_securityObject -  Something is unexpected.\n");
+            }
+            // init to empty again....
+            if (ErrObj_Exists)
+            {
+                ErrObj->UDRelease();
+            }
         }
-      // init to empty again....
-      if(ErrObj_Exists) ErrObj->UDRelease();
-    }  // if(condData->rc)
-    else {
-#if defined(DEBUGZ)
-      FPRINTF2(logfile,"Create_securityObject - Success created secturityObject: %p.\n",securityObject);
-#endif
-      }
+        else
+        {
+            // protect from GC
+            context->RequestGlobalReference(securityObject);
+            FPRINTF2(logfile,"Create_securityObject - Success created secturityObject: %p.\n",securityObject);
+        }
+        context->DetachThread();
     }
-  else securityObject = NULL;
-#undef DEBUGC
-#undef DEBUGZ
-
-  return securityObject;
-  }
+    return securityObject;
+}
 
 
 
@@ -1063,122 +907,52 @@ REXXOBJECT Create_securityObject(OrxScript  *pEngine,
 /*             5 - ConditionData pointer       */
 /*             6 - end thread?                 */
 /*             7 - get variables?              */
-void __stdcall runMethod(void *arguments)
+void OrxScript::runMethod(RexxThreadContext *context, RCB *RexxCode, RexxArrayObject args, RexxObjectPtr &targetResult, RexxConditionData &condData)
 {
-  // get the info that was passed to us
-  OrxScript  *pEngine = ((OrxScript**) arguments)[0]; // pointer to engine
-  RCB        *RexxCode = ((PRCB *) arguments)[1];   // method image
-  DISPPARAMS *parms = ((DISPPARAMS**) arguments)[2];  // COM parameters   (...either...)
-  REXXOBJECT  args = ((REXXOBJECT *) arguments)[3];   // REXX parameters  (.....or.....)
-  REXXOBJECT *pTargetResult = ((REXXOBJECT **) arguments)[4]; // result object
-  VARIANT    **vResult = ((VARIANT***) arguments)[4]; // result variant
-  RexxConditionData *condData = ((RexxConditionData**) arguments)[5]; // condition info
-  bool       fEndThread = (((int*)arguments)[6] != 0);// end this thread?
-  bool       fGetVariables = (((int*)arguments)[7] != 0); // get variables from immediate code?
+    bool       fGetVariables = (((int*)arguments)[7] != 0); // get variables from immediate code?
 
-  REXXOBJECT  pResult = NULL;
-  REXXOBJECT  pMethod = NULL;
-  REXXOBJECT  securitySource = NULL;
-  APIRET      rc;
-  RXSYSEXIT   exit_list[9];
-  HRESULT     hResult=S_OK;
-  OrxScriptError *ErrObj;
-  bool        ErrObj_Exists;
+    targetResult = NULLOBJECT;     // make sure no object is set
 
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  static int runcount = 0;
-  char fname[64];
-  FILE *logfile;
-
-  sprintf(fname,"c:\\temp\\runmethod%d.log",++runcount);
-  logfile = fopen(fname,"wb");
-  if (fEndThread) {
-    // needed? hResult = CoInitializeEx(NULL,COINIT_MULTITHREADED);
-    //if ( hResult != S_OK) _asm int 3
-  }
-#endif
     memset((void*) condData,0,sizeof(RexxConditionData));
 
     // thread dependend registration of the engine
-    registerEngineForCallback(pEngine);
+    OrxEngine *previous = ScriptProcessEngine::registerEngineForCallback(pEngine);
 
-    // initialize exit list
-    exit_list[0].sysexit_name = "RexxCatchExternalFunc";
-    exit_list[0].sysexit_code = RXEXF;
-    exit_list[1].sysexit_name = "RexxNovalueHandler";
-    exit_list[1].sysexit_code = RXVAR;
-    exit_list[2].sysexit_name = "RexxValueExtension";
-    exit_list[2].sysexit_code = RXVAL;
-    exit_list[3].sysexit_code = RXENDLST;
-
-    if (fGetVariables) {
-      exit_list[3].sysexit_name = "RexxRetrieveVariables";
-      exit_list[3].sysexit_code = RXTER;
-      exit_list[4].sysexit_code = RXENDLST;
-    }
-#if defined(DEBUGZ)
     FPRINTF2(CurrentObj_logfile,"runMethod about to execute %p from CodeBlock %p \n",RexxCode->Code,RexxCode);
-#endif
 
-    // if this was invoked with DISPPARMs, we need to convert the arguments,
-    // plus the return object must be converted to a VARIANT
-    if (parms) {
-      rc = RexxRunMethod(pEngine->getEngineName(),RexxCode->Code,parms,DispParms2RexxArray,exit_list,&pResult,pEngine->getSecurityObject(),condData);
-      // successful execution?
-      if (condData->rc == 0) {
-        // _asm int 3
-        WinEnterKernel();
-        Rexx2Variant(pResult, *vResult, VT_EMPTY /*(try your best)*/, 0 /*dummy argument?!*/);
-        WinLeaveKernel();
-        if (V_VT(*vResult) == VT_ERROR)
-          (*vResult)->vt = VT_EMPTY;
-      }
+    // call the routine, and check to see if there was an exception
+    targetResult = context->CallRoutine(RexxCode->Code, args);
+    if (context->CheckException())
+    {
+        // if we had an exception, then get the decoded exception information and
+        RexxDirectoryObject cond = context->GetConditionInfo();
+        context->DecodeConditionInfo(cond, &condData);
+        context->ClearException();
+        // an error occured: init excep info
+        ErrObj = new OrxScriptError(logfile,condData,&ErrObj_Exists);
+        ErrObj = new OrxScriptError(NULL,condData,&ErrObj_Exists);
+        hResult = pEngine->getScriptSitePtr()->OnScriptError((IActiveScriptError*) ErrObj);
+        FPRINTF2(logfile,"debug: OnScriptError returned %08x.\n",hResult);
+        if (FAILED(hResult))
+        {
+            FPRINTF2(logfile,"debug:  Something is unexpected.\n");
+        }
+        // init to empty again....
+        if (ErrObj_Exists)
+        {
+            ErrObj->UDRelease();
+        }
     }
     else
-      rc = RexxRunMethod(pEngine->getEngineName(),RexxCode->Code,args,NULL,exit_list,pTargetResult,pEngine->getSecurityObject(),condData);
-
-    condData->position += RexxCode->StartingLN;
+    {
+        // make sure this is protected for a bit
+        context->RequestGlobalReference(targetResult);
+        FPRINTF2(logfile,"Rexx call success. Returned object: %p.\n", targetResult);
+    }
 
     // remove engine from thread list
-    deregisterEngineForCallback();
-#if defined(DEBUGZ)
+    deregisterEngineForCallback(previous);
     FPRINTF2(logfile,"done (%d %d)\n",rc,condData->rc);
-#endif
 
-    if (condData->rc) {
-      // an error occured: init excep info
-#if defined(DEBUGZ)
-      ErrObj = new OrxScriptError(logfile,condData,&ErrObj_Exists);
-#else
-      ErrObj = new OrxScriptError(NULL,condData,&ErrObj_Exists);
-#endif
-      hResult = pEngine->getScriptSitePtr()->OnScriptError((IActiveScriptError*) ErrObj);
-#if defined(DEBUGZ)
-      FPRINTF2(logfile,"debug: OnScriptError returned %08x.\n",hResult);
-#endif
-      if (FAILED(hResult)) {
-#if defined(DEBUGZ)
-        FPRINTF2(logfile,"debug:  Something is unexpected.\n");
-#endif
-      }
-      // init to empty again....
-      if(ErrObj_Exists) ErrObj->UDRelease();
-    }
-    else {
-#if defined(DEBUGZ)
-      FPRINTF2(logfile,"RexxRunMethod success. Returned object: %p.\n",pResult);
-#endif
-    }
-
-#if defined(DEBUGC)+defined(DEBUGZ)
-  FPRINTF(logfile,"runMethod ends\n");
-  fclose(logfile);
-#endif
-
-  if (fEndThread) {
-    // needed? CoUninitialize();
-    _endthreadex(0);
-  }
-
+    FPRINTF(logfile,"runMethod ends\n");
 }

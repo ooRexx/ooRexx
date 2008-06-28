@@ -43,29 +43,35 @@
 /******************************************************************************/
 #include "RexxCore.h"
 #include "StringClass.hpp"
+#include "Interpreter.hpp"
 
 const char *  build_date = __DATE__;  /* date of last build                */
 
-RexxString *version_number (void)
+RexxString *Interpreter::versionNumber = OREF_NULL;
+
+RexxString *Interpreter::getVersionNumber()
 /******************************************************************************/
 /* Arguments:  None                                                           */
 /*                                                                            */
 /*  Returned:  Version string                                                 */
 /******************************************************************************/
 {
-  char     buffer[100];                /* buffer for building the string    */
-  char     work[20];                   /* working buffer                    */
-  char    *month;                      /* month of the build                */
-  char    *day;                        /* day of the build                  */
-  char    *year;                       /* year of the build                 */
+    if (versionNumber == OREF_NULL)
+    {
+        char     buffer[100];                /* buffer for building the string    */
+        char     work[20];                   /* working buffer                    */
 
-  strcpy(work, build_date);            /* copy the build date               */
-  month = strtok(work, " ");           /* get the month                     */
-  day = strtok(NULL, " ");             /* get the build day                 */
-  year = strtok(NULL, " ");            /* and the year                      */
-  if (*day == '0')                     /* day have a leading zero?          */
-    day++;                             /* step over it                      */
-                                       /* format the result                 */
-  sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT) 6.02 %s %s %s", ORX_VER, ORX_REL, ORX_MOD, day, month, year);
-  return new_string(buffer);          /* return as a rexx string           */
+        strcpy(work, build_date);            /* copy the build date               */
+        char *month = strtok(work, " ");     /* get the month                     */
+        char *day = strtok(NULL, " ");       /* get the build day                 */
+        char *year = strtok(NULL, " ");      /* and the year                      */
+        if (*day == '0')                     /* day have a leading zero?          */
+        {
+            day++;                             /* step over it                      */
+        }
+                                               /* format the result                 */
+        sprintf(buffer, "REXX-ooRexx_%d.%d.%d(MT) 6.02 %s %s %s", ORX_VER, ORX_REL, ORX_MOD, day, month, year);
+        versionNumber = new_string(buffer);  /* return as a rexx string           */
+    }
+    return versionNumber;
 }

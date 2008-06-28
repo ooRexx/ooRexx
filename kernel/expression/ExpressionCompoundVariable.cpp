@@ -53,6 +53,7 @@
 #include "ExpressionVariable.hpp"
 #include "RexxVariable.hpp"
 #include "ProtectedObject.hpp"
+#include "RexxCompoundTail.hpp"
 
 RexxCompoundVariable::RexxCompoundVariable(
     RexxString * _stemName,            /* stem retriever                    */
@@ -225,6 +226,38 @@ RexxObject  *RexxCompoundVariable::getValue(
 {
                                        /* resolve the tail element          */
   return context->getLocalCompoundVariableValue(stemName, index, &tails[0], tailCount);
+}
+
+/**
+ * Retrieve an object variable value, returning OREF_NULL if
+ * the variable does not have a value.
+ *
+ * @param dictionary The source variable dictionary.
+ *
+ * @return The variable value, or OREF_NULL if the variable is not
+ *         assigned.
+ */
+RexxObject  *RexxCompoundVariable::getRealValue(RexxVariableDictionary *dictionary)
+{
+                                       /* resolve the tail element          */
+  return dictionary->getCompoundVariableRealValue(stemName, &tails[0], tailCount);
+}
+
+
+/**
+ * Get the value of a variable without applying a default value
+ * to it.  Used in the apis so the caller can more easily
+ * detect an uninitialized variable.
+ *
+ * @param context The current context.
+ *
+ * @return The value of the variable.  Returns OREF_NULL if the variable
+ *         has not been assigned a value.
+ */
+RexxObject  *RexxCompoundVariable::getRealValue(RexxActivation *context)
+{
+                                       /* resolve the tail element          */
+  return context->getLocalCompoundVariableRealValue(stemName, index, &tails[0], tailCount);
 }
 
 

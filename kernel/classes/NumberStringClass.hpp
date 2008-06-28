@@ -148,8 +148,10 @@
     RexxString *formatInternal(size_t, size_t, size_t, size_t, RexxNumberString *, size_t, bool);
     RexxObject *operatorNot(RexxObject *);
     RexxObject *evaluate(RexxActivation *, RexxExpressionStack *);
-    RexxObject *getValue(RexxActivation *context){return this;}
-    RexxObject *getValue(RexxVariableDictionary *dictionary){return this;}
+    RexxObject *getValue(RexxActivation *context);
+    RexxObject *getValue(RexxVariableDictionary *dictionary);
+    RexxObject *getRealValue(RexxActivation *);
+    RexxObject *getRealValue(RexxVariableDictionary *);
     RexxObject *trunc(RexxObject *);
     RexxObject *truncInternal(size_t);
     RexxObject *unknown(RexxString *, RexxArray *);
@@ -188,7 +190,9 @@
     bool  createUnsignedInt64Value(const char *thisnum, stringsize_t intlength, int carry, wholenumber_t exponent, uint64_t maxValue, uint64_t &result);
     bool  checkIntegerDigits(stringsize_t numDigits, stringsize_t &numberLength, wholenumber_t &numberExponent, bool &carry);
     bool  int64Value(int64_t *result, stringsize_t numDigits);
+    bool  unsignedInt64Value(uint64_t *result, stringsize_t numDigits);
     void  formatInt64(int64_t integer);
+    void  formatUnsignedInt64(uint64_t integer);
 
     RexxNumberString *addSub(RexxNumberString *, unsigned int, size_t);
     RexxNumberString *plus(RexxObject *);
@@ -226,52 +230,57 @@
                 }
 
     static PCPPM operatorMethods[];
-    static RexxClass *classInstance;
 
-    char  number[4];
- };
-
-class RexxNumberStringClass : public RexxClass {
- public:
     static RexxNumberString *newInstance(double);
     static RexxNumberString *newInstance(float);
     static RexxNumberString *newInstance(wholenumber_t);
     static RexxNumberString *newInstance(int64_t);
+    static RexxNumberString *newInstance(uint64_t);
     static RexxNumberString *newInstance(stringsize_t);
     static RexxNumberString *newInstance(const char *, stringsize_t);
 
+
+    static void createInstance();
+    static RexxClass *classInstance;
+
+    char  number[4];
 };
 
 void AdjustPrecision(RexxNumberString *, char *, int);
 
 inline RexxNumberString *new_numberstring(const char *s, stringsize_t l)
 {
-    return RexxNumberStringClass::newInstance(s, l);
+    return RexxNumberString::newInstance(s, l);
 }
 
 inline RexxNumberString *new_numberstring(wholenumber_t n)
 {
-    return RexxNumberStringClass::newInstance(n);
+    return RexxNumberString::newInstance(n);
 }
 
 inline RexxNumberString *new_numberstring(stringsize_t n)
 {
-    return RexxNumberStringClass::newInstance(n);
+    return RexxNumberString::newInstance(n);
 }
 
 inline RexxNumberString *new_numberstring(int64_t n)
 {
-    return RexxNumberStringClass::newInstance(n);
+    return RexxNumberString::newInstance(n);
+}
+
+inline RexxNumberString *new_numberstring(uint64_t n)
+{
+    return RexxNumberString::newInstance(n);
 }
 
 inline RexxNumberString *new_numberstring(double n)
 {
-    return RexxNumberStringClass::newInstance(n);
+    return RexxNumberString::newInstance(n);
 }
 
 inline RexxNumberString *new_numberstring(float n)
 {
-    return RexxNumberStringClass::newInstance((double)n);
+    return RexxNumberString::newInstance((double)n);
 }
 
 #endif

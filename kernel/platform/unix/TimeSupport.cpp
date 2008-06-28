@@ -126,14 +126,13 @@ RexxMethod2(void, alarm_startTimer,
   RexxSemaphore sem;                   /* Event-semaphore                   */
   SEV semHandle;                       /* semaphore handle                  */
   int  msecInADay = 86400000;          /* number of milliseconds in a day   */
-  REXXOBJECT cancelObj;                /* place object to check for cancel  */
-  int  cancelVal;                      /* value of cancel                   */
   ASYNC_TIMER_INFO tinfo;              /* info for the timer thread         */
 
   semHandle = &sem;
-                                       /* set the state variables           */
-  ooRexxVarSet("EVENTSEMHANDLE", ooRexxInteger((uintptr_t)semHandle));
-  ooRexxVarSet("TIMERSTARTED", ooRexxTrue);
+
+  /* set the state variables           */
+  context->SetObjectVariable("EVENTSEMHANDLE", context->NewPointer(semHandle));
+  context->SetObjectVariable("TIMERSTARTED", context->TrueObject());
   /* setup the info for the timer thread                                    */
   tinfo.sem = semHandle;
   tinfo.time = msecInADay;
@@ -145,13 +144,15 @@ RexxMethod2(void, alarm_startTimer,
 
     semHandle->wait();                 /* wait for semaphore to be posted   */
     SysThreadYield();                  /* give the timer thread a chance    */
-    cancelObj = ooRexxVarValue("CANCELED");
-    cancelVal = REXX_INTEGER_VALUE(cancelObj);
+    /* Check if the alarm is canceled. */
+    RexxObjectPtr cancelObj = context->GetObjectVariable("CANCELED");
 
-    if (cancelVal == 1) {              /* If alarm cancelled?               */
-      return;                          /* get out                           */
+    if (cancelObj == context->TrueObject())
+    {
+        return 0;
     }
-    else {
+    else
+    {
       semHandle->reset();              /* Reset the event semaphore         */
     }
     numdays--;                         /* Decrement number of days          */
@@ -177,12 +178,12 @@ RexxMethod2(void, alarm_startTimer,
 /*********************************************************************/
 
 
-RexxMethod1(void, alarm_stopTimer,
-               size_t, eventSemHandle)
+RexxMethod1(int, alarm_stopTimer,
+               POINTER, eventSemHandle)
 {
   SEV    sev = (SEV)eventSemHandle;    /* event semaphore handle            */
   sev->post();                         /* Post the event semaphore          */
-  return;
+  return 0;
 }
 
 

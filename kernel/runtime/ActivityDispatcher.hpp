@@ -47,28 +47,24 @@ class RexxNativeActivation;
 class ActivityDispatcher
 {
 public:
-    inline ActivityDispatcher() { ; }
-    inline ActivityDispatcher(PRXSYSEXIT e, const char *env)
-    {
-        exits = e;
-        defaultEnvironment = env;
-    }
+    inline ActivityDispatcher() : activity(OREF_NULL), activation(OREF_NULL), conditionData(OREF_NULL), rc(0) { ; }
     virtual ~ActivityDispatcher() { ; }
 
     virtual void run();
     virtual void handleError(wholenumber_t, RexxDirectory *);
     virtual void handleError(RexxDirectory *);
     virtual void invoke();
+    virtual void invoke(RexxOption *);
+    virtual void invoke(PRXSYSEXIT exits, const char *env);
 
     inline void setContext(RexxActivity *act, RexxNativeActivation *a) { activity = act; activation = a; }
 
     wholenumber_t  rc;                 // error return code
-    const char *defaultEnvironment;    // the default execution environment
 
 protected:
+
     RexxActivity *activity;            // the activity we're running on
     RexxNativeActivation *activation;  // the native activation we're running under
-    PRXSYSEXIT exits;                  // exits we're running with
     RexxDirectory *conditionData;      // any condition data posted due to an activity error
 };
 

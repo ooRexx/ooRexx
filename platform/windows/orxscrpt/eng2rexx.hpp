@@ -39,38 +39,21 @@
 #ifndef ENG2REXX
 #define ENG2REXX
 
-#include "rexx.h"
-#include "RexxNativeAPI.h"
+#include "oorexxapi.h"
 #include "RexxInternalApis.h"
 #include "orxscrpt.hpp"
 #include "OrxScrptError.hpp"
 class OrxScript;
 
-extern HANDLE mutex;
-extern Index *thread2EngineList;
-
-LONG REXXENTRY RexxCatchExit(LONG, LONG, PEXIT);
-LONG REXXENTRY RexxCatchExternalFunc(LONG, LONG, PEXIT);
+int RexxEntry RexxNovalueHandler(RexxExitContext *, int ExitNumber, int Subfunction, PEXIT parmblock);
+int RexxEntry RexxValueExtension(RexxExitContext *, int ExitNumber, int Subfunction, PEXIT parmblock);
+int RexxEntry RexxCatchExternalFunc(RexxExitContext *, int ExitNumber, int Subfunction, PEXIT parmblock);
 int __stdcall scriptSecurity(CLSID,IUnknown*);
-REXXOBJECT Create_securityObject(OrxScript *, FILE *);
-void __stdcall parseText(void*);
-void __stdcall createCode(void*);
-void __stdcall runMethod(void*);
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-void REXXENTRY WinGetVariables(void (REXXENTRY *callback)(const char *, REXXOBJECT));
-void REXXENTRY WinEnterKernel();
-void REXXENTRY WinLeaveKernel();
-#ifdef __cplusplus
-}
-#endif
 
 // these three come from orexxole.c
-REXXOBJECT Variant2Rexx(VARIANT *);
-void Rexx2Variant(REXXOBJECT, VARIANT *, VARTYPE, size_t);
+RexxObjectPtr Variant2Rexx(RexxThreadContext *, VARIANT *pVariant);
+VOID Rexx2Variant(RexxThreadContext *, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
 void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*));
 
 #endif

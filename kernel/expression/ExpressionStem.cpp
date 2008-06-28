@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                       ExpressionStem.c     */
+/* REXX Translator                                       ExpressionStem.cpp   */
 /*                                                                            */
 /* Primitive Translator Expression Parsing Stem Reference Class               */
 /*                                                                            */
@@ -99,18 +99,18 @@ RexxObject  *RexxStemVariable::evaluate(
 /* Function:  Evaluate a REXX stem variable                                   */
 /******************************************************************************/
 {
-                                       /* look up the name                  */
-  RexxObject *value = context->getLocalStem(this->stem, this->index);
-                                       /* NOTE:  stem accesses do NOT       */
-                                       /* report NOVALUE so that DO OVER,   */
-                                       /* call-by-reference with a stem and */
-                                       /* return with a stem does not       */
-                                       /* trigger a novalue trap            */
-                                       /* unexpectedly                      */
-  stack->push(value);                  /* place on the evaluation stack     */
-                                       /* trace if necessary                */
-  context->traceVariable(stem, value);
-  return value;                        /* return the located variable       */
+    /* look up the name                  */
+    RexxObject *value = context->getLocalStem(this->stem, this->index);
+    /* NOTE:  stem accesses do NOT       */
+    /* report NOVALUE so that DO OVER,   */
+    /* call-by-reference with a stem and */
+    /* return with a stem does not       */
+    /* trigger a novalue trap            */
+    /* unexpectedly                      */
+    stack->push(value);                  /* place on the evaluation stack     */
+                                         /* trace if necessary                */
+    context->traceVariable(stem, value);
+    return value;                        /* return the located variable       */
 }
 
 RexxObject  *RexxStemVariable::getValue(
@@ -121,7 +121,7 @@ RexxObject  *RexxStemVariable::getValue(
 /******************************************************************************/
 {
                                        /* look up the name                  */
-  return dictionary->getStem(this->stem);
+    return dictionary->getStem(this->stem);
 }
 
 RexxObject  *RexxStemVariable::getValue(
@@ -132,7 +132,35 @@ RexxObject  *RexxStemVariable::getValue(
 /******************************************************************************/
 {
                                        /* look up the name                  */
-  return context->getLocalStem(stem, index);
+    return context->getLocalStem(stem, index);
+}
+
+/**
+ * Retrieve the real value of a stem variable.  Stem variables
+ * will always be created on first reference, so there is no
+ * difference between getValue() and getRealValue().
+ *
+ * @param dictionary The source variable dictionary.
+ *
+ * @return The stem object representing this variable.
+ */
+RexxObject  *RexxStemVariable::getRealValue(RexxVariableDictionary *dictionary)
+{
+    return dictionary->getStem(this->stem);
+}
+
+/**
+ * Retrieve the real value of a stem variable.  Stem variables
+ * will always be created on first reference, so there is no
+ * difference between getValue() and getRealValue().
+ *
+ * @param context The current execution context.
+ *
+ * @return The stem object representing this variable.
+ */
+RexxObject  *RexxStemVariable::getRealValue(RexxActivation *context)
+{
+    return context->getLocalStem(stem, index);
 }
 
 void RexxStemVariable::set(
@@ -142,20 +170,19 @@ void RexxStemVariable::set(
 /* Function:  Fast set of a stem variable value                               */
 /******************************************************************************/
 {
-  RexxStem     *stem_table;            /* retrieved stem table              */
-  RexxVariable *variable;              /* stem variable entry               */
-
-                                       /* look up the name                  */
-  variable = context->getLocalStemVariable(stem, index);
-  if (isOfClass(Stem, value)) {            /* stem to stem assignment           */
-    variable->set(value);              /* overlay the reference stem object */
-  }
-  else {
-                                       /* create a new stem object as value */
-    stem_table = new RexxStem (this->stem);
-    variable->set(stem_table);         /* overlay the reference stem object */
-    stem_table->setValue(value);       /* set the default value             */
-  }
+    /* look up the name                  */
+    RexxVariable *variable = context->getLocalStemVariable(stem, index);
+    if (isOfClass(Stem, value))
+    {            /* stem to stem assignment           */
+        variable->set(value);              /* overlay the reference stem object */
+    }
+    else
+    {
+        /* create a new stem object as value */
+        RexxStem *stem_table = new RexxStem (this->stem);
+        variable->set(stem_table);         /* overlay the reference stem object */
+        stem_table->setValue(value);       /* set the default value             */
+    }
 }
 
 
@@ -166,20 +193,19 @@ void RexxStemVariable::set(
 /* Function:  Fast set of a stem variable value                               */
 /******************************************************************************/
 {
-  RexxStem     *stem_table;            /* retrieved stem table              */
-  RexxVariable *variable;              /* stem variable entry               */
-
-                                       /* look up the name                  */
-  variable = dictionary->getStemVariable(this->stem);
-  if (isOfClass(Stem, value)) {            /* stem to stem assignment           */
-    variable->set(value);              /* overlay the reference stem object */
-  }
-  else {
-                                       /* create a new stem object as value */
-    stem_table = new RexxStem (this->stem);
-    variable->set(stem_table);         /* overlay the reference stem object */
-    stem_table->setValue(value);       /* set the default value             */
-  }
+    /* look up the name                  */
+    RexxVariable *variable = dictionary->getStemVariable(this->stem);
+    if (isOfClass(Stem, value))
+    {            /* stem to stem assignment           */
+        variable->set(value);              /* overlay the reference stem object */
+    }
+    else
+    {
+        /* create a new stem object as value */
+        RexxStem *stem_table = new RexxStem (this->stem);
+        variable->set(stem_table);         /* overlay the reference stem object */
+        stem_table->setValue(value);       /* set the default value             */
+    }
 }
 
 
@@ -190,7 +216,7 @@ bool RexxStemVariable::exists(
 /******************************************************************************/
 {
                                        /* retrieve the variable value       */
-  return context->localStemVariableExists(stem, index);
+    return context->localStemVariableExists(stem, index);
 }
 
 void RexxStemVariable::assign(
@@ -201,22 +227,20 @@ void RexxStemVariable::assign(
 /* Function:  Assign a value to a stem variable                               */
 /******************************************************************************/
 {
-  RexxStem      *stem_table;           /* retrieved stem table              */
-  RexxVariable  *variable;             /* stem variable entry               */
-
-                                       /* look up the name                  */
-  variable = context->getLocalStemVariable(stem, index);
-  if (isOfClass(Stem, value)) {            /* stem to stem assignment           */
-    variable->set(value);              /* overlay the reference stem object */
-  }
-  else {
-                                       /* create a new stem object as value */
-    stem_table = new RexxStem (this->stem);
-    variable->set(stem_table);         /* overlay the reference stem object */
-    stem_table->setValue(value);       /* set the default value             */
-  }
-  // trace the assignment
-  context->traceAssignment(stem, value);
+    RexxVariable *variable = context->getLocalStemVariable(stem, index);
+    if (isOfClass(Stem, value))
+    {            /* stem to stem assignment           */
+        variable->set(value);              /* overlay the reference stem object */
+    }
+    else
+    {
+        /* create a new stem object as value */
+        RexxStem *stem_table = new RexxStem (this->stem);
+        variable->set(stem_table);         /* overlay the reference stem object */
+        stem_table->setValue(value);       /* set the default value             */
+    }
+    // trace the assignment
+    context->traceAssignment(stem, value);
 }
 
 void RexxStemVariable::drop(
@@ -225,8 +249,8 @@ void RexxStemVariable::drop(
 /* Function:  Drop a variable object                                          */
 /******************************************************************************/
 {
-  /* drop the stem value */
-  context->dropLocalStem(stem, index);
+    /* drop the stem value */
+    context->dropLocalStem(stem, index);
 }
 
 void RexxStemVariable::procedureExpose(
@@ -237,16 +261,17 @@ void RexxStemVariable::procedureExpose(
 /* Function:  Expose a stem variable                                          */
 /******************************************************************************/
 {
-    RexxVariable *old_variable;          /* variable from the prior level     */
+    /* get the old variable entry        */
+    RexxVariable *old_variable = parent->getLocalStemVariable(stem, index);
 
-                                         /* get the old variable entry        */
-    old_variable = parent->getLocalStemVariable(stem, index);
-
-                                         /* set the entry in the new table    */
-    if (index == 0) {
-      context->updateLocalVariable(old_variable);
-    } else {
-      context->putLocalVariable(old_variable, index);
+    /* set the entry in the new table    */
+    if (index == 0)
+    {
+        context->updateLocalVariable(old_variable);
+    }
+    else
+    {
+        context->putLocalVariable(old_variable, index);
     }
 }
 
@@ -260,10 +285,8 @@ void RexxStemVariable::expose(
 /* Function:  Expose a stem variable                                          */
 /******************************************************************************/
 {
-    RexxVariable *old_stem;              /* variable from the prior level     */
-
                                          /* get the old variable entry        */
-    old_stem = object_dictionary->getStemVariable(stem);
+    RexxVariable *old_stem = object_dictionary->getStemVariable(stem);
                                          /* set the entry in the new table    */
     context->putLocalVariable(old_stem, index);
 }
@@ -275,11 +298,9 @@ void RexxStemVariable::setGuard(
 /* Set a guard variable notification on a stem variable                       */
 /******************************************************************************/
 {
-  RexxVariable *variable;              /* target variable object            */
-
                                        /* look up the name                  */
-  variable = context->getLocalStemVariable(this->stem, this->index);
-  variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
+    RexxVariable *variable = context->getLocalStemVariable(this->stem, this->index);
+    variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
 }
 
 void RexxStemVariable::clearGuard(
@@ -288,11 +309,9 @@ void RexxStemVariable::clearGuard(
 /* Remove a guard variable notification on an object variable                 */
 /******************************************************************************/
 {
-  RexxVariable *variable;              /* target variable object            */
-
                                        /* look up the name                  */
-  variable = context->getLocalStemVariable(this->stem, this->index);
-  variable->uninform(ActivityManager::currentActivity); /* mark the variable entry           */
+    RexxVariable *variable = context->getLocalStemVariable(this->stem, this->index);
+    variable->uninform(ActivityManager::currentActivity); /* mark the variable entry           */
 }
 
 
@@ -314,12 +333,10 @@ void *RexxStemVariable::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
-                                       /* Get new object                    */
-  newObject = (RexxObject *)new_object(size);
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheStemVariableTermBehaviour);
-  return newObject;                    /* return the new object             */
+                                         /* Get new object                    */
+    RexxObject *newObject = (RexxObject *)new_object(size);
+                                         /* Give new object its behaviour     */
+    newObject->setBehaviour(TheStemVariableTermBehaviour);
+    return newObject;                    /* return the new object             */
 }
 

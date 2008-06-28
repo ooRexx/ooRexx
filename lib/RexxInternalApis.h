@@ -47,31 +47,19 @@ extern "C" {
 #endif
 
 int REXXENTRY RexxResolveExit(const char *, REXXPFN *);
+int REXXENTRY RexxResolveRoutine(const char *, REXXPFN *);
+int REXXENTRY RexxQuery();
 
-APIRET REXXENTRY RexxCallFunction (const char *, size_t, PCONSTRXSTRING, int *, PRXSTRING, const char *);
-
-APIRET REXXENTRY RexxExecuteMacroFunction (const char *, PRXSTRING );
+RexxReturnCode REXXENTRY RexxExecuteMacroFunction (const char *, PRXSTRING );
 
 void REXXENTRY RexxCreateInterpreterImage();
 
 size_t REXXENTRY RexxGetCurrentPrecision();
 
-void REXXENTRY RexxCreateScriptContext(const char *contextName);
-
-void REXXENTRY RexxDestroyScriptContext(const char *contextName);
-
-int REXXENTRY RexxReleaseScriptReference(const char *contextName, REXXOBJECT obj);
-
-APIRET REXXENTRY RexxCreateMethod(const char *context, PCONSTRXSTRING sourceData, REXXOBJECT   *pmethod, RexxConditionData *pRexxCondData);
-
-APIRET REXXENTRY RexxRunMethod(const char * context, REXXOBJECT method, void * callbackArgs,
-  REXXOBJECT (REXXENTRY *callbackFunction)(void *), PRXSYSEXIT exit_list, REXXOBJECT *presult,
-  REXXOBJECT securityManager, RexxConditionData *pRexxCondData);
-
-APIRET REXXENTRY RexxLoadSubcom(const char *, const char *);
+RexxReturnCode REXXENTRY RexxLoadSubcom(const char *, const char *);
 
 /***    RexxCallSubcom - Execute a command in an environment */
-APIRET REXXENTRY RexxCallSubcom(const char *, const char *, PCONSTRXSTRING,
+RexxReturnCode REXXENTRY RexxCallSubcom(const char *, const char *, PCONSTRXSTRING,
          unsigned short *, wholenumber_t *, PRXSTRING );
 
 #ifdef __cplusplus

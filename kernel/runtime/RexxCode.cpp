@@ -75,10 +75,26 @@ RexxCode::RexxCode(
 }
 
 
+/**
+ * Process a detached ::requires type call.
+ *
+ * @param activity The current activity,
+ * @param routine  The routine object we're executing.
+ * @param msgname  The name this was invoked under.
+ * @param argPtr   The pointer to the call arguments,
+ * @param argcount The count of arguments,
+ * @param result   The returned result.
+ */
+void RexxCode::call(RexxActivity *activity, RoutineClass *routine, RexxString *msgname, RexxObject**argPtr, size_t argcount, ProtectedObject &result)
+{
+    // just forward to the more general method
+    this->call(activity, routine, msgname, argPtr, argcount, OREF_SUBROUTINE, OREF_NULL, EXTERNALCALL, result);
+}
+
+
 void RexxCode::call(
     RexxActivity *activity,            /* activity running under            */
-    RexxMethod *method,                // the method object getting invoked
-    RexxObject *receiver,              /* object receiving the message      */
+    RoutineClass *routine,             // top level routine instance
     RexxString *msgname,               /* message to be run                 */
     RexxObject**argPtr,                /* arguments to the method           */
     size_t      argcount,              /* the count of arguments            */
@@ -93,10 +109,10 @@ void RexxCode::call(
     // check the stack space before proceeding
     activity->checkStackSpace();       /* have enough stack space?          */
                                        /* add to the activity stack         */
-    RexxActivation *newacta = ActivityManager::newActivation(activity, method, this, OREF_NULL, calltype, environment, context);
+    RexxActivation *newacta = ActivityManager::newActivation(activity, routine, this, calltype, environment, context);
     activity->pushStackFrame(newacta);
                 /* run the method and return result  */
-    newacta->run(receiver, msgname, argPtr, argcount, OREF_NULL, result);
+    newacta->run(OREF_NULL, msgname, argPtr, argcount, OREF_NULL, result);
 }
 
 
@@ -105,8 +121,8 @@ void RexxCode::run(
     RexxMethod *method,                // the method object getting invoked
     RexxObject *receiver,              /* object receiving the message      */
     RexxString *msgname,               /* message to be run                 */
-    size_t      argcount,              /* the count of arguments            */
     RexxObject**argPtr,                /* arguments to the method           */
+    size_t      argcount,              /* the count of arguments            */
     ProtectedObject &result)           // the method result
 /******************************************************************************/
 /* Function:  Call a method as a top level program or external function call  */
@@ -190,6 +206,7 @@ RexxString * RexxCode::getProgramName()
                                        /* retrieve this from the source     */
   return this->source->getProgramName();
 }
+
 
 void * RexxCode::operator new(size_t size)
 /******************************************************************************/

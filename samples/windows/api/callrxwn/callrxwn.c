@@ -153,7 +153,7 @@ int CallRexx(HWND hwnd)
 
    CHAR    *str = "These words will be swapped"; /* text to swap     */
 
-   APIRET   rc;                        /* return code from REXX      */
+   RexxReturnCode   rc;                        /* return code from REXX      */
    SHORT    rexxrc = 0;                /* return code from function  */
    CHAR     *chTextOut[]={
             "This program will call the REXX interpreter to reverse  ",

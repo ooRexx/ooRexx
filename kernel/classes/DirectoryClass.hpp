@@ -41,8 +41,8 @@
 /* Primitive Directory Class Definitions                                      */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_RexxDirect
-#define Included_RexxDirect
+#ifndef Included_RexxDirectory
+#define Included_RexxDirectory
 
 #include "RexxCollection.hpp"
 
@@ -90,6 +90,8 @@ class RexxDirectory : public RexxHashTableCollection {
   RexxMethod *unknown_method;          /* unknown method entry              */
 
   static RexxDirectory *newInstance();
+
+  static void createInstance();
   // singleton class instance;
   static RexxClass *classInstance;
 };

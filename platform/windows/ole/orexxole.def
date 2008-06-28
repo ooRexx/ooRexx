@@ -39,19 +39,7 @@ LIBRARY OREXXOLE BASE=0x6B1F0000
 
 EXPORTS
   DllMain
-  OLEObject_Init
-  OLEObject_Uninit
-  OLEObject_Unknown
-  OLEObject_Request
-  OLEObject_GetVar
-  OLEObject_GetConst
-  OLEObject_GetKnownMethods
-  OLEObject_GetKnownEvents
-  OLEObject_GetObject_Class
-  OLEVariant_Init
-  OLEVariant_VarValueEquals
-  OLEVariant_VarTypeEquals
-  OLEVariant_ParamFlagsEquals
+  RexxGetPackage
   Rexx2Variant
   Variant2Rexx
   setCreationCallback

@@ -40,19 +40,32 @@
 
 OrxScriptError::OrxScriptError(FILE *Stream, RexxConditionData *info, bool *Exists)  :
                                ulRefCount(1),
-                               logfile(Stream) {
-  if (info)
-    memcpy(&RexxErrorInfo,info,sizeof(RexxConditionData));
-  else memset(&RexxErrorInfo,0,sizeof(RexxConditionData));
-  RunDestructor = Exists;
-  if(RunDestructor) *RunDestructor = true;
-  }
+                               logfile(Stream)
+{
+    if (info)
+    {
+        memcpy(&RexxErrorInfo,info,sizeof(RexxConditionData));
+    }
+    else
+    {
+        memset(&RexxErrorInfo,0,sizeof(RexxConditionData));
+    }
+    RunDestructor = Exists;
+    if (RunDestructor)
+    {
+        *RunDestructor = true;
+    }
+}
 
 
 
-OrxScriptError::~OrxScriptError()  {
-  if(RunDestructor) *RunDestructor = false;
-  }
+OrxScriptError::~OrxScriptError()
+{
+    if (RunDestructor)
+    {
+        *RunDestructor = false;
+    }
+}
 
 
 
@@ -69,62 +82,84 @@ OrxScriptError::~OrxScriptError()  {
 /* this means simply casting "this" to the desired interface */
 /* pointer, if the interface is supported.                   */
 /*************************************************************/
-STDMETHODIMP OrxScriptError::QueryInterface(REFIID riid, void **ppvObj){
-  HRESULT hResult = E_NOINTERFACE;
-  OLECHAR  cIID[100];
-  char    *IIDName,TrulyUnknown[]="??????";
+STDMETHODIMP OrxScriptError::QueryInterface(REFIID riid, void **ppvObj)
+{
+    HRESULT hResult = E_NOINTERFACE;
+    OLECHAR  cIID[100];
+    char    *IIDName,TrulyUnknown[]="??????";
 
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF2(logfile,"\n");
-  StringFromGUID2(riid, cIID, sizeof(cIID));
-  if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::QueryInterface (ppvObj = %p,\n    riid = %S \n",ppvObj,cIID);
-#endif
-  //  We should look this riid up in HKClass_Root\Interface\.... to print what it represents.  <----
+    if (RunDestructor && logfile)
+    {
+        FPRINTF2(logfile,"\n");
+    }
+    StringFromGUID2(riid, cIID, sizeof(cIID));
+    if (RunDestructor && logfile)
+    {
+        FPRINTF(logfile,"OrxScriptError::QueryInterface (ppvObj = %p,\n    riid = %S \n",ppvObj,cIID);
+    }
+    //  We should look this riid up in HKClass_Root\Interface\.... to print what it represents.  <----
 
-  // a pointer to result storage must be supplied
-  if (!ppvObj)
-    return ResultFromScode(E_INVALIDARG);
-  // set to NULL initiallly
-  *ppvObj = NULL;
+    // a pointer to result storage must be supplied
+    if (!ppvObj)
+    {
+        return ResultFromScode(E_INVALIDARG);
+    }
+    // set to NULL initiallly
+    *ppvObj = NULL;
 
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF2(logfile,"It is the (");
-#endif
-  // need to supply an IUnknown pointer?
-  if (IsEqualIID(riid, IID_IUnknown)) {
-    *ppvObj = (LPVOID)(IUnknown *)(IActiveScript *) this;
-#if defined(DEBUGC)+defined(DEBUGZ)
-    if(RunDestructor && logfile) FPRINTF3(logfile,"IUnknown");
-#endif
-  }
-  // need to supply an IActiveScriptError pointer?
-  else if (IsEqualIID(riid, IID_IActiveScriptError)) {
-    *ppvObj = (LPVOID)(IActiveScriptError *) this;
-#if defined(DEBUGC)+defined(DEBUGZ)
-    if(RunDestructor && logfile) FPRINTF3(logfile,"IActiveScriptError");
-#endif
-  }
-  else {
-    if(!(IIDName = NameThatInterface((OLECHAR *)&cIID[0]))) IIDName = &TrulyUnknown[0];
-#if defined(DEBUGC)+defined(DEBUGZ)
-    if(RunDestructor && logfile) FPRINTF3(logfile,"unsupported  %s",IIDName);
-#endif
-    if(IIDName != &TrulyUnknown[0]) free(IIDName);
+    if (RunDestructor && logfile)
+    {
+        FPRINTF2(logfile,"It is the (");
+    }
+    // need to supply an IUnknown pointer?
+    if (IsEqualIID(riid, IID_IUnknown))
+    {
+        *ppvObj = (LPVOID)(IUnknown *)(IActiveScript *) this;
+        if (RunDestructor && logfile)
+        {
+            FPRINTF3(logfile,"IUnknown");
+        }
+    }
+    // need to supply an IActiveScriptError pointer?
+    else if (IsEqualIID(riid, IID_IActiveScriptError))
+    {
+        *ppvObj = (LPVOID)(IActiveScriptError *) this;
+        if (RunDestructor && logfile)
+        {
+            FPRINTF3(logfile,"IActiveScriptError");
+        }
+    }
+    else
+    {
+        if (!(IIDName = NameThatInterface((OLECHAR *)&cIID[0])))
+        {
+            IIDName = &TrulyUnknown[0];
+        }
+        if (RunDestructor && logfile)
+        {
+            FPRINTF3(logfile,"unsupported  %s",IIDName);
+        }
+        if (IIDName != &TrulyUnknown[0])
+        {
+            free(IIDName);
+        }
     }
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF3(logfile,") interface.\n\n");
-#endif
+    if (RunDestructor && logfile)
+    {
+        FPRINTF3(logfile,") interface.\n\n");
+    }
 
-  // on success, call AddRef()
-  if (*ppvObj != NULL) {
-    AddRef();
-    hResult = NOERROR;
-  }
+    // on success, call AddRef()
+    if (*ppvObj != NULL)
+    {
+        AddRef();
+        hResult = NOERROR;
+    }
 
-  return hResult;
+    return hResult;
 }
 
 /**********************************/
@@ -134,13 +169,14 @@ STDMETHODIMP OrxScriptError::QueryInterface(REFIID riid, void **ppvObj){
 /**********************************/
 STDMETHODIMP_(ULONG) OrxScriptError::AddRef()
 {
-  //  Returns > 0 if ulRefCount > 0, but is not guaranteed
-  // to return the actual value of ulRefCount.
-  InterlockedIncrement((long *)&ulRefCount);
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::AddRef The count is now %u\n",ulRefCount);
-#endif
-  return ulRefCount;
+    //  Returns > 0 if ulRefCount > 0, but is not guaranteed
+    // to return the actual value of ulRefCount.
+    InterlockedIncrement((long *)&ulRefCount);
+    if (RunDestructor && logfile)
+    {
+        FPRINTF(logfile,"OrxScriptError::AddRef The count is now %u\n",ulRefCount);
+    }
+    return ulRefCount;
 }
 
 /***********************************************************/
@@ -148,35 +184,46 @@ STDMETHODIMP_(ULONG) OrxScriptError::AddRef()
 /*                                                         */
 /* decrement the reference count, if zero, destroy object. */
 /***********************************************************/
-STDMETHODIMP_(ULONG) OrxScriptError::Release() {
+STDMETHODIMP_(ULONG) OrxScriptError::Release()
+{
 
-  InterlockedDecrement((long *)&ulRefCount);
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::Release() The count is now %u\n",ulRefCount);
-#endif
-  if (ulRefCount)
-    return ulRefCount;
+    InterlockedDecrement((long *)&ulRefCount);
+    if (RunDestructor && logfile)
+    {
+        FPRINTF(logfile,"OrxScriptError::Release() The count is now %u\n",ulRefCount);
+    }
+    if (ulRefCount)
+    {
+        return ulRefCount;
+    }
 
-  delete this;
-  return 0;
-  }
+    delete this;
+    return 0;
+}
 
 
-STDMETHODIMP_(ULONG) OrxScriptError::UDRelease() {
+STDMETHODIMP_(ULONG) OrxScriptError::UDRelease()
+{
 
-  InterlockedDecrement((long *)&ulRefCount);
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::UDRelease() The count is now %u\n",ulRefCount);
-#endif
+    InterlockedDecrement((long *)&ulRefCount);
+    if (RunDestructor && logfile)
+    {
+        FPRINTF(logfile,"OrxScriptError::UDRelease() The count is now %u\n",ulRefCount);
+    }
 
-  if(RunDestructor) *RunDestructor = false;  //  The creator's pointer to us is no longer valid.
-  RunDestructor = NULL;                      //  The ceator of us has gone away.
-  if (ulRefCount)
-    return ulRefCount;
+    if (RunDestructor)
+    {
+        *RunDestructor = false;  //  The creator's pointer to us is no longer valid.
+    }
+    RunDestructor = NULL;                      //  The ceator of us has gone away.
+    if (ulRefCount)
+    {
+        return ulRefCount;
+    }
 
-  delete this;
-  return 0;
-  }
+    delete this;
+    return 0;
+}
 
 
 /********************************************************************/
@@ -186,72 +233,97 @@ STDMETHODIMP_(ULONG) OrxScriptError::UDRelease() {
 /* return to a call to IActiveScriptSite->OnScriptError             */
 /*                                                                  */
 /********************************************************************/
-HRESULT OrxScriptError::GetExceptionInfo(EXCEPINFO *pInfo) {
-  OLECHAR *temp;
-  char msg[512];
-  int major,minor;
+HRESULT OrxScriptError::GetExceptionInfo(EXCEPINFO *pInfo)
+{
+    OLECHAR *temp;
+    char msg[512];
+    int major,minor;
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::GetExceptionInfo = %p\n",pInfo);
-#endif
-  if (!pInfo) return E_POINTER;
+    if (RunDestructor && logfile)
+    {
+        FPRINTF(logfile,"OrxScriptError::GetExceptionInfo = %p\n",pInfo);
+    }
+    if (!pInfo)
+    {
+        return E_POINTER;
+    }
 
-  major = (int)RexxErrorInfo.code/1000;
-  minor = (int)RexxErrorInfo.code%1000;
-  if (minor)
-    sprintf(msg,"[%d.%d] ",major,minor);
-  else
-    sprintf(msg,"[%d] ",major);
+    major = (int)RexxErrorInfo.code/1000;
+    minor = (int)RexxErrorInfo.code%1000;
+    if (minor)
+    {
+        sprintf(msg,"[%d.%d] ",major,minor);
+    }
+    else
+    {
+        sprintf(msg,"[%d] ",major);
+    }
 
-  strcat(msg,RexxErrorInfo.errortext.strptr);
-  if (RexxErrorInfo.message.strlength > 0 && RexxErrorInfo.message.strlength < 1024) {
-    strcat(msg," / ");
-    strcat(msg,RexxErrorInfo.message.strptr);
-  }
+    strcat(msg,RexxErrorInfo.errortext.strptr);
+    if (RexxErrorInfo.message.strlength > 0 && RexxErrorInfo.message.strlength < 1024)
+    {
+        strcat(msg," / ");
+        strcat(msg,RexxErrorInfo.message.strptr);
+    }
 
-  // clear info block
-  memset(pInfo,0,sizeof(EXCEPINFO));
+    // clear info block
+    memset(pInfo,0,sizeof(EXCEPINFO));
 
-  temp = (OLECHAR*) malloc(sizeof(OLECHAR)*(strlen(msg)+1));
-  //  Should use the C2W() macro to generate this call.
-  MultiByteToWideChar( CP_ACP, 0, msg, -1, temp, (int)strlen(msg)+1 );
+    temp = (OLECHAR*) malloc(sizeof(OLECHAR)*(strlen(msg)+1));
+    //  Should use the C2W() macro to generate this call.
+    MultiByteToWideChar( CP_ACP, 0, msg, -1, temp, (int)strlen(msg)+1 );
 
-  pInfo->wCode = major;
-  pInfo->bstrDescription = SysAllocString(temp);
+    pInfo->wCode = major;
+    pInfo->bstrDescription = SysAllocString(temp);
 
-  free(temp);
+    free(temp);
 
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::GetExceptionInfo() - completed\n");
-#endif
-  return S_OK;
+    if (RunDestructor && logfile)
+    {
+        FPRINTF(logfile,"OrxScriptError::GetExceptionInfo() - completed\n");
+    }
+    return S_OK;
 }
 
 
 
 
-STDMETHODIMP OrxScriptError::GetSourcePosition(DWORD *pdwSourceContext, ULONG *LineNumber, LONG *CharPos) {
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::GetSourcePosition() *SourceContext %p *lineNumber %p *charPos %p\n",pdwSourceContext,
-          LineNumber,CharPos);
-  if(RunDestructor && logfile) FPRINTF2(logfile,"OrxScriptError::GetSourcePosition() RexxErrorInfo.position\n",RexxErrorInfo.position);
-#endif
-  if(pdwSourceContext) *pdwSourceContext = 0;
-  if(LineNumber) *LineNumber = (ULONG)RexxErrorInfo.position;
-  // if(LineNumber) *LineNumber = 666;
-  if(CharPos) *CharPos = -1;
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::GetSourcePosition() - completed\n");
-#endif
-  return S_OK;
-  }
+STDMETHODIMP OrxScriptError::GetSourcePosition(DWORD *pdwSourceContext, ULONG *LineNumber, LONG *CharPos)
+{
+    if (RunDestructor && logfile)
+    {
+        FPRINTF(logfile,"OrxScriptError::GetSourcePosition() *SourceContext %p *lineNumber %p *charPos %p\n",pdwSourceContext, LineNumber,CharPos);
+    }
+    if (RunDestructor && logfile)
+    {
+        FPRINTF2(logfile,"OrxScriptError::GetSourcePosition() RexxErrorInfo.position\n",RexxErrorInfo.position);
+    }
+    if (pdwSourceContext)
+    {
+        *pdwSourceContext = 0;
+    }
+    if (LineNumber)
+    {
+        *LineNumber = (ULONG)RexxErrorInfo.position;
+    }
+    // if(LineNumber) *LineNumber = 666;
+    if (CharPos)
+    {
+        *CharPos = -1;
+    }
+    if (RunDestructor && logfile)
+    {
+        FPRINTF(logfile,"OrxScriptError::GetSourcePosition() - completed\n");
+    }
+    return S_OK;
+}
 
 
-
-
-STDMETHODIMP OrxScriptError::GetSourceLineText(BSTR *Text) {
-#if defined(DEBUGC)+defined(DEBUGZ)
-  if(RunDestructor && logfile) FPRINTF(logfile,"OrxScriptError::GetSourceLineText() - Not implemented\n");
-#endif
-      return E_NOTIMPL;
+STDMETHODIMP OrxScriptError::GetSourceLineText(BSTR *Text)
+{
+    if (RunDestructor && logfile)
+    {
+        FPRINTF(logfile,"OrxScriptError::GetSourceLineText() - Not implemented\n");
+    }
+    return E_NOTIMPL;
 }

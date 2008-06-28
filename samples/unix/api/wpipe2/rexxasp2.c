@@ -85,7 +85,7 @@ static const char *AspiFncTable[] =
 * Return:    null string                                                 *
 *************************************************************************/
 
-APIRET REXXENTRY AspiLoadFuncs2(
+RexxReturnCode REXXENTRY AspiLoadFuncs2(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -116,7 +116,7 @@ APIRET REXXENTRY AspiLoadFuncs2(
 * Return:    null string                                                 *
 *************************************************************************/
 
-APIRET REXXENTRY AspiDeregFunc2(
+RexxReturnCode REXXENTRY AspiDeregFunc2(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */
@@ -152,7 +152,7 @@ APIRET REXXENTRY AspiDeregFunc2(
 * Return:    0 - success, 1 - failure                                    *
 *************************************************************************/
 
-APIRET REXXENTRY Aspi_Fill_REXX_Variable_Pool(
+RexxReturnCode REXXENTRY Aspi_Fill_REXX_Variable_Pool(
     const char *name,                    /* Function name              */
     size_t numargs,                      /* Number of arguments        */
     CONSTRXSTRING args[],                /* Argument array             */

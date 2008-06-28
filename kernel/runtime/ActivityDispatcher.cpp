@@ -89,7 +89,33 @@ void ActivityDispatcher::handleError(RexxDirectory *c)
 void ActivityDispatcher::invoke()
 {
     // this creates a new instance to run under, with an active activity
-    InstanceBlock instance(exits, defaultEnvironment);
+    InstanceBlock instance;
+
+    // go run the instance on the current activity
+    instance.activity->run(*this);
+}
+
+
+/**
+ * Invoke the dispatcher on a newly created interpreter instance.
+ */
+void ActivityDispatcher::invoke(RexxOption *options)
+{
+    // this creates a new instance to run under, with an active activity
+    InstanceBlock instance(options);
+
+    // go run the instance on the current activity
+    instance.activity->run(*this);
+}
+
+
+/**
+ * Invoke the dispatcher on a newly created interpreter instance.
+ */
+void ActivityDispatcher::invoke(PRXSYSEXIT exits, const char *env)
+{
+    // this creates a new instance to run under, with an active activity
+    InstanceBlock instance(exits, env);
 
     // go run the instance on the current activity
     instance.activity->run(*this);

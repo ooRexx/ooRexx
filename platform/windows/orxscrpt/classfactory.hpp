@@ -53,7 +53,7 @@ inline void DLLAddReference(void)
 {
   InterlockedIncrement((LPLONG)&ulDllReferences);
 #if defined(DEBUGZ)
-  FPRINTF(::DLLlogfile,"DLLAddReference: DLLReferences=%d\r\n", ulDllReferences);
+  FPRINTF(StreamProcessEngine::logfile,"DLLAddReference: DLLReferences=%d\r\n", ulDllReferences);
 #endif
 }
 
@@ -61,7 +61,7 @@ inline void DLLRelease(void)
 {
   InterlockedDecrement((LPLONG)&ulDllReferences);
 #if defined(DEBUGZ)
-  FPRINTF(::DLLlogfile,"DLLRelease: DLLReferences=%d\r\n", ulDllReferences);
+  FPRINTF(StreamProcessEngine::logfile,"DLLRelease: DLLReferences=%d\r\n", ulDllReferences);
 #endif
 }
 

@@ -2055,7 +2055,7 @@ extern "C" {
 /*                   1 - shutdown not possible now (memory in use)   */
 /*                                                                   */
 /*********************************************************************/
-APIRET  REXXENTRY RexxShutDownAPI(void)
+RexxReturnCode  REXXENTRY RexxShutDownAPI(void)
 {
   int semId;                           /* API semaphore ID            */
   shmid_ds buf;                        /* to hold the shmem info      */
@@ -2236,7 +2236,7 @@ void *REXXENTRY RexxAllocateMemory(size_t size)
 /*  Return Value:    The allocated Block of memory (PVOID)           */
 /*                                                                   */
 /*********************************************************************/
-APIRET REXXENTRY RexxFreeMemory(void *ptr)
+RexxReturnCode REXXENTRY RexxFreeMemory(void *ptr)
 {
    free(ptr);
    return 0;

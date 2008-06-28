@@ -83,6 +83,7 @@ void Interpreter::live(size_t liveMark)
 {
     memory_mark(interpreterInstances);
     memory_mark(localServer);
+    memory_mark(versionNumber);
 }
 
 void Interpreter::liveGeneral(int reason)
@@ -91,6 +92,7 @@ void Interpreter::liveGeneral(int reason)
   {
       memory_mark_general(interpreterInstances);
       memory_mark_general(localServer);
+      memory_mark_general(versionNumber);
   }
 }
 
@@ -100,23 +102,6 @@ void Interpreter::processStartup()
     createLocks();
     ActivityManager::createLocks();
     RexxMemory::createLocks();
-
-    // This is unconditional...it will fail if already loaded.
-    // NB:  On Unix systems, this needs to be lower case.  This fortunately works ok
-    // on Windows.
-    if (RexxRegisterFunctionDll("SYSLOADFUNCS", "rexxutil", "SysLoadFuncs") == 0)
-    {
-        /* default return code buffer        */
-        char      default_return_buffer[DEFRXSTRING];
-        RXSTRING funcresult;
-        int functionrc;                      /* Return code from function         */
-
-        /* first registration?               */
-        /* set up an result RXSTRING         */
-        MAKERXSTRING(funcresult, default_return_buffer, sizeof(default_return_buffer));
-        /* call the function loader          */
-        RexxCallFunction("SYSLOADFUNCS", 0, (PCONSTRXSTRING)NULL, &functionrc, &funcresult, "");
-    }
 }
 
 void Interpreter::processShutdown()
@@ -221,6 +206,27 @@ bool Interpreter::terminateInterpreter()
 
 
 /**
+ * Create a new instance and return the instance context pointers
+ * and thread context pointer for the instance.
+ *
+ * @param instance The returned instance pointer.
+ * @param threadContext
+ *                 The returned thread context pointer.
+ * @param options  Options to apply to this interpreter instance.
+ *
+ * @return 0 if the instance was created ok.
+ */
+int Interpreter::createInstance(RexxInstance *&instance, RexxThreadContext *&threadContext, RexxOption *options)
+{
+    // create the instance
+    InterpreterInstance *newInstance = createInterpreterInstance(options);
+    instance = newInstance->getInstanceContext();
+    threadContext = newInstance->getRootThreadContext();
+    return 0;
+}
+
+
+/**
  * Create a new interpreter instance.  An interpreter instance
  * is an accessible set of threads that constitutes an interpreter
  * environment for the purposes API access.
@@ -231,7 +237,7 @@ bool Interpreter::terminateInterpreter()
  *
  * @return The new interpreter instance.
  */
-InterpreterInstance *Interpreter::createInterpreterInstance(PRXSYSEXIT exits, const char *defaultEnvironment)
+InterpreterInstance *Interpreter::createInterpreterInstance(RexxOption *options)
 {
     // We need to ensure that the interpreter is initialized before we create an
     // interpreter instance.  There are some nasty recursion problems that can result,
@@ -262,7 +268,7 @@ InterpreterInstance *Interpreter::createInterpreterInstance(PRXSYSEXIT exits, co
     }
 
     // now that this is protected from garbage collection, go and initialize everything
-    instance->initialize(rootActivity, exits, defaultEnvironment);
+    instance->initialize(rootActivity, options);
     return instance;
 }
 
@@ -331,11 +337,48 @@ InstanceBlock::InstanceBlock()
  * is released and the instance is terminated upon leaving the
  * block.
  */
-InstanceBlock::InstanceBlock(PRXSYSEXIT exits, const char *defaultEnvironment)
+InstanceBlock::InstanceBlock(RexxOption *options)
 {
     // Get an instance.  This also gives the root activity of the instance
     // the kernel lock.
-    instance = Interpreter::createInterpreterInstance(exits, defaultEnvironment);
+    instance = Interpreter::createInterpreterInstance(options);
+    activity = instance->getRootActivity();
+}
+
+
+/**
+ * Manage a context where a new interpreter instance is created
+ * for the purposes of acquiring an activity, and the activity
+ * is released and the instance is terminated upon leaving the
+ * block.
+ */
+InstanceBlock::InstanceBlock(PRXSYSEXIT exits, const char *env)
+{
+    size_t optionCount = 0;
+
+    RexxOption options[3];
+
+    // if we have exits specified, add this to the option set
+    if (exits != NULL)
+    {
+        options[optionCount].optionName = REGISTERED_EXITS;
+        options[optionCount].option = (void *)exits;
+        optionCount++;
+    }
+
+    if (env != NULL)
+    {
+        options[optionCount].optionName = INITIAL_ADDRESS_ENVIRONMENT;
+        options[optionCount].option = (CSTRING)env;
+        optionCount++;
+    }
+
+    // set the marker for the end of the options
+    options[optionCount].optionName = NULL;
+
+    // Get an instance.  This also gives the root activity of the instance
+    // the kernel lock.
+    instance = Interpreter::createInterpreterInstance(&options[0]);
     activity = instance->getRootActivity();
 }
 
@@ -349,4 +392,100 @@ InstanceBlock::~InstanceBlock()
     activity->exitCurrentThread();
     // terminate the instance
     instance->terminate();
+}
+
+
+/**
+ * Decode a condition directory into a easier to use
+ * structure form for a native code user.  This breaks
+ * the directory into its component pieces, including
+ * converting values into primitive form using just a single
+ * API call.
+ *
+ * @param conditionObj
+ *               A directory object containing the condition information.
+ * @param pRexxCondData
+ *               The condition data structure that is populated with the
+ *               condition information.
+ */
+void Interpreter::decodeConditionData(RexxDirectory *conditionObj, RexxCondition *condData)
+{
+    memset(condData, 0, sizeof(RexxCondition));
+    condData->code = message_number((RexxString *)conditionObj->at(OREF_CODE));
+
+    condData->rc = message_number((RexxString *)conditionObj->at(OREF_RC));
+    condData->conditionName = (RexxStringObject)conditionObj->at(OREF_CONDITION);
+
+    RexxObject *temp = conditionObj->at(OREF_NAME_MESSAGE);
+    if (temp != TheNilObject)
+    {
+        condData->message = (RexxStringObject)temp;
+    }
+
+    temp = conditionObj->at(OREF_ERRORTEXT);
+    if (temp != TheNilObject)
+    {
+        condData->errortext = (RexxStringObject)temp;
+    }
+
+    temp = conditionObj->at(OREF_DESCRIPTION);
+    if (temp != TheNilObject)
+    {
+        condData->description = (RexxStringObject)temp;
+    }
+
+    condData->position = ((RexxInteger *)(conditionObj->at(OREF_POSITION)))->wholeNumber();
+
+    temp = conditionObj->at(OREF_PROGRAM);
+    if (temp != TheNilObject)
+    {
+        condData->program = (RexxStringObject)temp;
+    }
+
+    temp = conditionObj->at(OREF_ADDITIONAL);
+    if (temp != TheNilObject)
+    {
+        condData->additional = (RexxArrayObject)temp;
+    }
+}
+
+
+/**
+ * Default class resolution processing done without benefit of
+ * a program context.
+ *
+ * @param className The class name.
+ *
+ * @return A resolved class object (if any).
+ */
+RexxClass *Interpreter::findClass(RexxString *className)
+{
+    RexxString *internalName = className->upper();   /* upper case it                     */
+    /* send message to .local            */
+    RexxClass *classObject = (RexxClass *)(ActivityManager::localEnvironment->at(internalName));
+    if (classObject != OREF_NULL)
+    {
+        return classObject;
+    }
+
+    /* last chance, try the environment  */
+    return(RexxClass *)(TheEnvironment->at(internalName));
+}
+
+
+/**
+ * Return the current queue name.
+ *
+ * @return The name of the current queue.
+ */
+RexxString *Interpreter::getCurrentQueue()
+{
+    RexxObject *queue = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+
+    if (queue == OREF_NULL)              /* no queue?                         */
+    {
+        return OREF_SESSION;             // the session queue is the default
+    }
+    // get the current name from the queue object.
+    return(RexxString *)queue->sendMessage(OREF_GET);
 }

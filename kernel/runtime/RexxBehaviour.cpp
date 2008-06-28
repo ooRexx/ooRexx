@@ -49,6 +49,7 @@
 #include "ArrayClass.hpp"
 #include "SupplierClass.hpp"
 #include "ProtectedObject.hpp"
+#include "CPPCode.hpp"
 
 
 RexxBehaviour::RexxBehaviour(
@@ -226,6 +227,24 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
     OrefSet(this, this->owningClass, source->owningClass);
     /* use default operator methods set  */
     this->operatorMethods = (PCPPM *)source->operatorMethods;
+}
+
+
+/**
+ * Define a native kernel method on this behaviour.
+ *
+ * @param name       The method name.
+ * @param entryPoint The method entry point
+ * @param arguments  The argument definition.
+ *
+ * @return The created method object.
+ */
+RexxMethod *RexxBehaviour::define(const char *name, PCPPM entryPoint, size_t arguments)
+{
+    RexxString *n = RexxMemory::getGlobalName(name);
+    RexxMethod *method = new RexxMethod(n, CPPCode::resolveExportedMethod(entryPoint, arguments));
+    define(n, method);
+    return method;
 }
 
 

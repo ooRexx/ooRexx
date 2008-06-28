@@ -600,6 +600,17 @@
 #define Error_Symbol_or_string_constant_msg                          693
 #define Error_Symbol_or_string_constant_value_msg                    694
 #define Error_Translation_duplicate_constant_msg                     695
+#define Error_Execution_library_method_msg                           697
+#define Error_Execution_library_routine_msg                          698
+#define Error_Execution_native_routine_msg                           699
+#define Error_Incorrect_call_signature_msg                           700
+#define Error_Incorrect_method_signature_msg                         701
+#define Error_Incorrect_call_nostem_msg                              702
+#define Error_Incorrect_method_nostem_msg                            703
+#define Error_Invalid_argument_pointer_msg                           704
+#define Error_Invalid_argument_nostem_msg                            705
+#define Error_Invalid_argument_double_msg                            706
+#define Error_Invalid_argument_maxarg_msg                            707
 
 
 #endif

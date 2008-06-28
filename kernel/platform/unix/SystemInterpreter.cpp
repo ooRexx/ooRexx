@@ -64,9 +64,6 @@ void RxExitClearNormal();
 
 class InterpreterInstance;
 
-// the saved current working directory. 
-char SystemInterpreter::currentWorkingDirectory[CCHMAXPATH+2];
-
 void SystemInterpreter::processStartup()
 {
     atexit(RxExitClearNormal);
@@ -103,14 +100,7 @@ void SystemInterpreter::processShutdown()
 
 void SystemInterpreter::startInterpreter()
 {
-    // save the working directory, and raise an error if we can't get this 
-    updateCurrentWorkingDirectory(); 
-    if (strlen(currentWorkingDirectory) == 0)
-    {
-        logic_error(" *** ERROR: No current working directory for REXX!\n");
-    }
-
-    // make sure we have the home set appropriately 
+    // make sure we have the home set appropriately
     if ( RxAPIHOMEset() )
     {
         logic_error(" *** ERROR: No HOME or RXHOME directory for REXX!\n");
@@ -151,15 +141,15 @@ void SystemInterpreter::terminateInstance(InterpreterInstance *instance)
  *
  * @return The current working directory as a Rexx string.
  */
-void SystemInterpreter::updateCurrentWorkingDirectory()
+void SystemInterpreter::getCurrentWorkingDirectory(char *buf)
 {
-    if (!getcwd(currentWorkingDirectory, CCHMAXPATH)) /* Get current working direct */
+    if (!getcwd(buf, CCHMAXPATH)) /* Get current working direct */
     {
-       strncpy(currentWorkingDirectory, getenv("PWD"), CCHMAXPATH);
-       currentWorkingDirectory[CCHMAXPATH - 1] = '\0';
-       if (currentWorkingDirectory[0] != '/' )
+       strncpy(buf, getenv("PWD"), CCHMAXPATH);
+       // if we don't result in a real directory here, make it a null string.
+       if (buf[0] != '/' )
        {
-           currentWorkingDirectory[0] = '\0'; 
+           buf[0] = '\0';
        }
     }
 }

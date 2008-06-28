@@ -72,13 +72,15 @@ DeadObject *MemorySegment::lastDeadObject()
     /* just scan all of the objects until we've reached the end of */
     /* the segment */
     for (objectPtr = start(), endPtr = end();
-            objectPtr < endPtr;
-            objectPtr += ((RexxObject *)objectPtr)->getObjectSize()) {
+        objectPtr < endPtr;
+        objectPtr += ((RexxObject *)objectPtr)->getObjectSize())
+    {
         lastObjectPtr = objectPtr;
     }
 
-    if (!((RexxObject *)lastObjectPtr)->isObjectLive(memoryObject.markWord)) {
-        return (DeadObject *)lastObjectPtr;
+    if (!((RexxObject *)lastObjectPtr)->isObjectLive(memoryObject.markWord))
+    {
+        return(DeadObject *)lastObjectPtr;
     }
     return NULL;
 }
@@ -91,8 +93,9 @@ DeadObject *MemorySegment::firstDeadObject()
 /* in the segment for purposes of combining the segments.                     */
 /******************************************************************************/
 {
-    if (!((RexxObject *)start())->isObjectLive(memoryObject.markWord)) {
-        return (DeadObject *)start();
+    if (!((RexxObject *)start())->isObjectLive(memoryObject.markWord))
+    {
+        return(DeadObject *)start();
     }
     return NULL;
 }
@@ -105,8 +108,9 @@ void MemorySegment::gatherObjectStats(MemoryStats *memStats, SegmentStats *stats
 {
     char *op;
     char *ep;
-                                       /* for all objects in this segment   */
-    for (op = start(), ep = end(); op < ep; op += ((RexxObject *)op)->getObjectSize()) {
+    /* for all objects in this segment   */
+    for (op = start(), ep = end(); op < ep; op += ((RexxObject *)op)->getObjectSize())
+    {
         /* record the information about this object */
         stats->recordObject(memStats, op);
     }
@@ -121,7 +125,8 @@ void MemorySegmentSet::dumpSegments(FILE *keyfile, FILE *dumpfile)
     MemorySegment *segment;
     size_t counter = 0;
 
-    for (segment = first(); segment != NULL; segment = next(segment)) {
+    for (segment = first(); segment != NULL; segment = next(segment))
+    {
         segment->dump(name, ++counter, keyfile, dumpfile);
     }
 }
@@ -167,11 +172,11 @@ void NormalSegmentSet::checkObjectOverlap(DeadObject *obj)
 /* Function:  do dead object overlap validation checking.                     */
 /******************************************************************************/
 {
-    int i;
     /* all the work is done by the dead caches */
     largeDead.checkObjectOverlap(obj);
 
-    for (i = FirstDeadPool - 1; i < DeadPools; i++) {
+    for (int i = FirstDeadPool - 1; i < DeadPools; i++)
+    {
         subpools[i].checkObjectOverlap(obj);
     }
 }
@@ -203,12 +208,13 @@ NormalSegmentSet::NormalSegmentSet(RexxMemory *mem) :
     MemorySegmentSet(mem, SET_NORMAL, "Normal Allocation Segments"),
     largeDead("Large Normal Allocation Pool")
 {
-    int i;
     /* finish setting up the allocation subpools.  We set up one    */
     /* additional one, to act as a guard pool to redirect things to */
     /* the large pool. */
-    for (i = 0; i < DeadPools; i++) {  /* there are only                    */
-                                       /* DeadPools subpools! (<, not <=)   */
+    int i;
+    for (i = 0; i < DeadPools; i++)
+    {  /* there are only                    */
+        /* DeadPools subpools! (<, not <=)   */
         char buffer[100];
         sprintf(buffer, "Normal allocation subpool %d for blocks of size %d", i, DeadPoolToLength(i));
         subpools[i].setID(buffer);
@@ -287,9 +293,11 @@ MemorySegment *MemorySegmentSet::findEmptySegment(size_t requestLength)
 {
     /* scan the empty segments list */
     MemorySegment *segment = emptySegments.next;
-    while (segment->isReal()) {
+    while (segment->isReal())
+    {
         /* if this one is large enough, use it. */
-        if (segment->size() > requestLength) {
+        if (segment->size() > requestLength)
+        {
             segment->remove();
             return segment;
         }
@@ -307,7 +315,8 @@ void MemorySegmentSet::activateEmptySegments()
 {
     /* scan the empty segments list */
     MemorySegment *segment = emptySegments.next;
-    while (segment->isReal()) {
+    while (segment->isReal())
+    {
         /* grab the next segment in the chain */
         MemorySegment *nextSeg = segment->next;
 
@@ -329,7 +338,8 @@ bool MemorySegmentSet::newSegment(size_t requestLength, size_t minimumLength)
     /* successful.  This also adds the space to our dead object */
     /* pool. */
     MemorySegment *segment = allocateSegment(requestLength, minimumLength);
-    if (segment != NULL) {
+    if (segment != NULL)
+    {
         addSegment(segment);
         return true;
     }
@@ -376,13 +386,15 @@ void NormalSegmentSet::addDeadObject(DeadObject *object)
 
     /* if the length is larger than the biggest subpool we */
     /* maintain, we add this to the large block list. */
-    if (length > LargestSubpool) {
-          /* ideally, we'd like to add this sorted by size, but */
-          /* this is called so frequently, attempting to sort */
-          /* degrades performance by about 10%. */
-          largeDead.add(object);
+    if (length > LargestSubpool)
+    {
+        /* ideally, we'd like to add this sorted by size, but */
+        /* this is called so frequently, attempting to sort */
+        /* degrades performance by about 10%. */
+        largeDead.add(object);
     }
-    else {
+    else
+    {
         /* calculate the dead chain          */
         /* and add that to the appropriate chain */
         size_t deadChain = LengthToDeadPool(length);
@@ -439,13 +451,15 @@ void NormalSegmentSet::addDeadObject(char *object, size_t length)
 {
     /* if the length is larger than the biggest subpool we */
     /* maintain, we add this to the large block list. */
-    if (length > LargestSubpool) {
-          /* ideally, we'd like to add this sorted by size, but */
-          /* this is called so frequently, attempting to sort */
-          /* degrades performance by about 10%. */
-          largeDead.add(new (object) DeadObject(length));
+    if (length > LargestSubpool)
+    {
+        /* ideally, we'd like to add this sorted by size, but */
+        /* this is called so frequently, attempting to sort */
+        /* degrades performance by about 10%. */
+        largeDead.add(new (object) DeadObject(length));
     }
-    else {
+    else
+    {
         /* calculate the dead chain          */
         /* and add that to the appropriate chain */
         size_t deadChain = LengthToDeadPool(length);
@@ -461,38 +475,43 @@ void MemorySegmentSet::addSegment(MemorySegment *segment, bool createDeadObject)
 /* Function:  Add a segment to the segment pool.                              */
 /******************************************************************************/
 {
-  /* we want to keep these segments ordered by address so we can */
-  /* potentially combine them later. */
-  MemorySegment *insertPosition = anchor.next;
-  while (insertPosition->isReal()) {
-      /* we want to insert these in sorted order, by address. */
-      /* This allows us to merge segments later, if necessary. */
-      if (segment < insertPosition) {
-          break;
-      }
-      insertPosition = insertPosition->next;
-  }
+    /* we want to keep these segments ordered by address so we can */
+    /* potentially combine them later. */
+    MemorySegment *insertPosition = anchor.next;
+    while (insertPosition->isReal())
+    {
+        /* we want to insert these in sorted order, by address. */
+        /* This allows us to merge segments later, if necessary. */
+        if (segment < insertPosition)
+        {
+            break;
+        }
+        insertPosition = insertPosition->next;
+    }
 
-  /* first check to see if we can merge this with the previous */
-  /* segment.  This will give us larger segment sections for reuse. */
-  MemorySegment *previous = insertPosition->previous;
-  if (previous->isReal() && previous->isAdjacentTo(segment)) {
-      /* just combine this with the previous segment and add the */
-      /* entire block as a dead object. */
-      size_t deadLength = segment->realSize();
-      previous->combine(segment);
-      memory->verboseMessage("Combining newly allocated segment of %d bytes to create new segment of %d bytes\n", deadLength, previous->size());
-      addDeadObject((char *)segment, deadLength);
-  }
-  else {
-      /* insert this into position */
-      insertPosition->insertBefore(segment);
-      /* Insert the segment's dead space into the proper chain */
-      if (createDeadObject) {
-        DeadObject *ptr = segment->createDeadObject();
-        addDeadObject(ptr);
-      }
-  }
+    /* first check to see if we can merge this with the previous */
+    /* segment.  This will give us larger segment sections for reuse. */
+    MemorySegment *previous = insertPosition->previous;
+    if (previous->isReal() && previous->isAdjacentTo(segment))
+    {
+        /* just combine this with the previous segment and add the */
+        /* entire block as a dead object. */
+        size_t deadLength = segment->realSize();
+        previous->combine(segment);
+        memory->verboseMessage("Combining newly allocated segment of %d bytes to create new segment of %d bytes\n", deadLength, previous->size());
+        addDeadObject((char *)segment, deadLength);
+    }
+    else
+    {
+        /* insert this into position */
+        insertPosition->insertBefore(segment);
+        /* Insert the segment's dead space into the proper chain */
+        if (createDeadObject)
+        {
+            DeadObject *ptr = segment->createDeadObject();
+            addDeadObject(ptr);
+        }
+    }
 }
 
 
@@ -548,7 +567,8 @@ MemorySegment *MemorySegmentSet::donateSegment(size_t allocationLength)
     MemorySegment *segment = findEmptySegment(allocationLength);
     /* if no empties available, we might still be able to split off */
     /* an empty bit. */
-    if (segment == NULL) {
+    if (segment == NULL)
+    {
         segment = splitSegment(allocationLength);
     }
     return segment;
@@ -567,7 +587,10 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
 /* allocations since the segment information was updated.                     */
 /******************************************************************************/
 {
-    typedef enum {NO_SEGMENT, SPLIT_FRONT, SPLIT_REAR, SPLIT_MIDDLE} SplitType;
+    typedef enum
+    {
+        NO_SEGMENT, SPLIT_FRONT, SPLIT_REAR, SPLIT_MIDDLE
+    } SplitType;
 
     SplitType split = NO_SEGMENT;
     MemorySegment *candidateSegment = NULL;
@@ -583,30 +606,37 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
     /* of the segment.  Failing either of these, we'll split in the */
     /* middle to create 3 segments. */
     MemorySegment *segment = first();
-    while (segment != NULL) {
+    while (segment != NULL)
+    {
         char *endPtr;
         size_t deadLength;
         /* ok, sweep all of the objects in this segment, looking */
         /* for one large enough. */
         for (objectPtr = segment->start(), endPtr = segment->end(), deadLength = ((RexxObject *)objectPtr)->getObjectSize();
-             objectPtr < endPtr;
-             objectPtr += deadLength, deadLength = ((RexxObject *)objectPtr)->getObjectSize()) {
+            objectPtr < endPtr;
+            objectPtr += deadLength, deadLength = ((RexxObject *)objectPtr)->getObjectSize())
+        {
             /* We're only interested in the dead objects.  Note */
             /* that since we've just finished a GC operation, we */
             /* shouldn't see any adjacent dead objects. */
-            if (!((RexxObject *)objectPtr)->isObjectLive(memoryObject.markWord)) {
+            if (!((RexxObject *)objectPtr)->isObjectLive(memoryObject.markWord))
+            {
                 /* have we found an empty part large enough to */
                 /* convert into a segment? */
-                if (deadLength >= allocationLength && deadLength>= MinimumSegmentSize) {
+                if (deadLength >= allocationLength && deadLength>= MinimumSegmentSize)
+                {
                     /* is this at the end of the segment?  This is a */
                     /* perfect candidate.  we'll remember this for */
                     /* later. */
-                    if (segment->isLastBlock(objectPtr, deadLength)) {
+                    if (segment->isLastBlock(objectPtr, deadLength))
+                    {
                         /* we might already have a rear split candidate. */
                         /* Take the smaller of the possibilities. */
-                        if (split == SPLIT_REAR) {
+                        if (split == SPLIT_REAR)
+                        {
                             /* already have a smaller one?  We'll just skip this */
-                            if (splitLength < deadLength) {
+                            if (splitLength < deadLength)
+                            {
                                 break;
                             }
                         }
@@ -621,14 +651,17 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
                     /* This might be at the beginning of the */
                     /* segment.  We only use this if we don't have */
                     /* something more suitable already. */
-                    else if (segment->isFirstBlock(objectPtr)) {
+                    else if (segment->isFirstBlock(objectPtr))
+                    {
                         /* if we've already found a rear split, we */
                         /* don't want this one. */
-                        if (split == SPLIT_REAR) {
+                        if (split == SPLIT_REAR)
+                        {
                             continue;
                         }
                         /* we'll also ignore this if we've found a shorter front block */
-                        if (split == SPLIT_FRONT && splitLength < deadLength) {
+                        if (split == SPLIT_FRONT && splitLength < deadLength)
+                        {
                             continue;
                         }
                         split = SPLIT_FRONT;
@@ -643,14 +676,17 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
                     /* we've found a block on the middle.  This is */
                     /* our last choice, so we only use this if we */
                     /* haven't found anything better. */
-                    else {
+                    else
+                    {
                         /* we'll also ignore this if we've found a */
                         /* shorter front block */
-                        if ((split == SPLIT_MIDDLE && splitLength < deadLength)) {
+                        if ((split == SPLIT_MIDDLE && splitLength < deadLength))
+                        {
                             continue;
                         }
                         /* have we found any of the other options?  Skip it also. */
-                        if (split != NO_SEGMENT) {
+                        if (split != NO_SEGMENT)
+                        {
                             continue;
                         }
                         split = SPLIT_MIDDLE;
@@ -669,78 +705,79 @@ MemorySegment *MemorySegmentSet::splitSegment(size_t allocationLength)
     }
 
     /* now we need to process the "best" split candidate block. */
-    switch (split) {
+    switch (split)
+    {
         /* no block found that we can convert into a segment. */
         /* We'll just have to steal a dead block off of the chain. */
         case NO_SEGMENT: {
-            return NULL;
-        }
-        /* The preferred (and easiest split).  Just remove the */
-        /* block from the dead chain, adjust the original segment */
-        /* size, and make a new one from this block. */
+                return NULL;
+            }
+            /* The preferred (and easiest split).  Just remove the */
+            /* block from the dead chain, adjust the original segment */
+            /* size, and make a new one from this block. */
         case SPLIT_REAR: {
-            DeadObject *deadObject = (DeadObject *)splitBlock;
-            /* remove this from the dead chain. */
-            deadObject->remove();
-            /* And turn this into a segment */
-            MemorySegment *newSeg = new (splitBlock) MemorySegment(splitLength - MemorySegmentOverhead);
-            /* reduce the length of the segment we took this from */
-            candidateSegment->shrink(splitLength);
-            return newSeg;
-        }
-        /* split a segment in the front.  We need to create two */
-        /* segments for this one. */
+                DeadObject *deadObject = (DeadObject *)splitBlock;
+                /* remove this from the dead chain. */
+                deadObject->remove();
+                /* And turn this into a segment */
+                MemorySegment *newSeg = new (splitBlock) MemorySegment(splitLength - MemorySegmentOverhead);
+                /* reduce the length of the segment we took this from */
+                candidateSegment->shrink(splitLength);
+                return newSeg;
+            }
+            /* split a segment in the front.  We need to create two */
+            /* segments for this one. */
         case SPLIT_FRONT: {
-            DeadObject *deadObject = (DeadObject *)splitBlock;
-            /* remove this from the dead chain. */
-            deadObject->remove();
-            /* remove the existing segment from the chain. */
-            removeSegment(candidateSegment);
-            /* calculate the adjusted length of this */
-            size_t tailLength = candidateSegment->realSize() - splitLength;
-            /* go to the start of the tail end segment we're */
-            /* leaving behind.  Note that since we increment the */
-            /* length of the starting block from the front of the */
-            /* segment, we end up leaving a header space at the */
-            /* front of the created tail portion. */
-            MemorySegment *tailSegment = (MemorySegment *)( ((char*) candidateSegment) + splitLength);
-            /* create two segments out of this */
-            MemorySegment *newSeg = new (candidateSegment) MemorySegment(splitLength);
-            tailSegment = new (tailSegment) MemorySegment(tailLength);
-            /* Anchor new segment at end of list */
-            addSegment(tailSegment, false);
-            return newSeg;
-        }
-        /* we're taking a block from the middle of the segment.  We */
-        /* need to create segments in front, and back. */
+                DeadObject *deadObject = (DeadObject *)splitBlock;
+                /* remove this from the dead chain. */
+                deadObject->remove();
+                /* remove the existing segment from the chain. */
+                removeSegment(candidateSegment);
+                /* calculate the adjusted length of this */
+                size_t tailLength = candidateSegment->realSize() - splitLength;
+                /* go to the start of the tail end segment we're */
+                /* leaving behind.  Note that since we increment the */
+                /* length of the starting block from the front of the */
+                /* segment, we end up leaving a header space at the */
+                /* front of the created tail portion. */
+                MemorySegment *tailSegment = (MemorySegment *)( ((char*) candidateSegment) + splitLength);
+                /* create two segments out of this */
+                MemorySegment *newSeg = new (candidateSegment) MemorySegment(splitLength);
+                tailSegment = new (tailSegment) MemorySegment(tailLength);
+                /* Anchor new segment at end of list */
+                addSegment(tailSegment, false);
+                return newSeg;
+            }
+            /* we're taking a block from the middle of the segment.  We */
+            /* need to create segments in front, and back. */
         case SPLIT_MIDDLE: {
-            DeadObject *deadObject = (DeadObject *)splitBlock;
-            /* remove this from the dead chain. */
-            deadObject->remove();
-            /* remove the existing segment from the chain. */
-            removeSegment(candidateSegment);
-            /* get the length of data in the front segment part */
-            size_t frontLength = splitBlock - candidateSegment->start();
-            /* calculate the size of the data in the tail end piece */
-            size_t tailLength = candidateSegment->size() - (frontLength + splitLength);
-            /* address the start of the tail segment, accounting */
-            /* for the segment header we're adding on to the front */
-            /* of it (which comes from the end of the segment block */
-            /* we're stealing) */
-            MemorySegment *tailSegment = (MemorySegment *)(splitBlock + splitLength - MemorySegmentOverhead);
-            /* we need to reduce this by two segment headers...one */
-            /* for the segment we're stealing, and one for the */
-            /* trailing segment */
-            splitLength -= (2 * MemorySegmentOverhead);
-            /* create two segments out of this */
-            MemorySegment *newSeg = new (splitBlock) MemorySegment(splitLength);
-            tailSegment = new (tailSegment) MemorySegment(tailLength);
-            candidateSegment = new (candidateSegment) MemorySegment(frontLength);
-            /* Anchor the original pieces on the segment chain */
-            addSegment(tailSegment, false);
-            addSegment(candidateSegment, false);
-            return newSeg;
-        }
+                DeadObject *deadObject = (DeadObject *)splitBlock;
+                /* remove this from the dead chain. */
+                deadObject->remove();
+                /* remove the existing segment from the chain. */
+                removeSegment(candidateSegment);
+                /* get the length of data in the front segment part */
+                size_t frontLength = splitBlock - candidateSegment->start();
+                /* calculate the size of the data in the tail end piece */
+                size_t tailLength = candidateSegment->size() - (frontLength + splitLength);
+                /* address the start of the tail segment, accounting */
+                /* for the segment header we're adding on to the front */
+                /* of it (which comes from the end of the segment block */
+                /* we're stealing) */
+                MemorySegment *tailSegment = (MemorySegment *)(splitBlock + splitLength - MemorySegmentOverhead);
+                /* we need to reduce this by two segment headers...one */
+                /* for the segment we're stealing, and one for the */
+                /* trailing segment */
+                splitLength -= (2 * MemorySegmentOverhead);
+                /* create two segments out of this */
+                MemorySegment *newSeg = new (splitBlock) MemorySegment(splitLength);
+                tailSegment = new (tailSegment) MemorySegment(tailLength);
+                candidateSegment = new (candidateSegment) MemorySegment(frontLength);
+                /* Anchor the original pieces on the segment chain */
+                addSegment(tailSegment, false);
+                addSegment(candidateSegment, false);
+                return newSeg;
+            }
     }
     return NULL;
 }
@@ -761,7 +798,8 @@ size_t NormalSegmentSet::suggestMemoryExpansion()
 
     /* if we are less than 30% full, we should try to expand to the */
     /* 30% mark. */
-    if (freePercent < NormalMemoryExpansionThreshold) {
+    if (freePercent < NormalMemoryExpansionThreshold)
+    {
         /* get a recommendation on how large the heap should be */
         size_t recommendedSize = recommendedMemorySize();
         size_t newDeadBytes = recommendedSize - liveObjectBytes;
@@ -814,10 +852,12 @@ size_t NormalSegmentSet::suggestMemoryContraction()
     float freePercent = freeMemoryPercentage();
 
     /* if we have predominately free space in the heap, we should try to give some back */
-    if (freePercent > NormalMemoryContractionThreshold) {
+    if (freePercent > NormalMemoryContractionThreshold)
+    {
         /* if we're still working on our initial allocation set, we */
         /* don't want to try to shrink that. */
-        if (totalFreeMemory() <= InitialNormalSegmentSpace) {
+        if (totalFreeMemory() <= InitialNormalSegmentSpace)
+        {
             return 0;
         }
         /* Calculate an amount to shrink this by.  If it ends up */
@@ -851,7 +891,8 @@ void MemorySegmentSet::adjustMemorySize()
     /* current state. */
     size_t suggestedExpansion = suggestMemoryExpansion();
     /* if we've decided we need to expand,  */
-    if (suggestedExpansion > 0) {
+    if (suggestedExpansion > 0)
+    {
         /* go add as many segments as are required to reach that */
         /* level. */
         memory->verboseMessage("Expanding normal segment set by %d\n", suggestedExpansion);
@@ -882,9 +923,11 @@ void MemorySegmentSet::releaseEmptySegments(size_t releaseSize)
     /* up. */
     releaseSize = roundSegmentBoundary(releaseSize);
     MemorySegment *segment = first();
-    for(;segment != NULL; segment = next(segment)) {
+    for (;segment != NULL; segment = next(segment))
+    {
         /* is this an empty segment that fits within our criteria? */
-        if (segment->isEmpty() && segment->size() <= releaseSize) {
+        if (segment->isEmpty() && segment->size() <= releaseSize)
+        {
             /* we need to step back one segment for the looping, as */
             /* we're going to cut this segment out from the herd. */
             MemorySegment *previous = segment->previous;
@@ -919,21 +962,25 @@ void MemorySegmentSet::addSegments(size_t requiredSpace)
 /******************************************************************************/
 {
     /* this may take several passes to achieve */
-    for (;;) {
+    for (;;)
+    {
         /* figure out how large this should be */
         size_t segmentSize = calculateSegmentAllocation(requiredSpace);
         size_t minSize = segmentSize >= LargeSegmentDeadSpace ? LargeSegmentDeadSpace : SegmentDeadSpace;
         /* try to allocate a new segment */
         MemorySegment *newSeg = allocateSegment(segmentSize, minSize);
-        if (newSeg == NULL) {
+        if (newSeg == NULL)
+        {
             /* if we already failed to get our "minimum minimum", just quit now. */
-            if (minSize == SegmentDeadSpace) {
+            if (minSize == SegmentDeadSpace)
+            {
                 return;
             }
             /* try for a single segment allocation.  If that */
             /* fails...we have nothing else we can do. */
             newSeg = allocateSegment(SegmentDeadSpace, SegmentDeadSpace);
-            if (newSeg == NULL) {
+            if (newSeg == NULL)
+            {
                 return;
             }
         }
@@ -943,7 +990,8 @@ void MemorySegmentSet::addSegments(size_t requiredSpace)
         addSegment(newSeg);
         segmentSize = newSeg->size();
         /* if we've got what's needed, we're out of here. */
-        if (segmentSize >= requiredSpace) {
+        if (segmentSize >= requiredSpace)
+        {
             return;
         }
         /* reduce the size and try for some more */
@@ -972,8 +1020,8 @@ void NormalSegmentSet::prepareForSweep()
     /* we're about to rebuild the dead chains during the sweep, so */
     /* initialize all of these now. */
     largeDead.empty();
-    int i;
-    for (i = FirstDeadPool; i < DeadPools; i++) {
+    for (int i = FirstDeadPool; i < DeadPools; i++)
+    {
         subpools[i].emptySingle();
     }
 }
@@ -1008,24 +1056,27 @@ void NormalSegmentSet::completeSweepOperation()
 /* Function:  Handle all segment set post sweep activities.                   */
 /******************************************************************************/
 {
-    int i;
-
     /* Now we can optimize the look-aside entries for the small */
     /* dead chains.  By checking to see which chains have blocks in */
     /* them, we can potentially skip a lot of check/searching on an */
     /* allocation request. */
-    for (i = FirstDeadPool; i < DeadPools; i++) {
-        if (!subpools[i].isEmptySingle()) {
+    for (int i = FirstDeadPool; i < DeadPools; i++)
+    {
+        if (!subpools[i].isEmptySingle())
+        {
             /* point this back at itself */
             lastUsedSubpool[i] = i;
         }
-        else {
+        else
+        {
             /* default to the "skip to the end" location */
             int usePool = DeadPools;
             int j;
             /* scan all of the higher pools looking for the first hit */
-            for (j = i + 1; j < DeadPools; j++) {
-                if (!subpools[i].isEmptySingle()) {
+            for (j = i + 1; j < DeadPools; j++)
+            {
+                if (!subpools[i].isEmptySingle())
+                {
                     usePool = j;
                     break;
                 }
@@ -1071,13 +1122,16 @@ void MemorySegmentSet::sweep()
     /* go through the segments in order, until we've swept the */
     /* entire set */
     sweepSegment = first();
-    while (sweepSegment != NULL) {
+    while (sweepSegment != NULL)
+    {
         /* clear our live objects counter    */
         sweepSegment->liveObjects = 0;
         /* for all objects in segment */
-        for (objectPtr = sweepSegment->start(), endPtr = sweepSegment->end(); objectPtr < endPtr; ) {
+        for (objectPtr = sweepSegment->start(), endPtr = sweepSegment->end(); objectPtr < endPtr; )
+        {
             /* this a live object?               */
-            if (objectIsLive(objectPtr, mark)) {
+            if (objectIsLive(objectPtr, mark))
+            {
                 /* Get size of object for stats and  */
                 bytes = ((RexxObject *)objectPtr)->getObjectSize();
                 /* do any reference checking         */
@@ -1091,7 +1145,7 @@ void MemorySegmentSet::sweep()
             }
 
             else
-              {
+            {
                 /* get the object's size */
                 deadLength = ((RexxObject *)objectPtr)->getObjectSize();
                 /* do any reference checking         */
@@ -1099,7 +1153,8 @@ void MemorySegmentSet::sweep()
 
                 for (nextObjectPtr = objectPtr + deadLength;
                     (nextObjectPtr < endPtr) && objectIsNotLive(nextObjectPtr, mark);
-                    nextObjectPtr += bytes) {
+                    nextObjectPtr += bytes)
+                {
                     /* get the object size */
                     bytes = ((RexxObject *)nextObjectPtr)->getObjectSize();
                     /* do any reference checking         */
@@ -1149,11 +1204,13 @@ RexxObject *MemorySegmentSet::splitDeadObject(
 
     /* remainder too small or this is a very large request */
     /* is the remainder two small to reuse? */
-    if (deadLength < splitMinimum) {
+    if (deadLength < splitMinimum)
+    {
         /* over allocate this object */
         allocationLength += deadLength;
     }
-    else {
+    else
+    {
         /* Yes, so pull new object out of the front of the dead */
         /* object, adjust the size of the Dead object.  We want */
         /* to use the front rather than the back so that if we */
@@ -1166,7 +1223,7 @@ RexxObject *MemorySegmentSet::splitDeadObject(
     }
     /* Adjust the size of this object to the requested allocation length */
     ((RexxObject *)object)->setObjectSize(allocationLength);
-    return (RexxObject *)object;
+    return(RexxObject *)object;
 }
 
 
@@ -1178,13 +1235,12 @@ RexxObject *NormalSegmentSet::findLargeDeadObject(
 /* remainder portion placed back on the proper chain.                         */
 /******************************************************************************/
 {
-    DeadObject *largeObject;
-
     /* Go through the LARGEDEAD object looking for the 1st */
     /* one we can use either our object is too big for all the */
     /* small chains, or the small chains are depleted.... */
-    largeObject = largeDead.findFit(allocationLength);
-    if (largeObject != NULL) {         /* did we find an object?            */
+    DeadObject *largeObject = largeDead.findFit(allocationLength);
+    if (largeObject != NULL)
+    {         /* did we find an object?            */
         /* potentially split this object into a smaller unit so we */
         /* can reuse the remainder. */
         return splitDeadObject(largeObject, allocationLength, MinimumObjectSize);
@@ -1209,52 +1265,55 @@ RexxObject *NormalSegmentSet::handleAllocationFailure(size_t allocationLength)
 /* Function:  Allocate an object from the normal object segment pool.         */
 /******************************************************************************/
 {
-  RexxObject *newObject;
-
-  /* Step 2, force a GC */
-  memory->collect();
-  /* now that we have good GC data, decide if we need to adjust */
-  /* the heap size. */
-  adjustMemorySize();
-  /* Step 3, see if can allocate now */
-  newObject = findObject(allocationLength);
-  /* still no luck?                    */
-  if (newObject == OREF_NULL) {
-      /* it is possible that the adjustment routines did not add */
-      /* anything because, yet we were unable to allocate a block */
-      /* because we're highly fragmented.  Try adding a new segment */
-      /* now, before going to the extreme methods. */
-      addSegments(SegmentSize);
-      /* see if can allocate now */
-      newObject = findObject(allocationLength);
-      /* still no luck?                    */
-      if (newObject == OREF_NULL) {
-          /* We might be able to steal something from the */
-          /* large allocations.  This will also steal the recovery */
-          /* segment as a last ditch effort */
-          memory->scavengeSegmentSets(this, allocationLength);
-          /* see if can allocate now */
-          newObject = findObject(allocationLength);
-          /* still no luck?                    */
-          if (newObject == OREF_NULL) {
-              /* absolute last chance to fix this.  We allocated a */
-              /* recovery segment at start up and have been hiding this */
-              /* in our back pocket.  It is now time to bring this into */
-              /* play, because we're running on fumes! */
-              if (recoverSegment != NULL) {
-                  addSegment(recoverSegment);
-                  recoverSegment = NULL;
-                  /* And try to find it once more */
-                  newObject = findObject(allocationLength);
-              }
-              if (newObject == OREF_NULL) {
-                  /* can't allocate, report resource error. */
-                  reportException(Error_System_resources);
-              }
-          }
-      }
-  }
-  return newObject;
+    /* Step 2, force a GC */
+    memory->collect();
+    /* now that we have good GC data, decide if we need to adjust */
+    /* the heap size. */
+    adjustMemorySize();
+    /* Step 3, see if can allocate now */
+    RexxObject *newObject = findObject(allocationLength);
+    /* still no luck?                    */
+    if (newObject == OREF_NULL)
+    {
+        /* it is possible that the adjustment routines did not add */
+        /* anything because, yet we were unable to allocate a block */
+        /* because we're highly fragmented.  Try adding a new segment */
+        /* now, before going to the extreme methods. */
+        addSegments(SegmentSize);
+        /* see if can allocate now */
+        newObject = findObject(allocationLength);
+        /* still no luck?                    */
+        if (newObject == OREF_NULL)
+        {
+            /* We might be able to steal something from the */
+            /* large allocations.  This will also steal the recovery */
+            /* segment as a last ditch effort */
+            memory->scavengeSegmentSets(this, allocationLength);
+            /* see if can allocate now */
+            newObject = findObject(allocationLength);
+            /* still no luck?                    */
+            if (newObject == OREF_NULL)
+            {
+                /* absolute last chance to fix this.  We allocated a */
+                /* recovery segment at start up and have been hiding this */
+                /* in our back pocket.  It is now time to bring this into */
+                /* play, because we're running on fumes! */
+                if (recoverSegment != NULL)
+                {
+                    addSegment(recoverSegment);
+                    recoverSegment = NULL;
+                    /* And try to find it once more */
+                    newObject = findObject(allocationLength);
+                }
+                if (newObject == OREF_NULL)
+                {
+                    /* can't allocate, report resource error. */
+                    reportException(Error_System_resources);
+                }
+            }
+        }
+    }
+    return newObject;
 }
 
 
@@ -1279,13 +1338,12 @@ RexxObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLength)
 /* block of memory from the pool reserved for smaller allocations.            */
 /******************************************************************************/
 {
-    RexxObject *newObject;
-
     /* Step 2, decide to expand the heap or GC, or both */
     expandOrCollect(allocationLength);
     /* Step 3, see if can allocate now */
-    newObject = findObject(allocationLength);
-    if (newObject == OREF_NULL) {    /* still no luck?                    */
+    RexxObject *newObject = findObject(allocationLength);
+    if (newObject == OREF_NULL)
+    {    /* still no luck?                    */
         /* Step 4, force a heap expansion, if we can */
         expandSegmentSet(allocationLength);
         /* merge the expanded segments into our current set. */
@@ -1295,21 +1353,24 @@ RexxObject *LargeSegmentSet::handleAllocationFailure(size_t allocationLength)
         /* Step 5, see if can allocate now */
         newObject = findObject(allocationLength);
         /* still no luck?                    */
-        if (newObject == OREF_NULL) {
+        if (newObject == OREF_NULL)
+        {
             /* We'll take one last chance.  We don't really like */
             /* to do this, but we might be able to steal a block */
             /* off of the normal allocation chain. */
             memory->scavengeSegmentSets(this, allocationLength);
             /* Last chance, see if can allocate now */
             newObject = findObject(allocationLength);
-            if (newObject == OREF_NULL) {/* still no luck?                    */
+            if (newObject == OREF_NULL)
+            {/* still no luck?                    */
                 /* can't allocate, report resource error. */
                 reportException(Error_System_resources);
             }
         }
     }
     /* if we got a real object, count this.... */
-    if (newObject != OREF_NULL) {
+    if (newObject != OREF_NULL)
+    {
         requests++;
     }
     /* return our allocated object       */
@@ -1323,18 +1384,17 @@ RexxObject *OldSpaceSegmentSet::findObject(size_t allocationLength)
 /* object allocations.                                                        */
 /******************************************************************************/
 {
-  DeadObject *largeObject;
-
-  /* go through the LARGEDEAD object looking for the 1st one we can */
-  /* use either our object is too big for all the small chains, or */
-  /* the small chain are depleted.... */
-  largeObject = deadCache.findFit(allocationLength);
-  /* did we find an object?            */
-  if (largeObject != NULL) {
-      /* split and prepare this object for use */
-      return splitDeadObject(largeObject, allocationLength, LargeAllocationUnit);
-  }
-  return OREF_NULL;                    /* we couldn't get this              */
+    /* go through the LARGEDEAD object looking for the 1st one we can */
+    /* use either our object is too big for all the small chains, or */
+    /* the small chain are depleted.... */
+    DeadObject *largeObject = deadCache.findFit(allocationLength);
+    /* did we find an object?            */
+    if (largeObject != NULL)
+    {
+        /* split and prepare this object for use */
+        return splitDeadObject(largeObject, allocationLength, LargeAllocationUnit);
+    }
+    return OREF_NULL;                    /* we couldn't get this              */
 }
 
 
@@ -1354,7 +1414,8 @@ RexxObject *OldSpaceSegmentSet::allocateObject(size_t requestLength)
     /* the next appropriate boundary. */
     RexxObject *newObject = findObject(allocationLength);
     /* can't allocate one?               */
-    if (newObject == OREF_NULL) {
+    if (newObject == OREF_NULL)
+    {
         /* add space to this and try again */
         newSegment(allocationLength, allocationLength);
         /* Step 3, see if can allocate now */
@@ -1373,8 +1434,10 @@ MemorySegment *MemorySegmentSet::largestActiveSegment()
     MemorySegment *largest = &anchor;
     MemorySegment *segment;
 
-    for (segment = anchor.next; segment->isReal(); segment = segment->next) {
-        if (segment->size() > largest->size()) {
+    for (segment = anchor.next; segment->isReal(); segment = segment->next)
+    {
+        if (segment->size() > largest->size())
+        {
             largest = segment;
         }
     }
@@ -1393,8 +1456,10 @@ MemorySegment *MemorySegmentSet::largestEmptySegment()
     MemorySegment *largest = &emptySegments;
     MemorySegment *segment;
 
-    for (segment = emptySegments.next; segment->isReal(); segment = segment->next) {
-        if (segment->size() > largest->size()) {
+    for (segment = emptySegments.next; segment->isReal(); segment = segment->next)
+    {
+        if (segment->size() > largest->size())
+        {
             largest = segment;
         }
     }
@@ -1420,7 +1485,8 @@ void LargeSegmentSet::expandOrCollect(
     /* and go on.  We don't need to (and shouldn't) force a garbage */
     /* collection yet. */
     MemorySegment *largestEmpty = largestEmptySegment();
-    if (largestEmpty->size() > allocationLength) {
+    if (largestEmpty->size() > allocationLength)
+    {
         /* just move this over, and get out of here...we should be */
         /* able to satisfy this request now. */
         MemorySegment *segment = findEmptySegment(allocationLength);
@@ -1433,14 +1499,16 @@ void LargeSegmentSet::expandOrCollect(
     /* if our largest segment can't hold this block, then this is a */
     /* certain failure.  It is time to add more segments for large */
     /* allocations. */
-    if (largestActive->size() < allocationLength) {
+    if (largestActive->size() < allocationLength)
+    {
         expandSegmentSet(allocationLength);
         return;
     }
     /* we can get into a situation where we need to expand */
     /* frequently.  If we've reached that point, just add */
     /* additional memorhy. */
-    if (requests <= MemoryThrashingThreshold) {
+    if (requests <= MemoryThrashingThreshold)
+    {
         expandSegmentSet(allocationLength);
         /* we only do the expansion once per cycle for this.  Bump */
         /* the requests count up so we don't keep expanding without */
@@ -1448,7 +1516,8 @@ void LargeSegmentSet::expandOrCollect(
         requests = MemoryThrashingThreshold + 1;
         return;
     }
-    else {
+    else
+    {
         /* make sure all of our empty segments are included.  This */
         /* will allow us to merge these into larger blocks. */
         activateEmptySegments();
@@ -1483,7 +1552,8 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
     /* this length, we don't combine empties now.  Deferring this */
     /* makes it easier for use to give segments back. */
     MemorySegment *largestEmpty = largestEmptySegment();
-    if (largestEmpty->size() > allocationLength) {
+    if (largestEmpty->size() > allocationLength)
+    {
         return;
     }
 
@@ -1491,12 +1561,15 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
     /* find the adjacent segments. */
     MemorySegment *segment;
     /* scan the entire list */
-    for (segment = anchor.next; segment->isReal(); segment = segment->next) {
-        if (segment->isEmpty()) {
+    for (segment = anchor.next; segment->isReal(); segment = segment->next)
+    {
+        if (segment->isEmpty())
+        {
             MemorySegment *nextSeg = segment->next;
             /* loop until we we've collapsed all of the adjacent */
             /* empty segments */
-            for (;segment->isAdjacentTo(nextSeg) && nextSeg->isEmpty(); nextSeg = segment->next) {
+            for (;segment->isAdjacentTo(nextSeg) && nextSeg->isEmpty(); nextSeg = segment->next)
+            {
                 memory->verboseMessage("Combining two empty segments\n");
                 /* combine these segments */
                 combineEmptySegments(segment, nextSeg);
@@ -1508,7 +1581,8 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
     /* segments created a new large block, we're finished.  If not, */
     /* then we've got a hard job ahead of us */
     largestEmpty = largestEmptySegment();
-    if (largestEmpty->size() > allocationLength) {
+    if (largestEmpty->size() > allocationLength)
+    {
         return;
     }
 
@@ -1516,14 +1590,16 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
     /* scan the entire list again, looking for opportunities to */
     /* combine partially empty segments.  This could potentially */
     /* create a contiguous block large enough for our purposes. */
-    for (segment = anchor.next; segment->isReal(); segment = segment->next) {
+    for (segment = anchor.next; segment->isReal(); segment = segment->next)
+    {
         /* this segment is only a candidate for merging if it has a */
         /* dead object on the end (fairly common, since we allocate */
         /* from the front) */
         DeadObject *lastBlock = segment->lastDeadObject();
         MemorySegment *emptySegment = NULL;
         MemorySegment *tailSegment = NULL;
-        if (lastBlock != NULL) {
+        if (lastBlock != NULL)
+        {
             /* we only do this if we can get a block of sufficient */
             /* size for the request we've received.  So see how */
             /* much we can reclaim first. */
@@ -1531,12 +1607,14 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
             /* now go to the next segment, but only continue if */
             /* they abutt */
             MemorySegment *nextSeg = segment->next;
-            if (!segment->isAdjacentTo(nextSeg) || !nextSeg->isReal()) {
+            if (!segment->isAdjacentTo(nextSeg) || !nextSeg->isReal())
+            {
                 continue;
             }
             /* we could have a single empty segment after us, as */
             /* we've already merged multiples. */
-            if (nextSeg->isEmpty()) {
+            if (nextSeg->isEmpty())
+            {
                 /* add the size in and continue */
                 deadLength += nextSeg->realSize();
                 emptySegment = nextSeg;
@@ -1544,10 +1622,12 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
             }
             /* we should now be looking at a potential merger */
             /* candidate. */
-            if (segment->isAdjacentTo(nextSeg) && nextSeg->isReal()) {
+            if (segment->isAdjacentTo(nextSeg) && nextSeg->isReal())
+            {
                 /* see if we have an empty block at the front of this */
                 DeadObject *firstBlock = nextSeg->firstDeadObject();
-                if (firstBlock != NULL) {
+                if (firstBlock != NULL)
+                {
                     deadLength += firstBlock->getObjectSize() + MemorySegmentOverhead;
                     tailSegment = nextSeg;
                 }
@@ -1565,7 +1645,8 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
             lastBlock->remove();
             /* if there is an intervening empty segment, merge this */
             /* into this segment. */
-            if (emptySegment != NULL) {
+            if (emptySegment != NULL)
+            {
                 /* remove all of the dead blocks from the chain */
                 emptySegment->removeAll();
                 /* remove the segment, and combine with this one. */
@@ -1573,7 +1654,8 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
                 segment->combine(emptySegment);
             }
             /* we may be able to combine the front block  */
-            if (tailSegment != NULL) {
+            if (tailSegment != NULL)
+            {
                 /* remove the first dead block from the chain */
                 tailSegment->firstDeadObject()->remove();
                 /* merge these two segments together. */
@@ -1645,7 +1727,8 @@ void LargeSegmentSet::expandSegmentSet(
 /******************************************************************************/
 {
     /* do we have a really big request? */
-    if (allocationLength > LargeSegmentDeadSpace) {
+    if (allocationLength > LargeSegmentDeadSpace)
+    {
         /* we allocate this as the size we need.  No sense in */
         /* trying to over allocate here, as we'd like to free */
         /* this up as soon as we can. */
@@ -1656,7 +1739,8 @@ void LargeSegmentSet::expandSegmentSet(
     /* LargeSegment so we can fit more allocations in a segment. */
     /* If we can't get a full real on, then fall back to the */
     /* smaller size segment. */
-    else if (allocationLength < SegmentDeadSpace) {
+    else if (allocationLength < SegmentDeadSpace)
+    {
         memory->verboseMessage("Expanding large segment set by %d\n", LargeSegmentDeadSpace);
         newSegment(LargeSegmentDeadSpace, SegmentDeadSpace);
     }
@@ -1665,9 +1749,11 @@ void LargeSegmentSet::expandSegmentSet(
     /* less than half a segment in size, add one more segment unit */
     /* to the allocation to increase the probability we'd be able */
     /* to use the extra. */
-    else {
+    else
+    {
         size_t requestLength = roundSegmentBoundary(allocationLength);
-        if ((requestLength - allocationLength) < MinimumSegmentSize) {
+        if ((requestLength - allocationLength) < MinimumSegmentSize)
+        {
             requestLength += SegmentDeadSpace;
         }
         memory->verboseMessage("Expanding large segment set by %d\n", requestLength);
@@ -1684,12 +1770,12 @@ void MemorySegmentSet::gatherStats(MemoryStats *memStats, SegmentStats *stats)
     stats->count = count;
 
     MemorySegment *seg;
-    for (seg = first(); seg != NULL; seg = next(seg)) {
+    for (seg = first(); seg != NULL; seg = next(seg))
+    {
         seg->gatherObjectStats(memStats, stats);
         stats->largestSegment = Numerics::maxVal(stats->largestSegment, seg->size());
         stats->smallestSegment = Numerics::maxVal(stats->smallestSegment, seg->size());
     }
-
 }
 
 
@@ -1699,13 +1785,15 @@ void MemorySegment::markAllObjects()
 /******************************************************************************/
 {
     char *op, *ep;
-    for (op = start(), ep = end(); op < ep; ) {
+    for (op = start(), ep = end(); op < ep; )
+    {
         /* mark behaviour live               */
         memory_mark_general(((RexxObject *)op)->behaviour);
 
         /* Does this object have other Obj   */
         /*refs?                              */
-        if (((RexxObject *)op)->hasReferences()) {
+        if (((RexxObject *)op)->hasReferences())
+        {
             /*  yes, Then lets mark them         */
             ((RexxObject *)op)->liveGeneral(RESTORINGIMAGE);
         }
@@ -1721,7 +1809,8 @@ void OldSpaceSegmentSet::markOldSpaceObjects()
 {
     /* mark the restored image segment */
     MemorySegment *segment;
-    for (segment = first(); segment != NULL; segment = next(segment)) {
+    for (segment = first(); segment != NULL; segment = next(segment))
+    {
         segment->markAllObjects();
     }
 }

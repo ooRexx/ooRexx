@@ -44,45 +44,80 @@
 #ifndef Included_RexxBuffer
 #define Included_RexxBuffer
 
- class RexxBuffer : public RexxObject
- {
-  public:
-  void *operator new(size_t, size_t);
-  inline void *operator new(size_t size, void *ptr) {return ptr;};
-  inline void  operator delete(void *, size_t) { ; }
-  inline void  operator delete(void *, void *) { ; }
+class RexxBufferBase : public RexxObject
+{
+public:
 
-  inline RexxBuffer() {;};
-  inline RexxBuffer(RESTORETYPE restoreType) { ; };
-  RexxBuffer *expand(size_t);
+    inline RexxBufferBase() {;};
 
-  inline size_t getLength(void) { return this->size; };
-  inline char *address(void) {return this->data; }
-  inline void copyData(size_t offset, const char *string, size_t length) { memcpy(this->data + offset, string, length); }
-  inline void copyData(CONSTRXSTRING &r) { copyData(0, r.strptr, r.strlength); }
-  inline void openGap(size_t offset, size_t _size, size_t tailSize)
-  {
-      memmove(address() + offset + _size, address() + offset, tailSize);
-  }
-  inline void closeGap(size_t offset, size_t _size, size_t tailSize)
-  {
-      memmove(address() + offset, address() + offset + _size, tailSize);
-  }
-  inline void setData(size_t offset, char character, size_t length)
-  {
-      memset(address() + offset, character, length);
-  }
-  RexxObject *newRexx(RexxObject **args, size_t argc);
-
-  static void createInstance();
-
-  static RexxClass *classInstance;   // singleton class instance
-
- protected:
+    inline size_t getLength() { return this->length; }
+    inline size_t getSize() { return this->size; }
+    inline void   setLength(size_t l) { this->size = l; }
+    virtual char *getData() = 0;
+    inline void copyData(size_t offset, const char *string, size_t length) { memcpy(this->getData() + offset, string, length); }
+    inline void copyData(CONSTRXSTRING &r) { copyData(0, r.strptr, r.strlength); }
+    inline void copyData(RXSTRING &r) { copyData(0, r.strptr, r.strlength); }
+    inline void openGap(size_t offset, size_t _size, size_t tailSize)
+    {
+        memmove(getData() + offset + _size, getData() + offset, tailSize);
+    }
+    inline void closeGap(size_t offset, size_t _size, size_t tailSize)
+    {
+        memmove(getData() + offset, getData() + offset + _size, tailSize);
+    }
+    inline void setData(size_t offset, char character, size_t length)
+    {
+        memset(getData() + offset, character, length);
+    }
+protected:
 
    size_t size;                        // size of the buffer
-   char data[4];                       /* actual data length                */
- };
+   size_t length;                      // length of the buffer data (freqently the same)
+};
+
+
+class RexxBuffer : public RexxBufferBase
+{
+public:
+    void *operator new(size_t, size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *, size_t) { ; }
+    inline void  operator delete(void *, void *) { ; }
+
+    inline RexxBuffer() {;}
+    inline RexxBuffer(RESTORETYPE restoreType) { ; }
+
+    RexxBuffer *expand(size_t);
+    RexxObject *newRexx(RexxObject **args, size_t argc);
+    virtual char *getData() { return data; }
+
+    static void createInstance();
+
+    static RexxClass *classInstance;   // singleton class instance
+
+protected:
+    char data[4];                       /* actual data length                */
+};
+
+
+class RexxMappedBuffer : public RexxBufferBase
+{
+public:
+    void *operator new(size_t);
+    inline void *operator new(size_t size, void *ptr) {return ptr;};
+    inline void  operator delete(void *) { ; }
+    inline void  operator delete(void *, void *) { ; }
+
+    inline RexxMappedBuffer(void *d, size_t l) { data = d; size = l; length = l; }
+    inline RexxMappedBuffer(RESTORETYPE restoreType) { ; }
+
+    virtual char *getData() { return (char *)data; }
+
+protected:
+    void *data;                         /* actual data length                */
+};
+
+
 
  inline RexxBuffer *new_buffer(size_t s) { return new (s) RexxBuffer; }
  inline RexxBuffer *new_buffer(CONSTRXSTRING &r)
@@ -90,6 +125,25 @@
      RexxBuffer *b = new_buffer(r.strlength);
      b->copyData(r);
      return b;
+ }
+
+ inline RexxBuffer *new_buffer(RXSTRING &r)
+ {
+     RexxBuffer *b = new_buffer(r.strlength);
+     b->copyData(r);
+     return b;
+ }
+
+ inline RexxBuffer *new_buffer(const char *data, size_t length)
+ {
+     RexxBuffer *b = new_buffer(length);
+     b->copyData(0, data, length);
+     return b;
+ }
+
+ inline RexxMappedBuffer *new_mapped_buffer(void *data, size_t length)
+ {
+     return new RexxMappedBuffer(data, length);
  }
 
 

@@ -135,26 +135,26 @@ notready:
 /* init method for setup on stream instance           */
 /******************************************************/
 
-::METHOD !c_stream_init          EXTERNAL 'REXX stream_init'
-::METHOD chars                   EXTERNAL 'REXX stream_chars'
-::METHOD lines                   EXTERNAL 'REXX stream_lines'
-::METHOD position                EXTERNAL 'REXX stream_position'
-::METHOD state                   EXTERNAL 'REXX stream_state'
-::METHOD description             EXTERNAL 'REXX stream_description'
-::METHOD !query_position         EXTERNAL 'REXX stream_query_position'
-::METHOD charout                 EXTERNAL 'REXX stream_charout'
-::METHOD charin                  EXTERNAL 'REXX stream_charin'
-::METHOD linein                  EXTERNAL 'REXX stream_linein'
-::METHOD lineout                 EXTERNAL 'REXX stream_lineout'
-::METHOD qualify                 EXTERNAL 'REXX qualify'
-::METHOD !query_exists           EXTERNAL 'REXX query_exists'
-::METHOD !query_size             EXTERNAL 'REXX query_size'
-::METHOD !query_time             EXTERNAL 'REXX query_time'
-::METHOD !handle_set             EXTERNAL 'REXX handle_set'
-::METHOD !std_set                EXTERNAL 'REXX std_set'
-::METHOD flush                   EXTERNAL 'REXX stream_flush'
-::METHOD !query_handle           EXTERNAL 'REXX query_handle'
-::METHOD !query_streamtype       EXTERNAL 'REXX query_streamtype'
+::METHOD !c_stream_init          EXTERNAL 'LIBRARY REXX stream_init'
+::METHOD chars                   EXTERNAL 'LIBRARY REXX stream_chars'
+::METHOD lines                   EXTERNAL 'LIBRARY REXX stream_lines'
+::METHOD position                EXTERNAL 'LIBRARY REXX stream_position'
+::METHOD state                   EXTERNAL 'LIBRARY REXX stream_state'
+::METHOD description             EXTERNAL 'LIBRARY REXX stream_description'
+::METHOD !query_position         EXTERNAL 'LIBRARY REXX stream_query_position'
+::METHOD charout                 EXTERNAL 'LIBRARY REXX stream_charout'
+::METHOD charin                  EXTERNAL 'LIBRARY REXX stream_charin'
+::METHOD linein                  EXTERNAL 'LIBRARY REXX stream_linein'
+::METHOD lineout                 EXTERNAL 'LIBRARY REXX stream_lineout'
+::METHOD qualify                 EXTERNAL 'LIBRARY REXX qualify'
+::METHOD !query_exists           EXTERNAL 'LIBRARY REXX query_exists'
+::METHOD !query_size             EXTERNAL 'LIBRARY REXX query_size'
+::METHOD !query_time             EXTERNAL 'LIBRARY REXX query_time'
+::METHOD !handle_set             EXTERNAL 'LIBRARY REXX handle_set'
+::METHOD !std_set                EXTERNAL 'LIBRARY REXX std_set'
+::METHOD flush                   EXTERNAL 'LIBRARY REXX stream_flush'
+::METHOD !query_handle           EXTERNAL 'LIBRARY REXX query_handle'
+::METHOD !query_streamtype       EXTERNAL 'LIBRARY REXX query_streamtype'
 
 ::METHOD string                        /* string method                     */
   expose stream_name                   /* get the stream name               */
@@ -184,8 +184,8 @@ notready:
   return
                                        /* close and uninit are actually the */
                                        /* same method                       */
-::METHOD close        EXTERNAL 'REXX stream_close'
-::METHOD uninit       EXTERNAL 'REXX stream_close'
+::METHOD close        EXTERNAL 'LIBRARY REXX stream_close'
+::METHOD uninit       EXTERNAL 'LIBRARY REXX stream_close'
 
 ::METHOD  arrayout                     /* write out lines as an array       */
   use strict arg array, type=.nil      /* access the array                  */
@@ -291,7 +291,7 @@ notready:
 notready:                              /* standard notready handler         */
   raise propagate
 
-::METHOD open        EXTERNAL 'REXX stream_open'
+::METHOD open        EXTERNAL 'LIBRARY REXX stream_open'
 
 ::METHOD query                         /* standard query routine            */
   use strict arg subcommand
@@ -433,8 +433,8 @@ return position
 /* Create the rx_queue class and define its associated methods */
 /*****************************************************************/
 ::CLASS 'RexxQueue'
-::METHOD create  CLASS   EXTERNAL 'REXX rexx_create_queue'
-::METHOD delete  CLASS   EXTERNAL 'REXX rexx_delete_queue'
+::METHOD create  CLASS   EXTERNAL 'LIBRARY REXX rexx_create_queue'
+::METHOD delete  CLASS   EXTERNAL 'LIBRARY REXX rexx_delete_queue'
 
 ::METHOD init
   use strict arg name = "SESSION"
@@ -472,8 +472,8 @@ return position
 ::METHOD say
   forward message 'QUEUE'
 
-::METHOD push            EXTERNAL 'REXX rexx_push_queue'
-::METHOD queue           EXTERNAL 'REXX rexx_queue_queue'
-::METHOD pull            EXTERNAL 'REXX rexx_pull_queue'
-::METHOD linein          EXTERNAL 'REXX rexx_linein_queue'
-::METHOD queued          EXTERNAL 'REXX rexx_query_queue'
+::METHOD push            EXTERNAL 'LIBRARY REXX rexx_push_queue'
+::METHOD queue           EXTERNAL 'LIBRARY REXX rexx_queue_queue'
+::METHOD pull            EXTERNAL 'LIBRARY REXX rexx_pull_queue'
+::METHOD linein          EXTERNAL 'LIBRARY REXX rexx_linein_queue'
+::METHOD queued          EXTERNAL 'LIBRARY REXX rexx_query_queue'

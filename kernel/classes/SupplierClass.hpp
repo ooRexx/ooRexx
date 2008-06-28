@@ -62,7 +62,7 @@
    RexxObject  *index();
    RexxObject  *initRexx(RexxArray *values, RexxArray *indexes);
 
-
+   static void createInstance();
    static RexxClass *classInstance;
 
  protected:

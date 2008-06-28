@@ -38,5 +38,4 @@
 LIBRARY RXSOCK BASE=0x6B1C0000  ; @HOL for feature 421
 
 EXPORTS
-   SOCKLOADFUNCS = SockLoadFuncs
-   SOCKFUNCTIONGATEWAY = SockFunctionGateWay
+  RexxGetPackage

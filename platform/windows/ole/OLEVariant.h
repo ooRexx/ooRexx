@@ -45,10 +45,10 @@
 #define FLAG_SEPARATOR_CHAR    ','
 
 // Function prototypes for local functions
-static void convertToParamFlag( REXXOBJECT, int );
-static void convertToVT( REXXOBJECT, int );
-static REXXOBJECT stringToVT(REXXOBJECT);
-static REXXOBJECT stringToFlags(REXXOBJECT);
+static void convertToParamFlag(RexxMethodContext *, RexxObjectPtr, int );
+static void convertToVT(RexxMethodContext *, RexxObjectPtr, int );
+static RexxObjectPtr stringToVT(RexxMethodContext *,RexxObjectPtr);
+static RexxObjectPtr stringToFlags(RexxMethodContext *, RexxObjectPtr);
 
 static __inline int  countSymbols( PSZ, CHAR );
 static __inline PSZ  stripNonCSyms( PSZ );

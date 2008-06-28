@@ -97,6 +97,7 @@ set KERNEL=%OR_ORYXKSRC%
 set KCLASSES=%KERNEL%\classes
 set KMESSAGES=%KERNEL%\messages
 set KCORE=%KERNEL%\runtime
+set KAPI=%KERNEL%\api
 set KEXPR=%KERNEL%\expression
 set KINST=%KERNEL%\instructions
 set KMAIN=%KERNEL%\main

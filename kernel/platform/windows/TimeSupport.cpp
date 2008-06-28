@@ -38,7 +38,6 @@
 
 #include "RexxCore.h"
 #include "IntegerClass.hpp"
-#include "RexxNativeAPI.h"
 #include "RexxDateTime.hpp"
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
@@ -183,14 +182,12 @@ static void waitTimerOrEvent(HANDLE hev)
 /*                      day) until timer should expire, expressed in */
 /*                      milliseconds.                                */
 /*********************************************************************/
-RexxMethod2(void, alarm_startTimer,
+RexxMethod2(int, alarm_startTimer,
             wholenumber_t, numdays,
             wholenumber_t, alarmtime)
 {
     bool fState = false;                 /* Initial state of semaphore        */
     unsigned int msecInADay = 86400000;  /* number of milliseconds in a day   */
-    REXXOBJECT cancelObj;                /* object to check for cancel        */
-    wholenumber_t cancelVal;             /* value of cancel                   */
     HANDLE SemHandle = 0;                /* Event-semaphore handle            */
     UINT_PTR TimerHandle = 0;            /* Timer handle                      */
 
@@ -198,14 +195,13 @@ RexxMethod2(void, alarm_startTimer,
     SemHandle = CreateEvent(NULL, TRUE, fState, NULL);
     if ( !SemHandle )
     {
-        /* Couldn't create the semaphore, raise an exception. */
-        rexx_exception(Error_System_service);
-        return;
+        context->RaiseException(Rexx_Error_System_service);
+        return 0;
     }
 
-    /* Set the state variables. */
-    ooRexxVarSet("EVENTSEMHANDLE", ooRexxPointer(SemHandle));
-    ooRexxVarSet("TIMERSTARTED", ooRexxTrue);
+    /* set the state variables           */
+    context->SetObjectVariable("EVENTSEMHANDLE", context->NewPointer(SemHandle));
+    context->SetObjectVariable("TIMERSTARTED", context->True());
 
     if ( numdays > 0 )
     {
@@ -217,8 +213,8 @@ RexxMethod2(void, alarm_startTimer,
         {
             /* Couldn't create a timer, raise an exception. */
             CloseHandle(SemHandle);
-            rexx_exception(Error_System_service);
-            return;
+            context->RaiseException(Rexx_Error_System_service);
+            return 0;
         }
 
         while ( numdays > 0 )
@@ -227,14 +223,14 @@ RexxMethod2(void, alarm_startTimer,
             waitTimerOrEvent(SemHandle);
 
             /* Check if the alarm is canceled. */
-            cancelObj = ooRexxVarValue("CANCELED");
-            cancelVal = REXX_INTEGER_VALUE(cancelObj);
-            if ( cancelVal == 1 )
+            RexxObjectPtr cancelObj = context->GetObjectVariable("CANCELED");
+
+            if (cancelObj == context->True())
             {
                 /* Alarm is canceled, delete timer, close semaphore, return. */
                 KillTimer(NULL, TimerHandle);
                 CloseHandle(SemHandle);
-                return;
+                return 0;
             }
             numdays--;
         }
@@ -250,8 +246,8 @@ RexxMethod2(void, alarm_startTimer,
         {
             /* Couldn't create a timer, raise an exception. */
             CloseHandle(SemHandle);
-            rexx_exception(Error_System_service);
-            return;
+            context->RaiseException(Rexx_Error_System_service);
+            return 0;
         }
 
         /* Wait for the WM_TIMER message or for the alarm to be canceled. */
@@ -264,7 +260,7 @@ RexxMethod2(void, alarm_startTimer,
     }
 
     CloseHandle(SemHandle);
-    return;
+    return 0;
 }
 
 
@@ -277,15 +273,14 @@ RexxMethod2(void, alarm_startTimer,
 /*   Arguments:         eventSemHandle - handle to event semaphore   */
 /*                      used to signal the timer should be canceled. */
 /*********************************************************************/
-RexxMethod1(void, alarm_stopTimer,
-            POINTER, eventSemHandle)
+RexxMethod1(int, alarm_stopTimer, POINTER, eventSemHandle)
 {
     /* Post the event semaphore to signal the alarm should be canceled. */
     if ( ! EVPOST((HANDLE)eventSemHandle) )
     {
         /* Raise an error if the semaphore could not be posted. */
-        rexx_exception(Error_System_service);
+        context->RaiseException(Rexx_Error_System_service);
     }
-    return;
+    return 0;
 }
 

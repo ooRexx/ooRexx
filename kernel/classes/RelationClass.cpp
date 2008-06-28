@@ -51,6 +51,16 @@
 // singleton class instance
 RexxClass *RexxRelation::classInstance = OREF_NULL;
 
+
+/**
+ * Create initial class object at bootstrap time.
+ */
+void RexxRelation::createInstance()
+{
+    CLASS_CREATE(Relation, "Relation", RexxClass);
+}
+
+
 RexxObject *RexxRelation::removeItem(
   RexxObject *_value,                  /* value part of the tuple           */
   RexxObject *_index)                  /* item to remove                    */
@@ -58,7 +68,7 @@ RexxObject *RexxRelation::removeItem(
 /* Function:  Remove an item from a relation using an index                   */
 /******************************************************************************/
 {
-  return this->contents->removeItem(_value, _index);
+    return this->contents->removeItem(_value, _index);
 }
 
 RexxSupplier *RexxRelation::supplier(
@@ -67,25 +77,30 @@ RexxSupplier *RexxRelation::supplier(
 /* Function:  Create a supplier for a relation                                */
 /******************************************************************************/
 {
-  RexxArray  *itemArray;               /* array of returned items           */
-  RexxArray  *indexArray;              /* array of indexes                  */
-  size_t   i;                          /* loop counter                      */
-  size_t   size;                       /* size of the array                 */
+    RexxArray  *itemArray;               /* array of returned items           */
+    RexxArray  *indexArray;              /* array of indexes                  */
+    size_t   i;                          /* loop counter                      */
+    size_t   size;                       /* size of the array                 */
 
-  if (_index == OREF_NULL)              /* no index given?                   */
-                                       /* return the entire supplier        */
-    return this->contents->supplier();
-  else {                               /* partial supplier                  */
-                                       /* get all of the items with index   */
-    itemArray = this->contents->getAll(_index);
-    size = itemArray->size();          /* get the array size                */
-    indexArray = new_array(size);      /* get an index array                */
-    for (i = 1; i <= size; i++)        /* loop through the index array      */
-                                       /* insert the same index here        */
-      indexArray->put(_index, i);
-                                       /* turn this into a supplier         */
-    return (RexxSupplier *)new_supplier(itemArray, indexArray);
-  }
+    if (_index == OREF_NULL)              /* no index given?                   */
+    {
+        /* return the entire supplier        */
+        return this->contents->supplier();
+    }
+    else
+    {                               /* partial supplier                  */
+                                    /* get all of the items with index   */
+        itemArray = this->contents->getAll(_index);
+        size = itemArray->size();          /* get the array size                */
+        indexArray = new_array(size);      /* get an index array                */
+        for (i = 1; i <= size; i++)        /* loop through the index array      */
+        {
+            /* insert the same index here        */
+            indexArray->put(_index, i);
+        }
+        /* turn this into a supplier         */
+        return(RexxSupplier *)new_supplier(itemArray, indexArray);
+    }
 }
 
 RexxObject *RexxRelation::itemsRexx(
@@ -95,22 +110,23 @@ RexxObject *RexxRelation::itemsRexx(
 /*            the entire collection if the index is omitted.                  */
 /******************************************************************************/
 {
-  RexxArray *itemArray;                /* array of returned items           */
-  size_t  numEntries;                  /* number of entries                 */
-  size_t  tempSize;                    /* array size                        */
+    RexxArray *itemArray;                /* array of returned items           */
+    size_t  numEntries;                  /* number of entries                 */
+    size_t  tempSize;                    /* array size                        */
 
-  if (_index == OREF_NULL) {           /* no index given?                   */
-                                       /* return count for everything       */
-    numEntries = this->contents->totalEntries();
-    return (RexxObject *)new_integer(numEntries);
-  }
-  else
-  {
-                                       /* get all of the items with index   */
-    itemArray = this->contents->getAll(_index);
-    tempSize = itemArray->size();      /* return the array size             */
-    return (RexxObject *)new_integer(tempSize);
-  }
+    if (_index == OREF_NULL)
+    {           /* no index given?                   */
+                /* return count for everything       */
+        numEntries = this->contents->totalEntries();
+        return(RexxObject *)new_integer(numEntries);
+    }
+    else
+    {
+        /* get all of the items with index   */
+        itemArray = this->contents->getAll(_index);
+        tempSize = itemArray->size();      /* return the array size             */
+        return(RexxObject *)new_integer(tempSize);
+    }
 }
 
 RexxObject *RexxRelation::removeItemRexx(
@@ -120,22 +136,24 @@ RexxObject *RexxRelation::removeItemRexx(
 /* Function:  Remove an item from a relation using an index                   */
 /******************************************************************************/
 {
-  RexxObject *item;                    /* removed item                      */
+    RexxObject *item;                    /* removed item                      */
 
-  required_arg(_value, ONE);            /* make sure we have a value         */
+    required_arg(_value, ONE);            /* make sure we have a value         */
 
-  // standard remove form?
-  if (_index == OREF_NULL)
-  {
-      item = this->contents->removeItem(_value);
-  }
-  else    // multi-item form
-  {
-      item = this->contents->removeItem(_value, _index);
-  }
-  if (item == OREF_NULL)               /* If nothing found, give back .nil  */
-    item = TheNilObject;               /* (never return OREF_NULL to REXX)  */
-  return item;                         /* return removed value              */
+    // standard remove form?
+    if (_index == OREF_NULL)
+    {
+        item = this->contents->removeItem(_value);
+    }
+    else    // multi-item form
+    {
+        item = this->contents->removeItem(_value, _index);
+    }
+    if (item == OREF_NULL)               /* If nothing found, give back .nil  */
+    {
+        item = TheNilObject;               /* (never return OREF_NULL to REXX)  */
+    }
+    return item;                         /* return removed value              */
 }
 
 RexxObject *RexxRelation::hasItem(
@@ -162,9 +180,9 @@ RexxObject *RexxRelation::allIndex(
 /* Function:  return all indices with the same value                          */
 /******************************************************************************/
 {
-  required_arg(_value, ONE);           /* make sure we have a value         */
-                                       /* just get from the hash table      */
-  return this->contents->allIndex(_value);
+    required_arg(_value, ONE);           /* make sure we have a value         */
+                                         /* just get from the hash table      */
+    return this->contents->allIndex(_value);
 }
 
 RexxObject *RexxRelation::allAt(
@@ -173,9 +191,9 @@ RexxObject *RexxRelation::allAt(
 /* Function:  return all values with the same index                           */
 /******************************************************************************/
 {
-  required_arg(_index, ONE);           /* make sure we have an index        */
+    required_arg(_index, ONE);           /* make sure we have an index        */
                                        /* just get from the hash table      */
-  return this->contents->allIndex(_index);
+    return this->contents->allIndex(_index);
 }
 
 
@@ -188,16 +206,16 @@ RexxObject *RexxRelation::put(
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-  RexxHashTable *newHash;              /* newly created hash table          */
-
-  required_arg(_value, ONE);            /* make sure we have an value        */
-  required_arg(_index, TWO);            /* make sure we have an index        */
-                                       /* try to place in existing hashtab  */
-  newHash = this->contents->add(_value, _index);
-  if (newHash != OREF_NULL)            /* have a reallocation occur?        */
-                                       /* hook on the new hash table        */
-    OrefSet(this, this->contents, newHash);
-  return OREF_NULL;                    /* never returns anything            */
+    required_arg(_value, ONE);            /* make sure we have an value        */
+    required_arg(_index, TWO);            /* make sure we have an index        */
+    /* try to place in existing hashtab  */
+    RexxHashTable *newHash = this->contents->add(_value, _index);
+    if (newHash != OREF_NULL)            /* have a reallocation occur?        */
+    {
+        /* hook on the new hash table        */
+        OrefSet(this, this->contents, newHash);
+    }
+    return OREF_NULL;                    /* never returns anything            */
 }
 
 RexxObject *RexxRelation::newRexx(
@@ -207,14 +225,12 @@ RexxObject *RexxRelation::newRexx(
 /* Function:  Create an instance of a relation                                */
 /******************************************************************************/
 {
-  RexxRelation *newObj;                /* newly created queue object        */
-
-  newObj = new_relation();             /* get a new relation                */
-                                       /* object parse_assignment behaviour */
-  newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
-                                       /* Initialize the new list instance  */
-  newObj->sendMessage(OREF_INIT, init_args, argCount);
-  return newObj;                       /* return the new object             */
+    RexxRelation *newObj = new_relation();             /* get a new relation                */
+    /* object parse_assignment behaviour */
+    newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
+    /* Initialize the new list instance  */
+    newObj->sendMessage(OREF_INIT, init_args, argCount);
+    return newObj;                       /* return the new object             */
 }
 
 RexxRelation *RexxRelation::newInstance()
@@ -222,8 +238,8 @@ RexxRelation *RexxRelation::newInstance()
 /* Function:  Create a new relation item                                      */
 /******************************************************************************/
 {
-                                       /* Get new object                    */
-                                       /* get a new object and hash         */
-  return (RexxRelation *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxRelation), T_Relation);
+    /* Get new object                    */
+    /* get a new object and hash         */
+    return(RexxRelation *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxRelation), T_Relation);
 }
 
