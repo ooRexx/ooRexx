@@ -80,15 +80,6 @@ if ERRORLEVEL 1 goto error
 
 
 REM
-REM *** Rexxutil. Note that RexxUtil needs to be built before rexx.img is created.
-REM
-@ECHO Building Rexxutil..
-CD  %OR_ORYXRSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F REXXUTIL.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F REXXUTIL.MAK )
-if ERRORLEVEL 1 goto error
-
-
-REM
 REM *** These are the commmand lanuchers, need the kernel and rexxapi
 REM
 @ECHO Building Command launchers
@@ -110,8 +101,15 @@ IF %USELOGFILE% equ 1 ( NMAKE /F Rxqueue.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /
 if ERRORLEVEL 1 goto error
 
 
-@ECHO Building rxwinsys.dll
+REM
+REM *** Rexxutil
+REM
+@ECHO Building Rexxutil..
 CD  %OR_ORYXRSRC%
+IF %USELOGFILE% equ 1 ( NMAKE /F REXXUTIL.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F REXXUTIL.MAK )
+if ERRORLEVEL 1 goto error
+
+@ECHO Building rxwinsys.dll
 IF %USELOGFILE% equ 1 ( NMAKE /F RXWINSYS.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F RXWINSYS.MAK )
 if ERRORLEVEL 1 goto error
 

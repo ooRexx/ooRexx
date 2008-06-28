@@ -889,73 +889,77 @@
 
 
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
-  These menu bar methods are needed to provide backward compatibility for the
-  deprecated menu methods.  The ooDialog programmer is *strongly* discouraged
-  from using them.  If the deprecated methods are removed, these will be removed
-  with them.
-\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-::attribute menuBar get
-::attribute menuBar set private
-
-::method linkMenu
-  use strict arg menu
-
-  if \ menu~isA(.MenuBar) then return -1
-
-  oldMenu = self~menuBar
-  self~menuBar = menu
-  return oldMenu
-
-::method unlinkMenu
-  menu = self~menuBar
-  self~menuBar = .nil
-  return menu
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
-  The following menu bar methods are deprecated, instead, use the Menu classes
-  directly.
-\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/******************************************************************************/
+/* Menu/Action bar extensions */
 
 ::method EnableMenuItem unguarded
-    use strict arg id
-    if self~menuBar == .nil then return -2
-    return self~menuBar~enable(id)
+    use arg id
+    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+    if id = -1 then return -1
+    return DialogMenu("SETMI", self~Adm, id, "ENABLE")
+
 
 ::method DisableMenuItem unguarded
-    use strict arg id
-    if self~menuBar == .nil then return -2
-    return self~menuBar~disable(id)
+    use arg id
+    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+    if id = -1 then return -1
+    return DialogMenu("SETMI", self~Adm, id, "DISABLE")
+
 
 ::method CheckMenuItem unguarded
-    use strict arg id
-    if self~menuBar == .nil then return -2
-    return self~menuBar~check(id)
+    use arg id
+    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+    if id = -1 then return -1
+    return DialogMenu("SETMI", self~Adm, id, "CHECK")
+
 
 ::method UncheckMenuItem unguarded
-    use strict arg id
-    if self~menuBar == .nil then return -2
-    return self~menuBar~uncheck(id)
+    use arg id
+    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+    if id = -1 then return -1
+    return DialogMenu("SETMI", self~Adm, id, "UNCHECK")
+
 
 ::method GrayMenuItem unguarded
-    use strict arg id
-    if self~menuBar == .nil then return -2
-    return self~menuBar~gray(id)
+    use arg id
+    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+    if id = -1 then return -1
+    return DialogMenu("SETMI", self~Adm, id, "GRAY")
+
 
 ::method SetMenuItemRadio unguarded
-    use strict arg idstart, idend, idset
-    if self~menuBar == .nil then return -2
-    return self~menuBar~checkRadio(idstart, idend, idset)
+    use arg idstart, idend, idset
+    if idStart~DataType("N") = 0
+        then idStart = self~ResolveSymbolicId(idStart)
+    if idEnd~DataType("N")  = 0
+        then idEnd   = self~ResolveSymbolicId(idEnd)
+    if idSet~DataType("N")   = 0
+        then idSet   = self~ResolveSymbolicId(idSet)
+    if (idStart = -1) | (idEnd = -1) | (idSet = -1)
+        then return -1
+    return DialogMenu("SETMI", self~Adm, idstart, idend, idset)
+
 
 ::method GetMenuItemState unguarded
-    use strict arg id
-    if self~menuBar == .nil then return -2
-    return self~menuBar~getState(id)
+    use arg id
+    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+    if id = -1 then return -1
+    return DialogMenu("GETMI", self~Adm,  id)
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
-  End deprecated menu bar methods.
-\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+::method ConnectMenuItem
+   use arg id, msgToRise
+   if id~DataType("N") = 0 then do
+       if self~ProcessingLoad = 1 then msgToRise = id
+       id = self~ResolveSymbolicId(id)
+       if id = -1 then return -1
+   end
+   else do
+      if id < 3 | id = 9 then return 0
+      if Arg(2, 'o') = 1 then msgToRise = ""
+   end
+   return self~AddUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0x0000FFFF, 0, 0)
+
 
 /******************************************************************************/
 /* New extensions */
@@ -975,22 +979,6 @@
 ::method ConnectMouseCapture
    use arg msgToRise
    self~AddUserMsg(msgToRise, 0x00000215, 0xFFFFFFFF, 0, 0, 0, 0)
-
-::method ConnectMenuItem
-   use strict arg id, msgToRaise
-
-   id = self~ResolveResourceId(id)
-   if id = -1 then return -1
-
-   if id < 3 | id = 9 then return 0
-
-   return self~AddUserMsg(msgToRaise, 0x00000111, 0xFFFFFFFF, id, 0x0000FFFF, 0, 0)
-
--- Connect WM_CONTEXTMENU messages to a method.
-::method connectContextMenu
-   use strict arg msgToRaise, hwnd = .nil
-   if hwnd \== .nil then return self~addUserMsg(msgToRaise, 0x0000007B, 0xFFFFFFFF, hwnd, 0xFFFFFFFF, 0, 0, 0x00000201)
-   return self~addUserMsg(msgToRaise, 0x0000007B, 0xFFFFFFFF, 0, 0, 0, 0, 0x00000201)
 
 ::method PeekDialogMessage unguarded
    return GetDlgMsg(self~Adm, "Peek")

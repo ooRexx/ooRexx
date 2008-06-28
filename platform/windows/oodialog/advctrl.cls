@@ -63,8 +63,6 @@
        when type = "PB" then class = .ProgressBar
        when type = "SC" then class = .SliderControl
        when type = "TAB" then class = .TabControl
-       when type = "DT" then class = .DateTimePicker
-       when type = "MC" then class = .MonthCalendar
        otherwise return .Nil
    end
    ctrlobj = .Nil
@@ -145,52 +143,30 @@
    arr[3] = "TAB"
    forward message "GetControl" Arguments (arr)
 
-::method GetMonthCalendar unguarded
-   arr = Arg(1,"A")
-   arr[3] = "MC"
-   forward message "GetControl" Arguments (arr)
-
-::method GetDateTimePicker unguarded
-   arr = Arg(1,"A")
-   arr[3] = "DT"
-   forward message "GetControl" Arguments (arr)
-
 
 ::method ConnectTreeControl unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,6);      /* new id in result  6 == Tree Type */
+   return DataTable(self~Adm,"ADD",result,6);         /* new id in result  6 == Tree Type */
 
 ::method ConnectListControl unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,7);      /* new id in result  7 == List Type */
+   return DataTable(self~Adm,"ADD",result,7);         /* new id in result  7 == List Type */
 
 ::method ConnectSliderControl unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,8);      /* new id in result  8 == Track Bar Type */
+   return DataTable(self~Adm,"ADD",result,8);         /* new id in result  8 == Track Bar Type */
 
 ::method ConnectTabControl unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,9);      /* new id in result  9 == Tab Type */
-
-::method ConnectDateTimePicker unguarded
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,10);     /* new id in result  10 == Date and Time Picker */
-
-::method ConnectMonthCalendar unguarded
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,11);     /* new id in result  11 == Month Calendar */
+   return DataTable(self~Adm,"ADD",result,9);         /* new id in result  9 == Tab Type */
 
 
 ::method InternGetNewCtrlStyle
@@ -256,28 +232,8 @@
    else if kind = "PROGRESS" then do
         if style~wordpos("PBS_VERTICAL") > 0 then ret = ret || " VERTICAL"
         if style~wordpos("PBS_SMOOTH") > 0 then ret = ret || " SMOOTH"
-        if style~wordpos("PBS_MARQUEE") > 0 then ret = ret || " MARQUEE"
         if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
         if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
-   end
-   else if kind = "DTP" then do
-        if style~wordpos("DTS_APPCANPARSE") > 0 then ret = ret || " PARSE"
-        if style~wordpos("DTS_RIGHTALIGN;") > 0 then ret = ret || " RIGHT"
-        if style~wordpos("DTS_SHOWNONE;  ") > 0 then ret = ret || " NONE"
-        if style~wordpos("DTS_UPDOWN;    ") > 0 then ret = ret || " UPDOWN"
-        if style~wordpos("DTS_LONGDATEFORMAT") > 0 then ret = ret || " LONG"
-        if style~wordpos("DTS_SHORTDATEFORMAT") > 0 then ret = ret || " SHORT"
-        if style~wordpos("DTS_SHORTDATECENTURYFORMAT") > 0 then ret = ret || " CENTURY"
-        if style~wordpos("DTS_TIMEFORMAT") > 0 then ret = ret || " TIME"
-        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
-   end
-   else if kind = "MONTH" then do
-        if style~wordpos("MCS_DAYSTATE")  > 0 then ret = ret || " DAYSTATE"
-        if style~wordpos("MCS_MULTISELECT")  > 0 then ret = ret || " MULTI"
-        if style~wordpos("MCS_NOTODAY")  > 0 then ret = ret || " NOTODAY"
-        if style~wordpos("MCS_NOTODAYCIRCLE")  > 0 then ret = ret || " NOCIRCLE"
-        if style~wordpos("MCS_WEEKNUMBERS")  > 0 then ret = ret || " WEEKNUMBERS"
-        if style~wordpos("WS_BORDER")  > 0 then ret = ret || " BORDER"
    end
    if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
    if style~wordpos("WS_HSCROLL") > 0 then ret = ret || " HSCROLL"
@@ -343,32 +299,6 @@
    self~AktPtr = UsrAddNewCtrl("TAB", self~AktPtr, id, x, y, cx, cy, opts)
    if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then do
        self~ConnectTabControl(symbid, attname)
-   end
-
-
-::method AddDateTimePicker
-   use arg id, attname, x, y, cx, cy, opts
-   symbid = id
-   id = self~ItemAdd(id)
-   if id < 0 then return id
-   if Arg(2, 'O') then attname = "DATA"id
-   opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddNewCtrl("DTP", self~AktPtr, id, x, y, cx, cy, opts)
-   if self~AutoDetect = 1 then do
-       self~ConnectDateTimePicker(symbid, attname)
-   end
-
-
-::method AddMonthCalendar
-   use arg id, attname, x, y, cx, cy, opts
-   symbid = id
-   id = self~ItemAdd(id)
-   if id < 0 then return id
-   if Arg(2, 'O') then attname = "DATA"id
-   opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddNewCtrl("MONTH", self~AktPtr, id, x, y, cx, cy, opts)
-   if self~AutoDetect = 1 then do
-       self~ConnectMonthCalendar(symbid, attname)
    end
 
 
@@ -484,9 +414,6 @@
 
 ::method GetStyleRaw     -- Get the control's current GWL_STYLE style
    return HandleControlEx(self~hDlg, self~id, "X", "GET")
-
-::method GetFont
-   return HandleControlEx(self~hDlg, self~id, "F", "GET")
 
 ::method Clear
    parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
@@ -797,21 +724,6 @@
 
 ::method LastItem attribute
 
-/* FIXME TODO implement storing lastitem index in the window words!!
-::method new class
-   use arg pdialog, id, category
-   Forward Class(Super) continue  /* this also calls Init */
-   obj = result
-
-   data = HandleListCtrlEx(obj~hWnd, "M", "USER", "G")
-   say "Got back" data "for USERDATA"
-   data = HandleListCtrlEx(obj~hWnd, "M", "USER", "S", 99)
-   say "Set 99, got back again:" data
-   data = HandleListCtrlEx(obj~hWnd, "M", "USER", "G")
-   say "Now got back" data "for USERDATA"
-   return obj
-*/
-
 ::method Init
    forward class (super) continue
    self~LastItem = -1
@@ -929,36 +841,6 @@
    if width~datatype("N") = 1 then width = width * self~FactorX
    return HandleListCtrl("C","SETWIDTH", self~Hwnd, nr, width~translate)
 
-::method GetColumnCount
-  return HandleListCtrlEx(self~hwnd, "G", "COLCOUNT")
-
-::method GetColumnOrder
-
-   retStr = HandleListCtrlEx(self~hwnd, "M", "ORDER")
-   if retStr~datatype('W') then return retStr
-
-   retArray = .array~new
-   do i = 1 to retStr~words
-     retArray~append(retStr~word(i))
-   end
-   return retArray
-
-::method SetColumnOrder
-   use strict arg order
-   if \ order~isInstanceOf(.array) then return -3
-
-   count = order~items
-   if count < 2 then return 0
-
-   argStr = " "
-   do i = 1 to count
-     nr = order[i]
-     if \ nr~datatype('W') then return -3
-     if \ (nr >= 0 & nr < count) then return -3
-     argStr = argStr || nr || ' '
-   end
-
-   return HandleListCtrlEx(self~hwnd, "M", 'ORDER', argStr)
 
 ::method StringWidth
    use arg text
@@ -1322,30 +1204,6 @@
    end
    else return 0
 
-::method SetMarquee
-   use strict arg on, interval = 500
-   return  HandleOtherNewCtrls("PROGRESS", "MARQUEE", self~hwnd, on, interval)
-
-::method BarColor
-   use strict arg r, g, b
-   return  HandleOtherNewCtrls("PROGRESS", "BAR", self~hwnd, r, g, b)
-
-::method BackgroundColor
-   use strict arg r, g, b
-   return  HandleOtherNewCtrls("PROGRESS", "BACK", self~hwnd, r, g, b)
-
-::method MakeRGB
-   use strict arg red, green, blue
-   if \ self~checkRGBNumber(red) then raise syntax 88.907 array("red", 0, 255, red)
-   if \ self~checkRGBNumber(green) then raise syntax 88.907 array("green", 0, 255, green)
-   if \ self~checkRGBNumber(blue) then raise syntax 88.907 array("blue", 0, 255, blue)
-
-::method checkRGBNumber private
-   use arg n
-   if \ n~isA(.string) then return .false
-   if \ n~datatype('W') then return .false
-   if n < 0 | n > 255 then return .false
-   return .true
 
 
 
@@ -1600,18 +1458,6 @@
 /**********                                    Old controls                                         ****************************/
 
 ::class 'StaticControl' subclass DialogControl public
-
--- STM_SETICON == 0x0170
-::method SetIcon
-   use strict arg hIcon
-   return SendWinMsg("ANY", self~hwnd, "0x0170", hIcon, 0)
-
-::method SetText
-    use strict arg text
-    return HandleControlEx(self~hDlg, self~id, "E", "TXT", text)
-
-::method GetText
-    return HandleControlEx(self~hDlg, self~id, "E", "TXT")
 
 /****************************************************** Edit Control Class *********************************************************/
 
@@ -2227,66 +2073,3 @@
    end
    self~SetPos(pos)
    return pos
-
-
-::class 'DateTimePicker' subclass DialogControl public
-
-
-::method getDateTime  -- Get the currently selected date and time
-  return HandleDateTimePicker(self~hwnd, 'G', 'SYS')
-
-::method setDateTime
-  use strict arg hr = (time('N')~left(2)), min = (time('N')~substr(4, 5)),         -
-                 sec = (time('N')~substr(7,8)), ms = 0, dy = (date('S')~right(2)), -
-                 mn = (date('S')~substr(5, 6)), yr = (date('S')~left(4))
-
-  return HandleDateTimePicker(self~hwnd, 'S', 'SYS', hr':'min':'sec'.'ms dy mn yr)
-
-::method clear
-  return HandleDateTimePicker(self~hwnd, 'S', 'SYS')
-
-::class 'MonthCalendar' subclass DialogControl public
-
-::method init
-  expose n2Day n2Month
-
-  forward class (super) continue
-
-  n2Day = .array~of('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday',    -
-                    'Friday', 'Saturday')
-
-  n2Month = .array~of('January', 'February', 'March', 'April', 'May', 'June',  -
-                      'July', 'August', 'September', 'October', 'November',    -
-                      'December')
-
-::method getDate  -- Get the currently selected date
-  expose n2Day n2Month
-  use arg format = 'COMPLETE'
-
-  ans = HandleMonthCalendar(self~hwnd, 'G', 'CUR')
-
-  select
-    when ans == 1 then ans = -1
-    when format~caselessCompare('RAW') == 0 then nop
-
-    when format~caselessCompare('NORMAL') == 0 then do
-      ans = ans~word(1) n2Month[ans~word(2)]~left(3) ans~word(3)
-    end
-
-    when format~caselessCompare('COMPLETE') == 0 then do
-      ans = n2Day[ans~word(4) + 1] || ',' n2Month[ans~word(2)] ans~word(1) || ',' ans~word(3)
-    end
-
-    otherwise ans = -1
-  end
-  -- End select
-
-  return ans
-
-::method usesUnicode
-  return HandleMonthCalendar(self~hwnd, 'G', "UNI")
-
-
-::method setDate
-  use strict arg day, month, year = (date('S')~left(4))
-  return HandleMonthCalendar(self~hwnd, 'S', 'CUR', day month year)

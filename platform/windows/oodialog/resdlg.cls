@@ -102,11 +102,11 @@
    return ret
 
 
--- This method is deprecated, instead use the Menu classes directly.
 ::method SetMenu
-  use strict arg id
-  menuBar = .BinaryMenuBar~new(self, id, self, 0, .true)
-  if menuBar~initCode == 0 then self~menuBar = menuBar
-  return menuBar~initCode
+   use strict arg id
+   if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
+   if id < 1 then return -1
+
+   return DialogMenu("ASSOC", self~DlgHandle, id)
 
 

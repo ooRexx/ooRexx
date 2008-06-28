@@ -151,7 +151,7 @@
          lp = -101
          tag = 0x00000907
       end
-      when type~abbrev("SELECTFOCUS") then do
+      when type = "SELECTFOCUS" then do
          lp = -101
          tag = 0x00000D07
       end
