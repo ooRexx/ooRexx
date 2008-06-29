@@ -159,6 +159,7 @@ KeywordEntry RexxSource::subKeywords[] = {             /* language keyword table
 /*********************************************************************/
 
 KeywordEntry RexxSource::builtinFunctions[] = {        /* built-in function table    */
+    KeywordEntry(CHAR_QUEUEEXIT,   BUILTIN_QUEUEEXIT),
     KeywordEntry(CHAR_ABBREV,      BUILTIN_ABBREV),
     KeywordEntry(CHAR_ABS,         BUILTIN_ABS),
     KeywordEntry(CHAR_ADDRESS,     BUILTIN_ADDRESS),
@@ -237,7 +238,6 @@ KeywordEntry RexxSource::builtinFunctions[] = {        /* built-in function tabl
     KeywordEntry(CHAR_X2C,         BUILTIN_X2C),
     KeywordEntry(CHAR_X2D,         BUILTIN_X2D),
     KeywordEntry(CHAR_XRANGE,      BUILTIN_XRANGE),
-    KeywordEntry(CHAR_QUEUEEXIT,   BUILTIN_QUEUEEXIT),
 };
 
 /*********************************************************************/

@@ -139,8 +139,7 @@ call 'PlatformObjects.orx'                   -- now load platform-specific built
 say ('Base objects created')
 
 -- add all of the defined routine functions into our global list
-.kernel~functions~putAll(.routines)
-
+.kernel~functions['RXQUEUE'] = .routines~rxqueue
 
 exit
 
