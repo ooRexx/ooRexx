@@ -6501,6 +6501,28 @@ size_t RexxEntry SysWinGetDefaultPrinter(const char *name, size_t numargs, CONST
   return VALID_ROUTINE;
 }
 
+/* TODO FIXME we should have a general purpose function for determing the
+ *  Window version.  There is one in the incubator in WinShell.
+ */
+bool getOSVersionStruct(OSVERSIONINFOEX *pVersionInfo)
+{
+   // First try calling GetVersionEx with the extended struct and if it fails,
+   // try with the original struct.
+
+   ZeroMemory(pVersionInfo, sizeof(OSVERSIONINFOEX));
+   pVersionInfo->dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+
+   if( ! GetVersionEx((OSVERSIONINFO *)pVersionInfo) )
+   {
+      pVersionInfo->dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+      if ( ! GetVersionEx((OSVERSIONINFO *) pVersionInfo) )
+      {
+          return FALSE;
+      }
+   }
+   return true;
+}
+
 /*************************************************************************
 * Function:  SysWinSetDefaultPrinter                                     *
 *                                                                        *
@@ -6508,40 +6530,81 @@ size_t RexxEntry SysWinGetDefaultPrinter(const char *name, size_t numargs, CONST
 *                                                                        *
 * Params:    string describing default printer                           *
 *                                                                        *
-* Return:    error number                                                *
+* Return:    0 on success, otherwise the OS system error number.         *
 *************************************************************************/
-
-size_t RexxEntry SysWinSetDefaultPrinter(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+size_t RexxEntry SysWinSetDefaultPrinter(const char *name, size_t numargs, CONSTRXSTRING args[],
+                                         const char *queuename, PRXSTRING retstr)
 {
     DWORD  errnum = 0;
+    bool   success = true;
     UINT   count = 0;
-    OSVERSIONINFO osv;
+    OSVERSIONINFOEX osv;
 
-    if (numargs != 1)                    /* If no args, then its an    */
-                                         /* incorrect call             */
-        return INVALID_ROUTINE;
-
-    /* just make sure the input string has valid format:
-       it has to contain at least two commas */
-    for (count = 0; count < args[0].strlength; count++)
+    if (numargs != 1)
     {
-        if (args[0].strptr[count] == ',')
-            errnum++;
+        return INVALID_ROUTINE;
     }
 
-    if (errnum < 2)
+    // Two forms of input are allowed.  The old form of
+    // "Printername,Drivername,Portname" and for W2K or later just the printer
+    // name.  Count the commas to determine which form this might be.
+    for ( int i = 0; i < args[0].strlength; i++ )
+    {
+        if ( args[0].strptr[i] == ',' )
+        {
+            count++;
+        }
+    }
+
+    if ( ! getOSVersionStruct(&osv) )
+    {
         return INVALID_ROUTINE;
+    }
 
-    // What version of Windows are you running?
-    osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&osv);
+    SetLastError(0);
 
-    // NT / W2K
-    WriteProfileString("Windows", "DEVICE", args[0].strptr);
-    SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM) "windows");
+    if ( osv.dwMajorVersion >= 5 && count == 0 )
+    {
+        // This is W2K or later and the user specified just the printer name.
+        // This code will work on W2K through Vista.
+        if ( SetDefaultPrinter(args[0].strptr) == 0 )
+        {
+            success = false;
+        }
+    }
+    else if ( count == 2 )
+    {
+        // NT or earlier, or the user still specified the old format. Microssoft
+        // only provides WriteProfileString() for backward compatibility to
+        // 16-bit Windows, and at some point this may no longer be supported.
+        // But it still appears to work on XP.
+        if ( WriteProfileString("Windows", "DEVICE", args[0].strptr) == 0 )
+        {
+            success = false;
+        }
+        else
+        {
+            if ( SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0L, 0L, SMTO_NORMAL, 1000, NULL) == 0 )
+            {
+                // If a window just timed out, then GetLastError() will return 0
+                // and the user will get the succes code.  If GetLastError()
+                // does not return 0, then chances are something really is
+                // wrong.
+                success = false;
+            }
+        }
+    }
+    else
+    {
+        return INVALID_ROUTINE;
+    }
 
-    errnum = GetLastError();
-    sprintf(retstr->strptr,"%d",errnum);
+    if ( ! success )
+    {
+        errnum = GetLastError();
+    }
+
+    sprintf(retstr->strptr, "%d", errnum);
     retstr->strlength = strlen(retstr->strptr);
 
     return VALID_ROUTINE;
