@@ -437,7 +437,7 @@ RexxObject *PackageManager::addRegisteredRoutine(RexxString *name, RexxString *m
 
     // see if this package is resolveable/loadable.
     LibraryPackage *package = loadLibrary(module);
-    if (package == OREF_NULL)
+    if (package != OREF_NULL)
     {
         // See if this is resolvable in this context.  If we got it,
         // return True.
