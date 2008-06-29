@@ -39,6 +39,7 @@ LIBRARY OODIALOG BASE=0x6B170000 ; @HOL for feature 421
 
 
 EXPORTS
+  RexxGetPackage
   PLAYSOUNDFILE         =        PlaySoundFile
   PLAYSND               =        PlaySnd
   PLAYSOUNDFILEINLOOP   =        PlaySoundFileInLoop
