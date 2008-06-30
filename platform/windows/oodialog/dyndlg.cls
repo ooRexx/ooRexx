@@ -57,17 +57,6 @@
 
 
 ::method DynamicInit private
-   if RxFuncQuery("InstUserMMFuncs") \= 0 then do
-      ret = Rxfuncadd("InstUserMMFuncs", "oodialog", "InstUserMMFuncs")
-      if (ret = 0) then ret = InstUserMMFuncs()
-      if ret \= 0 then
-      do
-         self~deinstall
-         say "Couldn't load function library -->" ret
-         self~InitCode = 1
-         return 1
-      end
-   end
    self~AktPtr = 0
    self~MenuAktPtr = 0
    self~MenuBasePtr = 0

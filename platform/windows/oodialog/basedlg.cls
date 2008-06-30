@@ -55,17 +55,8 @@
 ::class 'WindowExtensions' public MIXINCLASS object
 
 ::method Init_WindowExtensions
-   if RxFuncQuery("InstExtendedMMFuncs") \= 0 then do
-      ret = Rxfuncadd("InstExtendedMMFuncs", "oodialog", "InstExtendedMMFuncs")
-      if ret = 0 then ret = InstExtendedMMFuncs()
-      if ret \= 0 then
-      do
-         say "Couldn't load function library -->" ret
-         call RxFuncDrop("InstExtendedMMFuncs")
-         self~InitCode = 1
-         return 1
-      end
-   end
+   -- TODO FIXME This method is no longer needed with the new APIs.  It was used
+   -- to load the extended C functions.
    return 0
 
 

@@ -43,7 +43,6 @@
 /*                                                                            */
 /******************************************************************************/
 
-
 ::requires "oodutils.cls"  /* load public routines (not static) */
 
 
@@ -69,37 +68,11 @@
 
 ::method Init_WindowBase
    use arg hwnd
-   /* Are the C-functions already installed */
-   if RxFuncQuery("InstMMFuncs") \= 0 then do
-      /* Install C-functions necessary for controlling a simple dialog */
-      ret = Rxfuncadd("InstMMFuncs", "oodialog", "InstMMFuncs")
-      if ret = 0 then ret = InstMMFuncs()
-      else say "Couldn't register function library!"
-      oodver = 2120         /* 2120 is the required OODialog.DLL version for these classes */
-      oodver_max = 2200     /* support up to level 2.2.0.0 */
-      if ret < oodver | ret > oodver_max then
-      do
-         if (ret = 1) then say "Couldn't load function library (OODIALOG.DLL)!"
-         else if ret < oodver then say "This OODialog Class Library requires OODIALOG.DLL level 2.1.2.0!"
-         else say "This OODialog Class Library only supports OODIALOG.DLL level 2.1.2.0!"
-         call RxFuncDrop("InstMMFuncs")
-         self~InitCode = 1
-         return 1
-      end
-   end
-   /* Are the extended OODialog C-functions already installed */
-   if RxFuncQuery("InstExtendedMMFuncs") \= 0 then do
-   /* Install C-functions necessary for extended dialog controlling */
-      ret = Rxfuncadd("InstExtendedMMFuncs", "oodialog", "InstExtendedMMFuncs")
-      if ret = 0 then ret = InstExtendedMMFuncs()
-      if ret \= 0 then
-      do
-         say "Couldn't load function library -->" ret
-         call RxFuncDrop("InstExtendedMMFuncs")
-         self~InitCode = 1
-         return 1
-      end
-   end
+
+   -- TODO FIXME at this point the old ooDialog loaded the functions in
+   -- ooDialog.dll.  This is no longer needed with the package manager.
+   -- However, the code also did a version check.  I don't think that adds
+   -- anything - is that needed?
 
    self~SizeX = 0
    self~SizeY = 0
@@ -250,8 +223,7 @@
 
    /* prepare the dialog management for a new dialog */
    self~Adm = HandleDialogAdmin()  /* allocate a new dialog table */
-   if self~Adm = 0 then
-   do
+   if self~Adm = 0 then do
       self~Deinstall
       self~InitCode = 1
       return 1
@@ -1307,8 +1279,11 @@
    return 1
 
 
-   /* Deinstall will remove the C-functions from the OREXX-API manager */
 
+/** Deinstall()
+  * Clean up memory allocated for this dialog, decrement the counter, and remove
+  * the mutex if there are no more active dialogs.
+  */
 ::method DeInstall
    /* do we have to do a cleanup of the dialog table ? */
    if self~Adm \= 0 then ret = HandleDialogAdmin(self~Adm)  /* free dialog table */
@@ -1319,13 +1294,8 @@
    num = queued()
    call RxQueue 'SET', oldqueue
    if .OOD.SEMAPHORE \= 0 then call SysReleaseMutexSem .OOD.SEMAPHORE
-   /* if no dialog is active anymore, deinstall API and delete queue */
+   /* if no dialog is active anymore, delete queue */
    if num = 0 then do
-      ret = RemoveMMFuncs()
-      if RxFuncQuery("InstExtendedMMFuncs") = 0 then
-         ret = RemoveExtendedMMFuncs()
-      if RxFuncQuery("InstUserMMFuncs") = 0 then
-         ret = RemoveUserMMFuncs()
       call RxQueue 'DELETE', "OOD_GLOBAL_COUNT"
       call SysCloseMutexSem .OOD.SEMAPHORE
       .Local~Remove("OOD.SEMAPHORE")

@@ -333,7 +333,7 @@ size_t RexxEntry UsrDefineDialog(const char *funcname, size_t argc, CONSTRXSTRIN
    UCreateDlg(&pbase, &p, buffer[4], buffer[0], buffer[1], buffer[2], buffer[3],
    /*            class         title            fontname         fontsize */
               argv[4].strptr, argv[5].strptr, argv[6].strptr, atoi(argv[7].strptr), lStyle);
-   sprintf(retstr->strptr, "%p %p", pbase, p);
+   sprintf(retstr->strptr, "0x%p 0x%p", pbase, p);
    retstr->strlength = strlen(retstr->strptr);
    return 0;
 }
@@ -602,7 +602,7 @@ void UAddNamedControl(WORD **p, CHAR * className, INT id, INT x, INT y, INT cx, 
 
 size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
-   INT buffer[6];
+   INT buffer[5];
    ULONG lStyle;
    WORD *p = NULL;
    int i;
@@ -613,7 +613,11 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
    {
        CHECKARG(9);
 
-       for (i=0;i<6;i++) buffer[i] = atoi(argv[i+1].strptr);
+       /* UsrAddControl("BUT", self~AktPtr, id, x, y, w, h, name, opts) */
+       for ( i = 0; i < 5; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
 
        p = (WORD *)GET_POINTER(argv[1]);
 
@@ -644,14 +648,18 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (!strstr(argv[8].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
 
        /*                       id         x           y         cx          cy  */
-       UAddControl(&p, 0x0080, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], argv[7].strptr, lStyle);
+       UAddControl(&p, 0x0080, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
    }
    else
    if (!strcmp(argv[0].strptr,"EL"))
    {
        CHECKARG(8);
 
-       for (i=0;i<6;i++) buffer[i] = atoi(argv[i+1].strptr);
+       /* UsrAddControl("EL", self~AktPtr, id, x, y, cx, cy, opts) */
+       for ( i = 0; i < 5; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
 
        p = (WORD *)GET_POINTER(argv[1]);
 
@@ -683,14 +691,18 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
 
        /*                         id          x       y          cx           cy  */
-       UAddControl(&p, 0x0081, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
+       UAddControl(&p, 0x0081, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
    else
    if (!strcmp(argv[0].strptr,"TXT"))
    {
        CHECKARGL(8);
 
-       for (i=0;i<5;i++) buffer[i] = atoi(argv[i+1].strptr);
+       /* UsrAddControl("TXT", self~AktPtr, x, y, cx, cy, opts, text, id) */
+       for ( i = 0; i < 4; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
 
        p = (WORD *)GET_POINTER(argv[1]);
 
@@ -712,14 +724,17 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                      id      x         y         cx       cy  */
-       UAddControl(&p, 0x0082, i, buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
+       UAddControl(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
    }
    else
    if (!strcmp(argv[0].strptr,"LB"))
    {
        CHECKARG(8);
 
-       for (i=0;i<6;i++) buffer[i] = atoi(argv[i+1].strptr);
+       for ( i = 0; i < 5; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
 
        p = (WORD *)GET_POINTER(argv[1]);
 
@@ -742,14 +757,17 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
 
        /*                         id       x          y            cx        cy  */
-       UAddControl(&p, 0x0083, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
+       UAddControl(&p, 0x0083, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
    else
    if (!strcmp(argv[0].strptr,"CB"))
    {
        CHECKARG(8);
 
-       for (i=0;i<6;i++) buffer[i] = atoi(argv[i+1].strptr);
+       for ( i = 0; i < 5; i++)
+       {
+         buffer[i] = atoi(argv[i+2].strptr);
+       }
 
        p = (WORD *)GET_POINTER(argv[1]);
 
@@ -769,14 +787,17 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
 
        /*                         id       x          y            cx        cy  */
-       UAddControl(&p, 0x0085, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
+       UAddControl(&p, 0x0085, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
    else
    if (!strcmp(argv[0].strptr,"GB"))
    {
        CHECKARGL(8);
 
-       for (i=0;i<5;i++) buffer[i] = atoi(argv[i+1].strptr);
+       for ( i = 0; i < 4; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
 
        if (argc > 8)
           i = atoi(argv[8].strptr);
@@ -792,14 +813,17 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                      id      x         y        cx        cy  */
-       UAddControl(&p, 0x0080, i, buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
+       UAddControl(&p, 0x0080, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[4].strptr, lStyle);
    }
    else
    if (!strcmp(argv[0].strptr,"FRM"))
    {
        CHECKARGL(8);
 
-       for (i=0;i<6;i++) buffer[i] = atoi(argv[i+1].strptr);
+       for ( i = 0; i < 4; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
 
        p = (WORD *)GET_POINTER(argv[1]);
 
@@ -822,14 +846,17 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                     id    x           y          cx         cy  */
-       UAddControl(&p, 0x0082, i, buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
+       UAddControl(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], NULL, lStyle);
    }
    else
    if (!strcmp(argv[0].strptr,"SB"))
    {
        CHECKARG(8);
 
-       for (i=0;i<6;i++) buffer[i] = atoi(argv[i+1].strptr);
+       for ( i = 0; i < 5; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
 
        p = (WORD *)GET_POINTER(argv[1]);
 
@@ -844,7 +871,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                         id       x          y            cx        cy  */
-       UAddControl(&p, 0x0084, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
+       UAddControl(&p, 0x0084, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
 
    RETPTR(p);
@@ -959,14 +986,17 @@ size_t RexxEntry UsrAddResource(const char *funcname, size_t argc, CONSTRXSTRING
 
 size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
-   INT buffer[6];
+   INT buffer[5];
    ULONG lStyle;
    WORD *p;
    int i;
 
    CHECKARG(8);
 
-   for (i=0;i<6;i++) buffer[i] = atoi(argv[i+1].strptr);
+   for ( i = 0; i < 5; i++ )
+   {
+       buffer[i] = atoi(argv[i+2].strptr);
+   }
 
    p = (WORD *)GET_POINTER(argv[1]);
 
@@ -988,7 +1018,7 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[7].strptr,"ATROOT")) lStyle |= TVS_LINESATROOT;
        if (strstr(argv[7].strptr,"SHOWSELALWAYS")) lStyle |= TVS_SHOWSELALWAYS;
         /*                                   id       x          y            cx        cy  */
-       UAddNamedControl(&p, WC_TREEVIEW, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
+       UAddNamedControl(&p, WC_TREEVIEW, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
        RETPTR(p)
    }
    else
@@ -996,7 +1026,7 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
    {
        lStyle |= EvaluateListStyle(argv[7].strptr);
         /*                                   id       x          y            cx        cy  */
-       UAddNamedControl(&p, WC_LISTVIEW, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
+       UAddNamedControl(&p, WC_LISTVIEW, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
        RETPTR(p)
    }
    else
@@ -1007,7 +1037,7 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[7].strptr,"VERTICAL")) lStyle |= PBS_VERTICAL;
        if (strstr(argv[7].strptr,"SMOOTH")) lStyle |= PBS_SMOOTH;
         /*                                     id       x          y            cx        cy  */
-       UAddNamedControl(&p, PROGRESS_CLASS, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
+       UAddNamedControl(&p, PROGRESS_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
        RETPTR(p)
    }
    else
@@ -1026,7 +1056,7 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[7].strptr,"BOTH")) lStyle |= TBS_BOTH;
        if (strstr(argv[7].strptr,"ENABLESELRANGE")) lStyle |= TBS_ENABLESELRANGE;
         /*                                   id       x          y            cx        cy  */
-       UAddNamedControl(&p, TRACKBAR_CLASS, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
+       UAddNamedControl(&p, TRACKBAR_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
        RETPTR(p)
    }
    else
@@ -1047,7 +1077,7 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
         if (strstr(argv[7].strptr,"CLIPSIBLINGS")) lStyle |= WS_CLIPSIBLINGS;  /* used for property sheet to prevent wrong display */
 
         /*                                   id       x          y            cx        cy  */
-        UAddNamedControl(&p, WC_TABCONTROL, buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], NULL, lStyle);
+        UAddNamedControl(&p, WC_TABCONTROL, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
         RETPTR(p)
    }
 
@@ -1062,7 +1092,7 @@ extern BOOL SHIFTkey = FALSE;
 #ifndef USE_DS_CONTROL
 BOOL IsNestedDialogMessage(
     DIALOGADMIN * dlgAdm,
-    LPMSG  lpmsg    // address of structure with message
+    PMSG  lpmsg    // address of structure with message
    )
 {
    HWND hW, hParent, hW2;

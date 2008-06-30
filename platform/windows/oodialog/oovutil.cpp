@@ -116,7 +116,7 @@ public:
 void *string2pointer(const char *string)
 {
     void *pointer = 0;
-    sscanf(string, "0x%p", pointer);
+    sscanf(string, "0x%p", &pointer);
     return pointer;
 }
 
@@ -361,7 +361,7 @@ size_t RexxEntry HandleDialogAdmin(const char *funcname, size_t argc, CONSTRXSTR
         }
         else
         {
-            MessageBox(0,"To many aktive Dialogs","Error",MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+            MessageBox(0,"To many active Dialogs","Error",MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
         }
     }
     LeaveCriticalSection(&crit_sec);

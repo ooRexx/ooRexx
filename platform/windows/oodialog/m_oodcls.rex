@@ -77,12 +77,18 @@ do j over Arrax
     NewFile~lineout("/*"||" "~copies(76)||"*/")
     NewFile~lineout("/"||"*"~copies(78)||"/")
     NewFile~lineout("")
-    NewFile~lineout('PARSE UPPER SOURCE . . REQ_FILE')    /* must be put in uppercased */
     do jj over ArrClasses[i]
         NewFile~lineout(".Environment~put(."jj",'"jj"')")
     end
-    if i = 1 then call ProcessUtils
-    else NewFile~lineout('::requires "'outname[i-1]'.CLS"')
+    if i = 1 then do
+       NewFile~lineout("")
+       NewFile~lineout("::requires 'oodialog' LIBRARY")
+       NewFile~lineout("")
+       call ProcessUtils
+    end
+    else do
+       NewFile~lineout('::requires "'outname[i-1]'.CLS"')
+    end
     do file over j
        say (inpdir || file)
        ReadFile = .stream~new(inpdir || File)
