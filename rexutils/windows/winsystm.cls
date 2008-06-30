@@ -37,30 +37,25 @@
 /*----------------------------------------------------------------------------*/
 
 
+::requires 'rxwinsys' LIBRARY
 
-/* This is the base class for all the other Windows... classes. It handles the ext. function
-registration incl. queue counter and deregistration */
-
+/* This is the base class for all the other Windows... classes. It handles the
+ * queue counter.
+ */
 ::class 'WindowsClassesBase'
 
 ::method InitCode attribute
 
 ::method init
    self~InitCode = 0
-   if RxFuncQuery("InstWinSysFuncs") \= 0 then
-      if RxFuncAdd("InstWinSysFuncs","RXWINSYS.DLL","InstWinSysFuncs") = 0 then
-         self~InitCode = InstWinSysFuncs()
-      else
-         self~InitCode = 1
 
-   if self~InitCode = 0 then do
-      /* set the global queue to increase the usage counter */
-      queuename = RxQueue('CREATE', "WINSYS_GLOBAL_COUNT")
-      if queuename \= "WINSYS_GLOBAL_COUNT" then call RxQueue 'DELETE', queuename
-      oldqueue = RxQueue('SET', "WINSYS_GLOBAL_COUNT")
-      push time()
-      call RxQueue 'SET', oldqueue
-   end
+   /* set the global queue to increase the usage counter */
+   queuename = RxQueue('CREATE', "WINSYS_GLOBAL_COUNT")
+   if queuename \= "WINSYS_GLOBAL_COUNT" then call RxQueue 'DELETE', queuename
+   oldqueue = RxQueue('SET', "WINSYS_GLOBAL_COUNT")
+   push time()
+   call RxQueue 'SET', oldqueue
+
    return self~InitCode
 
 
@@ -70,9 +65,8 @@ registration incl. queue counter and deregistration */
    num = queued()
    if num \= 0 then pull dummy
    call RxQueue 'SET', oldqueue
-   /* if no other program uses functions, deinstall API and delete queue */
+   /* if no other program uses functions, delete the queue */
    if num = 1 then do
-       call RemoveWinSysFuncs
        call RxQueue 'DELETE', "WINSYS_GLOBAL_COUNT"
    end
 
