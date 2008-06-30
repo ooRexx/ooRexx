@@ -677,7 +677,10 @@ void StreamInfo::resetFields()
     transient = false;
     record_based = false;
     isopen = false;
-    defaultResult = NULL;
+    // NB:  defaultResult is NOT automatically cleared.  Individual stream methods might
+    // set this to a default return value before an implicit open operation takes place,
+    // so clearing this will munge the expected return value.
+//    defaultResult = NULL;
 }
 
 
@@ -1500,6 +1503,9 @@ RexxMethod3(RexxStringObject, stream_linein, CSELF, streamPtr, OPTIONAL_int64_t,
  */
 int64_t StreamInfo::lines(bool quick)
 {
+    // if there are any failures, our return value is just a '0'
+    defaultResult = context->False();
+
     // if not open yet, open now, but don't create this if doesn't
     // already exist.
     if (!isopen)
