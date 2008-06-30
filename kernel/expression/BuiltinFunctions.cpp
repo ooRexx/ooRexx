@@ -2179,55 +2179,62 @@ BUILTIN(CHAROUT) {
 #define LINES_option 2
 
 BUILTIN(LINES) {
-  RexxObject   *stream;                /* target stream                     */
-  RexxString   *name;                  /* stream name                       */
-  RexxString   *option;                /* option: "N" or "C"                */
-  RexxInteger  *result;                /* linein result                     */
-  bool          added;                 /* add to stream table               */
+    RexxObject   *stream;                /* target stream                     */
+    RexxString   *name;                  /* stream name                       */
+    RexxString   *option;                /* option: "N" or "C"                */
+    RexxInteger  *result;                /* linein result                     */
+    bool          added;                 /* add to stream table               */
 
-  fix_args(LINES);                     /* check required arguments          */
+    fix_args(LINES);                     /* check required arguments          */
 
-  name = optional_string(LINES, name); /* get the string name               */
-  option = optional_string(LINES, option);
-  if (check_queue(name)) {             /* is this "QUEUE:"                  */
-                                       /* get the default output stream     */
-    stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
-                                       /* return count on the queue         */
-    result = (RexxInteger *)stream->sendMessage(OREF_QUERY);
-  }
-  else
-  {
-                                       /* get a stream for this name        */
-    stream = resolve_stream(name, context, stack, true, NULL, &added);
-
-    if (option != OREF_NULL)
+    name = optional_string(LINES, name); /* get the string name               */
+    option = optional_string(LINES, option);
+    if (check_queue(name))
+    {             /* is this "QUEUE:"                  */
+                  /* get the default output stream     */
+        stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+        /* return count on the queue         */
+        result = (RexxInteger *)stream->sendMessage(OREF_QUERY);
+    }
+    else
     {
-        switch (option->getChar(0)) {      /* process the option character      */
-          case 'C':
-          case 'c':
-            break;
-          case 'N':
-          case 'n':
-            break;
-          default:                         /* unknown option                    */
-                                           /* this is an error                  */
-            reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "NC", option);
-            break;
-        }
-    }
-    else {
-        option = OREF_NORMAL;
-    }
+        /* get a stream for this name        */
+        stream = resolve_stream(name, context, stack, true, NULL, &added);
 
-    /* use modified LINES method with quick flag       */
-    result = (RexxInteger *)stream->sendMessage(OREF_LINES, option);
-  }
-                                       /* for compatibility this needs      */
-                                       /* to only return 0 or 1             */
-  if (toupper(option->getChar(0)) == 'N')
-    return (result != IntegerZero) ? IntegerOne : IntegerZero;
-  else
-    return result;
+        if (option != OREF_NULL)
+        {
+            switch (option->getChar(0))
+            {      /* process the option character      */
+                case 'C':
+                case 'c':
+                    break;
+                case 'N':
+                case 'n':
+                    break;
+                default:                         /* unknown option                    */
+                    /* this is an error                  */
+                    reportException(Error_Incorrect_call_list, CHAR_ARG, IntegerTwo, "NC", option);
+                    break;
+            }
+        }
+        else
+        {
+            option = OREF_NORMAL;
+        }
+
+        /* use modified LINES method with quick flag       */
+        result = (RexxInteger *)stream->sendMessage(OREF_LINES, option);
+    }
+    /* for compatibility this needs      */
+    /* to only return 0 or 1             */
+    if (toupper(option->getChar(0)) == 'N')
+    {
+        return(result != IntegerZero) ? IntegerOne : IntegerZero;
+    }
+    else
+    {
+        return result;
+    }
 }
 
 #define CHARS_MIN 0

@@ -1503,9 +1503,6 @@ RexxMethod3(RexxStringObject, stream_linein, CSELF, streamPtr, OPTIONAL_int64_t,
  */
 int64_t StreamInfo::lines(bool quick)
 {
-    // if there are any failures, our return value is just a '0'
-    defaultResult = context->False();
-
     // if not open yet, open now, but don't create this if doesn't
     // already exist.
     if (!isopen)
