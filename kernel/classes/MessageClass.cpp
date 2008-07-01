@@ -513,7 +513,7 @@ RexxObject *RexxMessage::newRexx(
 /******************************************************************************/
 {
     RexxObject *sender;                  /* sending object                    */
-    RexxArray  *argPtr;                  // the arguments used with the message.
+    RexxArray  *argPtr = NULL;           // the arguments used with the message.
 
     size_t num_args = argCount;          /* get number of args passed         */
 

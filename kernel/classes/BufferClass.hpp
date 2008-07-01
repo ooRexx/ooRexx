@@ -54,7 +54,7 @@ public:
     inline size_t getSize() { return this->size; }
     inline void   setLength(size_t l) { this->size = l; }
     virtual char *getData() = 0;
-    inline void copyData(size_t offset, const char *string, size_t length) { memcpy(this->getData() + offset, string, length); }
+    inline void copyData(size_t offset, const char *string, size_t l) { memcpy(this->getData() + offset, string, l); }
     inline void copyData(CONSTRXSTRING &r) { copyData(0, r.strptr, r.strlength); }
     inline void copyData(RXSTRING &r) { copyData(0, r.strptr, r.strlength); }
     inline void openGap(size_t offset, size_t _size, size_t tailSize)
@@ -65,9 +65,9 @@ public:
     {
         memmove(getData() + offset, getData() + offset + _size, tailSize);
     }
-    inline void setData(size_t offset, char character, size_t length)
+    inline void setData(size_t offset, char character, size_t l)
     {
-        memset(getData() + offset, character, length);
+        memset(getData() + offset, character, l);
     }
 protected:
 

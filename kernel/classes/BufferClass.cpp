@@ -61,7 +61,7 @@ void RexxBuffer::createInstance()
 
 
 RexxBuffer *RexxBuffer::expand(
-    size_t length)                     /* minimum space needed              */
+    size_t l)                            /* minimum space needed              */
 /******************************************************************************/
 /* Function:  Create a larger buffer and copy existing data into it           */
 /******************************************************************************/
@@ -73,10 +73,10 @@ RexxBuffer *RexxBuffer::expand(
                                          /* buffer, or this size of           */
                                          /* current(this)buffer + requested   */
                                          /* minimum length.                   */
-    if (length > this->getLength())      /* need more than double?            */
+    if (l > this->getLength())           /* need more than double?            */
     {
         /* increase by the requested amount  */
-        newBuffer = new_buffer(this->getLength() + length);
+        newBuffer = new_buffer(this->getLength() + l);
     }
     else                                 /* just double the existing length   */
     {

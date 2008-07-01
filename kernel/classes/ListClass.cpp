@@ -1210,10 +1210,10 @@ RexxList *RexxList::classOf(
 
     if (TheListClass == (RexxClass *)this )
     {         /* creating an internel list item?   */
-        size_t size = argCount;                   /* get the array size                */
+        size_t _size = argCount;           /* get the array size                */
         newList  = new RexxList;           /* get a new list                    */
         ProtectedObject p(newList);
-        for (size_t i = 0; i < size; i++)
+        for (size_t i = 0; i < _size; i++)
         {       /* step through the array            */
             RexxObject *item = args[i];                  /* get the next item                 */
             if (item == OREF_NULL)
@@ -1227,12 +1227,12 @@ RexxList *RexxList::classOf(
     }
     else
     {
-        size_t size = argCount;                   /* get the array size                */
+        size_t _size = argCount;                   /* get the array size                */
         ProtectedObject p;
         /* get a new list                    */
         this->sendMessage(OREF_NEW, p);
         newList = (RexxList *)(RexxObject *)p;
-        for (size_t i = 0; i < size; i++)
+        for (size_t i = 0; i < _size; i++)
         {       /* step through the array            */
             RexxObject *item = args[i];                  /* get the next item                 */
             if (item == OREF_NULL)

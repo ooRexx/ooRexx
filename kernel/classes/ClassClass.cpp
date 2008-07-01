@@ -356,10 +356,10 @@ void RexxClass::defmeths(
         /* class behaviour                   */
 
         // if this is the Nil object, that's an override.  Make it OREF_NULL.
-        RexxObject *method = (RexxMethod *)newMethods->value(i);
-        if (method == TheNilObject)
+        RexxObject *_method = (RexxMethod *)newMethods->value(i);
+        if (_method == TheNilObject)
         {
-            method = OREF_NULL;
+            _method = OREF_NULL;
         }
 
         this->behaviour->define(method_name, OREF_NULL);

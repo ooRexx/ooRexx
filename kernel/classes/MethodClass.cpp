@@ -153,17 +153,17 @@ RexxArray *BaseExecutable::source()
  *
  * @param source The source object.
  */
-RexxMethod::RexxMethod(RexxString *name, RexxSource *source)
+RexxMethod::RexxMethod(RexxString *name, RexxSource *_source)
 {
     this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.
     ProtectedObject p(this);
-    ProtectedObject p2(source);
+    ProtectedObject p2(_source);
     OrefSet(this, this->executableName, name);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = source->generateCode();
+    RexxCode *codeObj = _source->generateCode();
     OrefSet(this, this->code, codeObj);
 }
 
@@ -197,10 +197,10 @@ RexxMethod::RexxMethod(RexxString *name)
     ProtectedObject p(this);
     OrefSet(this, this->executableName, name);
     // get a source object to generat this from
-    RexxSource *source = new RexxSource(name);
-    ProtectedObject p2(source);
+    RexxSource *_source = new RexxSource(name);
+    ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = source->generateCode();
+    RexxCode *codeObj = _source->generateCode();
     OrefSet(this, this->code, codeObj);
 }
 
@@ -220,10 +220,10 @@ RexxMethod::RexxMethod(RexxString *name, RexxBuffer *buf)
     ProtectedObject p(this);
     OrefSet(this, this->executableName, name);
     // get a source object to generat this from
-    RexxSource *source = new RexxSource(name, buf);
-    ProtectedObject p2(source);
+    RexxSource *_source = new RexxSource(name, buf);
+    ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = source->generateCode();
+    RexxCode *codeObj = _source->generateCode();
     OrefSet(this, this->code, codeObj);
 }
 
@@ -244,10 +244,10 @@ RexxMethod::RexxMethod(RexxString *name, const char *data, size_t length)
     ProtectedObject p(this);
     OrefSet(this, this->executableName, name);
     // get a source object to generat this from
-    RexxSource *source = new RexxSource(name, data, length);
-    ProtectedObject p2(source);
+    RexxSource *_source = new RexxSource(name, data, length);
+    ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = source->generateCode();
+    RexxCode *codeObj = _source->generateCode();
     OrefSet(this, this->code, codeObj);
 }
 
@@ -267,10 +267,10 @@ RexxMethod::RexxMethod(RexxString *name, RexxArray *s)
     ProtectedObject p(this);
     OrefSet(this, this->executableName, name);
     // get a source object to generat this from
-    RexxSource *source = new RexxSource(name, s);
-    ProtectedObject p2(source);
+    RexxSource *_source = new RexxSource(name, s);
+    ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = source->generateCode();
+    RexxCode *codeObj = _source->generateCode();
     OrefSet(this, this->code, codeObj);
 }
 
@@ -585,17 +585,17 @@ RexxMethod *RexxMethod::newRexx(
 /******************************************************************************/
 {
     RexxObject *pgmname;                 /* method name                       */
-    RexxObject *source;                  /* Array or string object            */
+    RexxObject *_source;                 /* Array or string object            */
     RexxMethod *newMethod;               /* newly created method object       */
     RexxObject *option = OREF_NULL;
     size_t initCount = 0;                /* count of arguments we pass along  */
 
                                          /* break up the arguments            */
 
-    process_new_args(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&source);
+    process_new_args(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
     /* get the method name as a string   */
     RexxString *nameString = REQUIRED_STRING(pgmname, ARG_ONE);
-    required_arg(source, TWO);           /* make sure we have the second too  */
+    required_arg(_source, TWO);          /* make sure we have the second too  */
 
     RexxSource *sourceContext = OREF_NULL;
     // retrieve extra parameter if exists
@@ -626,7 +626,7 @@ RexxMethod *RexxMethod::newRexx(
         }
     }
     /* go create a method                */
-    newMethod = RexxMethod::newMethodObject(nameString, source, IntegerTwo, sourceContext);
+    newMethod = RexxMethod::newMethodObject(nameString, _source, IntegerTwo, sourceContext);
     ProtectedObject p(newMethod);
     /* Give new object its behaviour     */
     newMethod->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());

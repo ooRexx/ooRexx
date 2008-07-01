@@ -190,7 +190,7 @@ RexxSupplier *RexxDirectory::supplier(void)
             RexxMethod *method = (RexxMethod *)methodTable->value(i);
             ProtectedObject v;
             /* run the method                    */
-            method->run(ActivityManager::currentActivity, this, name, 0, NULL, v);
+            method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
             result->put((RexxObject *)v, name);  /* add to the table                  */
         }
     }
@@ -272,8 +272,6 @@ RexxArray *RexxDirectory::allItems()
     /* now traverse the entire table     */
     for (HashLink j = hashTab->first(); hashTab->index(j) != OREF_NULL; j = hashTab->next(j))
     {
-        /* get the directory index           */
-        RexxString *name = (RexxString *)hashTab->index(j);
         /* add to the array                  */
         result->put(hashTab->value(j), i++);
     }
@@ -290,7 +288,7 @@ RexxArray *RexxDirectory::allItems()
             RexxMethod *method = (RexxMethod *)methodTable->value(j);
             ProtectedObject v;
             /* run the method                    */
-            method->run(ActivityManager::currentActivity, this, name, 0, NULL, v);
+            method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
             result->put((RexxObject *)v, i++);  /* add to the array                  */
         }
     }
@@ -570,7 +568,7 @@ RexxObject *RexxDirectory::at(
             {
                 ProtectedObject v;
                 /* run the method                    */
-                method->run(ActivityManager::currentActivity, this, _index, 0, NULL, v);
+                method->run(ActivityManager::currentActivity, this, _index, NULL, 0, v);
                 return(RexxObject *)v;
 
             }
@@ -712,7 +710,7 @@ RexxObject *RexxDirectory::indexRexx(RexxObject *target)
                 RexxString *name = (RexxString *)methodTable->index(i);
                 RexxMethod *method = (RexxMethod *)methodTable->value(i);
                 ProtectedObject v;
-                method->run(ActivityManager::currentActivity, this, name, 0, NULL, v);
+                method->run(ActivityManager::currentActivity, this, name, NULL, 0, v);
                 // got a match?
                 if (target->equalValue((RexxObject *)v))
                 {

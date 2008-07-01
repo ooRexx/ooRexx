@@ -349,13 +349,13 @@ void RexxArray::putApi(RexxObject *o, size_t position)
 }
 
 
-bool RexxArray::hasIndexApi(size_t index)
+bool RexxArray::hasIndexApi(size_t i)
 /******************************************************************************/
 /* Function:  Determine if an element exist for a position                    */
 /******************************************************************************/
 {
     /* in bounds and here?               */
-    if (index > 0 && index <= this->size() && *(this->data()+index-1) != OREF_NULL)
+    if (i > 0 && i <= this->size() && *(this->data()+i-1) != OREF_NULL)
     {
         return true;                            /* this is true                      */
     }
