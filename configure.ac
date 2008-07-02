@@ -45,7 +45,7 @@ dnl older distributions are happy.
 mandir="\$(prefix)/share/man"
 
 PACKAGE=ooRexx
-VERSION=3.3.0
+VERSION=4.0.0
 
 AC_CANONICAL_SYSTEM
 
