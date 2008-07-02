@@ -43,139 +43,67 @@
 /*                                                                            */
 /******************************************************************************/
 
-   /* Routine Play will search for a sound file in the PATH and play it */
+/* Routine play() will search for a sound file in the PATH and play it */
+::routine play public
+   use arg fileName, asyn = "NO"
 
-::routine Play public
-   use arg fileName, asyn
-   installed = 0
-   if Arg(2, 'o') = 1 then asyn = "NO"
-   if Arg(1, 'o') = 1 then do
-       if RxFuncQuery("StopSoundFile") \= 0 then do
-           call Rxfuncadd "StopSoundFile", "oodialog", "StopSoundFile"
-           installed = 1
-       end
-       ret = StopSoundFile()
-       if installed = 1 then call RxfuncDrop "StopSoundFile"
-       return ret
-   end
+   if Arg(1, 'o') then return StopSoundFile()
+
    file = SysSearchPath("SOUNDPATH",fileName)
    if file = "" then return 1
-   if asyn~translate = "LOOP" then do
-       if RxFuncQuery("PlaySoundFileInLoop") \= 0 then do
-           call Rxfuncadd "PlaySoundFileInLoop", "oodialog", "PlaySoundFileInLoop"
-           installed = 1
-       end
-       ret = PlaySoundFileInLoop(file)
-       if installed = 1 then call RxfuncDrop "PlaySoundFileInLoop"
-       return ret
-   end
-   if RxFuncQuery("PlaySoundFile") \= 0 then do
-       call Rxfuncadd "PlaySoundFile", "oodialog", "PlaySoundFile"
-       installed = 1
-   end
-   ret = PlaySoundFile(file, asyn)
-   if installed = 1 then call RxfuncDrop "PlaySoundFile"
-   return ret
+
+   if asyn~translate = "LOOP" then return PlaySoundFileInLoop(file)
+   else return PlaySoundFile(file, asyn)
 
 
-::routine InfoDialog public
+::routine infoDialog public
    use arg info
-   installed = 0
-   if RxFuncQuery("InfoMessage") \= 0 then do
-       call Rxfuncadd "InfoMessage", "oodialog", "InfoMessage"
-       installed = 1
-   end
-   ret = InfoMessage(info)
-   if installed = 1 then call RxfuncDrop "InfoMessage"
-   return ret
+   return InfoMessage(info)
 
 
-::routine ErrorDialog public
+::routine errorDialog public
    use arg info
-   installed = 0
-   if RxFuncQuery("ErrorMessage") \= 0 then do
-       call Rxfuncadd "ErrorMessage", "oodialog", "ErrorMessage"
-       installed = 1
-   end
-   ret = ErrorMessage(info)
-   if installed = 1 then call RxfuncDrop "ErrorMessage"
-   return ret
+   return ErrorMessage(info)
 
-::routine AskDialog public
+
+::routine askDialog public
    use arg info, defaultButton
-   if Arg(2,'e') then do
+   if arg(2,'e') then do
        defaultButton = defaultButton~left(1)~translate
-       if defaultButton <> 'N' & defaultButton <> 'Y' then
+       if defaultButton <> 'N', defaultButton <> 'Y' then do
            raise syntax 40.904 array('AskDialog', '2', '[Yes, No]', arg(2))
+       end
    end
-   installed = 0
-   if RxFuncQuery("YesNoMessage") \= 0 then do
-       call Rxfuncadd "YesNoMessage", "oodialog", "YesNoMessage"
-       installed = 1
-   end
-   if Arg(2,'o') then ret = YesNoMessage(info)
-   else ret = YesNoMessage(info, defaultButton)
+   if arg(2,'o') then return YesNoMessage(info)
+   else return YesNoMessage(info, defaultButton)
 
-   if installed = 1 then call RxfuncDrop "YesNoMessage"
-   return ret
 
-::routine FileNameDialog public
+::routine fileNameDialog public
    use arg selfile = "", parentwnd = 0, filter, load, title, defextension = "TXT", amulti, sepchar = ' '
-   installed = 0
-   if RxFuncQuery("GetFileNameWindow") \= 0 then do
-       call Rxfuncadd "GetFileNameWindow", "oodialog", "GetFileNameWindow"
-       installed = 1
-   end
 
    if load == 0 | load~left(1)~translate = "S" then load = 0; else load = 1
    if load == 1 & amulti~left(1)~translate = "M" then amulti = 1; else amulti = 0
 
-   if Arg() < 3 then ret = GetFileNameWindow(selfile, parentwnd)
-   else if Arg(3, 'O') then ret = GetFileNameWindow(selfile, parentwnd, Arg(3), load, Arg(5), defextension, amulti, sepchar)
-   else ret = GetFileNameWindow(selfile, parentwnd, Arg(3) || '0'x, load, Arg(5), defextension, amulti, sepchar)
-   if installed = 1 then call RxfuncDrop "GetFileNameWindow"
-   return ret
+   if arg() < 3 then return GetFileNameWindow(selfile, parentwnd)
+   else if Arg(3, 'O') then return GetFileNameWindow(selfile, parentwnd, arg(3), load, arg(5), defextension, amulti, sepchar)
+   else return GetFileNameWindow(selfile, parentwnd, arg(3) || '0'x, load, arg(5), defextension, amulti, sepchar)
 
-::routine FindWindow public
+
+::routine findWindow public
    use arg info
-   installed = 0
-   if RxFuncQuery("FindTheWindow") \= 0 then do
-       call Rxfuncadd "FindTheWindow", "oodialog", "FindTheWindow"
-       installed = 1
-   end
-   ret =  FindTheWindow(info)
-   if installed = 1 then call RxfuncDrop "FindTheWindow"
-   return ret
+   return FindTheWindow(info)
 
-::routine MSSleep public
+::routine msSleep public
    use strict arg ms
-   if RxFuncQuery("SleepMS") \= 0 then do
-      call Rxfuncadd "SleepMS", "oodialog", "SleepMS"
-      installed = 1
-   end
-   ret = SleepMS(ms)
-   if installed = 1 then call RxfuncDrop "SleepMS"
-   return ret
+   return SleepMS(ms)
 
-::routine ScreenSize public
-   if RxFuncQuery("GetScreenSize") \= 0 then do
-      call Rxfuncadd "GetScreenSize", "oodialog", "GetScreenSize"
-      installed = 1
-   end
+::routine screenSize public
    parse value GetScreenSize() with dx dy px py
-   ss = .array~of(dx,dy,px,py)
-   if installed = 1 then call RxfuncDrop "GetScreenSize"
-   return ss
+   return .array~of(dx,dy,px,py)
 
-::routine SystemMetrics public
+::routine systemMetrics public
    use strict arg index
-   if RxFuncQuery("GetSysMetrics") \= 0 then do
-      call Rxfuncadd "GetSysMetrics", "oodialog", "GetSysMetrics"
-      installed = 1
-   end
-   ret = GetSysMetrics(index)
-   if installed = 1 then call RxfuncDrop "GetSysMetrics"
-   return ret
+   return GetSysMetrics(index)
 
 
 /*-------------------------------- shortcut routines ---------------------------------*/

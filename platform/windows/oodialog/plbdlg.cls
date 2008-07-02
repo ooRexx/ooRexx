@@ -204,23 +204,6 @@
    self~InitCode = self~Init_WindowBase
    if self~InitCode \= 0 then return self~InitCode
 
-   /* Create semaphore for synchronization (if not already done) */
-   if .Local~HasIndex("OOD.SEMAPHORE") = 0 then do
-       sem = SysOpenMutexSem("OOD_GLOBAL_COUNT")
-       if sem = 0 then sem = SysCreateMutexSem("OOD_GLOBAL_COUNT")
-       if sem = "" then sem = 0
-       .Local["OOD.SEMAPHORE"] = sem
-   end
-
-   if .OOD.SEMAPHORE \= 0 then call SysRequestMutexSem .OOD.SEMAPHORE, 60000  /* wait for max. 60 seconds */
-   /* set the global queue to increase the dialog counter */
-   queuename = RxQueue('CREATE', "OOD_GLOBAL_COUNT")
-   if queuename \= "OOD_GLOBAL_COUNT" then call RxQueue 'DELETE', queuename
-   oldqueue = RxQueue('SET', "OOD_GLOBAL_COUNT")
-   push "dummy"  /* increase counter */
-   call RxQueue 'SET', oldqueue
-   if .OOD.SEMAPHORE \= 0 then call SysReleaseMutexSem .OOD.SEMAPHORE
-
    /* prepare the dialog management for a new dialog */
    self~Adm = HandleDialogAdmin()  /* allocate a new dialog table */
    if self~Adm = 0 then do
@@ -374,14 +357,6 @@
    ret =  HandleDlg("STOP", self~DlgHandle)
    self~DlgHandle = 0
    self~Adm = 0
-
-   if .OOD.SEMAPHORE \= 0 then call SysRequestMutexSem .OOD.SEMAPHORE, 60000  /* wait for max. 60 seconds */
-   /* set the global queue to decrease the dialog counter */
-   oldqueue = RxQueue('SET', "OOD_GLOBAL_COUNT")
-   num = queued()
-   if num > 0 then pull .
-   call RxQueue 'SET', oldqueue
-   if .OOD.SEMAPHORE \= 0 then call SysReleaseMutexSem .OOD.SEMAPHORE
 
    /* we ourselves are a child dialog and not called by the parent's stopit */
    if self~ParentDlg \= .Nil & caller \= "PARENT" then self~ParentDlg~ChildDied(self)
@@ -1269,40 +1244,23 @@
 ::method Leaving
    return
 
-   /* This method is an abstract method that will be called to determin */
-   /* whether the dialog can be closed or not. This function will */
-   /* be called by method OK */
-   /* If the return value is 1 the dialog can be closed, if it is 0 */
-   /* the dialog values are invalid */
-
-::method Validate protected unguarded
+/** validate()
+ * This method is an abstract method that will be called to determin whether the
+ * dialog can be closed or not. This function will be called by method OK.  If
+ * the return value is 1 the dialog can be closed, if it is 0 the dialog
+ * values are invalid.
+ */
+::method validate unguarded
    return 1
 
-
-
-/** Deinstall()
-  * Clean up memory allocated for this dialog, decrement the counter, and remove
-  * the mutex if there are no more active dialogs.
-  */
-::method DeInstall
-   /* do we have to do a cleanup of the dialog table ? */
-   if self~Adm \= 0 then ret = HandleDialogAdmin(self~Adm)  /* free dialog table */
+/** deinstall()
+ * Clean up memory allocated for this dialog.
+ */
+::method deInstall
+   if self~Adm \= 0 then ret = HandleDialogAdmin(self~Adm)
    self~Adm = 0
-   /* set the global queue to check the dialog counter */
-   if .OOD.SEMAPHORE \= 0 then call SysRequestMutexSem .OOD.SEMAPHORE, 60000  /* wait for max. 60 seconds */
-   oldqueue = RxQueue('SET', "OOD_GLOBAL_COUNT")
-   num = queued()
-   call RxQueue 'SET', oldqueue
-   if .OOD.SEMAPHORE \= 0 then call SysReleaseMutexSem .OOD.SEMAPHORE
-   /* if no dialog is active anymore, delete queue */
-   if num = 0 then do
-      call RxQueue 'DELETE', "OOD_GLOBAL_COUNT"
-      call SysCloseMutexSem .OOD.SEMAPHORE
-      .Local~Remove("OOD.SEMAPHORE")
-   end
 
-
-::method Uninit
-   /* do we have to do a cleanup of the dialog table ? */
-   if self~Adm \= 0 then ret = HandleDialogAdmin(self~Adm)  /* free dialog table */
+::method uninit
+   -- Check if the dialog table still needs to be freed.
+   if self~Adm \= 0 then ret = HandleDialogAdmin(self~Adm)
    self~Adm = 0
