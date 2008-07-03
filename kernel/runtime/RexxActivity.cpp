@@ -1398,7 +1398,7 @@ void RexxActivity::createNewActivationStack()
     checkActivationStack();
     // This is a root activation that will allow API functions to be called
     // on this thread without having an active bit of ooRexx code first.
-    RexxNativeActivation *new_activation = new RexxNativeActivation(this);
+    RexxNativeActivation *new_activation = ActivityManager::newNativeActivation(this);
     new_activation->setStackBase();
     // create a new root element on the stack and bump the depth indicator
     activations->push((RexxObject *)new_activation);
@@ -1434,26 +1434,22 @@ void RexxActivity::popStackFrame(bool  reply)
 
         // if this is not a reply operation and the frame we just removed is
         // a Rexx activation, we can just cache this.
-        if (!reply && isOfClass(Activation, poppedStackFrame))
+        if (!reply)
         {
             /* add this to the cache             */
-            ActivityManager::cacheActivation((RexxActivation *)poppedStackFrame);
+            ActivityManager::cacheActivation(poppedStackFrame);
         }
     }
 }
+
 
 void RexxActivity::cleanupStackFrame(RexxActivationBase *poppedStackFrame)
 {
     // make sure this frame is terminated first
     poppedStackFrame->termination();
 
-    // if the frame we just removed is
-    // a Rexx activation, we can just cache this.
-    if (isOfClass(Activation, poppedStackFrame))
-    {
-        /* add this to the cache             */
-        ActivityManager::cacheActivation((RexxActivation *)poppedStackFrame);
-    }
+    /* add this to the cache             */
+    ActivityManager::cacheActivation(poppedStackFrame);
 }
 
 
@@ -1636,7 +1632,7 @@ void RexxActivity::exitKernel()
 {
     // create new activation frame using the current Rexx frame (which can be null, but
     // is not likely to be).
-    RexxNativeActivation *new_activation = new RexxNativeActivation(this, currentRexxFrame);
+    RexxNativeActivation *new_activation = ActivityManager::newNativeActivation(this, currentRexxFrame);
     // this becomes the new top activation.  We also turn on the variable pool for
     // this situation.
     this->pushStackFrame(new_activation);
@@ -2904,7 +2900,7 @@ void RexxActivity::run(ActivityDispatcher &target)
     // exception;
     size_t activityLevel = getActivationLevel();
     // create a new native activation
-    RexxNativeActivation *newNActa = new RexxNativeActivation(this);
+    RexxNativeActivation *newNActa = ActivityManager::newNativeActivation(this);
     pushStackFrame(newNActa);            /* push it on the activity stack     */
 
     try
@@ -2947,7 +2943,7 @@ void RexxActivity::run(CallbackDispatcher &target)
 {
     // create new activation frame using the current Rexx frame (which can be null, but
     // is not likely to be).
-    RexxNativeActivation *new_activation = new RexxNativeActivation(this, currentRexxFrame);
+    RexxNativeActivation *new_activation = ActivityManager::newNativeActivation(this, currentRexxFrame);
     // this becomes the new top activation.  We also turn on the variable pool for
     // this situation.
     this->pushStackFrame(new_activation);

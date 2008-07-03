@@ -181,6 +181,7 @@ RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
    inline void  operator delete(void *, void *) { ; }
 
    inline RexxActivation(RESTORETYPE restoreType) { ; };
+   RexxActivation();
    RexxActivation(RexxActivity* _activity, RexxMethod *_method, RexxCode *_code);
    RexxActivation(RexxActivity *_activity, RoutineClass *_routine, RexxCode *_code, RexxString *calltype, RexxString *env, int context);
    RexxActivation(RexxActivity *_activity, RexxActivation *_parent, RexxCode *_code, int context);

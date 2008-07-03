@@ -272,7 +272,7 @@ void RexxNativeMethod::run(RexxActivity *activity, RexxMethod *method, RexxObjec
     }
 
     // create a new native activation
-    RexxNativeActivation *newNActa = new RexxNativeActivation(activity);
+    RexxNativeActivation *newNActa = ActivityManager::newNativeActivation(activity);
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->run(method, this, receiver, messageName, argPtr, count, result);
@@ -309,7 +309,7 @@ void RexxNativeRoutine::call(RexxActivity *activity, RoutineClass *routine, Rexx
     }
 
     // create a new native activation
-    RexxNativeActivation *newNActa = new RexxNativeActivation(activity);
+    RexxNativeActivation *newNActa = ActivityManager::newNativeActivation(activity);
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->callNativeRoutine(routine, this, functionName, argPtr, count, result);
@@ -346,7 +346,7 @@ void RegisteredRoutine::call(RexxActivity *activity, RoutineClass *routine, Rexx
     }
 
     // create a new native activation
-    RexxNativeActivation *newNActa = new RexxNativeActivation(activity);
+    RexxNativeActivation *newNActa = ActivityManager::newNativeActivation(activity);
     activity->pushStackFrame(newNActa);   /* push it on the activity stack     */
                                        /* and go run it                     */
     newNActa->callRegisteredRoutine(routine, this, functionName, argPtr, count, result);

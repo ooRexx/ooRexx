@@ -66,6 +66,18 @@
 #include <limits.h>
 
 
+
+
+/**
+ * Initialize an activation for direct caching in the activation
+ * cache.  At this time, this is not an executable activation
+ */
+RexxNativeActivation::RexxNativeActivation()
+{
+    this->setHasNoReferences();          // nothing referenced from this either
+}
+
+
 /**
  * Constructor for a new native activation used to create a
  * callback context for exit call outs.
@@ -74,6 +86,7 @@
  */
 RexxNativeActivation::RexxNativeActivation(RexxActivity *_activity, RexxActivation*_activation)
 {
+    this->clearObject();                 /* start with a fresh object         */
     this->activity = _activity;      /* the activity running on           */
     this->activation = _activation;  // our parent context
 }
@@ -87,6 +100,7 @@ RexxNativeActivation::RexxNativeActivation(RexxActivity *_activity, RexxActivati
  */
 RexxNativeActivation::RexxNativeActivation(RexxActivity *_activity)
 {
+    this->clearObject();                 /* start with a fresh object         */
     this->activity = _activity;      /* the activity running on           */
 }
 

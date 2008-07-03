@@ -219,10 +219,10 @@ notready:
 notready:                              /* standard notready handler         */
   raise propagate return (array~items - count)
 
-::METHOD  arrayin                      /* arrayin method                    */
-  forward message 'MAKEARRAY'
+::METHOD  makearray                    /* arrayin method                    */
+  forward message 'ARRAYIN'
 
-::METHOD  makearray                    /* stream makearray method           */
+::METHOD  arrayin                      /* stream makearray method           */
   use strict arg type='LINES'
   signal on notready                   /* the notready handler              */
 

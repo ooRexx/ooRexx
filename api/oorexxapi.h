@@ -571,6 +571,7 @@ typedef struct
     RexxObjectPtr   (RexxEntry *ArrayAt)(RexxThreadContext *, RexxArrayObject, size_t);
     logical_t       (RexxEntry *ArrayHasIndex)(RexxThreadContext *, RexxArrayObject, size_t);
     void            (RexxEntry *ArrayPut)(RexxThreadContext *, RexxArrayObject, RexxObjectPtr, size_t);
+    size_t          (RexxEntry *ArrayAppend)(RexxThreadContext *, RexxArrayObject, RexxObjectPtr);
     size_t          (RexxEntry *ArraySize)(RexxThreadContext *, RexxArrayObject);
     wholenumber_t   (RexxEntry *ArrayDimension)(RexxThreadContext *, RexxArrayObject);
     RexxArrayObject (RexxEntry *NewArray)(RexxThreadContext *, size_t);

@@ -107,6 +107,17 @@ void * RexxActivation::operator new(size_t size)
     return (RexxObject *)newObject;      /* return the new object             */
 }
 
+
+/**
+ * Initialize an activation for direct caching in the activation
+ * cache.  At this time, this is not an executable activation
+ */
+RexxActivation::RexxActivation()
+{
+    this->setHasNoReferences();          // nothing referenced from this either
+}
+
+
 /**
  * Initialize an activation for a method invocation.
  *

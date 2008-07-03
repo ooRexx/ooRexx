@@ -74,7 +74,9 @@ public:
     static RexxActivation *newActivation(RexxActivity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, int context);
     static RexxActivation *newActivation(RexxActivity *activity, RexxActivation *parent, RexxCode *code, int context);
     static RexxActivation *newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code);
-    static void cacheActivation(RexxActivation *activation);
+    static RexxNativeActivation *newNativeActivation(RexxActivity *activity, RexxActivation *parent);
+    static RexxNativeActivation *newNativeActivation(RexxActivity *activity);
+    static void cacheActivation(RexxActivationBase *activation);
     static RexxActivity *newActivity(int priority);
     static RexxActivity *newActivity(RexxActivity *);
     static void haltAllActivities();
@@ -116,13 +118,16 @@ protected:
                                         /* table of all localact             */
     static RexxList         *allActivities;
     static RexxObjectTable  *subClasses;   /* SubClasses...one per system       */
+                                        /* size of the activation cache      */
+    static size_t            activationCacheSize;
     static RexxStack        *activations;  /* cached activations                */
+                                        /* size of the activation cache      */
+    static size_t            nativeActivationCacheSize;
+    static RexxStack        *nativeActivations;  /* cached activations                */
                                         /* head of the waiting activity queue*/
     static RexxActivity     *firstWaitingActivity;
                                         /* tail of the waiting activity queue*/
     static RexxActivity     *lastWaitingActivity;
-                                        /* size of the activation cache      */
-    static size_t            activationCacheSize;
     static size_t            waitingActivities; /* number of waiting activities      */
     static bool              processTerminating;  // shutdown processing started
     static size_t            interpreterInstances;  // number of times an interpreter has been created.

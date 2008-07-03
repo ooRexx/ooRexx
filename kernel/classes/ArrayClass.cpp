@@ -257,7 +257,6 @@ RexxObject *RexxArray::isEmpty()
 }
 
 
-
 /**
  * Append an item after the last item in the array.
  *
@@ -265,7 +264,7 @@ RexxObject *RexxArray::isEmpty()
  *
  * @return The index of the appended item.
  */
-RexxObject  *RexxArray::append(RexxObject *value)
+RexxObject  *RexxArray::appendRexx(RexxObject *value)
 {
     required_arg(value, ONE);
 
@@ -280,6 +279,23 @@ RexxObject  *RexxArray::append(RexxObject *value)
     ensureSpace(newIndex);
     put(value, newIndex);
     return new_integer(newIndex);
+}
+
+
+/**
+ * Append an item after the last item in the array.
+ *
+ * @param value  The value to append.
+ *
+ * @return The index of the appended item.
+ */
+size_t RexxArray::append(RexxObject *value)
+{
+    size_t newIndex = lastElement + 1;
+
+    ensureSpace(newIndex);
+    put(value, newIndex);
+    return newIndex;
 }
 
 
