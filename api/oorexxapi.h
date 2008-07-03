@@ -572,6 +572,7 @@ typedef struct
     logical_t       (RexxEntry *ArrayHasIndex)(RexxThreadContext *, RexxArrayObject, size_t);
     void            (RexxEntry *ArrayPut)(RexxThreadContext *, RexxArrayObject, RexxObjectPtr, size_t);
     size_t          (RexxEntry *ArrayAppend)(RexxThreadContext *, RexxArrayObject, RexxObjectPtr);
+    size_t          (RexxEntry *ArrayAppendString)(RexxThreadContext *, RexxArrayObject, CSTRING, size_t);
     size_t          (RexxEntry *ArraySize)(RexxThreadContext *, RexxArrayObject);
     wholenumber_t   (RexxEntry *ArrayDimension)(RexxThreadContext *, RexxArrayObject);
     RexxArrayObject (RexxEntry *NewArray)(RexxThreadContext *, size_t);
@@ -1058,6 +1059,10 @@ struct RexxThreadContext_
     size_t ArrayAppend(RexxArrayObject ao, RexxObjectPtr o)
     {
         return functions->ArrayAppend(this, ao, o);
+    }
+    size_t ArrayAppendString(RexxArrayObject ao, CSTRING s, size_t l)
+    {
+        return functions->ArrayAppendString(this, ao, s, l);
     }
     size_t ArraySize(RexxArrayObject ao)
     {
@@ -1564,6 +1569,10 @@ struct RexxMethodContext_
     size_t ArrayAppend(RexxArrayObject ao, RexxObjectPtr o)
     {
         return threadContext->ArrayAppend(ao, o);
+    }
+    size_t ArrayAppendString(RexxArrayObject ao, CSTRING s, size_t l)
+    {
+        return threadContext->ArrayAppendString(ao, s, l);
     }
     size_t ArraySize(RexxArrayObject ao)
     {
@@ -2128,6 +2137,10 @@ struct RexxCallContext_
     {
         return threadContext->ArrayAppend(ao, o);
     }
+    size_t ArrayAppendString(RexxArrayObject ao, CSTRING s, size_t l)
+    {
+        return threadContext->ArrayAppendString(ao, s, l);
+    }
     size_t ArraySize(RexxArrayObject ao)
     {
         return threadContext->ArraySize(ao);
@@ -2684,6 +2697,10 @@ struct RexxExitContext_
     size_t ArrayAppend(RexxArrayObject ao, RexxObjectPtr o)
     {
         return threadContext->ArrayAppend(ao, o);
+    }
+    size_t ArrayAppendString(RexxArrayObject ao, CSTRING s, size_t l)
+    {
+        return threadContext->ArrayAppendString(ao, s, l);
     }
     size_t ArraySize(RexxArrayObject ao)
     {

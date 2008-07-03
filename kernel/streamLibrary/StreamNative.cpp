@@ -1228,6 +1228,57 @@ RexxStringObject StreamInfo::readVariableLine()
     }
 }
 
+
+/**
+ * Read in a variable length line, searching for the eol marker
+ * for the line.
+ *
+ * @return The read line.
+ */
+void StreamInfo::appendVariableLine(RexxArrayObject result)
+{
+    // allocate a buffer for this line.  We get a pretty good size one, which will
+    // most likely be sufficient for most file lines.
+    size_t bufferSize;
+    char  *buffer = getDefaultBuffer(bufferSize);
+    size_t currentLength = 0;
+
+    // now loop until get an entire line read in.
+    for (;;)
+    {
+        char *readPosition = buffer + currentLength;
+        size_t bytesRead = 0;
+        if (!fileInfo.gets(readPosition, bufferSize - currentLength, bytesRead))
+        {
+            checkEof();
+        }
+
+        // Check for new line character first.  If we are at eof and the last
+        // line ended in a new line, we don't want the \n in the returned
+        // string.
+
+        // If we have a new line character in the last position, we have
+        // a line.  The gets() function has translated crlf sequences into
+        // single lf characters.
+        if (buffer[bytesRead - 1] == '\n')
+        {
+            lineReadIncrement();
+            context->ArrayAppendString(result, buffer, currentLength + bytesRead - 1);
+            return;
+        }
+
+        // No new line but we hit end of file reading this?  This will be the
+        // entire line then.
+        if (fileInfo.atEof() && !fileInfo.hasBufferedInput())
+        {
+            lineReadIncrement();
+            context->ArrayAppendString(result, buffer, currentLength + bytesRead);
+        }
+        currentLength += bytesRead;
+        buffer = extendBuffer(bufferSize);
+    }
+}
+
 /**
  * Increments the read positions, including the line-orientated positions, after
  * a single line has been read. Assumes one line has actually been read.
@@ -1545,8 +1596,7 @@ int StreamInfo::arrayin(RexxArrayObject result)
         while (true)
         {
             // we need to read a variable length line
-            RexxStringObject temp = readVariableLine();
-            context->ArrayAppend(result, temp);
+            appendVariableLine(result);
         }
     }
 }

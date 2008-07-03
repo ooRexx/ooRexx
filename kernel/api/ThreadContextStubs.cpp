@@ -1168,6 +1168,21 @@ size_t RexxEntry ArrayAppend(RexxThreadContext *c, RexxArrayObject a, RexxObject
 }
 
 
+size_t RexxEntry ArrayAppendString(RexxThreadContext *c, RexxArrayObject a, CSTRING s, size_t l)
+{
+    ApiContext context(c);
+    try
+    {
+        RexxString *str = new_string(s, (stringsize_t)l);
+        return ((RexxArray *)a)->append(str);
+    }
+    catch (RexxNativeActivation *)
+    {
+        return 0;
+    }
+}
+
+
 size_t RexxEntry ArraySize(RexxThreadContext *c, RexxArrayObject a)
 {
     ApiContext context(c);
@@ -1780,6 +1795,7 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     ArrayHasIndex,
     ArrayPut,
     ArrayAppend,
+    ArrayAppendString,
     ArraySize,
     ArrayDimension,
     NewArray,

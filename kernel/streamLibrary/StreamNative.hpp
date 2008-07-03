@@ -122,6 +122,7 @@ public:
     void setCharWritePosition(int64_t position);
     void setLineWritePosition(int64_t position);
     RexxStringObject readVariableLine();
+    void appendVariableLine(RexxArrayObject r);
     void lineReadIncrement();
     void resetLinePositions();
     RexxStringObject charin(bool setPosition, int64_t position, size_t read_length);
