@@ -39,6 +39,8 @@
 #define _WIN32_WINNT    0x0501
 #define WINVER          0x0501
 
+#define STRICT
+
 #include <windows.h>
 #include <mmsystem.h>
 #include <rexx.h>
@@ -112,7 +114,7 @@ size_t RexxEntry StopSoundFile(const char *funcname, size_t argc, CONSTRXSTRING 
 }
 
 
-size_t RexxEntry OFNSetForegroundHookProc(
+UINT_PTR CALLBACK  OFNSetForegroundHookProc(
     HWND hdlg,    // handle to child dialog window
     UINT uiMsg,    // message identifier
     WPARAM wParam,    // message parameter
@@ -362,45 +364,29 @@ HIMAGELIST CreateImageList(INT start, HWND h, CONSTRXSTRING *argv, size_t argc)
    return iL;
 }
 
+/**
+ * This is the window procedure used to subclass the edit control for both the
+ * ListControl and TreeControl objects.  It would be nice to convert this to use
+ * the better API: SetWindowSubclass / RemoveWindowSubclass.
+ */
+WNDPROC wpOldEditProc = NULL;
 
-
-
-//*-------------------------------------------------------------------
-//| Title:
-//|     SubClassProc
-//|
-//| Parameters:
-//|     hWnd            - Handle to the message's destination window
-//|     wMessage        - Message number of the current message
-//|     wParam          - Additional info associated with the message
-//|     lParam          - Additional info associated with the message
-//|
-//| Purpose:
-//|     This is the window procedure used to subclass the edit control.
-//*---------------------------------------------------------------------
-
-WNDPROC lpOldEditProc = NULL;
-
-
-long FAR PASCAL CatchReturnSubProc(HWND hWnd, WORD wMessage,WORD wParam,LONG lParam)
+LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch (wMessage)
+    switch ( uMsg )
     {
         case WM_GETDLGCODE:
-            return (DLGC_WANTALLKEYS |
-                    (long)CallWindowProc(lpOldEditProc, hWnd, wMessage,
-                                   wParam, lParam));
+            return (DLGC_WANTALLKEYS | CallWindowProc(wpOldEditProc, hWnd, uMsg, wParam, lParam));
 
         case WM_CHAR:
              //Process this message to avoid message beeps.
             if ((wParam == VK_RETURN) || (wParam == VK_ESCAPE))
                 return 0;
             else
-                return (long)(CallWindowProc(lpOldEditProc, hWnd,wMessage, wParam, lParam));
+                return CallWindowProc(wpOldEditProc, hWnd,uMsg, wParam, lParam);
 
         default:
-            return (long)(CallWindowProc(lpOldEditProc, hWnd, wMessage,
-                                      wParam, lParam));
+            return CallWindowProc(wpOldEditProc, hWnd, uMsg, wParam, lParam);
             break;
 
     } /* end switch */
@@ -771,8 +757,8 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        HWND ew = TreeView_GetEditControl(h);
        if (ew)
        {
-           WNDPROC oldProc = (WNDPROC)SetWindowLongPtr(ew, GWL_WNDPROC, (LONG_PTR)CatchReturnSubProc);
-           if (oldProc != (WNDPROC)CatchReturnSubProc) lpOldEditProc = oldProc;
+           WNDPROC oldProc = (WNDPROC)SetWindowLongPtr(ew, GWLP_WNDPROC, (LONG_PTR)CatchReturnSubProc);
+           if (oldProc != (WNDPROC)CatchReturnSubProc) wpOldEditProc = oldProc;
            RETPTR(oldProc)
        }
        else RETC(0)
@@ -783,7 +769,7 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        HWND ew = TreeView_GetEditControl(h);
        if (ew)
        {
-           SetWindowLongPtr(ew, GWL_WNDPROC, (LONG_PTR)lpOldEditProc);
+           SetWindowLongPtr((HWND)ew, GWLP_WNDPROC, (LONG_PTR)wpOldEditProc);
            RETC(0)
        }
        RETVAL(-1)
@@ -1488,11 +1474,11 @@ size_t RexxEntry HandleListCtrlEx(const char *funcname, size_t argc, CONSTRXSTRI
             CHECKARGL(4)
 
             item = atol(argv[3].strptr);
-            if ( item < -1 ) RETVAL(-3);
+            if ( item < -1 || item > (ListView_GetItemCount(hList) - 1) ) RETVAL(-3);
 
             if ( argc == 4 )
             {
-                if ( item < 0 || item > (ListView_GetItemCount(hList) - 1) ) RETVAL(-3);
+                if ( item < 0 ) RETVAL(-3);
                 RETVAL(!(ListView_GetCheckState(hList, (UINT)item) == 0));
             }
             else if ( argc == 5 )
@@ -1768,8 +1754,8 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
            HWND ew = ListView_GetEditControl(h);
            if (ew)
            {
-               WNDPROC oldProc = (WNDPROC)SetWindowLongPtr(ew, GWL_WNDPROC, (LONG_PTR)CatchReturnSubProc);
-               if (oldProc != (WNDPROC)CatchReturnSubProc) lpOldEditProc = oldProc;
+               WNDPROC oldProc = (WNDPROC)SetWindowLongPtr(ew, GWLP_WNDPROC, (LONG_PTR)CatchReturnSubProc);
+               if (oldProc != (WNDPROC)CatchReturnSubProc) wpOldEditProc = oldProc;
                RETPTR(oldProc)
            }
            else RETC(0)
@@ -1780,7 +1766,7 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
            HWND ew = ListView_GetEditControl(h);
            if (ew)
            {
-               SetWindowLongPtr(ew, GWL_WNDPROC, (LONG_PTR)lpOldEditProc);
+               SetWindowLongPtr(ew, GWLP_WNDPROC, (LONG_PTR)wpOldEditProc);
                RETC(0)
            }
            RETVAL(-1)
@@ -2427,3 +2413,393 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
    }
    RETC(0)
 }
+
+static int dateTimeOperation(HWND hCtrl, char *buffer, size_t length, size_t type)
+{
+    SYSTEMTIME sysTime = {0};
+    int ret = 1;
+
+    switch ( type )
+    {
+        case DTO_GETDTP :
+            switch ( DateTime_GetSystemtime(hCtrl, &sysTime) )
+            {
+                case GDT_VALID:
+                    _snprintf(buffer, length,
+                              "%hu:%02hu:%02hu.%hu %hu %hu %hu %hu",
+                              sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds,
+                              sysTime.wDay, sysTime.wMonth, sysTime.wYear, sysTime.wDayOfWeek);
+
+                    ret = (int)strlen(buffer);
+                    break;
+
+                case GDT_NONE:
+                    buffer[0] = '0';
+                    buffer[1] = '\0';
+                    break;
+
+                case GDT_ERROR:
+                default :
+                    /* Failed */
+                    buffer[0] = '1';
+                    buffer[1] = '\0';
+                    break;
+            }
+            break;
+
+        case DTO_SETDTP :
+        {
+            int hr, min, sec, ms, dy, mn, yr;
+            ret = sscanf(buffer, "%hu:%02hu:%02hu.%hu %hu %hu %hu", &hr, &min, &sec, &ms, &dy, &mn, &yr);
+
+            if ( ret == 8 )
+            {
+                sysTime.wHour = hr;
+                sysTime.wMinute = min;
+                sysTime.wSecond = sec;
+                sysTime.wMilliseconds = ms;
+                sysTime.wDay = dy;
+                sysTime.wMonth = mn;
+                sysTime.wYear = yr;
+
+                if ( DateTime_SetSystemtime(hCtrl, GDT_VALID, &sysTime) == 0 )
+                {
+                    /* Failed */
+                    ret = 1;
+                }
+                else
+                {
+                    /* Good */
+                    ret = 0;
+                }
+            }
+            else
+            {
+                ret = -3;
+            }
+        } break;
+
+        case DTO_GETMONTH :
+            if ( MonthCal_GetCurSel(hCtrl, &sysTime) == 0 )
+            {
+                /* Failed */
+                buffer[0] = '1';
+                buffer[1] = '\0';
+            }
+            else
+            {
+                _snprintf(buffer, length, "%hu %hu %hu %hu", sysTime.wDay,
+                          sysTime.wMonth, sysTime.wYear, sysTime.wDayOfWeek);
+                ret = (int)strlen(buffer);
+            }
+            break;
+
+        case DTO_SETMONTH :
+        {
+            int dy, mn, yr;
+            ret = sscanf(buffer, "%hu %hu %hu", &dy, &mn, &yr);
+            if ( ret == 3 )
+            {
+                sysTime.wDay = dy;
+                sysTime.wMonth = mn;
+                sysTime.wYear = yr;
+                if ( MonthCal_SetCurSel(hCtrl, &sysTime) == 0 )
+                {
+                    /* Failed */
+                    ret = 1;
+                }
+                else
+                {
+                    /* Good */
+                    ret = 0;
+                }
+            }
+            else
+            {
+                ret = -3;
+            }
+        } break;
+
+        default :
+            /* Shouldn't happen, just set an error code. */
+            buffer[0] = '1';
+            buffer[1] = '\0';
+            break;
+    }
+    return ret;
+}
+
+/**
+ * Implements the interface to the Month Calendar control.
+ *
+ * The parameters sent from ooRexx as an array of RXString:
+ *
+ * argv[0]  Window handle of the month calendar control.
+ *
+ * argv[1]  Major designator:  G for get, etc..  Only the first letter of
+ *          the string is tested and it must be capitalized.
+ *
+ * argv[2]  Minor designator:  COL for get color, etc..  The whole capitalized
+ *          substring is used.
+ *
+ * argv[3]  Dependent on function.
+ *
+ * Return to ooRexx, in general:
+ *  < -5 a negated system error code
+ *    -5 not implemented yet
+ *    -4 unsupported ComCtl32 Version
+ *    -3 problem with an argument
+ *    -2 operation not supported by this month calendar control
+ *    -1 problem with the month calendar control id or handle
+ *     0 the Windows API call succeeds
+ *     1 the Windows API call failed
+ *  >  1 dependent on the function, usually a returned value not a return code
+ */
+size_t RexxEntry HandleMonthCalendar(const char *funcname, size_t argc, CONSTRXSTRING *argv,
+                                     const char *qname, RXSTRING *retstr)
+{
+    HWND       hwnd;
+    SYSTEMTIME sysTime = {0};
+
+    /* Minimum of 2 args. */
+    CHECKARGL(2);
+
+    hwnd = GET_HWND(argv[0]);
+    if ( hwnd == 0 || ! IsWindow(hwnd) )
+    {
+        RETVAL(-1);
+    }
+
+    /* G - 'get' something function */
+    if ( argv[1].strptr[0] == 'G' )
+    {
+        if ( strcmp(argv[2].strptr, "COL") == 0 )          /* GetColor()  */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "CUR") == 0 )     /* GetCurSel()  */
+        {
+            retstr->strlength = dateTimeOperation(hwnd, retstr->strptr, RXAUTOBUFLEN, DTO_GETMONTH);
+            return 0;
+        }
+        else if ( strcmp(argv[2].strptr, "FIR") == 0 )     /* GetFirstDayOfWeek() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MSEL") == 0 )    /* GetMaxSelCount() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MTOD") == 0 )     /* GetMaxTodayWidth() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MIN") == 0 )     /* GetMinReqRect () */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MDEL") == 0 )     /* GetMonthDelta() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MRAN") == 0 )     /* GetMonthRange() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "RAN") == 0 )     /* GetRange() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "SEL") == 0 )     /* GetSelRange() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "TOD") == 0 )     /* GetToday() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "UNI") == 0 )     /* GetUnicodeFormat() */
+        {
+            RETC(MonthCal_GetUnicodeFormat(hwnd) ? 1 : 0)
+        }
+        else RETERR;
+    }
+    else if ( argv[1].strptr[0] == 'S' )
+    {
+        if ( strcmp(argv[2].strptr, "COL") == 0 )          /* SetColor()  */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "CUR") == 0 )     /* SetCurSel()  */
+        {
+            CHECKARG(4)
+
+            /* buffer length is not used for the 'SET' operations. */
+            RETVAL(dateTimeOperation(hwnd, (char *)argv[3].strptr, 0, DTO_SETMONTH));
+        }
+        else if ( strcmp(argv[2].strptr, "FIR") == 0 )     /* SetFirstDayOfWeek() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MSEL") == 0 )    /* SetMaxSelCount() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MTOD") == 0 )    /* SetMaxTodayWidth() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MIN") == 0 )     /* SetMinReqRect () */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MDEL") == 0 )    /* SetMonthDelta() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "MRAN") == 0 )    /* SetMonthRange() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "RAN") == 0 )     /* SetRange() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "SEL") == 0 )     /* SetSelRange() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "TOD") == 0 )     /* SetToday() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "UNI") == 0 )     /* SetUnicodeFormat() */
+        {
+            RETC(0)
+        }
+        else RETERR;
+    }
+    else if ( argv[1].strptr[0] == 'H' )               /* HitTest() */
+    {
+        RETC(0)
+    }
+
+    RETERR;
+}
+
+
+/**
+ * Implements the interface to the Date and Time Picker control.
+ *
+ * The parameters sent from ooRexx as an array of RXString:
+ *
+ * argv[0]  Window handle of the date and time picker control.
+ *
+ * argv[1]  Major designator:  G for get, etc..  Only the first letter of
+ *          the string is tested and it must be capitalized.
+ *
+ * argv[2]  Minor designator:  STYLE for (extended) list style, etc..  The whole
+ *          capitalized word is used.
+ *
+ * argv[3]  Dependent on function.
+ *
+ * Return to ooRexx, in general:
+ *  < -5 a negated system error code
+ *    -5 not implemented yet
+ *    -4 unsupported ComCtl32 Version
+ *    -3 problem with an argument
+ *    -2 operation not supported by this month calendar control
+ *    -1 problem with the month calendar control id or handle
+ *     0 the Windows API call succeeds
+ *     1 the Windows API call failed
+ *  >  1 dependent on the function, usually a returned value not a return code
+ */
+size_t RexxEntry HandleDateTimePicker(const char *funcname, size_t argc, CONSTRXSTRING *argv,
+                                      const char *qname, RXSTRING *retstr)
+{
+    HWND       hwnd;
+    SYSTEMTIME sysTime = {0};
+
+    /* Minimum of 3 args. */
+    CHECKARGL(3);
+
+    hwnd = GET_HWND(argv[0]);
+    if ( hwnd == 0 || ! IsWindow(hwnd) )
+    {
+        RETVAL(-1);
+    }
+
+    /* G - 'get' something function */
+    if ( argv[1].strptr[0] == 'G' )
+    {
+        if ( strcmp(argv[2].strptr, "CAL")== 0  )          /* GetMonthCal()  */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "COL")== 0  )     /* GetMonthCalColor()  */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "FON")== 0  )     /* GetMonthCalFont() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "RAN")== 0  )    /* GetRange() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "SYS")== 0  )    /* GetSystemtime() */
+        {
+            retstr->strlength = dateTimeOperation(hwnd, retstr->strptr, RXAUTOBUFLEN, DTO_GETDTP);
+            return 0;
+        }
+        else
+        {
+            RETERR;
+        }
+    }
+    else if ( argv[1].strptr[0] == 'S' )
+    {
+        if ( strcmp(argv[2].strptr, "FOR") == 0 )          /* SetFormat()  */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "COL") == 0 )     /* SetMonthCalColor()  */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "FON") == 0 )     /* SetMonthCalFont() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "RAN") == 0 )    /* SetRange() */
+        {
+            RETC(0)
+        }
+        else if ( strcmp(argv[2].strptr, "SYS") == 0 )    /* SetSystemtime() */
+        {
+            if ( argc < 4 )
+            {
+                /* Set the DTP control to "no date" and clear its check box. */
+                if ( DateTime_SetSystemtime(hwnd, GDT_NONE, &sysTime) == 0 )
+                {
+                    /* Failed */
+                    RETC(1)
+                }
+                RETC(0)
+            }
+            else
+            {
+                CHECKARGL(4);
+
+                /* Buffer length is not used for the 'SET' operations. */
+                RETVAL(dateTimeOperation(hwnd, (char *)argv[3].strptr, 0, DTO_SETDTP));
+            }
+        }
+        else RETERR;
+    }
+
+    RETERR;
+}
+
+

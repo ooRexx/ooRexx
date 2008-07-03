@@ -1021,16 +1021,14 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
        UAddNamedControl(&p, WC_TREEVIEW, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
        RETPTR(p)
    }
-   else
-   if (!strcmp(argv[0].strptr,"LIST"))
+   else if (!strcmp(argv[0].strptr,"LIST"))
    {
        lStyle |= EvaluateListStyle(argv[7].strptr);
         /*                                   id       x          y            cx        cy  */
        UAddNamedControl(&p, WC_LISTVIEW, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
        RETPTR(p)
    }
-   else
-   if (!strcmp(argv[0].strptr,"PROGRESS"))
+   else if (!strcmp(argv[0].strptr,"PROGRESS"))
    {
        if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
        if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
@@ -1040,8 +1038,7 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
        UAddNamedControl(&p, PROGRESS_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
        RETPTR(p)
    }
-   else
-   if (!strcmp(argv[0].strptr,"SLIDER"))
+   else if (!strcmp(argv[0].strptr,"SLIDER"))
    {
        if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
@@ -1059,8 +1056,7 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
        UAddNamedControl(&p, TRACKBAR_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
        RETPTR(p)
    }
-   else
-   if (!strcmp(argv[0].strptr,"TAB"))
+   else if (!strcmp(argv[0].strptr,"TAB"))
    {
         if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
         if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
@@ -1078,6 +1074,54 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
 
         /*                                   id       x          y            cx        cy  */
         UAddNamedControl(&p, WC_TABCONTROL, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
+        RETPTR(p)
+   }
+   else if (!strcmp(argv[0].strptr,"DTP"))  /* Date and Time Picker control */
+   {
+        if (strstr(argv[7].strptr, "BORDER")) lStyle |= WS_BORDER;
+        if (!strstr(argv[7].strptr, "NOTAB")) lStyle |= WS_TABSTOP;
+        if (strstr(argv[7].strptr, "PARSE"))  lStyle |= DTS_APPCANPARSE;
+        if (strstr(argv[7].strptr, "RIGHT"))  lStyle |= DTS_RIGHTALIGN;
+        if (strstr(argv[7].strptr, "NONE"))   lStyle |= DTS_SHOWNONE;
+        if (strstr(argv[7].strptr, "UPDOWN")) lStyle |= DTS_UPDOWN;
+
+        if (strstr(argv[7].strptr, "LONG"))
+        {
+            lStyle |= DTS_LONGDATEFORMAT;
+        }
+        else if (strstr(argv[7].strptr, "SHORT"))
+        {
+            lStyle |= DTS_SHORTDATEFORMAT;
+        }
+        else if (strstr(argv[7].strptr, "CENTURY") && (ComCtl32Version >= COMCTL32_5_8))
+        {
+            lStyle |= DTS_SHORTDATECENTURYFORMAT;
+        }
+        else if (strstr(argv[7].strptr, "TIME"))
+        {
+            lStyle |= DTS_TIMEFORMAT;
+        }
+        else
+        {
+            lStyle |= DTS_TIMEFORMAT;
+        }
+
+        /*                                       id         x          y            cx        cy  */
+        UAddNamedControl(&p, DATETIMEPICK_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
+        RETPTR(p)
+   }
+   else if (!strcmp(argv[0].strptr,"MONTH"))  /* Month Calendar control */
+   {
+        if (strstr(argv[7].strptr, "BORDER"))      lStyle |= WS_BORDER;
+        if (!strstr(argv[7].strptr, "NOTAB"))      lStyle |= WS_TABSTOP;
+        if (strstr(argv[7].strptr, "DAYSTATE"))    lStyle |= MCS_DAYSTATE;
+        if (strstr(argv[7].strptr, "MULTI"))       lStyle |= MCS_MULTISELECT;
+        if (strstr(argv[7].strptr, "NOTODAY"))     lStyle |= MCS_NOTODAY;
+        if (strstr(argv[7].strptr, "NOCIRCLE"))    lStyle |= MCS_NOTODAYCIRCLE;
+        if (strstr(argv[7].strptr, "WEEKNUMBERS")) lStyle |= MCS_WEEKNUMBERS;
+
+        /*                                   id         x          y            cx        cy  */
+        UAddNamedControl(&p, MONTHCAL_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
         RETPTR(p)
    }
 

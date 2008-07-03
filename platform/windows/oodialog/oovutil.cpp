@@ -2071,7 +2071,7 @@ BOOL InitForCommonControls(void)
         INITCOMMONCONTROLSEX ctrlex;
 
         ctrlex.dwSize = sizeof(ctrlex);
-        ctrlex.dwICC = ICC_WIN95_CLASSES;
+        ctrlex.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES
         if ( ! InitCommonControlsEx(&ctrlex) )
         {
             CHAR msg[128];
@@ -2086,45 +2086,6 @@ BOOL InitForCommonControls(void)
         }
     }
     return success;
-}
-
-
-size_t RexxEntry InstMMFuncs(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    // this is a nop
-   RETVAL(DLLVER)   /* ok, so we return the DLL version */
-}
-
-
-
-size_t RexxEntry RemoveExtendedMMFuncs(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    // this is a nop
-    RETC(0)
-}
-
-
-
-size_t RexxEntry InstExtendedMMFuncs(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    // this is a nop
-    RETC(0)
-}
-
-
-
-size_t RexxEntry RemoveUserMMFuncs(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    // this is a nop
-    RETC(0)
-}
-
-
-
-size_t RexxEntry InstUserMMFuncs(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    // this is a nop
-    RETC(0)
 }
 
 
@@ -2157,7 +2118,6 @@ BOOL REXXENTRY DllMain(
 #ifdef __cplusplus
 }
 #endif
-
 
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetDlgMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
@@ -2204,6 +2164,8 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleControlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleOtherNewCtrls);
+REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleMonthCalendar);
+REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDateTimePicker);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DialogMenu);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WinTimer);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleFont);
@@ -2264,6 +2226,8 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(HandleListCtrlEx,     HandleListCtrlEx),
     REXX_CLASSIC_ROUTINE(HandleControlEx,      HandleControlEx),
     REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
+    REXX_CLASSIC_ROUTINE(HandleMonthCalendar,  HandleMonthCalendar),
+    REXX_CLASSIC_ROUTINE(HandleDateTimePicker, HandleDateTimePicker),
     REXX_CLASSIC_ROUTINE(DialogMenu,           DialogMenu),
     REXX_CLASSIC_ROUTINE(WinTimer,             WinTimer),
     REXX_CLASSIC_ROUTINE(HandleFont,           HandleFont),

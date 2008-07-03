@@ -134,7 +134,8 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
             char msgstr[512];
             CHAR tmp[20];
             PCHAR np = NULL;
-            HANDLE item;
+            int item;
+            HANDLE handle = NULL;
 
                 /* do we have a notification where we have to extract some information ? */
             if (message == WM_NOTIFY)
@@ -149,17 +150,28 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                     {
                         LPNMITEMACTIVATE pIA = (LPNMITEMACTIVATE)lparam;
 
-                        if ( pIA->uKeyFlags == LVKF_ALT ) strcpy(tmp, "ALT");
-                        else if ( pIA->uKeyFlags == LVKF_CONTROL ) strcpy(tmp, "CONTROL");
-                        else if ( pIA->uKeyFlags == LVKF_SHIFT ) strcpy(tmp, "SHIFT");
-                        else strcpy(tmp, "NONE");
+                        if ( pIA->uKeyFlags == 0 )
+                        {
+                            strcpy(tmp, "NONE");
+                        }
+                        else
+                        {
+                            tmp[0] = '\0';
+
+                            if ( pIA->uKeyFlags & LVKF_SHIFT )
+                                strcpy(tmp, "SHIFT");
+                            if ( pIA->uKeyFlags & LVKF_CONTROL )
+                                tmp[0] == '\0' ? strcpy(tmp, "CONTROL") : strcat(tmp, " CONTROL");
+                            if ( pIA->uKeyFlags & LVKF_ALT )
+                                tmp[0] == '\0' ? strcpy(tmp, "ALT") : strcat(tmp, " ALT");
+                        }
                         np = tmp;
 
                         /* Don't drop through, use AddDialogMessage here and
                          * return because we need to send 4 args to ooRexx.
                          */
 
-                        _snprintf(msgstr, 511, "%s(%u,%u,%u,\"%s\")", m[i].rexxProgram,
+                        _snprintf(msgstr, 511, "%s(%u,%d,%d,\"%s\")", m[i].rexxProgram,
                                   pIA->hdr.idFrom, pIA->iItem, pIA->iSubItem, np);
                         AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                         return 1;
@@ -174,7 +186,7 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                         if ( (m[i].tag & TAG_STATECHANGED) && (pLV->uChanged == LVIF_STATE) )
                         {
 
-                            item = (HANDLE)pLV->iItem;
+                            item = pLV->iItem;
                             param = pLV->hdr.idFrom;
 
                             if ( (m[i].tag & TAG_CHECKBOXCHANGED) && (pLV->uNewState & LVIS_STATEIMAGEMASK) )
@@ -208,14 +220,14 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                             else if ( MatchSelect(m[i].tag, pLV) )
                             {
                                 np = (pLV->uNewState & LVIS_SELECTED) ? "SELECTED" : "UNSELECTED";
-                                _snprintf(msgstr, 511, "%s(%u,%p,\"%s\")", m[i].rexxProgram, param, item, np);
+                                _snprintf(msgstr, 511, "%s(%u,%d,\"%s\")", m[i].rexxProgram, param, item, np);
                                 AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 continue;
                             }
                             else if ( MatchFocus(m[i].tag, pLV) )
                             {
                                 np = (pLV->uNewState & LVIS_FOCUSED) ? "FOCUSED" : "UNFOCUSED";
-                                _snprintf(msgstr, 511, "%s(%u,%p,\"%s\")", m[i].rexxProgram, param, item, np);
+                                _snprintf(msgstr, 511, "%s(%u,%d,\"%s\")", m[i].rexxProgram, param, item, np);
                                 AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                                 continue;
                             }
@@ -233,17 +245,17 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                 else if ((code == TVN_ENDLABELEDIT) && ((TV_DISPINFO *)lparam)->item.pszText)
                 {
                     np = ((TV_DISPINFO *)lparam)->item.pszText;
-                    item = (HANDLE)((TV_DISPINFO *)lparam)->item.hItem;
+                    handle = ((TV_DISPINFO *)lparam)->item.hItem;
                 }
                 else if ((code == LVN_ENDLABELEDIT) && ((LV_DISPINFO *)lparam)->item.pszText)
                 {
                     np = ((LV_DISPINFO *)lparam)->item.pszText;
-                    item = (HANDLE)((LV_DISPINFO *)lparam)->item.iItem;
+                    item = ((LV_DISPINFO *)lparam)->item.iItem;
                 }
                 /* do we have a tree expand/collapse? */
                 else if ((code == TVN_ITEMEXPANDED) || (code == TVN_ITEMEXPANDING))
                 {
-                    item = ((NM_TREEVIEW *)lparam)->itemNew.hItem;
+                    handle = ((NM_TREEVIEW *)lparam)->itemNew.hItem;
                     if (((NM_TREEVIEW *)lparam)->itemNew.state & TVIS_EXPANDED) np = "EXPANDED";
                     else np = "COLLAPSED";
                 }
@@ -255,7 +267,7 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                 /* do we have a list drag and drop? */
                 else if ((code == LVN_BEGINDRAG) || (code == LVN_BEGINRDRAG))
                 {
-                    item = (HANDLE)((NM_LISTVIEW *)lparam)->iItem;
+                    item = ((NM_LISTVIEW *)lparam)->iItem;
                     param = ((NMHDR *)lparam)->idFrom;
                     sprintf(tmp, "%d %d", ((NM_LISTVIEW *)lparam)->ptAction.x, ((NM_LISTVIEW *)lparam)->ptAction.y);
                     np = tmp;
@@ -263,7 +275,7 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                 /* do we have a tree drag and drop? */
                 else if ((code == TVN_BEGINDRAG) || (code == TVN_BEGINRDRAG))
                 {
-                    item = ((NM_TREEVIEW *)lparam)->itemNew.hItem;
+                    handle = ((NM_TREEVIEW *)lparam)->itemNew.hItem;
                     param = ((NMHDR *)lparam)->idFrom;
                     sprintf(tmp, "%d %d", ((NM_TREEVIEW *)lparam)->ptDrag.x, ((NM_TREEVIEW *)lparam)->ptDrag.y);
                     np = tmp;
@@ -298,13 +310,26 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
             }
 
             if (np)
-                _snprintf(msgstr, 511, "%s(%u,%p,\"%s\")", m[i].rexxProgram, param, item, np);
+            {
+                if ( handle != NULL )
+                {
+                    _snprintf(msgstr, 511, "%s(%u,0x%p,\"%s\")", m[i].rexxProgram, param, handle, np);
+                }
+                else
+                {
+                    _snprintf(msgstr, 511, "%s(%u,%d,\"%s\")", m[i].rexxProgram, param, item, np);
+                }
+            }
             else
+            {
                 sprintf(msgstr, "%s(%u,%u)", m[i].rexxProgram, param, lparam);
+            }
             AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
          }
          else
-            AddDialogMessage((char *)m[i].rexxProgram, addressedTo->pMessageQueue);
+         {
+             AddDialogMessage((char *)m[i].rexxProgram, addressedTo->pMessageQueue);
+         }
          return 1;
       }
    return 0;
@@ -411,6 +436,9 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
            else
                n[i] = atol(argv[i+1].strptr);
         }
+
+        // TODO need to decide what to do here.  Return is LRESULT which could
+        // possibly be a 64-bit number.
         ltoa((long)SendDlgItemMessage((HWND)hWnd, n[1], n[2], (WPARAM)n[3], (LPARAM)n[4]), retstr->strptr, 10);
         retstr->strlength = strlen(retstr->strptr);
         return 0;
@@ -495,6 +523,8 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
               n[i] = strtoul(argv[i+1].strptr,'\0',10);
        }
 
+       // TODO SendMessage returns LRESULT, which could possibly be a 64-bit
+       // number.
        ltoa((long)SendMessage(hWnd, n[1], (WPARAM)n[2], (LPARAM)n[3]), retstr->strptr, 10);
        retstr->strlength = strlen(retstr->strptr);
        return 0;

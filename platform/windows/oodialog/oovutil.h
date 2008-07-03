@@ -112,6 +112,15 @@ extern DWORD ComCtl32Version;
 #define TAG_SELECTCHANGED         0x00000400
 #define TAG_FOCUSCHANGED          0x00000800
 
+/**
+ * Date Time Operation type IDs for get / set system time.  These are operations
+ * used for the DateTimePicker and MonthCalendar controls.
+ */
+#define DTO_SETDTP                0x01
+#define DTO_GETDTP                0x02
+#define DTO_SETMONTH              0x03
+#define DTO_GETMONTH              0x04
+
 /* macros to check the number of arguments */
 #define CHECKARG(argexpct) { \
    if (argc != argexpct) \
@@ -298,7 +307,6 @@ typedef struct {
    SHORT displacex;
    SHORT displacey;
 } BITMAPTABLEENTRY;
-
 
 typedef struct {
    ULONG itemID;

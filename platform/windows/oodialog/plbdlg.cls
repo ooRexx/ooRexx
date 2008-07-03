@@ -164,7 +164,7 @@
 /******************************************************************************/
 /* The class PlainBaseDialog implements methods that are common to a dialog   */
 /* by Resource Workshop (ResDialog) and to a dialog created by using Add...   */
-/* methods (UserDialog).                                 */
+/* methods (UserDialog).                                                      */
 /******************************************************************************/
 
 ::class 'PlainBaseDialog' public inherit WindowBase
@@ -309,8 +309,8 @@
    /* push button has been pushed or ESC or Enter has been presed */
 
 ::method Run unguarded protected
-   use arg sleeptime
-   if Arg(1,'o') = 1 then sleeptime = 0
+   use strict arg sleeptime = 0
+
    do while self~finished = 0
       self~HandleMessages(sleeptime)
    end

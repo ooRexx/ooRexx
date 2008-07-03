@@ -86,6 +86,8 @@ EXPORTS
   HANDLELISTCTRLEX      =        HandleListCtrlEx
   HANDLECONTROLEX       =        HandleControlEx
   HANDLEOTHERNEWCTRLS   =        HandleOtherNewCtrls
+  HandleMonthCalendar
+  HandleDateTimePicker
 
   USRCREATEDIALOG       =        UsrCreateDialog
   USRDEFINEDIALOG       =        UsrDefineDialog
@@ -98,12 +100,6 @@ EXPORTS
   GETSTDTEXTSIZE        =        GetStdTextSize
   GETSYSMETRICS         =        GetSysMetrics
 
-  INSTMMFUNCS           =        InstMMFuncs
-  REMOVEMMFUNCS         =        RemoveMMFuncs
-  INSTEXTENDEDMMFUNCS   =        InstExtendedMMFuncs
-  REMOVEEXTENDEDMMFUNCS =        RemoveExtendedMMFuncs
-  INSTUSERMMFUNCS       =        InstUserMMFuncs
-  REMOVEUSERMMFUNCS     =        RemoveUserMMFuncs
   DUMPADMIN             =        DumpAdmin
 
 

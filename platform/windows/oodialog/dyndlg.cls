@@ -502,6 +502,12 @@
             when class = 'WC_TABCONTROL' | class = '"SYSTABCONTROL32"' then
                self~AddTabControl(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "TAB"))
 
+            when class = 'DATETIMEPICK_CLASS' then
+               self~AddDateTimePicker(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "DTP"))
+
+            when class = 'MONTHCAL_CLASS' then
+               self~AddMonthCalendar(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "MONTH"))
+
             otherwise do
                self~errorFile(f, s)
                return 1
