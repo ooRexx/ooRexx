@@ -1631,8 +1631,8 @@ void RexxSource::processInstall(
             // and have it do the installs processing.  This is a little roundabout, but
             // we end up back in our own context while processing this, and the merge
             // of the information happens then.
-            RequiresDirective *requires = (RequiresDirective *)this->requires->getValue(i);
-            requires->install(activation);
+            RequiresDirective *_requires = (RequiresDirective *)this->requires->getValue(i);
+            _requires->install(activation);
         }
     }
 
@@ -1845,8 +1845,6 @@ void RexxSource::classDirective()
     this->classes->append((RexxObject *)this->active_class);
 
     int  Public = DEFAULT_ACCESS_SCOPE;   /* haven't seen the keyword yet      */
-    bool subclass = false;                /* no subclass keyword yet           */
-    RexxString *metaclass = OREF_NULL;    /* no metaclass yet                  */
     for (;;)
     {                       /* now loop on the option keywords   */
         token = nextReal();            /* get the next token                */
@@ -2258,23 +2256,23 @@ void RexxSource::methodDirective()
     else
     {
                                 /* convert external into words       */
-        RexxArray *words = this->words(externalname);
+        RexxArray *_words = this->words(externalname);
         /* not 'PACKAGE library [entry]' form? */
-        if (((RexxString *)(words->get(1)))->strCompare(CHAR_LIBRARY))
+        if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
         {
-            RexxString *library;
+            RexxString *library = OREF_NULL;
             // the default entry point name is the internal name
             RexxString *entry = internalname;
 
             // full library with entry name version?
-            if (words->size() == 3)
+            if (_words->size() == 3)
             {
-                library = (RexxString *)words->get(2);
-                entry = (RexxString *)words->get(3);
+                library = (RexxString *)_words->get(2);
+                entry = (RexxString *)_words->get(3);
             }
-            else if (words->size() == 2)
+            else if (_words->size() == 2)
             {
-                library = (RexxString *)words->get(2);
+                library = (RexxString *)_words->get(2);
             }
             else  // wrong number of tokens
             {
@@ -2666,8 +2664,6 @@ void RexxSource::createConstantGetterMethod(RexxString *name, RexxObject *value)
  */
 void RexxSource::routineDirective()
 {
-    RexxString *externalName = OREF_NULL;
-
     RexxToken *token = nextReal();   /* get the next token                */
                                      /* not a symbol or a string          */
     if (!token->isSymbolOrLiteral())
@@ -2748,30 +2744,28 @@ void RexxSource::routineDirective()
         }
     }
     {
-        RexxCode *_method = OREF_NULL;
-
         this->saveObject(name);          /* protect the name                  */
 
         if (externalname != OREF_NULL)   /* have an external routine?         */
         {
             /* convert external into words       */
-            RexxArray *words = this->words(externalname);
+            RexxArray *_words = this->words(externalname);
             // ::ROUTINE foo EXTERNAL "PACKAGE libbar [foo]"
-            if (((RexxString *)(words->get(1)))->strCompare(CHAR_LIBRARY))
+            if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
             {
-                RexxString *library;
+                RexxString *library = OREF_NULL;
                 // the default entry point name is the internal name
                 RexxString *entry = name;
 
                 // full library with entry name version?
-                if (words->size() == 3)
+                if (_words->size() == 3)
                 {
-                    library = (RexxString *)words->get(2);
-                    entry = (RexxString *)words->get(3);
+                    library = (RexxString *)_words->get(2);
+                    entry = (RexxString *)_words->get(3);
                 }
-                else if (words->size() == 2)
+                else if (_words->size() == 2)
                 {
-                    library = (RexxString *)words->get(2);
+                    library = (RexxString *)_words->get(2);
                 }
                 else  // wrong number of tokens
                 {
@@ -2802,7 +2796,7 @@ void RexxSource::routineDirective()
             // ::ROUTINE foo EXTERNAL "REGISTERED libbar [foo]"
             else if (((RexxString *)(words->get(1)))->strCompare(CHAR_REGISTERED))
             {
-                RexxString *library;
+                RexxString *library = OREF_NULL;
                 // the default entry point name is the internal name
                 RexxString *entry = name;
 

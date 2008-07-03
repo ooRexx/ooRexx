@@ -66,6 +66,7 @@
 #define CCHMAXPATH PATH_MAX+1
 #include "RexxCore.h"                    /* incl general definitions        */
 #include "StringClass.hpp"
+#include "SystemInterpreter.hpp"
 
                                        /* define macros to bulid entries in */
                                        /* the msgEntry table for msg lookup */

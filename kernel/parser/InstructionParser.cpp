@@ -1011,7 +1011,7 @@ RexxInstruction *RexxSource::guardNew()
         syntaxError(Error_Symbol_expected_numeric, token);
     }
 
-    bool on_off;
+    bool on_off = false;
 
     /* resolve the subkeyword and        */
     /* process the subkeyword            */
@@ -1393,9 +1393,6 @@ RexxInstruction *RexxSource::optionsNew()
     if (_expression == OREF_NULL)         /* no expression here?               */
         /* this is invalid                   */
         syntaxError(Error_Invalid_expression_options);
-    firstToken();                        /* reset the clause to beginning     */
-    nextToken();                         /* step past the first token         */
-    RexxToken *_first = nextReal();                  /* get the first token               */
     /* create a new translator object    */
     RexxInstruction *newObject = new_instruction(OPTIONS, Options);
     /* now complete this                 */
@@ -1562,7 +1559,7 @@ RexxInstruction *RexxSource::parseNew(
         /* some variety of special trigger?  */
         else if (token->classId == TOKEN_OPERATOR)
         {
-            int trigger_type;
+            int trigger_type = 0;
             switch (token->subclass)
             {       /* process the operator character    */
 
