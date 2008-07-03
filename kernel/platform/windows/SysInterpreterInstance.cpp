@@ -82,12 +82,13 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
     char temp[4];             // this is just a temp buffer to check component sizes
 
     size_t pathSize = GetEnvironmentVariable("PATH", temp, sizeof(temp));
+    size_t rexxPathSize = GetEnvironmentVariable("REXXPATH", temp, sizeof(temp));
     size_t parentSize = parentDir == NULL ? 0 : strlen(parentDir);
     size_t extensionSize = extensionPath == NULL ? 0 : strlen(extensionPath);
 
 
     // enough room for separators and a terminating null
-    path = (char *)SysAllocateResultMemory(pathSize + parentSize + extensionSize + 8);
+    path = (char *)SysAllocateResultMemory(pathSize + rexxPathSize + parentSize + extensionSize + 16);
     *path = '\0';     // add a null character so strcat can work
     if (parentDir != NULL)
     {
@@ -101,10 +102,24 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
     if (extensionPath != NULL)
     {
         strcat(path, extensionPath);
+        if (path[strlen(path) - 1] != ';')
+        {
+            strcat(path, ";");
+        }
+    }
+
+    // add on the Rexx path, then the normal path
+    GetEnvironmentVariable("REXXPATH", path + strlen(path), (DWORD)pathSize + 1);
+    if (path[strlen(path) - 1] != ';')
+    {
         strcat(path, ";");
     }
 
     GetEnvironmentVariable("PATH", path + strlen(path), (DWORD)pathSize + 1);
+    if (path[strlen(path) - 1] != ';')
+    {
+        strcat(path, ";");
+    }
 }
 
 

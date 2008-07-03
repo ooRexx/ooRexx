@@ -66,7 +66,7 @@
 /* space available in a larger allocation. */
 #define LargeSegmentDeadSpace (LargeSegmentSize - MemorySegmentOverhead)
 
-#define InitialNormalSegmentSpace ((LargeSegmentSize * 2) - MemorySegmentOverhead)
+#define InitialNormalSegmentSpace ((LargeSegmentSize * 8) - MemorySegmentOverhead)
 
 #define LargestNormalSegmentSize (LargeObjectMinSize - (1024 * 1024)  - MemorySegmentOverhead)
 

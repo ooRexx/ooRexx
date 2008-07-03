@@ -89,30 +89,53 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
     char temp[4];             // this is just a temp buffer to check component sizes
 
     const char *sysPath = getenv("PATH");
-    size_t pathSize = strlen(sysPath);
+    const char *rexxPAth = getenv("REXXPATH");
+    size_t sysPathSize = sysPath == NULL ? 0 : strlen(sysPath);
+    size_t rexxPathSize = rexxPath == NULL ? 0 : strlen(rexxPath);
     size_t parentSize = parentDir == NULL ? 0 : strlen(parentDir);
     size_t extensionSize = extensionPath == NULL ? 0 : strlen(extensionPath);
 
 
     // enough room for separators and a terminating null
-    path = SysAllocateResultMemory(pathSize + parentSize + extensionSize + 8);
+    path = SysAllocateResultMemory(pathSize + parentSize + extensionSize + 16);
     *path = '\0';     // add a null character so strcat can work
     if (parentDir != NULL)
     {
         strcpy(path, parentDir);
-        strcat(path, ";");
+        strcat(path, ":");
     }
 
     // add on the current directory
-    strcat(path, ".;");
+    strcat(path, ".:");
 
     if (extensionPath != NULL)
     {
         strcat(path, extensionPath);
-        strcat(path, ";");
+        if (path[strlen(path) - 1] != ':')
+        {
+            strcat(path, ":");
+        }
     }
-    // add on the path at the end
-    strcat(path, sysPath);
+
+    // the rexxpath
+    if (rexxPath != NULL)
+    {
+        strcat(path, rexxPath);
+        if (path[strlen(path) - 1] != ':')
+        {
+            strcat(path, ":");
+        }
+    }
+
+    // and finally the normal path
+    if (sysPath != NULL)
+    {
+        strcat(path, sysPath);
+        if (path[strlen(path) - 1] != ':')
+        {
+            strcat(path, ":");
+        }
+    }
 }
 
 
