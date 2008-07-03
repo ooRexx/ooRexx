@@ -1448,11 +1448,16 @@ RexxStringObject StreamInfo::linein(bool setPosition, int64_t position, size_t c
     // reading fixed length records?
     if (record_based)
     {
+        // we need to adjust for any charin operations that might have
+        // occurred within this record
+        size_t read_length = binaryRecordLength -
+         ((charReadPosition % (int64_t)binaryRecordLength) == 0 ? 0 :
+         (size_t)(charReadPosition % (int64_t)binaryRecordLength) - 1);
         // a buffer string allows us to read the data into an actual string object
         // without having to first read it into a separate buffer.  Since charin()
         // is frequently used to read in entire files at one shot, this can be a
         // fairly significant savings.
-        RexxBufferStringObject temp = context->NewBufferString(count);
+        RexxBufferStringObject temp = context->NewBufferString(read_length);
         char *buffer = (char *)context->BufferStringData(temp);
 
         // do the actual read
@@ -1468,6 +1473,7 @@ RexxStringObject StreamInfo::linein(bool setPosition, int64_t position, size_t c
         return readVariableLine();
     }
 }
+
 
 /********************************************************************************************/
 /* stream_linein                                                                            */
@@ -1491,6 +1497,85 @@ RexxMethod3(RexxStringObject, stream_linein, CSELF, streamPtr, OPTIONAL_int64_t,
     }
 
     return context->NullString();
+}
+
+/**
+ * Perform a line-oriented arrayin operation on the stream
+ *
+ * @param setPosition
+ *                 Indicates whether it is necessary to move the read pointer
+ *                 before reading.
+ * @param position New target position.
+ * @param count    count of lines to read.
+ *
+ * @return A string object containing the read characters.
+ */
+int StreamInfo::arrayin(RexxArrayObject result)
+{
+    // do read setup
+    readSetup();
+    // reading fixed length records?
+    if (record_based)
+    {
+        while (true)
+        {
+            // we need to adjust for any charin operations that might have
+            // occurred within this record
+            size_t read_length = binaryRecordLength -
+             ((charReadPosition % (int64_t)binaryRecordLength) == 0 ? 0 :
+             (size_t)(charReadPosition % (int64_t)binaryRecordLength) - 1);
+            // a buffer string allows us to read the data into an actual string object
+            // without having to first read it into a separate buffer.  Since charin()
+            // is frequently used to read in entire files at one shot, this can be a
+            // fairly significant savings.
+            RexxBufferStringObject temp = context->NewBufferString(read_length);
+            char *buffer = (char *)context->BufferStringData(temp);
+
+            // do the actual read
+            size_t bytesRead;
+            readBuffer(buffer, read_length, bytesRead);
+
+            // now convert our buffered string into a real string object and return it.
+            context->FinishBufferString(temp, bytesRead);
+            context->ArrayAppend(result, temp);
+        }
+    }
+    else
+    {
+        while (true)
+        {
+            // we need to read a variable length line
+            RexxStringObject temp = readVariableLine();
+            context->ArrayAppend(result, temp);
+        }
+    }
+}
+
+
+/********************************************************************************************/
+/* native method for doing an arrayin line operation                                        */
+/********************************************************************************************/
+RexxMethod2(int, stream_arrayin, CSELF, streamPtr, RexxArrayObject, result)
+{
+    StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
+
+    try
+    {
+        return stream_info->arrayin(result);
+    }
+    // this is thrown for any exceptions
+    catch (int)
+    {
+    }
+    catch (StreamInfo *)
+    {
+    }
+
+    // this will generally terminate because of a NOTREADY condition.  We've been filling
+    // the array in as we go along, so the caller has the reference already, and will
+    // return whatever we've managed to fill in before the notready occurred;
+    return 0;
 }
 
 /**

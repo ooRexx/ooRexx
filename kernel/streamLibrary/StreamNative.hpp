@@ -127,6 +127,7 @@ public:
     RexxStringObject charin(bool setPosition, int64_t position, size_t read_length);
     size_t charout(RexxStringObject data, bool setPosition, int64_t position);
     RexxStringObject linein(bool setPosition, int64_t position, size_t count);
+    int arrayin(RexxArrayObject r);
     int64_t lines(bool quick);
     int64_t chars();
     int lineout(RexxStringObject data, bool setPosition, int64_t position);

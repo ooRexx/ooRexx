@@ -1055,6 +1055,10 @@ struct RexxThreadContext_
     {
         functions->ArrayPut(this, ao, o, n);
     }
+    size_t ArrayAppend(RexxArrayObject ao, RexxObjectPtr o)
+    {
+        return functions->ArrayAppend(this, ao, o);
+    }
     size_t ArraySize(RexxArrayObject ao)
     {
         return functions->ArraySize(this, ao);
@@ -1556,6 +1560,10 @@ struct RexxMethodContext_
     void ArrayPut(RexxArrayObject ao, RexxObjectPtr o, size_t n)
     {
         threadContext->ArrayPut(ao, o, n);
+    }
+    size_t ArrayAppend(RexxArrayObject ao, RexxObjectPtr o)
+    {
+        return threadContext->ArrayAppend(ao, o);
     }
     size_t ArraySize(RexxArrayObject ao)
     {
@@ -2116,6 +2124,10 @@ struct RexxCallContext_
     {
         threadContext->ArrayPut(ao, o, n);
     }
+    size_t ArrayAppend(RexxArrayObject ao, RexxObjectPtr o)
+    {
+        return threadContext->ArrayAppend(ao, o);
+    }
     size_t ArraySize(RexxArrayObject ao)
     {
         return threadContext->ArraySize(ao);
@@ -2668,6 +2680,10 @@ struct RexxExitContext_
     void ArrayPut(RexxArrayObject ao, RexxObjectPtr o, size_t n)
     {
         threadContext->ArrayPut(ao, o, n);
+    }
+    size_t ArrayAppend(RexxArrayObject ao, RexxObjectPtr o)
+    {
+        return threadContext->ArrayAppend(ao, o);
     }
     size_t ArraySize(RexxArrayObject ao)
     {

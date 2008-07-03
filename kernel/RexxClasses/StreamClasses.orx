@@ -239,9 +239,9 @@ notready:                              /* standard notready handler         */
   signal on notready                   -- the notready trap is a better means of
                                        -- handling this.
   if linein then do
-      do forever
-          array~append(self~linein)
-      end
+      -- delegate this to the native method, which will trigger a notready
+      -- when done reading.  It will fill in values as it goes.
+      self~line_arrayin(array)
   end
   else do
       do forever
@@ -251,6 +251,8 @@ notready:                              /* standard notready handler         */
 
 notready:
   return array
+
+::METHOD line_arrayin PRIVATE EXTERNAL 'LIBRARY REXX stream_arrayin'
 
 
 ::METHOD command                       /* process a stream command          */

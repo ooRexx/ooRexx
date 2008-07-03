@@ -57,6 +57,7 @@
    INTERNAL_METHOD(stream_charin)
    INTERNAL_METHOD(stream_linein)
    INTERNAL_METHOD(stream_lineout)
+   INTERNAL_METHOD(stream_arrayin)
    INTERNAL_METHOD(qualify)
    INTERNAL_METHOD(query_exists)
    INTERNAL_METHOD(query_size)
