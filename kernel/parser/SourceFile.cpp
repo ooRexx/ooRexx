@@ -2794,21 +2794,21 @@ void RexxSource::routineDirective()
             }
 
             // ::ROUTINE foo EXTERNAL "REGISTERED libbar [foo]"
-            else if (((RexxString *)(words->get(1)))->strCompare(CHAR_REGISTERED))
+            else if (((RexxString *)(_words->get(1)))->strCompare(CHAR_REGISTERED))
             {
                 RexxString *library = OREF_NULL;
                 // the default entry point name is the internal name
                 RexxString *entry = name;
 
                 // full library with entry name version?
-                if (words->size() == 3)
+                if (_words->size() == 3)
                 {
-                    library = (RexxString *)words->get(2);
-                    entry = (RexxString *)words->get(3);
+                    library = (RexxString *)_words->get(2);
+                    entry = (RexxString *)_words->get(3);
                 }
-                else if (words->size() == 2)
+                else if (_words->size() == 2)
                 {
-                    library = (RexxString *)words->get(2);
+                    library = (RexxString *)_words->get(2);
                 }
                 else  // wrong number of tokens
                 {
