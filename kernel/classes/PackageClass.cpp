@@ -494,13 +494,12 @@ PackageClass *PackageClass::newRexx(
 /******************************************************************************/
 {
     RexxObject *pgmname;                 /* method name                       */
-    RexxObject *source;                  /* Array or string object            */
-    RexxObject *option = OREF_NULL;
+    RexxObject *_source;                  /* Array or string object            */
     size_t initCount = 0;                /* count of arguments we pass along  */
 
                                          /* break up the arguments            */
 
-    process_new_args(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&source);
+    process_new_args(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
 
     PackageClass *package = OREF_NULL;
 
@@ -508,14 +507,14 @@ PackageClass *PackageClass::newRexx(
 
     /* get the package name as a string   */
     RexxString *nameString = REQUIRED_STRING(pgmname, "name");
-    if (source == OREF_NULL)
+    if (_source == OREF_NULL)
     {
         RexxString *resolvedName = ActivityManager::currentActivity->getInstance()->resolveProgramName(nameString, OREF_NULL, OREF_NULL);
         package = PackageManager::loadRequires(ActivityManager::currentActivity, nameString, resolvedName, p);
     }
     else
     {
-        RexxArray *sourceArray = REQUIRED_ARRAY(source, "source");
+        RexxArray *sourceArray = REQUIRED_ARRAY(_source, "source");
         package = PackageManager::loadRequires(ActivityManager::currentActivity, nameString, sourceArray, p);
     }
 

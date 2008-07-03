@@ -45,8 +45,7 @@
 #ifndef SysLibrary_DEFINED
 #define SysLibrary_DEFINED
 
-#include <stdlib.h>
-#include "PlatformTypes.h"
+#include "rexx.h"
 
 class SysLibrary
 {

@@ -52,17 +52,6 @@
 #include "StemClass.hpp"
 #include "RexxCompoundTail.hpp"
 
-/* a pair of static variables used by the stem sort function. */
-/* Since the qsort library program doesn't allow sort parameter */
-/* information to be passed to the compare routines, we need to use */
-/* a static variable for this.  Note that this is NOT thread safe. */
-/* The sort routine must not give up control to another thread */
-/* while running this.  It it ever becomes necessary to do that, */
-/* these values will need to be moved to the current activity */
-/* object. */
-static   size_t sortStartCol = 0;
-static   size_t sortCompLength = 0;
-
 // singleton class instance
 RexxClass *RexxStem::classInstance = OREF_NULL;
 
@@ -1027,11 +1016,11 @@ RexxSupplier *RexxStem::supplier()
  * @param tail   The index of the target value.
  * @param value  The new value to assign.
  */
-void RexxStem::setElement(const char *tail, RexxObject *value)
+void RexxStem::setElement(const char *_tail, RexxObject *_value)
 {
-    RexxCompoundTail resolved_tail(tail);
+    RexxCompoundTail resolved_tail(_tail);
     RexxVariable *variable = getCompoundVariable(&resolved_tail);
-    variable->set(value);                /* set the new value                 */
+    variable->set(_value);                /* set the new value                 */
 }
 
 
@@ -1042,11 +1031,11 @@ void RexxStem::setElement(const char *tail, RexxObject *value)
  * @param tail   The index of the target value.
  * @param value  The new value to assign.
  */
-void RexxStem::setElement(size_t tail, RexxObject *value)
+void RexxStem::setElement(size_t _tail, RexxObject *_value)
 {
-    RexxCompoundTail resolved_tail(tail);
+    RexxCompoundTail resolved_tail(_tail);
     RexxVariable *variable = getCompoundVariable(&resolved_tail);
-    variable->set(value);                /* set the new value                 */
+    variable->set(_value);              /* set the new value                 */
 }
 
 
@@ -1058,10 +1047,10 @@ void RexxStem::setElement(size_t tail, RexxObject *value)
  * @return The object value.  If the stem element does not exist or
  *         has been dropped, this returns OREF_NULL.
  */
-RexxObject *RexxStem::getElement(size_t tail)
+RexxObject *RexxStem::getElement(size_t _tail)
 {
 
-    RexxCompoundTail resolved_tail(tail);
+    RexxCompoundTail resolved_tail(_tail);
 
     return getElement(&resolved_tail);
 }
@@ -1074,10 +1063,10 @@ RexxObject *RexxStem::getElement(size_t tail)
  * @return The object value.  If the stem element does not exist or
  *         has been dropped, this returns OREF_NULL.
  */
-RexxObject *RexxStem::getElement(const char *tail)
+RexxObject *RexxStem::getElement(const char *_tail)
 {
 
-    RexxCompoundTail resolved_tail(tail);
+    RexxCompoundTail resolved_tail(_tail);
 
     return getElement(&resolved_tail);
 }
@@ -1109,10 +1098,10 @@ RexxObject *RexxStem::getElement(RexxCompoundTail *resolved_tail)
  *
  * @param tail   The direct tail value.
  */
-void RexxStem::dropElement(size_t tail)
+void RexxStem::dropElement(size_t _tail)
 {
 
-    RexxCompoundTail resolved_tail(tail);
+    RexxCompoundTail resolved_tail(_tail);
 
     return dropElement(&resolved_tail);
 }
@@ -1122,10 +1111,10 @@ void RexxStem::dropElement(size_t tail)
  *
  * @param tail   The direct tail value.
  */
-void RexxStem::dropElement(const char *tail)
+void RexxStem::dropElement(const char *_tail)
 {
 
-    RexxCompoundTail resolved_tail(tail);
+    RexxCompoundTail resolved_tail(_tail);
 
     return dropElement(&resolved_tail);
 }
@@ -1264,7 +1253,7 @@ void RexxStem::quickSort(SortData *sd, int (*comparator)(SortData *, RexxString 
 }
 
 
-bool RexxStem::sort(RexxString *prefix, int order, int type, size_t first, size_t last, size_t firstcol, size_t lastcol)
+bool RexxStem::sort(RexxString *prefix, int order, int type, size_t _first, size_t last, size_t firstcol, size_t lastcol)
 /******************************************************************************/
 /* Function:  Sort elements of a stem variable as if it was an array.  This   */
 /*            routine assumes that element ".0" of the stem contains a size   */
@@ -1309,10 +1298,10 @@ bool RexxStem::sort(RexxString *prefix, int order, int type, size_t first, size_
     }
 
     /* verify we're fully within the bounds */
-    if (first > count || last > count) {
+    if (_first > count || last > count) {
         return false;
     }
-    size_t bounds = last - first + 1;
+    size_t bounds = last - _first + 1;
 
     /* get an array item and protect it.  We need to have space for both the variable anchors, and the variable values. */
     RexxArray *array = new_array(bounds * 2);
@@ -1320,7 +1309,7 @@ bool RexxStem::sort(RexxString *prefix, int order, int type, size_t first, size_
 
     size_t i;
     size_t j;
-    for (j = 1, i = first; i <= last; i++, j++)
+    for (j = 1, i = _first; i <= last; i++, j++)
     {
         RexxCompoundTail nextStem(prefix, (size_t)i);
         RexxCompoundElement *next_element = findCompoundVariable(&nextStem);
@@ -1387,8 +1376,8 @@ bool RexxStem::sort(RexxString *prefix, int order, int type, size_t first, size_
     /* each variable back to its new value. */
     for (i = 1; i <= bounds; i++) {
         RexxCompoundElement *element = (RexxCompoundElement *)array->get(i);
-        RexxObject *value = array->get(i + bounds);
-        element->set(value);
+        RexxObject *_value = array->get(i + bounds);
+        element->set(_value);
     }
     return true;
 }

@@ -278,12 +278,12 @@ logical_t RexxEntry GetContextForm(RexxCallContext *c)
     ApiContext context(c);
     try
     {
-        return context.context->form() ? TRUE : FALSE;
+        return context.context->form() ? true : false;
     }
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 

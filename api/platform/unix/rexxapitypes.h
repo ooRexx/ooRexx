@@ -54,6 +54,13 @@
 #undef __REXX64__
 #endif
 
+#ifndef SSIZE_MAX
+#define SSIZE_MAX		((ssize_t)(SIZE_MAX >> 1))
+#endif 
+#ifndef SSIZE_MIN
+#define SSIZE_MIN		((ssize_t)SIZE_MAX)
+#endif 
+
 #define REXXENTRY
 
 typedef void *REXXPFN;

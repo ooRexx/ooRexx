@@ -99,7 +99,7 @@ void RexxEntry SetThreadTrace(RexxThreadContext *c, logical_t setting)
     ApiContext context(c);
     try
     {
-        context.activity->setTrace(setting == TRUE);
+        context.activity->setTrace(setting != 0);
     }
     catch (RexxNativeActivation *)
     {
@@ -629,7 +629,7 @@ logical_t RexxEntry ObjectToValue(RexxThreadContext *c, RexxObjectPtr o, ValueDe
         // just return FALSE;
         context.context->setConditionInfo(OREF_NULL);
     }
-    return FALSE;
+    return false;
 }
 
 RexxObjectPtr RexxEntry UnsignedNumberToObject(RexxThreadContext *c, stringsize_t n)
@@ -882,7 +882,7 @@ RexxStringObject RexxEntry NewStringFromAsciiz(RexxThreadContext *c, CSTRING s)
     ApiContext context(c);
     try
     {
-        return (RexxStringObject)context.ret(new_string((char *)s));
+        return (RexxStringObject)context.ret(new_string((const char *)s));
     }
     catch (RexxNativeActivation *)
     {
@@ -1048,7 +1048,7 @@ logical_t RexxEntry IsTable(RexxThreadContext *c, RexxObjectPtr o)
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 void  RexxEntry DirectoryPut(RexxThreadContext *c, RexxDirectoryObject t, RexxObjectPtr o, CSTRING i)
@@ -1112,7 +1112,7 @@ logical_t RexxEntry IsDirectory(RexxThreadContext *c, RexxObjectPtr o)
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 RexxObjectPtr RexxEntry ArrayAt(RexxThreadContext *c, RexxArrayObject a, size_t i)
@@ -1138,7 +1138,7 @@ logical_t RexxEntry ArrayHasIndex(RexxThreadContext *c, RexxArrayObject a, size_
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 void RexxEntry ArrayPut(RexxThreadContext *c, RexxArrayObject a, RexxObjectPtr o, size_t i)
@@ -1229,7 +1229,7 @@ logical_t RexxEntry IsArray(RexxThreadContext *c, RexxObjectPtr o)
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 CSTRING RexxEntry BufferData(RexxThreadContext *c, RexxBufferObject b)
@@ -1281,7 +1281,7 @@ logical_t RexxEntry IsBuffer(RexxThreadContext *c, RexxObjectPtr o)
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 wholenumber_t RexxEntry IntegerValue(RexxThreadContext *c, RexxIntegerObject o)
@@ -1320,7 +1320,7 @@ logical_t RexxEntry IsInteger(RexxThreadContext *c, RexxObjectPtr o)
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 POINTER RexxEntry PointerValue(RexxThreadContext *c, RexxPointerObject o)
@@ -1359,7 +1359,7 @@ logical_t RexxEntry IsPointer(RexxThreadContext *c, RexxObjectPtr o)
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 RexxObjectPtr RexxEntry SupplierValue(RexxThreadContext *c, RexxSupplierObject o)
@@ -1398,7 +1398,7 @@ logical_t RexxEntry SupplierAvailable(RexxThreadContext *c, RexxSupplierObject o
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 void RexxEntry SupplierNext(RexxThreadContext *c, RexxSupplierObject o)
@@ -1557,7 +1557,7 @@ logical_t RexxEntry IsStem(RexxThreadContext *c, RexxObjectPtr o)
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 void RexxEntry RaiseException0(RexxThreadContext *c, size_t n)
@@ -1631,7 +1631,7 @@ logical_t RexxEntry CheckCondition(RexxThreadContext *c)
     catch (RexxNativeActivation *)
     {
     }
-    return FALSE;
+    return false;
 }
 
 RexxDirectoryObject RexxEntry GetConditionInfo(RexxThreadContext *c)

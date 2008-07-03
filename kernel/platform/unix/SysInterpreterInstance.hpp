@@ -43,13 +43,15 @@
 #ifndef Included_SysInterpreterInstance_hpp
 #define Included_SysInterpreterinstance_hpp
 
+class InterpreterInstance; 
+
 class SysInterpreterInstance
 {
-public;
+public:
     void live(size_t);
     void liveGeneral(int);
 
-    void initialize(InterpreterInstance *i, RexxOptions *options);
+    void initialize(InterpreterInstance *i, RexxOption *options);
     RexxString *resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension);
 
 protected:
