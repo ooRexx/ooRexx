@@ -215,8 +215,10 @@ void SystemInterpreter::restoreEnvironment(
   begin = current = (char *)CurrentEnv; /* get the saved space        */
   size = ((ENVENTRY*)current)->size;   /* first read out the size    */
   current += 4;                        /* update the pointer         */
-  if(chdir(current) == -1)             /* restore the curr dir       */
-      reportException(Error_System_service_service, (const stringchar_t *)"ERROR CHANGING DIRECTORY");
+  if (chdir(current) == -1)            /* restore the curr dir       */
+  {
+        reportException(Error_System_service_service, (const stringchar_t *)"ERROR CHANGING DIRECTORY");
+  }
   current += strlen(current);          /* update the pointer         */
   current++;                           /* jump over '\0'             */
   if(!putflag){                        /* first change in the        */

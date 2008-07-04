@@ -274,8 +274,8 @@
    inline void    setLength(size_t l) { this->length = l; };
    inline void finish(stringsize_t l) { length = l; }
    inline const char *getStringData() { return this->stringData; };
-   inline char *getWritableData() { return this->stringData; };
-   inline void put(size_t s, const void *b, size_t l) { memcpy((this->stringData+s), b, l); };
+   inline char *getWritableData() { return &this->stringData[0]; };
+   inline void put(size_t s, const void *b, size_t l) { memcpy(getWritableData() + s, b, l); };
    inline void put(size_t s, RexxString *o) { put(s, o->getStringData(), o->getLength()); };
    inline void set(size_t s,int c, size_t l) { memset((this->stringData+s), c, l); };
    inline char getChar(size_t p) { return *(this->stringData+p); };

@@ -166,60 +166,70 @@ RexxObject *RexxExpressionFunction::evaluate(
 /* Function:  Execute a REXX function                                         */
 /******************************************************************************/
 {
-  ProtectedObject result;              /* returned result                   */
-  size_t      argcount;                /* count of arguments                */
-  size_t      i;                       /* loop counter                      */
-  size_t      stacktop;                /* top location on the stack         */
+    ProtectedObject result;              /* returned result                   */
+    size_t      argcount;                /* count of arguments                */
+    size_t      i;                       /* loop counter                      */
+    size_t      stacktop;                /* top location on the stack         */
 
-  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
+    ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
 
-  stacktop = stack->location();        /* save the stack top                */
+    stacktop = stack->location();        /* save the stack top                */
 
-  argcount = this->argument_count;     /* get the argument count            */
-  for (i = 0; i < argcount; i++) {     /* loop through the argument list    */
-                                       /* real argument?                    */
-    if (this->arguments[i] != OREF_NULL) {
-                                       /* evaluate the expression           */
-      result = this->arguments[i]->evaluate(context, stack);
-                                       /* trace if necessary                */
-      context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
+    argcount = this->argument_count;     /* get the argument count            */
+    for (i = 0; i < argcount; i++)     /* loop through the argument list    */
+    {
+        /* real argument?                    */
+        if (this->arguments[i] != OREF_NULL)
+        {
+            /* evaluate the expression           */
+            result = this->arguments[i]->evaluate(context, stack);
+            /* trace if necessary                */
+            context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
+        }
+        else
+        {
+            stack->push(OREF_NULL);          /* push an non-existent argument     */
+                                             /* trace if necessary                */
+            context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
+        }
     }
-    else {
-      stack->push(OREF_NULL);          /* push an non-existent argument     */
-                                       /* trace if necessary                */
-      context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
+
+    /* process various call types        */
+    switch (this->flags&function_type_mask)
+    {
+        
+        case function_internal:            /* need to process internal routine  */
+            /* go process the internal call      */
+            context->internalCall(this->target, argcount, stack, result);
+            break;
+
+        case function_builtin:             /* builtin function call             */
+            /* call the function                 */
+            result = (RexxObject *) (*(builtin_table[this->builtin_index]))(context, argcount, stack);
+            break;
+
+        case function_external:            /* need to call externally           */
+            /* go process the internal call      */
+            context->externalCall(this->functionName, argcount, stack, OREF_FUNCTIONNAME, result);
+            break;
     }
-  }
-
-                                       /* process various call types        */
-  switch (this->flags&function_type_mask) {
-
-    case function_internal:            /* need to process internal routine  */
-                                       /* go process the internal call      */
-      context->internalCall(this->target, argcount, stack, result);
-      break;
-
-    case function_builtin:             /* builtin function call             */
-                                       /* call the function                 */
-      result = (RexxObject *) (*(builtin_table[this->builtin_index]))(context, argcount, stack);
-      break;
-
-    case function_external:            /* need to call externally           */
-                                       /* go process the internal call      */
-      context->externalCall(this->functionName, argcount, stack, OREF_FUNCTIONNAME, result);
-      break;
-  }
-  if (result == OREF_NULL)             /* result returned?                  */
-                                       /* raise an error                    */
-    if (this->functionName)
-      reportException(Error_Function_no_data_function, this->functionName);
-    else
-      reportException(Error_Function_no_data);  // no name => don't try to print one out...!
-  stack->setTop(stacktop);             /* remove arguments from the stack   */
-  stack->push((RexxObject *)result);   /* push onto the stack               */
-                                       /* trace if necessary                */
-  context->traceFunction(functionName, (RexxObject *)result);
-  return (RexxObject *)result;         /* and return this to the caller     */
+    if (result == OREF_NULL)             /* result returned?                  */
+    {
+        /* raise an error                    */
+        if (this->functionName)
+        {
+            reportException(Error_Function_no_data_function, this->functionName);
+        }
+        else
+        {
+            reportException(Error_Function_no_data);  // no name => don't try to print one out...!
+        }
+    }
+    stack->setTop(stacktop);             /* remove arguments from the stack   */
+    stack->push((RexxObject *)result);   /* push onto the stack               */
+                                         /* trace if necessary                */
+    context->traceFunction(functionName, (RexxObject *)result);
+    return(RexxObject *)result;         /* and return this to the caller     */
 }
 
 void *RexxExpressionFunction::operator new(size_t size,

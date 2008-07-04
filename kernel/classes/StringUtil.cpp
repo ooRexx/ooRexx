@@ -659,7 +659,7 @@ size_t StringUtil::validateSet(const char *String, size_t Length, const char *Se
         }
     }
     /* if trailing blank or grouping bad */
-    if (c == ch_SPACE || SpaceFound && (Count % Modulus) != Residue)
+    if ((c == ch_SPACE) || (SpaceFound && ((Count % Modulus) != Residue)))
     {
         if (Hex)                           /* hex version?                      */
         {
