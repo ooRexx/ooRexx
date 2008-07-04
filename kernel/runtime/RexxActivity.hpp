@@ -131,7 +131,7 @@ typedef enum
    RexxActivity();
    RexxActivity(bool);
 
-
+   void reset();
    void runThread();
    wholenumber_t error();
    wholenumber_t error(RexxActivationBase *);
@@ -270,8 +270,8 @@ typedef enum
    inline bool        checkRequires(RexxString *n) { return runningRequires(n) != OREF_NULL; }
    inline void        setNextWaitingActivity(RexxActivity *next) { this->nextWaitingActivity = next; }
    inline RexxActivity *getNextWaitingActivity() { return nextWaitingActivity; }
-   inline void        waitKernel() { EVWAIT(this->runsem); }
-   inline void        clearWait()  { EVSET(this->runsem); }
+   inline void        waitKernel() { runsem.wait(); }
+   inline void        clearWait()  { runsem.clear(); }
    inline size_t      getRandomSeed() { return randomSeed; }
    inline void setRandomSeed(size_t seed) { randomSeed = seed; };
    inline RexxString *getLastMessageName() { return lastMessageName; }
@@ -348,7 +348,8 @@ typedef enum
    RexxActivity       *nextWaitingActivity;
    RexxString         *currentExit;    /* current executing system exit     */
    RexxObject         *waitingObject;  /* object activity is waiting on     */
-   SEV      runsem;                    /* activity run control semaphore    */
+   SysSemaphore        runsem;         /* activity run control semaphore    */
+   SysSemaphore        guardsem;       /* guard expression semaphore        */
    SysThread currentThread;            /* descriptor for this thread        */
    NumericSettings *numericSettings;   /* current activation setting values */
 
@@ -358,7 +359,6 @@ typedef enum
    bool     suspended;                 // the suspension flag
    bool     interpreterRoot;           // This is the root activity for an interpreter instance
    bool     attached;                  // this is attached to an instance (vs. created directly)
-   SEV      guardsem;                  /* guard expression semaphore        */
    size_t   nestedCount;               /* extent of the nesting             */
    char       *stackBase;              /* pointer to base of C stack        */
    bool        clauseExitUsed;         /* halt/trace sys exit not set ==> 1 */

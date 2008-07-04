@@ -85,7 +85,7 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
 }
 
 typedef struct {
-  SEV sem;                             /* semaphore to wait on              */
+  SysSemaphore *sem;                   /* semaphore to wait on              */
   size_t time;                         /* timeout value                     */
 } ASYNC_TIMER_INFO;
 
@@ -99,14 +99,20 @@ typedef struct {
 /*   Arguments:         info - struct which holds the semaphore      */
 /*                        handle and the timeout value in msecs.     */
 /*********************************************************************/
-void* async_timer(void *info)
+void* async_timer(void *_info)
 {
-                                       /* do wait with apprpriate timeout   */
-  (((ASYNC_TIMER_INFO*)info)->sem)->wait(((ASYNC_TIMER_INFO*)info)->time);
-  if (!(((ASYNC_TIMER_INFO*)info)->sem)->posted()) /* if sem not posted ..  */
-    (((ASYNC_TIMER_INFO*)info)->sem)->post();      /* do it                 */
-  return NULL;
+    ASYNC_TIMER_INFO *info = (ASYNC_TIMER_INFO *)_info;
+
+    /* do wait with apprpriate timeout   */
+    info->sem->wait(->time);
+    if (!info->sem->posted())            /* if sem not posted ..  */
+    {
+        info->sem->post();                 /* do it                 */
+    }
+    return NULL;
 }
+
+
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   alarm_starTimer                              */
@@ -123,47 +129,48 @@ RexxMethod2(void, alarm_startTimer,
                      wholenumber_t, numdays,
                      wholenumber_t, alarmtime)
 {
-  RexxSemaphore sem;                   /* Event-semaphore                   */
-  SEV semHandle;                       /* semaphore handle                  */
-  int  msecInADay = 86400000;          /* number of milliseconds in a day   */
-  ASYNC_TIMER_INFO tinfo;              /* info for the timer thread         */
+    SysSemaphore sem;                    /* Event-semaphore                   */
+    SysSemaphore *semHandle;             // the handle we pass around
+    int  msecInADay = 86400000;          /* number of milliseconds in a day   */
+    ASYNC_TIMER_INFO tinfo;              /* info for the timer thread         */
 
-  semHandle = &sem;
+    semHandle = &sem;
 
-  /* set the state variables           */
-  context->SetObjectVariable("EVENTSEMHANDLE", context->NewPointer(semHandle));
-  context->SetObjectVariable("TIMERSTARTED", context->TrueObject());
-  /* setup the info for the timer thread                                    */
-  tinfo.sem = semHandle;
-  tinfo.time = msecInADay;
+    /* set the state variables           */
+    context->SetObjectVariable("EVENTSEMHANDLE", context->NewPointer(semHandle));
+    context->SetObjectVariable("TIMERSTARTED", context->TrueObject());
+    /* setup the info for the timer thread                                    */
+    tinfo.sem = semHandle;
+    tinfo.time = msecInADay;
 
-  while (numdays > 0) {                /* is it some future day?            */
+    while (numdays > 0)
+    {                /* is it some future day?            */
 
-                                       /* start timer to wake up after a day*/
+                     /* start timer to wake up after a day*/
+        SysCreateThread(async_timer, C_STACK_SIZE, (void *)&tinfo);
+
+        semHandle->wait();                 /* wait for semaphore to be posted   */
+        SysThreadYield();                  /* give the timer thread a chance    */
+        /* Check if the alarm is canceled. */
+        RexxObjectPtr cancelObj = context->GetObjectVariable("CANCELED");
+
+        if (cancelObj == context->TrueObject())
+        {
+            return 0;
+        }
+        else
+        {
+            semHandle->clear();              /* Reset the event semaphore         */
+        }
+        numdays--;                         /* Decrement number of days          */
+    }
+    tinfo.sem = semHandle;               /* setup the info for timer thread   */
+    tinfo.time = alarmtime;
+    /* start the timer                   */
     SysCreateThread(async_timer, C_STACK_SIZE, (void *)&tinfo);
-
-    semHandle->wait();                 /* wait for semaphore to be posted   */
+    semHandle->wait();                   /* wait for semaphore to be posted   */
     SysThreadYield();                  /* give the timer thread a chance    */
-    /* Check if the alarm is canceled. */
-    RexxObjectPtr cancelObj = context->GetObjectVariable("CANCELED");
-
-    if (cancelObj == context->TrueObject())
-    {
-        return 0;
-    }
-    else
-    {
-      semHandle->reset();              /* Reset the event semaphore         */
-    }
-    numdays--;                         /* Decrement number of days          */
-  }
-  tinfo.sem = semHandle;               /* setup the info for timer thread   */
-  tinfo.time = alarmtime;
-                                       /* start the timer                   */
-  SysCreateThread(async_timer, C_STACK_SIZE, (void *)&tinfo);
-  semHandle->wait();                   /* wait for semaphore to be posted   */
-    SysThreadYield();                  /* give the timer thread a chance    */
-  return;
+    return;
 }
 
 /*********************************************************************/
@@ -178,12 +185,11 @@ RexxMethod2(void, alarm_startTimer,
 /*********************************************************************/
 
 
-RexxMethod1(int, alarm_stopTimer,
-               POINTER, eventSemHandle)
+RexxMethod1(int, alarm_stopTimer, POINTER, eventSemHandle)
 {
-  SEV    sev = (SEV)eventSemHandle;    /* event semaphore handle            */
-  sev->post();                         /* Post the event semaphore          */
-  return 0;
+    SysSemaphore *sev = (SysSemaphore *)eventSemHandle;    /* event semaphore handle            */
+    sev->post();                         /* Post the event semaphore          */
+    return 0;
 }
 
 

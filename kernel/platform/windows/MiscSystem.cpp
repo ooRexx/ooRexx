@@ -281,7 +281,9 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
   }
 
   if (ExceptionQueueSem)
-      EVPOST(ExceptionQueueSem);
+  {
+      SetEvent(ExceptionQueueSem);
+  }
   if (ExceptionHostProcess)
   {
       GenerateConsoleCtrlEvent(CTRL_C_EVENT, ExceptionHostProcessId);

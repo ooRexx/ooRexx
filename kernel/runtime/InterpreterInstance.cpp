@@ -66,8 +66,8 @@ InterpreterInstance::InterpreterInstance()
     clearObject();
 
     // this needs to be created and set
-    EVCR(terminationSem);
-    EVSET(terminationSem);
+    terminationSem.create();
+    terminationSem.clear();
 
     // fill in the interface vectore
     context.instanceContext.functions = &interfaceVector;
@@ -282,7 +282,7 @@ bool InterpreterInstance::poolActivity(RexxActivity *activity)
     // if this is a shutdown event signal it now.
     if (signalShutdown)
     {
-        EVPOST(terminationSem);
+        terminationSem.post();
     }
 
     // and move this to the global activity pool
@@ -444,7 +444,7 @@ bool InterpreterInstance::terminate()
         // ok, deactivate this again...this will return the activity because the terminating
         // flag is on.
         exitCurrentThread();
-        EVCLOSE(terminationSem);
+        terminationSem.close();
         return true;
     }
 

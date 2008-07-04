@@ -127,7 +127,7 @@ protected:
 
     bool terminating;                // shutdown indicator
     bool terminated;                 // last thread cleared indicator
-    SEV  terminationSem;             // used to signal that everything has shutdown
+    SysSemaphore terminationSem;     // used to signal that everything has shutdown
 
     // array of system exits
     ExitHandler exits[RXNOOFEXITS + 1];

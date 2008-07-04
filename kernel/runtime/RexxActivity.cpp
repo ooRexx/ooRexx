@@ -93,7 +93,7 @@ void RexxActivity::runThread()
 
         try
         {
-            EVWAIT(this->runsem);            /* wait for run permission           */
+            this->runsem.wait();             /* wait for run permission           */
             if (this->exit)                  /* told to exit?                     */
             {
                 break;                       /* we're out of here                 */
@@ -135,8 +135,8 @@ void RexxActivity::runThread()
 
         dispatchMessage = OREF_NULL;       // we're done with the message object
 
-        EVSET(this->runsem);               /* reset the run semaphore and the   */
-        EVSET(this->guardsem);             /* guard semaphore                   */
+        runsem.clear();                    /* reset the run semaphore and the   */
+        guardsem.clear();                  /* guard semaphore                   */
 
         // try to pool this.  If the ActivityManager doesn't take, we go into termination mode
         if (!instance->poolActivity(this))
@@ -164,8 +164,8 @@ void RexxActivity::runThread()
  */
 void RexxActivity::cleanupActivityResources()
 {
-    EVCLOSE(this->runsem);
-    EVCLOSE(this->guardsem);
+    runsem.close();
+    guardsem.close();
     currentThread.close();
 }
 
@@ -232,8 +232,8 @@ RexxActivity::RexxActivity(bool createThread)
                                        /* create an activation stack        */
     this->activations = new_internalstack(ACT_STACK_SIZE);
     this->frameStack.init();           /* initialize the frame stack        */
-    EVCR(this->runsem);                /* create the run and                */
-    EVCR(this->guardsem);              /* guard semaphores                  */
+    this->runsem.create();             /* create the run and                */
+    this->guardsem.create();           /* guard semaphores                  */
     this->activationStackSize = ACT_STACK_SIZE;  /* set the activation stack size     */
     this->stackcheck = true;           /* start with stack checking enabled */
                                        /* use default settings set          */
@@ -247,7 +247,7 @@ RexxActivity::RexxActivity(bool createThread)
 
     if (createThread)                    /* need to create a thread?          */
     {
-        EVSET(this->runsem);             /* set the run semaphore             */
+        runsem.clear();                  /* set the run semaphore             */
                                          /* create a thread                   */
         currentThread.create(this, C_STACK_SIZE);
     }
@@ -265,7 +265,7 @@ RexxActivity::RexxActivity(bool createThread)
  * Initialize an Activity object that's being recycled for
  * another use.
  */
-RexxActivity::RexxActivity()
+void RexxActivity::reset()
 {
                                        /* Make sure any left over           */
                                        /* ::REQUIRES is cleared out.        */
@@ -1268,9 +1268,9 @@ void RexxActivity::run()
 /* Function:  Release an activity to run                                      */
 /******************************************************************************/
 {
-  EVPOST(this->guardsem);              /* and the guard semaphore           */
-  EVPOST(this->runsem);                /* post the run semaphore            */
-  SysThreadYield();                    /* yield the thread                  */
+    guardsem.post();                     /* and the guard semaphore           */
+    runsem.post();                       /* post the run semaphore            */
+    SysThreadYield();                    /* yield the thread                  */
 }
 
 
@@ -1282,11 +1282,11 @@ void RexxActivity::run()
  */
 void RexxActivity::run(RexxMessage *target)
 {
-  dispatchMessage = target;
+    dispatchMessage = target;
 
-  EVPOST(this->guardsem);              /* and the guard semaphore           */
-  EVPOST(this->runsem);                /* post the run semaphore            */
-  SysThreadYield();                    /* yield the thread                  */
+    guardsem.post();                     /* and the guard semaphore           */
+    runsem.post();                       /* post the run semaphore            */
+    SysThreadYield();                    /* yield the thread                  */
 }
 
 
@@ -1658,11 +1658,11 @@ void RexxActivity::waitReserve(
 /* Function:  Wait for a new run event to occur                               */
 /******************************************************************************/
 {
-  EVSET(this->runsem);                 /* clear the run semaphore           */
-  this->waitingObject = resource;      /* save the waiting resource         */
-  releaseAccess();                     /* release the kernel access         */
-  EVWAIT(this->runsem);                /* wait for the run to be posted     */
-  requestAccess();                     /* reaquire the kernel access        */
+    runsem.clear();                      /* clear the run semaphore           */
+    this->waitingObject = resource;      /* save the waiting resource         */
+    releaseAccess();                     /* release the kernel access         */
+    runsem.wait();                       /* wait for the run to be posted     */
+    requestAccess();                     /* reaquire the kernel access        */
 }
 
 void RexxActivity::guardWait()
@@ -1670,9 +1670,9 @@ void RexxActivity::guardWait()
 /* Function:  Wait for a guard post event                                     */
 /******************************************************************************/
 {
-  releaseAccess();                     /* release kernel access             */
-  EVWAIT(this->guardsem);              /* wait on the guard semaphore       */
-  requestAccess();                     /* reaquire the kernel lock          */
+    releaseAccess();                     /* release kernel access             */
+    guardsem.wait();                     /* wait on the guard semaphore       */
+    requestAccess();                     /* reaquire the kernel lock          */
 }
 
 void RexxActivity::guardPost()
@@ -1680,10 +1680,7 @@ void RexxActivity::guardPost()
 /* Function:  Post a guard expression wake up notice                          */
 /******************************************************************************/
 {
-                                       /* make sure we have access to sem   */
-  EVOPEN(this->guardsem);              /* may be called from another process*/
-  EVPOST(this->guardsem);              /* OK for it to already be posted    */
-  EVCL(this->guardsem);                /* release access to sem.            */
+    guardsem.post();                     /* OK for it to already be posted    */
 }
 
 void RexxActivity::guardSet()
@@ -1692,7 +1689,7 @@ void RexxActivity::guardSet()
 /*            guard wait                                                      */
 /******************************************************************************/
 {
-  EVSET(this->guardsem);               /* set up for guard call             */
+    guardsem.clear();               /* set up for guard call             */
 }
 
 void RexxActivity::postRelease()
@@ -1700,11 +1697,8 @@ void RexxActivity::postRelease()
 /* Function:  Post an activities run semaphore                                */
 /******************************************************************************/
 {
-  this->waitingObject = OREF_NULL;     /* no longer waiting                 */
-                                       /* make sure we have access to sem   */
-  EVOPEN(this->runsem);                /* may be called from another process*/
-  EVPOST(this->runsem);                /* OK for it to already be posted    */
-  EVCL(this->runsem);                  /* release access to sem.            */
+    this->waitingObject = OREF_NULL;     /* no longer waiting                 */
+    runsem.post();                       /* OK for it to already be posted    */
 }
 
 void RexxActivity::kill(
@@ -2842,8 +2836,8 @@ void  RexxActivity::terminatePoolActivity()
 /*   and POST its run semaphore.                                              */
 /******************************************************************************/
 {
-  this->exit = true;                   /* Activity should exit          */
-  EVPOST(this->runsem);                /* let him run so he knows to exi*/
+    this->exit = true;                   /* Activity should exit          */
+    this->runsem.post();                /* let him run so he knows to exi*/
 }
 
 

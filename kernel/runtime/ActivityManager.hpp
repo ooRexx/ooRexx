@@ -98,12 +98,12 @@ public:
 
     static inline void postTermination()
     {
-        EVPOST(terminationSem);              /* let anyone who cares know we're done*/
+        terminationSem.post();              /* let anyone who cares know we're done*/
     }
 
     static inline void waitForTermination()
     {
-        EVWAIT(terminationSem);              // wait until this is posted
+        terminationSem.wait();              // wait until this is posted
     }
 
 protected:
@@ -133,8 +133,8 @@ protected:
     static bool              processTerminating;  // shutdown processing started
     static size_t            interpreterInstances;  // number of times an interpreter has been created.
 
-    static SMTX              kernelSemaphore;       // global kernel semaphore lock
-    static SEV               terminationSem;    // used to signal that everything has shutdown
+    static SysMutex          kernelSemaphore;       // global kernel semaphore lock
+    static SysSemaphore      terminationSem;    // used to signal that everything has shutdown
 };
 
 

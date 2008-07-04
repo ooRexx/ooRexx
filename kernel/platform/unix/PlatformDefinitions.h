@@ -118,10 +118,6 @@
 #include "ThreadSupport.hpp"
 #include "SystemSemaphores.h"
 
-#define KMTX int               /* kernel semaphore ID               */
-#define SMTX RexxMutex *       /* semaphore data types              */
-#define HMTX SMTX
-#define SEV  RexxSemaphore *
                              // semaphore definitions and init
 /******************************************************************************/
 /* REQUIRED:  Define the REXX type for exceptions.  These can be system       */
@@ -137,42 +133,6 @@ typedef int SYSEXCEPTIONBLOCK;
 /******************************************************************************/
 
 typedef void *(* PTHREADFN)(void *);    /* define a thread function          */
-
-/******************************************************************************/
-/* REQUIRED:  Definitions for REXX semaphore functions.  These default to     */
-/* the REXX library semaphore package, but can be redefined to map directly   */
-/* to system specific functions too.                                          */
-// If you are using the OREXX Thread package, look at winrexx.h for correct
-// setup of these macros.
-/******************************************************************************/
-
-#define MTXCR(s)      s = new RexxMutex// create a mutex semaphore
-#define MTXCROPEN(s,n) s = new RexxMutex // dummy for Windows
-                                       // request wait on a semaphore
-#define MTXRQ(s)      s->request()
-#define MTXRL(s)      s->release()     // clear a semaphore
-/* Mutex semaphores are in AIX defined as C++ Object pointers and          */
-/* therefore must be deleted after use                                     */
-#define MTXCL(s)      delete s
-//#define MTXCL(s)           // no need to close in thread package
-                                       // no wait, return if can't get it
-#define MTXRI(s)      s->requestImmediate()
-#define MTXNOPEN(s,n)                  // only used for shared stuff
-#define MTXNCR(s,n)   MTXCR(s)
-#define EVCR(s)       s = new RexxSemaphore
-#define EVCROPEN(s,n) s = new RexxSemaphore // dummy for Windows
-#define EVPOST(s)     s->post()
-#define EVSET(s)      s->reset()
-#define EVWAIT(s)     s->wait()
-#define EVCL(s)
-//#define EVCLOSE(s)
-/* Event semaphores are in AIX defined as C++ Object pointers and          */
-/* therefore must be deleted after use                                     */
-#define EVCLOSE(s)    delete s
-#define EVOPEN(s)
-//#define EVCLEAR(s)    s->reset()     // commented out by weigold
-#define EVCLEAR(s)    s=0              // and inserted new line
-#define EVEXIST(s)
 
 /******************************************************************************/
 /* REQUIRED:  Routine to start a new TimeSlice period.                        */
@@ -335,12 +295,8 @@ inline char **getEnvironment()
 #ifdef __cplusplus
 extern "C" {
 #endif
-#ifdef SEMAPHORE_DEBUG
-void SysRequestMutexSem (SMTX psem);   /* request a mutex semaphore         */
-                                       /* request a mutex (immediate return)*/
-int SysRequestImmediateMutexSem (SMTX psem);
+
 #define REXXTIMESLICE 100              /* 100 milliseconds (1/10 second)    */
-#endif
                                        /* moved from olcrtmis.h             */
 #define stricmp(s1, s2) strcasecmp(s1, s2)
                                        /* both functions can only be used   */

@@ -50,6 +50,7 @@
 #define RexxInterpreter_Included
 
 #include "RexxCore.h"
+#include "SysSemaphore.hpp"
 
 class InterpreterInstance;
 class RexxList;
@@ -71,16 +72,16 @@ public:
     static void processStartup();
     static void processShutdown();
 
-    static inline void getResourceLock() { MTXRQ(resourceLock); }
-    static inline void releaseResourceLock() { MTXRL(resourceLock); }
+    static inline void getResourceLock() { resourceLock.request(); }
+    static inline void releaseResourceLock() { resourceLock.release(); }
     static inline void createLocks()
     {
-        MTXCROPEN(resourceLock, "OBJREXXRESSEM");
+        resourceLock.create();
     }
 
     static inline void closeLocks()
     {
-        MTXCL(resourceLock);
+        resourceLock.close();
     }
 
     static int createInstance(RexxInstance *&instance, RexxThreadContext *&threadContext, RexxOption *options);
@@ -131,7 +132,7 @@ public:
 
 
 protected:
-    static SMTX   resourceLock;      // use to lock resources accessed outside of kernel global lock
+    static SysMutex  resourceLock;   // use to lock resources accessed outside of kernel global lock
     static int    initializations;   // indicates whether we're terminated or not
     static bool   timeSliceElapsed;  // indicates we've had a timer interrupt
     static RexxList *interpreterInstances;  // the set of interpreter instances

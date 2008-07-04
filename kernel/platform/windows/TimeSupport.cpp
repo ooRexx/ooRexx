@@ -275,7 +275,7 @@ RexxMethod2(int, alarm_startTimer,
 RexxMethod1(int, alarm_stopTimer, POINTER, eventSemHandle)
 {
     /* Post the event semaphore to signal the alarm should be canceled. */
-    if ( ! EVPOST((HANDLE)eventSemHandle) )
+    if ( ! SetEvent((HANDLE)eventSemHandle) )
     {
         /* Raise an error if the semaphore could not be posted. */
         context->RaiseException(Rexx_Error_System_service);

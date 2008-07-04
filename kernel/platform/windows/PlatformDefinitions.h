@@ -100,14 +100,6 @@
 /******************************************************************************/
 #define SCRIPTING
 
-
-/******************************************************************************/
-/* REQUIRED:  Define the REXX type for semaphores.  These can be system       */
-/* specific semaphore types or the REXX define OSEM.                          */
-/******************************************************************************/
-#define SMTX HANDLE                 /* semaphore data types              */
-#define SEV  HANDLE
-
 /******************************************************************************/
 /* REQUIRED:  Define the REXX type for exceptions.  These can be system       */
 /* specific exception registration info or any place holder type if this      */
@@ -123,125 +115,7 @@ typedef int SYSEXCEPTIONBLOCK;
 
 typedef void (* PTHREADFN)(void *);    /* define a thread function          */
 
-/******************************************************************************/
-/* REQUIRED:  Definitions for REXX semaphore functions.  These default to     */
-/* the REXX library semaphore package, but can be redefined to map directly   */
-/* to system specific functions too.                                          */
-/******************************************************************************/
-
-#ifdef _DEBUG
-// #define TRACE_SEMAPHORES    /* not necessary to trace MTX and EV macros */
-#endif
-
-/* create or open a named mutex semaphore */
-
-#define MTXCROPEN(s,n) /*printf("MTXCROPEN called with %x/%s in %s line %d\n", s, n, __FILE__, __LINE__);*/ MTXCR(s)
-
-/* create mutex only if it is NULL */
-#ifdef TRACE_SEMAPHORES
-#define MTXCR(s)      if (!s) {   \
-s = CreateMutex(NULL, FALSE, NULL); \
-printf("Created MTX %x in %s line %d\n", s, __FILE__, __LINE__);} \
-else printf("MTXCR handle %x not null in %s line %d\n", s, __FILE__, __LINE__)
-
-#else
-#define MTXCR(s)      if (!s) s = CreateMutex(NULL, FALSE, NULL)  // create a mutex semaphore
-#endif
-
 void SysRelinquish(void);              /* allow the system to run           */
-
-inline void waitHandle(HANDLE s)
-{
-    MSG msg = {0};
-
-    // If already signaled, return.
-    if ( WaitForSingleObject(s, 0) == WAIT_OBJECT_0 )
-    {
-        return;
-    }
-
-    /** Any thread that creates windows must process messages.  A thread that
-     *  calls WaitForSingelObject with an infinite timeout risks deadlocking the
-     *  system.  MS's solution for this is to use MsgWaitForMultipleObjects to
-     *  wait on the object, or a new message arriving in the message queue. Some
-     *  threads create windows indirectly, an example is COM with CoInitialize.
-     *  Since we can't know if the current thread has a message queue that needs
-     *  processing, we use MsgWaitForMultipleObjects.
-     *
-     *  Note that MsgWaitForMultipleObjects only returns if a new message is
-     *  placed in the queue.  PeekMessage alters the state of all messages in
-     *  the queue so that they are no longer 'new.'  Once PeekMessage is called,
-     *  all the messages on the queue need to be processed.
-     */
-    do
-    {
-        while ( PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-
-            // Check to see if signaled.
-            if ( WaitForSingleObject(s, 0) == WAIT_OBJECT_0 )
-            {
-                return;
-            }
-        }
-    } while ( MsgWaitForMultipleObjects(1, &s, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0 + 1 );
-}
-
-#define MTXRQ(s)      waitHandle(s);
-#define MTXRL(s)      ReleaseMutex(s) // clear a semaphore
-#ifdef TRACE_SEMAPHORES
-#define MTXCL(s)      if (!CloseHandle(s)) \
-                          printf("CloseHandle failed to close MTX %x --> %d\n", s, GetLastError()); \
-                      else printf("Closed MTX handle %x\n", s)
-
-#else
-#define MTXCL(s)      CloseHandle(s)                 // no need to close in thread package
-#endif
-                                       // no wait, return if can't get it
-#define MTXRI(s)      WaitForSingleObject(s,SEM_IMMEDIATE_RETURN)
-#define MTXNOPEN(s,n) s = OpenMutex(MUTEX_ALL_ACCESS, true, n)                 // only used for shared stuff
-#define MTXNCR(s,n)   s = CreateMutex(NULL, FALSE, n)
-
-#ifdef TRACE_SEMAPHORES
-#define EVCR(s)      if (!s) {   \
-s = CreateEvent(NULL, true, true, NULL); \
-printf("Created EV %x in %s line %d\n", s, __FILE__, __LINE__);} \
-else printf("EVCR handle %x not null in %s line %d\n", s, __FILE__, __LINE__)
-
-#else
-#define EVCR(s)       if (!s) s = CreateEvent(NULL, true, true, NULL)
-#endif
-
-/* create or open a named event semaphore */
-#define EVCROPEN(s,n) /* printf("EVCROPEN called with %x/%s in %s line %d\n", s, n, __FILE__, __LINE__);*/ EVCR(s)
-
-#define EVPOST(s)     SetEvent(s)
-#define EVSET(s)      ResetEvent(s)
-#define EVWAIT(s)     /* WaitForSingleObject(s, INFINITE) */ MTXRQ(s)
-#define EVCL(s)       // CloseHandle(s)          // we don't use openevent so no close is needed
-
-#ifdef TRACE_SEMAPHORES
-#define EVCLOSE(s)    if (!CloseHandle(s)) \
-                          printf("CloseHandle failed to close EV %x --> %d\n", s, GetLastError());\
-                          else printf("Closed EV handle %x\n", s)
-
-#else
-#define EVCLOSE(s)    CloseHandle(s)     // for the parts where the semaphore should be closed
-#endif
-
-#define EVOPEN(s)      // should be a duplicate there
-#define EVCLEAR(s)    s=NULL // clear an OSEM
-#define EVEXIST(s)    ((s != INVALID_HANDLE_VALUE) && (s != NULL))
-
-/******************************************************************************/
-/* REQUIRED:  Definitions for entering and exiting critical code sections.    */
-/* These can be defined out to nothing if these have no meaning.              */
-/******************************************************************************/
-
-#define SEM_IMMEDIATE_RETURN 0L
-#define SEM_INDEFINITE_WAIT  INFINITE
 
 /* Windows needs a special line write function to check stdout output */
 size_t line_write_check(const char * , size_t, FILE * );

@@ -212,8 +212,8 @@ platformHeaders = $(build_kernel_platform_dir)/APIDefinitions.h \
                   $(build_kernel_platform_dir)/SystemCommands.h \
                   $(build_kernel_platform_dir)/SystemInterpreter.hpp \
                   $(build_kernel_platform_dir)/SystemSemaphores.h \
-                  $(build_kernel_platform_dir)/SysThread.hpp \
-                  $(build_kernel_platform_dir)/ThreadSupport.hpp
+                  $(build_kernel_platform_dir)/SysSemaphores.hpp \
+                  $(build_kernel_platform_dir)/SysThread.hpp
 platformcommonHeaders =
 runtimeHeaders = $(build_runtime_dir)/ActivationApiContexts.hpp \
                  $(build_runtime_dir)/ActivityDispatcher.hpp \
@@ -504,8 +504,8 @@ platform_sources = $(build_kernel_platform_dir)/ErrorMessages.cpp \
                    $(build_kernel_platform_dir)/SystemInitialization.cpp \
                    $(build_kernel_platform_dir)/SystemInterpreter.cpp \
                    $(build_kernel_platform_dir)/SystemSemaphores.cpp \
+                   $(build_kernel_platform_dir)/SysSemaphores.cpp \
                    $(build_kernel_platform_dir)/SysThread.cpp \
-                   $(build_kernel_platform_dir)/ThreadSupport.cpp \
                    $(build_kernel_platform_dir)/TimeSupport.cpp \
                    $(build_kernel_platform_dir)/UseridFunction.cpp \
                    $(build_kernel_platform_dir)/ValueFunction.cpp

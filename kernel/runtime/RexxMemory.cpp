@@ -92,9 +92,9 @@ RexxDirectory *RexxMemory::kernel = OREF_NULL;
 RexxDirectory *RexxMemory::system = OREF_NULL;
 
 // locks for the memory process access
-SMTX RexxMemory::flattenMutex = 0;
-SMTX RexxMemory::unflattenMutex = 0;
-SMTX RexxMemory::envelopeMutex = 0;
+SysMutex RexxMemory::flattenMutex;
+SysMutex RexxMemory::unflattenMutex;
+SysMutex RexxMemory::envelopeMutex;
 
 static void logMemoryCheck(FILE *outfile, const char *message, ...)
 {
@@ -1947,12 +1947,12 @@ void RexxMemory::setObjectOffset(size_t offset)
 
         /* have a value, starting unflatten.  See if we can get MUTEX */
         /* immed */
-        if (MTXRI(this->unflattenMutex))
+        if (!unflattenMutex.requestImmediate())
         {
             {
                 UnsafeBlock releaser;
                 /* wait for current unflatten to end */
-                MTXRQ(this->unflattenMutex);
+                unflattenMutex.request();
             }
         }
     }
@@ -1960,7 +1960,7 @@ void RexxMemory::setObjectOffset(size_t offset)
     {
         /* no value, ending an unflatten */
         /* Release the MUTEX.                */
-        MTXRL(this->unflattenMutex);
+        unflattenMutex.release();
     }
 
     /* setup offSet value.               */
@@ -1981,20 +1981,20 @@ void      RexxMemory::setEnvelope(RexxEnvelope *_envelope)
     {
         /* have a value, starting unflatt    */
         /* See if we can get MUTEX immed     */
-        if (MTXRI(this->envelopeMutex))
+        if (!envelopeMutex.requestImmediate())
         {
             /* Nope, have to wait for it.        */
             /* release kernel access.            */
             {
                 UnsafeBlock releaser;
-                MTXRQ(this->envelopeMutex);        /* wait for current unflat to end    */
+                envelopeMutex.request();   /* wait for current unflat to end    */
             }
         }
     }
     else
     {
         /* no value, ending an unflatten     */
-        MTXRL(this->envelopeMutex);       /* Release the MUTEX.                */
+        envelopeMutex.release();         /* Release the MUTEX.                */
     }
 
     this->envelope = _envelope;          /* set the envelope object           */
@@ -2139,13 +2139,13 @@ RexxStack *RexxMemory::getFlattenStack(void)
 /* Function:  Allocate and lock the flatten stack capability.                 */
 /******************************************************************************/
 {
-    if (MTXRI(this->flattenMutex))
+    if (!flattenMutex.requestImmediate())
     {
         /* Nope, have to wait for it.        */
         /* release kernel access.            */
         {
             UnsafeBlock releaser;
-            MTXRQ(this->flattenMutex);         /* wait for current flattento end    */
+            flattenMutex.request();         /* wait for current flattento end    */
         }
     }
     /* create a temporary stack          */
@@ -2159,7 +2159,7 @@ void RexxMemory::returnFlattenStack(void)
 /******************************************************************************/
 {
    free((void *)this->flattenStack);   /* release the flatten stack         */
-   MTXRL(this->flattenMutex);          /* and release the semaphore         */
+   this->flattenMutex.release();       /* and release the semaphore         */
 }
 
 RexxObject *RexxMemory::dumpImageStats(void)
@@ -2256,9 +2256,9 @@ void RexxMemory::createLocks()
                                        /* Create/Open Shared MUTEX      */
                                        /* Semophores used to serialize  */
                                        /* the flatten/unflatten process */
-  MTXCR(flattenMutex);
-  MTXCR(unflattenMutex);
-  MTXCR(envelopeMutex);
+    flattenMutex.create();
+    unflattenMutex.create();
+    envelopeMutex.create();
 }
 
 void RexxMemory::closeLocks()
@@ -2269,12 +2269,9 @@ void RexxMemory::closeLocks()
                                        /* Create/Open Shared MUTEX      */
                                        /* Semophores used to serialize  */
                                        /* the flatten/unflatten process */
-  MTXCL(flattenMutex);
-  MTXCL(unflattenMutex);
-  MTXCL(envelopeMutex);
-  flattenMutex = 0;
-  unflattenMutex = 0;
-  envelopeMutex = 0;
+    flattenMutex.close();
+    unflattenMutex.close();
+    envelopeMutex.close();
 }
 
 

@@ -57,7 +57,7 @@
 
 
 // global resource lock
-SMTX Interpreter::resourceLock = 0;
+SysMutex Interpreter::resourceLock;
 
 RexxList *Interpreter::interpreterInstances = OREF_NULL;
 

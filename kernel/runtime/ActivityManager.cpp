@@ -83,10 +83,10 @@ size_t ActivityManager::interpreterInstances = 0;
 RexxDirectory *ActivityManager::localEnvironment = OREF_NULL;
 
 // global lock for the interpreter
-SMTX ActivityManager::kernelSemaphore = 0;
+SysMutex ActivityManager::kernelSemaphore;
 
 // the termination complete semaphore
-SEV  ActivityManager::terminationSem = 0;
+SysSemaphore ActivityManager::terminationSem;
 
 const size_t ACTIVATION_CACHE_SIZE = 10;
 
@@ -525,7 +525,7 @@ RexxActivity *ActivityManager::createNewActivity()
     {
         /* We are able to reuse an activity, */
         /*  so just re-initialize it.        */
-        new (activity) RexxActivity();
+        activity->reset();
     }
     return activity;                     /* return the activity               */
 }
@@ -736,7 +736,7 @@ void ActivityManager::lockKernel()
 /* Function:  Request access to the kernel                                    */
 /******************************************************************************/
 {
-    MTXRQ(kernelSemaphore);            /* just request the semaphore        */
+    kernelSemaphore.request();   /* just request the semaphore        */
 }
 
 void ActivityManager::unlockKernel()
@@ -745,7 +745,7 @@ void ActivityManager::unlockKernel()
 /******************************************************************************/
 {
     currentActivity = OREF_NULL;         /* no current activation             */
-    MTXRL(kernelSemaphore);             /* release the kernel semaphore      */
+    kernelSemaphore.release();           /* release the kernel semaphore      */
 }
 
 /**
@@ -753,10 +753,10 @@ void ActivityManager::unlockKernel()
  */
 void ActivityManager::createLocks()
 {
-    MTXCROPEN(kernelSemaphore, "OBJREXXKERNELSEM");
+    kernelSemaphore.create();
     // this needs to be created and set
-    EVCR(terminationSem);
-    EVSET(terminationSem);
+    terminationSem.create();
+    terminationSem.clear();
 }
 
 /**
@@ -764,8 +764,8 @@ void ActivityManager::createLocks()
  */
 void ActivityManager::closeLocks()
 {
-    MTXCL(kernelSemaphore);
-    EVCLOSE(terminationSem);
+    kernelSemaphore.close();
+    terminationSem.close();
 }
 
 
@@ -781,7 +781,7 @@ bool ActivityManager::lockKernelImmediate()
 {
     if (firstWaitingActivity == OREF_NULL)
     {
-        return MTXRI(kernelSemaphore) == 0;
+        return kernelSemaphore.requestImmediate();
     }
     // don't give this up if somebody is waiting
     return false;

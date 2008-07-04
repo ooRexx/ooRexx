@@ -106,7 +106,7 @@
    RexxActivity *startActivity;        /* Activity created to run msg       */
    RexxList     *waitingActivities;    /* waiting activities list           */
    size_t dataFlags;                   /* flags to control processing       */
-   SEV  waitResultSem;                 /* Semophore used to wait on result  */
+   SysSemaphore  waitResultSem;        /* Semophore used to wait on result  */
    size_t NumWaiting;                  /* activities waiting on result      */
  };
 

@@ -45,6 +45,8 @@
 #ifndef Included_RexxMemory
 #define Included_RexxMemory
 
+#include "SysSemaphore.hpp"
+
 /* The minimum allocation unit for an object.   */
 #define ObjectGrain 8
 /* The unit of granularity for large allocation */
@@ -372,9 +374,9 @@ enum
   WeakReference *weakReferenceList;    // list of active weak references
 
   static RexxDirectory *globalStrings; // table of global strings
-  static SMTX flattenMutex;            /* locks for various memory processes */
-  static SMTX unflattenMutex;
-  static SMTX envelopeMutex;
+  static SysMutex flattenMutex;        /* locks for various memory processes */
+  static SysMutex unflattenMutex;
+  static SysMutex envelopeMutex;
 };
 
 
