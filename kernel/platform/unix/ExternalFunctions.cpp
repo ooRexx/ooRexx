@@ -118,9 +118,6 @@ typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
 
 int putflag = 0;                            /* static or dynamic env memory   */
 
-REXXOBJECT BuildEnvlist(void);
-void RestoreEnvironment( void * );
-
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   sysBeep                                      */
@@ -350,6 +347,50 @@ bool SysExternalFunction(
 }
 
 
+/**
+ * Push a new environment for the SysSetLocal() BIF.
+ *
+ * @param context The current activation context.
+ *
+ * @return Returns TRUE if the environment was successfully pushed.
+ */
+RexxObject *SystemInterpreter::pushEnvironment(RexxActivation *context)
+{
+    RexxObject *Current = buildEnvlist(); /* build the new save block          */
+    if (Current == OREF_NULL)           /* if unsuccessful return zero       */
+    {
+        return TheFalseObject;
+    }
+    else
+    {
+        /* Have Native Actiovation           */
+        context->pushEnvironment(Current);          /*  update environemnt list          */
+        return TheTrueObject;              /* this returns one                  */
+    }
+}
+
+/**
+ * Pop an environment for the SysEndLocal() BIF.
+ *
+ * @param context The current activation context.
+ *
+ * @return Always returns FALSE.  This is a NOP on Windows.
+ */
+RexxObject *SystemInterpreter::popEnvironment(RexxActivation *context)
+{
+        RexxObject    *Current;          /* new save block                    */
+
+    Current =  context->popEnvironment();/*  block, if ixisted.               */
+    if (TheNilObject == Current)         /* nothing saved?                    */
+      return TheFalseObject;             /* return failure value              */
+    else {
+                                         /* restore everything                */
+      restoreEnvironment(Current);
+      return TheTrueObject;              /* this worked ok                    */
+    }
+}
+
+
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   BuildEnvlist                                 */
@@ -362,56 +403,62 @@ bool SysExternalFunction(
 /*                                                                   */
 /*********************************************************************/
 
-REXXOBJECT BuildEnvlist()
+RexxObject *SystemInterpreter::buildEnvlist()
 {
-  REXXOBJECT  newBuffer;               /* Buffer object to hold env  */
-  char      **Environment;             /* environment pointer        */
-  size_t      size = 0;                /* size of the new buffer     */
-  char       *curr_dir;                /* current directory          */
-  char       *New;                     /* starting address of buffer */
-  Environment = getEnvironment();      /* get the ptr to the environ */
+    RexxBuffer *newBuffer;               /* Buffer object to hold env  */
+    char      **Environment;             /* environment pointer        */
+    size_t      size = 0;                /* size of the new buffer     */
+    char       *curr_dir;                /* current directory          */
+    char       *New;                     /* starting address of buffer */
+    Environment = getEnvironment();      /* get the ptr to the environ */
 
-  for(;*Environment != NULL;Environment++){
-    size += strlen(*Environment);      /* calculate the size for all */
-    size++;                            /* environment variables+'\0' */
-  }                                    /* now get current dir        */
-  if(!size)
-    return OREF_NULL;                  /* no envrionment !           */
-  if (!(curr_dir=(char *)malloc(CCHMAXPATH+2)))/* malloc storage for cwd*/
-    reportException(Error_System_service);
+    for (;*Environment != NULL;Environment++)
+    {
+        size += strlen(*Environment);      /* calculate the size for all */
+        size++;                            /* environment variables+'\0' */
+    }                                    /* now get current dir        */
+    if (!size)
+    {
+        return OREF_NULL;                  /* no envrionment !           */
+    }
+    if (!(curr_dir=(char *)malloc(CCHMAXPATH+2)))/* malloc storage for cwd*/
+    {
+        reportException(Error_System_service);
+    }
 
-  // start with a copy of the current working directory
-  SystemInterpreter::getCurrentWorkingDirectory(curr_dir);
+    // start with a copy of the current working directory
+    SystemInterpreter::getCurrentWorkingDirectory(curr_dir);
 
-  size += strlen(curr_dir);            /* add the space for curr dir */
-  size++;                              /* and its terminating '\0'   */
-  size += 4;                           /* this is for the size itself*/
-                                       /* Now we have the size for   */
-                                       /* allocating the new buffer  */
-  newBuffer = ooRexxBuffer(size);      /* let's do it                */
-                                       /* Get starting address of buf*/
-  New = (char*)buffer_address(newBuffer);
-  ((ENVENTRY*)New)->size = size;       /* first write the size       */
-  New +=4;                             /* update the pointer         */
-                                       /* now write the curr dir     */
-  memcpy(New,curr_dir,strlen(curr_dir));
-  New += strlen(curr_dir);             /* update the pointer         */
-  memcpy(New,"\0",1);                  /* write the terminator       */
-  New++;                               /* update the pointer         */
-  Environment = getEnvironment();      /* reset to begin of environ  */
-                                       /* Loop through environment   */
-                                       /* and copy all entries to the*/
-                                       /* buffer, each terminating   */
-                                       /* with '\0'                  */
-  for(;*Environment != NULL;Environment++){
-                                       /* copy the entry             */
-    memcpy(New,*Environment,strlen(*Environment));
-    New += strlen(*Environment);       /* update the pointer         */
-    memcpy(New,"\0",1);                /* write the terminator       */
-    New++;                             /* update the pointer         */
-  }
-  free(curr_dir);                      /* free curr dir buffer       */
-  return newBuffer;                    /* return the pointer         */
+    size += strlen(curr_dir);            /* add the space for curr dir */
+    size++;                              /* and its terminating '\0'   */
+    size += 4;                           /* this is for the size itself*/
+                                         /* Now we have the size for   */
+                                         /* allocating the new buffer  */
+    newBuffer = new_buffer(size);        /* let's do it                */
+                                         /* Get starting address of buf*/
+    New = newBuffer->address();
+    ((ENVENTRY*)New)->size = size;       /* first write the size       */
+    New +=4;                             /* update the pointer         */
+                                         /* now write the curr dir     */
+    memcpy(New,curr_dir,strlen(curr_dir));
+    New += strlen(curr_dir);             /* update the pointer         */
+    memcpy(New,"\0",1);                  /* write the terminator       */
+    New++;                               /* update the pointer         */
+    Environment = getEnvironment();      /* reset to begin of environ  */
+                                         /* Loop through environment   */
+                                         /* and copy all entries to the*/
+                                         /* buffer, each terminating   */
+                                         /* with '\0'                  */
+    for (;*Environment != NULL;Environment++)
+    {
+        /* copy the entry             */
+        memcpy(New,*Environment,strlen(*Environment));
+        New += strlen(*Environment);       /* update the pointer         */
+        memcpy(New,"\0",1);                /* write the terminator       */
+        New++;                             /* update the pointer         */
+    }
+    free(curr_dir);                      /* free curr dir buffer       */
+    return newBuffer;                    /* return the pointer         */
 }
 
 
@@ -426,74 +473,86 @@ REXXOBJECT BuildEnvlist()
 /*                                                                   */
 /*********************************************************************/
 
-void RestoreEnvironment(
+void SystemInterpreter::restoreEnvironment(
   void *CurrentEnv)                    /* saved environment          */
 {
-  char  *current;                      /* ptr to saved environment   */
-  size_t size;                         /* size of the saved space    */
-  size_t length;                       /* string length              */
-  char  *begin;                        /* begin of saved space       */
-  char  **Environment;                 /* environment pointer        */
+    char  *current;                      /* ptr to saved environment   */
+    size_t size;                         /* size of the saved space    */
+    size_t length;                       /* string length              */
+    char  *begin;                        /* begin of saved space       */
+    char  **Environment;                 /* environment pointer        */
 
-  char  *del = NULL;                   /* ptr to old unused memory   */
-  char  *Env_Var_String;               /* enviornment entry          */
-  char   namebufsave[256],namebufcurr[256];
-  char  *np;
-  int i;
+    char  *del = NULL;                   /* ptr to old unused memory   */
+    char  *Env_Var_String;               /* enviornment entry          */
+    char   namebufsave[256],namebufcurr[256];
+    char  *np;
+    int i;
 
     Environment = getEnvironment();    /* get the current environment*/
 
-  begin = current = (char *)CurrentEnv;/* get the saved space        */
-  size = ((ENVENTRY*)current)->size;   /* first read out the size    */
-  current += 4;                        /* update the pointer         */
-  if(chdir(current) == -1)             /* restore the curr dir       */
-      rexx_exception1(Error_System_service_service, ooRexxString("ERROR CHANGING DIRECTORY"));
-  current += strlen(current);          /* update the pointer         */
-  current++;                           /* jump over '\0'             */
-  if(!putflag){                        /* first change in the        */
-                                       /* environment ?              */
-    /* copy all entries to dynamic memory                            */
-                                       /*for all entries in the env  */
-    for(;*Environment != NULL;Environment++){
-      length = strlen(*Environment)+1; /* get the size of the string */
-                                       /* and alloc space for it     */
-      Env_Var_String = (char *)malloc(length);
-      memcpy(Env_Var_String,*Environment,length);/* copy the string  */
-      putenv(Env_Var_String);          /* and make it part of env    */
+    begin = current = (char *)CurrentEnv;/* get the saved space        */
+    size = ((ENVENTRY*)current)->size;   /* first read out the size    */
+    current += 4;                        /* update the pointer         */
+    if (chdir(current) == -1)             /* restore the curr dir       */
+    {
+        rexx_exception1(Error_System_service_service, ooRexxString("ERROR CHANGING DIRECTORY"));
     }
-    putflag = 1;                       /* prevent do it again        */
-  }
-                                       /* Loop through the saved env */
-                                       /* entries and restore them   */
-  for(;(size_t)(current-begin)<size;current+=(strlen(current)+1)){
-    Environment = getEnvironment();    /* get the environment        */
-    del = NULL;
-    np = current;
-                                       /* extract the the name       */
-                                       /* from the saved enviroment  */
-    for(i=0;(*np!='=')&&(i<255);np++,i++){
-      memcpy(&(namebufsave[i]),np,1);  /* copy the character         */
+    current += strlen(current);          /* update the pointer         */
+    current++;                           /* jump over '\0'             */
+    if (!putflag)
+    {                        /* first change in the        */
+                             /* environment ?              */
+        /* copy all entries to dynamic memory                            */
+        /*for all entries in the env  */
+        for (;*Environment != NULL;Environment++)
+        {
+            length = strlen(*Environment)+1; /* get the size of the string */
+                                             /* and alloc space for it     */
+            Env_Var_String = (char *)malloc(length);
+            memcpy(Env_Var_String,*Environment,length);/* copy the string  */
+            putenv(Env_Var_String);          /* and make it part of env    */
+        }
+        putflag = 1;                       /* prevent do it again        */
     }
-    memcpy(&(namebufsave[i]),"\0",1);  /* copy the terminator        */
-                                       /* find the entry in the env  */
-    for(;*Environment != NULL;Environment++){
-      np = *Environment;
-                                       /* extract the the name       */
-                                       /* from the current env       */
-      for(i=0;(*np!='=')&&(i<255);np++,i++){
-        memcpy(&(namebufcurr[i]),np,1);/* copy the character         */
-      }
-      memcpy(&(namebufcurr[i]),"\0",1);/* copy the terminator        */
+    /* Loop through the saved env */
+    /* entries and restore them   */
+    for (;(size_t)(current-begin)<size;current+=(strlen(current)+1))
+    {
+        Environment = getEnvironment();    /* get the environment        */
+        del = NULL;
+        np = current;
+        /* extract the the name       */
+        /* from the saved enviroment  */
+        for (i=0;(*np!='=')&&(i<255);np++,i++)
+        {
+            memcpy(&(namebufsave[i]),np,1);  /* copy the character         */
+        }
+        memcpy(&(namebufsave[i]),"\0",1);  /* copy the terminator        */
+                                           /* find the entry in the env  */
+        for (;*Environment != NULL;Environment++)
+        {
+            np = *Environment;
+            /* extract the the name       */
+            /* from the current env       */
+            for (i=0;(*np!='=')&&(i<255);np++,i++)
+            {
+                memcpy(&(namebufcurr[i]),np,1);/* copy the character         */
+            }
+            memcpy(&(namebufcurr[i]),"\0",1);/* copy the terminator        */
 
-      if(!strcmp(namebufsave,namebufcurr)){/* have a match ?         */
-        del = *Environment;            /* remember it for deletion   */
-        break;                         /* found, so get out of here  */
-      }
+            if (!strcmp(namebufsave,namebufcurr))
+            {/* have a match ?         */
+                del = *Environment;            /* remember it for deletion   */
+                break;                         /* found, so get out of here  */
+            }
+        }
+        if (putenv(current) == -1)
+        {
+            rexx_exception1(Error_System_service_service, ooRexxString("ERROR RESTORING ENVIRONMENT VARIABLE"));
+        }
+        if (del)                            /* if there was an old entry  */
+        {
+            free(del);                       /* free it                    */
+        }
     }
-    if(putenv(current) == -1)
-      rexx_exception1(Error_System_service_service, ooRexxString("ERROR RESTORING ENVIRONMENT VARIABLE"));
-    if(del)                            /* if there was an old entry  */
-      free(del);                       /* free it                    */
-  }
-
 }

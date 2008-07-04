@@ -35,21 +35,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysValue                                     */
-/*                                                                   */
-/*   Function:          process the VALUE function selector          */
-/*                      function                                     */
-/*                                                                   */
-/*********************************************************************/
-
 #include <windows.h>
 #include <stdlib.h>
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ActivityManager.hpp"
+#include "SystemInterpreter.hpp"
 
 #define  SELECTOR  "ENVIRONMENT"    /* environment selector               */
 
@@ -61,7 +53,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-bool SysValue(
+bool SystemInterpreter::valueFunction(
     RexxString * Name,                 /* variable name                     */
     RexxObject * NewValue,             /* new assigned value                */
     RexxString * Selector,             /* variable selector                 */
@@ -80,13 +72,13 @@ bool SysValue(
     dwSize = GetEnvironmentVariable(Name->getStringData(), NULL, 0);
     if (dwSize)
     {
-      OldValue = (char *) SysAllocateResultMemory(dwSize);
+      OldValue = (char *) SystemInterpreter::allocateResultMemory(dwSize);
                                          /* scan for the variable           */
       if (OldValue && GetEnvironmentVariable(Name->getStringData(),OldValue,dwSize) )
       {
                                          /* have a value already?           */
         result = (RexxObject*) new_string(OldValue);
-        SysReleaseResultMemory(OldValue);
+        SystemInterpreter::releaseResultMemory(OldValue);
       }
       else
         result = OREF_NULLSTRING;        /* otherwise, return null            */

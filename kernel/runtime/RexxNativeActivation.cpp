@@ -61,6 +61,7 @@
 #include "ActivityDispatcher.hpp"
 #include "CallbackDispatcher.hpp"
 #include "Interpreter.hpp"
+#include "SystemInterpreter.hpp"
 
 #include <math.h>
 #include <limits.h>
@@ -1386,7 +1387,7 @@ void RexxNativeActivation::callRegisteredRoutine(RoutineClass *_routine, Registe
             if (funcresult.strptr != default_return_buffer )
             {
                 /* free it                           */
-                SysReleaseResultMemory(funcresult.strptr);
+                SystemInterpreter::releaseResultMemory(funcresult.strptr);
             }
         }
     }
@@ -2886,7 +2887,7 @@ RexxReturnCode RexxNativeActivation::copyValue(RexxObject * value, RXSTRING *rxs
     // caller allowing use to allocate this?
     if (rxstring->strptr == NULL)
     {
-        rxstring->strptr = (char *)SysAllocateResultMemory(string_length + 1);
+        rxstring->strptr = (char *)SystemInterpreter::allocateResultMemory(string_length + 1);
         if (rxstring->strptr == NULL)
         {
             return RXSHV_MEMFL;                  /* couldn't allocate, return flag */

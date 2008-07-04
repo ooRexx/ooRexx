@@ -43,7 +43,7 @@
 #include "RexxCore.h"
 #include "InterpreterInstance.hpp"
 #include "ListClass.hpp"
-
+#include "SystemInterpreter.hpp"
 
 /**
  * Initialize the interpreter instance.
@@ -88,7 +88,7 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
 
 
     // enough room for separators and a terminating null
-    path = (char *)SysAllocateResultMemory(pathSize + rexxPathSize + parentSize + extensionSize + 16);
+    path = (char *)SystemInterpreter::allocateResultMemory(pathSize + rexxPathSize + parentSize + extensionSize + 16);
     *path = '\0';     // add a null character so strcat can work
     if (parentDir != NULL)
     {
@@ -128,5 +128,5 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
  */
 SysSearchPath::~SysSearchPath()
 {
-    SysReleaseResultMemory((void *)path);
+    SystemInterpreter::releaseResultMemory((void *)path);
 }

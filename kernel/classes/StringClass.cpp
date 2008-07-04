@@ -55,6 +55,7 @@
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
 #include "RexxCompoundTail.hpp"
+#include "SystemInterpreter.hpp"
 
 // singleton class instance
 RexxClass *RexxString::classInstance = OREF_NULL;
@@ -1773,7 +1774,7 @@ void RexxString::copyToRxstring(RXSTRING &r)
     size_t result_length = getLength() + 1;
     if (r.strptr == NULL || r.strlength < result_length)
     {
-        r.strptr = (char *)SysAllocateResultMemory(result_length);
+        r.strptr = (char *)SystemInterpreter::allocateResultMemory(result_length);
     }
     // copy all of the data + the terminating null
     memcpy(r.strptr, getStringData(), result_length);

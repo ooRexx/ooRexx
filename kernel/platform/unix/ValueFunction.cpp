@@ -42,18 +42,10 @@
 /*                                                                            */
 /******************************************************************************/
 
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysValue                                     */
-/*                                                                   */
-/*   Function:          process the VALUE function selector          */
-/*                      function                                     */
-/*                                                                   */
-/*********************************************************************/
-
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ActivityManager.hpp"
+#include "SystemInterpreter.hpp"
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -121,7 +113,7 @@ int SetEnvironmentVariable(
   return 0;                            /* return success                    */
 }
 
-bool SysValue(
+bool SystemInterpreter::valueFunction(
     RexxString *Name,                  /* variable name                     */
     RexxObject *NewValue,              /* new assigned value                */
     RexxString *Selector,              /* variable selector                 */

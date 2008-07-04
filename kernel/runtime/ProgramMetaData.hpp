@@ -38,13 +38,15 @@
 #ifndef ProgramMetaData_Included
 #define ProgramMetaData_Included
 
+#include "SystemInterpreter.hpp"
+
 class RexxBuffer;
 
 class ProgramMetaData
 {
 public:
     void *operator new (size_t size, RexxBuffer *buff);
-    void operator delete (void *p, RexxBuffer *buff) { SysReleaseResultMemory(p); }
+    void operator delete (void *p, RexxBuffer *buff) { SystemInterpreter::releaseResultMemory(p); }
 
     ProgramMetaData();
     ProgramMetaData(RexxBuffer *);

@@ -73,18 +73,13 @@
 #include "ProtectedObject.hpp"
 #include "ActivityManager.hpp"
 #include "Interpreter.hpp"
+#include "SystemInterpreter.hpp"
 #include "RexxInternalApis.h"
 #include "PackageManager.hpp"
 #include "RexxCompoundTail.hpp"
 
 /* max instructions without a yield */
 #define MAX_INSTRUCTIONS  100
-                                       /* routine to restore the Environment*/
-                                       /* defined in xxxEXTF.C              */
-void RestoreEnvironment(void *);
-
-
-
                                        /* default template for a new        */
                                        /* activation.  This must be changed */
                                        /* whenever the settings definition  */
@@ -1306,7 +1301,7 @@ void RexxActivation::termination()
     {
         /* Yes, then restore the environment */
         /*  to the ist on added.             */
-        RestoreEnvironment(((RexxBuffer *)this->environmentList->lastItem())->getData());
+        SystemInterpreter::restoreEnvironment(((RexxBuffer *)this->environmentList->lastItem())->getData());
     }
     this->environmentList = OREF_NULL;   /* Clear out the env list            */
     this->closeStreams();                /* close any open streams            */
@@ -2369,7 +2364,7 @@ RoutineClass *RexxActivation::getMacroCode(RexxString *macroName)
         // return the allocated buffer
         if (macroImage.strptr == NULL)
         {
-            SysReleaseResultMemory(macroImage.strptr);
+            SystemInterpreter::releaseResultMemory(macroImage.strptr);
         }
     }
     return macroRoutine;
@@ -2555,7 +2550,7 @@ RexxDateTime RexxActivation::getTime()
             setElapsedTimerValid();
         }
         /* get a fresh time stamp            */
-        SysGetCurrentTime(&this->settings.timestamp);
+        SystemInterpreter::getCurrentTime(&this->settings.timestamp);
         /* got a new one                     */
         this->settings.timestamp.valid = true;
     }
@@ -3296,7 +3291,7 @@ bool RexxActivation::debugPause(RexxInstruction * instr)
         if (!(this->settings.flags&debug_prompt_issued))
         {
             /* write the initial prompt          */
-            this->activity->traceOutput(this, (RexxString *)SysMessageText(Message_Translations_debug_prompt));
+            this->activity->traceOutput(this, SystemInterpreter::getMessageText(Message_Translations_debug_prompt));
             /* remember we've issued this        */
             this->settings.flags |= debug_prompt_issued;
         }
@@ -3487,7 +3482,7 @@ RexxString * RexxActivation::sourceString()
 /******************************************************************************/
 {
                                        /* produce the system specific string*/
-  return SysSourceString(this->settings.calltype, this->code->getProgramName());
+  return SystemInterpreter::getSourceString(this->settings.calltype, this->code->getProgramName());
 }
 
 

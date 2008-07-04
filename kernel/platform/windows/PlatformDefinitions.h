@@ -332,8 +332,6 @@ size_t line_write_check(const char * , size_t, FILE * );
 /* can map the calls directly to inline code or comment them out all together.*/
 /******************************************************************************/
 
-#define SysINTName SysName
-
 #define DEFRXSTRING 256                 /* Default RXSTRING return size      */
 
 #define SysThreadYield()
@@ -347,18 +345,13 @@ size_t line_write_check(const char * , size_t, FILE * );
 #define SysAllocateHeap();             // no shared memory on windows yet
 #define SysReleaseHeap();              // no shared memory on windows yet
 
-void SysTermination();              // No initialization / termination yet
-
 extern bool HandleException;
-
                                        // our signal handling
 inline void SysRegisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = true; }
 inline void SysDeregisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = false; }
 
 inline void SysRegisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
 inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
-                                       //Temp workaround for message handling
-#define SysMessageHeader(n) OREF_NULL
                                        // in Windows, no EA's
 #define SysClauseBoundary(a)
 

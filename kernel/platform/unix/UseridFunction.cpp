@@ -35,14 +35,6 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysUserid                                    */
-/*                                                                   */
-/*   Function:          process the Userid function                  */
-/*                      function                                     */
-/*                                                                   */
-/*********************************************************************/
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -57,6 +49,7 @@
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
+#include "SystemInterpreter.hpp"
 
 #define ACCOUNT_BUFFER_SIZE  256
 
@@ -68,7 +61,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-RexxObject * SysUserid()
+RexxString *SystemInterpreter::getUserid()
 {
     char account_buffer[ACCOUNT_BUFFER_SIZE];
 #if defined( HAVE_GETPWUID )

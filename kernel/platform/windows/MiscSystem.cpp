@@ -52,6 +52,7 @@
 #include "SystemVersion.h"
 #include <signal.h>
 #include "Interpreter.hpp"
+#include "SystemInterpreter.hpp"
 
 extern bool UseMessageLoop = false;
 
@@ -65,55 +66,54 @@ extern HANDLE ExceptionHostProcess;
 extern bool ExceptionConsole;
 static int SignalCount = 0;
 
-RexxString *SysName( void )
+
+RexxString *SystemInterpreter::getInternalSystemName()
+{
+    return getSystemName();     // this is the same
+}
+
+RexxString *SystemInterpreter::getSystemName()
 /******************************************************************************/
 /* Function: Get System Name                                                  */
 /******************************************************************************/
 {
+    char chVerBuf[26];                   // buffer for version
+    int isys;
 
-  char chVerBuf[26];                   // buffer for version
-  int isys;
+    isys = which_system_is_running();
 
-  isys = which_system_is_running();
-
-  if (isys == 0) strcpy(chVerBuf, "Windows");     // Windows 3.1
-  else
-    if (isys == 1) strcpy(chVerBuf, "WindowsNT"); // Windows NT
-  else strcpy(chVerBuf, "Windows95");                                              // Windows 95
-
-  return new_string(chVerBuf);                     /* return as a string                */
+    if (isys == 0)
+    {
+      strcpy(chVerBuf, "Windows");     // Windows 3.1
+    }
+    else if (isys == 1)
+    {
+      strcpy(chVerBuf, "WindowsNT"); // Windows NT
+    }
+    else
+    {
+      strcpy(chVerBuf, "Windows95");                                              // Windows 95
+    }
+    return new_string(chVerBuf);                     /* return as a string                */
 }
 
 
-void SysTermination(void)
-{
-}
-
-
-void SysInitialize(void)
-/******************************************************************************/
-/* Function:   Perform system specific initialization.                        */
-/******************************************************************************/
-{
-}
-
-
-RexxString *SysVersion(void)
+RexxString *SystemInterpreter::getSystemVersion()
 /******************************************************************************/
 /* Function:   Return the system specific version identifier that is stored   */
 /*             in the image.                                                  */
 /******************************************************************************/
 {
-  char chVerBuf[8];                   // buffer for version
-  OSVERSIONINFO vi;
-  // dont forget to change sysmeths.cmd
+    char chVerBuf[8];                   // buffer for version
+    OSVERSIONINFO vi;
+    // dont forget to change sysmeths.cmd
 
-  vi.dwOSVersionInfoSize = sizeof(vi);  // if not set --> violation error
+    vi.dwOSVersionInfoSize = sizeof(vi);  // if not set --> violation error
 
-  GetVersionEx(&vi);              // get version with extended api
-                                       /* format into the buffer            */
-  wsprintf(chVerBuf,"%i.%02i",(int)vi.dwMajorVersion,(int)vi.dwMinorVersion);
-  return new_string(chVerBuf);     /* return as a string                */
+    GetVersionEx(&vi);              // get version with extended api
+    /* format into the buffer            */
+    wsprintf(chVerBuf,"%i.%02i",(int)vi.dwMajorVersion,(int)vi.dwMinorVersion);
+    return new_string(chVerBuf);     /* return as a string                */
 }
 
 
@@ -218,36 +218,33 @@ void SysSetupProgram(
   }
 }
 
-RexxString * SysSourceString(
+
+RexxString *SystemInterpreter::getSourceString(
   RexxString * callType,               /* type of call token                */
   RexxString * programName )           /* program name token                */
 /******************************************************************************/
 /* Function:  Produce a system specific source string                         */
 /******************************************************************************/
 {
-  RexxString * rsSysName;              // buffer for version
+    char  *outPtr;                  /* copy pointer                     */
+    const char  *chSysName;               /* copy pointer                     */
 
-  RexxString * source_string;          /* final source string               */
+    RexxString *rsSysName = getSystemName();    /* start with the system stuff       */
+    chSysName= rsSysName->getStringData();
 
-        char  *outPtr;                  /* copy pointer                     */
-  const char  *chSysName;               /* copy pointer                     */
+    RexxString *source_string = raw_string(rsSysName->getLength() + 2 + callType->getLength() + programName->getLength());
 
-  rsSysName = SysName();               /* start with the system stuff       */
-  chSysName= rsSysName->getStringData();
-
-  source_string = raw_string(rsSysName->getLength() + 2 + callType->getLength() + programName->getLength());
-
-  outPtr = source_string->getWritableData();  /* point to the result data          */
-  strcpy(outPtr, chSysName);           /* copy the system name              */
-  outPtr +=rsSysName->getLength();     /* step past the name                */
-  *outPtr++ = ' ';                     /* put a blank between               */
-                                       /* copy the call type                */
-  memcpy(outPtr, callType->getStringData(), callType->getLength());
-  outPtr += callType->getLength();     /* step over the call type           */
-  *outPtr++ = ' ';                     /* put a blank between               */
-                                       /* copy the system name              */
-  memcpy(outPtr, programName->getStringData(), programName->getLength());
-  return source_string;                /* return the source string          */
+    outPtr = source_string->getWritableData();  /* point to the result data          */
+    strcpy(outPtr, chSysName);           /* copy the system name              */
+    outPtr +=rsSysName->getLength();     /* step past the name                */
+    *outPtr++ = ' ';                     /* put a blank between               */
+                                         /* copy the call type                */
+    memcpy(outPtr, callType->getStringData(), callType->getLength());
+    outPtr += callType->getLength();     /* step over the call type           */
+    *outPtr++ = ' ';                     /* put a blank between               */
+                                         /* copy the system name              */
+    memcpy(outPtr, programName->getStringData(), programName->getLength());
+    return source_string;                /* return the source string          */
 }
 
 

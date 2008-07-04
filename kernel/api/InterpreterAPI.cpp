@@ -59,6 +59,7 @@
 #include "InterpreterInstance.hpp"
 #include "RexxNativeActivation.hpp"
 #include "RexxInternalApis.h"
+#include "SystemInterpreter.hpp"
 
 
 int REXXENTRY RexxTerminate()
@@ -231,7 +232,7 @@ char *REXXENTRY RexxGetVersionInformation()
     size_t s6 = strlen(vbuf6);
     size_t sd = strlen(__DATE__);
     size_t sv = strlen(ver);
-    char *ptr = (char *)SysAllocateResultMemory(sv+s0+s1+s2+s3+s4+s5+s6+sd+1);
+    char *ptr = (char *)SystemInterpreter::allocateResultMemory(sv+s0+s1+s2+s3+s4+s5+s6+sd+1);
     if (ptr)
     {
         sprintf(ptr, "%s%s%s%s%s%s%s%s%s", vbuf0, ver, vbuf1, __DATE__, vbuf2, vbuf3, vbuf4, vbuf5, vbuf6);

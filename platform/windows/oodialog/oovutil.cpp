@@ -2071,7 +2071,7 @@ BOOL InitForCommonControls(void)
         INITCOMMONCONTROLSEX ctrlex;
 
         ctrlex.dwSize = sizeof(ctrlex);
-        ctrlex.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES
+        ctrlex.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES;
         if ( ! InitCommonControlsEx(&ctrlex) )
         {
             CHAR msg[128];

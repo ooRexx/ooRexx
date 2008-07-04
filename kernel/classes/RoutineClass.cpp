@@ -61,6 +61,7 @@
 #include "RexxSmartBuffer.hpp"
 #include "ProgramMetaData.hpp"
 #include "Utilities.hpp"
+#include "SystemInterpreter.hpp"
 #include <ctype.h>
 
 
@@ -651,7 +652,7 @@ RoutineClass *RoutineClass::restoreFromMacroSpace(RexxString *name)
     /* unflatten the method now          */
     RoutineClass *routine = restore(&buffer, name);
     // release the buffer memory
-    SysReleaseResultMemory(buffer.strptr);
+    SystemInterpreter::releaseResultMemory(buffer.strptr);
     return routine;
 }
 

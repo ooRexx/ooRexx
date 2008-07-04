@@ -136,8 +136,6 @@ thread_id_t SysCreateThread(PTHREADFN threadFnc, size_t stackSize, void *args)
    return (thread_id_t)newThread;
 }
 
-
-
 void SysInitializeThread()
 {
 }

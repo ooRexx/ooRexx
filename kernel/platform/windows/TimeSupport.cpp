@@ -57,23 +57,22 @@ extern int REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
 /*                                                                   */
 /*   Function:          gets the time and date from the system clock */
 /*********************************************************************/
-void SysGetCurrentTime(
-  RexxDateTime *Date )                 /* returned data structure    */
+void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
 /*********************************************************************/
 /* Function:  Return a time stamp to the kernel date/time functions. */
 /*********************************************************************/
 {
-  SYSTEMTIME SystemDate; /* system date structure      */
+    SYSTEMTIME SystemDate; /* system date structure      */
 
-  GetLocalTime(&SystemDate);        /* via Windows                */
+    GetLocalTime(&SystemDate);        /* via Windows                */
 
-  Date->hours = SystemDate.wHour;
-  Date->minutes = SystemDate.wMinute;
-  Date->seconds = SystemDate.wSecond;
-  Date->microseconds = SystemDate.wMilliseconds * 1000;
-  Date->day = SystemDate.wDay;
-  Date->month = SystemDate.wMonth;
-  Date->year = SystemDate.wYear;
+    Date->hours = SystemDate.wHour;
+    Date->minutes = SystemDate.wMinute;
+    Date->seconds = SystemDate.wSecond;
+    Date->microseconds = SystemDate.wMilliseconds * 1000;
+    Date->day = SystemDate.wDay;
+    Date->month = SystemDate.wMonth;
+    Date->year = SystemDate.wYear;
 }
 
 /*********************************************************************/

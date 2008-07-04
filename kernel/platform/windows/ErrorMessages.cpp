@@ -43,14 +43,33 @@
 #include "StringClass.hpp"
 #include "SystemInterpreter.hpp"
 
-RexxString *  SysMessageText(
-    wholenumber_t code)                /* message code to extract           */
+
+/**
+ * Return a message header for a given error message.
+ *
+ * @param code   The error code
+ *
+ * @return On Windows, always returns NULL
+ */
+RexxString * SystemInterpreter::getMessageHeader(wholenumber_t code )
+{
+    return OREF_NULL;                  // no header on windows
+}
+
+/**
+ * Retrieve the message text for a give error code.
+ *
+ * @param code   The Rexx error code
+ *
+ * @return The error message associated with that code.
+ */
+RexxString *SystemInterpreter::getMessageText(wholenumber_t code)
 {
     char dataArea[256];                /* buf addr to return message        */
 
                                        /* loop through looking for the      */
                                        /* error code                        */
-    if (SystemInterpreter::loadMessage(code, dataArea, sizeof(dataArea) - 1))
+    if (loadMessage(code, dataArea, sizeof(dataArea) - 1))
     {
         return new_string(dataArea);
     }
@@ -60,46 +79,4 @@ RexxString *  SysMessageText(
     }
 }
 
-/* Change Activity
- * $Log: ErrorMessages.cpp,v $
- * Revision 1.3  2006/03/07 15:37:19  wdashley
- * ArtifactId: None
- * Comment: Removed all references to the developerworks site.
- *
- * Revision 1.2  2006/02/16 16:43:48  wdashley
- * ArtifactId: None
- * Comment: Updated copyright notice on all files.
- *
- * Revision 1.1  2005/03/27 01:38:04  rexx
- * *** empty log message ***
- *
- * Revision 1.2  2005/02/16 02:53:24  adminorx
- * Mass change - added standard RexxLA copyright notice.
- *
- * Revision 1.1  2005/01/13 23:54:15  adminorx
- * rename Windows .c source files to proper .cpp names
- *
- * Revision 1.2  2005/01/06 23:51:25  oorexx
- * Restructure generated message header files
- *
- * Revision 1.1.1.1  2004/10/19 21:44:28  oorexx
- * Initial import without docs.
- *
- * Revision 1.1.1.1  2004/10/12 13:15:09  oorexx
- * Initial import.
- *
-
-      Rev 1.2   24 May 1995 17:07:48   cmvc_cs
-
-      Rev 1.1   02 May 1995 14:29:58   cmvc_cs
-   Initial revision.
-
-      Rev 1.6   09 Nov 1994 12:57:28   cmvc_cs
-
-      Rev 1.5   13 Oct 1994 16:21:02   cmvc_cs
-
-      Rev 1.3   23 Sep 1994 11:00:12   cmvc_cs
-
-      Rev 1.2   23 Aug 1994 18:45:44   cmvc_cs
- */
 

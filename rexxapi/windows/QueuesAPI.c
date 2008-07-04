@@ -1235,7 +1235,7 @@ RexxReturnCode REXXENTRY RexxPullQueue(
              memcpy(data_buf->strptr,item+1,
                     item->size);
      } else                   /* set a non-null pointer     */
-         data_buf->strptr=NULL;    /* was (PUCHAR)1 before but trapped in SysReleaseResultMemory */
+         data_buf->strptr=NULL;    /* was (PUCHAR)1 before but trapped in SystemInterpreter::releaseResultMemory */
                                /* set the length             */
      if (dt != NULL)
      {

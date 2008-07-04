@@ -94,10 +94,6 @@ typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
   char     Variables[1];                    /* start of variable values       */
 } ENVENTRY;
 
-void ReplaceEnvironment( char * );
-REXXOBJECT BuildEnvlist(void);
-void RestoreEnvironment( void * );
-
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   sysBeep                                      */
@@ -319,21 +315,6 @@ bool SysExternalFunction(
 
 /*********************************************************************/
 /*                                                                   */
-/*   Subroutine Name:   ReplaceEnvironment                           */
-/*                                                                   */
-/*   Descriptive Name:  Replace environment variable set             */
-/*                                                                   */
-/*   Function:          resets the entire set of environment         */
-/*                      variables, resizing the segment if needed.   */
-/*                                                                   */
-/*********************************************************************/
-
-void ReplaceEnvironment(
-  char *VariableSet )                 /* new set of variables       */
-{
-}
-/*********************************************************************/
-/*                                                                   */
 /*   Subroutine Name:   RestoreEnvironment                           */
 /*                                                                   */
 /*   Descriptive Name:  restores environment saved by Setlocal()     */
@@ -343,8 +324,7 @@ void ReplaceEnvironment(
 /*                                                                   */
 /*********************************************************************/
 
-void RestoreEnvironment(
-  void *CurrentEnv)                   /* saved environment          */
+void SystemInterpreter::restoreEnvironment(void *CurrentEnv)
 {
 }
 

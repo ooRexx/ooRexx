@@ -60,6 +60,7 @@
 #include "ThreadSupport.hpp"
 #include "ActivityManager.hpp"
 #include "PointerClass.hpp"
+#include "SystemInterpreter.hpp"
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -93,25 +94,39 @@ void RxExitClearNormal();
 unsigned int iClauseCounter=0;         // count of clauses
 #define LOADED_OBJECTS 100
 
-void SysTermination(void)
-/******************************************************************************/
-/* Function:   Perform system specific termination.                           */
-/******************************************************************************/
+RexxString *SystemInterpreter::getInternalSystemName()
 {
+    return getSystemName();     // this is the same
 }
 
-RexxString *SysVersion(void)
+RexxString *SystemInterpreter::getSystemName()
+/******************************************************************************/
+/* Function: Get System Name                                                  */
+/******************************************************************************/
+{
+#if defined(AIX)
+    return new_string("AIX")
+#elif defined(OPSYS_SUN)
+    return new_string("SUNOS")
+#else
+    return new_string("LINUX")
+#endif
+}
+
+
+RexxString *SystemInterpreter::getSystemVersion()
 /******************************************************************************/
 /* Function:   Return the system specific version identifier that is stored   */
 /*             in the image.                                                  */
 /******************************************************************************/
 {
-  struct utsname info;                 /* info structur              */
+    struct utsname info;                 /* info structur              */
 
-  uname(&info);                        /* get the info               */
+    uname(&info);                        /* get the info               */
 
-  return new_string(info.release);    /* return as a string                */
+    return new_string(info.release);    /* return as a string                */
 }
+
 
 void *SysLoadProcedure(
   RexxPointer * LibraryHandle,         /* library load handle               */
@@ -190,28 +205,28 @@ void SysSetupProgram(
 #endif
 }
 
-RexxString * SysSourceString(
+RexxString * SystemInerpreter::getSourceString(
   RexxString * callType,               /* type of call token                */
   RexxString * programName )           /* program name token                */
 /******************************************************************************/
 /* Function:  Produce a system specific source string                         */
 /******************************************************************************/
 {
-  RexxString * source_string;          /* final source string               */
-  char       * outPtr;
-  source_string = raw_string(1+sizeof(ORX_SYS_STR)+callType->getLength()+programName->getLength());
-  outPtr = source_string->getWritableData();  /* point to result Data.             */
+    RexxString * source_string;          /* final source string               */
+    char       * outPtr;
+    source_string = raw_string(1+sizeof(ORX_SYS_STR)+callType->getLength()+programName->getLength());
+    outPtr = source_string->getWritableData();  /* point to result Data.             */
 
-  strcpy(outPtr, ORX_SYS_STR);          /* copy the system name              */
-  outPtr +=sizeof(ORX_SYS_STR) - 1;     /* step past the name                */
-  *outPtr++ = ' ';                     /* put a blank between               */
-                                       /* copy the call type                */
-  memcpy(outPtr, callType->getStringData(), callType->getLength());
-  outPtr += callType->getLength();     /* step over the call type           */
-  *outPtr++ = ' ';                     /* put a blank between               */
-                                       /* copy the system name              */
-  memcpy(outPtr, programName->getStringData(), programName->getLength());
-  return source_string;                /* return the source string          */
+    strcpy(outPtr, ORX_SYS_STR);          /* copy the system name              */
+    outPtr +=sizeof(ORX_SYS_STR) - 1;     /* step past the name                */
+    *outPtr++ = ' ';                     /* put a blank between               */
+                                         /* copy the call type                */
+    memcpy(outPtr, callType->getStringData(), callType->getLength());
+    outPtr += callType->getLength();     /* step over the call type           */
+    *outPtr++ = ' ';                     /* put a blank between               */
+                                         /* copy the system name              */
+    memcpy(outPtr, programName->getStringData(), programName->getLength());
+    return source_string;                /* return the source string          */
 }
 
 // these routines are NOPs

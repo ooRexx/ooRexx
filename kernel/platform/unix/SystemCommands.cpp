@@ -221,7 +221,7 @@ RexxObject * SysCommand(
                                                 /* user give us a new buffer? */
       if (retstr.strptr != default_return_buffer)
 
-        SysReleaseResultMemory(retstr.strptr);                  /* free it... */
+        SystemInterpreter::releaseResultMemory(retstr.strptr);                  /* free it... */
     }
     else
       result = IntegerZero;                         /* got a zero return code */

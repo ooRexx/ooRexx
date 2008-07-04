@@ -47,6 +47,7 @@
 #include "RexxCore.h"
 #include "RexxMemory.hpp"
 #include "ActivityManager.hpp"
+#include "SystemInterpreter.hpp"
 
 #define MEMSIZE     4194304            /* memory pool                       */
 #ifdef LINUX
@@ -59,7 +60,7 @@
 /*              another program as a return result                   */
 /*                                                                   */
 /*********************************************************************/
-void * SysAllocateResultMemory(
+void * SystemInterpreter::allocateResultMemory(
    size_t   Size )                     /* size to allocate                  */
 {
   return malloc(Size);
@@ -71,7 +72,7 @@ void * SysAllocateResultMemory(
 /*              agent as a return result                             */
 /*                                                                   */
 /*********************************************************************/
-void SysReleaseResultMemory(
+void SystemInterpreter::releaseResultMemory(
   void  *MemoryBlock)                  /* pointer to the result memory      */
 {
   free(MemoryBlock);                   /* release this block                */

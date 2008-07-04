@@ -44,6 +44,7 @@
 #include "RexxCore.h"
 #include "RexxMemory.hpp"
 #include "ActivityManager.hpp"
+#include "SystemInterpreter.hpp"
 
 // retrofit by IH
 #define MEMSIZE   4194304   /* get pools in 4M chunks. */
@@ -55,7 +56,7 @@
 /*              another program as a return result                   */
 /*                                                                   */
 /*********************************************************************/
-void *SysAllocateResultMemory(
+void *SystemInterpreter::allocateResultMemory(
    size_t   Size )                     /* size to allocate                  */
 {
     return (void *)GlobalAlloc(GMEM_FIXED, Size);
@@ -68,7 +69,7 @@ void *SysAllocateResultMemory(
 /*              agent as a return result                             */
 /*                                                                   */
 /*********************************************************************/
-void SysReleaseResultMemory(
+void SystemInterpreter::releaseResultMemory(
   void  *MemoryBlock)                  /* pointer to the result memory      */
 {
     /* free for DB2 2.1.1 version */

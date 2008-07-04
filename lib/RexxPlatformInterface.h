@@ -58,10 +58,6 @@ class RexxBuffer;
 class RexxPointer;
 class ProtectedObject;
 
-#ifndef SysGetCurrentTime
-void SysGetCurrentTime(RexxDateTime *);/* get the current time              */
-#endif
-
 #ifndef SysRelinquish
 void SysRelinquish(void);              /* allow the system to run           */
 #endif
@@ -92,40 +88,6 @@ void SysRegisterSignals(SYSEXCEPTIONBLOCK *);
 #ifndef SysDeregisterSignals
                                        /* deregister a signal handler       */
 void SysDeregisterSignals(SYSEXCEPTIONBLOCK *);
-#endif
-
-#ifndef SysTermination
-void SysTermination(void);             /* perform system specific cleanup   */
-#endif
-
-#ifndef SysInitialize
-void SysInitialize(void);              /* perform system initialization     */
-#endif
-
-#ifndef SysName
-RexxString *SysName(void);             /* get the system name               */
-#endif
-
-#ifndef SysVersion
-RexxString *SysVersion(void);          /* get the system version            */
-#endif
-
-#ifndef SysValue
-                                       /* system VALUE() builtin function   */
-bool SysValue(RexxString *, RexxObject *, RexxString *, RexxObject *&);
-#endif
-
-#ifndef SysUserid
-                                       /* system USERID() builtin function   */
-RexxObject *SysUserid();
-#endif
-
-#ifndef SysAllocateResultMemory
-void *SysAllocateResultMemory(size_t); /* allocate a result memory block    */
-#endif
-
-#ifndef SysReleaseResultMemory
-void SysReleaseResultMemory(void *);   /* release a result memory block     */
 #endif
 
 #ifndef SysExternalFunction
@@ -170,25 +132,12 @@ RexxPointer * SysLoadLibrary (RexxString *);
 void SysValidateAddressName(RexxString *);
 #endif
 
-#ifndef SysMessageText
-RexxString *SysMessageText(wholenumber_t);   /* retrieve an error message         */
-#endif
-
-#ifndef SysMessageHeader
-RexxString *SysMessageHeader(wholenumber_t);    /* get the header for an error msg   */
-#endif
-
 #ifndef SysReadProgram
 RexxBuffer *SysReadProgram (const char *); /* read a program into storage       */
 #endif
 
 #ifndef SysSetupProgram
 void SysSetupProgram(RexxActivation *);/* System specific program setup     */
-#endif
-
-#ifndef SysSourceString
-                                       /* Create the source string          */
-RexxString *SysSourceString(RexxString *, RexxString *);
 #endif
 
 #ifndef SysInitialAddressName

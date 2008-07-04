@@ -1046,7 +1046,7 @@ void SysFile::setStdIn()
 {
     // get the real handle, and open this using a different handle so we can
     // force the mode to append (and non-text)
-    long osHandle = _get_osfhandle(SysFileSystem::stdinHandle);
+    intptr_t osHandle = _get_osfhandle(SysFileSystem::stdinHandle);
     // set the file handle
     fileHandle = _open_osfhandle(osHandle, _O_RDONLY);
     ungetchar = -1;            // -1 indicates no char
@@ -1061,7 +1061,7 @@ void SysFile::setStdOut()
 {
     // get the real handle, and open this using a different handle so we can
     // force the mode to append (and non-text)
-    long osHandle = _get_osfhandle(SysFileSystem::stdoutHandle);
+    intptr_t osHandle = _get_osfhandle(SysFileSystem::stdoutHandle);
     // set the file handle
     fileHandle = _open_osfhandle(osHandle, _O_APPEND);
     ungetchar = -1;            // -1 indicates no char
@@ -1076,7 +1076,7 @@ void SysFile::setStdErr()
 {
     // get the real handle, and open this using a different handle so we can
     // force the mode to append (and non-text)
-    long osHandle = _get_osfhandle(SysFileSystem::stderrHandle);
+    intptr_t osHandle = _get_osfhandle(SysFileSystem::stderrHandle);
     // set the file handle
     fileHandle = _open_osfhandle(osHandle, _O_APPEND);
     ungetchar = -1;            // -1 indicates no char

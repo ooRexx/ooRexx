@@ -55,6 +55,7 @@
 
 class InterpreterInstance;
 class RexxActivation;
+class RexxDateTime;
 
 class SystemInterpreter
 {
@@ -77,9 +78,23 @@ public:
     static RexxString *extractFile(RexxString *file);
     static RexxObject *popEnvironment(RexxActivation *context);
     static RexxObject *pushEnvironment(RexxActivation *context);
+    static void restoreEnvironment(void *CurrentEnv);
     static RexxObject *buildEnvlist();
     static void restoreEnvironment(void *);
     static RexxString *qualifyFileSystemName(RexxString *name);
+    static void getCurrentTime(RexxDateTime *Date );
+    static RexxString *getSystemName();
+    static RexxString *getSystemVersion();
+    static RexxString *getInternalSystemName();
+    static RexxString *getSourceString(RexxString *callType, RexxString * programName);
+    static RexxString *getUserid();
+    static void releaseResultMemory(void *);
+    static void *allocateResultMemory(size_t);
+    static RexxString *getMessageHeader(wholenumber_t code);
+    static RexxString *getMessageText(wholenumber_t code);
+    static RexxString *getUserid();
+    static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result);
+
 };
 
 #endif

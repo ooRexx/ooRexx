@@ -323,19 +323,6 @@ inline char **getEnvironment()
 
 #define SysRelinquish()
 
-#if defined(AIX)
-#define SysName() new_string("AIX", 3)
-#define SysINTName() new_string("AIX",3)
-#elif defined(OPSYS_SUN)
-#define SysName() new_string("SUNOS", 5)
-#define SysINTName() new_string("SUNOS",5)
-#else
-#define SysName() new_string("LINUX", 5)
-#define SysINTName() new_string("LINUX",5)
-                                       // Thread yielding functions in
-                                       // threading package
-#endif
-
 #define SysThreadArg(a) a->args
 #define SysInitialAddressName() OREF_INITIALADDRESS
 

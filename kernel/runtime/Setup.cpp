@@ -80,6 +80,7 @@
 #include "WeakReferenceClass.hpp"
 #include "CPPCode.hpp"
 #include "Interpreter.hpp"
+#include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "PackageManager.hpp"
 #include "PackageClass.hpp"
@@ -1233,11 +1234,11 @@ void RexxMemory::createImage()
                                        /* set Oryx version                  */
   kernel_public(CHAR_VERSION, Interpreter::getVersionNumber(), TheKernel);
                                        /* set the system name               */
-  kernel_public(CHAR_NAME, SysName(), TheSystem);
+  kernel_public(CHAR_NAME, SystemInterpreter::getSystemName(), TheSystem);
                                        /* set the internal system name      */
-  kernel_public(CHAR_INTERNALNAME, SysINTName(), TheSystem);
+  kernel_public(CHAR_INTERNALNAME, SystemInterpreter::getInternalSystemName(), TheSystem);
                                        /* and the system version info       */
-  kernel_public(CHAR_VERSION,SysVersion(),TheSystem);
+  kernel_public(CHAR_VERSION, SystemInterpreter::getSystemVersion(), TheSystem);
   // initialize our thread vector for external calls.
   RexxActivity::initializeThreadContext();
 

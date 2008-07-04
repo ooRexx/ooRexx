@@ -61,7 +61,7 @@ const char * compiledHeader = "/**/@REXX";
 void *ProgramMetaData::operator new (size_t size, RexxBuffer *buff)
 {
     // allocate a new buffer for this
-    return SysAllocateResultMemory(buff->getLength() + size - sizeof(char[4]));
+    return SystemInterpreter::allocateResultMemory(buff->getLength() + size - sizeof(char[4]));
 }
 
 

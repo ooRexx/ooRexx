@@ -35,14 +35,6 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysUserid                                    */
-/*                                                                   */
-/*   Function:          process the Userid function                  */
-/*                      function                                     */
-/*                                                                   */
-/*********************************************************************/
 
 #include <windows.h>
 #include <stdlib.h>
@@ -50,6 +42,7 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "ActivityManager.hpp"
+#include "SystemInterpreter.hpp"
 
 #define ACCOUNT_BUFFER_SIZE  256
 
@@ -62,7 +55,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-RexxObject * SysUserid()
+RexxString *SystemInterpreter::getUserid()
 {
     char account_buffer[ACCOUNT_BUFFER_SIZE];
     RexxString *string_result;

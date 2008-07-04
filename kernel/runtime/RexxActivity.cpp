@@ -72,6 +72,7 @@
 #include "MessageDispatcher.hpp"
 #include "Interpreter.hpp"
 #include "PackageClass.hpp"
+#include "SystemInterpreter.hpp"
 
 const size_t ACT_STACK_SIZE = 20;
 
@@ -324,7 +325,7 @@ void RexxActivity::generateRandomNumberSeed()
     static int rnd = 0;
 
     rnd++;
-    SysGetCurrentTime(&timestamp);       /* get a fresh time stamp            */
+    SystemInterpreter::getCurrentTime(&timestamp);       /* get a fresh time stamp            */
                                          /* take the seed from the time       */
     randomSeed = rnd + (((timestamp.hours * 60 + timestamp.minutes) * 60 + timestamp.seconds) * 1000) + timestamp.microseconds/1000;
     for (i = 0; i < 13; i++)
@@ -810,7 +811,7 @@ RexxDirectory *RexxActivity::createExceptionObject(
     RexxInteger *rc = new_integer(newVal); /* get the primary message number    */
     exobj->put(rc, OREF_RC);             /* add the return code               */
                                          /* get the primary message text      */
-    RexxString *errortext = SysMessageText(primary);
+    RexxString *errortext = SystemInterpreter::getMessageText(primary);
     if (errortext == OREF_NULL)          /* no corresponding message          */
     {
         /* this is an error                  */
@@ -830,7 +831,7 @@ RexxDirectory *RexxActivity::createExceptionObject(
     if (primary != errcode)              /* have a secondary message to issue?*/
     {
         /* retrieve the secondary message    */
-        RexxString *message = SysMessageText(errcode);
+        RexxString *message = SystemInterpreter::getMessageText(errcode);
         if (message == OREF_NULL)          /* no corresponding message          */
         {
             /* this is an error                  */
@@ -1036,7 +1037,7 @@ void RexxActivity::reraiseException(RexxDirectory *exobj)
         sprintf(work,"%1d%3.3d", errornumber/1000, errornumber - primary);
         errornumber = atol(work);          /* convert to a long value           */
                                            /* retrieve the secondary message    */
-        RexxString *message = SysMessageText(errornumber);
+        RexxString *message = SystemInterpreter::getMessageText(errornumber);
         /* Retrieve any additional parameters*/
         RexxArray *additional = (RexxArray *)exobj->at(OREF_ADDITIONAL);
         /* do required substitutions         */
@@ -1118,15 +1119,15 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
     /* get the message number            */
     wholenumber_t errorCode = message_number((RexxString *)rc);
     /* get the header                    */
-    RexxString *text = (RexxString *)SysMessageHeader(errorCode);
+    RexxString *text = SystemInterpreter::getMessageHeader(errorCode);
     if (text == OREF_NULL)               /* no header available?              */
     {
         /* get the leading part              */
-        text = (RexxString *)SysMessageText(Message_Translations_error);
+        text = SystemInterpreter::getMessageText(Message_Translations_error);
     }
     else                                 /* add to the message text           */
     {
-        text = text->concat(SysMessageText(Message_Translations_error));
+        text = text->concat(SystemInterpreter::getMessageText(Message_Translations_error));
     }
     /* get the name of the program       */
     RexxString *programname = (RexxString *)exobj->at(OREF_PROGRAM);
@@ -1137,7 +1138,7 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
     if (programname != OREF_NULL && programname != OREF_NULLSTRING)
     {
         /* add on the "running" part         */
-        text = text->concatWith(SysMessageText(Message_Translations_running), ' ');
+        text = text->concatWith(SystemInterpreter::getMessageText(Message_Translations_running), ' ');
         /* add on the program name           */
         text = text->concatWith(programname, ' ');
         /* Get the position/Line number info */
@@ -1145,7 +1146,7 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
         if (position != OREF_NULL)         /* Do we have position/Line no info? */
         {
             /* Yes, add on the "line" part       */
-            text = text->concatWith(SysMessageText(Message_Translations_line), ' ');
+            text = text->concatWith(SystemInterpreter::getMessageText(Message_Translations_line), ' ');
             /* add on the line number            */
             text = text->concatWith(REQUEST_STRING(position), ' ');
             /* add on the ":  "                  */
@@ -1165,15 +1166,15 @@ RexxObject *RexxActivity::display(RexxDirectory *exobj)
                                            /* get the message number            */
         errorCode = message_number((RexxString *)rc);
         /* get the header                    */
-        text = (RexxString *)SysMessageHeader(errorCode);
+        text = SystemInterpreter::getMessageHeader(errorCode);
         if (text == OREF_NULL)             /* no header available?              */
         {
             /* get the leading part              */
-            text = (RexxString *)SysMessageText(Message_Translations_error);
+            text = SystemInterpreter::getMessageText(Message_Translations_error);
         }
         else                               /* add to the message text           */
         {
-            text = text->concat(SysMessageText(Message_Translations_error));
+            text = text->concat(SystemInterpreter::getMessageText(Message_Translations_error));
         }
         /* add on the error number           */
         text = text->concatWith((RexxString *)rc, ' ');
@@ -1198,7 +1199,7 @@ RexxObject *RexxActivity::displayDebug(RexxDirectory *exobj)
   RexxString *text;                    /* constructed final message         */
 
                                        /* get the leading part              */
-  text = (RexxString *)SysMessageText(Message_Translations_debug_error);
+  text = SystemInterpreter::getMessageText(Message_Translations_debug_error);
                                        /* add on the error number           */
   text = text->concatWith(REQUEST_STRING(exobj->at(OREF_RC)), ' ');
                                        /* add on the ":  "                  */
@@ -1212,7 +1213,7 @@ RexxObject *RexxActivity::displayDebug(RexxDirectory *exobj)
                                        /* have a real message?              */
   if (secondary != OREF_NULL && secondary != (RexxString *)TheNilObject) {
                                        /* get the leading part              */
-    text = (RexxString *)SysMessageText(Message_Translations_debug_error);
+    text = SystemInterpreter::getMessageText(Message_Translations_debug_error);
                                        /* add on the error number           */
     text = text->concatWith((RexxString *)exobj->at(OREF_CODE), ' ');
                                        /* add on the ":  "                  */
@@ -2064,7 +2065,7 @@ bool RexxActivity::callTerminalInputExit(
         if (exit_parm.rxsiotrd_retc.strptr != retbuffer)
         {
             /* free it                           */
-            SysReleaseResultMemory(exit_parm.rxsiotrd_retc.strptr);
+            SystemInterpreter::releaseResultMemory(exit_parm.rxsiotrd_retc.strptr);
 
         }
         return false;                      /* this was handled                  */
@@ -2098,7 +2099,7 @@ bool RexxActivity::callDebugInputExit(
         if (exit_parm.rxsiotrd_retc.strptr != retbuffer)
         {
             /* free it                           */
-            SysReleaseResultMemory(exit_parm.rxsiotrd_retc.strptr);
+            SystemInterpreter::releaseResultMemory(exit_parm.rxsiotrd_retc.strptr);
 
         }
         return false;                      /* this was handled                  */
@@ -2156,8 +2157,8 @@ bool RexxActivity::callFunctionExit(
         /* allocate enough memory for all arguments.           */
         /* At least one item needs to be allocated in order to avoid an error   */
         /* in the sysexithandler!                                               */
-        PCONSTRXSTRING argrxarray = (PCONSTRXSTRING) SysAllocateResultMemory(
-                                                                            sizeof(CONSTRXSTRING) * Numerics::maxVal((size_t)exit_parm.rxfnc_argc, (size_t)1));
+        PCONSTRXSTRING argrxarray = (PCONSTRXSTRING) SystemInterpreter::allocateResultMemory(
+             sizeof(CONSTRXSTRING) * Numerics::maxVal((size_t)exit_parm.rxfnc_argc, (size_t)1));
         if (argrxarray == OREF_NULL)       /* memory error?                     */
         {
             reportException(Error_System_resources);
@@ -2188,7 +2189,7 @@ bool RexxActivity::callFunctionExit(
         /* call the handler                  */
         bool wasNotHandled = callExit(activation, "RXFNC", RXFNC, RXFNCCAL, (void *)&exit_parm);
 
-        SysReleaseResultMemory(argrxarray);
+        SystemInterpreter::releaseResultMemory(argrxarray);
 
         if (wasNotHandled)
         {
@@ -2222,7 +2223,7 @@ bool RexxActivity::callFunctionExit(
             if (exit_parm.rxfnc_retc.strptr != retbuffer)
             {
                 /* free it                           */
-                SysReleaseResultMemory(exit_parm.rxfnc_retc.strptr);
+                SystemInterpreter::releaseResultMemory(exit_parm.rxfnc_retc.strptr);
             }
         }
         return false;                      /* this was handled                  */
@@ -2352,7 +2353,7 @@ bool RexxActivity::callCommandExit(
         if (exit_parm.rxcmd_retc.strptr != retbuffer)
         {
             /* free it                           */
-            SysReleaseResultMemory(exit_parm.rxcmd_retc.strptr);
+            SystemInterpreter::releaseResultMemory(exit_parm.rxcmd_retc.strptr);
         }
         return false;                      /* this was handled                  */
     }
@@ -2393,7 +2394,7 @@ bool  RexxActivity::callPullExit(
             if (exit_parm.rxmsq_retc.strptr != retbuffer)
             {
                 /* free it                           */
-                SysReleaseResultMemory(exit_parm.rxmsq_retc.strptr);
+                SystemInterpreter::releaseResultMemory(exit_parm.rxmsq_retc.strptr);
             }
         }
         return false;                      /* this was handled                  */
@@ -2488,7 +2489,7 @@ bool  RexxActivity::callQueueNameExit(
         if (exit_parm.rxmsq_name.strptr != retbuffer)
         {
             /* free it                           */
-            SysReleaseResultMemory(exit_parm.rxmsq_name.strptr);
+            SystemInterpreter::releaseResultMemory(exit_parm.rxmsq_name.strptr);
         }
         return false;                      /* this was handled                  */
     }

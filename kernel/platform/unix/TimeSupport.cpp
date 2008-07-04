@@ -53,6 +53,7 @@
 #include "IntegerClass.hpp"
 #include "RexxNativeAPI.h"                    /* Method macros */
 #include "RexxDateTime.hpp"
+#include "SystemInterpreter.hpp"
 
 #ifdef AIX
 #include <time.h>
@@ -61,27 +62,26 @@
 #endif
 
 
-void SysGetCurrentTime(
-  RexxDateTime *Date )                 /* returned data structure    */
+void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
 {
-  struct tm *SystemDate;               /* system date structure ptr  */
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
+    struct tm *SystemDate;               /* system date structure ptr  */
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
 
 #ifdef AIX
-  struct tm SD;                        /* system date area           */
-  SystemDate = localtime_r((time_t *)&tv.tv_sec, &SD);
+    struct tm SD;                        /* system date area           */
+    SystemDate = localtime_r((time_t *)&tv.tv_sec, &SD);
 #else
-  SystemDate = localtime((time_t *)&tv.tv_sec); /* convert           */
+    SystemDate = localtime((time_t *)&tv.tv_sec); /* convert           */
 #endif
 
-  Date->hours = SystemDate->tm_hour;
-  Date->minutes = SystemDate->tm_min;
-  Date->seconds = SystemDate->tm_sec;
-  Date->microseconds = tv.tv_usec;
-  Date->day = SystemDate->tm_mday;
-  Date->month = ++SystemDate->tm_mon;
-  Date->year = SystemDate->tm_year + 1900;
+    Date->hours = SystemDate->tm_hour;
+    Date->minutes = SystemDate->tm_min;
+    Date->seconds = SystemDate->tm_sec;
+    Date->microseconds = tv.tv_usec;
+    Date->day = SystemDate->tm_mday;
+    Date->month = ++SystemDate->tm_mon;
+    Date->year = SystemDate->tm_year + 1900;
 }
 
 typedef struct {

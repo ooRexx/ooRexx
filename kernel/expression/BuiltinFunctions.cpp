@@ -901,7 +901,7 @@ BUILTIN(FORM) {
 
 BUILTIN(USERID) {
   check_args(USERID);
-  return SysUserid();
+  return SystemInterpreter::getUserid();
 }
 
 #define ERRORTEXT_MIN 1
@@ -909,21 +909,22 @@ BUILTIN(USERID) {
 #define ERRORTEXT_n   1
 
 BUILTIN(ERRORTEXT) {
-  wholenumber_t  error_number;         /* requested error number            */
-  RexxString *result;                  /* function result                   */
-
-  check_args(ERRORTEXT);               /* check on required number of args  */
-                                       /* get the error number              */
-  error_number = (required_integer(ERRORTEXT, n))->getValue();
-                                       /* outside allowed range?            */
-  if (error_number < 0 || error_number > 99)
-                                       /* this is an error                  */
-    reportException(Error_Incorrect_call_range, CHAR_ERRORTEXT, IntegerOne, error_number);
-                                       /* retrieve the major error message  */
-  result = (RexxString *)SysMessageText(error_number * 1000);
-  if (result == OREF_NULL)             /* not found?                        */
-    result = OREF_NULLSTRING;          /* this is a null string result      */
-  return result;                       /* finished                          */
+    check_args(ERRORTEXT);               /* check on required number of args  */
+                                         /* get the error number              */
+    wholenumber_t error_number = (required_integer(ERRORTEXT, n))->getValue();
+    /* outside allowed range?            */
+    if (error_number < 0 || error_number > 99)
+    {
+        /* this is an error                  */
+        reportException(Error_Incorrect_call_range, CHAR_ERRORTEXT, IntegerOne, error_number);
+    }
+    /* retrieve the major error message  */
+    RexxString *result = SystemInterpreter::getMessageText(error_number * 1000);
+    if (result == OREF_NULL)             /* not found?                        */
+    {
+        result = OREF_NULLSTRING;          /* this is a null string result      */
+    }
+    return result;                       /* finished                          */
 }
 
 #define ARG_MIN 0
@@ -1269,7 +1270,7 @@ BUILTIN(DATE) {
         case 'L':                          /* 'L'ocal                           */
         {
             /* get the month name                */
-            RexxString *month_name = (RexxString *)SysMessageText(Message_Translations_January + month - 1);
+            RexxString *month_name = SystemInterpreter::getMessageText(Message_Translations_January + month - 1);
             /* format as a date                  */
             sprintf(work, "%u %s %4.4u", day, month_name->getStringData(), year);
             break;
@@ -1706,7 +1707,7 @@ BUILTIN(VALUE) {
   else                                 /* external value function           */
   {
       // try the platform defined selectors.
-      if (SysValue(variable, newvalue, selector, result))
+      if (SystemInterpreter::valueFunction(variable, newvalue, selector, result))
       {
           return result;
       }

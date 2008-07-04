@@ -56,6 +56,7 @@
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
+#include "SystemInterpreter.hpp"
 
 #define CMDBUFSIZE32S 260              /* Max size of executable cmd     */
 #define CMDBUFSIZENT 8092              /* Max size of executable cmd     */
@@ -171,7 +172,7 @@ RexxObject * SysCommand(
                                        /* user give us a new buffer?          */
       if (retstr.strptr != default_return_buffer)
                                        /* free it                             */
-        SysReleaseResultMemory(retstr.strptr);
+        SystemInterpreter::releaseResultMemory(retstr.strptr);
     }
     else
       result = IntegerZero;            /* got a zero return code              */
