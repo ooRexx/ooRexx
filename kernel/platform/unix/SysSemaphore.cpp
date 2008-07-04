@@ -44,19 +44,19 @@
 /*****************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+    #include "config.h"
 #endif
 
 #include <pthread.h>
 #include <memory.h>
 #include <stdio.h>
 #ifdef AIX
-#include <sys/sched.h>
-#include <time.h>
+    #include <sys/sched.h>
+    #include <time.h>
 #endif
 
 #if defined(OPSYS_SUN)
-#include <sched.h>
+    #include <sched.h>
 #endif
 
 #include <errno.h>
@@ -68,97 +68,111 @@
 /* ********************************************************************** */
 void SysSemaphore::create()
 {
-  int iRC = 0;
+    int iRC = 0;
 #if defined(OPSYS_AIX43) || defined(LINUX)   // added for AIX4.3
-  pthread_mutexattr_t mutexattr;
+    pthread_mutexattr_t mutexattr;
 
-  iRC = pthread_mutexattr_init(&mutexattr);
-  if ( iRC == 0 )
-  {
+    iRC = pthread_mutexattr_init(&mutexattr);
+    if ( iRC == 0 )
+    {
 #if defined(OPSYS_AIX43)                     // added for LINUX
-     iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE );
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE );
 #endif
 #if defined(OPSYS_SUN) && defined(LINUX)
-     iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK );
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK );
 #endif
 #if defined(LINUX) && !defined(OPSYS_SUN)
-     iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
 #endif
-  }
-  if ( iRC == 0 )
-     iRC = pthread_mutex_init(&(this->semMutex), &mutexattr);
-  if ( iRC == 0 )
-     iRC = pthread_mutexattr_destroy(&mutexattr); /* It does not affect       */
-  if ( iRC == 0 )                                 /* mutexes created with it  */
-     iRC = pthread_cond_init(&(this->semCond), NULL);
+    }
+    if ( iRC == 0 )
+    {
+        iRC = pthread_mutex_init(&(this->semMutex), &mutexattr);
+    }
+    if ( iRC == 0 )
+    {
+        iRC = pthread_mutexattr_destroy(&mutexattr); /* It does not affect       */
+    }
+    if ( iRC == 0 )                                 /* mutexes created with it  */
+    {
+        iRC = pthread_cond_init(&(this->semCond), NULL);
+    }
 #else
-  iRC = pthread_mutex_init(&(this->semMutex), NULL);
-  if ( iRC == 0 )
-     iRC = pthread_cond_init(&(this->semCond), NULL);
+    iRC = pthread_mutex_init(&(this->semMutex), NULL);
+    if ( iRC == 0 )
+    {
+        iRC = pthread_cond_init(&(this->semCond), NULL);
+    }
 #endif
-  if ( iRC != 0 )
-  {
-    fprintf(stderr," *** ERROR: At SysSemaphore(), pthread_mutex_init - RC = %d !\n", iRC);
-    if ( iRC == EINVAL )
-      fprintf(stderr," *** ERROR: Application was not built thread save!\n");
-  }
-  this->postedCount = 0;
+    if ( iRC != 0 )
+    {
+        fprintf(stderr," *** ERROR: At SysSemaphore(), pthread_mutex_init - RC = %d !\n", iRC);
+        if ( iRC == EINVAL )
+        {
+            fprintf(stderr," *** ERROR: Application was not built thread save!\n");
+        }
+    }
+    this->postedCount = 0;
 }
 
 void SysSemaphore::clear()
 {
-  pthread_cond_destroy(&(this->semCond));
-  pthread_mutex_destroy(&(this->semMutex));
+    pthread_cond_destroy(&(this->semCond));
+    pthread_mutex_destroy(&(this->semMutex));
 }
 
 
 void SysSemaphore::post()
 {
-  int rc;
+    int rc;
 
-  rc = pthread_mutex_lock(&(this->semMutex));      //Lock the semaphores Mutex
-  postedCount++;                                   //Increment post count
-  rc  = pthread_cond_broadcast(&(this->semCond));  //allows any threads waiting to run
-  rc = pthread_mutex_unlock(&(this->semMutex));    // Unlock access to Semaphore mutex
+    rc = pthread_mutex_lock(&(this->semMutex));      //Lock the semaphores Mutex
+    postedCount++;                                   //Increment post count
+    rc  = pthread_cond_broadcast(&(this->semCond));  //allows any threads waiting to run
+    rc = pthread_mutex_unlock(&(this->semMutex));    // Unlock access to Semaphore mutex
 }
 
 void SysSemaphore::wait()
 {
-  int rc;
-  int schedpolicy, i_prio;
-  struct sched_param schedparam;
+    int rc;
+    int schedpolicy, i_prio;
+    struct sched_param schedparam;
 
-  pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
-  i_prio = schedparam.sched_priority;
-  schedparam.sched_priority = 100;
-  pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
-  rc = pthread_mutex_lock(&(this->semMutex));      // Lock access to semaphore
-  if (!this->postedCount)                     // Has it been posted?
-    rc = pthread_cond_wait(&(this->semCond), &(this->semMutex)); // Nope, then wait on it.
-  pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
-  schedparam.sched_priority = i_prio;
-  pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
+    pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
+    i_prio = schedparam.sched_priority;
+    schedparam.sched_priority = 100;
+    pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
+    rc = pthread_mutex_lock(&(this->semMutex));      // Lock access to semaphore
+    if (!this->postedCount)                     // Has it been posted?
+    {
+        rc = pthread_cond_wait(&(this->semCond), &(this->semMutex)); // Nope, then wait on it.
+    }
+    pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
+    schedparam.sched_priority = i_prio;
+    pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
 }
 
 void SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
 {
-  struct timespec timestruct;
-  time_t *Tpnt = NULL;
+    struct timespec timestruct;
+    time_t *Tpnt = NULL;
 
-  timestruct.tv_nsec = 0;
-  timestruct.tv_sec = t/1000+time(Tpnt);    // convert to secs and abstime
-  pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
-  if (!this->postedCount)                   // Has it been posted?
-                                            // wait with timeout
-    pthread_cond_timedwait(&(this->semCond),&(this->semMutex),&timestruct);
-  pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
+    timestruct.tv_nsec = 0;
+    timestruct.tv_sec = t/1000+time(Tpnt);    // convert to secs and abstime
+    pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
+    if (!this->postedCount)                   // Has it been posted?
+    {
+                                              // wait with timeout
+        pthread_cond_timedwait(&(this->semCond),&(this->semMutex),&timestruct);
+    }
+    pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
 }
 
 void SysSemaphore::reset()
 {
-  pthread_mutex_lock(&(this->semMutex));      // Lock access to semaphore
-  this->postedCount = 0;                      // Clear value
-  pthread_mutex_unlock(&(this->semMutex));    // unlock access to semaphore
+    pthread_mutex_lock(&(this->semMutex));      // Lock access to semaphore
+    this->postedCount = 0;                      // Clear value
+    pthread_mutex_unlock(&(this->semMutex));    // unlock access to semaphore
 }
 
 /* ********************************************************************** */
@@ -166,40 +180,45 @@ void SysSemaphore::reset()
 /* ********************************************************************** */
 void SysMutex::create()
 {
-  int iRC = 0;
-                                      // Clear Mutex prior to Init call
-   this->mutex_value = 0;
+    int iRC = 0;
+    // Clear Mutex prior to Init call
+    this->mutex_value = 0;
 #if defined(OPSYS_AIX43) || defined(LINUX)
-  pthread_mutexattr_t mutexattr;
+    pthread_mutexattr_t mutexattr;
 
-  iRC = pthread_mutexattr_init(&mutexattr);
-  if ( iRC == 0 )
-  {
+    iRC = pthread_mutexattr_init(&mutexattr);
+    if ( iRC == 0 )
+    {
 #if defined(OPSYS_AIX43)              // added for LINUX
-     iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE );
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE );
 #endif
 #if defined(OPSYS_SUN) && defined(LINUX)
-     iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK );
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK );
 #endif
 #if defined(LINUX) && !defined(OPSYS_SUN)
-     iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
 #endif
-  }
-  if ( iRC == 0 )
-     iRC = pthread_mutex_init(&(this->mutexMutex), &mutexattr);
-  if ( iRC == 0 )
-     iRC = pthread_mutexattr_destroy(&mutexattr); /* It does not affect       */
+    }
+    if ( iRC == 0 )
+    {
+        iRC = pthread_mutex_init(&(this->mutexMutex), &mutexattr);
+    }
+    if ( iRC == 0 )
+    {
+        iRC = pthread_mutexattr_destroy(&mutexattr); /* It does not affect       */
+    }
 #else                                             /* mutexes created with it  */
-   iRC = pthread_mutex_init(&(this->mutexMutex), NULL);
+    iRC = pthread_mutex_init(&(this->mutexMutex), NULL);
 #endif
-  if ( iRC != 0 )
-  {
-    fprintf(stderr," *** ERROR: At RexxMutex(), pthread_mutex_init - RC = %d !\n", iRC);
-  }
+    if ( iRC != 0 )
+    {
+        fprintf(stderr," *** ERROR: At SysMutex(), pthread_mutex_init - RC = %d !\n", iRC);
+    }
 }
+
 
 void SysMutex::close()
 {
-  this->mutex_value = 0;
-  pthread_mutex_destroy(&(this->mutexMutex));
+    this->mutex_value = 0;
+    pthread_mutex_destroy(&(this->mutexMutex));
 }

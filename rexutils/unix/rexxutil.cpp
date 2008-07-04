@@ -410,8 +410,6 @@ extern char *resolve_tilde(const char *);
 #define restore_tty(a)    stty(ttyfd,a)                /* new settings STDIN  */
 
 
-/* semaphore to prevent mulitple SysGetKey calls                              */
-static RexxMutex SysGetKeySemaphore;
 /* original terminal settings                                                 */
 struct termios in_orig;                /* original settings (important!!)     */
 
@@ -4309,11 +4307,6 @@ size_t RexxEntry SysGetKey(const char *name, size_t numargs, CONSTRXSTRING args[
 {
   bool      echo = true;               /* Set to false if we         */
                                        /* shouldn't echo             */
-  RexxMutex *mutex;                    /* serialization semaphore    */
-
-  mutex = &SysGetKeySemaphore;
-  mutex->request();                    /* request the seamphore      */
-
   if (numargs > 1)                     /* too many arguments         */
     return INVALID_ROUTINE;            /* raise an error             */
 
@@ -4325,7 +4318,6 @@ size_t RexxEntry SysGetKey(const char *name, size_t numargs, CONSTRXSTRING args[
   }
 
   getkey(retstr->strptr,echo);         /* call the complicated part  */
-  mutex->release();                    /* release the seamphore      */
   retstr->strlength = strlen(retstr->strptr); /* format string       */
 
   return VALID_ROUTINE;                /* no error on call           */
