@@ -323,9 +323,6 @@ inline char **getEnvironment()
 
 #define SysRelinquish()
 
-#define SysThreadArg(a) a->args
-#define SysInitialAddressName() OREF_INITIALADDRESS
-
 #define SysGetTempFileName()  tmpnam(NULL)
 
 /******************************************************************************/

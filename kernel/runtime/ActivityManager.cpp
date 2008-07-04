@@ -500,38 +500,52 @@ void ActivityManager::cacheActivation(RexxActivationBase *activation)
 }
 
 
-RexxActivity *ActivityManager::newActivity(int priority)
-/******************************************************************************/
-/* Function:  Create or reuse an activity object                              */
-/******************************************************************************/
+/**
+ * Obtain a new activity for running on a separate thread.
+ *
+ * @return The created (or pooled) activity object.
+ */
+RexxActivity *ActivityManager::createNewActivity()
 {
-  ResourceSection lock;                // lock the control information
+    ResourceSection lock;                // lock the control information
+        /* try to get one from the free table*/
+    RexxActivity *activity =  (RexxActivity *)availableActivities->removeFirstItem();
+    if (activity == OREF_NULL)
+    {
+        lock.release();                    // release lock while creating new activity
+                                           /* Create a new activity object      */
+        activity = new RexxActivity(true);
+        lock.reacquire();                  // need this back again
+                                           /* Add this activity to the table of */
+                                           /* in use activities and the global  */
+                                           /* table                             */
+        allActivities->append((RexxObject *)activity);
+    }
+    else
+    {
+        /* We are able to reuse an activity, */
+        /*  so just re-initialize it.        */
+        new (activity) RexxActivity();
+    }
+    return activity;                     /* return the activity               */
+}
 
-  RexxActivity *activity = OREF_NULL;  /* no activity yet                   */
-  if (priority != NO_THREAD)           /* can we reuse one?                 */
-  {
-                                       /* try to get one from the free table*/
-      activity =  (RexxActivity *)availableActivities->removeFirstItem();
-  }
 
-  if (activity == OREF_NULL)
-  {
-    lock.release();                    // release lock while creating new activity
-                                       /* Create a new activity object      */
-    activity = new RexxActivity(false, priority);
-    lock.reacquire();                  // need this back again
+/**
+ * Create an activity object for the current thread.
+ *
+ * @return
+ */
+RexxActivity *ActivityManager::createCurrentActivity()
+{
+    // create an activity object without creating a new thread
+    RexxActivity *activity = new RexxActivity(false);
+    ResourceSection lock;                // lock the control information
                                        /* Add this activity to the table of */
                                        /* in use activities and the global  */
                                        /* table                             */
     allActivities->append((RexxObject *)activity);
-  }
-  else
-  {
-                                       /* We are able to reuse an activity, */
-                                       /*  so just re-initialize it.        */
-    new (activity) RexxActivity(true, priority);
-  }
-  return activity;                     /* return the activity               */
+    return activity;                     /* return the activity               */
 }
 
 
@@ -544,10 +558,10 @@ RexxActivity *ActivityManager::newActivity(int priority)
  *
  * @return A new activity.
  */
-RexxActivity *ActivityManager::newActivity(RexxActivity *parent)
+RexxActivity *ActivityManager::createNewActivity(RexxActivity *parent)
 {
     // create a new activity with the same priority as the parent
-    RexxActivity *activity = newActivity(parent->getPriority());
+    RexxActivity *activity = createNewActivity();
     // copy any needed settings from the parent
     activity->inheritSettings(parent);
     return activity;
@@ -705,7 +719,7 @@ RexxActivity *ActivityManager::findActivity()
 /* Function:  Locate the activity associated with a thread                    */
 /******************************************************************************/
 {
-    return findActivity(SysQueryThreadID());
+    return findActivity(SysThread::queryThreadID());
 }
 
 
@@ -868,7 +882,7 @@ RexxActivity *ActivityManager::getRootActivity()
     // create this activity.
     lockKernel();
                                    /* Get a new activity object.        */
-    RexxActivity *activityObject = newActivity(NO_THREAD);
+    RexxActivity *activityObject = createCurrentActivity();
     unlockKernel();                /* release kernel semaphore          */
     // mark this as the root activity for an interpreter instance.  Some operations
     // are only permitted from the root threads.
@@ -914,7 +928,7 @@ RexxActivity *ActivityManager::attachThread()
     // we need to lock the kernel to have access to the memory manager to
     // create this activity.
     lockKernel();
-    RexxActivity *activityObject = newActivity(NO_THREAD);
+    RexxActivity *activityObject = createCurrentActivity();
     // Do we have a nested interpreter call occurring on the same thread?  We need to
     // mark the old activity as suspended, and chain this to the new activity.
     if (oldActivity != OREF_NULL)

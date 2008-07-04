@@ -155,7 +155,7 @@ RexxActivation::RexxActivation(RexxActivity* _activity, RexxMethod * _method, Re
     this->activity->allocateLocalVariableFrame(&settings.local_variables);
                                        /* set the initial and initial       */
                                        /* alternate address settings        */
-    this->settings.current_env = SysInitialAddressName();
+    this->settings.current_env = SystemInterpreter::getDefaultAddressName();
     this->settings.alternate_env = this->settings.current_env;
                                        /* get initial random seed value     */
     this->random_seed = this->activity->getRandomSeed();
@@ -278,7 +278,7 @@ RexxActivation::RexxActivation(RexxActivity *_activity, RoutineClass *_routine, 
     this->activity->allocateLocalVariableFrame(&settings.local_variables);
     /* set the initial and initial       */
     /* alternate address settings        */
-    this->settings.current_env = SysInitialAddressName();
+    this->settings.current_env = SystemInterpreter::getDefaultAddressName();
     this->settings.alternate_env = this->settings.current_env;
     /* get initial random seed value     */
     this->random_seed = this->activity->getRandomSeed();
@@ -2273,7 +2273,7 @@ RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, R
     }
 
     // Step 4:  Perform all platform-specific searches
-    if (SysExternalFunction(this, this->activity, target, _arguments, _argcount, calltype, resultObj))
+    if (SystemInterpreter::invokeExternalFunction(this, this->activity, target, _arguments, _argcount, calltype, resultObj))
     {
         return(RexxObject *)resultObj;
     }
@@ -3391,7 +3391,7 @@ RexxObject * RexxActivation::command(
     if (this->activity->callCommandExit(this, commandString, address, &condition, &rc))
     {
         /* go issue the command              */
-        rc = SysCommand(this, this->activity, address, commandString, &condition);
+        rc = SystemInterpreter::invokeHostCommand(this, this->activity, address, commandString, &condition);
     }
     this->stack.push(rc);                /* save on the expression stack      */
     if (!this->debug_pause)

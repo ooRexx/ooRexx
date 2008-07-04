@@ -98,6 +98,18 @@ char * args[MAX_COMMAND_ARGS+1];            /* Array for argument parsing */
 int sys_command(const char *cmd, CMD_TYPE local_env_type);
 void scan_cmd(const char *parm_cmd, char **args);
 
+
+/**
+ * Retrieve the globally default initial address.
+ *
+ * @return The string name of the default address.
+ */
+RexxString *SystemInterpreter::getDefaultAddressName()
+{
+    return OREF_INITIALADDRESS;
+}
+
+
 /******************************************************************************/
 /* Name:       SysCommand                                                     */
 /*                                                                            */
@@ -114,7 +126,7 @@ void scan_cmd(const char *parm_cmd, char **args);
 /*             environment, we'll try passing the command to the system for   */
 /*             execution.                                                     */
 /******************************************************************************/
-RexxObject * SysCommand(
+RexxObject *SystemInterpreter::invokeHostCommand(
   RexxActivation    * activation,      /* activation working on behalf of   */
   RexxActivity      * activity,        /* activity running on               */
   RexxString        * environment,     /* target address                    */

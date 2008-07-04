@@ -336,12 +336,6 @@ size_t line_write_check(const char * , size_t, FILE * );
 
 #define SysThreadYield()
 
-#define SysQueryThreadID() ((thread_id_t)GetCurrentThreadId())
-
-#ifdef THREADHANDLE
-#define SysQueryThread() GetCurrentThread()
-#endif
-
 #define SysAllocateHeap();             // no shared memory on windows yet
 #define SysReleaseHeap();              // no shared memory on windows yet
 
@@ -355,11 +349,6 @@ inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
                                        // in Windows, no EA's
 #define SysClauseBoundary(a)
 
-// retrofit by IH
-#define SysInitialAddressName() OREF_INITIALADDRESS
-#define SysInitializeThread()
-
-#define SysTerminateThread(t)
 #define SysGetTempFileName()  tmpnam(NULL)
 
 

@@ -79,6 +79,18 @@ static bool ExplicitConsole;
 int  sys_command(const char *cmd, RexxString ** error_failure);
 int  sysCommandNT(const char *cmd, RexxString ** error_failure, bool direct);
 
+/**
+ * Retrieve the globally default initial address.
+ *
+ * @return The string name of the default address.
+ */
+RexxString *SystemInterpreter::getDefaultAddressName()
+{
+    return OREF_INITIALADDRESS;
+}
+
+
+
 /******************************************************************************/
 /* Name:       SysCommand                                                     */
 /*                                                                            */
@@ -95,7 +107,7 @@ int  sysCommandNT(const char *cmd, RexxString ** error_failure, bool direct);
 /*             environment, we'll try passing the command to the system for   */
 /*             execution.                                                     */
 /******************************************************************************/
-RexxObject * SysCommand(
+RexxObject *SystemInterpreter::invokeHostCommand(
   RexxActivation    * activation,      /* activation working on behalf of     */
   RexxActivity      * activity,        /* activity running on                 */
   RexxString        * environment,     /* target address                      */

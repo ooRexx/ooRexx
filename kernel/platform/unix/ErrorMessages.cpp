@@ -106,7 +106,7 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
     ERROR_MESSAGE *p;                     /* message table scan pointer        */
     int            msgid;                 /* message number                    */
     char           DataArea[256];         /* buf to return message             */
-    char          *message;
+    const char *   message;
     /* loop through looking for the      */
     /* error code                        */
 #if defined( HAVE_CATOPEN )
@@ -124,7 +124,7 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
                 {
                     sprintf(DataArea, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
                             REXXMESSAGEFILE, ORX_CATDIR);
-                    return new_string((char *)&DataArea, strlen(DataArea));
+                    return new_string(&DataArea);
                 }
             }                                   /* retrieve message from repository  */
             message = catgets(catd, set_num, msgid, NULL);
@@ -136,28 +136,38 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
                 {
                     sprintf(DataArea, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
                             REXXMESSAGEFILE, ORX_CATDIR);
-                    return new_string((char *)&DataArea, strlen(DataArea));
+                    return new_string(&DataArea);
                 }
                 else
                 {
                     message = catgets(catd, set_num, msgid, NULL);
                     if (!message)                    /* got a message ?                   */
+                    {
                         strcpy(DataArea,"Error message not found!");
+                    }
                     else
+                    {
                         strcpy(DataArea, message);
+                    }
                 }
 #else
                 strcpy(DataArea,"Error message not found!");
 #endif
-<<<<<<< .mine
             }
             else
+            {
                 strcpy(DataArea, message);
+            }
             catclose(catd);                 /* close the catalog                 */
                                             /* convert and return the message    */
-            return new_string((char *)&DataArea, strlen(DataArea));
+            return new_string(&DataArea);
         }
-=======
+    }
+    return OREF_NULL;                     /* no message retrieved              */
+#else
+    sprintf(DataArea,"Cannot get description for error %d",msgid);
+    return new_string(&DataArea);
+#endif
 }
 
 

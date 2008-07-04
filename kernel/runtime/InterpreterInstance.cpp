@@ -127,7 +127,7 @@ void InterpreterInstance::initialize(RexxActivity *activity, RexxOption *options
     // create a default wrapper for this security manager
     securityManager = new SecurityManager(OREF_NULL);
     // set the default system address environment (can be overridden by options)
-    defaultEnvironment = SysInitialAddressName();
+    defaultEnvironment = SystemInterpreter::getDefaultAddressName();
     processOptions(options);
     // do system specific initialization
     sysInstance.initialize(this, options);
@@ -230,7 +230,7 @@ bool InterpreterInstance::detachThread()
 RexxActivity *InterpreterInstance::spawnActivity(RexxActivity *parent)
 {
     // create a new activity
-    RexxActivity *activity = ActivityManager::newActivity(parent);
+    RexxActivity *activity = ActivityManager::createNewActivity(parent);
 
     ResourceSection lock;
 
@@ -329,7 +329,7 @@ RexxActivity *InterpreterInstance::findActivity(thread_id_t threadId)
  */
 RexxActivity *InterpreterInstance::findActivity()
 {
-    return findActivity(SysQueryThreadID());
+    return findActivity(SysThread::queryThreadID());
 }
 
 

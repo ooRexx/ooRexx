@@ -76,32 +76,14 @@
 
 const size_t ACT_STACK_SIZE = 20;
 
-extern "C" void activity_thread (RexxActivity *objp);
-
-void activity_thread (
-  RexxActivity *objp)                  /* activity assciated with a thread  */
-/******************************************************************************/
-/* Function:  Main "entry" routine for a newly created thread                 */
-/*                                                                            */
-/* Remark:    For AIX the pthread_exit is called whenever a thread terminates.*/
-/*            This should clear storage.                                      */
-/*                                                                            */
-/******************************************************************************/
-{
-    objp->runThread();
-}
-
-
 /**
  * The main entry point for spawned activities.
  */
 void RexxActivity::runThread()
 {
     SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
-
-    SysInitializeThread();               /* system specific thread init       */
                                          /* establish the stack base pointer  */
-    this->stackBase = SysGetThreadStackBase(TOTAL_STACK_SIZE);
+    this->stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
     SysRegisterExceptions(&exreg);       /* create needed exception handlers  */
     for (;;)
     {
@@ -116,13 +98,6 @@ void RexxActivity::runThread()
             {
                 break;                       /* we're out of here                 */
             }
-            /* set our priority appropriately    */
-#ifdef THREADHANDLE
-            SysSetThreadPriority(this->threadid, this->hThread, this->priority);
-#else
-            SysSetThreadPriority(this->threadid, this->priority);
-#endif
-
             this->requestAccess();           /* now get the kernel lock           */
             this->activate();                // make sure this is marked as active
             activityLevel = getActivationLevel();
@@ -178,7 +153,7 @@ void RexxActivity::runThread()
     SysDeregisterExceptions(&exreg);     /* remove exception trapping         */
     // tell the activity manager we're going away
     ActivityManager::activityEnded(this);
-    SysTerminateThread((thread_id_t)this->threadid);  /* system specific thread termination*/
+    currentThread.terminate();           /* system specific thread termination*/
     return;                              /* finished                          */
 }
 
@@ -191,9 +166,7 @@ void RexxActivity::cleanupActivityResources()
 {
     EVCLOSE(this->runsem);
     EVCLOSE(this->guardsem);
-#ifdef THREADHANDLE
-    EVCLOSE(this->hThread);
-#endif
+    currentThread.close();
 }
 
 
@@ -245,59 +218,58 @@ void *RexxActivity::operator new(size_t size)
    return newActivity;                 /* and return it                     */
 }
 
-RexxActivity::RexxActivity(
-    bool recycle,                      /* activity is being reused          */
-    int  _priority)                    /* activity priority                 */
-/******************************************************************************/
-/* Function:  Initialize an activity object                                   */
-/*  Returned:  Nothing                                                        */
-/******************************************************************************/
-{
-    if (!recycle)                        /* if this is the first time         */
-    {
-        this->clearObject();               /* globally clear the object         */
-                                           /* create an activation stack        */
-        this->activations = new_internalstack(ACT_STACK_SIZE);
-        this->frameStack.init();           /* initialize the frame stack        */
-        EVCR(this->runsem);                /* create the run and                */
-        EVCR(this->guardsem);              /* guard semaphores                  */
-        this->activationStackSize = ACT_STACK_SIZE;  /* set the activation stack size     */
-        this->stackcheck = true;           /* start with stack checking enabled */
-                                           /* use default settings set          */
-                                           /* set up current usage set          */
-        this->numericSettings = Numerics::getDefaultSettings();
 
-        if (_priority != NO_THREAD)        /* need to create a thread?          */
-        {
-            EVSET(this->runsem);             /* set the run semaphore             */
-                                             /* create a thread                   */
-            this->threadid = SysCreateThread((PTHREADFN)activity_thread,C_STACK_SIZE,this);
-            this->priority = _priority;      /* and the priority                  */
-        }
-        else                               /* thread already exists             */
-        {
-            /* query the thread id               */
-            this->threadid = SysQueryThreadID();
-#ifdef THREADHANDLE
-            this->hThread = SysQueryThread();
-#endif
-            this->priority = MEDIUM_PRIORITY;/* switch to medium priority         */
-                                             /* establish the stack base pointer  */
-            this->stackBase = SysGetThreadStackBase(TOTAL_STACK_SIZE);
-        }
-        this->generateRandomNumberSeed();  /* get a fresh random seed           */
-                                           /* Create table for progream being   */
-        this->requiresTable = new_table(); /*installed vial ::REQUIRES          */
-        // create a stack frame for this running context
-        createNewActivationStack();
-    }                                    /* recycling                         */
-    else
+/**
+ * Initialize an Activity object.
+ *
+ * @param createThread
+ *               Indicates whether we're going to be running on the
+ *               current thread, or creating a new thread.
+ */
+RexxActivity::RexxActivity(bool createThread)
+{
+    this->clearObject();               /* globally clear the object         */
+                                       /* create an activation stack        */
+    this->activations = new_internalstack(ACT_STACK_SIZE);
+    this->frameStack.init();           /* initialize the frame stack        */
+    EVCR(this->runsem);                /* create the run and                */
+    EVCR(this->guardsem);              /* guard semaphores                  */
+    this->activationStackSize = ACT_STACK_SIZE;  /* set the activation stack size     */
+    this->stackcheck = true;           /* start with stack checking enabled */
+                                       /* use default settings set          */
+                                       /* set up current usage set          */
+    this->numericSettings = Numerics::getDefaultSettings();
+    this->generateRandomNumberSeed();  /* get a fresh random seed           */
+                                       /* Create table for progream being   */
+    this->requiresTable = new_table(); /*installed vial ::REQUIRES          */
+    // create a stack frame for this running context
+    createNewActivationStack();
+
+    if (createThread)                    /* need to create a thread?          */
     {
-        this->priority = _priority;        /* just set the priority             */
-                                           /* Make sure any left over           */
-                                           /* ::REQUIRES is cleared out.        */
-        this->resetRunningRequires();
+        EVSET(this->runsem);             /* set the run semaphore             */
+                                         /* create a thread                   */
+        currentThread.create(this, C_STACK_SIZE);
     }
+    else                               /* thread already exists             */
+    {
+        // run on the current thread
+        currentThread.useCurrentThread();
+                                         /* establish the stack base pointer  */
+        this->stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
+    }
+}
+
+
+/**
+ * Initialize an Activity object that's being recycled for
+ * another use.
+ */
+RexxActivity::RexxActivity()
+{
+                                       /* Make sure any left over           */
+                                       /* ::REQUIRES is cleared out.        */
+    this->resetRunningRequires();
 }
 
 
@@ -1895,7 +1867,7 @@ thread_id_t  RexxActivity::threadIdMethod()
 /* Function:  Retrieve the activities threadid                                */
 /******************************************************************************/
 {
-  return this->threadid;                 /* just return the thread id info    */
+    return currentThread.getThreadID();  /* just return the thread id info    */
 }
 
 void RexxActivity::queryTrcHlt()
@@ -2889,7 +2861,7 @@ void RexxActivity::run(ActivityDispatcher &target)
     size_t  startDepth;                  /* starting depth of activation stack*/
 
                                          /* make sure we have the stack base  */
-    this->stackBase = SysGetThreadStackBase(TOTAL_STACK_SIZE);
+    this->stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
     this->generateRandomNumberSeed();    /* get a fresh random seed           */
                                          /* Push marker onto stack so we know */
     this->createNewActivationStack();    /* what level we entered.            */

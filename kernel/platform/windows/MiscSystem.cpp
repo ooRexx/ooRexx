@@ -313,67 +313,6 @@ int WinExceptionFilter( int xCode )
 }
 
 
-char *SysGetThreadStackBase (size_t StackSize)
-/******************************************************************************/
-/* Function:  Return a pointer to the current stack base                      */
-/******************************************************************************/
-{
-   size_t temp;
-   return (char *)&temp - StackSize;
-}
-
-
-DWORD WINAPI call_thread_function(void * Arguments)
-{
-   /* call the real threadfunction */
-   activity_thread((RexxActivity *)Arguments);
-   return 0;
-}
-
-
-thread_id_t SysCreateThread (
-  PTHREADFN ThreadProcedure,           /* address of thread procedure       */
-  size_t    StackSize,                 /* required stack size               */
-  void     *Arguments )                /* thread procedure argument block   */
-/******************************************************************************/
-/* Function:  Create a new thread                                             */
-/******************************************************************************/
-{
-  DWORD res;
-  HANDLE ht;
-
-  ht = CreateThread(NULL, StackSize, call_thread_function, Arguments, 0, &res);
-  if (!ht)
-  {
-      reportException(Error_System_service_service, "ERROR CREATING THREAD");
-     return 0;   /* error */
-  }
-  ((RexxActivity *)Arguments)->hThread = ht;
-  return (thread_id_t)res;
-}
-
-
-void SysSetThreadPriority(thread_id_t tid, HANDLE han, int prio)
-{
-  ULONG pri;
-
-                                       /* critical priority?                */
-  if (prio >= HIGH_PRIORITY) {
-    pri= THREAD_PRIORITY_ABOVE_NORMAL +1; /* the class is regular, but move    */
-                                         /* to the head of the class          */
-  }                                    /* medium priority                   */
-  else if (prio >= MEDIUM_PRIORITY) {
-    pri = THREAD_PRIORITY_NORMAL;      /* normal class,                     */
-                                       /* dead in the middle of it all      */
-  }
-  else {                               /* low priority                      */
-    pri = THREAD_PRIORITY_IDLE +1;     /* give us idle only, but make it    */
-                                       /* important idle time only          */
-  }
-
-  SetThreadPriority( han, pri);
-}
-
 #define MAX_ADDRESS_NAME_LENGTH  250   /* maximum command environment name  */
 
 void SysValidateAddressName(

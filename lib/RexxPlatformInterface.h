@@ -62,14 +62,6 @@ class ProtectedObject;
 void SysRelinquish(void);              /* allow the system to run           */
 #endif
 
-#ifndef SysSetThreadPriority
-#ifdef THREADHANDLE
-void SysSetThreadPriority(thread_id_t, HANDLE, int);  /* give a thread priority            */
-#else
-void SysSetThreadPriority(thread_id_t, int);  /* give a thread priority            */
-#endif
-#endif
-
 #ifndef SysRegisterExceptions
                                        /* setup for exceptions              */
 void SysRegisterExceptions(SYSEXCEPTIONBLOCK *);
@@ -90,31 +82,8 @@ void SysRegisterSignals(SYSEXCEPTIONBLOCK *);
 void SysDeregisterSignals(SYSEXCEPTIONBLOCK *);
 #endif
 
-#ifndef SysExternalFunction
-                                       /* call an external function         */
-bool SysExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
-#endif
-
-#ifndef SysCommand
-                                       /* invoke a command                  */
-RexxObject * SysCommand(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxString **);
-#endif
-
 #ifndef SysThreadYield
 void SysThreadYield(void);             /* yield thread control              */
-#endif
-
-#ifndef SysQueryThreadID
-thread_id_t SysQueryThreadID();        /* query the current thread          */
-#endif
-
-#ifndef SysGetThreadStackBase
-char *SysGetThreadStackBase(size_t);   /* query current thread stack start  */
-#endif
-
-#ifndef SysCreateThread
-                                       /* create a new thread               */
-thread_id_t SysCreateThread (PTHREADFN, size_t, void *);
 #endif
 
 #ifndef SysLoadProcedure
@@ -140,10 +109,6 @@ RexxBuffer *SysReadProgram (const char *); /* read a program into storage       
 void SysSetupProgram(RexxActivation *);/* System specific program setup     */
 #endif
 
-#ifndef SysInitialAddressName
-RexxString *SysInitialAddressName();   /* get the initial address name      */
-#endif
-
 #ifndef SysClauseBoundary
                                        /* Do system clause boundary stuff   */
 void SysClauseBoundary(RexxActivation *);
@@ -157,16 +122,6 @@ char *SysGetTempFileName(void);
 
 #ifndef SysLoadImage
 void SysLoadImage(char **, size_t *);    /* load the image file               */
-#endif
-
-#ifndef SysTerminateThread
-                                       /* thread being terminated           */
-void SysTerminateThread(thread_id_t threadid);
-#endif
-
-#ifndef SysInitializeThread
-                                       /* thread being started              */
-void SysInitializeThread();
 #endif
 
 /******************************************************************************/

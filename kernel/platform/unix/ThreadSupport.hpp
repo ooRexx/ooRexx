@@ -84,11 +84,5 @@ class RexxMutex {
      pthread_mutex_t mutexMutex;
      size_t mutex_value;
 };
-
-typedef struct _sysThreadArg {
-        thread_id_t threadId;
-        pthread_attr_t  threadAttr;
-        void*   args;
-} SysThreadArg;
 #endif
 

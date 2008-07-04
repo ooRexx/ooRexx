@@ -279,7 +279,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 /*               4) REXX programs with default extension                      */
 /*               5) Macro-space post-order functions                          */
 /******************************************************************************/
-bool SysExternalFunction(
+bool SystemInterpreter::invokeExternalFunction(
   RexxActivation * activation,         /* Current Activation                */
   RexxActivity   * activity,           /* activity in use                   */
   RexxString     * target,             /* Name of external function         */

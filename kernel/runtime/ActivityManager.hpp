@@ -77,8 +77,9 @@ public:
     static RexxNativeActivation *newNativeActivation(RexxActivity *activity, RexxActivation *parent);
     static RexxNativeActivation *newNativeActivation(RexxActivity *activity);
     static void cacheActivation(RexxActivationBase *activation);
-    static RexxActivity *newActivity(int priority);
-    static RexxActivity *newActivity(RexxActivity *);
+    static RexxActivity *createNewActivity();
+    static RexxActivity *createCurrentActivity();
+    static RexxActivity *createNewActivity(RexxActivity *);
     static void haltAllActivities();
     static void traceAllActivities(bool on);
     static bool setActivityTrace(thread_id_t thread_id, bool on_or_off);
@@ -264,8 +265,8 @@ inline void reportHalt(RexxString *description)
 }
 
 
-inline RexxActivity *new_activity()  { return ActivityManager::newActivity(MEDIUM_PRIORITY); }
-inline RexxActivity *new_activity(RexxActivity *parent)  { return ActivityManager::newActivity(parent); }
+inline RexxActivity *new_activity()  { return ActivityManager::createNewActivity(); }
+inline RexxActivity *new_activity(RexxActivity *parent)  { return ActivityManager::createNewActivity(parent); }
 
 
 inline RexxString *lastMessageName()

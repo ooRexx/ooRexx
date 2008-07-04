@@ -53,7 +53,7 @@
 #include "SourceLocation.hpp"
 #include "ExitHandler.hpp"
 #include "ActivationApiContexts.hpp"
-
+#include "SysThread.hpp"
 
 
 class ProtectedObject;                 // needed for look aheads
@@ -128,7 +128,8 @@ typedef enum
    inline void  operator delete(void *, void *) { ; }
 
    inline RexxActivity(RESTORETYPE restoreType) { ; };
-   RexxActivity(bool, int);
+   RexxActivity();
+   RexxActivity(bool);
 
 
    void runThread();
@@ -200,7 +201,7 @@ typedef enum
    void        terminatePoolActivity();
    RexxObject *localMethod();
    thread_id_t threadIdMethod();
-   bool isThread(thread_id_t id) { return threadid == id; }
+   bool isThread(thread_id_t id) { return currentThread.equals(id); }
    void setShvVal(RexxString *);
    inline bool isClauseExitUsed() { return clauseExitUsed; }
    void queryTrcHlt();
@@ -276,7 +277,6 @@ typedef enum
    inline RexxString *getLastMessageName() { return lastMessageName; }
    inline RexxMethod *getLastMethod() { return lastMethod; }
    inline void setLastMethod(RexxString *n, RexxMethod *m) { lastMessageName = n; lastMethod = m; }
-   inline int  getPriority() { return priority; }
 
    inline RexxThreadContext *getThreadContext() { return &threadContext.threadContext; }
    inline RexxNativeActivation *getApiContext() { return (RexxNativeActivation *)topStackFrame; }
@@ -309,11 +309,6 @@ typedef enum
    void createMethodContext(MethodContext &context, RexxNativeActivation *owner);
    void createCallContext(CallContext &context, RexxNativeActivation *owner);
    void createExitContext(ExitContext &context, RexxNativeActivation *owner);
-
-   // TODO:  This needs to be replaced by a system object.
-#ifdef THREADHANDLE
-   HANDLE   hThread;                   /* handle to thread                  */
-#endif
 
    static void initializeThreadContext();
 
@@ -354,10 +349,9 @@ typedef enum
    RexxString         *currentExit;    /* current executing system exit     */
    RexxObject         *waitingObject;  /* object activity is waiting on     */
    SEV      runsem;                    /* activity run control semaphore    */
-   thread_id_t threadid;               /* thread id                         */
+   SysThread currentThread;            /* descriptor for this thread        */
    NumericSettings *numericSettings;   /* current activation setting values */
 
-   int      priority;                  /* activity priority value           */
    bool     stackcheck;                /* stack space is to be checked      */
    bool     exit;                      /* activity loop is to exit          */
    bool     requestingString;          /* in error handling currently       */

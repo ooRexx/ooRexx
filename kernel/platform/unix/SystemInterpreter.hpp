@@ -94,6 +94,9 @@ public:
     static RexxString *getMessageText(wholenumber_t code);
     static RexxString *getUserid();
     static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result);
+    static RexxString *getDefaultAddressName();
+    static bool invokeExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
+    static RexxObject *invokeHostCommand(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxString **);
 
 };
 
