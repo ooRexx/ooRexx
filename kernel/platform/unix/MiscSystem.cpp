@@ -57,7 +57,6 @@
 #include "DirectoryClass.hpp"
 #include "RexxActivity.hpp"
 #include "RexxActivation.hpp"
-#include "ThreadSupport.hpp"
 #include "ActivityManager.hpp"
 #include "PointerClass.hpp"
 #include "SystemInterpreter.hpp"
@@ -105,11 +104,11 @@ RexxString *SystemInterpreter::getSystemName()
 /******************************************************************************/
 {
 #if defined(AIX)
-    return new_string("AIX")
+    return new_string("AIX");
 #elif defined(OPSYS_SUN)
-    return new_string("SUNOS")
+    return new_string("SUNOS");
 #else
-    return new_string("LINUX")
+    return new_string("LINUX");
 #endif
 
 }
@@ -166,7 +165,7 @@ void SystemInterpreter::setupProgram(RexxActivation *activation)
 #endif
 }
 
-RexxString * SystemInerpreter::getSourceString(RexxString * callType, RexxString * programName )
+RexxString * SystemInterpreter::getSourceString(RexxString * callType, RexxString * programName )
 /******************************************************************************/
 /* Function:  Produce a system specific source string                         */
 /******************************************************************************/

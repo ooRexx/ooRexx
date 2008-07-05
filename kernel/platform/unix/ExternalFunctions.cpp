@@ -108,7 +108,6 @@
                                             /* FILESPEC function options      */
 #define FILESPEC_PATH         'P'
 #define FILESPEC_NAME         'N'
-#define CCHMAXPATH PATH_MAX+1
 
 #define KIOCSOUND   0x4B2F              /* start sound generation (0 for off) */
 
@@ -247,7 +246,7 @@ RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
   }
 
   // get the current working directory and return it
-  char temp[CCHMAXPATH + 2];
+  char temp[PATH_MAX + 3];
   SystemInterpreter::getCurrentWorkingDirectory(temp);
   return context->NewStringFromAsciiz(temp);
 }
@@ -421,7 +420,7 @@ RexxObject *SystemInterpreter::buildEnvlist()
     {
         return OREF_NULL;                  /* no envrionment !           */
     }
-    if (!(curr_dir=(char *)malloc(CCHMAXPATH+2)))/* malloc storage for cwd*/
+    if (!(curr_dir=(char *)malloc(PATH_MAX + 3)))/* malloc storage for cwd*/
     {
         reportException(Error_System_service);
     }

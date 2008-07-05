@@ -50,7 +50,7 @@
 #include "BufferClass.hpp"
 #include "ProtectedObject.hpp"
 #include "SystemInterpreter.hpp"
-#include "SysInterpreterInstance.hpp"
+#include "InterpreterInstance.hpp"
 #include "SysFileSystem.hpp"
 #include <string.h>
 #include <stdio.h>
@@ -70,9 +70,6 @@
 # include <stropts.h>
 #endif
 
-#define CCHMAXPATH PATH_MAX+1
-
-
 /**
  * Resolve a program for intial loading or a subroutine call.
  *
@@ -88,9 +85,9 @@
  * @return A string version of the file name, if found.  Returns OREF_NULL if
  *         the program cannot be found.
  */
-RexxString *SysInterpreterInstance::resolveProgram(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension)
+RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension)
 {
-    char resolvedName[CCHMAXPATH + 2];    // finally resolved name
+    char resolvedName[PATH_MAX + 3];    // finally resolved name
 
     const char *name = _name->getStringData();
     const char *parentDir = _parentDir == OREF_NULL ? NULL : _parentDir->getStringData();
@@ -121,10 +118,9 @@ RexxString *SysInterpreterInstance::resolveProgram(RexxString *_name, RexxString
     }
 
     // ok, now time to try each of the individual extensions along the way.
-    size_t count = searchExtensions->size();
-    for (size_t i = 1; i <= count; i++)
+    for (size_t i = instance->searchExtensions->firstIndex(); i != LIST_END; i = instance->searchExtensions->nextIndex(i))
     {
-        RexxString *ext = (RexxString *)searchExtensions->get(i);
+        RexxString *ext = (RexxString *)instance->searchExtensions->getValue(i);
 
         if (SysFileSystem::searchName(name, searchPath.path, ext->getStringData(), resolvedName))
         {
@@ -147,7 +143,7 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
 /* Function : Load the image into storage                          */
 /*******************************************************************/
 {
-    char fullname[CCHMAXPATH + 2];    // finally resolved name
+    char fullname[PATH_MAX + 2];    // finally resolved name
     // The file may purposefully have no extension.
     if (!SysFileSystem::searchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
     {
@@ -228,8 +224,6 @@ RexxString *SystemInterpreter::qualifyFileSystemName(
     /* clear out the block               */
     memset(nameBuffer, 0, sizeof(nameBuffer));
     SysFileSystem::qualifyStreamName(name->getStringData(), nameBuffer, sizeof(nameBuffer)); /* expand the full name              */
-    /* uppercase this                    */
-    SysUtil::strupr(nameBuffer);
     /* get the qualified file name       */
     return new_string(nameBuffer);
 }

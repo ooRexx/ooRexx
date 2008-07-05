@@ -123,25 +123,29 @@ RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration
 /********************************************************************************************/
 RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 {
-  char buffer[CCHMAXPATH+1];  // retrofit by IH
-  int rc = 0;
+    char buffer[CCHMAXPATH+1]; 
+    int rc = 0;
 
-  if (dir != NO_CSTRING)
-  {
-      if ((strlen(dir) == 2) && (dir[1] == ':'))
-         rc = _chdrive(toupper( dir[0] ) - 'A' + 1);
-      else
-         rc = _chdir(dir);
-  }
-                                       /* Return the current directory    */
-  if (rc != 0 || _getcwd(buffer, MAX_PATH) == NULL)
-  {
-      return context->NullString();
-  }
-  else
-  {
-      return context->NewStringFromAsciiz(buffer);
-  }
+    if (dir != NO_CSTRING)
+    {
+        if ((strlen(dir) == 2) && (dir[1] == ':'))
+        {
+            rc = _chdrive(toupper( dir[0] ) - 'A' + 1);
+        }
+        else
+        {
+            rc = _chdir(dir);
+        }
+    }
+    /* Return the current directory    */
+    if (rc != 0 || _getcwd(buffer, MAX_PATH) == NULL)
+    {
+        return context->NullString();
+    }
+    else
+    {
+        return context->NewStringFromAsciiz(buffer);
+    }
 }
 
 

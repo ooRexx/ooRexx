@@ -63,7 +63,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #define ERROR_TABLE                    /* include error message table       */
-#define CCHMAXPATH PATH_MAX+1
 #include "RexxCore.h"                    /* incl general definitions        */
 #include "StringClass.hpp"
 #include "SystemInterpreter.hpp"

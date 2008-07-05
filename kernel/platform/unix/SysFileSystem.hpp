@@ -91,15 +91,14 @@ public:
     static const char PathDelimiter;  // directory path delimiter
 
     static char *getTempFileName();
-    static bool  searchFileName(char * name, char *fullName);
-    static char *extractFileExtension(char *name);
-    static void  qualifyStreamName(char *unqualifiedName, char *qualifiedName, size_t bufferSize);
-    static bool  findFirstFile(char *name);
-    static bool  fileExists(char *name);
+    static bool  searchFileName(const char * name, char *fullName);
+    static void  qualifyStreamName(const char *unqualifiedName, char *qualifiedName, size_t bufferSize);
+    static bool  fileExists(const char *name);
     static bool  searchName(const char *name, const char *path, const char *extension, char *resolvedName);
     static bool  checkCurrentFile(const char *name, char *resolvedName);
-    static bool  searchPath(const char *name, const char *path, const char *extension, char *resolvedName);
+    static bool  searchPath(const char *name, const char *path, char *resolvedName);
     static bool  hasExtension(const char *name);
+    static bool  hasDirectory(const char *name);
     static bool  canonicalizeName(char *name);
     static RexxString *extractDirectory(RexxString *file);
     static RexxString *extractExtension(RexxString *file);

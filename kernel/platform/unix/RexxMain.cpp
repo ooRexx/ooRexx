@@ -64,7 +64,6 @@
 #include "RexxActivation.hpp"
 #include "RexxActivity.hpp"
 #include "SourceFile.hpp"
-#include "RexxNativeAPI.h"                      /* REXX interface/native method code */
 
 #include "RexxAPIManager.h"
 #include "APIDefinitions.h"

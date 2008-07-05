@@ -50,7 +50,7 @@
  * @param options The options used to initialize us.  We can add additional
  *                platform-specific options if we wish.
  */
-void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOptions *options)
+void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOption *options)
 {
     instance = i;
 

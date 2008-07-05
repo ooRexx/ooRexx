@@ -55,7 +55,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <pwd.h>
 #include "SysFileSystem.hpp"
+#include "Utilities.hpp"
 
 
 // This is all the static stuff
@@ -77,125 +79,100 @@ const char SysFileSystem::PathDelimiter = '/';
 /*********************************************************************/
 
 bool SysFileSystem::searchFileName(
-  char *     name,                     /* name of rexx proc to check        */
+  const char* name,                    /* name of rexx proc to check        */
   char *     fullName )                /* fully resolved name               */
 {
-  size_t nameLength;                   /* length of name                    */
-  char tempPath[MaximumFileNameBuffer];// temporary place to store the path/name
-  char * currentpath;                  // current path
-  char * sep;                          // next colon in the path
+    size_t nameLength;                   /* length of name                    */
+    char tempPath[MaximumFileNameBuffer];// temporary place to store the path/name
+    char * currentpath;                  // current path
+    char * sep;                          // next colon in the path
 
-  nameLength = strlen(name);           /* get length of incoming name       */
+    nameLength = strlen(name);           /* get length of incoming name       */
 
-  /* if name is too small or big */
-  if (nameLength < 1 || nameLength > MaximumFileNameBuffer)
+    /* if name is too small or big */
+    if (nameLength < 1 || nameLength > MaximumFileNameBuffer)
+    {
+        return false;
+    }
+
+    /* does the filename already have a path? */
+    if (strstr(name, "/") != NULL)
+    {
+        switch (*name)
+        {
+            case '~':
+                strcpy(tempPath, getenv("HOME"));
+                strcat(tempPath, name + 1);
+                break;
+            case '.':
+                getcwd(tempPath, MaximumFileNameBuffer);
+                strcat(tempPath, name + 1);
+                break;
+            case '/':
+                strcpy(tempPath, name);
+                break;
+            default:
+                getcwd(tempPath, MaximumFileNameBuffer);
+                strcat(tempPath, "/");
+                strcat(tempPath, name);
+                break;
+        }
+        if (fileExists(tempPath) == false)
+        {
+            strcpy(fullName, tempPath);
+            return false;
+        }
+        return true;
+    }
+
+    /* there was no leading path so try the current directory */
+    getcwd(tempPath, MaximumFileNameBuffer);
+    strcat(tempPath, "/");
+    strcat(tempPath, name);
+    if (fileExists(name) == false)
+    {
+        strcpy(fullName, name);
+        return false;
+    }
+
+    /* it was not in the current directory so search the PATH */
+    currentpath = getenv("PATH");
+    if (currentpath == NULL)
+    {
+        return true;
+    }
+    sep = strchr(currentpath, ':');
+    while (sep != NULL)
+    {
+        /* try each entry in the PATH */
+        int i = sep - currentpath;
+        strncpy(tempPath, currentpath, i);
+        tempPath[i] = '\0';
+        strcat(tempPath, "/");
+        strcat(tempPath, name);
+        if (fileExists(tempPath) == false)
+        {
+            strcpy(fullName, tempPath);
+            return false;
+        }
+        currentpath = sep + 1;
+        sep = strchr(currentpath, ':');
+    }
+    /* the last entry in the PATH may not be terminated by a colon */
+    if (*currentpath != '\0')
+    {
+        strcpy(tempPath, currentpath);
+        strcat(tempPath, "/");
+        strcat(tempPath, name);
+        if (fileExists(tempPath) == false)
+        {
+            strcpy(fullName, tempPath);
+            return false;
+        }
+    }
+
+    /* file not found */
     return false;
-
-  /* does the filename already have a path? */
-  if (strstr(name, "/") != NULL) {
-      switch (*name) {
-      case '~':
-          strcpy(tempPath, getenv("HOME"));
-          strcat(tempPath, name + 1);
-          break;
-      case '.':
-          getcwd(tempPath, MaximumFileNameBuffer);
-          strcat(tempPath, name + 1);
-          break;
-      case '/':
-          strcpy(tempPath, name);
-          break;
-      default:
-          getcwd(tempPath, MaximumFileNameBuffer);
-          strcat(tempPath, "/");
-          strcat(tempPath, name);
-          break;
-      }
-      if (fileExists(tempPath) == false) {
-          strcpy(fullName, tempPath);
-          return false;
-      }
-      return true;
-  }
-
-  /* there was no leading path so try the current directory */
-  getcwd(tempPath, MaximumFileNameBuffer);
-  strcat(tempPath, "/");
-  strcat(tempPath, name);
-  if (fileExists(name) == false) {
-      strcpy(fullName, name);
-      return false;
-  }
-
-  /* it was not in the current directory so search the PATH */
-  currentpath = getenv("PATH");
-  if (currentpath == NULL) {
-      return true;
-  }
-  sep = strchr(currentpath, ':');
-  while (sep != NULL) {
-      /* try each entry in the PATH */
-      int i = sep - currentpath;
-      strncpy(tempPath, currentpath, i);
-      tempPath[i] = '\0';
-      strcat(tempPath, "/");
-      strcat(tempPath, name);
-      if (fileExists(tempPath) == false) {
-          strcpy(fullName, tempPath);
-          return false;
-      }
-      currentpath = sep + 1;
-      sep = strchr(currentpath, ':');
-  }
-  /* the last entry in the PATH may not be terminated by a colon */
-  if (*currentpath != '\0') {
-      strcpy(tempPath, currentpath);
-      strcat(tempPath, "/");
-      strcat(tempPath, name);
-      if (fileExists(tempPath) == false) {
-          strcpy(fullName, tempPath);
-          return false;
-      }
-  }
-
-  /* file not found */
-  return false;
-}
-
-/*********************************************************************/
-/*                                                                   */
-/* FUNCTION    : SysFileExtension                                    */
-/*                                                                   */
-/* DESCRIPTION : Looks for a file extension in given string. Returns */
-/*               the ext in PSZ form. If no file ext returns an      */
-/*               empty pointer.                                      */
-/*                                                                   */
-/*********************************************************************/
-
-char *SysFileSystem::extractFileExtension(
-  char     *name )                     /* file name                         */
-{
-  char     *scan;                      /* scanning pointer                  */
-  size_t    length;                    /* extension length                  */
-
-  scan = strrchr(name, '/');          /* have a path?                      */
-  if (scan)                            /* find one?                         */
-    scan++;                            /* step over last backspace          */
-  else
-    scan = name;                       /* no path, use name                 */
-
-    /* Look for the last occurence of period in the name. If not            */
-    /* found OR if found and the chars after the last period are all        */
-    /* periods or spaces, then we do not have an extension.                 */
-
-  if ((!(scan = strrchr(scan, '.'))) || strspn(scan, ". ") == strlen(scan))
-    return NULL;                       /* just return a null                */
-
-  scan++;                              /* step over the period              */
-  length = strlen(scan);               /* calculate residual length         */
-  if (!length)                         /* if no residual length             */
-    return  NULL;                      /* so return null extension          */
-  return --scan;                       /* return extension position         */
 }
 
 /*********************************************************************/
@@ -205,17 +182,14 @@ char *SysFileSystem::extractFileExtension(
 /* DESCRIPTION : Returns a temp file name.                           */
 /*                                                                   */
 /*********************************************************************/
-
 char *SysFileSystem::getTempFileName()
 {
-    char tempName[11];
-
-    strcpy(tempName, "tempXXXXXX");
-    return mktemp(tempName);
+    return tmpnam(NULL);
 }
 
+
 void SysFileSystem::qualifyStreamName(
-  char *name,                         // input name
+  const char *name,                   // input name
   char *fullName,                     // the output name
   size_t bufferSize)                  // size of the output buffer
 /*******************************************************************/
@@ -224,71 +198,71 @@ void SysFileSystem::qualifyStreamName(
 {
     char tempPath[MaximumFileNameBuffer];// temporary place to store the path/name
 
-  /* already expanded? */
-  if (*fullName != '\0')
-  {
-      return;                            /* nothing more to do                */
-  }
+    /* already expanded? */
+    if (*fullName != '\0')
+    {
+        return;                            /* nothing more to do                */
+    }
 
-  /* does the filename already have a path? */
-  if (strstr(name, "/") != NULL) {
-      switch (*name) {
-      case '~':
-          strcpy(tempPath, getenv("HOME"));
-          strcat(tempPath, name + 1);
-          break;
-      case '.':
-          getcwd(tempPath, MaximumFileNameBuffer);
-          strcat(tempPath, name + 1);
-          break;
-      case '/':
-          strcpy(tempPath, name);
-          break;
-      default:
-          getcwd(tempPath, MaximumFileNameBuffer);
-          strcat(tempPath, "/");
-          strcat(tempPath, name);
-          break;
-      }
-      if (strlen(tempPath) < bufferSize) {
-          strcpy(fullName, tempPath);
-      }
-      else {
-          *fullName = '\0';
-      }
-      return;
-  }
+    /* does the filename already have a path? */
+    if (strstr(name, "/") != NULL)
+    {
+        switch (*name)
+        {
+            case '~':
+                strcpy(tempPath, getenv("HOME"));
+                strcat(tempPath, name + 1);
+                break;
+            case '.':
+                getcwd(tempPath, MaximumFileNameBuffer);
+                strcat(tempPath, name + 1);
+                break;
+            case '/':
+                strcpy(tempPath, name);
+                break;
+            default:
+                getcwd(tempPath, MaximumFileNameBuffer);
+                strcat(tempPath, "/");
+                strcat(tempPath, name);
+                break;
+        }
+        if (strlen(tempPath) < bufferSize)
+        {
+            strcpy(fullName, tempPath);
+        }
+        else
+        {
+            *fullName = '\0';
+        }
+        return;
+    }
 
-  /* there was no leading path so try the current directory */
-  getcwd(tempPath, MaximumFileNameBuffer);
-  strcat(tempPath, "/");
-  strcat(tempPath, name);
-  if (strlen(tempPath) < bufferSize) {
-      strcpy(fullName, tempPath);
-  }
-  else {
-      *fullName = '\0';
-  }
-  return;
+    /* there was no leading path so try the current directory */
+    getcwd(tempPath, MaximumFileNameBuffer);
+    strcat(tempPath, "/");
+    strcat(tempPath, name);
+    if (strlen(tempPath) < bufferSize)
+    {
+        strcpy(fullName, tempPath);
+    }
+    else
+    {
+        *fullName = '\0';
+    }
+    return;
 }
 
-
-bool SysFileSystem::findFirstFile(
-    char *name)                     /* name of file with wildcards       */
-{
-    return false;
-}
-
-
-bool SysFileSystem::fileExists(char * fname)
+bool SysFileSystem::fileExists(const char * fname)
 {
     struct stat filestat;                // file attributes
     int rc;                              // stat function return code
 
     rc = stat(fname, &filestat);
-    if (rc == 0) {
-        if (S_ISREG(filestat.st_mode)) {
-           return false;
+    if (rc == 0)
+    {
+        if (S_ISREG(filestat.st_mode))
+        {
+            return false;
         }
     }
     return true;
@@ -404,7 +378,7 @@ RexxString *SysFileSystem::extractFile(RexxString *file)
  */
 bool SysFileSystem::hasExtension(const char *name)
 {
-    const char *endPtr = name + strlen(name) - 1
+    const char *endPtr = name + strlen(name) - 1;
 
     // scan backwards looking for a directory delimiter.  This name should
     // be fully qualified, so we don't have to deal with drive letters
@@ -428,6 +402,33 @@ bool SysFileSystem::hasExtension(const char *name)
 
 
 /**
+ * Test if a filename has a directory portion 
+ *
+ * @param name   The name to check.
+ *
+ * @return true if a directory was found on the file, false if 
+ *         there is no directory. 
+ */
+bool SysFileSystem::hasDirectory(const char *name)
+{
+    const char *endPtr = name + strlen(name) - 1;
+
+    // scan backwards looking for a directory delimiter.  This name should
+    // be fully qualified, so we don't have to deal with drive letters
+    while (name < endPtr)
+    {
+        // find the first directory element?
+        if (*endPtr == '\\')
+        {
+            return true;         // found a directory delimiter
+        }
+        endPtr--;
+    }
+    return false;          // no directory  
+}
+
+
+/**
  * Do a search for a single variation of a filename.
  *
  * @param name      The name to search for.
@@ -443,11 +444,11 @@ bool SysFileSystem::searchName(const char *name, const char *path, const char *e
 {
     UnsafeBlock releaser;
     // this is for building a temporary name
-    char       tempName[CCHMAXPATH + 2];
+    char       tempName[PATH_MAX + 3];
 
     // construct the search name, potentially adding on an extension
     strncpy(tempName, name, sizeof(tempName));
-    if (extension != OREF)
+    if (extension != NULL)
     {
         strncat(tempName, extension, sizeof(tempName));
     }
@@ -471,7 +472,7 @@ bool SysFileSystem::searchName(const char *name, const char *path, const char *e
             }
         }
         // try again in lower case
-        strlower(tempName);
+        Utilities::strlower(tempName);
     }
     return false;
 }
@@ -491,7 +492,7 @@ bool SysFileSystem::checkCurrentFile(const char *name, char *resolvedName)
     // validate that this is a name that can even be located.
     size_t nameLength = strlen(name);
 
-    if (nameLength < 1 || NameLength > CCHMAXPATH)
+    if (nameLength < 1 || nameLength > PATH_MAX + 1)
     {
         return false;
     }
@@ -533,8 +534,10 @@ bool SysFileSystem::searchPath(const char *name, const char *path, char *resolve
     // get an end pointer
     const char *pathEnd = path + strlen(path);
 
+    const char *p = path; 
+    const char *q = strchr(p, ':'); 
     /* For every dir in searchpath*/
-    for (const char *p = path, const char *q = strchr(p, ':'); p < pathEnd; p = q + 1, q = strchr(p, ':'))
+    for (; p < pathEnd; p = q + 1, q = strchr(p, ':'))
     {
         // it's possible we've hit the end, in which case, point the delimiter marker past the end of the
         // string
@@ -547,12 +550,13 @@ bool SysFileSystem::searchPath(const char *name, const char *path, char *resolve
         memcpy(resolvedName, p, sublength);
         resolvedName[sublength] = '/';
         resolvedName[sublength + 1] = '\0';
-        strncat(resolvedName, name, CCHMAXPATH)
+        strncat(resolvedName, name, PATH_MAX + 1);
 
         // take care of any special conditions in the name structure
         // a failure here means an invalid name of some sort
         if (canonicalizeName(resolvedName))
         {
+            struct stat dummy; 
             if (!stat(resolvedName, &dummy))     /* If file is found,          */
             {
                 return true;
@@ -574,9 +578,6 @@ bool SysFileSystem::searchPath(const char *name, const char *path, char *resolve
  */
 bool SysFileSystem::canonicalizeName(char *name)
 {
-    // copy over the reduced form
-    strncpy(name, tempName, CCHMAXPATH);
-
     // does it start with the user home marker?
     if (name[0] == '~')
     {
@@ -585,34 +586,34 @@ bool SysFileSystem::canonicalizeName(char *name)
         if (name[1] == '/')
         {
 
-            char tempName[CCHMAXPATH + 2];
+            char tempName[PATH_MAX + 3];
             // make a copy of the name
-            strncpy(tempName, name, CCHMAXPATH);
+            strncpy(tempName, name, PATH_MAX + 1);
             strcpy(name, getenv("HOME"));
             // if we need a separator, add one
             if (name[1] != '/')
             {
-                strncat(name, "/", CCHMAXPATH);
+                strncat(name, "/", PATH_MAX + 1);
             }
-            strncat(name, tempName + 1, CCHMAXPATH);
+            strncat(name, tempName + 1, PATH_MAX + 1);
         }
         else
         {
             // referencing a file in some other user's home directory.
             // we need to extract the username and resolve that home directory
-            char tempName[CCHMAXPATH + 2];
-            char userName[CCHMAXPATH + 2];
+            char tempName[PATH_MAX + 3];
+            char userName[PATH_MAX + 3];
 
             // make a copy of the name
-            strncpy(tempName, name, CCHMAXPATH);
+            strncpy(tempName, name, PATH_MAX + 1);
             // look for the start of a directory
             char *slash = strchr(tempName,'/');
             // if there is a directory after the username, we need
             // to copy just the name piece
-            if (!slash != NULL)
+            if (slash != NULL)
             {
                 size_t nameLength = slash - tempName - 1;
-                memcpy(userName, tempName + 1, nameLength;
+                memcpy(userName, tempName + 1, nameLength);
                 userName[nameLength] = '\0';
             }
             // all username, just copy
@@ -622,7 +623,7 @@ bool SysFileSystem::canonicalizeName(char *name)
             }
 
             // see if we can retrieve the information
-            struct passwd *ppwd getpwnam(userName);
+            struct passwd *ppwd = getpwnam(userName);
             if (ppwd == NULL)
             {
                 // this is not valid without user information, so just fail the operation
@@ -630,11 +631,11 @@ bool SysFileSystem::canonicalizeName(char *name)
                 return false;                    /* nothing happend            */
             }
 
-            strncpy(name, ppwd->pw_dir, CCHMAXPATH);
+            strncpy(name, ppwd->pw_dir, PATH_MAX + 1);
             // if we have a directory after the username, copy the whole thing
             if (slash != NULL)
             {
-                strncat(name, slash, CCHMAXPATH);
+                strncat(name, slash, PATH_MAX + 1);
             }
         }
     }
@@ -645,12 +646,12 @@ bool SysFileSystem::canonicalizeName(char *name)
     // process.
     else if (name[0] != '/')
     {
-        char tempName[CCHMAXPATH + 2];
+        char tempName[PATH_MAX + 2];
         // make a copy of the name
-        strncpy(tempName, name, CCHMAXPATH);
-        getcwd(name, CCHMAXPATH);
-        strncat(name, "/", CCHMAXPATH);
-        strncat(name, tempName, CCHMAXPATH);
+        strncpy(tempName, name, PATH_MAX + 1);
+        getcwd(name, PATH_MAX + 1);
+        strncat(name, "/", PATH_MAX + 1);
+        strncat(name, tempName, PATH_MAX + 1);
     }
 
     char *tempName = canonicalize_file_name(name);
@@ -659,25 +660,6 @@ bool SysFileSystem::canonicalizeName(char *name)
         return false;
     }
     return true;
-}
-
-
-/**
- * Portable implementation of an ascii-z string to uppercase (in place).
- *
- * @param str    String argument
- *
- * @return The address of the str unput argument.
- */
-void strlower(char *str)
-{
-    while (*str)
-    {
-        *str = tolower(*str);
-        str++;
-    }
-
-    return;
 }
 
 

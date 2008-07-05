@@ -85,7 +85,7 @@ SysFile::SysFile()
     append = true;
     filePointer = 0;
     ungetchar = 0;
-    writeBuffer = false;     // no pending write operations
+    writeBuffered = false;     // no pending write operations
 }
 
 /**

@@ -229,30 +229,6 @@ RexxString *SystemInterpreter::qualifyFileSystemName(
 }
 
 
-bool SearchFirstFile(
-  const char *Name)                     /* name of file with wildcards       */
-{
-   HANDLE FindHandle;
-   WIN32_FIND_DATA FindData;
-   unsigned int errorMode;
-
-   errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-   FindHandle = FindFirstFile(Name, &FindData);
-   SetErrorMode(errorMode);
-
-   if (FindHandle != INVALID_HANDLE_VALUE)
-   {
-      FindClose(FindHandle);
-      if ((FindData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)
-      || (FindData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-      || (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-     return false;
-      else return true;
-   }
-   else return false;
-}
-
-
 
 
 

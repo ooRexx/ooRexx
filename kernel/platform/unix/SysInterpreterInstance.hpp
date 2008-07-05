@@ -41,7 +41,7 @@
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_SysInterpreterInstance_hpp
-#define Included_SysInterpreterinstance_hpp
+#define Included_SysInterpreterInstance_hpp
 
 class InterpreterInstance;
 
@@ -63,6 +63,7 @@ protected:
 
 class SysSearchPath
 {
+public:
     SysSearchPath(const char *parent, const char *extension);
     ~SysSearchPath();
 

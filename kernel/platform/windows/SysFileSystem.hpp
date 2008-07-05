@@ -71,7 +71,6 @@ public:
     static char *getTempFileName();
     static bool  searchFileName(const char * name, char *fullName);
     static void  qualifyStreamName(const char *unqualifiedName, char *qualifiedName, size_t bufferSize);
-    static bool  findFirstFile(const char *name);
     static bool  fileExists(const char *name);
     static bool  hasExtension(const char *name);
     static RexxString *extractDirectory(RexxString *file);
