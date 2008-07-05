@@ -203,7 +203,7 @@
 # include <locale.h>
 #endif
 
-#include "rexx.h"
+#include "oorexxapi.h"
 #include "RexxAPIManager.h"
 #include "APIUtilities.h"
 
@@ -276,7 +276,6 @@
 #endif
 
 #include <termios.h>                   /* needed for SysGetKey       */
-#include "ThreadSupport.hpp"           /* for the SysGetKey semaphore*/
 #include <fnmatch.h>                   /* fnmatch()                  */
 
 #if !defined( HAVE_UNION_SEMUN )
@@ -481,9 +480,6 @@ typedef struct _SORT_MEM {
 extern "C" {
 #endif
 
-#if defined(AIX) || defined(LINUX)
-size_t RexxEntry SysLoadFuncs(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-
 /********************************************************************
 * Function:  string2ulong(string, number)                           *
 *                                                                   *
@@ -520,8 +516,6 @@ bool string2size_t(
   *number = accumulator;               /* return the value           */
   return true;                         /* good number                */
 }
-
-#endif
 
 /*********************************************************************/
 /****************  REXXUTIL Supporting Functions  ********************/
@@ -1690,7 +1684,9 @@ size_t RexxEntry SysSleep(const char *name, size_t numargs, CONSTRXSTRING args[]
 /* Entry for upper case function name                                */
 size_t RexxEntry SYSLOADFUNCS(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-   return( SysLoadFuncs( name, numargs, args, queuename,  retstr ) );
+    // this is a NOP now
+    retstr->strlength = 0;               /* set return value           */
+    return VALID_ROUTINE;
 }
 
 size_t RexxEntry SysLoadFuncs(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
@@ -4310,9 +4306,9 @@ size_t RexxEntry SysGetKey(const char *name, size_t numargs, CONSTRXSTRING args[
     return INVALID_ROUTINE;            /* raise an error             */
 
   if (numargs == 1) {                  /* validate arguments         */
-    if (!stricmp(args[0].strptr, "NOECHO"))
+    if (!strcasecmp(args[0].strptr, "NOECHO"))
       echo = false;
-    else if (stricmp(args[0].strptr, "ECHO"))
+    else if (strcasecmp(args[0].strptr, "ECHO"))
       return INVALID_ROUTINE;          /* Invalid option             */
   }
 
@@ -5627,28 +5623,28 @@ size_t RexxEntry SysQueryProcess(const char *name, size_t numargs, CONSTRXSTRING
   if (numargs > 1)                    /* none or one argument accepted */
     return INVALID_ROUTINE;              /* raise error condition      */
 
-  if ((numargs == 0) || (!stricmp(args[0].strptr, "PID")))
+  if ((numargs == 0) || (!strcasecmp(args[0].strptr, "PID")))
   {
     sprintf(retstr->strptr, "%d", getpid());
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;                /* no error on call           */
   }
   else
-  if (!stricmp(args[0].strptr, "PPID"))
+  if (!strcasecmp(args[0].strptr, "PPID"))
   {
     sprintf(retstr->strptr, "%d", getppid());
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;                /* no error on call           */
   }
   else
-  if (!stricmp(args[0].strptr, "PGID"))
+  if (!strcasecmp(args[0].strptr, "PGID"))
   {
     sprintf(retstr->strptr, "%d", getpgid(getpid()));
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;                /* no error on call           */
   }
   else
-  if (!stricmp(args[0].strptr, "PPRIO"))
+  if (!strcasecmp(args[0].strptr, "PPRIO"))
   {
     sprintf(retstr->strptr, "%d", getpriority(PRIO_PROCESS, 0));
     retstr->strlength = strlen(retstr->strptr);
@@ -5665,7 +5661,7 @@ size_t RexxEntry SysQueryProcess(const char *name, size_t numargs, CONSTRXSTRING
      retstr->strlength = strlen(retstr->strptr);
      return VALID_ROUTINE;               /* no error on call           */
   }
-  if (!stricmp(args[0].strptr, "PTIME")) /* Calculate the used CPU time*/
+  if (!strcasecmp(args[0].strptr, "PTIME")) /* Calculate the used CPU time*/
   {
     uiUsedCPUmsec  = (unsigned int) struResUse.ru_utime.tv_usec/1000;
     uiUsedCPUmsec += (unsigned int) struResUse.ru_stime.tv_usec/1000;
@@ -5713,21 +5709,21 @@ size_t RexxEntry SysQueryProcess(const char *name, size_t numargs, CONSTRXSTRING
     return VALID_ROUTINE;                /* no error on call           */
   }
   else
-  if (!stricmp(args[0].strptr, "PMEM"))  /* Show max memory RSS used   */
+  if (!strcasecmp(args[0].strptr, "PMEM"))  /* Show max memory RSS used   */
   {
     sprintf(retstr->strptr, "Max_Memory_RSS: %ld", struResUse.ru_maxrss);
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;                /* no error on call           */
   }
   else
-  if (!stricmp(args[0].strptr, "PSWAPS")) /* Memory has been swapped   */
+  if (!strcasecmp(args[0].strptr, "PSWAPS")) /* Memory has been swapped   */
   {
     sprintf(retstr->strptr, "Memory_swaps: %ld", struResUse.ru_nswap);
     retstr->strlength = strlen(retstr->strptr);
     return VALID_ROUTINE;                /* no error on call           */
   }
   else
-  if (!stricmp(args[0].strptr, "PRCVDSIG")) /* Process received signals*/
+  if (!strcasecmp(args[0].strptr, "PRCVDSIG")) /* Process received signals*/
   {
     sprintf(retstr->strptr, "Received_signals: %ld", struResUse.ru_nsignals);
     retstr->strlength = strlen(retstr->strptr);
@@ -5882,68 +5878,68 @@ size_t RexxEntry SysIsFileLink(const char *name, size_t numargs, CONSTRXSTRING a
 
 
 // now build the actual entry list
-RexxFunctionEntry rexxutil_functions[] =
+RexxRoutineEntry rexxutil_routines[] =
 {
-    REXX_CLASSIC_FUNCTION(SysCreateMutexSem,      SysCreateMutexSem),
-    REXX_CLASSIC_FUNCTION(SysOpenMutexSem,        SysOpenMutexSem),
-    REXX_CLASSIC_FUNCTION(SysCloseMutexSem,       SysCloseMutexSem),
-    REXX_CLASSIC_FUNCTION(SysRequestMutexSem,     SysRequestMutexSem),
-    REXX_CLASSIC_FUNCTION(SysReleaseMutexSem,     SysReleaseMutexSem),
-    REXX_CLASSIC_FUNCTION(SysCreateEventSem,      SysCreateEventSem),
-    REXX_CLASSIC_FUNCTION(SysOpenEventSem,        SysOpenEventSem),
-    REXX_CLASSIC_FUNCTION(SysCloseEventSem,       SysCloseEventSem),
-    REXX_CLASSIC_FUNCTION(SysResetEventSem,       SysResetEventSem),
-    REXX_CLASSIC_FUNCTION(SysPostEventSem,        SysPostEventSem),
-    REXX_CLASSIC_FUNCTION(SysWaitEventSem,        SysWaitEventSem),
-    REXX_CLASSIC_FUNCTION(SysSetPriority,         SysSetPriority),
-    REXX_CLASSIC_FUNCTION(SysAddRexxMacro,        SysAddRexxMacro),
-    REXX_CLASSIC_FUNCTION(SysDropRexxMacro,       SysDropRexxMacro),
-    REXX_CLASSIC_FUNCTION(SysReorderRexxMacro,    SysReorderRexxMacro),
-    REXX_CLASSIC_FUNCTION(SysQueryRexxMacro,      SysQueryRexxMacro),
-    REXX_CLASSIC_FUNCTION(SysClearRexxMacroSpace, SysClearRexxMacroSpace),
-    REXX_CLASSIC_FUNCTION(SysLoadRexxMacroSpace,  SysLoadRexxMacroSpace),
-    REXX_CLASSIC_FUNCTION(SysSaveRexxMacroSpace,  SysSaveRexxMacroSpace),
+    REXX_CLASSIC_ROUTINE(SysCreateMutexSem,      SysCreateMutexSem),
+    REXX_CLASSIC_ROUTINE(SysOpenMutexSem,        SysOpenMutexSem),
+    REXX_CLASSIC_ROUTINE(SysCloseMutexSem,       SysCloseMutexSem),
+    REXX_CLASSIC_ROUTINE(SysRequestMutexSem,     SysRequestMutexSem),
+    REXX_CLASSIC_ROUTINE(SysReleaseMutexSem,     SysReleaseMutexSem),
+    REXX_CLASSIC_ROUTINE(SysCreateEventSem,      SysCreateEventSem),
+    REXX_CLASSIC_ROUTINE(SysOpenEventSem,        SysOpenEventSem),
+    REXX_CLASSIC_ROUTINE(SysCloseEventSem,       SysCloseEventSem),
+    REXX_CLASSIC_ROUTINE(SysResetEventSem,       SysResetEventSem),
+    REXX_CLASSIC_ROUTINE(SysPostEventSem,        SysPostEventSem),
+    REXX_CLASSIC_ROUTINE(SysWaitEventSem,        SysWaitEventSem),
+    REXX_CLASSIC_ROUTINE(SysSetPriority,         SysSetPriority),
+    REXX_CLASSIC_ROUTINE(SysAddRexxMacro,        SysAddRexxMacro),
+    REXX_CLASSIC_ROUTINE(SysDropRexxMacro,       SysDropRexxMacro),
+    REXX_CLASSIC_ROUTINE(SysReorderRexxMacro,    SysReorderRexxMacro),
+    REXX_CLASSIC_ROUTINE(SysQueryRexxMacro,      SysQueryRexxMacro),
+    REXX_CLASSIC_ROUTINE(SysClearRexxMacroSpace, SysClearRexxMacroSpace),
+    REXX_CLASSIC_ROUTINE(SysLoadRexxMacroSpace,  SysLoadRexxMacroSpace),
+    REXX_CLASSIC_ROUTINE(SysSaveRexxMacroSpace,  SysSaveRexxMacroSpace),
 #if defined(AIX)
-    REXX_CLASSIC_FUNCTION(SysAddFuncPkg,          SysAddFuncPkg),
-    REXX_CLASSIC_FUNCTION(SysAddCmdPkg,           SysAddCmdPkg),
-    REXX_CLASSIC_FUNCTION(SysDropFuncPkg,         SysDropFuncPkg),
-    REXX_CLASSIC_FUNCTION(SysDropCmdPkg,          SysDropCmdPkg),
-    REXX_CLASSIC_FUNCTION(SysGetpid,              SysGetpid),
+    REXX_CLASSIC_ROUTINE(SysAddFuncPkg,          SysAddFuncPkg),
+    REXX_CLASSIC_ROUTINE(SysAddCmdPkg,           SysAddCmdPkg),
+    REXX_CLASSIC_ROUTINE(SysDropFuncPkg,         SysDropFuncPkg),
+    REXX_CLASSIC_ROUTINE(SysDropCmdPkg,          SysDropCmdPkg),
+    REXX_CLASSIC_ROUTINE(SysGetpid,              SysGetpid),
 #endif
-    REXX_CLASSIC_FUNCTION(SysFork,                SysFork),
-    REXX_CLASSIC_FUNCTION(SysWait,                SysWait),
-    REXX_CLASSIC_FUNCTION(SysCreatePipe,          SysCreatePipe),
-    REXX_CLASSIC_FUNCTION(SysCls,                 SysCls),
-    REXX_CLASSIC_FUNCTION(SysDropFuncs,           SysDropFuncs),
-    REXX_CLASSIC_FUNCTION(SysFileDelete,          SysFileDelete),
-    REXX_CLASSIC_FUNCTION(SysFileSearch,          SysFileSearch),
-    REXX_CLASSIC_FUNCTION(SysFileTree,            SysFileTree),
-    REXX_CLASSIC_FUNCTION(SysGetKey,              SysGetKey),
-    REXX_CLASSIC_FUNCTION(SysGetMessage,          SysGetMessage),
-    REXX_CLASSIC_FUNCTION(SysGetMessageX,         SysGetMessageX),
-    REXX_CLASSIC_FUNCTION(SysLoadFuncs,           SysLoadFuncs),
-    REXX_CLASSIC_FUNCTION(SysMkDir,               SysMkDir),
+    REXX_CLASSIC_ROUTINE(SysFork,                SysFork),
+    REXX_CLASSIC_ROUTINE(SysWait,                SysWait),
+    REXX_CLASSIC_ROUTINE(SysCreatePipe,          SysCreatePipe),
+    REXX_CLASSIC_ROUTINE(SysCls,                 SysCls),
+    REXX_CLASSIC_ROUTINE(SysDropFuncs,           SysDropFuncs),
+    REXX_CLASSIC_ROUTINE(SysFileDelete,          SysFileDelete),
+    REXX_CLASSIC_ROUTINE(SysFileSearch,          SysFileSearch),
+    REXX_CLASSIC_ROUTINE(SysFileTree,            SysFileTree),
+    REXX_CLASSIC_ROUTINE(SysGetKey,              SysGetKey),
+    REXX_CLASSIC_ROUTINE(SysGetMessage,          SysGetMessage),
+    REXX_CLASSIC_ROUTINE(SysGetMessageX,         SysGetMessageX),
+    REXX_CLASSIC_ROUTINE(SysLoadFuncs,           SysLoadFuncs),
+    REXX_CLASSIC_ROUTINE(SysMkDir,               SysMkDir),
 #ifdef LINUX
-    REXX_CLASSIC_FUNCTION(SysLinVer,              SysLinVer),
+    REXX_CLASSIC_ROUTINE(SysLinVer,              SysLinVer),
 #endif
-    REXX_CLASSIC_FUNCTION(SysVersion,             SysVersion),
-    REXX_CLASSIC_FUNCTION(SysRmDir,               SysRmDir),
-    REXX_CLASSIC_FUNCTION(SysSearchPath,          SysSearchPath),
-    REXX_CLASSIC_FUNCTION(SysSleep,               SysSleep),
-    REXX_CLASSIC_FUNCTION(SysTempFileName,        SysTempFileName),
-    REXX_CLASSIC_FUNCTION(SysDumpVariables,       SysDumpVariables),
-    REXX_CLASSIC_FUNCTION(SysSetFileDateTime,     SysSetFileDateTime),
-    REXX_CLASSIC_FUNCTION(SysGetFileDateTime,     SysGetFileDateTime),
-    REXX_CLASSIC_FUNCTION(SysStemSort,            SysStemSort),
-    REXX_CLASSIC_FUNCTION(SysStemDelete,          SysStemDelete),
-    REXX_CLASSIC_FUNCTION(SysStemInsert,          SysStemInsert),
-    REXX_CLASSIC_FUNCTION(SysStemCopy,            SysStemCopy),
-    REXX_CLASSIC_FUNCTION(SysQueryProcess,        SysQueryProcess),
-    REXX_CLASSIC_FUNCTION(SysGetErrortext,        SysGetErrortext),
-    REXX_CLASSIC_FUNCTION(SysUtilVersion,         SysUtilVersion),
-    REXX_CLASSIC_FUNCTION(SysIsFile,              SysIsFile),
-    REXX_CLASSIC_FUNCTION(SysIsFileDirectory,     SysIsFileDirectory),
-    REXX_CLASSIC_FUNCTION(SysIsFileLink,          SysIsFileLink),
+    REXX_CLASSIC_ROUTINE(SysVersion,             SysVersion),
+    REXX_CLASSIC_ROUTINE(SysRmDir,               SysRmDir),
+    REXX_CLASSIC_ROUTINE(SysSearchPath,          SysSearchPath),
+    REXX_CLASSIC_ROUTINE(SysSleep,               SysSleep),
+    REXX_CLASSIC_ROUTINE(SysTempFileName,        SysTempFileName),
+    REXX_CLASSIC_ROUTINE(SysDumpVariables,       SysDumpVariables),
+    REXX_CLASSIC_ROUTINE(SysSetFileDateTime,     SysSetFileDateTime),
+    REXX_CLASSIC_ROUTINE(SysGetFileDateTime,     SysGetFileDateTime),
+    REXX_CLASSIC_ROUTINE(SysStemSort,            SysStemSort),
+    REXX_CLASSIC_ROUTINE(SysStemDelete,          SysStemDelete),
+    REXX_CLASSIC_ROUTINE(SysStemInsert,          SysStemInsert),
+    REXX_CLASSIC_ROUTINE(SysStemCopy,            SysStemCopy),
+    REXX_CLASSIC_ROUTINE(SysQueryProcess,        SysQueryProcess),
+    REXX_CLASSIC_ROUTINE(SysGetErrortext,        SysGetErrortext),
+    REXX_CLASSIC_ROUTINE(SysUtilVersion,         SysUtilVersion),
+    REXX_CLASSIC_ROUTINE(SysIsFile,              SysIsFile),
+    REXX_CLASSIC_ROUTINE(SysIsFileDirectory,     SysIsFileDirectory),
+    REXX_CLASSIC_ROUTINE(SysIsFileLink,          SysIsFileLink),
 };
 
 RexxPackageEntry rexxutil_package_entry =
@@ -5953,7 +5949,7 @@ RexxPackageEntry rexxutil_package_entry =
     "4.0",                               // package information
     NULL,                                // no load/unload functions
     NULL,
-    rexxutil_functions,                  // the exported functions
+    rexxutil_routines,                   // the exported functions
     NULL                                 // no methods in this package
 };
 
