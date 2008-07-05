@@ -74,9 +74,6 @@ public:
     static void terminateInstance(InterpreterInstance *instance);
     static void getCurrentWorkingDirectory(char *);
 
-    static RexxString *extractDirectory(RexxString *file);
-    static RexxString *extractExtension(RexxString *file);
-    static RexxString *extractFile(RexxString *file);
     static RexxObject *popEnvironment(RexxActivation *context);
     static RexxObject *pushEnvironment(RexxActivation *context);
     static void restoreEnvironment(void *CurrentEnv);

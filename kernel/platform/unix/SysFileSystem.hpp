@@ -70,6 +70,8 @@
 
 #define NAME_BUFFER_LENGTH (MAXIMUM_PATH_LENGTH + MAXIMUM_FILENAME_LENGTH)
 
+class RexxString;
+
 class SysFileSystem
 {
 public:
@@ -94,6 +96,14 @@ public:
     static void  qualifyStreamName(char *unqualifiedName, char *qualifiedName, size_t bufferSize);
     static bool  findFirstFile(char *name);
     static bool  fileExists(char *name);
+    static bool  searchName(const char *name, const char *path, const char *extension, char *resolvedName);
+    static bool  checkCurrentFile(const char *name, char *resolvedName);
+    static bool  searchPath(const char *name, const char *path, const char *extension, char *resolvedName);
+    static bool  hasExtension(const char *name);
+    static bool  canonicalizeName(char *name);
+    static RexxString *extractDirectory(RexxString *file);
+    static RexxString *extractExtension(RexxString *file);
+    static RexxString *extractFile(RexxString *file);
 };
 
 #endif

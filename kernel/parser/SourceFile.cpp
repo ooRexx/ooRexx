@@ -84,6 +84,7 @@
 #include "LibraryDirective.hpp"
 #include "RequiresDirective.hpp"
 #include "PackageManager.hpp"
+#include "SysFileSystem.hpp"
 
 #define HOLDSIZE         60            /* room for 60 temporaries           */
 
@@ -320,9 +321,9 @@ void RexxSource::extractNameInformation()
         return;
     }
 
-    OrefSet(this, this->programDirectory, SystemInterpreter::extractDirectory(programName));
-    OrefSet(this, this->programExtension, SystemInterpreter::extractExtension(programName));
-    OrefSet(this, this->programFile, SystemInterpreter::extractFile(programName));
+    OrefSet(this, this->programDirectory, SysFileSystem::extractDirectory(programName));
+    OrefSet(this, this->programExtension, SysFileSystem::extractExtension(programName));
+    OrefSet(this, this->programFile, SysFileSystem::extractFile(programName));
 }
 
 

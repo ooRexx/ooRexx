@@ -51,6 +51,7 @@
 #include "ProtectedObject.hpp"
 #include "SystemInterpreter.hpp"
 #include "SysInterpreterInstance.hpp"
+#include "SysFileSystem.hpp"
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -70,73 +71,6 @@
 #endif
 
 #define CCHMAXPATH PATH_MAX+1
-
-
-/**
- * Extract directory information from a file name.
- *
- * @param file   The input file name.  If this represents a real source file,
- *               this will be fully resolved.
- *
- * @return The directory portion of the file name.  If the file name
- *         does not include a directory portion, then OREF_NULL is returned.
- */
-RexxString *SystemInterpreter::extractDirectory(RexxString *file)
-{
-    const char *pathName = file->getStringData();
-    const char *endPtr = pathName + file->getLength() - 1;
-
-    // scan backwards looking for a directory delimiter.  This name should
-    // be fully qualified, so we don't have to deal with drive letters
-    while (pathName < endPtr)
-    {
-        // find the first directory element?
-        if (*endPtr == '/')
-        {
-            // extract the directory information, including the final delimiter
-            // and return as a string object.
-            return new_string(pathName, endPtr - pathName + 1);
-        }
-        endPtr--;
-    }
-    return OREF_NULL;      // not available
-}
-
-
-/**
- * Extract extension information from a file name.
- *
- * @param file   The input file name.  If this represents a real source file,
- *               this will be fully resolved.
- *
- * @return The extension portion of the file name.  If the file
- *         name does not include an extension portion, then
- *         OREF_NULL is returned.
- */
-RexxString *SystemInterpreter::extractExtension(RexxString *file)
-{
-    const char *pathName = file->getStringData();
-    const char *endPtr = pathName + file->getLength() - 1;
-
-    // scan backwards looking for a directory delimiter.  This name should
-    // be fully qualified, so we don't have to deal with drive letters
-    while (pathName < endPtr)
-    {
-        // find the first directory element?
-        if (*endPtr == '/')
-        {
-            return OREF_NULL;    // found a directory portion before an extension...we're extensionless
-        }
-        // is this the extension dot?
-        else if (*endPtr == '.')
-        {
-            // return everything from the period on.  Keeping the period on is a convenience.
-            return new_string(endPtr);
-        }
-        endPtr--;
-    }
-    return OREF_NULL;      // not available
-}
 
 
 /**
@@ -167,9 +101,9 @@ RexxString *SysInterpreterInstance::resolveProgram(RexxString *_name, RexxString
 
     // if the file already has an extension, this dramatically reduces the number
     // of searches we need to make.
-    if (hasExtension(name))
+    if (SysFileSystem::hasExtension(name))
     {
-        if (searchName(name, searchPath.path, NULL, resolvedName))
+        if (SysFileSystem::searchName(name, searchPath.path, NULL, resolvedName))
         {
             return new_string(resolvedName);
         }
@@ -179,7 +113,7 @@ RexxString *SysInterpreterInstance::resolveProgram(RexxString *_name, RexxString
     // if we have a parent extension provided, use that in preference to any default searches
     if (parentExtension != NULL)
     {
-        if (searchName(name, searchPath.path, parentExtension, resolvedName))
+        if (SysFileSystem::searchName(name, searchPath.path, parentExtension, resolvedName))
         {
             return new_string(resolvedName);
         }
@@ -192,14 +126,14 @@ RexxString *SysInterpreterInstance::resolveProgram(RexxString *_name, RexxString
     {
         RexxString *ext = (RexxString *)searchExtensions->get(i);
 
-        if (searchName(name, searchPath.path, ext->getStringData(), resolvedName))
+        if (SysFileSystem::searchName(name, searchPath.path, ext->getStringData(), resolvedName))
         {
             return new_string(resolvedName);
         }
     }
 
     // The file may purposefully have no extension.
-    if (searchName(name, searchPath.path, NULL, resolvedName))
+    if (SysFileSystem::searchName(name, searchPath.path, NULL, resolvedName))
     {
         return new_string(resolvedName);
     }
@@ -208,319 +142,22 @@ RexxString *SysInterpreterInstance::resolveProgram(RexxString *_name, RexxString
 }
 
 
-/**
- * Test if a filename has an extension.
- *
- * @param name   The name to check.
- *
- * @return true if an extension was found on the file, false if there
- *         is no extension.
- */
-bool SysInterpreterInstance::hasExtension(const char *name)
-{
-    const char *endPtr = name + strlen(name) - 1
-
-    // scan backwards looking for a directory delimiter.  This name should
-    // be fully qualified, so we don't have to deal with drive letters
-    while (name < endPtr)
-    {
-        // find the first directory element?
-        if (*endPtr == '\\')
-        {
-            return false;        // found a directory portion before an extension...we're extensionless
-        }
-        // is this the extension dot?
-        else if (*endPtr == '.')
-        {
-            // return everything from the period on.  Keeping the period on is a convenience.
-            return true;
-        }
-        endPtr--;
-    }
-    return false;          // not available
-}
-
-
-/**
- * Do a search for a single variation of a filename.
- *
- * @param name      The name to search for.
- * @param directory A specific directory to look in first (can be NULL).
- * @param extension A potential extension to add to the file name (can be NULL).
- * @param resolvedName
- *                  The buffer used to return the resolved file name.
- *
- * @return true if the file was located.  A true returns indicates the
- *         resolved file name has been placed in the provided buffer.
- */
-bool SysInterpreterInstance::searchName(const char *name, const char *path, const char *extension, char *resolvedName)
-{
-    UnsafeBlock releaser;
-    // this is for building a temporary name
-    char       tempName[CCHMAXPATH + 2];
-
-    // construct the search name, potentially adding on an extension
-    strncpy(tempName, name, sizeof(tempName));
-    if (extension != OREF)
-    {
-        strncat(tempName, extension, sizeof(tempName));
-    }
-
-    // for each name, check in both the provided case and lower case.
-    for (int i = 0; i < 2; i++)
-    {
-        // check the file as is first
-        if (checkCurrentFile(tempName, resolvedName))
-        {
-            return true;
-        }
-
-        // we don't do path searches if there's directory information in the name
-        if (!hasDirectory(tempName))
-        {
-            // go search along the path
-            if (searchPath(tempName, path, resolvedName))
-            {
-                return true;
-            }
-        }
-        // try again in lower case
-        strlower(tempName);
-    }
-    return false;
-}
-
-
-/**
- * Try to locate a file using just the raw name passed in, as
- * opposed to searching along a path for the name.
- *
- * @param name   The name to use for the search.
- *
- * @return An RexxString version of the file name, iff the file was located. Returns
- *         OREF_NULL if the file did not exist.
- */
-bool SysInterpreterInstance::checkCurrentFile(const char *name, char *resolvedName)
-{
-    // validate that this is a name that can even be located.
-    size_t nameLength = strlen(name);
-
-    if (nameLength < 1 || NameLength > CCHMAXPATH)
-    {
-        return false;
-    }
-
-    // make a copy of the input name
-    strcpy(resolvedName, name);
-    // take care of any special conditions in the name structure
-    // a failure here means an invalid name of some sort
-    if (!canonicalizeName(resolvedName))
-    {
-        return false;
-    }
-
-    struct stat dummy;                   /* structure for stat system calls   */
-
-    // ok, if this exists, life is good.  Return it.
-    if (stat(resolvedName, &dummy))             /* look for file              */
-    {
-        return true;
-    }
-    // not found
-    return false;
-}
-
-
-/**
- * Do a path search for a file.
- *
- * @param name      The name to search for.
- * @param path      The search path to use.
- * @param resolvedName
- *                  A buffer used for returning the resolved name.
- *
- * @return Returns true if the file was located.  If true, the resolvedName
- *         buffer will contain the returned name.
- */
-bool SysInterpreterInstance::searchPath(const char *name, const char *path, char *resolvedName)
-{
-    // get an end pointer
-    const char *pathEnd = path + strlen(path);
-
-    /* For every dir in searchpath*/
-    for (const char *p = path, const char *q = strchr(p, ':'); p < pathEnd; p = q + 1, q = strchr(p, ':'))
-    {
-        // it's possible we've hit the end, in which case, point the delimiter marker past the end of the
-        // string
-        if (q == NULL)
-        {
-            q = pathEnd;
-        }
-        size_t sublength = q - p;
-
-        memcpy(resolvedName, p, sublength);
-        resolvedName[sublength] = '/';
-        resolvedName[sublength + 1] = '\0';
-        strncat(resolvedName, name, CCHMAXPATH)
-
-        // take care of any special conditions in the name structure
-        // a failure here means an invalid name of some sort
-        if (canonicalizeName(resolvedName))
-        {
-            if (!stat(resolvedName, &dummy))     /* If file is found,          */
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-
-/**
- * Process a file name to add the current working directory
- * or the home directory, as needed, then remove all of the
- * . and .. elements.
- *
- * @param name   The current working name.
- *
- * @return true if this was valid enough to normalize.
- */
-bool SysInterpreterInstance::canonicalizeName(char *name)
-{
-    // copy over the reduced form
-    strncpy(name, tempName, CCHMAXPATH);
-
-    // does it start with the user home marker?
-    if (name[0] == '~')
-    {
-        // this is the typical case.  This is a directory based off of
-        // the current users home directory.
-        if (name[1] == '/')
-        {
-
-            char tempName[CCHMAXPATH + 2];
-            // make a copy of the name
-            strncpy(tempName, name, CCHMAXPATH);
-            strcpy(name, getenv("HOME"));
-            // if we need a separator, add one
-            if (name[1] != '/')
-            {
-                strncat(name, "/", CCHMAXPATH);
-            }
-            strncat(name, tempName + 1, CCHMAXPATH);
-        }
-        else
-        {
-            // referencing a file in some other user's home directory.
-            // we need to extract the username and resolve that home directory
-            char tempName[CCHMAXPATH + 2];
-            char userName[CCHMAXPATH + 2];
-
-            // make a copy of the name
-            strncpy(tempName, name, CCHMAXPATH);
-            // look for the start of a directory
-            char *slash = strchr(tempName,'/');
-            // if there is a directory after the username, we need
-            // to copy just the name piece
-            if (!slash != NULL)
-            {
-                size_t nameLength = slash - tempName - 1;
-                memcpy(userName, tempName + 1, nameLength;
-                userName[nameLength] = '\0';
-            }
-            // all username, just copy
-            else
-            {
-                strcpy(userName, tempName + 1);
-            }
-
-            // see if we can retrieve the information
-            struct passwd *ppwd getpwnam(userName);
-            if (ppwd == NULL)
-            {
-                // this is not valid without user information, so just fail the operation
-                // if we can't get this.
-                return false;                    /* nothing happend            */
-            }
-
-            strncpy(name, ppwd->pw_dir, CCHMAXPATH);
-            // if we have a directory after the username, copy the whole thing
-            if (slash != NULL)
-            {
-                strncat(name, slash, CCHMAXPATH);
-            }
-        }
-    }
-
-    // if we're not starting with root, we need to add the
-    // current working directory.  This will also handle the
-    // "." and ".." cases, which will be removed by the canonicalization
-    // process.
-    else if (name[0] != '/')
-    {
-        char tempName[CCHMAXPATH + 2];
-        // make a copy of the name
-        strncpy(tempName, name, CCHMAXPATH);
-        getcwd(name, CCHMAXPATH);
-        strncat(name, "/", CCHMAXPATH);
-        strncat(name, tempName, CCHMAXPATH);
-    }
-
-    char *tempName = canonicalize_file_name(name);
-    if (tempName == NULL)
-    {
-        return false;
-    }
-    return true;
-}
-
-
-/**
- * Portable implementation of an ascii-z string to uppercase (in place).
- *
- * @param str    String argument
- *
- * @return The address of the str unput argument.
- */
-void strlower(char *str)
-{
-    while (*str)
-    {
-        *str = tolower(*str);
-        str++;
-    }
-
-    return;
-}
-
-
 void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
 /*******************************************************************/
 /* Function : Load the image into storage                          */
 /*******************************************************************/
 {
-    FILE *image = NULL;
-    const char *fullname;
-
-    fullname = searchFileName(BASEIMAGE, 'P');  /* PATH search         */
-
+    char fullname[CCHMAXPATH + 2];    // finally resolved name
+    // The file may purposefully have no extension.
+    if (!SysFileSystem::searchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
+    {
 #ifdef ORX_CATDIR
-    if ( fullname == OREF_NULL )
-    {
-        fullname = ORX_CATDIR"/rexx.img";
-    }
+         strcpy(fullname, ORX_CATDIR"/rexx.img");
+#else
+         logic_error("no startup image");   /* open failure                      */
 #endif
-
-    if ( fullname != OREF_NULL )
-    {
-        image = fopen(fullname, "rb");/* try to open the file              */
     }
-    else
-    {
-        logic_error("no startup image");   /* open failure                      */
-    }
-
+    FILE *image = fopen(fullname, "rb");/* try to open the file              */
     if ( image == NULL )
     {
         logic_error("unable to open image file");
@@ -586,52 +223,16 @@ RexxString *SystemInterpreter::qualifyFileSystemName(
 /* Function:  Qualify a stream name for this system                */
 /*******************************************************************/
 {
-   char nameBuffer[SysFileSystem::MaximumFileNameBuffer];
+    char nameBuffer[SysFileSystem::MaximumFileNameBuffer];
 
-                       /* clear out the block               */
-   memset(nameBuffer, 0, sizeof(nameBuffer));
-   SysFileSystem::qualifyStreamName(name->getStringData(), nameBuffer, sizeof(nameBuffer)); /* expand the full name              */
-                       /* uppercase this                    */
-   SysUtil::strupr(nameBuffer);
-                       /* get the qualified file name       */
-   return new_string(nameBuffer);
+    /* clear out the block               */
+    memset(nameBuffer, 0, sizeof(nameBuffer));
+    SysFileSystem::qualifyStreamName(name->getStringData(), nameBuffer, sizeof(nameBuffer)); /* expand the full name              */
+    /* uppercase this                    */
+    SysUtil::strupr(nameBuffer);
+    /* get the qualified file name       */
+    return new_string(nameBuffer);
 }
-
-bool SearchFirstFile(
-  const char *Name)                     /* name of file with wildcards       */
-{
-    return(0);
-}
-
-
-
-#if defined( FIONREAD )
-int SysPeekSTD(STREAM_INFO *stream_info)
-{
-  int c;
-
-  /* ioctl returns number of fully received bytes from keyboard, after        */
-  /* the Enter key has been hit. After the first byte has been read with      */
-  /* charin, ioctl returns '0'. stream_file->_cnt returns '0' until a first   */
-  /* charin has buffered input from STDIN. After that _cnt returns the num-   */
-  /* of still buffered characters. If new input arrives through STDIN, the    */
-  /* already buffered input is worked off, _cnt gets '0' and with that,       */
-  /* ioctl returns a non zero value. With the first charin, the logic repeats */
-
-  ioctl(stream_info->fh, FIONREAD, &c);
-#if defined( HAVE_FILE__IO_READ_PTR )
-  if ( (!c) && (!(stream_info->stream_file->_IO_read_ptr <
-      stream_info->stream_file->_IO_read_end)) )
-#elif defined( HAVE_FILE__CNT )
-  if( (!c) && (!stream_info->stream_file->_cnt) )
-#else
-  if ( !c ) /* not sure what to do here ? */
-#endif
-   return(0);
-  else
-   return(1);
-}
-#endif
 
 
 

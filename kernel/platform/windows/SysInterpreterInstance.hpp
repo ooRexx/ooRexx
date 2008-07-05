@@ -55,12 +55,7 @@ public:
     RexxString *resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension);
 
 protected:
-    bool hasExtension(const char *name);
     void addSearchExtension(const char *name);
-    bool searchName(const char *name, const char *path, const char *extension, char *resolvedName);
-    bool checkCurrentFile(const char *name, char *resolvedName);
-    bool searchPath(const char *name, const char *path, const char *extension, char *resolvedName);
-    void getLongName(char *fullName, size_t size);
 
     InterpreterInstance *instance;       // backlink to our instance container
 };

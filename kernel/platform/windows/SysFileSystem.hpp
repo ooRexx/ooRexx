@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                              SysThread.hpp     */
+/* REXX Kernel                                              SysFileSystem.hpp */
 /*                                                                            */
 /* System support for FileSystem operations.                                  */
 /*                                                                            */
@@ -47,6 +47,8 @@
 
 #include "windows.h"
 #include <stdio.h>
+
+class RexxString;
 
 class SysFileSystem
 {
@@ -71,6 +73,14 @@ public:
     static void  qualifyStreamName(const char *unqualifiedName, char *qualifiedName, size_t bufferSize);
     static bool  findFirstFile(const char *name);
     static bool  fileExists(const char *name);
+    static bool  hasExtension(const char *name);
+    static RexxString *extractDirectory(RexxString *file);
+    static RexxString *extractExtension(RexxString *file);
+    static RexxString *extractFile(RexxString *file);
+    static bool  searchName(const char *name, const char *path, const char *extension, char *resolvedName);
+    static bool  checkCurrentFile(const char *name, char *resolvedName);
+    static bool  searchPath(const char *name, const char *path, const char *extension, char *resolvedName);
+    static void  getLongName(char *fullName, size_t size);
 };
 
 #endif

@@ -43,7 +43,7 @@
 #ifndef Included_SysInterpreterInstance_hpp
 #define Included_SysInterpreterinstance_hpp
 
-class InterpreterInstance; 
+class InterpreterInstance;
 
 class SysInterpreterInstance
 {
@@ -53,14 +53,9 @@ public:
 
     void initialize(InterpreterInstance *i, RexxOption *options);
     RexxString *resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension);
-    static bool searchPath(const char *name, const char *path, const char *extension, char *resolvedName);
-    static bool searchName(const char *name, const char *path, const char *extension, char *resolvedName);
-    static bool checkCurrentFile(const char *name, char *resolvedName);
 
 protected:
-    bool hasExtension(const char *name);
     void addSearchExtension(const char *name);
-    bool canonicalizeName(char *name); 
 
     InterpreterInstance *instance;       // backlink to our instance container
 };
