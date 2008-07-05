@@ -357,7 +357,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
             {
                 /* run initialization exit           */
                 activity->callInitializationExit(this);
-                SysSetupProgram(this);         /* do any system specific setup      */
+                SystemInterpreter::setupProgram(this);         /* do any system specific setup      */
             }
             else
             {
@@ -428,8 +428,6 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
             instructionCount = 0;                /* no instructions yet               */
 #endif
             RexxInstruction *nextInst = this->next;  /* get the next instruction          */
-            SysClauseBoundary(this);             /* take one shot at clause stuff     */
-
             /* loop until we get a terminating   */
             while (nextInst != OREF_NULL)
             {      /* condition                         */
@@ -455,7 +453,6 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
                 nextInst->execute(this, localStack);  /* execute the instruction           */
                 localStack->clear();                  /* Force the stack clear             */
                 this->settings.timestamp.valid = false;
-                SysClauseBoundary(this);           /* process any required system stuff */
                                                    /* need to process inter-clause stuff*/
                 if (this->settings.flags&clause_boundary)
                 {

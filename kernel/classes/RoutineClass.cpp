@@ -834,7 +834,7 @@ RoutineClass *RoutineClass::restore(RXSTRING *inData, RexxString *name)
 RoutineClass *RoutineClass::fromFile(RexxString *filename)
 {
                                          /* load the program file             */
-    RexxBuffer *program_buffer = SysReadProgram(filename->getStringData());
+    RexxBuffer *program_buffer = SystemInterpreter::readProgram(filename->getStringData());
     if (program_buffer == OREF_NULL)     /* Program not found or read error?  */
     {
         /* report this                       */

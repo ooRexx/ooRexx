@@ -85,22 +85,4 @@ void SysDeregisterSignals(SYSEXCEPTIONBLOCK *);
 #ifndef SysThreadYield
 void SysThreadYield(void);             /* yield thread control              */
 #endif
-
-#ifndef SysReadProgram
-RexxBuffer *SysReadProgram (const char *); /* read a program into storage       */
-#endif
-
-#ifndef SysSetupProgram
-void SysSetupProgram(RexxActivation *);/* System specific program setup     */
-#endif
-
-#ifndef SysClauseBoundary
-                                       /* Do system clause boundary stuff   */
-void SysClauseBoundary(RexxActivation *);
-#endif
-
-#ifndef SysLoadImage
-void SysLoadImage(char **, size_t *);    /* load the image file               */
-#endif
-
 #endif

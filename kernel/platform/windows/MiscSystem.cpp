@@ -146,20 +146,22 @@ void SysRelinquish(void)
     }
 }
 
-void SysSetupProgram(
-  RexxActivation *activation)          /* current running program           */
+void SystemInterpreter::setupProgram(RexxActivation *activation)
 /******************************************************************************/
 /* Function:  Do system specific program setup                                */
 /******************************************************************************/
 {
-  TCHAR RxTraceBuf[8];
+    TCHAR RxTraceBuf[8];
 
-                                       /* scan current environment,         */
-  if (GetEnvironmentVariable("RXTRACE", RxTraceBuf, 8)) {
-    if (!stricmp(RxTraceBuf, "ON"))    /* request to turn on?               */
-                                       /* turn on tracing                   */
-      activation->setTrace(TRACE_RESULTS, DEBUG_ON);
-  }
+    /* scan current environment,         */
+    if (GetEnvironmentVariable("RXTRACE", RxTraceBuf, 8))
+    {
+        if (!stricmp(RxTraceBuf, "ON"))    /* request to turn on?               */
+        {
+                                           /* turn on tracing                   */
+            activation->setTrace(TRACE_RESULTS, DEBUG_ON);
+        }
+    }
 }
 
 

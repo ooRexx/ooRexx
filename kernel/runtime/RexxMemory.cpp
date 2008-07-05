@@ -823,7 +823,7 @@ void RexxMemory::restoreImage()
     int i;
 
     /* go load the image */
-    SysLoadImage(&image_buffer, &imagesize);
+    SystemInterpreter::loadImage(&image_buffer, &imagesize);
     /* get the relocation factor         */
     relocation = (size_t)image_buffer - sizeof(size_t);
     objectPointer = image_buffer;      /* address the start of the image    */

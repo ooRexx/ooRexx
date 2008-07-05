@@ -276,7 +276,7 @@ void RexxSource::initFile()
 /******************************************************************************/
 {
                                          /* load the program file             */
-    RexxBuffer *program_source = (RexxBuffer *)SysReadProgram(programName->getStringData());
+    RexxBuffer *program_source = (RexxBuffer *)SystemInterpreter::readProgram(programName->getStringData());
     if (program_source == OREF_NULL)     /* Program not found or read error?  */
     {
         /* report this                       */

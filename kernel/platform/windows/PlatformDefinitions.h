@@ -220,8 +220,6 @@ inline void SysDeregisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = false
 
 inline void SysRegisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
 inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
-                                       // in Windows, no EA's
-#define SysClauseBoundary(a)
 
 /******************************************************************************/
 /* OPTIONAL:  Finally, any other global defined constants for system specific */

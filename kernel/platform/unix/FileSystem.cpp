@@ -527,84 +527,89 @@ void strlower(char *str)
 }
 
 
-void SysLoadImage(char **imageBuffer, size_t *imageSize)
+void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
 /*******************************************************************/
 /* Function : Load the image into storage                          */
 /*******************************************************************/
 {
-  FILE *image = NULL;
-  const char *fullname;
-//RexxString * imgpath;
+    FILE *image = NULL;
+    const char *fullname;
 
-  fullname = SearchFileName(BASEIMAGE, 'P');  /* PATH search         */
+    fullname = SearchFileName(BASEIMAGE, 'P');  /* PATH search         */
 
 #ifdef ORX_CATDIR
-  if( fullname == OREF_NULL ) {
-      fullname = ORX_CATDIR"/rexx.img";
-  }
+    if ( fullname == OREF_NULL )
+    {
+        fullname = ORX_CATDIR"/rexx.img";
+    }
 #endif
 
-//  fullname = (char *)string_data(imgpath);
+    if ( fullname != OREF_NULL )
+    {
+        image = fopen(fullname, "rb");/* try to open the file              */
+    }
+    else
+    {
+        logic_error("no startup image");   /* open failure                      */
+    }
 
-//if ( imgpath && fullname )                         /* seg faultn          */
-  if ( fullname != OREF_NULL )
-    image = fopen(fullname, "rb");/* try to open the file              */
-  else
-    logic_error("no startup image");   /* open failure                      */
+    if ( image == NULL )
+    {
+        logic_error("unable to open image file");
+    }
 
-  if( image == NULL )
-      logic_error("unable to open image file");
-
-
-                                       /* Read in the size of the image     */
-  if(!fread(imageSize, 1, sizeof(size_t), image))
-    logic_error("could not check the size of the image");
-                                       /* Create new segment for image      */
-//memoryObject.newOldSegment(*imageSize);
-  *imageBuffer = (char *)memoryObject.allocateImageBuffer(*imageSize);
-                                       /* Create an object the size of the  */
-                                       /* image. We will be overwriting the */
-                                       /* object header.                    */
-//*imageBuffer = (char *)memoryObject.oldObject(*imageSize);
-                                       /* read in the image, store the      */
-                                       /* the size read                     */
-  if(!(*imageSize = fread(*imageBuffer, 1, *imageSize, image)))
-    logic_error("could not read in the image");
-  fclose(image);                       /* and close the file                */
+    /* Read in the size of the image     */
+    if (!fread(imageSize, 1, sizeof(size_t), image))
+    {
+        logic_error("could not check the size of the image");
+    }
+    /* Create new segment for image      */
+    *imageBuffer = (char *)memoryObject.allocateImageBuffer(*imageSize);
+    /* Create an object the size of the  */
+    /* image. We will be overwriting the */
+    /* object header.                    */
+    /* read in the image, store the      */
+    /* the size read                     */
+    if (!(*imageSize = fread(*imageBuffer, 1, *imageSize, image)))
+    {
+        logic_error("could not read in the image");
+    }
+    fclose(image);                       /* and close the file                */
 }
 
 
-RexxBuffer *SysReadProgram(
-  const char *file_name)               /* program file name                 */
+RexxBuffer *SystemInterpreter::readProgram(const char *file_name)
 /*******************************************************************/
 /* Function:  Read a program into a buffer                         */
 /*******************************************************************/
 {
-  FILE    *handle;                     /* open file access handle           */
-  size_t   buffersize;                 /* size of read buffer               */
-  {
-      handle = fopen(file_name, "rb");     /* open as a binary file             */
-      if (handle == NULL){                 /* open error?                       */
-        return OREF_NULL;                  /* return nothing                    */
-      }
+    FILE    *handle;                     /* open file access handle           */
+    size_t   buffersize;                 /* size of read buffer               */
+    {
+        handle = fopen(file_name, "rb");     /* open as a binary file             */
+        if (handle == NULL)
+        {                 /* open error?                       */
+            return OREF_NULL;                  /* return nothing                    */
+        }
 
-      if (fileno(handle) == (FOPEN_MAX - 2)){      /* open error?                       */
-        return OREF_NULL;                  /* return nothing                    */
-      }
+        if (fileno(handle) == (FOPEN_MAX - 2))
+        {      /* open error?                       */
+            return OREF_NULL;                  /* return nothing                    */
+        }
 
-      fseek(handle, 0, SEEK_END);          /* seek to the file end              */
-      buffersize = ftell(handle);          /* get the file size                 */
-      fseek(handle, 0, SEEK_SET);          /* seek back to the file beginning   */
-  }
-  RexxBuffer *buffer = new_buffer(buffersize);     /* get a buffer object               */
-  ProtectedObject p(buffer);
-  {
-      UnsafeBlock releaser;
+        fseek(handle, 0, SEEK_END);          /* seek to the file end              */
+        buffersize = ftell(handle);          /* get the file size                 */
+        fseek(handle, 0, SEEK_SET);          /* seek back to the file beginning   */
+    }
+    RexxBuffer *buffer = new_buffer(buffersize);     /* get a buffer object               */
+    ProtectedObject p(buffer);
+    {
+        UnsafeBlock releaser;
 
-      fread(buffer->getData(), 1, buffersize, handle);
-      fclose(handle);                      /* close the file                    */
-  }
-  return buffer;                       /* return the program buffer         */
+        fread(buffer->getData(), 1, buffersize, handle);
+        fclose(handle);                      /* close the file                    */
+    }
+    return buffer;                       /* return the program buffer         */
 }
 
 RexxString *SystemInterpreter::qualifyFileSystemName(

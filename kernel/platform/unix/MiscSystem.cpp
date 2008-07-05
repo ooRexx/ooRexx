@@ -147,8 +147,7 @@ void SystemInterpreter::validateAddressName(RexxString *name )
     }
 }
 
-void SysSetupProgram(
-                    RexxActivation *activation)          /* current running program           */
+void SystemInterpreter::setupProgram(RexxActivation *activation)
 /******************************************************************************/
 /* Function:  Do system specific program setup                                */
 /******************************************************************************/
@@ -157,7 +156,6 @@ void SysSetupProgram(
     char     *RxTraceBuf = NULL;
 
     /* scan current environment,         */
-/*if (GetEnvironmentVariable("RXTRACE", RxTraceBuf, 8)) {                   */
     RxTraceBuf = getenv("RXTRACE");
     if (RxTraceBuf)
     {
@@ -168,9 +166,7 @@ void SysSetupProgram(
 #endif
 }
 
-RexxString * SystemInerpreter::getSourceString(
-                                              RexxString * callType,               /* type of call token                */
-                                              RexxString * programName )           /* program name token                */
+RexxString * SystemInerpreter::getSourceString(RexxString * callType, RexxString * programName )
 /******************************************************************************/
 /* Function:  Produce a system specific source string                         */
 /******************************************************************************/
@@ -219,6 +215,3 @@ void SysDeregisterSignals(
 {
 }
 
-void SysClauseBoundary(RexxActivation *stub)
-{
-}

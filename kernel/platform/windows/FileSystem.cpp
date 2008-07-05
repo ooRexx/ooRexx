@@ -411,45 +411,49 @@ void SysInterpreterInstance::getLongName(char *fullName, size_t size)
   return;
 }
 
-void SysLoadImage(
+void SystemInterpreter::loadImage(
   char **imageBuffer,                  /* returned start of the image       */
   size_t *imageSize )                  /* size of the image                 */
 /*******************************************************************/
 /* Function:  Load the image into storage                          */
 /*******************************************************************/
 {
-  char      FullName[CCHMAXPATH + 2];  /* temporary name buffer             */
-  HANDLE    fileHandle;                /* open file access handle           */
-  DWORD     bytesRead;                 /* number of bytes read              */
+    char      FullName[CCHMAXPATH + 2];  /* temporary name buffer             */
+    HANDLE    fileHandle;                /* open file access handle           */
+    DWORD     bytesRead;                 /* number of bytes read              */
 
-  LPTSTR ppszFilePart=NULL;            // file name only in buffer
+    LPTSTR ppszFilePart=NULL;            // file name only in buffer
 
-  if ( !SearchPath(NULL,                // search default order
-          (LPCTSTR)BASEIMAGE,  // @ of filename
-          NULL,                // @ of extension, no default
-          CCHMAXPATH,          // len of buffer
-          (LPTSTR)FullName,    // buffer for found
-          &ppszFilePart) )
-    logic_error("no startup image");   /* can't find it                     */
+    if ( !SearchPath(NULL,                // search default order
+                     (LPCTSTR)BASEIMAGE,  // @ of filename
+                     NULL,                // @ of extension, no default
+                     CCHMAXPATH,          // len of buffer
+                     (LPTSTR)FullName,    // buffer for found
+                     &ppszFilePart) )
+    {
+        logic_error("no startup image");   /* can't find it                     */
+    }
 
-                       /* try to open the file              */
-  fileHandle = CreateFile(FullName, GENERIC_READ, FILE_SHARE_READ,
-                          NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
+    /* try to open the file              */
+    fileHandle = CreateFile(FullName, GENERIC_READ, FILE_SHARE_READ,
+                            NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
 
-  if (fileHandle == INVALID_HANDLE_VALUE)
-    logic_error("no startup image");   /* can't find it                     */
-                       /* Read in the size of the image     */
-  ReadFile(fileHandle, imageSize, sizeof(size_t), &bytesRead, NULL);
-  *imageBuffer = memoryObject.allocateImageBuffer(*imageSize);
-                       /* read in the image                 */
-  ReadFile(fileHandle, *imageBuffer, (DWORD)*imageSize, &bytesRead, NULL);
-  // set this to the actual size read.
-  *imageSize = bytesRead;
-  CloseHandle(fileHandle);                /* and close the file                */
+    if (fileHandle == INVALID_HANDLE_VALUE)
+    {
+        logic_error("no startup image");   /* can't find it                     */
+    }
+    /* Read in the size of the image     */
+    ReadFile(fileHandle, imageSize, sizeof(size_t), &bytesRead, NULL);
+    *imageBuffer = memoryObject.allocateImageBuffer(*imageSize);
+    /* read in the image                 */
+    ReadFile(fileHandle, *imageBuffer, (DWORD)*imageSize, &bytesRead, NULL);
+    // set this to the actual size read.
+    *imageSize = bytesRead;
+    CloseHandle(fileHandle);                /* and close the file                */
 }
 
-// retrofit by IH
-RexxBuffer *SysReadProgram(
+
+RexxBuffer *SystemInterpreter::readProgram(
   const char *file_name)               /* program file name                 */
 /*******************************************************************/
 /* Function:  Read a program into a buffer                         */
