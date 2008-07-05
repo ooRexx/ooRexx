@@ -36,96 +36,13 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
+/* REXX Kernel                                                                */
+/*                                                                            */
+/* list of REXX system-specific native methods.                               */
+/*                                                                            */
+/******************************************************************************/
 
-#include "RexxCore.h"
-#include "ExitHandler.hpp"
-#include "RexxActivity.hpp"
-#include "ActivityManager.hpp"
-#include "RexxInternalApis.h"
+//NOTE:  This file gets included multiple times to define different tables, so
+// it does not have standard #ifndef multiple include protections.
 
-
-/**
- * Call an exit
- *
- * @param activity   The current activity.
- * @param activation The top-most activation.
- * @param function   The exit major function code.
- * @param subfunction
- *                   The exit minor function code.
- * @param parms      The parameter block passed to the exit.
- *
- * @return The exit handler return code.
- */
-int ExitHandler::call(RexxActivity *activity, RexxActivation *activation, int function, int subfunction, void *parms)
-{
-    if (type == REGISTERED_NAME)
-    {
-        ExitHandlerDispatcher dispatcher(entryPoint, function, subfunction, parms);
-
-        // run this and give back the return code
-        activity->run(dispatcher);
-        return dispatcher.rc;
-    }
-    else
-    {
-        ContextExitHandlerDispatcher dispatcher(entryPoint, function, subfunction, parms);
-
-        // run this and give back the return code
-        activity->run(dispatcher);
-        return dispatcher.rc;
-    }
-}
-
-
-/**
- * Resolve a classic-style exit handler to the actual target
- * entry point address and invocation style.
- *
- * @param name   The registered exit name.
- */
-void ExitHandler::resolve(const char *name)
-{
-    RexxResolveExit(name, &entryPoint);
-    type = REGISTERED_NAME;
-}
-
-
-/**
- * Resolve a classic-style exit handler to the actual target
- * entry point address and invocation style.
- *
- * @param name   The registered exit name.
- */
-void ExitHandler::resolve(RexxContextExitHandler *handler)
-{
-    entryPoint = (REXXPFN)handler;
-    type = DIRECT;
-}
-
-
-
-/**
- * Process a callout to a system exit function.
- */
-void ExitHandlerDispatcher::run()
-{
-    RexxExitHandler *exit_address = (RexxExitHandler *)entryPoint;
-    rc = (int)(*exit_address)(major, minor, (PEXIT)parms);
-}
-
-
-
-/**
- * Process a callout to a system exit function.
- */
-void ContextExitHandlerDispatcher::run()
-{
-    RexxContextExitHandler *exit_address = (RexxContextExitHandler *)entryPoint;
-
-    ExitContext context;
-
-    // build a context pointer to pass out
-    activity->createExitContext(context, activation);
-
-    rc = (int)(*exit_address)(&context.threadContext, major, minor, (PEXIT)parms);
-}
+// Unix doesn't currently have any of these.

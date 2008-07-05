@@ -201,15 +201,15 @@ int Utilities::stricmp(const char *op1, const char *op2)
  * @return The compare result.  Returns 0, negative, or positive depending
  *         one the ordering compare result.
  */
-int Utilities::memicmp(void *mem1, void *mem2, size_t len)
+int Utilities::memicmp(const void *mem1, const void *mem2, size_t len)
 {
-    char *op1 = (char *)mem1;
-    char *op2 = (char *)mem2;
+    const char *op1 = (const char *)mem1;
+    const char *op2 = (const char *)mem2;
     while(len != 0)
     {
-        if (tolower(*((char *)op1)) != tolower(*((char *)op2)))
+        if (tolower(*op1) != tolower(*op2))
         {
-            return tolower(*((char *)op1)) - tolower(*((char *)op2));
+            return tolower(*op1) - tolower(*op2);
 
         }
         op1++;
@@ -217,7 +217,6 @@ int Utilities::memicmp(void *mem1, void *mem2, size_t len)
         len--;
     }
     return 0;
-
 }
 
 /**

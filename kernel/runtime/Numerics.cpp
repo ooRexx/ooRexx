@@ -135,7 +135,7 @@ RexxObject *Numerics::toObject(int64_t v)
 RexxObject *Numerics::toObject(uint64_t v)
 {
     // in the range for an integer object?
-    if (v <= MAX_WHOLENUMBER)
+    if (v <= (uint64_t)MAX_WHOLENUMBER)
     {
         return new_integer((stringsize_t)v);
     }

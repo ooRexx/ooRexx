@@ -720,7 +720,7 @@ void RexxActivity::raiseException(
     if (!this->raiseCondition(OREF_SYNTAX, OREF_NULL, OREF_NULL, OREF_NULL, OREF_NULL, conditionobj))
     {
         // get the traceback list so we can append to it was we unwind
-        RexxList *traceback = (RexxList *)conditionobj->get(OREF_TRACEBACK);
+        RexxList *_traceback = (RexxList *)conditionobj->get(OREF_TRACEBACK);
         /* fill in the propagation status    */
         conditionobj->put(TheTrueObject, OREF_PROPAGATED);
         // if we have an Rexx context to work with, unwind to that point, but adding the traceback
@@ -730,9 +730,7 @@ void RexxActivity::raiseException(
             unwindToFrame(activation);
             if (activation->getIndent() > MAX_TRACEBACK_LIST)
             {
-                // get the traceback list so we can append to it was we unwind
-                RexxList *traceback = (RexxList *)conditionobj->get(OREF_TRACEBACK);
-                traceback->addLast(new_string("     >...<"));
+                _traceback->addLast(new_string("     >...<"));
             }
             popStackFrame(activation);     // remove it from the stack
         }

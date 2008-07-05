@@ -43,7 +43,6 @@
 /******************************************************************************/
 
 #include "RexxCore.h"
-#include "ThreadSupport.hpp"
 #include "ActivityManager.hpp"
 #include <errno.h>
 
@@ -51,6 +50,18 @@
 
 #include "RexxCore.h"
 #include "SysThread.hpp"
+
+
+/**
+ * Top launcher function for spinning off a new activity. 
+ * 
+ * @param args   The thread arguments (just the pointer to the activity).
+ */
+void *threadFnc(void *args) 
+{
+    ((RexxActivity *)args)->runThread(); 
+    return NULL; 
+}
 
 /**
  * Close out any resources required by this thread descriptor.
@@ -108,7 +119,7 @@ void SysThread::create(RexxActivity *activity, size_t stackSize)
  #endif
     rc = pthread_attr_setstacksize(&newThreadAttr, stackSize);
                                                // Now create the thread
-    rc = pthread_create(&threadID, &newThreadAttr, threadFnc, (void *)activity);
+    rc = pthread_create(&threadId, &newThreadAttr, threadFnc, (void *)activity);
                                // Bumop thread count by one. Threadid
     if (rc != 0)
     {
@@ -123,7 +134,7 @@ void SysThread::create(RexxActivity *activity, size_t stackSize)
  *
  * @return The thread identifer for the current thread.
  */
-thread_id_t queryThreadID()
+thread_id_t SysThread::queryThreadID()
 {
     return (thread_id_t)pthread_self();      /* just call the correct function */
 }

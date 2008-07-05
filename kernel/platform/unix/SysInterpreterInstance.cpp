@@ -41,6 +41,7 @@
 /******************************************************************************/
 
 #include "InterpreterInstance.hpp"
+#include "SystemInterpreter.hpp"
 
 
 /**
@@ -69,9 +70,9 @@ void SysInterpreterInstance::addSearchExtension(const char *name)
 {
     // if the extension is not already in the extension list, add it
     RexxString *ext = new_string(name);
-    if (instance.searchExtensions->hasItem(ext) == TheFalseItem)
+    if (instance->searchExtensions->hasItem(ext) == TheFalseObject)
     {
-        instance.searchExtensions->append(ext);
+        instance->searchExtensions->append(ext);
     }
 }
 
@@ -86,10 +87,8 @@ void SysInterpreterInstance::addSearchExtension(const char *name)
  */
 SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
 {
-    char temp[4];             // this is just a temp buffer to check component sizes
-
     const char *sysPath = getenv("PATH");
-    const char *rexxPAth = getenv("REXXPATH");
+    const char *rexxPath = getenv("REXXPATH");
     size_t sysPathSize = sysPath == NULL ? 0 : strlen(sysPath);
     size_t rexxPathSize = rexxPath == NULL ? 0 : strlen(rexxPath);
     size_t parentSize = parentDir == NULL ? 0 : strlen(parentDir);
@@ -97,7 +96,7 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
 
 
     // enough room for separators and a terminating null
-    path = SystemInterpreter::allocateResultMemory(pathSize + parentSize + extensionSize + 16);
+    path = (char *)SystemInterpreter::allocateResultMemory(sysPathSize + rexxPathSize + parentSize + extensionSize + 16);
     *path = '\0';     // add a null character so strcat can work
     if (parentDir != NULL)
     {

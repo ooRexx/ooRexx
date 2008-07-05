@@ -59,7 +59,7 @@ public:
      void close();
      void post();
      void wait();
-     void wait(uint32_t);
+     bool wait(uint32_t);
      void reset();
      inline bool posted() { return postedCount != 0; }
 

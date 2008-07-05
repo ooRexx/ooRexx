@@ -46,10 +46,10 @@
 #include "StreamNative.hpp"
 #include "StreamCommandParser.h"
 #include "Utilities.hpp"
-#include <io.h>
 #include <fcntl.h>
-#include <share.h>
 #include <sys/stat.h>
+#include <string.h>
+#include <errno.h>
 
 /********************************************************************************/
 /*                                                                              */
@@ -538,7 +538,7 @@ const char *StreamInfo::openStd(const char *options)
  */
 const char *StreamInfo::handleOpen(const char *options)
 {
-    int oflag = O_BINARY;                  // we always open in binary mode
+    int oflag = RX_O_BINARY;                  // we always open in binary mode
 
     // reset the standard fields
     resetFields();
@@ -716,11 +716,11 @@ void StreamInfo::implicitOpen(int type)
     read_write = true;
     if (type == operation_nocreate)
     {
-        open(O_RDWR | O_BINARY, IREAD_IWRITE, SH_DENYRW);
+        open(O_RDWR | RX_O_BINARY, IREAD_IWRITE, RX_SH_DENYRW);
     }
     else
     {
-        open(RDWR_CREAT | O_BINARY, IREAD_IWRITE, SH_DENYRW);
+        open(RDWR_CREAT | RX_O_BINARY, IREAD_IWRITE, RX_SH_DENYRW);
     }
 
     // if there was an open error and we have the info to try again - doit
@@ -733,12 +733,12 @@ void StreamInfo::implicitOpen(int type)
         {
             // In Windows, all files are readable. Therefore S_IWRITE is
             // equivalent to S_IREAD | S_IWRITE.
-            open(O_WRONLY | O_BINARY, IREAD_IWRITE, SH_DENYRW);
+            open(O_WRONLY | RX_O_BINARY, IREAD_IWRITE, RX_SH_DENYRW);
             write_only = true;
         }
         else
         {
-            open(O_RDONLY | O_BINARY, S_IREAD, SH_DENYRW);
+            open(O_RDONLY | RX_O_BINARY, S_IREAD, RX_SH_DENYRW);
             read_only = true;
         }
 
@@ -999,7 +999,7 @@ void StreamInfo::completeLine(size_t writeLength)
     while (writeLength > 0)
     {
         size_t bytesWritten;
-        writeBuffer(buffer, min(writeLength, sizeof(buffer)), bytesWritten);
+        writeBuffer(buffer, writeLength < sizeof(buffer) ? writeLength : sizeof(buffer), bytesWritten);
         writeLength -= bytesWritten;
     }
 }
@@ -1328,11 +1328,11 @@ void StreamInfo::resetLinePositions()
  *
  * @return A string object containing the read characters.
  */
-RexxStringObject StreamInfo::charin(bool setPosition, int64_t position, size_t read_length)
+RexxStringObject StreamInfo::charin(bool _setPosition, int64_t position, size_t read_length)
 {
     readSetup();                        /* do needed setup                   */
     // given a position?...go set it.
-    if (setPosition)
+    if (_setPosition)
     {
        setCharReadPosition(position);
     }
@@ -1395,7 +1395,7 @@ RexxMethod3(RexxStringObject, stream_charin, CSELF, streamPtr, OPTIONAL_int64_t,
  *
  * @return The residual count on the write.
  */
-size_t StreamInfo::charout(RexxStringObject data, bool setPosition, int64_t position)
+size_t StreamInfo::charout(RexxStringObject data, bool _setPosition, int64_t position)
 {
     // no data given?  This is really a close operation.
     if (data == NULLOBJECT)
@@ -1403,7 +1403,7 @@ size_t StreamInfo::charout(RexxStringObject data, bool setPosition, int64_t posi
         // do the setup operations
         writeSetup();
         // if no position was specified, close this out
-        if (!setPosition)
+        if (!_setPosition)
         {
             close();
         }
@@ -1424,7 +1424,7 @@ size_t StreamInfo::charout(RexxStringObject data, bool setPosition, int64_t posi
     // and prepare for the write
     writeSetup();
     // set the output position to the new location, if given.
-    if (setPosition)
+    if (_setPosition)
     {
         setCharWritePosition(position);
     }
@@ -1475,7 +1475,7 @@ RexxMethod3(size_t, stream_charout, CSELF, streamPtr, OPTIONAL_RexxStringObject,
  *
  * @return A string object containing the read characters.
  */
-RexxStringObject StreamInfo::linein(bool setPosition, int64_t position, size_t count)
+RexxStringObject StreamInfo::linein(bool _setPosition, int64_t position, size_t count)
 {
     if (count != 1 && count != 0)       /* count out of range?               */
     {
@@ -1485,7 +1485,7 @@ RexxStringObject StreamInfo::linein(bool setPosition, int64_t position, size_t c
     // do read setup
     readSetup();
     // set a position if we have one
-    if (setPosition)
+    if (_setPosition)
     {
                                         /* set the proper position           */
         setLineReadPosition(position);
@@ -1670,10 +1670,10 @@ int64_t StreamInfo::lines(bool quick)
 
         // now calculate the number of lines in the stream from the size,
         // making sure we count any partial lines hanging off the end.
-        int64_t lines = currentSize / binaryRecordLength;
+        int64_t lineCount = currentSize / binaryRecordLength;
         if ((currentSize % binaryRecordLength) > 0)
         {
-            lines++;
+            lineCount++;
         }
 
         // get the current line position.  We don't need to fudge this...since
@@ -1681,12 +1681,11 @@ int64_t StreamInfo::lines(bool quick)
         int64_t currentLine = (charReadPosition - 1) / binaryRecordLength;
 
         // and return the delta count.
-        return lines - currentLine;
+        return lineCount - currentLine;
     }
     // non-binary persistent stream...these are a pain
     else
     {
-        int64_t lines = 0;               /* count of lines                    */
         int64_t currentSize = size();
 
         // if our read position is in no-man's land, this is zero
@@ -1822,7 +1821,7 @@ RexxMethod1(int64_t, stream_chars, CSELF, streamPtr)
  * @return 0 if everything worked.  All failures result in notready
  *         conditions, which throw an exception.
  */
-int StreamInfo::lineout(RexxStringObject data, bool setPosition, int64_t position)
+int StreamInfo::lineout(RexxStringObject data, bool _setPosition, int64_t position)
 {
     // nothing to process?
     if (data == NULLOBJECT)
@@ -1836,7 +1835,7 @@ int StreamInfo::lineout(RexxStringObject data, bool setPosition, int64_t positio
             completeLine(padding);
         }
         // not a line repositioning?  we need to close
-        if (!setPosition)
+        if (!_setPosition)
         {
             close();
         }
@@ -1854,7 +1853,7 @@ int StreamInfo::lineout(RexxStringObject data, bool setPosition, int64_t positio
 
     writeSetup();
     // set the position if needed
-    if (setPosition)
+    if (_setPosition)
     {
         setLineWritePosition(position);
     }
@@ -2023,9 +2022,9 @@ RexxMethod1(CSTRING, stream_flush, CSELF, streamPtr)
  */
 const char *StreamInfo::streamOpen(const char *options)
 {
-    int oflag = O_BINARY;               // we always open binary mode
+    int oflag = RX_O_BINARY;               // we always open binary mode
     int pmode = 0;                      /* and the protection mode           */
-    int shared = SH_DENYRW;             /* def. open is non shared           */
+    int shared = RX_SH_DENYRW;             /* def. open is non shared           */
 
     // if already open, make sure we close this
     if (isopen)
@@ -2106,17 +2105,17 @@ const char *StreamInfo::streamOpen(const char *options)
         };
 
         ParseAction OpenActionshared[] = {
-            ParseAction(SetItem, shared, SH_DENYNO),
+            ParseAction(SetItem, shared, RX_SH_DENYNO),
             ParseAction()
         };
 
         ParseAction OpenActionsharedread[] = {
-            ParseAction(SetItem, shared, SH_DENYWR),
+            ParseAction(SetItem, shared, RX_SH_DENYWR),
             ParseAction()
         };
 
         ParseAction OpenActionsharedwrite[] = {
-            ParseAction(SetItem, shared, SH_DENYRD),
+            ParseAction(SetItem, shared, RX_SH_DENYRD),
             ParseAction()
         };
 
@@ -2255,7 +2254,7 @@ const char *StreamInfo::streamOpen(const char *options)
         // printer).  Try opening again write only
         if (fileInfo.isDevice())
         {
-            if (!open(O_BINARY | WR_CREAT, S_IWRITE, shared))
+            if (!open(RX_O_BINARY | WR_CREAT, S_IWRITE, shared))
             {
                 char work[32];
 
@@ -2663,7 +2662,7 @@ int64_t StreamInfo::getLineSize()
  */
 int64_t StreamInfo::seekLinePosition(int64_t offset, int direction, int64_t &current_line, int64_t &current_position)
 {
-    int64_t newLinePosition;
+    int64_t newLinePosition = 0;
 
     switch (direction)
     {
@@ -3263,16 +3262,16 @@ int64_t StreamInfo::getStreamSize()
     // otherwise, we do this without a handle
     if (isopen)
     {
-        int64_t size;
-        fileInfo.getSize(size);
-        return size;
+        int64_t streamsize;
+        fileInfo.getSize(streamsize);
+        return streamsize;
     }
     else
     {
         resolveStreamName();
-        int64_t size;
-        fileInfo.getSize(qualified_name, size);
-        return size;
+        int64_t streamsize;
+        fileInfo.getSize(qualified_name, streamsize);
+        return streamsize;
     }
 }
 

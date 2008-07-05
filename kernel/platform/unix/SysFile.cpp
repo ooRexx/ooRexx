@@ -535,7 +535,7 @@ bool SysFile::puts(const char *data, size_t &len)
  *
  * @return A success/failure indicator.
  */
-bool SysFile::putLine(char *mybuffer, size_t len, size_t &bytesWritten)
+bool SysFile::putLine(const char *mybuffer, size_t len, size_t &bytesWritten)
 {
     // this could be a null line...don't try to write zero bytes
     if (len > 0)

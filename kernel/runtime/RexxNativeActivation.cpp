@@ -205,7 +205,7 @@ void RexxNativeActivation::reportStemError(size_t position, RexxObject *object)
  *                 The maximum argument count for the target.
  * @param maximumArgumentCount
  */
-void RexxNativeActivation::processArguments(size_t argcount, RexxObject **arglist, uint16_t *argumentTypes,
+void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_arglist, uint16_t *argumentTypes,
     ValueDescriptor *descriptors, size_t maximumArgumentCount)
 {
     size_t inputIndex = 0;            // no arguments used yet             */
@@ -295,11 +295,11 @@ void RexxNativeActivation::processArguments(size_t argcount, RexxObject **arglis
             // this is a real argument taken from the argument list
             default:                         /* still within argument bounds?     */
             {
-                if (inputIndex < argcount && arglist[inputIndex] != OREF_NULL)
+                if (inputIndex < _argcount && _arglist[inputIndex] != OREF_NULL)
                 {
                     // all of these arguments exist
                     descriptors[outputIndex].flags = ARGUMENT_EXISTS;
-                    RexxObject *argument = arglist[inputIndex];    /* get the next argument             */
+                    RexxObject *argument = _arglist[inputIndex];    /* get the next argument             */
                     switch (type)
                     {               /* process this type                 */
 
@@ -567,7 +567,7 @@ void RexxNativeActivation::processArguments(size_t argcount, RexxObject **arglis
         outputIndex++;                 /* step to the next argument         */
         argumentTypes++;               // and the next output position pointer
     }
-    if (inputIndex < argcount && !usedArglist)    /* extra, unwanted arguments?        */
+    if (inputIndex < _argcount && !usedArglist)    /* extra, unwanted arguments?        */
     {
                                          /* got too many                      */
         reportException(Error_Invalid_argument_maxarg, inputIndex);
@@ -587,15 +587,15 @@ void RexxNativeActivation::processArguments(size_t argcount, RexxObject **arglis
  */
 RexxArray *RexxNativeActivation::valuesToObject(ValueDescriptor *value, size_t count)
 {
-    RexxArray *result = new_array(count);
-    ProtectedObject p(result);
+    RexxArray *r = new_array(count);
+    ProtectedObject p(r);
 
     for (size_t i = 0; i < count; i++)
     {
         // convert each of the values in turn
-        result->put(valueToObject(value++), i);
+        r->put(valueToObject(value++), i);
     }
-    return result;
+    return r;
 }
 
 
@@ -723,9 +723,9 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
         case REXX_VALUE_POINTERSTRING:
         {
             // format this into a chracter string
-            char buffer[32];
-            sprintf(buffer, "0x%p", value->value.value_POINTER);
-            return new_string(buffer);
+            char temp[32];
+            sprintf(temp, "0x%p", value->value.value_POINTER);
+            return new_string(temp);
         }
 
         case 0:
@@ -1000,13 +1000,13 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
             /* force to a string value           */
             RexxString *string = o->stringValue();
 
-            void *pointer;
-            if (sscanf(string->getStringData(), "0x%p", &pointer) != 1)
+            void *pointerVal;
+            if (sscanf(string->getStringData(), "0x%p", &pointerVal) != 1)
             {
                 return false;
             }
 
-            value->value.value_POINTER = pointer;
+            value->value.value_POINTER = pointerVal;
             return true;
         }
 
@@ -1162,7 +1162,7 @@ void RexxNativeActivation::run(RexxMethod *_method, RexxNativeMethod *_code, Rex
  * @param count     The number of arguments.
  * @param resultObj The return value.
  */
-void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeRoutine *code, RexxString *functionName,
+void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeRoutine *_code, RexxString *functionName,
     RexxObject **list, size_t count, ProtectedObject &resultObj)
 {
     // anchor the context stuff
@@ -1178,7 +1178,7 @@ void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeR
     CallContext context;               // the passed out method context
 
     // sort out our active security manager
-    securityManager = code->getSecurityManager();
+    securityManager = _code->getSecurityManager();
     if (securityManager == OREF_NULL)
     {
         securityManager = activity->getInstanceSecurityManager();
@@ -1190,7 +1190,7 @@ void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeR
     context.threadContext.arguments = arguments;
 
     // get the entry point address of the target method
-    PNATIVEROUTINE methp = code->getEntry();
+    PNATIVEROUTINE methp = _code->getEntry();
 
     // retrieve the argument signatures and process them
     uint16_t *types = (*methp)((RexxCallContext *)&context, NULL);
@@ -1246,7 +1246,7 @@ void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeR
  * @param count      The number of arguments.
  * @param result     A protected object to receive the function result.
  */
-void RexxNativeActivation::callRegisteredRoutine(RoutineClass *_routine, RegisteredRoutine *code, RexxString *functionName,
+void RexxNativeActivation::callRegisteredRoutine(RoutineClass *_routine, RegisteredRoutine *_code, RexxString *functionName,
     RexxObject **list, size_t count, ProtectedObject &resultObj)
 {
     // anchor the context stuff
@@ -1262,7 +1262,7 @@ void RexxNativeActivation::callRegisteredRoutine(RoutineClass *_routine, Registe
 
 
     // get the entry point address of the target method
-    RexxRoutineHandler *methp = code->getEntry();
+    RexxRoutineHandler *methp = _code->getEntry();
 
     CONSTRXSTRING   arguments[MAX_NATIVE_ARGUMENTS];
     CONSTRXSTRING *argPtr = arguments;
@@ -1272,10 +1272,10 @@ void RexxNativeActivation::callRegisteredRoutine(RoutineClass *_routine, Registe
     // activation saved objects.
     if (count > MAX_NATIVE_ARGUMENTS)
     {
-        RexxBuffer *buffer = new_buffer(sizeof(CONSTRXSTRING) * count);
+        RexxBuffer *argBuffer = new_buffer(sizeof(CONSTRXSTRING) * count);
         // this keeps the buffer alive until the activation is popped.
-        createLocalReference(buffer);
-        argPtr = (CONSTRXSTRING *)buffer->getData();
+        createLocalReference(argBuffer);
+        argPtr = (CONSTRXSTRING *)argBuffer->getData();
     }
 
     // all of the arguments now need to be converted to string arguments
@@ -1724,13 +1724,13 @@ void *RexxNativeActivation::pointerString(RexxObject *object, size_t position)
     /* force to a string value           */
     RexxString *string = (RexxString *)object->stringValue();
 
-    void *pointer;
-    if (sscanf(string->getStringData(), "0x%p", &pointer) != 1)
+    void *pointerVal;
+    if (sscanf(string->getStringData(), "0x%p", &pointerVal) != 1)
     {
         reportException(Error_Invalid_argument_pointer, position + 1, string);
     }
 
-    return pointer;
+    return pointerVal;
 }
 
 
@@ -2031,8 +2031,6 @@ RexxObject *RexxNativeActivation::getReceiver()
  */
 SecurityManager *RexxNativeActivation::getSecurityManager()
 {
-    SecurityManager *manager = OREF_NULL;
-
     RexxSource *s = getSourceObject();
     if (s != OREF_NULL)
     {
@@ -2876,14 +2874,14 @@ RexxReturnCode RexxNativeActivation::copyValue(RexxObject * value, CONSTRXSTRING
  */
 RexxReturnCode RexxNativeActivation::copyValue(RexxObject * value, RXSTRING *rxstring, size_t *length)
 {
-    RexxString * stringValue;           /* converted object value            */
+    RexxString * stringVal;             /* converted object value            */
     stringsize_t string_length;         /* length of the string              */
     uint32_t     rc;                    /* return code                       */
 
     rc = 0;                             /* default to success                */
                                         /* get the string value              */
-    stringValue = value->stringValue();
-    string_length = stringValue->getLength();/* get the string length             */
+    stringVal = value->stringValue();
+    string_length = stringVal->getLength();/* get the string length             */
     // caller allowing use to allocate this?
     if (rxstring->strptr == NULL)
     {
@@ -2899,12 +2897,12 @@ RexxReturnCode RexxNativeActivation::copyValue(RexxObject * value, RXSTRING *rxs
     {
         rc = RXSHV_TRUNC;                      /* set truncated return code      */
                                                /* copy the short piece           */
-        memcpy(rxstring->strptr, stringValue->getStringData(), rxstring->strlength);
+        memcpy(rxstring->strptr, stringVal->getStringData(), rxstring->strlength);
     }
     else
     {
         /* copy entire string             */
-        memcpy(rxstring->strptr, stringValue->getStringData(), string_length);
+        memcpy(rxstring->strptr, stringVal->getStringData(), string_length);
         /* room for a null?               */
         if (rxstring->strlength > string_length)
         {
@@ -2931,13 +2929,13 @@ int RexxNativeActivation::stemSort(const char *stemname, int order, int type, si
     // currentActivity gets zeroed out.
     {
         /* get the REXX activation */
-        RexxActivation *activation = getRexxContext();
+        RexxActivation *contextActivation = getRexxContext();
 
         /* get the stem name as a string */
         RexxString *variable = new_string(stemname);
         ProtectedObject p1(variable);
         /* and get a retriever for this variable */
-        RexxStemVariable *retriever = (RexxStemVariable *)activation->getVariableRetriever(variable);
+        RexxStemVariable *retriever = (RexxStemVariable *)contextActivation->getVariableRetriever(variable);
 
         /* this must be a stem variable in order for the sorting to work. */
 

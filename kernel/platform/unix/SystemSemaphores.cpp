@@ -56,7 +56,7 @@
 #endif
 
 #include <sys/time.h>
-#include "PlatformDefinitions.h"
+#include "RexxCore.h"
 #include "SystemSemaphores.h"
 #include <errno.h>
 

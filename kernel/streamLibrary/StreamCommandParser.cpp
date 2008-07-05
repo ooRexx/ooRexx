@@ -84,14 +84,16 @@ bool StreamToken::nextToken()
     }
 
     // set the token start position
-    string = (char *)sourceData + offset;
+    string = (const char *)sourceData + offset;
     // else count the number of
     //characters in next token
     for (length = 0 ; sourceData[offset + length] != '\0'; length++   )
     {
         // contain a special character or blank?
         if (strchr("=+-< ", sourceData [offset + length]) != NULL)
+        {
             break;                      /* finished                          */
+        }
     }
     return true;                        /* return success                    */
 }

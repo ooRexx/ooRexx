@@ -85,7 +85,6 @@
 
 #include "SharedMemorySupport.h"                  /* system shared memory       */
 #include <string.h>                    /* to have the memset() func  */
-#include "RexxNativeAPI.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -232,7 +231,6 @@ int RxAPIStartUp(int chain)
         if ( ipckey == -1)                   /* No key error                   */
         {
             perror(" *E*  No key generated for shared memory.\n");
-            rexx_exception(Error_System_service);
             exit(-1);                         /* Stop anyway                    */
         }
 /* ipckey = ftok(getenv("HOME"),'r');    * generate a unique key          */
@@ -243,7 +241,6 @@ int RxAPIStartUp(int chain)
             if (opensem(&SemId,ipckey))         /* open the API semaphore     */
             {
                 perror(" *E* Open of API semaphore failed.\n");
-                rexx_exception(Error_System_service);
                 exit(-1);                       /* Stop anyway                    */
             }
         }
@@ -251,7 +248,6 @@ int RxAPIStartUp(int chain)
             if (semrc > 0 )                     /* error while create             */
         {
             fprintf(stderr," *E* No further API user possible!\n");
-            rexx_exception(Error_System_service);
             exit(-1);                       /* Stop anyway                     */
         }
     }
@@ -302,13 +298,11 @@ int RxAPIStartUp(int chain)
             if (ShmemId == -2)               /* system limit reached         */
         {
             fprintf(stderr," *E*  No further API user possible !\n");
-            rexx_exception(Error_System_service);
             exit(-1);                    /* Stop anyway                  */
         }
         if (ShmemId == -1)                /* open failed                  */
         {
             perror(" *E*  Open of the shared memory failed!\n");
-            rexx_exception(Error_System_service);
         }
         /* attach the anchor            */
         apidata =(REXXAPIDATA *)attachshmem(ShmemId);
@@ -344,7 +338,6 @@ int RxAPIStartUp(int chain)
             if ( ipckey == -1)                 /* No key error                    */
             {
                 perror(" *E*  No key generated for the shared memory");
-                rexx_exception(Error_System_service);
                 exit(-1);                      /* Stop anyway                       */
             }
             ShmemId = openshmem(ipckey, sizeof(REXXAPIDATA));/* get the ID */

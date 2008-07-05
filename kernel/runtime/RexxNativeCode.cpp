@@ -134,9 +134,9 @@ BaseCode *RexxNativeCode::setSourceObject(RexxSource *s)
     }
     else
     {
-        RexxNativeCode *copy = (RexxNativeCode *)this->copy();
-        OrefSet(copy, copy->source, s);
-        return copy;
+        RexxNativeCode *codeCopy = (RexxNativeCode *)this->copy();
+        OrefSet(codeCopy, codeCopy->source, s);
+        return codeCopy;
     }
 }
 

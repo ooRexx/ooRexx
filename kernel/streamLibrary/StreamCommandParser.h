@@ -43,6 +43,9 @@
 /******************************************************************************/
 #ifndef StreamCommandParser_Included
 #define StreamCommandParser_Included
+
+#include <cctype>
+#include "Utilities.hpp"
                                                 /* return code for gettoken at the end of input string */
 #define no_token  1
 
@@ -91,16 +94,16 @@ public:
     }
 
 
-    inline bool equals(char *token)
+    inline bool equals(const char *token)
     {
-        return memicmp(token, string, length) == 0;
+        return Utilities::memicmp(token, string, length) == 0;
     }
 
     inline bool atEnd() { return sourceData[offset] == '\0'; }
 
     inline bool toNumber(int64_t &num)
     {
-        int64_t offset = 0;
+        int64_t off = 0;
 
         /* convert string into long for later*/
         for (size_t i = 0; i < length; i++)
@@ -112,16 +115,16 @@ public:
                 return false;
             }
 
-            offset = (offset * 10) + (ch - '0');
+            off = (off * 10) + (ch - '0');
         }
-        num = offset;
+        num = off;
         return true;
     }
 
 
     inline bool toNumber(int &num)
     {
-        int offset = 0;
+        int off = 0;
 
         /* convert string into long for later*/
         for (size_t i = 0; i < length; i++)
@@ -133,9 +136,9 @@ public:
                 return false;
             }
 
-            offset = (offset * 10) + (ch - '0');
+            off = (off * 10) + (ch - '0');
         }
-        num = offset;
+        num = off;
         return true;
     }
 
@@ -159,7 +162,7 @@ class ParseAction;
 class TokenDefinition
 {
 public:
-    inline TokenDefinition(char *t, size_t l, ParseAction *a)
+    inline TokenDefinition(const char *t, size_t l, ParseAction *a)
     {
         token = t;
         minlength = l;
@@ -180,12 +183,12 @@ public:
     {
         return (*actionRoutine)(this, tokenizer, parms);
     }
-  char *token;                // token value
-  size_t minlength;           // minimum length for token to be a valid match with the input token
-  ParseAction *actions;       // token action definition
+    const char *token;                // token value
+    size_t minlength;           // minimum length for token to be a valid match with the input token
+    ParseAction *actions;       // token action definition
 
-  // the action routine for processing this token.
-  int (*actionRoutine)(TokenDefinition *, StreamToken &, void *);
+    // the action routine for processing this token.
+    int (*actionRoutine)(TokenDefinition *, StreamToken &, void *);
 };
 
                     /************************************************************************/

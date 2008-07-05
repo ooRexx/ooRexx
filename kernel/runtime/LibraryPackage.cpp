@@ -200,7 +200,7 @@ RexxPackageEntry *LibraryPackage::getPackageTable()
     loaded = true;
     // the try to resolve a package getting structure
     // resolve the function address
-    PFN entry = (PFN)lib.getProcedure("RexxGetPackage");
+    void *entry = lib.getProcedure("RexxGetPackage");
     if (entry == NULL)
     {
         // again, this is not an exception...this could just be

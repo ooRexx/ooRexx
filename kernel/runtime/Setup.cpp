@@ -138,7 +138,7 @@ void RexxMemory::createImage()
   ActivityManager::init();             /* Initialize the activity managers  */
   // Get an instance.  This also gives the root activity of the instance
   // the kernel lock.
-  InterpreterInstance *instance = Interpreter::createInterpreterInstance();
+  Interpreter::createInterpreterInstance();
   memoryObject.createStrings();        /* create all of the OREF_ strings   */
   // initializer for native libraries
   PackageManager::initialize();

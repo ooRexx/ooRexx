@@ -97,11 +97,11 @@ void RexxCompoundTail::buildTail(
   if (tailCount == 1)
   {
       /* get the tail value */
-      RexxObject *tail = tails[0]->getValue(dictionary);
+      RexxObject *_tail = tails[0]->getValue(dictionary);
       /* if it is an integer type, we might be able to address the string representation directly. */
-      if (isInteger(tail))
+      if (isInteger(_tail))
       {
-          RexxString *rep = ((RexxInteger *)tail)->getStringrep();
+          RexxString *rep = ((RexxInteger *)_tail)->getStringrep();
           if (rep != OREF_NULL)
           {
               /* point directly to the value       */
@@ -114,19 +114,19 @@ void RexxCompoundTail::buildTail(
           }
       }
       /* if this is directly a string, we can use this directly */
-      if (isString(tail))
+      if (isString(_tail))
       {
           /* point directly to the value       */
           /* and the length */
-          this->tail = ((RexxString *)tail)->getWritableData();
-          length = ((RexxString *)tail)->getLength();
+          this->tail = ((RexxString *)_tail)->getWritableData();
+          length = ((RexxString *)_tail)->getLength();
           remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
-          value = (RexxString *)tail;          /* save this reference in case we're asked for it later */
+          value = (RexxString *)_tail;         /* save this reference in case we're asked for it later */
           return;
       }
       /* some other type of object, or an integer without a string */
       /* rep.  We need to have it do the copy operation. */
-      tail->copyIntoTail(this);
+      _tail->copyIntoTail(this);
       length = current - this->tail;             /* set the final, updated length     */
   }
   else
@@ -154,11 +154,11 @@ void RexxCompoundTail::buildTail(
     if (tailCount == 1)
     {
         /* get the tail value */
-        RexxObject *tail = tails[0]->getValue(context);
+        RexxObject *_tail = tails[0]->getValue(context);
         /* if it is an integer type, we might be able to address the string representation directly. */
-        if (isInteger(tail))
+        if (isInteger(_tail))
         {
-            RexxString *rep = ((RexxInteger *)tail)->getStringrep();
+            RexxString *rep = ((RexxInteger *)_tail)->getStringrep();
             if (rep != OREF_NULL)
             {
                 /* point directly to the value       */
@@ -171,19 +171,19 @@ void RexxCompoundTail::buildTail(
             }
         }
         /* if this is directly a string, we can use this directly */
-        if (isString(tail))
+        if (isString(_tail))
         {
             /* point directly to the value       */
             /* and the length */
-            this->tail = ((RexxString *)tail)->getWritableData();
-            length = ((RexxString *)tail)->getLength();
+            this->tail = ((RexxString *)_tail)->getWritableData();
+            length = ((RexxString *)_tail)->getLength();
             remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
-            value = (RexxString *)tail;          /* save this reference in case we're asked for it later */
+            value = (RexxString *)_tail;         /* save this reference in case we're asked for it later */
             return;
         }
         /* some other type of object, or an integer without a string */
         /* rep.  We need to have it do the copy operation. */
-        tail->copyIntoTail(this);
+        _tail->copyIntoTail(this);
         length = current - this->tail;             /* set the final, updated length     */
     }
     else
@@ -230,16 +230,16 @@ void RexxCompoundTail::buildTail(
 
 
 void RexxCompoundTail::buildTail(
-    RexxString *tail)                        /* the single string index */
+    RexxString *_tail)                       /* the single string index */
 /******************************************************************************/
 /* Function:  Construct a tail from a single string index                     */
 /******************************************************************************/
 {
   /* point directly to the value       */
-  this->tail = tail->getWritableData();
-  length = tail->getLength();               /* and the length */
-  remainder = 0;                       /* belt and braces...this will force a reallocation if we append */
-  value = tail;                        /* save this reference in case we're asked for it later */
+  this->tail = _tail->getWritableData();
+  length = _tail->getLength();          /* and the length */
+  remainder = 0;                        /* belt and braces...this will force a reallocation if we append */
+  value = _tail;                        /* save this reference in case we're asked for it later */
 }
 
 
@@ -257,17 +257,17 @@ void RexxCompoundTail::buildTail(const char *t)
 
 
 void RexxCompoundTail::buildTail(
-    RexxString *tail, size_t index)                        /* the single string index */
+    RexxString *_tail, size_t index)                        /* the single string index */
 /******************************************************************************/
 /* Function:  Construct a tail from a string and an index                     */
 /******************************************************************************/
 {
     /* point directly to the value       */
-    if (tail->getStringData() != OREF_NULL)
+    if (_tail->getStringData() != OREF_NULL)
     {
-        tail->copyIntoTail(this);        /* add this to our tail              */
+        _tail->copyIntoTail(this);        /* add this to our tail              */
     }
-    length = length + tail->getLength();
+    length = length + _tail->getLength();
     length = length + Numerics::formatWholeNumber(index, current);
     current += length;
     remainder -= length;

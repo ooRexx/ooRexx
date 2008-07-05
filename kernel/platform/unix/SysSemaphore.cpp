@@ -60,7 +60,7 @@
 #endif
 
 #include <errno.h>
-#include "SysSemaphore.hpp"
+#include "RexxCore.h"
 
 
 /* ********************************************************************** */
@@ -152,20 +152,23 @@ void SysSemaphore::wait()
     pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
 }
 
-void SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
+bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
 {
     struct timespec timestruct;
     time_t *Tpnt = NULL;
 
+    int result = 0; 
     timestruct.tv_nsec = 0;
     timestruct.tv_sec = t/1000+time(Tpnt);    // convert to secs and abstime
     pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
     if (!this->postedCount)                   // Has it been posted?
     {
                                               // wait with timeout
-        pthread_cond_timedwait(&(this->semCond),&(this->semMutex),&timestruct);
+        result = pthread_cond_timedwait(&(this->semCond),&(this->semMutex),&timestruct);
     }
     pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
+    // a false return means this timed out 
+    return result != ETIMEDOUT; 
 }
 
 void SysSemaphore::reset()
