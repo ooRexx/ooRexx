@@ -94,8 +94,7 @@ public:
      void create();
      void createGuard();
      inline void open() { ; }
-     inline void close() { ; }
-     void clear();
+     void close();
      void post() { SetEvent(sem); };
      inline void wait()
      {
@@ -122,8 +121,7 @@ public:
      void create();
      void create(char *);
      void open(char *);
-     inline void close() { ; }
-     void clear();
+     void close();
      inline void request()
      {
          waitHandle(mutexMutex);
@@ -136,7 +134,7 @@ public:
 
      inline bool requestImmediate()
      {
-         return WaitForSingleObject(mutexMutex, 0) == WAIT_TIMEOUT;
+         return WaitForSingleObject(mutexMutex, 0) != WAIT_TIMEOUT;
      }
 
 protected:

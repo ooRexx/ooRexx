@@ -67,7 +67,7 @@ InterpreterInstance::InterpreterInstance()
 
     // this needs to be created and set
     terminationSem.create();
-    terminationSem.clear();
+    terminationSem.reset();
 
     // fill in the interface vectore
     context.instanceContext.functions = &interfaceVector;

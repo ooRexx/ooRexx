@@ -756,7 +756,7 @@ void ActivityManager::createLocks()
     kernelSemaphore.create();
     // this needs to be created and set
     terminationSem.create();
-    terminationSem.clear();
+    terminationSem.reset();
 }
 
 /**

@@ -135,8 +135,8 @@ void RexxActivity::runThread()
 
         dispatchMessage = OREF_NULL;       // we're done with the message object
 
-        runsem.clear();                    /* reset the run semaphore and the   */
-        guardsem.clear();                  /* guard semaphore                   */
+        runsem.reset();                    /* reset the run semaphore and the   */
+        guardsem.reset();                  /* guard semaphore                   */
 
         // try to pool this.  If the ActivityManager doesn't take, we go into termination mode
         if (!instance->poolActivity(this))
@@ -247,7 +247,7 @@ RexxActivity::RexxActivity(bool createThread)
 
     if (createThread)                    /* need to create a thread?          */
     {
-        runsem.clear();                  /* set the run semaphore             */
+        runsem.reset();                  /* set the run semaphore             */
                                          /* create a thread                   */
         currentThread.create(this, C_STACK_SIZE);
     }
@@ -1658,7 +1658,7 @@ void RexxActivity::waitReserve(
 /* Function:  Wait for a new run event to occur                               */
 /******************************************************************************/
 {
-    runsem.clear();                      /* clear the run semaphore           */
+    runsem.reset();                      /* clear the run semaphore           */
     this->waitingObject = resource;      /* save the waiting resource         */
     releaseAccess();                     /* release the kernel access         */
     runsem.wait();                       /* wait for the run to be posted     */
@@ -1689,7 +1689,7 @@ void RexxActivity::guardSet()
 /*            guard wait                                                      */
 /******************************************************************************/
 {
-    guardsem.clear();               /* set up for guard call             */
+    guardsem.reset();               /* set up for guard call             */
 }
 
 void RexxActivity::postRelease()

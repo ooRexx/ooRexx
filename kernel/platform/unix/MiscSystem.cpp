@@ -48,7 +48,7 @@
 /*                                                                   */
 /*********************************************************************/
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+    #include "config.h"
 #endif
 
 #include "RexxCore.h"
@@ -66,25 +66,25 @@
 #include <errno.h>
 
 #if defined( HAVE_SIGNAL_H )
-# include <signal.h>
+    #include <signal.h>
 #endif
 
 #if defined( HAVE_SYS_SIGNAL_H )
-# include <sys/signal.h>
+    #include <sys/signal.h>
 #endif
 
 #if defined( HAVE_SYS_LDR_H )
-# include <sys/ldr.h>
+    #include <sys/ldr.h>
 #endif
 
 #if defined( HAVE_FILEHDR_H )
-# include <filehdr.h>
+    #include <filehdr.h>
 #endif
 
 #include <dlfcn.h>
 
 #if defined( HAVE_SYS_UTSNAME_H )
-# include <sys/utsname.h>               /* get the uname() function   */
+    #include <sys/utsname.h>               /* get the uname() function   */
 #endif
 
 void RxExitClear(int);
@@ -111,6 +111,7 @@ RexxString *SystemInterpreter::getSystemName()
 #else
     return new_string("LINUX")
 #endif
+
 }
 
 
@@ -128,86 +129,48 @@ RexxString *SystemInterpreter::getSystemVersion()
 }
 
 
-void *SysLoadProcedure(
-  RexxPointer * LibraryHandle,         /* library load handle               */
-  RexxString  * Procedure)             /* required procedure name           */
-/******************************************************************************/
-/* Function:  Resolve a named procedure in a library                          */
-/******************************************************************************/
-{
-   void *load_address;
-   load_address = dlsym((void *)LibraryHandle->pointer(), Procedure->getStringData());
-   if (load_address == NULL)
-   {
-      reportException(Error_External_name_not_found_method, Procedure);
-   }
-   return load_address;
-}
-
-RexxPointer * SysLoadLibrary(
-     RexxString * Library)             /* required library name             */
-/******************************************************************************/
-/* Function:  Load a named library, returning the library handle              */
-/******************************************************************************/
-{
-  RexxString *result;
-  RexxString *tempresult;
-  void *plib;
-
-  result = (RexxString*) new_string("lib");
-  result = result->concatWithCstring(Library->getStringData());
-  result = result->concatWithCstring(ORX_SHARED_LIBRARY_EXT);
-  tempresult = (RexxString *)result->copy();
-
-  if (!(plib = dlopen(result->getStringData(), RTLD_LAZY )))
-  {
-     if (!(plib = dlopen(result->getStringData(), RTLD_LAZY )))
-     {
-        fprintf(stderr, " *** Error dlopen: %s\n", dlerror());
-        reportException(Error_Execution_library, tempresult);
-     }
-  }
-  return new_pointer(plib);
-}
-
 #define MAX_ADDRESS_NAME_LENGTH  250   /* maximum command environment name  */
 
-void SysValidateAddressName(
-  RexxString *Name )                   /* name to validate                  */
-/******************************************************************************/
-/* Function:  Validate an external address name                               */
-/******************************************************************************/
+
+/**
+ * Validate an external address name.
+ *
+ * @param Name   The name to validate
+ */
+void SystemInterpreter::validateAddressName(RexxString *name )
 {
-                                       /* name too long?                    */
-  if (Name->getLength() > MAX_ADDRESS_NAME_LENGTH)
-                                       /* go report an error                */
-    reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, Name);
+    /* name too long?                    */
+    if (name->getLength() > MAX_ADDRESS_NAME_LENGTH)
+    {
+        /* go report an error                */
+        reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, name);
+    }
 }
 
 void SysSetupProgram(
-  RexxActivation *activation)          /* current running program           */
+                    RexxActivation *activation)          /* current running program           */
 /******************************************************************************/
 /* Function:  Do system specific program setup                                */
 /******************************************************************************/
 {
 #ifdef RXTRACE_SUPPORT
-  char     *RxTraceBuf = NULL;
+    char     *RxTraceBuf = NULL;
 
-                                       /* scan current environment,         */
+    /* scan current environment,         */
 /*if (GetEnvironmentVariable("RXTRACE", RxTraceBuf, 8)) {                   */
-  RxTraceBuf = getenv("RXTRACE");
-  if (RxTraceBuf)
-  {
-    if (!stricmp(RxTraceBuf, "ON"))    /* request to turn on?               */
-                                       /* turn on tracing                   */
-      activation->setTrace(TRACE_RESULTS, DEBUG_ON);
-  }
+    RxTraceBuf = getenv("RXTRACE");
+    if (RxTraceBuf)
+    {
+        if (!stricmp(RxTraceBuf, "ON"))    /* request to turn on?               */
+                                           /* turn on tracing                   */
+            activation->setTrace(TRACE_RESULTS, DEBUG_ON);
+    }
 #endif
 }
 
 RexxString * SystemInerpreter::getSourceString(
-  RexxString * callType,               /* type of call token                */
-  RexxString * programName )           /* program name token                */
+                                              RexxString * callType,               /* type of call token                */
+                                              RexxString * programName )           /* program name token                */
 /******************************************************************************/
 /* Function:  Produce a system specific source string                         */
 /******************************************************************************/
@@ -230,12 +193,18 @@ RexxString * SystemInerpreter::getSourceString(
 }
 
 // these routines are NOPs
-void SysRegisterExceptions(SYSEXCEPTIONBLOCK *exception_info) { ; }
-void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *exception_info) { ; }
+void SysRegisterExceptions(SYSEXCEPTIONBLOCK *exception_info)
+{
+    ;
+}
+void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *exception_info)
+{
+    ;
+}
 
 
 void SysRegisterSignals(
-  SYSEXCEPTIONBLOCK *exception_info)   /* system specific exception info    */
+                       SYSEXCEPTIONBLOCK *exception_info)   /* system specific exception info    */
 /******************************************************************************/
 /* Function:   Establish exception handlers                                   */
 /******************************************************************************/
@@ -243,7 +212,7 @@ void SysRegisterSignals(
 }
 
 void SysDeregisterSignals(
-  SYSEXCEPTIONBLOCK *exception_info)   /* system specific exception info    */
+                         SYSEXCEPTIONBLOCK *exception_info)   /* system specific exception info    */
 /******************************************************************************/
 /* Function:   Clear out registered exception handlers                        */
 /******************************************************************************/

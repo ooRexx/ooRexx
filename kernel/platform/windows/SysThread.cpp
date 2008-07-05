@@ -64,6 +64,13 @@ DWORD WINAPI call_thread_function(void * arguments)
 }
 
 
+/**
+ * Create a real thread for the activity holding this
+ * item.
+ *
+ * @param activity  The activity we're creating on.
+ * @param stackSize The required stack size.
+ */
 void SysThread::create(RexxActivity *activity, size_t stackSize)
 {
     DWORD res;
@@ -73,6 +80,7 @@ void SysThread::create(RexxActivity *activity, size_t stackSize)
     {
         reportException(Error_System_service_service, "ERROR CREATING THREAD");
     }
+    threadId = res;
 }
 
 

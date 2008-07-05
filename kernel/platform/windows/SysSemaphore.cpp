@@ -52,7 +52,7 @@ void SysSemaphore::create()
 {
    if (sem == 0 )
    {
-       CreateEvent(NULL, true, true, NULL);
+       sem = CreateEvent(NULL, true, true, NULL);
    }
 }
 
@@ -60,11 +60,11 @@ void SysSemaphore::createGuard()
 {
    if (sem == 0 )
    {
-       CreateEvent(NULL, false, true, NULL);
+       sem = CreateEvent(NULL, false, true, NULL);
    }
 }
 
-void SysSemaphore::clear()
+void SysSemaphore::close()
 {
     if (sem != 0)
     {
@@ -98,7 +98,7 @@ void SysMutex::open(char *name)
     mutexMutex = OpenMutex(MUTEX_ALL_ACCESS, true, name);
 }
 
-void SysMutex::clear()
+void SysMutex::close()
 {
     if (mutexMutex != 0)
     {

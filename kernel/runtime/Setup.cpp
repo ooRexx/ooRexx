@@ -364,7 +364,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_LAST         ,TheArrayBehaviour, CPPM(RexxArray::lastRexx), 0);
   defineKernelMethod(CHAR_NEXT         ,TheArrayBehaviour, CPPM(RexxArray::nextRexx), A_COUNT);
   defineKernelMethod(CHAR_PREVIOUS     ,TheArrayBehaviour, CPPM(RexxArray::previousRexx), A_COUNT);
-  defineKernelMethod(CHAR_APPEND       ,TheArrayBehaviour, CPPM(RexxArray::append), 1);
+  defineKernelMethod(CHAR_APPEND       ,TheArrayBehaviour, CPPM(RexxArray::appendRexx), 1);
   defineKernelMethod(CHAR_MAKESTRING   ,TheArrayBehaviour, CPPM(RexxArray::makeString), 2);
   defineKernelMethod(CHAR_TOSTRING     ,TheArrayBehaviour, CPPM(RexxArray::toString), 2);
   defineKernelMethod(CHAR_ALLINDEXES   ,TheArrayBehaviour, CPPM(RexxArray::allIndexes), 0);

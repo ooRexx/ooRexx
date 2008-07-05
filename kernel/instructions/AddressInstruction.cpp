@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              AddressInstruction.c     */
+/* REXX Translator                                   AddressInstruction.cpp   */
 /*                                                                            */
 /* Primitive Address Parse Class                                              */
 /*                                                                            */
@@ -46,6 +46,7 @@
 #include "StringClass.hpp"
 #include "RexxActivation.hpp"
 #include "AddressInstruction.hpp"
+#include "SystemInterpreter.hpp"
 
 RexxInstructionAddress::RexxInstructionAddress(
   RexxObject *_expression,              /* variable address expression       */
@@ -106,43 +107,48 @@ void RexxInstructionAddress::execute(
 /* Function:  Execute a REXX LEAVE instruction                              */
 /****************************************************************************/
 {
-  RexxObject *result;                  /* expression evaluation result      */
-  RexxString *_command;                 /* command to be issued              */
+    RexxObject *result;                  /* expression evaluation result      */
+    RexxString *_command;                 /* command to be issued              */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-                                       /* is this an address toggle?        */
-  if (this->environment == OREF_NULL && this->expression == OREF_NULL) {
-    context->toggleAddress();          /* toggle the address settings       */
-    context->pauseInstruction();       /* do debug pause if necessary       */
-  }
-                                       /* have a constant address name?     */
-  else if (this->environment != OREF_NULL) {
-    if (this->command != OREF_NULL) {  /* actually the command form?        */
-                                       /* get the expression value          */
-      result = this->command->evaluate(context, stack);
-      _command = REQUEST_STRING(result);/* force to string form              */
-      context->traceResult(command);   /* trace if necessary                */
-                                       /* validate the address name         */
-      SysValidateAddressName(this->environment);
-                                       /* go process the command            */
-      context->command(_command, this->environment);
+    context->traceInstruction(this);     /* trace if necessary                */
+                                         /* is this an address toggle?        */
+    if (this->environment == OREF_NULL && this->expression == OREF_NULL)
+    {
+        context->toggleAddress();          /* toggle the address settings       */
+        context->pauseInstruction();       /* do debug pause if necessary       */
     }
-    else {                             /* just change the address           */
-                                       /* validate the address name         */
-      SysValidateAddressName(this->environment);
-                                       /* now perform the switch            */
-      context->setAddress(this->environment);
-      context->pauseInstruction();     /* do debug pause if necessary       */
+    /* have a constant address name?     */
+    else if (this->environment != OREF_NULL)
+    {
+        if (this->command != OREF_NULL)
+        {  /* actually the command form?        */
+           /* get the expression value          */
+            result = this->command->evaluate(context, stack);
+            _command = REQUEST_STRING(result);/* force to string form              */
+            context->traceResult(command);   /* trace if necessary                */
+                                             /* validate the address name         */
+            SystemInterpreter::validateAddressName(this->environment);
+            /* go process the command            */
+            context->command(_command, this->environment);
+        }
+        else
+        {                             /* just change the address           */
+                                      /* validate the address name         */
+            SystemInterpreter::validateAddressName(this->environment);
+            /* now perform the switch            */
+            context->setAddress(this->environment);
+            context->pauseInstruction();     /* do debug pause if necessary       */
+        }
     }
-  }
-  else {                               /* we have an ADDRESS VALUE form     */
-                                       /* get the expression value          */
-    result = this->expression->evaluate(context, stack);
-    _command = REQUEST_STRING(result); /* force to string form              */
-    context->traceResult(_command);    /* trace if necessary                */
-    SysValidateAddressName(_command);  /* validate the address name         */
-    context->setAddress(_command);     /* just change the address           */
-    context->pauseInstruction();       /* do debug pause if necessary       */
-  }
+    else
+    {                               /* we have an ADDRESS VALUE form     */
+                                    /* get the expression value          */
+        result = this->expression->evaluate(context, stack);
+        _command = REQUEST_STRING(result); /* force to string form              */
+        context->traceResult(_command);    /* trace if necessary                */
+        SystemInterpreter::validateAddressName(_command);  /* validate the address name         */
+        context->setAddress(_command);     /* just change the address           */
+        context->pauseInstruction();       /* do debug pause if necessary       */
+    }
 }
 

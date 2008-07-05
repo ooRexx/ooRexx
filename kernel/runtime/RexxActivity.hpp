@@ -271,7 +271,7 @@ typedef enum
    inline void        setNextWaitingActivity(RexxActivity *next) { this->nextWaitingActivity = next; }
    inline RexxActivity *getNextWaitingActivity() { return nextWaitingActivity; }
    inline void        waitKernel() { runsem.wait(); }
-   inline void        clearWait()  { runsem.clear(); }
+   inline void        clearWait()  { runsem.reset(); }
    inline size_t      getRandomSeed() { return randomSeed; }
    inline void setRandomSeed(size_t seed) { randomSeed = seed; };
    inline RexxString *getLastMessageName() { return lastMessageName; }

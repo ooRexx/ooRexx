@@ -117,62 +117,6 @@ RexxString *SystemInterpreter::getSystemVersion()
 }
 
 
-void *SysLoadProcedure(
-  RexxPointer * LibraryHandle,         /* library load handle               */
-  RexxString  * Procedure)             /* required procedure name           */
-/******************************************************************************/
-/* Function:  Resolve a named procedure in a library                          */
-/******************************************************************************/
-{
-  PFN     Function;                    /* resolved function address         */
-  HMODULE Handle;                      /* DLL module handle                 */
-  const char *Name;                    /* pointer to the module name        */
-
-
-  Name = Procedure->getStringData();   /* use the ASCII-Z form of this      */
-                                       /* get the module handle             */
-  Handle = (HMODULE)LibraryHandle->pointer();
-                                       /* try to get the function address   */
-  if ( !(Function =(PFN)GetProcAddress(Handle, Name)) )
-                                       /* report an exception               */
-    reportException(Error_External_name_not_found_method, Procedure);
-  return (void *)Function;             /* return the pointer information    */
-}
-
-RexxPointer * SysLoadLibrary(
-     RexxString * Library)             /* required library name             */
-/******************************************************************************/
-/* Function:  Load a named library, returning the library handle              */
-/******************************************************************************/
-{
-  HMODULE Handle;                      /* DLL module handle                 */
-  const char *Name;                    /* pointer to the module name        */
-
-  Name = Library->getStringData();     /* use the ASCII-Z form of this      */
-                                       /* get the module handle             */
-  if ( Handle = GetModuleHandle( (LPCTSTR) Name) ) {
-                                       /* got it?  Now get ordinal 1        */
-                                       /* now load ordinal routine 1 to see */
-                                       /* if this has been loaded in this   */
-                                       /* process already                   */
-    if (GetProcAddress( Handle, (LPCSTR)(DWORD)1) )
-      return new_pointer(Handle);      /* return handle as an integer       */
-    else {                             /* not already loaded                */
-                                       /* try to load the module            */
-
-      if (Handle = LoadLibrary((LPCTSTR)Name))
-        return new_pointer(Handle);
-                                        /* return the new handle info        */
-    }
-  }
-                                       /* try to load the module             */
-  else if (!(Handle = LoadLibrary((LPCTSTR)Name)))
-                                       /* report an error                    */
-    reportException(Error_Execution_library, Library);
-  return new_pointer(Handle);          /* return the new handle info         */
-}
-
-
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   SysRelinquish                                */
@@ -317,17 +261,20 @@ int WinExceptionFilter( int xCode )
 
 #define MAX_ADDRESS_NAME_LENGTH  250   /* maximum command environment name  */
 
-void SysValidateAddressName(
-  RexxString *Name )                   /* name to validate                  */
-/******************************************************************************/
-/* Function:  Validate an external address name                               */
-/******************************************************************************/
+
+
+/**
+ * Validate an external address name.
+ *
+ * @param Name   The name to validate
+ */
+void SystemInterpreter::validateAddressName(RexxString *name )
 {
-                                         /* name too long?                    */
-    if (Name->getLength() > MAX_ADDRESS_NAME_LENGTH)
+    /* name too long?                    */
+    if (name->getLength() > MAX_ADDRESS_NAME_LENGTH)
     {
-                                         /* go report an error                */
-        reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, Name);
+        /* go report an error                */
+        reportException(Error_Environment_name_name, MAX_ADDRESS_NAME_LENGTH, name);
     }
 }
 

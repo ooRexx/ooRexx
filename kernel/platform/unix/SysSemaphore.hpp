@@ -56,8 +56,7 @@ public:
      void create();
      inline void createGuard() { create(); }
      inline void open() { ; }
-     inline void close() { ; }
-     void clear();
+     void close();
      void post();
      void wait();
      void wait(uint32_t);
@@ -76,10 +75,7 @@ public:
      ~SysMutex() { ; }
      void create();
      inline void open() { ; }
-     inline void create(char *) { create(); }
-     inline void open(char *) { ; }
-     inline void close();
-     void clear();
+     void close();
 #ifdef OPSYS_AIX43
      inline void request()
      {

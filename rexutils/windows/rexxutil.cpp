@@ -134,7 +134,6 @@
 *       SysSaveRexxMacroSpace  -- Save a Rexx macro space             *
 *       SysShutDownSystem   -- Shutdown the system                    *
 *       SysSwitchSession    -- Switch to a named session              *
-*       SysLoadLibrary      -- Load a function package                *
 *       SysDropLibrary      -- Drop a function package                *
 *       SysPi               -- Return Pi to given precision           *
 *       SysSqrt             -- Calculate a square root                *

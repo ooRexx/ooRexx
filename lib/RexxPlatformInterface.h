@@ -86,21 +86,6 @@ void SysDeregisterSignals(SYSEXCEPTIONBLOCK *);
 void SysThreadYield(void);             /* yield thread control              */
 #endif
 
-#ifndef SysLoadProcedure
-                                       /* load a named procedure            */
-void *SysLoadProcedure (RexxPointer *, RexxString *);
-#endif
-
-#ifndef SysLoadLibrary
-                                       /* load a named library              */
-RexxPointer * SysLoadLibrary (RexxString *);
-#endif
-
-#ifndef SysValidateAddressName
-                                       /* validate an address environment   */
-void SysValidateAddressName(RexxString *);
-#endif
-
 #ifndef SysReadProgram
 RexxBuffer *SysReadProgram (const char *); /* read a program into storage       */
 #endif
@@ -122,23 +107,6 @@ char *SysGetTempFileName(void);
 
 #ifndef SysLoadImage
 void SysLoadImage(char **, size_t *);    /* load the image file               */
-#endif
-
-/******************************************************************************/
-/* Priority values used for adjusting thead priorities                        */
-/******************************************************************************/
-
-
-#ifndef LOW_PRIORITY
-#define LOW_PRIORITY    0
-#endif
-
-#ifndef MEDIUM_PRIORITY
-#define MEDIUM_PRIORITY 100
-#endif
-
-#ifndef HIGH_PRIORITY
-#define HIGH_PRIORITY   200
 #endif
 
 #endif

@@ -115,7 +115,7 @@ void SysSemaphore::create()
     this->postedCount = 0;
 }
 
-void SysSemaphore::clear()
+void SysSemaphore::close()
 {
     pthread_cond_destroy(&(this->semCond));
     pthread_mutex_destroy(&(this->semMutex));

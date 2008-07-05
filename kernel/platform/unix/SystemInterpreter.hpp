@@ -97,6 +97,7 @@ public:
     static RexxString *getDefaultAddressName();
     static bool invokeExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
     static RexxObject *invokeHostCommand(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxString **);
+    static void validateAddressName(RexxString *name );
 
 };
 
