@@ -466,8 +466,8 @@ void StreamInfo::close()
 const char *StreamInfo::openStd(const char *options)
 {
     // first check for the standard io streams
-   if (!Utilities::stricmp(stream_name, "STDIN") ||
-       !Utilities::stricmp(stream_name,"STDIN:"))
+   if (!Utilities::strCaselessCompare(stream_name, "STDIN") ||
+       !Utilities::strCaselessCompare(stream_name,"STDIN:"))
    {
        // indicate this is stdin
        fileInfo.setStdIn();
@@ -475,8 +475,8 @@ const char *StreamInfo::openStd(const char *options)
        read_only = 1;
    }
 
-   else if (!Utilities::stricmp(stream_name,"STDOUT") ||
-            !Utilities::stricmp(stream_name,"STDOUT:"))
+   else if (!Utilities::strCaselessCompare(stream_name,"STDOUT") ||
+            !Utilities::strCaselessCompare(stream_name,"STDOUT:"))
    {
        // indicate this is stdout
        fileInfo.setStdOut();
@@ -492,7 +492,7 @@ const char *StreamInfo::openStd(const char *options)
    }
 
    // check to see if buffering is allowed.
-   if (options != NULL && !Utilities::stricmp(options, "NOBUFFER"))
+   if (options != NULL && !Utilities::strCaselessCompare(options, "NOBUFFER"))
    {
        nobuffer = 1;
    }

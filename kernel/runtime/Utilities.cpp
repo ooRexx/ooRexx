@@ -176,7 +176,7 @@ const char *mempbrk(
  * @return The compare result.  Returns 0, negative, or positive depending
  *         one the ordering compare result.
  */
-int Utilities::stricmp(const char *op1, const char *op2)
+int Utilities::strCaselessCompare(const char *op1, const char *op2)
 {
     while (tolower(*op1) == tolower(*op2))
     {

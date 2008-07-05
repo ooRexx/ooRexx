@@ -66,8 +66,6 @@
 /*                                                                            */
 /*                                                                            */
 /******************************************************************************/
-#define INCL_REXX_STREAM
-
 #include <stdlib.h>
 #include "RexxCore.h"
 #include "RexxActivity.hpp"

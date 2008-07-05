@@ -127,26 +127,6 @@
 typedef int SYSEXCEPTIONBLOCK;
 
 /******************************************************************************/
-/* REQUIRED:  Define the REXX type for a "thread function" that starts off    */
-/* a new thread.                                                              */
-/******************************************************************************/
-
-typedef void *(* PTHREADFN)(void *);    /* define a thread function          */
-
-/******************************************************************************/
-/* REQUIRED:  Routine to start a new TimeSlice period.                        */
-/******************************************************************************/
-
-void SysStartTimeSlice( void );
-
-/******************************************************************************/
-/* REQUIRED:  Routine to alloc memory passed to external environments         */
-/******************************************************************************/
-
-#define SysAllocateExternalMemory(s) malloc((s))
-#define SysFreeExternalMemory(p) free((p))
-
-/******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */
 /******************************************************************************/
 
@@ -174,12 +154,6 @@ inline char **getEnvironment()
 #endif
 
 /******************************************************************************/
-/* REQUIRED:  Define the macro to call the line_write_function                */
-/******************************************************************************/
-
-#define line_write(b,c) fwrite(b,1,c,stream_info->stream_file)
-
-/******************************************************************************/
 /* REQUIRED:  Define the name of the image file that is saved and restored.   */
 /******************************************************************************/
 
@@ -193,64 +167,9 @@ inline char **getEnvironment()
 #define BASEIMAGELOAD "CoreClasses.orx" /* MHES 29122004 */
 
 /******************************************************************************/
-/* REQUIRED:  Define a name for the initialization semaphore.  If not required*/
-/* for your system, just make this any string.                                */
-/******************************************************************************/
-
-#define INIT_SEM_NAME "INIT_SEM"
-
-/******************************************************************************/
-/* Priority values used for adjusting thead priorities                        */
-/******************************************************************************/
-
-
-#ifdef AIX
-#define HIGH_PRIORITY   127
-#endif
-
-/******************************************************************************/
 /* REQUIRED:  Name of the file used to store the external message repository  */
 /******************************************************************************/
 #define REXXMESSAGEFILE    "rexx.cat"
-
-/******************************************************************************/
-/* REQUIRED:  Define any additional native methods that are to be accessed as */
-/* external REXX methods.                                                     */
-/******************************************************************************/
-
-#define SYSTEM_INTERNAL_METHODS() \
-   INTERNAL_METHOD(sysRxfuncadd) \
-   INTERNAL_METHOD(sysRxfuncdrop) \
-   INTERNAL_METHOD(sysRxfuncquery) \
-   INTERNAL_METHOD(sysBeep) \
-   INTERNAL_METHOD(sysFilespec) \
-   INTERNAL_METHOD(sysDirectory) \
-   INTERNAL_METHOD(sysSetLocal) \
-   INTERNAL_METHOD(sysEndLocal) \
-   INTERNAL_METHOD(function_queueExit)
-
-/******************************************************************************/
-/* REQUIRED:  Definitions for stream I/O.  Each should be tailored to the     */
-/* needs/quirks of the platform file systems.                                 */
-/* The following lines are examples from the OS/2 code.                       */
-/******************************************************************************/
-
-#ifdef INCL_REXX_STREAM                /* asking for file system stuff?     */
-/******************************************************************************/
-/* REQUIRED:  include whatever library system specific include files are      */
-/* needed.  If it is necessary to override any standard routines, do this     */
-/* here.                                                                      */
-/******************************************************************************/
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <unistd.h>
-#if defined(AIX)
-#include <usersec.h>
-#else
-#include <pwd.h>
-#endif
 
 /******************************************************************************/
 /* REQUIRED:  define the path delimiter and end of line information           */
@@ -260,19 +179,6 @@ inline char **getEnvironment()
 #define delimiter '/'
 #define line_end "\n"
 #define line_end_size 1
-
-/* adjust scan pointer */
-//#define adjust_scan_at_line_end()
-#endif
-
-
-#if defined(AIX) || defined(LINUX)
-  #define  OLDMETAVERSION       22     /* highest meta version number:                  */
-#else
-  #define  OLDMETAVERSION       30     // each platform should have it's own old meta version
-#endif
-
-#define OPT_CHAR  '-'                  /* Option char for UNIX               */
 
 /******************************************************************************/
 /* OPTIONAL:  Overrides for any functions defined in sysdef.h.  These         */
@@ -294,11 +200,6 @@ extern "C" {
 #endif
 
 #define REXXTIMESLICE 100              /* 100 milliseconds (1/10 second)    */
-                                       /* moved from olcrtmis.h             */
-#define stricmp(s1, s2) strcasecmp(s1, s2)
-                                       /* both functions can only be used   */
-                                       /* without a return value & radix=10 */
-#define _ultoa(val, str, radix)  sprintf(str, "%u", val)
 
 #include "APIDefinitions.h"
 

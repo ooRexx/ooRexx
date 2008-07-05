@@ -87,12 +87,6 @@
 #define TIMESLICE
 #define FIXEDTIMERS
 
-/* this symbol should be also defined using HIGHTID because of                */
-/* SetThreadPriority. This API needs the threads handle, not it's ID.         */
-/* Without the ThreadTable we don't get the handle so we have to store it     */
-/* within the Activity (in addition to the threads ID)                        */
-#define THREADHANDLE
-
 /******************************************************************************/
 /* OPTIONAL:  If the implementation enables external scripting support, then  */
 /* additional hand-shaking with an the exernal environment is enabled for     */
@@ -108,31 +102,7 @@
 
 typedef int SYSEXCEPTIONBLOCK;
 
-/******************************************************************************/
-/* REQUIRED:  Define the REXX type for a "thread function" that starts off    */
-/* a new thread.                                                              */
-/******************************************************************************/
-
-typedef void (* PTHREADFN)(void *);    /* define a thread function          */
-
 void SysRelinquish(void);              /* allow the system to run           */
-
-/* Windows needs a special line write function to check stdout output */
-size_t line_write_check(const char * , size_t, FILE * );
-
-/******************************************************************************/
-/* REQUIRED:  Routines to alloc memory passed to external environments        */
-/******************************************************************************/
-
-#define SysAllocateExternalMemory(s) GlobalAlloc(0, (s))
-#define SysFreeExternalMemory(p) GlobalFree((HGLOBAL)(p))
-
-
-/******************************************************************************/
-/* REQUIRED:  Define the macro to call the line_write_function                */
-/******************************************************************************/
-
-#define line_write(b,c) checked_line_write(b,c)
 
 /******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */
@@ -154,39 +124,9 @@ size_t line_write_check(const char * , size_t, FILE * );
 #define BASEIMAGELOAD "CoreClasses.orx"
 
 /******************************************************************************/
-/* REQUIRED:  Define a name for the initialization semaphore.  If not required*/
-/* for your system, just make this any string.                                */
-/******************************************************************************/
-
-#define INIT_SEM_NAME "INIT_SEM"
-
-/******************************************************************************/
 /* REQUIRED:  Name of the file used to store the external message repository  */
 /******************************************************************************/
 #define REXXMESSAGEFILE    "winatab.rc"
-
-
-#define SYSTEM_INTERNAL_METHODS() \
-   INTERNAL_METHOD(sysRxfuncadd) \
-   INTERNAL_METHOD(sysRxfuncdrop) \
-   INTERNAL_METHOD(sysRxfuncquery) \
-   INTERNAL_METHOD(sysBeep) \
-   INTERNAL_METHOD(sysSetLocal) \
-   INTERNAL_METHOD(sysEndLocal) \
-   INTERNAL_METHOD(sysDirectory) \
-   INTERNAL_METHOD(sysFilespec) \
-   INTERNAL_METHOD(sysMessageBox) \
-   INTERNAL_METHOD(function_queueExit)
-
-#ifdef INCL_REXX_STREAM                /* asking for file system stuff?     */
-/******************************************************************************/
-/* REQUIRED:  include whatever library system specific include files are      */
-/* needed.  If it is necessary to override any standard routines, do this     */
-/* here.                                                                      */
-/******************************************************************************/
-
-#include <sys\types.h>
-#include <sys\stat.h>
 
 /******************************************************************************/
 /* REQUIRED:  define the path delimiter and end of line information           */
@@ -196,10 +136,6 @@ size_t line_write_check(const char * , size_t, FILE * );
 #define delimiter '\\'
 #define line_end "\r\n"
 #define line_end_size 2
-                                       /* adjust scan pointer               */
-#define adjust_scan_at_line_end() if (*scan != '\0' && *scan == line_end[1]) scan++
-
-#endif
 
 /******************************************************************************/
 /* OPTIONAL:  Overrides for any functions defined in sysdef.h.  These         */
@@ -209,9 +145,6 @@ size_t line_write_check(const char * , size_t, FILE * );
 #define DEFRXSTRING 256                 /* Default RXSTRING return size      */
 
 #define SysThreadYield()
-
-#define SysAllocateHeap();             // no shared memory on windows yet
-#define SysReleaseHeap();              // no shared memory on windows yet
 
 extern bool HandleException;
                                        // our signal handling
@@ -240,13 +173,5 @@ inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
 
  extern bool HandleException;
  int WinExceptionFilter( int xCode );
-
-
-// Options character used for command line programs
-#define OPT_CHAR  '/'                  /* Option char for win                */
-
-#define  OLDMETAVERSION       29       /* highest meta version number:                  */
-
-
 #endif
 

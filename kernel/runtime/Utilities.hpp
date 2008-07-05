@@ -45,7 +45,7 @@
 class Utilities
 {
 public:
-    static int stricmp(const char *opt1, const char *opt2);
+    static int strCaselessCompare(const char *opt1, const char *opt2);
     static int memicmp(const void *opt1, const void *opt2, size_t len);
     static void strupper(char *str);
     static void strlower(char *str);

@@ -294,7 +294,7 @@ void RexxSource::initFile()
         // hashvalue is the length of the buffer
         memcpy(end, program_source->getData()+ (program_source->getLength()-3), 3);
         begin[9]=end[3]=0x00;
-        if (!stricmp("<![CDATA[",begin) && !stricmp("]]>",end))
+        if (!Utilities::strCaselessCompare("<![CDATA[",begin) && !Utilities::strCaselessCompare("]]>",end))
         {
             memcpy(program_source->getData(), "         ", 9);
             memcpy(program_source->getData() + (program_source->getLength() - 3), "   ", 3);

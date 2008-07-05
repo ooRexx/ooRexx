@@ -635,14 +635,14 @@ int  sys_command(const char *cmd, CMD_TYPE local_env_type)
      }
      strncpy(tmp, cmd, 6);
      tmp[6] = '\0';
-     if (!stricmp("unset ", tmp))
+     if (!Utilities::strCaselessCompare("unset ", tmp))
      {
         if (sys_process_export(cmd, &rc, UNSET_FLAG))
              return rc;
      }
      strncpy(tmp, cmd, 7);
      tmp[7] = '\0';
-     if (!stricmp("export ", tmp))
+     if (!Utilities::strCaselessCompare("export ", tmp))
      {
         if (sys_process_export(cmd, &rc, EXPORT_FLAG))
              return rc;

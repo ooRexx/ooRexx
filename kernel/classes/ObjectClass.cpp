@@ -1512,11 +1512,11 @@ RexxObject  *RexxObject::setMethod(
     if (option)
     {
         option = REQUIRED_STRING(option, ARG_THREE);
-        if (!stricmp("OBJECT",option->getStringData()))
+        if (!Utilities::strCaselessCompare("OBJECT",option->getStringData()))
         {
             // do nothing if OBJECT
         }
-        else if (!stricmp("FLOAT",option->getStringData()))
+        else if (!Utilities::strCaselessCompare("FLOAT",option->getStringData()))
         {
             // "FLOAT" makes option a NULL pointer, causing the old default behaviour on setMethod...
             option = OREF_NULL;
@@ -1845,7 +1845,7 @@ RexxObject  *RexxObject::defMethod(
         /* got an option? */
         if (option)
         {
-            if (!stricmp("OBJECT",option->getStringData()))
+            if (!Utilities::strCaselessCompare("OBJECT",option->getStringData()))
             {
                 targetClass = this->behaviour->getOwningClass();
             }

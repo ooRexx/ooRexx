@@ -158,7 +158,7 @@ void SystemInterpreter::setupProgram(RexxActivation *activation)
     RxTraceBuf = getenv("RXTRACE");
     if (RxTraceBuf)
     {
-        if (!stricmp(RxTraceBuf, "ON"))    /* request to turn on?               */
+        if (!Utilities::strCaselessCompare(RxTraceBuf, "ON"))    /* request to turn on?               */
                                            /* turn on tracing                   */
             activation->setTrace(TRACE_RESULTS, DEBUG_ON);
     }
