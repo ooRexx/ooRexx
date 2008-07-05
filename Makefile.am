@@ -415,6 +415,7 @@ classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/QueueClass.cpp \
                   $(build_classes_dir)/RelationClass.cpp \
                   $(build_classes_dir)/RoutineClass.cpp \
+                  $(build_classes_dir)/RexxQueueMethods.cpp \
                   $(build_classes_dir)/StackClass.cpp \
                   $(build_classes_dir)/StemClass.cpp \
                   $(build_classes_dir)/StringClass.cpp \

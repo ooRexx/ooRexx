@@ -41,6 +41,8 @@
 
 #ifndef AIXAPI_H_INCLUDED
 #define AIXAPI_H_INCLUDED
+
+#include "rexx.h"
 /***    Structure of Rexx API registration block (APIBLOCK) */
 
 #define USERLENGTH  8                  /* Length of saved user data  */

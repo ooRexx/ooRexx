@@ -659,14 +659,21 @@ static int callrexx(
 /*********************************************************************/
 static int rxstrfrmfile(FILE *file, PRXSTRING r, size_t size, PMEMORYBASE  memory_pool )             /* Memory pool for the read   */
 {
-  int    rc      = 0;
+    int    rc      = 0;
 
-  r->SLN = size;
-  if (size)                            /* if bytes to read           */
-    if ((r->SPT = (char*)malloc((size_t)size)) != NULL )
-      rc=file_read(file,(char *)(r->SPT),size); /*read the information*/
-    else rc = RXMACRO_NO_STORAGE;      /* error during allocation    */
-  return rc;                           /* return the error code      */
+    r->SLN = size;
+    if (size)                            /* if bytes to read           */
+    {
+        if ((r->SPT = (char*)malloc((size_t)size)) != NULL)
+        {
+            rc=file_read(file,(char *)(r->SPT),size); /*read the information*/
+        }
+        else
+        {
+            rc = RXMACRO_NO_STORAGE;      /* error during allocation    */
+        }
+    }
+    return rc;                           /* return the error code      */
 }
 
 /*********************************************************************/

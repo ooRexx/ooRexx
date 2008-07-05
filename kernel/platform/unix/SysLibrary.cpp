@@ -104,3 +104,18 @@ bool SysLibrary::load(
     return true;     // loaded successfully
 }
 
+
+/**
+ * Free a loaded library if the library is still loaded.
+ *
+ * @return True if we unloaded ok, false otherwise.
+ */
+bool SysLibrary::unload()
+{
+    if (libraryHandle != NULL)
+    {
+        dlclose(libraryHandle);           
+        return true; 
+    }
+    return false;
+}

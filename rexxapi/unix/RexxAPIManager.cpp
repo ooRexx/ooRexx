@@ -312,7 +312,7 @@ int RxAPIStartUp(int chain)
 
     attachall(chain);                      /*get all shared memory blocks*/
 
-    apidata->ThreadId=(thread_id_t)SysQueryThreadID();
+    apidata->ThreadId=(thread_id_t)pthread_self();     
     if (apidata->ThreadId!=(thread_id_t)-1)
     {/* if Rexx is up*/
         /*if no session queue exitsts */
@@ -1784,7 +1784,7 @@ void  RxExitClear(int sig)
         RxSubcomExitList();        /* remove process specific registrations*/
         locksem(apidata->rexxapisemaphore, 0);
         attachall(QUEUECHAIN);     /* get the queue memeory pool           */
-        if (SysQueryThreadID()!=(thread_id_t)-1) /* if Rexx is up                       */
+        if (pthread_self()!=(thread_id_t)-1) /* if Rexx is up                       */
             Queue_Detach(getpid());  /* remove the session queue             */
         detachall(QUEUECHAIN);     /* release the queue memory pool        */
 
@@ -1964,7 +1964,7 @@ void  RxExitClearNormal()
     RxSubcomExitList();        /* remove process specific registrations*/
     locksem(apidata->rexxapisemaphore, 0 );
     attachall(QUEUECHAIN);     /* get the queue memeory pool           */
-    if(SysQueryThreadID()!=(thread_id_t)-1) /* if Rexx is up                        */
+    if(pthread_self()!=(thread_id_t)-1) /* if Rexx is up                        */
       Queue_Detach(getpid());  /* remove the session queue             */
     detachall(QUEUECHAIN);     /* release the queue memory pool        */
 
