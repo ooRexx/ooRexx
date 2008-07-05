@@ -65,6 +65,7 @@
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 #include "PackageManager.hpp"
+#include "SysFileSystem.hpp"
 
 // restore a class from its
 // associated primitive behaviour
@@ -1563,7 +1564,7 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
     if (!objectReferenceOK(markObject))
     {
         /* Get a temporary file name for out */
-        outFileName = SysGetTempFileName();
+        outFileName = SysFileSystem::getTempFileName();
         /* Open the temp file for the dump. */
         outfile = fopen(outFileName,"wb");
         logMemoryCheck(outfile, "Found non Object at %p, being marked from %p\n",markObject, pMarkObject);
@@ -2093,7 +2094,7 @@ RexxObject *RexxMemory::checkSetOref(
         if (!inObjectStorage(setter))
         {      /* Is the setter object invalid      */
             allOK = false;                     /* No, just put out setters addr.    */
-            outFileName = SysGetTempFileName();/* Get a temporary file name for out */
+            outFileName = SysFileSystem::getTempFileName();/* Get a temporary file name for out */
             outfile = fopen(outFileName,"wb");
             logMemoryCheck(outfile, "The Setter object at %p is invalid...\n");
 
@@ -2102,7 +2103,7 @@ RexxObject *RexxMemory::checkSetOref(
         else if (value && (RexxBehaviour *)value != TheBehaviourBehaviour && (RexxBehaviour *)value != RexxBehaviour::getPrimitiveBehaviour(T_Behaviour) && !objectReferenceOK(value))
         {
             allOK = false;                     /* No, put out the info              */
-            outFileName = SysGetTempFileName();/* Get a temporary file name for out */
+            outFileName = SysFileSystem::getTempFileName();/* Get a temporary file name for out */
             outfile = fopen(outFileName,"wb");
             logMemoryCheck(outfile, "The Setter object at %p attempted to put a non object %p, at offset %p\n",setter, value, (char *)index - (char *)setter);
             logMemoryCheck(outfile, " A dump of the Setting object follows: \n");
@@ -2112,7 +2113,7 @@ RexxObject *RexxMemory::checkSetOref(
         else if (index >= (RexxObject **)((char *)setter + setter->getObjectSize()))
         {
             allOK = false;                     /* Yes, let them know                */
-            outFileName = SysGetTempFileName();/* Get a temporary file name for out */
+            outFileName = SysFileSystem::getTempFileName();/* Get a temporary file name for out */
             outfile = fopen(outFileName,"wb");
             logMemoryCheck(outfile, "The Setter object at %p has tried to store at offset, which is  outside his object range\n",setter, (char *)index - (char *)setter);
             logMemoryCheck(outfile, " A dump of the Setting object follows: \n");

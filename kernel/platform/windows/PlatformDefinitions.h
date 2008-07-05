@@ -223,9 +223,6 @@ inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
                                        // in Windows, no EA's
 #define SysClauseBoundary(a)
 
-#define SysGetTempFileName()  tmpnam(NULL)
-
-
 /******************************************************************************/
 /* OPTIONAL:  Finally, any other global defined constants for system specific */
 /* code usage.                                                                */

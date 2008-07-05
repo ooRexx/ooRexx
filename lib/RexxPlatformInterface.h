@@ -99,12 +99,6 @@ void SysSetupProgram(RexxActivation *);/* System specific program setup     */
 void SysClauseBoundary(RexxActivation *);
 #endif
 
-#ifndef SysGetTempFileName
-                                       /* Get a temporary file name for     */
-                                       /* debug dumps                       */
-char *SysGetTempFileName(void);
-#endif
-
 #ifndef SysLoadImage
 void SysLoadImage(char **, size_t *);    /* load the image file               */
 #endif

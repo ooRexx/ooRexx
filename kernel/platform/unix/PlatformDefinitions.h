@@ -283,8 +283,6 @@ inline char **getEnvironment()
 
 #define SysRelinquish()
 
-#define SysGetTempFileName()  tmpnam(NULL)
-
 /******************************************************************************/
 /* OPTIONAL:  Finally, any other global defined constants for system specific */
 /* code usage.                                                                */
