@@ -73,7 +73,7 @@ class RexxActivity;
 class SysThread
 {
 public:
-    inline SysThread() : threadId(0), hThread(NULL) { }
+    inline SysThread() : threadId(0) { }
     inline bool equals(thread_id_t t) { return threadId == t; }
     void terminate();
     void create(RexxActivity *activity, size_t stackSize);

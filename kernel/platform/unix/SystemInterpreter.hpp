@@ -81,7 +81,6 @@ public:
     static RexxObject *pushEnvironment(RexxActivation *context);
     static void restoreEnvironment(void *CurrentEnv);
     static RexxObject *buildEnvlist();
-    static void restoreEnvironment(void *);
     static RexxString *qualifyFileSystemName(RexxString *name);
     static void getCurrentTime(RexxDateTime *Date );
     static RexxString *getSystemName();
@@ -93,7 +92,6 @@ public:
     static void *allocateResultMemory(size_t);
     static RexxString *getMessageHeader(wholenumber_t code);
     static RexxString *getMessageText(wholenumber_t code);
-    static RexxString *getUserid();
     static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result);
     static RexxString *getDefaultAddressName();
     static bool invokeExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);

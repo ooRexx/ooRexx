@@ -115,7 +115,6 @@
 #else
 #define SysThreadYield()   sched_yield()
 #endif
-#include "ThreadSupport.hpp"
 #include "SystemSemaphores.h"
 
                              // semaphore definitions and init

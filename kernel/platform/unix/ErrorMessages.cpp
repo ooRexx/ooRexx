@@ -124,7 +124,7 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
                 {
                     sprintf(DataArea, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
                             REXXMESSAGEFILE, ORX_CATDIR);
-                    return new_string(&DataArea);
+                    return new_string(DataArea);
                 }
             }                                   /* retrieve message from repository  */
             message = catgets(catd, set_num, msgid, NULL);
@@ -136,7 +136,7 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
                 {
                     sprintf(DataArea, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
                             REXXMESSAGEFILE, ORX_CATDIR);
-                    return new_string(&DataArea);
+                    return new_string(DataArea);
                 }
                 else
                 {
@@ -160,7 +160,7 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
             }
             catclose(catd);                 /* close the catalog                 */
                                             /* convert and return the message    */
-            return new_string(&DataArea);
+            return new_string(DataArea);
         }
     }
     return OREF_NULL;                     /* no message retrieved              */
