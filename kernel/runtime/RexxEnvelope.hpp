@@ -53,6 +53,7 @@
 #define ObjectHasNonPrimitiveBehaviour(o) (((uintptr_t)(((RexxObject *)o)->behaviour)) & BEHAVIOUR_NON_PRIMITIVE)
 
 class RexxSmartBuffer;
+class RexxBuffer; 
 
 class RexxEnvelope : public RexxInternalObject
 {

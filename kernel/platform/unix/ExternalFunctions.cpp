@@ -76,7 +76,6 @@
 #include "RexxActivation.hpp"
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
-#include "RexxNativeAPI.h"                           /* Lot's of useful REXX macros    */
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
 #include "RexxAPIManager.h"
 #include "APIUtilities.h"
@@ -85,6 +84,7 @@
 #include "StringUtil.hpp"
 #include "SystemInterpreter.hpp"
 #include "PackageManager.hpp"
+#include "BufferClass.hpp"
 
 
 #define CMDBUFSIZE      1024                 /* Max size of executable cmd     */
@@ -263,7 +263,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
   const char *endPtr = name + nameLength;          /* point to last character           */
   const char *pathEnd = strrchr(name, '/');        /* find the last slash in Name       */
 
-  switch (toupper(*Option))              /* process each option               */
+  switch (toupper(*option))              /* process each option               */
   {
       case FILESPEC_PATH:                /* extract the path                  */
       {
@@ -271,7 +271,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
                                          /* up to and including last slash.   */
                                          /* else return OREF_NULLSTRING       */
          {
-             return context->newString(name, pathEnd - name + 1);
+             return context->NewString(name, pathEnd - name + 1);
          }
          else
          {
@@ -296,7 +296,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 
     default:                           /* unknown option                    */
                                        /* raise an error                    */
-      context->IncorrectCall();
+      context->InvalidRoutine(); 
       return NULLOBJECT;
   }
 }
@@ -327,7 +327,7 @@ bool SystemInterpreter::invokeExternalFunction(
       return true;
   }
                                        /* no luck try for a registered func */
-  if (PackageManager::callNativeFunction(activation, activity, target, arguments, argcount, result))
+  if (PackageManager::callNativeRoutine(activity, target, arguments, argcount, result))
   {
       return true;
   }
@@ -436,7 +436,7 @@ RexxObject *SystemInterpreter::buildEnvlist()
                                          /* allocating the new buffer  */
     newBuffer = new_buffer(size);        /* let's do it                */
                                          /* Get starting address of buf*/
-    New = newBuffer->address();
+    New = newBuffer->getData(); 
     ((ENVENTRY*)New)->size = size;       /* first write the size       */
     New +=4;                             /* update the pointer         */
                                          /* now write the curr dir     */
@@ -495,7 +495,7 @@ void SystemInterpreter::restoreEnvironment(
     current += 4;                        /* update the pointer         */
     if (chdir(current) == -1)             /* restore the curr dir       */
     {
-        rexx_exception1(Error_System_service_service, ooRexxString("ERROR CHANGING DIRECTORY"));
+        reportException(Error_System_service_service, "ERROR CHANGING DIRECTORY");
     }
     current += strlen(current);          /* update the pointer         */
     current++;                           /* jump over '\0'             */
@@ -548,7 +548,7 @@ void SystemInterpreter::restoreEnvironment(
         }
         if (putenv(current) == -1)
         {
-            rexx_exception1(Error_System_service_service, ooRexxString("ERROR RESTORING ENVIRONMENT VARIABLE"));
+            reportException(Error_System_service_service, "ERROR RESTORING ENVIRONMENT VARIABLE");
         }
         if (del)                            /* if there was an old entry  */
         {

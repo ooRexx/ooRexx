@@ -48,9 +48,9 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
-#include "RexxNativeAPI.h"
 #include "ProtectedObject.hpp"
 #include "SystemInterpreter.hpp"
+#include "SysInterpreterInstance.hpp"
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -95,7 +95,7 @@ RexxString *SystemInterpreter::extractDirectory(RexxString *file)
         {
             // extract the directory information, including the final delimiter
             // and return as a string object.
-            return new_string(pathName, endPtr = pathName + 1);
+            return new_string(pathName, endPtr - pathName + 1);
         }
         endPtr--;
     }
@@ -136,38 +136,6 @@ RexxString *SystemInterpreter::extractExtension(RexxString *file)
         endPtr--;
     }
     return OREF_NULL;      // not available
-}
-
-
-/**
- * Extract file nformation from a file name.
- *
- * @param file   The input file name.  If this represents a real source file,
- *               this will be fully resolved.
- *
- * @return The file portion of the file name.  If the file name
- *         does not include a directory portion, then the entire
- *         string is returned
- */
-RexxString *SystemInterpreter::extractDirectory(RexxString *file)
-{
-    const char *pathName = file->getStringData();
-    const char *endPtr = pathName + file->getLength() - 1;
-
-    // scan backwards looking for a directory delimiter.  This name should
-    // be fully qualified, so we don't have to deal with drive letters
-    while (pathName < endPtr)
-    {
-        // find the first directory element?
-        if (*endPtr == '\\')
-        {
-            // extract the directory information, including the final delimiter
-            // and return as a string object.
-            return new_string(endPtr);
-        }
-        endPtr--;
-    }
-    return file;     // this is all filename
 }
 
 
@@ -308,7 +276,7 @@ bool SysInterpreterInstance::searchName(const char *name, const char *path, cons
         }
 
         // we don't do path searches if there's directory information in the name
-        if (\hasDirectory(tempName))
+        if (!hasDirectory(tempName))
         {
             // go search along the path
             if (searchPath(tempName, path, resolvedName))
@@ -535,7 +503,7 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
     FILE *image = NULL;
     const char *fullname;
 
-    fullname = SearchFileName(BASEIMAGE, 'P');  /* PATH search         */
+    fullname = searchFileName(BASEIMAGE, 'P');  /* PATH search         */
 
 #ifdef ORX_CATDIR
     if ( fullname == OREF_NULL )

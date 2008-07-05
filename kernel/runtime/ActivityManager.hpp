@@ -41,7 +41,7 @@
 class RexxObjectTable;
 class RexxStack;
 class RexxCode;
-
+class RoutineClass; 
 
 class ActivityManager
 {

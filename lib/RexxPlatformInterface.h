@@ -51,11 +51,7 @@ class RexxString;
 class RexxInteger;
 class RexxActivity;
 class RexxActivation;
-class RoutineClass;
-class RexxDateTime;
 class RexxNativeActivation;
-class RexxBuffer;
-class RexxPointer;
 class ProtectedObject;
 
 #ifndef SysRelinquish
