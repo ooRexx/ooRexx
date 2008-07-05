@@ -80,6 +80,7 @@ public:
     static bool  checkCurrentFile(const char *name, char *resolvedName);
     static bool  searchPath(const char *name, const char *path, const char *extension, char *resolvedName);
     static void  getLongName(char *fullName, size_t size);
+    static bool  findFirstFile(const char *name);
 };
 
 #endif
