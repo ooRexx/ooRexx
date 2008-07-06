@@ -225,7 +225,8 @@ BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lPara
              BitBlt(dis->hDC, r.left, r.top, r.right, r.bottom, hDC, left, top, SRCCOPY);
           }
           /* this if has been added because of a violation error moving animated button dialogs a lot */
-          else if ((ULONG)addr->BmpTab[i].bmpFocusID+(ULONG)addr->BmpTab[i].bmpSelectID+(ULONG)addr->BmpTab[i].bitmapID+(ULONG)addr->BmpTab[i].bmpDisableID > 0)
+          else if ((ULONG_PTR)addr->BmpTab[i].bmpFocusID + (ULONG_PTR)addr->BmpTab[i].bmpSelectID +
+                   (ULONG_PTR)addr->BmpTab[i].bitmapID + (ULONG_PTR)addr->BmpTab[i].bmpDisableID > 0)
           {
              /* is the stretching activated? */
              if ((addr->BmpTab[i].Loaded & 0x0100) == 0x0100)
