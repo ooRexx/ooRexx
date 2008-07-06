@@ -65,6 +65,9 @@ public:
     inline thread_id_t getThreadID() { return threadId; }
 
     static thread_id_t queryThreadID();
+    static void relinquish();
+    // this is a nop on windows
+    static inline void yield() { }
 
 protected:
     thread_id_t   threadId;         // the thread identifier

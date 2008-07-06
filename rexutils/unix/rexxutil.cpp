@@ -2938,7 +2938,6 @@ size_t RexxEntry SysWaitEventSem(const char *name, size_t numargs, CONSTRXSTRING
     }
     APICLEANUP(MACROCHAIN);            /* release the shared resouces*/
     SysThreadYield();                  /* some time to register sig           */
-    SysThreadYield();                  /* some time to register sig           */
                                        /* while no success           */
     while(semop(apidata->rexxutilsems,&sem_lock,1) != 0 ){
       if((errno) && (errno != EAGAIN)){/* if there was a real error  */
@@ -3257,7 +3256,6 @@ size_t RexxEntry SysRequestMutexSem(const char *name, size_t numargs, CONSTRXSTR
             retstr->strlength = strlen(retstr->strptr);
             return VALID_ROUTINE;
           }
-          SysThreadYield();              /* free the processor           */
           SysThreadYield();              /* free the processor           */
                                          /* while no success           */
           while(semop(apidata->rexxutilsems,&sem_lock,1) != 0 ){

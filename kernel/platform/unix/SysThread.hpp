@@ -84,6 +84,16 @@ public:
     inline thread_id_t getThreadID() { return (thread_id_t)threadId; }
 
     static thread_id_t queryThreadID();
+    // the following os a NOP on unix platforms
+    static inline void reliniquish() { }
+    static inline void yield()
+    {
+#ifdef OPSYS_AIX41
+        pthread_yield();
+#else
+        sched_yield();
+#endif
+    }
 
 protected:
     pthread_t     threadId;         // the thread identifier

@@ -77,21 +77,9 @@
 RexxReturnCode REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
 #endif /*timeslice*/
 
-
-extern bool UseMessageLoop;  /* speciality for VAC++ */
-
-
 bool HandleException = true;           /* Global switch for Exception Handling */
 
 extern "C" {
-
-BOOL REXXENTRY RexxSetProcessMessages(BOOL onoff)
-{
-   bool old;
-   old = UseMessageLoop;
-   UseMessageLoop = (onoff != 0);
-   return old;
-}
 }
 
 

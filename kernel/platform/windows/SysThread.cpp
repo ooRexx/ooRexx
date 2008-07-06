@@ -91,7 +91,7 @@ void SysThread::create(RexxActivity *activity, size_t stackSize)
  */
 thread_id_t SysThread::queryThreadID()
 {
-    return (thread_id_t)GetCurrentThreadId();
+    return(thread_id_t)GetCurrentThreadId();
 }
 
 
@@ -116,5 +116,28 @@ void SysThread::useCurrentThread()
 char *SysThread::getStackBase(size_t stackSize)
 {
     size_t temp;
-    return (char *)&temp - stackSize;
+    return(char *)&temp - stackSize;
+}
+
+
+/**
+ * Have this thread reliniquish control
+ */
+void SysThread::relinquish()
+{
+    MSG msg;
+
+    /*  If there is a msg in the message queue, dispatch it to the appropriate
+     *  window proc.
+     */
+
+    if (PeekMessage (&msg,   // message structure
+                     NULL,                  // handle of window receiving the message
+                     0,                     // lowest message to examine
+                     0,
+                     PM_REMOVE))            // highest message to examine
+    {
+        TranslateMessage(&msg);// Translates virtual key codes
+        DispatchMessage(&msg); // Dispatches message to window
+    }
 }

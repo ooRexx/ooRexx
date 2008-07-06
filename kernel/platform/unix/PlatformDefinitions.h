@@ -181,14 +181,6 @@ inline char **getEnvironment()
 #define line_end_size 1
 
 /******************************************************************************/
-/* OPTIONAL:  Overrides for any functions defined in sysdef.h.  These         */
-/* can map the calls directly to inline code or comment them out all together.*/
-/* The following lines are examples from the OS/2 code.                       */
-/******************************************************************************/
-
-#define SysRelinquish()
-
-/******************************************************************************/
 /* OPTIONAL:  Finally, any other global defined constants for system specific */
 /* code usage.                                                                */
 /******************************************************************************/

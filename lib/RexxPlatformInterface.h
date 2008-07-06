@@ -54,10 +54,6 @@ class RexxActivation;
 class RexxNativeActivation;
 class ProtectedObject;
 
-#ifndef SysRelinquish
-void SysRelinquish(void);              /* allow the system to run           */
-#endif
-
 #ifndef SysRegisterExceptions
                                        /* setup for exceptions              */
 void SysRegisterExceptions(SYSEXCEPTIONBLOCK *);

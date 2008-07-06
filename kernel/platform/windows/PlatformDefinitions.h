@@ -102,8 +102,6 @@
 
 typedef int SYSEXCEPTIONBLOCK;
 
-void SysRelinquish(void);              /* allow the system to run           */
-
 /******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */
 /******************************************************************************/
@@ -143,8 +141,6 @@ void SysRelinquish(void);              /* allow the system to run           */
 /******************************************************************************/
 
 #define DEFRXSTRING 256                 /* Default RXSTRING return size      */
-
-#define SysThreadYield()
 
 extern bool HandleException;
                                        // our signal handling

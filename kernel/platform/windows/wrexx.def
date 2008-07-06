@@ -57,12 +57,6 @@ RexxTranslateProgram           @24
 ;
 RexxCreateInterpreterImage     @94
 RexxGetCurrentPrecision        @95
-;
-; Windows Specific
-;
-RexxSetProcessMessages        @110
-
-; for feature 249
 
 RexxGetVersionInformation     @114
 RexxStemSort                  @124

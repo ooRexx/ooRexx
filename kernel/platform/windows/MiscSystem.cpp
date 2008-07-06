@@ -54,8 +54,6 @@
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 
-extern bool UseMessageLoop = false;
-
 extern "C" void activity_thread (RexxActivity *objp);
 
 unsigned int iClauseCounter=0;         // count of clauses
@@ -116,35 +114,6 @@ RexxString *SystemInterpreter::getSystemVersion()
     return new_string(chVerBuf);     /* return as a string                */
 }
 
-
-/*********************************************************************/
-/*                                                                   */
-/*   Subroutine Name:   SysRelinquish                                */
-/*                                                                   */
-/*   Function:          Performs peekmsg to yield to other processes */
-/*                                                                   */
-/*********************************************************************/
-
-void SysRelinquish(void)
-{
-    MSG msg;
-
-   /*  If there is a msg in the message queue, dispatch it to the appropriate
-    *  window proc.
-    */
-
-    if (!UseMessageLoop) return;
-
-    if (PeekMessage (&msg,   // message structure
-      NULL,                  // handle of window receiving the message
-      0,                     // lowest message to examine
-      0,
-      PM_REMOVE))            // highest message to examine
-    {
-      TranslateMessage(&msg);// Translates virtual key codes
-      DispatchMessage(&msg); // Dispatches message to window
-    }
-}
 
 void SystemInterpreter::setupProgram(RexxActivation *activation)
 /******************************************************************************/

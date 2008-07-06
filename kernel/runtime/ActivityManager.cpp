@@ -45,6 +45,7 @@
 #include "ProtectedObject.hpp"
 #include "InterpreterInstance.hpp"
 #include "RexxNativeActivation.hpp"
+#include "SysThread.hpp"
 
 // The currently active activity.
 RexxActivity *ActivityManager::currentActivity = OREF_NULL;
@@ -207,8 +208,8 @@ void ActivityManager::addWaitingActivity(
         {
             unlockKernel();
         }
-        SysThreadYield();                  /* yield the thread                  */
-        SysRelinquish();                   /* now allow system stuff to run     */
+        SysThread::yield();                /* yield the thread                  */
+        SysThread::relinquish();           /* now allow system stuff to run     */
         waitingAct->waitKernel();          /* and wait for permission           */
     }
     lockKernel();                        // get the kernel lock now
