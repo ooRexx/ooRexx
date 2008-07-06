@@ -77,7 +77,6 @@
 RexxReturnCode REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
 #endif /*timeslice*/
 
-bool HandleException = true;           /* Global switch for Exception Handling */
 
 extern "C" {
 }

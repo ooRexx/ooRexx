@@ -95,14 +95,6 @@
 #define SCRIPTING
 
 /******************************************************************************/
-/* REQUIRED:  Define the REXX type for exceptions.  These can be system       */
-/* specific exception registration info or any place holder type if this      */
-/* doesn't apply.                                                             */
-/******************************************************************************/
-
-typedef int SYSEXCEPTIONBLOCK;
-
-/******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */
 /******************************************************************************/
 
@@ -142,14 +134,6 @@ typedef int SYSEXCEPTIONBLOCK;
 
 #define DEFRXSTRING 256                 /* Default RXSTRING return size      */
 
-extern bool HandleException;
-                                       // our signal handling
-inline void SysRegisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = true; }
-inline void SysDeregisterSignals(SYSEXCEPTIONBLOCK *e) { HandleException = false; }
-
-inline void SysRegisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
-inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
-
 /******************************************************************************/
 /* OPTIONAL:  Finally, any other global defined constants for system specific */
 /* code usage.                                                                */
@@ -167,7 +151,6 @@ inline void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *e) { ; }
  #define WinEndExceptions } __except ( WinExceptionFilter(GetExceptionCode( ))) {  }\
                             SetConsoleCtrlHandler(&WinConsoleCtrlHandler, FALSE);
 
- extern bool HandleException;
  int WinExceptionFilter( int xCode );
 #endif
 

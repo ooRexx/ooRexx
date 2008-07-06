@@ -117,15 +117,6 @@
 #endif
 #include "SystemSemaphores.h"
 
-                             // semaphore definitions and init
-/******************************************************************************/
-/* REQUIRED:  Define the REXX type for exceptions.  These can be system       */
-/* specific exception registration info or any place holder type if this      */
-/* doesn't apply.                                                             */
-/******************************************************************************/
-
-typedef int SYSEXCEPTIONBLOCK;
-
 /******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */
 /******************************************************************************/

@@ -54,27 +54,4 @@ class RexxActivation;
 class RexxNativeActivation;
 class ProtectedObject;
 
-#ifndef SysRegisterExceptions
-                                       /* setup for exceptions              */
-void SysRegisterExceptions(SYSEXCEPTIONBLOCK *);
-#endif
-
-#ifndef SysDeregisterExceptions
-                                       /* clear exception handlers          */
-void SysDeregisterExceptions(SYSEXCEPTIONBLOCK *);
-#endif
-
-#ifndef SysRegisterSignals
-                                       /* register a signal handler         */
-void SysRegisterSignals(SYSEXCEPTIONBLOCK *);
-#endif
-
-#ifndef SysDeregisterSignals
-                                       /* deregister a signal handler       */
-void SysDeregisterSignals(SYSEXCEPTIONBLOCK *);
-#endif
-
-#ifndef SysThreadYield
-void SysThreadYield(void);             /* yield thread control              */
-#endif
 #endif

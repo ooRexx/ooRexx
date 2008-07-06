@@ -221,12 +221,7 @@ int WinExceptionFilter( int xCode )
 /* Function:  Exception Filter used by Windows exception handling             */
 /******************************************************************************/
 {
-  int nRtn = EXCEPTION_CONTINUE_SEARCH;
-  if (!HandleException)
-    nRtn = EXCEPTION_CONTINUE_EXECUTION;
-
-  /* Put any needed code for special handling here */
-  return nRtn;
+    return EXCEPTION_CONTINUE_SEARCH;
 }
 
 

@@ -81,10 +81,8 @@ const size_t ACT_STACK_SIZE = 20;
  */
 void RexxActivity::runThread()
 {
-    SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
                                          /* establish the stack base pointer  */
     this->stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
-    SysRegisterExceptions(&exreg);       /* create needed exception handlers  */
     for (;;)
     {
         // save the actitivation level in case there's an error unwind for an unhandled
@@ -150,7 +148,6 @@ void RexxActivity::runThread()
 
     this->requestAccess();               /* get the kernel access             */
 
-    SysDeregisterExceptions(&exreg);     /* remove exception trapping         */
     // tell the activity manager we're going away
     ActivityManager::activityEnded(this);
     currentThread.terminate();           /* system specific thread termination*/
@@ -2849,7 +2846,6 @@ void  RexxActivity::terminatePoolActivity()
  */
 void RexxActivity::run(ActivityDispatcher &target)
 {
-    SYSEXCEPTIONBLOCK exreg;             /* system specific exception info    */
     size_t  startDepth;                  /* starting depth of activation stack*/
 
                                          /* make sure we have the stack base  */
@@ -2858,8 +2854,6 @@ void RexxActivity::run(ActivityDispatcher &target)
                                          /* Push marker onto stack so we know */
     this->createNewActivationStack();    /* what level we entered.            */
     startDepth = stackFrameDepth;        /* Remember activation stack depth   */
-
-    SysRegisterSignals(&exreg);          /* register our signal handlers      */
 
     // save the actitivation level in case there's an error unwind for an unhandled
     // exception;
@@ -2891,7 +2885,6 @@ void RexxActivity::run(ActivityDispatcher &target)
     restoreActivationLevel(activityLevel);
     // give uninit objects a chance to run
     memoryObject.runUninits();
-    SysDeregisterSignals(&exreg);        /* deregister the signal handlers    */
     // unwind to the same stack depth as the start, removing all new entries
     unwindToDepth(startDepth);
 }

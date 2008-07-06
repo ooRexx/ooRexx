@@ -61,7 +61,6 @@ class InterpreterInstance;
 
 HINSTANCE SystemInterpreter::moduleHandle = 0;      // handle to the interpeter DLL
 
-
 void SystemInterpreter::processStartup(HINSTANCE mod)
 {
     moduleHandle = mod;
