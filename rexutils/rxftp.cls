@@ -931,8 +931,8 @@ return self~recvresponse(exretc)
 ::method ftperrno    attribute -- last ftp response code
 ::method response    attribute -- parsed command response from last command
 ::attribute bufsize  get       -- bufsize for send/receive
-::attribute bufsize  set     
-   expose bufsize 
+::attribute bufsize  set
+   expose bufsize
    use arg value
    if datatype(value, "Whole") = .false | value < 0 then
    raise syntax 93.906 array ("bufsize", value)

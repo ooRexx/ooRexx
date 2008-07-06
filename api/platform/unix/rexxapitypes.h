@@ -56,7 +56,7 @@
 
 #ifndef SSIZE_MIN
 #define SSIZE_MIN		(-SIZE_MAX - 1)
-#endif 
+#endif
 
 #define REXXENTRY
 
