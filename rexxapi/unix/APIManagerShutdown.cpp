@@ -51,7 +51,7 @@ extern char achRexxHomeDir[];
 
 int main(
     int argc,
-    char **argv[] )
+    char *argv[] )
 {
   int  iRC = 0;
   char * pcharHome;                 /* Pointer to environment var HOME          */

@@ -214,9 +214,9 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXTRANSLATEPROGRAM)(const char *, const 
 #define REXXTRANSLATEPROGRAM RexxTranslateProgram
 
 
-char *REXXENTRY RexxGetVersionInformation();
+char *REXXENTRY RexxGetVersionInformation(void);
 
-typedef char *(REXXENTRY *PFNGETVERSIONINFORMATION)();
+typedef char *(REXXENTRY *PFNGETVERSIONINFORMATION)(void);
 
 #define REXXGETVERSIONINFORMATON RexxGetVersionInformation
 

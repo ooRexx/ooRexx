@@ -1159,7 +1159,7 @@ special character (such as a parenthesis).
       <SubMessage>
         <Code>21</Code>
         <Subcode>913</Subcode>
-        <MessageNumber>295</MessageNumber>
+        <MessageNumber>708</MessageNumber>
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_data_constant_dir</SymbolicName>

@@ -233,7 +233,6 @@
 #define Error_Invalid_subkeyword_requires_msg                        292
 #define Error_Invalid_subkeyword_procedure_msg                       293
 #define Error_Invalid_subkeyword_callonname_msg                      294
-#define Error_Invalid_data_constant_dir_msg                          295
 #define Error_Invalid_subkeyword_signalonname_msg                    295
 #define Error_Invalid_subkeyword_parse_msg                           296
 #define Error_Invalid_subkeyword_use_msg                             297
@@ -611,6 +610,7 @@
 #define Error_Invalid_argument_nostem_msg                            705
 #define Error_Invalid_argument_double_msg                            706
 #define Error_Invalid_argument_maxarg_msg                            707
+#define Error_Invalid_data_constant_dir_msg                          708
 
 
 #endif
