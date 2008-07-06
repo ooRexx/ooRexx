@@ -50,6 +50,7 @@
 #include <stddef.h>
 
   class RexxObject;
+  class RexxInteger;
   class RexxBehaviour;
   class RexxCompoundTail;
   class RexxCompoundElement;

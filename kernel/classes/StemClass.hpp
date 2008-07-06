@@ -56,6 +56,7 @@
 
 class RexxSupplier;
 class RexxCompoundTail;
+class RexxNativeActivation;
 
  class SortData
  {

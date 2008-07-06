@@ -52,5 +52,4 @@
 // kernel->platform interface
 #include "PlatformDefinitions.h"       /* include platform definitions first*/
 #include "RexxErrorCodes.h"            /* error code definitions            */
-#include "RexxPlatformInterface.h"     /* include system defaults           */
 #endif

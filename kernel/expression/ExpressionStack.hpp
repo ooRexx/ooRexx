@@ -48,6 +48,7 @@
 #include "ArrayClass.hpp"
 
 class ProtectedObject;
+class RexxActivity;
 
 class RexxExpressionStack {
  public:

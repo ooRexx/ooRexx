@@ -127,7 +127,18 @@ inline size_t RANDOMIZE(size_t seed) { return (seed * RANDOM_FACTOR + 1); }
 #define OrefSet(o,r,v) memoryObject.checkSetOref((RexxObject *)o, (RexxObject **)&(r), (RexxObject *)v, __FILE__, __LINE__)
 #endif
 
+
+// forward declaration of commonly used classes
 class RexxExpressionStack;
+class RexxActivation;
+class RexxObject;
+class RexxClass;
+class RexxDirectory;
+class RexxIntegerClass;
+class RexxArray;
+class RexxMemory;
+class RexxString;
+
                                        /* builtin function prototype        */
 typedef RexxObject *builtin_func(RexxActivation *, size_t, RexxExpressionStack *);
 typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
@@ -165,11 +176,6 @@ typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
 /* Global Objects - General                                                   */
 /******************************************************************************/
 
-class RexxClass;
-class RexxDirectory;
-class RexxIntegerClass;
-class RexxArray;
-class RexxMemory;
 
 // this one is special, and is truly global.
 EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
