@@ -269,7 +269,6 @@ runtimeHeaders = $(build_runtime_dir)/ActivationApiContexts.hpp \
 streamlibraryHeaders = $(build_streamlibrary_dir)/StreamCommandParser.h \
                        $(build_streamlibrary_dir)/StreamNative.hpp
 libHeaders = $(build_lib_dir)/RexxPlatformDefinitions.h \
-             $(build_lib_dir)/RexxPlatformInterface.h \
              $(build_lib_dir)/RexxInternalApis.h
 rexxapiHeaders = $(build_rexxapi_dir)/APIUtil.h \
                  $(build_rexxapi_dir)/ASCIISymbols.h \

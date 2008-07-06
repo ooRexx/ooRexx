@@ -76,94 +76,114 @@
 void DisplayError(int msgid)           /* simplified catalog access@MAE004M */
 {
 #if defined( HAVE_NL_TYPES_H )
- nl_catd        catd;                  /* catalog descriptor from catopen() */
+    nl_catd        catd;                  /* catalog descriptor from catopen() */
 #endif
- int            set_num = 1;           /* message set 1 from catalog        */
- const char    *message;               /* message pointer                   */
- char           DataArea[256];         /* buf to return message             */
+    int            set_num = 1;           /* message set 1 from catalog        */
+    const char    *message;               /* message pointer                   */
+    char           DataArea[256];         /* buf to return message             */
 
 #if defined( HAVE_CATOPEN )
-                                       /* open message catalog in NLSPATH   */
-     if ((catd = catopen(REXXMESSAGEFILE, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
-     {
-       sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-       if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
-       {
-          printf("\n*** Cannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
-                 REXXMESSAGEFILE, ORX_CATDIR );
-          return;                      /* terminate program                   */
-       }
-     }                                 /* retrieve message from repository  */
-       message = catgets(catd, set_num, msgid, NULL);
-       if(!message)                    /* got a message ?                     */
-# if defined(OPSYS_LINUX) && !defined(OPSYS_SUN)
-       {
-         sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
-         if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
-         {
-           printf("\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
-                  REXXMESSAGEFILE, ORX_CATDIR);
-         }
-         else
-         {
-           message = catgets(catd, set_num, msgid, NULL);
-           if(!message)                  /* got a message ?                   */
-             printf("\n Error message not found!\n");
-           else
-             printf("\n%s\n", message);  /* print the message                 */
-         }
-       }
-# else
-         printf("*** Error message not found!");
-       else
-         printf("\n%s\n", message);    /* print the message                 */
-# endif
-     catclose(catd);                   /* close the catalog                 */
+    /* open message catalog in NLSPATH   */
+    if ((catd = catopen(REXXMESSAGEFILE, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
+    {
+        sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
+        if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
+        {
+            printf("\n*** Cannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
+                   REXXMESSAGEFILE, ORX_CATDIR );
+            return;                      /* terminate program                   */
+        }
+    }                                 /* retrieve message from repository  */
+    message = catgets(catd, set_num, msgid, NULL);
+    if (!message)                    /* got a message ?                     */
+#if defined(OPSYS_LINUX) && !defined(OPSYS_SUN)
+    {
+        sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
+        if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
+        {
+            printf("\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
+                   REXXMESSAGEFILE, ORX_CATDIR);
+        }
+        else
+        {
+            message = catgets(catd, set_num, msgid, NULL);
+            if (!message)                  /* got a message ?                   */
+            {
+                printf("\n Error message not found!\n");
+            }
+            else
+            {    
+                printf("\n%s\n", message);  /* print the message                 */
+            }
+        }
+    }
 #else
-     printf("*** Cannot get description for error %d!", msgid);
+    {
+        printf("*** Error message not found!");
+    }
+    else
+    {
+        printf("\n%s\n", message);    /* print the message                 */
+    }
 #endif
-     return;                           /* terminate program                 */
+    catclose(catd);                   /* close the catalog                 */
+#else
+    printf("*** Cannot get description for error %d!", msgid);
+#endif
+    return;                           /* terminate program                 */
 }
 
 int main (int argc, char **argv)
 {
-  bool silent = false;
-  int silentp;
-  char *ptr;
-                                       /* check for /s option               */
-  for (silentp = 1; silentp < argc; silentp++) {
-    if (argv[silentp][0] == '-' &&
-        (argv[silentp][1] == 's' || argv[silentp][1] == 'S')) {
-      silent = true;
-      break;
+    bool silent = false;
+    int silentp;
+    char *ptr;
+    /* check for /s option               */
+    for (silentp = 1; silentp < argc; silentp++)
+    {
+        if (argv[silentp][0] == '-' &&
+            (argv[silentp][1] == 's' || argv[silentp][1] == 'S'))
+        {
+            silent = true;
+            break;
+        }
     }
-  }
-  if (!silent) {                       /* display version and copyright     */
-    ptr = RexxGetVersionInformation();
-    printf(ptr);
-    if (ptr) free(ptr);
-  }
-                                       /* Check validity of arguments       */
-  if (argc < 2 || argc > 4 ||          /* # args exceeding bounds           */
-      silent && argc==2 ||             /* -s is the first argument          */
-      silent && silentp + 1 < argc ||  /* -s is not the last argument       */
-      !silent && argc==4 ) {           /* 3 arguments, but no /s            */
-    if (argc > 2) {
-      DisplayError((int)Error_REXXC_cmd_parm_incorrect_msg);
+    if (!silent)                       /* display version and copyright     */
+    {
+        ptr = RexxGetVersionInformation();
+        printf(ptr);
+        if (ptr) 
+        {
+            free(ptr);
+        }
     }
-    DisplayError((int) Error_REXXC_wrongNrArg_msg);
-    DisplayError((int) Error_REXXC_SynCheckInfo_msg);
-    exit(-1);                          /* terminate with an error           */
-  }                                    /* end additions                     */
-                                       /* modified control logic            */
-  if (argc==4 && silent || argc==3 && !silent) {
-    if (strcmp(argv[1], argv[2]) == 0) {
-      DisplayError((int)Error_REXXC_outDifferent_msg);
-      exit(-2);                        /* terminate with an error           */
+    /* Check validity of arguments       */
+    if (argc < 2 || argc > 4 ||          /* # args exceeding bounds           */
+        (silent && argc==2) ||             /* -s is the first argument          */
+        (silent && (silentp + 1 < argc)) ||  /* -s is not the last argument       */
+        (!silent && argc==4))           /* 3 arguments, but no /s            */
+    {
+        if (argc > 2)
+        {
+            DisplayError((int)Error_REXXC_cmd_parm_incorrect_msg);
+        }
+        DisplayError((int) Error_REXXC_wrongNrArg_msg);
+        DisplayError((int) Error_REXXC_SynCheckInfo_msg);
+        exit(-1);                          /* terminate with an error           */
+    }                                    /* end additions                     */
+    /* modified control logic            */
+    if (argc==4 && silent || argc==3 && !silent)
+    {
+        if (strcmp(argv[1], argv[2]) == 0)
+        {
+            DisplayError((int)Error_REXXC_outDifferent_msg);
+            exit(-2);                        /* terminate with an error           */
+        }
+        /* translate and save the output     */
+        return RexxTranslateProgram(argv[1], argv[2], NULL);
     }
-                                       /* translate and save the output     */
-    return RexxTranslateProgram(argv[1], argv[2], NULL);
-  }
-  else                                 /* just doing syntax check           */
-    return RexxTranslateProgram(argv[1], NULL, NULL);
+    else                                 /* just doing syntax check           */
+    {
+        return RexxTranslateProgram(argv[1], NULL, NULL);
+    }
 }

@@ -85,7 +85,7 @@ public:
 
     static thread_id_t queryThreadID();
     // the following os a NOP on unix platforms
-    static inline void reliniquish() { }
+    static inline void relinquish() { }
     static inline void yield()
     {
 #ifdef OPSYS_AIX41
