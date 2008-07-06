@@ -162,9 +162,4 @@ void SetH_Errno(void);
  * string compare ignore upper and lower case
  *------------------------------------------------------------------*/
 int stricmp(const char *op1, const char *op2 );
-
-
-bool string2socket(RXSTRING *string, SOCKET *socket);
-void socket2string(PRXSTRING result, SOCKET socket);
-{
 #endif

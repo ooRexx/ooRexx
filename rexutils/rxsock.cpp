@@ -118,18 +118,6 @@ int stricmp(const char *op1, const char *op2)
 }
 #endif
 
-bool string2socket(RXSTRING *string, SOCKET *socket)
-{
-    return sscanf(string->strptr, "0x%p", socket) == 1;
-}
-
-
-void socket2string(PRXSTRING result, SOCKET socket)
-{
-    sprintf(result->strptr, "0x%p", socket);
-    result->strlength = strlen(result->strptr);
-}
-
 /*------------------------------------------------------------------
  * strip blanks from a line
  *------------------------------------------------------------------*/
