@@ -105,8 +105,7 @@ catdir = $(prefix)/bin
 COMMON_CPPFLAGS = -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_MOD_LVL) -DORX_FIX=0 \
                   -DORX_SYS_STR=\"@ORX_SYS_STR@\" \
                   -DORX_CATDIR=\"$(catdir)\" \
-                  -DORX_SHARED_LIBRARY_EXT=\"@ORX_SHARED_LIBRARY_EXT@\" \
-                  -DHIGHTID
+                  -DORX_SHARED_LIBRARY_EXT=\"@ORX_SHARED_LIBRARY_EXT@\"
 
 messageXML = $(build_messages_dir)/rexxmsg.xml
 

@@ -111,7 +111,7 @@ typedef  LONG REXXENTRY REXX (
 #define SPT  strptr
 static RXSTRING RXSTRING_EMPTY = { 0L, (PCH)0 };
 
-#define RXVERSION  "REXX-ooRexx 6.02"  /* MHES 29122004 interpreter version str    */
+#define RXVERSION  "REXX-ooRexx 6.03"  /* interpreter version str    */
 #define RXVERSIZE  16                  /* size of RXVERSION str      */
 #define SIGNATURE  0xddd5              /* macro space file marker    */
 #define FNAMSIZE   256                 /* file name size             */
