@@ -159,8 +159,8 @@
    ret = ""
    if style~wordpos("NOT WS_VISIBLE") > 0 then ret = "HIDDEN"
    else if style~wordpos("WS_VISIBLE") > 0 then ret = "VISIBLE"
-   if style~wordpos("WS_DISABLED") > 0 then ret = ret || " DISABLED"
-   if style~wordpos("WS_GROUP") > 0 then ret = ret || " GROUP"
+   if style~wordpos("WS_DISABLED") > 0 & style~wordpos("NOT WS_DISABLED") == 0 then ret = ret || " DISABLED"
+   if style~wordpos("WS_GROUP") > 0 & style~wordpos("NOT WS_GROUP") == 0 then ret = ret || " GROUP"
    if kind = "DLG" then do
       if style~wordpos("DS_CENTER") > 0 then ret = ret ||" CENTER"
       if style~wordpos("DS_SYSMODAL") > 0 then ret = ret ||" SYSTEMMODAL"
