@@ -418,6 +418,7 @@ void AbstractCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *r
 #include "PointerClass.hpp"
 #include "BufferClass.hpp"
 #include "WeakReferenceClass.hpp"
+#include "ContextClass.hpp"
 
 PCPPM CPPCode::exportedMethods[] =     /* start of exported methods table   */
 {
@@ -643,6 +644,7 @@ CPPM(PackageClass::addRoutine),
 CPPM(PackageClass::addPublicRoutine),
 CPPM(PackageClass::addClass),
 CPPM(PackageClass::addPublicClass),
+CPPM(PackageClass::getName),
 
 CPPM(PackageClass::newRexx),
 
@@ -896,6 +898,16 @@ CPPM(RexxBuffer::newRexx),
 CPPM(WeakReference::newRexx),
 CPPM(WeakReference::value),
 
+CPPM(RexxContext::newRexx),
+CPPM(RexxContext::copyRexx),
+CPPM(RexxContext::getPackage),
+CPPM(RexxContext::getDigits),
+CPPM(RexxContext::getFuzz),
+CPPM(RexxContext::getForm),
+CPPM(RexxContext::getVariables),
+CPPM(RexxContext::getExecutable),
+CPPM(RexxContext::getArgs),
+CPPM(RexxContext::getCondition),
 NULL                                   /* final terminating method          */
 };
 

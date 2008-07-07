@@ -122,6 +122,7 @@ kernelApiHeaders = $(build_kernel_api_dir)/ContextApi.hpp
 classesHeaders = $(build_classes_dir)/ArrayClass.hpp \
                  $(build_classes_dir)/BufferClass.hpp \
                  $(build_classes_dir)/ClassClass.hpp \
+                 $(build_classes_dir)/ContextClass.hpp \
                  $(build_classes_dir)/DirectoryClass.hpp \
                  $(build_classes_dir)/IntegerClass.hpp \
                  $(build_classes_dir)/ListClass.hpp \
@@ -399,6 +400,7 @@ kernel_api_sources = $(build_kernel_api_dir)/CallContextStubs.cpp \
 classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/BufferClass.cpp \
                   $(build_classes_dir)/ClassClass.cpp \
+                  $(build_classes_dir)/ContextClass.cpp \
                   $(build_classes_dir)/DirectoryClass.cpp \
                   $(build_classes_dir)/IntegerClass.cpp \
                   $(build_classes_dir)/ListClass.cpp \

@@ -74,6 +74,7 @@
 #include "WeakReferenceClass.hpp"
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
+#include "ContextClass.hpp"
 #include "RexxBehaviour.hpp"
 #include "SourceFile.hpp"
 #include "LibraryPackage.hpp"
@@ -157,7 +158,7 @@ void RexxMemory::buildVirtualFunctionTable()
 /*            There will be one for each Class.                               */
 /******************************************************************************/
 {
-    char objectBuffer[1024];          /* buffer for each object            */
+    char objectBuffer[1024];       /* buffer for each object            */ 
     void *objectPtr;
 
     objectPtr = objectBuffer;
@@ -289,6 +290,12 @@ void RexxMemory::buildVirtualFunctionTable()
    
    objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_PackageClass] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) RexxContext(RESTOREIMAGE);
+   virtualFunctionTable[T_RexxContext] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   virtualFunctionTable[T_RexxContextClass] = *((void **)objectPtr);
    
    objectPtr = new (objectPtr) RexxNilObject(RESTOREIMAGE);
    virtualFunctionTable[T_NilObject] = *((void **)objectPtr);

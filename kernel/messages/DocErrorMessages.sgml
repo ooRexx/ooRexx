@@ -3153,6 +3153,13 @@ special character (such as a parenthesis).
 <para>Method argument <emphasis>argument</emphasis> must have a stem object value; found "<emphasis>value</emphasis>"</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>970</term>
+<listitem>
+<para>COPY method is not supported for object <emphasis>object</emphasis>
+</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR97">
@@ -3405,6 +3412,12 @@ special character (such as a parenthesis).
 <term>980</term>
 <listitem>
 <para>Unable to load native routine "<emphasis>name</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>981</term>
+<listitem>
+<para>Target RexxContext is no longer active</para>
 </listitem>
 </varlistentry>
 </variablelist>

@@ -191,6 +191,7 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 #define TheMethodClass RexxMethod::classInstance
 #define TheRoutineClass RoutineClass::classInstance
 #define ThePackageClass PackageClass::classInstance
+#define TheRexxContextClass RexxContext::classInstance
 #define TheNumberStringClass RexxNumberString::classInstance
 #define TheObjectClass RexxObject::classInstance
 #define TheQueueClass RexxQueue::classInstance

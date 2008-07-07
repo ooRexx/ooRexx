@@ -91,6 +91,8 @@
 #define TheRoutineClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_RoutineClass])
 #define ThePackageBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Package])
 #define ThePackageClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_PackageClass])
+#define TheRexxContextBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxContext])
+#define TheRexxContextClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_RexxContextClass])
 #define TheNilObjectBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NilObject])
 #define TheBehaviourBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Behaviour])
 #define TheRexxSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxSource])

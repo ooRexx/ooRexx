@@ -84,6 +84,7 @@
 #include "InterpreterInstance.hpp"
 #include "PackageManager.hpp"
 #include "PackageClass.hpp"
+#include "ContextClass.hpp"
 
 
 void RexxMemory::defineKernelMethod(
@@ -206,6 +207,7 @@ void RexxMemory::createImage()
   RexxMethod::createInstance();
   RoutineClass::createInstance();
   PackageClass::createInstance();
+  RexxContext::createInstance();
   RexxQueue::createInstance();
   RexxList::createInstance();
   RexxStem::createInstance();
@@ -601,6 +603,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_ADDPUBLICROUTINE    ,ThePackageBehaviour, CPPM(PackageClass::addPublicRoutine), 2);
   defineKernelMethod(CHAR_ADDCLASS            ,ThePackageBehaviour, CPPM(PackageClass::addClass), 2);
   defineKernelMethod(CHAR_ADDPUBLICCLASS      ,ThePackageBehaviour, CPPM(PackageClass::addPublicClass), 2);
+  defineKernelMethod(CHAR_NAME                ,ThePackageBehaviour, CPPM(PackageClass::getName), 0);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   ThePackageBehaviour->setMethodDictionaryScope(ThePackageClass);
@@ -608,6 +611,38 @@ void RexxMemory::createImage()
                                        /* Now call the class subclassable   */
                                        /* method                            */
   ThePackageClass->subClassable(true);
+
+
+  /***************************************************************************/
+  /*           RexxContext                                                   */
+  /***************************************************************************/
+
+                                       /* Add the NEW methods to the        */
+                                       /* class behaviour                   */
+  defineKernelMethod(CHAR_NEW     , TheRexxContextBehaviour, CPPM(RexxContext::newRexx), A_COUNT);
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheRexxContextBehaviour->setMethodDictionaryScope(TheRexxContextClass);
+
+  defineKernelMethod(CHAR_COPY          ,TheRexxContextBehaviour, CPPM(RexxContext::copyRexx), 0);
+  defineKernelMethod(CHAR_PACKAGE       ,TheRexxContextBehaviour, CPPM(RexxContext::getPackage), 0);
+  defineKernelMethod(CHAR_EXECUTABLE    ,TheRexxContextBehaviour, CPPM(RexxContext::getExecutable), 0);
+  defineKernelMethod(CHAR_FORM          ,TheRexxContextBehaviour, CPPM(RexxContext::getForm), 0);
+  defineKernelMethod(CHAR_FUZZ          ,TheRexxContextBehaviour, CPPM(RexxContext::getFuzz), 0);
+  defineKernelMethod(CHAR_DIGITS        ,TheRexxContextBehaviour, CPPM(RexxContext::getDigits), 0);
+  defineKernelMethod(CHAR_VARIABLES     ,TheRexxContextBehaviour, CPPM(RexxContext::getVariables), 0);
+  defineKernelMethod(CHAR_ARGS          ,TheRexxContextBehaviour, CPPM(RexxContext::getArgs), 0);
+  defineKernelMethod(CHAR_CONDITION     ,TheRexxContextBehaviour, CPPM(RexxContext::getCondition), 0);
+
+                                       /* Add the instance methods to the   */
+                                       /* instance behaviour mdict          */
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheRexxContextBehaviour->setMethodDictionaryScope(TheRexxContextClass);
+
+                                       /* Now call the class subclassable   */
+                                       /* method                            */
+  TheRexxContextClass->subClassable(true);
 
   /***************************************************************************/
   /*           QUEUE                                                         */
@@ -1203,6 +1238,7 @@ void RexxMemory::createImage()
   kernel_public(CHAR_METHOD           ,TheMethodClass  ,TheEnvironment);
   kernel_public(CHAR_ROUTINE          ,TheRoutineClass ,TheEnvironment);
   kernel_public(CHAR_PACKAGE          ,ThePackageClass ,TheEnvironment);
+  kernel_public(CHAR_REXXCONTEXT      ,TheRexxContextClass ,TheEnvironment);
   kernel_public(CHAR_NIL              ,TheNilObject    ,TheEnvironment);
   kernel_public(CHAR_OBJECT           ,TheObjectClass  ,TheEnvironment);
   kernel_public(CHAR_QUEUE            ,TheQueueClass   ,TheEnvironment);

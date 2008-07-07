@@ -506,6 +506,7 @@
 #define Error_Unsupported_new_method                       93967
 #define Error_Incorrect_method_signature                   93968
 #define Error_Incorrect_method_nostem                      93969
+#define Error_Unsupported_copy_method                      93970
 #define Error_No_method                                    97000
 #define Error_No_method_name                               97001
 #define Error_No_method_user_defined                       97900
@@ -546,6 +547,7 @@
 #define Error_Execution_library_method                     98978
 #define Error_Execution_library_routine                    98979
 #define Error_Execution_native_routine                     98980
+#define Error_Execution_context_not_active                 98981
 #define Error_Translation                                  99000
 #define Error_Translation_user_defined                     99900
 #define Error_Translation_duplicate_class                  99901

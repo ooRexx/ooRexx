@@ -611,6 +611,8 @@
 #define Error_Invalid_argument_double_msg                            706
 #define Error_Invalid_argument_maxarg_msg                            707
 #define Error_Invalid_data_constant_dir_msg                          708
+#define Error_Unsupported_copy_method_msg                            709
+#define Error_Execution_context_not_active_msg                       710
 
 
 #endif

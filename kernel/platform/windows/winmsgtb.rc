@@ -611,6 +611,8 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Invalid_argument_double    "Argument &1 must be a valid double value; found ""&2"""
    Error_Invalid_argument_maxarg    "Too many arguments in invocation; &1 expected"
    Error_Invalid_data_constant_dir    "Data must not follow the ::CONSTANT value; found ""&1"""
+   Error_Unsupported_copy_method    "COPY method is not supported for object &1"
+   Error_Execution_context_not_active    "Target RexxContext is no longer active"
    
 END
 

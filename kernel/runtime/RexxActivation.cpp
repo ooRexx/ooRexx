@@ -848,6 +848,7 @@ void RexxActivation::live(size_t liveMark)
     memory_mark(this->settings.calltype);
     memory_mark(this->settings.streams);
     memory_mark(this->settings.halt_description);
+    memory_mark(this->contextObject);
 
     /* We're hold a pointer back to our arguments directly where they */
     /* are created.  Since in some places, this argument list comes */
@@ -898,6 +899,7 @@ void RexxActivation::liveGeneral(int reason)
     memory_mark_general(this->settings.calltype);
     memory_mark_general(this->settings.streams);
     memory_mark_general(this->settings.halt_description);
+    memory_mark_general(this->contextObject);
 
     /* We're hold a pointer back to our arguments directly where they */
     /* are created.  Since in some places, this argument list comes */
@@ -1307,6 +1309,11 @@ void RexxActivation::termination()
     this->activity->releaseStackFrame(stack.getFrame());
     /* do the variable termination       */
     cleanupLocalVariables();
+    // deactivate the context object if we created one.
+    if (contextObject != OREF_NULL)
+    {
+        contextObject->detach();
+    }
 }
 
 
@@ -2178,6 +2185,25 @@ RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry        
         {
 
             return new_integer(this->current->getLineNumber());
+        }
+    }
+    else if (name->strCompare(CHAR_CONTEXT))  /* current execution context (".context")?    */
+    {
+        // if this is an interpret, we need to report the line number of
+        // the context that calls the interpret.
+        if (this->isInterpret())
+        {
+            return parent->rexxVariable(name);
+        }
+        else
+        {
+            // the context object is created on demand...much of the time, this
+            // is not needed for an actvation
+            if (contextObject == OREF_NULL)
+            {
+                contextObject = new RexxContext(this);
+            }
+            return contextObject;
         }
     }
     return OREF_NULL;                    // not recognized
@@ -3858,6 +3884,17 @@ RexxSource *RexxActivation::getSourceObject()
     }
     // this should NEVER happen!
     return OREF_NULL;
+}
+
+/**
+ * Retrieve the package for the current execution context.
+ *
+ * @return The Package holding the code for the current execution
+ *         context.
+ */
+PackageClass *RexxActivation::getPackage()
+{
+    return executable->getPackage();
 }
 
 

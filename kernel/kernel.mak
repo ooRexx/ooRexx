@@ -119,7 +119,7 @@ OKPOBJ1=$(OR_OUTDIR)\RexxEnvelope.$(OBJ) $(OR_OUTDIR)\ArrayClass.$(OBJ) $(OR_OUT
         $(OR_OUTDIR)\ClassClass.$(OBJ) $(OR_OUTDIR)\DeadObject.$(OBJ) $(OR_OUTDIR)\PointerClass.$(OBJ) \
 	$(OR_OUTDIR)\WeakReferenceClass.$(OBJ)
 OKPOBJ2=$(OR_OUTDIR)\DirectoryClass.$(OBJ) $(OR_OUTDIR)\MethodClass.$(OBJ)  $(OR_OUTDIR)\RoutineClass.$(OBJ) \
-	 $(OR_OUTDIR)\PackageClass.$(OBJ)
+	 $(OR_OUTDIR)\PackageClass.$(OBJ) $(OR_OUTDIR)\ContextClass.$(OBJ)
 OKPOBJ3=$(OR_OUTDIR)\ListClass.$(OBJ)   $(OR_OUTDIR)\RexxMemory.$(OBJ) $(OR_OUTDIR)\MemorySegment.$(OBJ) \
          $(OR_OUTDIR)\MemoryStats.$(OBJ) $(OR_OUTDIR)\MessageClass.$(OBJ)    \
         $(OR_OUTDIR)\StemClass.$(OBJ)   $(OR_OUTDIR)\ObjectClass.$(OBJ) $(OR_OUTDIR)\RexxCompoundTail.$(OBJ) \

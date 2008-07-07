@@ -101,6 +101,8 @@ RexxBehaviour RexxBehaviour::primitiveBehaviours[T_Last_Primitive_Class + 1] =
     RexxBehaviour(T_RoutineClass, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_Package, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_PackageClass, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_RexxContext, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_RexxContextClass, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_NilObject, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_Behaviour, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_RexxSource, (PCPPM *)RexxObject::operatorMethods),

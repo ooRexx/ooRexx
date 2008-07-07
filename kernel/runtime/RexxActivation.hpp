@@ -52,11 +52,13 @@
 #include "RexxCode.hpp"
 #include "ActivityManager.hpp"
 #include "RexxCompoundTail.hpp"
+#include "ContextClass.hpp"
 
 
 class RexxInstructionCallBase;
 class ProtectedObject;
 class RexxSupplier;
+class PackageClass;
 
 #define trace_debug         0x00000001 /* interactive trace mode flag       */
 #define trace_all           0x00000002 /* trace all instructions            */
@@ -333,6 +335,8 @@ RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
    RexxVariableBase *directRetriever(RexxString *);
    RexxObject       *handleNovalueEvent(RexxString *name, RexxVariable *variable);
    RexxSource       *getSourceObject();
+   PackageClass     *getPackage();
+   RexxObject       *getExecutableObject() { return executable; }
 
    inline void              setCallType(RexxString *type) {this->settings.calltype = type; }
    inline void              pushBlock(RexxDoBlock *block) { block->setPrevious(this->dostack); this->dostack = block; }
@@ -601,6 +605,7 @@ RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
    int                  object_scope;  /* reserve/release state of variables*/
    RexxObject          *result;        /* result of execution               */
    RexxArray           *trapinfo;      /* current trap handler              */
+   RexxContext         *contextObject; // the context object representing the execution context
                                        /* current activation state          */
    int                  execution_state;
                                        /* type of activation activity       */
