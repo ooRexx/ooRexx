@@ -811,30 +811,26 @@ void RexxClass::createClassBehaviour(
     {
         if (TheObjectClass != this)        /* if this isn't OBJECT              */
         {
-            /* go through each of the metaclasses*/
-            /* in list to see which one's have   */
-            /* not been added yet                */
-            for (size_t index = this->metaClass->size(); index > 0; index--)
+            // we only process the first item in the metaclass list, since it
+            // will properly pull in the scopes for all of the rest, in the correct order.
+            metaclass = (RexxClass *)this->metaClass->get(1);
+            /* add which ever metaclasses have    */
+            /* not been added yet                 */
+            if (metaclass != TheNilObject && !target_class_behaviour->checkScope(metaclass))
             {
-                metaclass = (RexxClass *)this->metaClass->get(index);
-                /* add which ever metaclasses have    */
-                /* not been added yet                 */
-                if (metaclass != TheNilObject && !target_class_behaviour->checkScope(metaclass))
-                {
-                    /* merge in the meta class mdict      */
-                    target_class_behaviour->methodDictionaryMerge(metaclass->instanceBehaviour->getMethodDictionary());
-                    // now we need to merge in the scopes.  For each metaclass, starting
-                    // from the bottom of the hierarchy down, merge in each of the scope
-                    // values.
-                    RexxArray *addedScopes = metaclass->behaviour->getScopes()->allAt(TheNilObject);
-                    ProtectedObject p(addedScopes);
+                /* merge in the meta class mdict      */
+                target_class_behaviour->methodDictionaryMerge(metaclass->instanceBehaviour->getMethodDictionary());
+                // now we need to merge in the scopes.  For each metaclass, starting
+                // from the bottom of the hierarchy down, merge in each of the scope
+                // values.
+                RexxArray *addedScopes = metaclass->behaviour->getScopes()->allAt(TheNilObject);
+                ProtectedObject p(addedScopes);
 
-                    // these need to be processed in reverse order
-                    for (size_t i = addedScopes->size(); i > 0; i--)
-                    {
-                        RexxClass *scope = (RexxClass *)addedScopes->get(i);
-                        target_class_behaviour->mergeScope(scope);
-                    }
+                // these need to be processed in reverse order
+                for (size_t i = addedScopes->size(); i > 0; i--)
+                {
+                    RexxClass *scope = (RexxClass *)addedScopes->get(i);
+                    target_class_behaviour->mergeScope(scope);
                 }
             }
         }
