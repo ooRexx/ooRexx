@@ -142,7 +142,7 @@ class RexxSource : public RexxInternalObject {
   unsigned int locateToken(RexxToken *);
   void        globalSetup();
   RexxString *packLiteral(size_t, size_t, int);
-  RexxCode   *generateCode();
+  RexxCode   *generateCode(bool isMethod);
   RexxCode   *interpretMethod(RexxDirectory *);
   RexxCode   *interpret(RexxString *, RexxDirectory *, size_t);
   void        checkDirective();
@@ -225,7 +225,6 @@ class RexxSource : public RexxInternalObject {
   void        errorPosition(int, RexxToken *);
   void        errorToken(int, RexxToken *);
   void        blockError(RexxInstruction *);
-  static RexxCode   *generateCodeFromFile(RexxString *);
   RexxInstruction *sourceNewObject(size_t, RexxBehaviour *, int);
   void        parseTraceSetting(RexxString *, size_t *, size_t *);
   size_t      processVariableList(int);
@@ -236,7 +235,8 @@ class RexxSource : public RexxInternalObject {
   bool        isTraceable();
   inline bool isInterpret() { return (flags & _interpret) != 0; }
 
-  inline void        install(RexxActivation *activation) { if (this->flags&_install) this->processInstall(activation); };
+  inline bool        needsInstallation() { return (this->flags&_install) != 0; }
+  inline void        install(RexxActivation *activation) { if (needsInstallation()) this->processInstall(activation); };
   inline void        addReference(RexxObject *reference) { this->calls->addLast(reference); }
   inline void        pushDo(RexxInstruction *i) { this->control->pushRexx((RexxObject *)i); }
   inline RexxInstruction *popDo() { return (RexxInstruction *)(this->control->pullRexx()); };
@@ -368,6 +368,7 @@ protected:
   size_t line_offset;                  /* current offset with in the line   */
   size_t interpret_adjust;             /* INTERPRET adjustment              */
 
+  RexxCode *initCode;                  // the initialization code
                                        /* start of directives section       */
   RexxList      *loadedPackages;       // packages imported by this package
   PackageClass  *package;              // our package wrapper

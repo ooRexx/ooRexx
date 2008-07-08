@@ -85,6 +85,7 @@
 #include "RequiresDirective.hpp"
 #include "PackageManager.hpp"
 #include "SysFileSystem.hpp"
+#include "RoutineClass.hpp"
 
 #define HOLDSIZE         60            /* room for 60 temporaries           */
 
@@ -629,6 +630,7 @@ void RexxSource::live(size_t liveMark)
   memory_mark(this->merged_public_routines);
   memory_mark(this->methods);
   memory_mark(this->active_class);
+  memory_mark(this->initCode);
 }
 
 void RexxSource::liveGeneral(int reason)
@@ -696,6 +698,7 @@ void RexxSource::liveGeneral(int reason)
   memory_mark_general(this->merged_public_routines);
   memory_mark_general(this->methods);
   memory_mark_general(this->active_class);
+  memory_mark_general(this->initCode);
 }
 
 void RexxSource::flatten (RexxEnvelope *envelope)
@@ -753,6 +756,7 @@ void RexxSource::flatten (RexxEnvelope *envelope)
     flatten_reference(newThis->merged_public_routines, envelope);
     flatten_reference(newThis->methods, envelope);
     flatten_reference(newThis->active_class, envelope);
+    flatten_reference(newThis->initCode, envelope);
 
   cleanUpFlatten
 }
@@ -1140,7 +1144,7 @@ void RexxSource::globalSetup()
 }
 
 
-RexxCode *RexxSource::generateCode()
+RexxCode *RexxSource::generateCode(bool isMethod)
 /******************************************************************************/
 /* Function:  Convert a source object into an executable method               */
 /******************************************************************************/
@@ -1150,6 +1154,18 @@ RexxCode *RexxSource::generateCode()
   RexxCode *newCode = this->translate(OREF_NULL);
   ProtectedObject p(newCode);
   this->cleanup();                     /* release temporary tables          */
+  // if generating a method object, then process the directive installation now
+  if (isMethod)
+  {
+      // In order to install, we need to call something.  We manage this by
+      // creating a dummy stub routine that we can call to force things to install
+      RexxCode *stub = new RexxCode(this, OREF_NULL, OREF_NULL, 10, FIRST_VARIABLE_INDEX);
+      ProtectedObject p(stub);
+      RoutineClass *code = new RoutineClass(programName, stub);
+      p = code;
+      ProtectedObject dummy;
+      code->call(ActivityManager::currentActivity, programName, NULL, 0, dummy);
+  }
   return newCode;                      /* return the method                 */
 }
 
@@ -1661,7 +1677,8 @@ RexxCode *RexxSource::translate(
 {
     /* go translate the lead block       */
     RexxCode *newMethod = this->translateBlock(_labels);
-    this->saveObject((RexxObject *)newMethod);  /* make this safe                    */
+    // we save this in case we need to explicitly run this at install time
+    OrefSet(this, this->initCode, newMethod);
     if (!this->atEnd())                  /* have directives to process?       */
     {
         /* create the routines directory     */
@@ -5221,24 +5238,6 @@ void *RexxSource::operator new (size_t size)
                                        /* Give new object its behaviour     */
   newObject->setBehaviour(TheRexxSourceBehaviour);
   return newObject;                    /* return the new object             */
-}
-
-
-/**
- * Generate a code object from a source file.
- *
- * @param programname
- *               The name of the program file.
- *
- * @return A RexxCode object for this source file.
- */
-RexxCode *RexxSource::generateCodeFromFile(RexxString *programname )
-{
-    // create a new source object from the file
-    RexxSource *newObject = new RexxSource(programname);
-    ProtectedObject p(newObject);
-    // now generate a code object from this file
-    return newObject->generateCode();
 }
 
 

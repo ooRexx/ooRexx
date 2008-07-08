@@ -163,7 +163,7 @@ RexxMethod::RexxMethod(RexxString *name, RexxSource *_source)
     ProtectedObject p2(_source);
     OrefSet(this, this->executableName, name);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode();
+    RexxCode *codeObj = _source->generateCode(true);
     OrefSet(this, this->code, codeObj);
 }
 
@@ -200,7 +200,7 @@ RexxMethod::RexxMethod(RexxString *name)
     RexxSource *_source = new RexxSource(name);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode();
+    RexxCode *codeObj = _source->generateCode(true);
     OrefSet(this, this->code, codeObj);
 }
 
@@ -223,7 +223,7 @@ RexxMethod::RexxMethod(RexxString *name, RexxBuffer *buf)
     RexxSource *_source = new RexxSource(name, buf);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode();
+    RexxCode *codeObj = _source->generateCode(true);
     OrefSet(this, this->code, codeObj);
 }
 
@@ -247,7 +247,7 @@ RexxMethod::RexxMethod(RexxString *name, const char *data, size_t length)
     RexxSource *_source = new RexxSource(name, data, length);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode();
+    RexxCode *codeObj = _source->generateCode(true);
     OrefSet(this, this->code, codeObj);
 }
 
@@ -270,7 +270,7 @@ RexxMethod::RexxMethod(RexxString *name, RexxArray *s)
     RexxSource *_source = new RexxSource(name, s);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode();
+    RexxCode *codeObj = _source->generateCode(true);
     OrefSet(this, this->code, codeObj);
 }
 

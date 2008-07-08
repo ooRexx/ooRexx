@@ -110,7 +110,7 @@ RoutineClass::RoutineClass(RexxString *name)
     RexxSource *_source = new RexxSource(name);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode();
+    RexxCode *codeObj = _source->generateCode(false);
     OrefSet(this, this->code, codeObj);
 }
 
@@ -133,7 +133,7 @@ RoutineClass::RoutineClass(RexxString *name, RexxBuffer *s)
     RexxSource *_source = new RexxSource(name, s);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode();
+    RexxCode *codeObj = _source->generateCode(false);
     OrefSet(this, this->code, codeObj);
 }
 
@@ -157,7 +157,7 @@ RoutineClass::RoutineClass(RexxString *name, const char *data, size_t length)
     RexxSource *_source = new RexxSource(name, data, length);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode();
+    RexxCode *codeObj = _source->generateCode(false);
     OrefSet(this, this->code, codeObj);
 }
 
@@ -180,7 +180,7 @@ RoutineClass::RoutineClass(RexxString *name, RexxArray *s)
     RexxSource *_source = new RexxSource(name, s);
     ProtectedObject p2(_source);
     // generate our code object and make the file hook up.
-    RexxCode *codeObj = _source->generateCode();
+    RexxCode *codeObj = _source->generateCode(false);
     OrefSet(this, this->code, codeObj);
 }
 
