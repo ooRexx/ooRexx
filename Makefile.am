@@ -209,6 +209,7 @@ platformHeaders = $(build_kernel_platform_dir)/APIDefinitions.h \
                   $(build_kernel_platform_dir)/SysInterpreterInstance.hpp \
                   $(build_kernel_platform_dir)/SysLibrary.hpp \
                   $(build_kernel_platform_dir)/SysNativeFunctions.h \
+                  $(build_kernel_platform_dir)/SysNativeMethods.h \
                   $(build_kernel_platform_dir)/SystemCommands.h \
                   $(build_kernel_platform_dir)/SystemInterpreter.hpp \
                   $(build_kernel_platform_dir)/SystemSemaphores.h \

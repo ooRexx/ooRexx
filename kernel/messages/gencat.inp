@@ -1724,6 +1724,12 @@ $ Error_Invalid_argument_maxarg
 $ Error_Invalid_data_constant_dir
 708 Data must not follow the ::CONSTANT value; found "&1"
 
+$ Error_Unsupported_copy_method
+709 COPY method is not supported for object &1
+
+$ Error_Execution_context_not_active
+710 Target RexxContext is no longer active
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */

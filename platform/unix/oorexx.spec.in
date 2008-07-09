@@ -149,6 +149,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/include/rexxapitypes.h
 %{_prefix}/include/rexxplatformapis.h
 %{_prefix}/include/rexxplatformdefs.h
+%{_prefix}/include/oorexxapi.h
+%{_prefix}/include/oorexxerrors.h
 %{_prefix}/share/man/man1/rexx.1
 %{_prefix}/share/man/man1/rexxc.1
 %{_prefix}/share/man/man1/rxsubcom.1
@@ -212,6 +214,8 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/include/rexxapitypes.h               /usr/include/rexxapitypes.h
    ln -sf %{_prefix}/include/rexxplatformapis.h           /usr/include/rexxplatformapis.h
    ln -sf %{_prefix}/include/rexxplatformdefs.h           /usr/include/rexxplatformdefs.h
+   ln -sf %{_prefix}/include/oorexxapi.h                  /usr/include/oorexxapi.h
+   ln -sf %{_prefix}/include/oorexxerrors.h               /usr/include/oorexxerrors.h
    ln -sf %{_prefix}/share/man/man1/rexx.1                /usr/share/man/man1/rexx.1
    ln -sf %{_prefix}/share/man/man1/rexxc.1               /usr/share/man/man1/rexxc.1
    ln -sf %{_prefix}/share/man/man1/rxsubcom.1            /usr/share/man/man1/rxsubcom.1
@@ -261,6 +265,8 @@ rm -f /usr/include/rexxapidefs.h
 rm -f /usr/include/rexxapitypes.h
 rm -f /usr/include/rexxplatformapis.h
 rm -f /usr/include/rexxplatformdefs.h
+rm -f /usr/include/oorexxapi.h
+rm -f /usr/include/oorexxerrors.h
 rm -f /usr/bin/rexxtry.rex
 rm -rf /usr/share/ooRexx
 
