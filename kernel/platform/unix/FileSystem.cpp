@@ -145,7 +145,7 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
 {
     char fullname[PATH_MAX + 2];    // finally resolved name
     // The file may purposefully have no extension.
-    if (!SysFileSystem::searchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
+    if (!SysFileSystem::primitiveSearchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
     {
 #ifdef ORX_CATDIR
          strcpy(fullname, ORX_CATDIR"/rexx.img");

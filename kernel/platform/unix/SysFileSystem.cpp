@@ -402,12 +402,12 @@ bool SysFileSystem::hasExtension(const char *name)
 
 
 /**
- * Test if a filename has a directory portion 
+ * Test if a filename has a directory portion
  *
  * @param name   The name to check.
  *
- * @return true if a directory was found on the file, false if 
- *         there is no directory. 
+ * @return true if a directory was found on the file, false if
+ *         there is no directory.
  */
 bool SysFileSystem::hasDirectory(const char *name)
 {
@@ -424,7 +424,7 @@ bool SysFileSystem::hasDirectory(const char *name)
         }
         endPtr--;
     }
-    return false;          // no directory  
+    return false;          // no directory
 }
 
 
@@ -443,6 +443,24 @@ bool SysFileSystem::hasDirectory(const char *name)
 bool SysFileSystem::searchName(const char *name, const char *path, const char *extension, char *resolvedName)
 {
     UnsafeBlock releaser;
+    return primitiveSearchName(name, path, extension, resolvedName);
+}
+
+
+/**
+ * Do a search for a single variation of a filename.
+ *
+ * @param name      The name to search for.
+ * @param directory A specific directory to look in first (can be NULL).
+ * @param extension A potential extension to add to the file name (can be NULL).
+ * @param resolvedName
+ *                  The buffer used to return the resolved file name.
+ *
+ * @return true if the file was located.  A true returns indicates the
+ *         resolved file name has been placed in the provided buffer.
+ */
+bool SysFileSystem::primitiveSearchName(const char *name, const char *path, const char *extension, char *resolvedName)
+{
     // this is for building a temporary name
     char       tempName[PATH_MAX + 3];
 
@@ -534,8 +552,8 @@ bool SysFileSystem::searchPath(const char *name, const char *path, char *resolve
     // get an end pointer
     const char *pathEnd = path + strlen(path);
 
-    const char *p = path; 
-    const char *q = strchr(p, ':'); 
+    const char *p = path;
+    const char *q = strchr(p, ':');
     /* For every dir in searchpath*/
     for (; p < pathEnd; p = q + 1, q = strchr(p, ':'))
     {
@@ -556,7 +574,7 @@ bool SysFileSystem::searchPath(const char *name, const char *path, char *resolve
         // a failure here means an invalid name of some sort
         if (canonicalizeName(resolvedName))
         {
-            struct stat dummy; 
+            struct stat dummy;
             if (!stat(resolvedName, &dummy))     /* If file is found,          */
             {
                 return true;

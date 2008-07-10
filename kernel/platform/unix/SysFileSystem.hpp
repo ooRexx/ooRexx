@@ -95,6 +95,7 @@ public:
     static void  qualifyStreamName(const char *unqualifiedName, char *qualifiedName, size_t bufferSize);
     static bool  fileExists(const char *name);
     static bool  searchName(const char *name, const char *path, const char *extension, char *resolvedName);
+    static bool  primitiveSearchName(const char *name, const char *path, const char *extension, char *resolvedName);
     static bool  checkCurrentFile(const char *name, char *resolvedName);
     static bool  searchPath(const char *name, const char *path, char *resolvedName);
     static bool  hasExtension(const char *name);

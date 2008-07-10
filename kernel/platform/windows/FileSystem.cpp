@@ -136,30 +136,22 @@ void SystemInterpreter::loadImage(
 /* Function:  Load the image into storage                          */
 /*******************************************************************/
 {
-    char      FullName[CCHMAXPATH + 2];  /* temporary name buffer             */
-    HANDLE    fileHandle;                /* open file access handle           */
-    DWORD     bytesRead;                 /* number of bytes read              */
-
-    LPTSTR ppszFilePart=NULL;            // file name only in buffer
-
-    if ( !SearchPath(NULL,                // search default order
-                     (LPCTSTR)BASEIMAGE,  // @ of filename
-                     NULL,                // @ of extension, no default
-                     CCHMAXPATH,          // len of buffer
-                     (LPTSTR)FullName,    // buffer for found
-                     &ppszFilePart) )
+    char fullname[CCHMAXPATH + 1];    // finally resolved name
+    // The file may purposefully have no extension.
+    if (!SysFileSystem::primitiveSearchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
     {
         logic_error("no startup image");   /* can't find it                     */
     }
 
     /* try to open the file              */
-    fileHandle = CreateFile(FullName, GENERIC_READ, FILE_SHARE_READ,
+    HANDLE fileHandle = CreateFile(fullname, GENERIC_READ, FILE_SHARE_READ,
                             NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
 
     if (fileHandle == INVALID_HANDLE_VALUE)
     {
         logic_error("no startup image");   /* can't find it                     */
     }
+    DWORD     bytesRead;                 /* number of bytes read              */
     /* Read in the size of the image     */
     ReadFile(fileHandle, imageSize, sizeof(size_t), &bytesRead, NULL);
     *imageBuffer = memoryObject.allocateImageBuffer(*imageSize);

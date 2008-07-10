@@ -77,6 +77,7 @@ public:
     static RexxString *extractExtension(RexxString *file);
     static RexxString *extractFile(RexxString *file);
     static bool  searchName(const char *name, const char *path, const char *extension, char *resolvedName);
+    static bool  primitiveSearchName(const char *name, const char *path, const char *extension, char *resolvedName);
     static bool  checkCurrentFile(const char *name, char *resolvedName);
     static bool  searchPath(const char *name, const char *path, const char *extension, char *resolvedName);
     static void  getLongName(char *fullName, size_t size);

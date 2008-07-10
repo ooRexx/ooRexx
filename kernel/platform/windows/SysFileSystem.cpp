@@ -355,6 +355,28 @@ bool SysFileSystem::hasExtension(const char *name)
 bool SysFileSystem::searchName(const char *name, const char *path, const char *extension, char *resolvedName)
 {
     UnsafeBlock releaser;
+    return primitiveSearchName(name, path, extension, resolvedName);
+}
+
+
+/**
+ * Do a search for a single variation of a filename.
+ *
+ * NOTE:  This version does not do anything with the
+ * kernel lock, so it is callable before the first activity
+ * is set up.
+ *
+ * @param name      The name to search for.
+ * @param path
+ * @param extension A potential extension to add to the file name (can be NULL).
+ * @param resolvedName
+ *                  The buffer used to return the resolved file name.
+ *
+ * @return true if the file was located.  A true returns indicates the
+ *         resolved file name has been placed in the provided buffer.
+ */
+bool SysFileSystem::primitiveSearchName(const char *name, const char *path, const char *extension, char *resolvedName)
+{
     // this is for building a temporary name
     char       tempName[CCHMAXPATH + 2];
 
