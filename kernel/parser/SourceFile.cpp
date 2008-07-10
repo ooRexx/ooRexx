@@ -1160,9 +1160,9 @@ RexxCode *RexxSource::generateCode(bool isMethod)
       // In order to install, we need to call something.  We manage this by
       // creating a dummy stub routine that we can call to force things to install
       RexxCode *stub = new RexxCode(this, OREF_NULL, OREF_NULL, 10, FIRST_VARIABLE_INDEX);
-      ProtectedObject p(stub);
+      ProtectedObject p2(stub);
       RoutineClass *code = new RoutineClass(programName, stub);
-      p = code;
+      p2 = code;
       ProtectedObject dummy;
       code->call(ActivityManager::currentActivity, programName, NULL, 0, dummy);
   }
