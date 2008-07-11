@@ -291,7 +291,7 @@ void options_error( int   type,        /* Error type.                */
   {
      sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
      if ((catd = catopen(DataArea, 0)) == (nl_catd)CATD_ERR)
-        printf("\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
+        printf("\nCannot open REXX message catalog %s.  Not in NLSPATH or %s.\n",
                REXXMESSAGEFILE, ORX_CATDIR);
   }
                                 /* retrieve message from repository        */
@@ -302,7 +302,7 @@ void options_error( int   type,        /* Error type.                */
      sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
      if ((catd = catopen(DataArea, 0)) == (nl_catd)CATD_ERR)
      {
-        sprintf(DataArea, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
+        sprintf(DataArea, "\nCannot open REXX message catalog %s.  Not in NLSPATH or %s.\n",
                           REXXMESSAGEFILE, ORX_CATDIR);
      }
      else

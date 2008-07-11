@@ -121,7 +121,7 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
                 sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
                 if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
                 {
-                    sprintf(DataArea, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
+                    sprintf(DataArea, "Cannot open REXX message catalog %s.  Not in NLSPATH or %s.",
                             REXXMESSAGEFILE, ORX_CATDIR);
                     return new_string(DataArea);
                 }
@@ -133,7 +133,7 @@ RexxString *SystemInterpreter::getMessageText(wholenumber_t code )
                 sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
                 if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
                 {
-                    sprintf(DataArea, "\nCannot open REXX message catalog %s.\nNot in NLSPATH or %s.\n",
+                    sprintf(DataArea, "Cannot open REXX message catalog %s.  Not in NLSPATH or %s.",
                             REXXMESSAGEFILE, ORX_CATDIR);
                     return new_string(DataArea);
                 }

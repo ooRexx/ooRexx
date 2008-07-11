@@ -540,7 +540,7 @@ bool SysFile::putLine(const char *mybuffer, size_t len, size_t &bytesWritten)
     // this could be a null line...don't try to write zero bytes
     if (len > 0)
     {
-        if (!write(buffer, len, bytesWritten))
+        if (!write(mybuffer, len, bytesWritten))
         {
             return false;
         }
@@ -574,7 +574,7 @@ bool SysFile::gets(char *mybuffer, size_t bufferLen, size_t &bytesRead)
         // this will just be null terminated.  If this us a multi
         // character line terminator, both characters will appear
         // at the end of the line.
-        if (buffer[i] == '\n')
+        if (mybuffer[i] == '\n')
         {
             // once we hit a new line character, back up and see if the
             // previous character is a carriage return.  If it is, collapse
@@ -582,7 +582,7 @@ bool SysFile::gets(char *mybuffer, size_t bufferLen, size_t &bytesRead)
             if (i >= 1 && buffer[i - 1] == '\r')
             {
                 i--;
-                buffer[i] = '\n';
+                mybuffer[i] = '\n';
             }
             i++;   // we need to step the position so that the null terminator doesn't overwrite
             break;
@@ -596,7 +596,7 @@ bool SysFile::gets(char *mybuffer, size_t bufferLen, size_t &bytesRead)
     }
 
     // null terminate, set the length, and return
-    buffer[i] = '\0';
+    mybuffer[i] = '\0';
     // this is the length minus the terminating null
     bytesRead = i;
     // return an error state, but not EOF status.
