@@ -69,20 +69,30 @@
 void SysSemaphore::create()
 {
     int iRC = 0;
-#if defined(OPSYS_AIX43) || defined(LINUX)   // added for AIX4.3
+                                    // Clear mutex/cond prior to init
+//  this->semMutex = NULL;
+//  this->semCond = NULL;
+
+/* The original settings for pthread_mutexattr_settype() were:
+   AIX43: PTHREAD_MUTEX_RECURSIVE
+   SUNOS: PTHREAD_MUTEX_ERRORCHECK
+   LINUX: PTHREAD_MUTEX_RECURSIVE_NP
+*/
+
+#if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
     pthread_mutexattr_t mutexattr;
 
     iRC = pthread_mutexattr_init(&mutexattr);
     if ( iRC == 0 )
     {
-#if defined(OPSYS_AIX43)                     // added for LINUX
-        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE );
-#endif
-#if defined(OPSYS_SUN) && defined(LINUX)
-        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK );
-#endif
-#if defined(LINUX) && !defined(OPSYS_SUN)
-        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
+#if defined( HAVE_PTHREAD_MUTEX_RECURSIVE_NP ) /* Linux most likely */
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
+#elif defined( HAVE_PTHREAD_MUTEX_RECURSIVE )
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+#elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
+        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
+#else
+        fprintf(stderr," *** ERROR: Unknown 2nd argument to pthread_mutexattr_settype()!\n");
 #endif
     }
     if ( iRC == 0 )
@@ -106,10 +116,10 @@ void SysSemaphore::create()
 #endif
     if ( iRC != 0 )
     {
-        fprintf(stderr," *** ERROR: At SysSemaphore(), pthread_mutex_init - RC = %d !\n", iRC);
+        fprintf(stderr," *** ERROR: At RexxSemaphore(), pthread_mutex_init - RC = %d !\n", iRC);
         if ( iRC == EINVAL )
         {
-            fprintf(stderr," *** ERROR: Application was not built thread save!\n");
+            fprintf(stderr," *** ERROR: Application was not built thread safe!\n");
         }
     }
     this->postedCount = 0;
@@ -157,7 +167,7 @@ bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
     struct timespec timestruct;
     time_t *Tpnt = NULL;
 
-    int result = 0; 
+    int result = 0;
     timestruct.tv_nsec = 0;
     timestruct.tv_sec = t/1000+time(Tpnt);    // convert to secs and abstime
     pthread_mutex_lock(&(this->semMutex));    // Lock access to semaphore
@@ -167,8 +177,8 @@ bool SysSemaphore::wait(uint32_t t)           // takes a timeout in msecs
         result = pthread_cond_timedwait(&(this->semCond),&(this->semMutex),&timestruct);
     }
     pthread_mutex_unlock(&(this->semMutex));    // Release mutex lock
-    // a false return means this timed out 
-    return result != ETIMEDOUT; 
+    // a false return means this timed out
+    return result != ETIMEDOUT;
 }
 
 void SysSemaphore::reset()
@@ -183,24 +193,30 @@ void SysSemaphore::reset()
 /* ********************************************************************** */
 void SysMutex::create()
 {
-    int iRC = 0;
     // Clear Mutex prior to Init call
+//   this->mutexMutex = NULL;
     this->mutex_value = 0;
-#if defined(OPSYS_AIX43) || defined(LINUX)
+
+/* The original settings for pthread_mutexattr_settype() were:
+   AIX43: PTHREAD_MUTEX_RECURSIVE
+   SUNOS: PTHREAD_MUTEX_ERRORCHECK
+   LINUX: PTHREAD_MUTEX_RECURSIVE_NP
+*/
+#if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
     pthread_mutexattr_t mutexattr;
 
     iRC = pthread_mutexattr_init(&mutexattr);
     if ( iRC == 0 )
     {
-#if defined(OPSYS_AIX43)              // added for LINUX
-        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE );
-#endif
-#if defined(OPSYS_SUN) && defined(LINUX)
-        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK );
-#endif
-#if defined(LINUX) && !defined(OPSYS_SUN)
-        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP );
-#endif
+    #if defined( HAVE_PTHREAD_MUTEX_RECURSIVE_NP ) /* Linux most likely */
+            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
+    #elif defined( HAVE_PTHREAD_MUTEX_RECURSIVE )
+            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+    #elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
+            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
+    #else
+            fprintf(stderr," *** ERROR: Unknown 2nd argument to pthread_mutexattr_settype()!\n");
+    #endif
     }
     if ( iRC == 0 )
     {
@@ -215,7 +231,7 @@ void SysMutex::create()
 #endif
     if ( iRC != 0 )
     {
-        fprintf(stderr," *** ERROR: At SysMutex(), pthread_mutex_init - RC = %d !\n", iRC);
+        fprintf(stderr," *** ERROR: At RexxMutex(), pthread_mutex_init - RC = %d !\n", iRC);
     }
 }
 
