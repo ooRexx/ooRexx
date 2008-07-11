@@ -385,7 +385,7 @@ bool SysFileSystem::hasExtension(const char *name)
     while (name < endPtr)
     {
         // find the first directory element?
-        if (*endPtr == '\\')
+        if (*endPtr == '/')
         {
             return false;        // found a directory portion before an extension...we're extensionless
         }
@@ -418,7 +418,7 @@ bool SysFileSystem::hasDirectory(const char *name)
     while (name < endPtr)
     {
         // find the first directory element?
-        if (*endPtr == '\\')
+        if (*endPtr == '/')
         {
             return true;         // found a directory delimiter
         }
