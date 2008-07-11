@@ -77,7 +77,7 @@ typedef uint16_t *(RexxEntry *PNATIVEMETHOD)(RexxMethodContext *, ValueDescripto
                                        /* pointer to native function function*/
 typedef uint16_t *(RexxEntry *PNATIVEROUTINE)(RexxCallContext *, ValueDescriptor *);
 
-typedef unsigned int (RexxEntry *PREGISTEREDROUTINE)(const char *, size_t, PCONSTRXSTRING, const char *, PRXSTRING);
+typedef size_t (RexxEntry *PREGISTEREDROUTINE)(const char *, size_t, PCONSTRXSTRING, const char *, PRXSTRING);
 
 class BaseExecutable : public RexxObject
 {
