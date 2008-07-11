@@ -579,7 +579,7 @@ bool SysFile::gets(char *mybuffer, size_t bufferLen, size_t &bytesRead)
             // once we hit a new line character, back up and see if the
             // previous character is a carriage return.  If it is, collapse
             // it to the single line delimiter.
-            if (i >= 1 && buffer[i - 1] == '\r')
+            if (i >= 1 && mybuffer[i - 1] == '\r')
             {
                 i--;
                 mybuffer[i] = '\n';
