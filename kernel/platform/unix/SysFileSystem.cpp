@@ -672,11 +672,17 @@ bool SysFileSystem::canonicalizeName(char *name)
         strncat(name, tempName, PATH_MAX + 1);
     }
 
-    char *tempName = canonicalize_file_name(name);
-    if (tempName == NULL)
+    // NOTE:  realpath() is more portable than canonicalize_file_name().  The biggest difference between them
+    // is support for really long file names (longer than PATH_MAX).  Since everything we've done up to this point 
+    // has assumed that PATH_MAX is the limit, it probably doesn't make much sense to start worrying about this 
+    // at the very last stage of the process. 
+    char tempName[PATH_MAX + 2];
+    char *temp = realpath(name, tempName);
+    if (temp == NULL)
     {
         return false;
     }
+    strcpy(tempName, name); 
     return true;
 }
 
