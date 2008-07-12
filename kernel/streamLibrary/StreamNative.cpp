@@ -2274,6 +2274,12 @@ const char *StreamInfo::streamOpen(const char *options)
         }
     }
 
+    // turn off buffering if requested.
+    if (nobuffer)
+    {
+        fileInfo.setBuffering(false, 0);
+    }
+
 /********************************************************************************************/
 /*          if it is a persistant stream put the write character pointer at the end         */
 /*   need to check if the last character is end of file and if so write over it             */

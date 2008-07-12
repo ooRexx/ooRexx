@@ -842,12 +842,15 @@ bool SysFile::seek(int64_t offset, int direction, int64_t &position)
         {
             case SEEK_SET:
                 position = _lseeki64(fileHandle, offset, SEEK_SET);
+                break;
 
             case SEEK_CUR:
                 position = _lseeki64(fileHandle, offset, SEEK_CUR);
+                break;
 
             case SEEK_END:
                 position = _lseeki64(fileHandle, offset, SEEK_END);
+                break;
 
             default:
                 return false;
@@ -897,6 +900,8 @@ bool SysFile::getSize(int64_t &size)
     // are we open?
     if (fileHandle >= 0)
     {
+        // we might have pending output that might change the size
+        flush();
         // have a handle, use fstat() to get the info
         struct _stati64 fileInfo;
         if (_fstati64(fileHandle, &fileInfo) == 0)
