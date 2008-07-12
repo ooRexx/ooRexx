@@ -158,11 +158,11 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
              logic_error("no startup image");   /* open failure                      */
     #endif
         }
-    }
-    image = fopen(fullname, "rb");/* try to open the file              */
-    if ( image == NULL )
-    {
-        logic_error("unable to open image file");
+        image = fopen(fullname, "rb");/* try to open the file              */
+        if ( image == NULL )
+        {
+            logic_error("unable to open image file");
+        }
     }
 
     /* Read in the size of the image     */
