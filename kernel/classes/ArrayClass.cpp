@@ -529,7 +529,7 @@ RexxObject *RexxArray::dimension(      /* query dimensions of an array      */
         /* convert to a number               */
         size_t position = target->requiredPositive(ARG_ONE);
         /* asking for dimension of single?   */
-        if (this->dimensions == OREF_NULL)
+        if ((this->dimensions == OREF_NULL) || (this->dimensions->size() == 1))
         {
             if (position == 1)
             {             /* first dimension?                  */
