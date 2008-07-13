@@ -40,67 +40,6 @@ LIBRARY OODIALOG BASE=0x6B170000 ; @HOL for feature 421
 
 EXPORTS
   RexxGetPackage
-  PLAYSOUNDFILE         =        PlaySoundFile
-  PLAYSND               =        PlaySnd
-  PLAYSOUNDFILEINLOOP   =        PlaySoundFileInLoop
-  STOPSOUNDFILE         =        StopSoundFile
-  SLEEPMS               =        SleepMS
-  GETFILENAMEWINDOW     =        GetFileNameWindow
-  ADDUSERMESSAGE        =        AddUserMessage
-  DATATABLE             =        DataTable
-  BMPBUTTON             =        BmpButton
-  HANDLEDIALOGADMIN     =        HandleDialogAdmin
-  HANDLEDLG             =        HandleDlg
-  SETITEMDATA           =        SetItemData
-  SETSTEMDATA           =        SetStemData
-  GETITEMDATA           =        GetItemData
-  GETSTEMDATA           =        GetStemData
-  SENDWINMSG            =        SendWinMsg
-  ERRORMESSAGE          =        ErrorMessage
-  INFOMESSAGE           =        InfoMessage
-  YESNOMESSAGE          =        YesNoMessage
-
-  FINDTHEWINDOW         =        FindTheWindow
-  WINDOWRECT            =        WindowRect
-  GETDLGMSG             =        GetDlgMsg
-  STARTDIALOG           =        StartDialog
-  HANDLESCROLLBAR       =        HandleScrollBar
-  WRITETEXT             =        WriteText
-  SCROLLTEXT            =        ScrollText
-  SCROLLTHEWINDOW       =        ScrollTheWindow
-  HANDLEFONT            =        HandleFont
-  SETBACKGROUND         =        SetBackground
-  DCDRAW                =        DCDraw
-  DRAWGETSET            =        DrawGetSet
-  HANDLEDC_OBJ          =        HandleDC_Obj
-  WNDSHOW_POS           =        WndShow_Pos
-  WND_DESKTOP           =        Wnd_Desktop
-  WINAPI32FUNC          =        WinAPI32Func
-  WINTIMER              =        WinTimer
-  LOADREMOVEBITMAP      =        LoadRemoveBitmap
-  SETLBTABSTOPS         =        SetLBTabStops
-  DIALOGMENU            =        DialogMenu
-  BINARYAND             =        BinaryAnd
-  HANDLETREECTRL        =        HandleTreeCtrl
-  HANDLELISTCTRL        =        HandleListCtrl
-  HANDLELISTCTRLEX      =        HandleListCtrlEx
-  HANDLECONTROLEX       =        HandleControlEx
-  HANDLEOTHERNEWCTRLS   =        HandleOtherNewCtrls
-  HandleMonthCalendar
-  HandleDateTimePicker
-
-  USRCREATEDIALOG       =        UsrCreateDialog
-  USRDEFINEDIALOG       =        UsrDefineDialog
-  USRADDCONTROL         =        UsrAddControl
-  USRADDNEWCTRL         =        UsrAddNewCtrl
-  USRMENU               =        UsrMenu
-  USRADDRESOURCE        =        UsrAddResource
-  GETSCREENSIZE         =        GetScreenSize
-  GETDIALOGFACTOR       =        GetDialogFactor
-  GETSTDTEXTSIZE        =        GetStdTextSize
-  GETSYSMETRICS         =        GetSysMetrics
-
-  DUMPADMIN             =        DumpAdmin
 
 
 
