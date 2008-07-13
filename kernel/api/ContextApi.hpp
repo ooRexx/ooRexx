@@ -147,7 +147,7 @@ public:
      */
     inline InstanceApiContext(RexxInstance *c)
     {
-        instance = (InterpreterInstance *)c;
+        instance = ((InstanceContext *)c)->instance;
     }
 
     /**
