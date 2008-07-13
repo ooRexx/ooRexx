@@ -40,8 +40,6 @@
 /*                                                                            */
 /******************************************************************************/
 
-#include "oorexxapi.h"
-
 #define MAXREXXNAME 128
 #define MAXLENQUEUE 2056
 #define NR_BUFFER 15
@@ -420,8 +418,6 @@ typedef struct
    HWND AktChild;
    HINSTANCE TheInstance;
    HANDLE TheThread;
-   RexxObjectPtr   self;
-   RexxInstance  *interpreter;
    BOOL OnTheTop;
    ULONG LeaveDialog;
    BOOL Use3DControls;

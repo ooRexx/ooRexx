@@ -311,20 +311,6 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
    return FALSE;
 }
 
-RexxMethod2(int, SetInterpreter, OSELF, self, CSTRING, dlgAdmin)
-{
-    DIALOGADMIN * dlgAdm = (DIALOGADMIN *)string2pointer(dlgAdmin);
-
-    if ( dlgAdm == NULL )
-    {
-        return -1;
-    }
-    printf("self=%p contex=%p instance=%p\n", self, context, context->threadContext->instance);
-    dlgAdm->interpreter = context->threadContext->instance;
-    dlgAdm->self = self;
-    return 0;
-}
-
 
 
 /* prepare dialog management table for a new dialog entry */
@@ -2255,12 +2241,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_LAST_ROUTINE()
 };
 
-
-RexxMethodEntry oodialog_methods[] = {
-    REXX_METHOD( SetInterpreter, SetInterpreter ),
-    REXX_LAST_METHOD()
-};
-
 RexxPackageEntry oodialog_package_entry =
 {
     STANDARD_PACKAGE_HEADER
@@ -2269,7 +2249,7 @@ RexxPackageEntry oodialog_package_entry =
     NULL,                                // no load/unload functions
     NULL,
     oodialog_functions,                  // the exported functions
-    oodialog_methods                     // the exported methods
+    NULL                                 // no methods in this package
 };
 
 // package loading stub.
