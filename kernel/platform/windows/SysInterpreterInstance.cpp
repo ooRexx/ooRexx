@@ -82,7 +82,7 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
     char temp[4];             // this is just a temp buffer to check component sizes
 
     size_t pathSize = GetEnvironmentVariable("PATH", temp, sizeof(temp));
-    size_t rexxPathSize = GetEnvironmentVariable("REXXPATH", temp, sizeof(temp));
+    size_t rexxPathSize = GetEnvironmentVariable("REXX_PATH", temp, sizeof(temp));
     size_t parentSize = parentDir == NULL ? 0 : strlen(parentDir);
     size_t extensionSize = extensionPath == NULL ? 0 : strlen(extensionPath);
 
@@ -109,7 +109,7 @@ SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
     }
 
     // add on the Rexx path, then the normal path
-    GetEnvironmentVariable("REXXPATH", path + strlen(path), (DWORD)pathSize + 1);
+    GetEnvironmentVariable("REXX_PATH", path + strlen(path), (DWORD)pathSize + 1);
     if (path[strlen(path) - 1] != ';')
     {
         strcat(path, ";");

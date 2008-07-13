@@ -88,7 +88,7 @@ void SysInterpreterInstance::addSearchExtension(const char *name)
 SysSearchPath::SysSearchPath(const char *parentDir, const char *extensionPath)
 {
     const char *sysPath = getenv("PATH");
-    const char *rexxPath = getenv("REXXPATH");
+    const char *rexxPath = getenv("REXX_PATH");
     size_t sysPathSize = sysPath == NULL ? 0 : strlen(sysPath);
     size_t rexxPathSize = rexxPath == NULL ? 0 : strlen(rexxPath);
     size_t parentSize = parentDir == NULL ? 0 : strlen(parentDir);
