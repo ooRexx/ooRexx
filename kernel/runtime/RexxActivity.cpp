@@ -1573,6 +1573,14 @@ void RexxActivity::initializeThreadContext()
 
 
 /**
+ * Detach a thread from the interpreter instance,
+ */
+void RexxActivity::detachThread()
+{
+    instance->detachThread(this);
+}
+
+/**
  * Cleanup the resources for a detached activity, including
  * removing the suspended state from a pushed activity nest.
  */

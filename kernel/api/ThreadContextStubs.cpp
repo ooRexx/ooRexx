@@ -67,10 +67,11 @@ BEGIN_EXTERN_C()
 
 void RexxEntry DetachThread(RexxThreadContext *c)
 {
-    ApiContext context(c);
+    // we do this one without grabbing the lock because we're going away.
+    ApiContext context(c, false);
     try
     {
-        context.activity->detachInstance();
+        context.activity->detachThread();
     }
     catch (RexxNativeActivation *)
     {

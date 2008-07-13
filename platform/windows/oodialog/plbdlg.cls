@@ -193,6 +193,8 @@
    /* the OREXX-API manager and prepare the dialog management for a new      */
    /* dialog */
 
+::method setInterpreterInstance  EXTERNAL 'LIBRARY oodialog SetInterpreter'
+
 ::method Init protected
    expose Library Resource DlgData.
    use arg Library, Resource, DlgData., includeFile
@@ -211,6 +213,9 @@
       self~InitCode = 1
       return 1
    end
+
+   ret = self~setInterpreterInstance(self~Adm)
+   say 'Got back:' ret
 
    /* call methods to get dialog settings */
    self~InitAutoDetection

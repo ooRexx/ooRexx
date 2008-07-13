@@ -162,6 +162,9 @@ int InterpreterInstance::attachThread(RexxThreadContext *&attachedContext)
 {
     RexxActivity *activity = attachThread();
     attachedContext = activity->getThreadContext();
+    // When we attach, we get the current lock.  We need to ensure we
+    // release this before returning control to the outside world.
+    activity->releaseAccess();
     return 0;
 }
 
@@ -196,12 +199,12 @@ RexxActivity *InterpreterInstance::attachThread()
 /**
  * Detach a thread from this interpreter instance.
  *
+ * @param activity The activity to detach
+ *
  * @return true if this worked ok.
  */
-bool InterpreterInstance::detachThread()
+bool InterpreterInstance::detachThread(RexxActivity *activity)
 {
-    // first check for an existing activity
-    RexxActivity *activity = findActivity();
     // if the thread in question is not found, is not an attached thread, or
     // the thread is currently busy, this fails
     if (activity == OREF_NULL || !activity->isAttached() || activity->isActive())
@@ -210,12 +213,23 @@ bool InterpreterInstance::detachThread()
     }
     ResourceSection lock;
 
-
     allActivities->removeItem((RexxObject *)activity);
     // have the activity manager remove this from the global tables
     // and perform resource cleanup
     ActivityManager::returnActivity(activity);
     return true;
+}
+
+
+/**
+ * Detach a thread from this interpreter instance.
+ *
+ * @return true if this worked ok.
+ */
+bool InterpreterInstance::detachThread()
+{
+    // first check for an existing activity
+    return detachThread(findActivity());
 }
 
 

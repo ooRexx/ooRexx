@@ -235,6 +235,7 @@ typedef enum
    void setupAttachedActivity(InterpreterInstance *interpreter);
    void addToInstance(InterpreterInstance *interpreter);
    void detachInstance();
+   void detachThread();
    inline InterpreterInstance *getInstance() { return instance; }
 
    inline void activate() { nestedCount++; }

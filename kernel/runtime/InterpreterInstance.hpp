@@ -80,6 +80,7 @@ public:
     RexxActivity *attachThread();
     int attachThread(RexxThreadContext *&attachedContext);
     bool detachThread();
+    bool detachThread(RexxActivity *activity);
     RexxActivity *spawnActivity(RexxActivity *parent);
     void exitCurrentThread();
     RexxActivity *findActivity(thread_id_t threadId);

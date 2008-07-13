@@ -295,6 +295,23 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                 if ( ((m[i].tag & TAG_CTRLMASK) == TAG_DIALOG) && (m[i].tag & TAG_HELP) && (message == WM_HELP))
                 {
                     LPHELPINFO phi = (LPHELPINFO)lparam;
+                    RexxThreadContext *context = NULL;
+                    RexxInstance  *interpreter = addressedTo->interpreter;
+
+                    printf("Got F1 self=%p interpreter=%p context=%p msg=%s\n",
+                           addressedTo->self, interpreter, context, m[i].rexxProgram);
+
+                    if ( interpreter->AttachThread(&context) )
+                    {
+                        printf("DID attach thread. context=%p\n", context);
+                        context->SendMessage1(addressedTo->self, m[i].rexxProgram, context->NewInteger(phi->iCtrlId));
+                        context->DetachThread();     // detach the thread this is just a test.
+                        return 1;
+                    }
+                    else
+                    {
+                        printf("Did NOT attach thread.\n");
+                    }
 
                     if ( phi->iContextType == HELPINFO_WINDOW )
                         np = "WINDOW";
