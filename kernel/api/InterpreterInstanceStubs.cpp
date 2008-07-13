@@ -57,7 +57,7 @@ void RexxEntry Terminate(RexxInstance  *c)
 logical_t RexxEntry AttachThread(RexxInstance *c, RexxThreadContext **tc)
 {
     InstanceApiContext context(c);
-    return context.instance->attachThread(*tc);
+    return (context.instance->attachThread(*tc) == 0);
 }
 
 void RexxEntry Halt(RexxInstance *c)
