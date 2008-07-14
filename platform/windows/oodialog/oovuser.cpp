@@ -36,6 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
+#define _WIN32_WINNT    0x0501
+#define WINVER          0x0501
+
 #include <windows.h>
 #include <rexx.h>
 #include <stdio.h>
@@ -1034,6 +1037,9 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
        if (strstr(argv[7].strptr,"VERTICAL")) lStyle |= PBS_VERTICAL;
        if (strstr(argv[7].strptr,"SMOOTH")) lStyle |= PBS_SMOOTH;
+
+       if (strstr(argv[7].strptr,"MARQUEE") && ComCtl32Version >= COMCTL32_6_0) lStyle |= PBS_MARQUEE;
+
         /*                                     id       x          y            cx        cy  */
        UAddNamedControl(&p, PROGRESS_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
        RETPTR(p)

@@ -2079,6 +2079,37 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            CHECKARG(5);
            RETVAL((long)SendMessage(h, PBM_SETRANGE, 0, MAKELPARAM(atoi(argv[3].strptr), atoi(argv[4].strptr))))
        }
+       else
+       if (!strcmp(argv[1].strptr, "MARQUEE"))
+       {
+           /* Requires XP Common Controls version 6.0 */
+           if ( ComCtl32Version < COMCTL32_6_0 ) RETVAL(-4)
+
+           CHECKARG(5);
+           if (SendMessage(h, PBS_MARQUEE, (BOOL)atoi(argv[3].strptr), atoi(argv[4].strptr)))
+               RETVAL(1)
+           else
+               RETVAL(0)
+       }
+       else
+       if (!strcmp(argv[1].strptr, "BAR"))
+       {
+           COLORREF rgb;
+
+           if ( argc == 4 && ISHEX(argv[3].strptr) )
+           {
+               rgb = (COLORREF)strtoul(argv[3].strptr,'\0',16);
+           }
+           else if ( argc == 6)
+           {
+               rgb = RGB((BYTE)atoi(argv[3].strptr), (BYTE)atoi(argv[4].strptr), (BYTE)atoi(argv[5].strptr));
+           }
+           else
+           {
+               RETVAL(-1)
+           }
+           RETVAL(SendMessage(h, PBM_SETBARCOLOR, 0, rgb))
+       }
    }
    else
    if (!strcmp(argv[0].strptr, "SLIDER"))

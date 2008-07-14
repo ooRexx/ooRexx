@@ -198,7 +198,7 @@
    ret = ""
    if style~wordpos("NOT WS_VISIBLE") > 0 then ret = "HIDDEN"
    else if style~wordpos("WS_VISIBLE") > 0 then ret = "VISIBLE"
-   if style~wordpos("WS_DISABLED") > 0 then ret = ret || " DISABLED"
+   if style~wordpos("WS_DISABLED") > 0 & style~wordpos("NOT WS_DISABLED") == 0 then ret = ret || " DISABLED"
    if kind = "TREE" then do
       if style~wordpos("TVS_DISABLEDRAGDROP") > 0 then ret = ret || " NODRAG"
       if style~wordpos("TVS_EDITLABELS") > 0 then ret = ret || " EDIT"
@@ -256,6 +256,7 @@
    else if kind = "PROGRESS" then do
         if style~wordpos("PBS_VERTICAL") > 0 then ret = ret || " VERTICAL"
         if style~wordpos("PBS_SMOOTH") > 0 then ret = ret || " SMOOTH"
+        if style~wordpos("PBS_MARQUEE") > 0 then ret = ret || " MARQUEE"
         if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
         if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
    end
@@ -1272,6 +1273,18 @@
       return pmin || " " || pmax
    end
    else return 0
+
+::method SetMarquee
+   use strict arg on, interval = 500
+   return  HandleOtherNewCtrls("PROGRESS", "MARQUEE", self~hwnd, on, interval)
+
+::method BarColor
+   use strict arg r, g, b
+   return  HandleOtherNewCtrls("PROGRESS", "BAR", self~hwnd, r, g, b)
+
+::method BackgroundColor
+   use strict arg r, g, b
+   return  HandleOtherNewCtrls("PROGRESS", "BACK", self~hwnd, r, g, b)
 
 
 
