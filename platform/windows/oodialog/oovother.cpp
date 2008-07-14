@@ -1365,6 +1365,14 @@ size_t RexxEntry HandleControlEx(const char *funcname, size_t argc, CONSTRXSTRIN
             RETVAL(-2)  /* Subclass procedure is not installed. */
         }
     }
+    else if ( argv[2].strptr[0] == 'F' )    /* Font */
+    {
+        if ( strcmp(argv[3].strptr, "GET" ) == 0)
+        {
+            RETHANDLE(SendMessage(hCtrl, WM_GETFONT, 0, 0));
+        }
+        else RETERR
+    }
     RETERR
 }
 
