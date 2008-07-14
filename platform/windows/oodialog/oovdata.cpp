@@ -211,6 +211,27 @@ BOOL SetMultiListBoxSelections(HWND hW, ULONG id, const char * data)
                  }
 
 
+/* TODO these stub functions for Get / Set data need to be filled in. */
+BOOL GetDateTimeData(HWND hDlg, char *data, int ctrlID)
+{
+   return FALSE;
+}
+
+BOOL SetDateTimeData(HWND hDlg, const char *data, int ctrlID)
+{
+   return FALSE;
+}
+
+BOOL GetMonthCalendarData(HWND hDlg, char *data, int ctrlID)
+{
+   return FALSE;
+}
+
+BOOL SetMonthCalendarData(HWND hDlg, const char *data, int ctrlID)
+{
+   return FALSE;
+}
+
 
 BOOL GetTreeData(HWND hW, char * ldat, INT item)
 {
@@ -446,6 +467,12 @@ size_t RexxEntry GetItemData(const char *funcname, size_t argc, CONSTRXSTRING *a
       case 9:
          if (!GetTabCtrlData(hW, data, id)) data[0] = '\0';
          break;
+      case 10:
+         if (!GetDateTimeData(hW, data, id)) data[0] = '\0';
+         break;
+      case 11:
+         if (!GetMonthCalendarData(hW, data, id)) data[0] = '\0';
+         break;
 
       default: if (GetItemDataExternal) (*GetItemDataExternal)(hW, id, k, data, DATA_BUFFER-1);
                else data[0] = '\0';
@@ -568,6 +595,11 @@ size_t RexxEntry SetItemData(const char *funcname, size_t argc, CONSTRXSTRING *a
             RETC(!SetSliderData(hW, data, id))
         case 9:
             RETC(!SetTabCtrlData(hW, data, id))
+        case 10:
+            RETC(!SetDateTimeData(hW, data, id))
+        case 11:
+            RETC(!SetMonthCalendarData(hW, data, id))
+
         default:
             if (SetItemDataExternal)
             {
@@ -893,9 +925,6 @@ BOOL DataAutodetection(DIALOGADMIN * aDlg)
            else
            if ((!strcmp(classname, "LISTBOX")) && (style & WS_VISIBLE))
               itemtoadd = 3;
-
-           /* The following checks are not required unless the resource workshop supports
-              the creation of Win32 controls in .DLLs */
            else
            if ((!strcmp(classname, WC_TREEVIEW)) && (style & WS_VISIBLE))
               itemtoadd = 6;
@@ -908,6 +937,12 @@ BOOL DataAutodetection(DIALOGADMIN * aDlg)
            else
            if ((!strcmp(classname, WC_TABCONTROL)) && (style & WS_VISIBLE))
               itemtoadd = 9;
+           else
+           if ((!strcmp(classname, DATETIMEPICK_CLASS)) && (style & WS_VISIBLE))
+              itemtoadd = 10;
+           else
+           if ((!strcmp(classname, MONTHCAL_CLASS)) && (style & WS_VISIBLE))
+              itemtoadd = 11;
        }
 
        if (itemtoadd >= 0)
