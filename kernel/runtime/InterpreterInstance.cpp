@@ -356,12 +356,16 @@ RexxActivity *InterpreterInstance::findActivity()
  */
 RexxActivity *InterpreterInstance::enterOnCurrentThread()
 {
-    ResourceSection lock;              // lock the outer control block access
-
-    // attach this thread to the current activity
-    RexxActivity *activity = attachThread();
-    // this will also get us the kernel lock, and take care of nesting
-    activity->activate();
+    RexxActivity *activity;
+    {
+        ResourceSection lock;              // lock the outer control block access
+        // attach this thread to the current activity
+        activity = attachThread();
+        // this will also get us the kernel lock, and take care of nesting
+        activity->activate();
+    }
+    // we need to ensure the resource lock is released before we attempt to
+    // acquire the kernel lock
     activity->requestAccess();
     // return the activity in case the caller needs it.
     return activity;
