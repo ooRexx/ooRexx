@@ -245,11 +245,6 @@ RexxActivity *InterpreterInstance::spawnActivity(RexxActivity *parent)
 {
     // create a new activity
     RexxActivity *activity = ActivityManager::createNewActivity(parent);
-
-    ResourceSection lock;
-
-    // add this to the activity lists
-    allActivities->append((RexxObject *)activity);
     // associate the thread with this instance
     activity->addToInstance(this);
     return activity;

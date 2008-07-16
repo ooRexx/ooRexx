@@ -41,7 +41,7 @@
 class RexxObjectTable;
 class RexxStack;
 class RexxCode;
-class RoutineClass; 
+class RoutineClass;
 
 class ActivityManager
 {
@@ -135,6 +135,7 @@ protected:
 
     static SysMutex          kernelSemaphore;       // global kernel semaphore lock
     static SysSemaphore      terminationSem;    // used to signal that everything has shutdown
+    static volatile bool sentinel;  // used to ensure proper ordering of updates
 };
 
 
