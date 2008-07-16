@@ -1464,11 +1464,11 @@ RexxStemObject RexxEntry NewStem(RexxThreadContext *c, CSTRING name)
     {
         if (name == NULL)
         {
-            return (RexxStemObject)context.ret(new RexxStem(new_string(name)));
+            return (RexxStemObject)context.ret(new RexxStem(OREF_NULL));
         }
         else
         {
-            return (RexxStemObject)context.ret(new RexxStem(OREF_NULL));
+            return (RexxStemObject)context.ret(new RexxStem(new_string(name)));
         }
 
     }
