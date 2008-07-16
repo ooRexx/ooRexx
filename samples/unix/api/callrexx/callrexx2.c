@@ -335,7 +335,7 @@ int main(int argc, char **argv)
     printf("Press Enter to continue\n");
     scanf("%c", &val);
 
-    instore[0].strptr = (char *)sync_tst;
+    instore[0].strptr = (const char *)sync_tst;
     instore[0].strlength = strlen(instore[0].strptr);
     instore[1].strptr = NULL;
     instore[1].strlength = 0;
