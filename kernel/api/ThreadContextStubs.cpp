@@ -266,7 +266,7 @@ logical_t RexxEntry HasMethod(RexxThreadContext *c, RexxObjectPtr o, CSTRING n)
     try
     {
         // convert the name to a string instance, and check the environments.
-        return ((RexxObject *)o)->hasMethod(new_string(n)->upper()) == TheTrueObject;
+        return ((RexxObject *)o)->hasMethod(new_upper_string(n)) == TheTrueObject;
 
     }
     catch (RexxNativeActivation *)
