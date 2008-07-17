@@ -1377,6 +1377,38 @@ size_t RexxEntry HandleControlEx(const char *funcname, size_t argc, CONSTRXSTRIN
 }
 
 
+static inline int getLVColumnCount(HWND hList)
+{
+    return Header_GetItemCount(ListView_GetHeader(hList));
+}
+
+/**
+ * What is a reasonable number of columns in a list-view?  Seems silly to
+ * restrict the user, someone will always want 2 more.  On the other hand, is
+ * someone going to have 1,000 columns?  10,000 columns?
+ *
+ * @param  count  The number of colums
+ *
+ * @return The size of a space separated ascii string of numbers big enough to
+ *         hold count numbers.
+ */
+static inline size_t getColumnOrderStrlen(int count)
+{
+    if ( count < 100 )
+    {
+        return 3 * count;
+    }
+    else if ( count < 1000 )
+    {
+        return (3 * 99) + (4 * (count - 99));
+    }
+    else if ( count < 10000 )
+    {
+        return (3 * 99) + (4 * 900) + (5 * (count - 999));
+    }
+    return 0;
+}
+
 /**
  * Extended List-View control functionality.  Implements capabilities not
  * present in the original ooDialog ListControl.  In general, this will be
@@ -1516,6 +1548,105 @@ size_t RexxEntry HandleListCtrlEx(const char *funcname, size_t argc, CONSTRXSTRI
              * it.)
              */
             RETVAL(1);  // Return 1 (failed) until this is implemented.
+        }
+        else if ( strcmp(argv[2].strptr, "ORDER") == 0 )  /* Set, get column Order */
+        {
+            int count;
+            int *order;
+            int i = 0;
+            int retVal = 1;
+
+            count = getLVColumnCount(hList);
+            if ( count < 2 )
+            {
+                /* The return is 0 or 1 columns, or -1 for an error. */
+                RETVAL(count == -1 ? -2 : count)
+            }
+
+            order = (int *)malloc(count * sizeof(int));
+            if ( order == NULL )
+            {
+                RETVAL(-(LONG)GetLastError())
+            }
+
+            if ( argc == 3 )
+            {
+                char buf[4];
+
+                size_t l = getColumnOrderStrlen(count);
+                if ( l == 0 )
+                {
+                    retVal = -2;
+                }
+                else
+                {
+                    if ( l > RXAUTOBUFLEN )
+                    {
+                        PVOID p = GlobalAlloc(GMEM_FIXED, count);
+                        if ( ! p )
+                        {
+                            free(order);
+                            RETVAL(-(LONG)GetLastError())
+                        }
+
+                        retstr->strptr = (PCHAR)p;
+                    }
+
+                    if ( ListView_GetColumnOrderArray(hList, count, order) == 0 )
+                    {
+                        retVal = -2;
+                    }
+                    else
+                    {
+                        retstr->strptr[0] = '\0';
+                        for ( i = 0; i < count; i++, order++ )
+                        {
+                            strcat(retstr->strptr, ltoa(*order, buf, 10));
+                            strcat(retstr->strptr, " ");
+                        }
+                        retstr->strlength = strlen(retstr->strptr);
+                    }
+                }
+            }
+            else if ( argc == 4 )
+            {
+                char *token;
+                char *str = _strdup(argv[3].strptr);
+
+                token = strtok(str, " ");
+                while( token != NULL && i++ < count )
+                {
+                    *order++ = atoi(token);
+                    token = strtok(NULL, " ");
+                }
+                free(str);
+
+                retVal = ListView_SetColumnOrderArray(hList, count, order) == 0 ? -2 : 0;
+            }
+            else
+            {
+                retVal = -3;     /* Error with argument. */
+            }
+
+            free(order);
+            if ( retVal != 1 )
+            {
+                RETVAL(retVal)
+            }
+            else
+            {
+                /* The return string is already set, just return 0. */
+                return 0;
+            }
+        }
+        else RETERR;
+    }
+    /* G - Get something function */
+    else if ( argv[1].strptr[0] == 'G' )
+    {
+        if ( !strcmp(argv[2].strptr, "COLCOUNT") )  /* Get List-view column count. */
+        {
+            RETVAL(getLVColumnCount(hList));
         }
         else RETERR;
     }

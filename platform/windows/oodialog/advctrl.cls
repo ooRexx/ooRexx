@@ -914,6 +914,36 @@
    if width~datatype("N") = 1 then width = width * self~FactorX
    return HandleListCtrl("C","SETWIDTH", self~Hwnd, nr, width~translate)
 
+::method GetColumnCount
+  return HandleListCtrlEx(self~hwnd, "G", "COLCOUNT")
+
+::method GetColumnOrder
+
+   retStr = HandleListCtrlEx(self~hwnd, "M", "ORDER")
+   if retStr~datatype('W') then return retStr
+
+   retArray = .array~new
+   do i = 1 to retStr~words
+     retArray~append(retStr~word(i))
+   end
+   return retArray
+
+::method SetColumnOrder
+   use strict arg order
+   if \ order~isInstanceOf(.array) then return -3
+
+   count = order~items
+   if count < 2 then return 0
+
+   argStr = " "
+   do i = 1 to count
+     nr = order[i]
+     if \ nr~datatype('W') then return -3
+     if \ (nr >= 0 & nr < count) then return -3
+     argStr = argStr || nr || ' '
+   end
+
+   return HandleListCtrlEx(self~hwnd, "M", 'ORDER', argStr)
 
 ::method StringWidth
    use arg text
