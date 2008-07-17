@@ -2,9 +2,9 @@
                     ====================================
 
 Please read ALL of these notes, to be sure you understand your options,
-before building ooRexx.  These notes cover building the 3.x versions of
-ooRexx.  (In this document the term "builder" is used to refer to the person
-building ooRexx from source.)
+before building ooRexx.  These notes cover building the 3.x and 4.x versions
+of ooRexx.  (In this document the term "builder" is used to refer to the
+person building ooRexx from source.)
 
 Obtaining the source
 ====================
@@ -36,6 +36,10 @@ build instructions.
 [Required] Microsoft Visual C++ V 6.0 plus service packs, or later.
 
 [Required] Microsoft Platform SDK February 2003, or later.
+
+The environment variables for the C++ compiler and the Platform SDK *MUST*
+be set correctly to build ooRexx.  See the Environment set up section below
+for details.
 
 Note: The release ooRexx, built by the project team, is built using Visual
 C++ 6.0 and the February 2003 SDK.  However, ooRexx builds without problems

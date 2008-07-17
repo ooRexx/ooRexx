@@ -41,9 +41,9 @@
 TARGET=rexxapi
 
 all: $(OR_OUTDIR)\$(TARGET).dll $(OR_OUTDIR)\rxapi.exe
-    @ECHO .
+    @ECHO.
     @ECHO All done $(TARGET).dll  rxapi.exe
-    @ECHO .
+    @ECHO.
 
 !include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
 
@@ -102,7 +102,7 @@ $(OR_OUTDIR)\rxapi.exe : $(OR_OUTDIR)\RexxAPIService.obj $(OR_OUTDIR)\rxapi.res
 
 # Update the resource if necessary
 $(OR_OUTDIR)\rxapi.res: $(APLATFORM)\rxapi.rc $(APLATFORM)\APIServiceMessages.h
-    @ECHO .
+    @ECHO.
     @ECHO ResourceCompiling $(@B).res
         $(rc) $(rcflags_common) -r -fo $(OR_OUTDIR)\rxapi.res $(APLATFORM)\rxapi.rc
 
@@ -110,7 +110,7 @@ $(OR_OUTDIR)\rxapi.res: $(APLATFORM)\rxapi.rc $(APLATFORM)\APIServiceMessages.h
 # *** Inference Rule for APIMAIN.C->OBJ
 #
 $(OR_OUTDIR)\RexxAPIService.obj:$(APLATFORM)\RexxAPIService.c
-    @ECHO .
+    @ECHO.
     @ECHO Compiling $(**)
     $(OR_CC) $(cflags_common) $(cflags_exe)  /Fo$(@) $(OR_ORYXINCL) $(**)
 
@@ -118,7 +118,7 @@ $(OR_OUTDIR)\RexxAPIService.obj:$(APLATFORM)\RexxAPIService.c
 # *** Inference Rule for rxapi.exe C->OBJ, if no Local C file
 #
 {$(OR_ORYXASRC)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
+    @ECHO.
     @ECHO Compiling $(**)
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(**)
 
@@ -126,7 +126,7 @@ $(OR_OUTDIR)\RexxAPIService.obj:$(APLATFORM)\RexxAPIService.c
 # *** Inference Rule for rxapi.exe C->OBJ, if no Local C file
 #
 {$(APLATFORM)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
+    @ECHO.
     @ECHO Compiling $(**)
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(**)
 
@@ -135,7 +135,7 @@ $(OR_OUTDIR)\RexxAPIService.obj:$(APLATFORM)\RexxAPIService.c
 # *** Inference Rule for local C->OBJ
 #
 {$(OR_OUTDIR)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
+    @ECHO.
     @ECHO Compiling $(**)
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(**)
 
@@ -145,6 +145,6 @@ $(OR_OUTDIR)\RexxAPIService.obj:$(APLATFORM)\RexxAPIService.c
 
 # Update the version information block
 $(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc
-    @ECHO .
+    @ECHO.
     @ECHO ResourceCompiling $(@B).res
         $(rc) $(rcflags_common) -r -fo$(@) $(**)

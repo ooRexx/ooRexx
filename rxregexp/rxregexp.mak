@@ -38,14 +38,12 @@
 #------------------------
 # RXREGEXP.MAK make file
 #------------------------
-#all: $(OR_OUTDIR)\rxregexp.dll \
-#     $(OR_OUTDIR)\rxregexp.cmd
 all: $(OR_OUTDIR)\rxregexp.dll $(OR_OUTDIR)\rxregexp.cls
-    @ECHO .
+    @ECHO.
     @ECHO All done RXREGEXP.DLL
-    @ECHO .
+    @ECHO.
 
-!include "..\LIB\ORXWIN32.MAK"
+!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
 
 !IFNDEF OR_ORYXREGEXP
 !ERROR Build error, OR_ORYXREGEXP not set
@@ -87,7 +85,7 @@ $(OR_OUTDIR)\rxregexp.dll : $(CPPOBJS) $(OBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\RXREGEX
 # directly from that location without doing an install.
 #
 $(OR_OUTDIR)\rxregexp.cls : $(OR_ORYXREGEXP)\rxregexp.cls
-    @ECHO .
+    @ECHO.
     @ECHO Copying $(OR_ORYXREGEXP)\rxregexp.cls
     copy $(OR_ORYXREGEXP)\rxregexp.cls $(OR_OUTDIR)
 
@@ -95,6 +93,6 @@ $(OR_OUTDIR)\rxregexp.cls : $(OR_ORYXREGEXP)\rxregexp.cls
 # *** .cpp -> .obj rules
 #
 $(CPPOBJS):  $(@B).cpp
-    @ECHO .
+    @ECHO.
     @ECHO Compiling $(@B).cpp
-    $(OR_CC) $(cflags_common) /GX $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXREGEXP)\$(@B).cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXREGEXP)\$(@B).cpp
