@@ -898,6 +898,8 @@ void RexxSource::nextClause()
         this->clause->setLocation(location);
     }
     this->flags &= ~reclaimed;           /* no reclaimed clause               */
+    // always set the error information
+    clauseLocation = clause->getLocation();
 }
                                        /* extra space required to format a  */
                                        /* result line.  This overhead is    */
@@ -1205,8 +1207,8 @@ void RexxSource::checkDirective()
 /*            directive instructions.                                         */
 /******************************************************************************/
 {
-                                       /* get the clause location           */
-    SourceLocation location = this->clause->getLocation();
+    // save the clause location so we can reset for errors
+    SourceLocation location = clauseLocation;
 
     this->nextClause();                  /* get the next clause               */
     /* have a next clause?               */
@@ -1225,7 +1227,7 @@ void RexxSource::checkDirective()
     // this resets the current clause location so that any errors on the current
     // clause detected after the clause check reports this on the correct line
     // number
-    this->clause->setLocation(location);
+    clauseLocation = location;
 }
 
 
@@ -5036,11 +5038,9 @@ void RexxSource::error(
 /* Function:  Raise an error caused by source translation problems.           */
 /******************************************************************************/
 {
-                                       /* get the clause location           */
-  SourceLocation location = this->clause->getLocation();
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, OREF_NULL, OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, OREF_NULL, OREF_NULL);
 }
 
 void RexxSource::errorLine(
@@ -5051,13 +5051,9 @@ void RexxSource::errorLine(
 /*            the line number of another instruction object                   */
 /******************************************************************************/
 {
-  SourceLocation  location;            /* error location                    */
-
-                                       /* get the clause location           */
-  location = this->clause->getLocation();
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
 }
 
 void RexxSource::errorPosition(
@@ -5068,11 +5064,10 @@ void RexxSource::errorPosition(
 /*            with the error.                                                 */
 /******************************************************************************/
 {
-  SourceLocation location = this->clause->getLocation();/* get the clause location           */
   SourceLocation token_location = token->getLocation(); /* get the token location            */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(new_integer(token_location.getOffset()), new_integer(token_location.getLineNumber())), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(new_integer(token_location.getOffset()), new_integer(token_location.getLineNumber())), OREF_NULL);
 }
 
 void RexxSource::errorToken(
@@ -5083,11 +5078,7 @@ void RexxSource::errorToken(
 /*            message.                                                        */
 /******************************************************************************/
 {
-    RexxString     *value;               /* token value                       */
-
-    SourceLocation location = this->clause->getLocation();/* get the clause location           */
-
-    value = token->value;                /* get the token value               */
+    RexxString *value = token->value;                /* get the token value               */
     if (value == OREF_NULL)
     {
         switch (token->classId)
@@ -5145,7 +5136,7 @@ void RexxSource::errorToken(
     }
     this->errorCleanup();                /* release any saved objects         */
                                          /* pass on the exception info        */
-    ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -5155,10 +5146,9 @@ void RexxSource::error(
 /* Function:  Issue an error message with a single substitution parameter.    */
 /******************************************************************************/
 {
-  SourceLocation location = this->clause->getLocation();/* get the clause location           */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -5169,10 +5159,9 @@ void RexxSource::error(
 /* Function:  Issue an error message with two substitution parameters.        */
 /******************************************************************************/
 {
-  SourceLocation location = this->clause->getLocation();/* get the clause location           */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value1, value2), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -5184,10 +5173,9 @@ void RexxSource::error(
 /* Function:  Issue an error message with three substitution parameters.    */
 /****************************************************************************/
 {
-  SourceLocation location = this->clause->getLocation();/* get the clause location           */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &location, this, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }
 
 void RexxSource::blockError(
@@ -5196,8 +5184,8 @@ void RexxSource::blockError(
 /* Function:  Raise an error for an unclosed block instruction.               */
 /******************************************************************************/
 {
-    SourceLocation location = this->last->getLocation();  /* get the instruction location      */
-    this->clause->setLocation(location);/* report as the last instruction    */
+    // get the instruction location and set as the current error location
+    clauseLocation = this->last->getLocation();
 
     switch (_instruction->getType())
     {   /* issue proper message type         */

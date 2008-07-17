@@ -360,6 +360,7 @@ protected:
   SecurityManager *securityManager;    /* source execution time security    */
   const char *current;                 /* current working line              */
   RexxClause *clause;                  /* current clause being created      */
+  SourceLocation clauseLocation;       // current clause location for errors
   RexxBuffer *sourceBuffer;            /* contiguous buffered source        */
   RexxBuffer *sourceIndices;           /* line locations within buffer      */
   size_t current_length;               /* length of current line            */
