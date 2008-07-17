@@ -1103,7 +1103,7 @@ void RexxStem::dropElement(size_t _tail)
 
     RexxCompoundTail resolved_tail(_tail);
 
-    return dropElement(&resolved_tail);
+    dropElement(&resolved_tail);
 }
 
 /**
@@ -1116,7 +1116,7 @@ void RexxStem::dropElement(const char *_tail)
 
     RexxCompoundTail resolved_tail(_tail);
 
-    return dropElement(&resolved_tail);
+    dropElement(&resolved_tail);
 }
 
 
@@ -1128,8 +1128,6 @@ void RexxStem::dropElement(const char *_tail)
  */
 void RexxStem::dropElement(RexxCompoundTail *resolved_tail)
 {
-    // see if we have a variable...if we do, return its value (a dropped variable
-    // has a value of OREF_NULL).  If not found, return OREF_NULL;
     RexxCompoundElement *variable = findCompoundVariable(resolved_tail);
     if (variable != OREF_NULL)
     {

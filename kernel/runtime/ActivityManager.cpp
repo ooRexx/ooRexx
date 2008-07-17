@@ -112,7 +112,8 @@ void ActivityManager::init()
     // now initialize both activation caches with empty references.  This generally
     // keeps the cached items from fragmenting the object heap because they are
     // longer lived.
-    for (size_t i = 0; i < ACTIVATION_CACHE_SIZE; i++)
+    size_t i;
+    for (i = 0; i < ACTIVATION_CACHE_SIZE; i++)
     {
         // push a dummy activation on the stack
         activations->push((RexxObject *)new RexxActivation());
@@ -120,7 +121,7 @@ void ActivityManager::init()
     activationCacheSize = ACTIVATION_CACHE_SIZE;
 
     nativeActivations = new (NATIVE_ACTIVATION_CACHE_SIZE) RexxStack(NATIVE_ACTIVATION_CACHE_SIZE);
-    for (size_t i = 0; i < NATIVE_ACTIVATION_CACHE_SIZE; i++)
+    for (i = 0; i < NATIVE_ACTIVATION_CACHE_SIZE; i++)
     {
         // push a dummy activation on the stack
         nativeActivations->push((RexxObject *)new RexxNativeActivation());

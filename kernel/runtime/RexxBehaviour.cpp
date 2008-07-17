@@ -559,9 +559,10 @@ RexxSupplier *RexxBehaviour::getMethods(RexxObject *scope)
     }
 
     size_t count = 0;
+    HashLink i;
 
     // travese the method dictionary, searching for methods with the target scope
-    for (HashLink i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
+    for (i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
     {
         if (((RexxMethod *)this->methodDictionary->value(i))->getScope() == scope)
         {
@@ -574,7 +575,7 @@ RexxSupplier *RexxBehaviour::getMethods(RexxObject *scope)
     count = 1;
 
     // pass two, copy the entries into the array
-    for (HashLink i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
+    for (i = this->methodDictionary->first(); this->methodDictionary->index(i) != OREF_NULL; i = this->methodDictionary->next(i))
     {
         if (((RexxMethod *)this->methodDictionary->value(i))->getScope() == scope)
         {

@@ -448,9 +448,9 @@ void RexxVariableDictionary::liveGeneral(int reason)
 RexxSupplier *RexxVariableDictionary::getAllVariables()
 {
     size_t count = 0;                    // the size of the supplier arrays
-
+    HashLink i;
                                          /* loop through the hash table       */
-    for (HashLink i = this->contents->first();
+    for (i = this->contents->first();
          i < this->contents->totalSlotsSize();
          i = this->contents->next(i))
     {
@@ -470,7 +470,7 @@ RexxSupplier *RexxVariableDictionary::getAllVariables()
 
     count = 1;
     // now loop again populating the supplier arrays
-    for (HashLink i = this->contents->first();
+    for (i = this->contents->first();
          i < this->contents->totalSlotsSize();
          i = this->contents->next(i))
     {

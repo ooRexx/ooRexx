@@ -3301,7 +3301,8 @@ RexxMethod3(RexxObjectPtr,                // Return type
         context->RaiseException(Rexx_Error_System_resources);
     }
 
-    for (size_t i=0; i < iArgCount; i++)
+    size_t i;
+    for (i = 0; i < iArgCount; i++)
     {
         /* arguments are filled in from the end of the array */
         VariantInit(&(pVarArgs[iArgCount - i - 1]));
@@ -3402,7 +3403,7 @@ RexxMethod3(RexxObjectPtr,                // Return type
     // needed for instance of tests
     RexxClassObject variantClass = context->FindClass("OLEVARIANT");
 
-    for (size_t i=0; i < dp.cArgs; i++)
+    for (i = 0; i < dp.cArgs; i++)
     {
         arrItem = context->ArrayAt(msgArgs, i + 1);
 

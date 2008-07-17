@@ -883,8 +883,9 @@ RexxArray  *RexxHashTable::allIndex(
 /******************************************************************************/
 {
     size_t count = 0;                           /* no items found yet                */
+    size_t i;
     /* loop through them all             */
-    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    for (i = this->totalSlotsSize(); i > 0; i--)
     {
         /* real entry?                       */
         if (this->entries[i - 1].index != OREF_NULL)
@@ -900,7 +901,7 @@ RexxArray  *RexxHashTable::allIndex(
     RexxArray *result = new_array(count);           /* get proper size result array      */
     size_t j = 1;                               /* start at the first element        */
     /* loop through them all             */
-    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    for (i = this->totalSlotsSize(); i > 0; i--)
     {
         /* real entry?                       */
         if (this->entries[i - 1].index != OREF_NULL)

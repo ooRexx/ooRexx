@@ -1733,9 +1733,10 @@ void RexxSource::resolveDependencies()
     }
     else                                 /* have classes to process           */
     {
+        size_t i;
         // run through the class list having each directive set up its
         // dependencies
-        for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
+        for (i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
         {
             /* get the next class                */
             ClassDirective *current_class = (ClassDirective *)(classes->getValue(i));
@@ -1754,7 +1755,7 @@ void RexxSource::resolveDependencies()
         {
             // this is the next one we process
             ClassDirective *next_install = OREF_NULL;
-            for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
+            for (i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
             {
                  /* get the next class                */
                 ClassDirective *current_class = (ClassDirective *)(classes->getValue(i));
@@ -1777,7 +1778,7 @@ void RexxSource::resolveDependencies()
 
             // now go through the pending list telling each of the remaining classes that
             // they can remove this dependency from their list
-            for (size_t i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
+            for (i = classes->firstIndex(); i != LIST_END; i = classes->nextIndex(i))
             {    /* go remove the dependencies        */
                  /* get a class                       */
                 ClassDirective *current_class = (ClassDirective *)classes->getValue(i);
