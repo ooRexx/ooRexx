@@ -34,14 +34,34 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ******************************************************************************/
 
-# The Visual C++ compiler at the Visual Studio 2005 level does not support the
-# same options as the Visual C++ 6.0 compiler.  Uncomment the following if
-# compiling with Visual Studio 2005 to remove warning messages.  Alternatively,
-# VCPP8 can be set as an environment variable.
-#VCPP8 =
+# NOTE: If for some reason there is a problem with setting the compiler version
+# in this section, simply comment out everything except the setting of the
+# proper VCPPx macro for your system.
+#
+# These compiler defines allow the support of different versions of Mircrosoft's
+# Visual C++ compiler.  The build has not necessarily been tested on all of the
+# following versions, so some of the !IFDEF statements may need to be adjusted.
+# VCPP9 == Visual C++ 2008
+# VCPP8 == Visual C++ 2005
+# VCPP7 == Visual C++ 2003
+# VCPP6 == Visual C++ 6.0
+#
+# Not sure if there is a difference between VCPP7 and VCPP8, so if Visual C++
+# 2003 is detected, VCPP8 is also defined.  May need to change that.
+!IF "$(MSVCVER)" == "9.0"
+VCPP9 = 1
+!ELSEIF "$(MSVCVER)" == "8.0"
+VCPP8 = 1
+!ELSEIF "$(MSVCVER)" == "7.0"
+VCPP7 = 1
+VCPP8 = 1
+!ELSEIF "$(MSVCVER)" == "6.0"
+VCPP6 = 1
+!ELSE
+!ERROR Build environment does not appear to be set. Check windows-build.txt for details
+!ENDIF
 
 # include the version information
-
 !include "$(OR_ORYXSRC)\oorexx.ver.incl"
 
 # Make file include for WIN32 stuff
@@ -80,10 +100,15 @@ OR_LINK=link
 #
 OR_IMPLIB=lib
 
-!IFDEF VCPP8
-Z_FLAGS =
-!ELSE
-Z_FLAGS = -Zd
+# The ooRexx version definition for the compile flags.
+VER_DEF = -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_MOD_LVL) -DOOREXX_BLD=$(ORX_BLD_LVL) -DOOREXX_COPY_YEAR=\"$(ORX_COPY_YEAR)\"
+
+# The start of the warning flags for the compile flags.
+WARNING_FLAGS = /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
+
+# Visual C++ 6.0 chokes on /Wp64
+!IFNDEF VCPP6
+WARNING_FLAGS = /Wp64  $(WARNING_FLAGS)
 !ENDIF
 
 # Turn on extra warnings by defining EXTRAWARNINGS to 1.
@@ -95,9 +120,15 @@ Z_FLAGS = -Zd
 # variable.
 # EXTRAWARNINGS = 1
 !IF "$(EXTRAWARNINGS)" == "1"
-WARNING_FLAGS = /W4 /Wp64 /wd4100 /wd4706 /wd4701
+WARNING_FLAGS = /W4 /wd4100 /wd4706 /wd4701 $(WARNING_FLAGS)
 !ELSE
-WARNING_FLAGS = /W3 /Wp64
+WARNING_FLAGS = /W3 $(WARNING_FLAGS)
+!ENDIF
+
+!IFDEF VCPP8
+Z_FLAGS =
+!ELSE
+Z_FLAGS = -Zd
 !ENDIF
 
 #
@@ -114,7 +145,7 @@ cflags_noopt=/nologo /D:_X86_ /DWIN32 $(WARNING_FLAGS) -c $(my_cdebug) /DNULL=0
 !ENDIF
 
 # CHM - added definition for RXDBG
-cflags_common=/EHsc /nologo -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_MOD_LVL) -DOOREXX_BLD=$(ORX_BLD_LVL)  -DOOREXX_COPY_YEAR=\"$(ORX_COPY_YEAR)\" /D:_X86_ /DWIN32 $(WARNING_FLAGS) -c $(my_cdebug) $(MK_ASM) $(RXDBG) /DNULL=0 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
+cflags_common=/EHsc /nologo /D:_X86_ /DWIN32 $(VER_DEF) $(WARNING_FLAGS) -c $(my_cdebug) $(MK_ASM) $(RXDBG) /DNULL=0
 
 # ENG - added for feature 953
 !IFDEF JAPANESE
