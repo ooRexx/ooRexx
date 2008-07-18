@@ -4711,6 +4711,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Execution_context_not_active</SymbolicName>
         <Text>Target RexxContext is no longer active</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>982</Subcode>
+        <MessageNumber>711</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_library_version</SymbolicName>
+        <Text>Library <q><Sub position="1" name="name"/></q> is not compatible with current interpreter version.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

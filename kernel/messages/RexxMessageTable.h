@@ -550,6 +550,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Execution_library_routine)
       MINOR(Error_Execution_native_routine)
       MINOR(Error_Execution_context_not_active)
+      MINOR(Error_Execution_library_version)
   MAJOR(Error_Translation)
       MINOR(Error_Translation_user_defined)
       MINOR(Error_Translation_duplicate_class)

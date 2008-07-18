@@ -4825,6 +4825,7 @@ RexxMethodEntry oleobject_methods[] = {
 
 RexxPackageEntry oleobject_package_entry = {
     STANDARD_PACKAGE_HEADER
+    REXX_INTERPRETER_4_0_0,              // anything after 4.0.0 will work
     "OLEObject",                         // name of the package
     "1.4",                               // package information
     NULL,                                // no load/unload functions

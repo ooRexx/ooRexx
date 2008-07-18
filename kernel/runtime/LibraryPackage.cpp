@@ -51,7 +51,6 @@
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
 
-
 /**
  * Create a new LibraryPackage object instance.
  *
@@ -221,6 +220,12 @@ RexxPackageEntry *LibraryPackage::getPackageTable()
 void LibraryPackage::loadPackage(RexxPackageEntry *p)
 {
     package = p;       //NB:  this is NOT an object, so OrefSet is not needed.
+
+    // verify that this library is compatible
+    if (package->requiredVersion != 0 && package->requiredVersion < REXX_CURRENT_INTERPRETER_VERSION)
+    {
+        reportException(Error_Execution_library_version, libraryName);
+    }
     // load the function table
     loadRoutines(package->routines);
 

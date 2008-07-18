@@ -3420,6 +3420,12 @@ special character (such as a parenthesis).
 <para>Target RexxContext is no longer active</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>982</term>
+<listitem>
+<para>Library "<emphasis>name</emphasis>" is not compatible with current interpreter version.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR99">

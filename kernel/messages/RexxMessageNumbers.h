@@ -613,6 +613,7 @@
 #define Error_Invalid_data_constant_dir_msg                          708
 #define Error_Unsupported_copy_method_msg                            709
 #define Error_Execution_context_not_active_msg                       710
+#define Error_Execution_library_version_msg                          711
 
 
 #endif

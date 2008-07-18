@@ -210,7 +210,10 @@ typedef struct _RexxMethodEntry
 #define REXX_METHOD(n, e) REXX_METHOD_ENTRY(n, e)
 #define REXX_LAST_METHOD()  { 0, 0, NULL, (void *)NULL, 0, 0 }
 
-#define REXX_PACKAGE_API_NO 20051030
+#define REXX_PACKAGE_API_NO 20081030
+// The interpreter version gets defined using two digits for major, minor, and revision.
+#define REXX_INTERPRETER_4_0_0  40000
+#define REXX_CURRENT_INTERPRETER_VERSION REXX_INTERPRETER_4_0_0
 #define NO_VERSION_YET NULL
 
 #define STANDARD_PACKAGE_HEADER sizeof(RexxPackageEntry), REXX_PACKAGE_API_NO,
@@ -228,6 +231,7 @@ typedef struct _RexxPackageEntry
 {
     int size;                      // size of the structure...help compatibility
     int apiVersion;                // version this was compiled with
+    int requiredVersion;           // minimum required interpreter version (0 means any)
     const char *packageName;       // package identifier
     const char  *packageVersion;   // package version #
     RexxPackageLoader loader;      // the package loader
