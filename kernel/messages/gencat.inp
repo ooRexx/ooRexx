@@ -1730,6 +1730,9 @@ $ Error_Unsupported_copy_method
 $ Error_Execution_context_not_active
 710 Target RexxContext is no longer active
 
+$ Error_Execution_library_version
+711 Library "&1" is not compatible with current interpreter version.
+
 
 $ * -------------------------------------------------------------------------- */
 $ * --            ==================================================        -- */
