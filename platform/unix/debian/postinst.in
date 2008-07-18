@@ -89,7 +89,7 @@ if [ -d /opt/ooRexx ]; then
    ln -sf /opt/ooRexx/share/man/man1/rexxc.1               /usr/share/man/man1/rexxc.1
    ln -sf /opt/ooRexx/share/man/man1/rxsubcom.1            /usr/share/man/man1/rxsubcom.1
    ln -sf /opt/ooRexx/share/man/man1/rxqueue.1             /usr/share/man/man1/rxqueue.1
-   ln -sf /opt/ooRexx/share/man/man1/rxdelipc.1            /usr/share/man/man1/rxqueue.1
+   ln -sf /opt/ooRexx/share/man/man1/rxdelipc.1            /usr/share/man/man1/rxdelipc.1
    ln -sf /opt/ooRexx/include/rexx.h                       /usr/include/rexx.h
    ln -sf /opt/ooRexx/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
 
