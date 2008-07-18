@@ -356,7 +356,8 @@ include_HEADERS = $(build_api_dir)/rexx.h \
 man_MANS = $(build_utils_platform_dir)/rexx.1 \
            $(build_utils_platform_dir)/rexxc.1 \
            $(build_utils_platform_dir)/rxsubcom.1 \
-           $(build_utils_platform_dir)/rxqueue.1
+           $(build_utils_platform_dir)/rxqueue.1 \
+           $(build_utils_platform_dir)/rxdelipc.1
 
 #################### librexx.so ##########################
 # Sources for librexxapi.so

@@ -155,6 +155,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/share/man/man1/rexxc.1
 %{_prefix}/share/man/man1/rxsubcom.1
 %{_prefix}/share/man/man1/rxqueue.1
+%{_prefix}/share/man/man1/rxdelipc.1
 %{_prefix}/share/ooRexx/rexx.sh
 %{_prefix}/share/ooRexx/rexx.csh
 %{_prefix}/share/ooRexx/*.rex
