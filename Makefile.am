@@ -982,7 +982,7 @@ deb:
 	fakeroot dh_installdirs
 	fakeroot make install DESTDIR=`pwd`/debian/oorexx
 # Do the packaging steps
-	fakeroot dh_installchangelogs CHANGES
+	fakeroot dh_installchangelogs
 	fakeroot dh_installdocs
 	fakeroot dh_installexamples
 	fakeroot dh_installman
