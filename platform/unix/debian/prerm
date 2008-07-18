@@ -58,6 +58,7 @@ rm -f /usr/share/man/man1/rexx.1
 rm -f /usr/share/man/man1/rexxc.1
 rm -f /usr/share/man/man1/rxsubcom.1
 rm -f /usr/share/man/man1/rxqueue.1
+rm -f /usr/share/man/man1/rxdelipc.1
 rm -f /usr/include/rexx.h
 rm -f /usr/include/rexxapidefs.h
 rm -f /usr/include/rexxapitypes.h

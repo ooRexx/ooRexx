@@ -220,6 +220,7 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/share/man/man1/rexxc.1               /usr/share/man/man1/rexxc.1
    ln -sf %{_prefix}/share/man/man1/rxsubcom.1            /usr/share/man/man1/rxsubcom.1
    ln -sf %{_prefix}/share/man/man1/rxqueue.1             /usr/share/man/man1/rxqueue.1
+   ln -sf %{_prefix}/share/man/man1/rxdelipc.1             /usr/share/man/man1/rxdelipc.1
    ln -sf %{_prefix}/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
 # allow backwards compatibility to Object REXX 2.x
    ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.2
@@ -260,6 +261,7 @@ rm -f /usr/share/man/man1/rexx.1
 rm -f /usr/share/man/man1/rexxc.1
 rm -f /usr/share/man/man1/rxsubcom.1
 rm -f /usr/share/man/man1/rxqueue.1
+rm -f /usr/share/man/man1/rxdelipc.1
 rm -f /usr/include/rexx.h
 rm -f /usr/include/rexxapidefs.h
 rm -f /usr/include/rexxapitypes.h
