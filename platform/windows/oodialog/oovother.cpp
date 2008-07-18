@@ -2058,7 +2058,8 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
    {
        if (!strcmp(argv[1].strptr, "INS"))
        {
-           LV_COLUMN lvi;
+           LVCOLUMN lvi;
+           int retVal;
 
            CHECKARG(7);
 
@@ -2076,7 +2077,19 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
            else if (strstr(argv[6].strptr,"RIGHT")) lvi.fmt = LVCFMT_RIGHT;
            else lvi.fmt = LVCFMT_LEFT;
 
-           RETVAL(ListView_InsertColumn(h, lvi.iSubItem, &lvi));
+           retVal = ListView_InsertColumn(h, lvi.iSubItem, &lvi);
+           if ( retVal != -1 && lvi.fmt != LVCFMT_LEFT && lvi.iSubItem == 0 )
+           {
+               /* According to the MSDN docs: "If a column is added to a
+                * list-view control with index 0 (the leftmost column) and with
+                * LVCFMT_RIGHT or LVCFMT_CENTER specified, the text is not
+                * right-aligned or centered." This is the suggested work around.
+                */
+               lvi.iSubItem = 1;
+               ListView_InsertColumn(h, lvi.iSubItem, &lvi);
+               ListView_DeleteColumn(h, 0);
+           }
+           RETVAL(retVal);
        }
        else
        if (!strcmp(argv[1].strptr, "SET"))
