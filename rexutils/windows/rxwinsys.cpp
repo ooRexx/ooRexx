@@ -136,15 +136,20 @@ LONG HandleArgError(PRXSTRING r, BOOL ToMuch)
    ((value[0] == '0') && (toupper(value[1]) == 'X'))
 
 
+/* Note many existing programs abbreviate HKEY_LOCAL_MACHINE to "LOCAL_MACHINE",
+ * or "MACHINE", and many do not.  Many existing programs use the full
+ * HKEY_LOCAL_MACHINE.  So the comparison needs to remain strstr.
+ *
+ */
 #define GET_HKEY(argum, ghk) { \
      ghk = NULL; \
-     if (strcmp(argum,"MACHINE") == 0) ghk = HKEY_LOCAL_MACHINE; else \
-     if (strcmp(argum,"CLASSES") == 0) ghk = HKEY_CLASSES_ROOT; else \
-     if (strcmp(argum,"CURRENT_USER") == 0) ghk = HKEY_CURRENT_USER; else \
-     if (strcmp(argum,"USERS") == 0) ghk = HKEY_USERS; else \
-     if (strcmp(argum,"PERFORMANCE") == 0) ghk = HKEY_PERFORMANCE_DATA; else \
-     if (strcmp(argum,"CURRENT_CONFIG") == 0) ghk = HKEY_CURRENT_CONFIG; else \
-     if (strcmp(argum,"DYN_DATA") == 0) ghk = HKEY_DYN_DATA; else \
+     if (strstr(argum,"MACHINE") == 0) ghk = HKEY_LOCAL_MACHINE; else \
+     if (strstr(argum,"CLASSES") == 0) ghk = HKEY_CLASSES_ROOT; else \
+     if (strstr(argum,"CURRENT_USER") == 0) ghk = HKEY_CURRENT_USER; else \
+     if (strstr(argum,"USERS") == 0) ghk = HKEY_USERS; else \
+     if (strstr(argum,"PERFORMANCE") == 0) ghk = HKEY_PERFORMANCE_DATA; else \
+     if (strstr(argum,"CURRENT_CONFIG") == 0) ghk = HKEY_CURRENT_CONFIG; else \
+     if (strstr(argum,"DYN_DATA") == 0) ghk = HKEY_DYN_DATA; else \
      string2pointer(argum, (void **)&ghk); \
 }
 
