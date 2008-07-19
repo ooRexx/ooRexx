@@ -229,66 +229,66 @@ size_t RexxEntry GetSysMetrics(const char *funcname, size_t argc, CONSTRXSTRING 
 void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
                 const char * dlgClass, const char * title, const char * fontname, INT fontsize, ULONG lStyle)
 {
-   int   nchar;
+    int   nchar;
 
-   *ppTemplate = *p = (PWORD) LocalAlloc(LPTR, (NrItems+3)*256);
+    *ppTemplate = *p = (PWORD) LocalAlloc(LPTR, (NrItems+3)*256);
 
-     /* start to fill in the dlgtemplate information.  addressing by WORDs */
-   **p = LOWORD (lStyle);
-   (*p)++;
-   **p = HIWORD (lStyle);
-   (*p)++;
-   **p = 0;          // LOWORD (lExtendedStyle)
-   (*p)++;
-   **p = 0;          // HIWORD (lExtendedStyle)
-   (*p)++;
-   **p = NrItems;          // NumberOfItems
-   (*p)++;
-   **p = x;         // x
-   (*p)++;
-   **p = y;         // y
-   (*p)++;
-   **p = cx;        // cx
-   (*p)++;
-   **p = cy;         // cy
-   (*p)++;
-   /* copy the menu of the dialog */
-
-   /* no menu */
-   **p = 0;
-   (*p)++;
-
-   /* copy the class of the dialog */
-   if ( !(lStyle & WS_CHILD) && (dlgClass))
-   {
-      nchar = nCopyAnsiToWideChar (*p, TEXT(dlgClass));
-      (*p) += nchar;
-   }
-   else
-   {
-     **p = 0;
+    /* start to fill in the dlgtemplate information.  addressing by WORDs */
+    **p = LOWORD (lStyle);
     (*p)++;
-   }
-   /* copy the title of the dialog */
-   if (title)
-   {
-      nchar = nCopyAnsiToWideChar (*p, TEXT(title));
-      (*p) += nchar;
-   }
-   else
-   {
-     **p = 0;
+    **p = HIWORD (lStyle);
     (*p)++;
-   }
+    **p = 0;          // LOWORD (lExtendedStyle)
+    (*p)++;
+    **p = 0;          // HIWORD (lExtendedStyle)
+    (*p)++;
+    **p = NrItems;    // NumberOfItems
+    (*p)++;
+    **p = x;          // x
+    (*p)++;
+    **p = y;          // y
+    (*p)++;
+    **p = cx;         // cx
+    (*p)++;
+    **p = cy;         // cy
+    (*p)++;
+    /* copy the menu of the dialog */
 
-   /* add in the wPointSize and szFontName here iff the DS_SETFONT bit on */
-   **p = fontsize;         // fontsize
-   (*p)++;
-   nchar = nCopyAnsiToWideChar (*p, TEXT(fontname));
-   (*p) += nchar;
+    /* no menu */
+    **p = 0;
+    (*p)++;
 
-   /* make sure the first item starts on a DWORD boundary */
-   (*p) = lpwAlign (*p);
+    /* copy the class of the dialog */
+    if ( !(lStyle & WS_CHILD) && (dlgClass) )
+    {
+        nchar = nCopyAnsiToWideChar (*p, TEXT(dlgClass));
+        (*p) += nchar;
+    }
+    else
+    {
+        **p = 0;
+        (*p)++;
+    }
+    /* copy the title of the dialog */
+    if ( title )
+    {
+        nchar = nCopyAnsiToWideChar (*p, TEXT(title));
+        (*p) += nchar;
+    }
+    else
+    {
+        **p = 0;
+        (*p)++;
+    }
+
+    /* add in the wPointSize and szFontName here iff the DS_SETFONT bit on */
+    **p = fontsize;   // fontsize
+    (*p)++;
+    nchar = nCopyAnsiToWideChar (*p, TEXT(fontname));
+    (*p) += nchar;
+
+    /* make sure the first item starts on a DWORD boundary */
+    (*p) = lpwAlign (*p);
 }
 
 
@@ -390,7 +390,11 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
    return ret;
 }
 
-
+static inline size_t illegalBuffer(RXSTRING *retstr)
+{
+    MessageBox(0, "Illegal resource buffer", "Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+    RETC(0)
+}
 
 size_t RexxEntry UsrCreateDialog(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
@@ -405,24 +409,35 @@ size_t RexxEntry UsrCreateDialog(const char *funcname, size_t argc, CONSTRXSTRIN
    GET_ADM;
    if (!dlgAdm) RETERR;
 
-   if (argv[1].strptr[0] == 'C')   /* do we have a child dialog to be created? */
+   if (argv[1].strptr[0] == 'C')          /* Create a child dialog. */
    {
-       LONG l = 0;
-       /* set number of items to dialogtemplate */
-       p = (DLGTEMPLATE *) GET_POINTER(argv[3]);
+       /* Get the dialog template pointer and the number of dialog controls. */
+       p = (DLGTEMPLATE *)GET_POINTER(argv[3]);
+       if ( p == NULL )
+       {
+           return illegalBuffer(retstr);
+       }
        p->cdit = (WORD) atoi(argv[2].strptr);
+
+       /* Get the parent dialog's window handle. */
        hW = GET_HWND(argv[4]);
-       /* send a create message. This is out of history so the child dialog has been created in a faster thread */
-       hW = (HWND) SendMessage(hW, WM_USER_CREATECHILD, (WPARAM) l, (LPARAM) p);
 
-       dlgAdm->ChildDlg[atoi(argv[5].strptr)] = hW;
+       /* The child dialog needs to be created in the window procedure thread
+        * of the parent.
+        */
+       hW = (HWND)SendMessage(hW, WM_USER_CREATECHILD, 0, (LPARAM)p);
 
-       /* free the memory allocated for template */
-       if (p) LocalFree(p);
+       /* We are done with the dialog template. */
+       safeLocalFree(p);
 
-       RETHANDLE(hW);
+       /* The child dialog may not have been created. */
+       if ( hW != NULL )
+       {
+           dlgAdm->ChildDlg[atoi(argv[5].strptr)] = hW;
+           RETHANDLE(hW);
+       }
    }
-   else
+   else                                   /* Create a top level dialog. */
    {
        CHECKARGL(8);
 
@@ -431,10 +446,9 @@ size_t RexxEntry UsrCreateDialog(const char *funcname, size_t argc, CONSTRXSTRIN
 
        /* set number of items to dialogtemplate */
        p = (DLGTEMPLATE *)GET_POINTER(argv[4]);
-       if (!p)
+       if ( p == NULL )
        {
-           MessageBox(0,"Illegal resource buffer","Error",MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
-           RETC(0)
+           return illegalBuffer(retstr);
        }
 
        p->cdit = (WORD) atoi(argv[2].strptr);
@@ -465,8 +479,8 @@ size_t RexxEntry UsrCreateDialog(const char *funcname, size_t argc, CONSTRXSTRIN
        while ((!Release) && dlgAdm && (dlgAdm->TheThread)) {Sleep(1);};  /* wait for dialog start */
        LeaveCriticalSection(&crit_sec);
 
-       /* free the memory allocated for template */
-       if (p) LocalFree(p);
+       /* Free the memory allocated for template. */
+       safeLocalFree(p);
 
        if (dlgAdm)
        {
