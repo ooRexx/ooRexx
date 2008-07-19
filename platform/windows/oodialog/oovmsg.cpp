@@ -308,12 +308,18 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                     return 1;
                 }
             }
+            else if ( message == WM_HSCROLL || message == WM_VSCROLL)
+            {
+                _snprintf(msgstr, 511, "%s(%u,\"0x%p\")", m[i].rexxProgram, param, lparam);
+                AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
+                return 1;
+            }
 
             if (np)
             {
                 if ( handle != NULL )
                 {
-                    _snprintf(msgstr, 511, "%s(%u,0x%p,\"%s\")", m[i].rexxProgram, param, handle, np);
+                    _snprintf(msgstr, 511, "%s(%u,\"0x%p\",\"%s\")", m[i].rexxProgram, param, handle, np);
                 }
                 else
                 {
