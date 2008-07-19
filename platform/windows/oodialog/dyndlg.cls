@@ -230,6 +230,19 @@
       if style~wordpos("WS_TABSTOP") = 0 then ret = ret || " NOTAB"
    end
    else if kind = "ST" then do
+       if style~wordpos("SS_CENTERIMAGE") > 0 then ret = ret || " CENTERIMAGE"
+       if style~wordpos("SS_EDITCONTROL") > 0 then ret = ret || " EDITCONTROL"
+       if style~wordpos("SS_ENDELLIPSIS") > 0 then ret = ret || " ENDELLIPSIS"
+       if style~wordpos("SS_NOPREFIX") > 0 then ret = ret || " NOPREFIX"
+       if style~wordpos("SS_NOTIFY") > 0 then ret = ret || " NOTIFY"
+       if style~wordpos("SS_PATHELLIPSIS") > 0 then ret = ret || " PATHELLIPSIS"
+       if style~wordpos("SS_RIGHTJUST") > 0 then ret = ret || " RIGHTJUST"
+       if style~wordpos("SS_REALSIZECONTROL") > 0 then ret = ret || " SIZECONTROL"
+       if style~wordpos("SS_REALSIZEIMAGE") > 0 then ret = ret || " SIZEIMAGE"
+       if style~wordpos("SS_SIMPLE") > 0 then ret = ret || " SIMPLE"
+       if style~wordpos("SS_SUNKEN") > 0 then ret = ret || " SUNKEN"
+       if style~wordpos("SS_WORDELLIPSIS") > 0 then ret = ret || " WORDELLIPSIS"
+
        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
        if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
    end
@@ -471,8 +484,21 @@
                      self~AddGrayFRAME(x, y, w, h, opts, id)
                   when style~wordpos("SS_BLACKFRAME") > 0 then
                      self~AddBlackFRAME(x, y, w, h, opts, id)
+                  when style~wordpos("SS_ETCHEDFRAME") > 0 then
+                     self~AddStatic(id, x, y, w, h, "ETCHED " || opts)
+                  when style~wordpos("SS_ETCHEDHORZ") > 0 then
+                     self~AddStatic(id, x, y, w, h, "HORZ " || opts)
+                  when style~wordpos("SS_ETCHEDVERT") > 0 then
+                     self~AddStatic(id, x, y, w, h, "VERT " || opts)
+                  when style~wordpos("SS_BITMAP") > 0 then
+                     self~AddImage(id, x, y, w, h, "BITMAP " || opts)
+                  when style~wordpos("SS_ENHMETAFILE") > 0 then
+                     self~AddImage(id, x, y, w, h, "METAFILE " || opts)
+                  when style~wordpos("SS_ICON") > 0 then
+                     self~AddImage(id, x, y, w, h, "ICON " || opts)
                   otherwise
-                      ret = ErrorMessage("Item ignored due to unknown option in:" f "("s")")
+                      ret = ErrorMessage("Static item ignored due to unknown static style option in:" || -
+                                         '0d0a'x || f "("s")")
                end
             end
             when class = '"EDIT"' then
@@ -537,6 +563,11 @@
                else if type = "RTEXT" then opts = opts || " RIGHT";
                else if style~wordpos("SS_LEFTNOWORDWRAP") > 0 then opts = opts || " LEFTNOWRAP";
                self~AddText(x, y, w, h, name, opts, id)
+            end
+
+            when type = "ICON" then do
+               opts = self~InternGetRCStyle(style, "ST")
+               self~AddImage(id, x, y, w, h, "ICON " || opts)
             end
 
             when type = "GROUPBOX" then
@@ -674,6 +705,37 @@
 ::method AddBlackFrame
    return self~InternAddStatic(Arg(1,"A"), 5)
 
+::method AddStatic
+   use arg id, x, y, cx, cy, options
+   arga = .array~new
+   options = self~GetDefaultOpts(options)
+   arga[1] = x
+   arga[2] = y
+   arga[3] = cx
+   arga[4] = cy
+   arga[5] = options
+   if arg(1, 'E') then arga[6] = id
+
+   select
+     when options~wordpos("WHITERECT") > 0 then return self~InternAddStatic(arga, 0)
+     when options~wordpos("GRAYRECT") > 0 then return self~InternAddStatic(arga, 1)
+     when options~wordpos("BLACKRECT") > 0 then return self~InternAddStatic(arga, 2)
+     when options~wordpos("WHITEFRAME") > 0 then return self~InternAddStatic(arga, 3)
+     when options~wordpos("GRAYFRAME") > 0 then return self~InternAddStatic(arga, 4)
+     when options~wordpos("BLACKFRAME") > 0 then return self~InternAddStatic(arga, 5)
+     when options~wordpos("ETCHED") > 0 then return self~InternAddStatic(arga, 6)
+     when options~wordpos("HORZ") > 0 then return self~InternAddStatic(arga, 7)
+     when options~wordpos("VERT") > 0 then return self~InternAddStatic(arga, 8)
+     otherwise return -1
+   end
+   -- End select
+
+::method AddImage
+   use arg id, x, y, cx, cy, options
+   id = self~ItemAdd(id)
+   if id < 0 then return id
+   options = self~GetDefaultOpts(options)
+   self~AktPtr = UsrAddControl("IMG", self~AktPtr, id, x, y, cx, cy, options)
 
 ::method AddEntryLine
    use arg id, fname, x, y, cx, cy, opts

@@ -421,13 +421,14 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
 {
     LONG i;
     ULONG n[5];
+    HWND hWnd;
 
     CHECKARGL(5);
-    if (!strcmp(argv[0].strptr,"DLG"))
+    hWnd = GET_HWND(argv[1]);
+
+    if ( strcmp(argv[0].strptr, "DLG") == 0 )
     {
         CHECKARG(6);
-
-        HWND hWnd = GET_HWND(argv[0]);
 
         for (i=1; i<5; i++)
         {
@@ -449,8 +450,6 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
         LPARAM lP;
 
         CHECKARG(6);
-
-        HWND hWnd = GET_HWND(argv[0]);
 
         for (i=0; i<4; i++)
         {
@@ -511,23 +510,28 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
        if (retstr->strlength < 0) retstr->strlength = 0;   /* could be LB_ERR = -1 */
        return 0;
     }
-    else
-    if (!strcmp(argv[0].strptr,"ANY"))
+    else if ( strcmp(argv[0].strptr,"ANY") == 0 )
     {
-       HWND hWnd = GET_HWND(argv[0]);
-       for (i=0; i<4; i++)
-       {
-          if (ISHEX(argv[i+1].strptr))
-              n[i] = strtoul(argv[i+1].strptr,'\0',16);
-          else
-              n[i] = strtoul(argv[i+1].strptr,'\0',10);
-       }
+        /* Currently, all SendWinMsg("ANY") calls from ooDialog classes have
+         * this format:  SendWinMsg("ANY", handle, msgID, handle, decimal)
+         * where the msgID has the hex format.  Handling the decimal as a long
+         * works for now.
+         */
+        LRESULT ret;
+        UINT msgID = strtoul(argv[2].strptr, '\0', 16);
+        HANDLE wParam = GET_HANDLE(argv[3].strptr);
+        LONG lParam = atol(argv[4].strptr);
 
        // TODO SendMessage returns LRESULT, which could possibly be a 64-bit
-       // number.
-       ltoa((long)SendMessage(hWnd, n[1], (WPARAM)n[2], (LPARAM)n[3]), retstr->strptr, 10);
-       retstr->strlength = strlen(retstr->strptr);
-       return 0;
+       // number.  Need to look at each one of the ooDialog calls and decide if
+       // it can still be used here.
+       ret = SendMessage(hWnd, msgID, (WPARAM)wParam, (LPARAM)lParam);
+       if ( ret == 0 )
+       {
+           RETVAL(0)
+       }
+
+       RETHANDLE(ret);
     }
     return 0;
 }

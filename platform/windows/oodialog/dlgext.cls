@@ -300,7 +300,7 @@
 ::method SetItemFont unguarded
    use arg id, hFont, bRedraw     /* WM_SETFONT */
    if Arg(3, 'o') = 1 then bRedraw = 1
-   return SendWinMsg("ANY", self~GetItem(id), "0x00000030", hFont, bRedraw)
+   return SendWinMsg("ANY", self~GetItem(id), "0x0030", hFont, bRedraw)
 
 ::method HideWindowFast unguarded
    use arg hwnd

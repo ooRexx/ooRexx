@@ -69,11 +69,6 @@
 ::method Init_WindowBase
    use arg hwnd
 
-   -- TODO FIXME at this point the old ooDialog loaded the functions in
-   -- ooDialog.dll.  This is no longer needed with the package manager.
-   -- However, the code also did a version check.  I don't think that adds
-   -- anything - is that needed?
-
    self~SizeX = 0
    self~SizeY = 0
    parse value GetDialogFactor() with x y
@@ -201,8 +196,8 @@
    self~ParentDlg = .Nil
 
    /* Initialize the WindowBase */
-   self~InitCode = self~Init_WindowBase
-   if self~InitCode \= 0 then return self~InitCode
+   self~Init_WindowBase
+   self~InitCode = 0
 
    /* prepare the dialog management for a new dialog */
    self~Adm = HandleDialogAdmin()  /* allocate a new dialog table */

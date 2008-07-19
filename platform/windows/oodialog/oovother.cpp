@@ -989,6 +989,19 @@ DWORD ListExtendedStyleToString(HWND hList, RXSTRING *retstr)
 }
 
 /**
+ * Determine if a window belongs to the specified window class.
+ */
+static bool checkWindowClass(HWND hwnd, TCHAR *pClass)
+{
+    TCHAR buf[64];
+
+    if ( ! RealGetWindowClass(hwnd, buf, sizeof(buf)) || strcmp(buf, pClass) )
+        return false;
+    return true;
+}
+
+
+/**
  * Extended Common Control functionality.  This function implements capabilities
  * for the common controls that were not available at the time of the original
  * IBM ooDialog, or were available but not put into ooDialog.
@@ -1042,8 +1055,60 @@ size_t RexxEntry HandleControlEx(const char *funcname, size_t argc, CONSTRXSTRIN
     /* Determine the control, or other function.  The single first letter is
      * checked.
      */
-    if ( argv[2].strptr[0] == 'E' )      /* Edit control function */
+    if ( argv[2].strptr[0] == 'E' )      /* Edit control function (or also static) */
     {
+        if ( strcmp(argv[3].strptr, "TXT") == 0 )       /* Set or get the control's text. */
+        {
+            /* The same function is used to set / get the text for an edit
+             * control or for a static control.
+             */
+            if ( ! (checkWindowClass(hCtrl, WC_EDIT) || checkWindowClass(hCtrl, WC_STATIC)) )
+                RETVAL(-1)
+
+            if ( argc > 4 )
+            {
+                if ( SetWindowText(hCtrl, argv[4].strptr) == 0 )
+                    RETVAL(-(LONG)GetLastError())
+                else
+                    RETVAL(0)
+            }
+            else
+            {
+                ULONG count = (ULONG)GetWindowTextLength(hCtrl);
+
+                if ( count == 0 )
+                {
+                    retstr->strptr[0] = '\0';
+                    retstr->strlength = 0;
+                }
+                else
+                {
+                    if ( ++count > RXAUTOBUFLEN )
+                    {
+                        PVOID p = GlobalAlloc(GMEM_FIXED, count);
+                        if ( ! p )
+                        {
+                            RETVAL(-(LONG)GetLastError())
+                        }
+
+                        retstr->strptr = (PCHAR)p;
+                    }
+                    count = GetWindowText(hCtrl, (LPTSTR)retstr->strptr, count);
+
+                    retstr->strlength = count;
+                    if ( count == 0 )
+                    {
+                        retstr->strptr[0] = '\0';
+                    }
+                }
+            }
+            return 0;
+        }
+
+        /* The remaining functions are for an edit control only */
+        if ( ! checkWindowClass(hCtrl, WC_EDIT) )
+            RETVAL(-1)
+
         if ( !strcmp(argv[3].strptr, "MSG") ) /* Send an edit message (EM_*) */
         {
             CHECKARGL(5);
@@ -1125,47 +1190,6 @@ size_t RexxEntry HandleControlEx(const char *funcname, size_t argc, CONSTRXSTRIN
                 else RETERR
             }
             else RETERR
-        }
-        if ( !strcmp(argv[3].strptr, "TXT") )         /* Set or get the edit control's text. */
-        {
-            if ( argc > 4 )
-            {
-                if ( SetWindowText(hCtrl, argv[4].strptr) == 0 )
-                    RETVAL(0)
-                else
-                    RETVAL(-(LONG)GetLastError())
-            }
-            else
-            {
-                ULONG count = (ULONG)GetWindowTextLength(hCtrl);
-
-                if ( count == 0 )
-                {
-                    retstr->strptr[0] = '\0';
-                    retstr->strlength = 0;
-                }
-                else
-                {
-                    if ( ++count > RXAUTOBUFLEN )
-                    {
-                        PVOID p = GlobalAlloc(GMEM_FIXED, count);
-                        if ( ! p )
-                        {
-                            RETVAL(-(LONG)GetLastError())
-                        }
-
-                        retstr->strptr = (PCHAR)p;
-                    }
-                    count = GetWindowText(hCtrl, (LPTSTR)retstr->strptr, count);
-
-                    retstr->strlength = count;
-                    if ( count == 0 )
-                    {
-                        retstr->strptr[0] = '\0';
-                    }
-                }
-            }
-            return 0;
         }
         else RETERR
     }
@@ -2260,7 +2284,11 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            {
                RETVAL(-1)
            }
-           RETVAL(SendMessage(h, PBM_SETBARCOLOR, 0, rgb))
+           /* Returns the old COLORREF, or CLR_DEFAULT.  It has the format of
+            * 0x00bbggrr so we use the handle format to send it back.  But it is
+            * not a handle.
+            */
+           RETHANDLE(SendMessage(h, PBM_SETBARCOLOR, 0, rgb))
        }
    }
    else

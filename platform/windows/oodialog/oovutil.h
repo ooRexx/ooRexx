@@ -72,6 +72,23 @@
 
 extern LONG HandleError(PRXSTRING r, CHAR * text);
 
+/* Flags for the get icon functions.  Indicates the source of the icon. */
+#define ICON_FILE                 0x00000001
+#define ICON_OODIALOG             0x00000002
+#define ICON_DLL                  0x00000004
+#define ICON_SYSTEM               0x00000008
+
+/* The resource IDs of the System Icons.  The raw numeric numbers are used
+ * so that they can be passed into functions that use MAKEINTRESOURCE() on the
+ * supplied ID.
+ */
+#define IDICON_APPLICATION     32512
+#define IDICON_HAND            32513
+#define IDICON_QUESTION        32514
+#define IDICON_EXCLAMATION     32515
+#define IDICON_ASTERISK        32516
+#define IDICON_WINLOGO         32517
+
 /* Defines for the different possible versions of comctl32.dll up to Windows
  * XP SP2. These DWORD "packed version" numbers are calculated using the
  * following macro:

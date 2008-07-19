@@ -782,7 +782,7 @@
    use arg id, hFont, bRedraw, category     /* WM_SETFONT */
    if Arg(4,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    if Arg(3, 'o') = 1 then bRedraw = 1
-   return SendWinMsg("ANY",self~GetItem(id, self~catalog['handles'][category]), "0x00000030", hFont, bRedraw)
+   return SendWinMsg("ANY",self~GetItem(id, self~catalog['handles'][category]), "0x0030", hFont, bRedraw)
 
 ::method FocusCategoryItem unguarded
    use arg id, category

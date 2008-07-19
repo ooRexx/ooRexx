@@ -393,9 +393,8 @@
       obj~Hwnd = 0
       obj~Id = 0
       if Arg() = 0 then do
-         if obj~Init_WindowBase \= 0 then return .Nil
-         if obj~Init_WindowExtensions \= 0 then return .Nil
-         obj~oDlg = .Nil
+         obj~Init_WindowBase
+         obj~oDlg = .nil
          return obj
       end
       else do
@@ -1573,6 +1572,20 @@
 /**********                                    Old controls                                         ****************************/
 
 ::class 'StaticControl' subclass DialogControl public
+
+::method SetIcon
+   use strict arg hIcon
+   return SendWinMsg("ANY", self~hwnd, "0x0170", hIcon, 0) -- 0x0170 == STM_SETICON
+
+::method GetIcon
+   return SendWinMsg("ANY", self~hwnd, "0x0171", "0x0", 0) -- 0x0171 == STM_GETICON
+
+::method SetText
+    use strict arg text
+    return HandleControlEx(self~hDlg, self~id, "E", "TXT", text)
+
+::method GetText
+    return HandleControlEx(self~hDlg, self~id, "E", "TXT")
 
 /****************************************************** Edit Control Class *********************************************************/
 

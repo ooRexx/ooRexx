@@ -36,6 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
+#define NTDDI_VERSION   NTDDI_WINXPSP2
 #define _WIN32_WINNT    0x0501
 #define WINVER          0x0501
 
@@ -56,7 +57,7 @@ extern BOOL DataAutodetection(DIALOGADMIN * aDlg);
 extern INT DelDialog(DIALOGADMIN * aDlg);
 extern CRITICAL_SECTION crit_sec;
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
-extern BOOL GetDialogIcons(DIALOGADMIN *, INT, BOOL, PHANDLE, PHANDLE);
+extern BOOL GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
 extern BOOL InitForCommonControls(void);
 
 //#define USE_DS_CONTROL
@@ -86,15 +87,15 @@ public:
 ****************************************************************************************************/
 
 
-LPWORD lpwAlign ( LPWORD lpIn)
+LPWORD lpwAlign (LPWORD lpIn)
 {
   ULONG_PTR ul;
 
-  ul = (ULONG_PTR) lpIn;
+  ul = (ULONG_PTR)lpIn;
   ul +=3;
   ul >>=2;
   ul <<=2;
-  return (LPWORD) ul;
+  return (LPWORD)ul;
 }
 
 
@@ -486,7 +487,7 @@ size_t RexxEntry UsrCreateDialog(const char *funcname, size_t argc, CONSTRXSTRIN
                  HICON hBig = NULL;
                  HICON hSmall = NULL;
 
-                 if ( GetDialogIcons(dlgAdm, atoi(argv[7].strptr), TRUE, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
+                 if ( GetDialogIcons(dlgAdm, atoi(argv[7].strptr), ICON_FILE, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
                  {
                     dlgAdm->SysMenuIcon = (HICON)SetClassLongPtr(dlgAdm->TheDlg, GCL_HICON, (LONG_PTR)hBig);
                     dlgAdm->TitleBarIcon = (HICON)SetClassLongPtr(dlgAdm->TheDlg, GCL_HICONSM, (LONG_PTR)hSmall);
@@ -653,8 +654,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                       id         x           y         cx          cy  */
        UAddControl(&p, 0x0080, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
    }
-   else
-   if (!strcmp(argv[0].strptr,"EL"))
+   else if (!strcmp(argv[0].strptr,"EL"))
    {
        CHECKARG(8);
 
@@ -696,8 +696,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                         id          x       y          cx           cy  */
        UAddControl(&p, 0x0081, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
-   else
-   if (!strcmp(argv[0].strptr,"TXT"))
+   else if (!strcmp(argv[0].strptr,"TXT"))
    {
        CHECKARGL(8);
 
@@ -729,8 +728,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                      id      x         y         cx       cy  */
        UAddControl(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
    }
-   else
-   if (!strcmp(argv[0].strptr,"LB"))
+   else if (!strcmp(argv[0].strptr,"LB"))
    {
        CHECKARG(8);
 
@@ -762,8 +760,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                         id       x          y            cx        cy  */
        UAddControl(&p, 0x0083, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
-   else
-   if (!strcmp(argv[0].strptr,"CB"))
+   else if (!strcmp(argv[0].strptr,"CB"))
    {
        CHECKARG(8);
 
@@ -792,8 +789,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                         id       x          y            cx        cy  */
        UAddControl(&p, 0x0085, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
-   else
-   if (!strcmp(argv[0].strptr,"GB"))
+   else if (!strcmp(argv[0].strptr,"GB"))
    {
        CHECKARGL(8);
 
@@ -818,8 +814,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                      id      x         y        cx        cy  */
        UAddControl(&p, 0x0080, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[4].strptr, lStyle);
    }
-   else
-   if (!strcmp(argv[0].strptr,"FRM"))
+   else if (!strcmp(argv[0].strptr,"FRM"))
    {
        CHECKARGL(8);
 
@@ -841,7 +836,14 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (buffer[6] == 2) lStyle |= SS_BLACKRECT; else
        if (buffer[6] == 3) lStyle |= SS_WHITEFRAME; else
        if (buffer[6] == 4) lStyle |= SS_GRAYFRAME; else
-       lStyle |= SS_BLACKFRAME;
+       if (buffer[6] == 5) lStyle  |= SS_BLACKFRAME ; else
+       if (buffer[6] == 6) lStyle  |= SS_ETCHEDFRAME ; else
+       if (buffer[6] == 7) lStyle  |= SS_ETCHEDHORZ ; else
+       lStyle |= SS_ETCHEDVERT;
+
+       if (strstr(argv[7].strptr,"NOTIFY")) lStyle |= SS_NOTIFY;
+       if (strstr(argv[7].strptr,"SUNKEN")) lStyle |= SS_SUNKEN;
+
        if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
        if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
        if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
@@ -851,8 +853,40 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                     id    x           y          cx         cy  */
        UAddControl(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], NULL, lStyle);
    }
-   else
-   if (!strcmp(argv[0].strptr,"SB"))
+   else if (!strcmp(argv[0].strptr,"IMG"))
+   {
+       CHECKARGL(8);
+
+       for ( i = 0; i < 5; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
+
+       p = (WORD *)GET_POINTER(argv[1]);
+
+       lStyle = WS_CHILD;
+       if (strstr(argv[7].strptr,"METAFILE")) lStyle |= SS_ENHMETAFILE; else
+       if (strstr(argv[7].strptr,"BITMAP")) lStyle |= SS_BITMAP; else
+       if (strstr(argv[7].strptr,"ICON")) lStyle |= SS_ICON;
+
+       if (strstr(argv[7].strptr,"NOTIFY")) lStyle |= SS_NOTIFY;
+       if (strstr(argv[7].strptr,"CENTERIMAGE")) lStyle |= SS_CENTERIMAGE;
+       if (strstr(argv[7].strptr,"RIGHTJUST")) lStyle |= SS_RIGHTJUST;
+       if (strstr(argv[7].strptr,"SUNKEN")) lStyle |= SS_SUNKEN;
+
+       if (strstr(argv[7].strptr,"SIZECONTROL")) lStyle |= SS_REALSIZECONTROL; else
+       if (strstr(argv[7].strptr,"SIZEIMAGE")) lStyle |= SS_REALSIZEIMAGE;
+
+       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
+       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
+       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
+       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
+       if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
+
+       /*                      id           x          y          cx         cy       text  */
+       UAddControl(&p, 0x0082, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], "", lStyle);
+   }
+   else if (!strcmp(argv[0].strptr,"SB"))
    {
        CHECKARG(8);
 

@@ -54,12 +54,6 @@
 
 ::class 'WindowExtensions' public MIXINCLASS object
 
-::method Init_WindowExtensions
-   -- TODO FIXME This method is no longer needed with the new APIs.  It was used
-   -- to load the extended C functions.
-   return 0
-
-
 ::method HideFast unguarded
    return WndShow_Pos("S",self~hwnd, "HIDE FAST")
 
@@ -80,7 +74,7 @@
 ::method SetFont unguarded
    use arg hFont, bRedraw     /* WM_SETFONT */
    if Arg(2, 'o') = 1 then bRedraw = 1
-   return SendWinMsg("ANY",self~hwnd, "0x00000030", hFont, bRedraw)
+   return SendWinMsg("ANY",self~hwnd, "0x0030", hFont, bRedraw)
 
 ::method GetRect unguarded
    return WindowRect("GET", self~Hwnd)
@@ -209,6 +203,23 @@
 ::method RemoveBitmap unguarded
    use arg hBitmap
    return LoadRemoveBitmap(0 /* NULL Adm */, hBitmap, "REMOVE")
+
+::method LoadSysIcon unguarded
+   use strict arg iconName
+   return WinAPI32Func('I', 'S', iconName~translate)
+
+::method LoadIconDirect unguarded
+   use strict arg iconID, cx = 0, cy = 0, src = 'U'
+   if \ iconID~isA(.string) then return -1
+   if \ iconID~datatype("W") then iconID = self~ResolveSymbolicId(iconID)
+   if iconID = -1 then return iconID
+   if src~left(1)~translate == 'D' then src = 'D'
+   else src = 'U'
+   return WinAPI32Func('I', 'N', self~adm, iconID, cx, cy, src)
+
+::method LoadIcon unguarded
+   use strict arg fileName, cx = 0, cy = 0
+   return WinAPI32Func('I', 'F', fileName, cx, cy)
 
 ::method CreateBrush unguarded
     use arg color, brushSpecifier
@@ -407,8 +418,7 @@
    if result <> 0 then return result
 
    self~ScrollNow = 0      /* a kind of semaphore to handle multiple text scrolling */
-   self~InitCode = self~Init_WindowExtensions
-   if self~InitCode \= 0 then return self~InitCode
+   self~InitCode = 0
 
    self~BkgBitmap = 0  /* no background bitmap */
    self~BkgBrushBmp = 0  /* no background bitmap */
