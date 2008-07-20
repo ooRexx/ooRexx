@@ -2582,7 +2582,7 @@ BUILTIN(RXFUNCQUERY)
   RexxString *name = required_string(RXFUNCQUERY, name);
 
   // hand this off to the package manager.
-  return PackageManager::dropRegisteredRoutine(name);
+  return PackageManager::queryRegisteredRoutine(name);
 }
 
 
