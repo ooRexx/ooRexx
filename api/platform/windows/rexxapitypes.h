@@ -77,27 +77,27 @@ typedef size_t (REXXENTRY *REXXPFN)();
 #define SIZE_MAX		(~((size_t)0))
 #endif
 #define SSIZE_MAX		((ssize_t)(SIZE_MAX >> 1))
-#define SSIZE_MIN		((ssize_t)SIZE_MAX)
+#define SSIZE_MIN		(~SSIZE_MAX)
 
 #define UINTPTR_MAX     (~((uintptr_t)0))
 #define INTPTR_MAX      ((intptr_t)(UINTPTR_MAX >> 1))
-#define INTPTR_MIN      ((intptr_t)UINTPTR_MAX)
+#define INTPTR_MIN      (~INTPTR_MAX)
 
-#define UINT32_MAX        (~((uint32_t)0))
-#define INT32_MAX         ((int32_t)(UINT32_MAX >> 1))
-#define INT32_MIN         ((int32_t)UINT32_MAX)
+#define UINT32_MAX      (~((uint32_t)0))
+#define INT32_MAX       ((int32_t)(UINT32_MAX >> 1))
+#define INT32_MIN       (~INT32_MAX)
 
-#define UINT16_MAX        (~((uint16_t)0))
-#define INT16_MAX         ((int16_t)(UINT16_MAX >> 1))
-#define INT16_MIN         ((int16_t)UINT16_MAX)
+#define UINT16_MAX      (uint16_t)(~((uint16_t)0))
+#define INT16_MAX       ((int16_t)(UINT16_MAX >> 1))
+#define INT16_MIN       (~INT16_MAX)
 
-#define UINT8_MAX        (~((uint8_t)0))
-#define INT8_MAX         ((int8_t)(UINT8_MAX >> 1))
-#define INT8_MIN         ((int8_t)UINT8_MAX)
+#define UINT8_MAX       (uint8_t)(~((uint8_t)0))
+#define INT8_MAX        ((int8_t)(UINT8_MAX >> 1))
+#define INT8_MIN        (~INT8_MAX)
 
-#define UINT64_MAX (~((uint64_t)0))
-#define INT64_MAX  ((int64_t)(UINT64_MAX >> 1))
-#define INT64_MIN  ((int64_t)UINT64_MAX)
+#define UINT64_MAX      (~((uint64_t)0))
+#define INT64_MAX       ((int64_t)(UINT64_MAX >> 1))
+#define INT64_MIN       (~INT64_MAX)
 
 #define VLARexxEntry __cdecl           /* external entry points       */
 
