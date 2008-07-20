@@ -143,13 +143,13 @@ LONG HandleArgError(PRXSTRING r, BOOL ToMuch)
  */
 #define GET_HKEY(argum, ghk) { \
      ghk = NULL; \
-     if (strstr(argum,"MACHINE") == 0) ghk = HKEY_LOCAL_MACHINE; else \
-     if (strstr(argum,"CLASSES") == 0) ghk = HKEY_CLASSES_ROOT; else \
-     if (strstr(argum,"CURRENT_USER") == 0) ghk = HKEY_CURRENT_USER; else \
-     if (strstr(argum,"USERS") == 0) ghk = HKEY_USERS; else \
-     if (strstr(argum,"PERFORMANCE") == 0) ghk = HKEY_PERFORMANCE_DATA; else \
-     if (strstr(argum,"CURRENT_CONFIG") == 0) ghk = HKEY_CURRENT_CONFIG; else \
-     if (strstr(argum,"DYN_DATA") == 0) ghk = HKEY_DYN_DATA; else \
+     if (strstr(argum,"MACHINE")) ghk = HKEY_LOCAL_MACHINE; else \
+     if (strstr(argum,"CLASSES")) ghk = HKEY_CLASSES_ROOT; else \
+     if (strstr(argum,"CURRENT_USER")) ghk = HKEY_CURRENT_USER; else \
+     if (strstr(argum,"USERS")) ghk = HKEY_USERS; else \
+     if (strstr(argum,"PERFORMANCE")) ghk = HKEY_PERFORMANCE_DATA; else \
+     if (strstr(argum,"CURRENT_CONFIG")) ghk = HKEY_CURRENT_CONFIG; else \
+     if (strstr(argum,"DYN_DATA")) ghk = HKEY_DYN_DATA; else \
      string2pointer(argum, (void **)&ghk); \
 }
 
@@ -272,7 +272,6 @@ size_t RexxEntry WSRegistryKey(const char *funcname, size_t argc, CONSTRXSTRING 
         DWORD access=0;
 
         GET_HKEY(argv[1].strptr, hk);
-        printf("hk string=%s hk=%p\n", argv[1].strptr, hk);
 
         if (argc == 2)
         {
