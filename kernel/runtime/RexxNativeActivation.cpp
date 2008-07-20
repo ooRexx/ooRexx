@@ -522,20 +522,28 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                     switch (type)
                     {
 
-                        case REXX_VALUE_RexxStringObject: /* no object here                    */
-                        case REXX_VALUE_RexxArrayObject: /* no object here                    */
-                        case REXX_VALUE_RexxObjectPtr:  /* no object here                    */
-                        case REXX_VALUE_int:            /* non-integer value                 */
-                        case REXX_VALUE_int64_t:        /* non-integer value                 */
-                        case REXX_VALUE_int32_t:        /* non-integer value                 */
-                        case REXX_VALUE_int16_t:        /* non-integer value                 */
-                        case REXX_VALUE_int8_t:         /* non-integer value                 */
-                        case REXX_VALUE_wholenumber_t:     /* non-existent long                 */
-                        case REXX_VALUE_stringsize_t:   /* non-existent long                 */
-                        case REXX_VALUE_logical_t:      // this must be a boolean value
-                        case REXX_VALUE_size_t:         /* non-existent double               */
-                        case REXX_VALUE_CSTRING:        /* missing character string          */
+                        case REXX_VALUE_RexxObjectPtr:     // no object here
+                        case REXX_VALUE_int:               // non-integer value
+                        case REXX_VALUE_wholenumber_t:     // non-existent long
+                        case REXX_VALUE_CSTRING:           // missing character string
                         case REXX_VALUE_POINTER:
+                        case REXX_VALUE_RexxStringObject:  // no object here
+                        case REXX_VALUE_stringsize_t:      // non-existent long
+                        case REXX_VALUE_int8_t:            // non-integer value
+                        case REXX_VALUE_int16_t:           // non-integer value
+                        case REXX_VALUE_int32_t:           // non-integer value
+                        case REXX_VALUE_int64_t:           // non-integer value
+                        case REXX_VALUE_uint8_t:           // non-integer value
+                        case REXX_VALUE_uint16_t:          // non-integer value
+                        case REXX_VALUE_uint32_t:          // non-integer value
+                        case REXX_VALUE_uint64_t:          // non-integer value
+                        case REXX_VALUE_size_t:
+                        case REXX_VALUE_ssize_t:
+                        case REXX_VALUE_intptr_t:
+                        case REXX_VALUE_uintptr_t:
+                        case REXX_VALUE_logical_t:         // this must be a boolean value
+                        case REXX_VALUE_RexxArrayObject:   // no object here
+                        case REXX_VALUE_RexxStemObject:
                         case REXX_VALUE_POINTERSTRING:
                         {
                             // set this as a 64-bit value to clear everything out
