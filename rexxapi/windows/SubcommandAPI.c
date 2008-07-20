@@ -540,7 +540,7 @@ int REXXENTRY RexxResolveExit(
   const char * name,                   /* Exit name.                 */
   REXXPFN *handler)
 {
-  return RegLoad(name, NULL, REGSYSEXIT, (REXXPFN *)&handler);
+  return RegLoad(name, NULL, REGSYSEXIT, handler);
 }
 
 
@@ -699,7 +699,7 @@ RexxQueryFunction(
 /*********************************************************************/
 int REXXENTRY RexxResolveRoutine(const char *name, REXXPFN *handler)
 {
-    return RegLoad(name, NULL, REGFUNCTION, (REXXPFN *)&handler);
+    return RegLoad(name, NULL, REGFUNCTION, handler);
 }
 
 

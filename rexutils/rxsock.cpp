@@ -852,6 +852,7 @@ size_t RexxEntry SockDie(const char *name, size_t argc, PCONSTRXSTRING argv, con
 // now build the actual entry list
 RexxRoutineEntry rxsock_functions[] =
 {
+    REXX_CLASSIC_ROUTINE( SockLoadFuncs,      SockLoadFuncs),
     REXX_CLASSIC_ROUTINE( SockDropFuncs,      SockDropFuncs),
     REXX_CLASSIC_ROUTINE( SockAccept,         SockAccept),
     REXX_CLASSIC_ROUTINE( SockBind,           SockBind),

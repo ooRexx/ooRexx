@@ -308,7 +308,7 @@ RexxReturnCode REXXENTRY RexxRegisterSubcomExe(
 int REXXENTRY RexxResolveRoutine(const char *name, REXXPFN *handler)
 {
     void *plib = NULL;
-    return RegLoad(name, NULL, REGFUNCTION, (REXXPFN *)&handler, &plib);
+    return RegLoad(name, NULL, REGFUNCTION, handler, &plib);
 }
 
 
@@ -598,7 +598,7 @@ int REXXENTRY RexxResolveExit(
   REXXPFN *handler)
 {
   void *plib = NULL;
-  return RegLoad(name, NULL, REGSYSEXIT, (REXXPFN *)&handler, &plib);
+  return RegLoad(name, NULL, REGSYSEXIT, handler, &plib);
 }
 
 
