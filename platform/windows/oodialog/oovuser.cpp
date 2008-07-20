@@ -807,6 +807,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
    {
        CHECKARGL(8);
 
+       /* UsrAddControl("GB",self~AktPtr, x, y, cx, cy, opts, text, id) */
        for ( i = 0; i < 4; i++ )
        {
            buffer[i] = atoi(argv[i+2].strptr);
@@ -826,7 +827,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                      id      x         y        cx        cy  */
-       UAddControl(&p, 0x0080, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[4].strptr, lStyle);
+       UAddControl(&p, 0x0080, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"FRM"))
    {
