@@ -190,4 +190,11 @@ extern "C" {
 }
 #endif
 
+/* 
+ * OPTIONAL: For EBCDIC systems.
+ */
+#if defined(__MVS__)
+   #define EBCDIC
+#endif
+
 #endif
