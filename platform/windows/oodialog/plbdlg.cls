@@ -46,6 +46,10 @@
 ::requires "oodutils.cls"  /* load public routines (not static) */
 
 
+::class 'DlgUtil' public
+::method commonInit class EXTERNAL "LIBRARY oodialog dlgutil_commonInit"
+::method colorRef class EXTERNAL "LIBRARY oodialog dlgutil_colorRef"
+
 /******************************************************************************/
 /* The class WindowBase implements methods that are common to all windows,    */
 /* if it is a dialog or a dialog item                                         */
@@ -68,6 +72,17 @@
 
 ::method Init_WindowBase
    use arg hwnd
+
+   self~hwnd = -1
+   self~SizeX = -1
+   self~SizeY = -1
+   self~FactorX = -1
+   self~FactorY = -1
+
+   if \ .DlgUtil~commonInit then do
+     self~initCode = 1
+     return 1
+   end
 
    self~SizeX = 0
    self~SizeY = 0
@@ -196,8 +211,8 @@
    self~ParentDlg = .Nil
 
    /* Initialize the WindowBase */
-   self~Init_WindowBase
-   self~InitCode = 0
+   self~initCode = self~Init_WindowBase
+   if self~initCode <> 0 then return self~initCode
 
    /* prepare the dialog management for a new dialog */
    self~Adm = HandleDialogAdmin()  /* allocate a new dialog table */

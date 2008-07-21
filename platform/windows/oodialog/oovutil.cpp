@@ -51,7 +51,6 @@
 #undef NOGLOBALVARIABLES
 #include "oodResources.h"
 
-
 extern HINSTANCE MyInstance = NULL;
 
 extern DIALOGADMIN * DialogTab[MAXDIALOGS] = {NULL};
@@ -60,6 +59,7 @@ extern INT StoredDialogs = 0;
 extern CRITICAL_SECTION crit_sec = {0};
 extern WPARAM InterruptScroll;
 extern DWORD ComCtl32Version = 0;
+static bool CommonInitDone = false;  // TODO this is a temporary measure, may be removed.
 
 extern BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
 extern BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam, BOOL MsgEnabled);
@@ -72,7 +72,6 @@ extern LONG HandleError(PRXSTRING r, CHAR * text);
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 extern BOOL GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
 extern HICON GetIconForID(DIALOGADMIN *, UINT, UINT, int, int);
-extern BOOL InitForCommonControls(void);
 
 /* Shared functions for keyboard hooks and key press subclassing */
 extern LONG setKeyPressData(KEYPRESSDATA *, CONSTRXSTRING, CONSTRXSTRING, const char *);
@@ -687,11 +686,6 @@ size_t RexxEntry StartDialog(const char *funcname, size_t argc, CONSTRXSTRING *a
     if (!dlgAdm)
     {
         RETERR;
-    }
-
-    if ( ! ComCtl32Version && ! InitForCommonControls() )
-    {
-        RETC(0);
     }
 
     EnterCriticalSection(&crit_sec);
@@ -1931,7 +1925,6 @@ LONG SetRexxStem(const char * name, INT id, const char * secname, const char * d
 }
 
 
-
 size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    CHAR data[256];
@@ -2070,18 +2063,6 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
 }
 
 
-/****************************************************************************************************
-
-           Part for REXXAPI
-
-****************************************************************************************************/
-
-size_t RexxEntry RemoveMMFuncs(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    // this is a nop
-    RETC(0);
-}
-
 /**
  * Convenience function to put up an error message box.
  *
@@ -2099,12 +2080,17 @@ static void internalErrorMsg(PSZ pszMsg, PSZ pszTitle)
  * The minimum version of 4.71 is supported on Windows 95 with Internet Explorer
  * 4.0, Windows NT 4.0 with Internet Explorer 4.0, Windows 98, and Windows 2000.
  *
- * @return TRUE if comctl32.dll is at least version 4.71, otherwise FALSE.
+ * @return .true if comctl32.dll is at least version 4.71, otherwise .false.
  */
-BOOL InitForCommonControls(void)
+RexxMethod0(RexxObjectPtr, dlgutil_commonInit)
 {
     HINSTANCE hinst;
-    BOOL      success = FALSE;
+    bool      success = false;
+
+    if ( CommonInitDone )
+    {
+        return (ComCtl32Version >= COMCTL32_4_71 ? context->True() : context->False());
+    }
 
     hinst = LoadLibrary(TEXT("comctl32.dll"));
     if ( hinst )
@@ -2155,10 +2141,16 @@ BOOL InitForCommonControls(void)
         }
         else
         {
-            success = TRUE;
+            success = true;
         }
     }
-    return success;
+
+    CommonInitDone = true;
+    if ( success )
+    {
+        return context->True();
+    }
+    return context->False();
 }
 
 
@@ -2314,6 +2306,33 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_LAST_ROUTINE()
 };
 
+REXX_METHOD_PROTOTYPE(dlgutil_commonInit);
+REXX_METHOD_PROTOTYPE(dlgutil_colorRef);
+REXX_METHOD_PROTOTYPE(pbc_stepIt);
+REXX_METHOD_PROTOTYPE(pbc_getPos);
+REXX_METHOD_PROTOTYPE(pbc_setPos);
+REXX_METHOD_PROTOTYPE(pbc_getRange);
+REXX_METHOD_PROTOTYPE(pbc_setRange);
+REXX_METHOD_PROTOTYPE(pbc_setStep);
+REXX_METHOD_PROTOTYPE(pbc_setMarquee);
+REXX_METHOD_PROTOTYPE(pbc_setBkColor);
+REXX_METHOD_PROTOTYPE(pbc_setBarColor);
+
+RexxMethodEntry oodialog_methods[] = {
+    REXX_METHOD(dlgutil_commonInit,    dlgutil_commonInit),
+    REXX_METHOD(dlgutil_colorRef,      dlgutil_colorRef),
+    REXX_METHOD(pbc_stepIt,            pbc_stepIt),
+    REXX_METHOD(pbc_getPos,            pbc_getPos),
+    REXX_METHOD(pbc_setPos,            pbc_setPos),
+    REXX_METHOD(pbc_getRange,          pbc_getRange),
+    REXX_METHOD(pbc_setRange,          pbc_setRange),
+    REXX_METHOD(pbc_setStep,           pbc_setStep),
+    REXX_METHOD(pbc_setMarquee,        pbc_setMarquee),
+    REXX_METHOD(pbc_setBkColor,        pbc_setBkColor),
+    REXX_METHOD(pbc_setBarColor,       pbc_setBarColor),
+    REXX_LAST_METHOD()
+};
+
 RexxPackageEntry oodialog_package_entry =
 {
     STANDARD_PACKAGE_HEADER
@@ -2323,7 +2342,7 @@ RexxPackageEntry oodialog_package_entry =
     NULL,                                // no load/unload functions
     NULL,
     oodialog_functions,                  // the exported functions
-    NULL                                 // no methods in this package
+    oodialog_methods                     // the exported methods
 };
 
 // package loading stub.

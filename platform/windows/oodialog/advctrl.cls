@@ -393,7 +393,7 @@
       obj~Hwnd = 0
       obj~Id = 0
       if Arg() = 0 then do
-         obj~Init_WindowBase
+         self~initCode = obj~Init_WindowBase
          obj~oDlg = .nil
          return obj
       end
@@ -1272,59 +1272,26 @@
 
 
 
-/****************************************************** Progress Bar Class *********************************************************/
-
+/***************** Progress Bar Class *********************************************************/
 
 ::class 'ProgressBar' subclass DialogControl public
 
-::method Step
-   if Arg(1,'e') then
-       return HandleOtherNewCtrls("PROGRESS", "DELTA", self~hwnd, arg(1))
-   else
-       return HandleOtherNewCtrls("PROGRESS", "STEP", self~hwnd)
+::method step EXTERNAL "LIBRARY oodialog pbc_stepIt"
+::method setStep EXTERNAL "LIBRARY oodialog pbc_setStep"
 
-::method SetPos
-   use arg newpos
-   if Arg(1,'o') = 1 then return -1
-   return HandleOtherNewCtrls("PROGRESS", "POS", self~hwnd, newpos)
+::method setPos EXTERNAL "LIBRARY oodialog pbc_setPos"
+::method getPos EXTERNAL "LIBRARY oodialog pbc_getPos"
 
-::method SetStep
-   use arg newstep
-   if Arg(1,'o') = 1 then return -1
-   return HandleOtherNewCtrls("PROGRESS", "SETSTEP", self~hwnd, newstep)
+::method setRange EXTERNAL "LIBRARY oodialog pbc_setRange"
+::method getRange EXTERNAL "LIBRARY oodialog pbc_getRange"
 
-::method SetRange
-   use arg min, max
-   if Arg(1,'o') = 1 then min = 0
-   if Arg(2,'o') = 1 then max = 100
-   if max < min then return 0
-   prevrange =  HandleOtherNewCtrls("PROGRESS", "RANGE", self~hwnd, min, max)
-   if prevrange \= 0 then do
-      pmin = BinaryAnd(prevrange, "0x0000FFFF")
-      pmax = BinaryAnd(prevrange, "0xFFFF0000") % "10000"~x2d
-      return pmin || " " || pmax
-   end
-   else return 0
+::method setMarquee EXTERNAL "LIBRARY oodialog pbc_setMarquee"
 
-::method SetMarquee
-   use strict arg on, interval = 500
-   return  HandleOtherNewCtrls("PROGRESS", "MARQUEE", self~hwnd, on, interval)
-
-::method BarColor
-   use strict arg r, g, b
-   return  HandleOtherNewCtrls("PROGRESS", "BAR", self~hwnd, r, g, b)
-
-::method BackgroundColor
-   use strict arg r, g, b
-   return  HandleOtherNewCtrls("PROGRESS", "BACK", self~hwnd, r, g, b)
+::method barColor EXTERNAL "LIBRARY oodialog pbc_setBarColor"
+::method backgroundColor EXTERNAL "LIBRARY oodialog pbc_setBkColor"
 
 
-
-
-
-
-/****************************************************** Track Bar Class *********************************************************/
-
+/******************** Track Bar Class *********************************************************/
 
 ::class 'SliderControl' subclass DialogControl public
 

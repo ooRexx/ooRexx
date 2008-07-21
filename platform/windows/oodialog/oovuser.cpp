@@ -58,7 +58,6 @@ extern INT DelDialog(DIALOGADMIN * aDlg);
 extern CRITICAL_SECTION crit_sec;
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
 extern BOOL GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
-extern BOOL InitForCommonControls(void);
 
 //#define USE_DS_CONTROL
 
@@ -440,9 +439,6 @@ size_t RexxEntry UsrCreateDialog(const char *funcname, size_t argc, CONSTRXSTRIN
    else                                   /* Create a top level dialog. */
    {
        CHECKARGL(8);
-
-       if ( ! ComCtl32Version && ! InitForCommonControls() )
-           RETC(0)
 
        /* set number of items to dialogtemplate */
        p = (DLGTEMPLATE *)GET_POINTER(argv[4]);

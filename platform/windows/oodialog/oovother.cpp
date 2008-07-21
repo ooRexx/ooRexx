@@ -43,6 +43,8 @@
 
 #include <windows.h>
 #include <mmsystem.h>
+#include "oorexxapi.h"
+#include <RexxErrorCodes.h>
 #include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>
@@ -2215,7 +2217,6 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
 }
 
 
-
 size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    HWND h;
@@ -2225,73 +2226,6 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
    h = GET_HWND(argv[2]);
    if (!h) RETERR;
 
-   if (!strcmp(argv[0].strptr, "PROGRESS"))
-   {
-       if (!strcmp(argv[1].strptr, "STEP"))
-       {
-           RETVAL((long)SendMessage(h, PBM_STEPIT, 0, 0))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "POS"))
-       {
-           CHECKARG(4);
-           RETVAL((long)SendMessage(h, PBM_SETPOS, atoi(argv[3].strptr), 0))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "SETSTEP"))
-       {
-           CHECKARG(4);
-           RETVAL((long)SendMessage(h, PBM_SETSTEP, atoi(argv[3].strptr), 0))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "DELTA"))
-       {
-           CHECKARG(4);
-           RETVAL((long)SendMessage(h, PBM_DELTAPOS, atoi(argv[3].strptr), 0))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "RANGE"))
-       {
-           CHECKARG(5);
-           RETVAL((long)SendMessage(h, PBM_SETRANGE, 0, MAKELPARAM(atoi(argv[3].strptr), atoi(argv[4].strptr))))
-       }
-       else
-       if (!strcmp(argv[1].strptr, "MARQUEE"))
-       {
-           /* Requires XP Common Controls version 6.0 */
-           if ( ComCtl32Version < COMCTL32_6_0 ) RETVAL(-4)
-
-           CHECKARG(5);
-           if (SendMessage(h, PBS_MARQUEE, (BOOL)atoi(argv[3].strptr), atoi(argv[4].strptr)))
-               RETVAL(1)
-           else
-               RETVAL(0)
-       }
-       else
-       if (!strcmp(argv[1].strptr, "BAR"))
-       {
-           COLORREF rgb;
-
-           if ( argc == 4 && ISHEX(argv[3].strptr) )
-           {
-               rgb = (COLORREF)strtoul(argv[3].strptr,'\0',16);
-           }
-           else if ( argc == 6)
-           {
-               rgb = RGB((BYTE)atoi(argv[3].strptr), (BYTE)atoi(argv[4].strptr), (BYTE)atoi(argv[5].strptr));
-           }
-           else
-           {
-               RETVAL(-1)
-           }
-           /* Returns the old COLORREF, or CLR_DEFAULT.  It has the format of
-            * 0x00bbggrr so we use the handle format to send it back.  But it is
-            * not a handle.
-            */
-           RETHANDLE(SendMessage(h, PBM_SETBARCOLOR, 0, rgb))
-       }
-   }
-   else
    if (!strcmp(argv[0].strptr, "SLIDER"))
    {
        if (!strcmp(argv[1].strptr, "POS"))
@@ -2302,8 +2236,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            else
                SendMessage(h, TBM_SETPOS, IsYes(argv[4].strptr), atol(argv[3].strptr));
        }
-       else
-       if (!strcmp(argv[1].strptr, "SETRANGE"))
+       else if (!strcmp(argv[1].strptr, "SETRANGE"))
        {
            CHECKARG(6);
            if (argv[3].strptr[0] == 'L')
@@ -2313,15 +2246,13 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            else
                SendMessage(h, TBM_SETRANGE, IsYes(argv[5].strptr), MAKELONG(atol(argv[3].strptr), atol(argv[4].strptr)));
        }
-       else
-       if (!strcmp(argv[1].strptr, "GETRANGE"))
+       else if (!strcmp(argv[1].strptr, "GETRANGE"))
        {
            sprintf(retstr->strptr, "%d %d",SendMessage(h, TBM_GETRANGEMIN, 0,0), SendMessage(h, TBM_GETRANGEMAX, 0,0));
            retstr->strlength = strlen(retstr->strptr);
            return 0;
        }
-       else
-       if (!strcmp(argv[1].strptr, "TICS"))
+       else if (!strcmp(argv[1].strptr, "TICS"))
        {
            /*CHECKARG(5); */
            /* 4 arguments for 'N', 5 for all the others */
@@ -2352,24 +2283,21 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            }
            RETC(0);
        }
-       else
-       if (!strcmp(argv[1].strptr, "GETSTEPS"))
+       else if (!strcmp(argv[1].strptr, "GETSTEPS"))
        {
            CHECKARG(4);
            if (argv[3].strptr[0] == 'L')
                RETVAL((long)SendMessage(h, TBM_GETLINESIZE, 0, 0))
            else RETVAL((long)SendMessage(h, TBM_GETPAGESIZE, 0, 0));
        }
-       else
-       if (!strcmp(argv[1].strptr, "SETSTEPS"))
+       else if (!strcmp(argv[1].strptr, "SETSTEPS"))
        {
            CHECKARG(5);
            if (argv[3].strptr[0] == 'L')
                RETVAL((long)SendMessage(h, TBM_SETLINESIZE, 0, atol(argv[4].strptr)))
            else RETVAL((long)SendMessage(h, TBM_SETPAGESIZE, 0, atol(argv[4].strptr)));
        }
-       else
-       if (!strcmp(argv[1].strptr, "SETSEL"))
+       else if (!strcmp(argv[1].strptr, "SETSEL"))
        {
            CHECKARGL(5);
            if (argv[3].strptr[0] == 'C')
@@ -2385,16 +2313,14 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            else
                SendMessage(h, TBM_SETSEL, IsYes(argv[5].strptr), MAKELONG(atol(argv[3].strptr), atol(argv[4].strptr)));
        }
-       else
-       if (!strcmp(argv[1].strptr, "GETSEL"))
+       else if (!strcmp(argv[1].strptr, "GETSEL"))
        {
            sprintf(retstr->strptr, "%d %d",SendMessage(h, TBM_GETSELSTART, 0,0), SendMessage(h, TBM_GETSELEND, 0,0));
            retstr->strlength = strlen(retstr->strptr);
            return 0;
        }
    }
-   else
-   if (!strcmp(argv[0].strptr, "TAB"))
+   else if (!strcmp(argv[0].strptr, "TAB"))
    {
        if (!strcmp(argv[1].strptr, "INS"))
        {
@@ -2418,8 +2344,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            }
            RETVAL(TabCtrl_InsertItem(h, item, &tab));
        }
-       else
-       if (!strcmp(argv[1].strptr, "SET"))
+       else if (!strcmp(argv[1].strptr, "SET"))
        {
            TC_ITEM tab;
            INT item;
@@ -2441,8 +2366,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            }
            RETC(!TabCtrl_SetItem(h, item, &tab));
        }
-       else
-       if (!strcmp(argv[1].strptr, "GET"))
+       else if (!strcmp(argv[1].strptr, "GET"))
        {
            TC_ITEM tab;
            INT item;
@@ -2466,8 +2390,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            }
            else RETVAL(-1)
        }
-       else
-       if (!strcmp(argv[1].strptr, "SEL"))
+       else if (!strcmp(argv[1].strptr, "SEL"))
        {
            TC_ITEM tab;
            CHECKARGL(4);
@@ -2511,8 +2434,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
                }
            }
        }
-       else
-       if (!strcmp(argv[1].strptr, "FOCUS"))
+       else if (!strcmp(argv[1].strptr, "FOCUS"))
        {
            CHECKARG(4);
            if (argv[3].strptr[0] == 'G')
@@ -2523,8 +2445,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
                RETC(0);
            }
        }
-       else
-       if (!strcmp(argv[1].strptr, "DEL"))
+       else if (!strcmp(argv[1].strptr, "DEL"))
        {
            INT item;
            CHECKARG(4);
@@ -2535,18 +2456,15 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
               RETC(!TabCtrl_DeleteItem(h, item))
            RETVAL(-1)
        }
-       else
-       if (!strcmp(argv[1].strptr, "CNT"))
+       else if (!strcmp(argv[1].strptr, "CNT"))
        {
            RETVAL(TabCtrl_GetItemCount(h))
        }
-       else
-       if (!strcmp(argv[1].strptr, "ROWCNT"))
+       else if (!strcmp(argv[1].strptr, "ROWCNT"))
        {
            RETVAL(TabCtrl_GetRowCount(h))
        }
-       else
-       if (!strcmp(argv[1].strptr, "SETIMG"))
+       else if (!strcmp(argv[1].strptr, "SETIMG"))
        {
            HIMAGELIST iL;
 
@@ -2555,8 +2473,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            if (iL) RETHANDLE(TabCtrl_SetImageList(h, iL))
            else RETC(0)
        }
-       else
-       if (!strcmp(argv[1].strptr, "UNSETIMG"))
+       else if (!strcmp(argv[1].strptr, "UNSETIMG"))
        {
            HIMAGELIST iL;
 
@@ -2566,16 +2483,14 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
 
            RETC(!ImageList_Destroy( iL))
        }
-       else
-       if (!strcmp(argv[1].strptr, "PADDING"))
+       else if (!strcmp(argv[1].strptr, "PADDING"))
        {
            CHECKARG(5);
 
            TabCtrl_SetPadding(h, atoi(argv[3].strptr), atoi(argv[4].strptr));
            RETC(0);
        }
-       else
-       if (!strcmp(argv[1].strptr, "SIZE"))
+       else if (!strcmp(argv[1].strptr, "SIZE"))
        {
            LONG prevsize;
            CHECKARG(5);
@@ -2585,8 +2500,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            retstr->strlength = strlen(retstr->strptr);
            return 0;
        }
-       else
-       if (!strcmp(argv[1].strptr, "RECT"))
+       else if (!strcmp(argv[1].strptr, "RECT"))
        {
            RECT r;
            CHECKARG(4);
@@ -2599,8 +2513,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            }
            return 0;
        }
-       else
-       if (!strcmp(argv[1].strptr, "ADJUST"))
+       else if (!strcmp(argv[1].strptr, "ADJUST"))
        {
            RECT r;
            BOOL adapt;  /* or only query */
@@ -3013,4 +2926,276 @@ size_t RexxEntry HandleDateTimePicker(const char *funcname, size_t argc, CONSTRX
     RETERR;
 }
 
+
+/* These inline (and non-inline) convenience functions will be move so that they
+ * are accessible by all of ooDialog at some point.  Right now they are just
+ * used by the Progress Bar native method functions.
+ */
+inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr self)
+{
+    RexxStringObject rxString = (RexxStringObject)context->SendMessage0(self, "HWND");
+    return GET_HWND(context->StringData(rxString));
+}
+
+inline bool rxOmittedArg(RexxMethodContext * context, size_t index)
+{
+    return context->ArrayHasIndex(context->GetArguments(), index) == 0 ? true : false;
+}
+
+inline size_t rxArgCount(RexxMethodContext * context)
+{
+    return context->ArraySize(context->GetArguments());
+}
+
+inline bool hasStyle(HWND hwnd, DWORD_PTR style)
+{
+    if ( (GetWindowLongPtr(hwnd, GWL_STYLE) & style) || (GetWindowLongPtr(hwnd, GWL_EXSTYLE) & style) )
+    {
+        return true;
+    }
+    return false;
+}
+
+void comCtl32Exception(RexxMethodContext *context, const char *methodName)
+{
+    char msg[128];
+    sprintf(msg, "The %s method requires Windows XP or later", methodName);
+    context->RaiseException1(Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
+}
+
+void wrongWindowStyleException(RexxMethodContext *context, const char *obj, const char *style)
+{
+    char msg[128];
+    sprintf(msg, "This %s does not have the %s style", obj, style);
+    context->RaiseException1(Error_Incorrect_method_user_defined, context->NewStringFromAsciiz(msg));
+}
+
+/**
+ * Step the progress bar by the step increment or do a delta position.  A delta
+ * position moves the progress bar from its current position by the specified
+ * amount.
+ *
+ * Note this difference between stepping and doing a delta.  When the progress
+ * bar is stepped and the step amount results in a position past the end of the
+ * progress bar, the progress bar restarts at the minimum position.  When a
+ * delta position is done, if the end of the progress bar is reached, it will
+ * just stay at the end.
+ *
+ * @param  delta [Optional]  If present a delta position is done using this
+ *               values.  If absent, then a step is done.
+ *
+ * @return  For both cases the previous position is returned.
+ */
+RexxMethod2(RexxObjectPtr, pbc_stepIt, OSELF, self, OPTIONAL_uint32_t, delta)
+{
+    int previous;
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    if ( rxOmittedArg(context, 1) )
+    {
+        previous = (int)SendMessage(hwnd, PBM_STEPIT, 0, 0);
+    }
+    else
+    {
+        previous = (int)SendMessage(hwnd, PBM_DELTAPOS, delta, 0);
+    }
+    return context->NumberToObject(previous);
+}
+
+/**
+ * Set the position of the progress bar.
+ *
+ * @param newPos  Set the position to this value.
+ *
+ * @return The the old progress bar position.
+ */
+RexxMethod2(RexxObjectPtr, pbc_setPos, OSELF, self, int32_t, newPos)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    int pos = (int)SendMessage(hwnd, PBM_SETPOS, newPos, 0);
+
+    return context->NumberToObject(pos);
+}
+
+RexxMethod1(RexxObjectPtr, pbc_getPos, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    int pos = (int)SendMessage(hwnd, PBM_GETPOS, 0, 0);
+
+    return context->NumberToObject(pos);
+}
+
+RexxMethod3(RexxObjectPtr, pbc_setRange, OSELF, self, OPTIONAL_int32_t, min, OPTIONAL_int32_t, max)
+{
+    TCHAR buf[64];
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    if ( rxOmittedArg(context, 1) )
+    {
+        min = 0;
+    }
+    if ( rxOmittedArg(context, 2) )
+    {
+        max = 100;
+    }
+
+    DWORD range = (DWORD)SendMessage(hwnd, PBM_SETRANGE32, min, max);
+
+    _snprintf(buf, sizeof(buf), "%d %d", LOWORD(range), HIWORD(range));
+
+    return context->NewStringFromAsciiz(buf);
+}
+
+RexxMethod1(RexxObjectPtr, pbc_getRange, OSELF, self)
+{
+    TCHAR buf[64];
+    HWND hwnd = rxGetWindowHandle(context, self);
+    PBRANGE pbr;
+
+    SendMessage(hwnd, PBM_GETRANGE, TRUE, (LPARAM)&pbr);
+    _snprintf(buf, sizeof(buf), "%d %d", pbr.iLow, pbr.iHigh);
+
+    return context->NewStringFromAsciiz(buf);
+}
+
+RexxMethod2(RexxObjectPtr, pbc_setStep, OSELF, self, OPTIONAL_int32_t, newStep)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    if ( rxOmittedArg(context, 1) )
+    {
+        newStep = 10;
+    }
+    int previous = (int)SendMessage(hwnd, PBM_SETSTEP, newStep, 0);
+
+    return context->NumberToObject(previous);
+}
+
+RexxMethod3(RexxObjectPtr, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, OPTIONAL_uint32_t, pause)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    /* Requires XP Common Controls version 6.0 */
+    if (  ComCtl32Version < COMCTL32_6_0 )
+    {
+        comCtl32Exception(context, "setMarquee");
+        return context->Nil();
+    }
+
+    if ( ! hasStyle(hwnd, PBS_MARQUEE) )
+    {
+        wrongWindowStyleException(context, "progress bar", "PBS_MARQUEE");
+        return context->Nil();
+    }
+
+    if ( rxOmittedArg(context, 1) )
+    {
+        on = 1;
+    }
+    if ( rxOmittedArg(context, 2) )
+    {
+        pause = 1000;
+    }
+
+    if ( (BOOL)SendMessage(hwnd, PBM_SETMARQUEE, (BOOL)on, pause) )
+    {
+        return context->True();
+    }
+    return context->False();
+}
+
+RexxMethod4(RexxObjectPtr, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    size_t count = rxArgCount(context);
+    COLORREF rgb;
+
+    if ( count == 1 )
+    {
+        rgb = r;
+    }
+    else if ( count == 3 )
+    {
+        rgb = RGB((uint8_t)r, g, b);
+    }
+    else
+    {
+        context->RaiseException1(Error_Incorrect_method_minarg, context->NewInteger(3));
+        return context->Nil();
+    }
+
+    return context->NumberToObject((COLORREF)SendMessage(hwnd, PBM_SETBKCOLOR, 0, rgb));
+}
+
+RexxMethod4(RexxObjectPtr, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    size_t count = rxArgCount(context);
+    COLORREF rgb;
+
+    if ( count == 1 )
+    {
+        rgb = r;
+    }
+    else if ( count == 3 )
+    {
+        rgb = RGB((uint8_t)r, g, b);
+    }
+    else
+    {
+        context->RaiseException1(Error_Incorrect_method_minarg, context->NewInteger(3));
+        return context->Nil();
+    }
+
+    return context->NumberToObject((COLORREF)SendMessage(hwnd, PBM_SETBKCOLOR, 0, rgb));
+}
+
+RexxMethod3(RexxObjectPtr, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+{
+    size_t count = rxArgCount(context);
+
+    if ( count == 1 )
+    {
+        if ( ! context->IsString(r) )
+        {
+            context->RaiseException2(Error_Incorrect_method_noclass,
+                                     context->NewInteger(1),
+                                     context->NewStringFromAsciiz("String"));
+            return context->Nil();
+        }
+        const char * s = context->ObjectToStringValue(r);
+        if ( *s == 'D' || *s == 'd' )
+        {
+            return context->NumberToObject(CLR_DEFAULT);
+        }
+        else if ( *s == 'N' || *s == 'n' )
+        {
+            return context->NumberToObject(CLR_NONE);
+        }
+        else
+        {
+            context->RaiseException2(Error_Incorrect_method_list,
+                                     context->NewInteger(1),
+                                     context->NewStringFromAsciiz("DEFAULT, NONE"));
+            return context->Nil();
+        }
+    }
+
+    if ( count != 3 )
+    {
+        context->RaiseException1(Error_Incorrect_method_minarg, context->NewInteger(3));
+        return context->Nil();
+
+    }
+
+    if ( ! context->IsInteger(r) )
+    {
+        context->RaiseException2(Error_Incorrect_method_whole, context->NewInteger(1), r);
+        return context->Nil();
+    }
+
+    size_t red;
+    context->ObjectToUnsignedNumber(r, &red);
+    return context->NumberToObject(RGB((uint8_t)red, g, b));
+}
 
