@@ -142,8 +142,8 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       GENERIC_OPSYS="$GENERIC_OPSYS -DOPSYS_SUN"
       case "$CXX" in
          g++)
-            CC_WARNINGS="-m32 $GCC_WARNINGS"
-            CXX_WARNINGS="-m32 $GCXX_WARNINGS"
+            CC_WARNINGS="$GCC_WARNINGS"
+            CXX_WARNINGS="$GCXX_WARNINGS"
             ;;
          *)
 dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
@@ -170,8 +170,8 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       ORX_SYS_STR="LINUX"
       ;;
    *86_64-*linux*)
-      CC_WARNINGS="-m32 $GCC_WARNINGS"
-      CXX_WARNINGS="-m32 $GCXX_WARNINGS"
+      CC_WARNINGS="$GCC_WARNINGS"
+      CXX_WARNINGS="$GCXX_WARNINGS"
       ORX_SYS_STR="LINUX"
       ;;
    alpha*-*linux*)
