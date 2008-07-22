@@ -5938,6 +5938,7 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysIsFile,              SysIsFile),
     REXX_CLASSIC_ROUTINE(SysIsFileDirectory,     SysIsFileDirectory),
     REXX_CLASSIC_ROUTINE(SysIsFileLink,          SysIsFileLink),
+    REXX_LAST_ROUTINE()
 };
 
 RexxPackageEntry rexxutil_package_entry =
