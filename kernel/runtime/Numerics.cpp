@@ -66,7 +66,7 @@ wholenumber_t Numerics::MIN_EXPONENT = -999999999;
 stringsize_t Numerics::DEFAULT_DIGITS  = ((stringsize_t)9);
     // the digits setting used internally for function/method arguments to allow
     // for the full binary value range
-stringsize_t Numerics::ARGUMENT_DIGITS  = ((stringsize_t)9);
+stringsize_t Numerics::ARGUMENT_DIGITS  = ((stringsize_t)10);
 #endif
 stringsize_t  Numerics::MAX_STRINGSIZE = SIZE_MAX;
     // max numeric digits value for explicit 64-bit conversions
