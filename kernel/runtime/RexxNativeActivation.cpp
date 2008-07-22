@@ -668,7 +668,7 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
 
         case REXX_VALUE_uint32_t:                        /* integer value                     */
         {
-            return Numerics::toObject((wholenumber_t)value->value.value_uint32_t);
+            return Numerics::toObject((stringsize_t)value->value.value_uint32_t);
         }
 
         case REXX_VALUE_uint64_t:                        /* integer value                     */
