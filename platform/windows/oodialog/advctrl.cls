@@ -1276,19 +1276,22 @@
 
 ::class 'ProgressBar' subclass DialogControl public
 
-::method step EXTERNAL "LIBRARY oodialog pbc_stepIt"
-::method setStep EXTERNAL "LIBRARY oodialog pbc_setStep"
+::method step external "LIBRARY oodialog pbc_stepIt"
+::method setStep external "LIBRARY oodialog pbc_setStep"
 
-::method setPos EXTERNAL "LIBRARY oodialog pbc_setPos"
-::method getPos EXTERNAL "LIBRARY oodialog pbc_getPos"
+::method setPos external "LIBRARY oodialog pbc_setPos"
+::method getPos external "LIBRARY oodialog pbc_getPos"
 
-::method setRange EXTERNAL "LIBRARY oodialog pbc_setRange"
-::method getRange EXTERNAL "LIBRARY oodialog pbc_getRange"
+::method setRange external "LIBRARY oodialog pbc_setRange"
+::method getRange external "LIBRARY oodialog pbc_getRange"
 
-::method setMarquee EXTERNAL "LIBRARY oodialog pbc_setMarquee"
+::method setMarquee external "LIBRARY oodialog pbc_setMarquee"
 
-::method barColor EXTERNAL "LIBRARY oodialog pbc_setBarColor"
-::method backgroundColor EXTERNAL "LIBRARY oodialog pbc_setBkColor"
+::method barColor external "LIBRARY oodialog pbc_setBarColor"
+::method backgroundColor external "LIBRARY oodialog pbc_setBkColor"
+
+-- For internal testing only
+::method test external "LIBRARY oodialog pbc_test"
 
 
 /******************** Track Bar Class *********************************************************/

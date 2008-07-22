@@ -49,6 +49,7 @@
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
+#include <shlwapi.h>
 #include <commctrl.h>
 #include "oovutil.h"
 
@@ -2937,14 +2938,36 @@ inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr self)
     return GET_HWND(context->StringData(rxString));
 }
 
-inline bool rxOmittedArg(RexxMethodContext * context, size_t index)
+inline bool rxArgOmitted(RexxMethodContext * context, size_t index)
 {
     return context->ArrayHasIndex(context->GetArguments(), index) == 0 ? true : false;
 }
 
+inline bool rxArgExists(RexxMethodContext * context, size_t index)
+{
+    return context->ArrayHasIndex(context->GetArguments(), index) == 1 ? true : false;
+}
+
+/**
+ * Return the number of existing arguments passed to a native API Rexx method,
+ * (as opposed to the size of the argument array.)
+ *
+ * @param context  The method context pointer for the native method.
+ *
+ * @return The count of existing arguments in the argument array.
+ */
 inline size_t rxArgCount(RexxMethodContext * context)
 {
-    return context->ArraySize(context->GetArguments());
+    size_t j = 0;
+    size_t count = context->ArraySize(context->GetArguments());
+    for( size_t i = 1; i <= count; i++ )
+    {
+        if ( rxArgExists(context, i) )
+        {
+            j++;
+        }
+    }
+    return j;
 }
 
 inline bool hasStyle(HWND hwnd, DWORD_PTR style)
@@ -2986,20 +3009,18 @@ void wrongWindowStyleException(RexxMethodContext *context, const char *obj, cons
  *
  * @return  For both cases the previous position is returned.
  */
-RexxMethod2(RexxObjectPtr, pbc_stepIt, OSELF, self, OPTIONAL_uint32_t, delta)
+RexxMethod2(int, pbc_stepIt, OSELF, self, OPTIONAL_uint32_t, delta)
 {
-    int previous;
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    if ( rxOmittedArg(context, 1) )
+    if ( rxArgOmitted(context, 1) )
     {
-        previous = (int)SendMessage(hwnd, PBM_STEPIT, 0, 0);
+        return (int)SendMessage(hwnd, PBM_STEPIT, 0, 0);
     }
     else
     {
-        previous = (int)SendMessage(hwnd, PBM_DELTAPOS, delta, 0);
+        return (int)SendMessage(hwnd, PBM_DELTAPOS, delta, 0);
     }
-    return context->NumberToObject(previous);
 }
 
 /**
@@ -3009,20 +3030,16 @@ RexxMethod2(RexxObjectPtr, pbc_stepIt, OSELF, self, OPTIONAL_uint32_t, delta)
  *
  * @return The the old progress bar position.
  */
-RexxMethod2(RexxObjectPtr, pbc_setPos, OSELF, self, int32_t, newPos)
+RexxMethod2(int, pbc_setPos, OSELF, self, int32_t, newPos)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
-    int pos = (int)SendMessage(hwnd, PBM_SETPOS, newPos, 0);
-
-    return context->NumberToObject(pos);
+    return (int)SendMessage(hwnd, PBM_SETPOS, newPos, 0);
 }
 
-RexxMethod1(RexxObjectPtr, pbc_getPos, OSELF, self)
+RexxMethod1(int, pbc_getPos, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
-    int pos = (int)SendMessage(hwnd, PBM_GETPOS, 0, 0);
-
-    return context->NumberToObject(pos);
+    return (int)SendMessage(hwnd, PBM_GETPOS, 0, 0);
 }
 
 RexxMethod3(RexxObjectPtr, pbc_setRange, OSELF, self, OPTIONAL_int32_t, min, OPTIONAL_int32_t, max)
@@ -3030,17 +3047,16 @@ RexxMethod3(RexxObjectPtr, pbc_setRange, OSELF, self, OPTIONAL_int32_t, min, OPT
     TCHAR buf[64];
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    if ( rxOmittedArg(context, 1) )
+    if ( rxArgOmitted(context, 1) )
     {
         min = 0;
     }
-    if ( rxOmittedArg(context, 2) )
+    if ( rxArgOmitted(context, 2) )
     {
         max = 100;
     }
 
     DWORD range = (DWORD)SendMessage(hwnd, PBM_SETRANGE32, min, max);
-
     _snprintf(buf, sizeof(buf), "%d %d", LOWORD(range), HIWORD(range));
 
     return context->NewStringFromAsciiz(buf);
@@ -3058,20 +3074,18 @@ RexxMethod1(RexxObjectPtr, pbc_getRange, OSELF, self)
     return context->NewStringFromAsciiz(buf);
 }
 
-RexxMethod2(RexxObjectPtr, pbc_setStep, OSELF, self, OPTIONAL_int32_t, newStep)
+RexxMethod2(int, pbc_setStep, OSELF, self, OPTIONAL_int32_t, newStep)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    if ( rxOmittedArg(context, 1) )
+    if ( rxArgOmitted(context, 1) )
     {
         newStep = 10;
     }
-    int previous = (int)SendMessage(hwnd, PBM_SETSTEP, newStep, 0);
-
-    return context->NumberToObject(previous);
+    return (int)SendMessage(hwnd, PBM_SETSTEP, newStep, 0);
 }
 
-RexxMethod3(RexxObjectPtr, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, OPTIONAL_uint32_t, pause)
+RexxMethod3(logical_t, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, OPTIONAL_uint32_t, pause)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
@@ -3079,32 +3093,30 @@ RexxMethod3(RexxObjectPtr, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, 
     if (  ComCtl32Version < COMCTL32_6_0 )
     {
         comCtl32Exception(context, "setMarquee");
-        return context->Nil();
+        return 0;
     }
 
     if ( ! hasStyle(hwnd, PBS_MARQUEE) )
     {
         wrongWindowStyleException(context, "progress bar", "PBS_MARQUEE");
-        return context->Nil();
+        return 0;
     }
 
-    if ( rxOmittedArg(context, 1) )
+    if ( rxArgOmitted(context, 1) )
     {
         on = 1;
     }
-    if ( rxOmittedArg(context, 2) )
+    if ( rxArgOmitted(context, 2) )
     {
         pause = 1000;
     }
 
-    if ( (BOOL)SendMessage(hwnd, PBM_SETMARQUEE, (BOOL)on, pause) )
-    {
-        return context->True();
-    }
-    return context->False();
+    /* The Windows message always returns 1, return 1 for .true (succeeded.) */
+    SendMessage(hwnd, PBM_SETMARQUEE, on, pause);
+    return 1;
 }
 
-RexxMethod4(RexxObjectPtr, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
     size_t count = rxArgCount(context);
@@ -3121,13 +3133,13 @@ RexxMethod4(RexxObjectPtr, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_ui
     else
     {
         context->RaiseException1(Error_Incorrect_method_minarg, context->NewInteger(3));
-        return context->Nil();
+        return 0;
     }
 
-    return context->NumberToObject((COLORREF)SendMessage(hwnd, PBM_SETBKCOLOR, 0, rgb));
+    return (uint32_t)SendMessage(hwnd, PBM_SETBKCOLOR, 0, rgb);
 }
 
-RexxMethod4(RexxObjectPtr, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
     size_t count = rxArgCount(context);
@@ -3144,13 +3156,118 @@ RexxMethod4(RexxObjectPtr, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_u
     else
     {
         context->RaiseException1(Error_Incorrect_method_minarg, context->NewInteger(3));
-        return context->Nil();
+        return 0;
     }
 
-    return context->NumberToObject((COLORREF)SendMessage(hwnd, PBM_SETBKCOLOR, 0, rgb));
+    return (uint32_t)SendMessage(hwnd, PBM_SETBKCOLOR, 0, rgb);
 }
 
-RexxMethod3(RexxObjectPtr, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+RexxMethod5(logical_t, pbc_test, OSELF, self, OPTIONAL_int32_t, n1,
+            OPTIONAL_int32_t, n2, OPTIONAL_int32_t, n3, OPTIONAL_int32_t, n4)
+{
+    printf("pbc_test arg count=%d\n", rxArgCount(context));
+    printf("pbc_test arg 1 omitted? %d\n", rxArgOmitted(context, 1));
+    printf("pbc_test arg 2 omitted? %d\n", rxArgOmitted(context, 2));
+    printf("pbc_test arg 3 omitted? %d\n", rxArgOmitted(context, 3));
+    printf("pbc_test arg 4 omitted? %d\n", rxArgOmitted(context, 4));
+
+    return 1;
+}
+
+#define COMCTL_ERR_TITLE    "ooDialog - Windows Common Controls Error"
+#define GENERIC_ERR_TITLE   "ooDialog - Error"
+
+extern DWORD ComCtl32Version = 0;
+
+/**
+ * Convenience function to put up an error message box.
+ *
+ * @param pszMsg    The message.
+ * @param pszTitle  The title of for the message box.
+ */
+static void internalErrorMsg(PSZ pszMsg, PSZ pszTitle)
+{
+    MessageBox(0, pszMsg, pszTitle, MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+}
+
+/**
+ * Determines the version of comctl32.dll and initializes the common controls.
+ *
+ * The minimum version of 4.71 is supported on Windows 95 with Internet Explorer
+ * 4.0, Windows NT 4.0 with Internet Explorer 4.0, Windows 98, and Windows 2000.
+ *
+ * @return .true if comctl32.dll is at least version 4.71, otherwise .false.
+ */
+RexxMethod0(logical_t, dlgutil_commonInit)
+{
+    static bool CommonInitDone = false;
+    HINSTANCE   hinst;
+    bool        success = false;
+
+    if ( CommonInitDone )
+    {
+        return (ComCtl32Version >= COMCTL32_4_71 ? 1 : 0);
+    }
+
+    hinst = LoadLibrary(TEXT("comctl32.dll"));
+    if ( hinst )
+    {
+        DLLGETVERSIONPROC pDllGetVersion;
+
+        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinst, "DllGetVersion");
+        if ( pDllGetVersion )
+        {
+            DLLVERSIONINFO info;
+
+            ZeroMemory(&info, sizeof(info));
+            info.cbSize = sizeof(info);
+            if ( SUCCEEDED((*pDllGetVersion)(&info)) )
+                ComCtl32Version = MAKEVERSION(info.dwMajorVersion, info.dwMinorVersion);
+        }
+        FreeLibrary(hinst);
+    }
+
+    if ( ComCtl32Version == 0 )
+    {
+        internalErrorMsg("The version of the Windows Common Controls library (comctl32.dll)\n"
+                         "could not be determined.  ooDialog will not run", COMCTL_ERR_TITLE);
+    }
+    else if ( ComCtl32Version < COMCTL32_4_71 )
+    {
+        CHAR msg[256];
+        sprintf(msg, "ooDialog can not run with this version of the Windows Common Controls library\n"
+                "(comctl32.dll.)  The minimum version required is 4.71.\n\nThis system has version: %s\n",
+                ComCtl32Version == COMCTL32_4_0 ? "4.0" : "4.7" );
+
+        internalErrorMsg(msg, COMCTL_ERR_TITLE);
+        ComCtl32Version = 0;
+    }
+    else
+    {
+        INITCOMMONCONTROLSEX ctrlex;
+
+        ctrlex.dwSize = sizeof(ctrlex);
+        ctrlex.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES;
+        if ( ! InitCommonControlsEx(&ctrlex) )
+        {
+            CHAR msg[128];
+            sprintf(msg, "Initializing the Windows Common Controls library (InitCommonControlsEx)\n"
+                    "failed.  Windows System Error Code: %d\n", GetLastError());
+            internalErrorMsg(msg, COMCTL_ERR_TITLE);
+            ComCtl32Version = 0;
+        }
+        else
+        {
+            success = true;
+        }
+    }
+
+    CommonInitDone = true;
+    return (success ? 1 : 0);
+}
+
+
+RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
     size_t count = rxArgCount(context);
 
@@ -3161,41 +3278,40 @@ RexxMethod3(RexxObjectPtr, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t,
             context->RaiseException2(Error_Incorrect_method_noclass,
                                      context->NewInteger(1),
                                      context->NewStringFromAsciiz("String"));
-            return context->Nil();
+            return 0;
         }
         const char * s = context->ObjectToStringValue(r);
         if ( *s == 'D' || *s == 'd' )
         {
-            return context->NumberToObject(CLR_DEFAULT);
+            return CLR_DEFAULT;
         }
         else if ( *s == 'N' || *s == 'n' )
         {
-            return context->NumberToObject(CLR_NONE);
+            return CLR_NONE;
         }
         else
         {
             context->RaiseException2(Error_Incorrect_method_list,
                                      context->NewInteger(1),
                                      context->NewStringFromAsciiz("DEFAULT, NONE"));
-            return context->Nil();
+            return 0;
         }
     }
 
     if ( count != 3 )
     {
         context->RaiseException1(Error_Incorrect_method_minarg, context->NewInteger(3));
-        return context->Nil();
-
+        return 0;
     }
 
     if ( ! context->IsInteger(r) )
     {
         context->RaiseException2(Error_Incorrect_method_whole, context->NewInteger(1), r);
-        return context->Nil();
+        return 0;
     }
 
-    size_t red;
+    uint32_t red;
     context->ObjectToUnsignedNumber(r, &red);
-    return context->NumberToObject(RGB((uint8_t)red, g, b));
+    return RGB((uint8_t)red, g, b);
 }
 
