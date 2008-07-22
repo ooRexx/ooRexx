@@ -1955,7 +1955,7 @@ RexxString *RexxString::newString(double number)
 /******************************************************************************/
 {
                                        /* get double as a number string.    */
-  return new_numberstring(number)->stringValue();
+  return new_numberstringFromDouble(number)->stringValue();
 }
 
 

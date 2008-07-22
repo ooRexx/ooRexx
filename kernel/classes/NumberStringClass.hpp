@@ -231,12 +231,12 @@
 
     static PCPPM operatorMethods[];
 
-    static RexxNumberString *newInstance(double);
-    static RexxNumberString *newInstance(float);
-    static RexxNumberString *newInstance(wholenumber_t);
-    static RexxNumberString *newInstance(int64_t);
-    static RexxNumberString *newInstance(uint64_t);
-    static RexxNumberString *newInstance(stringsize_t);
+    static RexxNumberString *newInstanceFromDouble(double);
+    static RexxNumberString *newInstanceFromFloat(float);
+    static RexxNumberString *newInstanceFromWholenumber(wholenumber_t);
+    static RexxNumberString *newInstanceFromInt64(int64_t);
+    static RexxNumberString *newInstanceFromUint64(uint64_t);
+    static RexxNumberString *newInstanceFromStringsize(stringsize_t);
     static RexxNumberString *newInstance(const char *, stringsize_t);
 
 
@@ -253,34 +253,34 @@ inline RexxNumberString *new_numberstring(const char *s, stringsize_t l)
     return RexxNumberString::newInstance(s, l);
 }
 
-inline RexxNumberString *new_numberstring(wholenumber_t n)
+inline RexxNumberString *new_numberstringFromWholenumber(wholenumber_t n)
 {
-    return RexxNumberString::newInstance(n);
+    return RexxNumberString::newInstanceFromWholenumber(n);
 }
 
-inline RexxNumberString *new_numberstring(stringsize_t n)
+inline RexxNumberString *new_numberstringFromStringsize(stringsize_t n)
 {
-    return RexxNumberString::newInstance(n);
+    return RexxNumberString::newInstanceFromStringsize(n);
 }
 
-inline RexxNumberString *new_numberstring(int64_t n)
+inline RexxNumberString *new_numberstringFromInt64(int64_t n)
 {
-    return RexxNumberString::newInstance(n);
+    return RexxNumberString::newInstanceFromInt64(n);
 }
 
-inline RexxNumberString *new_numberstring(uint64_t n)
+inline RexxNumberString *new_numberstringFromUint64(uint64_t n)
 {
-    return RexxNumberString::newInstance(n);
+    return RexxNumberString::newInstanceFromUint64(n);
 }
 
-inline RexxNumberString *new_numberstring(double n)
+inline RexxNumberString *new_numberstringFromDouble(double n)
 {
-    return RexxNumberString::newInstance(n);
+    return RexxNumberString::newInstanceFromDouble(n);
 }
 
-inline RexxNumberString *new_numberstring(float n)
+inline RexxNumberString *new_numberstringFromFloat(float n)
 {
-    return RexxNumberString::newInstance((double)n);
+    return RexxNumberString::newInstanceFromFloat(n);
 }
 
 #endif

@@ -761,7 +761,7 @@ RexxObjectPtr RexxEntry DoubleToObject(RexxThreadContext *c, double n)
     ApiContext context(c);
     try
     {
-        return context.ret(new_numberstring(n));
+        return context.ret(new_numberstringFromDouble(n));
     }
     catch (RexxNativeActivation *)
     {

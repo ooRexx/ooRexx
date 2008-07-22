@@ -208,11 +208,15 @@ RexxNumberString *RexxInteger::numberString()
 /* Function:  Convert an integer into a numberstring value                    */
 /******************************************************************************/
 {
-  if (this->stringrep != OREF_NULL)    /* have a cached string value?       */
-                                       /* use its numberstring value        */
-    return this->stringrep->numberString();
-  else                                 /* create a new numberstring         */
-    return (RexxNumberString *)new_numberstring((wholenumber_t)this->value);
+    if (this->stringrep != OREF_NULL)    /* have a cached string value?       */
+    {
+        /* use its numberstring value        */
+        return this->stringrep->numberString();
+    }
+    else                                 /* create a new numberstring         */
+    {
+        return(RexxNumberString *)new_numberstringFromWholenumber((wholenumber_t)this->value);
+    }
 }
 
 

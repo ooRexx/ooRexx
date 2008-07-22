@@ -142,7 +142,7 @@ RexxObject *Numerics::int64ToObject(int64_t v)
     }
     // out of range, we need to use a numberstring for this, using the full
     // allowable digits range
-    return new_numberstring(v);
+    return new_numberstringFromInt64(v);
 }
 
 
@@ -163,7 +163,7 @@ RexxObject *Numerics::uint64ToObject(uint64_t v)
     }
     // out of range, we need to use a numberstring for this, using the full
     // allowable digits range
-    return new_numberstring(v);
+    return new_numberstringFromUint64(v);
 }
 
 
@@ -184,7 +184,7 @@ RexxObject *Numerics::wholenumberToObject(wholenumber_t v)
     }
     // out of range, we need to use a numberstring for this, using the full
     // allowable digits range
-    return new_numberstring(v);
+    return new_numberstringFromWholenumber(v);
 }
 
 
@@ -205,7 +205,7 @@ RexxObject *Numerics::stringsizeToObject(stringsize_t v)
     }
     // out of range, we need to use a numberstring for this, using the full
     // allowable digits range
-    return new_numberstring(v);
+    return new_numberstringFromStringsize(v);
 }
 
 /**
@@ -596,5 +596,5 @@ RexxObject *Numerics::ptrToObject(uintptr_t v)
     }
     // out of range, we need to use a numberstring for this, using the full
     // allowable digits range
-    return new_numberstring(v);
+    return new_numberstringFromWholenumber(v);
 }

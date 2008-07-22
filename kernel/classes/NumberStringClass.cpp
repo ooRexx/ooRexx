@@ -3155,7 +3155,7 @@ RexxNumberString *RexxNumberString::newInstance(const char *number, stringsize_t
     return newNumber;
 }
 
-RexxNumberString *RexxNumberString::newInstance(float num)
+RexxNumberString *RexxNumberString::newInstanceFromFloat(float num)
 /******************************************************************************/
 /* Function:  Create a numberstring object from a floating point number       */
 /******************************************************************************/
@@ -3176,7 +3176,7 @@ RexxNumberString *RexxNumberString::newInstance(float num)
     return result;
 }
 
-RexxNumberString *RexxNumberString::newInstance(double number)
+RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
 /******************************************************************************/
 /* Function:  Create a NumberString from a double value                       */
 /******************************************************************************/
@@ -3197,7 +3197,7 @@ RexxNumberString *RexxNumberString::newInstance(double number)
     return result;
 }
 
-RexxNumberString *RexxNumberString::newInstance(wholenumber_t integer)
+RexxNumberString *RexxNumberString::newInstanceFromWholenumber(wholenumber_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from a long value                  */
 /******************************************************************************/
@@ -3209,7 +3209,7 @@ RexxNumberString *RexxNumberString::newInstance(wholenumber_t integer)
     return newNumber;
 }
 
-RexxNumberString *RexxNumberString::newInstance(stringsize_t integer)
+RexxNumberString *RexxNumberString::newInstanceFromStringsize(stringsize_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from an unsigned long value        */
 /******************************************************************************/
@@ -3222,7 +3222,7 @@ RexxNumberString *RexxNumberString::newInstance(stringsize_t integer)
 }
 
 
-RexxNumberString *RexxNumberString::newInstance(int64_t integer)
+RexxNumberString *RexxNumberString::newInstanceFromInt64(int64_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from a long value                  */
 /******************************************************************************/
@@ -3235,7 +3235,7 @@ RexxNumberString *RexxNumberString::newInstance(int64_t integer)
 }
 
 
-RexxNumberString *RexxNumberString::newInstance(uint64_t integer)
+RexxNumberString *RexxNumberString::newInstanceFromUint64(uint64_t integer)
 /******************************************************************************/
 /* Function:  Create a NumberString object from a long value                  */
 /******************************************************************************/
