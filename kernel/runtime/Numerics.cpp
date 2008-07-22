@@ -230,22 +230,34 @@ bool Numerics::objectToWholeNumber(RexxObject *source, wholenumber_t &result, wh
  */
 bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stringsize_t maxValue)
 {
-    stringsize_t temp;
-    // if not a valid whole number, reject this too
-    if (!source->unsignedNumberValue(temp, ARGUMENT_DIGITS))
+    // is this an integer value (very common)
+    if (isInteger(source))
     {
+        result = ((RexxInteger *)source)->stringSize();
+        return result <= maxValue ? true : false;
+    }
+    else
+    {
+        // get this as a numberstring (which it might already be)
+        RexxNumberString *nString = source->numberString();
+        // not convertible to number string?  get out now
+        if (source == OREF_NULL)
+        {
+            return false;
+        }
+        uint64_t temp;
+
+        // if not valid or outside of the minimum range, reject this too
+        if (nString->unsignedInt64Value(&temp, ARGUMENT_DIGITS))
+        {
+            if ( temp <= maxValue )
+            {
+                result = (stringsize_t)temp;
+                return true;
+            }
+        }
         return false;
     }
-
-    // outside of the minimum range?  reject this too.
-    if (temp > maxValue)
-    {
-        return false;
-    }
-
-    // pass this back and indicate success.
-    result = temp;
-    return true;
 }
 
 
