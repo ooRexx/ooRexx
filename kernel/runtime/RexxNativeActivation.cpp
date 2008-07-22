@@ -681,6 +681,11 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
             return Numerics::toObject((wholenumber_t)value->value.value_uintptr_t);
         }
 
+        case REXX_VALUE_logical_t:                        /* logical value                     */
+        {
+            return value->value.value_logical_t == 0 ? TheFalseObject : TheTrueObject;
+        }
+
         case REXX_VALUE_size_t:                        /* integer value                     */
         {
             return Numerics::toObject((stringsize_t)value->value.value_size_t);
