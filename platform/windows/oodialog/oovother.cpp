@@ -3159,7 +3159,7 @@ RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_
         return 0;
     }
 
-    return (uint32_t)SendMessage(hwnd, PBM_SETBKCOLOR, 0, rgb);
+    return (uint32_t)SendMessage(hwnd, PBM_SETBARCOLOR, 0, rgb);
 }
 
 RexxMethod5(logical_t, pbc_test, OSELF, self, OPTIONAL_int32_t, n1,
