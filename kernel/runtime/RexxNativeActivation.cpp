@@ -678,7 +678,7 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
 
         case REXX_VALUE_uintptr_t:                       /* integer value                     */
         {
-            return Numerics::toObject((wholenumber_t)value->value.value_uintptr_t);
+            return Numerics::toObject((stringsize_t)value->value.value_uintptr_t);
         }
 
         case REXX_VALUE_logical_t:                        /* logical value                     */
@@ -1660,7 +1660,7 @@ stringsize_t RexxNativeActivation::unsignedNumberValue(RexxObject *o, size_t pos
     // convert using the whole value range
     if (!Numerics::objectToStringSize(o, temp, maxValue))
     {
-        reportException(Error_Invalid_argument_whole, position + 1, o);
+        reportException(Error_Invalid_argument_nonnegative, position + 1, o);
     }
     return temp;
 }
@@ -1702,7 +1702,7 @@ uint64_t RexxNativeActivation::unsignedInt64Value(RexxObject *o, size_t position
     // convert using the whole value range
     if (!Numerics::objectToUnsignedInt64(o, temp))
     {
-        reportException(Error_Invalid_argument_whole, position + 1, o);
+        reportException(Error_Invalid_argument_nonnegative, position + 1, o);
     }
     return temp;
 }
