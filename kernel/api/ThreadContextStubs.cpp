@@ -565,7 +565,7 @@ RexxObjectPtr RexxEntry NumberToObject(RexxThreadContext *c, wholenumber_t n)
     ApiContext context(c);
     try
     {
-        return context.ret(Numerics::toObject((wholenumber_t)n));
+        return context.ret(Numerics::wholenumberToObject((wholenumber_t)n));
     }
     catch (RexxNativeActivation *)
     {
@@ -638,7 +638,7 @@ RexxObjectPtr RexxEntry UnsignedNumberToObject(RexxThreadContext *c, stringsize_
     ApiContext context(c);
     try
     {
-        return context.ret(Numerics::toObject((stringsize_t)n));
+        return context.ret(Numerics::stringsizeToObject((stringsize_t)n));
     }
     catch (RexxNativeActivation *)
     {
@@ -693,7 +693,7 @@ RexxObjectPtr RexxEntry Int64ToObject(RexxThreadContext *c, int64_t n)
     ApiContext context(c);
     try
     {
-        return context.ret(Numerics::toObject(n));
+        return context.ret(Numerics::int64ToObject(n));
     }
     catch (RexxNativeActivation *)
     {
@@ -706,7 +706,7 @@ RexxObjectPtr RexxEntry UnsignedInt64ToObject(RexxThreadContext * c, uint64_t n)
     ApiContext context(c);
     try
     {
-        return context.ret(Numerics::toObject(n));
+        return context.ret(Numerics::uint64ToObject(n));
     }
     catch (RexxNativeActivation *)
     {

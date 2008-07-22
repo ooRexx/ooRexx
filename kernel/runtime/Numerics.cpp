@@ -58,6 +58,28 @@ stringsize_t Numerics::DEFAULT_DIGITS  = ((stringsize_t)18);
     // the digits setting used internally for function/method arguments to allow
     // for the full range
 stringsize_t Numerics::ARGUMENT_DIGITS  = ((stringsize_t)20);
+
+
+/* Array for valid whole number at various digits settings */
+/*  for value 1-18.                                         */
+wholenumber_t Numerics::validMaxWhole[] = {10,
+                                           100,
+                                           1000,
+                                           10000,
+                                           100000,
+                                           1000000,
+                                           10000000,
+                                           100000000,
+                                           1000000000,
+                                           10000000000,
+                                           100000000000,
+                                           1000000000000,
+                                           10000000000000,
+                                           100000000000000,
+                                           1000000000000000,
+                                           10000000000000000,
+                                           100000000000000000,
+                                           1000000000000000000};
 #else
 wholenumber_t Numerics::MAX_WHOLENUMBER = 999999999;
 wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
@@ -67,6 +89,19 @@ stringsize_t Numerics::DEFAULT_DIGITS  = ((stringsize_t)9);
     // the digits setting used internally for function/method arguments to allow
     // for the full binary value range
 stringsize_t Numerics::ARGUMENT_DIGITS  = ((stringsize_t)10);
+
+
+/* Array for valid whole number at various digits settings */
+/*  for value 1-9.                                         */
+wholenumber_t Numerics::validMaxWhole[] = {10,
+                                           100,
+                                           1000,
+                                           10000,
+                                           100000,
+                                           1000000,
+                                           10000000,
+                                           100000000,
+                                           1000000000};
 #endif
 stringsize_t  Numerics::MAX_STRINGSIZE = SIZE_MAX;
     // max numeric digits value for explicit 64-bit conversions
@@ -77,19 +112,6 @@ bool Numerics::FORM_ENGINEERING   = true;
 stringsize_t Numerics::DEFAULT_FUZZ    = ((stringsize_t)0); /* default numeric fuzz setting      */
                                      /* default numeric form setting      */
 bool Numerics::DEFAULT_FORM = Numerics::FORM_SCIENTIFIC;
-
-
-/* Array for valid whole number at various digits settings */
-/*  for value 1-8.                                         */
-wholenumber_t Numerics::validMaxWhole[] = {10,
-                                           100,
-                                           1000,
-                                           10000,
-                                           100000,
-                                           1000000,
-                                           10000000,
-                                           100000000,
-                                           1000000000};
 
 NumericSettings Numerics::defaultSettings;
 NumericSettings *Numerics::settings = &Numerics::defaultSettings;
@@ -111,7 +133,7 @@ NumericSettings::NumericSettings()
  *
  * @return The Rexx object version of this number.
  */
-RexxObject *Numerics::toObject(int64_t v)
+RexxObject *Numerics::int64ToObject(int64_t v)
 {
     // in the range for an integer object?
     if (v <= MAX_WHOLENUMBER && v >= MIN_WHOLENUMBER)
@@ -132,7 +154,7 @@ RexxObject *Numerics::toObject(int64_t v)
  *
  * @return The Rexx object version of this number.
  */
-RexxObject *Numerics::toObject(uint64_t v)
+RexxObject *Numerics::uint64ToObject(uint64_t v)
 {
     // in the range for an integer object?
     if (v <= (uint64_t)MAX_WHOLENUMBER)
@@ -153,7 +175,7 @@ RexxObject *Numerics::toObject(uint64_t v)
  *
  * @return The Rexx object version of this number.
  */
-RexxObject *Numerics::toObject(wholenumber_t v)
+RexxObject *Numerics::wholenumberToObject(wholenumber_t v)
 {
     // in the range for an integer object?
     if (v <= MAX_WHOLENUMBER && v >= MIN_WHOLENUMBER)
@@ -174,7 +196,7 @@ RexxObject *Numerics::toObject(wholenumber_t v)
  *
  * @return The Rexx object version of this number.
  */
-RexxObject *Numerics::toObject(stringsize_t v)
+RexxObject *Numerics::stringsizeToObject(stringsize_t v)
 {
     // in the range for an integer object?
     if (v <= (stringsize_t)MAX_WHOLENUMBER)

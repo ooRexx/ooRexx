@@ -628,57 +628,57 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
 
         case REXX_VALUE_int:                    /* integer value                     */
         {
-            return Numerics::toObject((wholenumber_t)value->value.value_int);
+            return Numerics::wholenumberToObject((wholenumber_t)value->value.value_int);
         }
 
         case REXX_VALUE_int8_t:                         /* integer value                     */
         {
-            return Numerics::toObject((wholenumber_t)value->value.value_int8_t);
+            return Numerics::wholenumberToObject((wholenumber_t)value->value.value_int8_t);
         }
 
         case REXX_VALUE_int16_t:                        /* integer value                     */
         {
-            return Numerics::toObject((wholenumber_t)value->value.value_int16_t);
+            return Numerics::wholenumberToObject((wholenumber_t)value->value.value_int16_t);
         }
 
         case REXX_VALUE_int32_t:                        /* integer value                     */
         {
-            return Numerics::toObject((wholenumber_t)value->value.value_int32_t);
+            return Numerics::wholenumberToObject((wholenumber_t)value->value.value_int32_t);
         }
 
         case REXX_VALUE_int64_t:                        /* integer value                     */
         {
-            return Numerics::toObject(value->value.value_int64_t);
+            return Numerics::int64ToObject(value->value.value_int64_t);
         }
 
         case REXX_VALUE_intptr_t:                       /* integer value                     */
         {
-            return Numerics::toObject((wholenumber_t)value->value.value_intptr_t);
+            return Numerics::wholenumberToObject((wholenumber_t)value->value.value_intptr_t);
         }
 
         case REXX_VALUE_uint8_t:                         /* integer value                     */
         {
-            return Numerics::toObject((stringsize_t)value->value.value_uint8_t);
+            return Numerics::stringsizeToObject((stringsize_t)value->value.value_uint8_t);
         }
 
         case REXX_VALUE_uint16_t:                        /* integer value                     */
         {
-            return Numerics::toObject((stringsize_t)value->value.value_uint16_t);
+            return Numerics::stringsizeToObject((stringsize_t)value->value.value_uint16_t);
         }
 
         case REXX_VALUE_uint32_t:                        /* integer value                     */
         {
-            return Numerics::toObject((stringsize_t)value->value.value_uint32_t);
+            return Numerics::stringsizeToObject((stringsize_t)value->value.value_uint32_t);
         }
 
         case REXX_VALUE_uint64_t:                        /* integer value                     */
         {
-            return Numerics::toObject(value->value.value_uint64_t);
+            return Numerics::uint64ToObject(value->value.value_uint64_t);
         }
 
         case REXX_VALUE_uintptr_t:                       /* integer value                     */
         {
-            return Numerics::toObject((stringsize_t)value->value.value_uintptr_t);
+            return Numerics::stringsizeToObject((stringsize_t)value->value.value_uintptr_t);
         }
 
         case REXX_VALUE_logical_t:                        /* logical value                     */
@@ -688,22 +688,22 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
 
         case REXX_VALUE_size_t:                        /* integer value                     */
         {
-            return Numerics::toObject((stringsize_t)value->value.value_size_t);
+            return Numerics::stringsizeToObject((stringsize_t)value->value.value_size_t);
         }
 
         case REXX_VALUE_ssize_t:                        /* integer value                     */
         {
-            return Numerics::toObject((wholenumber_t)value->value.value_size_t);
+            return Numerics::wholenumberToObject((wholenumber_t)value->value.value_size_t);
         }
 
         case REXX_VALUE_wholenumber_t:        /* long integer value                */
         {
-            return Numerics::toObject((wholenumber_t)value->value.value_wholenumber_t);
+            return Numerics::wholenumberToObject((wholenumber_t)value->value.value_wholenumber_t);
         }
 
         case REXX_VALUE_stringsize_t:     /* long integer value                */
         {
-            return Numerics::toObject((stringsize_t)value->value.value_stringsize_t);
+            return Numerics::stringsizeToObject((stringsize_t)value->value.value_stringsize_t);
         }
 
         case REXX_VALUE_double:                 /* double value                      */

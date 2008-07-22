@@ -78,10 +78,10 @@ public:
                                      /* default numeric form setting      */
     static bool DEFAULT_FORM;
 
-    static RexxObject *toObject(wholenumber_t v);
-    static RexxObject *toObject(stringsize_t v);
-    static RexxObject *toObject(int64_t v);
-    static RexxObject *toObject(uint64_t v);
+    static RexxObject *wholenumberToObject(wholenumber_t v);
+    static RexxObject *stringsizeToObject(stringsize_t v);
+    static RexxObject *int64ToObject(int64_t v);
+    static RexxObject *uint64ToObject(uint64_t v);
     static RexxObject *ptrToObject(uintptr_t v);
 
     static bool objectToWholeNumber(RexxObject *o, wholenumber_t &result, wholenumber_t max, wholenumber_t min);
