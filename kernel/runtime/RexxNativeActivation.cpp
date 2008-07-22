@@ -1660,7 +1660,7 @@ stringsize_t RexxNativeActivation::unsignedNumberValue(RexxObject *o, size_t pos
     // convert using the whole value range
     if (!Numerics::objectToStringSize(o, temp, maxValue))
     {
-        reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), IntegerZero, new_numberstring(maxValue), o));
+        reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), IntegerZero, new_numberstringFromStringsize(maxValue), o));
     }
     return temp;
 }
