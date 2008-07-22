@@ -121,9 +121,10 @@ RexxDateTime::RexxDateTime(int64_t basetime)
 /**
  * Create a RexxDateTime instance from a baseDate value.
  *
- * @param basetime The basedate for this instance.
+ * @param basedate
+ * @param dummy    Dummy argument to allow constructor overload to work.
  */
-RexxDateTime::RexxDateTime(wholenumber_t basedate)
+RexxDateTime::RexxDateTime(wholenumber_t basedate, bool dummy)
 {
     clear();
     setBaseDate(basedate);

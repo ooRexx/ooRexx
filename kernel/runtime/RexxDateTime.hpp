@@ -113,7 +113,7 @@ public:
 
     RexxDateTime();
     RexxDateTime(int64_t basetime);
-    RexxDateTime(wholenumber_t basedate);
+    RexxDateTime(wholenumber_t basedate, bool dummy);
     RexxDateTime(wholenumber_t year, wholenumber_t month, wholenumber_t day);
     RexxDateTime(wholenumber_t year, wholenumber_t month, wholenumber_t day, wholenumber_t hour, wholenumber_t minutes, wholenumber_t seconds, wholenumber_t microseconds);
 
