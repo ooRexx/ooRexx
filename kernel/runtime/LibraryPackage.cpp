@@ -269,7 +269,7 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
         RexxRoutine *func = OREF_NULL;
         if (table->style == ROUTINE_CLASSIC_STYLE)
         {
-            func = new RegisteredRoutine(libraryName, routineName, (PREGISTEREDROUTINE)table->entryPoint);
+            func = new RegisteredRoutine(libraryName, routineName, (RexxRoutineHandler *)table->entryPoint);
         }
         else
         {
