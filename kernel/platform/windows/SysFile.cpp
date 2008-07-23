@@ -1049,11 +1049,9 @@ void SysFile::getStreamTypeInfo()
  */
 void SysFile::setStdIn()
 {
-    // get the real handle, and open this using a different handle so we can
-    // force the mode to append (and non-text)
-    intptr_t osHandle = _get_osfhandle(SysFileSystem::stdinHandle);
-    // set the file handle
-    fileHandle = _open_osfhandle(osHandle, _O_RDONLY);
+    // set the file handle using the standard handles, but force binary mode
+    fileHandle = _fileno(stdin);
+    _setmode(fileHandle, _O_BINARY);
     ungetchar = -1;            // -1 indicates no char
     getStreamTypeInfo();
     setBuffering(false, 0);
@@ -1064,11 +1062,9 @@ void SysFile::setStdIn()
  */
 void SysFile::setStdOut()
 {
-    // get the real handle, and open this using a different handle so we can
-    // force the mode to append (and non-text)
-    intptr_t osHandle = _get_osfhandle(SysFileSystem::stdoutHandle);
-    // set the file handle
-    fileHandle = _open_osfhandle(osHandle, _O_APPEND);
+    // set the file handle using the standard handles, but force binary mode
+    fileHandle = _fileno(stdout);
+    _setmode(fileHandle, _O_BINARY);
     ungetchar = -1;            // -1 indicates no char
     getStreamTypeInfo();
     setBuffering(false, 0);
@@ -1079,11 +1075,9 @@ void SysFile::setStdOut()
  */
 void SysFile::setStdErr()
 {
-    // get the real handle, and open this using a different handle so we can
-    // force the mode to append (and non-text)
-    intptr_t osHandle = _get_osfhandle(SysFileSystem::stderrHandle);
-    // set the file handle
-    fileHandle = _open_osfhandle(osHandle, _O_APPEND);
+    // set the file handle using the standard handles, but force binary mode
+    fileHandle = _fileno(stderr);
+    _setmode(fileHandle, _O_BINARY);
     ungetchar = -1;            // -1 indicates no char
     getStreamTypeInfo();
     setBuffering(false, 0);
