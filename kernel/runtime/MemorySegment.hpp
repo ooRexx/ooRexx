@@ -51,8 +51,13 @@
 #define MemorySegmentOverhead       (sizeof(MemorySegmentHeader))
 #define MemorySegmentPoolOverhead   (sizeof(MemorySegmentPoolHeader))
 
+#ifdef __REXX64__
+// default size for a segment allocation, we go larger on 64-bit
+#define SegmentSize (65536*2)
+#else
 /* default size for a segment allocation */
 #define SegmentSize 65536
+#endif
 /* Minimum size segment we'll allow */
 #define MinimumSegmentSize (SegmentSize/2)
 /* amount of usable space in a minimum sized segment */
