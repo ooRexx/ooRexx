@@ -205,7 +205,7 @@ inline RexxArray *new_externalArray(size_t s, RexxClass *c)
 
 inline RexxArray *new_array(size_t s)
 {
-    return new (s, (RexxClass *)NULL) RexxArray;
+    return new (s, TheArrayClass) RexxArray;
 }
 
 inline RexxArray *new_array(RexxObject *o1)

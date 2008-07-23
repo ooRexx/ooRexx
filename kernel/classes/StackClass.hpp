@@ -47,7 +47,7 @@
  class RexxStack : public RexxInternalObject {
   public:
    inline void *operator new(size_t size, void *ptr) { return ptr; }
-   void        *operator new(size_t, size_t, bool temporary = false);
+   void        *operator new(size_t, size_t, bool temporary);
    inline void  operator delete(void *) { }
    inline void  operator delete(void *, void *) { }
    inline void  operator delete(void *, size_t, bool temporary) { };

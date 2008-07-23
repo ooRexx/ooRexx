@@ -1348,10 +1348,8 @@ void RexxMemory::liveStackFull()
 /* Function:  Process a live-stack overflow situation                         */
 /******************************************************************************/
 {
-    RexxStack *newLiveStack;             /* new temporary live stack          */
-
                                          /* create a temporary stack          */
-    newLiveStack = new (this->liveStack->size * 2, true) RexxStack (this->liveStack->size * 2);
+    RexxStack *newLiveStack = new (this->liveStack->size * 2, true) RexxStack (this->liveStack->size * 2);
     /* copy the live stack entries       */
     newLiveStack->copyEntries(this->liveStack);
     /* has this already been expanded?   */

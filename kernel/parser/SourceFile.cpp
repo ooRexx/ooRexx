@@ -1124,7 +1124,7 @@ void RexxSource::globalSetup()
 /******************************************************************************/
 {
                                        /* holding pen for temporaries       */
-  OrefSet(this, this->holdstack, new (HOLDSIZE) RexxStack(HOLDSIZE));
+  OrefSet(this, this->holdstack, new (HOLDSIZE, false) RexxStack(HOLDSIZE));
                                        /* create a save table               */
   OrefSet(this, this->savelist, new_object_table());
                                        /* allocate global control tables    */
