@@ -2246,9 +2246,9 @@ void RexxSource::methodDirective()
 
         // create the method pair and quit.
         createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
-            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+            Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
         createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
-            Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+            Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
         return;
     }
     // abstract method?
@@ -2320,7 +2320,7 @@ void RexxSource::methodDirective()
             syntaxError(Error_Translation_bad_external, externalname);
         }
     }
-    _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+    _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
     // add to the compilation
     addMethod(internalname, _method, Class);
 }
@@ -2483,9 +2483,9 @@ void RexxSource::attributeDirective()
 
             // create the method pair and quit.
             createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
-                Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+                Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
             createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
-                Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+                Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
             break;
 
         }
@@ -2496,12 +2496,12 @@ void RexxSource::attributeDirective()
             if (hasBody())
             {
                 createMethod(internalname, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
             }
             else
             {
                 createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
             }
             break;
         }
@@ -2514,12 +2514,12 @@ void RexxSource::attributeDirective()
             if (hasBody())        // just the getter method
             {
                 createMethod(setterName, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
             }
             else
             {
                 createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard == GUARDED_METHOD);
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
             }
             break;
         }

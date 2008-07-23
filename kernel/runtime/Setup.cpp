@@ -525,7 +525,7 @@ void RexxMemory::createImage()
 
                                        /* Add the instance methods to the   */
                                        /* instance behaviour mdict          */
-  defineKernelMethod(CHAR_SETUNGUARDED ,TheMethodBehaviour, CPPM(RexxMethod::setUnGuardedRexx), 0);
+  defineKernelMethod(CHAR_SETUNGUARDED ,TheMethodBehaviour, CPPM(RexxMethod::setUnguardedRexx), 0);
   defineKernelMethod(CHAR_SETGUARDED   ,TheMethodBehaviour, CPPM(RexxMethod::setGuardedRexx), 0);
   defineKernelMethod(CHAR_SETPRIVATE   ,TheMethodBehaviour, CPPM(RexxMethod::setPrivateRexx), 0);
   defineKernelMethod(CHAR_ISGUARDED    ,TheMethodBehaviour, CPPM(RexxMethod::isGuardedRexx), 0);

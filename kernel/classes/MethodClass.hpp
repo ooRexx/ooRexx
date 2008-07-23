@@ -119,7 +119,7 @@ protected:
   RexxMethod  *newScope(RexxClass  *);
   void         setScope(RexxClass  *);
   RexxSmartBuffer  *saveMethod();
-  RexxObject  *setUnGuardedRexx();
+  RexxObject  *setUnguardedRexx();
   RexxObject  *setGuardedRexx();
   RexxObject  *setPrivateRexx();
   RexxObject  *setProtectedRexx();
@@ -134,7 +134,7 @@ protected:
    inline bool   isProtected()    {return (this->methodFlags & PROTECTED_FLAG) != 0;}
    inline bool   isSpecial()      {return (this->methodFlags & (PROTECTED_FLAG | PRIVATE_FLAG)) != 0;}
 
-   inline void   setUnGuarded()    {this->methodFlags |= UNGUARDED_FLAG;};
+   inline void   setUnguarded()    {this->methodFlags |= UNGUARDED_FLAG;};
    inline void   setGuarded()      {this->methodFlags &= ~UNGUARDED_FLAG;};
    inline void   setPrivate()      {this->methodFlags |= (PRIVATE_FLAG | PROTECTED_FLAG);};
    inline void   setProtected()    {this->methodFlags |= PROTECTED_FLAG;};

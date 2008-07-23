@@ -373,12 +373,12 @@ void RexxMethod::setScope(
   OrefSet(this, this->scope, _scope);  /* just set the scope                */
 }
 
-RexxObject *RexxMethod::setUnGuardedRexx()
+RexxObject *RexxMethod::setUnguardedRexx()
 /******************************************************************************/
 /* Function:  Flag a method as being an unguarded method                      */
 /******************************************************************************/
 {
-  this->setUnGuarded();                /* turn on the UNGUARDED state     */
+  this->setUnguarded();                /* turn on the UNGUARDED state     */
   return OREF_NULL;                    /* return nothing                    */
 }
 
@@ -458,9 +458,10 @@ void RexxMethod::setAttributes(bool _private, bool _protected, bool _guarded)
     {
         setProtected();
     }
-    if (_guarded)
+    // guarded is the default, so we need to reverse this
+    if (!_guarded)
     {
-        setGuarded();
+        setUnguarded();
     }
 }
 

@@ -411,7 +411,7 @@ RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
    inline bool              isTopLevel() { return (this->activation_context&TOP_LEVEL_CALL) != 0; }
    inline bool              isForwarded() { return (this->settings.flags&forwarded) != 0; }
    inline bool              isGuarded() { return (this->settings.flags&guarded_method) != 0; }
-   inline bool              setGuarded() { return (this->settings.flags&guarded_method) != 0; }
+   inline void              setGuarded() { this->settings.flags |= guarded_method; }
 
    inline bool              isExternalTraceOn() { return (this->settings.flags&trace_on) != 0; }
    inline void              setExternalTraceOn() { this->settings.flags |= trace_on; }

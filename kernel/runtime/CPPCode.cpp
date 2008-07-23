@@ -604,7 +604,7 @@ CPPM(RexxMessage::arguments),
 
 CPPM(RexxMessage::newRexx),
 
-CPPM(RexxMethod::setUnGuardedRexx),    /* Method methods                    */
+CPPM(RexxMethod::setUnguardedRexx),    /* Method methods                    */
 CPPM(RexxMethod::setGuardedRexx),
 CPPM(BaseExecutable::source),
 CPPM(BaseExecutable::getPackage),

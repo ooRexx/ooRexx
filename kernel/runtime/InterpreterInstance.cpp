@@ -217,6 +217,12 @@ bool InterpreterInstance::detachThread(RexxActivity *activity)
     // have the activity manager remove this from the global tables
     // and perform resource cleanup
     ActivityManager::returnActivity(activity);
+
+    // Was this the last detach of an thread?  Signal the shutdown event
+    if (allActivities->items() == 0 && terminating)
+    {
+        terminationSem.post();
+    }
     return true;
 }
 
@@ -247,6 +253,10 @@ RexxActivity *InterpreterInstance::spawnActivity(RexxActivity *parent)
     RexxActivity *activity = ActivityManager::createNewActivity(parent);
     // associate the thread with this instance
     activity->addToInstance(this);
+    // add this to the activities list
+    ResourceSection lock;
+
+    allActivities->append((RexxObject *)activity);
     return activity;
 }
 
@@ -267,8 +277,10 @@ bool InterpreterInstance::poolActivity(RexxActivity *activity)
 
     if (terminating)
     {
-        // is this the last one to finish up?
-        if (allActivities->items() == 1)
+        // is this the last one to finish up?  Generally, the main thread
+        // will be waiting for this to terminate.  That is thread 1, we're thread
+        // 2.  In reality, this is the test for the last "spawned" thread.
+        if (allActivities->items() <= 2)
         {
             // This activity is currently the current activity.  We're going to run the
             // uninits on this one, so reactivate it until we're done running
@@ -426,9 +438,6 @@ bool InterpreterInstance::terminate()
     // turn on the global termination in process flag
     terminating = true;
 
-
-    //TODO:  Need to so something about uninits here
-
     {
         // remove the current activity from the list so we don't clean everything
         // up.  We need to
@@ -443,26 +452,27 @@ bool InterpreterInstance::terminate()
         allActivities->append((RexxObject *)current);
     }
 
-    // if everything has terminated, then make sure we run the uninits before shutting down.
-    if (terminated)
+    // if there are active threads still running, we need to wait until
+    // they all finish
+    if (!terminated)
     {
-        // This activity is currently the current activity.  We're going to run the
-        // uninits on this one, so reactivate it until we're done running
-        enterOnCurrentThread();
-        // release any global references we've been holding.
-        globalReferences->empty();
-        // before we update of the data structures, make sure we process any
-        // pending uninit activity.
-        memoryObject.collectAndUninit();
-        // ok, deactivate this again...this will return the activity because the terminating
-        // flag is on.
-        exitCurrentThread();
-        terminationSem.close();
-        return true;
+        terminationSem.wait();
     }
 
-    // unable to shut down
-    return false;
+    // if everything has terminated, then make sure we run the uninits before shutting down.
+    // This activity is currently the current activity.  We're going to run the
+    // uninits on this one, so reactivate it until we're done running
+    enterOnCurrentThread();
+    // release any global references we've been holding.
+    globalReferences->empty();
+    // before we update of the data structures, make sure we process any
+    // pending uninit activity.
+    memoryObject.collectAndUninit();
+    // ok, deactivate this again...this will return the activity because the terminating
+    // flag is on.
+    exitCurrentThread();
+    terminationSem.close();
+    return true;
 }
 
 

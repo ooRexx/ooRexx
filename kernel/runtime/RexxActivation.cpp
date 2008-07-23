@@ -125,10 +125,6 @@ RexxActivation::RexxActivation(RexxActivity* _activity, RexxMethod * _method, Re
     this->clearObject();                 /* start with a fresh object         */
     this->activity = _activity;          /* save the activity pointer         */
     this->scope = _method->getScope();   // save the scope
-    if (_method->isGuarded())            // make sure we set the appropriate guarded state
-    {
-        setGuarded();
-    }
     this->code = _code;                  /* get the REXX method object        */
     this->executable = _method;          // save this as the base executable
     this->settings.intermediate_trace = false;
@@ -145,8 +141,16 @@ RexxActivation::RexxActivation(RexxActivity* _activity, RexxMethod * _method, Re
                                          /* when creating the stack avoids it.*/
     _activity->allocateStackFrame(&this->stack, this->code->getMaxStackSize());
     this->setHasReferences();
-                                       /* get initial settings template     */
+
+    // get initial settings template
+    // NOTE:  Anything that alters information in the settings must happen AFTER
+    // this point.
     this->settings = activationSettingsTemplate;
+
+    if (_method->isGuarded())            // make sure we set the appropriate guarded state
+    {
+        setGuarded();
+    }
                                        /* save the source also              */
     this->settings.parent_code = this->code;
 
