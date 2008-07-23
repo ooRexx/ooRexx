@@ -59,7 +59,7 @@ public:
 
     void run(RexxActivity *, RexxMethod *, RexxObject *, RexxString *, RexxObject **, size_t, ProtectedObject &);
 
-    static CPPCode *resolveExportedMethod(PCPPM targetMethod, size_t argcount);
+    static CPPCode *resolveExportedMethod(const char *, PCPPM targetMethod, size_t argcount);
     // The table of exported methods.
     static PCPPM exportedMethods[];
 

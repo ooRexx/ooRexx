@@ -242,7 +242,7 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
 RexxMethod *RexxBehaviour::define(const char *name, PCPPM entryPoint, size_t arguments)
 {
     RexxString *n = RexxMemory::getGlobalName(name);
-    RexxMethod *method = new RexxMethod(n, CPPCode::resolveExportedMethod(entryPoint, arguments));
+    RexxMethod *method = new RexxMethod(n, CPPCode::resolveExportedMethod(name, entryPoint, arguments));
     define(n, method);
     return method;
 }

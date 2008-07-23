@@ -916,12 +916,15 @@ NULL                                   /* final terminating method          */
  * Resolve the entry point of a CPP method into a CPPCode wrapper
  * for that method.
  *
+ * @param name   The name of the method (used for error reporting)
  * @param targetMethod
  *               The method to wrapper
+ * @param argumentCount
+ *               The argument descriptor.
  *
  * @return A CPPCode object for the wrappered method.
  */
-CPPCode *CPPCode::resolveExportedMethod(PCPPM targetMethod, size_t argumentCount)
+CPPCode *CPPCode::resolveExportedMethod(const char *name, PCPPM targetMethod, size_t argumentCount)
 {
     for (size_t i = 0; exportedMethods[i] != NULL; i++)
     {
@@ -931,7 +934,10 @@ CPPCode *CPPCode::resolveExportedMethod(PCPPM targetMethod, size_t argumentCount
             return new CPPCode(i, targetMethod, argumentCount);
         }
     }
+
+    char buffer[256];
+    sprintf("Unresolved exported method:  %s", name);
     /* this is a bad error               */
-    logic_error("Unresolved exported method");
+    logic_error(buffer);
     return NULL;                         /* needs a return value              */
 }
