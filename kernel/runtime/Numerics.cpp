@@ -263,7 +263,7 @@ bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stri
         // get this as a numberstring (which it might already be)
         RexxNumberString *nString = source->numberString();
         // not convertible to number string?  get out now
-        if (source == OREF_NULL)
+        if (nString == OREF_NULL)
         {
             return false;
         }
@@ -381,7 +381,7 @@ bool Numerics::objectToUintptr(RexxObject *source, uintptr_t &result)
         // get this as a numberstring (which it might already be)
         RexxNumberString *nString = source->numberString();
         // not convertible to number string?  get out now
-        if (source == OREF_NULL)
+        if (nString == OREF_NULL)
         {
             return false;
         }
