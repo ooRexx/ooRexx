@@ -100,8 +100,8 @@ public:
     inline void clearObjectMark() { flags &= LiveMask; }
     inline void setObjectMark(size_t mark) { clearObjectMark(); flags |= mark; }
     inline bool isObjectMarked(size_t mark) { return (flags & mark) != 0; }
-    inline bool isObjectLive(size_t mark) { return (flags & MarkMask) == mark; }
-    inline bool isObjectDead(size_t mark) { return (flags & MarkMask) != mark; }
+    inline bool isObjectLive(size_t mark) { return ((size_t)(flags & MarkMask)) == mark; }
+    inline bool isObjectDead(size_t mark) { return ((size_t)(flags & MarkMask)) != mark; }
     inline void clear() { objectSize = 0; flags = 0; }
     inline void setOldSpace() { flags |= OldSpaceBit; }
     inline void clearOldSpace() { flags &= ~OldSpaceBit; }
