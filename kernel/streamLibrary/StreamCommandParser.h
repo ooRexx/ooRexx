@@ -45,6 +45,7 @@
 #define StreamCommandParser_Included
 
 #include <cctype>
+#include <ctype.h>
 #include "Utilities.hpp"
                                                 /* return code for gettoken at the end of input string */
 #define no_token  1

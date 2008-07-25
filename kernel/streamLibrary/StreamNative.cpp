@@ -1599,6 +1599,7 @@ int StreamInfo::arrayin(RexxArrayObject result)
             appendVariableLine(result);
         }
     }
+    return 0;
 }
 
 
