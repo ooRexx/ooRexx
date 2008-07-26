@@ -1095,7 +1095,7 @@ RexxDirectoryObject RexxEntry NewDirectory(RexxThreadContext *c)
     ApiContext context(c);
     try
     {
-        return (RexxDirectoryObject)context.ret(new_table());
+        return (RexxDirectoryObject)context.ret(new_directory());
     }
     catch (RexxNativeActivation *)
     {
