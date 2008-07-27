@@ -266,6 +266,7 @@ RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
    static RoutineClass* getMacroCode(RexxString *macroName);
    RexxString       *resolveProgramName(RexxString *name);
    RexxClass        *findClass(RexxString *name);
+   RexxClass        *findCallerClass(RexxString *name);
    RexxObject      * command(RexxString *, RexxString *);
    int64_t           getElapsed();
    RexxDateTime      getTime();

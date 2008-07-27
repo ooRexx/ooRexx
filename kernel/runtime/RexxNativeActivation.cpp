@@ -2486,6 +2486,29 @@ RexxClass *RexxNativeActivation::findClass(RexxString *className)
 
 
 /**
+ * Resolve a class in the context of the caller's execution
+ * context.
+ *
+ * @param className The target class name.
+ *
+ * @return The resolved class (if any).
+ */
+RexxClass *RexxNativeActivation::findCallerClass(RexxString *className)
+{
+    // have a caller context?  if not, just do the default environment searches
+    if (activation == OREF_NULL)
+    {
+        return Interpreter::findClass(className);
+    }
+    else
+    {
+        // use the caller activation to resolve this
+        return activation->findClass(className);
+    }
+}
+
+
+/**
  * Retrieve the source object for the current context, if there is one.
  *
  * @return The source object associated with any Method or Routine currently

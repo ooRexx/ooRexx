@@ -286,6 +286,21 @@ logical_t RexxEntry GetContextForm(RexxCallContext *c)
     return false;
 }
 
+RexxClassObject RexxEntry FindCallContextClass(RexxCallContext *c, CSTRING n)
+{
+    ApiContext context(c);
+    try
+    {
+        // convert the name to a string instance, and check the environments.
+        RexxString *name = new_upper_string(n);
+        return (RexxClassObject)context.ret(context.context->findCallerClass(name));
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
 
 END_EXTERN_C()
 
@@ -303,7 +318,8 @@ CallContextInterface RexxActivity::callContextFunctions =
     InvalidRoutine,
     GetContextDigits,
     GetContextFuzz,
-    GetContextForm
+    GetContextForm,
+    FindCallContextClass
 };
 
 ExitContextInterface RexxActivity::exitContextFunctions =

@@ -108,6 +108,7 @@ class RexxNativeActivation : public RexxActivationBase
   RexxObject *getSuper();
   RexxStem *resolveStemVariable(RexxObject *s);
   RexxClass *findClass(RexxString *className);
+  RexxClass *findCallerClass(RexxString *className);
 
   inline void   termination() { this->guardOff();}
 

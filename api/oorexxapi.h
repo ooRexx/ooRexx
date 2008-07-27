@@ -676,6 +676,7 @@ typedef struct
     wholenumber_t    (RexxEntry *GetContextDigits)(RexxCallContext *);
     wholenumber_t    (RexxEntry *GetContextFuzz)(RexxCallContext *);
     logical_t        (RexxEntry *GetContextForm)(RexxCallContext *);
+    RexxClassObject  (RexxEntry *FindContextClass)(RexxCallContext *, CSTRING);
 } CallContextInterface;
 
 #define EXIT_INTERFACE_VERSION 100
@@ -2377,6 +2378,10 @@ struct RexxCallContext_
     logical_t GetContextForm()
     {
         return functions->GetContextForm(this);
+    }
+    RexxClassObject FindContextClass(CSTRING n)
+    {
+        return functions->FindContextClass(this, n);
     }
 
 #endif
