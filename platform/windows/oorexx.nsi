@@ -365,7 +365,9 @@ Section "${LONGNAME} Development Kit" SecDev
   ; Distribution files...
   File "${BINDIR}\rexx.lib"
   File "${BINDIR}\rexxapi.lib"
+  File "${SRCDIR}\api\oorexxapi.h"
   File "${SRCDIR}\api\rexx.h"
+  File "${SRCDIR}\api\oorexxerrors.h"
   File "${SRCDIR}\api\rexxapidefs.h"
   File "${SRCDIR}\api\platform\windows\rexxapitypes.h"
   File "${SRCDIR}\api\platform\windows\rexxplatformapis.h"
