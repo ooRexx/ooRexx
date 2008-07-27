@@ -273,59 +273,59 @@ $(KWINDOWS)\winmsgtb.rc: $(KWINDOWS)\WinMessageResource.xsl $(KMESSAGES)\rexxmsg
     xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KWINDOWS)\WinMessageResource.xsl
 
 $(KMESSAGES)\RexxErrorCodes.h: $(KMESSAGES)\RexxErrorCodes.xsl $(KMESSAGES)\rexxmsg.xml
-    @ECHO .
+    @ECHO.
     @ECHO Generating $(@)
     xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxErrorCodes.xsl
 
+$(OR_ORYXAPI)\oorexxerrors.h: $(KMESSAGES)\ApiErrorCodes.xsl $(KMESSAGES)\rexxmsg.xml
+    @ECHO.
+    @ECHO Generating $(@)
+    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\ApiErrorCodes.xsl
+
 $(KMESSAGES)\DocErrorMessages.sgml: $(KMESSAGES)\DocBookErrors.xsl $(KMESSAGES)\rexxmsg.xml
-    @ECHO .
+    @ECHO.
     @ECHO Generating $(@)
     xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\DocBookErrors.xsl
 
 $(KMESSAGES)\RexxMessageNumbers.h: $(KMESSAGES)\RexxMessageNumbers.xsl $(KMESSAGES)\rexxmsg.xml
-    @ECHO .
+    @ECHO.
     @ECHO Generating $(@)
     xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxMessageNumbers.xsl
 
 $(KMESSAGES)\RexxMessageTable.h: $(KMESSAGES)\RexxMessageTable.xsl $(KMESSAGES)\rexxmsg.xml
-    @ECHO .
+    @ECHO.
     @ECHO Generating $(@)
     xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxMessageTable.xsl
 
-$(OR_ORYXAPI)\api\oorexxerrors.h: $(KMESSAGES)\ApiErrorCodes.xsl $(KMESSAGES)\rexxmsg.xml
-    @ECHO .
-    @ECHO Generating $(@)
-    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\ApiErrorCodes.xsl
-
 $(KCORE)\PrimitiveBehaviourNames.h: $(KCORE)\PrimitiveBehaviourNames.xsl $(KCORE)\PrimitiveClasses.xml
-    @ECHO .
+    @ECHO.
     @ECHO Generating $(@)
     xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\PrimitiveBehaviourNames.xsl
 
 $(KCORE)\PrimitiveBehaviours.cpp: $(KCORE)\PrimitiveBehaviours.xsl $(KCORE)\PrimitiveClasses.xml
-    @ECHO .
+    @ECHO.
     @ECHO Generating $(@)
     xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\PrimitiveBehaviours.xsl
 
 $(KCORE)\VirtualFunctionTable.cpp: $(KCORE)\VirtualFunctionTable.xsl $(KCORE)\PrimitiveClasses.xml
-    @ECHO .
+    @ECHO.
     @ECHO Generating $(@)
     xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\VirtualFunctionTable.xsl
 
 $(KCORE)\ClassTypeCodes.h: $(KCORE)\ClassTypeCodes.xsl $(KCORE)\PrimitiveClasses.xml
-    @ECHO .
+    @ECHO.
     @ECHO Generating $(@)
     xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\ClassTypeCodes.xsl
 
 $(OR_OUTDIR)\winmsgtb.res: $(KWINDOWS)\winmsgtb.rc $(KMESSAGES)\DocErrorMessages.sgml
-    @ECHO .
+    @ECHO.
     @ECHO ResourceCompiling $(@)
         $(rc) $(rcflags_common) $(OR_ORYXRCINCL) -r -fo$(@) $(KWINDOWS)\winmsgtb.rc
 
 
 # Update the version information block
 $(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc
-    @ECHO .
+    @ECHO.
     @ECHO ResourceCompiling $(@B).res
         $(rc) $(rcflags_common) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_ORYXKSRC)\$(@B).rc
 
