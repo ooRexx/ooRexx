@@ -560,6 +560,21 @@ RexxObjectPtr RexxEntry NewObject(RexxThreadContext *c)
     return NULLOBJECT;
 }
 
+POINTER RexxEntry ObjectToCSelf(RexxThreadContext *c, RexxObjectPtr o)
+{
+    ApiContext context(c);
+    try
+    {
+        // ask the object to figure this out
+        return ((RexxObject *)o)->getCSelf();
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULL;
+}
+
+
 RexxObjectPtr RexxEntry NumberToObject(RexxThreadContext *c, wholenumber_t n)
 {
     ApiContext context(c);
@@ -1263,12 +1278,12 @@ logical_t RexxEntry IsArray(RexxThreadContext *c, RexxObjectPtr o)
     return false;
 }
 
-CSTRING RexxEntry BufferData(RexxThreadContext *c, RexxBufferObject b)
+POINTER RexxEntry BufferData(RexxThreadContext *c, RexxBufferObject b)
 {
     ApiContext context(c);
     try
     {
-        return (CSTRING)((RexxBuffer *)b)->getData();
+        return (POINTER)((RexxBuffer *)b)->getData();
     }
     catch (RexxNativeActivation *)
     {
@@ -1747,6 +1762,7 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     SaveRoutine,
 
     NewObject,
+    ObjectToCSelf,
     NumberToObject,
     UintptrToObject,
     ValueToObject,

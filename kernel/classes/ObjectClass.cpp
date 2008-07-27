@@ -58,7 +58,7 @@
 #include "ExpressionBaseVariable.hpp"
 #include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
-
+#include "PointerClass.hpp"
 
 
 // singleton class instance
@@ -1897,6 +1897,34 @@ void RexxInternalObject::removedUninit()
     memoryObject.removeUninitObject((RexxObject *)this);
 }
 
+/**
+ * Search through all of the scopes looking for a variable
+ * of the given name.  This will return the first match.
+ *
+ * @param name   The target name.
+ *
+ * @return The value associated with the variable or OREF_NULL if
+ *         no matching variable is found.
+ */
+RexxObject *RexxObject::getObjectVariable(RexxString *name)
+{
+    RexxVariableDictionary *dictionary = objectVariables;
+    while (dictionary != OREF_NULL)
+    {
+        // see if this dictionary has the variable
+        RexxObject *val = dictionary->realValue(name);
+        // return this if it exists
+        if (val != OREF_NULL)
+        {
+            return val;
+        }
+        // step to the next dictionary in the chain
+        dictionary = dictionary->getNextDictionary();
+    }
+    return OREF_NULL;      // no variable found
+}
+
+
 RexxObject * RexxObject::getObjectVariable(
   RexxString * name,                   /* variable name (name object)       */
   RexxObject * scope)                  /* target variable scope             */
@@ -2309,6 +2337,35 @@ RexxNilObject::RexxNilObject()
 HashCode RexxNilObject::getHashValue()
 {
     return hashValue;
+}
+
+
+/**
+ * Attempt to get a CSELF value from an object instance
+ * for a native context.
+ *
+ * @return An unwrapperd CSELF value, if one can be found.
+ */
+void *RexxObject::getCSelf()
+{
+    // try for the variable value
+    RexxObject *C_self = getObjectVariable(OREF_CSELF);
+    // if we found one, validate for unwrappering
+    if (C_self != OREF_NULL)
+    {
+        // if this is a pointer, then unwrapper the value
+        if (C_self->isInstanceOf(ThePointerClass))
+        {
+            return ((RexxPointer *)C_self)->pointer();
+        }
+        // this could be a containing buffer instance as well
+        else if (C_self->isInstanceOf(TheBufferClass))
+        {
+            // return a pointer to the buffer beginning
+            return(void *)((RexxBuffer *)C_self)->getData();
+        }
+    }
+    return NULL;                     /* no object available               */
 }
 
 

@@ -262,18 +262,6 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                 break;
             }
 
-            case REXX_VALUE_BUFFER:               /* reference to Buffered storage     */
-            {
-                // this doesn't make any sense for a function call
-                if (activationType != METHOD_ACTIVATION)
-                {
-                    reportSignatureError();
-                }
-                descriptors[outputIndex].flags = ARGUMENT_EXISTS | SPECIAL_ARGUMENT;
-                descriptors[outputIndex].value.value_POINTER = this->buffer();
-                break;
-            }
-
             case REXX_VALUE_ARGLIST:              /* need the argument list            */
             {
                 descriptors[outputIndex].flags = ARGUMENT_EXISTS | SPECIAL_ARGUMENT;
@@ -1781,35 +1769,13 @@ void *RexxNativeActivation::cself()
 /*            NULL is returned.                                               */
 /******************************************************************************/
 {
-    /* retrieve from object dictionary   */
-    RexxPointer *C_self = (RexxPointer *)methodVariables()->realValue(OREF_CSELF);
-    if (C_self != OREF_NULL)             /* got an item?                      */
+    // if this is a method invocation, ask the receiver object to figure this out.
+    if (receiver != OREF_NULL)
     {
-        return C_self->pointer();        /* return the pointer value          */
+        return receiver->getCSelf();
     }
-    else
-    {
-        return NULL;                     /* no object available               */
-    }
-}
-
-
-void *RexxNativeActivation::buffer()
-/******************************************************************************/
-/* Function:  Returns "unwrapped" C or C++ object stored in a buffer object.  */
-/*            If the variable CSELF does not exist, then NULL is returned.    */
-/******************************************************************************/
-{
-    /* retrieve from object dictionary   */
-    RexxBuffer *C_self = (RexxBuffer *)this->methodVariables()->realValue(OREF_CSELF);
-    if (C_self != OREF_NULL)             /* got an item?                      */
-    {
-        return(void *)C_self->getData();  /* return a pointer to the address   */
-    }
-    else
-    {
-        return NULL;                       /* no object available               */
-    }
+    // nope, call context doesn't allow this
+    return OREF_NULL;
 }
 
 

@@ -445,6 +445,7 @@ class RexxObject : public RexxInternalObject {
                                        // Following are internal OREXX methods
      RexxObject  *defMethods(RexxDirectory *);
      void         setObjectVariable(RexxString *, RexxObject *, RexxObject *);
+     RexxObject  *getObjectVariable(RexxString *);
      RexxObject  *getObjectVariable(RexxString *, RexxObject *);
      void         addObjectVariables(RexxVariableDictionary *);
      void         copyObjectVariables(RexxObject *newObject);
@@ -476,6 +477,7 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *copyRexx();
      RexxObject  *unknownRexx(RexxString *, RexxArray *);
      RexxObject  *hasMethodRexx(RexxString *);
+     void *getCSelf();
      // compare 2 values for equality, potentially falling back on the
      // "==" method for the test.
      bool inline equalValue(RexxObject *other)

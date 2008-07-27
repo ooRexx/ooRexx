@@ -55,9 +55,8 @@
 #define REXX_VALUE_ARGLIST     2
 #define REXX_VALUE_NAME        3
 #define REXX_VALUE_SCOPE       4
-#define REXX_VALUE_BUFFER      5
-#define REXX_VALUE_CSELF       6
-#define REXX_VALUE_OSELF       7
+#define REXX_VALUE_CSELF       5
+#define REXX_VALUE_OSELF       6
 
 // each of the following types have an optional equivalent
 
@@ -327,7 +326,6 @@ typedef struct
         RexxArrayObject       value_ARGLIST;
         CSTRING               value_NAME;
         RexxClassObject       value_SCOPE;
-        POINTER               value_BUFFER;
         POINTER               value_CSELF;
         RexxObjectPtr         value_OSELF;
         RexxObjectPtr         value_RexxObjectPtr;
@@ -527,6 +525,7 @@ typedef struct
     RexxBufferObject  (RexxEntry *SaveRoutine)(RexxThreadContext *, RexxRoutineObject);
 
     RexxObjectPtr    (RexxEntry *NewObject)(RexxThreadContext *);
+    POINTER          (RexxEntry *ObjectToCSelf)(RexxThreadContext *, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *NumberToObject)(RexxThreadContext *, wholenumber_t);
     RexxObjectPtr    (RexxEntry *UintptrToObject)(RexxThreadContext *, uintptr_t);
     RexxObjectPtr    (RexxEntry *ValueToObject)(RexxThreadContext *, ValueDescriptor *);
@@ -584,7 +583,7 @@ typedef struct
     RexxArrayObject (RexxEntry *ArrayOfTwo)(RexxThreadContext *, RexxObjectPtr, RexxObjectPtr);
     logical_t       (RexxEntry *IsArray)(RexxThreadContext *, RexxObjectPtr);
 
-    CSTRING (RexxEntry *BufferData)(RexxThreadContext *, RexxBufferObject);
+    POINTER (RexxEntry *BufferData)(RexxThreadContext *, RexxBufferObject);
     size_t            (RexxEntry *BufferLength)(RexxThreadContext *, RexxBufferObject);
     RexxBufferObject  (RexxEntry *NewBuffer)(RexxThreadContext *, size_t);
     logical_t         (RexxEntry *IsBuffer)(RexxThreadContext *, RexxObjectPtr);
@@ -881,6 +880,10 @@ struct RexxThreadContext_
     {
         return functions->NewObject(this);
     }
+    POINTER ObjectToCSelf(RexxObjectPtr o)
+    {
+        return functions->ObjectToCSelf(this, o);
+    }
     RexxObjectPtr NumberToObject(wholenumber_t n)
     {
         return functions->NumberToObject(this, n);
@@ -1094,7 +1097,7 @@ struct RexxThreadContext_
         return functions->IsArray(this, o);
     }
 
-    CSTRING BufferData(RexxBufferObject bo)
+    POINTER BufferData(RexxBufferObject bo)
     {
         return functions->BufferData(this, bo);
     }
@@ -1395,6 +1398,10 @@ struct RexxMethodContext_
     {
         return threadContext->NewObject();
     }
+    POINTER ObjectToCSelf(RexxObjectPtr o)
+    {
+        return threadContext->ObjectToCSelf(o);
+    }
     RexxObjectPtr NumberToObject(wholenumber_t n)
     {
         return threadContext->NumberToObject(n);
@@ -1604,7 +1611,7 @@ struct RexxMethodContext_
         return threadContext->IsArray(o);
     }
 
-    CSTRING BufferData(RexxBufferObject bo)
+    POINTER BufferData(RexxBufferObject bo)
     {
         return threadContext->BufferData(bo);
     }
@@ -1962,6 +1969,10 @@ struct RexxCallContext_
     {
         return threadContext->NewObject();
     }
+    POINTER ObjectToCSelf(RexxObjectPtr o)
+    {
+        return threadContext->ObjectToCSelf(o);
+    }
     RexxObjectPtr NumberToObject(wholenumber_t n)
     {
         return threadContext->NumberToObject(n);
@@ -2171,7 +2182,7 @@ struct RexxCallContext_
         return threadContext->IsArray(o);
     }
 
-    CSTRING BufferData(RexxBufferObject bo)
+    POINTER BufferData(RexxBufferObject bo)
     {
         return threadContext->BufferData(bo);
     }
@@ -2527,6 +2538,10 @@ struct RexxExitContext_
     {
         return threadContext->NewObject();
     }
+    POINTER ObjectToCSelf(RexxObjectPtr o)
+    {
+        return threadContext->ObjectToCSelf(o);
+    }
     RexxObjectPtr NumberToObject(wholenumber_t n)
     {
         return threadContext->NumberToObject(n);
@@ -2736,7 +2751,7 @@ struct RexxExitContext_
         return threadContext->IsArray(o);
     }
 
-    CSTRING BufferData(RexxBufferObject bo)
+    POINTER BufferData(RexxBufferObject bo)
     {
         return threadContext->BufferData(bo);
     }
@@ -2931,7 +2946,6 @@ RexxReturnCode RexxEntry RexxCreateInterpreter(RexxInstance **, RexxThreadContex
 #define ARGUMENT_TYPE_ARGLIST    RexxArrayObject
 #define ARGUMENT_TYPE_NAME       CSTRING
 #define ARGUMENT_TYPE_SCOPE      RexxClassObject
-#define ARGUMENT_TYPE_BUFFER     POINTER
 #define ARGUMENT_TYPE_CSELF      POINTER
 #define ARGUMENT_TYPE_OSELF      RexxObjectPtr
 
