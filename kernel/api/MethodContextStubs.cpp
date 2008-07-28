@@ -93,7 +93,7 @@ CSTRING RexxEntry GetMessageName(RexxMethodContext *c)
     ApiContext context(c);
     try
     {
-        return (CSTRING)context.context->getMessageName();
+        return (CSTRING)context.context->getMessageName()->getStringData();
     }
     catch (RexxNativeActivation *)
     {
