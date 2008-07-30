@@ -3270,6 +3270,29 @@ __methodstub(name) \
 __type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9))
 
 
+// method with 10 arguments
+#define RexxMethod10(returnType, name, t1, n1, t2, n2, t3, n3, t4, n4, t5, n5, t6, n6, t7, n7, t8, n8, t9, n9, t10, n10) \
+/* forward reference definition for method */ \
+__type(returnType) name##_impl (RexxMethodContext * context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10));  \
+                               \
+/* method signature definition */ \
+static uint16_t name##_types[] = {__tdcl(returnType), __tdcl(t1), __tdcl(t2), __tdcl(t3), __tdcl(t4), __tdcl(t5), __tdcl(t6), __tdcl(t7), __tdcl(t8), __tdcl(t9), __tdcl(t10), REXX_ARGUMENT_TERMINATOR};    \
+\
+__cpp_method_proto(name) \
+/* generated calling stub function */ \
+__methodstub(name) \
+{ \
+    if (arguments != NULL) /* if no arguments passed, this a signature request */ \
+    {                                                                             \
+        /* forward to the method implementation */                                \
+        __ret(returnType, name##_impl(context, __arg(1, t1), __arg(2, t2), __arg(3, t3), __arg(4, t4), __arg(5, t5), __arg(6, t6), __arg(7, t7), __arg(8, t8), __arg(9, t9), __arg(10, t10)));      \
+    }                                                                             \
+    return name##_types;     /* return the type signature */                      \
+} \
+/* the real target method code */  \
+__type(returnType) name##_impl(RexxMethodContext *context, __adcl(t1, n1), __adcl(t2, n2), __adcl(t3, n3), __adcl(t4, n4), __adcl(t5, n5), __adcl(t6, n6), __adcl(t7, n7), __adcl(t8, n8), __adcl(t9, n9), __adcl(t10, n10))
+
+
 #define __functionstub(name) uint16_t * RexxEntry name(RexxCallContext *context, ValueDescriptor *arguments)
 
 #ifdef __cplusplus
