@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -44,7 +44,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include "oorexxapi.h"
-#include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
@@ -4312,7 +4311,7 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
 }
 
 /* This method is used as a convenient way to test code. */
-RexxMethod2(int, bc_test, RexxObjectPtr, dlg, RexxObjectPtr, id)
+RexxMethod2(int, bc_test, OPTIONAL_RexxObjectPtr, dlg, OPTIONAL_CSTRING, id)
 {
     return 0;
 }
@@ -4382,6 +4381,31 @@ static void internalErrorMsg(PSZ pszMsg, PSZ pszTitle)
     MessageBox(0, pszMsg, pszTitle, MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
 }
 
+DWORD getComCtl32Version(void)
+{
+    HINSTANCE hinst;
+    DWORD     dllVersion = 0;
+
+    hinst = LoadLibrary(TEXT("comctl32.dll"));
+    if ( hinst )
+    {
+        DLLGETVERSIONPROC pDllGetVersion;
+
+        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinst, "DllGetVersion");
+        if ( pDllGetVersion )
+        {
+            DLLVERSIONINFO info;
+
+            ZeroMemory(&info, sizeof(info));
+            info.cbSize = sizeof(info);
+            if ( SUCCEEDED((*pDllGetVersion)(&info)) )
+                dllVersion = MAKEVERSION(info.dwMajorVersion, info.dwMinorVersion);
+        }
+        FreeLibrary(hinst);
+    }
+    return dllVersion;
+}
+
 /**
  * This is the .DlgUtil class init() method.  It executes when the .DlgUtil
  * class is constructed, which is done during the processing of the ::requires
@@ -4407,26 +4431,9 @@ static void internalErrorMsg(PSZ pszMsg, PSZ pszTitle)
  */
 RexxMethod0(logical_t, dlgutil_init)
 {
-    HINSTANCE   hinst;
-    bool        success = false;
+    bool success = false;
 
-    hinst = LoadLibrary(TEXT("comctl32.dll"));
-    if ( hinst )
-    {
-        DLLGETVERSIONPROC pDllGetVersion;
-
-        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinst, "DllGetVersion");
-        if ( pDllGetVersion )
-        {
-            DLLVERSIONINFO info;
-
-            ZeroMemory(&info, sizeof(info));
-            info.cbSize = sizeof(info);
-            if ( SUCCEEDED((*pDllGetVersion)(&info)) )
-                ComCtl32Version = MAKEVERSION(info.dwMajorVersion, info.dwMinorVersion);
-        }
-        FreeLibrary(hinst);
-    }
+    ComCtl32Version = getComCtl32Version();
 
     if ( ComCtl32Version == 0 )
     {
@@ -4464,7 +4471,7 @@ RexxMethod0(logical_t, dlgutil_init)
             _snprintf(msg, sizeof(msg),
                       "Initializing the Windows Common Controls\n"
                       "library (InitCommonControlsEx) failed.\n"
-                      "ooDialogcan not continue.\n\n"
+                      "ooDialog can not continue.\n\n"
                       "Windows System Error Code: %d\n", err);
 
             internalErrorMsg(msg, COMCTL_ERR_TITLE);
