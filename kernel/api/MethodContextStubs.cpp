@@ -164,6 +164,7 @@ void RexxEntry DropObjectVariable(RexxMethodContext *c, CSTRING n)
     }
 }
 
+
 RexxObjectPtr RexxEntry SendSuperMessage(RexxMethodContext *c, CSTRING n, RexxArrayObject a)
 {
     ApiContext context(c);
@@ -171,7 +172,7 @@ RexxObjectPtr RexxEntry SendSuperMessage(RexxMethodContext *c, CSTRING n, RexxAr
     {
         RexxObject *self = context.context->getSelf();
         RexxObject *super = context.context->getSuper();
-        RexxString *message = new_string(n);
+        RexxString *message = new_upper_string(n);
         RexxArray *args = (RexxArray *)a;
         ProtectedObject result;
         self->messageSend(message, args->data(), args->size(), super, result);
@@ -190,7 +191,7 @@ RexxObjectPtr RexxEntry SendOverrideMessage(RexxMethodContext *c, CSTRING n, Rex
     {
         RexxObject *self = context.context->getSelf();
         RexxObject *super = (RexxObject *)clazz;
-        RexxString *message = new_string(n);
+        RexxString *message = new_upper_string(n);
         RexxArray *args = (RexxArray *)a;
         ProtectedObject result;
         self->messageSend(message, args->data(), args->size(), super, result);
