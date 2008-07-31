@@ -2209,8 +2209,16 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_LAST_ROUTINE()
 };
 
-REXX_METHOD_PROTOTYPE(dlgutil_commonInit);
+REXX_METHOD_PROTOTYPE(dlgutil_init);
+REXX_METHOD_PROTOTYPE(dlgutil_comctl32Version);
+REXX_METHOD_PROTOTYPE(dlgutil_version);
+REXX_METHOD_PROTOTYPE(dlgutil_hiWord);
+REXX_METHOD_PROTOTYPE(dlgutil_loWord);
 REXX_METHOD_PROTOTYPE(dlgutil_colorRef);
+REXX_METHOD_PROTOTYPE(dlgutil_getRValue);
+REXX_METHOD_PROTOTYPE(dlgutil_getGValue);
+REXX_METHOD_PROTOTYPE(dlgutil_getBValue);
+
 REXX_METHOD_PROTOTYPE(pbc_stepIt);
 REXX_METHOD_PROTOTYPE(pbc_getPos);
 REXX_METHOD_PROTOTYPE(pbc_setPos);
@@ -2222,19 +2230,95 @@ REXX_METHOD_PROTOTYPE(pbc_setBkColor);
 REXX_METHOD_PROTOTYPE(pbc_setBarColor);
 REXX_METHOD_PROTOTYPE(pbc_test);
 
+REXX_METHOD_PROTOTYPE(bc_cls_checkInGroup);
+REXX_METHOD_PROTOTYPE(bc_getState);
+REXX_METHOD_PROTOTYPE(bc_setState);
+REXX_METHOD_PROTOTYPE(bc_setStyle);
+REXX_METHOD_PROTOTYPE(bc_isChecked);
+REXX_METHOD_PROTOTYPE(bc_click);
+REXX_METHOD_PROTOTYPE(bc_getImage);
+REXX_METHOD_PROTOTYPE(bc_setImage);
+REXX_METHOD_PROTOTYPE(bc_checked);
+REXX_METHOD_PROTOTYPE(bc_isIndeterminate);
+REXX_METHOD_PROTOTYPE(bc_indeterminate);
+REXX_METHOD_PROTOTYPE(bc_check);
+REXX_METHOD_PROTOTYPE(bc_uncheck);
+REXX_METHOD_PROTOTYPE(bc_getIdealSize);
+REXX_METHOD_PROTOTYPE(bc_getTextMargin);
+REXX_METHOD_PROTOTYPE(bc_setTextMargin);
+REXX_METHOD_PROTOTYPE(bc_setImageList);
+REXX_METHOD_PROTOTYPE(bc_getImageList);
+REXX_METHOD_PROTOTYPE(bc_test);
+
+REXX_METHOD_PROTOTYPE(rect_init);
+REXX_METHOD_PROTOTYPE(rect_left);
+REXX_METHOD_PROTOTYPE(rect_top);
+REXX_METHOD_PROTOTYPE(rect_right);
+REXX_METHOD_PROTOTYPE(rect_bottom);
+REXX_METHOD_PROTOTYPE(rect_setLeft);
+REXX_METHOD_PROTOTYPE(rect_setTop);
+REXX_METHOD_PROTOTYPE(rect_setRight);
+REXX_METHOD_PROTOTYPE(rect_setBottom);
+
+REXX_METHOD_PROTOTYPE(point_init);
+REXX_METHOD_PROTOTYPE(point_x);
+REXX_METHOD_PROTOTYPE(point_setX);
+REXX_METHOD_PROTOTYPE(point_y);
+REXX_METHOD_PROTOTYPE(point_setY);
+
 RexxMethodEntry oodialog_methods[] = {
-    REXX_METHOD(dlgutil_commonInit,    dlgutil_commonInit),
-    REXX_METHOD(dlgutil_colorRef,      dlgutil_colorRef),
-    REXX_METHOD(pbc_stepIt,            pbc_stepIt),
-    REXX_METHOD(pbc_getPos,            pbc_getPos),
-    REXX_METHOD(pbc_setPos,            pbc_setPos),
-    REXX_METHOD(pbc_getRange,          pbc_getRange),
-    REXX_METHOD(pbc_setRange,          pbc_setRange),
-    REXX_METHOD(pbc_setStep,           pbc_setStep),
-    REXX_METHOD(pbc_setMarquee,        pbc_setMarquee),
-    REXX_METHOD(pbc_setBkColor,        pbc_setBkColor),
-    REXX_METHOD(pbc_setBarColor,       pbc_setBarColor),
-    REXX_METHOD(pbc_test,              pbc_test),
+    REXX_METHOD(dlgutil_init,            dlgutil_init),
+    REXX_METHOD(dlgutil_comctl32Version, dlgutil_comctl32Version),
+    REXX_METHOD(dlgutil_version,         dlgutil_version),
+    REXX_METHOD(dlgutil_hiWord,          dlgutil_hiWord),
+    REXX_METHOD(dlgutil_loWord,          dlgutil_loWord),
+    REXX_METHOD(dlgutil_colorRef,        dlgutil_colorRef),
+    REXX_METHOD(dlgutil_getRValue,       dlgutil_getRValue),
+    REXX_METHOD(dlgutil_getGValue,       dlgutil_getGValue),
+    REXX_METHOD(dlgutil_getBValue,       dlgutil_getBValue),
+    REXX_METHOD(pbc_stepIt,              pbc_stepIt),
+    REXX_METHOD(pbc_getPos,              pbc_getPos),
+    REXX_METHOD(pbc_setPos,              pbc_setPos),
+    REXX_METHOD(pbc_getRange,            pbc_getRange),
+    REXX_METHOD(pbc_setRange,            pbc_setRange),
+    REXX_METHOD(pbc_setStep,             pbc_setStep),
+    REXX_METHOD(pbc_setMarquee,          pbc_setMarquee),
+    REXX_METHOD(pbc_setBkColor,          pbc_setBkColor),
+    REXX_METHOD(pbc_setBarColor,         pbc_setBarColor),
+    REXX_METHOD(pbc_test,                pbc_test),
+    REXX_METHOD(bc_cls_checkInGroup,     bc_cls_checkInGroup),
+    REXX_METHOD(bc_getState,             bc_getState),
+    REXX_METHOD(bc_setState,             bc_setState),
+    REXX_METHOD(bc_setStyle,             bc_setStyle),
+    REXX_METHOD(bc_click,                bc_click),
+    REXX_METHOD(bc_getImage,             bc_getImage),
+    REXX_METHOD(bc_setImage,             bc_setImage),
+    REXX_METHOD(bc_isChecked,            bc_isChecked),
+    REXX_METHOD(bc_checked,              bc_checked),
+    REXX_METHOD(bc_isIndeterminate,      bc_isIndeterminate),
+    REXX_METHOD(bc_indeterminate,        bc_indeterminate),
+    REXX_METHOD(bc_check,                bc_check),
+    REXX_METHOD(bc_uncheck,              bc_uncheck),
+    REXX_METHOD(bc_getIdealSize,         bc_getIdealSize),
+    REXX_METHOD(bc_getTextMargin,        bc_getTextMargin),
+    REXX_METHOD(bc_setTextMargin,        bc_setTextMargin),
+    REXX_METHOD(bc_setImageList,         bc_setImageList),
+    REXX_METHOD(bc_getImageList,         bc_getImageList),
+    REXX_METHOD(bc_test,                 bc_test),
+    REXX_METHOD(rect_init,               rect_init),
+    REXX_METHOD(rect_left,               rect_left),
+    REXX_METHOD(rect_top,                rect_top),
+    REXX_METHOD(rect_right,              rect_right),
+    REXX_METHOD(rect_bottom,             rect_bottom),
+    REXX_METHOD(rect_setLeft,            rect_setLeft),
+    REXX_METHOD(rect_setTop,             rect_setTop),
+    REXX_METHOD(rect_setRight,           rect_setRight),
+    REXX_METHOD(rect_setBottom,          rect_setBottom),
+    REXX_METHOD(point_init,              point_init),
+    REXX_METHOD(point_x,                 point_x),
+    REXX_METHOD(point_setX,              point_setX),
+    REXX_METHOD(point_y,                 point_y),
+    REXX_METHOD(point_setY,              point_setY),
     REXX_LAST_METHOD()
 };
 

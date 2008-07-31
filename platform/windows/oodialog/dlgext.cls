@@ -217,7 +217,7 @@
    if pos~DataType("N") = 0 then return
 
    if Arg(4,"o") = 0 then do
-       sbc = BinaryAnd(poscode, 0x0000FFFF)
+       sbc = .DlgUtil~loWord(poscode)
        if sbc = 0 & step > 0 then step = -step
        else if sbc = 1 & step < 0 then step = +step
    end
@@ -230,8 +230,7 @@
    end
    else if Arg(4,'o') = 0 then do
       /* calc the position returned by message */
-      pos = BinaryAnd(poscode, 0xFFFF0000)
-      pos = pos % X2D('10000')
+      pos = .DlgUtil~hiWord(poscode)
    end
    self~SetSBPos(sbid, pos)
    self~SetEntryLine(elid,pos)

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,11 +35,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/* Object REXX OODialog                                              oovmsg.c */
-/*                                                                            */
-/*  OODialog Messaging function                                               */
-/*                                                                            */
+
+/**
+ * Open Object REXX OODialog - ooDialog Messaging function
+ */
+#define NTDDI_VERSION   NTDDI_WINXPSP2
+#define _WIN32_WINNT    0x0501
+#define WINVER          0x0501
 
 #include <windows.h>
 #include <rexx.h>
@@ -285,6 +287,11 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                 {
                     param = ((NMHDR *)lparam)->idFrom;
                     lparam = (ULONG)((NM_LISTVIEW *)lparam)->iSubItem;  /* which column is pressed */
+                }
+                else if ( code == BCN_HOTITEMCHANGE )
+                {
+                    /* Args to ooRexx will be the control ID, entering = true or false. */
+                    lparam = (((NMBCHOTITEM *)lparam)->dwFlags & HICF_ENTERING) ? 1 : 0;
                 }
             }
             else if ( m[i].tag )

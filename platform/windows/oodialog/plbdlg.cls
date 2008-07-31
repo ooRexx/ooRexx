@@ -47,8 +47,34 @@
 
 
 ::class 'DlgUtil' public
-::method commonInit class EXTERNAL "LIBRARY oodialog dlgutil_commonInit"
-::method colorRef class EXTERNAL "LIBRARY oodialog dlgutil_colorRef"
+::method init class external "LIBRARY oodialog dlgutil_init"
+::method version class external "LIBRARY oodialog dlgutil_version"
+::method comctl32Version class external "LIBRARY oodialog dlgutil_comctl32Version"
+::method hiWord class external "LIBRARY oodialog dlgutil_hiWord"
+::method loWord class external "LIBRARY oodialog dlgutil_loWord"
+::method colorRef class external "LIBRARY oodialog dlgutil_colorRef"
+::method getRValue class external "LIBRARY oodialog dlgutil_getRValue"
+::method getGValue class external "LIBRARY oodialog dlgutil_getGValue"
+::method getBValue class external "LIBRARY oodialog dlgutil_getBValue"
+
+::class 'Rect' public
+::method init external "LIBRARY oodialog rect_init"
+::method left external "LIBRARY oodialog rect_left"
+::method 'left=' external "LIBRARY oodialog rect_setLeft"
+::method top external "LIBRARY oodialog rect_top"
+::method 'top=' external "LIBRARY oodialog rect_setTop"
+::method right external "LIBRARY oodialog rect_right"
+::method 'right=' external "LIBRARY oodialog rect_setRight"
+::method bottom external "LIBRARY oodialog rect_bottom"
+::method 'bottom=' external "LIBRARY oodialog rect_setBottom"
+
+::class 'Point' public
+::method init external "LIBRARY oodialog point_init"
+::method x external "LIBRARY oodialog point_x"
+::method 'x=' external "LIBRARY oodialog point_setX"
+::method y external "LIBRARY oodialog point_y"
+::method 'y=' external "LIBRARY oodialog point_setY"
+
 
 /******************************************************************************/
 /* The class WindowBase implements methods that are common to all windows,    */
@@ -70,19 +96,8 @@
    use arg msgname
    call ErrorMessage(msgname || " is not a method of " || self)
 
-::method Init_WindowBase
+::method init_WindowBase
    use arg hwnd
-
-   self~hwnd = -1
-   self~SizeX = -1
-   self~SizeY = -1
-   self~FactorX = -1
-   self~FactorY = -1
-
-   if \ .DlgUtil~commonInit then do
-     self~initCode = 1
-     return 1
-   end
 
    self~SizeX = 0
    self~SizeY = 0
@@ -90,7 +105,7 @@
    self~FactorX=x
    self~FactorY=Y
 
-   if Arg(1,'o') = 1 then self~Hwnd = 0
+   if arg(1,'o') then self~Hwnd = 0
    else do
        self~hwnd = hwnd
        parse value Wnd_Desktop("RECT", hwnd) with x y cx cy
@@ -195,14 +210,16 @@
   /* execution of the dialog */
 ::method AutomaticMethods attribute protected
 
-::method ConstDir attribute protected   /* directory containing constants */
+/* Directory object containing symbolic constants */
+::attribute ConstDir get
+::attribute constDir set private
+
 ::method ProcessingLoad attribute protected    /* in LoadItems ? */
 ::method ChildDialogs attribute
 
-   /* the constructor of the class will install the necessary C-functions to */
-   /* the OREXX-API manager and prepare the dialog management for a new      */
-   /* dialog */
-
+/** PlainBaseDialog::init()  Performs the necessary intialization, including the
+ * set up of the dialog management block, for all dialogs.
+ */
 ::method Init protected
    expose Library Resource DlgData.
    use arg Library, Resource, DlgData., includeFile
@@ -211,8 +228,7 @@
    self~ParentDlg = .Nil
 
    /* Initialize the WindowBase */
-   self~initCode = self~Init_WindowBase
-   if self~initCode <> 0 then return self~initCode
+   self~initCode = self~init_WindowBase
 
    /* prepare the dialog management for a new dialog */
    self~Adm = HandleDialogAdmin()  /* allocate a new dialog table */

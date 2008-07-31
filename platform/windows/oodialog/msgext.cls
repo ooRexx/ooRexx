@@ -175,6 +175,12 @@
        when type = "DBLCLK"         then lp = 5
        when type = "GOTFOCUS"       then lp = 6
        when type = "LOSTFOCUS"      then lp = 7
+
+       when type = "HOTITEM" then do
+         -- Sends WM_NOTIFY and notify code is: BCN_HOTITEMCHANGE=0xfffffb1f (decimal=-1249) TAG_BUTTON = 0x00000004
+         return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", 0xFFFFFB1F, "0xFFFFFFFF", 4)
+       end
+
        otherwise return -1
    end
    return self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* buttons sends WM_COMMAND when BS_NOTIFY */

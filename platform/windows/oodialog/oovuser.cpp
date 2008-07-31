@@ -644,6 +644,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[8].strptr,"OWNER")) lStyle |= BS_OWNERDRAW;
        if (strstr(argv[8].strptr,"LEFTTEXT")) lStyle |= BS_LEFTTEXT;
        if (strstr(argv[8].strptr,"BITMAP")) lStyle |= BS_BITMAP;
+       if (strstr(argv[8].strptr,"ICON")) lStyle |= BS_ICON;
        if (strstr(argv[8].strptr,"LEFT")) lStyle |= BS_LEFT;
        if (strstr(argv[8].strptr,"RIGHT")) lStyle |= BS_RIGHT;
        if (strstr(argv[8].strptr,"HCENTER")) lStyle |= BS_CENTER;
@@ -663,6 +664,32 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
 
        /*                       id         x           y         cx          cy  */
        UAddControl(&p, 0x0080, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
+   }
+   else if (!strcmp(argv[0].strptr,"GB"))  // A groupbox is actually a button.
+   {
+       CHECKARGL(8);
+
+       /* UsrAddControl("GB",self~AktPtr, x, y, cx, cy, opts, text, id) */
+       for ( i = 0; i < 4; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
+
+       if (argc > 8)
+          i = atoi(argv[8].strptr);
+       else i = -1;
+
+       p = (WORD *)GET_POINTER(argv[1]);
+
+       lStyle = WS_CHILD | BS_GROUPBOX;
+       if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
+       if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
+       if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;
+       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
+       if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
+
+       /*                      id      x         y        cx        cy  */
+       UAddControl(&p, 0x0080, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"EL"))
    {
@@ -798,32 +825,6 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
 
        /*                         id       x          y            cx        cy  */
        UAddControl(&p, 0x0085, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-   }
-   else if (!strcmp(argv[0].strptr,"GB"))
-   {
-       CHECKARGL(8);
-
-       /* UsrAddControl("GB",self~AktPtr, x, y, cx, cy, opts, text, id) */
-       for ( i = 0; i < 4; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       if (argc > 8)
-          i = atoi(argv[8].strptr);
-       else i = -1;
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       lStyle = WS_CHILD | BS_GROUPBOX;
-       if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
-
-       /*                      id      x         y        cx        cy  */
-       UAddControl(&p, 0x0080, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"FRM"))
    {

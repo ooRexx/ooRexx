@@ -101,7 +101,6 @@ extern LONG HandleError(PRXSTRING r, CHAR * text);
 #define COMCTL32_4_72        262216
 #define COMCTL32_5_8         327688
 #define COMCTL32_5_81        327761
-#define COMCTL32_5_82        327762
 #define COMCTL32_6_0         393216
 
 /* The version of comctl32.dll in use when oodialog.dll is loaded. */
@@ -118,6 +117,7 @@ extern DWORD ComCtl32Version;
 #define TAG_DIALOG                0x00000001
 #define TAG_HELP                  0x00000100
 
+#define TAG_BUTTON                0x00000004
 #define TAG_TREEVIEW              0x00000006
 #define TAG_LISTVIEW              0x00000007
 #define TAG_TRACKBAR              0x00000008
@@ -282,6 +282,15 @@ inline void safeLocalFree(void *p)
     if (p != NULL)
     {
         LocalFree(p);
+    }
+}
+
+
+inline void safeFree(void *p)
+{
+    if (p != NULL)
+    {
+        free(p);
     }
 }
 

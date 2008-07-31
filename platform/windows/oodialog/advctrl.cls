@@ -393,7 +393,7 @@
       obj~Hwnd = 0
       obj~Id = 0
       if Arg() = 0 then do
-         self~initCode = obj~Init_WindowBase
+         self~initCode = obj~init_WindowBase
          obj~oDlg = .nil
          return obj
       end
@@ -1298,112 +1298,88 @@
 
 ::class 'SliderControl' subclass DialogControl public
 
-::method "Pos="
-   forward message (SetPos)
+::method "pos="
+   forward message (setPos)
 
-::method Pos
+::method pos
    return HandleOtherNewCtrls("SLIDER", "POS", self~hwnd, "G")
 
-::method SetPos
-   use arg p, redraw
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then redraw = 0
+::method setPos
+   use strict arg p, redraw = .false
    call HandleOtherNewCtrls "SLIDER", "POS", self~hwnd, p, redraw
 
-::method InitRange
-   use arg min, max, redraw
-   if Arg(1,'o') = 1 then min = 0
-   if Arg(2,'o') = 1 then max = 100
-   if Arg(3,'o') = 1 then redraw = 0
+::method initRange
+   use strict arg min = 0, max = 100, redraw = .false
    if max < min then return -1
    return HandleOtherNewCtrls("SLIDER", "SETRANGE", self~hwnd, min, max, redraw)
 
-::method SetMin
-   use arg min, redraw
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then redraw = 1
+::method setMin
+   use strict arg min, redraw = .true
    return HandleOtherNewCtrls("SLIDER", "SETRANGE", self~hwnd, "L", min, redraw)
 
-::method SetMax
-   use arg max, redraw
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then redraw = 1
+::method setMax
+   use strict arg max, redraw = .true
    return HandleOtherNewCtrls("SLIDER", "SETRANGE", self~hwnd, "H", max, redraw)
 
-::method Range
+::method range
    return HandleOtherNewCtrls("SLIDER", "GETRANGE", self~hwnd)
 
-::method ClearTicks
-   use arg redraw
-   if Arg(1,'o') = 1 then redraw = 1
+::method clearTicks
+   use strict arg redraw = .true
    return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "C", redraw)
 
-::method CountTicks
+::method countTicks
    return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "N")
 
-::method GetTick
-   use arg tic
-   if Arg(1,'o') = 1 then return -1
+::method getTick
+   use strict arg tic
    return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "G", tic)
 
-::method SetTickAt
-   use arg pos
-   if Arg(1,'o') = 1 then return -1
+::method setTickAt
+   use strict arg pos
    return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "S", pos)
 
-::method SetTickFrequency
-   use arg freq
-   if Arg(1,'o') = 1 then return -1
+::method setTickFrequency
+   use strict arg freq
    return HandleOtherNewCtrls("SLIDER", "TICS", self~hwnd, "F", freq)
 
-::method GetLineStep
+::method getLineStep
    return HandleOtherNewCtrls("SLIDER", "GETSTEPS", self~hwnd, "L")
 
-::method GetPageStep
+::method getPageStep
    return HandleOtherNewCtrls("SLIDER", "GETSTEPS", self~hwnd, "P")
 
-::method SetLineStep
-   use arg step
-   if Arg(1,'o') = 1 then return -1
+::method setLineStep
+   use strict arg step
    return HandleOtherNewCtrls("SLIDER", "SETSTEPS", self~hwnd, "L", step)
 
-::method SetPageStep
-   use arg step
-   if Arg(1,'o') = 1 then return -1
+::method setPageStep
+   use strict arg step
    return HandleOtherNewCtrls("SLIDER", "SETSTEPS", self~hwnd, "P", step)
 
-::method InitSelRange
-   use arg min, max, redraw
-   if Arg(1,'o') = 1 then min = 0
-   if Arg(2,'o') = 1 then parse value self~Range with . max
-   if Arg(3,'o') = 1 then redraw = 0
+::method initSelRange
+   use arg min = 0, max, redraw = .false
+   if arg(2,'o') then parse value self~Range with . max
    if max < min then return -1
    return HandleOtherNewCtrls("SLIDER", "SETSEL", self~hwnd, min, max, redraw)
 
-::method SetSelStart
-   use arg min, redraw
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then redraw = 1
+::method setSelStart
+   use strict arg min, redraw = .true
    return HandleOtherNewCtrls("SLIDER", "SETSEL", self~hwnd, "S", min, redraw)
 
-::method SetSelEnd
-   use arg max, redraw
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then redraw = 1
+::method setSelEnd
+   use strict arg max, redraw = .true
    return HandleOtherNewCtrls("SLIDER", "SETSEL", self~hwnd, "E", max, redraw)
 
-::method ClearSelRange
-   use arg redraw
-   if Arg(1,'o') = 1 then redraw = 1
+::method clearSelRange
+   use strict arg redraw = .true
    return HandleOtherNewCtrls("SLIDER", "SETSEL", self~hwnd, "C", redraw)
 
-::method SelRange
+::method selRange
    return HandleOtherNewCtrls("SLIDER", "GETSEL", self~hwnd)
 
 
-
-/****************************************************** Tab Control Class *********************************************************/
-
+/******************* Tab Control Class ****************************************/
 
 ::class 'TabControl' subclass DialogControl public
 
@@ -1656,8 +1632,8 @@
 
 ::Method Margins
     marg = self~Message2Parent(0x00D4, 0, 0)
-    right = BinaryAnd(marg, 0xFFFF0000) % X2D("10000")
-    left = BinaryAnd(marg, 0x0000FFFF)
+    right = .DlgUtil~hiWord(marg)
+    left = .DlgUtil~loWord(marg)
     return left" "right
 
 ::method GetLine
@@ -1706,102 +1682,50 @@
 ::method GetStyle
    return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "G")
 
-/****************************************************** ButtonControl Classes *********************************************************/
+/******************* ButtonControl Classes ************************************/
 
 ::class 'ButtonControl' subclass DialogControl public
 
-::Method State
-    ch = self~Message2Parent(0x00F2, 0, 0)
-    st = ""
-    if BinaryAnd(ch,3) == 0 then st = "UNCHECKED"
-    if BinaryAnd(ch,1) \= 0 then st = "CHECKED"
-    if BinaryAnd(ch,2) \= 0 then st = "INDETERMINATE"
-    if BinaryAnd(ch,4) \= 0 then st = st || " PUSHED"
-    if BinaryAnd(ch,8) \= 0 then st = st || " FOCUS"
-    return st
+::constant BUTTON_IMAGELIST_ALIGN_LEFT 0
+::constant BUTTON_IMAGELIST_ALIGN_RIGHT 1
+::constant BUTTON_IMAGELIST_ALIGN_TOP 2
+::constant BUTTON_IMAGELIST_ALIGN_BOTTOM 3
+::constant BUTTON_IMAGELIST_ALIGN_CENTER 4
 
-::Method "State="
-    use arg sttext
-    sttext = sttext~Translate
-    doCheck = .true
-    select
-      when sttext~wordpos("INDETERMINATE")>0 then do
-        numeric digits 11
-        style = BinaryAnd(self~getStyleRaw, 0xF)
-        if style <> 5 & style <> 6 then return
-        st = 2
-      end
-      when sttext~wordpos("UNCHECKED")>0 then st = 0
-      when sttext~wordpos("CHECKED")>0 then st = 1
-      otherwise doCheck = .false
-    end
-    -- End select
+::method state external "LIBRARY oodialog bc_getState"
+::method "state=" external "LIBRARY oodialog bc_setState"
+::method "style=" external "LIBRARY oodialog bc_setStyle"
 
-    if doCheck then do
-      ret = self~Message2Parent(0x00F1, st, 0x0)
-      if ret <> 0 then return
-    end
+::method getIdealSize external "LIBRARY oodialog bc_getIdealSize"
+::method getTextMargin external "LIBRARY oodialog bc_getTextMargin"
+::method setTextMargin external "LIBRARY oodialog bc_setTextMargin"
+::method setImageList external "LIBRARY oodialog bc_setImageList"
+::method getImageList external "LIBRARY oodialog bc_getImageList"
 
-    if sttext~wordpos("FOCUS")>0 then self~SetFocus(self~Hwnd)
+::method push external "LIBRARY oodialog bc_click"
+::method click external "LIBRARY oodialog bc_click"
 
-    if sttext~pos("PUSHED")>0 then do
-      if sttext~wordpos("PUSHED")>0 then st = 1
-      else if sttext~wordpos("NOTPUSHED")>0 then st = 0
-      else return
-      self~Message2Parent(0x00F3, st, 0x0)
-    end
+::method getImage external "LIBRARY oodialog bc_getImage"
+::method setImage external "LIBRARY oodialog bc_setImage"
 
+/* For internal testing only, do not use this method */
+::method test external "LIBRARY oodialog bc_test"
 
-::Method GetImage
-    return self~Message2Parent(0x00F6, 0, 0)
-
-::Method SetImage
-    use arg img
-    return self~Message2Parent(0x00F7, 0, img)
-
-::Method "Style="
-    use arg sttext
-    st = 0
-    sttext = sttext~Translate
-    if sttext~wordpos("DEFPUSHBUTTON")>0 then st = 1
-    if sttext~wordpos("CHECKBOX")>0 then st = 2
-    if sttext~wordpos("AUTOCHECKBOX")>0 then st = 3
-    if sttext~wordpos("RADIOBUTTON")>0 then st = 4
-    if sttext~wordpos("3STATE")>0 then st = 5
-    if sttext~wordpos("AUTO3STATE")>0 then st = 6
-    if sttext~wordpos("GROUPBOX")>0 then st = 7
-    if sttext~wordpos("AUTORADIOBUTTON")>0 then st = 9
-    if sttext~wordpos("OWNERDRAW")>0 then st = st + "B"~X2D
-    if sttext~wordpos("LEFTTEXT")>0 then st = st + "20"~X2D
-    if sttext~wordpos("BITMAP")>0 then st = st + "80"~X2D
-    if sttext~wordpos("LEFT")>0 then st = st + "100"~X2D
-    if sttext~wordpos("RIGHT")>0 then st = st + "200"~X2D
-    if sttext~wordpos("CENTER")>0 then st = st + "300"~X2D
-    if sttext~wordpos("TOP")>0 then st = st + "400"~X2D
-    if sttext~wordpos("BOTTOM")>0 then st = st + "800"~X2D
-    if sttext~wordpos("VCENTER")>0 then st = st + "C00"~X2D
-    if sttext~wordpos("PUSHLIKE")>0 then st = st + "1000"~X2D
-    if sttext~wordpos("MULTILINE")>0 then st = st + "2000"~X2D
-    if sttext~wordpos("NOTIFY")>0 then st = st + "4000"~X2D
-    if sttext~wordpos("FLAT")>0 then st = st + "8000"~X2D
-    self~Message2Parent(0x00F4, st, 1)
-
-
-::method ChangeBitmap unguarded
+::method changeBitmap unguarded
    arga = Arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~ID
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
    forward to (self~oDlg) message "ChangeBitmapButton" Arguments (newarg)
 
-::method DisplaceBitmap unguarded
+::method displaceBitmap unguarded
    use arg x, y
    return self~oDlg~DisplaceBitmap(self~ID, x, y)
 
-::method GetBmpDisplacement unguarded
+::method detBmpDisplacement unguarded
    return self~oDlg~GetBmpDisplacement(self~ID)
 
-::method ScrollText unguarded
+::method scrollText unguarded
    arga = Arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~hwnd
@@ -1809,20 +1733,20 @@
    forward to (self~oDlg) Arguments (newarg)
 
    /* This method moves the rectangle within a button and redraws the uncovered area */
-::method Scroll unguarded
+::method scroll unguarded
    use arg xPos, yPos, left, top, right, bottom
    return ScrollTheWindow(self~oDlg~Adm, self~hwnd, xPos, yPos, left, top, right, bottom, "yes")
 
-::method GetBitmapSizeX unguarded
+::method setBitmapSizeX unguarded
    return self~oDlg~GetBitmapSizeX(self~ID)
 
-::method GetBitmapSizeY unguarded
+::method getBitmapSizeY unguarded
    return self~oDlg~GetBitmapSizeY(self~ID)
 
    /* This method will draw the bitmap of a button */
    /* Use this method to move a bitmap or a part of it... */
 
-::method DrawBitmap unguarded
+::method drawBitmap unguarded
    arga = Arg(1,"A")
    newarg = .array~new(arga~Items+2)
    newarg[1] = self~hwnd
@@ -1833,7 +1757,7 @@
 
    /* This method will draw the bitmap step by step */
 
-::method DimBitmap unguarded
+::method dimBitmap unguarded
    arga = Arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~id
@@ -1841,7 +1765,7 @@
    forward to (self~oDlg) Arguments (newarg)
 
 
-::method ScrollBitmapFromTo unguarded
+::method scrollBitmapFromTo unguarded
    arga = Arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~id
@@ -1850,27 +1774,22 @@
 
 
 ::class 'RadioButton' subclass ButtonControl public
+::method checkInGroup class external "LIBRARY oodialog bc_cls_checkInGroup"
 
-::Method IsChecked
-    ch = self~Message2Parent(0x00F0, 0, 0)
-    if ch = 0 then return "UNCHECKED"
-    else if ch = 1 then return "CHECKED"
-    else if ch = 2 then return "INDETERMINATE"
-    else return "UNKNOWN"
+::method checked external "LIBRARY oodialog bc_checked"
+::method isChecked external "LIBRARY oodialog bc_isChecked"
+::method check external "LIBRARY oodialog bc_check"
+::method uncheck external "LIBRARY oodialog bc_uncheck"
 
-::Method Check
-    return self~Message2Parent(0x00F1, 1, 0)
-
-::Method Uncheck
-    return self~Message2Parent(0x00F1, 0, 0)
-
-::Method Indeterminate
-    return self~Message2Parent(0x00F1, 2, 0)
+/* This method is DEPRECATED radio buttons can not be set to indeterminate. */
+::method indeterminate external "LIBRARY oodialog bc_check"
 
 ::class 'CheckBox' subclass RadioButton public
 
+::method indeterminate external "LIBRARY oodialog bc_indeterminate"
+::method isIndeterminate external "LIBRARY oodialog bc_isIndeterminate"
 
-/****************************************************** List Box Class *********************************************************/
+/**************** List Box Class **********************************************/
 
 ::class 'ListBox' subclass DialogControl public
 
@@ -2147,7 +2066,7 @@
    use arg posdata, single, page
    if Arg(2,"o") = 1 then single = 1
    if Arg(3,"o") = 1 then page = 10
-   code = BinaryAnd(posdata, 0x0000FFFF)
+   code = .DlgUtil~loWord(posdata)
    parse value self~Range with rmin rmax
    pos = self~Position
    select
@@ -2160,9 +2079,9 @@
       /* page down */
       when code = 3 then pos = min(rmax,pos + page)
       /* track position */
-      when code = 4 then pos = BinaryAnd(posdata, 0xFFFF0000) % X2D("10000")
+      when code = 4 then pos = .DlgUtil~hiWord(posdata)
       /* tracking */
-      when code = 5 then pos = BinaryAnd(posdata, 0xFFFF0000) % X2D("10000")
+      when code = 5 then pos = .DlgUtil~loWord(posdata)
       /* top */
       when code = 6 then pos = rmin
       /* bottom */

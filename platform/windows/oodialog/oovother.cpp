@@ -44,7 +44,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include "oorexxapi.h"
-#include <RexxErrorCodes.h>
 #include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>
@@ -1002,7 +1001,6 @@ static bool checkWindowClass(HWND hwnd, TCHAR *pClass)
         return false;
     return true;
 }
-
 
 /**
  * Extended Common Control functionality.  This function implements capabilities
@@ -2930,8 +2928,46 @@ size_t RexxEntry HandleDateTimePicker(const char *funcname, size_t argc, CONSTRX
 
 /* These inline (and non-inline) convenience functions will be move so that they
  * are accessible by all of ooDialog at some point.  Right now they are just
- * used by the Progress Bar native method functions.
+ * used by native method functions in this source file.
  */
+
+#define OOD_EXCEPTION_IS_RAISED -9
+
+const char *comctl32VersionName(DWORD id)
+{
+    const char *name;
+    switch ( id )
+    {
+        case COMCTL32_4_0 :
+            name = "comctl32.dll version 4.0 (W95 / NT4)";
+            break;
+
+        case COMCTL32_4_7 :
+            name = "comctl32.dll version 4.7 (IE 3.x)";
+            break;
+
+        case COMCTL32_4_71 :
+            name = "comctl32.dll version 4.71 (IE 4.0)";
+            break;
+        case COMCTL32_4_72 :
+            name = "comctl32.dll version 4.72 (W98 / IE 4.01)";
+            break;
+        case COMCTL32_5_8 :
+            name = "comctl32.dll version 5.8 (IE 5)";
+            break;
+        case COMCTL32_5_81 :
+            name = "comctl32.dll version 5.81 (W2K / ME)";
+            break;
+        case COMCTL32_6_0 :
+            name = "comctl32.dll version 6.0 (XP)";
+            break;
+        default :
+            name = "Unknown";
+            break;
+    }
+    return name;
+}
+
 inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr self)
 {
     RexxStringObject rxString = (RexxStringObject)context->SendMessage0(self, "HWND");
@@ -2948,6 +2984,62 @@ inline bool rxArgExists(RexxMethodContext * context, size_t index)
     return context->ArrayHasIndex(context->GetArguments(), index) == 1 ? true : false;
 }
 
+inline void outOfMemoryException(RexxMethodContext *c)
+{
+    c->RaiseException1(Rexx_Error_System_resources_user_defined, c->NewStringFromAsciiz("Failed to allocate memory"));
+}
+
+inline void *wrongClassException(RexxMethodContext *c, int pos, const char *n)
+{
+    c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->NewInteger(pos), c->NewStringFromAsciiz(n));
+    return NULL;
+}
+
+void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, RexxObjectPtr actual)
+{
+    RexxArrayObject a = c->NewArray(3);
+    c->ArrayAppend(a, c->NewInteger(pos));
+    c->ArrayAppend(a, c->NewStringFromAsciiz(list));
+    c->ArrayAppend(a, actual);
+
+    c->RaiseExceptionArray(Rexx_Error_Incorrect_method_list, a);
+}
+
+void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, const char *actual)
+{
+    wrongArgValueException(c, pos, list, c->NewStringFromAsciiz(actual));
+}
+
+bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum)
+{
+    if ( ComCtl32Version < minimum )
+    {
+        char msg[256];
+        _snprintf(msg, sizeof(msg), "The %s() method requires %s or later", methodName, comctl32VersionName(minimum));
+        context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
+        return false;
+    }
+    return true;
+}
+
+bool requiredClass(RexxMethodContext *context, RexxObjectPtr obj, const char *name, int argPos)
+{
+    RexxClassObject rxClass = context->FindContextClass(name);
+    if ( ! context->IsInstanceOf(obj, rxClass) )
+    {
+        wrongClassException(context, argPos, name);
+        return false;
+    }
+    return true;
+}
+
+void wrongWindowStyleException(RexxMethodContext *context, const char *obj, const char *style)
+{
+    char msg[128];
+    _snprintf(msg, sizeof(msg), "This %s does not have the %s style", obj, style);
+    context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->NewStringFromAsciiz(msg));
+}
+
 /**
  * Return the number of existing arguments passed to a native API Rexx method,
  * (as opposed to the size of the argument array.)
@@ -2956,7 +3048,7 @@ inline bool rxArgExists(RexxMethodContext * context, size_t index)
  *
  * @return The count of existing arguments in the argument array.
  */
-inline size_t rxArgCount(RexxMethodContext * context)
+size_t rxArgCount(RexxMethodContext * context)
 {
     size_t j = 0;
     size_t count = context->ArraySize(context->GetArguments());
@@ -2970,6 +3062,52 @@ inline size_t rxArgCount(RexxMethodContext * context)
     return j;
 }
 
+PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos)
+{
+    if ( requiredClass(context, r, "Rect", argPos) )
+    {
+        return (PRECT)context->ObjectToCSelf(r);
+    }
+    return NULL;
+}
+
+RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b)
+{
+    RexxObjectPtr rect = NULL;
+    RexxClassObject RectClass = context->FindContextClass("RECT");
+    if ( RectClass != NULL )
+    {
+        RexxArrayObject args = context->NewArray(4);
+        context->ArrayAppend(args, context->NewInteger(l));
+        context->ArrayAppend(args, context->NewInteger(t));
+        context->ArrayAppend(args, context->NewInteger(r));
+        context->ArrayAppend(args, context->NewInteger(b));
+
+        rect = context->SendMessage(RectClass, "NEW", args);
+    }
+    return rect;
+}
+
+PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos)
+{
+    if ( requiredClass(context, p, "Point", argPos) )
+    {
+        return (PPOINT)context->ObjectToCSelf(p);
+    }
+    return NULL;
+}
+
+RexxObjectPtr rxNewPoint(RexxMethodContext *context, long x, long y)
+{
+    RexxObjectPtr point = NULL;
+    RexxClassObject PointClass = context->FindContextClass("POINT");
+    if ( PointClass != NULL )
+    {
+        point = context->SendMessage2(PointClass, "NEW", context->NewInteger(x), context->NewInteger(y));
+    }
+    return point;
+}
+
 inline bool hasStyle(HWND hwnd, DWORD_PTR style)
 {
     if ( (GetWindowLongPtr(hwnd, GWL_STYLE) & style) || (GetWindowLongPtr(hwnd, GWL_EXSTYLE) & style) )
@@ -2979,18 +3117,177 @@ inline bool hasStyle(HWND hwnd, DWORD_PTR style)
     return false;
 }
 
-void comCtl32Exception(RexxMethodContext *context, const char *methodName)
+/**
+ * Returns an upper-cased copy of the string with all space characters removed.
+ *
+ * @param str   The string to copy and upper case.
+ *
+ * @return      A pointer to a new string, or null on a memory allocation
+ *              failure.
+ *
+ * The caller is responsible for freeing the returned string.
+ */
+char *strdupupr_nospace(const char *str)
 {
-    char msg[128];
-    sprintf(msg, "The %s method requires Windows XP or later", methodName);
-    context->RaiseException1(Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
+    char *retStr = NULL;
+    if ( str )
+    {
+        size_t l = strlen(str);
+        retStr = (char *)malloc(l);
+        if ( retStr )
+        {
+            char *p;
+            for ( p = retStr; *str; ++str )
+            {
+                if ( *str == ' ' )
+                {
+                    continue;
+                }
+                if ( ('a' <= *str) && (*str <= 'z') )
+                {
+                    *p++ = *str - ('a' - 'A');
+                }
+                else
+                {
+                    *p++ = *str;
+                }
+            }
+            *p = '\0';
+        }
+    }
+    return retStr;
 }
 
-void wrongWindowStyleException(RexxMethodContext *context, const char *obj, const char *style)
+/**
+ * Returns an upper-cased copy of the string.
+ *
+ * @param str   The string to copy and upper case.
+ *
+ * @return      A pointer to a new string, or null on a memory allocation
+ *              failure.
+ *
+ * The caller is responsible for freeing the returned string.
+ */
+char *strdupupr(const char *str)
 {
-    char msg[128];
-    sprintf(msg, "This %s does not have the %s style", obj, style);
-    context->RaiseException1(Error_Incorrect_method_user_defined, context->NewStringFromAsciiz(msg));
+    char *retStr = NULL;
+    if ( str )
+    {
+        size_t l = strlen(str);
+        retStr = (char *)malloc(l);
+        if ( retStr )
+        {
+            char *p;
+            for ( p = retStr; *str; ++str )
+            {
+                if ( ('a' <= *str) && (*str <= 'z') )
+                {
+                    *p++ = *str - ('a' - 'A');
+                }
+                else
+                {
+                    *p++ = *str;
+                }
+            }
+            *p = '\0';
+        }
+    }
+    return retStr;
+}
+
+void oodSetSysErrCode(RexxMethodContext *context, DWORD code)
+{
+    RexxDirectoryObject local = context->GetLocalEnvironment();
+    if ( local != NULLOBJECT )
+    {
+        context->DirectoryPut(local, context->NewInteger(code), "SYSTEMERRORCODE");
+    }
+}
+void oodSetSysErrCode(RexxMethodContext *context)
+{
+    oodSetSysErrCode(context, GetLastError());
+}
+
+/**
+ * Resolves a resource ID used in a native API method call to its numeric value.
+ * The resource ID may be numeric or symbolic.  An exception is raised if the ID
+ * can not be resolved.
+ *
+ * @param context    Method context for the method call.
+ * @param dlg        ooDialog dialog object. <Assumed>
+ * @param id         Resource ID.
+ * @param argPosDlg  Arg position of the assumed dialog object.  Used for raised
+ *                   exceptions.
+ * @param argPosID   Arg positionof the ID, used for raised exceptions.
+ *
+ * @return int       The resolved numeric ID, or OOD_EXCEPTION_IS_RAISED
+ *
+ * Note:  This function raises an execption if the ID does not resolve.
+ * Therefore, it should not be used for existing ooDialog methods that used to
+ * return -1 when the ID was not resolved.  Will need to see what strategy can
+ * be implemented going forward.
+ */
+int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObjectPtr id,
+                         int argPosDlg, int argPosID)
+{
+    /* TODO FIXME The intent is to refactor ooDialog so that the ConstDir
+     * directory attribute is moved to a mixin class.  When that is done the
+     * required class name here must change.
+     */
+    if ( ! requiredClass(context, dlg, "PlainBaseDialog", argPosDlg) )
+    {
+        return OOD_EXCEPTION_IS_RAISED;
+    }
+
+    wholenumber_t result = -1;
+    char *symbol = NULL;
+
+    if ( context->IsInteger(id) )
+    {
+        result = context->IntegerValue((RexxIntegerObject)id);
+    }
+    else if ( context->IsString(id) )
+    {
+        RexxDirectoryObject constDir = (RexxDirectoryObject)context->SendMessage0(dlg, "CONSTDIR");
+        if ( constDir != NULLOBJECT )
+        {
+            /* The original ooDialog code uses:
+             *   self~ConstDir[id~space(0)~translate]
+             * Why they allowed a space in a symbolic ID, I don't understand.
+             * But, I guess we need to preserve that.
+             */
+
+            symbol = strdupupr_nospace(context->StringData((RexxStringObject)id));
+            if ( symbol == NULL )
+            {
+                outOfMemoryException(context);
+                return OOD_EXCEPTION_IS_RAISED;
+            }
+
+            RexxObjectPtr item = context->DirectoryAt(constDir, symbol);
+            if ( item != NULLOBJECT )
+            {
+                if ( context->IsInteger(item) )
+                {
+                    result = context->IntegerValue((RexxIntegerObject)item);
+                }
+                else if ( context->IsString(item) )
+                {
+                    context->ObjectToNumber(item, &result);
+                }
+            }
+        }
+    }
+
+    safeFree(symbol);
+
+    if ( result < 1 )
+    {
+        wrongArgValueException(context, argPosID, "a valid numeric ID or a valid symbloic ID" , id);
+        return OOD_EXCEPTION_IS_RAISED;
+    }
+
+    return (int)result;
 }
 
 /**
@@ -3042,7 +3339,7 @@ RexxMethod1(int, pbc_getPos, OSELF, self)
     return (int)SendMessage(hwnd, PBM_GETPOS, 0, 0);
 }
 
-RexxMethod3(RexxObjectPtr, pbc_setRange, OSELF, self, OPTIONAL_int32_t, min, OPTIONAL_int32_t, max)
+RexxMethod3(RexxStringObject, pbc_setRange, OSELF, self, OPTIONAL_int32_t, min, OPTIONAL_int32_t, max)
 {
     TCHAR buf[64];
     HWND hwnd = rxGetWindowHandle(context, self);
@@ -3062,7 +3359,7 @@ RexxMethod3(RexxObjectPtr, pbc_setRange, OSELF, self, OPTIONAL_int32_t, min, OPT
     return context->NewStringFromAsciiz(buf);
 }
 
-RexxMethod1(RexxObjectPtr, pbc_getRange, OSELF, self)
+RexxMethod1(RexxStringObject, pbc_getRange, OSELF, self)
 {
     TCHAR buf[64];
     HWND hwnd = rxGetWindowHandle(context, self);
@@ -3085,16 +3382,27 @@ RexxMethod2(int, pbc_setStep, OSELF, self, OPTIONAL_int32_t, newStep)
     return (int)SendMessage(hwnd, PBM_SETSTEP, newStep, 0);
 }
 
+/**
+ *  ProgressBar::setMarquee()  Turn marquee mode on or off.
+ *
+ *  @param   on     [Optional]  Stop or start marquee mode.  Default is to
+ *                  start.
+ *
+ *  @param   pause  [Optional]  Time in milliseconds between updates.  Default
+ *                  is 1000 (1 second.)
+ *
+ *  @return  True (always.)
+ *
+ *  Requires XP Common Controls version 6.0 or greater.
+ */
 RexxMethod3(logical_t, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, OPTIONAL_uint32_t, pause)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-
-    /* Requires XP Common Controls version 6.0 */
-    if (  ComCtl32Version < COMCTL32_6_0 )
+    if ( ! requiredComCtl32Version(context, "setMarquee", COMCTL32_6_0) )
     {
-        comCtl32Exception(context, "setMarquee");
         return 0;
     }
+
+    HWND hwnd = rxGetWindowHandle(context, self);
 
     if ( ! hasStyle(hwnd, PBS_MARQUEE) )
     {
@@ -3132,7 +3440,7 @@ RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t
     }
     else
     {
-        context->RaiseException1(Error_Incorrect_method_minarg, context->NewInteger(3));
+        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NewInteger(3));
         return 0;
     }
 
@@ -3155,24 +3463,908 @@ RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_
     }
     else
     {
-        context->RaiseException1(Error_Incorrect_method_minarg, context->NewInteger(3));
+        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NewInteger(3));
         return 0;
     }
 
     return (uint32_t)SendMessage(hwnd, PBM_SETBARCOLOR, 0, rgb);
 }
 
+/**
+ * This function stub is used for testing.
+ */
 RexxMethod5(logical_t, pbc_test, OSELF, self, OPTIONAL_int32_t, n1,
             OPTIONAL_int32_t, n2, OPTIONAL_int32_t, n3, OPTIONAL_int32_t, n4)
 {
-    printf("pbc_test arg count=%d\n", rxArgCount(context));
-    printf("pbc_test arg 1 omitted? %d\n", rxArgOmitted(context, 1));
-    printf("pbc_test arg 2 omitted? %d\n", rxArgOmitted(context, 2));
-    printf("pbc_test arg 3 omitted? %d\n", rxArgOmitted(context, 3));
-    printf("pbc_test arg 4 omitted? %d\n", rxArgOmitted(context, 4));
-
     return 1;
 }
+
+/**
+ *  Methods for the ooDialog class: .ButtonControl and its subclasses
+ *  .RadioButton and .CheckBox.
+ */
+
+#define BC_SETSTYLE_OPTS "PUSHBOX, DEFPUSHBUTTON, CHECKBOX, AUTOCHECKBOX, 3STATE, AUTO3STATE, "        \
+                         "RADIO, AUTORADIO, GROUPBOX, OWNERDRAW, LEFTTEXT, RIGHTBUTTON, NOTLEFTTEXT, " \
+                         "TEXT, ICON, BITMAP, LEFT, RIGHT, HCENTER, TOP, BOTTOM, VCENTER, PUSHLIKE, "  \
+                         "NOTPUSHLIKE, MULTILINE, NOTMULTILINE, NOTIFY, NOTNOTIFY, FLAT, NOTFLAT"
+
+#define BC_SETSTATE_OPTS "CHECKED, UNCHECKED, INDETERMINATE, FOCUS, PUSH, NOTPUSHED"
+
+typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;
+typedef enum {def, autoCheck, threeState, autoThreeState, noSubtype } BUTTONSUBTYPE, *PBUTTONSUBTYPE;
+
+BUTTONTYPE getButtonInfo(HWND hwnd, PBUTTONSUBTYPE sub, DWORD *style)
+{
+    BUTTONTYPE type = notButton;
+
+    if ( ! checkWindowClass(hwnd, WC_BUTTON) )
+    {
+        if ( sub != NULL )
+        {
+            *sub = noSubtype;
+        }
+        if ( style != NULL )
+        {
+            *style = 0;
+        }
+        return type;
+    }
+
+    DWORD _style = (DWORD)GetWindowLongPtr(hwnd, GWL_STYLE);
+    BUTTONSUBTYPE _sub;
+
+    switch ( _style & BS_TYPEMASK )
+    {
+        case BS_PUSHBUTTON :
+        case BS_PUSHBOX :
+            type = push;
+            _sub = noSubtype;
+            break;
+
+        case BS_DEFPUSHBUTTON :
+            type = push;
+            _sub = def;
+            break;
+
+        case BS_CHECKBOX :
+            type = check;
+            _sub = noSubtype;
+            break;
+
+        case BS_AUTOCHECKBOX :
+            type = check;
+            _sub = autoCheck;
+            break;
+
+        case BS_3STATE :
+            type = check;
+            _sub = threeState;
+            break;
+
+        case BS_AUTO3STATE :
+            type = check;
+            _sub = autoThreeState;
+            break;
+
+        case BS_RADIOBUTTON :
+            type = radio;
+            _sub = noSubtype;
+            break;
+
+        case BS_AUTORADIOBUTTON :
+            type = radio;
+            _sub = autoCheck;
+            break;
+
+        case BS_GROUPBOX :
+            type = group;
+            _sub = noSubtype;
+            break;
+
+        case BS_USERBUTTON :
+        case BS_OWNERDRAW :
+            type = owner;
+            _sub = noSubtype;
+            break;
+
+        default :
+            // Can not happen.
+            type = notButton;
+            _sub = noSubtype;
+            break;
+     }
+
+    if ( style != NULL )
+    {
+        *style = _style & ~BS_TYPEMASK;
+    }
+    if ( sub != NULL )
+    {
+        *sub = _sub;
+    }
+    return type;
+}
+
+RexxMethod4(int, bc_cls_checkInGroup, RexxObjectPtr, dlg, RexxObjectPtr, idFirst,
+            RexxObjectPtr, idLast, RexxObjectPtr, idCheck)
+{
+    int result = 0;
+    if ( requiredClass(context, dlg, "PlainBaseDialog", 1) )
+    {
+        HWND hwnd = rxGetWindowHandle(context, dlg);
+
+        int first = oodResolveSymbolicID(context, dlg, idFirst, 1, 2);
+        int last = oodResolveSymbolicID(context, dlg, idLast, 1, 3);
+        int check = oodResolveSymbolicID(context, dlg, idCheck, 1, 4);
+
+        if ( first != OOD_EXCEPTION_IS_RAISED && last != OOD_EXCEPTION_IS_RAISED && check != OOD_EXCEPTION_IS_RAISED )
+        {
+            if ( CheckRadioButton(hwnd, first, last, check) == 0 )
+            {
+                result = (int)GetLastError();
+            }
+        }
+
+    }
+    return result;
+}
+
+RexxMethod2(RexxObjectPtr, bc_setState, OSELF, self, CSTRING, opts)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    BUTTONTYPE type = getButtonInfo(hwnd, NULL, NULL);
+    UINT msg = 0;
+    WPARAM wp = 0;
+
+    char *token;
+    char *str = strdupupr(opts);
+    if ( ! str )
+    {
+        outOfMemoryException(context);
+        return NULLOBJECT;
+    }
+
+    token = strtok(str, " ");
+    while ( token != NULL )
+    {
+        if ( strcmp(token, "CHECKED") == 0 )
+        {
+            if ( (type == check || type == radio) )
+            {
+                msg = BM_SETCHECK;
+                wp = (WPARAM)BST_CHECKED;
+            }
+        }
+        else if ( strcmp(token, "UNCHECKED") == 0 )
+        {
+            if ( (type == check || type == radio) )
+            {
+                msg = BM_SETCHECK;
+                wp = (WPARAM)BST_UNCHECKED;
+            }
+        }
+        else if ( strcmp(token, "INDETERMINATE") == 0 )
+        {
+            if ( type == check )
+            {
+                msg = BM_SETCHECK;
+                wp = (WPARAM)BST_INDETERMINATE;
+            }
+        }
+        else if ( strcmp(token, "FOCUS") == 0 )
+        {
+            msg = 0;
+            SendMessage(GetParent(hwnd), WM_NEXTDLGCTL, (WPARAM)hwnd, TRUE);
+        }
+        else if ( strcmp(token, "PUSHED") == 0 )
+        {
+            msg = BM_SETSTATE;
+            wp = (WPARAM)TRUE;
+        }
+        else if ( strcmp(token, "NOTPUSHED") == 0 )
+        {
+            msg = BM_SETSTATE;
+            wp = (WPARAM)FALSE;
+        }
+        else
+        {
+            free(str);
+            wrongArgValueException(context, 1, BC_SETSTATE_OPTS, token);
+            return NULLOBJECT;
+        }
+
+        if ( msg != 0 )
+        {
+            SendMessage(hwnd, msg, wp, 0);
+            msg = 0;
+        }
+        token = strtok(NULL, " ");
+    }
+
+    safeFree(str);
+    return NULLOBJECT;
+}
+
+RexxMethod1(RexxStringObject, bc_getState, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    BUTTONTYPE type = getButtonInfo(hwnd, NULL, NULL);
+
+    TCHAR buf[64] = {'\0'};
+    LRESULT l;
+
+    if ( type == radio || type == check )
+    {
+        l = SendMessage(hwnd, BM_GETCHECK, 0, 0);
+        if ( l == BST_CHECKED )
+        {
+            strcpy(buf, "CHECKED ");
+        }
+        else if ( l == BST_INDETERMINATE )
+        {
+            strcpy(buf,  "INDETERMINATE ");
+        }
+        else
+        {
+            strcpy(buf, "UNCHECKED ");
+        }
+    }
+
+    l = SendMessage(hwnd, BM_GETSTATE, 0, 0);
+    if ( l & BST_FOCUS )
+        strcat(buf, "FOCUS ");
+    {
+    }
+    if ( l & BST_PUSHED )
+    {
+        strcat(buf, "PUSHED");
+    }
+
+    return context->NewStringFromAsciiz(buf);
+}
+
+/**
+ * Changes the default push button in a dialog to that of the dialog control
+ * specified.
+ *
+ * @param hCtrl  The push button that is to become the default push button.
+ *
+ * @return True on success, otherwise false.
+ *
+ * @assumes hCtrl is a push button control in a dialog.
+ */
+HWND changeDefPushButton(HWND hCtrl)
+{
+    HWND hDlg = GetParent(hCtrl);
+    int  id = GetDlgCtrlID(hCtrl);
+    HWND hOldDef = NULL;
+
+    if ( hDlg != NULL )
+    {
+        LRESULT result = SendMessage(hDlg, DM_GETDEFID, 0, 0);
+
+        if ( HIWORD(result) == DC_HASDEFID )
+        {
+            if ( LOWORD(result) == id )
+            {
+                /* This control already is the default push button, just return.
+                 */
+                return hOldDef;
+            }
+
+            /* The DM_SETDEFID message does not remove the default push button
+             * highlighting, we have to do that ourselves.
+             */
+            hOldDef = (HWND)GetDlgItem(hDlg, LOWORD(result));
+        }
+
+        SendMessage(hDlg, DM_SETDEFID, (WPARAM)id, 0);
+
+        if ( hOldDef )
+        {
+            SendMessage(hOldDef, BM_SETSTYLE, (WPARAM)BS_PUSHBUTTON, (LPARAM)TRUE);
+        }
+    }
+    return hOldDef;
+}
+
+
+RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    BUTTONSUBTYPE sub;
+    DWORD style, oldStyle;
+    BUTTONTYPE type;
+    DWORD typeStyle = 0, oldTypeStyle;
+    bool changeDefButton = false;
+
+    if ( strlen(opts) == 0 )
+    {
+        // No change.
+        return NULLOBJECT;
+    }
+
+    type = getButtonInfo(hwnd, &sub, &style);
+    oldStyle = style;
+    oldTypeStyle = ((DWORD)GetWindowLongPtr(hwnd, GWL_STYLE) & BS_TYPEMASK);
+
+    char *token;
+    char *str = strdupupr(opts);
+    if ( ! str )
+    {
+        outOfMemoryException(context);
+        return NULLOBJECT;
+    }
+
+    token = strtok(str, " ");
+    while ( token != NULL )
+    {
+        if ( strcmp(token, "PUSHBOX") == 0 )
+        {
+            if ( type == push )
+            {
+                typeStyle = BS_PUSHBOX;
+            }
+        }
+        else if ( strcmp(token, "DEFPUSHBUTTON") == 0 )
+        {
+            if ( type == push  && sub != def )
+            {
+                typeStyle = BS_DEFPUSHBUTTON;
+                changeDefButton = true;
+            }
+        }
+        else if ( strcmp(token, "CHECKBOX") == 0 )
+        {
+            if ( type == check )
+            {
+                typeStyle = BS_CHECKBOX;
+            }
+        }
+        else if ( strcmp(token, "AUTOCHECKBOX") == 0 )
+        {
+            if ( type == check )
+            {
+                typeStyle = BS_AUTOCHECKBOX;
+            }
+        }
+        else if ( strcmp(token, "3STATE") == 0 )
+        {
+            if ( type == check )
+            {
+                typeStyle = BS_3STATE;
+            }
+        }
+        else if ( strcmp(token, "AUTO3STATE") == 0 )
+        {
+            if ( type == check )
+            {
+                typeStyle = BS_AUTO3STATE;
+            }
+        }
+        else if ( strcmp(token, "RADIO") == 0 )
+        {
+            if ( type == radio )
+            {
+                typeStyle = BS_RADIOBUTTON;
+            }
+        }
+        else if ( strcmp(token, "AUTORADIO") == 0 )
+        {
+            if ( type == radio )
+            {
+                typeStyle = BS_AUTORADIOBUTTON;
+            }
+        }
+        else if ( strcmp(token, "GROUPBOX") == 0 || strcmp(token, "OWNERDRAW") == 0 )
+        {
+            ; // Ignored.
+        }
+        else if ( strcmp(token, "LEFTTEXT") == 0 || strcmp(token, "RIGHTBUTTON") == 0 )
+        {
+            style |= BS_LEFTTEXT;
+        }
+        else if ( strcmp(token, "NOTLEFTTEXT") == 0 )
+        {
+            style &= ~BS_LEFTTEXT;
+        }
+        else if ( strcmp(token, "TEXT") == 0 )
+        {
+            style &= ~(BS_ICON | BS_BITMAP);
+        }
+        else if ( strcmp(token, "ICON") == 0 )
+        {
+            style = (style & ~BS_BITMAP) | BS_ICON;
+        }
+        else if ( strcmp(token, "BITMAP") == 0 )
+        {
+            style = (style & ~BS_ICON) | BS_BITMAP;
+        }
+        else if ( strcmp(token, "LEFT") == 0 )
+        {
+            style = (style & ~BS_CENTER) | BS_LEFT;
+        }
+        else if ( strcmp(token, "RIGHT") == 0 )
+        {
+            style = (style & ~BS_CENTER) | BS_RIGHT;
+        }
+        else if ( strcmp(token, "HCENTER") == 0 )
+        {
+            style |= BS_CENTER;
+        }
+        else if ( strcmp(token, "TOP") == 0 )
+        {
+            style = (style & ~BS_VCENTER) | BS_TOP;
+        }
+        else if ( strcmp(token, "BOTTOM") == 0 )
+        {
+            style = (style & ~BS_VCENTER) | BS_BOTTOM;
+        }
+        else if ( strcmp(token, "VCENTER") == 0 )
+        {
+            style |= BS_VCENTER;
+        }
+        else if ( strcmp(token, "PUSHLIKE") == 0 )
+        {
+            if ( type == check || type == radio )
+            {
+                style |= BS_PUSHLIKE;
+            }
+        }
+        else if ( strcmp(token, "MULTILINE") == 0 )
+        {
+            style |= BS_MULTILINE;
+        }
+        else if ( strcmp(token, "NOTIFY") == 0 )
+        {
+            style |= BS_NOTIFY;
+        }
+        else if ( strcmp(token, "FLAT") == 0 )
+        {
+            style |= BS_FLAT;
+        }
+        else if ( strcmp(token, "NOTPUSHLIKE") == 0 )
+        {
+            if ( type == check || type == radio )
+            {
+                style &= ~BS_PUSHLIKE;
+            }
+        }
+        else if ( strcmp(token, "NOTMULTILINE") == 0 )
+        {
+            style &= ~BS_MULTILINE;
+        }
+        else if ( strcmp(token, "NOTNOTIFY") == 0 )
+        {
+            style &= ~BS_NOTIFY;
+        }
+        else if ( strcmp(token, "NOTFLAT") == 0 )
+        {
+            style &= ~BS_FLAT;
+        }
+        else
+        {
+            free(str);
+            wrongArgValueException(context, 1, BC_SETSTYLE_OPTS, token);
+            return NULLOBJECT;
+        }
+
+        token = strtok(NULL, " ");
+    }
+
+    style |= typeStyle;
+
+    HWND oldDefButton = NULL;
+    if ( changeDefButton )
+    {
+        oldDefButton = changeDefPushButton(hwnd);
+    }
+
+    if ( style != (oldStyle | oldTypeStyle) )
+    {
+        SetWindowLongPtr(hwnd, GWL_STYLE, style);
+        SendMessage(hwnd, BM_SETSTYLE, (WPARAM)style, (LPARAM)TRUE);
+
+        InvalidateRect(hwnd, NULL, TRUE);
+        UpdateWindow(hwnd);
+
+        if ( oldDefButton )
+        {
+            InvalidateRect(oldDefButton, NULL, TRUE);
+            UpdateWindow(oldDefButton);
+        }
+    }
+
+    safeFree(str);
+    return NULLOBJECT;
+}
+
+static int getImageType(RexxMethodContext *context, int argPos, const char *opt)
+{
+    int type = IMAGE_BITMAP;
+    if ( rxArgExists(context, 1) )
+    {
+        switch ( *opt )
+        {
+            case 'b' :
+            case 'B' :
+                // Do nothing type is already IMAGE_BITMAP.
+                break;
+
+            case 'i' :
+            case 'I' :
+                type = IMAGE_ICON;
+                break;
+
+            default :
+                wrongArgValueException(context, 1, "Bitmap, Icon", opt);
+                return 0;
+        }
+    }
+    return type;
+}
+
+RexxMethod2(POINTER, bc_getImage, OSELF, self, OPTIONAL_CSTRING, opt)
+{
+    int type = getImageType(context, 1, opt);
+    HWND hwnd = rxGetWindowHandle(context, self);
+    return (void *)SendMessage(hwnd, BM_GETIMAGE, type, 0);
+}
+
+RexxMethod3(POINTER, bc_setImage, OSELF, self, POINTER, hImage, OPTIONAL_CSTRING, opt)
+{
+    int type = getImageType(context, 1, opt);
+    HWND hwnd = rxGetWindowHandle(context, self);
+    return (void *)SendMessage(hwnd, BM_SETIMAGE, type, (LPARAM)hImage);
+}
+
+RexxMethod1(RexxObjectPtr, bc_click, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    SendMessage(hwnd, BM_CLICK, 0, 0);
+    return NULLOBJECT;
+}
+
+RexxMethod1(logical_t, bc_checked, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    return (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_CHECKED ? 1 : 0);
+}
+
+RexxMethod1(CSTRING, bc_isChecked, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    char * state = "UNCHECKED";
+
+    switch ( SendMessage(hwnd, BM_GETCHECK, 0, 0) )
+    {
+        case BST_CHECKED :
+            state = "CHECKED";
+            break;
+        case BST_INDETERMINATE :
+            state = "INDETERMINATE";
+    }
+    return state;
+}
+
+RexxMethod1(logical_t, bc_isIndeterminate, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    if ( getButtonInfo(hwnd, NULL, NULL) == check  )
+    {
+        return (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_INDETERMINATE ? 1 : 0);
+    }
+    return 0;
+}
+
+RexxMethod1(int, bc_indeterminate, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    if ( getButtonInfo(hwnd, NULL, NULL) == check  )
+    {
+        SendMessage(hwnd, BM_SETCHECK, BST_INDETERMINATE, 0);
+    }
+    return 0;
+}
+
+RexxMethod1(int, bc_check, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    SendMessage(hwnd, BM_SETCHECK, BST_CHECKED, 0);
+    return 0;
+}
+
+RexxMethod1(int, bc_uncheck, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    SendMessage(hwnd, BM_SETCHECK, BST_UNCHECKED, 0);
+    return 0;
+}
+
+RexxMethod1(RexxObjectPtr, bc_getTextMargin, OSELF, self)
+{
+    if ( ! requiredComCtl32Version(context, "getTextMargin", COMCTL32_6_0) )
+    {
+        return NULLOBJECT;
+    }
+
+    HWND hwnd = rxGetWindowHandle(context, self);
+    RexxObjectPtr result = NULLOBJECT;
+
+    RECT r;
+    if ( Button_GetTextMargin(hwnd, &r) )
+    {
+        result = rxNewRect(context, r.left, r.top, r.right, r.bottom);
+    }
+    return (result == NULL) ? context->Nil() : result;
+}
+
+RexxMethod2(logical_t, bc_setTextMargin, OSELF, self, RexxObjectPtr, r)
+{
+    if ( ! requiredComCtl32Version(context, "setTextMargin", COMCTL32_6_0) )
+    {
+        return 0;
+    }
+
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    PRECT pRect = rxGetRect(context, r, 1);
+    if ( pRect != NULL )
+    {
+        if ( Button_SetTextMargin(hwnd, pRect) )
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+RexxMethod1(RexxObjectPtr, bc_getIdealSize, OSELF, self)
+{
+    if ( ! requiredComCtl32Version(context, "getIdealSize", COMCTL32_6_0) )
+    {
+        return NULLOBJECT;
+    }
+
+    HWND hwnd = rxGetWindowHandle(context, self);
+    RexxObjectPtr result = NULLOBJECT;
+
+    SIZE size;
+    if ( Button_GetIdealSize(hwnd, &size) )
+    {
+        result = rxNewPoint(context, size.cx, size.cy);
+    }
+    return (result == NULLOBJECT) ? context->Nil() : result;
+}
+
+RexxMethod1(RexxObjectPtr, bc_getImageList, OSELF, self)
+{
+    if ( ! requiredComCtl32Version(context, "getImageList", COMCTL32_6_0) )
+    {
+        return NULLOBJECT;
+    }
+
+    HWND hwnd = rxGetWindowHandle(context, self);
+    BUTTON_IMAGELIST biml;
+    RexxObjectPtr result = context->Nil();
+
+    if ( Button_GetImageList(hwnd, &biml) )
+    {
+        RexxTableObject table = context->NewTable();
+        if ( table != NULLOBJECT )
+        {
+            RexxObjectPtr ptr = (RexxObjectPtr)context->NewPointer(biml.himl);
+            if ( ptr != NULLOBJECT )
+            {
+                context->TablePut(table, ptr, context->NewStringFromAsciiz("himl"));
+            }
+
+            RexxObjectPtr rect = rxNewRect(context, biml.margin.left, biml.margin.top,
+                                           biml.margin.right, biml.margin.bottom);
+            if ( rect != NULL )
+            {
+                context->TablePut(table, rect, context->NewStringFromAsciiz("rect"));
+            }
+
+            char *align;
+            switch ( biml.uAlign )
+            {
+                case BUTTON_IMAGELIST_ALIGN_LEFT :
+                    align = "LEFT";
+                    break;
+                case BUTTON_IMAGELIST_ALIGN_RIGHT :
+                    align = "RIGHT";
+                    break;
+                case BUTTON_IMAGELIST_ALIGN_TOP :
+                    align = "TOP";
+                    break;
+                case BUTTON_IMAGELIST_ALIGN_BOTTOM :
+                    align = "BOTTOM";
+                    break;
+                default :
+                    align = "CENTER";
+                    break;
+            }
+            RexxStringObject alignment = context->NewStringFromAsciiz(align);
+            if ( alignment != NULLOBJECT )
+            {
+                context->TablePut(table, alignment, context->NewStringFromAsciiz("alignment"));
+            }
+
+            result = table;
+        }
+    }
+    return result;
+}
+
+/**
+ * Sets an image list for the button.
+ *
+ * @return  The handle to the image list used for BUTTON_IMAGELIST struct.
+ *
+ * This method sets the ooDialog System error code (.SystemErrorCode).
+ *
+ * @note  This method is intended to accept either a .ImageList object, or an
+ *        array of files names, to use for the button image list.  Since the
+ *        .ImageList class has not been added to ooDialog, yet, this code will
+ *        need to be revisited.
+ */
+RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
+            RexxObjectPtr, size, uint32_t, flag, OPTIONAL_RexxObjectPtr, margin, OPTIONAL_uint8_t, align)
+{
+    if ( ! requiredComCtl32Version(context, "setImageList", COMCTL32_6_0) )
+    {
+        return NULL;
+    }
+
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    oodSetSysErrCode(context, 0);
+
+    void *result = NULL;
+
+    PPOINT pSize = rxGetPoint(context, size, 2);
+    if ( pSize == NULL )
+    {
+        return result;
+    }
+
+    BUTTON_IMAGELIST biml;
+
+    if ( rxArgExists(context, 4) )
+    {
+        PRECT pRect = rxGetRect(context, margin, 4);
+        if ( pRect == NULL )
+        {
+            return result;
+        }
+        biml.margin.top = pRect->top;
+        biml.margin.left = pRect->left;
+        biml.margin.right = pRect->right;
+        biml.margin.bottom = pRect->bottom;
+    }
+    else
+    {
+        biml.margin.top = 3;
+        biml.margin.left = 3;
+        biml.margin.right = 3;
+        biml.margin.bottom = 3;
+    }
+
+    biml.uAlign = rxArgExists(context, 5) ? align : BUTTON_IMAGELIST_ALIGN_CENTER;
+
+    HIMAGELIST himl = ImageList_Create(pSize->x, pSize->y, flag, 5, 5);
+    if ( himl == NULL )
+    {
+        oodSetSysErrCode(context);
+        return result;
+    }
+
+    size_t count = context->ArraySize(files);
+    if ( count != 1 && count != 5 )
+    {
+        context->RaiseException1(
+            Rexx_Error_Incorrect_method_user_defined,
+            context->NewStringFromAsciiz("The bitmap files array must contain exactly 1 or 5 file names"));
+        return NULL;
+    }
+
+    HANDLE hBitmap;
+    for ( size_t i = 1; i <= count; i++ )
+    {
+        RexxObjectPtr f = context->ArrayAt(files, i);
+        if ( f == NULLOBJECT || ! context->IsString(f) )
+        {
+            context->RaiseException1(
+                Rexx_Error_Incorrect_method_array_nostring,
+                context->NewInteger(i + 1));
+            return NULL;
+        }
+
+        const char *file = context->StringData((RexxStringObject)f);
+
+        hBitmap = LoadImage(NULL, file, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+        if ( hBitmap == NULL )
+        {
+            oodSetSysErrCode(context);
+            ImageList_Destroy(himl);
+            return NULL;
+        }
+
+        ImageList_Add(himl, (HBITMAP)hBitmap, NULL);
+        DeleteObject(hBitmap);
+    }
+
+    biml.himl = himl;
+    if ( Button_SetImageList(hwnd, &biml) )
+    {
+        result = himl;
+    }
+    else
+    {
+        oodSetSysErrCode(context);
+        ImageList_Destroy(himl);
+    }
+    return result;
+}
+
+/* This method is used as a convenient way to test code. */
+RexxMethod2(int, bc_test, RexxObjectPtr, dlg, RexxObjectPtr, id)
+{
+    return 0;
+}
+
+/**
+ * Methods for the ooDialog .Point class.
+ */
+RexxMethod2(RexxObjectPtr, point_init, OPTIONAL_int32_t,  x, OPTIONAL_int32_t, y)
+{
+    RexxBufferObject obj = context->NewBuffer(sizeof(POINT));
+    context->SetObjectVariable("CSELF", obj);
+
+    POINT *p = (POINT *)context->BufferData(obj);
+
+    p->x = rxArgExists(context, 1) ? x : 0;
+    p->y = rxArgExists(context, 2) ? y : p->x;
+
+    return NULLOBJECT;
+}
+
+RexxMethod1(int32_t, point_x, CSELF, p) { return ((POINT *)p)->x; }
+RexxMethod1(int32_t, point_y, CSELF, p) { return ((POINT *)p)->y; }
+RexxMethod2(RexxObjectPtr, point_setX, CSELF, p, int32_t, x) { ((POINT *)p)->x = x; return NULLOBJECT; }
+RexxMethod2(RexxObjectPtr, point_setY, CSELF, p, int32_t, y) { ((POINT *)p)->y = y; return NULLOBJECT; }
+
+/**
+ * Methods for the ooDialog .Rect class.
+ */
+RexxMethod4(RexxObjectPtr, rect_init, OPTIONAL_int32_t, left, OPTIONAL_int32_t, top,
+            OPTIONAL_int32_t, right, OPTIONAL_int32_t, bottom)
+{
+    RexxBufferObject obj = context->NewBuffer(sizeof(RECT));
+    context->SetObjectVariable("CSELF", obj);
+
+    RECT *r = (RECT *)context->BufferData(obj);
+
+    r->left = rxArgExists(context, 1) ? left : 0;
+    r->top = rxArgExists(context, 2) ? top : r->left;
+    r->right = rxArgExists(context, 3) ? right : r->left;
+    r->bottom = rxArgExists(context, 4) ? bottom : r->left;
+
+    return NULLOBJECT;
+}
+
+RexxMethod1(int32_t, rect_left, CSELF, pRect) { return ((RECT *)pRect)->left; }
+RexxMethod1(int32_t, rect_top, CSELF, pRect) { return ((RECT *)pRect)->top; }
+RexxMethod1(int32_t, rect_right, CSELF, pRect) { return ((RECT *)pRect)->right; }
+RexxMethod1(int32_t, rect_bottom, CSELF, pRect) { return ((RECT *)pRect)->bottom; }
+RexxMethod2(RexxObjectPtr, rect_setLeft, CSELF, pRect, int32_t, left) { ((RECT *)pRect)->left = left; return NULLOBJECT; }
+RexxMethod2(RexxObjectPtr, rect_setTop, CSELF, pRect, int32_t, top) { ((RECT *)pRect)->top = top; return NULLOBJECT; }
+RexxMethod2(RexxObjectPtr, rect_setRight, CSELF, pRect, int32_t, right) { ((RECT *)pRect)->right; return NULLOBJECT; }
+RexxMethod2(RexxObjectPtr, rect_setBottom, CSELF, pRect, int32_t, bottom) { ((RECT *)pRect)->bottom = bottom; return NULLOBJECT; }
 
 #define COMCTL_ERR_TITLE    "ooDialog - Windows Common Controls Error"
 #define GENERIC_ERR_TITLE   "ooDialog - Error"
@@ -3191,23 +4383,32 @@ static void internalErrorMsg(PSZ pszMsg, PSZ pszTitle)
 }
 
 /**
- * Determines the version of comctl32.dll and initializes the common controls.
+ * This is the .DlgUtil class init() method.  It executes when the .DlgUtil
+ * class is constructed, which is done during the processing of the ::requires
+ * directive for oodPlain.cls.  This makes it the ideal place for any
+ * initialization that must be done prior to ooDialog starting.
  *
- * The minimum version of 4.71 is supported on Windows 95 with Internet Explorer
- * 4.0, Windows NT 4.0 with Internet Explorer 4.0, Windows 98, and Windows 2000.
+ * Note that an exception raised here effectively terminates ooDialog before any
+ * user code is executed.
+ *
+ * 1.) Determines the version of comctl32.dll and initializes the common
+ * controls.  The minimum acceptable version of 4.71 is supported on Windows 95
+ * with Internet Explorer 4.0, Windows NT 4.0 with Internet Explorer 4.0,
+ * Windows 98, and Windows 2000.
+ *
+ * 2.) Initializes a null pointer Pointer object and places it in the .local
+ * directory. (.NullPointer)  This allows ooRexx code to test for a null
+ * pointer.
+ *
+ * 3.) Places the SystemErrorCode (.SystemErrorCode) variable in the .local
+ * directory.
  *
  * @return .true if comctl32.dll is at least version 4.71, otherwise .false.
  */
-RexxMethod0(logical_t, dlgutil_commonInit)
+RexxMethod0(logical_t, dlgutil_init)
 {
-    static bool CommonInitDone = false;
     HINSTANCE   hinst;
     bool        success = false;
-
-    if ( CommonInitDone )
-    {
-        return (ComCtl32Version >= COMCTL32_4_71 ? 1 : 0);
-    }
 
     hinst = LoadLibrary(TEXT("comctl32.dll"));
     if ( hinst )
@@ -3230,17 +4431,25 @@ RexxMethod0(logical_t, dlgutil_commonInit)
     if ( ComCtl32Version == 0 )
     {
         internalErrorMsg("The version of the Windows Common Controls library (comctl32.dll)\n"
-                         "could not be determined.  ooDialog will not run", COMCTL_ERR_TITLE);
+                         "could not be determined.  ooDialog can not continue", COMCTL_ERR_TITLE);
+
+        context->RaiseException1(Rexx_Error_System_service_user_defined,
+                                 context->NewStringFromAsciiz("ooDialog requires a known version of comctl32.dll"));
     }
     else if ( ComCtl32Version < COMCTL32_4_71 )
     {
         CHAR msg[256];
-        sprintf(msg, "ooDialog can not run with this version of the Windows Common Controls library\n"
-                "(comctl32.dll.)  The minimum version required is 4.71.\n\nThis system has version: %s\n",
-                ComCtl32Version == COMCTL32_4_0 ? "4.0" : "4.7" );
+        _snprintf(msg, sizeof(msg),
+                  "ooDialog can not continue with this version of the Windows\n"
+                  "Common Controls library(comctl32.dll.)  The minimum\n"
+                  "version required is 4.71.\n\n"
+                  "This system has: %s\n", comctl32VersionName(ComCtl32Version));
 
         internalErrorMsg(msg, COMCTL_ERR_TITLE);
         ComCtl32Version = 0;
+
+        _snprintf(msg, sizeof(msg), "ooDialog requires %s or later", comctl32VersionName(COMCTL32_4_71));
+        context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
     }
     else
     {
@@ -3251,10 +4460,19 @@ RexxMethod0(logical_t, dlgutil_commonInit)
         if ( ! InitCommonControlsEx(&ctrlex) )
         {
             CHAR msg[128];
-            sprintf(msg, "Initializing the Windows Common Controls library (InitCommonControlsEx)\n"
-                    "failed.  Windows System Error Code: %d\n", GetLastError());
+            DWORD err = GetLastError();
+            _snprintf(msg, sizeof(msg),
+                      "Initializing the Windows Common Controls\n"
+                      "library (InitCommonControlsEx) failed.\n"
+                      "ooDialogcan not continue.\n\n"
+                      "Windows System Error Code: %d\n", err);
+
             internalErrorMsg(msg, COMCTL_ERR_TITLE);
             ComCtl32Version = 0;
+
+            _snprintf(msg, sizeof(msg),
+                      "ooDialog requires initialization of the Common Controls library (system error=%u)", err);
+            context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
         }
         else
         {
@@ -3262,10 +4480,30 @@ RexxMethod0(logical_t, dlgutil_commonInit)
         }
     }
 
-    CommonInitDone = true;
+    if ( success )
+    {
+        RexxDirectoryObject local = context->GetLocalEnvironment();
+        if ( local != NULLOBJECT )
+        {
+            context->DirectoryPut(local, context->NewPointer(NULL), "NULLPOINTER");
+            context->DirectoryPut(local, context->NewInteger(0), "SYSTEMERRORCODE");
+        }
+    }
+
     return (success ? 1 : 0);
 }
 
+RexxMethod0(RexxStringObject, dlgutil_comctl32Version)
+{
+    return context->NewStringFromAsciiz(comctl32VersionName(ComCtl32Version));
+}
+
+RexxMethod0(RexxStringObject, dlgutil_version)
+{
+    char buf[64];
+    _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+    return context->NewStringFromAsciiz(buf);
+}
 
 RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
@@ -3275,9 +4513,7 @@ RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, O
     {
         if ( ! context->IsString(r) )
         {
-            context->RaiseException2(Error_Incorrect_method_noclass,
-                                     context->NewInteger(1),
-                                     context->NewStringFromAsciiz("String"));
+            wrongClassException(context, 1, "String");
             return 0;
         }
         const char * s = context->ObjectToStringValue(r);
@@ -3291,22 +4527,20 @@ RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, O
         }
         else
         {
-            context->RaiseException2(Error_Incorrect_method_list,
-                                     context->NewInteger(1),
-                                     context->NewStringFromAsciiz("DEFAULT, NONE"));
+            wrongArgValueException(context, 1, "DEFAULT, NONE", s);
             return 0;
         }
     }
 
     if ( count != 3 )
     {
-        context->RaiseException1(Error_Incorrect_method_minarg, context->NewInteger(3));
+        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NewInteger(3));
         return 0;
     }
 
     if ( ! context->IsInteger(r) )
     {
-        context->RaiseException2(Error_Incorrect_method_whole, context->NewInteger(1), r);
+        context->RaiseException2(Rexx_Error_Incorrect_method_whole, context->NewInteger(1), r);
         return 0;
     }
 
@@ -3314,4 +4548,10 @@ RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, O
     context->ObjectToUnsignedNumber(r, &red);
     return RGB((uint8_t)red, g, b);
 }
+
+RexxMethod1(uint8_t, dlgutil_getRValue, uint32_t, colorRef) { return GetRValue(colorRef); }
+RexxMethod1(uint8_t, dlgutil_getGValue, uint32_t, colorRef) { return GetGValue(colorRef); }
+RexxMethod1(uint8_t, dlgutil_getBValue, uint32_t, colorRef) { return GetBValue(colorRef); }
+RexxMethod1(uint16_t, dlgutil_hiWord, uint32_t, dw) { return HIWORD(dw); }
+RexxMethod1(uint16_t, dlgutil_loWord, uint32_t, dw) { return LOWORD(dw); }
 
