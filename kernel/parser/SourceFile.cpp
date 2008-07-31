@@ -2310,7 +2310,8 @@ void RexxSource::methodDirective()
             {
                  syntaxError(Error_External_name_not_found_method, entry);
             }
-            nmethod->setSourceObject(this);
+            // this might return a different object if this has been used already
+            nmethod = (RexxNativeCode *)nmethod->setSourceObject(this);
             /* turn into a real method object    */
             _method = new RexxMethod(name, nmethod);
         }

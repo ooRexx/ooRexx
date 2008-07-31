@@ -78,6 +78,7 @@ RexxMethod2(int,                          // Return type
 
     // this will be passed back into us on calls
     context->SetObjectVariable("CSELF", context->NewPointer(pAutomaton));
+
     return 0;
 }
 
