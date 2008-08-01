@@ -2218,6 +2218,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_colorRef);
 REXX_METHOD_PROTOTYPE(dlgutil_getRValue);
 REXX_METHOD_PROTOTYPE(dlgutil_getGValue);
 REXX_METHOD_PROTOTYPE(dlgutil_getBValue);
+REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer);
 
 REXX_METHOD_PROTOTYPE(pbc_stepIt);
 REXX_METHOD_PROTOTYPE(pbc_getPos);
@@ -2276,6 +2277,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_getRValue,       dlgutil_getRValue),
     REXX_METHOD(dlgutil_getGValue,       dlgutil_getGValue),
     REXX_METHOD(dlgutil_getBValue,       dlgutil_getBValue),
+    REXX_METHOD(dlgutil_handleToPointer, dlgutil_handleToPointer),
     REXX_METHOD(pbc_stepIt,              pbc_stepIt),
     REXX_METHOD(pbc_getPos,              pbc_getPos),
     REXX_METHOD(pbc_setPos,              pbc_setPos),

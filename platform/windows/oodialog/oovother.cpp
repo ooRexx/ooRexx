@@ -4562,3 +4562,14 @@ RexxMethod1(uint8_t, dlgutil_getBValue, uint32_t, colorRef) { return GetBValue(c
 RexxMethod1(uint16_t, dlgutil_hiWord, uint32_t, dw) { return HIWORD(dw); }
 RexxMethod1(uint16_t, dlgutil_loWord, uint32_t, dw) { return LOWORD(dw); }
 
+/**
+ * A temporary utility to convert from a handle that is still being stored in
+ * ooDialog in string form ("0xFFFFAAAA") to its actual pointer value.  The
+ * interface is needed to facilitate testing Windows extensions that have been
+ * converted to only use pointer valules.
+ */
+RexxMethod1(POINTER, dlgutil_handleToPointer, CSTRING, handle)
+{
+    return string2pointer(handle);
+}
+

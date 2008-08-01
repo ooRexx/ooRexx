@@ -56,6 +56,7 @@
 ::method getRValue class external "LIBRARY oodialog dlgutil_getRValue"
 ::method getGValue class external "LIBRARY oodialog dlgutil_getGValue"
 ::method getBValue class external "LIBRARY oodialog dlgutil_getBValue"
+::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer"
 
 ::class 'Rect' public
 ::method init external "LIBRARY oodialog rect_init"
