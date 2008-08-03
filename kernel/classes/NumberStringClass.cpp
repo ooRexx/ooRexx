@@ -2188,7 +2188,7 @@ void RexxNumberString::formatUnsignedInt64(uint64_t integer)
 
         // copy into the buffer and set the length
         this->length = sizeof(buffer) - index;
-        memcpy(this->number, buffer, this->length);
+        memcpy(this->number, &buffer[index], this->length);
     }
 }
 
@@ -3199,51 +3199,49 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
 
 RexxNumberString *RexxNumberString::newInstanceFromWholenumber(wholenumber_t integer)
 /******************************************************************************/
-/* Function:  Create a NumberString object from a long value                  */
+/* Function:  Create a NumberString object from a wholenumber_t value         */
 /******************************************************************************/
 {
-    /* at most an integer will be 9      */
-    /*  digits long.                     */
-    RexxNumberString *newNumber = new (10) RexxNumberString (10);
-    newNumber->formatNumber(integer);      /* format the integer                */
+    // the size of the integer depends on the platform, 32-bit or 64-bit.
+    // ARGUMENT_DIGITS ensures the correct value
+    RexxNumberString *newNumber = new (Numerics::ARGUMENT_DIGITS) RexxNumberString (Numerics::ARGUMENT_DIGITS);
+    newNumber->formatNumber(integer);      /* format the number               */
     return newNumber;
 }
 
 RexxNumberString *RexxNumberString::newInstanceFromStringsize(stringsize_t integer)
 /******************************************************************************/
-/* Function:  Create a NumberString object from an unsigned long value        */
+/* Function:  Create a NumberString object from a size_t value                */
 /******************************************************************************/
 {
-    /* at most an integer will be 9      */
-    /*  digits long.                     */
-    RexxNumberString *newNumber = new (10) RexxNumberString (10);
-    newNumber->formatUnsignedNumber(integer);     /* format the integer                */
+    // the size of the integer depends on the platform, 32-bit or 64-bit.
+    // ARGUMENT_DIGITS ensures the correct value
+    RexxNumberString *newNumber = new (Numerics::ARGUMENT_DIGITS) RexxNumberString (Numerics::ARGUMENT_DIGITS);
+    newNumber->formatUnsignedNumber(integer);     /* format the number        */
     return newNumber;
 }
 
 
 RexxNumberString *RexxNumberString::newInstanceFromInt64(int64_t integer)
 /******************************************************************************/
-/* Function:  Create a NumberString object from a long value                  */
+/* Function:  Create a NumberString object from a signed 64 bit number        */
 /******************************************************************************/
 {
-    // this give us space for entire binary range of the number.  For 32-bit
-    // systems, this requires 10 digits.  For 64-bit, we need 20 digits.
-    RexxNumberString *newNumber = new (Numerics::ARGUMENT_DIGITS + 1) RexxNumberString (Numerics::ARGUMENT_DIGITS + 1);
-    newNumber->formatInt64(integer);  /* format the integer                */
+    // this give us space for entire binary range of the int64_t number.
+    RexxNumberString *newNumber = new (Numerics::DIGITS64) RexxNumberString (Numerics::DIGITS64);
+    newNumber->formatInt64(integer);  /* format the number                    */
     return newNumber;
 }
 
 
 RexxNumberString *RexxNumberString::newInstanceFromUint64(uint64_t integer)
 /******************************************************************************/
-/* Function:  Create a NumberString object from a long value                  */
+/* Function:  Create a NumberString object from an unsigned 64 bit number     */
 /******************************************************************************/
 {
-    // this give us space for entire binary range of the number.  For 32-bit
-    // systems, this requires 10 digits.  For 64-bit, we need 20 digits.
-    RexxNumberString *newNumber = new (Numerics::ARGUMENT_DIGITS + 1) RexxNumberString (Numerics::ARGUMENT_DIGITS + 1);
-    newNumber->formatUnsignedInt64(integer);  /* format the integer                */
+    // this give us space for entire binary range of the uint64_t number.
+    RexxNumberString *newNumber = new (Numerics::DIGITS64) RexxNumberString (Numerics::DIGITS64);
+    newNumber->formatUnsignedInt64(integer);  /* format the number            */
     return newNumber;
 }
 
