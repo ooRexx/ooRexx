@@ -3132,7 +3132,7 @@ char *strdupupr_nospace(const char *str)
     if ( str )
     {
         size_t l = strlen(str);
-        retStr = (char *)malloc(l);
+        retStr = (char *)malloc(l + 1);
         if ( retStr )
         {
             char *p;
@@ -3173,7 +3173,7 @@ char *strdupupr(const char *str)
     if ( str )
     {
         size_t l = strlen(str);
-        retStr = (char *)malloc(l);
+        retStr = (char *)malloc(l + 1);
         if ( retStr )
         {
             char *p;
@@ -4311,9 +4311,11 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
 }
 
 /* This method is used as a convenient way to test code. */
-RexxMethod2(int, bc_test, OPTIONAL_RexxObjectPtr, dlg, OPTIONAL_CSTRING, id)
+RexxMethod2(RexxStringObject, bc_test, OPTIONAL_RexxObjectPtr, dlg, OPTIONAL_CSTRING, id)
 {
-    return 0;
+    char buf[64];
+    strcpy(buf, "This is my name: Mark");
+    return context->NewStringFromAsciiz(buf);
 }
 
 /**
