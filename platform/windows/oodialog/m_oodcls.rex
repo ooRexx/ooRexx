@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -50,7 +50,6 @@ outname[3] = "OODWIN32"
 UtilName = "OODUTILS.CLS"
 .Local["UtilName"] = UtilName
 Arrax = .Array~new(3)
-ArrClasses = .Array~new(3)
 Arrax[1] = .CheckArray~of("PLBDLG.CLS", "DYNDLG.CLS", "PLUDLG.CLS", "STDDLG.CLS")
 
 Arrax[2] = .CheckArray~of("DLGEXT.CLS", "BASEDLG.CLS", "RESDLG.CLS", "USERDLG.CLS", "RCDIALOG.CLS", -
@@ -58,21 +57,9 @@ Arrax[2] = .CheckArray~of("DLGEXT.CLS", "BASEDLG.CLS", "RESDLG.CLS", "USERDLG.CL
 
 Arrax[3] = .CheckArray~of("ADVCTRL.CLS", "STDEXT.CLS", "MSGEXT.CLS", "PROPSHT.CLS")
 
-ArrClasses[1] = .Array~of("DLGUTIL", "PLAINBASEDIALOG", "PLAINUSERDIALOG", "DYNAMICDIALOG", "TIMEDMESSAGE", -
-                          "INPUTBOX", "PASSWORDBOX", "INTEGERBOX", "MULTIINPUTBOX", "LISTCHOICE", "MULTILISTCHOICE", -
-                          "CHECKLIST", "SINGLESELECTION", "WINDOWBASE")
-
-ArrClasses[2] = .Array~of("BASEDIALOG", "DIALOGEXTENSIONS", "WINDOWEXTENSIONS", "RESDIALOG", "USERDIALOG", "RCDIALOG", -
-                          "CATEGORYDIALOG", "ANIMATEDBUTTON")
-
-ArrClasses[3] = .Array~of("ADVANCEDCONTROLS", "DIALOGCONTROL", "TREECONTROL", "LISTCONTROL", "PROGRESSBAR", "SLIDERCONTROL", -
-                          "TABCONTROL", "STATICCONTROL", "EDITCONTROL", "BUTTONCONTROL", "RADIOBUTTON", "CHECKBOX", "LISTBOX", -
-                          "COMBOBOX", "SCROLLBAR", "MESSAGEEXTENSIONS", "PROPERTYSHEET", "STATEINDICATOR", "PROGRESSINDICATOR", -
-                          "DATETIMEPICKER", "MONTHCALENDAR")
-
 i = 0
 do j over Arrax
-    i = i + 1
+    i += 1
     NewFile = .stream~new(outname[i] || ".CLS")
     if NewFile~open("WRITE REPLACE") \= "READY:" then leave
     NewFile~lineout("/"||"*"~copies(78)||"/")
@@ -82,9 +69,7 @@ do j over Arrax
     NewFile~lineout("/*"||" "~copies(76)||"*/")
     NewFile~lineout("/"||"*"~copies(78)||"/")
     NewFile~lineout("")
-    do jj over ArrClasses[i]
-        NewFile~lineout(".Environment~put(."jj",'"jj"')")
-    end
+
     if i = 1 then do
        NewFile~lineout("")
        NewFile~lineout("::requires 'oodialog' LIBRARY")
