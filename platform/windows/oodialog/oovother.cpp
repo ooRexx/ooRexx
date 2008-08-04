@@ -4410,7 +4410,6 @@ DWORD getComCtl32Version(void)
 
 bool initCommonControls(DWORD classes)
 {
-    boo success = false;
     INITCOMMONCONTROLSEX ctrlex;
 
     ctrlex.dwSize = sizeof(ctrlex);
@@ -4418,9 +4417,9 @@ bool initCommonControls(DWORD classes)
 
     if ( InitCommonControlsEx(&ctrlex) )
     {
-        success = true;
+        return true;
     }
-    return success;
+    return false;
 }
 
 /**
