@@ -4408,6 +4408,21 @@ DWORD getComCtl32Version(void)
     return dllVersion;
 }
 
+bool initCommonControls(DWORD classes)
+{
+    boo success = false;
+    INITCOMMONCONTROLSEX ctrlex;
+
+    ctrlex.dwSize = sizeof(ctrlex);
+    ctrlex.dwICC = classes;
+
+    if ( InitCommonControlsEx(&ctrlex) )
+    {
+        success = true;
+    }
+    return success;
+}
+
 /**
  * This is the .DlgUtil class init() method.  It executes when the .DlgUtil
  * class is constructed, which is done during the processing of the ::requires
@@ -4462,11 +4477,7 @@ RexxMethod0(logical_t, dlgutil_init)
     }
     else
     {
-        INITCOMMONCONTROLSEX ctrlex;
-
-        ctrlex.dwSize = sizeof(ctrlex);
-        ctrlex.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES;
-        if ( ! InitCommonControlsEx(&ctrlex) )
+        if ( ! initCommonControls(ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES) )
         {
             CHAR msg[128];
             DWORD err = GetLastError();
