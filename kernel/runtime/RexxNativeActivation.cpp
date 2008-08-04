@@ -2632,7 +2632,7 @@ void RexxNativeActivation::variablePoolFetchVariable(PSHVBLOCK pshvblock)
  */
 void RexxNativeActivation::variablePoolSetVariable(PSHVBLOCK pshvblock)
 {
-    RexxVariableBase *retriever = variablePoolGetVariable(pshvblock, pshvblock->shvcode == RXSHV_SYFET);
+    RexxVariableBase *retriever = variablePoolGetVariable(pshvblock, pshvblock->shvcode == RXSHV_SYSET);
     if (retriever != OREF_NULL)
     {
         /* have a non-name retriever?        */
@@ -2664,7 +2664,7 @@ void RexxNativeActivation::variablePoolSetVariable(PSHVBLOCK pshvblock)
  */
 void RexxNativeActivation::variablePoolDropVariable(PSHVBLOCK pshvblock)
 {
-    RexxVariableBase *retriever = variablePoolGetVariable(pshvblock, pshvblock->shvcode == RXSHV_SYFET);
+    RexxVariableBase *retriever = variablePoolGetVariable(pshvblock, pshvblock->shvcode == RXSHV_SYDRO);
     if (retriever != OREF_NULL)
     {
         /* have a non-name retriever?        */
