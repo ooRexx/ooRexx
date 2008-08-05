@@ -4598,7 +4598,7 @@ RexxMethod0(RexxStringObject, dlgutil_comctl32Version)
 RexxMethod0(RexxStringObject, dlgutil_version)
 {
     char buf[64];
-    _snprintf(buf, sizeof(buf), "ooRexx Windows Extension ooDialog %u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+    _snprintf(buf, sizeof(buf), "ooDialog %u.%u.%u.%u (an ooRexx Windows Extension)", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
     return context->NewStringFromAsciiz(buf);
 }
 
