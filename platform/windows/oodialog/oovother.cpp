@@ -2925,12 +2925,17 @@ size_t RexxEntry HandleDateTimePicker(const char *funcname, size_t argc, CONSTRX
 }
 
 
-/* These inline (and non-inline) convenience functions will be move so that they
- * are accessible by all of ooDialog at some point.  Right now they are just
- * used by native method functions in this source file.
+/* These inline (and non-inline) convenience functions will be moved so that
+ * they are accessible by all of ooDialog at some point.  Right now they are
+ * just used by native method functions in this source file.
  */
 
 #define OOD_EXCEPTION_IS_RAISED -9
+
+#define NO_HMODULE_MSG            "failed to obtain %s module handle; OS error code %d"
+#define NO_PROC_MSG               "failed to get procedeure adddress for %s(); OS error code %d"
+#define API_FAILED_MSG            "system API %s() failed; COM code 0x%08x"
+#define NO_COMMCTRL_MSG           "failed to initialize %s; OS error code %d"
 
 const char *comctl32VersionName(DWORD id)
 {
@@ -2983,9 +2988,42 @@ inline bool rxArgExists(RexxMethodContext * context, size_t index)
     return context->ArrayHasIndex(context->GetArguments(), index) == 1 ? true : false;
 }
 
+inline void systemServiceException(RexxMethodContext *context, char *msg)
+{
+    context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
+}
+
+void systemServiceException(RexxMethodContext *context, char *msg, const char *sub)
+{
+    if ( sub != NULL )
+    {
+        TCHAR buffer[128];
+        _snprintf(buffer, sizeof(buffer), msg, sub);
+        systemServiceException(context, buffer);
+    }
+    else
+    {
+        systemServiceException(context, msg);
+    }
+}
+
+void systemServiceExceptionCode(RexxMethodContext *context, const char *msg, const char *arg1)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), msg, arg1, GetLastError());
+    systemServiceException(context, buffer);
+}
+
+void systemServiceExceptionComCode(RexxMethodContext *context, const char *msg, const char *arg1, HRESULT hr)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), msg, arg1, hr);
+    systemServiceException(context, buffer);
+}
+
 inline void outOfMemoryException(RexxMethodContext *c)
 {
-    c->RaiseException1(Rexx_Error_System_resources_user_defined, c->NewStringFromAsciiz("Failed to allocate memory"));
+    systemServiceException(c, "Failed to allocate memory");
 }
 
 inline void *wrongClassException(RexxMethodContext *c, int pos, const char *n)
@@ -4378,48 +4416,132 @@ extern DWORD ComCtl32Version = 0;
  * @param pszMsg    The message.
  * @param pszTitle  The title of for the message box.
  */
-static void internalErrorMsg(PSZ pszMsg, PSZ pszTitle)
+static void internalErrorMsg(CSTRING pszMsg, CSTRING pszTitle)
 {
     MessageBox(0, pszMsg, pszTitle, MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
 }
 
-DWORD getComCtl32Version(void)
-{
-    HINSTANCE hinst;
-    DWORD     dllVersion = 0;
+#define DLLGETVERSION_FUNCTION       "DllGetVersion"
+#define COMMON_CONTROL_DLL           "comctl32.dll"
 
-    hinst = LoadLibrary(TEXT("comctl32.dll"));
+/**
+ * Determines the version of comctl32.dll and compares it against a minimum
+ * required version.
+ *
+ * @param  context      The ooRexx method context.
+ * @param  pDllVersion  The loaded version of comctl32.dll is returned here as a
+ *                      packed unsigned long. This number is created using
+ *                      Microsoft's suggested process and can be used for
+ *                      numeric comparisons.
+ * @param  minVersion   The minimum acceptable version.
+ * @param  packageName  The name of the package initiating this check.
+ * @param  errTitle     The title for the error dialog if it is displayed.
+ *
+ * @note  If this function fails, an exception is raised.
+ */
+bool getComCtl32Version(RexxMethodContext *context, DWORD *pDllVersion, DWORD minVersion,
+                         CSTRING packageName, CSTRING errTitle)
+{
+    bool success = false;
+    *pDllVersion = 0;
+
+    HINSTANCE hinst = LoadLibrary(TEXT(COMMON_CONTROL_DLL));
     if ( hinst )
     {
         DLLGETVERSIONPROC pDllGetVersion;
 
-        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinst, "DllGetVersion");
+        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinst, DLLGETVERSION_FUNCTION);
         if ( pDllGetVersion )
         {
+            HRESULT hr;
             DLLVERSIONINFO info;
 
             ZeroMemory(&info, sizeof(info));
             info.cbSize = sizeof(info);
-            if ( SUCCEEDED((*pDllGetVersion)(&info)) )
-                dllVersion = MAKEVERSION(info.dwMajorVersion, info.dwMinorVersion);
+
+            hr = (*pDllGetVersion)(&info);
+            if ( SUCCEEDED(hr) )
+            {
+                *pDllVersion = MAKEVERSION(info.dwMajorVersion, info.dwMinorVersion);
+                success = true;
+            }
+            else
+            {
+                systemServiceExceptionComCode(context, API_FAILED_MSG, DLLGETVERSION_FUNCTION, hr);
+            }
+        }
+        else
+        {
+            systemServiceExceptionCode(context, NO_PROC_MSG, DLLGETVERSION_FUNCTION);
         }
         FreeLibrary(hinst);
     }
-    return dllVersion;
+    else
+    {
+        systemServiceExceptionCode(context, NO_HMODULE_MSG, COMMON_CONTROL_DLL);
+    }
+
+    if ( *pDllVersion == 0 )
+    {
+        CHAR msg[256];
+        _snprintf(msg, sizeof(msg),
+                  "The version of the Windows Common Controls library (%s)\n"
+                  "could not be determined.  %s can not continue",
+                  COMMON_CONTROL_DLL, packageName);
+
+        internalErrorMsg(msg, errTitle);
+        success = false;
+    }
+    else if ( *pDllVersion < minVersion )
+    {
+        CHAR msg[256];
+        _snprintf(msg, sizeof(msg),
+                  "%s can not continue with this version of the Windows\n"
+                  "Common Controls library(%s.)  The minimum\n"
+                  "version required is: %s.\n\n"
+                  "This system has: %s\n",
+                  packageName, COMMON_CONTROL_DLL, comctl32VersionName(minVersion),
+                  comctl32VersionName(*pDllVersion));
+
+        internalErrorMsg(msg, errTitle);
+        *pDllVersion = 0;
+        success = false;
+    }
+    return success;
 }
 
-bool initCommonControls(DWORD classes)
+/**
+ * Initializes the common control library for the specified classes.
+ *
+ * @param classes       Flag specifing the classes to be initialized.
+ * @param  packageName  The name of the package initializing the classes.
+ * @param  errTitle     The title for the error dialog if it is displayed.
+ *
+ * @return True on success, otherwise false.
+ *
+ * @note   An exception has been raised when false is returned.
+ */
+bool initCommonControls(RexxMethodContext *context, DWORD classes, CSTRING packageName, CSTRING errTitle)
 {
     INITCOMMONCONTROLSEX ctrlex;
 
     ctrlex.dwSize = sizeof(ctrlex);
     ctrlex.dwICC = classes;
 
-    if ( InitCommonControlsEx(&ctrlex) )
+    if ( ! InitCommonControlsEx(&ctrlex) )
     {
-        return true;
+        systemServiceExceptionCode(context, NO_COMMCTRL_MSG, "Common Control Library");
+
+        CHAR msg[128];
+        _snprintf(msg, sizeof(msg),
+                  "Initializing the Windows Common Controls\n"
+                  "library failed.  %s can not continue.\n\n"
+                  "Windows System Error Code: %d\n", packageName, GetLastError());
+
+        internalErrorMsg(msg, errTitle);
+        return false;
     }
-    return false;
+    return true;
 }
 
 /**
@@ -4447,69 +4569,25 @@ bool initCommonControls(DWORD classes)
  */
 RexxMethod0(logical_t, dlgutil_init)
 {
-    bool success = false;
-
-    ComCtl32Version = getComCtl32Version();
-
-    if ( ComCtl32Version == 0 )
+    if ( ! getComCtl32Version(context, &ComCtl32Version, COMCTL32_4_71, "ooDialog", COMCTL_ERR_TITLE) )
     {
-        internalErrorMsg("The version of the Windows Common Controls library (comctl32.dll)\n"
-                         "could not be determined.  ooDialog can not continue", COMCTL_ERR_TITLE);
-
-        context->RaiseException1(Rexx_Error_System_service_user_defined,
-                                 context->NewStringFromAsciiz("ooDialog requires a known version of comctl32.dll"));
+        return false;
     }
-    else if ( ComCtl32Version < COMCTL32_4_71 )
-    {
-        CHAR msg[256];
-        _snprintf(msg, sizeof(msg),
-                  "ooDialog can not continue with this version of the Windows\n"
-                  "Common Controls library(comctl32.dll.)  The minimum\n"
-                  "version required is 4.71.\n\n"
-                  "This system has: %s\n", comctl32VersionName(ComCtl32Version));
 
-        internalErrorMsg(msg, COMCTL_ERR_TITLE);
+    if ( ! initCommonControls(context, ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES, "ooDialog", COMCTL_ERR_TITLE) )
+    {
         ComCtl32Version = 0;
-
-        _snprintf(msg, sizeof(msg), "ooDialog requires %s or later", comctl32VersionName(COMCTL32_4_71));
-        context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
+        return false;
     }
-    else
+
+    RexxDirectoryObject local = context->GetLocalEnvironment();
+    if ( local != NULLOBJECT )
     {
-        if ( ! initCommonControls(ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES) )
-        {
-            CHAR msg[128];
-            DWORD err = GetLastError();
-            _snprintf(msg, sizeof(msg),
-                      "Initializing the Windows Common Controls\n"
-                      "library (InitCommonControlsEx) failed.\n"
-                      "ooDialog can not continue.\n\n"
-                      "Windows System Error Code: %d\n", err);
-
-            internalErrorMsg(msg, COMCTL_ERR_TITLE);
-            ComCtl32Version = 0;
-
-            _snprintf(msg, sizeof(msg),
-                      "ooDialog requires initialization of the Common Controls library (system error=%u)", err);
-            context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
-        }
-        else
-        {
-            success = true;
-        }
+        context->DirectoryPut(local, context->NewPointer(NULL), "NULLPOINTER");
+        context->DirectoryPut(local, context->NewInteger(0), "SYSTEMERRORCODE");
     }
 
-    if ( success )
-    {
-        RexxDirectoryObject local = context->GetLocalEnvironment();
-        if ( local != NULLOBJECT )
-        {
-            context->DirectoryPut(local, context->NewPointer(NULL), "NULLPOINTER");
-            context->DirectoryPut(local, context->NewInteger(0), "SYSTEMERRORCODE");
-        }
-    }
-
-    return (success ? 1 : 0);
+    return true;
 }
 
 RexxMethod0(RexxStringObject, dlgutil_comctl32Version)
@@ -4520,7 +4598,7 @@ RexxMethod0(RexxStringObject, dlgutil_comctl32Version)
 RexxMethod0(RexxStringObject, dlgutil_version)
 {
     char buf[64];
-    _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+    _snprintf(buf, sizeof(buf), "ooRexx Windows Extension ooDialog %u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
     return context->NewStringFromAsciiz(buf);
 }
 
