@@ -88,17 +88,17 @@
 
 
 ::method AddPopupMenu
-    use arg name, opt
-    if arg(2,'o') = 1 then opt = ""
+    use strict arg name, opt = ""
+    opt = opt~translate
     self~MenuAktPtr = UsrMenu("ADD", self~MenuAktPtr, 0, name, "POPUP" || opt)
 
 ::method AddMenuItem
-    use arg name, id, opt, msgToRaise
+    use arg name, id, opt = "", msgToRaise
    id = self~CheckId(id)
-   if  id = -1 then return
-    if arg(3,'o') = 1 then opt = ""
-    self~MenuAktPtr = UsrMenu("ADD", self~MenuAktPtr, id, name, opt)
-    if arg(4,'o') = 0 then self~ConnectMenuItem(id, msgToRaise)
+   if  id = -1 then return 1
+   opt = opt~translate
+   self~MenuAktPtr = UsrMenu("ADD", self~MenuAktPtr, id, name, opt)
+   if arg(4,'E') then self~ConnectMenuItem(id, msgToRaise)
 
 
 ::method AddMenuSeparator

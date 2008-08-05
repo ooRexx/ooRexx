@@ -1317,7 +1317,7 @@ size_t RexxEntry UsrMenu(const char *funcname, size_t argc, CONSTRXSTRING *argv,
        p++;
     #endif
 
-       sprintf(retstr->strptr, "%p %p %p", hMem, pTemplate, p);
+       sprintf(retstr->strptr, "0x%p 0x%p 0x%p", hMem, pTemplate, p);
        retstr->strlength = strlen(retstr->strptr);
        return 0;
    }
