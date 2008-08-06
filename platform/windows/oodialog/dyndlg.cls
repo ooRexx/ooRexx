@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -50,17 +50,9 @@
 ::method AktPtr attribute protected
 ::method DialogItemCount attribute protected
 
-    /* attributes for internal use (menu) */
-::method MenuBasePtr attribute protected
-::method MenuAktPtr attribute protected
-::method MenuMemHandle attribute protected
-
 
 ::method DynamicInit private
    self~AktPtr = 0
-   self~MenuAktPtr = 0
-   self~MenuBasePtr = 0
-   self~MenuMemHandle = 0
    self~DialogItemCount = 0
    if Arg(1,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
    return 0
@@ -113,24 +105,6 @@
    newarg[1] = 0
    newarg[2] = 0
    forward message "Create" Arguments (newarg)
-
-
-::method Checkfile private
-   use arg f
-   if (f~lines = 0) then do
-      f~close
-      self~ProcessingLoad = 0
-      ret = ErrorMessage("Error reading resource file!" f)
-      return 1
-   end
-   return 0
-
-
-::method Errorfile private
-   use arg f, s
-   f~close
-   self~ProcessingLoad = 0
-   ret = ErrorMessage("Error reading resource file:" f "("s")")
 
 
    /* This method is provided to be used in any subclass of 'UserDialog' */
@@ -605,25 +579,6 @@
    f~close
    self~ProcessingLoad = 0
    return 0
-
-
-
-::method CheckId
-   use arg id
-
-   if id~datatype("N") = 0 then do
-      if self~ConstDir = .Nil then do
-         ret = ErrorMessage("Adding dialog item:" id "undefined non-numeric identification number!")
-         return -1
-      end
-      else if self~ConstDir[id~space(0)~translate] = .Nil then do
-          ret = ErrorMessage("Adding dialog item:" id "undefined non-numeric identification number!")
-          return -1
-      end
-      id = self~ResolveSymbolicId(id)
-   end
-   return id
-
 
 ::method ItemAdd
    use arg id, staticId

@@ -1034,7 +1034,12 @@ static bool checkWindowClass(HWND hwnd, TCHAR *pClass)
  *     1 the Windows API call failed
  *  >  1 dependent on the function, usually a returned value not a return code
  */
-size_t RexxEntry HandleControlEx(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+size_t RexxEntry HandleControlEx(
+    const char *funcname,
+    size_t argc,
+    CONSTRXSTRING *argv,
+    const char *qname,
+    RXSTRING *retstr)
 {
     HWND hDlg;
     HWND hCtrl;
@@ -2930,7 +2935,7 @@ size_t RexxEntry HandleDateTimePicker(const char *funcname, size_t argc, CONSTRX
  * just used by native method functions in this source file.
  */
 
-#define OOD_EXCEPTION_IS_RAISED -9
+#define OOD_ID_EXCEPTION -9
 
 #define NO_HMODULE_MSG            "failed to obtain %s module handle; OS error code %d"
 #define NO_PROC_MSG               "failed to get procedeure adddress for %s(); OS error code %d"
@@ -3257,7 +3262,7 @@ void oodSetSysErrCode(RexxMethodContext *context)
  *                   exceptions.
  * @param argPosID   Arg positionof the ID, used for raised exceptions.
  *
- * @return int       The resolved numeric ID, or OOD_EXCEPTION_IS_RAISED
+ * @return int       The resolved numeric ID, or OOD_ID_EXCEPTION
  *
  * Note:  This function raises an execption if the ID does not resolve.
  * Therefore, it should not be used for existing ooDialog methods that used to
@@ -3267,13 +3272,9 @@ void oodSetSysErrCode(RexxMethodContext *context)
 int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObjectPtr id,
                          int argPosDlg, int argPosID)
 {
-    /* TODO FIXME The intent is to refactor ooDialog so that the ConstDir
-     * directory attribute is moved to a mixin class.  When that is done the
-     * required class name here must change.
-     */
-    if ( ! requiredClass(context, dlg, "PlainBaseDialog", argPosDlg) )
+    if ( ! requiredClass(context, dlg, "ResourceUtils", argPosDlg) )
     {
-        return OOD_EXCEPTION_IS_RAISED;
+        return OOD_ID_EXCEPTION;
     }
 
     wholenumber_t result = -1;
@@ -3298,7 +3299,7 @@ int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObje
             if ( symbol == NULL )
             {
                 outOfMemoryException(context);
-                return OOD_EXCEPTION_IS_RAISED;
+                return OOD_ID_EXCEPTION;
             }
 
             RexxObjectPtr item = context->DirectoryAt(constDir, symbol);
@@ -3321,7 +3322,7 @@ int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObje
     if ( result < 1 )
     {
         wrongArgValueException(context, argPosID, "a valid numeric ID or a valid symbloic ID" , id);
-        return OOD_EXCEPTION_IS_RAISED;
+        return OOD_ID_EXCEPTION;
     }
 
     return (int)result;
@@ -3635,7 +3636,7 @@ RexxMethod4(int, bc_cls_checkInGroup, RexxObjectPtr, dlg, RexxObjectPtr, idFirst
         int last = oodResolveSymbolicID(context, dlg, idLast, 1, 3);
         int check = oodResolveSymbolicID(context, dlg, idCheck, 1, 4);
 
-        if ( first != OOD_EXCEPTION_IS_RAISED && last != OOD_EXCEPTION_IS_RAISED && check != OOD_EXCEPTION_IS_RAISED )
+        if ( first != OOD_ID_EXCEPTION && last != OOD_ID_EXCEPTION && check != OOD_ID_EXCEPTION )
         {
             if ( CheckRadioButton(hwnd, first, last, check) == 0 )
             {

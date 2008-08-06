@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -45,27 +45,26 @@
 
 ::class 'ResDialog' subclass BaseDialog public
 
-::method Init
-   expose Library Resource DlgData.
-   use arg Library, Resource, DlgData., includeFile
+::method init
+   expose library resource dlgData.
+   use arg library, resource, dlgData., includeFile
 
-   if arg(4, 'E') then ret = self~init:super(Library, Resource, DlgData., includeFile)
-   else ret = self~init:super(Library, Resource, DlgData.)
+   if arg(4, 'E') then ret = self~init:super(library, resource, dlgData., includeFile)
+   else ret = self~init:super(library, resource, dlgData.)
    if ret \= 0 then return ret
 
-   if Arg(3,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
-   if \ Resource~datatype("N") then Resource = self~ResolveSymbolicId(Resource)
-   if Resource < 1 then self~InitCode = -1
+   if arg(3,'o') then self~useStem = 0; else self~useStem = 1
+   if \ resource~datatype("N") then resource = self~resolveSymbolicId(resource)
+   if resource < 1 then self~initCode = -1
 
-   return self~InitCode
+   return self~initCode
 
-   /* create a Windows dialog out of the resource stored in Library */
-
-::method StartIt
-   expose Library Resource DlgData.
+-- Create a Windows dialog out of the resource stored in Library.
+::method startIt
+   expose library resource dlgData.
    use arg icon = 0, modal = 0
 
-   if \ icon~DataType("W") then icon = self~ResolveSymbolicId(icon)
+   if \ icon~datatype("W") then icon = self~resolveSymbolicId(icon)
    if icon < 0 then icon = 0
 
    if modal <> 0 & modal <> 1 then do
@@ -73,40 +72,38 @@
      else modal = 0
    end
 
-   self~DlgHandle = StartDialog(self~Adm, Library, Resource, self~AutoDetect, 1, icon, modal)
-   if self~DlgHandle \= 0 then do
+   self~dlgHandle = StartDialog(self~adm, library, resource, self~autoDetect, 1, icon, modal)
+   if self~dlgHandle \= 0 then do
       /* if autodetection is on, create the data attributes */
-      if self~AutoDetect = 1 then do
+      if self~autoDetect = 1 then do
          id = 1; i=0
          do while id > 0
-            parse value DataTable(self~Adm,"GET", i) with id typ cat
-            hnd = self~GetItem(id)
+            parse value DataTable(self~adm,"GET", i) with id typ cat
+            hnd = self~getItem(id)
             if (hnd \= 0) then do
                 txt = Wnd_Desktop("TXT",hnd)
-                self~AddAttribute(id, txt)
+                self~addAttribute(id, txt)
             end
             i = i +1
          end
       end
-      self~InitDialog
+      self~initDialog
    end
 
-   return self~DlgHandle
+   return self~dlgHandle
 
 
-::method StopIt
+::method stopIt
    forward class (super) continue
    ret = result
-   if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
-   if self~BkgBitmap \= 0 then self~RemoveBitmap(self~BkgBitmap)
+   if self~bkgBrushBmp \= 0 then self~deleteObject(self~bkgBrushBmp)
+   if self~bkgBitmap \= 0 then self~removeBitmap(self~bkgBitmap)
    return ret
 
-
-::method SetMenu
-   use strict arg id
-   if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
-   if id < 1 then return -1
-
-   return DialogMenu("ASSOC", self~DlgHandle, id)
-
+-- This method is deprecated, instead use the Menu classes directly.
+::method setMenu
+  use strict arg id
+  menuBar = .BinaryMenuBar~new(self, id, self, 0, .true)
+  if menuBar~initCode == 0 then self~menuBar = menuBar
+  return menuBar~initCode
 

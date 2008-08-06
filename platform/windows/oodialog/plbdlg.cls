@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -187,13 +187,142 @@
    return GetSysMetrics(index)
 
 
+::class 'ResourceUtils' public mixinclass object
+
+/* Directory object containing symbolic constants */
+::attribute constDir get
+::attribute constDir set private
+
+::attribute processingLoad private    -- in LoadItems ?
+
+::method ParseIncludeFile
+  use strict arg hFile
+
+  -- Revisit. Should an error msg box be put up if the file is not found?
+  hFile = SysSearchPath("PATH", hFile)
+  if hFile == "" then return 1
+
+  f = .stream~new(hFile)
+  f~open(read)
+
+  do while f~state == "READY"
+    line = f~linein~strip('L')
+
+    if line~abbrev("#ifdef") then do
+      self~skipThroughIfDefs(f, line)
+      iterate
+    end
+
+    if line~abbrev("#define") & line~words == 3 then do
+      parse var line def symbol numericID .
+      if numericID~datatype('W') then self~ConstDir[symbol~translate] = numericID
+    end
+  end
+  f~close
+  return 0
+
+::method skipThroughIfDefs private
+  use arg fObj, line
+
+  if \ line~abbrev("#ifdef") & \ line~abbrev("#ifndef") then return
+  ifDefStack = .queue~new
+  ifDefStack~push(line)
+  do while fObj~state == "READY"
+    l = fObj~linein~strip("L")
+    select
+      when l~abbrev("#endif") then ifDefStack~pull
+      when l~abbrev("#ifdef") then ifDefStack~push(l)
+      when l~abbrev("#ifndef") then ifDefStack~push(l)
+      otherwise nop
+    end
+    if ifDefStack~items == 0 then leave
+  end
+
+::method Checkfile private
+   use arg f
+   if (f~lines = 0) then do
+      f~close
+      self~ProcessingLoad = 0
+      ret = ErrorMessage("Error reading resource file!" f)
+      return 1
+   end
+   return 0
+
+::method Errorfile private
+   use arg f, s
+   f~close
+   self~ProcessingLoad = 0
+   ret = ErrorMessage("Error reading resource file:" f "("s")")
+
+::method CheckId
+  use strict arg id
+
+  if id~datatype("W") then return id
+
+  if \ self~ConstDir~isA(.directory) then return self~idError(id)
+
+  if self~ConstDir[id~space(0)~translate] = .nil then return self~idError(id)
+
+  return self~ResolveSymbolicId(id)
+
+::method idError private
+  use strict arg id
+  j = ErrorMessage("Adding dialog resource:" id "undefined" || '0d0a'x || -
+                   "non-numeric identification number.")
+  return -1
+
+::method ResolveSymbolicId unguarded
+   use strict arg id
+   id = self~ConstDir[id~space(0)~translate]
+   if id == .nil then return -1
+   return id
+
+/**
+ * Return a symbolic ID from the ConstDir that matches the numeric ID.
+ * The docs will advise users of ooDialog to use unique numbers for all
+ * resources.
+ */
+::method ResolveNumericID unguarded
+  use arg numericID
+  if \ numericID~datatype('W') then return -1
+  do symbolicID over self~ConstDir~allIndexes
+    if self~ConstDir[symbolicID] == numericID then return symbolicID
+  end
+  return -1
+
+::method resolveResourceID unguarded
+  use strict arg id
+  if id~datatype("W"), id > -1 then return id
+  return self~ResolveSymbolicId(id)
+
+::method mergeSymbols
+  use strict arg otherSymbolSrc
+
+  select
+    when otherSymbolSrc~isA(.directory) then do
+      if self~constDir == otherSymbolSrc then return 0
+      self~constDir~putAll(otherSymbolSrc)
+      otherSymbolSrc~putAll(self~constDir)
+    end
+
+    when otherSymbolSrc~isA(.ResourceUtils) then do
+      if self~constDir == otherSymbolSrc~constDir then return 0
+      self~constDir~putAll(otherSymbolSrc~constDir)
+      otherSymbolSrc~constDir~putAll(self~constDir)
+    end
+
+    otherwise return -1
+  end
+  -- End select
+  return 0
+
 /******************************************************************************/
 /* The class PlainBaseDialog implements methods that are common to a dialog   */
 /* by Resource Workshop (ResDialog) and to a dialog created by using Add...   */
 /* methods (UserDialog).                                                      */
 /******************************************************************************/
 
-::class 'PlainBaseDialog' public inherit WindowBase
+::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils
 
 ::method Adm attribute protected   /* external adminstration buffer */
 ::method AutoDetect attribute      /* Automatic data field detection on/off */
@@ -211,11 +340,6 @@
   /* execution of the dialog */
 ::method AutomaticMethods attribute protected
 
-/* Directory object containing symbolic constants */
-::attribute ConstDir get
-::attribute constDir set private
-
-::method ProcessingLoad attribute protected    /* in LoadItems ? */
 ::method ChildDialogs attribute
 
 /** PlainBaseDialog::init()  Performs the necessary intialization, including the
@@ -273,51 +397,6 @@
      self~ParseIncludeFile(includeFile)
 
    return 0
-
-::method ParseIncludeFile
-  use strict arg hFile
-
-  if hFile == "" then return 1
-
-  -- Revisit. Should an error msg box be put up if the file is not found?
-  hFile = SysSearchPath("PATH", hFile)
-  if hFile == "" then return 1
-
-  f = .stream~new(hFile)
-  f~open(read)
-
-  do while f~state == "READY"
-    line = f~linein~strip('L')
-
-    if line~abbrev("#ifdef") then do
-      self~skipThroughIfDefs(f, line)
-      iterate
-    end
-
-    if line~abbrev("#define") & line~words == 3 then do
-      parse var line def symbol numericID .
-      if numericID~datatype('W') then self~ConstDir[symbol~translate] = numericID
-    end
-  end
-  f~close
-  return 0
-
-::method skipThroughIfDefs private
-  use arg fObj, line
-
-  if \ line~abbrev("#ifdef") & \ line~abbrev("#ifndef") then return
-  ifDefStack = .queue~new
-  ifDefStack~push(line)
-  do while fObj~state == "READY"
-    l = fObj~linein~strip("L")
-    select
-      when l~abbrev("#endif") then ifDefStack~pull
-      when l~abbrev("#ifdef") then ifDefStack~push(l)
-      when l~abbrev("#ifndef") then ifDefStack~push(l)
-      otherwise nop
-    end
-    if ifDefStack~items == 0 then leave
-  end
 
 ::method DlgHandle unguarded
    return self~hwnd
@@ -422,23 +501,6 @@
 ::method GetSelf unguarded
    return HandleDlg("HNDL", self~Adm)
 
-::method ResolveSymbolicId unguarded
-   use arg id
-   id = self~ConstDir[id~space(0)~translate]
-   if id \= .Nil then return id; else return -1
-
-/**
- * Return a symbolic ID from the ConstDir that matches the numeric ID.
- * The docs will advise users of ooDialog to use unique numbers for all
- * resources.
- */
-::method ResolveNumericID unguarded
-  use arg numericID
-  if \ numericID~datatype('W') then return -1
-  do symbolicID over self~ConstDir~allIndexes
-    if self~ConstDir[symbolicID] == numericID then return symbolicID
-  end
-  return -1
 
    /* This method returns the handle of a dialog item */
 

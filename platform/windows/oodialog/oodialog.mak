@@ -44,8 +44,9 @@ OPTIONS= $(cflags_common) $(cflags_dll) $(OR_ORYXINCL)
 OR_LIB=$(OR_OUTDIR)
 
 SOURCEF= $(OR_OUTDIR)\oovutil.obj $(OR_OUTDIR)\oovdata.obj $(OR_OUTDIR)\oovtext.obj $(OR_OUTDIR)\oovtools.obj \
-                 $(OR_OUTDIR)\oovmsg.obj $(OR_OUTDIR)\oovscrll.obj $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovdraw.obj \
-         $(OR_OUTDIR)\oovuser.obj $(OR_OUTDIR)\oovbmp.obj $(OR_OUTDIR)\oovother.obj $(OR_OUTDIR)\oodialog.res
+         $(OR_OUTDIR)\oovmsg.obj $(OR_OUTDIR)\oovscrll.obj $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovdraw.obj \
+         $(OR_OUTDIR)\oovuser.obj $(OR_OUTDIR)\oovbmp.obj $(OR_OUTDIR)\oovother.obj $(OR_OUTDIR)\menu.obj \
+         $(OR_OUTDIR)\oodialog.res
 
 .c{$(OR_OUTDIR)}.obj:
     $(C) $(OPTIONS)  /DINCL_32  -c $(@B).c /DCREATEDLL /Fo$(OR_OUTDIR)\$(@B).obj

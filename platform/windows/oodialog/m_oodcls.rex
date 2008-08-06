@@ -52,7 +52,7 @@ UtilName = "OODUTILS.CLS"
 Arrax = .Array~new(3)
 Arrax[1] = .CheckArray~of("PLBDLG.CLS", "DYNDLG.CLS", "PLUDLG.CLS", "STDDLG.CLS")
 
-Arrax[2] = .CheckArray~of("DLGEXT.CLS", "BASEDLG.CLS", "RESDLG.CLS", "USERDLG.CLS", "RCDIALOG.CLS", -
+Arrax[2] = .CheckArray~of("DLGEXT.CLS", "BASEDLG.CLS", "RESDLG.CLS", "USERDLG.CLS", "RCDIALOG.CLS", "MENU.CLS", -
                           "CATDLG.CLS", "ANIBUTTN.CLS", "DLGAREA.CLS")
 
 Arrax[3] = .CheckArray~of("ADVCTRL.CLS", "STDEXT.CLS", "MSGEXT.CLS", "PROPSHT.CLS")

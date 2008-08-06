@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -64,6 +64,7 @@
 #define WM_USER_SUBCLASS            WM_USER + 0x0606
 #define WM_USER_SUBCLASS_REMOVE     WM_USER + 0x0607
 #define WM_USER_HOOK                WM_USER + 0x0608
+#define WM_USER_CONTEXT_MENU        WM_USER + 0x0609
 
 #define VISDLL "OODIALOG.DLL"
 #define DLLVER 2130
@@ -116,13 +117,17 @@ extern DWORD ComCtl32Version;
  */
 #define TAG_DIALOG                0x00000001
 #define TAG_HELP                  0x00000100
+#define TAG_CONTEXTMENU           0x00000200
+#define TAG_MENUCOMMAND           0x00000400
 
 #define TAG_BUTTON                0x00000004
 #define TAG_TREEVIEW              0x00000006
 #define TAG_LISTVIEW              0x00000007
 #define TAG_TRACKBAR              0x00000008
 #define TAG_TAB                   0x00000009
+
 #define TAG_CTRLMASK              0x000000FF
+#define TAG_FLAGMASK              0x00FFFF00
 
 #define TAG_STATECHANGED          0x00000100
 #define TAG_CHECKBOXCHANGED       0x00000200
@@ -346,6 +351,14 @@ typedef struct {
    PCHAR fileName;
 } ICONTABLEENTRY;
 
+typedef struct {
+    HMENU       hMenu;
+    HWND        hWnd;
+    UINT        flags;
+    POINT       point;
+    LPTPMPARAMS lptpm;
+} TRACKPOP, *PTRACKPOP;
+
 /* Stuff for key press subclassing and keyboard hooks */
 #define MAX_KEYPRESS_METHODS  63
 #define COUNT_KEYPRESS_KEYS   256
@@ -450,7 +463,6 @@ typedef struct
    HBRUSH BkgBrush;
    HBITMAP BkgBitmap;
    HPALETTE ColorPalette;
-   HMENU menu;
    HICON SysMenuIcon;
    HICON TitleBarIcon;
    BOOL  SharedIcon;

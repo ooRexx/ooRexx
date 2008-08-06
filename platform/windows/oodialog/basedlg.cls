@@ -401,25 +401,22 @@
    if Arg(3,'o') = 1 then blue = 0
    return (blue*256*256) + (green*256) + red
 
-
-
-/******************************************************************************/
-/* The class BaseDialog implements methods that are common to a dialog        */
-/* by Resource Workshop (ResDialog) and to a dialog created by using Add...   */
-/* methods (UserDialog).                                 */
-/******************************************************************************/
-
+/** class: BaseDialog
+ * Implements methods that are common to all 3 types of dialogs, ResDialog,
+ * RcDialog, and UserDialog.
+ */
 ::class 'BaseDialog' public subclass PlainBaseDialog inherit DialogExtensions WindowExtensions
 
-::method ScrollNow attribute        /* Indicator whether or not scrolling is active */
+::method scrollNow attribute   -- Indicator whether or not scrolling is active
 
-::method Init
+::method init
    forward class (super) continue
    if result <> 0 then return result
 
-   self~ScrollNow = 0      /* a kind of semaphore to handle multiple text scrolling */
-   self~InitCode = 0
+   self~scrollNow = 0   -- a kind of semaphore to handle multiple text scrolling
+   self~initCode = 0
 
-   self~BkgBitmap = 0  /* no background bitmap */
-   self~BkgBrushBmp = 0  /* no background bitmap */
+   self~bkgBitmap = 0     -- no background bitmap
+   self~bkgBrushBmp = 0   -- no background bitmap
+   self~menuBar = .nil
    return 0
