@@ -175,10 +175,20 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       ORX_SYS_STR="LINUX"
       ;;
    alpha*-*linux*)
+      CC_WARNINGS="$GCC_WARNINGS"
+      CXX_WARNINGS="$GCXX_WARNINGS"
       ORX_SYS_STR="LINUX"
+      ;;
+   i370-*ibm*)
+      ORX_SYS_STR="LINUX"
+      GENERIC_DEFINES="$GENERIC_DEFINES -m31 -OO"
+      CC_WARNINGS="$GCC_WARNINGS"
+      CXX_WARNINGS="$GCXX_WARNINGS"
       ;;
    *linux*)
       ORX_SYS_STR="LINUX"
+      CC_WARNINGS="$GCC_WARNINGS"
+      CXX_WARNINGS="$GCXX_WARNINGS"
       ;;
    *cygnus*)
       CC_WARNINGS="$GCC_WARNINGS"
