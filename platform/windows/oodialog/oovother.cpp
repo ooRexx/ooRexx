@@ -2977,10 +2977,39 @@ const char *comctl32VersionName(DWORD id)
     return name;
 }
 
+POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
+{
+    CSTRING value = "";
+    RexxStringObject rxString = (RexxStringObject)context->SendMessage0(obj, name);
+    if ( rxString != NULLOBJECT )
+    {
+        value = context->StringData(rxString);
+    }
+    return string2pointer(value);
+}
+
+DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
+{
+    DIALOGADMIN *adm = (DIALOGADMIN *)rxGetPointerAttribute(context, dlg, "ADM");
+    if ( adm == NULL )
+    {
+         // Want this message: Could not retrieve the "value" information for "object"
+         // similar to old 98.921
+
+        TCHAR buf[128];
+        RexxStringObject name = (RexxStringObject)context->SendMessage0(dlg, "OBJECTNAME");
+        _snprintf(buf, sizeof(buf), "Could not retrieve the dialog administration block information for %s",
+                  context->StringData(name));
+
+        context->RaiseException1(Rexx_Error_Execution_user_defined, context->NewStringFromAsciiz(buf));
+    }
+    return adm;
+}
+
+
 inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr self)
 {
-    RexxStringObject rxString = (RexxStringObject)context->SendMessage0(self, "HWND");
-    return GET_HWND(context->StringData(rxString));
+    return (HWND)rxGetPointerAttribute(context, self, "HWND");
 }
 
 inline bool rxArgOmitted(RexxMethodContext * context, size_t index)
@@ -2993,7 +3022,7 @@ inline bool rxArgExists(RexxMethodContext * context, size_t index)
     return context->ArrayHasIndex(context->GetArguments(), index) == 1 ? true : false;
 }
 
-inline void systemServiceException(RexxMethodContext *context, char *msg)
+void systemServiceException(RexxMethodContext *context, char *msg)
 {
     context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
 }
@@ -3160,14 +3189,15 @@ inline bool hasStyle(HWND hwnd, DWORD_PTR style)
 }
 
 /**
- * Returns an upper-cased copy of the string with all space characters removed.
+ * Returns an upper-cased copy of the string with all space and ampersand
+ * characters removed.
  *
  * @param str   The string to copy and upper case.
  *
  * @return      A pointer to a new string, or null on a memory allocation
  *              failure.
  *
- * The caller is responsible for freeing the returned string.
+ * @note        The caller is responsible for freeing the returned string.
  */
 char *strdupupr_nospace(const char *str)
 {
@@ -3181,7 +3211,7 @@ char *strdupupr_nospace(const char *str)
             char *p;
             for ( p = retStr; *str; ++str )
             {
-                if ( *str == ' ' )
+                if ( *str == ' ' || *str == '&' )
                 {
                     continue;
                 }

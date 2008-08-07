@@ -323,8 +323,8 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                              * the x and y coordinates are sent as -1 and -1.
                              * Args to ooRexx: hwnd, x, y
                              */
-                            _snprintf(msgstr, 511, "%s(0x%p,%d,%d)", m[i].rexxProgram, param,
-                                      (SHORT)LOWORD(lparam), (SHORT)HIWORD(lparam));
+                            _snprintf(msgstr, 511, "%s('0x%p',%d,%d)", m[i].rexxProgram, param,
+                                      (int)(short)LOWORD(lparam), (int)(short)HIWORD(lparam));
                             AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                             return 1;
                         }
@@ -333,7 +333,7 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
                         {
                             /* Args to ooRexx: index, hMenu
                              */
-                            _snprintf(msgstr, 511, "%s(%d,0x%p)", m[i].rexxProgram, param, lparam);
+                            _snprintf(msgstr, 511, "%s(%d,'0x%p')", m[i].rexxProgram, param, lparam);
                             AddDialogMessage((char *)msgstr, addressedTo->pMessageQueue);
                             return 1;
                         }
@@ -378,47 +378,60 @@ BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN 
 }
 
 
-BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, ULONG filt2, ULONG lparam, ULONG filt3, CONSTRXSTRING prog, ULONG ulTag)
+// TODO FIXME wParam and lParam are 64-bit in 64-bit Windows.
+BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, ULONG filt2,
+                   ULONG lparam, ULONG filt3, CSTRING prog, ULONG ulTag)
 {
-   if (!prog.strlength) return 0;
-   if (!(message | param | lparam))
-   {
-       MessageBox(0,"Message passed is invalid","Error",MB_OK | MB_ICONHAND);
-       return 0;
-   }
-   if (!aDlg->MsgTab)
-   {
-      aDlg->MsgTab = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_MT_ENTRIES);
-      if (!aDlg->MsgTab)
-      {
-          MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
-          return 0;
-      }
+    size_t len = strlen(prog);
 
-      aDlg->MT_size = 0;
-   }
+    if ( strlen(prog) == 0 )
+    {
+        return 0;
+    }
+    if ( !(message | param | lparam) )
+    {
+        MessageBox(0,"Message passed is invalid","Error",MB_OK | MB_ICONHAND);
+        return 0;
+    }
+    if ( !aDlg->MsgTab )
+    {
+        aDlg->MsgTab = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_MT_ENTRIES);
+        if ( !aDlg->MsgTab )
+        {
+            MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
+            return 0;
+        }
+        aDlg->MT_size = 0;
+    }
 
-   if (aDlg->MT_size < MAX_MT_ENTRIES)
-   {
-      aDlg->MsgTab[aDlg->MT_size].msg = message;
-      aDlg->MsgTab[aDlg->MT_size].filterM = filt1;
-      aDlg->MsgTab[aDlg->MT_size].wParam = param;
-      aDlg->MsgTab[aDlg->MT_size].filterP = filt2;
-      aDlg->MsgTab[aDlg->MT_size].lParam = lparam;
-      aDlg->MsgTab[aDlg->MT_size].filterL = filt3;
-      aDlg->MsgTab[aDlg->MT_size].tag = ulTag;
-      aDlg->MsgTab[aDlg->MT_size].rexxProgram = (PCHAR)LocalAlloc(LMEM_FIXED, prog.strlength+1);
-      if (aDlg->MsgTab[aDlg->MT_size].rexxProgram) rxstrlcpy(aDlg->MsgTab[aDlg->MT_size].rexxProgram, prog);
-      aDlg->MT_size ++;
-      return 1;
-   }
-   else
-   {
-      MessageBox(0, "Messages have exceeded the maximum number of allocated\n"
-                    "table entries. No message can be added.\n",
-                 "Error",MB_OK | MB_ICONHAND);
-   }
-   return 0;
+    if ( aDlg->MT_size < MAX_MT_ENTRIES )
+    {
+        aDlg->MsgTab[aDlg->MT_size].msg = message;
+        aDlg->MsgTab[aDlg->MT_size].filterM = filt1;
+        aDlg->MsgTab[aDlg->MT_size].wParam = param;
+        aDlg->MsgTab[aDlg->MT_size].filterP = filt2;
+        aDlg->MsgTab[aDlg->MT_size].lParam = lparam;
+        aDlg->MsgTab[aDlg->MT_size].filterL = filt3;
+        aDlg->MsgTab[aDlg->MT_size].tag = ulTag;
+        aDlg->MsgTab[aDlg->MT_size].rexxProgram = (PCHAR)LocalAlloc(LMEM_FIXED, len + 1);
+
+        /* This is what the original code did, but if we could not alloc memory,
+         * we should bail.
+         */
+        if ( aDlg->MsgTab[aDlg->MT_size].rexxProgram )
+        {
+            strcpy(aDlg->MsgTab[aDlg->MT_size].rexxProgram, prog);
+        }
+        aDlg->MT_size ++;
+        return 1;
+    }
+    else
+    {
+        MessageBox(0, "Messages have exceeded the maximum number of allocated\n"
+                   "table entries. No message can be added.\n",
+                   "Error",MB_OK | MB_ICONHAND);
+    }
+    return 0;
 }
 
 
@@ -454,7 +467,7 @@ size_t RexxEntry AddUserMessage(const char *funcname, size_t argc, CONSTRXSTRING
    else
       n[NARG-1] = 0;
 
-   RETC(!AddTheMessage(dlgAdm, n[0], n[1], n[2], n[3], n[4], n[5], argv[7], n[NARG-1]))
+   RETC(!AddTheMessage(dlgAdm, n[0], n[1], n[2], n[3], n[4], n[5], argv[7].strptr, n[NARG-1]))
 }
 
 

@@ -66,6 +66,9 @@
 ::attribute wID set private
 ::attribute wID get
 
+::attribute connectionRequested private
+::attribute connectionQ private
+
 ::method menuInit private
   use strict arg symbolSrc
 
@@ -73,6 +76,9 @@
   self~dlg = .nil
   self~initCode = 0
   self~wID = .nil
+
+  self~connectionRequested = .false
+  self~connectionQ = .queue~new
 
   select
     when symbolSrc~isA(.directory) then self~constDir = symbolSrc
@@ -140,10 +146,11 @@
 
   return GetMII("ISSUB", self~hMenu, itemID, byPosition)
 
-/** isItem()  Returns true if the menu item specified is not a menu item that
- * opens a submenu or a separator, othewise false.
+/** isCommandItem()  Returns true if the menu item specified is a command menu
+ * item, i.e., not a menu item that opens a submenu or a separator, othewise
+ * false.
  */
-::method isItem
+::method isCommandItem
   use strict arg itemID, byPosition = .false
 
   itemID = self~resolveItemID(itemID, byPosition)
@@ -163,7 +170,7 @@
 
   return GetMII("ISSEP", self~hMenu, itemID, byPosition)
 
-/** getHandele()  Returns the raw menu handle of this menu.
+/** getHandle()  Returns the raw menu handle of this menu.
  */
 ::method getHandle
   return self~hMenu
@@ -218,11 +225,11 @@
 
   if \ popup~isA(.PopupMenu) then return -2
 
-  ret = InsertMII("POP", self~hMenu, before, byPosition, popup~getHandle, text, id, stateOpts, typeOpts)
+  ret = InsertMII("POP", self~hMenu, before, byPosition, popup~getHandle, text, id, stateOpts~upper, typeOpts~upper)
   return self~maybeRedraw(ret)
 
 ::method insertItem unguarded
-  use strict arg before, text, id, stateOpts = "", typeOpts = "", byPosition = .false
+  use strict arg before, text, id, stateOpts = "", typeOpts = "", byPosition = .false, connect = .false
 
   id = self~resolveResourceID(id)
   if id == -1 then return -1
@@ -230,7 +237,19 @@
   before = self~resolveItemID(before, byPosition)
   if before == -1 then return -1
 
-  ret = InsertMII("ITEM", self~hMenu, before, byPosition, text, id, stateOpts, typeOpts)
+  ret = InsertMII("ITEM", self~hMenu, before, byPosition, text, id, stateOpts~upper, typeOpts~upper)
+
+  if connect then do
+    msgToRaise = text~changeStr('&', "")~space(0)
+    if self~dlg <> .nil then do
+      self~connectItem(id, msgToRaise, self~dlg)
+    end
+    else do
+      self~connectionRequested = .true
+      self~connectionQ~queue(.MapItem~new(id, msgToRaise))
+    end
+  end
+
   return self~maybeRedraw(ret)
 
 ::method insertSeparator unguarded
@@ -481,6 +500,20 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   Message connection methods.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+::method checkConnectionRequest private
+  use strict arg dlg
+
+  if self~connectionRequested then do
+    self~connectionRequested = .false
+    do map over self~connectionQ
+      self~connectItem(map~key, map~item, dlg)
+    end
+    self~connectionQ~empty
+  end
+
+/** connectItem()  Connects the menu command item with the specified ID to the
+ * specified method.
+ */
 ::method connectItem
   use strict arg id, msgToRaise, dlg = (self~dlg)
 
@@ -496,7 +529,10 @@
 
   return 0
 
-::method connectItems
+/** connectItemsToMsg()  Connects a collection of menu command items to the
+ * single specified method.
+ */
+::method connectItemsToMsg
   use strict arg itemIDs, msgToRaise, dlg = (self~dlg)
 
   if \ itemIDs~isA(.Collection) then return -2
@@ -510,12 +546,7 @@
 
   return status
 
-::method connectAllItems
-  use strict arg msgToRaise, dlg = (self~dlg)
-
-  -- TODO FIXME To do this we need to recurse through and examine each menu item
-  -- for its type, connecting each menu item, not a popup, using the text of the
-  -- item.
+::method connectAllItems external "LIBRARY oodialog menu_connectAllItems"
 
 -- Connect WM_CONTEXTMENU messages to a method.
 ::method connectContextMenu
@@ -523,10 +554,12 @@
 
   if \ dlg~isA(.BaseDialog) then return -3
 
-  if hwnd \== .nil then return dlg~addUserMsg(msgToRaise, 0x0000007B, 0xFFFFFFFF, hwnd, 0xFFFFFFFF, 0, 0, 0x00000201)
-  return dlg~addUserMsg(msgToRaise, 0x0000007B, 0xFFFFFFFF, 0, 0, 0, 0, 0x00000201)
-   return self~addUserMsg(msgToRaise, 0x0000007B, 0xFFFFFFFF, 0, 0, 0, 0, 0x00000201)
+  if hwnd \== .nil then
+    return dlg~addUserMsg(msgToRaise, 0x0000007B, 0xFFFFFFFF, hwnd, 0xFFFFFFFF, 0, 0, 0x00000201)
+  else
+    return dlg~addUserMsg(msgToRaise, 0x0000007B, 0xFFFFFFFF, 0, 0, 0, 0, 0x00000201)
 
+::method test external "LIBRARY oodialog menu_test"
 
 /* class: MenuBar- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
      A mix in class implementing functionality that is common to all menu bars.
@@ -552,6 +585,9 @@
 
   dlg~linkMenu(self)
   self~dlg = dlg
+
+  self~checkConnectionRequest(dlg)
+
   return oldMenu
 
 ::method replace
@@ -735,7 +771,7 @@
   oldDlg = self~dlg
   self~dlg = dlg
 
-  if oldDlg == .nil then return 0
+  self~checkConnectionRequest(dlg)
   return oldDlg
 
 /* class: MenuTemplate - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -785,7 +821,7 @@
   helpID = self~checkId(helpID)
   if  helpID == -1 then helpID = 0
 
-  currentPtr = MemMenu("ADD", currentPtr, id, name, "POPUP " || opt, helpID)
+  currentPtr = MemMenu("ADD", currentPtr, id, name, "POPUP " || opt~upper, helpID)
 
   return 0
 
@@ -798,10 +834,12 @@
   id = self~CheckId(id)
   if  id == -1 then return id
 
-  currentPtr = MemMenu("ADD", currentPtr, id, name, opt)
+  currentPtr = MemMenu("ADD", currentPtr, id, name, opt~upper)
 
-  -- TODO FIXME need to what ? queue all connections and do on assign / attach?
-  if msgToRaise <> .nil then say 'FIXME FIXME addItem()' --self~ConnectMenuItem(id, msgToRaise)
+  if msgToRaise <> .nil then do
+    self~connectionRequested = .true
+    self~connectionQ~queue(.MapItem~new(id, msgToRaise))
+  end
 
   return 0
 
@@ -1046,4 +1084,16 @@
   self~processingLoad = 0
 
   return 0
+
+::class 'MapItem' public
+
+::attribute key set private
+::attribute key get
+
+::attribute item set private
+::attribute item get
+
+::method init
+  expose key item
+  use strict arg key, item
 

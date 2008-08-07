@@ -2165,6 +2165,9 @@ REXX_METHOD_PROTOTYPE(bc_setImageList);
 REXX_METHOD_PROTOTYPE(bc_getImageList);
 REXX_METHOD_PROTOTYPE(bc_test);
 
+REXX_METHOD_PROTOTYPE(menu_test);
+REXX_METHOD_PROTOTYPE(menu_connectAllItems);
+
 REXX_METHOD_PROTOTYPE(rect_init);
 REXX_METHOD_PROTOTYPE(rect_left);
 REXX_METHOD_PROTOTYPE(rect_top);
@@ -2221,6 +2224,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_setImageList,         bc_setImageList),
     REXX_METHOD(bc_getImageList,         bc_getImageList),
     REXX_METHOD(bc_test,                 bc_test),
+    REXX_METHOD(menu_test,               menu_test),
+    REXX_METHOD(menu_connectAllItems,    menu_connectAllItems),
     REXX_METHOD(rect_init,               rect_init),
     REXX_METHOD(rect_left,               rect_left),
     REXX_METHOD(rect_top,                rect_top),

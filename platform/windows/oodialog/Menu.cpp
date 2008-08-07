@@ -36,14 +36,23 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 #include <windows.h>
-#include <rexx.h>
+#include "oorexxapi.h"
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
 #include "oovutil.h"
 #include <limits.h>
 
-extern LPWORD lpwAlign(LPWORD lpIn);
+LPWORD lpwAlign(LPWORD lpIn);
+BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, ULONG, ULONG, ULONG, ULONG, CSTRING, ULONG);
+
+/* TODO FIXME need to start putting this stuff in a common module. */
+char *strdupupr_nospace(const char *str);
+void systemServiceException(RexxMethodContext *context, char *msg);
+bool requiredClass(RexxMethodContext *, RexxObjectPtr, const char *, int);
+inline bool rxArgOmitted(RexxMethodContext * context, size_t index);
+POINTER rxGetPointerAttribute(RexxMethodContext *, RexxObjectPtr, CSTRING);
+DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
 /**
  * Convenience function to return a menu handle to ooRexx.
@@ -154,6 +163,14 @@ ULONG itemStateToRexx(UINT state, PRXSTRING retstr)
     return 0;
 }
 
+/**
+ * Return a valid menu handle.  This function is used with classic style native
+ * API.
+ *
+ * @param str  Menu handle represented as a string
+ *
+ * @return A validated menu handle, or null.
+ */
 HMENU getMenuHandle(const char *str)
 {
     HMENU hMenu = NULL;
@@ -197,6 +214,175 @@ DWORD getDWord(const char *str)
         val = 0;
     }
     return val;
+}
+
+// maybe inline
+bool _isSubMenu(LPMENUITEMINFO pMii)
+{
+    if ( pMii->hSubMenu != NULL && pMii->cch == 0 )
+    {
+        return true;
+    }
+    return false;
+}
+
+bool _isMenuCommandItem(LPMENUITEMINFO pMii)
+{
+    if ( pMii->hSubMenu == NULL && (pMii->fType & MFT_SEPARATOR) == 0 )
+    {
+        return true;
+    }
+    return false;
+}
+
+HMENU menuGetHandle(RexxMethodContext * context, RexxObjectPtr self)
+{
+    HMENU hMenu = (HMENU)rxGetPointerAttribute(context, self, "HMENU");
+    if ( IsMenu(hMenu) == 0 )
+    {
+        TCHAR buf[64];
+        _snprintf(buf, sizeof(buf), "The menu handle (0x%p) is not valid at this time", hMenu);
+        systemServiceException(context, buf);
+        hMenu = NULL;
+    }
+    return hMenu;
+}
+
+RexxObjectPtr menuGetDialogObj(RexxMethodContext *context, RexxObjectPtr menu, RexxObjectPtr dlg, int argPos)
+{
+    if ( rxArgOmitted(context, argPos) )
+    {
+        dlg  = context->SendMessage0(menu, "DLG");
+        if ( dlg == NULLOBJECT || dlg == context->Nil() )
+        {
+            context->RaiseException1(Rexx_Error_Incorrect_method_user_defined,
+                                     context->NewStringFromAsciiz("This menu has no assigned dialog"));
+            return NULLOBJECT;
+        }
+    }
+
+    if ( ! requiredClass(context, dlg, "BaseDialog", argPos) )
+    {
+        return NULLOBJECT;
+    }
+    return dlg;
+}
+
+int menuConnectItems(HMENU hMenu, DIALOGADMIN *dlgAdm, CSTRING msg)
+{
+    DWORD rc = 0;
+    int count = GetMenuItemCount(hMenu);
+
+    MENUITEMINFO mii = {0};
+    unsigned int miiSize = sizeof(MENUITEMINFO);
+    unsigned int miiFMask = MIIM_FTYPE | MIIM_SUBMENU;
+
+    for ( int i = 0; i < count; i++)
+    {
+        ZeroMemory(&mii, miiSize);
+        mii.cbSize = miiSize;
+        mii.fMask = miiFMask;
+
+        if ( GetMenuItemInfo(hMenu, i, TRUE, &mii) )
+        {
+            if ( _isSubMenu(&mii) )
+            {
+                rc = menuConnectItems(mii.hSubMenu, dlgAdm, msg);
+                if ( rc != 0 )
+                {
+                    return 0;
+                }
+            }
+            else if ( _isMenuCommandItem(&mii) )
+            {
+                TCHAR buf[256];
+                mii.fMask = MIIM_ID | MIIM_STRING | MIIM_FTYPE;
+                mii.cch = sizeof(buf);
+                mii.dwTypeData = buf;
+
+                if ( GetMenuItemInfo(hMenu, i, TRUE, &mii) )
+                {
+                    char *pMsg = (char *)msg;
+                    if ( pMsg == NULL )
+                    {
+                        pMsg = strdupupr_nospace(mii.dwTypeData);
+                        if ( ! pMsg )
+                        {
+                            // need to raise exception
+                            return 0;
+                        }
+                    }
+                    //                             WM_COMMAND  msg filt    wparam   filt      lparam f prog tag
+                    BOOL s = AddTheMessage(dlgAdm, 0x00000111, 0xFFFFFFFF, mii.wID, 0x0000FFFF,  0,  0, pMsg, 0);
+
+                    if ( pMsg != msg )
+                    {
+                        safeFree(pMsg);
+                    }
+                    if ( ! s )
+                    {
+                        return 1;
+                    }
+                }
+                else
+                {
+                    return GetLastError();
+                }
+            }
+        }
+        else
+        {
+            return GetLastError();
+        }
+
+    }
+    return 0;
+}
+
+/** Menu::connectAllItems()
+ *
+ * Connects all menu command items in this menu to a method.
+ *
+ * @param  msg   OPTIONAL  Connect all menu command items to the method by this
+ *               name.  The default is to connect all menu command items to a
+ *               method name composed from the text of the command item.
+ *
+ * @param  _dlg  OPTIONAL  Connect the command items to the method(s) of this
+ *               dialog object.  The default is to connect the command items to
+ *               the owner dialog of this menu.  An exception is raised if a
+ *               valid dialog object can not be resolved.
+ *
+ * @return       0 on success, 1 if AddTheMessage() failed, system error code on
+ *               other errors.
+ */
+RexxMethod3(int32_t, menu_connectAllItems, OSELF, self, OPTIONAL_CSTRING, msg, OPTIONAL_RexxObjectPtr, _dlg)
+{
+    HMENU hMenu = menuGetHandle(context, self);
+    if ( hMenu == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    RexxObjectPtr dlg = menuGetDialogObj(context, self, _dlg, 2);
+    if ( dlg == NULLOBJECT )
+    {
+        return NULLOBJECT;
+    }
+
+    DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, dlg);
+    if ( dlgAdm == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    return menuConnectItems(hMenu, dlgAdm, msg);
+}
+
+
+/* This method is used as a convenient way to test code. */
+RexxMethod2(RexxStringObject, menu_test, OSELF, self, OPTIONAL_CSTRING, id)
+{
+    return NULLOBJECT;
 }
 
 size_t RexxEntry WinMenu(const char *f, size_t argc, CONSTRXSTRING *argv, const char *q, RXSTRING *retstr)
@@ -1248,7 +1434,6 @@ size_t RexxEntry TrackPopup(const char *f, size_t argc, CONSTRXSTRING *argv, con
     tp.hWnd = getWindowHandle(argv[2].strptr);
     if ( tp.hMenu == NULL || (tp.hWnd == NULL) )
     {
-        printf("%s hMenu=%p hWnd=%p\n", __FUNCTION__, tp.hMenu, tp.hWnd);
         RETVAL(-3)
     }
 
