@@ -109,7 +109,7 @@ public:
         /* convert string into long for later*/
         for (size_t i = 0; i < length; i++)
         {
-            char ch = sourceData[i];
+            char ch = string[i];
 
             if (!isdigit(ch))
             {
@@ -130,7 +130,7 @@ public:
         /* convert string into long for later*/
         for (size_t i = 0; i < length; i++)
         {
-            char ch = sourceData[i];
+            char ch = string[i];
 
             if (!isdigit(ch))
             {
