@@ -2300,6 +2300,9 @@ const char *StreamInfo::streamOpen(const char *options)
             // read the last character of the buffer
             readBuffer(&char_buffer, 1, bytesRead);
 
+            // the above read will have advanced the char read position by 1
+            charReadPosition--;
+
             // if the last character is not a ctrl_z, we need to
             // step past it.
             if (ctrl_z != char_buffer)
