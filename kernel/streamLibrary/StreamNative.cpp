@@ -2606,8 +2606,12 @@ int64_t StreamInfo::streamPosition(const char *options)
             setPosition(charReadPosition, charReadPosition);
             seekLinePosition(offset, style, lineReadPosition, lineReadCharPosition);
 
+            // update the charReadPosition
+            charReadPosition = lineReadCharPosition;
+
             if (position_flags & operation_write)
             {
+                charWritePosition = charReadPosition;
                 lineWriteCharPosition = lineReadCharPosition;
                 lineWritePosition = lineReadPosition;
             }
@@ -3036,19 +3040,27 @@ int64_t StreamInfo::readForwardByLine(int64_t offset, int64_t &current_line, int
     // make sure we're reading from the correct position
     setPosition(current_position, current_position);
 
-    if (!fileInfo.seekForwardLines(current_position - 1, offset, current_position))
+    // track how many lines are actually moved (move is decremented by seekForwardLines())
+    int64_t move = offset;
+
+    // remember to do the 1-based / 0-based conversions
+    if (!fileInfo.seekForwardLines(current_position - 1, move, current_position))
     {
         // no good, raise an error
         notreadyError();
     }
-    // set this to the number of lines actually moved
-    current_line += offset;            /* assume success                    */
+
+    // back to 1-based
+    current_position++;
+
+    // set this according to the number of lines actually moved
+    current_line += offset - move;
     // unable to read everything?  Then the current line is also the line size
-    if (offset != 0)
+    if (move != 0)
     {
         stream_line_size = current_line;
     }
-    return current_line;                /* return current line count         */
+    return current_line;                // return current line
 }
 
 
@@ -3069,19 +3081,14 @@ int64_t StreamInfo::seekToVariableLine(int64_t offset, int64_t &current_line, in
     {
         return current_line;
     }
-    // can we reach there by going forward?
-    if (offset > current_line)
+    // not possible to reach there by going forward?
+    if (current_line > offset)
     {
-        // read forward from the beginning
-        return readForwardByLine(offset - current_line, current_line, current_position);
-    }
-    else
-    {
-        // read forward from the beginning
+        // then read forward from the beginning
         current_line = 1;
         current_position = 1;
-        return readForwardByLine(offset, current_line, current_position);
     }
+    return readForwardByLine(offset - current_line, current_line, current_position);
 }
 
 
