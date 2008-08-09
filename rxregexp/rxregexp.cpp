@@ -96,29 +96,6 @@ RexxMethod1(int,                          // Return type
     return 0;
 }
 
-    enum
-    {
-        THREAD_STACK_SIZE = 1024*512
-    };
-
-DWORD WINAPI call_thread_function(void * arguments)
-{
-    RexxInstance *instance = (RexxInstance *)arguments;
-    RexxThreadContext *context;
-    instance->AttachThread(&context);
-    context->SendMessage0(context->Nil(), "FOO");
-   return 0;
-}
-
-RexxMethod1(int,                          // Return type
-            RegExp_Foo,                // Object_method name
-            OSELF, self)               // Pointer to self
-{
-    DWORD         _threadID;        // thread identifier
-    CreateThread(NULL, THREAD_STACK_SIZE, call_thread_function, (void *)context->threadContext->instance, 0, &_threadID);
-    return 0;
-}
-
 RexxMethod3(int,                          // Return type
             RegExp_Parse,              // Object_method name
             CSELF, self,               // Pointer to automaton control block
@@ -229,7 +206,6 @@ RexxMethodEntry rxregexp_methods[] =
     REXX_METHOD(RegExp_Parse,   RegExp_Parse),
     REXX_METHOD(RegExp_Pos,     RegExp_Pos),
     REXX_METHOD(RegExp_Match,   RegExp_Match),
-    REXX_METHOD(RegExp_Foo,     RegExp_Foo),
     REXX_LAST_METHOD()
 };
 
