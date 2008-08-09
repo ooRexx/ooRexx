@@ -763,7 +763,7 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
                     // set the return position and get outta here
                     endPosition = startPosition + offset + 1;
                     free(buffer);
-                    return false;
+                    return true;
                 }
             }
             // step to the next character;
