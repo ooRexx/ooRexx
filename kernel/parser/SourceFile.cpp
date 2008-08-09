@@ -2534,7 +2534,6 @@ void RexxSource::attributeDirective()
 void RexxSource::constantDirective()
 {
     RexxToken *token = nextReal();   /* get the next token                */
-
                                      /* not a symbol or a string          */
     if (!token->isSymbolOrLiteral())
     {
@@ -2547,14 +2546,38 @@ void RexxSource::constantDirective()
 
     // we only expect just a single value token here
     token = nextReal();                /* get the next token                */
+    RexxObject *value;
                                        /* not a symbol or a string          */
     if (!token->isSymbolOrLiteral())
     {
-        /* report an error                   */
-        syntaxError(Error_Symbol_or_string_constant_value, token);
+        // if not a "+" or "-" operator, this is an error
+        if (!token->isOperator() || (token->subclass != OPERATOR_SUBTRACT && token->subclass != OPERATOR_PLUS))
+        {
+            /* report an error                   */
+            syntaxError(Error_Symbol_or_string_constant_value, token);
+        }
+        RexxToken *second = nextReal();
+        // this needs to be a constant symbol...we check for
+        // numeric below
+        if (!second->isSymbol() || second->subclass != SYMBOL_CONSTANT)
+        {
+            /* report an error                   */
+            syntaxError(Error_Symbol_or_string_constant_value, token);
+        }
+        // concat with the sign operator
+        value = token->value->concat(second->value);
+        // and validate that this a valid number
+        if (value->numberString() == OREF_NULL)
+        {
+            /* report an error                   */
+            syntaxError(Error_Symbol_or_string_constant_value, token);
+        }
     }
-    // this will be some sort of literal value
-    RexxObject *value = this->commonString(token->value);
+    else
+    {
+        // this will be some sort of literal value
+        value = this->commonString(token->value);
+    }
 
     token = nextReal();                /* get the next token                */
     // No other options on this instruction

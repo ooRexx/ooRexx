@@ -398,6 +398,7 @@ class RexxToken : public RexxInternalObject {
   inline bool       isSymbolOrLiteral()  { return (this->classId == TOKEN_LITERAL) || (this->classId == TOKEN_SYMBOL); };
   inline bool       isConstant()  { return (this->classId == TOKEN_SYMBOL && this->subclass != SYMBOL_VARIABLE && this->subclass != SYMBOL_STEM && this->subclass != SYMBOL_COMPOUND); };
   inline bool       isSymbol() { return (this->classId == TOKEN_SYMBOL); };
+  inline bool       isOperator() { return (this->classId == TOKEN_OPERATOR); }
   inline bool       isEndOfClause() { return this->classId == TOKEN_EOC; }
   inline void       setNumeric(int v)   { this->numeric = v; };
   inline const SourceLocation &getLocation() { return tokenLocation; }
