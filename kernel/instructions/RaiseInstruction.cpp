@@ -49,6 +49,7 @@
 #include "QueueClass.hpp"
 #include "RexxActivation.hpp"
 #include "RaiseInstruction.hpp"
+#include "Interpreter.hpp"
 
 RexxInstructionRaise::RexxInstructionRaise(
   RexxString *_condition,               /* condition to raise                */
@@ -181,7 +182,7 @@ void RexxInstructionRaise::execute(
       reportException(Error_Conversion_raise, rc);
                                        /* convert to a decimal              */
                                        /* and get integer object            */
-    msgNum = message_number(errorcode);
+    msgNum = Interpreter::messageNumber(errorcode);
     rc = (RexxObject *)new_integer(msgNum);
   }
   if (this->description != OREF_NULL)  /* given a description?              */

@@ -107,3 +107,49 @@ void TranslateDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
     rc = -r;
 }
 
+
+/**
+ * Default virtual method for handling a run() methods on
+ * an activity dispatcher.
+ */
+void TranslateInstoreDispatcher::run()
+{
+    ProtectedSet savedObjects;
+    RexxString *name = OREF_NULLSTRING;     // name of the invoked program
+    if (programName != NULL)       /* have an actual name?              */
+    {
+        /* get string version of the name    */
+        name = new_string(programName);
+    }
+
+    savedObjects.add(name);              /* protect from garbage collect      */
+
+    RXSTRING instore[2];
+
+    MAKERXSTRING(instore[0], const_cast<char *>(source->strptr), source->strlength);
+    MAKERXSTRING(instore[1], NULL, 0);
+
+    /* go handle instore parms           */
+    RoutineClass *program = RoutineClass::processInstore(instore, name);
+    if (program == OREF_NULL)           /* couldn't get it?                  */
+    {
+        /* got an error here                 */
+        reportException(Error_Program_unreadable_name, name);
+    }
+    savedObjects.add(program);
+}
+
+
+/**
+ * Default handler for any error conditions.  This just sets the
+ * condition information in the dispatch unit.
+ *
+ * @param c      The condition information for the error.
+ */
+void TranslateInstoreDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
+{
+    // use the base error handling and set our return code to the negated error code.
+    ActivityDispatcher::handleError(rc, c);
+    rc = -r;
+}
+

@@ -45,7 +45,7 @@ all: $(OR_OUTDIR)\ORXSCRPT.dll
     @ECHO All done ORXSCRPT.DLL
     @ECHO .
 
-!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
+!include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
 # To add just debugging for this DLL, uncomment / comment the following as
 # appropriate
@@ -56,8 +56,8 @@ all: $(OR_OUTDIR)\ORXSCRPT.dll
 # Adds just the orxscrpt logging.
 #ORXSCRPT_DEBUG = /DDEBUGC /DDEBUGZ
 
-!IFNDEF OR_ORYXAXSCRIPT
-!ERROR Build error, OR_ORYXAXSCRIPT not set
+!IFNDEF OR_ORXSCRIPTSRC
+!ERROR Build error, OR_ORXSCRIPTSRC not set
 !ENDIF
 
 
@@ -81,9 +81,9 @@ CPPOBJS = $(OR_OUTDIR)\dllfuncs.obj   \
 #
 # Generate import library (.lib) and export library (.exp) from
 # module-definition (.dfw) file for a DLL
-$(OR_OUTDIR)\ORXSCRPT.lib : $(CPPOBJS) $(OR_ORYXAXSCRIPT)\ORXSCRPT.def
+$(OR_OUTDIR)\ORXSCRPT.lib : $(CPPOBJS) $(OR_ORXSCRIPTSRC)\ORXSCRPT.def
         $(OR_IMPLIB) -machine:$(CPU) \
-        -def:$(OR_ORYXAXSCRIPT)\ORXSCRPT.def \
+        -def:$(OR_ORXSCRIPTSRC)\ORXSCRPT.def \
         $(OR_OUTDIR)\orexxole.lib \
         $(CPPOBJS)               \
         -out:$(OR_OUTDIR)\ORXSCRPT.lib
@@ -93,7 +93,7 @@ $(OR_OUTDIR)\ORXSCRPT.lib : $(CPPOBJS) $(OR_ORYXAXSCRIPT)\ORXSCRPT.def
 #
 # need import libraries and def files still
 $(OR_OUTDIR)\ORXSCRPT.dll : $(CPPOBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\ORXSCRPT.lib \
-                            $(OR_ORYXAXSCRIPT)\ORXSCRPT.def     \
+                            $(OR_ORXSCRIPTSRC)\ORXSCRPT.def     \
                             $(OR_OUTDIR)\ORXSCRPT.exp
     $(OR_LINK) -map $(lflags_common) $(lflags_dll) -out:$(OR_OUTDIR)\$(@B).dll \
              $(CPPOBJS) $(RXDBG_OBJ) \
@@ -101,8 +101,7 @@ $(OR_OUTDIR)\ORXSCRPT.dll : $(CPPOBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\ORXSCRPT.lib \
              $(OR_OUTDIR)\$(@B).exp \
              $(OR_OUTDIR)\orexxole.lib \
              $(OR_OUTDIR)\rexx.lib \
-             $(OR_OUTDIR)\rexxapi.lib \
-             $(libs_dll)
+             $(OR_OUTDIR)\rexxapi.lib
 
 #
 # *** .cpp -> .obj rules
@@ -110,4 +109,4 @@ $(OR_OUTDIR)\ORXSCRPT.dll : $(CPPOBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\ORXSCRPT.lib \
 $(CPPOBJS):  $(@B).cpp
     @ECHO .
     @ECHO Compiling $(@B).cpp
-    $(OR_CC) $(cflags_common) /EHsc $(cflags_dll) $(ORXSCRPT_DEBUG) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXAXSCRIPT)\$(@B).cpp
+    $(OR_CC) $(cflags_common) /EHsc $(cflags_dll) $(ORXSCRPT_DEBUG) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORXSCRIPTSRC)\$(@B).cpp

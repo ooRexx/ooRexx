@@ -38,7 +38,7 @@
 # NMAKE-compatible MAKE file for FNTEST*
 all:  $(OR_OUTDIR)\oodialog.dll
 
-!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
+!include "$(OR_LIBSRC)\ORXWIN32.MAK"
 C=cl
 OPTIONS= $(cflags_common) $(cflags_dll) $(OR_ORYXINCL)
 OR_LIB=$(OR_OUTDIR)
@@ -54,16 +54,16 @@ SOURCEF= $(OR_OUTDIR)\oovutil.obj $(OR_OUTDIR)\oovdata.obj $(OR_OUTDIR)\oovtext.
 #
 # *** .cpp -> .obj rules
 #
-{$(OR_ORYXOODSRC)}.cpp{$(OR_OUTDIR)}.obj:
+{$(OR_OODIALOGSRC)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(@B).cpp
-    $(OR_CC) $(cflags_common) $(cflags_dll) /DCREATEDLL /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OR_ORYXOODSRC)\$(@B).cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /DCREATEDLL /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OR_OODIALOGSRC)\$(@B).cpp
 
 
-{$(OR_ORYXOODSRC)}.c{$(OR_OUTDIR)}.obj:
+{$(OR_OODIALOGSRC)}.c{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /DCREATEDLL /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OR_ORYXOODSRC)\$(@B).c
+    $(OR_CC) $(cflags_common) $(cflags_dll) /DCREATEDLL /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL)  $(OR_OODIALOGSRC)\$(@B).c
 
 
 $(OR_OUTDIR)\oodialog.dll:     $(SOURCEF)
@@ -75,12 +75,12 @@ $(OR_OUTDIR)\oodialog.dll:     $(SOURCEF)
     WINMM.LIB \
     COMDLG32.LIB \
     COMCTL32.LIB \
-    -def:$(OR_ORYXOODSRC)\oovutil.def \
+    -def:$(OR_OODIALOGSRC)\oovutil.def \
     -out:$(OR_OUTDIR)\$(@B).dll
 
 
 # Update the version information block
-$(OR_OUTDIR)\oodialog.res: $(OR_ORYXOODSRC)\oodialog.rc
+$(OR_OUTDIR)\oodialog.res: $(OR_OODIALOGSRC)\oodialog.rc
     @ECHO .
     @ECHO ResourceCompiling $(@B).res
-        $(rc) $(rcflags_common) /i $(OR_ORYXOODSRC) /i $(OR_ORYXWSRC) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_ORYXOODSRC)\$(@B).rc
+        $(rc) $(rcflags_common) /i $(OR_OODIALOGSRC) /i $(OR_WINKERNELSRC) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_OODIALOGSRC)\$(@B).rc

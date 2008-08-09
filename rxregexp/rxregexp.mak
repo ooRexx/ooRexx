@@ -43,10 +43,10 @@ all: $(OR_OUTDIR)\rxregexp.dll $(OR_OUTDIR)\rxregexp.cls
     @ECHO All done RXREGEXP.DLL
     @ECHO.
 
-!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
+!include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
-!IFNDEF OR_ORYXREGEXP
-!ERROR Build error, OR_ORYXREGEXP not set
+!IFNDEF OR_REGEXPSRC
+!ERROR Build error, OR_REGEXPSRC not set
 !ENDIF
 
 CPPOBJS = $(OR_OUTDIR)\rxregexp.obj $(OR_OUTDIR)\automaton.obj $(OR_OUTDIR)\dblqueue.obj
@@ -58,9 +58,9 @@ CPPOBJS = $(OR_OUTDIR)\rxregexp.obj $(OR_OUTDIR)\automaton.obj $(OR_OUTDIR)\dblq
 #
 # Generate import library (.lib) and export library (.exp) from
 # module-definition (.dfw) file for a DLL
-$(OR_OUTDIR)\RXREGEXP.lib : $(CPPOBJS) $(OR_ORYXREGEXP)\RXREGEXP.def
+$(OR_OUTDIR)\RXREGEXP.lib : $(CPPOBJS) $(OR_REGEXPSRC)\RXREGEXP.def
         $(OR_IMPLIB) -machine:$(CPU) \
-        -def:$(OR_ORYXREGEXP)\RXREGEXP.def \
+        -def:$(OR_REGEXPSRC)\RXREGEXP.def \
         $(CPPOBJS)               \
         -out:$(OR_OUTDIR)\RXREGEXP.lib
 
@@ -69,25 +69,24 @@ $(OR_OUTDIR)\RXREGEXP.lib : $(CPPOBJS) $(OR_ORYXREGEXP)\RXREGEXP.def
 #
 # need import libraries and def files still
 $(OR_OUTDIR)\rxregexp.dll : $(CPPOBJS) $(OBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\RXREGEXP.lib \
-                            $(OR_ORYXREGEXP)\RXREGEXP.def     \
+                            $(OR_REGEXPSRC)\RXREGEXP.def     \
                             $(OR_OUTDIR)\RXREGEXP.exp
     $(OR_LINK) -map $(lflags_common) $(lflags_dll) -out:$(OR_OUTDIR)\$(@B).dll \
              $(CPPOBJS) $(RXDBG_OBJ) \
              $(OR_OUTDIR)\verinfo.res \
              $(OR_OUTDIR)\$(@B).exp \
              $(OR_OUTDIR)\rexx.lib \
-             $(OR_OUTDIR)\rexxapi.lib \
-             $(libs_dll)
+             $(OR_OUTDIR)\rexxapi.lib
 
 
 #
 # Copy rxregexp.cls to the build directory so the test suite can be run
 # directly from that location without doing an install.
 #
-$(OR_OUTDIR)\rxregexp.cls : $(OR_ORYXREGEXP)\rxregexp.cls
+$(OR_OUTDIR)\rxregexp.cls : $(OR_REGEXPSRC)\rxregexp.cls
     @ECHO.
-    @ECHO Copying $(OR_ORYXREGEXP)\rxregexp.cls
-    copy $(OR_ORYXREGEXP)\rxregexp.cls $(OR_OUTDIR)
+    @ECHO Copying $(OR_REGEXPSRC)\rxregexp.cls
+    copy $(OR_REGEXPSRC)\rxregexp.cls $(OR_OUTDIR)
 
 #
 # *** .cpp -> .obj rules
@@ -95,4 +94,4 @@ $(OR_OUTDIR)\rxregexp.cls : $(OR_ORYXREGEXP)\rxregexp.cls
 $(CPPOBJS):  $(@B).cpp
     @ECHO.
     @ECHO Compiling $(@B).cpp
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXREGEXP)\$(@B).cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_REGEXPSRC)\$(@B).cpp

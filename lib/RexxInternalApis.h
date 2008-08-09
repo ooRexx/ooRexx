@@ -50,17 +50,19 @@ int REXXENTRY RexxResolveExit(const char *, REXXPFN *);
 int REXXENTRY RexxResolveRoutine(const char *, REXXPFN *);
 int REXXENTRY RexxQuery();
 
-RexxReturnCode REXXENTRY RexxExecuteMacroFunction (const char *, PRXSTRING );
+RexxReturnCode REXXENTRY RexxResolveMacroFunction (const char *, PRXSTRING );
 
 void REXXENTRY RexxCreateInterpreterImage();
 
 size_t REXXENTRY RexxGetCurrentPrecision();
 
+/***    RexxCallSubcom - Execute a command in an environment */
+RexxReturnCode REXXENTRY RexxCallSubcom(const char *, PCONSTRXSTRING,
+         unsigned short *, wholenumber_t *, PRXSTRING );
+
 RexxReturnCode REXXENTRY RexxLoadSubcom(const char *, const char *);
 
-/***    RexxCallSubcom - Execute a command in an environment */
-RexxReturnCode REXXENTRY RexxCallSubcom(const char *, const char *, PCONSTRXSTRING,
-         unsigned short *, wholenumber_t *, PRXSTRING );
+RexxReturnCode REXXENTRY RexxResolveSubcom(const char *name, REXXPFN *);
 
 #ifdef __cplusplus
 }

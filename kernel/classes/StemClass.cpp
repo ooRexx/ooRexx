@@ -513,7 +513,7 @@ RexxObject *RexxStem::newRexx(
     RexxObject * name;                   /* name of the stem item             */
 
                                          /* break up the arguments            */
-    process_new_args(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&name, NULL);
+    RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&name, NULL);
     newObj = new RexxStem ((RexxString *)name);   /* get a new stem                    */
     newObj->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());
     /* does object have an UNINT method  */

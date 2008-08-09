@@ -48,7 +48,6 @@
 #include <dispex.h>
 
 #include "oorexxapi.h"
-#include "DebugOutput.h"
 #include "events.h"
 
 
@@ -1176,15 +1175,6 @@ BOOL fFindConstant(const char * pszConstName, POLECLASSINFO pClsInfo, PPOLECONST
         /* not found so far, go to next element in list */
         pConstInfo = pConstInfo->pNext;
     } /* endwhile */
-
-#if defined(REXX_DEBUG)
-    if (fFound)
-    {
-        DbgPrintf("Located const info ptr=%p, memid=%8.8X, sValue=%s\n",
-                  pConstInfo, pConstInfo->memId,
-                  pszDbgVariant(&(pConstInfo->sValue)));
-    }
-#endif
 
     return fFound;
 }

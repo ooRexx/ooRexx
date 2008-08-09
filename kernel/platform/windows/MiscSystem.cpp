@@ -163,7 +163,6 @@ RexxString *SystemInterpreter::getSourceString(
 }
 
 
-/* HOL005M begin */
 BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
 /******************************************************************************/
 /* Arguments:  Report record, registration record, context record,            */
@@ -193,11 +192,6 @@ BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
   {
       GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, ExceptionHostProcessId);
       return true;   /* ignore signal */
-  }
-
-  if (ExceptionQueueSem)
-  {
-      SetEvent(ExceptionQueueSem);
   }
   if (ExceptionHostProcess)
   {

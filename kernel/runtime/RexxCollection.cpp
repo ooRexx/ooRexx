@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  RexxCollection.c      */
+/* REXX Kernel                                          RexxCollection.cpp    */
 /*                                                                            */
 /* Primitive HashTableCollection Class                                        */
 /*                                                                            */
@@ -47,6 +47,7 @@
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
 #include "DirectoryClass.hpp"
+#include "Interpreter.hpp"
 
 void RexxHashTableCollection::live(size_t liveMark)
 /******************************************************************************/
@@ -109,7 +110,7 @@ RexxObject *RexxHashTableCollection::makeProxy(RexxEnvelope *envelope)
     }
     else
     {
-        logic_error("Don't know how to generate a proxy object for an object");
+        Interpreter::logicError("Don't know how to generate a proxy object for an object");
     }
     return OREF_NULL;
 }

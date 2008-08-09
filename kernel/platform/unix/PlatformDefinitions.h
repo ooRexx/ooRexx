@@ -110,13 +110,6 @@
 
 #define _POSIX_THREADS_
 
-#ifdef OPSYS_AIX41
-#define SysThreadYield()   pthread_yield()
-#else
-#define SysThreadYield()   sched_yield()
-#endif
-#include "SystemSemaphores.h"
-
 /******************************************************************************/
 /* REQUIRED:  Define the string used for the default initial address setting. */
 /******************************************************************************/

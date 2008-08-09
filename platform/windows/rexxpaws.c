@@ -118,8 +118,6 @@ int __cdecl main(int argc, char *argv[])
                                        /* give a simple error message       */
     #undef printf
     printf("Syntax: REXXPAWS ProgramName [parameter_1....parameter_n]\n");
-    /* try to unload the orexx memory manager */
-    RexxShutDownAPI();
     return -1;
   }
   else {                               /* real program execution            */
@@ -145,8 +143,6 @@ int __cdecl main(int argc, char *argv[])
    freeArguments(NULL, &arguments);
 
   }
-  /* try to unload the orexx memory manager */
-  RexxShutDownAPI();
                                              // return interpeter or
  return rc ? rc : rexxrc;                    // rexx program return cd
 }

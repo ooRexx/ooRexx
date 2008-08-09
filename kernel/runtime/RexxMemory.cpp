@@ -64,6 +64,7 @@
 #include "WeakReferenceClass.hpp"
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
+#include "Interpreter.hpp"
 #include "PackageManager.hpp"
 #include "SysFileSystem.hpp"
 
@@ -1471,7 +1472,7 @@ void RexxMemory::markGeneral(void *obj)
 
     if (!saveimage)
     {
-        logic_error("Wrong mark routine called");
+        Interpreter::logicError("Wrong mark routine called");
     }
 
     /* we're doing the image construction work */
@@ -1506,7 +1507,7 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
         // the buffer size.
         if (image_offset + size> MaxImageSize)
         {
-            logic_error("Rexx saved image exceeds expected maximum");
+            Interpreter::logicError("Rexx saved image exceeds expected maximum");
         }
         /* Copy object to image buffer. */
         memcpy(bufferReference, markObject, size);
@@ -1524,7 +1525,7 @@ void RexxMemory::saveImageMark(RexxObject *markObject, RexxObject **pMarkObject)
         {
             if (behaviour->isTransientClass())
             {
-                logic_error("Transient class included in image buffer");
+                Interpreter::logicError("Transient class included in image buffer");
             }
             /* clear this out, as this is overloaded with the oldspace */
             /* flag. */
@@ -1619,7 +1620,7 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
                                         /*  otherwise the cleanup from logic */
                                         /*  error will hang !!!              */
         /* we would have crashed soon anyway!*/
-        logic_error("Bad Object found during GC !\n");
+        Interpreter::logicError("Bad Object found during GC !\n");
     }
 
     if (!markObject->isObjectLive(markWord) && markObject->isNewSpace())
@@ -2126,7 +2127,7 @@ RexxObject *RexxMemory::checkSetOref(
         logMemoryCheck(outfile, " The error occurred in line %u of file %s\n", lineNum, fileName);
         printf("The dump data has been written to file %s \n",outFileName);
         fclose(outfile);
-        logic_error("Something went really wrong in SetOref ...\n");
+        Interpreter::logicError("Something went really wrong in SetOref ...\n");
     }
     /* now do the normal SetOref() stuff */
     return(setter->isOldSpace() ? (this->setOref(index, value)) : (*index = value));

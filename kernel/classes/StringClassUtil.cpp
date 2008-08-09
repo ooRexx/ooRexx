@@ -62,7 +62,7 @@ stringsize_t get_length(
 {
     if (argument == OREF_NULL)            /* have a real argument?             */
     {
-        missing_argument(position);       /* raise an error                    */
+        missingArgument(position);       /* raise an error                    */
     }
     stringsize_t    value;                /* converted number value            */
 
@@ -86,7 +86,7 @@ stringsize_t get_position(
 {
     if (argument == OREF_NULL)            /* have a real argument?             */
     {
-        missing_argument(position);         /* raise an error                    */
+        missingArgument(position);         /* raise an error                    */
     }
     stringsize_t    value;                /* converted number value            */
 

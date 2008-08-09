@@ -54,6 +54,7 @@
 
 class InterpreterInstance;
 class RexxList;
+class RexxActivity;
 
 class Interpreter
 {
@@ -121,6 +122,8 @@ public:
     }
 
 
+    static void logicError (const char *desc);
+    static wholenumber_t messageNumber(RexxString *);
     static inline void setTimeSliceElapsed() { timeSliceElapsed = true; }
     static inline void clearTimeSliceElapsed() { timeSliceElapsed = false; }
     static void haltAllActivities();

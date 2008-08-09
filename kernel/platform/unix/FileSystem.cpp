@@ -49,6 +49,7 @@
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
 #include "ProtectedObject.hpp"
+#include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "SysFileSystem.hpp"
@@ -144,9 +145,9 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
 /*******************************************************************/
 {
     char fullname[PATH_MAX + 2];    // finally resolved name
-    // try first in the current directory 
+    // try first in the current directory
     FILE *image = fopen(BASEIMAGE, "rb");
-    // if not found, then try a path search 
+    // if not found, then try a path search
     if (image == NULL)
     {
         // The file may purposefully have no extension.
@@ -155,20 +156,20 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
     #ifdef ORX_CATDIR
              strcpy(fullname, ORX_CATDIR"/rexx.img");
     #else
-             logic_error("no startup image");   /* open failure                      */
+             Interpreter::logicError("no startup image");   /* open failure                      */
     #endif
         }
         image = fopen(fullname, "rb");/* try to open the file              */
         if ( image == NULL )
         {
-            logic_error("unable to open image file");
+            Interpreter::logicError("unable to open image file");
         }
     }
 
     /* Read in the size of the image     */
     if (!fread(imageSize, 1, sizeof(size_t), image))
     {
-        logic_error("could not check the size of the image");
+        Interpreter::logicError("could not check the size of the image");
     }
     /* Create new segment for image      */
     *imageBuffer = (char *)memoryObject.allocateImageBuffer(*imageSize);
@@ -179,7 +180,7 @@ void SystemInterpreter::loadImage(char **imageBuffer, size_t *imageSize)
     /* the size read                     */
     if (!(*imageSize = fread(*imageBuffer, 1, *imageSize, image)))
     {
-        logic_error("could not read in the image");
+        Interpreter::logicError("could not read in the image");
     }
     fclose(image);                       /* and close the file                */
 }

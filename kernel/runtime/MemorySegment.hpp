@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                         RexxMemorysegment.hpp    */
+/* REXX Kernel                                       RexxMemorysegment.hpp    */
 /*                                                                            */
 /* Primitive MemorySegment class definitions                                  */
 /*                                                                            */
@@ -47,6 +47,7 @@
 
 #include "stddef.h"
 #include "DeadObject.hpp"
+#include "Interpreter.hpp"
 
 #define MemorySegmentOverhead       (sizeof(MemorySegmentHeader))
 #define MemorySegmentPoolOverhead   (sizeof(MemorySegmentPoolHeader))
@@ -362,7 +363,7 @@ class MemorySegmentSet {
               /* Yes, this is not good.  Exit      */
               /* Critical Section and report       */
               /* unrecoverable error.              */
-              logic_error("Bad object detected during Garbage Collection, unable to continue");
+              Interpreter::logicError("Bad object detected during Garbage Collection, unable to continue");
           }
       #endif
       }

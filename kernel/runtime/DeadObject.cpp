@@ -46,6 +46,7 @@
 #include <string.h>
 #include "RexxCore.h"
 #include "RexxMemory.hpp"
+#include "Interpreter.hpp"
 
 void DeadObjectPool::dumpMemoryProfile(FILE *outFile)
 /******************************************************************************/
@@ -202,8 +203,9 @@ void DeadObjectPool::checkObjectGrain(DeadObject *obj)
 /* Function:  Debug validity check of object added to a dead pool.            */
 /******************************************************************************/
 {
-    if (!IsObjectGrained(obj)) {
-        logic_error("Object aligned on improper boundary");
+    if (!IsObjectGrained(obj))
+    {
+        Interpreter::logicError("Object aligned on improper boundary");
     }
 }
 
@@ -217,7 +219,7 @@ void DeadObjectPool::checkObjectOverlap(DeadObject *obj)
     while (check != NULL && check->isReal()) {
         if (check->overlaps(obj)) {
             printf("Object at %p for length %d overlaps object at %p for length %d\n", obj, obj->getObjectSize(), check, check->getObjectSize());
-            logic_error("Overlapping dead objects added to the cache.");
+            Interpreter::logicError("Overlapping dead objects added to the cache.");
         }
         check = check->next;
     }

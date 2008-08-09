@@ -53,7 +53,7 @@
 #include "SourceLocation.hpp"
 #include "ExitHandler.hpp"
 #include "ActivationApiContexts.hpp"
-#include "SysThread.hpp"
+#include "SysActivity.hpp"
 
 
 class ProtectedObject;                 // needed for look aheads
@@ -351,7 +351,7 @@ typedef enum
    RexxObject         *waitingObject;  /* object activity is waiting on     */
    SysSemaphore        runsem;         /* activity run control semaphore    */
    SysSemaphore        guardsem;       /* guard expression semaphore        */
-   SysThread currentThread;            /* descriptor for this thread        */
+   SysActivity currentThread;            /* descriptor for this thread        */
    NumericSettings *numericSettings;   /* current activation setting values */
 
    bool     stackcheck;                /* stack space is to be checked      */

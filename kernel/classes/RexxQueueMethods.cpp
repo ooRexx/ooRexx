@@ -76,7 +76,7 @@ RexxMethod0(RexxObjectPtr, rexx_pull_queue)
    buf.strptr = NULL;                  /* ask for a returned buffer         */
    buf.strlength = 0;
                                        /* pull a line                       */
-   rc = RexxPullQueue(context->ObjectToStringValue(queue_name), &buf, NULL, RXQUEUE_NOWAIT);
+   rc = RexxPullFromQueue(context->ObjectToStringValue(queue_name), &buf, NULL, RXQUEUE_NOWAIT);
 
    if (!rc)
    {                                   /* get a pulled line?                */
@@ -105,7 +105,7 @@ RexxMethod0(RexxObjectPtr, rexx_linein_queue)
    buf.strptr = NULL;                  /* ask for a returned buffer         */
    buf.strlength = 0;
                                        /* pull a line                       */
-   rc = RexxPullQueue(context->ObjectToStringValue(queue_name), &buf, NULL, RXQUEUE_WAIT);
+   rc = RexxPullFromQueue(context->ObjectToStringValue(queue_name), &buf, NULL, RXQUEUE_WAIT);
 
    if (!rc)                            /* get a pulled line?                */
    {

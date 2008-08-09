@@ -57,5 +57,20 @@ public:
 };
 
 
+class TranslateInstoreDispatcher : public ActivityDispatcher
+{
+public:
+    inline TranslateInstoreDispatcher() : ActivityDispatcher() { ; }
+    virtual ~TranslateInstoreDispatcher() { ; }
+
+    virtual void run();
+    virtual void handleError(wholenumber_t, RexxDirectory *);
+
+    const char *programName;             /* REXX program to run               */
+    CONSTRXSTRING *source;               // the image to translate
+    RXSTRING  *image;                    // the translated image              */
+};
+
+
 #endif
 

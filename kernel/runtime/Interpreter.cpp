@@ -411,9 +411,9 @@ InstanceBlock::~InstanceBlock()
 void Interpreter::decodeConditionData(RexxDirectory *conditionObj, RexxCondition *condData)
 {
     memset(condData, 0, sizeof(RexxCondition));
-    condData->code = message_number((RexxString *)conditionObj->at(OREF_CODE));
+    condData->code = messageNumber((RexxString *)conditionObj->at(OREF_CODE));
 
-    condData->rc = message_number((RexxString *)conditionObj->at(OREF_RC));
+    condData->rc = messageNumber((RexxString *)conditionObj->at(OREF_RC));
     condData->conditionName = (RexxStringObject)conditionObj->at(OREF_CONDITION);
 
     RexxObject *temp = conditionObj->at(OREF_NAME_MESSAGE);
@@ -488,4 +488,54 @@ RexxString *Interpreter::getCurrentQueue()
     }
     // get the current name from the queue object.
     return(RexxString *)queue->sendMessage(OREF_GET);
+}
+
+
+void Interpreter::logicError (const char *desc)
+/******************************************************************************/
+/* Function:  Raise a fatal logic error                                       */
+/******************************************************************************/
+{
+    printf("Logic error: %s\n",desc);
+    exit(RC_LOGIC_ERROR);
+}
+
+wholenumber_t Interpreter::messageNumber(
+    RexxString *errorcode)             /* REXX error code as string         */
+/******************************************************************************/
+/* Function:  Parse out the error code string into the messagecode valuey     */
+/******************************************************************************/
+{
+    const char *decimalPoint;            /* location of decimalPoint in errorcode*/
+    wholenumber_t  primary = 0;          /* Primary part of error code, major */
+    wholenumber_t  secondary = 0;        /* Secondary protion (minor code)    */
+    wholenumber_t  count;
+
+    /* make sure we get errorcode as str */
+    errorcode = (RexxString *)errorcode->stringValue();
+    /* scan to decimal Point or end of   */
+    /* error code.                       */
+    for (decimalPoint = errorcode->getStringData(), count = 0; *decimalPoint && *decimalPoint != '.'; decimalPoint++, count++);
+
+    // must be a whole number in the correct range
+    if (!new_string(errorcode->getStringData(), count)->numberValue(primary) || primary < 1 || primary >= 100)
+    {
+        /* Nope raise an error.              */
+        reportException(Error_Expression_result_raise);
+
+    }
+    // now shift over the decimal position.
+    primary *= 1000;
+
+
+    if (*decimalPoint)
+    {                 /* Was there a decimal point specified?*/
+                      /* is the subcode invalid or too big?*/
+        if (!new_string(decimalPoint + 1, errorcode->getLength() - count -1)->numberValue(secondary) || secondary < 0  || secondary >= 1000)
+        {
+            /* Yes, raise an error.              */
+            reportException(Error_Expression_result_raise);
+        }
+    }
+    return primary + secondary;          /* add two portions together, return */
 }

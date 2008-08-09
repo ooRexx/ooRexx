@@ -43,10 +43,10 @@ all: $(OR_OUTDIR)\rexxutil.dll $(OR_OUTDIR)\rxftp.cls
     @ECHO All done rexxutil.dll
     @ECHO .
 
-!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
+!include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
-!IFNDEF OR_ORYXRSRC
-!ERROR Build error, OR_ORYXRSRC not set
+!IFNDEF OR_REXXUTILSRC
+!ERROR Build error, OR_REXXUTILSRC not set
 !ENDIF
 
 RXUTILOBJ = $(OR_OUTDIR)\rexxutil.obj
@@ -78,17 +78,16 @@ $(OR_OUTDIR)\rexxutil.dll : $(RXUTILOBJ) $(RXDBG_OBJ)   \
              $(OR_OUTDIR)\verinfo.res \
              $(OR_OUTDIR)\$(@B).exp \
              $(OR_OUTDIR)\rexxapi.lib \
-             $(OR_OUTDIR)\rexx.lib \
-             $(libs_dll)
+             $(OR_OUTDIR)\rexx.lib
 
 #
 # Copy rxftp.cls to the build directory so the test suite can be run directly
 # from that location without doing an install.
 #
-$(OR_OUTDIR)\rxftp.cls : $(OR_ORYXRSRC)\rxftp.cls
+$(OR_OUTDIR)\rxftp.cls : $(OR_REXXUTILSRC)\rxftp.cls
     @ECHO .
-    @ECHO Copying $(OR_ORYXRSRC)\rxftp.cls
-    copy $(OR_ORYXRSRC)\rxftp.cls $(OR_OUTDIR)
+    @ECHO Copying $(OR_REXXUTILSRC)\rxftp.cls
+    copy $(OR_REXXUTILSRC)\rxftp.cls $(OR_OUTDIR)
 
 #
 # *** wrxutil.obj
@@ -100,7 +99,7 @@ $(OR_OUTDIR)\rxftp.cls : $(OR_ORYXRSRC)\rxftp.cls
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(**)
 
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
 {$(XPLATFORM)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
@@ -109,7 +108,7 @@ $(OR_OUTDIR)\rxftp.cls : $(OR_ORYXRSRC)\rxftp.cls
 
 
 # Update the version information block
-$(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc
+$(OR_OUTDIR)\verinfo.res: $(INT_PLATFORM)\verinfo.rc
     @ECHO .
     @ECHO ResourceCompiling $(@)
         $(rc) $(rcflags_common) -r -fo$(@) $(**)

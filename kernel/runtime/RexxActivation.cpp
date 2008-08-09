@@ -2385,7 +2385,7 @@ RoutineClass *RexxActivation::getMacroCode(RexxString *macroName)
     RoutineClass * macroRoutine = OREF_NULL;
 
     macroImage.strptr = NULL;
-    if (RexxExecuteMacroFunction(macroName->getStringData(), &macroImage) == 0)
+    if (RexxResolveMacroFunction(macroName->getStringData(), &macroImage) == 0)
     {
         macroRoutine = RoutineClass::restore(&macroImage, macroName);
         // return the allocated buffer

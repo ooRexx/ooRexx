@@ -47,6 +47,7 @@
 #include "BufferClass.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "SysFileSystem.hpp"
@@ -140,7 +141,7 @@ void SystemInterpreter::loadImage(
     // The file may purposefully have no extension.
     if (!SysFileSystem::primitiveSearchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
     {
-        logic_error("no startup image");   /* can't find it                     */
+        Interpreter::logicError("no startup image");   /* can't find it                     */
     }
 
     /* try to open the file              */
@@ -149,7 +150,7 @@ void SystemInterpreter::loadImage(
 
     if (fileHandle == INVALID_HANDLE_VALUE)
     {
-        logic_error("no startup image");   /* can't find it                     */
+        Interpreter::logicError("no startup image");   /* can't find it                     */
     }
     DWORD     bytesRead;                 /* number of bytes read              */
     /* Read in the size of the image     */

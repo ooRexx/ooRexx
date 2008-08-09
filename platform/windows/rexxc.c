@@ -164,8 +164,6 @@ int __cdecl main(int argc, char *argv[])
                         /* rexx procedure executed*/
    RexxDeregisterExit("MY_IOC",NULL);     // remove the exit in exe exit list
   }
-  /* try to unload the orexx memory manager */
-  RexxShutDownAPI();
                                              // return interpeter or
  return rc ? rc : rexxrc;                    // rexx program return cd
 }

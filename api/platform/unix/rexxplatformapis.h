@@ -38,28 +38,14 @@
 #ifndef REXXPLATFORMAPIS_INCLUDED
 #define REXXPLATFORMAPIS_INCLUDED
 
-/***    RexxPullQueue - Retrieve data from an External Data Queue */
-typedef struct _REXXDATETIME {         /* REXX time stamp format            */
-  uint16_t       hours;                /* hour of the day (24-hour)         */
-  uint16_t       minutes;              /* minute of the hour                */
-  uint16_t       seconds;              /* second of the minute              */
-  uint16_t       hundredths;           /* hundredths of a second            */
-  uint16_t       day;                  /* day of the month                  */
-  uint16_t       month;                /* month of the year                 */
-  uint16_t       year;                 /* current year                      */
-  uint16_t       weekday;              /* day of the week                   */
-  uint32_t       microseconds;         /* microseconds                      */
-  uint32_t       yearday;              /* day number within the year        */
-} REXXDATETIME;
 
 /***    RexxPullQueue - Retrieve data from an External Data Queue */
-
 RexxReturnCode REXXENTRY RexxPullQueue (
         const char *,                          /* Name of queue to read from  */
         PRXSTRING,                             /* RXSTRING to receive data    */
         REXXDATETIME *,                        /* Stor for data date/time     */
         size_t);                               /* wait status (WAIT|NOWAIT)   */
-typedef RexxReturnCode (REXXENTRY *PFNREXXPULLQUEUE)(const char *, PCONSTRXSTRING, REXXDATETIME *,
+typedef RexxReturnCode (REXXENTRY *PFNREXXPULLQUEUE)(const char *, PRXSTRING, REXXDATETIME *,
                                            size_t);
 
 #endif /* REXXPLATFORMAPIS_INCLUDED */

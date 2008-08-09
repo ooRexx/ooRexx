@@ -137,7 +137,7 @@ RexxObject *SystemInterpreter::invokeHostCommand(
 /* CRITICAL window here -->>  ABSOLUTELY NO KERNEL CALLS ALLOWED              */
   {
       CalloutBlock releaser;
-      rc=RexxCallSubcom(current_address, NULL, &rxstrcmd, &flags, &sbrc, &retstr);
+      rc=RexxCallSubcom(current_address, &rxstrcmd, &flags, &sbrc, &retstr);
   }
 
 /* END CRITICAL window here -->>  kernel calls now allowed again              */

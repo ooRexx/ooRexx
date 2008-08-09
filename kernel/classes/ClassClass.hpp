@@ -125,6 +125,7 @@
           void         addSubClass(RexxClass *);
           void         removeSubclass(RexxClass *c);
 
+   static void processNewArgs(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
 
    static void createInstance();
    // singleton class instance;

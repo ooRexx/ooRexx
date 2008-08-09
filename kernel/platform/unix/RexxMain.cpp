@@ -65,9 +65,7 @@
 #include "RexxActivity.hpp"
 #include "SourceFile.hpp"
 
-#include "RexxAPIManager.h"
 #include "APIDefinitions.h"
-#include "APIUtilities.h"
 #include "Interpreter.hpp"
 
 

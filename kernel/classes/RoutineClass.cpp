@@ -563,7 +563,7 @@ RoutineClass *RoutineClass::newRexx(
 
                                          /* break up the arguments            */
 
-    process_new_args(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
+    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
     /* get the method name as a string   */
     RexxString *nameString = REQUIRED_STRING(pgmname, ARG_ONE);
     required_arg(_source, TWO);          /* make sure we have the second too  */
@@ -572,7 +572,7 @@ RoutineClass *RoutineClass::newRexx(
     // retrieve extra parameter if exists
     if (initCount != 0)
     {
-        process_new_args(init_args, initCount, &init_args, &initCount, 1, (RexxObject **)&option, NULL);
+        RexxClass::processNewArgs(init_args, initCount, &init_args, &initCount, 1, (RexxObject **)&option, NULL);
         if (isOfClass(Method, option))
         {
             sourceContext = ((RexxMethod *)option)->getSourceObject();
@@ -648,7 +648,7 @@ RoutineClass *RoutineClass::restoreFromMacroSpace(RexxString *name)
 
     MAKERXSTRING(buffer, NULL, 0);
     /* get the image of function         */
-    RexxExecuteMacroFunction(name->getStringData(), &buffer);
+    RexxResolveMacroFunction(name->getStringData(), &buffer);
     /* unflatten the method now          */
     RoutineClass *routine = restore(&buffer, name);
     // release the buffer memory

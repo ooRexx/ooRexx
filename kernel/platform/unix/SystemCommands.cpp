@@ -177,7 +177,7 @@ RexxObject *SystemInterpreter::invokeHostCommand(
 // BEGIN CRITICAL window here -->>  absolutely no kernel calls inside this window
   {
       CalloutBlock releaser;
-      rc=RexxCallSubcom(current_address, NULL, &rxstrcmd, &flags, &sbrc, &retstr);
+      rc=RexxCallSubcom(current_address,&rxstrcmd, &flags, &sbrc, &retstr);
   }
 // END CRITICAL window here -->>  kernel calls now allowed again
 

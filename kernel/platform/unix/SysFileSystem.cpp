@@ -59,12 +59,6 @@
 #include "SysFileSystem.hpp"
 #include "Utilities.hpp"
 
-
-// This is all the static stuff
-const int SysFileSystem::stdinHandle = 0;
-const int SysFileSystem::stdoutHandle = 1;
-const int SysFileSystem::stderrHandle = 2;
-
 const char SysFileSystem::EOF_Marker = 0x1A;
 const char *SysFileSystem::EOL_Marker = "\n";
 const char SysFileSystem::PathDelimiter = '/';
@@ -529,7 +523,7 @@ bool SysFileSystem::checkCurrentFile(const char *name, char *resolvedName)
     // ok, if this exists, life is good.  Return it.
     if (stat(resolvedName, &dummy) == 0)             /* look for file              */
     {
-        // this needs to be a regular file 
+        // this needs to be a regular file
         if (S_ISREG(dummy.st_mode))
         {
             return true;
@@ -582,7 +576,7 @@ bool SysFileSystem::searchPath(const char *name, const char *path, char *resolve
             struct stat dummy;
             if (stat(resolvedName, &dummy) == 0)     /* If file is found,          */
             {
-                // this needs to be a regular file 
+                // this needs to be a regular file
                 if (S_ISREG(dummy.st_mode))
                 {
                     return true;
@@ -683,16 +677,16 @@ bool SysFileSystem::canonicalizeName(char *name)
     }
 
     // NOTE:  realpath() is more portable than canonicalize_file_name().  The biggest difference between them
-    // is support for really long file names (longer than PATH_MAX).  Since everything we've done up to this point 
-    // has assumed that PATH_MAX is the limit, it probably doesn't make much sense to start worrying about this 
-    // at the very last stage of the process. 
+    // is support for really long file names (longer than PATH_MAX).  Since everything we've done up to this point
+    // has assumed that PATH_MAX is the limit, it probably doesn't make much sense to start worrying about this
+    // at the very last stage of the process.
     char tempName[PATH_MAX + 2];
     char *temp = realpath(name, tempName);
     if (temp == NULL)
     {
         return false;
     }
-    strcpy(tempName, name); 
+    strcpy(tempName, name);
     return true;
 }
 

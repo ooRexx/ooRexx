@@ -69,7 +69,6 @@
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
-#include "RexxAPIManager.h"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
 #include "PackageManager.hpp"
@@ -123,7 +122,7 @@ RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration
 /********************************************************************************************/
 RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 {
-    char buffer[CCHMAXPATH+1]; 
+    char buffer[CCHMAXPATH+1];
     int rc = 0;
 
     if (dir != NO_CSTRING)
@@ -180,19 +179,19 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
     case FILESPEC_PATH:                /* extract the path                  */
       if (nameLength > 0) {            /* have a real string?               */
                                        /* find colon or backslash           */
-        scanPtr = mempbrk(name, ":\\/", nameLength);
+        scanPtr = Utilities::locateCharacter(name, ":\\/", nameLength);
         if (scanPtr != NULL) {
           if (*scanPtr == ':') {       /* found a colon?                    */
             scanPtr++;                 /* step past the colon               */
             if (scanPtr < endPtr) {    /* not last character?               */
               pathEnd = NULL;          /* no end here                       */
                                        /* search for backslashes            */
-              pathPtr = mempbrk(scanPtr, "\\/", endPtr - scanPtr);
+              pathPtr = Utilities::locateCharacter(scanPtr, "\\/", endPtr - scanPtr);
               while (pathPtr != NULL) {  /* while more backslashes            */
                 pathEnd = pathPtr;     /* save the position                 */
                                        /* search for more backslashes       */
                 pathPtr++;             /* step past the last match          */
-                pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
+                pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
               }
               if (pathEnd != NULL)     /* have backslashes?                 */
               {
@@ -205,12 +204,12 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
             pathEnd = pathPtr;         /* CHM - defect 85: save end pos.    */
             pathPtr++;                 /* step past first one               */
                                        /* search for backslashes            */
-            pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
+            pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
             while (pathPtr) {          /* while more backslashes            */
               pathEnd = pathPtr;       /* save the position                 */
               pathPtr++;               /* step past the last match          */
                                        /* search for more backslashes       */
-              pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
+              pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
             }
                                        /* extract the path                  */
             return context->NewString(name, pathEnd - name + 1);
@@ -222,17 +221,17 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
     case FILESPEC_NAME:                /* extract the file name             */
       if (nameLength > 0) {            /* filename null string?             */
                                        /* find colon or backslash           */
-        scanPtr = mempbrk(name, ":\\/", nameLength);
+        scanPtr = Utilities::locateCharacter(name, ":\\/", nameLength);
         if (scanPtr != NULL) {
           if (*scanPtr == ':') {       /* found a colon?                    */
             scanPtr++;                 /* step past the colon               */
             pathEnd = scanPtr;         /* save current position             */
-            pathPtr = mempbrk(scanPtr, "\\/", endPtr - scanPtr);
+            pathPtr = Utilities::locateCharacter(scanPtr, "\\/", endPtr - scanPtr);
             while (pathPtr) {          /* while more backslashes            */
               pathPtr++;               /* step past the last match          */
               pathEnd = pathPtr;       /* save the position                 */
                                        /* search for more backslashes       */
-              pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
+              pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
             }
             if (pathEnd < endPtr)      /* stuff to return?                  */
             {
@@ -243,12 +242,12 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
             pathPtr = scanPtr + 1;     /* save start position               */
             pathEnd = pathPtr;         /* step past first one               */
                                        /* search for backslashes            */
-            pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
+            pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
             while (pathPtr != NULL) {  /* while more backslashes            */
               pathPtr++;               /* step past the last match          */
               pathEnd = pathPtr;       /* save the position                 */
                                        /* search for more backslashes       */
-              pathPtr = mempbrk(pathPtr, "\\/", endPtr - pathPtr);
+              pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
             }
             if (pathEnd < endPtr)      /* stuff to return?                  */
             {

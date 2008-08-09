@@ -44,9 +44,9 @@ RexxReturnCode REXXENTRY RexxPullQueue (
         const char *,                          /* Name of queue to read from  */
         PRXSTRING,                             /* RXSTRING to receive data    */
         SYSTEMTIME *,                          /* Stor for data date/time     */
-        unsigned int);                         /* wait status (WAIT|NOWAIT)   */
-typedef RexxReturnCode (REXXENTRY *PFNREXXPULLQUEUE)(const char *, PCONSTRXSTRING, SYSTEMTIME *,
-                                           unsigned int);
+        size_t);                               /* wait status (WAIT|NOWAIT)   */
+typedef RexxReturnCode (REXXENTRY *PFNREXXPULLQUEUE)(const char *, PRXSTRING, SYSTEMTIME *,
+                                           size_t);
 
 #endif /* REXXPLATFORMAPIS_INCLUDED */
 

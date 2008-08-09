@@ -6547,7 +6547,7 @@ size_t RexxEntry SysWinSetDefaultPrinter(const char *name, size_t numargs, CONST
     // Two forms of input are allowed.  The old form of
     // "Printername,Drivername,Portname" and for W2K or later just the printer
     // name.  Count the commas to determine which form this might be.
-    for ( int i = 0; i < args[0].strlength; i++ )
+    for ( size_t i = 0; i < args[0].strlength; i++ )
     {
         if ( args[0].strptr[i] == ',' )
         {

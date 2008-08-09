@@ -205,7 +205,7 @@ RexxObject  *RexxArray::putRexx(RexxObject **arguments, size_t argCount)
     if (argCount == 0 || value == OREF_NULL)
     {
         /* this is an error                  */
-        missing_argument(ARG_ONE);         /* this is an error                  */
+        missingArgument(ARG_ONE);         /* this is an error                  */
     }
     /* go validate the index             */
     /* have array expanded if necessary  */
@@ -2093,7 +2093,7 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
         /* make sure current parm is inte    */
         current_dim = (RexxInteger *)args[i];
         if (current_dim == OREF_NULL)      /* was this one omitted?             */
-            missing_argument(i+1);           /* must have this value              */
+            missingArgument(i+1);           /* must have this value              */
                                              /* get the long value                */
         cur_size = current_dim->requiredNonNegative((int)(i+1));
         /* going to do an overflow?          */

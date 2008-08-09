@@ -225,12 +225,12 @@ void RexxSource::initBuffered(
                                            /* set the start position            */
         descriptor.position = _current - start;
         /* scan for a important character    */
-        scan = mempbrk(_current, line_delimiters, length);
+        scan = Utilities::locateCharacter(_current, line_delimiters, length);
         /* need to skip over null chars      */
         while (scan != OREF_NULL && *scan == '\0')
         {
             /* scan for a linend                 */
-            scan = mempbrk(scan + 1, line_delimiters, length - (scan - _current - 1));
+            scan = Utilities::locateCharacter(scan + 1, line_delimiters, length - (scan - _current - 1));
         }
         if (scan == NULL)
         {                /* not found, go to the end          */

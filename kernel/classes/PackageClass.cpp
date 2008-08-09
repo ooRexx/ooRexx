@@ -499,7 +499,7 @@ PackageClass *PackageClass::newRexx(
 
                                          /* break up the arguments            */
 
-    process_new_args(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
+    RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
 
     PackageClass *package = OREF_NULL;
 

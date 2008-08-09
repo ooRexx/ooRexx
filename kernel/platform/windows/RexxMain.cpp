@@ -61,9 +61,7 @@
 #include "DirectoryClass.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "IntegerClass.hpp"
-#include "APIServiceTables.h"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
-#include "RexxAPIManager.h"
 #include "Interpreter.hpp"
 #include "ProtectedObject.hpp"
 #include "PointerClass.hpp"

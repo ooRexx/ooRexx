@@ -1,0 +1,69 @@
+#! /bin/bash
+#
+# rxapid.sh    Start/Stop the rxapi daemon.
+#
+# description: rxapi is a standard UNIX program which coordinates the sharing
+#              of data betwenn multiple instances of ooRexx scripts.
+# processname: rxapi
+# pidfile:     /var/run/rxapi.pid
+
+# Source function library.
+. /etc/init.d/functions
+
+prog="rxapi"
+
+start() {
+	echo -n $"Starting $prog: "
+	daemon @prefix@/bin/rxapi
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/rxapi
+	return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping $prog: "
+	killproc rxapi
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/rxapi
+	return $RETVAL
+}
+
+rhstatus() {
+	status @prefix@/bin/rxapi
+}
+
+restart() {
+  	stop
+	start
+}
+
+force-reload() {
+	echo -n $"Force-reload not supported."
+	echo
+	return 0
+}
+
+# See how we were called.
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  restart)
+  	restart
+	;;
+  status)
+  	rhstatus
+	;;
+  force-reload)
+  	force-reload
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart|status|force-reload}"
+	exit 1
+esac

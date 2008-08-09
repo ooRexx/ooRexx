@@ -82,10 +82,6 @@ public:
         MaximumFileNameBuffer = MAXIMUM_PATH_LENGTH + MAXIMUM_FILENAME_LENGTH
     };
 
-    static const int stdinHandle;
-    static const int stdoutHandle;
-    static const int stderrHandle;
-
     static const char EOF_Marker;
     static const char *EOL_Marker;    // the end-of-line marker
     static const char PathDelimiter;  // directory path delimiter

@@ -58,7 +58,7 @@ rem REM *** Rexxapi
 rem REM Rexxapi before oryxk for ORDAPI.C
 REM
 @ECHO Building Rexxapi..
-CD  %OR_ORYXASRC%
+CD  %OR_REXXAPISRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F REXXAPI.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F REXXAPI.MAK )
 if ERRORLEVEL 1 goto error
 
@@ -66,7 +66,7 @@ REM
 REM *** Kernel
 REM
 @ECHO Building Kernel....
-CD  %OR_ORYXKSRC%
+CD  %OR_INTERPRETER_SRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F KERNEL.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F KERNEL.MAK )
 if ERRORLEVEL 1 goto error
 
@@ -74,7 +74,7 @@ REM *** orexxole
 REM
 :OREXXOLE
 @ECHO Building OREXXOLE..
-CD  %OR_ORYXOLESRC%
+CD  %OR_OLEOBJECTSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F OREXXOLE.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F OREXXOLE.MAK )
 if ERRORLEVEL 1 goto error
 
@@ -83,7 +83,7 @@ REM
 REM *** Rexxutil. Note that RexxUtil needs to be built before rexx.img is created.
 REM
 @ECHO Building Rexxutil..
-CD  %OR_ORYXRSRC%
+CD  %OR_REXXUTILSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F REXXUTIL.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F REXXUTIL.MAK )
 if ERRORLEVEL 1 goto error
 
@@ -92,7 +92,7 @@ REM
 REM *** These are the commmand lanuchers, need the kernel and rexxapi
 REM
 @ECHO Building Command launchers
-CD  %OR_ORYXWSRC%
+CD  %OR_WINKERNELSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F ORYXWIN.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F ORYXWIN.MAK )
 if ERRORLEVEL 1 goto error
 
@@ -103,29 +103,30 @@ IF %USELOGFILE% equ 1 ( REXXIMAGE >>%OR_ERRLOG% 2>&1 ) else ( REXXIMAGE )
 if ERRORLEVEL 1 goto error
 
 @ECHO Building RXSUBCOM and RXQUEUE..
-CD  %OR_ORYXASRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F Rxsubcom.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F Rxsubcom.MAK )
+CD  %OR_UTILITIES%\rxsubcom\platform\windows
+IF %USELOGFILE% equ 1 ( NMAKE /F rxsubcom.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rxsubcom.mak )
 if ERRORLEVEL 1 goto error
-IF %USELOGFILE% equ 1 ( NMAKE /F Rxqueue.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F Rxqueue.MAK )
+CD  %OR_UTILITIES%\rxqueue\platform\windows
+IF %USELOGFILE% equ 1 ( NMAKE /F rxqueue.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rxqueue.mak )
 if ERRORLEVEL 1 goto error
 
 
 @ECHO Building rxwinsys.dll
-CD  %OR_ORYXRSRC%
+CD  %OR_REXXUTILSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F RXWINSYS.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F RXWINSYS.MAK )
 if ERRORLEVEL 1 goto error
 
 REM *** rxsock
 REM
 @ECHO Building RxSock..
-CD  %OR_ORYXRSRC%
+CD  %OR_REXXUTILSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F Rxsock.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F Rxsock.MAK )
 if ERRORLEVEL 1 goto error
 
 REM *** rxmath
 REM
 @ECHO Building RxMath..
-CD  %OR_ORYXRSRC%
+CD  %OR_REXXUTILSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F rxmath.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rxmath.mak )
 if ERRORLEVEL 1 goto error
 
@@ -133,7 +134,7 @@ if ERRORLEVEL 1 goto error
 REM *** rxregexp
 REM
 @ECHO Building RXREGEXP...
-CD  %OR_ORYXREGEXP%
+CD  %OR_REGEXPSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F RXREGEXP.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F RXREGEXP.MAK )
 if ERRORLEVEL 1 goto error
 
@@ -141,21 +142,21 @@ if ERRORLEVEL 1 goto error
 REM *** oodialog
 REM
 @ECHO Building OODIALOG..
-CD  %OR_ORYXOODSRC%
+CD  %OR_OODIALOGSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F OODIALOG.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F OODIALOG.MAK )
 if ERRORLEVEL 1 goto error
 
 
 ECHO Building OODIALOG classes
 CD %OR_OUTDIR%
-IF %USELOGFILE% equ 1 ( REXX %OR_ORYXOODSRC%\M_OODCLS.REX >>%OR_ERRLOG% 2>&1 ) else ( REXX %OR_ORYXOODSRC%\M_OODCLS.REX )
+IF %USELOGFILE% equ 1 ( REXX %OR_OODIALOGSRC%\M_OODCLS.REX >>%OR_ERRLOG% 2>&1 ) else ( REXX %OR_OODIALOGSRC%\M_OODCLS.REX )
 if ERRORLEVEL 1 goto error
 
 
 CD %SRC_DIR%
 
 REM @ECHO Building ORXSCRPT..
-REM CD  %OR_ORYXAXSCRIPT%
+REM CD  %OR_ORXSCRIPTSRC%
 REM IF %USELOGFILE% equ 1 ( NMAKE /F ORXSCRPT.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F ORXSCRPT.MAK )
 REM if ERRORLEVEL 1 goto error
 
@@ -167,32 +168,32 @@ set LIB=%LIB%;%OR_OUTDIR%
 set INCLUDE=%OR_OUTDIR%;%SAMPLEPATH%;%INCLUDE%
 @ECHO Include path is %INCLUDE%
 
-CD  %OR_ORYXAPISAMPLES%\callrxnt
+CD  %OR_APISAMPLESRC%\callrxnt
 IF %USELOGFILE% equ 1 ( NMAKE /F callrxnt.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F callrxnt.mak )
 if ERRORLEVEL 1 goto error
 
-CD  %OR_ORYXAPISAMPLES%\callrxwn
+CD  %OR_APISAMPLESRC%\callrxwn
 IF %USELOGFILE% equ 1 ( NMAKE /F callrxwn.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F callrxwn.mak )
 if ERRORLEVEL 1 goto error
 
-CD  %OR_ORYXAPISAMPLES%\rexxexit
+CD  %OR_APISAMPLESRC%\rexxexit
 IF %USELOGFILE% equ 1 ( NMAKE /F rexxexit.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxexit.mak )
 if ERRORLEVEL 1 goto error
 
-CD  %OR_ORYXAPISAMPLES%\wpipe\wpipe1
+CD  %OR_APISAMPLESRC%\wpipe\wpipe1
 IF %USELOGFILE% equ 1 ( NMAKE /F rexxapi1.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxapi1.mak )
 if ERRORLEVEL 1 goto error
 
-CD  %OR_ORYXAPISAMPLES%\wpipe\wpipe2
+CD  %OR_APISAMPLESRC%\wpipe\wpipe2
 IF %USELOGFILE% equ 1 ( NMAKE /F rexxapi2.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxapi2.mak )
 if ERRORLEVEL 1 goto error
 
-CD  %OR_ORYXAPISAMPLES%\wpipe\wpipe3
+CD  %OR_APISAMPLESRC%\wpipe\wpipe3
 IF %USELOGFILE% equ 1 ( NMAKE /F rexxapi3.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rexxapi3.mak )
 if ERRORLEVEL 1 goto error
 
 @ECHO Building OODialog Samples..
-CD  %OR_ORYXOODIALOGSAMPLES%\res
+CD  %OR_OODIALOGSAMPLES%\res
 IF %USELOGFILE% equ 1 ( NMAKE /F res.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F res.mak )
 if ERRORLEVEL 1 goto error
 

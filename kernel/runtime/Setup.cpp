@@ -1311,7 +1311,7 @@ void RexxMemory::createImage()
       catch (ActivityException )
       {
           ActivityManager::currentActivity->error();          /* do error cleanup                  */
-          logic_error("Error building kernel image.  Image not saved.");
+          Interpreter::logicError("Error building kernel image.  Image not saved.");
       }
 
   }

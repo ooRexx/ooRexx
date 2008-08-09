@@ -53,6 +53,7 @@ RexxQuery                      @15
 RexxTerminate                  @16
 ;
 RexxTranslateProgram           @24
+RexxTranslateInstoreProgram    @25
 ;
 ;
 RexxCreateInterpreterImage     @94

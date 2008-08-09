@@ -59,6 +59,14 @@ VERSION_INFO = -version-info ${ORX_CURRENT}:${ORX_REVISION}:${ORX_AGE}
 # These are the platform independent directories
 build_utils_dir = $(top_srcdir)/platform
 build_rexxapi_dir = $(top_srcdir)/rexxapi
+build_rexxapi_client_dir = $(build_rexxapi_dir)/client
+build_rexxapi_client_platform_dir = $(build_rexxapi_dir)/client/platform/unix
+build_rexxapi_server_dir = $(build_rexxapi_dir)/server
+build_rexxapi_server_platform_dir = $(build_rexxapi_dir)/server/platform/unix
+build_rexxapi_common_dir = $(build_rexxapi_dir)/common
+build_rexxapi_common_platform_dir = $(build_rexxapi_dir)/common/platform/unix
+build_common_dir = $(top_srcdir)/common
+build_common_platform_dir = $(top_srcdir)/common/platform/unix
 build_kernel_dir = $(top_srcdir)/kernel
 build_kernel_common_dir = $(build_kernel_dir)/platform/common
 build_kernel_api_dir = $(build_kernel_dir)/api
@@ -75,10 +83,10 @@ build_rexutils_dir = $(top_srcdir)/rexutils
 build_rxregexp_dir = $(top_srcdir)/rxregexp
 build_samples_dir = $(top_srcdir)/samples
 build_rexxclasses_dir = $(build_kernel_dir)/RexxClasses
+build_utilities_dir = $(build_kernel_dir)/utilities
 
 # These are the *nix directories
 utils_unix_dir = $(build_utils_dir)/unix
-rexxapi_unix_dir = $(build_rexxapi_dir)/unix
 kernel_unix_dir = $(build_kernel_dir)/platform/unix
 api_unix_dir = $(build_api_dir)/platform/unix
 rexutils_unix_dir = $(build_rexutils_dir)/unix
@@ -204,18 +212,20 @@ parserHeaders = $(build_parser_dir)/Clause.hpp \
 platformHeaders = $(build_kernel_platform_dir)/APIDefinitions.h \
                   $(build_kernel_platform_dir)/PlatformDefinitions.h \
                   $(build_kernel_platform_dir)/SharedMemorySupport.h \
-                  $(build_kernel_platform_dir)/SysFile.hpp \
+                  $(build_kernel_platform_dir)/SysActivity.hpp \
                   $(build_kernel_platform_dir)/SysFileSystem.hpp \
                   $(build_kernel_platform_dir)/SysInterpreterInstance.hpp \
-                  $(build_kernel_platform_dir)/SysLibrary.hpp \
                   $(build_kernel_platform_dir)/SysNativeFunctions.h \
                   $(build_kernel_platform_dir)/SysNativeMethods.h \
                   $(build_kernel_platform_dir)/SystemCommands.h \
-                  $(build_kernel_platform_dir)/SystemInterpreter.hpp \
-                  $(build_kernel_platform_dir)/SystemSemaphores.h \
-                  $(build_kernel_platform_dir)/SysSemaphore.hpp \
-                  $(build_kernel_platform_dir)/SysThread.hpp
-platformcommonHeaders =
+                  $(build_kernel_platform_dir)/SystemInterpreter.hpp 
+commonHeaders = $(build_common_dir)/SynchronizedBlock.hpp \
+                $(build_common_dir)/Utilities.hpp \
+                $(build_common_platform_dir)/SysFile.hpp \
+                $(build_common_platform_dir)/SysLibrary.hpp \
+                $(build_common_platform_dir)/SysSemaphore.hpp \
+                $(build_common_platform_dir)/SysThread.hpp
+
 runtimeHeaders = $(build_runtime_dir)/ActivationApiContexts.hpp \
                  $(build_runtime_dir)/ActivityDispatcher.hpp \
                  $(build_runtime_dir)/ActivityManager.hpp \
@@ -265,19 +275,33 @@ runtimeHeaders = $(build_runtime_dir)/ActivationApiContexts.hpp \
                  $(build_runtime_dir)/RexxVariable.hpp \
                  $(build_runtime_dir)/RexxVariableDictionary.hpp \
                  $(build_runtime_dir)/SecurityManager.hpp \
-                 $(build_runtime_dir)/TranslateDispatcher.hpp \
-                 $(build_runtime_dir)/Utilities.hpp
+                 $(build_runtime_dir)/TranslateDispatcher.hpp
 streamlibraryHeaders = $(build_streamlibrary_dir)/StreamCommandParser.h \
                        $(build_streamlibrary_dir)/StreamNative.hpp
 libHeaders = $(build_lib_dir)/RexxPlatformDefinitions.h \
              $(build_lib_dir)/RexxInternalApis.h
-rexxapiHeaders = $(build_rexxapi_dir)/APIUtil.h \
-                 $(build_rexxapi_dir)/ASCIISymbols.h \
-                 $(build_rexxapi_dir)/Characters.h \
-                 $(build_rexxapi_dir)/CodePageTables.h
-rexxapiunixHeaders = $(build_rexxapi_platform_dir)/APIUtilities.h \
-                     $(build_rexxapi_platform_dir)/RexxAPIManager.h \
-                     $(build_rexxapi_platform_dir)/SubcommandAPI.h
+rexxapiServerHeaders = $(build_rexxapi_server_dir)/APIServer.hpp \
+                 $(build_rexxapi_server_dir)/APIServerInstance.hpp \
+                 $(build_rexxapi_server_dir)/APIServerThread.hpp \
+                 $(build_rexxapi_server_dir)/MacroSpaceManager.hpp \
+                 $(build_rexxapi_server_dir)/QueueManager.hpp \
+                 $(build_rexxapi_server_dir)/RegistrationManager.hpp
+rexxapiClientHeaders = $(build_rexxapi_client_dir)/ClientMessage.hpp \
+                 $(build_rexxapi_client_dir)/LocalAPIContext.hpp \
+                 $(build_rexxapi_client_dir)/LocalAPIManager.hpp \
+                 $(build_rexxapi_client_dir)/LocalAPISubsystem.hpp \
+                 $(build_rexxapi_client_dir)/LocalMacroSpaceManager.hpp \
+                 $(build_rexxapi_client_dir)/LocalQueueManager.hpp \
+                 $(build_rexxapi_client_dir)/LocalRegistrationManager.hpp \
+                 $(build_rexxapi_client_dir)/RexxAPI.h \
+                 $(build_rexxapi_client_dir)/SysLocalAPIManager.hpp
+rexxapiCommonHeaders = $(build_rexxapi_common_dir)/Encodings.hpp \
+                 $(build_rexxapi_common_dir)/Rxstring.hpp \
+                 $(build_rexxapi_common_dir)/ServiceException.hpp \
+                 $(build_rexxapi_common_dir)/ServiceMessage.hpp \
+                 $(build_rexxapi_common_dir)platform/unix/SysAPIManager.hpp \
+                 $(build_rexxapi_common_dir)platform/unix/SysCSStream.hpp \
+                 $(build_rexxapi_common_dir)platform/unix/SysProcess.hpp \
 rxregexpHeaders = $(build_rxregexp_dir)/automaton.hpp \
                   $(build_rxregexp_dir)/dblqueue.cpp \
                   $(build_rxregexp_dir)/dblqueue.hpp \
@@ -327,7 +351,7 @@ BUILT_SOURCES = $(errorHeaders) \
 #
 # Binary targets
 #
-bin_PROGRAMS = rexximage rexx rexxc rxqueue rxsubcom rxdelipc
+bin_PROGRAMS = rxapi rexximage rexx rexxc rxqueue rxsubcom rxdelipc
 
 #
 # Shared library targets
@@ -362,12 +386,26 @@ man_MANS = $(build_utils_platform_dir)/rexx.1 \
 #################### librexx.so ##########################
 # Sources for librexxapi.so
 #
-librexxapi_la_SOURCES = $(build_rexxapi_platform_dir)/SubcommandAPI.cpp \
-                        $(build_rexxapi_platform_dir)/RexxAPIManager.cpp \
-                        $(build_kernel_platform_dir)/SystemSemaphores.cpp \
-                        $(build_kernel_platform_dir)/SharedMemorySupport.cpp \
-                        $(build_rexxapi_platform_dir)/MacroSpace.cpp \
-                        $(build_rexxapi_platform_dir)/QueuesAPI.cpp
+librexxapi_la_SOURCES = $(build_rexxapi_client_dir)/ClientMessage.cpp \
+                        $(build_rexxapi_client_dir)/LocalAPIContext.cpp \
+                        $(build_rexxapi_client_dir)/LocalAPIManager.cpp \
+                        $(build_rexxapi_client_dir)/LocalMacroSpaceManager.cpp \
+                        $(build_rexxapi_client_dir)/LocalQueueManager.cpp \
+                        $(build_rexxapi_client_dir)/LocalRegistrationManager.cpp \
+                        $(build_rexxapi_client_dir)/MacroSpaceApi.cpp \
+                        $(build_rexxapi_client_dir)/QueuesAPI.cpp \
+                        $(build_rexxapi_client_dir)/RegistrationAPI.cpp \
+                        $(build_rexxapi_client_dir)/platform/unix/SysLegacyAPI.cpp \
+                        $(build_rexxapi_client_dir)/platform/unix/SysLocalAPIManager.cpp \
+                        $(build_rexxapi_common_dir)/ServiceMessage.cpp \
+                        $(build_rexxapi_common_dir)/platform/unix/SysAPIManager.cpp \
+                        $(build_rexxapi_common_dir)/platform/unix/SysCSStream.cpp \
+                        $(build_rexxapi_common_dir)/platform/unix/SysProcess.cpp \
+                        $(build_common_dir)/Utilities.cpp \
+                        $(build_common_dir)/platform/unix/SysSemaphore.cpp \
+                        $(build_common_dir)/platform/unix/SysLibrary.cpp \
+                        $(build_common_dir)/platform/unix/SysFile.cpp \
+                        $(build_common_dir)/platform/unix/SysThread.cpp
 
 #
 # Preprocessor flags for librexxapi.so
@@ -376,17 +414,12 @@ librexxapi_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                           -I$(build_lib_dir) \
                           -I$(build_api_dir) \
                           -I$(build_api_platform_dir) \
-                          -I$(build_kernel_dir) \
-                          -I$(build_expression_dir) \
-                          -I$(build_instructions_dir) \
-                          -I$(build_classes_dir) \
-                          -I$(build_runtime_dir) \
-                          -I$(build_parser_dir) \
-                          -I$(build_messages_dir) \
-                          -I$(build_kernel_common_dir) \
-                          -I$(build_kernel_platform_dir) \
-                          -I$(build_rexxapi_dir) \
-                          -I$(build_rexxapi_platform_dir)
+                          -I$(build_rexxapi_client_dir) \
+                          -I$(build_rexxapi_client_platform_dir) \
+                          -I$(build_rexxapi_common_dir) \
+                          -I$(build_rexxapi_common_platform_dir) \
+                          -I$(build_common_dir) \
+                          -I$(build_common_platform_dir)
 
 librexxapi_la_LDFLAGS = $(VERSION_INFO)
 
@@ -490,28 +523,26 @@ parser_sources = $(build_parser_dir)/Clause.cpp \
                  $(build_parser_dir)/Scanner.cpp \
                  $(build_parser_dir)/SourceFile.cpp \
                  $(build_parser_dir)/Token.cpp
-kernel_platform_common_sources =
-#                        SharedMemorySupport.cpp
-#                        SystemSemaphores.cpp
 platform_sources = $(build_kernel_platform_dir)/ErrorMessages.cpp \
                    $(build_kernel_platform_dir)/ExternalFunctions.cpp \
                    $(build_kernel_platform_dir)/FileSystem.cpp \
                    $(build_kernel_platform_dir)/MemorySupport.cpp \
                    $(build_kernel_platform_dir)/MiscSystem.cpp \
                    $(build_kernel_platform_dir)/RexxMain.cpp \
-                   $(build_kernel_platform_dir)/SysFile.cpp \
+                   $(build_kernel_platform_dir)/SysActivity.cpp \
                    $(build_kernel_platform_dir)/SysFileSystem.cpp \
                    $(build_kernel_platform_dir)/SysInterpreterInstance.cpp \
-                   $(build_kernel_platform_dir)/SysLibrary.cpp \
                    $(build_kernel_platform_dir)/SystemCommands.cpp \
                    $(build_kernel_platform_dir)/SystemInitialization.cpp \
                    $(build_kernel_platform_dir)/SystemInterpreter.cpp \
-                   $(build_kernel_platform_dir)/SystemSemaphores.cpp \
-                   $(build_kernel_platform_dir)/SysSemaphore.cpp \
-                   $(build_kernel_platform_dir)/SysThread.cpp \
                    $(build_kernel_platform_dir)/TimeSupport.cpp \
                    $(build_kernel_platform_dir)/UseridFunction.cpp \
                    $(build_kernel_platform_dir)/ValueFunction.cpp
+common_sources = $(build_common_dir)/Utilities.cpp \
+                 $(build_common_platform_dir)/SysFile.cpp \
+                 $(build_common_platform_dir)/SysLibrary.cpp \
+                 $(build_common_platform_dir)/SysSemaphore.cpp \
+                 $(build_common_platform_dir)/SysThread.cpp
 runtime_sources  = $(build_runtime_dir)/ActivityDispatcher.cpp \
                    $(build_runtime_dir)/ActivityManager.cpp \
                    $(build_runtime_dir)/CallbackDispatcher.cpp \
@@ -558,7 +589,6 @@ runtime_sources  = $(build_runtime_dir)/ActivityDispatcher.cpp \
                    $(build_runtime_dir)/SecurityManager.cpp \
                    $(build_runtime_dir)/Setup.cpp \
                    $(build_runtime_dir)/TranslateDispatcher.cpp \
-                   $(build_runtime_dir)/Utilities.cpp \
                    $(build_runtime_dir)/Version.cpp \
                    $(build_runtime_dir)/VirtualFunctionTable.cpp
 streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
@@ -568,8 +598,8 @@ librexx_la_SOURCES = $(classes_sources) \
                      $(expression_sources) \
                      $(instructions_sources) \
                      $(parser_sources) \
-                     $(kernel_platform_common_sources) \
                      $(platform_sources) \
+                     $(common_sources) \
                      $(runtime_sources) \
                      $(streamlibrary_sources)
 core_classes = $(build_rexxclasses_dir)/CoreClasses.orx \
@@ -584,6 +614,8 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_lib_dir) \
                        -I$(build_api_dir) \
                        -I$(build_api_platform_dir) \
+                       -I$(build_common_dir) \
+                       -I$(build_common_platform_dir) \
                        -I$(build_kernel_dir) \
                        -I$(build_expression_dir) \
                        -I$(build_instructions_dir) \
@@ -597,6 +629,43 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_rexxapi_platform_dir)
 
 librexx_la_LDFLAGS = $(VERSION_INFO) -nostartfiles
+#################### rxapi ##########################
+# Sources for rxapi
+#
+rxapi_SOURCES = $(build_rexxapi_server_dir)/APIServer.cpp \
+                $(build_rexxapi_server_dir)/APIServerInstance.cpp \
+                $(build_rexxapi_server_dir)/APIServerThread.cpp \
+                $(build_rexxapi_server_dir)/MacroSpaceManager.cpp \
+                $(build_rexxapi_server_dir)/QueueManager.cpp \
+                $(build_rexxapi_server_dir)/RegistrationManager.cpp \
+                $(build_rexxapi_server_dir)/platform/unix/APIService.cpp \
+                $(build_rexxapi_common_dir)/ServiceMessage.cpp \
+                $(build_rexxapi_common_dir)/platform/unix/SysAPIManager.cpp \
+                $(build_rexxapi_common_dir)/platform/unix/SysCSStream.cpp \
+                $(build_rexxapi_common_dir)/platform/unix/SysProcess.cpp \
+                $(build_common_dir)/Utilities.cpp \
+                $(build_common_dir)/platform/unix/SysSemaphore.cpp \
+                $(build_common_dir)/platform/unix/SysThread.cpp
+#
+# Preprocessor flags for rxapi
+#
+rxapi_CXXFLAGS  = $(COMMON_CPPFLAGS) \
+                 -I$(build_lib_dir) \
+                 -I$(build_api_dir) \
+                 -I$(build_api_platform_dir) \
+                 -I$(build_messages_dir) \
+                 -I$(build_rexxapi_server_dir) \
+                 -I$(build_rexxapi_server_platform_dir) \
+                 -I$(build_rexxapi_common_dir) \
+                 -I$(build_rexxapi_common_platform_dir) \
+                 -I$(build_common_dir) \
+                 -I$(build_common_platform_dir)
+#
+# Extra libraries for rxapi
+#
+rxapi_LDADD   = @ORX_LDADD_EXECUTABLE@
+rxapi_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
+
 #################### rexx ##########################
 # Sources for rexx
 #
@@ -663,7 +732,7 @@ rexxc_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rxqueue #########################
 # Sources for rxqueue
 #
-rxqueue_SOURCES =  $(build_rexxapi_platform_dir)/QueueCommand.cpp
+rxqueue_SOURCES =  $(build_utilities_dir)/rxqueue/platform/unix/rxqueue.cpp
 #
 # Preprocessor flags for rxqueue
 #
@@ -683,7 +752,7 @@ rxqueue_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rxsubcom #########################
 # Sources for rxsubcom
 #
-rxsubcom_SOURCES =  $(build_rexxapi_platform_dir)/SUBCOMCommand.cpp
+rxsubcom_SOURCES =  $(build_utilities_dir)/rxsubcom/platform/unix/rxsubcom.cpp
 #
 # Preprocessor flags for rxsubcom
 #
@@ -883,7 +952,7 @@ EXTRA_DIST = $(build_messages_dir)/RexxMessageNumbers.xsl \
              $(instructionsHeaders) \
              $(parserHeaders) \
              $(platformHeaders) \
-             $(platformcommonHeaders) \
+             $(commonHeaders) \
              $(runtimeHeaders) \
              $(streamlibraryHeaders) \
              $(libHeaders) \

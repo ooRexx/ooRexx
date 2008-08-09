@@ -43,10 +43,10 @@ all: $(OR_OUTDIR)\rexximage.exe $(OR_OUTDIR)\rexx.exe $(OR_OUTDIR)\orx.exe $(OR_
      @ECHO ...
      @ECHO All done ....
 
-!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
+!include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
-!IFNDEF OR_ORYXWSRC
-!ERROR Build error, OR_ORYXWSRC not set
+!IFNDEF OR_WINKERNELSRC
+!ERROR Build error, OR_WINKERNELSRC not set
 !ENDIF
 
 # define component-specific dependencies
@@ -69,7 +69,6 @@ $(OR_OUTDIR)\ORX.exe : $(REXXCOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res
     $(OR_LINK) $(REXXCOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res $(lflags_common_console) /STACK:524288 \
     $(OR_OUTDIR)\rexxapi.lib \
     $(OR_OUTDIR)\rexx.lib \
-    $(libs_dll) \
     -out:$(OR_OUTDIR)\$(@B).exe
 
 $(OR_OUTDIR)\rexx.exe : $(OR_OUTDIR)\orx.exe
@@ -81,14 +80,12 @@ $(OR_OUTDIR)\rexxhide.exe : $(REXXCHOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res
     $(OR_LINK) $(REXXCHOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res $(lflags_common) /STACK:524288 \
     $(OR_OUTDIR)\rexxapi.lib \
     $(OR_OUTDIR)\rexx.lib \
-    $(libs_dll) \
     -out:$(OR_OUTDIR)\$(@B).exe
 
 $(OR_OUTDIR)\rexxpaws.exe : $(REXXPOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res
     $(OR_LINK) $(REXXPOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res $(lflags_common_console) /STACK:524288 \
     $(OR_OUTDIR)\rexxapi.lib \
     $(OR_OUTDIR)\rexx.lib \
-    $(libs_dll) \
     -out:$(OR_OUTDIR)\$(@B).exe
 #
 # *** rexximage.exe
@@ -99,15 +96,14 @@ $(OR_OUTDIR)\rexximage.exe : $(REXXIOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res
     $(OR_LINK) $(REXXIOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res $(lflags_common_console) /STACK:524288 \
     $(OR_OUTDIR)\rexxapi.lib \
     $(OR_OUTDIR)\rexx.lib \
-    $(libs_dll) \
     -out:$(OR_OUTDIR)\$(@B).exe
 
 # *** Inference Rule for C->OBJ
 #
-{$(OR_ORYXWSRC)}.c{$(OR_OUTDIR)}.obj:
+{$(OR_WINKERNELSRC)}.c{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXWSRC)\$(@B).c $(OR_ORYXINCL)
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_WINKERNELSRC)\$(@B).c $(OR_ORYXINCL)
 
 #
 # *** Inference Rule for local C->OBJ
@@ -119,25 +115,25 @@ $(OR_OUTDIR)\rexximage.exe : $(REXXIOBJ) $(KERNELOBJ) $(OR_OUTDIR)\rexx.res
 
 # *** Inference Rule for REXX->OBJ
 #
-$(OR_OUTDIR)\rexx.obj: $(OR_ORYXWSRC)\rexx.c
+$(OR_OUTDIR)\rexx.obj: $(OR_WINKERNELSRC)\rexx.c
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_ORYXWSRC)\$(@B).c
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_WINKERNELSRC)\$(@B).c
 
-$(OR_OUTDIR)\rexxhide.obj: $(OR_ORYXWSRC)\rexxhide.c
+$(OR_OUTDIR)\rexxhide.obj: $(OR_WINKERNELSRC)\rexxhide.c
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_ORYXWSRC)\$(@B).c
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_WINKERNELSRC)\$(@B).c
 
-$(OR_OUTDIR)\rexxpaws.obj: $(OR_ORYXWSRC)\rexxpaws.c
+$(OR_OUTDIR)\rexxpaws.obj: $(OR_WINKERNELSRC)\rexxpaws.c
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_ORYXWSRC)\$(@B).c
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_WINKERNELSRC)\$(@B).c
 
-$(OR_OUTDIR)\rexximage.obj: $(OR_ORYXWSRC)\rexximage.cpp
+$(OR_OUTDIR)\rexximage.obj: $(OR_WINKERNELSRC)\rexximage.cpp
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_ORYXWSRC)\$(@B).cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_WINKERNELSRC)\$(@B).cpp
 
 #
 # *** Copy ICO files to target dir...
@@ -147,17 +143,17 @@ COPYICOFILES: $(ICOFILES)
 #
 # *** Inference Rule for ICOFILES
 #
-{$(OR_ORYXWSRC)}.ico{$(OR_OUTDIR)}.ico:
+{$(OR_WINKERNELSRC)}.ico{$(OR_OUTDIR)}.ico:
     @ECHO .
     @ECHO Copying $(@B).ico
-    COPY $(OR_ORYXWSRC)\$(@B).ico $(OR_OUTDIR)\$(@B).ico
+    COPY $(OR_WINKERNELSRC)\$(@B).ico $(OR_OUTDIR)\$(@B).ico
 #
 # NEED individual dependencies placed here eventually
 #
 
 
 # Update the version information block
-$(OR_OUTDIR)\rexx.res: $(OR_ORYXWSRC)\rexx.rc
+$(OR_OUTDIR)\rexx.res: $(OR_WINKERNELSRC)\rexx.rc
     @ECHO .
     @ECHO ResourceCompiling $(@B).res
-        $(rc) $(rcflags_common) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_ORYXWSRC)\$(@B).rc
+        $(rc) $(rcflags_common) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_WINKERNELSRC)\$(@B).rc

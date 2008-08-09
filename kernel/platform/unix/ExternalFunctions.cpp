@@ -77,8 +77,6 @@
 #include "MethodClass.hpp"
 #include "SourceFile.hpp"
 #include "RexxInternalApis.h"          /* Get private REXXAPI API's         */
-#include "RexxAPIManager.h"
-#include "APIUtilities.h"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"

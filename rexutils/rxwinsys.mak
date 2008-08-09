@@ -38,7 +38,7 @@
 # NMAKE-compatible MAKE file for FNTEST*
 all:  $(OR_OUTDIR)\rxwinsys.dll $(OR_OUTDIR)\winsystm.cls
 
-!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
+!include "$(OR_LIBSRC)\ORXWIN32.MAK"
 C=cl
 OPTIONS= $(cflags_common) $(OR_ORYXINCL)
 OR_LIB=$(OR_OUTDIR)
@@ -49,7 +49,7 @@ SOURCEF=$(OR_OUTDIR)\rxwinsys.obj
     $(C) $(OPTIONS) $(cflags_dll) $(ORYXINCL) /DINCL_32  -c $(**) /Fo$(@)
 
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
 {$(XPLATFORM)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .

@@ -634,6 +634,31 @@ wholenumber_t RexxInteger::strictComp(
 
 
 /**
+ * Do a comparison operation between an Integer object and
+ * another object.
+ *
+ * @param other  The other object.
+ *
+ * @return true if the two objects compare equal, false for an
+ *         unequal result.
+ */
+wholenumber_t RexxInteger::comp(RexxObject *other)
+{
+    required_arg(other, ONE);            /* make sure this is really there    */
+                                         /* able to compare here?             */
+    if (this->isSameType(other) && number_digits() == Numerics::DEFAULT_DIGITS)
+    {
+        /* just return the difference        */
+        return this->value - ((RexxInteger *)other)->value;
+    }
+    else                                 /* do a numberstring compare         */
+    {
+        return this->numberString()->comp(other);
+    }
+}
+
+
+/**
  * Exported version of the HASHCODE method for retrieving the
  * object's hash.
  *

@@ -43,10 +43,10 @@ all: $(OR_OUTDIR)\orexxole.dll
     @ECHO All done OREXXOLE.DLL
     @ECHO .
 
-!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
+!include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
-!IFNDEF OR_ORYXOLESRC
-!ERROR Build error, OR_ORYXOLESRC not set
+!IFNDEF OR_OLEOBJECTSRC
+!ERROR Build error, OR_OLEOBJECTSRC not set
 !ENDIF
 
 OBJS   = $(OR_OUTDIR)\orexxole.obj $(OR_OUTDIR)\OLEVariant.obj
@@ -59,9 +59,9 @@ CPPOBJS = $(OR_OUTDIR)\events.obj
 #
 # Generate import library (.lib) and export library (.exp) from
 # module-definition (.dfw) file for a DLL
-$(OR_OUTDIR)\orexxole.lib : $(CPPOBJS) $(OBJS) $(OR_ORYXOLESRC)\orexxole.def
+$(OR_OUTDIR)\orexxole.lib : $(CPPOBJS) $(OBJS) $(OR_OLEOBJECTSRC)\orexxole.def
         $(OR_IMPLIB) -machine:$(CPU) \
-        -def:$(OR_ORYXOLESRC)\orexxole.def \
+        -def:$(OR_OLEOBJECTSRC)\orexxole.def \
         $(OBJS)               \
         -out:$(OR_OUTDIR)\orexxole.lib
 
@@ -70,15 +70,14 @@ $(OR_OUTDIR)\orexxole.lib : $(CPPOBJS) $(OBJS) $(OR_ORYXOLESRC)\orexxole.def
 #
 # need import libraries and def files still
 $(OR_OUTDIR)\orexxole.dll : $(CPPOBJS) $(OBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\orexxole.lib \
-                            $(OR_ORYXOLESRC)\orexxole.def     \
+                            $(OR_OLEOBJECTSRC)\orexxole.def     \
                             $(OR_OUTDIR)\orexxole.exp
     $(OR_LINK) -map $(lflags_common) $(lflags_dll) -out:$(OR_OUTDIR)\$(@B).dll \
              $(CPPOBJS) $(OBJS) $(RXDBG_OBJ) \
              $(OR_OUTDIR)\verinfo.res \
              $(OR_OUTDIR)\$(@B).exp \
              $(OR_OUTDIR)\rexx.lib \
-             $(OR_OUTDIR)\rexxapi.lib \
-             $(libs_dll)
+             $(OR_OUTDIR)\rexxapi.lib
 
 #
 # *** .c -> .obj rules
@@ -87,7 +86,7 @@ $(OR_OUTDIR)\orexxole.dll : $(CPPOBJS) $(OBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\orexxol
 $(OBJS):  $(@B).c
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp) $(OR_ORYXOLESRC)\$(@B).c
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp) $(OR_OLEOBJECTSRC)\$(@B).c
 
 #
 # *** .cpp -> .obj rules
@@ -95,4 +94,4 @@ $(OBJS):  $(@B).c
 $(CPPOBJS):  $(@B).cpp
     @ECHO .
     @ECHO Compiling $(@B).cpp
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXOLESRC)\$(@B).cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_OLEOBJECTSRC)\$(@B).cpp

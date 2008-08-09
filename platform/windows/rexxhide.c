@@ -76,8 +76,6 @@ int WINAPI WinMain(
   if (program_name == NULL) {
                                        /* give a simple error message       */
     MessageBox(NULL, "Syntax: REXXHIDE ProgramName [parameter_1....parameter_n]\n", "Wrong Arguments", MB_OK | MB_ICONHAND);
-    /* try to unload the orexx memory manager */
-    RexxShutDownAPI();
     return -1;
   }
   else {                               /* real program execution            */
@@ -105,8 +103,6 @@ int WINAPI WinMain(
        MessageBox(NULL, arg_buffer, "Execution Error", MB_OK | MB_ICONHAND);
    }
   }
-  /* try to unload the orexx memory manager */
-  RexxShutDownAPI();
                                              // return interpeter or
  return rc ? rc : rexxrc;                    // rexx program return cd
 }

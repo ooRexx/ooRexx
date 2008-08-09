@@ -42,6 +42,7 @@ class RexxObjectTable;
 class RexxStack;
 class RexxCode;
 class RoutineClass;
+class RexxNativeActivation;
 
 class ActivityManager
 {
@@ -263,6 +264,13 @@ inline void reportHalt(RexxString *description)
                                          /* raise as a syntax error           */
       reportException(Error_Program_interrupted_condition, OREF_HALT);
   }
+}
+
+
+inline void missingArgument(size_t argumentPosition)
+{
+                                       /* just raise the error              */
+    reportException(Error_Incorrect_method_noarg, argumentPosition);
 }
 
 

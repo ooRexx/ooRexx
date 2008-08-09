@@ -86,10 +86,6 @@
     #include <sys/utsname.h>               /* get the uname() function   */
 #endif
 
-void RxExitClear(int);
-void RxExitClearNormal();
-
-
 unsigned int iClauseCounter=0;         // count of clauses
 #define LOADED_OBJECTS 100
 

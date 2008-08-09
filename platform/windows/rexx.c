@@ -125,7 +125,6 @@ int __cdecl main(int argc, char *argv[])
                     GlobalFree(ptr);
                 }
             }
-            RexxShutDownAPI();        /* unload RXAPI.EXE */
             return 0;
 
         default:                       /* ignore other switches             */
@@ -151,8 +150,6 @@ int __cdecl main(int argc, char *argv[])
     #undef printf
     printf("Syntax: REXX [-v] ProgramName [parameter_1....parameter_n]\n");
     printf("or    : REXX [-e] ProgramString [parameter_1....parameter_n]\n");
-    /* try to unload the orexx memory manager */
-    RexxShutDownAPI();
     return -1;
   }
   else {                               /* real program execution            */
@@ -202,8 +199,6 @@ int __cdecl main(int argc, char *argv[])
     freeArguments(NULL, &arguments);
 
   }
-  /* try to unload the orexx memory manager */
-  RexxShutDownAPI();
                                               // return interpeter or
   return rc ? rc : rexxrc;                    // rexx program return cd
 }

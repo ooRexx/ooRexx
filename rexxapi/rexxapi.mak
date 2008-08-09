@@ -38,27 +38,37 @@
 #------------------------
 # REXXAPI.MAK make file
 #------------------------
-TARGET=rexxapi
 
-all: $(OR_OUTDIR)\$(TARGET).dll $(OR_OUTDIR)\rxapi.exe
+all: $(OR_OUTDIR)\rexxapi.dll $(OR_OUTDIR)\rxapi.exe
     @ECHO.
-    @ECHO All done $(TARGET).dll  rxapi.exe
+    @ECHO All done rexxapi.dll  rxapi.exe
     @ECHO.
 
-!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
+!include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
-!IFNDEF OR_ORYXASRC
-!ERROR Build error, OR_ORYXASRC not set
+!IFNDEF OR_REXXAPISRC
+!ERROR Build error, OR_REXXAPISRC not set
 !ENDIF
 
-#lflags_common = $(lflags_common) kernel32.lib
+COMMONINC = -I$(OR_REXXAPISRC)\common -I$(OR_REXXAPISRC)\common\platform\windows
+CLIENTINC = -I$(OR_REXXAPISRC)\client -I$(OR_REXXAPISRC)\client\platform\windows
+SERVERINC = -I$(OR_REXXAPISRC)\server -I$(OR_REXXAPISRC)\server\platform\windows
 
-OBJLIST = $(OR_OUTDIR)\RexxAPIManager.obj $(OR_OUTDIR)\QueuesAPI.obj \
-          $(OR_OUTDIR)\MacroSpace.obj $(OR_OUTDIR)\APIUtilities.obj \
-          $(OR_OUTDIR)\SubcommandAPI.obj \
+CLIENTOBJS = $(OR_OUTDIR)\ClientMessage.obj $(OR_OUTDIR)\LocalAPIContext.obj \
+          $(OR_OUTDIR)\LocalAPIManager.obj $(OR_OUTDIR)\LocalQueueManager.obj \
+          $(OR_OUTDIR)\LocalMacroSpaceManager.obj $(OR_OUTDIR)\LocalRegistrationManager.obj \
+          $(OR_OUTDIR)\MacroSpaceApi.obj $(OR_OUTDIR)\QueuesApi.obj  $(OR_OUTDIR)\RegistrationApi.obj \
+          $(OR_OUTDIR)\ServiceMessage.obj $(OR_OUTDIR)\SysCSStream.obj $(OR_OUTDIR)\SysProcess.obj \
+          $(OR_OUTDIR)\Utilities.obj $(OR_OUTDIR)\SysLegacyAPI.obj $(OR_OUTDIR)\SysFile.obj \
+          $(OR_OUTDIR)\SysLocalAPIManager.obj $(OR_OUTDIR)\SysLibrary.obj $(OR_OUTDIR)\SysAPIManager.obj \
+          $(OR_OUTDIR)\SysSemaphore.obj
 
-OBJLST2 = $(OR_OUTDIR)\QueuesAPI.obj  $(OR_OUTDIR)\RexxAPIManager.obj \
-          $(OR_OUTDIR)\MacroSpace.obj $(OR_OUTDIR)\APIUtilities.obj
+SERVEROBJS = $(OR_OUTDIR)\APIServer.obj $(OR_OUTDIR)\APIServerInstance.obj \
+          $(OR_OUTDIR)\MacroSpaceManager.obj $(OR_OUTDIR)\QueueManager.obj \
+          $(OR_OUTDIR)\RegistrationManager.obj $(OR_OUTDIR)\ServiceMessage.obj \
+          $(OR_OUTDIR)\APIService.obj $(OR_OUTDIR)\SysCSStream.obj $(OR_OUTDIR)\SysProcess.obj \
+          $(OR_OUTDIR)\SysAPIManager.obj $(OR_OUTDIR)\SysThread.obj $(OR_OUTDIR)\SysSemaphore.obj \
+          $(OR_OUTDIR)\Utilities.obj $(OR_OUTDIR)\APIServerThread.obj
 
 # Following for REXXAPI.DLL
 #
@@ -67,84 +77,99 @@ OBJLST2 = $(OR_OUTDIR)\QueuesAPI.obj  $(OR_OUTDIR)\RexxAPIManager.obj \
 #
 # Generate import library (.lib) and export library (.exp) from
 # module-definition (.dfw) file for a DLL
-$(OR_OUTDIR)\$(TARGET).lib : $(OBJLIST) $(APLATFORM)\rexxapi.def
+$(OR_OUTDIR)\rexxapi.lib : $(CLIENTOBJS) $(OR_REXXAPISRC)\client\platform\windows\rexxapi.def
         $(OR_IMPLIB) -machine:$(CPU) \
-        -def:$(APLATFORM)\$(TARGET).def               \
-        $(OBJLIST)               \
-        -out:$(OR_OUTDIR)\$(TARGET).lib
+        -def:$(OR_REXXAPISRC)\client\platform\windows\rexxapi.def \
+        $(CLIENTOBJS) \
+        -out:$(OR_OUTDIR)\rexxapi.lib
 
 #
 # *** REXXAPI.DLL
 #
 # need import libraries and def files still
-$(OR_OUTDIR)\$(TARGET).dll : $(OBJLIST) $(RXDBG_OBJ)      \
-                             $(OR_OUTDIR)\$(TARGET).lib   \
-                             $(APLATFORM)\$(TARGET).def \
-                             $(OR_OUTDIR)\$(TARGET).exp   \
+$(OR_OUTDIR)\rexxapi.dll : $(CLIENTOBJS) $(RXDBG_OBJ)      \
+                             $(OR_OUTDIR)\rexxapi.lib   \
+                             $(OR_REXXAPISRC)\client\platform\windows\rexxapi.def \
+                             $(OR_OUTDIR)\rexxapi.exp   \
                              $(OR_OUTDIR)\verinfo.res
     $(OR_LINK) $(lflags_common) $(lflags_dll) /MAP -out:$(OR_OUTDIR)\$(@B).dll \
-             $(OBJLIST) $(RXDBG_OBJ) \
+             $(CLIENTOBJS) \
              $(OR_OUTDIR)\verinfo.res \
              $(OR_OUTDIR)\$(@B).exp \
-             $(libs_dll)
+             wsock32.lib
 
 #
 # *** rxapi.EXE
 #
-$(OR_OUTDIR)\rxapi.exe : $(OR_OUTDIR)\RexxAPIService.obj $(OR_OUTDIR)\rxapi.res
-    $(OR_LINK) $(OR_OUTDIR)\RexxAPIService.obj $(OR_OUTDIR)\rxapi.res /MAP \
+$(OR_OUTDIR)\rxapi.exe : $(SERVEROBJS) $(OR_OUTDIR)\rxapi.res
+    $(OR_LINK) $(SERVEROBJS) $(OR_OUTDIR)\rxapi.res /MAP \
     $(lflags_common) $(lflags_exe) \
-    $(OR_OUTDIR)\Rexxapi.lib  \
-    $(libs_dll) \
-    /DELAYLOAD:advapi32.dll \
-    -out:$(OR_OUTDIR)\$(@B).exe
+    -out:$(OR_OUTDIR)\$(@B).exe \
+    wsock32.lib
 
 
 # Update the resource if necessary
-$(OR_OUTDIR)\rxapi.res: $(APLATFORM)\rxapi.rc $(APLATFORM)\APIServiceMessages.h
+$(OR_OUTDIR)\rxapi.res: $(OR_REXXAPISRC)\server\platform\windows\rxapi.rc
     @ECHO.
     @ECHO ResourceCompiling $(@B).res
-        $(rc) $(rcflags_common) -r -fo $(OR_OUTDIR)\rxapi.res $(APLATFORM)\rxapi.rc
+        $(rc) $(rcflags_common) -r -fo $(OR_OUTDIR)\rxapi.res $(OR_REXXAPISRC)\server\platform\windows\rxapi.rc
 
 #
-# *** Inference Rule for APIMAIN.C->OBJ
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
 #
-$(OR_OUTDIR)\RexxAPIService.obj:$(APLATFORM)\RexxAPIService.c
+{$(OR_REXXAPISRC)\client}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO.
     @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_exe)  /Fo$(@) $(OR_ORYXINCL) $(**)
+    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(CLIENTINC) $(COMMONINC) $(OR_ORYXINCL) $(Tp)$(**)
 
 #
-# *** Inference Rule for rxapi.exe C->OBJ, if no Local C file
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(OR_ORYXASRC)}.c{$(OR_OUTDIR)}.obj:
+{$(OR_REXXAPISRC)\client\platform\windows}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO.
     @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(**)
+    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(CLIENTINC) $(COMMONINC) $(OR_ORYXINCL) $(Tp)$(**)
 
 #
-# *** Inference Rule for rxapi.exe C->OBJ, if no Local C file
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(APLATFORM)}.c{$(OR_OUTDIR)}.obj:
+{$(OR_REXXAPISRC)\server}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO.
     @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(**)
-
+    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(SERVERINC) $(COMMONINC) $(OR_ORYXINCL) $(Tp)$(**)
 
 #
-# *** Inference Rule for local C->OBJ
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(OR_OUTDIR)}.c{$(OR_OUTDIR)}.obj:
+{$(OR_REXXAPISRC)\server\platform\windows}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO.
     @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(**)
+    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(SERVERINC) $(COMMONINC) $(OR_ORYXINCL) $(Tp)$(**)
 
 #
-# NEED individual dependencies placed here eventually
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
 #
+{$(OR_REXXAPISRC)\common}.cpp{$(OR_OUTDIR)}.obj:
+    @ECHO .
+    @ECHO Compiling $(**)
+    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(COMMONINC) $(OR_ORYXINCL) $(Tp)$(**)
+
+#
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
+#
+{$(OR_REXXAPISRC)\common\platform\windows}.cpp{$(OR_OUTDIR)}.obj:
+    @ECHO .
+    @ECHO Compiling $(**)
+    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(COMMONINC) $(OR_ORYXINCL) $(Tp)$(**)
 
 # Update the version information block
-$(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc
+$(OR_OUTDIR)\verinfo.res: $(INT_PLATFORM)\verinfo.rc
     @ECHO.
     @ECHO ResourceCompiling $(@B).res
         $(rc) $(rcflags_common) -r -fo$(@) $(**)

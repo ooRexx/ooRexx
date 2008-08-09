@@ -1599,14 +1599,14 @@ RexxMessage *RexxObject::start(
 
     if (argCount < 1 )                   /* no arguments?                     */
     {
-        missing_argument(ARG_ONE);         /* Yes, this is an error.            */
+        missingArgument(ARG_ONE);         /* Yes, this is an error.            */
     }
     /* Get the message name.             */
     RexxObject *message = arguments[0];  /* get the message .                 */
                                          /* Did we receive a message name     */
     if (message == OREF_NULL)
     {
-        missing_argument(ARG_ONE);         /* Yes, this is an error.            */
+        missingArgument(ARG_ONE);         /* Yes, this is an error.            */
     }
 
     /* if 1st arg is a string, we can do */
@@ -1753,7 +1753,7 @@ RexxObject  *RexxObject::run(
                     /*args                               */
                     if (argCount < 3)              /* not enough arguments?             */
                     {
-                        missing_argument(ARG_THREE); /* this is an error                  */
+                        missingArgument(ARG_THREE); /* this is an error                  */
                     }
                     if (argCount > 3)              /* too many arguments?               */
                     {

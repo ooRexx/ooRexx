@@ -38,7 +38,6 @@
 
 #include <windows.h>
 #include "oorexxapi.h"
-#include "APIUtil.h"
 #include <stdio.h>
 #include <string.h>
 #include <ddeml.h>

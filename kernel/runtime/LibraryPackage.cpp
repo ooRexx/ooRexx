@@ -479,7 +479,7 @@ void LibraryPackage::reload()
     package = getPackageTable();
     if (package == OREF_NULL)
     {
-        logic_error("Failure loading required base library");
+        Interpreter::logicError("Failure loading required base library");
     }
 }
 

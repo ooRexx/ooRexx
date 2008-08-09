@@ -40,6 +40,7 @@
 #include "CPPCode.hpp"
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
+#include "Interpreter.hpp"
 
 
 /**
@@ -278,7 +279,7 @@ void AttributeSetterCode::run(RexxActivity *activity, RexxMethod *method, RexxOb
 
     if (count == 0 || *argPtr == OREF_NULL)
     {
-        missing_argument(1);
+        missingArgument(1);
     }
     // go set the attribue
     attribute->set(receiver->getObjectVariables(method->getScope()), argPtr[0]);
@@ -937,6 +938,6 @@ CPPCode *CPPCode::resolveExportedMethod(const char *name, PCPPM targetMethod, si
     char buffer[256];
     sprintf(buffer,"Unresolved exported method:  %s", name);
     /* this is a bad error               */
-    logic_error(buffer);
+    Interpreter::logicError(buffer);
     return NULL;                         /* needs a return value              */
 }

@@ -1551,3 +1551,46 @@ void RexxClass::createInstance()
     TheClassClass->makeProxiedObject();
     new (TheClassClass) RexxClass;
 }
+
+
+void RexxClass::processNewArgs(
+    RexxObject **arg_array,            /* source argument array             */
+    size_t       argCount,             /* size of the argument array        */
+    RexxObject***init_args,            /* remainder arguments               */
+    size_t      *remainderSize,        /* remaining count of arguments      */
+    size_t       required,             /* number of arguments we require    */
+    RexxObject **argument1,            /* first returned argument           */
+    RexxObject **argument2 )           /* second return argument            */
+/******************************************************************************/
+/* Function:  Divide up a class new arglist into new arguments and init args  */
+/******************************************************************************/
+{
+    *argument1 = OREF_NULL;              /* clear the first argument          */
+    if (argCount >= 1)                   /* have at least one argument?       */
+    {
+        *argument1 = arg_array[0];         /* get the first argument            */
+    }
+    if (required == 2)
+    {                 /* processing two arguments?         */
+        if (argCount >= 2)                 /* get at least 2?                   */
+        {
+            *argument2 = arg_array[1];       /* get the second argument           */
+        }
+        else
+        {
+            *argument2 = OREF_NULL;          /* clear the second argument         */
+        }
+    }
+    /* get the init args part            */
+    *init_args = arg_array + required;
+    /* if we have at least the required arguments, reduce the count. */
+    /* Otherwise, set this to zero. */
+    if (argCount >= required)
+    {
+        *remainderSize = argCount - required;
+    }
+    else
+    {
+        *remainderSize = 0;
+    }
+}

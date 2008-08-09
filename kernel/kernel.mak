@@ -51,17 +51,17 @@ all : ORXHEADERS $(OR_OUTDIR)\rexx.dll  \
     @ECHO All done ....
 
 # Include compiler specific macro definitions
-!include "$(OR_ORYXLSRC)\ORXWIN32.MAK"
+!include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
 # Check for oryxk source variable set
 # This is where the source files are....
-!IFNDEF OR_ORYXKSRC
-!ERROR Build error, OR_ORYXKSRC not set
+!IFNDEF OR_INTERPRETER_SRC
+!ERROR Build error, OR_INTERPRETER_SRC not set
 !ENDIF
 
 # Check for lib source path
-!IFNDEF OR_ORYXLSRC
-!ERROR Build error, OR_ORYXLSRC not set
+!IFNDEF OR_LIBSRC
+!ERROR Build error, OR_LIBSRC not set
 !ENDIF
 
 
@@ -151,7 +151,7 @@ SYSOBJ1=$(OR_OUTDIR)\TimeSupport.$(OBJ)  \
 
 SYSOBJ2=$(OR_OUTDIR)\ExternalFunctions.$(OBJ)  $(OR_OUTDIR)\RexxMain.$(OBJ)  $(OR_OUTDIR)\SystemCommands.$(OBJ)   \
         $(OR_OUTDIR)\StreamNative.$(OBJ)   $(OR_OUTDIR)\StreamCommandParser.$(OBJ)    $(OR_OUTDIR)\ProgramMetaData.$(OBJ) \
-	$(OR_OUTDIR)\SysFile.$(OBJ) $(OR_OUTDIR)\SysFileSystem.$(OBJ) $(OR_OUTDIR)\SysLibrary.$(OBJ) $(OR_OUTDIR)\SysThread.$(OBJ) \
+	$(OR_OUTDIR)\SysFile.$(OBJ) $(OR_OUTDIR)\SysFileSystem.$(OBJ) $(OR_OUTDIR)\SysLibrary.$(OBJ) $(OR_OUTDIR)\SysActivity.$(OBJ) \
         $(OR_OUTDIR)\SysSemaphore.$(OBJ)
 
 SYSOBJ3=$(OR_OUTDIR)\MemorySupport.$(OBJ)   $(OR_OUTDIR)\MiscSystem.$(OBJ)  $(OR_OUTDIR)\SystemInitialization.$(OBJ)
@@ -190,8 +190,8 @@ ORXFILES=$(OR_OUTDIR)\CoreClasses.orx  $(OR_OUTDIR)\StreamClasses.orx \
 	 $(OR_OUTDIR)\PlatformObjects.orx $(OR_OUTDIR)\orexxole.cls
 
 #define critical header files for forcing recomp
-ORXHEADERS=$(OR_ORYXAPI)\oorexxerrors.h $(KMESSAGES)\RexxErrorCodes.h $(KMESSAGES)\RexxMessageNumbers.h $(KMESSAGES)\RexxMessageTable.h $(KCORE)\RexxCore.h \
-    $(KCORE)\PrimitiveBehaviourNames.h $(KCORE)\ClassTypeCodes.h
+ORXHEADERS=$(OR_APISRC)\oorexxerrors.h $(INTERPRETER_MESSAGES)\RexxErrorCodes.h $(INTERPRETER_MESSAGES)\RexxMessageNumbers.h $(INTERPRETER_MESSAGES)\RexxMessageTable.h $(INTERPRETER_RUNTIME)\RexxCore.h \
+    $(INTERPRETER_RUNTIME)\PrimitiveBehaviourNames.h $(INTERPRETER_RUNTIME)\ClassTypeCodes.h
 
 
 #
@@ -201,13 +201,13 @@ ORXHEADERS=$(OR_ORYXAPI)\oorexxerrors.h $(KMESSAGES)\RexxErrorCodes.h $(KMESSAGE
 # the type command creates a file of all objects as input to the lib
 #
 $(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ)  \
-                  $(KWINDOWS)\wrexx.def
+                  $(INT_PLATFORM)\wrexx.def
    type <<$(OR_OUTDIR)\oryxk.lst
    $(ORYXKOBJ) $(ORYXLOBJ)
 <<
         $(OR_IMPLIB)    \
         -machine:$(CPU) \
-        -def:$(KWINDOWS)\wrexx.def \
+        -def:$(INT_PLATFORM)\wrexx.def \
         @$(OR_OUTDIR)\oryxk.lst \
         -out:$(OR_OUTDIR)\$(@B).lib
 
@@ -217,7 +217,7 @@ $(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ)  \
 # need import libraries and def files still
 #
 $(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXLOBJ) $(RXDBG_OBJ) \
-                         $(OR_OUTDIR)\$(@B).lib $(KWINDOWS)\wrexx.def    \
+                         $(OR_OUTDIR)\$(@B).lib $(INT_PLATFORM)\wrexx.def    \
                          $(OR_OUTDIR)\winmsgtb.res $(OR_OUTDIR)\verinfo.res
  type <<$(OR_OUTDIR)\oryxk.lst
    $(ORYXKOBJ) $(RXDBG_OBJ) $(ORYXLOBJ)
@@ -226,8 +226,7 @@ $(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXLOBJ) $(RXDBG_OBJ) \
              @$(OR_OUTDIR)\oryxk.lst \
              $(OR_OUTDIR)\winmsgtb.res \
              $(OR_OUTDIR)\$(@B).exp  \
-             $(OR_OUTDIR)\rexxapi.lib \
-             $(libs_dll)
+             $(OR_OUTDIR)\rexxapi.lib
 
 #
 # *** rxcmd32.LIB  : Creates .lib import library
@@ -235,10 +234,10 @@ $(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXLOBJ) $(RXDBG_OBJ) \
 #
 # the type command creates a file of all objects as input to the lib
 #
-$(OR_OUTDIR)\rxcmd32.lib : $(SYSUT32OBJ)  $(OR_ORYXKSRC)\$(@B).def
+$(OR_OUTDIR)\rxcmd32.lib : $(SYSUT32OBJ)  $(OR_INTERPRETER_SRC)\$(@B).def
         $(OR_IMPLIB)    \
         -machine:$(CPU) \
-        -def:$(OR_ORYXKSRC)\$(@B).def \
+        -def:$(OR_INTERPRETER_SRC)\$(@B).def \
         $(SYSUT32OBJ) \
         -out:$(OR_OUTDIR)\$(@B).lib
 
@@ -249,91 +248,94 @@ $(OR_OUTDIR)\rxcmd32.lib : $(SYSUT32OBJ)  $(OR_ORYXKSRC)\$(@B).def
 # w32sut32.lib needed for this Universal Thunk DLL
 #
 $(OR_OUTDIR)\rxcmd32.dll : $(SYSUT32OBJ) $(OR_OUTDIR)\$(@B).lib \
-                           $(OR_ORYXKSRC)\$(@B).def
+                           $(OR_INTERPRETER_SRC)\$(@B).def
     $(OR_LINK) $(lflags_common) $(lflags_dll)  -out:$(OR_OUTDIR)\$(@B).dll \
              $(SYSUT32OBJ) \
              $(OR_OUTDIR)\$(@B).exp  \
-             $(libs_dll) \
              w32sut32.lib
 
 #
 # *** rxcmd16.DLL
 #
 # Created with 16-bit compiler stored in CMVC in \kernel directory
-$(OR_OUTDIR)\rxcmd16.dll : $(OR_ORYXKSRC)\$(@B).dll
+$(OR_OUTDIR)\rxcmd16.dll : $(OR_INTERPRETER_SRC)\$(@B).dll
     @ECHO .
     @ECHO Copying $(@B).dll from kernel directory
-    COPY $(OR_ORYXKSRC)\$(@B).dll $(OR_OUTDIR)\$(@B).dll
+    COPY $(OR_INTERPRETER_SRC)\$(@B).dll $(OR_OUTDIR)\$(@B).dll
 
 # Update the Windows Message Table resource if necessary
 
-$(KWINDOWS)\winmsgtb.rc: $(KWINDOWS)\WinMessageResource.xsl $(KMESSAGES)\rexxmsg.xml
+$(INT_PLATFORM)\winmsgtb.rc: $(INT_PLATFORM)\WinMessageResource.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
     @ECHO .
     @ECHO Generating $(@)
-    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KWINDOWS)\WinMessageResource.xsl
+    xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INT_PLATFORM)\WinMessageResource.xsl
 
-$(KMESSAGES)\RexxErrorCodes.h: $(KMESSAGES)\RexxErrorCodes.xsl $(KMESSAGES)\rexxmsg.xml
+$(INTERPRETER_MESSAGES)\RexxErrorCodes.h: $(INTERPRETER_MESSAGES)\RexxErrorCodes.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxErrorCodes.xsl
+    xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\RexxErrorCodes.xsl
 
-$(OR_ORYXAPI)\oorexxerrors.h: $(KMESSAGES)\ApiErrorCodes.xsl $(KMESSAGES)\rexxmsg.xml
+$(OR_ORYXAPI)\oorexxerrors.h: $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\ApiErrorCodes.xsl
+    xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl
 
-$(KMESSAGES)\DocErrorMessages.sgml: $(KMESSAGES)\DocBookErrors.xsl $(KMESSAGES)\rexxmsg.xml
+$(INTERPRETER_MESSAGES)\DocErrorMessages.sgml: $(INTERPRETER_MESSAGES)\DocBookErrors.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\DocBookErrors.xsl
+    xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\DocBookErrors.xsl
 
-$(KMESSAGES)\RexxMessageNumbers.h: $(KMESSAGES)\RexxMessageNumbers.xsl $(KMESSAGES)\rexxmsg.xml
+$(INTERPRETER_MESSAGES)\RexxMessageNumbers.h: $(INTERPRETER_MESSAGES)\RexxMessageNumbers.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxMessageNumbers.xsl
+    xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\RexxMessageNumbers.xsl
 
-$(KMESSAGES)\RexxMessageTable.h: $(KMESSAGES)\RexxMessageTable.xsl $(KMESSAGES)\rexxmsg.xml
+$(INTERPRETER_MESSAGES)\RexxMessageTable.h: $(INTERPRETER_MESSAGES)\RexxMessageTable.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(KMESSAGES)\rexxmsg.xml $(KMESSAGES)\RexxMessageTable.xsl
+    xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\RexxMessageTable.xsl
 
-$(KCORE)\PrimitiveBehaviourNames.h: $(KCORE)\PrimitiveBehaviourNames.xsl $(KCORE)\PrimitiveClasses.xml
+$(OR_APISRC)\api\oorexxerrors.h: $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
+    @ECHO .
+    @ECHO Generating $(@)
+    xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl
+
+$(INTERPRETER_RUNTIME)\PrimitiveBehaviourNames.h: $(INTERPRETER_RUNTIME)\PrimitiveBehaviourNames.xsl $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\PrimitiveBehaviourNames.xsl
+    xalan -o $(@) $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml $(INTERPRETER_RUNTIME)\PrimitiveBehaviourNames.xsl
 
-$(KCORE)\PrimitiveBehaviours.cpp: $(KCORE)\PrimitiveBehaviours.xsl $(KCORE)\PrimitiveClasses.xml
+$(INTERPRETER_RUNTIME)\PrimitiveBehaviours.cpp: $(INTERPRETER_RUNTIME)\PrimitiveBehaviours.xsl $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\PrimitiveBehaviours.xsl
+    xalan -o $(@) $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml $(INTERPRETER_RUNTIME)\PrimitiveBehaviours.xsl
 
-$(KCORE)\VirtualFunctionTable.cpp: $(KCORE)\VirtualFunctionTable.xsl $(KCORE)\PrimitiveClasses.xml
+$(INTERPRETER_RUNTIME)\VirtualFunctionTable.cpp: $(INTERPRETER_RUNTIME)\VirtualFunctionTable.xsl $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\VirtualFunctionTable.xsl
+    xalan -o $(@) $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml $(INTERPRETER_RUNTIME)\VirtualFunctionTable.xsl
 
-$(KCORE)\ClassTypeCodes.h: $(KCORE)\ClassTypeCodes.xsl $(KCORE)\PrimitiveClasses.xml
+$(INTERPRETER_RUNTIME)\ClassTypeCodes.h: $(INTERPRETER_RUNTIME)\ClassTypeCodes.xsl $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(KCORE)\PrimitiveClasses.xml $(KCORE)\ClassTypeCodes.xsl
+    xalan -o $(@) $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml $(INTERPRETER_RUNTIME)\ClassTypeCodes.xsl
 
-$(OR_OUTDIR)\winmsgtb.res: $(KWINDOWS)\winmsgtb.rc $(KMESSAGES)\DocErrorMessages.sgml
+$(OR_OUTDIR)\winmsgtb.res: $(INT_PLATFORM)\winmsgtb.rc $(INTERPRETER_MESSAGES)\DocErrorMessages.sgml
     @ECHO.
     @ECHO ResourceCompiling $(@)
-        $(rc) $(rcflags_common) $(OR_ORYXRCINCL) -r -fo$(@) $(KWINDOWS)\winmsgtb.rc
+        $(rc) $(rcflags_common) $(OR_ORYXRCINCL) -r -fo$(@) $(INT_PLATFORM)\winmsgtb.rc
 
 
 # Update the version information block
-$(OR_OUTDIR)\verinfo.res: $(KWINDOWS)\verinfo.rc
+$(OR_OUTDIR)\verinfo.res: $(INT_PLATFORM)\verinfo.rc
     @ECHO.
     @ECHO ResourceCompiling $(@B).res
-        $(rc) $(rcflags_common) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_ORYXKSRC)\$(@B).rc
+        $(rc) $(rcflags_common) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_INTERPRETER_SRC)\$(@B).rc
 
 $(OR_OUTDIR)\rexxc.exe : $(OR_OUTDIR)\RexxCompiler.obj
     $(OR_LINK) $(**) $(lflags_common_console) \
     $(OR_OUTDIR)\verinfo.res \
     $(OR_OUTDIR)\rexx.lib \
-    $(libs_dll)  \
     -out:$(@)
 
 #
@@ -351,7 +353,7 @@ ORXHEADERS: $(ORXHEADERS)
 #
 # *** Inference Rule for Rexx Class files
 #
-{$(KREXX)}.orx{$(OR_OUTDIR)}.orx:
+{$(REXX_CLASSES)}.orx{$(OR_OUTDIR)}.orx:
     @ECHO .
     @ECHO Copying $(**)
     COPY $(**) $(@)
@@ -359,16 +361,7 @@ ORXHEADERS: $(ORXHEADERS)
 #
 # *** Inference Rule for Rexx Class files
 #
-{$(KWINDOWS)}.orx{$(OR_OUTDIR)}.orx:
-    @ECHO .
-    @ECHO Copying $(**)
-    COPY $(**) $(@)
-
-
-#
-# *** Inference Rule for Rexx Extra samples
-#
-{$(KEXTRAS)}.rex{$(OR_OUTDIR)}.rex:
+{$(INT_PLATFORM)}.orx{$(OR_OUTDIR)}.orx:
     @ECHO .
     @ECHO Copying $(**)
     COPY $(**) $(@)
@@ -376,7 +369,7 @@ ORXHEADERS: $(ORXHEADERS)
 #
 # *** Inference Rule for Rexx samples
 #
-{$(OR_ORYXSAMPLES)}.rex{$(OR_OUTDIR)}.rex:
+{$(OR_SAMPLESRC)}.rex{$(OR_OUTDIR)}.rex:
     @ECHO .
     @ECHO Copying $(**)
     COPY $(**) $(@)
@@ -384,195 +377,119 @@ ORXHEADERS: $(ORXHEADERS)
 #
 # *** Inference Rule for Rexx samples
 #
-{$(OR_ORYXOLESRC)}.cls{$(OR_OUTDIR)}.cls:
+{$(OR_OLEOBJECTSRC)}.cls{$(OR_OUTDIR)}.cls:
     @ECHO .
     @ECHO Copying $(**)
     COPY $(**) $(@)
 
-# Queue pull works on NT if not optimized @ENG M
-# changed cflags_noopt to cflags_common. optimizer settings should not affect code!!! @ENG A
-#$(OR_OUTDIR)\RexxActivityobj:  $(OR_ORYXKSRC)\RexxActivityc
-#    @ECHO .
-#    @ECHO Compiling $(@B).c
-#    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_ORYXKSRC)\$(@B).c
-
 
 #
 # *** Inference Rule for C->OBJ
-# *** For .C files in OR_ORYXLSRC directory
+# *** For .C files in OR_LIBSRC directory
 #
-{$(OR_ORYXLSRC)}.c{$(OR_OUTDIR)}.obj:
+{$(OR_LIBSRC)}.c{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(Tp)$(OR_ORYXLSRC)\$(@B).c $(OR_ORYXINCL)
+    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(Tp)$(OR_LIBSRC)\$(@B).c $(OR_ORYXINCL)
 
 #
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(OR_ORYXLSRC)}.cpp{$(OR_OUTDIR)}.obj:
+{$(OR_LIBSRC)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
-    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(Tp)$(OR_ORYXLSRC)\$(@B).cpp $(OR_ORYXINCL)
+    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(Tp)$(OR_LIBSRC)\$(@B).cpp $(OR_ORYXINCL)
 
 #
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(KCORE)}.cpp{$(OR_OUTDIR)}.obj:
+{$(INTERPRETER_RUNTIME)}.cpp{$(OR_OUTDIR)}.obj:
+    @ECHO .
+    @ECHO Compiling $(**)
+    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
+
+
+#
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
+#
+{$(INTERPRETER_API)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
 
 #
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(KAPI)}.cpp{$(OR_OUTDIR)}.obj:
+{$(PARSER)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
 
 #
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(KPARSER)}.cpp{$(OR_OUTDIR)}.obj:
+{$(EXPRESSIONS)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
 
 #
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(KEXPR)}.cpp{$(OR_OUTDIR)}.obj:
+{$(INSTRUCTIONS)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
 
 #
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(KINST)}.cpp{$(OR_OUTDIR)}.obj:
+{$(INTERPRETER_CLASSES)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
 
 #
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(KCLASSES)}.cpp{$(OR_OUTDIR)}.obj:
-    @ECHO .
-    @ECHO Compiling $(**)
-    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
-
-#
-# *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
-#
-{$(KPLATFORM)}.cpp{$(OR_OUTDIR)}.obj:
-    @ECHO .
-    @ECHO Compiling $(**)
-    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
-
-#
-# *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
-#
-{$(KWINDOWS)}.cpp{$(OR_OUTDIR)}.obj:
+{$(INT_PLATFORM)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
 
 #
 # *** Inference Rule for C->OBJ
-# *** For .C files in OR_ORYXLSRC directory
+# *** For .C files in OR_LIBSRC directory
 #
-{$(KCORE)}.c{$(OR_OUTDIR)}.obj:
+{$(INTERPRETER_RUNTIME)}.c{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
 
 #
 # *** Inference Rule for C->OBJ
-# *** For .C files in OR_ORYXLSRC directory
+# *** For .C files in OR_LIBSRC directory
 #
-{$(KPLATFORM)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
-    @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
-
-#
-# *** Inference Rule for C->OBJ
-# *** For .C files in OR_ORYXLSRC directory
-#
-{$(KSTREAM)}.c{$(OR_OUTDIR)}.obj:
+{$(INT_PLATFORM)}.c{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
 
 #
 # *** Inference Rule for CPP->OBJ
-# *** For .CPP files in OR_ORYXLSRC directory
+# *** For .CPP files in OR_LIBSRC directory
 #
-{$(KSTREAM)}.cpp{$(OR_OUTDIR)}.obj:
+{$(STREAM)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
 
-#
-# *** Inference Rule for C->OBJ
-# *** For .C files in OR_ORYXLSRC directory
-#
-{$(KWINDOWS)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
-    @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
 
-#
-# *** Inference Rule for C->OBJ
-# *** For .C files in OR_ORYXLSRC directory
-#
-{$(KMAIN)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
-    @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
-
-#
-# *** Inference Rule for local C->OBJ
-#
-{$(OR_OUTDIR)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
-    @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_OUTDIR)\$(@B).c
-
-
-#
-# *** Description Block for rxcmd32.c
-#
-# rxcmd32.c was separated from the inference rules above
-# to avoid being compiled by C++ compiler.
-#
-# all flags come from compiler specific defines in ..\lib\orxwin32.mak
-#
-#$(OR_OUTDIR)\rxcmd32.obj: $(OR_ORYXKSRC)\rxcmd32.c
-#    @ECHO .
-#    @ECHO Compiling $(**).c
-#    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(OR_ORYXKSRC)\$(@B).c
-
-#$(OR_OUTDIR)\rexxc.obj: $(KWINDOWS)\RexxCompiler.c
-#    @ECHO .
-#    @ECHO Compiling $(**)
-#    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
-
-$(OR_OUTDIR)\RexxMigration.obj: $(KPLATFORM)\RexxMigration.cpp
-    @ECHO .
-    @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
-
-#
-# NEED individual dependencies placed here eventually
-#

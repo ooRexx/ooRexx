@@ -250,17 +250,11 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 /* Utility Functions                                                          */
 /******************************************************************************/
 
-void logic_error (const char *desc);
-const char *mempbrk(const char *, const char *, size_t);     /* search for characters             */
-
                                        /* find an environment symbol        */
 #define env_find(s) (TheEnvironment->entry(s))
-                                       /* various exception/condition       */
-                                       /* reporting routines                */
-void missing_argument(size_t position);
-wholenumber_t message_number(RexxString *);
+
                                        /* verify argument presence          */
-#define required_arg(arg, position) if (arg == OREF_NULL) missing_argument(ARG_##position)
+#define required_arg(arg, position) if (arg == OREF_NULL) missingArgument(ARG_##position)
 
 /******************************************************************************/
 /* Thread constants                                                           */
@@ -299,11 +293,6 @@ const size_t A_COUNT   = 127;            /* pass arguments as pointer/count pair
 const int RC_OK         = 0;
 const int RC_LOGIC_ERROR  = 2;
 
-// MAKE a static method on ClassClass.
-                                       /* data converstion and validation   */
-                                       /* routines                          */
-void process_new_args(RexxObject **, size_t, RexxObject ***, size_t *, size_t, RexxObject **, RexxObject **);
-
 const int POSITIVE    = 1;             /* integer must be positive          */
 const int NONNEGATIVE = 2;             /* integer must be non-negative      */
 const int WHOLE       = 3;             /* integer must be whole             */
@@ -317,6 +306,7 @@ inline bool isStem(RexxObject *o) { return isOfClass(Stem, o); }
 inline bool isActivation(RexxObject *o) { return isOfClass(Activation, o); }
 inline bool isMethod(RexxObject *o) { return isOfClass(Method, o); }
 
+#include "ActivityManager.hpp"
 
 /* The next macro is specifically for REQUESTing a STRING, since there are    */
 /* four primitive classes that are equivalents for strings.  It will trap on  */
@@ -334,14 +324,11 @@ inline RexxString * REQUIRED_STRING(RexxObject *object, size_t position)
 {
     if (object == OREF_NULL)             /* missing argument?                 */
     {
-        missing_argument(position);        /* raise an error                    */
+        missingArgument(position);        /* raise an error                    */
     }
                                            /* force to a string value           */
     return object->requiredString(position);
 }
-
-
-#include "ActivityManager.hpp"
 
 /* The next routine is specifically for REQUESTing an ARRAY needed as a method*/
 /* argument.  This raises an error if the object cannot be converted to a     */
@@ -350,7 +337,7 @@ inline RexxArray * REQUIRED_ARRAY(RexxObject *object, size_t position)
 {
     if (object == OREF_NULL)             /* missing argument?                 */
     {
-        missing_argument(position);      /* raise an error                    */
+        missingArgument(position);      /* raise an error                    */
     }
     /* force to array form               */
     RexxArray *array = object->requestArray();

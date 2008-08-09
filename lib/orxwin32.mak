@@ -62,7 +62,7 @@ VCPP6 = 1
 !ENDIF
 
 # include the version information
-!include "$(OR_ORYXSRC)\oorexx.ver.incl"
+!include "$(OR_MAINSRC)\oorexx.ver.incl"
 
 # Make file include for WIN32 stuff
 #
@@ -75,15 +75,6 @@ VCPP6 = 1
 !ERROR Build error, OR_ORYXINCL not set
 !ENDIF
 
-!IF "$(REXXDEBUG)" == "1"
-RXDBG=/DREXX_DEBUG
-RXDBG_OBJ=$(OR_OUTDIR)\windbg.obj
-!ELSE
-RXDBG=
-RXDBG_OBJ=
-!ENDIF
-
-# CHM - added assembly listings
 !IF "$(MKASM)" == "1"
 MK_ASM=/FAcs /Fa$(OR_OUTDIR)\ASM\$(@B).asm
 !ELSE
@@ -152,11 +143,20 @@ cflags_common=/EHsc /nologo /D:_X86_ /DWIN32 $(VER_DEF) $(WARNING_FLAGS) -c $(my
 cflags_common = $(cflags_common) /DJAPANESE
 !ENDIF
 
-# Toronto does not want to use MSVCRT20.DLL so we need a statically linked rexx
+# ooRexx has always been using a statically linked CRT.
 !IFDEF NOCRTDLL
-cflags_dll=/MT   #MTd if runtime debug
+# statically linked rexx
+!IF "$(NODEBUG)" == "1"
+cflags_dll=/MT
 !ELSE
-cflags_dll=/MDd   #MDd if runtime debug
+cflags_dll=/MTd
+!ENDIF
+!ELSE
+!IF "$(NODEBUG)" == "1"
+cflags_dll=/MD
+!ELSE
+cflags_dll=/MDd
+!ENDIF
 !ENDIF
 cflags_exe=
 
@@ -175,25 +175,33 @@ my_ldebug =
 my_ldebug = /PROFILE /DEBUG -debugtype:cv
 !ENDIF
 
-lflags_common= /MAP /NOLOGO $(my_ldebug) /SUBSYSTEM:Windows $(lflags_lib) user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib delayimp.lib ole32.lib oleaut32.lib uuid.lib shell32.lib kernel32.lib
+libs_common=user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib delayimp.lib ole32.lib oleaut32.lib uuid.lib shell32.lib kernel32.lib
+
+lflags_common= /MAP /NOLOGO $(my_ldebug) /SUBSYSTEM:Windows $(lflags_lib) $(libs_common)
 lflags_common_console= /MAP /NOLOGO $(my_ldebug) /SUBSYSTEM:Console $(lflags_lib) user32.lib comdlg32.lib gdi32.lib kernel32.lib
 lflags_dll = /DLL -entry:_DllMainCRTStartup@12
 lflags_exe =
-#
-# set up the Lib flags used
-#
-libs_dll=
-libs_exe=
 
 #
 # set up the rc flags used
 #
 rcflags_common=rc /DWIN32 -dOOREXX_VER=$(ORX_MAJOR) -dOOREXX_REL=$(ORX_MINOR) -dOOREXX_SUB=$(ORX_MOD_LVL) -dOOREXX_BLD=$(ORX_BLD_LVL) -dOOREXX_VER_STR=\"$(ORX_VER_STR)\" -dOOREXX_COPY_YEAR=\"$(ORX_COPY_YEAR)\"
 
-# CHM - define dependency for WINDBG.OBJ
-!IF "$(REXXDEBUG)" == "1"
-$(RXDBG_OBJ): $(OR_ORYXKSRC)\windbg.c
+#
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
+#
+{$(OR_COMMONPLATFORMSRC)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
-    @ECHO Compiling WINDBG.c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp) $(OR_ORYXKSRC)\$(@B).c
-!ENDIF
+    @ECHO Compiling $(**)
+    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
+
+#
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
+#
+{$(OR_COMMONSRC)}.cpp{$(OR_OUTDIR)}.obj:
+    @ECHO .
+    @ECHO Compiling $(**)
+    $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
+

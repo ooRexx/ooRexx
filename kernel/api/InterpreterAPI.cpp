@@ -176,7 +176,6 @@ int REXXENTRY RexxStart(
 }
 
 
-
 /**
  * Translate a program and store the translated results in an
  * external file.
@@ -199,6 +198,29 @@ RexxReturnCode REXXENTRY RexxTranslateProgram(const char *inFile, const char *ou
     // go run this program
     arguments.invoke(exits, NULL);
 
+    return (RexxReturnCode)arguments.rc;       /* return the error code (negated)   */
+}
+
+
+/**
+ * Translate a program and store the translated results in an
+ * external file.
+ *
+ * @param inFile The input name.
+ * @param source The source RXSTRING
+ * @param image  The returned image RXSTRING
+ *
+ * @return The error return code (if any).
+ */
+RexxReturnCode REXXENTRY RexxTranslateInstoreProgram(const char *inFile, CONSTRXSTRING *source, RXSTRING *image)
+{
+    TranslateInstoreDispatcher arguments;
+    // this gets processed from disk, always.
+    arguments.programName = inFile;
+    arguments.source = source;
+    arguments.image = image;
+    // go run this program
+    arguments.invoke(NULL, NULL);
     return (RexxReturnCode)arguments.rc;       /* return the error code (negated)   */
 }
 

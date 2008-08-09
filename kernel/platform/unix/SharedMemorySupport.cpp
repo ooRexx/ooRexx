@@ -51,9 +51,6 @@
 #include <sys/shm.h>
 #include <errno.h>
 
-extern int iSemShmMode;                        /* Mode from startup          */
-
-
 /******************************************************************************/
 /* Name:       getshmem                                                       */
 /*                                                                            */
@@ -68,7 +65,7 @@ extern int iSemShmMode;                        /* Mode from startup          */
 int getshmem(key_t key, int segsize){
 
  int rc;
- rc=(shmget(key, segsize, IPC_CREAT|IPC_EXCL|iSemShmMode));
+ rc=(shmget(key, segsize, IPC_CREAT|IPC_EXCL|432));
  //if((errno == ENOSPC) || (segsize>SHMMAX))
  if ( ( rc == -1 ) && ( errno != EEXIST ) )
    return (-2);                          /* system limit reached              */

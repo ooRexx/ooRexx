@@ -49,7 +49,6 @@
 #include "RexxCore.h"
 #include "SystemInterpreter.hpp"
 #include "Interpreter.hpp"
-#include "RexxAPIManager.h"
 
 #if defined( HAVE_SIGNAL_H )
 # include <signal.h>
@@ -59,33 +58,10 @@
 # include <sys/signal.h>
 #endif
 
-void RxExitClear(int);
-void RxExitClearNormal();
-
 class InterpreterInstance;
 
 void SystemInterpreter::processStartup()
 {
-    atexit(RxExitClearNormal);
-    /* Set the cleanup handler for unconditional process termination          */
-    struct sigaction new_action;
-    struct sigaction old_action;
-
-    /* Set up the structure to specify the new action                         */
-    new_action.sa_handler = RxExitClear;
-    old_action.sa_handler = NULL;
-    sigfillset(&new_action.sa_mask);
-    new_action.sa_flags = SA_RESTART;
-
-/* Termination signals are set by Object REXX whenever the signals were not set */
-/* from outside (calling C-routine). The SIGSEGV signal is not set any more, so */
-/* that we now get a coredump instead of a hang up                              */
-
-    sigaction(SIGINT, NULL, &old_action);
-    if (old_action.sa_handler == NULL)           /* not set by ext. exit handler*/
-    {
-        sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGTERM signal     */
-    }
     // now do the platform independent startup
     Interpreter::processStartup();
 }
@@ -100,11 +76,6 @@ void SystemInterpreter::processShutdown()
 
 void SystemInterpreter::startInterpreter()
 {
-    // make sure we have the home set appropriately
-    if ( RxAPIHOMEset() )
-    {
-        logic_error(" *** ERROR: No HOME or RXHOME directory for REXX!\n");
-    }
 }
 
 
