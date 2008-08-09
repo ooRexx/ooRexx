@@ -184,10 +184,12 @@ RexxActivity *InterpreterInstance::attachThread()
         return activity;
     }
 
-    ResourceSection lock;
-
     // we need to get a new activity set up for this particular thread
     activity = ActivityManager::attachThread();
+    // resource lock must come AFTER we attach the thread, otherwise
+    // we can create a deadlock situation when we attempt to get the kernel
+    // lock
+    ResourceSection lock;
     // add this to the activity lists
     allActivities->append((RexxObject *)activity);
     // associate the thread with this instance
