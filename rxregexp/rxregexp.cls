@@ -50,6 +50,7 @@ Syntax:
 ::METHOD PARSE EXTERNAL "LIBRARY rxregexp RegExp_Parse"
 ::METHOD MATCH EXTERNAL "LIBRARY rxregexp RegExp_Match"
 ::METHOD POS EXTERNAL "LIBRARY rxregexp RegExp_Pos"
+::METHOD FOO EXTERNAL "LIBRARY rxregexp RegExp_Foo"
 
 ::METHOD POSITION
   expose !POS

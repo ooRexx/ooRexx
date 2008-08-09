@@ -170,6 +170,7 @@ class RexxNativeActivation : public RexxActivationBase
   RexxReturnCode copyValue(RexxObject * value, RXSTRING *rxstring, size_t *length);
   RexxReturnCode copyValue(RexxObject * value, CONSTRXSTRING *rxstring, size_t *length);
   int stemSort(const char *stemname, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
+  inline void enableConditionTrap() { trapConditions = true; }
 
 protected:
 
@@ -205,5 +206,6 @@ protected:
     int             object_scope;        /* reserve/release state of variables*/
     bool            stackBase;           // this is a stack base marker
     bool            trapErrors;          // we're trapping errors from external callers
+    bool            trapConditions;      // trap any raised conditions
 };
 #endif

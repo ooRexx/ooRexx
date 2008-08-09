@@ -2186,8 +2186,23 @@ bool RexxNativeActivation::trap(RexxString *condition, RexxDirectory * exception
 
     // we end up seeing this a second time if we're raising the exception on
     // return from an external call or method.
-    if (trapErrors)
+    if (condition->isEqual(OREF_SYNTAX))
     {
+        if (trapErrors)
+        {
+            // record this in case any callers want to know about it.
+            setConditionInfo(exception_object);
+            // this will unwind back to the calling level, with the
+            // exception information recorded.
+            throw this;
+        }
+
+    }
+    else if (trapConditions)
+    {
+        // pretty much the same deal, but we're only handling conditions, and
+        // only one condtion, so reset the trap flag
+        trapConditions = false;
         // record this in case any callers want to know about it.
         setConditionInfo(exception_object);
         // this will unwind back to the calling level, with the
