@@ -83,7 +83,7 @@ build_rexutils_dir = $(top_srcdir)/rexutils
 build_rxregexp_dir = $(top_srcdir)/rxregexp
 build_samples_dir = $(top_srcdir)/samples
 build_rexxclasses_dir = $(build_kernel_dir)/RexxClasses
-build_utilities_dir = $(build_kernel_dir)/utilities
+build_utilities_dir = $(top_srcdir)/utilities
 
 # These are the *nix directories
 utils_unix_dir = $(build_utils_dir)/unix
@@ -351,7 +351,7 @@ BUILT_SOURCES = $(errorHeaders) \
 #
 # Binary targets
 #
-bin_PROGRAMS = rxapi rexximage rexx rexxc rxqueue rxsubcom rxdelipc
+bin_PROGRAMS = rxapi rexximage rexx rexxc rxqueue rxsubcom 
 
 #
 # Shared library targets
@@ -380,8 +380,7 @@ include_HEADERS = $(build_api_dir)/rexx.h \
 man_MANS = $(build_utils_platform_dir)/rexx.1 \
            $(build_utils_platform_dir)/rexxc.1 \
            $(build_utils_platform_dir)/rxsubcom.1 \
-           $(build_utils_platform_dir)/rxqueue.1 \
-           $(build_utils_platform_dir)/rxdelipc.1
+           $(build_utils_platform_dir)/rxqueue.1 
 
 #################### librexx.so ##########################
 # Sources for librexxapi.so
@@ -768,22 +767,6 @@ rxsubcom_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 #
 rxsubcom_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
 rxsubcom_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
-
-#################### rxdelipc #########################
-# Sources for rxdelipc
-#
-rxdelipc_SOURCES =  $(build_rexxapi_platform_dir)/APIManagerShutdown.cpp
-#
-# Preprocessor flags for rxdelipc
-#
-rxdelipc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
-                     -I$(build_api_dir) \
-                     -I$(build_api_platform_dir)
-#
-# Extra libraries for rxdelipc
-#
-rxdelipc_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
-rxdelipc_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 
 #################### librexxutil.so ################
 #

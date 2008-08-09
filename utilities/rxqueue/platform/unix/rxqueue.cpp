@@ -65,12 +65,14 @@
 #include <stdlib.h>            /* needed for miscellaneous functions */
 #include <string.h>            /* needed for string functions        */
 #include "rexx.h"              /* needed for queue functions & codes */
+#include "RexxMessageNumbers.h"
 
 #define RXQUEUE_CLEAR    -2    /* used for queue mode CLEAR flag     */
 #define BAD_MESSAGE      -6    /* Exit RC for message not found.     */
 
 #define MSG_BUF_SIZE    256    /* Error message buffer size          */
 
+#define REXXMESSAGEFILE    "rexx.cat"
 #define CATD_ERR -1
 
 char  line[4096];              /* buffer for data to add to queue    */
@@ -90,7 +92,6 @@ int main(
     int       i;                 /* loop counter for arguments         */
     int       rc;                /* return code from API calls         */
     size_t    entries;           /* number of entries in queue         */
-    REXXDATETIME  dt;            /* date/time structure for reading    */
     const char *quename=NULL;    /* initialize queuename to NULL       */
     size_t    linelen ;          /* input line length                  */
     CONSTRXSTRING  queuedata;    /* data added to the queue            */

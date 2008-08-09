@@ -61,6 +61,8 @@
 #include "RexxErrorCodes.h"
 #include "RexxMessageNumbers.h"
 
+#define REXXMESSAGEFILE    "rexx.cat"
+
 #define BUFFERLEN         256          /* Length of message bufs used*/
                                        /* Macro for argv[1] compares */
 #define CASE(x) if(!strcasecmp(x,argv[1]))
@@ -80,7 +82,6 @@ int main( int argc, char *argv[ ], char *envp[ ] )
     const char * scbname;               /* registration name          */
     const char * scbdll_name;           /* DLL file name              */
     const char * scbdll_proc;           /* DLL procedure name         */
-    int          rc;
 
     /* Must be at lease 1 argument*/
     if (argc<2)
@@ -111,10 +112,14 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         /* if only 3 passed, dummy 4  */
         if (argc<4)
         {
-            argv[3]="";
+            scbdll_name = "";
+        }
+        else 
+        {
+            scbdll_name = argv[3];
         }
         unsigned short flags;
-        return RexxQuerySubcom(argv[2], argv[3], &flags, NULL);
+        return RexxQuerySubcom(argv[2], scbdll_name, &flags, NULL);
     }                                 /*                            */
     CASE("DROP")
     {                       /* Drop Check                 */
@@ -126,9 +131,13 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         /* if only 3 passed, dummy 4  */
         if (argc<4)
         {
-            argv[3]="";
+            scbdll_name = "";
         }
-        return RexxDeregisterSubcom(argv[2], argv[3]);
+        else 
+        {
+            scbdll_name = argv[3];
+        }
+        return RexxDeregisterSubcom(argv[2], scbdll_name);
     }
     CASE("LOAD")
     {
@@ -138,7 +147,11 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         }
         if (argc<4)
         {
-            argv[3]="";             /* if only 3 passed, dummy 4  */
+            scbdll_name = "";
+        }
+        else 
+        {
+            scbdll_name = argv[3];
         }
         return RexxLoadSubcom(argv[2], argv[3]);
     }
