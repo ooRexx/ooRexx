@@ -96,14 +96,6 @@ RexxMethod1(int,                          // Return type
     return 0;
 }
 
-RexxMethod1(int,                          // Return type
-            RegExp_Foo,                // Object_method name
-            OSELF, self)               // Pointer to self
-{
-    context->SendMessage0(self, "FOOBAR");
-    return 0;
-}
-
 RexxMethod3(int,                          // Return type
             RegExp_Parse,              // Object_method name
             CSELF, self,               // Pointer to automaton control block
@@ -214,7 +206,6 @@ RexxMethodEntry rxregexp_methods[] =
     REXX_METHOD(RegExp_Parse,   RegExp_Parse),
     REXX_METHOD(RegExp_Pos,     RegExp_Pos),
     REXX_METHOD(RegExp_Match,   RegExp_Match),
-    REXX_METHOD(RegExp_Foo,     RegExp_Foo),
     REXX_LAST_METHOD()
 };
 
