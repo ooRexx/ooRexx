@@ -595,7 +595,6 @@ runtime_sources  = $(build_runtime_dir)/GlobalData.cpp \
                    $(build_runtime_dir)/InterpreterInstance.cpp \
                    $(build_runtime_dir)/Numerics.cpp \
                    $(build_runtime_dir)/RexxMisc.cpp \
-                   $(build_runtime_dir)/TranslateDispatcher.cpp \
                    $(build_runtime_dir)/Version.cpp
 streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
                         $(build_streamlibrary_dir)/StreamNative.cpp
