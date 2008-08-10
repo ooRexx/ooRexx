@@ -1743,30 +1743,41 @@ Output:
 ::METHOD queue                -- put an element into the queue, possibly replacing an existing one
   expose size
 
-  use strict arg item
+  use strict arg item, option = "Normal"
+
   if size=0 then return .nil  -- size is 0, do not process!
 
-  if self~items >= size then
-     item=self~pull           -- if we've gone over the size, remove this
-  else
-     item=.nil                -- return value a .nil to indicate that we were not forced to remove an existing item
+  if option~caselessMatchChar(1,'u')    -- if option is unique remove any instances extant
+  then do while self~hasItem(item)
+          self~removeItem(item)
+       end
 
-  forward class (super) continue -- allow the superclass to handle adding the item
-  return item                 -- return pulled item
+  if self~items >= size then
+     ret = self~pull           -- if we've gone over the size, remove this
+  else
+     ret = .nil               -- return value a .nil to indicate that we were not forced to remove an existing item
+
+  forward class (super) continue array (item) -- allow the superclass to handle adding the item
+  return ret                  -- return pulled item
 
 ::METHOD push
   expose size
-  use strict arg item
+  use strict arg item, option = "Normal"
 
   if size=0 then return .nil  -- size is 0, do not process !
 
-  if self~items >= size then
-     item=self~remove(self~items)   -- remove the end item.
-  else
-     item=.nil                -- return value a .nil to indicate that we were not forced to remove an existing item
+  if option~caselessMatchChar(1,'u')    -- if option is unique remove any instances extant
+  then do while self~hasItem(item)
+          self~removeItem(item)
+       end
 
-  forward class (super) continue    -- allow the superclass to handle adding the item
-  return item                 -- return removed item
+  if self~items >= size then
+     ret = self~remove(self~items)   -- remove the end item.
+  else
+     ret = .nil                     -- return value a .nil to indicate that we were not forced to remove an existing item
+
+  forward class (super) continue array (item)   -- allow the superclass to handle adding the item
+  return ret                      -- return removed item
 
 
 -----------------------------
