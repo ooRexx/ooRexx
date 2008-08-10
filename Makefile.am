@@ -705,7 +705,7 @@ rexx_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rexx ##########################
 # Sources for rexx
 #
-rexximage_SOURCES = $(build_utilities_)/rexximage/rexximage.cpp
+rexximage_SOURCES = $(build_utilities_dir)/rexximage/rexximage.cpp
 #
 # Preprocessor flags for rexximage
 #
