@@ -76,6 +76,7 @@ build_concurrency_dir = $(build_kernel_dir)/concurrency
 build_behaviour_dir = $(build_kernel_dir)/behaviour
 build_execution_dir = $(build_kernel_dir)/execution
 build_memory_dir = $(build_kernel_dir)/memory
+build_package_dir = $(build_kernel_dir)/package
 build_instructions_dir = $(build_kernel_dir)/instructions
 build_parser_dir = $(build_kernel_dir)/parser
 build_runtime_dir = $(build_kernel_dir)/runtime
@@ -167,6 +168,8 @@ expressionHeaders = $(build_expression_dir)/BuiltinFunctions.hpp \
                     $(build_expression_dir)/ExpressionVariable.hpp \
                     $(build_expression_dir)/IndirectVariableReference.hpp \
                     $(build_expression_dir)/ExpressionLogical.hpp
+packageHeaders = $(build_package_dir)/LibraryPackage.hpp \
+                 $(build_package_dir)/PackageManager.hpp
 memoryHeaders = $(build_memory_dir)/DeadObject.hpp \
                 $(build_memory_dir)/MemorySegment.hpp \
                 $(build_memory_dir)/MemoryStats.hpp \
@@ -467,6 +470,8 @@ classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/SupplierClass.cpp \
                   $(build_classes_dir)/TableClass.cpp \
                   $(build_classes_dir)/WeakReferenceClass.cpp
+package_sources = $(build_package_dir)/LibraryPackage.cpp \
+                  $(build_package_dir)/PackageManager.cpp
 memory_sources = $(build_memory_dir)/DeadObject.cpp \
                  $(build_memory_dir)/MemorySegment.cpp \
                  $(build_memory_dir)/MemoryStats.cpp \
@@ -601,6 +606,7 @@ librexx_la_SOURCES = $(classes_sources) \
                      $(behaviour_sources) \
                      $(execution_sources) \
                      $(memory_sources) \
+                     $(package_sources) \
                      $(concurrency_sources) \
                      $(expression_sources) \
                      $(instructions_sources) \
@@ -627,6 +633,7 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_behaviour_dir) \
                        -I$(build_execution_dir) \
                        -I$(build_memory_dir) \
+                       -I$(build_package_dir) \
                        -I$(build_concurrency_dir) \
                        -I$(build_expression_dir) \
                        -I$(build_instructions_dir) \
