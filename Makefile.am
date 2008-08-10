@@ -74,6 +74,7 @@ build_classes_dir = $(build_kernel_dir)/classes
 build_expression_dir = $(build_kernel_dir)/expression
 build_concurrency_dir = $(build_kernel_dir)/concurrency
 build_behaviour_dir = $(build_kernel_dir)/behaviour
+build_execution_dir = $(build_kernel_dir)/execution
 build_instructions_dir = $(build_kernel_dir)/instructions
 build_parser_dir = $(build_kernel_dir)/parser
 build_runtime_dir = $(build_kernel_dir)/runtime
@@ -165,6 +166,16 @@ expressionHeaders = $(build_expression_dir)/BuiltinFunctions.hpp \
                     $(build_expression_dir)/ExpressionVariable.hpp \
                     $(build_expression_dir)/IndirectVariableReference.hpp \
                     $(build_expression_dir)/ExpressionLogical.hpp
+executionHeaders = $(build_execution_dir)/CPPCode.hpp \
+                   $(build_execution_dir)/RexxActivation.hpp \
+                   $(build_execution_dir)/RexxActivationStack.hpp \
+                   $(build_execution_dir)/RexxCode.hpp \
+                   $(build_execution_dir)/RexxLocalVariables.hpp \
+                   $(build_execution_dir)/RexxNativeActivation.hpp \
+                   $(build_execution_dir)/RexxNativeCode.hpp \
+                   $(build_execution_dir)/RexxVariable.hpp \
+                   $(build_execution_dir)/RexxVariableDictionary.hpp \
+                   $(build_execution_dir)/SecurityManager.hpp
 behaviourHeaders = $(build_behaviour_dir)/ClassTypeCodes.h \
                    $(build_behaviour_dir)/PrimitiveBehaviourNames.h \
                    $(build_behaviour_dir)/RexxBehaviour.hpp
@@ -239,8 +250,7 @@ commonHeaders = $(build_common_dir)/SynchronizedBlock.hpp \
                 $(build_common_platform_dir)/SysSemaphore.hpp \
                 $(build_common_platform_dir)/SysThread.hpp
 
-runtimeHeaders = $(build_runtime_dir)/CPPCode.hpp \
-                 $(build_runtime_dir)/DeadObject.hpp \
+runtimeHeaders = $(build_runtime_dir)/DeadObject.hpp \
                  $(build_runtime_dir)/GlobalNames.h \
                  $(build_runtime_dir)/Interpreter.hpp \
                  $(build_runtime_dir)/InterpreterInstance.hpp \
@@ -253,10 +263,7 @@ runtimeHeaders = $(build_runtime_dir)/CPPCode.hpp \
                  $(build_runtime_dir)/PackageManager.hpp \
                  $(build_runtime_dir)/ProgramMetaData.hpp \
                  $(build_runtime_dir)/ProtectedObject.hpp \
-                 $(build_runtime_dir)/RexxActivation.hpp \
-                 $(build_runtime_dir)/RexxActivationStack.hpp \
                  $(build_runtime_dir)/RexxBuiltinFunctions.h \
-                 $(build_runtime_dir)/RexxCode.hpp \
                  $(build_runtime_dir)/RexxCollection.hpp \
                  $(build_runtime_dir)/RexxCompoundElement.hpp \
                  $(build_runtime_dir)/RexxCompoundTable.hpp \
@@ -268,15 +275,9 @@ runtimeHeaders = $(build_runtime_dir)/CPPCode.hpp \
                  $(build_runtime_dir)/RexxHashTable.hpp \
                  $(build_runtime_dir)/RexxInternalStack.hpp \
                  $(build_runtime_dir)/RexxListTable.hpp \
-                 $(build_runtime_dir)/RexxLocalVariables.hpp \
                  $(build_runtime_dir)/RexxMemory.hpp \
                  $(build_runtime_dir)/RexxMisc.hpp \
-                 $(build_runtime_dir)/RexxNativeActivation.hpp \
-                 $(build_runtime_dir)/RexxNativeCode.hpp \
                  $(build_runtime_dir)/RexxSmartBuffer.hpp \
-                 $(build_runtime_dir)/RexxVariable.hpp \
-                 $(build_runtime_dir)/RexxVariableDictionary.hpp \
-                 $(build_runtime_dir)/SecurityManager.hpp \
                  $(build_runtime_dir)/TranslateDispatcher.hpp
 streamlibraryHeaders = $(build_streamlibrary_dir)/StreamCommandParser.h \
                        $(build_streamlibrary_dir)/StreamNative.hpp
@@ -465,6 +466,16 @@ classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/SupplierClass.cpp \
                   $(build_classes_dir)/TableClass.cpp \
                   $(build_classes_dir)/WeakReferenceClass.cpp
+execution_sources = $(build_execution_dir)/CPPCode.cpp \
+                    $(build_execution_dir)/RexxActivation.cpp \
+                    $(build_execution_dir)/RexxActivationStack.cpp \
+                    $(build_execution_dir)/RexxCode.cpp \
+                    $(build_execution_dir)/RexxLocalVariables.cpp \
+                    $(build_execution_dir)/RexxNativeActivation.cpp \
+                    $(build_execution_dir)/RexxNativeCode.cpp \
+                    $(build_execution_dir)/RexxVariable.cpp \
+                    $(build_execution_dir)/RexxVariableDictionary.cpp \
+                    $(build_execution_dir)/SecurityManager.cpp
 behaviour_sources = $(build_behaviour_dir)/PrimitiveBehaviours.cpp \
                     $(build_behaviour_dir)/RexxBehaviour.cpp \
                     $(build_behaviour_dir)/VirtualFunctionTable.cpp
@@ -597,6 +608,7 @@ streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
 librexx_la_SOURCES = $(classes_sources) \
                      $(kernel_api_sources) \
                      $(behaviour_sources) \
+                     $(execution_sources) \
                      $(concurrency_sources) \
                      $(expression_sources) \
                      $(instructions_sources) \
@@ -621,6 +633,7 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_common_platform_dir) \
                        -I$(build_kernel_dir) \
                        -I$(build_behaviour_dir) \
+                       -I$(build_execution_dir) \
                        -I$(build_concurrency_dir) \
                        -I$(build_expression_dir) \
                        -I$(build_instructions_dir) \
