@@ -257,7 +257,6 @@ parserHeaders = $(build_parser_dir)/Clause.hpp \
                 $(build_parser_dir)/Token.hpp
 platformHeaders = $(build_interpreter_platform_dir)/APIDefinitions.h \
                   $(build_interpreter_platform_dir)/PlatformDefinitions.h \
-                  $(build_interpreter_platform_dir)/SharedMemorySupport.h \
                   $(build_interpreter_platform_dir)/SysActivity.hpp \
                   $(build_interpreter_platform_dir)/SysFileSystem.hpp \
                   $(build_interpreter_platform_dir)/SysInterpreterInstance.hpp \
