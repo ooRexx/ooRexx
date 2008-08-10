@@ -71,6 +71,7 @@ build_kernel_dir = $(top_srcdir)/kernel
 build_kernel_common_dir = $(build_kernel_dir)/platform/common
 build_kernel_api_dir = $(build_kernel_dir)/api
 build_classes_dir = $(build_kernel_dir)/classes
+build_classes_support_dir = $(build_kernel_dir)/classes/support
 build_expression_dir = $(build_kernel_dir)/expression
 build_concurrency_dir = $(build_kernel_dir)/concurrency
 build_behaviour_dir = $(build_kernel_dir)/behaviour
@@ -131,6 +132,14 @@ errorHeaders = $(build_messages_dir)/RexxMessageNumbers.h \
                $(build_messages_dir)/RexxErrorCodes.h \
                $(build_messages_dir)/RexxMessageTable.h
 kernelApiHeaders = $(build_kernel_api_dir)/ContextApi.hpp
+classesSupportHeaders = $(build_classes_support_dir)/ProgramMetaData.hpp \
+                        $(build_classes_support_dir)/RexxCollection.hpp \
+                        $(build_classes_support_dir)/RexxCompoundElement.hpp \
+                        $(build_classes_support_dir)/RexxCompoundTable.hpp \
+                        $(build_classes_support_dir)/RexxCompoundTail.hpp \
+                        $(build_classes_support_dir)/RexxDateTime.hpp \
+                        $(build_classes_support_dir)/RexxHashTable.hpp \
+                        $(build_classes_support_dir)/RexxListTable.hpp
 classesHeaders = $(build_classes_dir)/ArrayClass.hpp \
                  $(build_classes_dir)/BufferClass.hpp \
                  $(build_classes_dir)/ClassClass.hpp \
@@ -176,6 +185,7 @@ memoryHeaders = $(build_memory_dir)/DeadObject.hpp \
                 $(build_memory_dir)/ProtectedObject.hpp \
                 $(build_memory_dir)/RexxEnvelope.hpp \
                 $(build_memory_dir)/RexxInternalStack.hpp \
+                $(build_memory_dir)/RexxSmartBuffer.hpp \
                 $(build_memory_dir)/RexxMemory.hpp
 executionHeaders = $(build_execution_dir)/CPPCode.hpp \
                    $(build_execution_dir)/RexxActivation.hpp \
@@ -198,6 +208,7 @@ concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
                      $(build_concurrency_dir)/MessageDispatcher.hpp \
                      $(build_concurrency_dir)/RexxActivity.hpp \
                      $(build_concurrency_dir)/RexxStartDispatcher.hpp \
+                     $(build_concurrency_dir)/TranslateDispatcher.hpp
 instructionsHeaders = $(build_instructions_dir)/AddressInstruction.hpp \
                       $(build_instructions_dir)/AssignmentInstruction.hpp \
                       $(build_instructions_dir)/CallInstruction.hpp \
@@ -267,20 +278,10 @@ runtimeHeaders = $(build_runtime_dir)/GlobalNames.h \
                  $(build_runtime_dir)/NativeFunctions.h \
                  $(build_runtime_dir)/NativeMethods.h \
                  $(build_runtime_dir)/Numerics.hpp \
-                 $(build_runtime_dir)/ProgramMetaData.hpp \
                  $(build_runtime_dir)/RexxBuiltinFunctions.h \
-                 $(build_runtime_dir)/RexxCollection.hpp \
-                 $(build_runtime_dir)/RexxCompoundElement.hpp \
-                 $(build_runtime_dir)/RexxCompoundTable.hpp \
-                 $(build_runtime_dir)/RexxCompoundTail.hpp \
                  $(build_runtime_dir)/RexxConstants.hpp \
                  $(build_runtime_dir)/RexxCore.h \
-                 $(build_runtime_dir)/RexxDateTime.hpp \
-                 $(build_runtime_dir)/RexxHashTable.hpp \
-                 $(build_runtime_dir)/RexxListTable.hpp \
-                 $(build_runtime_dir)/RexxMisc.hpp \
-                 $(build_runtime_dir)/RexxSmartBuffer.hpp \
-                 $(build_runtime_dir)/TranslateDispatcher.hpp
+                 $(build_runtime_dir)/RexxMisc.hpp
 streamlibraryHeaders = $(build_streamlibrary_dir)/StreamCommandParser.h \
                        $(build_streamlibrary_dir)/StreamNative.hpp
 libHeaders = $(build_lib_dir)/RexxPlatformDefinitions.h \
@@ -435,6 +436,14 @@ kernel_api_sources = $(build_kernel_api_dir)/CallContextStubs.cpp \
                      $(build_kernel_api_dir)/InterpreterInstanceStubs.cpp \
                      $(build_kernel_api_dir)/MethodContextStubs.cpp \
                      $(build_kernel_api_dir)/ThreadContextStubs.cpp
+classes_support_sources = $(build_classes_support_dir)/ProgramMetaData.cpp \
+                          $(build_classes_support_dir)/RexxCollection.cpp \
+                          $(build_classes_support_dir)/RexxCompoundElement.cpp \
+                          $(build_classes_support_dir)/RexxCompoundTable.cpp \
+                          $(build_classes_support_dir)/RexxCompoundTail.cpp \
+                          $(build_classes_support_dir)/RexxDateTime.cpp \
+                          $(build_classes_support_dir)/RexxHashTable.cpp \
+                          $(build_classes_support_dir)/RexxListTable.cpp
 classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/BufferClass.cpp \
                   $(build_classes_dir)/ClassClass.cpp \
@@ -476,6 +485,8 @@ memory_sources = $(build_memory_dir)/DeadObject.cpp \
                  $(build_memory_dir)/ProtectedObject.cpp \
                  $(build_memory_dir)/RexxEnvelope.cpp \
                  $(build_memory_dir)/RexxInternalStack.cpp \
+                 $(build_memory_dir)/RexxSmartBuffer.cpp \
+                 $(build_memory_dir)/Setup.cpp \
                  $(build_memory_dir)/RexxMemory.cpp
 execution_sources = $(build_execution_dir)/CPPCode.cpp \
                     $(build_execution_dir)/RexxActivation.cpp \
@@ -496,7 +507,8 @@ concurrency_sources = $(build_concurrency_dir)/ActivityDispatcher.cpp \
                       $(build_concurrency_dir)/ExitHandler.cpp \
                       $(build_concurrency_dir)/MessageDispatcher.cpp \
                       $(build_concurrency_dir)/RexxActivity.cpp \
-                      $(build_concurrency_dir)/RexxStartDispatcher.cpp
+                      $(build_concurrency_dir)/RexxStartDispatcher.cpp \
+                      $(build_concurrency_dir)/TranslateDispatcher.cpp
 expression_sources = $(build_expression_dir)/BuiltinFunctions.cpp \
                      $(build_expression_dir)/CommonExternalFunctions.cpp \
                      $(build_expression_dir)/ExpressionCompoundVariable.cpp \
@@ -582,22 +594,13 @@ runtime_sources  = $(build_runtime_dir)/GlobalData.cpp \
                    $(build_runtime_dir)/Interpreter.cpp \
                    $(build_runtime_dir)/InterpreterInstance.cpp \
                    $(build_runtime_dir)/Numerics.cpp \
-                   $(build_runtime_dir)/ProgramMetaData.cpp \
-                   $(build_runtime_dir)/RexxCollection.cpp \
-                   $(build_runtime_dir)/RexxCompoundElement.cpp \
-                   $(build_runtime_dir)/RexxCompoundTable.cpp \
-                   $(build_runtime_dir)/RexxCompoundTail.cpp \
-                   $(build_runtime_dir)/RexxDateTime.cpp \
-                   $(build_runtime_dir)/RexxHashTable.cpp \
-                   $(build_runtime_dir)/RexxListTable.cpp \
                    $(build_runtime_dir)/RexxMisc.cpp \
-                   $(build_runtime_dir)/RexxSmartBuffer.cpp \
-                   $(build_runtime_dir)/Setup.cpp \
                    $(build_runtime_dir)/TranslateDispatcher.cpp \
                    $(build_runtime_dir)/Version.cpp
 streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
                         $(build_streamlibrary_dir)/StreamNative.cpp
 librexx_la_SOURCES = $(classes_sources) \
+                     $(classes_support_sources) \
                      $(kernel_api_sources) \
                      $(behaviour_sources) \
                      $(execution_sources) \
@@ -634,6 +637,7 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_expression_dir) \
                        -I$(build_instructions_dir) \
                        -I$(build_classes_dir) \
+                       -I$(build_classes_support_dir) \
                        -I$(build_runtime_dir) \
                        -I$(build_parser_dir) \
                        -I$(build_messages_dir) \
@@ -863,15 +867,7 @@ librxregexp_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                           -I$(build_lib_dir) \
                           -I$(build_api_dir) \
                           -I$(build_api_platform_dir) \
-                          -I$(build_kernel_dir) \
-                          -I$(build_expression_dir) \
-                          -I$(build_classes_dir) \
-                          -I$(build_messages_dir) \
-                          -I$(build_parser_dir) \
-                          -I$(build_kernel_common_dir) \
-                          -I$(build_runtime_dir) \
-                          -I$(build_kernel_platform_dir) \
-                          -I$(build_rexxapi_platform_dir)
+                          -I$(build_messages_dir)
 #
 # Extra libraries for librxregexp.so (maybe)
 #
