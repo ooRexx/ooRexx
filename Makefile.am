@@ -72,6 +72,7 @@ build_kernel_common_dir = $(build_kernel_dir)/platform/common
 build_kernel_api_dir = $(build_kernel_dir)/api
 build_classes_dir = $(build_kernel_dir)/classes
 build_expression_dir = $(build_kernel_dir)/expression
+build_concurrency_dir = $(build_kernel_dir)/concurrency
 build_instructions_dir = $(build_kernel_dir)/instructions
 build_parser_dir = $(build_kernel_dir)/parser
 build_runtime_dir = $(build_kernel_dir)/runtime
@@ -163,6 +164,14 @@ expressionHeaders = $(build_expression_dir)/BuiltinFunctions.hpp \
                     $(build_expression_dir)/ExpressionVariable.hpp \
                     $(build_expression_dir)/IndirectVariableReference.hpp \
                     $(build_expression_dir)/ExpressionLogical.hpp
+concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
+                     $(build_concurrency_dir)/ActivityDispatcher.hpp \
+                     $(build_concurrency_dir)/ActivityManager.hpp \
+                     $(build_concurrency_dir)/CallbackDispatcher.hpp \
+                     $(build_concurrency_dir)/ExitHandler.hpp \
+                     $(build_concurrency_dir)/MessageDispatcher.hpp \
+                     $(build_concurrency_dir)/RexxActivity.hpp \
+                     $(build_concurrency_dir)/RexxStartDispatcher.hpp \
 instructionsHeaders = $(build_instructions_dir)/AddressInstruction.hpp \
                       $(build_instructions_dir)/AssignmentInstruction.hpp \
                       $(build_instructions_dir)/CallInstruction.hpp \
@@ -218,7 +227,7 @@ platformHeaders = $(build_kernel_platform_dir)/APIDefinitions.h \
                   $(build_kernel_platform_dir)/SysNativeFunctions.h \
                   $(build_kernel_platform_dir)/SysNativeMethods.h \
                   $(build_kernel_platform_dir)/SystemCommands.h \
-                  $(build_kernel_platform_dir)/SystemInterpreter.hpp 
+                  $(build_kernel_platform_dir)/SystemInterpreter.hpp
 commonHeaders = $(build_common_dir)/SynchronizedBlock.hpp \
                 $(build_common_dir)/Utilities.hpp \
                 $(build_common_platform_dir)/SysFile.hpp \
@@ -226,21 +235,15 @@ commonHeaders = $(build_common_dir)/SynchronizedBlock.hpp \
                 $(build_common_platform_dir)/SysSemaphore.hpp \
                 $(build_common_platform_dir)/SysThread.hpp
 
-runtimeHeaders = $(build_runtime_dir)/ActivationApiContexts.hpp \
-                 $(build_runtime_dir)/ActivityDispatcher.hpp \
-                 $(build_runtime_dir)/ActivityManager.hpp \
-                 $(build_runtime_dir)/CallbackDispatcher.hpp \
-                 $(build_runtime_dir)/ClassTypeCodes.h \
+runtimeHeaders = $(build_runtime_dir)/ClassTypeCodes.h \
                  $(build_runtime_dir)/CPPCode.hpp \
                  $(build_runtime_dir)/DeadObject.hpp \
-                 $(build_runtime_dir)/ExitHandler.hpp \
                  $(build_runtime_dir)/GlobalNames.h \
                  $(build_runtime_dir)/Interpreter.hpp \
                  $(build_runtime_dir)/InterpreterInstance.hpp \
                  $(build_runtime_dir)/LibraryPackage.hpp \
                  $(build_runtime_dir)/MemorySegment.hpp \
                  $(build_runtime_dir)/MemoryStats.hpp \
-                 $(build_runtime_dir)/MessageDispatcher.hpp \
                  $(build_runtime_dir)/NativeFunctions.h \
                  $(build_runtime_dir)/NativeMethods.h \
                  $(build_runtime_dir)/Numerics.hpp \
@@ -250,7 +253,6 @@ runtimeHeaders = $(build_runtime_dir)/ActivationApiContexts.hpp \
                  $(build_runtime_dir)/ProtectedObject.hpp \
                  $(build_runtime_dir)/RexxActivation.hpp \
                  $(build_runtime_dir)/RexxActivationStack.hpp \
-                 $(build_runtime_dir)/RexxActivity.hpp \
                  $(build_runtime_dir)/RexxBehaviour.hpp \
                  $(build_runtime_dir)/RexxBuiltinFunctions.h \
                  $(build_runtime_dir)/RexxCode.hpp \
@@ -271,7 +273,6 @@ runtimeHeaders = $(build_runtime_dir)/ActivationApiContexts.hpp \
                  $(build_runtime_dir)/RexxNativeActivation.hpp \
                  $(build_runtime_dir)/RexxNativeCode.hpp \
                  $(build_runtime_dir)/RexxSmartBuffer.hpp \
-                 $(build_runtime_dir)/RexxStartDispatcher.hpp \
                  $(build_runtime_dir)/RexxVariable.hpp \
                  $(build_runtime_dir)/RexxVariableDictionary.hpp \
                  $(build_runtime_dir)/SecurityManager.hpp \
@@ -463,6 +464,13 @@ classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/SupplierClass.cpp \
                   $(build_classes_dir)/TableClass.cpp \
                   $(build_classes_dir)/WeakReferenceClass.cpp
+concurrency_sources = $(build_concurrency_dir)/ActivityDispatcher.cpp \
+                      $(build_concurrency_dir)/ActivityManager.cpp \
+                      $(build_concurrency_dir)/CallbackDispatcher.cpp \
+                      $(build_concurrency_dir)/ExitHandler.cpp \
+                      $(build_concurrency_dir)/MessageDispatcher.cpp \
+                      $(build_concurrency_dir)/RexxActivity.cpp \
+                      $(build_concurrency_dir)/RexxStartDispatcher.cpp
 expression_sources = $(build_expression_dir)/BuiltinFunctions.cpp \
                      $(build_expression_dir)/CommonExternalFunctions.cpp \
                      $(build_expression_dir)/ExpressionCompoundVariable.cpp \
@@ -542,12 +550,8 @@ common_sources = $(build_common_dir)/Utilities.cpp \
                  $(build_common_platform_dir)/SysLibrary.cpp \
                  $(build_common_platform_dir)/SysSemaphore.cpp \
                  $(build_common_platform_dir)/SysThread.cpp
-runtime_sources  = $(build_runtime_dir)/ActivityDispatcher.cpp \
-                   $(build_runtime_dir)/ActivityManager.cpp \
-                   $(build_runtime_dir)/CallbackDispatcher.cpp \
-                   $(build_runtime_dir)/CPPCode.cpp \
+runtime_sources  = $(build_runtime_dir)/CPPCode.cpp \
                    $(build_runtime_dir)/DeadObject.cpp \
-                   $(build_runtime_dir)/ExitHandler.cpp \
                    $(build_runtime_dir)/GlobalData.cpp \
                    $(build_runtime_dir)/GlobalNames.cpp \
                    $(build_runtime_dir)/InternalPackage.cpp \
@@ -556,7 +560,6 @@ runtime_sources  = $(build_runtime_dir)/ActivityDispatcher.cpp \
                    $(build_runtime_dir)/LibraryPackage.cpp \
                    $(build_runtime_dir)/MemorySegment.cpp \
                    $(build_runtime_dir)/MemoryStats.cpp \
-                   $(build_runtime_dir)/MessageDispatcher.cpp \
                    $(build_runtime_dir)/Numerics.cpp \
                    $(build_runtime_dir)/PackageManager.cpp \
                    $(build_runtime_dir)/PrimitiveBehaviours.cpp \
@@ -564,7 +567,6 @@ runtime_sources  = $(build_runtime_dir)/ActivityDispatcher.cpp \
                    $(build_runtime_dir)/ProtectedObject.cpp \
                    $(build_runtime_dir)/RexxActivation.cpp \
                    $(build_runtime_dir)/RexxActivationStack.cpp \
-                   $(build_runtime_dir)/RexxActivity.cpp \
                    $(build_runtime_dir)/RexxBehaviour.cpp \
                    $(build_runtime_dir)/RexxCode.cpp \
                    $(build_runtime_dir)/RexxCollection.cpp \
@@ -582,7 +584,6 @@ runtime_sources  = $(build_runtime_dir)/ActivityDispatcher.cpp \
                    $(build_runtime_dir)/RexxNativeActivation.cpp \
                    $(build_runtime_dir)/RexxNativeCode.cpp \
                    $(build_runtime_dir)/RexxSmartBuffer.cpp \
-                   $(build_runtime_dir)/RexxStartDispatcher.cpp \
                    $(build_runtime_dir)/RexxVariable.cpp \
                    $(build_runtime_dir)/RexxVariableDictionary.cpp \
                    $(build_runtime_dir)/SecurityManager.cpp \
@@ -594,6 +595,7 @@ streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
                         $(build_streamlibrary_dir)/StreamNative.cpp
 librexx_la_SOURCES = $(classes_sources) \
                      $(kernel_api_sources) \
+                     $(concurrency_sources) \
                      $(expression_sources) \
                      $(instructions_sources) \
                      $(parser_sources) \
@@ -616,6 +618,7 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_common_dir) \
                        -I$(build_common_platform_dir) \
                        -I$(build_kernel_dir) \
+                       -I$(build_concurrency_dir) \
                        -I$(build_expression_dir) \
                        -I$(build_instructions_dir) \
                        -I$(build_classes_dir) \
