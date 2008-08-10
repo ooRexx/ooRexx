@@ -47,7 +47,6 @@
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuiltinFunctions.h"                     /* include BIF util prototype/macros */
 #include "ActivityManager.hpp"
 
 
@@ -56,7 +55,7 @@
 /*               object, verifying that the number is a non-negative value.   */
 /*               If the argument is omitted, an error is raised.              */
 /******************************************************************************/
-stringsize_t get_length(
+stringsize_t lengthArgument(
     RexxObject * argument,             /* input argument                    */
     size_t position )                  /* position of the argument          */
 {
@@ -80,7 +79,7 @@ stringsize_t get_length(
 /*               value, verifying that the number is a positive value.        */
 /*               If the argument is omitted, an error is raised.              */
 /******************************************************************************/
-stringsize_t get_position(
+stringsize_t positionArgument(
     RexxObject *argument,              /* input argument                    */
     size_t position )                  /* position of the argument          */
 {
@@ -103,7 +102,7 @@ stringsize_t get_position(
 /*               character, if it exists otherwise return the default         */
 /*               character as defined (passed in) by the BIF.                 */
 /******************************************************************************/
-char get_pad_character(
+char padArgument(
     RexxObject *argument,              /* method argument                   */
     size_t position )                  /* argument position                 */
 {
@@ -124,7 +123,7 @@ char get_pad_character(
 /*               character, if it exists otherwise return the default         */
 /*               character as defined (passed in) by the BIF.                 */
 /******************************************************************************/
-char get_option_character(
+char optionArgument(
     RexxObject *argument,              /* method argument                   */
     size_t position )                  /* argument position                 */
 {

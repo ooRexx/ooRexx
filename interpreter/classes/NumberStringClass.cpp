@@ -51,7 +51,6 @@
 #include "BufferClass.hpp"
 #include "RexxActivation.hpp"
 #include "NumberStringMath.hpp"
-#include "RexxBuiltinFunctions.h"
 #include "Numerics.hpp"
 #include "StringUtil.hpp"
 
@@ -2867,7 +2866,7 @@ RexxString *RexxNumberString::d2xD2c(
 
 
                                          /* get the target length             */
-    ResultSize = optional_length(_length, SIZE_MAX, ARG_ONE);
+    ResultSize = optionalLengthArgument(_length, SIZE_MAX, ARG_ONE);
     CurrentDigits = number_digits();     /* get the current digits setting    */
     TargetLength = this->length;         /* copy the length                   */
                                          /* too big to process?               */

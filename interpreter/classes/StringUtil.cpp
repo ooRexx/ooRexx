@@ -46,7 +46,6 @@
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuiltinFunctions.h"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
 #include "QueueClass.hpp"
@@ -67,7 +66,7 @@
 RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInteger *_position,
     RexxInteger *_length, RexxString  *pad)
 {
-    size_t position = get_position(_position, ARG_ONE) - 1;
+    size_t position = positionArgument(_position, ARG_ONE) - 1;
     // assume nothing is pulled from this string
     size_t length = 0;
     // is the position within the string bounds?
@@ -77,9 +76,9 @@ RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInte
         length = stringLength - position;
     }
     // now we process any overrides on this
-    length = optional_length(_length, length, ARG_TWO);
+    length = optionalLengthArgument(_length, length, ARG_TWO);
     // get a padding character (blank is default)
-    char padChar = get_pad(pad, ' ', ARG_THREE);
+    char padChar = optionalPadArgument(pad, ' ', ARG_THREE);
 
     // if our target length is zero, we can just return the null string singleton
     if (length == 0)
@@ -133,7 +132,7 @@ RexxInteger *StringUtil::posRexx(const char *stringData, size_t length, RexxStri
     /* force needle to a string          */
     needle = REQUIRED_STRING(needle, ARG_ONE);
     /* get the starting position         */
-    size_t _start = optional_position(pstart, 1, ARG_TWO);
+    size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
     /* pass on to the primitive function */
     /* and return as an integer object   */
     return new_integer(pos(stringData, length, needle, _start - 1));
@@ -203,7 +202,7 @@ RexxInteger *StringUtil::lastPosRexx(const char *stringData, size_t haystackLen,
 {
     needle = REQUIRED_STRING(needle, ARG_ONE);
     // find out where to start the search. The default is at the very end.
-    size_t startPos = optional_position(_start, haystackLen, ARG_TWO);
+    size_t startPos = optionalPositionArgument(_start, haystackLen, ARG_TWO);
     // now perform the actual search.
     return new_integer(lastPos(stringData, haystackLen, needle, startPos));
 }
@@ -342,7 +341,7 @@ const char *StringUtil::caselessLastPos(const char *needle, size_t needleLen, co
 RexxString *StringUtil::subchar(const char *stringData, size_t stringLength, RexxInteger *positionArg)
 {
     // the starting position isn't optional
-    size_t position = get_position(positionArg, ARG_ONE) - 1;
+    size_t position = positionArgument(positionArg, ARG_ONE) - 1;
 
     // beyond the bounds, this is a null string
     if (position >= stringLength)

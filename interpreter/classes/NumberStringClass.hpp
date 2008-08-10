@@ -71,6 +71,8 @@
 #define NumberRounded      0x00000010       /* Indicate the number was rounded once */
                                             /*  at NumDigits, avoid double rounding */
 
+#define OVERFLOWSPACE 2                /* space for numeric buffer overflow */
+
 #define SetNumberStringZero()                                           \
       this->number[0] = '\0';               /* Make value a zero.*/     \
       this->length = 1;                     /* Length is 1       */     \

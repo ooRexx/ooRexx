@@ -277,7 +277,6 @@ runtimeHeaders = $(build_runtime_dir)/GlobalNames.h \
                  $(build_runtime_dir)/NativeFunctions.h \
                  $(build_runtime_dir)/NativeMethods.h \
                  $(build_runtime_dir)/Numerics.hpp \
-                 $(build_runtime_dir)/RexxBuiltinFunctions.h \
                  $(build_runtime_dir)/RexxConstants.hpp \
                  $(build_runtime_dir)/RexxCore.h \
                  $(build_runtime_dir)/RexxMisc.hpp

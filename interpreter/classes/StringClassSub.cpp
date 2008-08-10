@@ -48,7 +48,6 @@
 #include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuiltinFunctions.h"
 #include "ActivityManager.hpp"
 #include "StringUtil.hpp"
 
@@ -71,11 +70,11 @@ RexxString *RexxString::center(RexxInteger *_length,
     RexxString *Retval;                  /* return string                     */
 
                                          /* see how long result should be     */
-    Width = get_length(_length, ARG_ONE);
+    Width = lengthArgument(_length, ARG_ONE);
 
     /* Get pad character (optional) blank*/
     /*  is used if omitted.              */
-    PadChar = get_pad(pad, ' ', ARG_TWO);
+    PadChar = optionalPadArgument(pad, ' ', ARG_TWO);
     Len = this->getLength();                  /* get length of input to center     */
     if (Width == Len)                    /* if input length and               */
     {
@@ -135,9 +134,9 @@ RexxString *RexxString::delstr(RexxInteger *position,
 
     StringLen = this->getLength();            /* get string length                 */
     /* get start string position         */
-    DeletePos = get_position(position, ARG_ONE);
+    DeletePos = positionArgument(position, ARG_ONE);
     /* get the length to delete          */
-    DeleteLen = optional_length(_length, StringLen - DeletePos + 1, ARG_TWO);
+    DeleteLen = optionalLengthArgument(_length, StringLen - DeletePos + 1, ARG_TWO);
 
     if (DeletePos > StringLen)           /* beyond string bounds?             */
     {
@@ -205,18 +204,18 @@ RexxString *RexxString::insert(RexxString  *newStrObj,
 
     TCharLen = this->getLength();             /* get the target string length      */
     /* get the needle string (and length)*/
-    newStr = (RexxString *)get_string(newStrObj, ARG_ONE);
+    newStr = stringArgument(newStrObj, ARG_ONE);
     NCharLen = newStr->getLength();
-    /* use optional_length for starting  */
+    /* use optionalLengthArgument for starting  */
     /* position becase a value of 0 IS   */
     /* valid for INSERT                  */
-    NChar = optional_length(position, 0, ARG_TWO);
+    NChar = optionalLengthArgument(position, 0, ARG_TWO);
     /* get the optional length, using the*/
     /* needle length as the defaul       */
-    ReqLenChar = optional_length(_length, NCharLen, ARG_THREE);
+    ReqLenChar = optionalLengthArgument(_length, NCharLen, ARG_THREE);
 
     /*  is used if omitted.              */
-    PadChar = get_pad(pad, ' ', ARG_FOUR);
+    PadChar = optionalPadArgument(pad, ' ', ARG_FOUR);
     ReqLeadPad = 0;                      /* set lead pad to zero              */
     TargetSize = TCharLen;               /* copy the target size              */
 
@@ -297,10 +296,10 @@ RexxString *RexxString::left(RexxInteger *_length,
     size_t    CopyLength;                /* length to copy                    */
 
                                          /* get the target length             */
-    Size = get_length(_length, ARG_ONE);
+    Size = lengthArgument(_length, ARG_ONE);
 
     /*  is used if omitted.              */
-    PadChar = get_pad(pad, ' ', ARG_TWO);
+    PadChar = optionalPadArgument(pad, ' ', ARG_TWO);
     Length = this->getLength();               /* get input length                  */
 
     if (!Size)                           /* requesting zero bytes?            */
@@ -352,14 +351,14 @@ RexxString *RexxString::overlay(
 
     TargetLen = this->getLength();       /* get the haystack length           */
                                          /* get the overlay string value      */
-    newStr = (RexxString *)get_string(newStrObj, ARG_ONE);
+    newStr = stringArgument(newStrObj, ARG_ONE);
     NewLen = newStr->getLength();
     /* get the overlay position          */
-    OverlayPos = optional_position(position, 1, ARG_TWO);
+    OverlayPos = optionalPositionArgument(position, 1, ARG_TWO);
     /* get final overlay length          */
-    OverlayLen = optional_length(_length, NewLen, ARG_THREE);
+    OverlayLen = optionalLengthArgument(_length, NewLen, ARG_THREE);
     /*  is used if omitted.              */
-    PadChar = get_pad(pad, ' ', ARG_FOUR);
+    PadChar = optionalPadArgument(pad, ' ', ARG_FOUR);
 
     if (OverlayLen > NewLen)             /* need to pad?                      */
         BackPad = OverlayLen - NewLen;     /* get the pad size                  */
@@ -483,10 +482,10 @@ RexxString *RexxString::right(RexxInteger *_length,
     size_t    CopyLength;                /* length to copy                    */
 
                                          /* get the target length             */
-    Size = get_length(_length, ARG_ONE);
+    Size = lengthArgument(_length, ARG_ONE);
 
     /*  is used if omitted.              */
-    PadChar = get_pad(pad, ' ', ARG_TWO);
+    PadChar = optionalPadArgument(pad, ' ', ARG_TWO);
     Length = this->getLength();               /* get input length                  */
 
     if (!Size)                           /* requesting zero bytes?            */
@@ -533,7 +532,7 @@ RexxString *RexxString::strip(RexxString *option,
     RexxString *Retval;                  /* return value                      */
 
     /* get the option character          */
-    Option = option_character(option, STRIP_BOTH, ARG_ONE);
+    Option = optionalOptionArgument(option, STRIP_BOTH, ARG_ONE);
     if (Option != STRIP_TRAILING &&      /* must be a valid option            */
         Option != STRIP_LEADING &&
         Option != STRIP_BOTH )
@@ -542,7 +541,7 @@ RexxString *RexxString::strip(RexxString *option,
     }
     // get the strip character.  This is a phony default, as the
     // real default strips the entire set of recognized whitespace characters.
-    RemoveChar = get_pad(stripchar, ' ', ARG_TWO);
+    RemoveChar = optionalPadArgument(stripchar, ' ', ARG_TWO);
     // and get a special processing flag
     bool stripWhite = stripchar == OREF_NULL;
 

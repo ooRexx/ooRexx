@@ -64,6 +64,56 @@
 
 #define  INITIAL_NAME_SIZE     10      /* first name table allocation       */
 #define  EXTENDED_NAME_SIZE    10      /* amount to extend table by         */
+                                       /* Strip function options     */
+#define  STRIP_BOTH                'B'
+#define  STRIP_LEADING             'L'
+#define  STRIP_TRAILING            'T'
+                                       /* Datatype function options  */
+#define  DATATYPE_ALPHANUMERIC     'A'
+#define  DATATYPE_BINARY           'B'
+#define  DATATYPE_LOWERCASE        'L'
+#define  DATATYPE_MIXEDCASE        'M'
+#define  DATATYPE_NUMBER           'N'
+#define  DATATYPE_SYMBOL           'S'
+#define  DATATYPE_VARIABLE         'V'
+#define  DATATYPE_UPPERCASE        'U'
+#define  DATATYPE_WHOLE_NUMBER     'W'
+#define  DATATYPE_HEX              'X'
+#define  DATATYPE_9DIGITS          '9'
+#define  DATATYPE_LOGICAL          'O' // lOgical.
+                                       /* Verify function options    */
+#define  VERIFY_MATCH              'M'
+#define  VERIFY_NOMATCH            'N'
+
+#define ch_SPACE ' '
+
+                                       /* character validation sets for the */
+                                       /* datatype function                 */
+#define  HEX_CHAR_STR   "0123456789ABCDEFabcdef"
+#define  ALPHANUM       \
+"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+#define  BINARI         "01"
+#define  LOWER_ALPHA    "abcdefghijklmnopqrstuvwxyz"
+#define  MIXED_ALPHA    \
+"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#define  UPPER_ALPHA    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+/*********************************************************************/
+/*                                                                   */
+/*      Name:                   IntToHexdigit                        */
+/*                                                                   */
+/*      Descriptive name:       convert int to hexadecimal digit     */
+/*                                                                   */
+/*      Returns:                A hexadecimal digit representing n.  */
+/*                                                                   */
+/*********************************************************************/
+
+                                       /* convert the number                */
+inline char IntToHexDigit(int n)
+{
+    return "0123456789ABCDEF"[n];
+}
 
 
  class RexxString : public RexxObject {

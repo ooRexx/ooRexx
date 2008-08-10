@@ -48,7 +48,6 @@
 #include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuiltinFunctions.h"
 #include "StringUtil.hpp"
 
 
@@ -73,10 +72,10 @@ RexxString *RexxString::delWord(RexxInteger *position,
     RexxString *Retval;                  /* return value                      */
 
                                          /* convert position to binary        */
-    WordPos = get_position(position, ARG_ONE);
+    WordPos = positionArgument(position, ARG_ONE);
     /* get num of words to delete, the   */
     /* default is "a very large number"  */
-    Count = optional_length(plength, MAXNUM, ARG_TWO);
+    Count = optionalLengthArgument(plength, MAXNUM, ARG_TWO);
 
     Length = this->getLength();               /* get string length                 */
     if (!Length)                         /* null string?                      */
@@ -158,10 +157,10 @@ RexxString *RexxString::space(RexxInteger *space_count,
     RexxString *Retval;                  /* return value                      */
 
                                          /* get the spacing count             */
-    Spaces = optional_length(space_count, 1, ARG_ONE);
+    Spaces = optionalLengthArgument(space_count, 1, ARG_ONE);
 
     /* get the pad character             */
-    PadChar = get_pad(pad, ' ', ARG_TWO);
+    PadChar = optionalPadArgument(pad, ' ', ARG_TWO);
 
     Length = this->getLength();               /* get the string length             */
     Count = 0;                           /* no words yet                      */
@@ -237,10 +236,10 @@ RexxString *RexxString::subWord(RexxInteger *position,
     RexxString *Retval;                  /* return value                      */
 
                                          /* convert position to binary        */
-    WordPos = get_position(position, ARG_ONE);
+    WordPos = positionArgument(position, ARG_ONE);
     /* get num of words to delete, the   */
     /* default is "a very large number"  */
-    Count = optional_length(plength, MAXNUM, ARG_TWO);
+    Count = optionalLengthArgument(plength, MAXNUM, ARG_TWO);
 
     Length = this->getLength();               /* get Argument length               */
     if (!Length || !Count)               /* null string?                      */
@@ -297,7 +296,7 @@ RexxString *RexxString::word(RexxInteger *position)
     RexxString *Retval;                  /* return value                      */
 
                                          /* convert position to binary        */
-    WordPos = get_position(position, ARG_ONE);
+    WordPos = positionArgument(position, ARG_ONE);
 
     Length = this->getLength();          /* get Argument length               */
     if (Length == 0)                     /* null string?                      */
@@ -346,7 +345,7 @@ RexxInteger *RexxString::wordIndex(RexxInteger *position)
 
     Length = this->getLength();          /* get the string length             */
                                          /* convert count to binary           */
-    WordPos = get_position(position, ARG_ONE);
+    WordPos = positionArgument(position, ARG_ONE);
     Word = this->getStringData();        /* point to word data                */
 
                                          /* get the first word                */
@@ -385,7 +384,7 @@ RexxInteger *RexxString::wordLength(RexxInteger *position)
 
     Length = this->getLength();               /* get the string length             */
     /* convert count to binary           */
-    WordPos = get_position(position , ARG_ONE);
+    WordPos = positionArgument(position , ARG_ONE);
     Word = this->getStringData();             /* point to word data                */
 
     /* get the first word                */
@@ -431,11 +430,11 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase,
     const char *NextNeedlePtr;           /* pointer to next word              */
     size_t   i;                          /* loop counter                      */
 
-    phrase = get_string(phrase, ARG_ONE);/* get the phrase we are looking for */
+    phrase = stringArgument(phrase, ARG_ONE);/* get the phrase we are looking for */
     NeedleLength = phrase->getLength();       /* get the length also               */
     /* get starting position, the default*/
     /* is the first word                 */
-    Count = optional_position(pstart, 1, ARG_TWO);
+    Count = optionalPositionArgument(pstart, 1, ARG_TWO);
 
     Needle = phrase->getStringData();    /* get friendly pointer              */
     Haystack = this->getStringData();    /* and the second also               */
@@ -542,11 +541,11 @@ RexxInteger *RexxString::wordPos(RexxString  *phrase,
 
 RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstart)
 {
-    phrase = get_string(phrase, ARG_ONE);/* get the phrase we are looking for */
+    phrase = stringArgument(phrase, ARG_ONE);/* get the phrase we are looking for */
     stringsize_t needleLength = phrase->getLength();       /* get the length also               */
                                          /* get starting position, the default*/
                                          /* is the first word                 */
-    stringsize_t count = optional_position(pstart, 1, ARG_TWO);
+    stringsize_t count = optionalPositionArgument(pstart, 1, ARG_TWO);
 
     const char *needle = phrase->getStringData();  /* get friendly pointer              */
     const char *haystack = this->getStringData();  /* and the second also               */

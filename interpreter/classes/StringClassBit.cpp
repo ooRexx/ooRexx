@@ -48,7 +48,6 @@
 #include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuiltinFunctions.h"
 
 /******************************************************************************/
 /* Arguments:  String to bitand with self                                     */
@@ -74,11 +73,11 @@ RexxString *RexxString::bitAnd(RexxString *string2,
 
                                          /* get string we will be doing bit   */
                                          /* stuff to...                       */
-    string2 = optional_string(string2, OREF_NULLSTRING, ARG_ONE);
+    string2 = optionalStringArgument(string2, OREF_NULLSTRING, ARG_ONE);
     String2Len = string2->getLength();        /* get the string length             */
     String2 = string2->getStringData();       /* get the string data pointer       */
     /* get the pad character             */
-    PadChar = get_pad(pad, 0xff, ARG_TWO);
+    PadChar = optionalPadArgument(pad, (char)0xff, ARG_TWO);
 
     String1 = this->getStringData();     /* point to the first string         */
     String1Len = this->getLength();      /* get the length                    */
@@ -143,11 +142,11 @@ RexxString *RexxString::bitOr(RexxString *string2,
 
     /* get string we will be doing bit   */
     /* stuff to...                       */
-    string2 = optional_string(string2, OREF_NULLSTRING, ARG_ONE);
+    string2 = optionalStringArgument(string2, OREF_NULLSTRING, ARG_ONE);
     String2Len = string2->getLength();   /* get the string length             */
     String2 = string2->getStringData();  /* get the string data pointer       */
                                          /* get the pad character             */
-    PadChar = get_pad(pad, 0x00, ARG_TWO);
+    PadChar = optionalPadArgument(pad, 0x00, ARG_TWO);
 
     String1 = this->getStringData();     /* point to the first string         */
     String1Len = this->getLength();      /* get the length                    */
@@ -212,11 +211,11 @@ RexxString *RexxString::bitXor(RexxString *string2,
 
     /* get string we will be doing bit   */
     /* stuff to...                       */
-    string2 = optional_string(string2, OREF_NULLSTRING, ARG_ONE);
+    string2 = optionalStringArgument(string2, OREF_NULLSTRING, ARG_ONE);
     String2Len = string2->getLength();   /* get the string length             */
     String2 = string2->getStringData();  /* get the string data pointer       */
                                          /* get the pad character             */
-    PadChar = get_pad(pad, 0x00, ARG_TWO);
+    PadChar = optionalPadArgument(pad, 0x00, ARG_TWO);
 
     String1 = this->getStringData();     /* point to the first string         */
     String1Len = this->getLength();      /* get the length                    */

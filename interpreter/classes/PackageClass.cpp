@@ -47,7 +47,6 @@
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "PackageClass.hpp"
-#include "RexxBuiltinFunctions.h"
 #include "RoutineClass.hpp"
 #include "InterpreterInstance.hpp"
 #include "PackageManager.hpp"
@@ -163,7 +162,7 @@ RexxString *PackageClass::getSourceLine(size_t n)
 RexxString *PackageClass::getSourceLineRexx(RexxObject *position)
 {
     // the starting position isn't optional
-    size_t n = get_position(position, ARG_ONE);
+    size_t n = positionArgument(position, ARG_ONE);
     return source->get(n);
 }
 

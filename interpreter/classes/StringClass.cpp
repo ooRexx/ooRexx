@@ -51,7 +51,6 @@
 #include "DirectoryClass.hpp"
 #include "RexxActivation.hpp"
 #include "RexxActivity.hpp"
-#include "RexxBuiltinFunctions.h"
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
 #include "RexxCompoundTail.hpp"
@@ -1425,8 +1424,8 @@ RexxString *RexxString::lower()
  */
 RexxString *RexxString::lowerRexx(RexxInteger *_start, RexxInteger *_length)
 {
-    size_t startPos = optional_position(_start, 1, ARG_ONE) - 1;
-    size_t rangeLength = optional_length(_length, getLength(), ARG_TWO);
+    size_t startPos = optionalPositionArgument(_start, 1, ARG_ONE) - 1;
+    size_t rangeLength = optionalLengthArgument(_length, getLength(), ARG_TWO);
 
     // if we're starting beyond the end bounds, return unchanged
     if (startPos >= getLength())
@@ -1458,8 +1457,8 @@ RexxString *RexxString::lowerRexx(RexxInteger *_start, RexxInteger *_length)
  */
 RexxString *RexxString::upperRexx(RexxInteger *_start, RexxInteger *_length)
 {
-    size_t startPos = optional_position(_start, 1, ARG_ONE) - 1;
-    size_t rangeLength = optional_length(_length, getLength(), ARG_TWO);
+    size_t startPos = optionalPositionArgument(_start, 1, ARG_ONE) - 1;
+    size_t rangeLength = optionalLengthArgument(_length, getLength(), ARG_TWO);
 
     // if we're starting beyond the end bounds, return unchanged
     if (startPos >= getLength())

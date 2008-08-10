@@ -330,6 +330,56 @@ inline RexxString * REQUIRED_STRING(RexxObject *object, size_t position)
     return object->requiredString(position);
 }
 
+inline RexxString *stringArgument(RexxObject *s, size_t p)
+{
+    return REQUIRED_STRING(s, p);
+}
+
+inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, size_t p)
+{
+    return (o == OREF_NULL ? d : stringArgument(o, p));
+}
+
+// resides in the string class util
+size_t lengthArgument(RexxObject *o, size_t p);
+
+inline size_t optionalLengthArgument(RexxObject *o, size_t d, size_t p)
+{
+    return (o == OREF_NULL ? d : lengthArgument(o, p));
+}
+
+// resides in the string class util
+size_t positionArgument(RexxObject *o, size_t p);
+
+inline size_t optionalPositionArgument(RexxObject *o, size_t d, size_t p)
+{
+    return (o == OREF_NULL ? d : positionArgument(o, p));
+}
+
+char padArgument(RexxObject *o, size_t p);
+
+inline char optionalPadArgument(RexxObject *o, char d, size_t p)
+{
+    return (o == OREF_NULL ? d : padArgument(o, p));
+}
+
+char optionArgument(RexxObject *o, size_t p);
+
+inline char optionalOptionArgument(RexxObject *o, char d, size_t p)
+{
+    return (o == OREF_NULL ? d : optionArgument(o, p));
+}
+
+inline size_t optionalNonNegative(RexxObject *o, size_t d, size_t p)
+{
+    return (o == OREF_NULL ? d : o->requiredNonNegative(p));
+}
+
+inline size_t optionalPositive(RexxObject *o, size_t d, size_t p)
+{
+    return (o == OREF_NULL ? d : o->requiredPositive(p));
+}
+
 /* The next routine is specifically for REQUESTing an ARRAY needed as a method*/
 /* argument.  This raises an error if the object cannot be converted to a     */
 /* single dimensional array item                                              */

@@ -48,7 +48,6 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "BufferClass.hpp"
-#include "RexxBuiltinFunctions.h"
 
 #include "NumberStringMath.hpp"
 #include "ActivityManager.hpp"
@@ -336,7 +335,7 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
     CurrentDigits = number_digits();     /* get the current digits setting    */
     StringLength = this->getLength();         /* get Argument string length        */
     /* get the target length             */
-    ResultSize = optional_length(_length, -1, ARG_ONE);
+    ResultSize = optionalLengthArgument(_length, -1, ARG_ONE);
     if (!ResultSize)                     /* zero requested                    */
     {
         return(RexxString *)IntegerZero;  /* always returns zero               */

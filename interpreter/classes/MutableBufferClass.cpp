@@ -48,7 +48,6 @@
 #include "RexxCore.h"
 #include "StringClass.hpp"
 #include "MutableBufferClass.hpp"
-#include "RexxBuiltinFunctions.h"                          /* Gneral purpose BIF Header file       */
 #include "ProtectedObject.hpp"
 #include "StringUtil.hpp"
 
@@ -83,7 +82,7 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
         if (args[0] != NULL)
         {
             /* force argument to string value    */
-            string = (RexxString *)get_string(args[0], ARG_ONE);
+            string = stringArgument(args[0], ARG_ONE);
         }
         else
         {
@@ -97,7 +96,7 @@ RexxMutableBuffer *RexxMutableBufferClass::newRexx(RexxObject **args, size_t arg
 
     if (argc >= 2)
     {
-        bufferLength = optional_length(args[1], DEFAULT_BUFFER_LENGTH, ARG_TWO);
+        bufferLength = optionalLengthArgument(args[1], DEFAULT_BUFFER_LENGTH, ARG_TWO);
     }
 
     defaultSize = bufferLength;           /* remember initial default size     */
@@ -295,9 +294,9 @@ RexxMutableBuffer *RexxMutableBuffer::insert(RexxObject *str, RexxObject *pos, R
 
     // we're using optional length because 0 is valid for insert.
     size_t begin = optionalNonNegative(pos, 0, ARG_TWO);
-    size_t insertLength = optional_length(len, string->getLength(), ARG_THREE);
+    size_t insertLength = optionalLengthArgument(len, string->getLength(), ARG_THREE);
 
-    char padChar = get_pad(pad, ' ', ARG_FOUR);
+    char padChar = optionalPadArgument(pad, ' ', ARG_FOUR);
 
     size_t copyLength = Numerics::minVal(insertLength, string->getLength());
     size_t padLength = insertLength - copyLength;
@@ -356,11 +355,11 @@ RexxMutableBuffer *RexxMutableBuffer::overlay(RexxObject *str, RexxObject *pos, 
 /* Function:  replace characters in buffer contents                           */
 /******************************************************************************/
 {
-    RexxString *string = get_string(str, ARG_ONE);
-    size_t begin = optional_position(pos, 1, ARG_TWO) - 1;
-    size_t replaceLength = optional_length(len, string->getLength(), ARG_THREE);
+    RexxString *string = stringArgument(str, ARG_ONE);
+    size_t begin = optionalPositionArgument(pos, 1, ARG_TWO) - 1;
+    size_t replaceLength = optionalLengthArgument(len, string->getLength(), ARG_THREE);
 
-    char padChar = get_pad(pad, ' ', ARG_FOUR);
+    char padChar = optionalPadArgument(pad, ' ', ARG_FOUR);
 
     // make sure we have room for this
     ensureCapacity(begin + replaceLength);
@@ -396,8 +395,8 @@ RexxMutableBuffer *RexxMutableBuffer::mydelete(RexxObject *_start, RexxObject *l
 /* Function:  delete character range in buffer                                */
 /******************************************************************************/
 {
-    size_t begin = get_position(_start, ARG_ONE) - 1;
-    size_t range = optional_length(len, this->data->getLength() - begin, ARG_TWO);
+    size_t begin = positionArgument(_start, ARG_ONE) - 1;
+    size_t range = optionalLengthArgument(len, this->data->getLength() - begin, ARG_TWO);
 
     // is the begin point actually within the string?
     if (begin < dataLength)
@@ -424,7 +423,7 @@ RexxObject *RexxMutableBuffer::setBufferSize(RexxInteger *size)
 /* Function:  set the size of the buffer                                      */
 /******************************************************************************/
 {
-    size_t newsize = get_length(size, ARG_ONE);
+    size_t newsize = lengthArgument(size, ARG_ONE);
     // has a reset to zero been requested?
     if (newsize == 0)
     {

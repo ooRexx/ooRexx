@@ -48,7 +48,6 @@
 #include <math.h>
 #include "RexxCore.h"
 #include "StringClass.hpp"
-#include "RexxBuiltinFunctions.h"
 #include "SourceFile.hpp"
 #include "ActivityManager.hpp"
 #include "StringUtil.hpp"
@@ -195,11 +194,11 @@ RexxInteger *RexxString::abbrev(
     size_t   ChkLen;                     /* required check length             */
     int      rc;                         /* compare result                    */
 
-    info = get_string(info, ARG_ONE);    /* process the information string    */
+    info = stringArgument(info, ARG_ONE);    /* process the information string    */
     Len2 = info->getLength();                 /* get the length also               */
     /* get the optional check length     */
     /* get the optional check length     */
-    ChkLen = optional_length(_length, Len2, ARG_TWO);
+    ChkLen = optionalLengthArgument(_length, Len2, ARG_TWO);
     Len1 = this->getLength();                 /* get this length                   */
 
     if (ChkLen == 0 && Len2 == 0)        /* if null string match              */
@@ -226,10 +225,10 @@ RexxInteger *RexxString::abbrev(
 RexxInteger *RexxString::caselessAbbrev(RexxString *info, RexxInteger *_length)
 {
     // the info must be a string value
-    info = get_string(info, ARG_ONE);
+    info = stringArgument(info, ARG_ONE);
     stringsize_t len2 = info->getLength();
     // the check length is optional, and defaults to the length of info.
-    stringsize_t chkLen = optional_length(_length, len2, ARG_TWO);
+    stringsize_t chkLen = optionalLengthArgument(_length, len2, ARG_TWO);
 
     stringsize_t len1 = this->getLength();
 
@@ -271,9 +270,9 @@ RexxInteger *RexxString::compare(
 
     Length1 = this->getLength();              /* get this strings length           */
     /* validate the compare string       */
-    string2 = get_string(string2, ARG_ONE);
+    string2 = stringArgument(string2, ARG_ONE);
     Length2 = string2->getLength();           /* get the length also               */
-    PadChar = get_pad(pad, ' ', ARG_TWO);/* get the pad character             */
+    PadChar = optionalPadArgument(pad, ' ', ARG_TWO);/* get the pad character             */
     if (Length1 > Length2)
     {             /* first longer?                     */
         String1 = this->getStringData();   /* make arg 1 first string           */
@@ -337,10 +336,10 @@ RexxInteger *RexxString::caselessCompare(RexxString *other, RexxString *pad)
 {
     stringsize_t length1 = this->getLength(); /* get this strings length           */
                                          /* validate the compare string       */
-    other = get_string(other, ARG_ONE);
+    other = stringArgument(other, ARG_ONE);
     stringsize_t length2 = other->getLength();       /* get the length also               */
     // we uppercase the pad character now since this is caseless
-    char padChar = toupper(get_pad(pad, ' ', ARG_TWO));
+    char padChar = toupper(optionalPadArgument(pad, ' ', ARG_TWO));
 
     const char *string1;
     const char *string2;
@@ -442,7 +441,7 @@ RexxObject *RexxString::dataType(RexxString *pType)
     if (pType != OREF_NULL)
     {             /* see if type was specified?        */
                   /* yes, specified, get 1st char      */
-        int type = option_character(pType, 0, ARG_ONE);
+        int type = optionalOptionArgument(pType, 0, ARG_ONE);
         /* and call datatype routine to      */
         return StringUtil::dataType(this, type);    /* determine if its type specified.  */
     }
@@ -465,7 +464,7 @@ RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *_
     // validate that this is a good string argument
     needle = REQUIRED_STRING(needle, ARG_ONE);
     // find out where to start the search. The default is at the very end.
-    size_t startPos = optional_position(_start, getLength(), ARG_TWO);
+    size_t startPos = optionalPositionArgument(_start, getLength(), ARG_TWO);
     // now perform the actual search.
     return new_integer(caselessLastPos(needle, startPos));
 }
@@ -743,7 +742,7 @@ RexxInteger *RexxString::caselessPosRexx(
     /* force needle to a string          */
     needle = REQUIRED_STRING(needle, ARG_ONE);
     /* get the starting position         */
-    size_t _start = optional_position(pstart, 1, ARG_TWO);
+    size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
     /* pass on to the primitive function */
     /* and return as an integer object   */
     return new_integer(this->caselessPos(needle, _start - 1));
@@ -841,15 +840,15 @@ RexxString *RexxString::translate(
     }
                                             /* validate the tables               */
                                             /* validate the tables               */
-    tableo = optional_string(tableo, OREF_NULLSTRING, ARG_ONE);
+    tableo = optionalStringArgument(tableo, OREF_NULLSTRING, ARG_ONE);
     OutTableLength = tableo->getLength();      /* get the table length              */
     /* input table too                   */
-    tablei = optional_string(tablei, OREF_NULLSTRING, ARG_TWO);
+    tablei = optionalStringArgument(tablei, OREF_NULLSTRING, ARG_TWO);
     InTableLength = tablei->getLength();       /* get the table length              */
     InTable = tablei->getStringData();    /* point at the input table          */
     OutTable = tableo->getStringData();   /* and the output table              */
                                           /* get the pad character             */
-    PadChar = get_pad(pad, ' ', ARG_THREE);
+    PadChar = optionalPadArgument(pad, ' ', ARG_THREE);
     /* allocate space for answer         */
     /* and copy the string               */
     Retval = new_string(this->getStringData(), this->getLength());
@@ -906,10 +905,10 @@ RexxInteger *RexxString::verify(
     char      ch;                        /* scan character                    */
     bool      Match;                     /* found a match                     */
 
-    ref = get_string(ref, ARG_ONE);      /* get the reference string          */
+    ref = stringArgument(ref, ARG_ONE);  /* get the reference string          */
     ReferenceLen = ref->getLength();     /* get a length also                 */
                                          /* get the option, default 'Nomatch' */
-    Option = option_character(option, VERIFY_NOMATCH, ARG_TWO);
+    Option = optionalOptionArgument(option, VERIFY_NOMATCH, ARG_TWO);
     if (Option != VERIFY_MATCH &&        /* options are 'Match' and           */
         Option != VERIFY_NOMATCH)        /* 'NoMatch'                         */
     {
@@ -918,7 +917,7 @@ RexxInteger *RexxString::verify(
     }
 
     /* get starting position             */
-    StartPos = optional_position(_start, 1, ARG_THREE);
+    StartPos = optionalPositionArgument(_start, 1, ARG_THREE);
     StringLen = this->getLength();       /* get the string length             */
     if (StartPos > StringLen)            /* beyond end of string?             */
     {
