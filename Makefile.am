@@ -73,6 +73,7 @@ build_kernel_api_dir = $(build_kernel_dir)/api
 build_classes_dir = $(build_kernel_dir)/classes
 build_expression_dir = $(build_kernel_dir)/expression
 build_concurrency_dir = $(build_kernel_dir)/concurrency
+build_behaviour_dir = $(build_kernel_dir)/behaviour
 build_instructions_dir = $(build_kernel_dir)/instructions
 build_parser_dir = $(build_kernel_dir)/parser
 build_runtime_dir = $(build_kernel_dir)/runtime
@@ -118,7 +119,7 @@ COMMON_CPPFLAGS = -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_
 
 messageXML = $(build_messages_dir)/rexxmsg.xml
 
-classesXML = $(build_runtime_dir)/PrimitiveClasses.xml
+classesXML = $(build_behaviour_dir)/PrimitiveClasses.xml
 
 #
 # header files for source distribution
@@ -164,6 +165,9 @@ expressionHeaders = $(build_expression_dir)/BuiltinFunctions.hpp \
                     $(build_expression_dir)/ExpressionVariable.hpp \
                     $(build_expression_dir)/IndirectVariableReference.hpp \
                     $(build_expression_dir)/ExpressionLogical.hpp
+behaviourHeaders = $(build_behaviour_dir)/ClassTypeCodes.h \
+                   $(build_behaviour_dir)/PrimitiveBehaviourNames.h \
+                   $(build_behaviour_dir)/RexxBehaviour.hpp
 concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
                      $(build_concurrency_dir)/ActivityDispatcher.hpp \
                      $(build_concurrency_dir)/ActivityManager.hpp \
@@ -235,8 +239,7 @@ commonHeaders = $(build_common_dir)/SynchronizedBlock.hpp \
                 $(build_common_platform_dir)/SysSemaphore.hpp \
                 $(build_common_platform_dir)/SysThread.hpp
 
-runtimeHeaders = $(build_runtime_dir)/ClassTypeCodes.h \
-                 $(build_runtime_dir)/CPPCode.hpp \
+runtimeHeaders = $(build_runtime_dir)/CPPCode.hpp \
                  $(build_runtime_dir)/DeadObject.hpp \
                  $(build_runtime_dir)/GlobalNames.h \
                  $(build_runtime_dir)/Interpreter.hpp \
@@ -248,12 +251,10 @@ runtimeHeaders = $(build_runtime_dir)/ClassTypeCodes.h \
                  $(build_runtime_dir)/NativeMethods.h \
                  $(build_runtime_dir)/Numerics.hpp \
                  $(build_runtime_dir)/PackageManager.hpp \
-                 $(build_runtime_dir)/PrimitiveBehaviourNames.h \
                  $(build_runtime_dir)/ProgramMetaData.hpp \
                  $(build_runtime_dir)/ProtectedObject.hpp \
                  $(build_runtime_dir)/RexxActivation.hpp \
                  $(build_runtime_dir)/RexxActivationStack.hpp \
-                 $(build_runtime_dir)/RexxBehaviour.hpp \
                  $(build_runtime_dir)/RexxBuiltinFunctions.h \
                  $(build_runtime_dir)/RexxCode.hpp \
                  $(build_runtime_dir)/RexxCollection.hpp \
@@ -352,7 +353,7 @@ BUILT_SOURCES = $(errorHeaders) \
 #
 # Binary targets
 #
-bin_PROGRAMS = rxapi rexximage rexx rexxc rxqueue rxsubcom 
+bin_PROGRAMS = rxapi rexximage rexx rexxc rxqueue rxsubcom
 
 #
 # Shared library targets
@@ -381,7 +382,7 @@ include_HEADERS = $(build_api_dir)/rexx.h \
 man_MANS = $(build_utils_platform_dir)/rexx.1 \
            $(build_utils_platform_dir)/rexxc.1 \
            $(build_utils_platform_dir)/rxsubcom.1 \
-           $(build_utils_platform_dir)/rxqueue.1 
+           $(build_utils_platform_dir)/rxqueue.1
 
 #################### librexx.so ##########################
 # Sources for librexxapi.so
@@ -464,6 +465,9 @@ classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/SupplierClass.cpp \
                   $(build_classes_dir)/TableClass.cpp \
                   $(build_classes_dir)/WeakReferenceClass.cpp
+behaviour_sources = $(build_behaviour_dir)/PrimitiveBehaviours.cpp \
+                    $(build_behaviour_dir)/RexxBehaviour.cpp \
+                    $(build_behaviour_dir)/VirtualFunctionTable.cpp
 concurrency_sources = $(build_concurrency_dir)/ActivityDispatcher.cpp \
                       $(build_concurrency_dir)/ActivityManager.cpp \
                       $(build_concurrency_dir)/CallbackDispatcher.cpp \
@@ -562,12 +566,10 @@ runtime_sources  = $(build_runtime_dir)/CPPCode.cpp \
                    $(build_runtime_dir)/MemoryStats.cpp \
                    $(build_runtime_dir)/Numerics.cpp \
                    $(build_runtime_dir)/PackageManager.cpp \
-                   $(build_runtime_dir)/PrimitiveBehaviours.cpp \
                    $(build_runtime_dir)/ProgramMetaData.cpp \
                    $(build_runtime_dir)/ProtectedObject.cpp \
                    $(build_runtime_dir)/RexxActivation.cpp \
                    $(build_runtime_dir)/RexxActivationStack.cpp \
-                   $(build_runtime_dir)/RexxBehaviour.cpp \
                    $(build_runtime_dir)/RexxCode.cpp \
                    $(build_runtime_dir)/RexxCollection.cpp \
                    $(build_runtime_dir)/RexxCompoundElement.cpp \
@@ -589,12 +591,12 @@ runtime_sources  = $(build_runtime_dir)/CPPCode.cpp \
                    $(build_runtime_dir)/SecurityManager.cpp \
                    $(build_runtime_dir)/Setup.cpp \
                    $(build_runtime_dir)/TranslateDispatcher.cpp \
-                   $(build_runtime_dir)/Version.cpp \
-                   $(build_runtime_dir)/VirtualFunctionTable.cpp
+                   $(build_runtime_dir)/Version.cpp
 streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
                         $(build_streamlibrary_dir)/StreamNative.cpp
 librexx_la_SOURCES = $(classes_sources) \
                      $(kernel_api_sources) \
+                     $(behaviour_sources) \
                      $(concurrency_sources) \
                      $(expression_sources) \
                      $(instructions_sources) \
@@ -618,6 +620,7 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_common_dir) \
                        -I$(build_common_platform_dir) \
                        -I$(build_kernel_dir) \
+                       -I$(build_behaviour_dir) \
                        -I$(build_concurrency_dir) \
                        -I$(build_expression_dir) \
                        -I$(build_instructions_dir) \
@@ -884,17 +887,17 @@ $(build_messages_dir)/RexxMessageTable.h: $(build_messages_dir)/RexxMessageTable
 $(build_messages_dir)/gencat.inp: $(build_kernel_platform_dir)/UnixGencat.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(build_kernel_platform_dir)/UnixGencat.xsl
 
-$(build_runtime_dir)/ClassTypeCodes.h: $(build_runtime_dir)/ClassTypeCodes.xsl $(classesXML)
-	sh ./xsl.sh $(@) $(classesXML) $(build_runtime_dir)/ClassTypeCodes.xsl
+$(build_behaviour_dir)/ClassTypeCodes.h: $(build_behaviour_dir)/ClassTypeCodes.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(build_behaviour_dir)/ClassTypeCodes.xsl
 
-$(build_runtime_dir)/PrimitiveBehaviourNames.h: $(build_runtime_dir)/PrimitiveBehaviourNames.xsl $(classesXML)
-	sh ./xsl.sh $(@) $(classesXML) $(build_runtime_dir)/PrimitiveBehaviourNames.xsl
+$(build_behaviour_dir)/PrimitiveBehaviourNames.h: $(build_behaviour_dir)/PrimitiveBehaviourNames.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(build_behaviour_dir)/PrimitiveBehaviourNames.xsl
 
-$(build_runtime_dir)/PrimitiveBehaviours.cpp: $(build_runtime_dir)/PrimitiveBehaviours.xsl $(classesXML)
-	sh ./xsl.sh $(@) $(classesXML) $(build_runtime_dir)/PrimitiveBehaviours.xsl
+$(build_behaviour_dir)/PrimitiveBehaviours.cpp: $(build_behaviour_dir)/PrimitiveBehaviours.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(build_behaviour_dir)/PrimitiveBehaviours.xsl
 
-$(build_runtime_dir)/VirtualFunctionTables.cpp: $(build_runtime_dir)/VirtualFunctionTable.xsl $(classesXML)
-	sh ./xsl.sh $(@) $(classesXML) $(build_runtime_dir)/VirtualFunctionTable.xsl
+$(build_behaviour_dir)/VirtualFunctionTables.cpp: $(build_behaviour_dir)/VirtualFunctionTable.xsl $(classesXML)
+	sh ./xsl.sh $(@) $(classesXML) $(build_behaviour_dir)/VirtualFunctionTable.xsl
 
 rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 	cp $(build_rexxclasses_dir)/*.orx .
@@ -921,10 +924,10 @@ EXTRA_DIST = $(build_messages_dir)/RexxMessageNumbers.xsl \
              $(messageXML) \
              $(classesXML) \
              $(build_kernel_platform_dir)/UnixGencat.xsl \
-             $(build_runtime_dir)/ClassTypeCodes.xsl \
-             $(build_runtime_dir)/PrimitiveBehaviourNames.xsl \
-             $(build_runtime_dir)/PrimitiveBehaviours.xsl \
-             $(build_runtime_dir)/VirtualFunctionTable.xsl \
+             $(build_behaviour_dir)/ClassTypeCodes.xsl \
+             $(build_behaviour_dir)/PrimitiveBehaviourNames.xsl \
+             $(build_behaviour_dir)/PrimitiveBehaviours.xsl \
+             $(build_behaviour_dir)/VirtualFunctionTable.xsl \
              $(errorHeaders) \
              $(build_utils_platform_dir)/rexx.sh \
              $(build_utils_platform_dir)/rexx.csh \

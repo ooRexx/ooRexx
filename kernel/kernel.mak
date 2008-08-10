@@ -191,7 +191,7 @@ ORXFILES=$(OR_OUTDIR)\CoreClasses.orx  $(OR_OUTDIR)\StreamClasses.orx \
 
 #define critical header files for forcing recomp
 ORXHEADERS=$(OR_APISRC)\oorexxerrors.h $(INTERPRETER_MESSAGES)\RexxErrorCodes.h $(INTERPRETER_MESSAGES)\RexxMessageNumbers.h $(INTERPRETER_MESSAGES)\RexxMessageTable.h $(INTERPRETER_RUNTIME)\RexxCore.h \
-    $(INTERPRETER_RUNTIME)\PrimitiveBehaviourNames.h $(INTERPRETER_RUNTIME)\ClassTypeCodes.h
+    $(BEHAVIOUR)\PrimitiveBehaviourNames.h $(BEHAVIOUR)\ClassTypeCodes.h
 
 
 #
@@ -300,25 +300,25 @@ $(OR_APISRC)\api\oorexxerrors.h: $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl $(INT
     @ECHO Generating $(@)
     xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl
 
-$(INTERPRETER_RUNTIME)\PrimitiveBehaviourNames.h: $(INTERPRETER_RUNTIME)\PrimitiveBehaviourNames.xsl $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml
+$(BEHAVIOUR)\PrimitiveBehaviourNames.h: $(BEHAVIOUR)\PrimitiveBehaviourNames.xsl $(BEHAVIOUR)\PrimitiveClasses.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml $(INTERPRETER_RUNTIME)\PrimitiveBehaviourNames.xsl
+    xalan -o $(@) $(BEHAVIOUR)\PrimitiveClasses.xml $(BEHAVIOUR)\PrimitiveBehaviourNames.xsl
 
-$(INTERPRETER_RUNTIME)\PrimitiveBehaviours.cpp: $(INTERPRETER_RUNTIME)\PrimitiveBehaviours.xsl $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml
+$(BEHAVIOUR)\PrimitiveBehaviours.cpp: $(BEHAVIOUR)\PrimitiveBehaviours.xsl $(BEHAVIOUR)\PrimitiveClasses.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml $(INTERPRETER_RUNTIME)\PrimitiveBehaviours.xsl
+    xalan -o $(@) $(BEHAVIOUR)\PrimitiveClasses.xml $(BEHAVIOUR)\PrimitiveBehaviours.xsl
 
-$(INTERPRETER_RUNTIME)\VirtualFunctionTable.cpp: $(INTERPRETER_RUNTIME)\VirtualFunctionTable.xsl $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml
+$(BEHAVIOUR)\VirtualFunctionTable.cpp: $(BEHAVIOUR)\VirtualFunctionTable.xsl $(BEHAVIOUR)\PrimitiveClasses.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml $(INTERPRETER_RUNTIME)\VirtualFunctionTable.xsl
+    xalan -o $(@) $(BEHAVIOUR)\PrimitiveClasses.xml $(BEHAVIOUR)\VirtualFunctionTable.xsl
 
-$(INTERPRETER_RUNTIME)\ClassTypeCodes.h: $(INTERPRETER_RUNTIME)\ClassTypeCodes.xsl $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml
+$(BEHAVIOUR)\ClassTypeCodes.h: $(BEHAVIOUR)\ClassTypeCodes.xsl $(BEHAVIOUR)\PrimitiveClasses.xml
     @ECHO.
     @ECHO Generating $(@)
-    xalan -o $(@) $(INTERPRETER_RUNTIME)\PrimitiveClasses.xml $(INTERPRETER_RUNTIME)\ClassTypeCodes.xsl
+    xalan -o $(@) $(BEHAVIOUR)\PrimitiveClasses.xml $(BEHAVIOUR)\ClassTypeCodes.xsl
 
 $(OR_OUTDIR)\winmsgtb.res: $(INT_PLATFORM)\winmsgtb.rc $(INTERPRETER_MESSAGES)\DocErrorMessages.sgml
     @ECHO.
@@ -443,6 +443,15 @@ ORXHEADERS: $(ORXHEADERS)
 # *** For .CPP files in OR_LIBSRC directory
 #
 {$(CONCURRENCY)}.cpp{$(OR_OUTDIR)}.obj:
+    @ECHO .
+    @ECHO Compiling $(**)
+    $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
+
+#
+# *** Inference Rule for CPP->OBJ
+# *** For .CPP files in OR_LIBSRC directory
+#
+{$(BEHAVIOUR)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
