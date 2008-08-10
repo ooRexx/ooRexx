@@ -565,8 +565,7 @@ common_sources = $(build_common_dir)/Utilities.cpp \
                  $(build_common_platform_dir)/SysLibrary.cpp \
                  $(build_common_platform_dir)/SysSemaphore.cpp \
                  $(build_common_platform_dir)/SysThread.cpp
-runtime_sources  = $(build_runtime_dir)/CPPCode.cpp \
-                   $(build_runtime_dir)/DeadObject.cpp \
+runtime_sources  = $(build_runtime_dir)/DeadObject.cpp \
                    $(build_runtime_dir)/GlobalData.cpp \
                    $(build_runtime_dir)/GlobalNames.cpp \
                    $(build_runtime_dir)/InternalPackage.cpp \
@@ -579,9 +578,6 @@ runtime_sources  = $(build_runtime_dir)/CPPCode.cpp \
                    $(build_runtime_dir)/PackageManager.cpp \
                    $(build_runtime_dir)/ProgramMetaData.cpp \
                    $(build_runtime_dir)/ProtectedObject.cpp \
-                   $(build_runtime_dir)/RexxActivation.cpp \
-                   $(build_runtime_dir)/RexxActivationStack.cpp \
-                   $(build_runtime_dir)/RexxCode.cpp \
                    $(build_runtime_dir)/RexxCollection.cpp \
                    $(build_runtime_dir)/RexxCompoundElement.cpp \
                    $(build_runtime_dir)/RexxCompoundTable.cpp \
@@ -591,15 +587,9 @@ runtime_sources  = $(build_runtime_dir)/CPPCode.cpp \
                    $(build_runtime_dir)/RexxHashTable.cpp \
                    $(build_runtime_dir)/RexxInternalStack.cpp \
                    $(build_runtime_dir)/RexxListTable.cpp \
-                   $(build_runtime_dir)/RexxLocalVariables.cpp \
                    $(build_runtime_dir)/RexxMemory.cpp \
                    $(build_runtime_dir)/RexxMisc.cpp \
-                   $(build_runtime_dir)/RexxNativeActivation.cpp \
-                   $(build_runtime_dir)/RexxNativeCode.cpp \
                    $(build_runtime_dir)/RexxSmartBuffer.cpp \
-                   $(build_runtime_dir)/RexxVariable.cpp \
-                   $(build_runtime_dir)/RexxVariableDictionary.cpp \
-                   $(build_runtime_dir)/SecurityManager.cpp \
                    $(build_runtime_dir)/Setup.cpp \
                    $(build_runtime_dir)/TranslateDispatcher.cpp \
                    $(build_runtime_dir)/Version.cpp
