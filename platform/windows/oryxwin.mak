@@ -130,10 +130,10 @@ $(OR_OUTDIR)\rexxpaws.obj: $(OR_WINKERNELSRC)\rexxpaws.c
     @ECHO Compiling $(@B).c
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_WINKERNELSRC)\$(@B).c
 
-$(OR_OUTDIR)\rexximage.obj: $(OR_WINKERNELSRC)\rexximage.cpp
+$(OR_OUTDIR)\rexximage.obj: $(OR_UTILITIES)\rexximage\rexximage.cpp
     @ECHO .
     @ECHO Compiling $(@B).c
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_WINKERNELSRC)\$(@B).cpp
+    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) $(Tp)$(OR_UTILITIES)\rexximage\rexximage.cpp
 
 #
 # *** Copy ICO files to target dir...

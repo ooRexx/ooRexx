@@ -705,17 +705,14 @@ rexx_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rexx ##########################
 # Sources for rexx
 #
-rexximage_SOURCES = $(build_utils_platform_dir)/rexximage.cpp
+rexximage_SOURCES = $(build_utilities_)/rexximage/rexximage.cpp
 #
 # Preprocessor flags for rexximage
 #
 rexximage_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                  -I$(build_lib_dir) \
                  -I$(build_api_dir) \
-                 -I$(build_api_platform_dir) \
-                 -I$(build_messages_dir) \
-                 -I$(build_interpreter_platform_dir) \
-                 -I$(build_rexxapi_platform_dir)
+                 -I$(build_api_platform_dir)
 #
 # Extra libraries for rexx
 #
@@ -904,7 +901,7 @@ $(build_behaviour_dir)/VirtualFunctionTables.cpp: $(build_behaviour_dir)/Virtual
 rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 	cp $(build_rexxclasses_dir)/*.orx .
 	cp $(build_interpreter_platform_dir)/*.orx .
-	./rexximage -i
+	./rexximage
 	rm -f *.orx
 
 #
