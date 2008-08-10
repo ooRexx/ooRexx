@@ -264,11 +264,9 @@ commonHeaders = $(build_common_dir)/SynchronizedBlock.hpp \
 runtimeHeaders = $(build_runtime_dir)/GlobalNames.h \
                  $(build_runtime_dir)/Interpreter.hpp \
                  $(build_runtime_dir)/InterpreterInstance.hpp \
-                 $(build_runtime_dir)/LibraryPackage.hpp \
                  $(build_runtime_dir)/NativeFunctions.h \
                  $(build_runtime_dir)/NativeMethods.h \
                  $(build_runtime_dir)/Numerics.hpp \
-                 $(build_runtime_dir)/PackageManager.hpp \
                  $(build_runtime_dir)/ProgramMetaData.hpp \
                  $(build_runtime_dir)/RexxBuiltinFunctions.h \
                  $(build_runtime_dir)/RexxCollection.hpp \
@@ -583,9 +581,7 @@ runtime_sources  = $(build_runtime_dir)/GlobalData.cpp \
                    $(build_runtime_dir)/InternalPackage.cpp \
                    $(build_runtime_dir)/Interpreter.cpp \
                    $(build_runtime_dir)/InterpreterInstance.cpp \
-                   $(build_runtime_dir)/LibraryPackage.cpp \
                    $(build_runtime_dir)/Numerics.cpp \
-                   $(build_runtime_dir)/PackageManager.cpp \
                    $(build_runtime_dir)/ProgramMetaData.cpp \
                    $(build_runtime_dir)/RexxCollection.cpp \
                    $(build_runtime_dir)/RexxCompoundElement.cpp \
