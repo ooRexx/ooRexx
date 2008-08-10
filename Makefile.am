@@ -67,33 +67,33 @@ build_rexxapi_common_dir = $(build_rexxapi_dir)/common
 build_rexxapi_common_platform_dir = $(build_rexxapi_dir)/common/platform/unix
 build_common_dir = $(top_srcdir)/common
 build_common_platform_dir = $(top_srcdir)/common/platform/unix
-build_kernel_dir = $(top_srcdir)/kernel
-build_kernel_common_dir = $(build_kernel_dir)/platform/common
-build_kernel_api_dir = $(build_kernel_dir)/api
-build_classes_dir = $(build_kernel_dir)/classes
-build_classes_support_dir = $(build_kernel_dir)/classes/support
-build_expression_dir = $(build_kernel_dir)/expression
-build_concurrency_dir = $(build_kernel_dir)/concurrency
-build_behaviour_dir = $(build_kernel_dir)/behaviour
-build_execution_dir = $(build_kernel_dir)/execution
-build_memory_dir = $(build_kernel_dir)/memory
-build_package_dir = $(build_kernel_dir)/package
-build_instructions_dir = $(build_kernel_dir)/instructions
-build_parser_dir = $(build_kernel_dir)/parser
-build_runtime_dir = $(build_kernel_dir)/runtime
-build_streamlibrary_dir = $(build_kernel_dir)/streamLibrary
-build_messages_dir = $(build_kernel_dir)/messages
+build_interpreter_dir = $(top_srcdir)/interpreter
+build_interpreter_common_dir = $(build_interpreter_dir)/platform/common
+build_interpreter_api_dir = $(build_interpreter_dir)/api
+build_classes_dir = $(build_interpreter_dir)/classes
+build_classes_support_dir = $(build_interpreter_dir)/classes/support
+build_expression_dir = $(build_interpreter_dir)/expression
+build_concurrency_dir = $(build_interpreter_dir)/concurrency
+build_behaviour_dir = $(build_interpreter_dir)/behaviour
+build_execution_dir = $(build_interpreter_dir)/execution
+build_memory_dir = $(build_interpreter_dir)/memory
+build_package_dir = $(build_interpreter_dir)/package
+build_instructions_dir = $(build_interpreter_dir)/instructions
+build_parser_dir = $(build_interpreter_dir)/parser
+build_runtime_dir = $(build_interpreter_dir)/runtime
+build_streamlibrary_dir = $(build_interpreter_dir)/streamLibrary
+build_messages_dir = $(build_interpreter_dir)/messages
 build_lib_dir = $(top_srcdir)/lib
 build_api_dir = $(top_srcdir)/api
 build_rexutils_dir = $(top_srcdir)/rexutils
 build_rxregexp_dir = $(top_srcdir)/rxregexp
 build_samples_dir = $(top_srcdir)/samples
-build_rexxclasses_dir = $(build_kernel_dir)/RexxClasses
+build_rexxclasses_dir = $(build_interpreter_dir)/RexxClasses
 build_utilities_dir = $(top_srcdir)/utilities
 
 # These are the *nix directories
 utils_unix_dir = $(build_utils_dir)/unix
-kernel_unix_dir = $(build_kernel_dir)/platform/unix
+interpreter_unix_dir = $(build_interpreter_dir)/platform/unix
 api_unix_dir = $(build_api_dir)/platform/unix
 rexutils_unix_dir = $(build_rexutils_dir)/unix
 samples_unix_dir = $(build_samples_dir)/unix
@@ -101,7 +101,7 @@ samples_unix_dir = $(build_samples_dir)/unix
 # These are the Windows directories
 utils_windows_dir = $(build_utils_dir)/windows
 rexxapi_windows_dir = $(build_rexxapi_dir)/windows
-kernel_windows_dir = $(build_kernel_dir)/platform/windows
+interpreter_windows_dir = $(build_interpreter_dir)/platform/windows
 api_windows_dir = $(build_api_dir)/platform/windows
 rexutils_windows_dir = $(build_rexutils_dir)/windows
 samples_windows_dir = $(build_samples_dir)/windows
@@ -109,7 +109,7 @@ samples_windows_dir = $(build_samples_dir)/windows
 # These are the platform specific build directories
 build_utils_platform_dir = $(utils_@ORX_PLATFORM@_dir)
 build_rexxapi_platform_dir = $(rexxapi_@ORX_PLATFORM@_dir)
-build_kernel_platform_dir = $(kernel_@ORX_PLATFORM@_dir)
+build_interpreter_platform_dir = $(interpreter_@ORX_PLATFORM@_dir)
 build_api_platform_dir = $(api_@ORX_PLATFORM@_dir)
 build_rexutils_platform_dir = $(rexutils_@ORX_PLATFORM@_dir)
 build_samples_platform_dir = $(samples_@ORX_PLATFORM@_dir)
@@ -131,7 +131,7 @@ classesXML = $(build_behaviour_dir)/PrimitiveClasses.xml
 errorHeaders = $(build_messages_dir)/RexxMessageNumbers.h \
                $(build_messages_dir)/RexxErrorCodes.h \
                $(build_messages_dir)/RexxMessageTable.h
-kernelApiHeaders = $(build_kernel_api_dir)/ContextApi.hpp
+interpreterApiHeaders = $(build_interpreter_api_dir)/ContextApi.hpp
 classesSupportHeaders = $(build_classes_support_dir)/ProgramMetaData.hpp \
                         $(build_classes_support_dir)/RexxCollection.hpp \
                         $(build_classes_support_dir)/RexxCompoundElement.hpp \
@@ -255,16 +255,16 @@ parserHeaders = $(build_parser_dir)/Clause.hpp \
                 $(build_parser_dir)/SourceFile.hpp \
                 $(build_parser_dir)/SourceLocation.hpp \
                 $(build_parser_dir)/Token.hpp
-platformHeaders = $(build_kernel_platform_dir)/APIDefinitions.h \
-                  $(build_kernel_platform_dir)/PlatformDefinitions.h \
-                  $(build_kernel_platform_dir)/SharedMemorySupport.h \
-                  $(build_kernel_platform_dir)/SysActivity.hpp \
-                  $(build_kernel_platform_dir)/SysFileSystem.hpp \
-                  $(build_kernel_platform_dir)/SysInterpreterInstance.hpp \
-                  $(build_kernel_platform_dir)/SysNativeFunctions.h \
-                  $(build_kernel_platform_dir)/SysNativeMethods.h \
-                  $(build_kernel_platform_dir)/SystemCommands.h \
-                  $(build_kernel_platform_dir)/SystemInterpreter.hpp
+platformHeaders = $(build_interpreter_platform_dir)/APIDefinitions.h \
+                  $(build_interpreter_platform_dir)/PlatformDefinitions.h \
+                  $(build_interpreter_platform_dir)/SharedMemorySupport.h \
+                  $(build_interpreter_platform_dir)/SysActivity.hpp \
+                  $(build_interpreter_platform_dir)/SysFileSystem.hpp \
+                  $(build_interpreter_platform_dir)/SysInterpreterInstance.hpp \
+                  $(build_interpreter_platform_dir)/SysNativeFunctions.h \
+                  $(build_interpreter_platform_dir)/SysNativeMethods.h \
+                  $(build_interpreter_platform_dir)/SystemCommands.h \
+                  $(build_interpreter_platform_dir)/SystemInterpreter.hpp
 commonHeaders = $(build_common_dir)/SynchronizedBlock.hpp \
                 $(build_common_dir)/Utilities.hpp \
                 $(build_common_platform_dir)/SysFile.hpp \
@@ -317,7 +317,7 @@ aixExportFiles = $(build_rexutils_platform_dir)/*.exp \
                  $(build_rexutils_dir)/*.exp \
                  $(build_rexxapi_dir)/*.exp \
                  $(build_rxregexp_dir)/*.exp
-windowsDefFiles = $(kernel_windows_dir)/*.def \
+windowsDefFiles = $(interpreter_windows_dir)/*.def \
                   $(build_lib_dir)/*.def \
                   $(build_rexutils_dir)/*.def \
                   $(build_rxregexp_dir)/*.def
@@ -337,12 +337,12 @@ windowsFiles = \
             $(top_srcdir)/orxdb.bat \
             $(top_srcdir)/windows-build.txt \
             $(build_lib_dir)/*.mak \
-            $(kernel_windows_dir)/*.cpp \
-            $(kernel_windows_dir)/*.h \
-            $(kernel_windows_dir)/*.rc \
-            $(kernel_windows_dir)/*.xsl \
-            $(kernel_windows_dir)/*.orx \
-            $(build_kernel_dir)/*.mak \
+            $(interpreter_windows_dir)/*.cpp \
+            $(interpreter_windows_dir)/*.h \
+            $(interpreter_windows_dir)/*.rc \
+            $(interpreter_windows_dir)/*.xsl \
+            $(interpreter_windows_dir)/*.orx \
+            $(build_interpreter_dir)/*.mak \
             $(build_rexxapi_dir)/*.mak \
             $(build_rexutils_dir)/*.mak \
             $(build_rxregexp_dir)/*.mak \
@@ -431,11 +431,11 @@ librexxapi_la_LDFLAGS = $(VERSION_INFO)
 #################### librexx.so ##########################
 # Sources for librexx.so
 #
-kernel_api_sources = $(build_kernel_api_dir)/CallContextStubs.cpp \
-                     $(build_kernel_api_dir)/InterpreterAPI.cpp \
-                     $(build_kernel_api_dir)/InterpreterInstanceStubs.cpp \
-                     $(build_kernel_api_dir)/MethodContextStubs.cpp \
-                     $(build_kernel_api_dir)/ThreadContextStubs.cpp
+interpreter_api_sources = $(build_interpreter_api_dir)/CallContextStubs.cpp \
+                     $(build_interpreter_api_dir)/InterpreterAPI.cpp \
+                     $(build_interpreter_api_dir)/InterpreterInstanceStubs.cpp \
+                     $(build_interpreter_api_dir)/MethodContextStubs.cpp \
+                     $(build_interpreter_api_dir)/ThreadContextStubs.cpp
 classes_support_sources = $(build_classes_support_dir)/ProgramMetaData.cpp \
                           $(build_classes_support_dir)/RexxCollection.cpp \
                           $(build_classes_support_dir)/RexxCompoundElement.cpp \
@@ -568,21 +568,21 @@ parser_sources = $(build_parser_dir)/Clause.cpp \
                  $(build_parser_dir)/Scanner.cpp \
                  $(build_parser_dir)/SourceFile.cpp \
                  $(build_parser_dir)/Token.cpp
-platform_sources = $(build_kernel_platform_dir)/ErrorMessages.cpp \
-                   $(build_kernel_platform_dir)/ExternalFunctions.cpp \
-                   $(build_kernel_platform_dir)/FileSystem.cpp \
-                   $(build_kernel_platform_dir)/MemorySupport.cpp \
-                   $(build_kernel_platform_dir)/MiscSystem.cpp \
-                   $(build_kernel_platform_dir)/RexxMain.cpp \
-                   $(build_kernel_platform_dir)/SysActivity.cpp \
-                   $(build_kernel_platform_dir)/SysFileSystem.cpp \
-                   $(build_kernel_platform_dir)/SysInterpreterInstance.cpp \
-                   $(build_kernel_platform_dir)/SystemCommands.cpp \
-                   $(build_kernel_platform_dir)/SystemInitialization.cpp \
-                   $(build_kernel_platform_dir)/SystemInterpreter.cpp \
-                   $(build_kernel_platform_dir)/TimeSupport.cpp \
-                   $(build_kernel_platform_dir)/UseridFunction.cpp \
-                   $(build_kernel_platform_dir)/ValueFunction.cpp
+platform_sources = $(build_interpreter_platform_dir)/ErrorMessages.cpp \
+                   $(build_interpreter_platform_dir)/ExternalFunctions.cpp \
+                   $(build_interpreter_platform_dir)/FileSystem.cpp \
+                   $(build_interpreter_platform_dir)/MemorySupport.cpp \
+                   $(build_interpreter_platform_dir)/MiscSystem.cpp \
+                   $(build_interpreter_platform_dir)/RexxMain.cpp \
+                   $(build_interpreter_platform_dir)/SysActivity.cpp \
+                   $(build_interpreter_platform_dir)/SysFileSystem.cpp \
+                   $(build_interpreter_platform_dir)/SysInterpreterInstance.cpp \
+                   $(build_interpreter_platform_dir)/SystemCommands.cpp \
+                   $(build_interpreter_platform_dir)/SystemInitialization.cpp \
+                   $(build_interpreter_platform_dir)/SystemInterpreter.cpp \
+                   $(build_interpreter_platform_dir)/TimeSupport.cpp \
+                   $(build_interpreter_platform_dir)/UseridFunction.cpp \
+                   $(build_interpreter_platform_dir)/ValueFunction.cpp
 common_sources = $(build_common_dir)/Utilities.cpp \
                  $(build_common_platform_dir)/SysFile.cpp \
                  $(build_common_platform_dir)/SysLibrary.cpp \
@@ -600,7 +600,7 @@ streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
                         $(build_streamlibrary_dir)/StreamNative.cpp
 librexx_la_SOURCES = $(classes_sources) \
                      $(classes_support_sources) \
-                     $(kernel_api_sources) \
+                     $(interpreter_api_sources) \
                      $(behaviour_sources) \
                      $(execution_sources) \
                      $(memory_sources) \
@@ -616,8 +616,8 @@ librexx_la_SOURCES = $(classes_sources) \
 core_classes = $(build_rexxclasses_dir)/CoreClasses.orx \
                $(build_rexxclasses_dir)/StreamClasses.orx \
 	       $(build_rexxclasses_dir)/SystemMethods.orx
-core_platform_classes = $(build_kernel_platform_dir)/PlatformObjects.orx \
-                        $(build_kernel_platform_dir)/UnixMethods.orx
+core_platform_classes = $(build_interpreter_platform_dir)/PlatformObjects.orx \
+                        $(build_interpreter_platform_dir)/UnixMethods.orx
 #
 # Preprocessor flags for librexx.so
 #
@@ -627,7 +627,7 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_api_platform_dir) \
                        -I$(build_common_dir) \
                        -I$(build_common_platform_dir) \
-                       -I$(build_kernel_dir) \
+                       -I$(build_interpreter_dir) \
                        -I$(build_behaviour_dir) \
                        -I$(build_execution_dir) \
                        -I$(build_memory_dir) \
@@ -641,8 +641,8 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_parser_dir) \
                        -I$(build_messages_dir) \
                        -I$(build_streamlibrary_dir) \
-                       -I$(build_kernel_common_dir) \
-                       -I$(build_kernel_platform_dir) \
+                       -I$(build_interpreter_common_dir) \
+                       -I$(build_interpreter_platform_dir) \
                        -I$(build_rexxapi_platform_dir)
 
 librexx_la_LDFLAGS = $(VERSION_INFO) -nostartfiles
@@ -695,7 +695,7 @@ rexx_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                  -I$(build_api_dir) \
                  -I$(build_api_platform_dir) \
                  -I$(build_messages_dir) \
-                 -I$(build_kernel_platform_dir) \
+                 -I$(build_interpreter_platform_dir) \
                  -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for rexx
@@ -716,7 +716,7 @@ rexximage_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                  -I$(build_api_dir) \
                  -I$(build_api_platform_dir) \
                  -I$(build_messages_dir) \
-                 -I$(build_kernel_platform_dir) \
+                 -I$(build_interpreter_platform_dir) \
                  -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for rexx
@@ -736,7 +736,7 @@ rexxc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                   -I$(build_api_dir) \
                   -I$(build_api_platform_dir) \
                   -I$(build_messages_dir) \
-                  -I$(build_kernel_platform_dir) \
+                  -I$(build_interpreter_platform_dir) \
                   -I$(build_rexxapi_platform_dir)
 
 #
@@ -757,7 +757,7 @@ rxqueue_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                     -I$(build_lib_dir) \
                     -I$(build_api_dir) \
                     -I$(build_api_platform_dir) \
-                    -I$(build_kernel_platform_dir) \
+                    -I$(build_interpreter_platform_dir) \
                     -I$(build_messages_dir) \
                     -I$(build_rexxapi_platform_dir)
 #
@@ -777,7 +777,7 @@ rxsubcom_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                     -I$(build_lib_dir) \
                     -I$(build_api_dir) \
                     -I$(build_api_platform_dir) \
-                    -I$(build_kernel_platform_dir) \
+                    -I$(build_interpreter_platform_dir) \
                     -I$(build_messages_dir) \
                     -I$(build_rexxapi_platform_dir)
 #
@@ -798,10 +798,10 @@ librexxutil_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                           -I$(build_lib_dir) \
                           -I$(build_api_dir) \
                           -I$(build_api_platform_dir) \
-                          -I$(build_kernel_dir) \
+                          -I$(build_interpreter_dir) \
                           -I$(build_messages_dir) \
-                          -I$(build_kernel_common_dir) \
-                          -I$(build_kernel_platform_dir) \
+                          -I$(build_interpreter_common_dir) \
+                          -I$(build_interpreter_platform_dir) \
                           -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for librexxutil.so (maybe)
@@ -821,11 +821,11 @@ librxmath_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                         -I$(build_lib_dir) \
                         -I$(build_api_dir) \
                         -I$(build_api_platform_dir) \
-                        -I$(build_kernel_dir) \
+                        -I$(build_interpreter_dir) \
                         -I$(build_messages_dir) \
-                        -I$(build_kernel_common_dir) \
+                        -I$(build_interpreter_common_dir) \
                         -I$(build_runtime_dir) \
-                        -I$(build_kernel_platform_dir) \
+                        -I$(build_interpreter_platform_dir) \
                         -I$(build_rexxapi_platform_dir)
 #
 # Extra libraries for librxmath.so (maybe)
@@ -888,8 +888,8 @@ $(build_messages_dir)/RexxErrorCodes.h: $(build_messages_dir)/RexxErrorCodes.xsl
 $(build_messages_dir)/RexxMessageTable.h: $(build_messages_dir)/RexxMessageTable.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/RexxMessageTable.xsl
 
-$(build_messages_dir)/gencat.inp: $(build_kernel_platform_dir)/UnixGencat.xsl $(messageXML)
-	sh ./xsl.sh $(@) $(messageXML) $(build_kernel_platform_dir)/UnixGencat.xsl
+$(build_messages_dir)/gencat.inp: $(build_interpreter_platform_dir)/UnixGencat.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_interpreter_platform_dir)/UnixGencat.xsl
 
 $(build_behaviour_dir)/ClassTypeCodes.h: $(build_behaviour_dir)/ClassTypeCodes.xsl $(classesXML)
 	sh ./xsl.sh $(@) $(classesXML) $(build_behaviour_dir)/ClassTypeCodes.xsl
@@ -905,7 +905,7 @@ $(build_behaviour_dir)/VirtualFunctionTables.cpp: $(build_behaviour_dir)/Virtual
 
 rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 	cp $(build_rexxclasses_dir)/*.orx .
-	cp $(build_kernel_platform_dir)/*.orx .
+	cp $(build_interpreter_platform_dir)/*.orx .
 	./rexximage -i
 	rm -f *.orx
 
@@ -927,7 +927,7 @@ EXTRA_DIST = $(build_messages_dir)/RexxMessageNumbers.xsl \
              $(build_messages_dir)/gencat.inp \
              $(messageXML) \
              $(classesXML) \
-             $(build_kernel_platform_dir)/UnixGencat.xsl \
+             $(build_interpreter_platform_dir)/UnixGencat.xsl \
              $(build_behaviour_dir)/ClassTypeCodes.xsl \
              $(build_behaviour_dir)/PrimitiveBehaviourNames.xsl \
              $(build_behaviour_dir)/PrimitiveBehaviours.xsl \
@@ -936,11 +936,11 @@ EXTRA_DIST = $(build_messages_dir)/RexxMessageNumbers.xsl \
              $(build_utils_platform_dir)/rexx.sh \
              $(build_utils_platform_dir)/rexx.csh \
              $(build_rxregexp_dir)/rxregexp.cls \
-             $(build_kernel_platform_dir)/UnixMethods.orx \
-             $(build_kernel_platform_dir)/PlatformObjects.orx \
+             $(build_interpreter_platform_dir)/UnixMethods.orx \
+             $(build_interpreter_platform_dir)/PlatformObjects.orx \
              $(build_rexxclasses_dir) \
              $(classesHeaders) \
-             $(kernelApiHeaders) \
+             $(interpreterApiHeaders) \
              $(expressionHeaders) \
              $(instructionsHeaders) \
              $(parserHeaders) \
@@ -969,9 +969,9 @@ dist-hook:
 # Force the timestamp of the message headers and the input to gencat
 # to have a later date than the source XML, so Xalan is not needed to
 # be executed by the user
-	touch $(distdir)/kernel/messages/*.h
-	touch $(distdir)/kernel/messages/DocErrorMessages.sgml
-	touch $(distdir)/kernel/messages/gencat.inp
+	touch $(distdir)/interpreter/messages/*.h
+	touch $(distdir)/interpreter/messages/DocErrorMessages.sgml
+	touch $(distdir)/interpreter/messages/gencat.inp
 #
 # Add oorexx.ver.incl, a file used by the Windows build, to the source
 # distribution.

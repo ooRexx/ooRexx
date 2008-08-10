@@ -36,7 +36,7 @@
 #
 # *******************************************************************************
 #------------------------
-# KERNEL.MAK make file
+# INTERPRETER.MAK make file
 #------------------------
 
 
@@ -254,14 +254,6 @@ $(OR_OUTDIR)\rxcmd32.dll : $(SYSUT32OBJ) $(OR_OUTDIR)\$(@B).lib \
              $(OR_OUTDIR)\$(@B).exp  \
              w32sut32.lib
 
-#
-# *** rxcmd16.DLL
-#
-# Created with 16-bit compiler stored in CMVC in \kernel directory
-$(OR_OUTDIR)\rxcmd16.dll : $(OR_INTERPRETER_SRC)\$(@B).dll
-    @ECHO .
-    @ECHO Copying $(@B).dll from kernel directory
-    COPY $(OR_INTERPRETER_SRC)\$(@B).dll $(OR_OUTDIR)\$(@B).dll
 
 # Update the Windows Message Table resource if necessary
 
