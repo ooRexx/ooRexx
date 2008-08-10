@@ -63,11 +63,11 @@ IF %USELOGFILE% equ 1 ( NMAKE /F REXXAPI.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /
 if ERRORLEVEL 1 goto error
 
 REM
-REM *** Kernel
+REM *** Interpreter
 REM
-@ECHO Building Kernel....
+@ECHO Building Interpreter....
 CD  %OR_INTERPRETER_SRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F KERNEL.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F KERNEL.MAK )
+IF %USELOGFILE% equ 1 ( NMAKE /F INTERPRETER.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F INTERPRETER.MAK )
 if ERRORLEVEL 1 goto error
 
 REM *** orexxole
@@ -89,7 +89,7 @@ if ERRORLEVEL 1 goto error
 
 
 REM
-REM *** These are the commmand lanuchers, need the kernel and rexxapi
+REM *** These are the commmand lanuchers, need the interpreter and rexxapi
 REM
 @ECHO Building Command launchers
 CD  %OR_WINKERNELSRC%
