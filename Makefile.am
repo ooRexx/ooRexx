@@ -85,7 +85,6 @@ build_streamlibrary_dir = $(build_interpreter_dir)/streamLibrary
 build_messages_dir = $(build_interpreter_dir)/messages
 build_lib_dir = $(top_srcdir)/lib
 build_api_dir = $(top_srcdir)/api
-build_rexutils_dir = $(top_srcdir)/rexutils
 build_rxregexp_dir = $(top_srcdir)/rxregexp
 build_samples_dir = $(top_srcdir)/samples
 build_rexxclasses_dir = $(build_interpreter_dir)/RexxClasses
@@ -96,7 +95,6 @@ build_extensions_dir = $(top_srcdir)/extensions
 utils_unix_dir = $(build_utils_dir)/unix
 interpreter_unix_dir = $(build_interpreter_dir)/platform/unix
 api_unix_dir = $(build_api_dir)/platform/unix
-rexutils_unix_dir = $(build_rexutils_dir)/unix
 samples_unix_dir = $(build_samples_dir)/unix
 
 # These are the Windows directories
@@ -104,7 +102,6 @@ utils_windows_dir = $(build_utils_dir)/windows
 rexxapi_windows_dir = $(build_rexxapi_dir)/windows
 interpreter_windows_dir = $(build_interpreter_dir)/platform/windows
 api_windows_dir = $(build_api_dir)/platform/windows
-rexutils_windows_dir = $(build_rexutils_dir)/windows
 samples_windows_dir = $(build_samples_dir)/windows
 
 # These are the platform specific build directories
@@ -112,7 +109,6 @@ build_utils_platform_dir = $(utils_@ORX_PLATFORM@_dir)
 build_rexxapi_platform_dir = $(rexxapi_@ORX_PLATFORM@_dir)
 build_interpreter_platform_dir = $(interpreter_@ORX_PLATFORM@_dir)
 build_api_platform_dir = $(api_@ORX_PLATFORM@_dir)
-build_rexutils_platform_dir = $(rexutils_@ORX_PLATFORM@_dir)
 build_samples_platform_dir = $(samples_@ORX_PLATFORM@_dir)
 
 catdir = $(prefix)/bin
@@ -312,10 +308,6 @@ rxregexpHeaders = $(build_rxregexp_dir)/automaton.hpp \
                   $(build_rxregexp_dir)/dblqueue.hpp \
                   $(build_rxregexp_dir)/regexp.hpp
 rxsockHeaders = $(build_extensions_dir)/rxsock/rxsock.h
-aixExportFiles = $(build_rexutils_platform_dir)/*.exp \
-                 $(build_rexutils_dir)/*.exp \
-                 $(build_rexxapi_dir)/*.exp \
-                 $(build_rxregexp_dir)/*.exp
 windowsDefFiles = $(interpreter_windows_dir)/*.def \
                   $(build_lib_dir)/*.def \
                   $(build_rexutils_dir)/*.def \
@@ -326,7 +318,6 @@ miscFiles = $(top_srcdir)/CPLv1.0.txt \
             $(top_srcdir)/NOTICE \
             $(top_srcdir)/oorexx.ver \
             $(top_srcdir)/unix-like-build.txt \
-            $(aixExportFiles) \
             $(utils_unix_dir)/oorexx.spec \
             $(utils_unix_dir)/makepkg.rex \
             $(build_rxregexp_dir)/*.cls \

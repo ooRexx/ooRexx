@@ -39,19 +39,19 @@
 all:  $(OR_OUTDIR)\rxwinsys.dll $(OR_OUTDIR)\winsystm.cls
 
 !include "$(OR_LIBSRC)\ORXWIN32.MAK"
+
+SOURCE_DIR = $(OR_EXTENSIONS)\platform\windows\rxwinsys
+
 C=cl
 OPTIONS= $(cflags_common) $(OR_ORYXINCL)
 OR_LIB=$(OR_OUTDIR)
 
 SOURCEF=$(OR_OUTDIR)\rxwinsys.obj
 
-{$(XPLATFORM)}.c{$(OR_OUTDIR)}.obj:
-    $(C) $(OPTIONS) $(cflags_dll) $(ORYXINCL) /DINCL_32  -c $(**) /Fo$(@)
-
 # *** Inference Rule for CPP->OBJ
 # *** For .CPP files in OR_LIBSRC directory
 #
-{$(XPLATFORM)}.cpp{$(OR_OUTDIR)}.obj:
+{$(SOURCE_DIR)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
@@ -63,14 +63,14 @@ $(OR_OUTDIR)\rxwinsys.dll:     $(SOURCEF)
     $(lflags_common) $(lflags_dll) \
     $(OR_LIB)\rexx.lib \
     $(OR_LIB)\rexxapi.lib \
-    -def:$(XPLATFORM)\rxwinsys.def \
+    -def:$(SOURCE_DIR)\rxwinsys.def \
     -out:$(OR_OUTDIR)\$(@B).dll
 
 #
 # Copy winsystm.cls to the build directory so the test suite can be run directly
 # from that location without doing an install.
 #
-$(OR_OUTDIR)\winsystm.cls : $(XPLATFORM)\winsystm.cls
+$(OR_OUTDIR)\winsystm.cls : $(SOURCE_DIR)\winsystm.cls
     @ECHO .
-    @ECHO Copying $(XPLATFORM)\winsystm.cls
-    copy $(XPLATFORM)\winsystm.cls $(OR_OUTDIR)
+    @ECHO Copying $(SOURCE_DIR)\winsystm.cls
+    copy $(SOURCE_DIR)\winsystm.cls $(OR_OUTDIR)

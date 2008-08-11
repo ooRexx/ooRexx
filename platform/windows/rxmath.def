@@ -35,7 +35,7 @@
 ;/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 ;/*                                                                            */
 ;/*----------------------------------------------------------------------------*/
-LIBRARY RXMATH BASE=0x6B1C0000
+LIBRARY RXMATH
 
 EXPORTS
   RexxGetPackage

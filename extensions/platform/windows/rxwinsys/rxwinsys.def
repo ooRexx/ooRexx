@@ -35,7 +35,7 @@
 ;/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 ;/*                                                                            */
 ;/*----------------------------------------------------------------------------*/
-LIBRARY RXWINSYS BASE=0x6B150000  ; @HOL for feature 421
+LIBRARY RXWINSYS
 EXPORTS
   RexxGetPackage
 
