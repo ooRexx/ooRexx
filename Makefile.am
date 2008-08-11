@@ -90,6 +90,7 @@ build_rxregexp_dir = $(top_srcdir)/rxregexp
 build_samples_dir = $(top_srcdir)/samples
 build_rexxclasses_dir = $(build_interpreter_dir)/RexxClasses
 build_utilities_dir = $(top_srcdir)/utilities
+build_extensions_dir = $(top_srcdir)/extensions
 
 # These are the *nix directories
 utils_unix_dir = $(build_utils_dir)/unix
@@ -785,7 +786,7 @@ rxsubcom_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #
 # Sources for librexxutil.so
 #
-librexxutil_la_SOURCES = $(build_rexutils_platform_dir)/rexxutil.cpp
+librexxutil_la_SOURCES = $(build_extensions_dir)/platform/unix/rexxutil.cpp
 #
 # Preprocessor flags for librexxutil.so
 #
@@ -793,11 +794,7 @@ librexxutil_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                           -I$(build_lib_dir) \
                           -I$(build_api_dir) \
                           -I$(build_api_platform_dir) \
-                          -I$(build_interpreter_dir) \
-                          -I$(build_messages_dir) \
-                          -I$(build_interpreter_common_dir) \
-                          -I$(build_interpreter_platform_dir) \
-                          -I$(build_rexxapi_platform_dir)
+                          -I$(build_messages_dir)
 #
 # Extra libraries for librexxutil.so (maybe)
 #
@@ -816,12 +813,7 @@ librxmath_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                         -I$(build_lib_dir) \
                         -I$(build_api_dir) \
                         -I$(build_api_platform_dir) \
-                        -I$(build_interpreter_dir) \
-                        -I$(build_messages_dir) \
-                        -I$(build_interpreter_common_dir) \
-                        -I$(build_runtime_dir) \
-                        -I$(build_interpreter_platform_dir) \
-                        -I$(build_rexxapi_platform_dir)
+                        -I$(build_messages_dir)
 #
 # Extra libraries for librxmath.so (maybe)
 #
@@ -909,7 +901,7 @@ rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 #
 ooTest:
 	cp $(build_rxregexp_dir)/rxregexp.cls .
-	cp $(build_rexutils_dir)/rxftp.cls .
+	cp $(build_extensions_dir)/extensions/rxftp/rxftp.cls .
 
 #
 # distribution files
@@ -995,7 +987,7 @@ install-exec-local:
 	fi
 	$(install_sh_SCRIPT) $(build_utils_platform_dir)/oorexx-config $(DESTDIR)$(prefix)/bin/oorexx-config
 	$(install_sh_SCRIPT) $(build_rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
-	$(install_sh_SCRIPT) $(build_rexutils_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
+	$(install_sh_SCRIPT) $(build_extensions_dir)/rxftp/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
 	for a in $(build_samples_dir)/*.rex; do \
 		bn=`basename $$a`; \
 		$(install_sh_SCRIPT) $$a $(DESTDIR)$(prefix)/share/ooRexx/$$bn; \

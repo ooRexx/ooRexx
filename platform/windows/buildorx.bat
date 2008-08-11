@@ -83,8 +83,14 @@ REM
 REM *** Rexxutil. Note that RexxUtil needs to be built before rexx.img is created.
 REM
 @ECHO Building Rexxutil..
-CD  %OR_REXXUTILSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F REXXUTIL.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F REXXUTIL.MAK )
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_EXTENSIONS%\rexxutil\platform\windows\rexxutil.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_EXTENSIONS%\rexxutil\platform\windows\rexxutil.mak )
+if ERRORLEVEL 1 goto error
+
+REM
+REM *** rxftp
+REM
+@ECHO Building rxftp
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak )
 if ERRORLEVEL 1 goto error
 
 

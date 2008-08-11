@@ -38,16 +38,14 @@
 #------------------------
 # REXXAPI.MAK make file
 #------------------------
-all: $(OR_OUTDIR)\rexxutil.dll $(OR_OUTDIR)\rxftp.cls
+all: $(OR_OUTDIR)\rexxutil.dll
     @ECHO .
     @ECHO All done rexxutil.dll
     @ECHO .
 
 !include "$(OR_LIBSRC)\ORXWIN32.MAK"
 
-!IFNDEF OR_REXXUTILSRC
-!ERROR Build error, OR_REXXUTILSRC not set
-!ENDIF
+SOURCE_DIR = $(OR_EXTENSIONS)\rexxutil\platform\windows
 
 RXUTILOBJ = $(OR_OUTDIR)\rexxutil.obj
 
@@ -58,9 +56,9 @@ RXUTILOBJ = $(OR_OUTDIR)\rexxutil.obj
 #
 # Generate import library (.lib) and export library (.exp) from
 # module-definition (.dfw) file for a DLL
-$(OR_OUTDIR)\rexxutil.lib : $(RXUTILOBJ) $(XPLATFORM)\rexxutil.def
+$(OR_OUTDIR)\rexxutil.lib : $(RXUTILOBJ) $(SOURCE_DIR)\rexxutil.def
         $(OR_IMPLIB) -machine:$(CPU) \
-        -def:$(XPLATFORM)\rexxutil.def               \
+        -def:$(SOURCE_DIR)\rexxutil.def               \
         $(RXUTILOBJ)               \
         -out:$(OR_OUTDIR)\rexxutil.lib
 
@@ -68,40 +66,23 @@ $(OR_OUTDIR)\rexxutil.lib : $(RXUTILOBJ) $(XPLATFORM)\rexxutil.def
 # *** REXXutil.DLL
 #
 # need import libraries and def files still
-$(OR_OUTDIR)\rexxutil.dll : $(RXUTILOBJ) $(RXDBG_OBJ)   \
+$(OR_OUTDIR)\rexxutil.dll : $(RXUTILOBJ) \
                             $(OR_OUTDIR)\rexxutil.lib   \
-                            $(XPLATFORM)\rexxutil.def \
+                            $(SOURCE_DIR)\rexxutil.def \
                             $(OR_OUTDIR)\rexxutil.exp   \
                             $(OR_OUTDIR)\verinfo.res
     $(OR_LINK) $(lflags_common) $(lflags_dll) /DELAYLOAD:advapi32.dll -out:$(OR_OUTDIR)\$(@B).dll \
-             $(RXUTILOBJ) $(RXDBG_OBJ) \
+             $(RXUTILOBJ) \
              $(OR_OUTDIR)\verinfo.res \
              $(OR_OUTDIR)\$(@B).exp \
              $(OR_OUTDIR)\rexxapi.lib \
              $(OR_OUTDIR)\rexx.lib
 
-#
-# Copy rxftp.cls to the build directory so the test suite can be run directly
-# from that location without doing an install.
-#
-$(OR_OUTDIR)\rxftp.cls : $(OR_REXXUTILSRC)\rxftp.cls
-    @ECHO .
-    @ECHO Copying $(OR_REXXUTILSRC)\rxftp.cls
-    copy $(OR_REXXUTILSRC)\rxftp.cls $(OR_OUTDIR)
-
-#
-# *** wrxutil.obj
-#
-
-{$(XPLATFORM)}.c{$(OR_OUTDIR)}.obj:
-    @ECHO .
-    @ECHO Compiling $(**)
-    $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(@) $(OR_ORYXINCL) $(**)
 
 # *** Inference Rule for CPP->OBJ
 # *** For .CPP files in OR_LIBSRC directory
 #
-{$(XPLATFORM)}.cpp{$(OR_OUTDIR)}.obj:
+{$(SOURCE_DIR)}.cpp{$(OR_OUTDIR)}.obj:
     @ECHO .
     @ECHO Compiling $(**)
     $(OR_CC)  $(cflags_common) $(cflags_dll) /Fo$(@) $(Tp)$(**) $(OR_ORYXINCL)
