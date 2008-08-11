@@ -125,15 +125,13 @@ if ERRORLEVEL 1 goto error
 REM *** rxsock
 REM
 @ECHO Building RxSock..
-CD  %OR_REXXUTILSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F Rxsock.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F Rxsock.MAK )
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\rxsock.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxsock.mak )
 if ERRORLEVEL 1 goto error
 
 REM *** rxmath
 REM
 @ECHO Building RxMath..
-CD  %OR_REXXUTILSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F rxmath.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F rxmath.mak )
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\rxmath.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxmath.mak )
 if ERRORLEVEL 1 goto error
 
 

@@ -311,7 +311,7 @@ rxregexpHeaders = $(build_rxregexp_dir)/automaton.hpp \
                   $(build_rxregexp_dir)/dblqueue.cpp \
                   $(build_rxregexp_dir)/dblqueue.hpp \
                   $(build_rxregexp_dir)/regexp.hpp
-rexutilsHeaders = $(build_rexutils_dir)/rxsock.h
+rxsockHeaders = $(build_extensions_dir)/rxsock/rxsock.h
 aixExportFiles = $(build_rexutils_platform_dir)/*.exp \
                  $(build_rexutils_dir)/*.exp \
                  $(build_rexxapi_dir)/*.exp \
@@ -805,15 +805,14 @@ librexxutil_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 # Sources for librxmath.so
 #
-librxmath_la_SOURCES = $(build_rexutils_dir)/rxmath.cpp
+librxmath_la_SOURCES = $(build_extensions_dir)/rxmath/rxmath.cpp
 #
 # Preprocessor flags for librxmath.so
 #
 librxmath_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                         -I$(build_lib_dir) \
                         -I$(build_api_dir) \
-                        -I$(build_api_platform_dir) \
-                        -I$(build_messages_dir)
+                        -I$(build_api_platform_dir)
 #
 # Extra libraries for librxmath.so (maybe)
 #
@@ -824,15 +823,15 @@ librxmath_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 # Sources for librxsock.so
 #
-librxsock_la_SOURCES = $(build_rexutils_dir)/rxsock.cpp \
-                       $(build_rexutils_dir)/rxsockfn.cpp
+librxsock_la_SOURCES = $(build_extensions_dir)/rxsock/rxsock.cpp \
+                       $(build_extensions_dir)/rxsock/rxsockfn.cpp
 #
 # Preprocessor flags for librxsock.so
 #
 librxsock_la_CXXFLAGS = $(COMMON_CPPFLAGS) \
                       -I$(build_api_dir) \
                       -I$(build_api_platform_dir) \
-                      -I$(build_rexxapi_platform_dir)
+                      -I$(build_extensions_dir)
 #
 # Extra libraries for librxsock.so (maybe)
 #
@@ -940,7 +939,7 @@ EXTRA_DIST = $(build_messages_dir)/RexxMessageNumbers.xsl \
              $(rexxapiHeaders) \
              $(rexxapiunixHeaders) \
              $(rxregexpHeaders) \
-             $(rexutilsHeaders) \
+             $(rxsockHeaders) \
              $(man_MANS) \
              $(miscFiles) \
              $(windowsFiles) \
