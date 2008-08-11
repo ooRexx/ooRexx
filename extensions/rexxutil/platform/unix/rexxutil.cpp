@@ -198,7 +198,6 @@
 # include "config.h"
 #endif
 
-#include "PlatformDefinitions.h"
 #if defined( HAVE_LOCALE_H )
 # include <locale.h>
 #endif
@@ -305,6 +304,7 @@ extern char *resolve_tilde(const char *);
 #define OFFSET          1000           /* needed to prevent collision*/
                                        /* with the return codes      */
 #define MAXUSECOUNT     65535          /* max semaphore usecount     */
+#define REXXMESSAGEFILE    "rexx.cat"
 
 
 /*********************************************************************/

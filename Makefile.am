@@ -786,7 +786,7 @@ rxsubcom_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #
 # Sources for librexxutil.so
 #
-librexxutil_la_SOURCES = $(build_extensions_dir)/platform/unix/rexxutil.cpp
+librexxutil_la_SOURCES = $(build_extensions_dir)/rexxutil/platform/unix/rexxutil.cpp
 #
 # Preprocessor flags for librexxutil.so
 #
@@ -901,7 +901,7 @@ rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 #
 ooTest:
 	cp $(build_rxregexp_dir)/rxregexp.cls .
-	cp $(build_extensions_dir)/extensions/rxftp/rxftp.cls .
+	cp $(build_extensions_dir)/rxftp/rxftp.cls .
 
 #
 # distribution files
