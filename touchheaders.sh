@@ -36,11 +36,15 @@
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
 
-touch ./kernel/messages/RexxErrorCodes.h
-touch ./kernel/messages/RexxMessageNumbers.h
-touch ./kernel/messages/RexxMessageTable.h
-touch ./kernel/messages/DocErrorMessages.sgml
-touch ./kernel/messages/gencat.inp
-touch ./kernel/platform/windows/winmsgtb.rc
-touch ./kernel/platform/unix/rexx.cat
+touch ./interpreter/messages/RexxErrorCodes.h
+touch ./interpreter/messages/RexxMessageNumbers.h
+touch ./interpreter/messages/RexxMessageTable.h
+touch ./interpreter/messages/DocErrorMessages.sgml
+touch ./interpreter/messages/gencat.inp
+touch ./interpreter/platform/windows/winmsgtb.rc
+touch ./interpreter/platform/unix/rexx.cat
+touch ./interpreter/behaviour/PrimitiveBehaviourNames.h
+touch ./interpreter/behaviour/VirtualFunctionTable.cpp
+touch ./interpreter/behaviour/ClassTypeCodes.h
+touch ./api/oorexxerrors.h
 

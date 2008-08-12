@@ -267,11 +267,6 @@ $(INTERPRETER_MESSAGES)\RexxErrorCodes.h: $(INTERPRETER_MESSAGES)\RexxErrorCodes
     @ECHO Generating $(@)
     xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\RexxErrorCodes.xsl
 
-$(OR_ORYXAPI)\oorexxerrors.h: $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
-    @ECHO.
-    @ECHO Generating $(@)
-    xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl
-
 $(INTERPRETER_MESSAGES)\DocErrorMessages.sgml: $(INTERPRETER_MESSAGES)\DocBookErrors.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
     @ECHO.
     @ECHO Generating $(@)

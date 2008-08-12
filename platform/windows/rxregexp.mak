@@ -58,9 +58,9 @@ CPPOBJS = $(OR_OUTDIR)\rxregexp.obj $(OR_OUTDIR)\automaton.obj $(OR_OUTDIR)\dblq
 #
 # Generate import library (.lib) and export library (.exp) from
 # module-definition (.dfw) file for a DLL
-$(OR_OUTDIR)\RXREGEXP.lib : $(CPPOBJS) $(OR_REGEXPSRC)\RXREGEXP.def
+$(OR_OUTDIR)\RXREGEXP.lib : $(CPPOBJS) $(OR_WINKERNELSRC)\RXREGEXP.def
         $(OR_IMPLIB) -machine:$(CPU) \
-        -def:$(OR_REGEXPSRC)\RXREGEXP.def \
+        -def:$(OR_WINKERNELSRC)\RXREGEXP.def \
         $(CPPOBJS)               \
         -out:$(OR_OUTDIR)\RXREGEXP.lib
 
@@ -69,7 +69,7 @@ $(OR_OUTDIR)\RXREGEXP.lib : $(CPPOBJS) $(OR_REGEXPSRC)\RXREGEXP.def
 #
 # need import libraries and def files still
 $(OR_OUTDIR)\rxregexp.dll : $(CPPOBJS) $(OBJS) $(OR_OUTDIR)\RXREGEXP.lib \
-                            $(OR_REGEXPSRC)\RXREGEXP.def     \
+                            $(OR_WINKERNELSRC)\RXREGEXP.def     \
                             $(OR_OUTDIR)\RXREGEXP.exp
     $(OR_LINK) -map $(lflags_common) $(lflags_dll) -out:$(OR_OUTDIR)\$(@B).dll \
              $(CPPOBJS) \

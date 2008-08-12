@@ -139,7 +139,7 @@ REM *** rxregexp
 REM
 @ECHO Building RXREGEXP...
 CD  %OR_REGEXPSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F RXREGEXP.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F RXREGEXP.MAK )
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\rxregexp.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxregexp.mak )
 if ERRORLEVEL 1 goto error
 
 
