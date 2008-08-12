@@ -676,7 +676,7 @@ rxapi_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rexx ##########################
 # Sources for rexx
 #
-rexx_SOURCES = $(build_utils_platform_dir)/rexx.cpp
+rexx_SOURCES = $(build_utilities_dir)/rexx/platform/unix/rexx.cpp
 #
 # Preprocessor flags for rexx
 #
@@ -684,9 +684,7 @@ rexx_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                  -I$(build_lib_dir) \
                  -I$(build_api_dir) \
                  -I$(build_api_platform_dir) \
-                 -I$(build_messages_dir) \
-                 -I$(build_interpreter_platform_dir) \
-                 -I$(build_rexxapi_platform_dir)
+                 -I$(build_messages_dir)
 #
 # Extra libraries for rexx
 #

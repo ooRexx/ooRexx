@@ -90,18 +90,27 @@ REM
 REM *** rxftp
 REM
 @ECHO Building rxftp
-IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak )
+IF %USELOGFILE% equ 1 ( NMAKE /F  >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak )
 if ERRORLEVEL 1 goto error
-
 
 REM
 REM *** These are the commmand lanuchers, need the interpreter and rexxapi
 REM
-@ECHO Building Command launchers
-CD  %OR_WINKERNELSRC%
-IF %USELOGFILE% equ 1 ( NMAKE /F ORYXWIN.MAK >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F ORYXWIN.MAK )
+@ECHO Building rexximage command launcher
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\rexximage.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rexximage.mak )
 if ERRORLEVEL 1 goto error
 
+@ECHO Building rexx command launcher
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_UTILITIES%\rexx\platform\windows\rexx.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_UTILITIES%\rexx\platform\windows\rexx.mak )
+if ERRORLEVEL 1 goto error
+
+@ECHO Building rexxhide command launcher
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_UTILITIES%\platform\windows\rexxhide\rexxhide.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_UTILITIES%\platform\windows\rexxhide\rexxhide.mak )
+if ERRORLEVEL 1 goto error
+
+@ECHO Building rexxpaws command launcher
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_UTILITIES%\platform\windows\rexxpaws\rexxpaws.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_UTILITIES%\platform\windows\rexxpaws\rexxpaws.mak )
+if ERRORLEVEL 1 goto error
 
 @ECHO Building REXX.IMG ...
 CD %OR_OUTDIR%
