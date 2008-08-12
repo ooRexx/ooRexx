@@ -85,7 +85,7 @@ build_streamlibrary_dir = $(build_interpreter_dir)/streamLibrary
 build_messages_dir = $(build_interpreter_dir)/messages
 build_lib_dir = $(top_srcdir)/lib
 build_api_dir = $(top_srcdir)/api
-build_rxregexp_dir = $(top_srcdir)/rxregexp
+build_rxregexp_dir = $(top_srcdir)/extensions/rxregexp
 build_samples_dir = $(top_srcdir)/samples
 build_rexxclasses_dir = $(build_interpreter_dir)/RexxClasses
 build_utilities_dir = $(top_srcdir)/utilities
@@ -888,7 +888,7 @@ rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 # This ensures a developer can run the test suite from the build directory
 #
 ooTest:
-	cp $(build_rxregexp_dir)/rxregexp.cls .
+	cp $(build_extensions_dir)/rxregexp/rxregexp.cls .
 	cp $(build_extensions_dir)/rxftp/rxftp.cls .
 
 #
