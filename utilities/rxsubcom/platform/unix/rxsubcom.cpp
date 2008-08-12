@@ -67,7 +67,6 @@
                                        /* Macro for argv[1] compares */
 #define CASE(x) if(!strcasecmp(x,argv[1]))
 
-#define CCHMAXPATH PATH_MAX+1
 #ifdef LINUX                   /*  AIX already defined               */
 #define SECOND_PARAMETER 1             /* different sign. Lin-AIX    */
 #define CATD_ERR -1
@@ -114,7 +113,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         {
             scbdll_name = "";
         }
-        else 
+        else
         {
             scbdll_name = argv[3];
         }
@@ -133,7 +132,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         {
             scbdll_name = "";
         }
-        else 
+        else
         {
             scbdll_name = argv[3];
         }
@@ -149,7 +148,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         {
             scbdll_name = "";
         }
-        else 
+        else
         {
             scbdll_name = argv[3];
         }

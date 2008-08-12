@@ -65,7 +65,6 @@
 #define REXXMESSAGEFILE    "rexx.cat"
 
 #define BUFFERLEN         256           /* Length of message bufs used        */
-#define CCHMAXPATH PATH_MAX+1
 #ifdef LINUX
 #define SECOND_PARAMETER 1              /* different sign. Lin-AIX            */
 #define CATD_ERR -1
@@ -112,7 +111,7 @@ void DisplayError(int msgid)           /* simplified catalog access@MAE004M */
                 printf("\n Error message not found!\n");
             }
             else
-            {    
+            {
                 printf("\n%s\n", message);  /* print the message                 */
             }
         }
@@ -152,7 +151,7 @@ int main (int argc, char **argv)
     {
         ptr = RexxGetVersionInformation();
         printf(ptr);
-        if (ptr) 
+        if (ptr)
         {
             free(ptr);
         }

@@ -138,7 +138,6 @@
 /* OPTIONAL:  Finally, any other global defined constants for system specific */
 /* code usage.                                                                */
 /******************************************************************************/
-#include "wintypes.h"
  // Re-directed output...
  #include <stdio.h>                    // for following file ref...
 

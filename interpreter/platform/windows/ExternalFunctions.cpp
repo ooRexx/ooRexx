@@ -122,7 +122,7 @@ RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration
 /********************************************************************************************/
 RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 {
-    char buffer[CCHMAXPATH+1];
+    char buffer[MAX_PATH+1];
     int rc = 0;
 
     if (dir != NO_CSTRING)

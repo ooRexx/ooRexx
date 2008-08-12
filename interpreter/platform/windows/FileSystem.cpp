@@ -79,7 +79,7 @@
  */
 RexxString *SysInterpreterInstance::resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension)
 {
-    char resolvedName[CCHMAXPATH + 2];    // finally resolved name
+    char resolvedName[MAX_PATH + 2];    // finally resolved name
 
     const char *name = _name->getStringData();
     const char *parentDir = _parentDir == OREF_NULL ? NULL : _parentDir->getStringData();
@@ -137,7 +137,7 @@ void SystemInterpreter::loadImage(
 /* Function:  Load the image into storage                          */
 /*******************************************************************/
 {
-    char fullname[CCHMAXPATH + 1];    // finally resolved name
+    char fullname[MAX_PATH + 1];    // finally resolved name
     // The file may purposefully have no extension.
     if (!SysFileSystem::primitiveSearchName(BASEIMAGE, getenv("PATH"), NULL, fullname))
     {

@@ -51,7 +51,6 @@
 
 #include "RexxCore.h"
 
-#define CCHMAXPATH PATH_MAX+1
 
 class InterpreterInstance;
 class RexxActivation;

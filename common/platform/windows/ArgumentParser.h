@@ -36,8 +36,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-#include "SystemVersion.h"
-
 const char *nextArgument(BOOL getprog, const char *argptr, PULONG ndx, PULONG len, BOOL allocate, ULONG maxarglength)
 {
     PCHAR ret;
@@ -95,8 +93,7 @@ PCONSTRXSTRING getArguments(const char **program, const char *argptr, size_t *co
     /* don't forget the break after program_name */
 
     /* WindowsNT accepts 2048 bytes, Windows95/98 1024 bytes */
-    if (which_system_is_running() == 1) maxarglen=2048;
-    else maxarglen=1024;
+    maxarglen=2048;
 
     i = 0;
     if (program)

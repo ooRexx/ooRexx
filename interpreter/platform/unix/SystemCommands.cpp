@@ -69,7 +69,6 @@
 #include <pwd.h>
 #include <limits.h>
 
-#define CCHMAXPATH PATH_MAX+1
 #define CMDBUFSIZE 1024                     /* Max size of executable cmd     */
 #define MAX_COMMAND_ARGS 400
 

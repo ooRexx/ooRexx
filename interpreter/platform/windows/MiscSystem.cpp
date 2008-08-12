@@ -49,7 +49,6 @@
 #include <stdlib.h>
 #include <process.h>
 #include "malloc.h"
-#include "SystemVersion.h"
 #include <signal.h>
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
@@ -68,6 +67,24 @@ static int SignalCount = 0;
 RexxString *SystemInterpreter::getInternalSystemName()
 {
     return getSystemName();     // this is the same
+}
+
+
+static OSVERSIONINFO version_info={0}; /* for optimization so that GetVersionEx */
+									   /* don't have to be called each time */
+
+int which_system_is_running()
+{
+	if (!version_info.dwOSVersionInfoSize)
+	{
+	   /* GetVersionEx called for the first time */
+       version_info.dwOSVersionInfoSize = sizeof(version_info);  // if not set --> violation error
+       GetVersionEx(&version_info);
+	}
+    if (version_info.dwPlatformId == VER_PLATFORM_WIN32s) return 0;     // Windows 3.1
+	else
+	  if (version_info.dwPlatformId == VER_PLATFORM_WIN32_NT) return 1; // Windows NT
+	else return 2;											  // Windows 95
 }
 
 RexxString *SystemInterpreter::getSystemName()

@@ -378,7 +378,7 @@ bool SysFileSystem::searchName(const char *name, const char *path, const char *e
 bool SysFileSystem::primitiveSearchName(const char *name, const char *path, const char *extension, char *resolvedName)
 {
     // this is for building a temporary name
-    char       tempName[CCHMAXPATH + 2];
+    char       tempName[MAX_PATH + 2];
 
     // construct the search name, potentially adding on an extension
     strncpy(tempName, name, sizeof(tempName));
@@ -417,7 +417,7 @@ bool SysFileSystem::checkCurrentFile(const char *name, char *resolvedName)
     size_t nameLength = strlen(name); /* get length of incoming name       */
 
     // make sure we have a valid length for even searching
-    if (nameLength < 1 || nameLength > CCHMAXPATH)
+    if (nameLength < 1 || nameLength > MAX_PATH)
     {
         return false;
     }
@@ -426,7 +426,7 @@ bool SysFileSystem::checkCurrentFile(const char *name, char *resolvedName)
     unsigned int errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     LPTSTR ppszFilePart=NULL;            // file name only in buffer
 
-    if (GetFullPathName(name, CCHMAXPATH, (LPTSTR)resolvedName, &ppszFilePart))
+    if (GetFullPathName(name, MAX_PATH, (LPTSTR)resolvedName, &ppszFilePart))
     {
         DWORD fileAttrib = GetFileAttributes((LPTSTR)resolvedName);
 
@@ -434,7 +434,7 @@ bool SysFileSystem::checkCurrentFile(const char *name, char *resolvedName)
         // the long name value in the correct casing
         if (fileAttrib != INVALID_FILE_ATTRIBUTES && fileAttrib != FILE_ATTRIBUTE_DIRECTORY)
         {
-            getLongName(resolvedName, CCHMAXPATH);
+            getLongName(resolvedName, MAX_PATH);
             SetErrorMode(errorMode);
             return true;
         }
@@ -460,7 +460,7 @@ bool SysFileSystem::searchPath(const char *name, const char *path, const char *e
     unsigned int errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
 
     LPTSTR ppszFilePart=NULL;            // file name only in buffer
-    if (SearchPath((LPCTSTR)path, (LPCTSTR)name, (LPCTSTR)extension, CCHMAXPATH, (LPTSTR)resolvedName, &ppszFilePart))
+    if (SearchPath((LPCTSTR)path, (LPCTSTR)name, (LPCTSTR)extension, MAX_PATH, (LPTSTR)resolvedName, &ppszFilePart))
     {
         DWORD fileAttrib = GetFileAttributes((LPTSTR)resolvedName);
 
@@ -468,7 +468,7 @@ bool SysFileSystem::searchPath(const char *name, const char *path, const char *e
         // the long name value in the correct casing
         if (fileAttrib != INVALID_FILE_ATTRIBUTES && fileAttrib != FILE_ATTRIBUTE_DIRECTORY)
         {
-            getLongName(resolvedName, CCHMAXPATH);
+            getLongName(resolvedName, MAX_PATH);
             SetErrorMode(errorMode);
             return true;
         }
@@ -488,7 +488,7 @@ void SysFileSystem::getLongName(char *fullName, size_t size)
 {
     char           *p;
 
-    if (size >= CCHMAXPATH)
+    if (size >= MAX_PATH)
     {
         DWORD length = GetLongPathName(fullName, fullName, (DWORD)size);
 

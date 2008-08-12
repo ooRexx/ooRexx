@@ -192,9 +192,6 @@
 #include <conio.h>
 #include <math.h>
 #include <limits.h>
-#include "wintypes.h"
-#include "SystemVersion.h"
-
 
 #define OM_WAKEUP (WM_USER+10)
 VOID CALLBACK SleepTimerProc( HWND, UINT, UINT, DWORD);
@@ -203,7 +200,6 @@ VOID CALLBACK SleepTimerProc( HWND, UINT, UINT, DWORD);
 /*  Various definitions used by various functions.                   */
 /*********************************************************************/
 
-#define CCHMAXPATH MAX_PATH            /* used in os2file            */
 #define MAX_LABEL      13              /* max label length (sdrvinfo)*/
 #define MAX_DIGITS     9               /* max digits in numeric arg  */
 #define MAX            264             /* temporary buffer length    */
@@ -303,9 +299,9 @@ typedef struct RxTreeData {
     SHVBLOCK shvb;                     /* Request block for RxVar    */
     size_t stemlen;                    /* Length of stem             */
     size_t vlen;                       /* Length of variable value   */
-    char TargetSpec[CCHMAXPATH+1];     /* Target filespec            */
-    char truefile[CCHMAXPATH+1];       /* expanded file name         */
-    char Temp[CCHMAXPATH+80];          /* buffer for returned values */
+    char TargetSpec[MAX_PATH+1];     /* Target filespec            */
+    char truefile[MAX_PATH+1];       /* expanded file name         */
+    char Temp[MAX_PATH+80];          /* buffer for returned values */
     char varname[MAX];                 /* Buffer for variable name   */
     size_t nattrib;                    /* New attrib, diff for each  */
 } RXTREEDATA;
@@ -1258,7 +1254,7 @@ LONG RecursiveFindFile(
 
   WIN32_FIND_DATA wfd;                 /* Find File data struct      */
 
-  CHAR  staticBuffer[CCHMAXPATH+1];    /* dynamic memory             */
+  CHAR  staticBuffer[MAX_PATH+1];    /* dynamic memory             */
   CHAR  *tempfile = staticBuffer;      /* Used to hold temp file name*/
   HANDLE fHandle;                      /* search handle used by      */
                                        /* FindFirstFile()            */
@@ -1270,7 +1266,7 @@ LONG RecursiveFindFile(
                                        /* returns...                 */
   size_t maxsize = strlen(path) + strlen(ldp->TargetSpec);
                                        /* build spec name            */
-  if (maxsize >= CCHMAXPATH) {
+  if (maxsize >= MAX_PATH) {
     tempfile = (CHAR*) malloc(sizeof(CHAR)*(maxsize+1));
   }
   wsprintf(tempfile, "%s%s", path, ldp->TargetSpec);
@@ -1306,7 +1302,7 @@ LONG RecursiveFindFile(
             !strcmp(wfd.cFileName, ".."))
           continue;                    /* skip this one              */
         maxsize = strlen(path) + strlen(wfd.cFileName) + 1;
-        if (maxsize >= CCHMAXPATH) {
+        if (maxsize >= MAX_PATH) {
           if (tempfile != staticBuffer) {
             free(tempfile);
           }
@@ -2293,31 +2289,6 @@ size_t RexxEntry SysGetKey(const char *name, size_t numargs, CONSTRXSTRING args[
   }
   else {
     tmp = _getch();                    /* read a character           */
-
-    if (RUNNING_95)
-    {
-       /* The _getch() function and therefore the underlying OS function      */
-       /* ReadConsoleInput does not works correctly for W´95 and 98.          */
-       /* The function should read the console and remove the read character  */
-       /* from the console input buffer. But it does not really remove it !   */
-       /* For this a second ReadConsoleInput is executed.                     */
-       /* Under NT 4.0 it works correctly                                     */
-
-       HANDLE       hStdin = 0;
-       INPUT_RECORD ConInpRec;
-       DWORD        dNum;
-                                       /* if not an extended char    */
-       if (!(tmp == 0x00) || (tmp == 0xe0))
-       {
-                                     /* get the console input handle */
-         hStdin = GetStdHandle(STD_INPUT_HANDLE);
-
-         ReadConsoleInput( hStdin,  /* read again one character from */
-                            &ConInpRec,/* the console input buffer   */
-                            1L,
-                            &dNum );
-       }
-    }
 
                                        /* If a function key or arrow */
     if ((tmp == 0x00) || (tmp == 0xe0)) {

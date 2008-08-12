@@ -355,8 +355,10 @@ int sys_command(const char *cmd, RexxString **error_failure)
   }
                                        // location of command interpreter
   if (NULL == (sys_cmd_handler = getenv(COMSPEC)))
+  {
                                        // CMD.EXE on NT Command.com on 32s
-    sys_cmd_handler = (RUNNING_NT) ? CMDDEFNAMENT : CMDDEFNAME32S;
+    sys_cmd_handler = CMDDEFNAMENT;
+  }
                                        /* Get len of handler                  */
   length_cmd_handler = strlen((char *)sys_cmd_handler);
 
@@ -366,7 +368,7 @@ int sys_command(const char *cmd, RexxString **error_failure)
   /* CreateProcess                                                            */
   /****************************************************************************/
                                       // string length is system specific
-  uMaxStringLength = (RUNNING_NT) ? CMDBUFSIZENT : CMDBUFSIZE32S;
+  uMaxStringLength = CMDBUFSIZENT;
   max_cmd_length = uMaxStringLength -       /* Maximum size of string         */
                    (length_cmd_handler+1) - /* Minus length of sys cmd handler*/
                    strlen(cl_opt) -         /* Minus length of cmd line option*/
@@ -382,10 +384,7 @@ int sys_command(const char *cmd, RexxString **error_failure)
 
   /* check whether or not program to invoke is cmd or command */
   _strupr(strcpy(cmdstring_ptr,&interncmd[j]));
-  if (!RUNNING_95)
-      searchFile = strstr(cmdstring_ptr, "CMD") != NULL;
-  else
-      searchFile = strstr(cmdstring_ptr, "COMMAND") != NULL;
+  searchFile = strstr(cmdstring_ptr, "CMD") != NULL;
 
   if (searchFile)
   {
@@ -403,10 +402,7 @@ int sys_command(const char *cmd, RexxString **error_failure)
           cmdstring_ptr[i]='\0';
       }
 
-      if (!RUNNING_95)
-          fileFound = SearchPath(NULL, cmdstring_ptr, ".EXE", CMDBUFSIZENT-1, cmdstring, (LPSTR *)&filepart) != 0;
-      else
-          fileFound = SearchPath(NULL, cmdstring_ptr, ".COM", CMDBUFSIZENT-1, cmdstring, (LPSTR *)&filepart) != 0;
+      fileFound = SearchPath(NULL, cmdstring_ptr, ".EXE", CMDBUFSIZENT-1, cmdstring, (LPSTR *)&filepart) != 0;
       cmdstring_ptr = cmdstring;           /* Set pointer again to cmd buffer (might have been increased) */
 
       if (fileFound && !stricmp(sys_cmd_handler, cmdstring_ptr))
