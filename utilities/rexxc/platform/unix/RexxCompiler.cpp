@@ -61,8 +61,8 @@
 #endif
 
 #include "rexx.h"
-#include "PlatformDefinitions.h"        /* added for cat name + defs          */
 #include "RexxMessageNumbers.h"
+#define REXXMESSAGEFILE    "rexx.cat"
 
 #define BUFFERLEN         256           /* Length of message bufs used        */
 #define CCHMAXPATH PATH_MAX+1
@@ -172,7 +172,7 @@ int main (int argc, char **argv)
         exit(-1);                          /* terminate with an error           */
     }                                    /* end additions                     */
     /* modified control logic            */
-    if (argc==4 && silent || argc==3 && !silent)
+    if ((argc==4 && silent) || (argc==3 && !silent))
     {
         if (strcmp(argv[1], argv[2]) == 0)
         {
