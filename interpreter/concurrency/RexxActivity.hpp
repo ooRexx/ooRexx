@@ -238,6 +238,9 @@ typedef enum
    void detachThread();
    inline InterpreterInstance *getInstance() { return instance; }
 
+   inline void nestAttach() { attachCount++; }
+   inline bool isNestedAttach() { return attachCount != 0; }
+   inline void returnAttach() { attachCount--; }
    inline void activate() { nestedCount++; }
    inline void deactivate() { nestedCount--; }
    inline bool isActive() { return nestedCount > 0; }
@@ -361,6 +364,7 @@ typedef enum
    bool     interpreterRoot;           // This is the root activity for an interpreter instance
    bool     attached;                  // this is attached to an instance (vs. created directly)
    size_t   nestedCount;               /* extent of the nesting             */
+   size_t   attachCount;               // extent of nested attaches
    char       *stackBase;              /* pointer to base of C stack        */
    bool        clauseExitUsed;         /* halt/trace sys exit not set ==> 1 */
    size_t      randomSeed;             /* random number seed                */

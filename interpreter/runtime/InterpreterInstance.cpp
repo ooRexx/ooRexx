@@ -181,11 +181,17 @@ RexxActivity *InterpreterInstance::attachThread()
     // do we have this?  we can just return it
     if (activity != OREF_NULL)
     {
+        // make sure we mark this as attached...we might be nested and don't want to
+        // clean this up until we complete
+        activity->nestAttach();
         return activity;
     }
 
     // we need to get a new activity set up for this particular thread
     activity = ActivityManager::attachThread();
+    // this is still attached, but we'll release it once it is detached.  We start with
+    // a count of 1 and cleanup once we hit zero.
+    activity->nestAttach();
     // resource lock must come AFTER we attach the thread, otherwise
     // we can create a deadlock situation when we attempt to get the kernel
     // lock
@@ -213,6 +219,16 @@ bool InterpreterInstance::detachThread(RexxActivity *activity)
     {
         return false;
     }
+
+    // if we reused the activity because of a nested callback attach, then
+    // we just decrement the nesting count and return without cleaning up
+    // any resources.
+    activity->returnAttach();
+    if (activity->isNestedAttach())
+    {
+        return true;
+    }
+
     ResourceSection lock;
 
     allActivities->removeItem((RexxObject *)activity);
