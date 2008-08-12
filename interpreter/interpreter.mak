@@ -216,11 +216,11 @@ $(OR_OUTDIR)\rexx.lib : $(ORYXKOBJ)  \
 #
 # need import libraries and def files still
 #
-$(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXLOBJ) $(RXDBG_OBJ) \
+$(OR_OUTDIR)\rexx.dll : $(ORXHEADERS) $(ORYXKOBJ) $(ORYXLOBJ) \
                          $(OR_OUTDIR)\$(@B).lib $(INT_PLATFORM)\wrexx.def    \
                          $(OR_OUTDIR)\winmsgtb.res $(OR_OUTDIR)\verinfo.res
  type <<$(OR_OUTDIR)\oryxk.lst
-   $(ORYXKOBJ) $(RXDBG_OBJ) $(ORYXLOBJ)
+   $(ORYXKOBJ) $(ORYXLOBJ)
 <<
     $(OR_LINK) $(lflags_common) $(lflags_dll)  -out:$(OR_OUTDIR)\$(@B).dll \
              @$(OR_OUTDIR)\oryxk.lst \

@@ -68,11 +68,11 @@ $(OR_OUTDIR)\RXREGEXP.lib : $(CPPOBJS) $(OR_REGEXPSRC)\RXREGEXP.def
 # *** RXREGEXP.DLL
 #
 # need import libraries and def files still
-$(OR_OUTDIR)\rxregexp.dll : $(CPPOBJS) $(OBJS) $(RXDBG_OBJ) $(OR_OUTDIR)\RXREGEXP.lib \
+$(OR_OUTDIR)\rxregexp.dll : $(CPPOBJS) $(OBJS) $(OR_OUTDIR)\RXREGEXP.lib \
                             $(OR_REGEXPSRC)\RXREGEXP.def     \
                             $(OR_OUTDIR)\RXREGEXP.exp
     $(OR_LINK) -map $(lflags_common) $(lflags_dll) -out:$(OR_OUTDIR)\$(@B).dll \
-             $(CPPOBJS) $(RXDBG_OBJ) \
+             $(CPPOBJS) \
              $(OR_OUTDIR)\verinfo.res \
              $(OR_OUTDIR)\$(@B).exp \
              $(OR_OUTDIR)\rexx.lib \

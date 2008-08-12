@@ -135,13 +135,7 @@ my_cdebug = -Zi /Od /Gr /D_DEBUG /DEBUGTYPE:CV
 cflags_noopt=/nologo /D:_X86_ /DWIN32 $(WARNING_FLAGS) -c $(my_cdebug) /DNULL=0
 !ENDIF
 
-# CHM - added definition for RXDBG
 cflags_common=/EHsc /nologo /D:_X86_ /DWIN32 $(VER_DEF) $(WARNING_FLAGS) -c $(my_cdebug) $(MK_ASM) $(RXDBG) /DNULL=0
-
-# ENG - added for feature 953
-!IFDEF JAPANESE
-cflags_common = $(cflags_common) /DJAPANESE
-!ENDIF
 
 # ooRexx has always been using a statically linked CRT.
 !IFDEF NOCRTDLL

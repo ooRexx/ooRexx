@@ -87,7 +87,7 @@ $(OR_OUTDIR)\rexxapi.lib : $(CLIENTOBJS) $(OR_REXXAPISRC)\client\platform\window
 # *** REXXAPI.DLL
 #
 # need import libraries and def files still
-$(OR_OUTDIR)\rexxapi.dll : $(CLIENTOBJS) $(RXDBG_OBJ)      \
+$(OR_OUTDIR)\rexxapi.dll : $(CLIENTOBJS) \
                              $(OR_OUTDIR)\rexxapi.lib   \
                              $(OR_REXXAPISRC)\client\platform\windows\rexxapi.def \
                              $(OR_OUTDIR)\rexxapi.exp   \
