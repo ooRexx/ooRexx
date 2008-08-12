@@ -712,7 +712,7 @@ rexximage_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rexxc #########################
 # Sources for rexxc
 #
-rexxc_SOURCES = $(build_utils_platform_dir)/RexxCompiler.cpp
+rexxc_SOURCES = $(build_utilities_dir)/rexxc/platform/unix/RexxCompiler.cpp
 #
 # Preprocessor flags for rexxc
 #
@@ -720,9 +720,7 @@ rexxc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                   -I$(build_lib_dir) \
                   -I$(build_api_dir) \
                   -I$(build_api_platform_dir) \
-                  -I$(build_messages_dir) \
-                  -I$(build_interpreter_platform_dir) \
-                  -I$(build_rexxapi_platform_dir)
+                  -I$(build_messages_dir)
 
 #
 # Extra libraries for rexxc

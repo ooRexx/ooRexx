@@ -45,7 +45,6 @@
 # -------------------------------------------------------------------------
 # CHM moved target definition to top
 all : ORXHEADERS $(OR_OUTDIR)\rexx.dll  \
-      $(OR_OUTDIR)\rexxc.exe \
       COPYORXFILES
     @ECHO ...
     @ECHO All done ....
@@ -318,12 +317,6 @@ $(OR_OUTDIR)\verinfo.res: $(INT_PLATFORM)\verinfo.rc
     @ECHO.
     @ECHO ResourceCompiling $(@B).res
         $(rc) $(rcflags_common) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_INTERPRETER_SRC)\$(@B).rc
-
-$(OR_OUTDIR)\rexxc.exe : $(OR_OUTDIR)\RexxCompiler.obj
-    $(OR_LINK) $(**) $(lflags_common_console) \
-    $(OR_OUTDIR)\verinfo.res \
-    $(OR_OUTDIR)\rexx.lib \
-    -out:$(@)
 
 #
 #

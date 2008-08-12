@@ -112,6 +112,10 @@ if ERRORLEVEL 1 goto error
 IF %USELOGFILE% equ 1 ( NMAKE /F %OR_UTILITIES%\platform\windows\rexxpaws\rexxpaws.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_UTILITIES%\platform\windows\rexxpaws\rexxpaws.mak )
 if ERRORLEVEL 1 goto error
 
+@ECHO Building rexxc command launcher
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_UTILITIES%\rexxc\platform\windows\rexxc.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_UTILITIES%\rexxc\platform\windows\rexxc.mak )
+if ERRORLEVEL 1 goto error
+
 @ECHO Building REXX.IMG ...
 CD %OR_OUTDIR%
 IF %USELOGFILE% equ 1 ( REXXIMAGE >>%OR_ERRLOG% 2>&1 ) else ( REXXIMAGE )
