@@ -114,9 +114,9 @@ void SystemInterpreter::terminateInstance(InterpreterInstance *instance)
  */
 void SystemInterpreter::getCurrentWorkingDirectory(char *buf)
 {
-    if (!getcwd(buf, MAX_PATH)) /* Get current working direct */
+    if (!getcwd(buf, PATH_MAX)) /* Get current working direct */
     {
-       strncpy(buf, getenv("PWD"), MAX_PATH);
+       strncpy(buf, getenv("PWD"), PATH_MAX);
        // if we don't result in a real directory here, make it a null string.
        if (buf[0] != '/' )
        {
