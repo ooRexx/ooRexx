@@ -727,7 +727,7 @@ bool RexxDateTime::setMinutes(wholenumber_t m)
  * @return true if the time was set properly.  false if the
  *         value was invalid.
  */
-bool RexxDateTime::adjustTimeZone(wholenumber_t o)
+bool RexxDateTime::adjustTimeZone(int64_t o)
 {
     // we set the time using a UTC time adjusted by the offset,
     int64_t base = getUTCBaseTime();
@@ -1361,5 +1361,5 @@ void RexxDateTime::formatSeconds(char *buffer)
 void RexxDateTime::formatTimeZone(char *buffer)
 {
     // the time zone is a sized value
-    sprintf(buffer, "%d", timeZoneOffset);
+    Numerics::formatInt64(timeZoneOffset, (char *)buffer);
 }

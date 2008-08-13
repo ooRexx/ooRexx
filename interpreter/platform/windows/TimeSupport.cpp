@@ -86,17 +86,17 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
     sysTimeStamp |= systemFileTime.dwHighDateTime;
     sysTimeStamp <<= 32;
     sysTimeStamp |= systemFileTime.dwLowDateTime;
-    // the resolution of this is in tenths of micro seconds.  Convert to seconds,
+    // the resolution of this is in tenths of micro seconds.  Convert to microseconds
     // which is a more realistic value
-    sysTimeStamp = sysTimeStamp / 10000000UL;
+    sysTimeStamp = sysTimeStamp / 10UL;
 
     localTimeStamp |= localFileTime.dwHighDateTime;
     localTimeStamp <<= 32;
     localTimeStamp |= localFileTime.dwLowDateTime;
-    localTimeStamp = localTimeStamp / 10000000UL;
+    localTimeStamp = localTimeStamp / 10UL;
 
     // ok, we can use this to calculate the timestamp directly
-    Date->timeZoneOffset = (wholenumber_t)(localTimeStamp - sysTimeStamp);
+    Date->timeZoneOffset = localTimeStamp - sysTimeStamp;
 
     SYSTEMTIME localTime;
 

@@ -148,7 +148,7 @@ public:
     bool setHours(wholenumber_t h);
     bool setSeconds(wholenumber_t s);
     bool setMinutes(wholenumber_t m);
-    bool adjustTimeZone(wholenumber_t o);
+    bool adjustTimeZone(int64_t o);
     void formatBaseDate(char *buffer);
     void formatBaseTime(char *buffer);
     void formatUnixTime(char *buffer);
@@ -167,8 +167,8 @@ public:
     void formatNormalTime(char *buffer);
     void formatSeconds(char *buffer);
     void formatTimeZone(char *buffer);
-    inline void setTimeZoneOffset(wholenumber_t o) { timeZoneOffset = o; }
-    inline wholenumber_t getTimeZoneOffset() { return timeZoneOffset; }
+    inline void setTimeZoneOffset(int64_t o) { timeZoneOffset = o; }
+    inline int64_t getTimeZoneOffset() { return timeZoneOffset; }
 
 
     wholenumber_t   year;                // current year
@@ -179,7 +179,7 @@ public:
     wholenumber_t   seconds;             // second of the minute
     wholenumber_t   microseconds;        // microseconds
     wholenumber_t   valid;               // valid time stamp marker
-    wholenumber_t   timeZoneOffset;      // offset from UTC for this time stamp
+    int64_t         timeZoneOffset;      // offset from UTC for this time stamp
 
 protected:
 
