@@ -17,7 +17,7 @@
 !define KEYFILE     "rexx.exe"
 
 !define MUI_ICON "${SRCDIR}\platform\windows\rexx.ico"
-!define MUI_UNICON "${SRCDIR}\platform\windows\uninstall.ico"
+!define MUI_UNICON "${SRCDIR}\platform\windows\install\uninstall.ico"
 
 Name "${LONGNAME} ${VERSION}"
 

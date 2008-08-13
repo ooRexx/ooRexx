@@ -184,24 +184,24 @@ REM If not making the debug version skip to packaging the release version
 IF %PACKAGE_DBG% == 0 GOTO PACKAGE_RELEASE
 
 SET BINDIR=/DBINDIR=%SRC_DRV%%SRC_DIR%\Win32Dbg
-cd platform\windows
+cd platform\windows\install
 makensis %DOTVER% %NODOTVER% %SRCDIR% %BINDIR% oorexx.nsi
 
 REM Rename the deug package so it is not overwritten if the release package
 REM is created.
 ren ooRexx%NODOTS%.exe ooRexx%NODOTS%-debug.exe
-move ooRexx%NODOTS%-debug.exe ..\..\
-cd ..\..\
+move ooRexx%NODOTS%-debug.exe ..\..\..\
+cd ..\..\..\
 
 REM If not making the release version skip to environment variables clean up.
 IF %PACKAGE_REL% == 0 GOTO ENV_VARS_CLEANUP
 
 :PACKAGE_RELEASE
 SET BINDIR=/DBINDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
-cd platform\windows
+cd platform\windows\install
 makensis %DOTVER% %NODOTVER% %SRCDIR% %BINDIR% oorexx.nsi
-move ooRexx%NODOTS%.exe ..\..\
-cd ..\..\
+move ooRexx%NODOTS%.exe ..\..\..\
+cd ..\..\..\
 
 :ENV_VARS_CLEANUP
 SET CPU=
