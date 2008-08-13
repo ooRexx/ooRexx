@@ -79,12 +79,12 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
     struct tm *GMTDate;                  /* system date structure ptr  */
 #ifdef AIX
     struct tm GD;                        /* system date area           */
-    GMTDate = gmttime_r((time_t *)&tv.tv_sec, &GD);
+    GMTDate = gmtime_r((time_t *)&tv.tv_sec, &GD);
 #else
-    GMTDate = gmttime_r((time_t *)&tv.tv_sec);
+    GMTDate = gmtime((time_t *)&tv.tv_sec);
 #endif
     // in microseconds
-    Data->timeZoneOffset = tv.tv_sec - mktime(GMTDate) * 1000000;
+    Date->timeZoneOffset = ((int64_t)(tv.tv_sec - mktime(GMTDate))) * 1000000UL;
 }
 
 /*********************************************************************/
