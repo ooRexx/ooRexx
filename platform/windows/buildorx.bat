@@ -90,7 +90,7 @@ REM
 REM *** rxftp
 REM
 @ECHO Building rxftp
-IF %USELOGFILE% equ 1 ( NMAKE /F  >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak )
+IF %USELOGFILE% equ 1 ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_WINKERNELSRC%\rxftp.mak )
 if ERRORLEVEL 1 goto error
 
 REM
