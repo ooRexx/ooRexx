@@ -755,11 +755,11 @@ void ServerQueueManager::dispatch(ServiceMessage &message)
     // so they need to control their own locking mechanisms
     if (message.operation == PULL_FROM_NAMED_QUEUE)
     {
-        addToNamedQueue(message);
+        pullFromNamedQueue(message);
     }
     else if (message.operation == PULL_FROM_SESSION_QUEUE)
     {
-        addToSessionQueue(message);
+        pullFromSessionQueue(message);
     }
     else {
         Lock managerLock(lock);     // we need to synchronize on this instance
@@ -797,12 +797,6 @@ void ServerQueueManager::dispatch(ServiceMessage &message)
                 break;
             case ADD_TO_SESSION_QUEUE:
                 addToSessionQueue(message);
-                break;
-            case PULL_FROM_NAMED_QUEUE:
-                pullFromNamedQueue(message);
-                break;
-            case PULL_FROM_SESSION_QUEUE:
-                pullFromSessionQueue(message);
                 break;
             default:
                 message.setExceptionInfo(SERVER_FAILURE, "Invalid queue manager operation");

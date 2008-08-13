@@ -1146,6 +1146,8 @@ BUILTIN(DATE) {
 
         /* clear the time stamp              */
         timestamp.clear();
+        // everything is done using the current timezone offset
+        timestamp.setTimeZoneOffset(current.getTimeZoneOffset());
         switch (style2)
         {                  /* convert to usable form per option2*/
 
@@ -1365,13 +1367,16 @@ BUILTIN(TIME) {
 
     if (intime != OREF_NULL)
     {
-        // the input timestamp is not valid with the elapsed time options
+        // the input timestamp is not valid with the elapsed time options, and
+        // using an offset as an input isn't really meaningful
         if (style == 'R' || style == 'E')
         {
             reportException(Error_Incorrect_call_invalid_conversion, CHAR_TIME, new_string((char *)&style, 1));
         }
         bool valid = true;                 // assume this is a good timestamp
         timestamp.clear();                 // clear everything out
+        // everything is done using the current timezone offset
+        timestamp.setTimeZoneOffset(current.getTimeZoneOffset());
 
         switch (style2)
         {
@@ -1433,6 +1438,16 @@ BUILTIN(TIME) {
                 break;
             }
 
+            case 'O':                          // 'O'ffset.  microseconds offset from UTC
+            {
+                // everything comes from the current time stamp, but we will adjust to the new offset
+                timestamp = current;                 // and by default we work off of that time
+                wholenumber_t i;
+                valid = intime->numberValue(i) && timestamp.adjustTimeZone(i);
+                break;
+
+            }
+
             default:
                 work[0] = style2;              /* copy over the character           */
                 reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNS", new_string(work, 1));
@@ -1453,7 +1468,7 @@ BUILTIN(TIME) {
             /* get the current elapsed time      */
             int64_t startTime = context->getElapsed();
             // substract the time values
-            int64_t threshold = current.getBaseTime() - startTime;
+            int64_t threshold = current.getUTCBaseTime() - startTime;
             if (threshold < 0)
             {
                 strcpy(work, "0");            /* just return zero                  */
@@ -1506,6 +1521,10 @@ BUILTIN(TIME) {
 
         case 'T':                          /* 'T'icks                           */
             timestamp.formatUnixTime(work);
+            break;
+
+        case 'O':                          // 'O'ffset.  microseconds offset from UTC
+            timestamp.formatTimeZone(work);
             break;
 
         default:                          /* unknown format                    */

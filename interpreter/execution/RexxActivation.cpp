@@ -2573,7 +2573,7 @@ RexxDateTime RexxActivation::getTime()
         // so that it will remain current.
         if (isElapsedTimerReset())
         {
-            this->settings.elapsed_time = settings.timestamp.getBaseTime();
+            this->settings.elapsed_time = settings.timestamp.getUTCBaseTime();
             setElapsedTimerValid();
         }
         /* get a fresh time stamp            */
@@ -2597,7 +2597,7 @@ int64_t RexxActivation::getElapsed()
     if (this->settings.elapsed_time == 0)
     {
 
-        settings.elapsed_time = settings.timestamp.getBaseTime();
+        settings.elapsed_time = settings.timestamp.getUTCBaseTime();
     }
     return settings.elapsed_time;
 }

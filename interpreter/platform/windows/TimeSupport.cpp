@@ -41,6 +41,7 @@
 #include "RexxDateTime.hpp"
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
+#include <time.h>
 
 HANDLE SystemInterpreter::timeSliceTimerThread = 0;
 
@@ -50,6 +51,16 @@ HANDLE SystemInterpreter::timeSliceTimerThread = 0;
 #ifdef TIMESLICE
 extern int REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
 #endif
+
+
+#define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+
+struct timezone
+{
+    int  tz_minuteswest; // minutes West of Greenwich
+    int  tz_dsttime;     // the daylight savings time correction
+};
+
 
 /*********************************************************************/
 /*                                                                   */
@@ -62,17 +73,43 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
 /* Function:  Return a time stamp to the kernel date/time functions. */
 /*********************************************************************/
 {
-    SYSTEMTIME SystemDate; /* system date structure      */
+    FILETIME systemFileTime;
+    FILETIME localFileTime;
+    uint64_t sysTimeStamp = 0;
+    uint64_t localTimeStamp = 0;
+    // this retrieves the time as UTC, in a form we can do arithmetic with
+    GetSystemTimeAsFileTime(&systemFileTime);
+    // this converts the time to the local time zone
+    FileTimeToLocalFileTime(&systemFileTime, &localFileTime);
 
-    GetLocalTime(&SystemDate);        /* via Windows                */
+    // now get these as long values so we can do math with them
+    sysTimeStamp |= systemFileTime.dwHighDateTime;
+    sysTimeStamp <<= 32;
+    sysTimeStamp |= systemFileTime.dwLowDateTime;
+    // the resolution of this is in tenths of micro seconds.  Convert to seconds,
+    // which is a more realistic value
+    sysTimeStamp = sysTimeStamp / 10000000UL;
 
-    Date->hours = SystemDate.wHour;
-    Date->minutes = SystemDate.wMinute;
-    Date->seconds = SystemDate.wSecond;
-    Date->microseconds = SystemDate.wMilliseconds * 1000;
-    Date->day = SystemDate.wDay;
-    Date->month = SystemDate.wMonth;
-    Date->year = SystemDate.wYear;
+    localTimeStamp |= localFileTime.dwHighDateTime;
+    localTimeStamp <<= 32;
+    localTimeStamp |= localFileTime.dwLowDateTime;
+    localTimeStamp = localTimeStamp / 10000000UL;
+
+    // ok, we can use this to calculate the timestamp directly
+    Date->timeZoneOffset = (wholenumber_t)(localTimeStamp - sysTimeStamp);
+
+    SYSTEMTIME localTime;
+
+    // get a localized version of the time
+    FileTimeToSystemTime(&localFileTime, &localTime);
+
+    Date->hours = localTime.wHour;
+    Date->minutes = localTime.wMinute;
+    Date->seconds = localTime.wSecond;
+    Date->microseconds = localTime.wMilliseconds * 1000;
+    Date->day = localTime.wDay;
+    Date->month = localTime.wMonth;
+    Date->year = localTime.wYear;
 }
 
 /*********************************************************************/

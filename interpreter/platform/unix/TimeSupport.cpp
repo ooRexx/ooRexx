@@ -75,6 +75,16 @@ void SystemInterpreter::getCurrentTime(RexxDateTime *Date )
     Date->day = SystemDate->tm_mday;
     Date->month = ++SystemDate->tm_mon;
     Date->year = SystemDate->tm_year + 1900;
+
+    struct tm *GMTDate;                  /* system date structure ptr  */
+#ifdef AIX
+    struct tm GD;                        /* system date area           */
+    GMTDate = gmttime_r((time_t *)&tv.tv_sec, &GD);
+#else
+    GMTDate = gmttime_r((time_t *)&tv.tv_sec);
+#endif
+    // in microseconds
+    Data->timeZoneOffset = tv.tv_sec - mktime(GMTDate) * 1000000;
 }
 
 /*********************************************************************/
@@ -102,10 +112,10 @@ RexxMethod2(int, alarm_startTimer,
 
     while (numdays > 0)
     {                /* is it some future day?            */
-        // use the semaphore to wait for an entire day.  
-        // if this returns true, then this was not a timeout, which 
-        // probably means this was cancelled. 
-        if (sem.wait(msecInADay)) 
+        // use the semaphore to wait for an entire day.
+        // if this returns true, then this was not a timeout, which
+        // probably means this was cancelled.
+        if (sem.wait(msecInADay))
         {
             /* Check if the alarm is canceled. */
             RexxObjectPtr cancelObj = context->GetObjectVariable("CANCELED");
@@ -122,8 +132,8 @@ RexxMethod2(int, alarm_startTimer,
         numdays--;                         /* Decrement number of days          */
     }
 
-    // now we can just wait for the alarm time to expire 
-    sem.wait(alarmtime); 
+    // now we can just wait for the alarm time to expire
+    sem.wait(alarmtime);
     return 0;
 }
 

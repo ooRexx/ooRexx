@@ -443,6 +443,9 @@ RexxReturnCode LocalQueueManager::mapReturnResult(ServiceMessage &m)
         case QUEUE_IN_USE:
             return RXQUEUE_ACCESS;
 
+        case QUEUE_EMPTY:
+            return RXQUEUE_EMPTY;
+
         default:
             return RXQUEUE_OK;
     }

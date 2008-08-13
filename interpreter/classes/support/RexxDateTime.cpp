@@ -224,6 +224,18 @@ int64_t RexxDateTime::getBaseTime()
 
 
 /**
+ * Return this time as a UTC timestamp (adjusted for
+ * the timezone offset);
+ *
+ * @return
+ */
+int64_t RexxDateTime::getUTCBaseTime()
+{
+    return getBaseTime() + timeZoneOffset;
+}
+
+
+/**
  * Calculate the basetime, returned as the number of seconds
  * since 00:00:00.000000 on 01 Jan 1970.  The basetime is
  * calculated using the same Gregorian calendar system used to
@@ -704,7 +716,25 @@ bool RexxDateTime::setMinutes(wholenumber_t m)
     seconds = 0;
     microseconds = 0;
     return true;
+}
 
+
+/**
+ * Adjust the timestamp to a new timezone offset.
+ *
+ * @param o      The offset value (in microseconds)
+ *
+ * @return true if the time was set properly.  false if the
+ *         value was invalid.
+ */
+bool RexxDateTime::adjustTimeZone(wholenumber_t o)
+{
+    // we set the time using a UTC time adjusted by the offset,
+    int64_t base = getUTCBaseTime();
+    setBaseTime(base - o);
+    // then set the offset afterward
+    timeZoneOffset = o;
+    return true;
 }
 
 
@@ -1320,4 +1350,16 @@ void RexxDateTime::formatNormalTime(char *buffer)
 void RexxDateTime::formatSeconds(char *buffer)
 {
     sprintf(buffer, "%u", (hours * MINUTES_IN_HOUR + minutes) * SECONDS_IN_MINUTE + seconds);
+}
+
+
+/**
+ * Format a the time zone offset value
+ *
+ * @param buffer The target buffer for the output.
+ */
+void RexxDateTime::formatTimeZone(char *buffer)
+{
+    // the time zone is a sized value
+    sprintf(buffer, "%d", timeZoneOffset);
 }
