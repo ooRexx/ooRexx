@@ -71,13 +71,6 @@ void RexxEntry SetTrace(RexxInstance *c, logical_t setting)
     InstanceApiContext context(c);
     context.instance->traceAllActivities(setting != 0);
 }
-
-
-logical_t RexxEntry CreateScriptContext(RexxInstance *c, RexxScriptContext **sc, RexxOption *o)
-{
-    return (logical_t)false;
-}
-
 END_EXTERN_C()
 
 
@@ -86,7 +79,6 @@ RexxInstanceInterface InterpreterInstance::interfaceVector =
     INSTANCE_INTERFACE_VERSION,
     Terminate,
     AttachThread,
-    CreateScriptContext,
     Halt,
     SetTrace,
 };

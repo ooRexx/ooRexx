@@ -124,13 +124,6 @@ typedef RexxInstance_ RexxInstance;
 typedef const struct RexxInstance_ *RexxInstance;
 #endif
 
-struct RexxScriptContext_;
-#ifdef __cplusplus
-typedef RexxScriptContext_ RexxScriptContext;
-#else
-typedef const struct RexxScriptContext_ *RexxScriptContext;
-#endif
-
 struct RexxThreadContext_;
 #ifdef __cplusplus
 typedef RexxThreadContext_ RexxThreadContext;
@@ -460,7 +453,6 @@ typedef struct
 
     void        (RexxEntry *Terminate)(RexxInstance *);
     logical_t   (RexxEntry *AttachThread)(RexxInstance *, RexxThreadContext **);
-    logical_t   (RexxEntry *CreateScriptContext)(RexxInstance *, RexxScriptContext **, RexxOption *);
     void        (RexxEntry *Halt)(RexxInstance *);
     void        (RexxEntry *SetTrace)(RexxInstance *, logical_t);
 } RexxInstanceInterface;
@@ -468,17 +460,6 @@ typedef struct
 #define THREAD_INTERFACE_VERSION 100
 
 BEGIN_EXTERN_C()
-
-typedef struct
-{
-    wholenumber_t interfaceVersion;    // The interface version identifier
-
-    void             (RexxEntry *DeleteContext)(RexxScriptContext *);
-    void             (RexxEntry *AddVariableBinding)(CSTRING, ValueDescriptor *);
-    void             (RexxEntry *RemoveVariableBinding)(CSTRING);
-    RexxObjectPtr    (RexxEntry *GetVariableValue)(CSTRING);
-} RexxScriptInterface;
-
 
 typedef struct
 {
@@ -623,10 +604,6 @@ typedef struct
     void             (RexxEntry *DecodeConditionInfo)(RexxThreadContext *, RexxDirectoryObject, RexxCondition *);
     void             (RexxEntry *ClearCondition)(RexxThreadContext *);
 
-    void             (RexxEntry *AddScript)(RexxScriptContext *, CSTRING, CSTRING, size_t);
-    void             (RexxEntry *RunScript)(RexxScriptContext *, CSTRING, CSTRING, size_t, wholenumber_t, ValueDescriptor *);
-    void             (RexxEntry *CallScript)(RexxScriptContext *, CSTRING, wholenumber_t, ValueDescriptor *);
-
     RexxObjectPtr    RexxNil;
     RexxObjectPtr    RexxTrue;
     RexxObjectPtr    RexxFalse;
@@ -706,10 +683,6 @@ struct RexxInstance_
     {
         return functions->AttachThread(this, tc);
     }
-    logical_t CreateScriptContext(RexxScriptContext **sc, RexxOption *ro)
-    {
-        return functions->CreateScriptContext(this, sc, ro);
-    }
     void Halt()
     {
         functions->Halt(this);
@@ -718,15 +691,6 @@ struct RexxInstance_
     {
         functions->SetTrace(this, s);
     }
-#endif
-};
-
-
-struct RexxScriptContext_
-{
-    RexxInstance *instance;             // the owning instance
-    RexxScriptInterface *functions;     // the interface function vector
-#ifdef __cplusplus
 #endif
 };
 
