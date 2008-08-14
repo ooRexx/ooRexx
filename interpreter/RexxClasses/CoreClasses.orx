@@ -2032,27 +2032,29 @@ Output:
 -- return the DateTime for the earliest time in the Rexx calendar system
 ::METHOD minDate class
   use strict arg
-  return self~new(1, 1, 1)
+  -- this is returned in utc
+  return self~new(1, 1, 1, 0)
 
 -- return the DateTime for the end of the supported Rexx calendar system
 ::METHOD maxDate class
   use strict arg
-  return self~new(9999, 12, 31, 23, 59, 59, 999999)
+  -- this is returned in UTC
+  return self~new(9999, 12, 31, 23, 59, 59, 999999, 0)
 
 -- return a DateTime object for today's date, and a time
 -- of 00:00:0).000000
 ::METHOD today class
-  use strict arg
+  use strict arg, offset=(time('O'))
   -- just grab the date in standard format and convert
-  return self~fromStandardDate(date('s'))
+  return self~fromStandardDate(date('s'),, offset)
 
 -- Create a DateTime object from a Normal date string.  An optional
 -- separator character can be specified.
 ::METHOD fromNormalDate class
-  use strict arg date, sep = (" ")
+  use strict arg date, sep = (" "), offset=(time('O'))
 
   signal on syntax
-  return self~new(date('F', date, 'N', , sep))
+  return self~new(date('F', date, 'N', , sep), offset)
 
   syntax:
   raise syntax 88.918 array("date", date)
@@ -2061,9 +2063,9 @@ Output:
 -- Create a DateTime object from a European date string.  An optional
 -- separator character can be specified.
 ::METHOD fromEuropeanDate class
-  use strict arg date, sep = ("/")
+  use strict arg date, sep = ("/"), offset=(time('O'))
   signal on syntax
-  return self~new(date('F', date, 'E', , sep))
+  return self~new(date('F', date, 'E', , sep), offset)
 
   syntax:
   raise syntax 88.918 array("date", date)
@@ -2072,9 +2074,9 @@ Output:
 -- Create a DateTime object from an Ordered date string.  An optional
 -- separator character can be specified.
 ::METHOD fromOrderedDate class
-  use strict arg date, sep = ("/")
+  use strict arg date, sep = ("/"), offset=(time('O'))
   signal on syntax
-  return self~new(date('F', date, 'O', , sep))
+  return self~new(date('F', date, 'O', , sep), offset)
 
   syntax:
   raise syntax 88.918 array("date", date)
@@ -2083,9 +2085,9 @@ Output:
 -- Create a DateTime object from a Standard date string.  An optional
 -- separator character can be specified.
 ::METHOD fromStandardDate class
-  use strict arg date, sep = ("")
+  use strict arg date, sep = (""), offset=(time('O'))
   signal on syntax
-  return self~new(date('F', date, 'S', , sep))
+  return self~new(date('F', date, 'S', , sep), offset)
 
   syntax:
   raise syntax 88.918 array("date", date)
@@ -2094,9 +2096,9 @@ Output:
 -- Create a DateTime object from a Usa date string.  An optional
 -- separator character can be specified.
 ::METHOD fromUsaDate class
-  use strict arg date, sep = ("/")
+  use strict arg date, sep = ("/"), offset=(time('O'))
   signal on syntax
-  return self~new(date('F', date, 'U', , sep))
+  return self~new(date('F', date, 'U', , sep), offset)
 
   syntax:
   raise syntax 88.918 array("date", date)
@@ -2104,9 +2106,9 @@ Output:
 
 -- Create a DateTime object from a Normal time string.
 ::METHOD fromNormalTime class
-  use strict arg time
+  use strict arg time, offset=(time('O'))
   signal on syntax
-  return self~new(time('F', time, 'N'))
+  return self~new(time('F', time, 'N'), offset)
 
   syntax:
   raise syntax 88.918 array("time", time)
@@ -2114,18 +2116,18 @@ Output:
 
 -- Create a DateTime object from a Civil time string.
 ::METHOD fromCivilTime class
-  use strict arg time
+  use strict arg time, offset=(time('O'))
   signal on syntax
-  return self~new(time('F', time, 'C'))
+  return self~new(time('F', time, 'C'), offset)
 
   syntax:
   raise syntax 88.918 array("time", time)
 
 -- Create a DateTime object from a Long time string.
 ::METHOD fromLongTime class
-  use strict arg time
+  use strict arg time, offset=(time('O'))
   signal on syntax
-  return self~new(time('F', time, 'L'))
+  return self~new(time('F', time, 'L'), offset)
 
   syntax:
   raise syntax 88.918 array("time", time)
@@ -2133,12 +2135,12 @@ Output:
 
 -- Create a DateTime object from a Iso date/time string.
 ::METHOD fromIsoDate class
-  use strict arg time
+  use strict arg time, offset=(time('O'))
   parse var time date 'T' time
   numeric digits 18
 
   signal on syntax
-  return self~new(date('F', date, 'S',,"-") + time("F", time, "L"))
+  return self~new(date('F', date, 'S',,"-") + time("F", time, "L"), offset)
 
   syntax:
   raise syntax 88.918 array("date", date)
@@ -2146,9 +2148,9 @@ Output:
 
 -- Create a DateTime object from Unix Ticks value
 ::METHOD fromTicks class
-  use strict arg date
+  use strict arg date, offset=(time('O'))
   signal on syntax
-  return self~new(date('F', date, 'T'))
+  return self~new(date('F', date, 'T'), offset)
 
   syntax:
   raise syntax 88.918 array("ticks", date)
@@ -2156,9 +2158,9 @@ Output:
 
 -- Create a DateTime object from a basedate value
 ::METHOD fromBaseDate class
-  use strict arg date
+  use strict arg date, offset=(time('O'))
   signal on syntax
-  return self~new(date('F', date, 'B'))
+  return self~new(date('F', date, 'B'), offset)
 
   syntax:
   raise syntax 88.918 array("date", date)
@@ -2166,42 +2168,61 @@ Output:
 
 -- initialize a DateTime instance.  There are multiple forms of this:
 --
--- init(fulltime)
+-- init(fulltime<,offset>)
 --      input is a full time number such as returned from date('f')
--- init(year, month, day)
+-- init(year, month, day<,offset>)
 --      initialize from a year/month/day value.  The time will be set to
 --      00:00:00.000000 of the current date
--- init(year, month, day, hours, minutes, seconds, microseconds)
+-- init(year, month, day, hours, minutes, seconds, microseconds<,offset>)
 --      initialize from a fully specified time specification.  The microseconds
 --      are optional and default to zero.
 ::METHOD init
-  expose timestamp
-
   numeric digits 18    -- need higher digits for time calculations
 
+  argCount = arg()
+
   select
-      when arg() == 0 then do
-          timestamp = date('Full')    -- no arguments, just use the current time
+      when argCount == 0 then do
+          -- no arguments, use current time and local timezone offset
+          self~setTimeStamp(date('Full'), time('O'))
       end
-      when arg() == 1 then do    -- just create from a microseconds value
-          use strict arg timestamp
+      when arg() <= 2 then do    -- just create from a microseconds value
+          use strict arg timestamp, offset=(time('O'))
           -- seems silly, but this validates the time
-          timestamp = date('f', timestamp, 'f')
+          self~setTimeStamp(date('f', timestamp, 'f'), offset)
       end
-      when arg() <= 3 then do
+      when arg() <= 4 then do
           -- year month day to microseconds value
-          use strict arg year, month, day
+          use strict arg year, month, day, offset=(time('O'))
 
           -- format into a convertable date
           timestamp = self~convertDate(year, month, day)
+          self~setTimeStamp(self~convertDate(year, month, day), offset)
       end
       -- only other format is everything, and only the microseconds are optional.
       otherwise
           -- starting with year, month, day, hours, minutes, seconds
-          use strict arg year, month, day, hours, minutes, seconds, usecs = 0
+          use strict arg year, month, day, hours, minutes, seconds, usecs = 0, offset=(time('O'))
 
           timestamp = self~convertDate(year, month, day) + self~convertTime(hours, minutes, seconds, usecs)
+          self~setTimeStamp(timestamp, offset)
   end
+
+-- private method to adjust the date's timestamp and timezone information during construction
+::METHOD setTimeStamp private
+  expose utctimestamp timestamp offset
+  use arg timestamp, offset
+
+  numeric digits 18
+  -- if this is a timespan, then grab the number of microseconds in the
+  -- span, retaining the sign
+  if offset~isa(.TimeSpan) then
+      offset = offset~totalMicroseconds
+  else
+     -- must be a whole number
+     .argUtil~validateWhole("offset", offset, 18)
+  -- adjust the internal timestamp back to UTC
+  utctimestamp = timestamp - offset
 
 -- private utility method to get a full date value from year/month/day.
 ::METHOD convertDate private
@@ -2228,16 +2249,16 @@ Output:
 
 -- perform a sort comparison of two datetimes
 ::METHOD compareTo
-  expose timestamp
+  expose utcTimeStamp
 
   use strict arg other
 
   .ArgUtil~validateClass("other", other, .DateTime)
 
-  othertime = other~fullDate
+  othertime = other~utcDate
 
   -- just pick up the sign value of the subtraction
-  return (timestamp - othertime)~sign
+  return (utcTimeStamp - othertime)~sign
 
 -- return the year value of the datetime.
 ::METHOD year
@@ -2392,7 +2413,7 @@ Output:
 --
 -- Prefix minus has no meaning, and will result in an error.
 ::METHOD "-"
-  expose timestamp
+  expose timeStamp utcTimeStamp
 
   numeric digits 18     -- need this to do math on the value
 
@@ -2411,7 +2432,8 @@ Output:
   -- subtracting two dates
   else if other~isa(.datetime) then do
       -- perform the math using the big numbers...the result may be negative
-      return .timespan~new(timestamp - other~fullDate)
+      -- we also use the UTC time, since these might represent different timezones
+      return .timespan~new(utcTimeStamp - other~utcDate)
   end
 
   raise syntax 88.914 array("subtractor", "DateTime or TimeSpan")
@@ -2419,7 +2441,7 @@ Output:
 
 -- add a datetime instance to a timespan instance, returning a new datetime.
 ::METHOD "+"
-  expose timestamp
+  expose timestamp offset
 
   numeric digits 18     -- need this to do math on the value
 
@@ -2427,7 +2449,7 @@ Output:
   if arg() == 0 then do
       -- this is pretty meaningless, but less so than
       -- prefix -.  We'll just make this a noop and return a copy of ourselves
-      return self~class~new(timestamp)
+      return self~class~new(timestamp, offset)
   end
 
   -- ok, actually addition.  We require a timespan.  Trying to add
@@ -2438,8 +2460,8 @@ Output:
   -- When addition occurs between two timespaces, the result is a timespan.
   -- When adding to a datatime, the result is a datetime.
   if other~isa(.timespan) then do
-      -- combine the two intervals
-      return self~class~new(timestamp + other~totalMicroseconds)
+      -- combine the two intervals, using the same timezone value
+      return self~class~new(timestamp + other~totalMicroseconds, offset)
   end
 
   raise syntax 93.948 array(1, "TimeSpan")
@@ -2450,7 +2472,7 @@ Output:
 -- will be February 29th in a non-leap year, the day is rolled back to the
 -- 28th.
 ::METHOD addYears
-  expose timestamp
+  expose timestamp offset
   use strict arg years
 
   .ArgUtil~validateWhole("years", years)
@@ -2479,38 +2501,38 @@ Output:
   end
 
   -- now adjust that component by the corresponding years
-  newDate = self~class~new(year, month, day)
+  newDate = self~class~new(year, month, day, offset)
 
   -- and finally recombine with the time to get the adjusted timestamp
   return newDate + dayoffset
 
 -- Add a number of 7-day units to the datetime, returning a new instance
 ::METHOD addWeeks
-  expose timestamp
+  expose timestamp offset
   use strict arg weeks
 
   .ArgUtil~validateNumber("weeks", weeks)
 
   numeric digits 18
   -- return a new instance of DateTime
-  return self~class~new(trunc(timestamp + weeks * (7 * 24 * 3600 * 1000000)))
+  return self~class~new(trunc(timestamp + weeks * (7 * 24 * 3600 * 1000000)), offset)
 
 
 -- Add a number of days to a datetime, returning a new datetime instance.
 ::METHOD addDays
-  expose timestamp
+  expose timestamp offset
   use strict arg days
 
   .ArgUtil~validateNumber("days", days)
 
   numeric digits 18
   -- return a new instance of DateTime
-  return self~class~new(trunc(timestamp + days * (24 * 3600 * 1000000)))
+  return self~class~new(trunc(timestamp + days * (24 * 3600 * 1000000)), offset)
 
 
 -- Add a number of hours to a datetime, returning a new datetime instance.
 ::METHOD addHours
-  expose timestamp
+  expose timestamp offset
   use strict arg hours
 
   .ArgUtil~validateNumber("hours", hours)
@@ -2520,12 +2542,12 @@ Output:
   -- return a new instance of DateTime.
   -- NB, we trunk the value, as it's possible to add non-whole numbers of
   -- these units.
-  return self~class~new(trunc(timestamp + (hours * (3600 * 1000000))))
+  return self~class~new(trunc(timestamp + (hours * (3600 * 1000000))), offset)
 
 
 -- Add a number of minutes to a datetime, returning a new datetime instance.
 ::METHOD addMinutes
-  expose timestamp
+  expose timestamp offset
   use strict arg minutes
 
   .ArgUtil~validateNumber("minutes", minutes)
@@ -2535,12 +2557,12 @@ Output:
   -- return a new instance of DateTime
   -- NB, we trunk the value, as it's possible to add non-whole numbers of
   -- these units.
-  return self~class~new(trunc(timestamp + (minutes * (60 * 1000000))))
+  return self~class~new(trunc(timestamp + (minutes * (60 * 1000000))), offset)
 
 
 -- Add a number of seconds to a datetime, returning a new datetime instance.
 ::METHOD addSeconds
-  expose timestamp
+  expose timestamp offset
   use strict arg seconds
 
   .ArgUtil~validateNumber("seconds", seconds)
@@ -2550,12 +2572,12 @@ Output:
   -- return a new instance of DateTime
   -- NB, we trunk the value, as it's possible to add non-whole numbers of
   -- these units.
-  return self~class~new(trunc(timestamp + (seconds * 1000000)))
+  return self~class~new(trunc(timestamp + (seconds * 1000000)), offset)
 
 
 -- Add a number of microseconds to a datetime, returning a new datetime instance.
 ::METHOD addMicroseconds
-  expose timestamp
+  expose timestamp offset
   use strict arg usecs
 
   numeric digits 18
@@ -2563,14 +2585,34 @@ Output:
   -- return a new instance of DateTime
   -- NB, we trunk the value, as it's possible to add non-whole numbers of
   -- these units.
-  return self~class~new(trunc(timestamp + usecs))
-
+  return self~class~new(trunc(timestamp + usecs), offset)
 
 -- Format the datetime into ISO format, yyyy-mm-ddT00:00:00.000000
 ::METHOD isoDate
   expose timestamp
   use strict arg
   return date("S",timestamp,"F","-")"T"time("L", timestamp, "F")
+
+-- Format the datetime into full ISO format, yyyy-mm-ddT00:00:00.000000+hhmm
+::METHOD utcIsoDate
+  expose utcTimeStamp offset
+  use strict arg
+  base = date("S",utcTimeStamp,"F","-")"T"time("L", utcTimeStamp, "F")
+  if offset = 0 then
+     return base||'Z'  -- this is Zulu time
+  numeric digits 18
+  -- we only append hours and minutes, so pull that out
+  minutes = offset / (1000000 * 60)
+  if minutes < 0 then do
+     sign = '-'
+     minutes = -minutes
+  end
+  else sign = '+'
+
+  hours = minutes%60
+  minutes = minutes//60
+  --this returns the padded value
+  return base||sign||right(hours, 2, '0')||right(minutes, 2, '0')
 
 -- Return the basedate for this datetime instance.
 ::METHOD baseDate
@@ -2673,6 +2715,33 @@ Output:
   expose timestamp
   return timestamp
 
+-- return the UTC timestamp in fulldate format
+::METHOD utcDate
+  expose utcTimeStamp
+  return utcTimeStamp
+
+::METHOD toTimeZone
+  expose utcTimeStamp
+  -- default offset is for UTC
+  use strict arg offset=0
+
+  numeric digits 18
+  -- if this is a timespan, then grab the number of microseconds in the
+  -- span, retaining the sign
+  if offset~isa(.TimeSpan) then
+      offset = offset~totalMicroseconds
+  else
+     -- must be a whole number
+     .argUtil~validateWhole("offset", offset, 18)
+  -- we create a new DateTime by converting the UTC time to
+  -- the target timezone, then create a new object using that offset
+  return self~class~new(utcTimeStamp + offset, offset)
+
+-- return the time zone offset, as a TimeSpan object
+::METHOD offset
+  expose offset
+  return .TimeSpan~new(offset)
+
 -- Return the Unix Ticks value for this timestamp.
 ::METHOD ticks
   expose timestamp
@@ -2683,7 +2752,7 @@ Output:
 -- 00:00:00.000000
 ::METHOD date
   use strict arg
-  return self~class~new(date('F', self~standardDate, 'S'))
+  return self~class~new(date('F', self~standardDate, 'S'), offset)
 
 -- Returns the time of day as a TimeSpan object with the interval
 -- from 00:00:00.000000 of the datetime day.
@@ -3289,7 +3358,7 @@ Output:
   end
 
 
-::CLASS "ArgUtil" public
+::CLASS 'ArgUtil' public
 ::METHOD validateNumber class
   use strict arg name, number
   if \number~dataType('Number') then do
@@ -3300,6 +3369,7 @@ Output:
 -- 907 message for all error conditions to be most specific.
 ::METHOD validateNumberRange class
   use strict arg name, number, min, max
+  numeric digits digits
   -- validate the numeric part first
   if \number~dataType('Number') then do
       raise syntax 88.907 array(name, min, max, number)
@@ -3313,7 +3383,8 @@ Output:
 -- Validates the argument is a whole number and is in range.  This gives the
 -- 907 message for all error conditions to be most specific.
 ::METHOD validateWholeRange class
-  use strict arg name, number, min, max
+  use strict arg name, number, min, max, digits=(digits())
+  numeric digits digits
   -- validate the numeric part first
   if \number~dataType('Whole') then do
       raise syntax 88.907 array(name, min, max, number)
@@ -3324,14 +3395,16 @@ Output:
   end
 
 ::METHOD validateWhole class
-  use strict arg name, number
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
   if \number~dataType('Whole') then do
       raise syntax 88.903 array(name, number)
   end
 
 -- Note, this uses the 904 message for both, which is most specific
 ::METHOD validateNonNegative class
-  use strict arg name, number
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
   -- first validate whole number status
   if \number~dataType('Whole') then do
       raise syntax 88.904 array(name, number)
@@ -3342,7 +3415,8 @@ Output:
   end
 
 ::METHOD validatePositive class
-  use strict arg name, number
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
   -- first validate whole number status
   if \number~dataType('Whole') then do
       raise syntax 88.905 array(name, number)
@@ -3355,7 +3429,8 @@ Output:
 -- validate a length parameter.  This is essentially the same
 -- as validateNonNegative, but a more specific message.
 ::METHOD validateLength class
-  use strict arg name, number
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
   -- first validate whole number status
   if \number~dataType('Whole') then do
       raise syntax 88.911 array(name, number)
@@ -3368,7 +3443,8 @@ Output:
 -- validate a position parameter.  This is essentially the same
 -- as validatePosition, but a more specific message.
 ::METHOD validatePosition class
-  use strict arg name, number
+  use strict arg name, number, digits=(digits())
+  numeric digits digits
   -- first validate whole number status
   if \number~dataType('Whole') then do
       raise syntax 88.912 array(name, number)
