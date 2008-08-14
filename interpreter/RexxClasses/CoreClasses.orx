@@ -88,6 +88,7 @@ supplier_methods~put(.methods~supplier_supplier, 'SUPPLIER')
 .environment~setentry('COLUMNCOMPARATOR', .columncomparator)
 .environment~setentry('CASELESSCOLUMNCOMPARATOR', .caselesscolumncomparator)
 .environment~setentry('INVERTINGCOMPARATOR', .invertingcomparator)
+.environment~setentry('ORDERABLE', .orderable)
 
 /* Call the system dependant routine to define addition methods */
 call 'SystemMethods.orx'           /* case sensitive           */
@@ -2027,7 +2028,7 @@ Output:
 
 
 
-::CLASS 'DateTime' public inherit Comparable
+::CLASS 'DateTime' public inherit Comparable Orderable
 
 -- return the DateTime for the earliest time in the Rexx calendar system
 ::METHOD minDate class
@@ -2260,6 +2261,7 @@ Output:
 
   othertime = other~utcDate
 
+  numeric digits 18
   -- just pick up the sign value of the subtraction
   return (utcTimeStamp - othertime)~sign
 
@@ -2323,92 +2325,6 @@ Output:
 ::METHOD hashCode
   expose timestamp
   return timestamp~hashcode
-
--- compare two DateTime instances
-::METHOD "=="
-  use strict arg other
-
-  if \other~isa(self~class) then do
-      return .false
-  end
-
-  return self~compareTo(other) == 0
-
-
--- compare two DateTime instances
-::METHOD "\=="
-  use strict arg other
-
-  if \other~isa(self~class) then do
-      return .true
-  end
-
-  return self~compareTo(other) \== 0
-
-::METHOD "="
-  -- this is equivalent of "=="
-  forward message("==")
-
-::METHOD "\="
-  -- this is equivalent of "\=="
-  forward message("\==")
-
-::METHOD "<>"
-  -- this is equivalent of "\=="
-  forward message("\==")
-
-::METHOD "><"
-  -- this is equivalent of "\=="
-  forward message("\==")
-
-::METHOD "<"
-  use strict arg other
-  return self~compareTo(other) < 0
-
-::METHOD "<="
-  use strict arg other
-  return self~compareTo(other) <= 0
-
-::METHOD "\>"
-  use strict arg other
-  return self~compareTo(other) <= 0
-
-::METHOD "<<"
-  use strict arg other
-  return self~compareTo(other) < 0
-
-::METHOD "<<="
-  use strict arg other
-  return self~compareTo(other) <= 0
-
-::METHOD "\>>"
-  use strict arg other
-  return self~compareTo(other) <= 0
-
-::METHOD ">"
-  use strict arg other
-  return self~compareTo(other) > 0
-
-::METHOD ">="
-  use strict arg other
-  return self~compareTo(other) >= 0
-
-::METHOD "\<"
-  use strict arg other
-  return self~compareTo(other) >= 0
-
-::METHOD ">>"
-  use strict arg other
-  return self~compareTo(other) > 0
-
-::METHOD ">>="
-  use strict arg other
-  return self~compareTo(other) >= 0
-
-::METHOD "\<<"
-  use strict arg other
-  return self~compareTo(other) >= 0
-
 
 -- perform subtraction between two datetime objects or a datetime
 -- object and a timespan object.  The original object is left unchanged
@@ -2811,7 +2727,7 @@ Output:
 
 -- TimeSpan represents an interval of time.  Timespans are created by subtracting
 -- two DateTime objects.  They also can added to DateTime objects.
-::CLASS 'TimeSpan' public inherit Comparable
+::CLASS 'TimeSpan' public inherit Comparable Orderable
 
 -- Create a timespan object representing a number of days
 ::METHOD fromDays class
@@ -2942,6 +2858,7 @@ Output:
 
   .ArgUtil~validateClass("other", other, .TimeSpan)
 
+  numeric digits 18
   othertime = other~totalMicroseconds
 
   -- now produce a compare result based on the relative values.
@@ -2953,9 +2870,7 @@ Output:
   else if timestamp > othertime then do
       return 1
   end
-
   return 0
-
 
 -- return a timespan instance as a positive value
 ::METHOD duration
@@ -3052,91 +2967,6 @@ Output:
 ::METHOD hashCode
   expose timestamp
   return timestamp~hashcode
-
--- comparison methods for TimeSpan instances
-::METHOD "=="
-  use strict arg other
-
-  if \other~isa(.TimeSpan) then do
-      return .false
-  end
-
-  return self~compareTo(other) == 0
-
-
-::METHOD "\=="
-  use strict arg other
-
-  if \other~isa(.TimeSpan) then do
-      return .true
-  end
-
-  return self~compareTo(other) \== 0
-
-::METHOD "="
-  -- this is equivalent of "=="
-  forward message("==")
-
-::METHOD "\="
-  -- this is equivalent of "\=="
-  forward message("\==")
-
-::METHOD "<>"
-  -- this is equivalent of "\=="
-  forward message("\==")
-
-::METHOD "><"
-  -- this is equivalent of "\=="
-  forward message("\==")
-
-::METHOD "<"
-  use strict arg other
-  return self~compareTo(other) < 0
-
-::METHOD "<="
-  use strict arg other
-  return self~compareTo(other) <= 0
-
-::METHOD "\>"
-  use strict arg other
-  return self~compareTo(other) <= 0
-
-::METHOD "<<"
-  use strict arg other
-  return self~compareTo(other) < 0
-
-::METHOD "<<="
-  use strict arg other
-  return self~compareTo(other) <= 0
-
-::METHOD "\>>"
-  use strict arg other
-  return self~compareTo(other) <= 0
-
-::METHOD ">"
-  use strict arg other
-  return self~compareTo(other) > 0
-
-::METHOD ">="
-  use strict arg other
-  return self~compareTo(other) >= 0
-
-::METHOD "\<"
-  use strict arg other
-  return self~compareTo(other) >= 0
-
-::METHOD ">>"
-  use strict arg other
-  return self~compareTo(other) > 0
-
-::METHOD ">>="
-  use strict arg other
-  return self~compareTo(other) >= 0
-
-::METHOD "\<<"
-  use strict arg other
-  return self~compareTo(other) >= 0
-
 
 -- perform timespan subtraction.  If this is a prefix "-",
 -- then the timespan is just negated.  Otherwise, the other
@@ -3508,3 +3338,101 @@ Output:
   return
 
 syntax: raise propagate
+
+
+
+-- A mixin class for easily adding comparison methods to a
+-- class
+::CLASS 'Orderable' PUBLIC MIXINCLASS Object
+
+-- perform an ordered comparison of two objects
+::METHOD compareTo ABSTRACT
+
+
+-- compare two instances
+-- == and \== don't raise an error if these
+-- are not of the same type, they will apply object
+-- comparison rules for that.
+::METHOD "=="
+  use strict arg other
+
+  if \other~isa(self~class) then do
+      return .false
+  end
+
+  return self~compareTo(other) == 0
+
+
+-- compare two instances
+::METHOD "\=="
+  use strict arg other
+
+  if \other~isa(self~class) then do
+      return .true
+  end
+
+  return self~compareTo(other) \== 0
+
+::METHOD "="
+  -- this is equivalent of "=="
+  forward message("==")
+
+::METHOD "\="
+  -- this is equivalent of "\=="
+  forward message("\==")
+
+::METHOD "<>"
+  -- this is equivalent of "\=="
+  forward message("\==")
+
+::METHOD "><"
+  -- this is equivalent of "\=="
+  forward message("\==")
+
+::METHOD "<"
+  use strict arg other
+  return self~compareTo(other) < 0
+
+::METHOD "<="
+  use strict arg other
+  return self~compareTo(other) <= 0
+
+::METHOD "\>"
+  use strict arg other
+  return self~compareTo(other) <= 0
+
+::METHOD "<<"
+  use strict arg other
+  return self~compareTo(other) < 0
+
+::METHOD "<<="
+  use strict arg other
+  return self~compareTo(other) <= 0
+
+::METHOD "\>>"
+  use strict arg other
+  return self~compareTo(other) <= 0
+
+::METHOD ">"
+  use strict arg other
+  return self~compareTo(other) > 0
+
+::METHOD ">="
+  use strict arg other
+  return self~compareTo(other) >= 0
+
+::METHOD "\<"
+  use strict arg other
+  return self~compareTo(other) >= 0
+
+::METHOD ">>"
+  use strict arg other
+  return self~compareTo(other) > 0
+
+::METHOD ">>="
+  use strict arg other
+  return self~compareTo(other) >= 0
+
+::METHOD "\<<"
+  use strict arg other
+  return self~compareTo(other) >= 0
