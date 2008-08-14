@@ -2044,14 +2044,14 @@ Output:
 -- return a DateTime object for today's date, and a time
 -- of 00:00:0).000000
 ::METHOD today class
-  use strict arg, offset=(time('O'))
+  use strict arg, offset=(time('O')/60000000)
   -- just grab the date in standard format and convert
   return self~fromStandardDate(date('s'),, offset)
 
 -- Create a DateTime object from a Normal date string.  An optional
 -- separator character can be specified.
 ::METHOD fromNormalDate class
-  use strict arg date, sep = (" "), offset=(time('O'))
+  use strict arg date, sep = (" "), offset=(time('O')/60000000)
 
   signal on syntax
   return self~new(date('F', date, 'N', , sep), offset)
@@ -2063,7 +2063,7 @@ Output:
 -- Create a DateTime object from a European date string.  An optional
 -- separator character can be specified.
 ::METHOD fromEuropeanDate class
-  use strict arg date, sep = ("/"), offset=(time('O'))
+  use strict arg date, sep = ("/"), offset=(time('O')/60000000)
   signal on syntax
   return self~new(date('F', date, 'E', , sep), offset)
 
@@ -2074,7 +2074,7 @@ Output:
 -- Create a DateTime object from an Ordered date string.  An optional
 -- separator character can be specified.
 ::METHOD fromOrderedDate class
-  use strict arg date, sep = ("/"), offset=(time('O'))
+  use strict arg date, sep = ("/"), offset=(time('O')/60000000)
   signal on syntax
   return self~new(date('F', date, 'O', , sep), offset)
 
@@ -2085,7 +2085,7 @@ Output:
 -- Create a DateTime object from a Standard date string.  An optional
 -- separator character can be specified.
 ::METHOD fromStandardDate class
-  use strict arg date, sep = (""), offset=(time('O'))
+  use strict arg date, sep = (""), offset=(time('O')/60000000)
   signal on syntax
   return self~new(date('F', date, 'S', , sep), offset)
 
@@ -2096,7 +2096,7 @@ Output:
 -- Create a DateTime object from a Usa date string.  An optional
 -- separator character can be specified.
 ::METHOD fromUsaDate class
-  use strict arg date, sep = ("/"), offset=(time('O'))
+  use strict arg date, sep = ("/"), offset=(time('O')/60000000)
   signal on syntax
   return self~new(date('F', date, 'U', , sep), offset)
 
@@ -2106,7 +2106,7 @@ Output:
 
 -- Create a DateTime object from a Normal time string.
 ::METHOD fromNormalTime class
-  use strict arg time, offset=(time('O'))
+  use strict arg time, offset=(time('O')/60000000)
   signal on syntax
   return self~new(time('F', time, 'N'), offset)
 
@@ -2116,7 +2116,7 @@ Output:
 
 -- Create a DateTime object from a Civil time string.
 ::METHOD fromCivilTime class
-  use strict arg time, offset=(time('O'))
+  use strict arg time, offset=(time('O')/60000000)
   signal on syntax
   return self~new(time('F', time, 'C'), offset)
 
@@ -2125,7 +2125,7 @@ Output:
 
 -- Create a DateTime object from a Long time string.
 ::METHOD fromLongTime class
-  use strict arg time, offset=(time('O'))
+  use strict arg time, offset=(time('O')/60000000)
   signal on syntax
   return self~new(time('F', time, 'L'), offset)
 
@@ -2135,7 +2135,7 @@ Output:
 
 -- Create a DateTime object from a Iso date/time string.
 ::METHOD fromIsoDate class
-  use strict arg time, offset=(time('O'))
+  use strict arg time, offset=(time('O')/60000000)
   parse var time date 'T' time
   numeric digits 18
 
@@ -2148,7 +2148,7 @@ Output:
 
 -- Create a DateTime object from Unix Ticks value
 ::METHOD fromTicks class
-  use strict arg date, offset=(time('O'))
+  use strict arg date, offset=(time('O')/60000000)
   signal on syntax
   return self~new(date('F', date, 'T'), offset)
 
@@ -2158,7 +2158,7 @@ Output:
 
 -- Create a DateTime object from a basedate value
 ::METHOD fromBaseDate class
-  use strict arg date, offset=(time('O'))
+  use strict arg date, offset=(time('O')/60000000)
   signal on syntax
   return self~new(date('F', date, 'B'), offset)
 
@@ -2184,16 +2184,16 @@ Output:
   select
       when argCount == 0 then do
           -- no arguments, use current time and local timezone offset
-          self~setTimeStamp(date('Full'), time('O'))
+          self~setTimeStamp(date('Full'), time('O')/60000000)
       end
       when arg() <= 2 then do    -- just create from a microseconds value
-          use strict arg timestamp, offset=(time('O'))
+          use strict arg timestamp, offset=(time('O')/60000000)
           -- seems silly, but this validates the time
           self~setTimeStamp(date('f', timestamp, 'f'), offset)
       end
       when arg() <= 4 then do
           -- year month day to microseconds value
-          use strict arg year, month, day, offset=(time('O'))
+          use strict arg year, month, day, offset=(time('O')/60000000)
 
           -- format into a convertable date
           timestamp = self~convertDate(year, month, day)
@@ -2202,7 +2202,7 @@ Output:
       -- only other format is everything, and only the microseconds are optional.
       otherwise
           -- starting with year, month, day, hours, minutes, seconds
-          use strict arg year, month, day, hours, minutes, seconds, usecs = 0, offset=(time('O'))
+          use strict arg year, month, day, hours, minutes, seconds, usecs = 0, offset=(time('O')/60000000)
 
           timestamp = self~convertDate(year, month, day) + self~convertTime(hours, minutes, seconds, usecs)
           self~setTimeStamp(timestamp, offset)
@@ -2218,9 +2218,12 @@ Output:
   -- span, retaining the sign
   if offset~isa(.TimeSpan) then
       offset = offset~totalMicroseconds
-  else
+  else do
      -- must be a whole number
-     .argUtil~validateWhole("offset", offset, 18)
+     .argUtil~validateWhole("offset", offset)
+     -- we need to convert from minutes to microseconds
+     offset = offset * 60000000
+  end
   -- adjust the internal timestamp back to UTC
   utctimestamp = timestamp - offset
 
