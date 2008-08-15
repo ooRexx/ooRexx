@@ -92,7 +92,7 @@ bool SystemInterpreter::valueFunction(
             SetEnvironmentVariable((LPCTSTR)Name->getStringData(), NULL);
        else
             SetEnvironmentVariable((LPCTSTR)Name->getStringData(),
-                             (LPCTSTR)REQUIRED_STRING(NewValue,ARG_TWO)->getStringData());
+                             (LPCTSTR)stringArgument(NewValue,ARG_TWO)->getStringData());
     }
     return true;
   }

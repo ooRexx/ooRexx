@@ -559,7 +559,7 @@ RexxObject *RexxClass::defineMethod(
     }
     /* make sure there is at least one   */
     /* parameter                         */
-    method_name = REQUIRED_STRING(method_name, ARG_ONE)->upper();
+    method_name = stringArgument(method_name, ARG_ONE)->upper();
     if ( OREF_NULL == method_object)     /* 2nd arg omitted?                  */
     {
         /* Yes, remove all message with this */
@@ -650,7 +650,7 @@ RexxObject *RexxClass::deleteMethod(
         reportNomethod(lastMessageName(), this);
     }
     /* and that it can be a string        */
-    method_name = REQUIRED_STRING(method_name, ARG_ONE)->upper();
+    method_name = stringArgument(method_name, ARG_ONE)->upper();
     /* make a copy of the instance        */
     /* behaviour so any previous objects  */
     /* aren't enhanced                    */
@@ -673,7 +673,7 @@ RexxMethod *RexxClass::method(
 /*****************************************************************************/
 {
     /* make sure we have a proper name    */
-    method_name = REQUIRED_STRING(method_name, ARG_ONE)->upper();
+    method_name = stringArgument(method_name, ARG_ONE)->upper();
     RexxMethod *method_object = (RexxMethod *)this->instanceBehaviour->getMethodDictionary()->stringGet(method_name);
     /* check if it is in the mdict        */
     if ( OREF_NULL == method_object)
@@ -1445,7 +1445,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
         reportException(Error_Incorrect_method_minarg, IntegerOne);
     }
     RexxString *class_id = (RexxString *)args[0];    /* get the id parameter              */
-    class_id = REQUIRED_STRING(class_id, ARG_ONE);   /* and that it can be a string       */
+    class_id = stringArgument(class_id, ARG_ONE);   /* and that it can be a string       */
     /* get a copy of this class object   */
     RexxClass *new_class = (RexxClass *)this->clone();
 

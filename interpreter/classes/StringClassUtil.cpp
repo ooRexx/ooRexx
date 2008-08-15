@@ -106,7 +106,7 @@ char padArgument(
     RexxObject *argument,              /* method argument                   */
     size_t position )                  /* argument position                 */
 {
-    RexxString *parameter = (RexxString *)REQUIRED_STRING(argument, position);
+    RexxString *parameter = (RexxString *)stringArgument(argument, position);
     /* is the string only 1 character?   */
     if (parameter->getLength() != 1)
     {
@@ -128,7 +128,7 @@ char optionArgument(
     size_t position )                  /* argument position                 */
 {
     /* force option to string            */
-    RexxString *parameter = (RexxString *)REQUIRED_STRING(argument, position);
+    RexxString *parameter = (RexxString *)stringArgument(argument, position);
     /* return the first character        */
     return toupper(parameter->getChar(0));
 }

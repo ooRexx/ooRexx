@@ -130,7 +130,7 @@ RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInte
 RexxInteger *StringUtil::posRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart)
 {
     /* force needle to a string          */
-    needle = REQUIRED_STRING(needle, ARG_ONE);
+    needle = stringArgument(needle, ARG_ONE);
     /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
     /* pass on to the primitive function */
@@ -200,7 +200,7 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
  */
 RexxInteger *StringUtil::lastPosRexx(const char *stringData, size_t haystackLen, RexxString  *needle, RexxInteger *_start)
 {
-    needle = REQUIRED_STRING(needle, ARG_ONE);
+    needle = stringArgument(needle, ARG_ONE);
     // find out where to start the search. The default is at the very end.
     size_t startPos = optionalPositionArgument(_start, haystackLen, ARG_TWO);
     // now perform the actual search.
@@ -373,7 +373,7 @@ RexxArray *StringUtil::makearray(const char *start, size_t length, RexxString *s
     if (separator != OREF_NULL)
     {
         // make sure this is really a string value
-        separator = REQUIRED_STRING(separator, ARG_ONE);
+        separator = stringArgument(separator, ARG_ONE);
         sepData = separator->getStringData();
         sepSize = separator->getLength();
         checkCR = false;                 // if explicitly given, only use the given one

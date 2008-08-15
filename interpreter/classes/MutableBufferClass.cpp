@@ -273,7 +273,7 @@ RexxMutableBuffer *RexxMutableBuffer::append(RexxObject *obj)
 /* Function:  append to the mutable buffer                                    */
 /******************************************************************************/
 {
-    RexxString *string = REQUIRED_STRING(obj, ARG_ONE);
+    RexxString *string = stringArgument(obj, ARG_ONE);
     ProtectedObject p(string);
     // make sure we have enough room
     ensureCapacity(string->getLength());
@@ -290,7 +290,7 @@ RexxMutableBuffer *RexxMutableBuffer::insert(RexxObject *str, RexxObject *pos, R
 /******************************************************************************/
 {
     // force this into string form
-    RexxString * string = REQUIRED_STRING(str, ARG_ONE);
+    RexxString * string = stringArgument(str, ARG_ONE);
 
     // we're using optional length because 0 is valid for insert.
     size_t begin = optionalNonNegative(pos, 0, ARG_TWO);

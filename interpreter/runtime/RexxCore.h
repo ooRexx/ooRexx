@@ -320,7 +320,7 @@ inline RexxString *REQUEST_STRING(RexxObject *object)
 /* The next routine is specifically for REQUESTing a STRING needed as a method*/
 /* argument.  This raises an error if the object cannot be converted to a     */
 /* string value.                                                              */
-inline RexxString * REQUIRED_STRING(RexxObject *object, size_t position)
+inline RexxString * stringArgument(RexxObject *object, size_t position)
 {
     if (object == OREF_NULL)             /* missing argument?                 */
     {
@@ -330,15 +330,32 @@ inline RexxString * REQUIRED_STRING(RexxObject *object, size_t position)
     return object->requiredString(position);
 }
 
-inline RexxString *stringArgument(RexxObject *s, size_t p)
+
+/* The next routine is specifically for REQUESTing a STRING needed as a method*/
+/* argument.  This raises an error if the object cannot be converted to a     */
+/* string value.                                                              */
+inline RexxString * stringArgument(RexxObject *object, const char *name)
 {
-    return REQUIRED_STRING(s, p);
+    if (object == OREF_NULL)             /* missing argument?                 */
+    {
+        reportException(Error_Invalid_argument_noarg, name);
+    }
+                                           /* force to a string value           */
+    return object->requiredString(name);
 }
+
 
 inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, size_t p)
 {
     return (o == OREF_NULL ? d : stringArgument(o, p));
 }
+
+
+inline RexxString *optionalStringArgument(RexxObject *o, RexxString *d, const char *p)
+{
+    return (o == OREF_NULL ? d : stringArgument(o, p));
+}
+
 
 // resides in the string class util
 size_t lengthArgument(RexxObject *o, size_t p);
@@ -383,7 +400,7 @@ inline size_t optionalPositive(RexxObject *o, size_t d, size_t p)
 /* The next routine is specifically for REQUESTing an ARRAY needed as a method*/
 /* argument.  This raises an error if the object cannot be converted to a     */
 /* single dimensional array item                                              */
-inline RexxArray * REQUIRED_ARRAY(RexxObject *object, size_t position)
+inline RexxArray *arrayArgument(RexxObject *object, size_t position)
 {
     if (object == OREF_NULL)             /* missing argument?                 */
     {
@@ -401,7 +418,7 @@ inline RexxArray * REQUIRED_ARRAY(RexxObject *object, size_t position)
 }
 
 
-inline RexxArray * REQUIRED_ARRAY(RexxObject *object, const char *name)
+inline RexxArray * arrayArgument(RexxObject *object, const char *name)
 {
     if (object == OREF_NULL)             /* missing argument?                 */
     {
@@ -423,21 +440,7 @@ inline RexxArray * REQUIRED_ARRAY(RexxObject *object, const char *name)
 /* The next routine is specifically for REQUESTing a STRING needed as a method*/
 /* argument.  This raises an error if the object cannot be converted to a     */
 /* string value.                                                              */
-inline RexxString * REQUIRED_STRING(RexxObject *object, const char *name)
-{
-    if (object == OREF_NULL)             /* missing argument?                 */
-    {
-        reportException(Error_Invalid_argument_noarg, name);
-    }
-                                           /* force to a string value           */
-    return object->requiredString(name);
-}
-
-
-/* The next routine is specifically for REQUESTing a STRING needed as a method*/
-/* argument.  This raises an error if the object cannot be converted to a     */
-/* string value.                                                              */
-inline void REQUIRED_INSTANCE(RexxObject *object, RexxClass *clazz, const char *name)
+inline void classArgument(RexxObject *object, RexxClass *clazz, const char *name)
 {
     if (object == OREF_NULL)             /* missing argument?                 */
     {

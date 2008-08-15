@@ -2018,7 +2018,7 @@ RexxString *RexxString::newRexx(RexxObject **init_args, size_t argCount)
                                          /* break up the arguments            */
     RexxClass::processNewArgs(init_args, argCount, &init_args, &argCount, 1, (RexxObject **)&stringObj, NULL);
     /* force argument to string value    */
-    RexxString *string = (RexxString *)REQUIRED_STRING(stringObj, ARG_ONE);
+    RexxString *string = (RexxString *)stringArgument(stringObj, ARG_ONE);
     /* create a new string object        */
     string = new_string(string->getStringData(), string->getLength());
     string->setBehaviour(((RexxClass *)this)->getInstanceBehaviour());

@@ -144,7 +144,7 @@ bool SystemInterpreter::valueFunction(
     }
     else
     {
-    SetEnvironmentVariable(Name, REQUIRED_STRING(NewValue, ARG_TWO));
+    SetEnvironmentVariable(Name, stringArgument(NewValue, ARG_TWO));
     }
   }
   return true;

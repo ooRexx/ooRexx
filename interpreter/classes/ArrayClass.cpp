@@ -1292,7 +1292,7 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
     if (format != OREF_NULL)
     {
         // a string value is required here
-        format = REQUIRED_STRING(format, ARG_ONE);
+        format = stringArgument(format, ARG_ONE);
     }
 
     if (format == OREF_NULL)
@@ -1337,7 +1337,7 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
     {
         if (separator != OREF_NULL)
         {
-            line_end_string = REQUIRED_STRING(separator, ARG_TWO);
+            line_end_string = stringArgument(separator, ARG_TWO);
         }
         else
         {

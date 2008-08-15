@@ -595,7 +595,7 @@ RexxMethod *RexxMethod::newRexx(
 
     RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
     /* get the method name as a string   */
-    RexxString *nameString = REQUIRED_STRING(pgmname, ARG_ONE);
+    RexxString *nameString = stringArgument(pgmname, ARG_ONE);
     required_arg(_source, TWO);          /* make sure we have the second too  */
 
     RexxSource *sourceContext = OREF_NULL;
@@ -647,7 +647,7 @@ RexxMethod *RexxMethod::newFileRexx(RexxString *filename)
 /******************************************************************************/
 {
     /* get the method name as a string   */
-    filename = REQUIRED_STRING(filename, ARG_ONE);
+    filename = stringArgument(filename, ARG_ONE);
     /* create a source object            */
     RexxMethod *newMethod = new RexxMethod(filename);
     ProtectedObject p(newMethod);

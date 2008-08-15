@@ -269,7 +269,7 @@ RexxMethod *RexxInternalObject::instanceMethod(RexxString  *method_name)
 RexxMethod *RexxObject::instanceMethod(RexxString  *method_name)
 {
     // the name must be a string...and we use it in upper case
-    method_name = REQUIRED_STRING(method_name, ARG_ONE)->upper();
+    method_name = stringArgument(method_name, ARG_ONE)->upper();
     // retrieve the method from the dictionary
     RexxMethod *method_object = (RexxMethod *)this->behaviour->getMethodDictionary()->stringGet(method_name);
     // this is an error if it doesn't exist
@@ -1437,7 +1437,7 @@ RexxObject  *RexxObject::objectNameEquals(RexxObject *name)
     required_arg(name, ONE);             /* must have a name                  */
     scope = lastMethod()->getScope();    /* get the method's scope            */
                                          /* get this as a string              */
-    name = (RexxObject *)REQUIRED_STRING(name, ARG_ONE);
+    name = (RexxObject *)stringArgument(name, ARG_ONE);
     /* set the name                      */
     this->setObjectVariable(OREF_NAME, name, scope);
     return OREF_NULL;                    /* no return value                   */
@@ -1508,10 +1508,10 @@ RexxObject  *RexxObject::setMethod(
 /******************************************************************************/
 {
     /* get the message name as a string  */
-    msgname = REQUIRED_STRING(msgname, ARG_ONE)->upper();
+    msgname = stringArgument(msgname, ARG_ONE)->upper();
     if (option)
     {
-        option = REQUIRED_STRING(option, ARG_THREE);
+        option = stringArgument(option, ARG_THREE);
         if (!Utilities::strCaselessCompare("OBJECT",option->getStringData()))
         {
             // do nothing if OBJECT
@@ -1548,7 +1548,7 @@ RexxObject  *RexxObject::unsetMethod(
 /******************************************************************************/
 {
                                        /* get the message name as a string  */
-  msgname = REQUIRED_STRING(msgname, ARG_ONE)->upper();
+  msgname = stringArgument(msgname, ARG_ONE)->upper();
                                        /* now just go remove this           */
   this->behaviour->removeMethod(msgname);
   return OREF_NULL;                    /* no return value                   */
@@ -1562,7 +1562,7 @@ RexxObject  *RexxObject::requestRexx(
 /******************************************************************************/
 {
                                          /* Verify we have a string parm      */
-    className = REQUIRED_STRING(className, ARG_ONE)->upper();
+    className = stringArgument(className, ARG_ONE)->upper();
     RexxString *class_id = this->id()->upper();      /* get the class name in uppercase   */
                                          /* of the same class?                */
     if (className->strictEqual(class_id) == TheTrueObject)
@@ -1646,7 +1646,7 @@ RexxMessage *RexxObject::start(
             reportException(Error_Incorrect_method_message);
         }
         /* get the message as a string       */
-        newMsgName = REQUIRED_STRING(messageArray->get(1), ARG_ONE);
+        newMsgName = stringArgument(messageArray->get(1), ARG_ONE);
         /* Was starting scope omitted ?      */
         if (OREF_NULL == messageArray->get(2))
         {
@@ -1675,7 +1675,7 @@ RexxMessage *RexxObject::start(
     else                                 /* not an array as message.          */
     {
         /* force to a string value           */
-        message = REQUIRED_STRING(message, ARG_ONE);
+        message = stringArgument(message, ARG_ONE);
     }
     /* Create the new message object.    */
     newMessage = new RexxMessage(this, message, new (argCount - 1, arguments + 1) RexxArray);
@@ -1742,7 +1742,7 @@ RexxObject  *RexxObject::run(
         /* get the 1st one, its the option   */
         RexxString *option = (RexxString *)arguments[1];
         /* this is now required              */
-        option = REQUIRED_STRING(option, ARG_TWO);
+        option = stringArgument(option, ARG_TWO);
         /* process the different options     */
         switch (toupper(option->getChar(0)))
         {
@@ -2310,7 +2310,7 @@ RexxObject *RexxObject::hasMethodRexx(
 /* Function:  Exported access to an object virtual function                   */
 /******************************************************************************/
 {
-  message = REQUIRED_STRING(message, ARG_ONE)->upper();
+  message = stringArgument(message, ARG_ONE)->upper();
   return this->hasMethod(message);     /* forward to the virtual function   */
 }
 

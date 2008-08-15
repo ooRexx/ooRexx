@@ -282,7 +282,7 @@ RexxObject *RoutineClass::callRexx(RexxObject **args, size_t count)
 RexxObject *RoutineClass::callWithRexx(RexxArray *args)
 {
     // this is required and must be an array
-    args = REQUIRED_ARRAY(args, 1);
+    args = arrayArgument(args, 1);
 
     ProtectedObject result;
 
@@ -565,7 +565,7 @@ RoutineClass *RoutineClass::newRexx(
 
     RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
     /* get the method name as a string   */
-    RexxString *nameString = REQUIRED_STRING(pgmname, ARG_ONE);
+    RexxString *nameString = stringArgument(pgmname, ARG_ONE);
     required_arg(_source, TWO);          /* make sure we have the second too  */
 
     RexxSource *sourceContext = OREF_NULL;
@@ -618,7 +618,7 @@ RoutineClass *RoutineClass::newFileRexx(
 /******************************************************************************/
 {
                                        /* get the method name as a string   */
-  filename = REQUIRED_STRING(filename, ARG_ONE);
+  filename = stringArgument(filename, ARG_ONE);
                                        /* finish up processing of this      */
   RoutineClass * newMethod = new RoutineClass(filename);
   ProtectedObject p2(newMethod);

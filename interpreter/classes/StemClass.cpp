@@ -79,7 +79,7 @@ RexxStem::RexxStem(
     else
     {
         /* must get a string here            */
-        name = REQUIRED_STRING(name, ARG_ONE);
+        name = stringArgument(name, ARG_ONE);
     }
     OrefSet(this, this->stemName, name); /* fill in the name                  */
     OrefSet(this, this->value, name);    /* fill in the default value         */
@@ -190,7 +190,7 @@ RexxObject *RexxStem::unknown(
 /******************************************************************************/
 {
     /* validate the name                 */
-    msgname = REQUIRED_STRING(msgname, ARG_ONE);
+    msgname = stringArgument(msgname, ARG_ONE);
     required_arg(arguments, TWO);        /* need an argument array            */
                                          /* get this as an array              */
     arguments = (RexxArray  *)REQUEST_ARRAY(arguments);
@@ -482,7 +482,7 @@ RexxObject *RexxStem::request(
 {
     ProtectedObject result;
     /* Verify we have a string parm      */
-    makeclass = REQUIRED_STRING(makeclass, ARG_ONE)->upper();
+    makeclass = stringArgument(makeclass, ARG_ONE)->upper();
     /* array request?                    */
     if (makeclass->strCompare(CHAR_ARRAY))
     {

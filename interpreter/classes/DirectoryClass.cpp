@@ -304,7 +304,7 @@ RexxObject *RexxDirectory::entryRexx(
 /******************************************************************************/
 {
                                          /* get a string parameter (uppercase)*/
-    entryName = REQUIRED_STRING(entryName, ARG_ONE)->upper();
+    entryName = stringArgument(entryName, ARG_ONE)->upper();
     RexxObject *temp = this->at(entryName);          /* retrieve the name                 */
 
                                          /* if we found nothing or the method */
@@ -323,7 +323,7 @@ RexxObject *RexxDirectory::hasIndex(
 /******************************************************************************/
 {
     /* get as a string parameter         */
-    indexName = REQUIRED_STRING(indexName, ARG_ONE);
+    indexName = stringArgument(indexName, ARG_ONE);
     /* got a value?                      */
     if (this->contents->stringGet(indexName) != OREF_NULL)
     {
@@ -355,7 +355,7 @@ RexxObject *RexxDirectory::hasEntry(
 /******************************************************************************/
 {
     /* get as a string parameter         */
-    entryName = REQUIRED_STRING(entryName, ARG_ONE)->upper();
+    entryName = stringArgument(entryName, ARG_ONE)->upper();
     /* in the table?                     */
     if (this->contents->stringGet(entryName) != OREF_NULL)
     {
@@ -387,7 +387,7 @@ RexxObject *RexxDirectory::setEntry(
 /******************************************************************************/
 {
     /* get as a string parameter         */
-    entryname = REQUIRED_STRING(entryname, ARG_ONE)->upper();
+    entryname = stringArgument(entryname, ARG_ONE)->upper();
     if (entryobj != OREF_NULL)
     {         /* have a new value?                 */
               /* try to place in existing hashtab  */
@@ -416,7 +416,7 @@ RexxObject *RexxDirectory::remove(
 /******************************************************************************/
 {
     /* get as a string parameter         */
-    entryname = REQUIRED_STRING(entryname, ARG_ONE);
+    entryname = stringArgument(entryname, ARG_ONE);
     RexxObject *oldVal = this->at(entryname);        /* go get the directory value        */
     if (oldVal == OREF_NULL)             /* nothing to return?                */
     {
@@ -447,7 +447,7 @@ RexxObject *RexxDirectory::unknown(
 /******************************************************************************/
 {
     /* validate the name                 */
-    RexxString *message_value = REQUIRED_STRING(msgname, ARG_ONE);
+    RexxString *message_value = stringArgument(msgname, ARG_ONE);
     required_arg(arguments, TWO);        /* need an argument array            */
                                          /* get the length                    */
     stringsize_t message_length = message_value->getLength();
@@ -483,7 +483,7 @@ RexxObject *RexxDirectory::setMethod(
 /******************************************************************************/
 {
     /* get as a string parameter         */
-    entryname = REQUIRED_STRING(entryname, ARG_ONE)->upper();
+    entryname = stringArgument(entryname, ARG_ONE)->upper();
     if (methodobj != OREF_NULL)          /* have a method object?             */
     {
         if (!isOfClass(Method, methodobj))     /* given as a string?                */
@@ -598,7 +598,7 @@ RexxObject *RexxDirectory::atRexx(
     RexxObject *temp;                    /* Temporary holder for return value */
 
                                          /* get as a string parameter         */
-    _index = REQUIRED_STRING(_index, ARG_ONE);
+    _index = stringArgument(_index, ARG_ONE);
     // is this the .local object?  We'll need to check with the security manager
     if ((RexxDirectory *)(ActivityManager::localEnvironment) == this)
     {
@@ -626,7 +626,7 @@ RexxObject *RexxDirectory::put(
 /******************************************************************************/
 {
     /* get as a string parameter         */
-    _index = REQUIRED_STRING(_index, ARG_TWO);
+    _index = stringArgument(_index, ARG_TWO);
     if (this->method_table != OREF_NULL) /* have a table?                     */
     {
         this->method_table->remove(_index);/* remove any method                 */

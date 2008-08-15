@@ -462,7 +462,7 @@ RexxInteger *RexxString::lastPosRexx(RexxString  *needle, RexxInteger *_start)
 RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *_start)
 {
     // validate that this is a good string argument
-    needle = REQUIRED_STRING(needle, ARG_ONE);
+    needle = stringArgument(needle, ARG_ONE);
     // find out where to start the search. The default is at the very end.
     size_t startPos = optionalPositionArgument(_start, getLength(), ARG_TWO);
     // now perform the actual search.
@@ -551,7 +551,7 @@ RexxInteger *RexxString::countStrRexx(RexxString *needle)
 /******************************************************************************/
 {
     /* force needle to a string          */
-    needle = REQUIRED_STRING(needle, ARG_ONE);
+    needle = stringArgument(needle, ARG_ONE);
     size_t count = this->countStr(needle);      /* do the counting                   */
     return new_integer(count);           /* return the count as an object     */
 }
@@ -581,7 +581,7 @@ RexxInteger *RexxString::caselessCountStrRexx(RexxString *needle)
 /******************************************************************************/
 {
     /* force needle to a string          */
-    needle = REQUIRED_STRING(needle, ARG_ONE);
+    needle = stringArgument(needle, ARG_ONE);
     size_t count = this->caselessCountStr(needle); /* do the counting                   */
     return new_integer(count);              /* return the count as an object     */
 }
@@ -604,9 +604,9 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
     size_t i;
 
     /* force needle to a string          */
-    needle = REQUIRED_STRING(needle, ARG_ONE);
+    needle = stringArgument(needle, ARG_ONE);
     /* newneedle must be a string two    */
-    newNeedle = REQUIRED_STRING(newNeedle, ARG_TWO);
+    newNeedle = stringArgument(newNeedle, ARG_TWO);
 
     // we'll only change up to a specified count.  If not there, we do everything.
     size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
@@ -671,9 +671,9 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
     size_t i;
 
     /* force needle to a string          */
-    needle = REQUIRED_STRING(needle, ARG_ONE);
+    needle = stringArgument(needle, ARG_ONE);
     /* newneedle must be a string two    */
-    newNeedle = REQUIRED_STRING(newNeedle, ARG_TWO);
+    newNeedle = stringArgument(newNeedle, ARG_TWO);
     // we'll only change up to a specified count.  If not there, we do everything.
     size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
 
@@ -740,7 +740,7 @@ RexxInteger *RexxString::caselessPosRexx(
 /******************************************************************************/
 {
     /* force needle to a string          */
-    needle = REQUIRED_STRING(needle, ARG_ONE);
+    needle = stringArgument(needle, ARG_ONE);
     /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
     /* pass on to the primitive function */

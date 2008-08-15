@@ -400,7 +400,7 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                         case REXX_VALUE_RexxStringObject: /* Required STRING object            */
                         {
                             /* force to a string value           */
-                            RexxString *temp = REQUIRED_STRING(argument, inputIndex + 1) ;
+                            RexxString *temp = stringArgument(argument, inputIndex + 1) ;
                             // if this forced a string object to be created,
                             // we need to protect it here.
                             if (temp != argument)
@@ -417,7 +417,7 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                         case REXX_VALUE_RexxArrayObject: /* Required ARRAY object            */
                         {
                             /* force to a string value           */
-                            RexxArray *temp = REQUIRED_ARRAY(argument, inputIndex + 1) ;
+                            RexxArray *temp = arrayArgument(argument, inputIndex + 1) ;
                             // if this forced a string object to be created,
                             // we need to protect it here.
                             if (temp != argument)
@@ -456,7 +456,7 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                             }
 
                             /* force to a string value           */
-                            RexxString *temp = REQUIRED_STRING(argument, inputIndex + 1) ;
+                            RexxString *temp = stringArgument(argument, inputIndex + 1) ;
                             // if this forced a string object to be created,
                             // we need to protect it here.
                             if (temp != argument)
@@ -914,7 +914,7 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
         case REXX_VALUE_RexxStringObject: /* Required STRING object            */
         {
             /* force to a string value           */
-            RexxString *temp = REQUIRED_STRING(o, 1) ;
+            RexxString *temp = stringArgument(o, 1) ;
             // if this forced a string object to be created,
             // we need to protect it here.
             if (temp != o)
@@ -931,7 +931,7 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
         case REXX_VALUE_RexxArrayObject: /* Required ARRAY object            */
         {
             /* force to a string value           */
-            RexxArray *temp = REQUIRED_ARRAY(o, 1) ;
+            RexxArray *temp = arrayArgument(o, 1) ;
             // if this forced a string object to be created,
             // we need to protect it here.
             if (temp != o)
@@ -970,7 +970,7 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
             }
 
             /* force to a string value           */
-            RexxString *temp = REQUIRED_STRING(o, 1) ;
+            RexxString *temp = stringArgument(o, 1) ;
             // if this forced a string object to be created,
             // we need to protect it here.
             if (temp != o)
@@ -2300,7 +2300,7 @@ RexxStem *RexxNativeActivation::resolveStemVariable(RexxObject *s)
     }
 
     /* force to a string value           */
-    RexxString *temp = REQUIRED_STRING(s, 1);
+    RexxString *temp = stringArgument(s, 1);
     // see if we can retrieve this stem
     return (RexxStem *)getContextStem(temp);
 }

@@ -351,7 +351,7 @@ RexxArray *PackageClass::getImportedPackages()
 PackageClass *PackageClass::loadPackage(RexxString *name, RexxArray *s)
 {
     // make sure we have a valid name and delegate to the source object
-    name = REQUIRED_STRING(name, 1);
+    name = stringArgument(name, 1);
     // if no source provided, this comes from a file
     if (s == OREF_NULL)
     {
@@ -359,7 +359,7 @@ PackageClass *PackageClass::loadPackage(RexxString *name, RexxArray *s)
     }
     else
     {
-        s = REQUIRED_ARRAY(s, "source");
+        s = arrayArgument(s, "source");
         return source->loadRequired(name, s);
     }
 }
@@ -374,7 +374,7 @@ PackageClass *PackageClass::loadPackage(RexxString *name, RexxArray *s)
  */
 RexxObject *PackageClass::addPackage(PackageClass *package)
 {
-    REQUIRED_INSTANCE(package, ThePackageClass, "package");
+    classArgument(package, ThePackageClass, "package");
     source->addPackage(package);
     return this;
 }
@@ -389,8 +389,8 @@ RexxObject *PackageClass::addPackage(PackageClass *package)
  */
 RexxObject *PackageClass::addRoutine(RexxString *name, RoutineClass *routine)
 {
-    name = REQUIRED_STRING(name, "name");
-    REQUIRED_INSTANCE(routine, TheRoutineClass, "routine");
+    name = stringArgument(name, "name");
+    classArgument(routine, TheRoutineClass, "routine");
     source->addInstalledRoutine(name, routine, false);
     return this;
 }
@@ -405,8 +405,8 @@ RexxObject *PackageClass::addRoutine(RexxString *name, RoutineClass *routine)
  */
 RexxObject *PackageClass::addPublicRoutine(RexxString *name, RoutineClass *routine)
 {
-    name = REQUIRED_STRING(name, "name");
-    REQUIRED_INSTANCE(routine, TheRoutineClass, "routine");
+    name = stringArgument(name, "name");
+    classArgument(routine, TheRoutineClass, "routine");
     source->addInstalledRoutine(name, routine, true);
     return this;
 }
@@ -421,8 +421,8 @@ RexxObject *PackageClass::addPublicRoutine(RexxString *name, RoutineClass *routi
  */
 RexxObject *PackageClass::addClass(RexxString *name, RexxClass *clazz)
 {
-    name = REQUIRED_STRING(name, "name");
-    REQUIRED_INSTANCE(clazz, TheClassClass, "class");
+    name = stringArgument(name, "name");
+    classArgument(clazz, TheClassClass, "class");
     source->addInstalledClass(name, clazz, false);
     return this;
 }
@@ -437,8 +437,8 @@ RexxObject *PackageClass::addClass(RexxString *name, RexxClass *clazz)
  */
 RexxObject *PackageClass::addPublicClass(RexxString *name, RexxClass *clazz)
 {
-    name = REQUIRED_STRING(name, "name");
-    REQUIRED_INSTANCE(clazz, TheClassClass, "class");
+    name = stringArgument(name, "name");
+    classArgument(clazz, TheClassClass, "class");
     source->addInstalledClass(name, clazz, true);
     return this;
 }
@@ -505,7 +505,7 @@ PackageClass *PackageClass::newRexx(
     ProtectedObject p;
 
     /* get the package name as a string   */
-    RexxString *nameString = REQUIRED_STRING(pgmname, "name");
+    RexxString *nameString = stringArgument(pgmname, "name");
     if (_source == OREF_NULL)
     {
         RexxString *resolvedName = ActivityManager::currentActivity->getInstance()->resolveProgramName(nameString, OREF_NULL, OREF_NULL);
@@ -513,7 +513,7 @@ PackageClass *PackageClass::newRexx(
     }
     else
     {
-        RexxArray *sourceArray = REQUIRED_ARRAY(_source, "source");
+        RexxArray *sourceArray = arrayArgument(_source, "source");
         package = PackageManager::loadRequires(ActivityManager::currentActivity, nameString, sourceArray, p);
     }
 

@@ -582,7 +582,7 @@ RexxObject *RexxMessage::newRexx(
     else                                 /* not an array as message.          */
     {
         /* force to a string value           */
-        _message = REQUIRED_STRING(_message, ARG_TWO);
+        _message = stringArgument(_message, ARG_TWO);
         /* Message to be sent.               */
     }
 
@@ -602,7 +602,7 @@ RexxObject *RexxMessage::newRexx(
         else
         {
             /* Convert it into a string.         */
-            optionString = REQUIRED_STRING(optionString, ARG_THREE);
+            optionString = stringArgument(optionString, ARG_THREE);
             /*  char and make it lower case      */
             char option = tolower(optionString->getChar(0));
             if (option == 'a')               /* args passed as an array?          */
