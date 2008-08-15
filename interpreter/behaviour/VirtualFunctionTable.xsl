@@ -75,7 +75,7 @@ void RexxMemory::buildVirtualFunctionTable()
 /*            There will be one for each Class.                               */
 /******************************************************************************/
 {
-    char objectBuffer[1024];       /* buffer for each object            */ 
+    uintptr_t objectBuffer[256];       /* buffer for each object            */
     void *objectPtr;
 
     objectPtr = objectBuffer;
