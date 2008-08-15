@@ -110,22 +110,15 @@ RexxObject *RexxRelation::itemsRexx(
 /*            the entire collection if the index is omitted.                  */
 /******************************************************************************/
 {
-    RexxArray *itemArray;                /* array of returned items           */
-    size_t  numEntries;                  /* number of entries                 */
-    size_t  tempSize;                    /* array size                        */
-
     if (_index == OREF_NULL)
     {           /* no index given?                   */
                 /* return count for everything       */
-        numEntries = this->contents->totalEntries();
-        return(RexxObject *)new_integer(numEntries);
+        return new_integer(contents->totalEntries());
     }
     else
     {
-        /* get all of the items with index   */
-        itemArray = this->contents->getAll(_index);
-        tempSize = itemArray->size();      /* return the array size             */
-        return(RexxObject *)new_integer(tempSize);
+        // just search and count
+        return new_integer(contents->countAll(_index));
     }
 }
 

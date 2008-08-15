@@ -91,6 +91,7 @@ typedef size_t HashLink;
    RexxHashTable *add(RexxObject *value, RexxObject *key);
    RexxObject    *remove(RexxObject *key);
    RexxArray     *getAll(RexxObject *key);
+   size_t         countAll(RexxObject *key);
    RexxObject    *get(RexxObject *key);
    RexxHashTable *put(RexxObject *value, RexxObject *key);
    RexxHashTable *primitiveAdd(RexxObject *value, RexxObject *key);

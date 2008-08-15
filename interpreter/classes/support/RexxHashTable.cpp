@@ -745,27 +745,9 @@ RexxArray  *RexxHashTable::getAll(
 /* Function:  Get all elements with a specified index as an array             */
 /******************************************************************************/
 {
-    size_t count = 0;                           /* no items found yet                */
+    // get a count of matching items
+    size_t count = countAll(_index);
     HashLink position = hashIndex(_index);         /* calculate the hash slot           */
-    /* have an entry at this slot        */
-    if (this->entries[position].index != OREF_NULL)
-    {
-        do
-        {                               /* while more items in chain         */
-                                        /* if got a match                    */
-            if (EQUAL_VALUE(_index, this->entries[position].index))
-            {
-                count++;                       /* bump our counter                  */
-            }
-                                               /* step to the next link             */
-        } while ((position = this->entries[position].next) != NO_MORE);
-    }
-    else
-    {
-        /* no elements found                 */
-        return(RexxArray *)TheNullArray->copy();
-    }
-
     RexxArray *result = new_array(count);           /* get proper size result array      */
     size_t i = 1;                               /* start at the first element        */
     position = hashIndex(_index);         /* calculate the hash slot           */
@@ -780,6 +762,38 @@ RexxArray  *RexxHashTable::getAll(
         /* step to the next link             */
     } while ((position = this->entries[position].next) != NO_MORE);
     return result;                       /* return the result array           */
+}
+
+/**
+ * Return a count of all items with a given index.
+ *
+ * @param _index The target index
+ *
+ * @return The count of matching items.
+ */
+size_t RexxHashTable::countAll(RexxObject *_index)
+{
+    size_t count = 0;                           /* no items found yet                */
+    HashLink position = hashIndex(_index);         /* calculate the hash slot           */
+    /* have an entry at this slot        */
+    if (this->entries[position].index != OREF_NULL)
+    {
+        do
+        {                               /* while more items in chain         */
+                                        /* if got a match                    */
+            if (EQUAL_VALUE(_index, this->entries[position].index))
+            {
+                count++;                       /* bump our counter                  */
+            }
+                                               /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+        return count;
+    }
+    else
+    {
+        /* no elements found                 */
+        return 0;
+    }
 }
 
 RexxArray  *RexxHashTable::primitiveGetAll(
