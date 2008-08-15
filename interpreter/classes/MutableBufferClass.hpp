@@ -93,9 +93,17 @@ class RexxMutableBufferClass : public RexxClass {
    RexxString        *makeString();
    RexxInteger       *countStrRexx(RexxString *needle);
    RexxInteger       *caselessCountStrRexx(RexxString *needle);
+   RexxMutableBuffer *changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
+   RexxMutableBuffer *caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
 
    inline const char *getStringData() { return data->getData(); }
    inline size_t      getLength()     { return dataLength; }
+   inline char *      getData()       { return data->getData(); }
+   inline void copyData(size_t offset, const char *string, size_t l) { data->copyData(offset, string, l); }
+   inline void openGap(size_t offset, size_t _size, size_t tailSize) { data->openGap(offset, _size, tailSize); }
+   inline void closeGap(size_t offset, size_t _size, size_t tailSize) { data->closeGap(offset, _size, tailSize); }
+   inline void adjustGap(size_t offset, size_t _size, size_t _newSize) { data->adjustGap(offset, _size, _newSize); }
+   inline void setData(size_t offset, char character, size_t l) { data->setData(offset, character, l); }
 
    static void createInstance();
    static RexxClass *classInstance;

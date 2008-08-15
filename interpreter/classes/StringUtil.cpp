@@ -1317,7 +1317,7 @@ size_t StringUtil::caselessCountStr(const char *hayStack, size_t hayStackLength,
 {
     size_t count = 0;                           /* no matches yet                    */
     /* get the first match position      */
-    size_t matchPos = pos(hayStack, hayStackLength, needle, 0);
+    size_t matchPos = caselessPos(hayStack, hayStackLength, needle, 0);
     while (matchPos != 0)
     {
         count = count + 1;                 /* count this match                  */
