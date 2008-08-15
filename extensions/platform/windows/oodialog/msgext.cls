@@ -284,9 +284,9 @@
    if Arg(3,'o') = 1 then msgToRise = "On" || type
    type = type~translate
    select
-       when type = "KEYDOWN" then lp = -550
-       when type = "SELCHANGE"    then lp = -551
-       when type = "SELCHANGING"    then lp = -552
+       when type = "KEYDOWN"     then lp = -550
+       when type = "SELCHANGE"   then lp = -551
+       when type = "SELCHANGING" then lp = -552
        otherwise return -1
    end
    return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
@@ -302,20 +302,36 @@
    if Arg(3,'o') = 1 then msgToRise = "On" || type
    type = type~translate
    select
-       when type = "UP"             then wp =0
-       when type = "DOWN"           then wp =1
-       when type = "PAGEUP"             then wp =2
-       when type = "PAGEDOWN"           then wp =3
-       when type = "POSITION"           then wp =4
-       when type = "DRAG"              then wp =5
-       when type = "TOP"                then wp =6
-       when type = "BOTTOM"             then wp =7
-       when type = "ENDTRACK"           then wp =8
+       when type = "UP"       then wp =0
+       when type = "DOWN"     then wp =1
+       when type = "PAGEUP"   then wp =2
+       when type = "PAGEDOWN" then wp =3
+       when type = "POSITION" then wp =4
+       when type = "DRAG"     then wp =5
+       when type = "TOP"      then wp =6
+       when type = "BOTTOM"   then wp =7
+       when type = "ENDTRACK" then wp =8
        otherwise return -1
    end
    ret = self~AddUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_HSCROLL */
    if ret <> 0 then return ret
    return self~AddUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
+
+
+::method connectStaticNotify
+   use strict arg id, type, msgToRaise = ""
+   if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
+   if id = -1 then return -1
+   if msgToRaise == "" then msgToRaise = "On" || type
+   type = type~translate
+   select
+       when type = "CLICK"   then lp = 0
+       when type = "DBLCLK"  then lp = 1
+       when type = "ENABLE"  then lp = 2
+       when type = "DISABLE" then lp = 3
+       otherwise return -1
+   end
+   return self~AddUserMsg(msgToRaise, 0x00000111, "0xFFFFFFFF", lp~x2d * X2D("10000") + id, "0xFFFFFFFF", 0, 0)
 
 
 ::method DefTreeEditStarter

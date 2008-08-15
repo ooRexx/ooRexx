@@ -214,7 +214,6 @@
        if style~wordpos("SS_RIGHTJUST") > 0 then ret = ret || " RIGHTJUST"
        if style~wordpos("SS_REALSIZECONTROL") > 0 then ret = ret || " SIZECONTROL"
        if style~wordpos("SS_REALSIZEIMAGE") > 0 then ret = ret || " SIZEIMAGE"
-       if style~wordpos("SS_SIMPLE") > 0 then ret = ret || " SIMPLE"
        if style~wordpos("SS_SUNKEN") > 0 then ret = ret || " SUNKEN"
        if style~wordpos("SS_WORDELLIPSIS") > 0 then ret = ret || " WORDELLIPSIS"
 
@@ -417,10 +416,11 @@
 
       if s~wordpos("CONTROL") > 0 then
       do
-         parse var s type '"'name'"' "," id "," class "," style "," x "," y "," w "," h
+         parse var s type '"'name'"' "," id "," class "," style "," x "," y "," w "," h "," extStyle
          opts = ""
          class = class~strip~translate
          style = style~translate(" ", "|")
+         extStyle = extStyle~translate(" ", "|")
          select
             when class = '"BUTTON"' then do
                if style~wordpos("BS_AUTORADIOBUTTON") > 0 | style~wordpos("BS_RADIOBUTTON") > 0 then
@@ -460,11 +460,11 @@
                   when style~wordpos("SS_BLACKFRAME") > 0 then
                      self~AddBlackFRAME(x, y, w, h, opts, id)
                   when style~wordpos("SS_ETCHEDFRAME") > 0 then
-                     self~AddStatic(id, x, y, w, h, "ETCHED " || opts)
+                     self~AddEtchedFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_ETCHEDHORZ") > 0 then
-                     self~AddStatic(id, x, y, w, h, "HORZ " || opts)
+                     self~AddEtchedHorizonatlFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_ETCHEDVERT") > 0 then
-                     self~AddStatic(id, x, y, w, h, "VERT " || opts)
+                     self~AddEtchedVerticalFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_BITMAP") > 0 then
                      self~AddImage(id, x, y, w, h, "BITMAP " || opts)
                   when style~wordpos("SS_ENHMETAFILE") > 0 then
@@ -516,10 +516,11 @@
          end /* select 2*/
       end
       else do
-         parse var s type '"'name'"' "," id "," x "," y "," w "," h "," style
-         if id~space(0) = "" then parse var s type id "," x "," y "," w "," h "," style
+         parse var s type '"'name'"' "," id "," x "," y "," w "," h "," style "," extStyle
+         if id~space(0) = "" then parse var s type id "," x "," y "," w "," h "," style "," extStyle
          type = type~strip~translate
          style = style~translate(" ", "|")
+         extStyle = extStyle~translate(" ", "|")
 
          select
             when type = "DEFPUSHBUTTON" | type = "PUSHBUTTON" then
@@ -617,30 +618,62 @@
    self~AktPtr = UsrAddControl("GB",self~AktPtr, x, y, cx, cy, opts, text, id)
 
 
+::method AddStatic
+   use arg id = (-1), x, y, cx = 0, cy = 0, options, text = ""
+   argA = .array~new
+   options = self~GetDefaultOpts(options)
+   argA[1] = x
+   argA[2] = y
+   argA[3] = cx
+   argA[4] = cy
+   argA[5] = options
+   argA[6] = id
+
+   select
+     when options~wordpos("WHITERECT") > 0 then return self~InternAddStatic(argA, 0)
+     when options~wordpos("GRAYRECT") > 0 then return self~InternAddStatic(argA, 1)
+     when options~wordpos("BLACKRECT") > 0 then return self~InternAddStatic(argA, 2)
+     when options~wordpos("WHITEFRAME") > 0 then return self~InternAddStatic(argA, 3)
+     when options~wordpos("GRAYFRAME") > 0 then return self~InternAddStatic(argA, 4)
+     when options~wordpos("BLACKFRAME") > 0 then return self~InternAddStatic(argA, 5)
+     when options~wordpos("ETCHED") > 0 then return self~InternAddStatic(argA, 6)
+     when options~wordpos("HORZ") > 0 then return self~InternAddStatic(argA, 7)
+     when options~wordpos("VERT") > 0 then return self~InternAddStatic(argA, 8)
+
+     when options~wordpos("BITMAP") > 0 then forward message "AddImage"
+     when options~wordpos("METAFILE") > 0 then forward message "AddImage"
+     when options~wordpos("ICON") > 0 then forward message "AddImage"
+
+     when options~wordpos("LEFT") > 0 then return self~addText(x, y, cx, cy, text, options, id)
+     when options~wordpos("RIGHT") > 0 then return self~addText(x, y, cx, cy, text, options, id)
+     when options~wordpos("CENTER") > 0 then return self~addText(x, y, cx, cy, text, options, id)
+     when options~wordpos("SIMPLE") > 0 then return self~addText(x, y, cx, cy, text, options, id)
+     when options~wordpos("LEFTNOWRAP") > 0 then return self~addText(x, y, cx, cy, text, options, id)
+     otherwise return -1
+   end
+   -- End select
+
+   return 0
+
+::method AddImage
+   use arg id, x, y, cx, cy, options
+   id = self~ItemAdd(id)
+   if id < 0 then return id
+   options = self~GetDefaultOpts(options)
+   self~AktPtr = UsrAddControl("IMG", self~AktPtr, id, x, y, cx, cy, options)
 
 ::method AddText
-   use arg x, y, cx, cy, text, opts, id
-   if Arg(5, 'o') = 1 then return 1
-   if Arg(3, 'o') = 1 then cx = 0
-   if Arg(4, 'o') = 1 then cy = 0
+   use arg x, y, cx = 0, cy = 0, text = "", opts, id = (-1)
+
    if cx = 0 | cy = 0 then do
       parse value GetStdTextSize(text) with icx icy
       if cx = 0 then cx = icx+2
       if cy = 0 then cy = icy
    end
-   id = self~ItemAdd(id, \(Arg(7,"o") | id = "ID"))
+   id = self~ItemAdd(id)
    if id = -2 then return id
    opts = self~GetDefaultOpts(opts)
    self~AktPtr = UsrAddControl("TXT", self~AktPtr, x, y, cx, cy, opts, text, id)
-
-
-
-::method InternAddStatic
-   use arg arga, type
-   if arga~hasindex(6) = 0 then id = self~ItemAdd(-1, 0); else id = self~ItemAdd(arga[6],1)
-   if id = -2 then return id
-   opts = self~GetDefaultOpts(arga[5])
-   self~AktPtr = UsrAddControl("FRM", self~AktPtr, arga[1], arga[2], arga[3], arga[4], type, opts, id)
    return 0
 
 ::method AddWhiteRect
@@ -661,37 +694,22 @@
 ::method AddBlackFrame
    return self~InternAddStatic(Arg(1,"A"), 5)
 
-::method AddStatic
-   use arg id, x, y, cx, cy, options
-   arga = .array~new
-   options = self~GetDefaultOpts(options)
-   arga[1] = x
-   arga[2] = y
-   arga[3] = cx
-   arga[4] = cy
-   arga[5] = options
-   if arg(1, 'E') then arga[6] = id
+::method AddEtchedFrame
+   return self~InternAddStatic(Arg(1,"A"), 6)
 
-   select
-     when options~wordpos("WHITERECT") > 0 then return self~InternAddStatic(arga, 0)
-     when options~wordpos("GRAYRECT") > 0 then return self~InternAddStatic(arga, 1)
-     when options~wordpos("BLACKRECT") > 0 then return self~InternAddStatic(arga, 2)
-     when options~wordpos("WHITEFRAME") > 0 then return self~InternAddStatic(arga, 3)
-     when options~wordpos("GRAYFRAME") > 0 then return self~InternAddStatic(arga, 4)
-     when options~wordpos("BLACKFRAME") > 0 then return self~InternAddStatic(arga, 5)
-     when options~wordpos("ETCHED") > 0 then return self~InternAddStatic(arga, 6)
-     when options~wordpos("HORZ") > 0 then return self~InternAddStatic(arga, 7)
-     when options~wordpos("VERT") > 0 then return self~InternAddStatic(arga, 8)
-     otherwise return -1
-   end
-   -- End select
+::method AddEtchedHorizontalFrame
+   return self~InternAddStatic(Arg(1,"A"), 7)
 
-::method AddImage
-   use arg id, x, y, cx, cy, options
-   id = self~ItemAdd(id)
-   if id < 0 then return id
-   options = self~GetDefaultOpts(options)
-   self~AktPtr = UsrAddControl("IMG", self~AktPtr, id, x, y, cx, cy, options)
+::method AddEtchedVerticalFrame
+   return self~InternAddStatic(Arg(1,"A"), 8)
+
+::method InternAddStatic private
+   use arg arga, type
+   if arga~hasindex(6) = 0 then id = self~ItemAdd(-1, 0); else id = self~ItemAdd(arga[6],1)
+   if id = -2 then return id
+   opts = self~GetDefaultOpts(arga[5])
+   self~AktPtr = UsrAddControl("FRM", self~AktPtr, arga[1], arga[2], arga[3], arga[4], type, opts, id)
+   return 0
 
 ::method AddEntryLine
    use arg id, fname, x, y, cx, cy, opts

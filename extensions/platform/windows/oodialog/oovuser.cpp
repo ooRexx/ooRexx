@@ -733,38 +733,6 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                         id          x       y          cx           cy  */
        UAddControl(&p, 0x0081, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
-   else if (!strcmp(argv[0].strptr,"TXT"))
-   {
-       CHECKARGL(8);
-
-       /* UsrAddControl("TXT", self~AktPtr, x, y, cx, cy, opts, text, id) */
-       for ( i = 0; i < 4; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       if (argc > 8)
-          i = atoi(argv[8].strptr);
-       else i = -1;
-
-       lStyle = WS_CHILD;
-       if (strstr(argv[6].strptr,"CENTER")) lStyle |= SS_CENTER;
-       else if (strstr(argv[6].strptr,"RIGHT")) lStyle |= SS_RIGHT;
-       else if (strstr(argv[6].strptr,"SIMPLE")) lStyle |= SS_SIMPLE;
-       else if (strstr(argv[6].strptr,"LEFTNOWRAP")) lStyle |= SS_LEFTNOWORDWRAP;
-       else lStyle |= SS_LEFT;
-
-       if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
-
-       /*                      id      x         y         cx       cy  */
-       UAddControl(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
-   }
    else if (!strcmp(argv[0].strptr,"LB"))
    {
        CHECKARG(8);
@@ -825,6 +793,46 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
 
        /*                         id       x          y            cx        cy  */
        UAddControl(&p, 0x0085, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
+   }
+   else if (!strcmp(argv[0].strptr,"TXT"))
+   {
+       CHECKARGL(8);
+
+       /* UsrAddControl("TXT", self~AktPtr, x, y, cx, cy, opts, text, id) */
+       for ( i = 0; i < 4; i++ )
+       {
+           buffer[i] = atoi(argv[i+2].strptr);
+       }
+
+       p = (WORD *)GET_POINTER(argv[1]);
+
+       if (argc > 8)
+          i = atoi(argv[8].strptr);
+       else i = -1;
+
+       lStyle = WS_CHILD;
+       if (strstr(argv[6].strptr,"CENTER")) lStyle |= SS_CENTER;
+       else if (strstr(argv[6].strptr,"RIGHT")) lStyle |= SS_RIGHT;
+       else if (strstr(argv[6].strptr,"SIMPLE")) lStyle |= SS_SIMPLE;
+       else if (strstr(argv[6].strptr,"LEFTNOWRAP")) lStyle |= SS_LEFTNOWORDWRAP;
+       else lStyle |= SS_LEFT;
+
+       if (strstr(argv[6].strptr,"NOTIFY")) lStyle |= SS_NOTIFY;
+       if (strstr(argv[6].strptr,"SUNKEN")) lStyle |= SS_SUNKEN;
+       if (strstr(argv[6].strptr,"EDITCONTROL")) lStyle |= SS_EDITCONTROL;
+       if (strstr(argv[6].strptr,"ENDELLIPSIS")) lStyle |= SS_ENDELLIPSIS;
+       if (strstr(argv[6].strptr,"NOPREFIX")) lStyle |= SS_NOPREFIX;
+       if (strstr(argv[6].strptr,"PATHELLIPSIS")) lStyle |= SS_PATHELLIPSIS;
+       if (strstr(argv[6].strptr,"WORDELLIPSIS")) lStyle |= SS_WORDELLIPSIS;
+
+       if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
+       if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
+       if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;
+       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
+       if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
+
+       /*                      id      x         y         cx       cy  */
+       UAddControl(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"FRM"))
    {
