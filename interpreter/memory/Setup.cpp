@@ -812,6 +812,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_INSERT                       ,TheStringBehaviour, CPPM(RexxString::insert), 4);
   defineKernelMethod(CHAR_LEFT                         ,TheStringBehaviour, CPPM(RexxString::left), 2);
   defineKernelMethod(CHAR_OVERLAY                      ,TheStringBehaviour, CPPM(RexxString::overlay), 4);
+  defineKernelMethod(CHAR_REPLACEAT                    ,TheStringBehaviour, CPPM(RexxString::replaceAt), 4);
   defineKernelMethod(CHAR_REVERSE                      ,TheStringBehaviour, CPPM(RexxString::reverse), 0);
   defineKernelMethod(CHAR_RIGHT                        ,TheStringBehaviour, CPPM(RexxString::right), 2);
   defineKernelMethod(CHAR_STRIP                        ,TheStringBehaviour, CPPM(RexxString::strip), 2);
@@ -926,6 +927,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_APPEND                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::append), 1);
   defineKernelMethod(CHAR_INSERT                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::insert), 4);
   defineKernelMethod(CHAR_OVERLAY                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::overlay), 4);
+  defineKernelMethod(CHAR_REPLACEAT                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::replaceAt), 4);
   defineKernelMethod(CHAR_DELETE                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::mydelete), 2);
   defineKernelMethod(CHAR_SUBSTR                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::substr), 3);
   defineKernelMethod(CHAR_POS                          ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::posRexx), 2);

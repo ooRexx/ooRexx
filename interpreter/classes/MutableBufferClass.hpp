@@ -80,6 +80,7 @@ class RexxMutableBufferClass : public RexxClass {
    RexxMutableBuffer *append(RexxObject*);
    RexxMutableBuffer *insert(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
    RexxMutableBuffer *overlay(RexxObject*, RexxObject*, RexxObject*, RexxObject*);
+   RexxMutableBuffer *replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad);
    RexxMutableBuffer *mydelete(RexxObject*, RexxObject*);
    RexxString        *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad);
    RexxInteger       *lastPos(RexxString *needle, RexxInteger *_start);

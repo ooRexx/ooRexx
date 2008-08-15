@@ -429,6 +429,88 @@ RexxString *RexxString::overlay(
     return Retval;                       /* return new string                 */
 }
 
+
+/**
+ * Replace a substring starting at a given position and
+ * length with another string.  This operation is essentially
+ * a delstr() followed by an insert() operation.
+ *
+ * @param newStrObj The replacement string
+ * @param position  The replacement position (required)
+ * @param _length   The length of string to replace (optional).  If omitted,
+ *                  the length of the replacement string is used and this
+ *                  is essentially an overlay operation.
+ * @param pad       The padding character if padding is required.  The default
+ *                  is a ' '
+ *
+ * @return A new instance of the string with the value replace.
+ */
+RexxString *RexxString::replaceAt(RexxString  *newStrObj, RexxInteger *position, RexxInteger *_length, RexxString  *pad)
+{
+    size_t targetLen = this->getLength();   // get the length of the replacement target
+    // the replacement value is required and must be a string
+    RexxString *newStr = stringArgument(newStrObj, ARG_ONE);
+    // the length of the replacement string is the default replacement length
+    size_t newLen = newStr->getLength();
+    // the overlay position is required
+    size_t replacePos = positionArgument(position, ARG_TWO);
+    // the replacement length is optional, and defaults to the length of the replacement string
+    size_t replaceLen = optionalLengthArgument(_length, newLen, ARG_THREE);
+    // we only pad if the start position is past the end of the string
+    char padChar = optionalPadArgument(pad, ' ', ARG_FOUR);
+    size_t padding = 0;
+    size_t frontLen = 0;
+    size_t backLen = 0;
+    // the only time we need to pad is if the replacement position is past the
+    // end of the string
+    if (replacePos > targetLen)
+    {
+        padding = replacePos - targetLen - 1;
+        frontLen = targetLen;
+    }
+    else
+    {
+        // this is within bounds, so we copy up to that position
+        frontLen = replacePos - 1;
+    }
+    // is this within the bounds of the string?
+    if (replacePos + replaceLen < targetLen)
+    {
+        // calculate the back part we need to copy
+        backLen = targetLen - (replacePos + replaceLen - 1);
+    }
+    // allocate a result string
+    RexxString *retval = raw_string(frontLen + backLen + padding + newLen);
+    // and get a copy location
+    char *current = retval->getWritableData();
+
+    if (frontLen > 0)
+    {                      /* something in front?               */
+                           /* copy the front part               */
+        memcpy(current, this->getStringData(), frontLen);
+        current += frontLen;               /* step the pointer                  */
+    }
+    // padding only happens if we've copy the entire front portion
+    if (padding > 0)
+    {
+        memset(current, padChar, padding);
+        current += padding;
+    }
+    // replace with a non-null string?  copy into the current position
+    if (newLen > 0)
+    {
+        memcpy(current, newStr->getStringData(), newLen);
+        current += newLen;
+    }
+    // the remainder, if there is any, get's copied after the
+    // replacement string with no padding
+    if (backLen > 0)
+    {
+        memcpy(current, this->getStringData() + replacePos + replaceLen - 1, backLen);
+    }
+    return retval;
+}
+
 /* the REVERSE function */
 /******************************************************************************/
 /* Arguments:  none                                                           */

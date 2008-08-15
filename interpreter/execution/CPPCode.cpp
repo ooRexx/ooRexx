@@ -772,6 +772,7 @@ CPPM(RexxString::right),
 CPPM(RexxString::strip),
 CPPM(RexxString::substr),
 CPPM(RexxString::subchar),
+CPPM(RexxString::replaceAt),
 
                                           /* following methods are in OKBWORD  */
 CPPM(RexxString::delWord),
@@ -849,6 +850,7 @@ CPPM(RexxMutableBuffer::posRexx),
 CPPM(RexxMutableBuffer::lastPos),
 CPPM(RexxMutableBuffer::getBufferSize),
 CPPM(RexxMutableBuffer::setBufferSize),
+CPPM(RexxMutableBuffer::replaceAt),
 
 CPPM(RexxSupplier::available),         /* Supplier methods                  */
 CPPM(RexxSupplier::next),

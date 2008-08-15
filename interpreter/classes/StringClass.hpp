@@ -234,6 +234,7 @@ inline char IntToHexDigit(int n)
    RexxString  *insert(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
    RexxString  *left(RexxInteger *, RexxString *);
    RexxString  *overlay(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
+   RexxString  *replaceAt(RexxString *, RexxInteger *, RexxInteger *, RexxString *);
    RexxString  *reverse();
    RexxString  *right(RexxInteger *, RexxString *);
    RexxString  *strip(RexxString *, RexxString *);

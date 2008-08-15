@@ -65,6 +65,11 @@ public:
     {
         memmove(getData() + offset, getData() + offset + _size, tailSize);
     }
+
+    inline void adjustGap(size_t offset, size_t _size, size_t _newSize)
+    {
+        memmove(getData() + offset + _newSize, getData() + offset + _size, getLength() - (offset + _size));
+    }
     inline void setData(size_t offset, char character, size_t l)
     {
         memset(getData() + offset, character, l);

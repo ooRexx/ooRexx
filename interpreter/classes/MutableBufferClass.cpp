@@ -390,6 +390,80 @@ RexxMutableBuffer *RexxMutableBuffer::overlay(RexxObject *str, RexxObject *pos, 
 }
 
 
+/**
+ * Replace a target substring within a string with
+ * a new string value.  This is similar overlay, but
+ * replacing might cause the characters following the
+ * replacement position to be shifted to the left or
+ * right.
+ *
+ * @param str    The replacement string.
+ * @param pos    The target position (required).
+ * @param len    The target length (optional).  If not specified, the
+ *               length of the replacement string is used, and this
+ *               is essentially an overlay operation.
+ * @param pad    A padding character if padding is required.  The default
+ *               pad is a ' '.  Padding only occurs if the replacement
+ *               position is beyond the current data length.
+ *
+ * @return The target mutablebuffer object.
+ */
+RexxMutableBuffer *RexxMutableBuffer::replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad)
+{
+    RexxString *string = stringArgument(str, ARG_ONE);
+    size_t begin = positionArgument(pos, ARG_TWO) - 1;
+    size_t newLength = string->getLength();
+    size_t replaceLength = optionalLengthArgument(len, newLength, ARG_THREE);
+
+    char padChar = optionalPadArgument(pad, ' ', ARG_FOUR);
+    size_t finalLength;
+
+    // will this extend beyond the end of the string, we require
+    // space for the position + the replacement string length
+    if (begin + newLength > dataLength)
+    {
+        finalLength = begin + newLength;
+    }
+    else
+    {
+        // we need to add the delta between the excised string and the inserted
+        // replacement string
+        finalLength = dataLength - replaceLength + newLength;
+    }
+
+    // make sure we have room for this
+    ensureCapacity(finalLength);
+
+    // is our start position beyond the current data end?
+    // NB: Even though we've adjusted the buffer size, the dataLength is still
+    // the original entry length.
+    if (begin > dataLength)
+    {
+        // add padding to the gap
+        data->setData(dataLength, padChar, begin - dataLength);
+        // now overlay the string data
+        data->copyData(begin, string->getStringData(), newLength);
+    }
+    else
+    {
+        // if the strings are of different lengths, we need to adjust the size
+        // of the gap we're copying into
+        if (replaceLength != newLength)
+        {
+            // snip out the original string
+            data->adjustGap(begin, replaceLength, newLength);
+        }
+        // now overlay the string data
+        data->copyData(begin, string->getStringData(), newLength);
+    }
+
+    // and finally adjust the length
+    dataLength = finalLength;
+    // our return value is always the target mutable buffer
+    return this;
+}
+
+
 RexxMutableBuffer *RexxMutableBuffer::mydelete(RexxObject *_start, RexxObject *len)
 /******************************************************************************/
 /* Function:  delete character range in buffer                                */
