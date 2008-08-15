@@ -340,11 +340,23 @@ public:
 
     inline void transferMessageData(RXSTRING &data)
     {
-        MAKERXSTRING(data, (char *)messageData, messageDataLength);
-        // we've given up ownership of this data, so clear out the
-        // pointers so we don't try to free
-        messageData = NULL;
-        messageDataLength = 0;
+        // if provided a buffer, then use it if large enough
+        if (data.strptr != NULL && messageDataLength < data.strlength)
+        {
+            memcpy(data.strptr, messageData, messageDataLength);
+            data.strlength = messageDataLength;
+            // we need to free our copy
+            freeMessageData();
+        }
+        else
+        {
+
+            MAKERXSTRING(data, (char *)messageData, messageDataLength);
+            // we've given up ownership of this data, so clear out the
+            // pointers so we don't try to free
+            messageData = NULL;
+            messageDataLength = 0;
+        }
     }
 
 
