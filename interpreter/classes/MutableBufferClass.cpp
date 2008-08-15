@@ -590,3 +590,26 @@ RexxArray *RexxMutableBuffer::makearray(RexxString *div)
 {
     return StringUtil::makearray(getStringData(), getLength(), div);
 }
+
+
+RexxInteger *RexxMutableBuffer::countStrRexx(RexxString *needle)
+/******************************************************************************/
+/* Function:  Count occurrences of one string in another.                     */
+/******************************************************************************/
+{
+    /* force needle to a string          */
+    needle = stringArgument(needle, ARG_ONE);
+    // delegate the counting to the string util
+    return new_integer(StringUtil::countStr(getStringData(), getLength(), needle));
+}
+
+RexxInteger *RexxMutableBuffer::caselessCountStrRexx(RexxString *needle)
+/******************************************************************************/
+/* Function:  Count occurrences of one string in another.                     */
+/******************************************************************************/
+{
+    /* force needle to a string          */
+    needle = stringArgument(needle, ARG_ONE);
+    // delegate the counting to the string util
+    return new_integer(StringUtil::caselessCountStr(getStringData(), getLength(), needle));
+}

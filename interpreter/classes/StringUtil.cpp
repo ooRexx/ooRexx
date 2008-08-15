@@ -188,6 +188,54 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
 
 
 /**
+ * Primitive level search withint a string buffer.
+ *
+ * @param stringData The maystack buffer.
+ * @param haystack_length
+ *                   The length of the haystack.
+ * @param needle     The search needle.
+ * @param _start     The starting position.
+ *
+ * @return The offset of the located needle, or 0 if the needle doesn't exist.
+ */
+size_t StringUtil::caselessPos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start)
+{
+    // get the two working lengths
+    size_t needle_length = needle->getLength();
+
+    // ok, there are a few quick checks we can perform.  If the needle is
+    // bigger than the haystack, or the needle is a null string or
+    // our haystack length after adjusting to the starting position
+    // zero, then we can quickly return zero.
+    if (needle_length > haystack_length + _start || needle_length == 0 || _start + needle_length > haystack_length)
+    {
+        return 0;
+    }
+
+    // address the string value
+    const char *haypointer = stringData + _start;
+    const char *needlepointer = needle->getStringData();
+    size_t location = _start + 1;         // this is the match location as an index
+    // calculate the number of probes we can make in this string
+    size_t count = (haystack_length - _start) - needle_length + 1;
+
+    // now scan
+    while (count--)
+    {
+                                           /* get a hit?                        */
+        if (caselessCompare(haypointer, needlepointer, needle_length) == 0)
+        {
+            return location;
+        }
+        // step our pointers accordingly
+        location++;
+        haypointer++;
+    }
+    return 0;  // we got nothing...
+}
+
+
+/**
  * Locate the last positon of a string within the designated
  * string buffer.
  *
@@ -283,6 +331,45 @@ const char *StringUtil::lastPos(const char *needle, size_t needleLen, const char
         haystack--;
     }
     return NULL;   // nothing to see here folks, move along
+}
+
+
+/**
+ * Primitive level caseless lastpos search within a string
+ * buffer.
+ *
+ * @param stringData The maystack buffer.
+ * @param haystack_length
+ *                   The length of the haystack.
+ * @param needle     The search needle.
+ * @param _start     The starting position.
+ *
+ * @return The offset of the located needle, or 0 if the needle doesn't exist.
+ */
+size_t StringUtil::caselessLastPos(const char *stringData, size_t haystackLen, RexxString *needle, size_t _start)
+{
+    size_t needleLen = needle->getLength();          /* and get the length too            */
+
+    // no match possible if either string is null
+    if (needleLen == 0 || haystackLen == 0)
+    {
+        return 0;
+    }
+    else
+    {
+        // get the start position for the search.
+        haystackLen = Numerics::minVal(_start, haystackLen);
+                                         /* do the search                     */
+        const char *matchLocation = caselessLastPos(needle->getStringData(), needleLen, stringData, haystackLen);
+        if (matchLocation == NULL)
+        {
+            return 0;
+        }
+        else
+        {
+            return matchLocation - stringData + 1;
+        }
+    }
 }
 
 
@@ -1188,4 +1275,76 @@ size_t StringUtil::nextWord(const char **String, size_t *StringLength, const cha
         }
     }
     return WordStart;                    /* return word length         */
+}
+
+
+/**
+ * Count the occurences of a string within another string.
+ *
+ * @param hayStack Pointer to the haystack data.
+ * @param hayStackLength
+ *                 Length of the haystack data.
+ * @param needle   The needle we're searching for
+ *
+ * @return The count of needle occurrences located in the string.
+ */
+size_t StringUtil::countStr(const char *hayStack, size_t hayStackLength, RexxString *needle)
+{
+    size_t count = 0;                           /* no matches yet                    */
+    /* get the first match position      */
+    size_t matchPos = pos(hayStack, hayStackLength, needle, 0);
+    while (matchPos != 0)
+    {
+        count = count + 1;                 /* count this match                  */
+        // step to the new position and search
+        matchPos = pos(hayStack, hayStackLength, needle, matchPos + needle->getLength() - 1);
+    }
+    return count;                        /* return the match count            */
+}
+
+
+/**
+ * Count the occurences of a string within another string.
+ *
+ * @param hayStack Pointer to the haystack data.
+ * @param hayStackLength
+ *                 Length of the haystack data.
+ * @param needle   The needle we're searching for
+ *
+ * @return The count of needle occurrences located in the string.
+ */
+size_t StringUtil::caselessCountStr(const char *hayStack, size_t hayStackLength, RexxString *needle)
+{
+    size_t count = 0;                           /* no matches yet                    */
+    /* get the first match position      */
+    size_t matchPos = pos(hayStack, hayStackLength, needle, 0);
+    while (matchPos != 0)
+    {
+        count = count + 1;                 /* count this match                  */
+        // step to the new position and search
+        matchPos = caselessPos(hayStack, hayStackLength, needle, matchPos + needle->getLength() - 1);
+    }
+    return count;                        /* return the match count            */
+}
+
+
+size_t StringUtil::memPos(
+  const char *string,                  /* search string                     */
+  size_t length,                       /* string length                     */
+  char   target )                      /* target character                  */
+/*********************************************************************/
+/*  Function:  offset of first occurrence of char in string          */
+/*********************************************************************/
+{
+                                         /* while in the string               */
+    for (const char *scan = string; length; length--)
+    {
+        // if we have a match, return the offset
+        if (*scan == target)
+        {
+            return scan - string;
+        }
+        scan++;                            /* step the position                 */
+    }
+    return -1;                   // no match position
 }

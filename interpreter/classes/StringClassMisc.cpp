@@ -453,12 +453,29 @@ RexxObject *RexxString::dataType(RexxString *pType)
 }
 
 
+/**
+ * Do a lastpos() search for a string.
+ *
+ * @param needle The search needle.
+ * @param _start The starting position.
+ *
+ * @return the offset of the match position (origin 1).  Returns 0
+ *         if no match was found.
+ */
 RexxInteger *RexxString::lastPosRexx(RexxString  *needle, RexxInteger *_start)
 {
     return StringUtil::lastPosRexx(getStringData(), getLength(), needle, _start);
 }
 
 
+/**
+ * Rexx exported version of the caselessLastPos() method.
+ *
+ * @param needle The search needle.
+ * @param _start The starting position.
+ *
+ * @return The match position.  0 means not found.
+ */
 RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *_start)
 {
     // validate that this is a good string argument
@@ -468,7 +485,6 @@ RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *_
     // now perform the actual search.
     return new_integer(caselessLastPos(needle, startPos));
 }
-
 
 
 /**
@@ -501,48 +517,7 @@ size_t RexxString::lastPos(RexxString  *needle, size_t _start)
  */
 size_t RexxString::caselessLastPos(RexxString *needle, size_t _start)
 {
-    size_t haystackLen = this->getLength();          /* get the haystack length           */
-    size_t needleLen = needle->getLength();          /* and get the length too            */
-
-    // no match possible if either string is null
-    if (needleLen == 0 || haystackLen == 0)
-    {
-        return 0;
-    }
-    else
-    {
-        // get the start position for the search.
-        haystackLen = Numerics::minVal(_start, haystackLen);
-                                         /* do the search                     */
-        const char *matchLocation = StringUtil::caselessLastPos(needle->getStringData(), needleLen, this->getStringData(), haystackLen);
-        if (matchLocation == NULL)
-        {
-            return 0;
-        }
-        else
-        {
-            return matchLocation - this->getStringData() + 1;
-        }
-    }
-}
-
-size_t RexxString::countStr(RexxString *needle)
-/******************************************************************************/
-/* Function:  Count occurrences of one string in another.                     */
-/******************************************************************************/
-{
-    size_t count = 0;                           /* no matches yet                    */
-                                         /* get the length of the needle      */
-    size_t needlelength = needle->getLength();
-    /* get the first match position      */
-    size_t matchPos = this->pos(needle, 0);
-    while (matchPos != 0)
-    {              /* while we're getting matches       */
-        count = count + 1;                 /* count this match                  */
-                                           /* do the next search                */
-        matchPos = this->pos(needle, matchPos + needlelength - 1);
-    }
-    return count;                        /* return the match count            */
+    return StringUtil::caselessLastPos(getStringData(), getLength(), needle, _start);
 }
 
 RexxInteger *RexxString::countStrRexx(RexxString *needle)
@@ -552,28 +527,10 @@ RexxInteger *RexxString::countStrRexx(RexxString *needle)
 {
     /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
-    size_t count = this->countStr(needle);      /* do the counting                   */
-    return new_integer(count);           /* return the count as an object     */
+    // delegate the counting to the string util
+    return new_integer(StringUtil::countStr(getStringData(), getLength(), needle));
 }
 
-size_t RexxString::caselessCountStr(RexxString *needle)
-/******************************************************************************/
-/* Function:  Count occurrences of one string in another.                     */
-/******************************************************************************/
-{
-    size_t count = 0;                           /* no matches yet                    */
-    /* get the length of the needle      */
-    size_t needlelength = needle->getLength();
-    /* get the first match position      */
-    size_t matchPos = this->caselessPos(needle, 0);
-    while (matchPos != 0)
-    {                 /* while we're getting matches       */
-        count = count + 1;                 /* count this match                  */
-                                           /* do the next search                */
-        matchPos = this->caselessPos(needle, matchPos + needlelength - 1);
-    }
-    return count;                        /* return the match count            */
-}
 
 RexxInteger *RexxString::caselessCountStrRexx(RexxString *needle)
 /******************************************************************************/
@@ -582,8 +539,8 @@ RexxInteger *RexxString::caselessCountStrRexx(RexxString *needle)
 {
     /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
-    size_t count = this->caselessCountStr(needle); /* do the counting                   */
-    return new_integer(count);              /* return the count as an object     */
+    // delegate the counting to the string util
+    return new_integer(StringUtil::caselessCountStr(getStringData(), getLength(), needle));
 }
 
 RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg)
@@ -610,7 +567,7 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
 
     // we'll only change up to a specified count.  If not there, we do everything.
     size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
-    matches = this->countStr(needle);    /* find the number of replacements   */
+    matches = StringUtil::countStr(getStringData(), getLength(), needle);    /* find the number of replacements   */
     if (matches > count)                 // the matches are bounded by the count
     {
         matches = count;
@@ -626,8 +583,8 @@ RexxString *RexxString::changeStr(RexxString *needle, RexxString *newNeedle, Rex
     _start = 0;                          /* set a zero starting point         */
     for (i = 0; i < matches; i++)
     {      /* until we hit count or run out     */
-        matchPos = this->pos(needle, _start);  /* look for the next occurrence      */
-        if (matchPos == 0)                 /* not found?                        */
+        matchPos = pos(needle, _start);  /* look for the next occurrence      */
+        if (matchPos == 0)               /* not found?                        */
         {
             break;                           /* get out of here                   */
         }
@@ -677,7 +634,7 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
     // we'll only change up to a specified count.  If not there, we do everything.
     size_t count = optionalPositive(countArg, Numerics::MAX_WHOLENUMBER, ARG_THREE);
 
-    matches = this->caselessCountStr(needle);    /* find the number of replacements   */
+    matches = StringUtil::caselessCountStr(getStringData(), getLength(), needle);    /* find the number of replacements   */
     if (matches > count)                 // the matches are bounded by the count
     {
         matches = count;
@@ -745,74 +702,37 @@ RexxInteger *RexxString::caselessPosRexx(
     size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
     /* pass on to the primitive function */
     /* and return as an integer object   */
-    return new_integer(this->caselessPos(needle, _start - 1));
+    return new_integer(StringUtil::caselessPos(getStringData(), getLength(),needle , _start - 1));
 }
 
 
+/**
+ * Do a primitive level pos() search on a string.
+ *
+ * @param needle The search needle.
+ * @param _start The starting position (origin 0)
+ *
+ * @return The match position (origin 1).  Returns 0 for no match.
+ */
 size_t RexxString::pos(RexxString *needle, size_t _start)
 {
     return StringUtil::pos(getStringData(), getLength(), needle, _start);
 }
 
 
+/**
+ * Do a primitive level pos() search on a string.
+ *
+ * @param needle The search needle.
+ * @param _start The starting position (origin 0)
+ *
+ * @return The match position (origin 1).  Returns 0 for no match.
+ */
 size_t RexxString::caselessPos(RexxString *needle, size_t _start)
 {
-    // get the two working lengths
-    size_t haystack_length = getLength();
-    size_t needle_length = needle->getLength();
-
-    // ok, there are a few quick checks we can perform.  If the needle is
-    // bigger than the haystack, or the needle is a null string or
-    // our haystack length after adjusting to the starting position
-    // zero, then we can quickly return zero.
-    if (needle_length > haystack_length + _start || needle_length == 0 || _start + needle_length > haystack_length)
-    {
-        return 0;
-    }
-
-    // address the string value
-    const char *haypointer = getStringData() + _start;
-    const char *needlepointer = needle->getStringData();
-    size_t location = _start + 1;         // this is the match location as an index
-    // calculate the number of probes we can make in this string
-    size_t count = (haystack_length - _start) - needle_length + 1;
-
-    // now scan
-    while (count--)
-    {
-                                           /* get a hit?                        */
-        if (StringUtil::caselessCompare(haypointer, needlepointer, needle_length) == 0)
-        {
-            return location;
-        }
-        // step our pointers accordingly
-        location++;
-        haypointer++;
-    }
-    return 0;  // we got nothing...
+    return StringUtil::caselessPos(getStringData(), getLength(), needle, _start);
 }
 
-size_t MemPos(
-  const char *String,                  /* search string                     */
-  size_t Length,                       /* string length                     */
-  char   Char )                        /* target character                  */
-/*********************************************************************/
-/*  Function:  offset of first occurrence of char in string          */
-/*********************************************************************/
-{
-    size_t Position = -1;                       /* default to no match               */
-                                         /* while in the string               */
-    for (const char *Scan = String; Length; Length--)
-    {
-        if (*Scan == Char)
-        {               /* find a match?                     */
-            Position = Scan - String;        /* return difference                 */
-            break;                           /* quit the loop                     */
-        }
-        Scan++;                            /* step the position                 */
-    }
-    return Position;                     /* return match position             */
-}
 
 RexxString *RexxString::translate(
     RexxString *tableo,                /* output table                      */
@@ -862,7 +782,7 @@ RexxString *RexxString::translate(
         if (tablei != OREF_NULLSTRING)      /* input table specified?            */
         {
             /* search for the character          */
-            Position = MemPos(InTable, InTableLength, ch);
+            Position = StringUtil::memPos(InTable, InTableLength, ch);
         }
         else
         {

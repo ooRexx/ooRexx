@@ -933,12 +933,14 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_POS                          ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::posRexx), 2);
   defineKernelMethod(CHAR_LASTPOS                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lastPos), 2);
   defineKernelMethod(CHAR_SUBCHAR                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::subchar), 1);
-  defineKernelMethod(CHAR_GETBUFFERSIZE                , TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::getBufferSize), 0);
-  defineKernelMethod(CHAR_SETBUFFERSIZE                , TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::setBufferSize), 1);
+  defineKernelMethod(CHAR_GETBUFFERSIZE                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::getBufferSize), 0);
+  defineKernelMethod(CHAR_SETBUFFERSIZE                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::setBufferSize), 1);
 
   defineKernelMethod(CHAR_LENGTH                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lengthRexx), 0);
   defineKernelMethod(CHAR_MAKEARRAY                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::makearray), 1);
   defineKernelMethod(CHAR_STRING                       ,TheMutableBufferBehaviour, CPPM(RexxObject::makeStringRexx), 0);
+  defineKernelMethod(CHAR_COUNTSTR                     ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::countStrRexx), 1);
+  defineKernelMethod(CHAR_CASELESSCOUNTSTR             ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessCountStrRexx), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

@@ -53,11 +53,13 @@ public:
     static RexxString *substr(const char *, size_t, RexxInteger *, RexxInteger *, RexxString *);
     static RexxInteger *posRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart);
     static size_t pos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start);
+    static size_t caselessPos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start);
     static RexxInteger *lastPosRexx(const char *stringData, size_t haystackLen, RexxString  *needle, RexxInteger *_start);
     static size_t lastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start);
     static const char *lastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static RexxString *subchar(const char *stringData, size_t stringLength, RexxInteger *positionArg);
     static RexxArray *makearray(const char *start, size_t length, RexxString *separator);
+    static size_t caselessLastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start);
     static const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static int caselessCompare(const char *, const char *, size_t);
     static int hexDigitToInt(char  ch);
@@ -75,6 +77,9 @@ public:
     static void skipNonBlanks(const char **String, size_t *StringLength);
     static void skipBlanks(const char **String, size_t *StringLength);
     static size_t nextWord(const char **String, size_t *StringLength, const char **NextString );
+    static size_t countStr(const char *hayStack, size_t hayStackLength, RexxString *needle);
+    static size_t caselessCountStr(const char *hayStack, size_t hayStackLength, RexxString *needle);
+    static size_t memPos(const char *string, size_t length, char target);
 };
 
 #endif

@@ -851,6 +851,8 @@ CPPM(RexxMutableBuffer::lastPos),
 CPPM(RexxMutableBuffer::getBufferSize),
 CPPM(RexxMutableBuffer::setBufferSize),
 CPPM(RexxMutableBuffer::replaceAt),
+CPPM(RexxMutableBuffer::countStrRexx),
+CPPM(RexxMutableBuffer::caselessCountStrRexx),
 
 CPPM(RexxSupplier::available),         /* Supplier methods                  */
 CPPM(RexxSupplier::next),

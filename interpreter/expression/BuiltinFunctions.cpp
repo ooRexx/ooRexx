@@ -2543,8 +2543,7 @@ BUILTIN(COUNTSTR) {
   needle = required_string(COUNTSTR, needle);
                                        /* get string for target             */
   haystack = required_string(COUNTSTR, haystack);
-  count = haystack->countStr(needle);  /* go perform the countstr function  */
-  return new_integer(count);           /* return the new count              */
+  return haystack->countStrRexx(needle); /* go perform the countstr function  */
 }
 
 
