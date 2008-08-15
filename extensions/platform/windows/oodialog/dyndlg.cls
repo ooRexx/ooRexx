@@ -670,7 +670,7 @@
       if cx = 0 then cx = icx+2
       if cy = 0 then cy = icy
    end
-   id = self~ItemAdd(id)
+   id = self~ItemAdd(id, 1)
    if id = -2 then return id
    opts = self~GetDefaultOpts(opts)
    self~AktPtr = UsrAddControl("TXT", self~AktPtr, x, y, cx, cy, opts, text, id)
