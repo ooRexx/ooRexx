@@ -97,6 +97,8 @@ class RexxMutableBufferClass : public RexxClass {
    RexxInteger       *caselessCountStrRexx(RexxString *needle);
    RexxMutableBuffer *changeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
    RexxMutableBuffer *caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
+   RexxMutableBuffer *upper(RexxInteger *_start, RexxInteger *_length);
+   RexxMutableBuffer *lower(RexxInteger *_start, RexxInteger *_length);
 
    inline const char *getStringData() { return data->getData(); }
    inline size_t      getLength()     { return dataLength; }

@@ -950,3 +950,83 @@ RexxMutableBuffer *RexxMutableBuffer::caselessChangeStr(RexxString *needle, Rexx
     dataLength = resultLength;
     return this;
 }
+
+
+/**
+ * Rexx exported method stub for the lower() method.
+ *
+ * @param start  The optional starting location.  Defaults to the first character
+ *               if not specified.
+ * @param length The length to convert.  Defaults to the segment from the start
+ *               position to the end of the string.
+ *
+ * @return A new string object with the case conversion applied.
+ */
+RexxMutableBuffer *RexxMutableBuffer::lower(RexxInteger *_start, RexxInteger *_length)
+{
+    size_t startPos = optionalPositionArgument(_start, 1, ARG_ONE) - 1;
+    size_t rangeLength = optionalLengthArgument(_length, getLength(), ARG_TWO);
+
+    // if we're starting beyond the end bounds, return unchanged
+    if (startPos >= getLength())
+    {
+        return this;
+    }
+
+    rangeLength = Numerics::minVal(rangeLength, getLength() - startPos);
+
+    // a zero length value is also a non-change.
+    if (rangeLength == 0)
+    {
+        return this;
+    }
+
+    char *data = getData() + startPos;
+    // now uppercase in place
+    for (size_t i = 0; i < rangeLength; i++)
+    {
+        *data = tolower(*data);
+        data++;
+    }
+    return this;
+}
+
+
+/**
+ * Rexx exported method stub for the upper() method.
+ *
+ * @param start  The optional starting location.  Defaults to the first character
+ *               if not specified.
+ * @param length The length to convert.  Defaults to the segment from the start
+ *               position to the end of the string.
+ *
+ * @return A new string object with the case conversion applied.
+ */
+RexxMutableBuffer *RexxMutableBuffer::upper(RexxInteger *_start, RexxInteger *_length)
+{
+    size_t startPos = optionalPositionArgument(_start, 1, ARG_ONE) - 1;
+    size_t rangeLength = optionalLengthArgument(_length, getLength(), ARG_TWO);
+
+    // if we're starting beyond the end bounds, return unchanged
+    if (startPos >= getLength())
+    {
+        return this;
+    }
+
+    rangeLength = Numerics::minVal(rangeLength, getLength() - startPos);
+
+    // a zero length value is also a non-change.
+    if (rangeLength == 0)
+    {
+        return this;
+    }
+
+    char *data = getData() + startPos;
+    // now uppercase in place
+    for (size_t i = 0; i < rangeLength; i++)
+    {
+        *data = toupper(*data);
+        data++;
+    }
+    return this;
+}
