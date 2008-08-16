@@ -702,7 +702,7 @@ RexxInteger *RexxString::caselessPosRexx(
     size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
     /* pass on to the primitive function */
     /* and return as an integer object   */
-    return new_integer(StringUtil::caselessPos(getStringData(), getLength(),needle , _start - 1));
+    return new_integer(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1));
 }
 
 

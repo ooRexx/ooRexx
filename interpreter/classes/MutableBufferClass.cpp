@@ -552,15 +552,77 @@ RexxString *RexxMutableBuffer::substr(RexxInteger *argposition,
 }
 
 
+/**
+ * Perform a search for a string within the buffer.
+ *
+ * @param needle The search needle.
+ * @param pstart the starting position.
+ *
+ * @return The index of the located string.  Returns 0 if no matches
+ *         are found.
+ */
 RexxInteger *RexxMutableBuffer::posRexx(RexxString  *needle, RexxInteger *pstart)
 {
     return StringUtil::posRexx(getStringData(), getLength(), needle, pstart);
 }
 
 
+/**
+ * Perform a search for the last position of a string within the
+ * buffer.
+ *
+ * @param needle The search needle.
+ * @param pstart the starting position.
+ *
+ * @return The index of the located string.  Returns 0 if no matches
+ *         are found.
+ */
 RexxInteger *RexxMutableBuffer::lastPos(RexxString  *needle, RexxInteger *_start)
 {
     return StringUtil::lastPosRexx(getStringData(), getLength(), needle, _start);
+}
+
+
+/**
+ * Perform a caseless search for a string within the buffer.
+ *
+ * @param needle The search needle.
+ * @param pstart the starting position.
+ *
+ * @return The index of the located string.  Returns 0 if no matches
+ *         are found.
+ */
+RexxInteger *RexxMutableBuffer::caselessPos(RexxString  *needle, RexxInteger *pstart)
+{
+    /* force needle to a string          */
+    needle = stringArgument(needle, ARG_ONE);
+    /* get the starting position         */
+    size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
+    /* pass on to the primitive function */
+    /* and return as an integer object   */
+    return new_integer(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1));
+}
+
+
+/**
+ * Perform a caseless search for the last position of a string
+ * within the buffer.
+ *
+ * @param needle The search needle.
+ * @param pstart the starting position.
+ *
+ * @return The index of the located string.  Returns 0 if no matches
+ *         are found.
+ */
+RexxInteger *RexxMutableBuffer::caselessLastPos(RexxString  *needle, RexxInteger *pstart)
+{
+    /* force needle to a string          */
+    needle = stringArgument(needle, ARG_ONE);
+    /* get the starting position         */
+    size_t _start = optionalPositionArgument(pstart, getLength(), ARG_TWO);
+    /* pass on to the primitive function */
+    /* and return as an integer object   */
+    return new_integer(StringUtil::caselessLastPos(getStringData(), getLength(), needle , _start - 1));
 }
 
 

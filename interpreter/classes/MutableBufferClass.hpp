@@ -85,6 +85,8 @@ class RexxMutableBufferClass : public RexxClass {
    RexxString        *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad);
    RexxInteger       *lastPos(RexxString *needle, RexxInteger *_start);
    RexxInteger       *posRexx(RexxString *needle, RexxInteger *_start);
+   RexxInteger       *caselessLastPos(RexxString *needle, RexxInteger *_start);
+   RexxInteger       *caselessPos(RexxString *needle, RexxInteger *_start);
    RexxString        *subchar(RexxInteger *startPosition);
 
    RexxInteger       *getBufferSize() { return new_integer(bufferLength); }
