@@ -859,6 +859,7 @@ CPPM(RexxMutableBuffer::changeStr),
 CPPM(RexxMutableBuffer::caselessChangeStr),
 CPPM(RexxMutableBuffer::upper),
 CPPM(RexxMutableBuffer::lower),
+CPPM(RexxMutableBuffer::translate),
 
 CPPM(RexxSupplier::available),         /* Supplier methods                  */
 CPPM(RexxSupplier::next),

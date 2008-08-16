@@ -1030,3 +1030,64 @@ RexxMutableBuffer *RexxMutableBuffer::upper(RexxInteger *_start, RexxInteger *_l
     }
     return this;
 }
+
+
+/**
+ * translate characters in the buffer using a translation table.
+ *
+ * @param tableo The output table specification
+ * @param tablei The input table specification
+ * @param pad    An optional padding character (default is a space).
+ *
+ * @return The target mutable buffer.
+ */
+RexxMutableBuffer *RexxMutableBuffer::translate(RexxString *tableo, RexxString *tablei, RexxString *pad)
+{
+    // just a simple uppercase?
+    if (tableo == OREF_NULL && tablei == OREF_NULL && pad == OREF_NULL)
+    {
+        return this->upper(OREF_NULL, OREF_NULL);
+    }
+                                            /* validate the tables               */
+    tableo = optionalStringArgument(tableo, OREF_NULLSTRING, ARG_ONE);
+    size_t outTableLength = tableo->getLength();      /* get the table length              */
+    /* input table too                   */
+    tablei = optionalStringArgument(tablei, OREF_NULLSTRING, ARG_TWO);
+    size_t inTableLength = tablei->getLength();       /* get the table length              */
+    const char *inTable = tablei->getStringData();    /* point at the input table          */
+    const char *outTable = tableo->getStringData();   /* and the output table              */
+                                          /* get the pad character             */
+    char padChar = optionalPadArgument(pad, ' ', ARG_THREE);
+    char *scanPtr = getData();                  /* point to data                     */
+    size_t scanLength = getLength();            /* get the length too                */
+
+    while (scanLength--)
+    {                /* spin thru input                   */
+        char ch = *scanPtr;                      /* get a character                   */
+        size_t position;
+
+        if (tablei != OREF_NULLSTRING)      /* input table specified?            */
+        {
+            /* search for the character          */
+            position = StringUtil::memPos(inTable, inTableLength, ch);
+        }
+        else
+        {
+            position = (size_t)ch;            /* position is the character value   */
+        }
+        if (position != (size_t)(-1))
+        {     /* found in the table?               */
+            if (position < outTableLength)    /* in the output table?              */
+            {
+                /* convert the character             */
+                *scanPtr = *(outTable + position);
+            }
+            else
+            {
+                *scanPtr = padChar;             /* else use the pad character        */
+            }
+        }
+        scanPtr++;                          /* step the pointer                  */
+    }
+    return this;
+}

@@ -99,6 +99,7 @@ class RexxMutableBufferClass : public RexxClass {
    RexxMutableBuffer *caselessChangeStr(RexxString *needle, RexxString *newNeedle, RexxInteger *countArg);
    RexxMutableBuffer *upper(RexxInteger *_start, RexxInteger *_length);
    RexxMutableBuffer *lower(RexxInteger *_start, RexxInteger *_length);
+   RexxMutableBuffer *translate(RexxString *tableo, RexxString *tablei, RexxString *pad);
 
    inline const char *getStringData() { return data->getData(); }
    inline size_t      getLength()     { return dataLength; }
