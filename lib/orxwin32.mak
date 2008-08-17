@@ -173,7 +173,7 @@ libs_common=user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib delayimp
 
 lflags_common= /MAP /NOLOGO $(my_ldebug) /SUBSYSTEM:Windows $(lflags_lib) $(libs_common)
 lflags_common_console= /MAP /NOLOGO $(my_ldebug) /SUBSYSTEM:Console $(lflags_lib) user32.lib comdlg32.lib gdi32.lib kernel32.lib
-lflags_dll = /DLL -entry:_DllMainCRTStartup@12
+lflags_dll = /DLL
 lflags_exe =
 
 #
