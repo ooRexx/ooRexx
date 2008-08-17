@@ -59,6 +59,7 @@
 
 #define COMPILE_NEWAPIS_STUBS          /* Allows GetLongPathName to run on  */
 #define WANT_GETLONGPATHNAME_WRAPPER   /* NT and Windows 95                 */
+#define NO_SHOBJIDL_SORTDIRECTION
 #include <NewAPIs.h>
 
 
