@@ -794,30 +794,29 @@ BUILTIN(LENGTH) {
 }
 
 #define TRANSLATE_MIN 1
-#define TRANSLATE_MAX 4
+#define TRANSLATE_MAX 6
 #define TRANSLATE_string  1
 #define TRANSLATE_tableo  2
 #define TRANSLATE_tablei  3
 #define TRANSLATE_pad     4
+#define TRANSLATE_start   5
+#define TRANSLATE_range   6
 
 BUILTIN(TRANSLATE) {
-  RexxString  *string;                 /* target string                     */
-  RexxString  *tableo;                 /* output table                      */
-  RexxString  *tablei;                 /* input table                       */
-  RexxString  *pad;                    /* optional pad character            */
-
-  fix_args(TRANSLATE);                 /* check on required number of args  */
-                                       /* must have a string                */
-  string = required_string(TRANSLATE, string);
-                                       /* output table is optional          */
-  tableo = optional_string(TRANSLATE, tableo);
-                                       /* input table is optional           */
-  tablei = optional_string(TRANSLATE, tablei);
-                                       /* pad is also optional              */
-  pad = optional_string(TRANSLATE, pad);
-                                       /* perform the translate             */
-  checkPadArgument(CHAR_TRANSLATE, IntegerFour, pad);
-  return string->translate(tableo, tablei, pad);
+    fix_args(TRANSLATE);                 /* check on required number of args  */
+                                         /* must have a string                */
+    RexxString *string = required_string(TRANSLATE, string);
+    /* output table is optional          */
+    RexxString *tableo = optional_string(TRANSLATE, tableo);
+    /* input table is optional           */
+    RexxString *tablei = optional_string(TRANSLATE, tablei);
+    /* pad is also optional              */
+    RexxString *pad = optional_string(TRANSLATE, pad);
+    /* perform the translate             */
+    checkPadArgument(CHAR_TRANSLATE, IntegerFour, pad);
+    RexxInteger *start = optional_integer(TRANSLATE, start);
+    RexxInteger *range = optional_integer(TRANSLATE, range);
+    return string->translate(tableo, tablei, pad, start, range);
 }
 
 #define VERIFY_MIN 2
@@ -2536,7 +2535,6 @@ BUILTIN(CHANGESTR) {
 BUILTIN(COUNTSTR) {
   RexxString *needle;                  /* needle to change                  */
   RexxString *haystack;                /* target haystack                   */
-  size_t      count;                   /* returned count                    */
 
   fix_args(COUNTSTR);                  /* check on require number of args   */
                                        /* get string for new                */

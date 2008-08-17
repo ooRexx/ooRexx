@@ -737,7 +737,9 @@ size_t RexxString::caselessPos(RexxString *needle, size_t _start)
 RexxString *RexxString::translate(
     RexxString *tableo,                /* output table                      */
     RexxString *tablei,                /* input table                       */
-    RexxString *pad)                   /* pad character                     */
+    RexxString *pad,                   /* pad character                     */
+    RexxInteger *_start,               // start position to translate
+    RexxInteger *_range)               // length to translate
 /******************************************************************************/
 /*  Function:  String class TRANSLATE method/function                         */
 /******************************************************************************/
@@ -756,7 +758,7 @@ RexxString *RexxString::translate(
                                          /* just a simple uppercase?          */
     if (tableo == OREF_NULL && tablei == OREF_NULL && pad == OREF_NULL)
     {
-        return this->upper();               /* return the uppercase version      */
+        return this->upperRexx(_start, _range);   /* return the uppercase version      */
     }
                                             /* validate the tables               */
                                             /* validate the tables               */
@@ -769,11 +771,22 @@ RexxString *RexxString::translate(
     OutTable = tableo->getStringData();   /* and the output table              */
                                           /* get the pad character             */
     PadChar = optionalPadArgument(pad, ' ', ARG_THREE);
+    size_t start = optionalPositionArgument(_start, 1, ARG_FOUR);
+    size_t range = optionalLengthArgument(_range, getLength() - start + 1, ARG_FOUR);
+
+    // if nothing to translate, we can return now
+    if (start > getLength() || range == 0)
+    {
+        return this;
+    }
+    // cape the real range
+    range = Numerics::maxVal(range, getLength() - start + 1);
+
     /* allocate space for answer         */
     /* and copy the string               */
     Retval = new_string(this->getStringData(), this->getLength());
-    ScanPtr = Retval->getWritableData();  /* point to data                     */
-    ScanLength = this->getLength();            /* get the length too                */
+    ScanPtr = Retval->getWritableData() + start - 1;  /* point to data                     */
+    ScanLength = range;                        /* get the length too                */
 
     while (ScanLength--)
     {                /* spin thru input                   */

@@ -1038,15 +1038,17 @@ RexxMutableBuffer *RexxMutableBuffer::upper(RexxInteger *_start, RexxInteger *_l
  * @param tableo The output table specification
  * @param tablei The input table specification
  * @param pad    An optional padding character (default is a space).
+ * @param _start The starting position to translate.
+ * @param _range The length to translate
  *
  * @return The target mutable buffer.
  */
-RexxMutableBuffer *RexxMutableBuffer::translate(RexxString *tableo, RexxString *tablei, RexxString *pad)
+RexxMutableBuffer *RexxMutableBuffer::translate(RexxString *tableo, RexxString *tablei, RexxString *pad, RexxInteger *_start, RexxInteger *_range)
 {
     // just a simple uppercase?
     if (tableo == OREF_NULL && tablei == OREF_NULL && pad == OREF_NULL)
     {
-        return this->upper(OREF_NULL, OREF_NULL);
+        return this->upper(_start, _range);
     }
                                             /* validate the tables               */
     tableo = optionalStringArgument(tableo, OREF_NULLSTRING, ARG_ONE);
@@ -1058,8 +1060,18 @@ RexxMutableBuffer *RexxMutableBuffer::translate(RexxString *tableo, RexxString *
     const char *outTable = tableo->getStringData();   /* and the output table              */
                                           /* get the pad character             */
     char padChar = optionalPadArgument(pad, ' ', ARG_THREE);
-    char *scanPtr = getData();                  /* point to data                     */
-    size_t scanLength = getLength();            /* get the length too                */
+    size_t start = optionalPositionArgument(_start, 1, ARG_FOUR);
+    size_t range = optionalLengthArgument(_range, getLength() - start + 1, ARG_FOUR);
+
+    // if nothing to translate, we can return now
+    if (start > getLength() || range == 0)
+    {
+        return this;
+    }
+    // cape the real range
+    range = Numerics::maxVal(range, getLength() - start + 1);
+    char *scanPtr = getData() + start - 1;      /* point to data                     */
+    size_t scanLength = range;                  /* get the length too                */
 
     while (scanLength--)
     {                /* spin thru input                   */

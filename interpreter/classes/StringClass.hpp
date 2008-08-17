@@ -271,7 +271,7 @@ inline char IntToHexDigit(int n)
    size_t       pos(RexxString *, size_t);
    size_t       caselessPos(RexxString *, size_t);
 
-   RexxString  *translate(RexxString *, RexxString *, RexxString *);
+   RexxString  *translate(RexxString *, RexxString *, RexxString *, RexxInteger *, RexxInteger *);
    RexxInteger *verify(RexxString *, RexxString *, RexxInteger *);
    RexxInteger *countStrRexx(RexxString *);
    RexxInteger *caselessCountStrRexx(RexxString *);
