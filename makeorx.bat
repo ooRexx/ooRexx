@@ -43,8 +43,15 @@ REM Note: needed for XCOPY command under Win 2000 to suppress the overwrite ques
 REM Win NT 4.0 ignores this environment variable
 SET COPYCMD=/Y
 
-REM MHES 29122004 Added set CPU=ix86
-set CPU=ix86
+REM CPU is set to X86 or X64 to define if this is a 32-bit or 64-bit build.  A
+REM few things key off of this, but not many.  To build for 64-bit on Windows,
+REM using the 64-bit toolset is what does most of it.  By default this is a
+REM 32-bit build.
+if x%CPU%x == xx (
+  set CPU=X86
+) else (
+  if /I "%CPU%" EQU "AMD64" (set CPU=X64) else (if /I "%CPU%" NEQ "X64" set CPU=X86)
+)
 
 REM Check that we have at least the first option
 IF %1x == x GOTO HELP
@@ -204,7 +211,6 @@ move ooRexx%NODOTS%.exe ..\..\..\
 cd ..\..\..\
 
 :ENV_VARS_CLEANUP
-SET CPU=
 SET DOPACKAGE=
 SET PACKAGE_REL=
 SET PACKAGE_DBG=
