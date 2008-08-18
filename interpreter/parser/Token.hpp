@@ -375,6 +375,7 @@
 #define  BUILTIN_ENDLOCAL          BUILTIN_RXFUNCQUERY      + 1
 #define  BUILTIN_SETLOCAL          BUILTIN_ENDLOCAL         + 1
 #define  BUILTIN_QUEUEEXIT         BUILTIN_SETLOCAL         + 1
+#define  BUILTIN_QUALIFY           BUILTIN_QUEUEEXIT        + 1
 
 
 

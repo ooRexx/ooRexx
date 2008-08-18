@@ -59,6 +59,7 @@
 #include "ProtectedObject.hpp"
 #include "PackageManager.hpp"
 #include "SystemInterpreter.hpp"
+#include "SysFileSystem.hpp"
 
 
 /* checks if pad is a single character string */
@@ -2607,6 +2608,25 @@ BUILTIN(ENDLOCAL)
     return SystemInterpreter::popEnvironment(context);
 }
 
+#define QUALIFY_MIN 0
+#define QUALIFY_MAX 1
+#define QUALIFY_name  1
+
+/**
+ * Qualify a stream name.
+ */
+BUILTIN(QUALIFY)
+{
+    check_args(QUALIFY);               /* check on required number of args  */
+    RexxString *name = optional_string(QUALIFY, name);
+
+    char qualified_name[SysFileSystem::MaximumFileNameLength];
+    // qualifyStreamName will not expand if not a null string on entry.
+    qualified_name[0] = '\0';
+    SysFileSystem::qualifyStreamName(name->getStringData(), qualified_name, sizeof(qualified_name));
+    return new_string(qualified_name);
+}
+
 /* the following builtin function    */
 /* table must maintain the same order*/
 /* as the builtin function codes used*/
@@ -2693,5 +2713,6 @@ pbuiltin builtin_table[] = {
     &builtin_function_ENDLOCAL         ,
     &builtin_function_SETLOCAL         ,
     &builtin_function_QUEUEEXIT        ,
+    &builtin_function_QUALIFY          ,
 };
 
