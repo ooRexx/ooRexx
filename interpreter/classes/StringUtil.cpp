@@ -1612,3 +1612,215 @@ RexxInteger *StringUtil::wordLength(const char *data, size_t length, RexxInteger
     }
     return new_integer(wordLength);      /* return the word length            */
 }
+
+
+/**
+ * Execute a wordpos search on a buffer of data.
+ *
+ * @param data   the source data buffer.
+ * @param length the length of the buffer
+ * @param phrase the search phrase.
+ * @param pstart the starting position.
+ *
+ * @return the location of the start of the search phrase.
+ */
+RexxInteger *StringUtil::wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart)
+{
+    phrase = stringArgument(phrase, ARG_ONE);/* get the phrase we are looking for */
+    stringsize_t needleLength = phrase->getLength();       /* get the length also               */
+                                         /* get starting position, the default*/
+                                         /* is the first word                 */
+    stringsize_t count = optionalPositionArgument(pstart, 1, ARG_TWO);
+
+    const char *needle = phrase->getStringData();  /* get friendly pointer              */
+    const char *haystack = data;                   /* and the second also               */
+    stringsize_t haystackLength = length;          /* get the haystack length           */
+                                                 /* count the words in needle         */
+    stringsize_t needleWords = wordCount(needle, needleLength);
+                                         /* and haystack                      */
+    stringsize_t haystackWords = wordCount(haystack, haystackLength);
+                                         /* if search string is longer        */
+                                         /* or no words in search             */
+                                         /* or count is longer than           */
+                                         /* haystack, this is a failure       */
+    if (needleWords > (haystackWords - count + 1) || needleWords == 0 || count > haystackWords)
+    {
+        return IntegerZero;
+    }
+
+    const char *nextHaystack;
+    const char *nextNeedle;
+                                       /* point at first word               */
+    stringsize_t haystackWordLength = nextWord(&haystack, &haystackLength, &nextHaystack);
+                                       /* now skip over count-1             */
+    for (stringsize_t i = count - 1; i && haystackWordLength != 0; i--)
+    {
+        haystack = nextHaystack;         /* step past current word            */
+                                       /* find the next word                */
+        haystackWordLength = nextWord(&haystack, &haystackLength, &nextHaystack);
+    }
+                                       /* get number of searches            */
+    stringsize_t searchCount = (haystackWords - needleWords - count) + 2;
+                                       /* position at first needle          */
+    stringsize_t firstNeedle = nextWord(&needle, &needleLength, &nextNeedle);
+                                       /* loop for the possible times       */
+    for (; searchCount; searchCount--)
+    {
+        stringsize_t needleWordLength = firstNeedle;   /* set the length                    */
+        const char *needlePosition = needle;         /* get the start of phrase           */
+        const char *haystackPosition = haystack;     /* and the target string loop        */
+                                         /* for needlewords                   */
+        const char *nextHaystackPtr = nextHaystack;  /* copy nextword information         */
+        const char *nextNeedlePtr = nextNeedle;
+                                         /* including the lengths             */
+        stringsize_t haystackScanLength = haystackLength;
+        stringsize_t needleScanLength = needleLength;
+
+        stringsize_t i;
+
+        for (i = needleWords; i; i--)
+        {
+            // length mismatch, can't be a match
+
+            if (haystackWordLength != needleWordLength)
+            {
+                break;
+            }
+
+            // now compare the two words, using a caseless comparison
+            // if the words don't match, terminate now
+            if (memcmp(needlePosition, haystackPosition, needleWordLength) != 0)
+            {
+                break;                       /* get out fast.                     */
+            }
+
+                                           /* the last words matched, so        */
+                                           /* continue searching.               */
+
+                                           /* set new search information        */
+            haystackPosition = nextHaystackPtr;
+            needlePosition = nextNeedlePtr;
+                                           /* Scan off the next word            */
+            haystackWordLength = nextWord(&haystackPosition, &haystackScanLength, &nextHaystackPtr);
+                                           /* repeat for the needle             */
+            needleWordLength = nextWord(&needlePosition, &needleScanLength, &nextNeedlePtr);
+        }
+
+        if (i == 0)                      /* all words matched, we             */
+        {
+            return new_integer(count);   // return the position
+        }
+        haystack = nextHaystack;         /* set the search position           */
+                                         /* step to next haytack pos          */
+        haystackWordLength = nextWord(&haystack, &haystackLength, &nextHaystack);
+        count++;                         /* remember the word position        */
+    }
+
+    return IntegerZero;                // not found
+}
+
+
+/**
+ * Execute a caseless wordpos search on a buffer of data.
+ *
+ * @param data   the source data buffer.
+ * @param length the length of the buffer
+ * @param phrase the search phrase.
+ * @param pstart the starting position.
+ *
+ * @return the location of the start of the search phrase.
+ */
+RexxInteger *StringUtil::caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart)
+{
+    phrase = stringArgument(phrase, ARG_ONE);/* get the phrase we are looking for */
+    stringsize_t needleLength = phrase->getLength();       /* get the length also               */
+                                         /* get starting position, the default*/
+                                         /* is the first word                 */
+    stringsize_t count = optionalPositionArgument(pstart, 1, ARG_TWO);
+
+    const char *needle = phrase->getStringData();  /* get friendly pointer              */
+    const char *haystack = data;                   /* and the second also               */
+    stringsize_t haystackLength = length;          /* get the haystack length           */
+                                                 /* count the words in needle         */
+    stringsize_t needleWords = wordCount(needle, needleLength);
+                                         /* and haystack                      */
+    stringsize_t haystackWords = wordCount(haystack, haystackLength);
+                                         /* if search string is longer        */
+                                         /* or no words in search             */
+                                         /* or count is longer than           */
+                                         /* haystack, this is a failure       */
+    if (needleWords > (haystackWords - count + 1) || needleWords == 0 || count > haystackWords)
+    {
+        return IntegerZero;
+    }
+
+    const char *nextHaystack;
+    const char *nextNeedle;
+                                       /* point at first word               */
+    stringsize_t haystackWordLength = nextWord(&haystack, &haystackLength, &nextHaystack);
+                                       /* now skip over count-1             */
+    for (stringsize_t i = count - 1; i && haystackWordLength != 0; i--)
+    {
+        haystack = nextHaystack;         /* step past current word            */
+                                       /* find the next word                */
+        haystackWordLength = nextWord(&haystack, &haystackLength, &nextHaystack);
+    }
+                                       /* get number of searches            */
+    stringsize_t searchCount = (haystackWords - needleWords - count) + 2;
+                                       /* position at first needle          */
+    stringsize_t firstNeedle = nextWord(&needle, &needleLength, &nextNeedle);
+                                       /* loop for the possible times       */
+    for (; searchCount; searchCount--)
+    {
+        stringsize_t needleWordLength = firstNeedle;   /* set the length                    */
+        const char *needlePosition = needle;         /* get the start of phrase           */
+        const char *haystackPosition = haystack;     /* and the target string loop        */
+                                         /* for needlewords                   */
+        const char *nextHaystackPtr = nextHaystack;  /* copy nextword information         */
+        const char *nextNeedlePtr = nextNeedle;
+                                         /* including the lengths             */
+        stringsize_t haystackScanLength = haystackLength;
+        stringsize_t needleScanLength = needleLength;
+
+        stringsize_t i;
+
+        for (i = needleWords; i; i--)
+        {
+            // length mismatch, can't be a match
+
+            if (haystackWordLength != needleWordLength)
+            {
+                break;
+            }
+
+            // now compare the two words, using a caseless comparison
+            // if the words don't match, terminate now
+            if (caselessCompare(needlePosition, haystackPosition, needleWordLength))
+            {
+                break;                       /* get out fast.                     */
+            }
+
+                                           /* the last words matched, so        */
+                                           /* continue searching.               */
+
+                                           /* set new search information        */
+            haystackPosition = nextHaystackPtr;
+            needlePosition = nextNeedlePtr;
+                                           /* Scan off the next word            */
+            haystackWordLength = nextWord(&haystackPosition, &haystackScanLength, &nextHaystackPtr);
+                                           /* repeat for the needle             */
+            needleWordLength = nextWord(&needlePosition, &needleScanLength, &nextNeedlePtr);
+        }
+
+        if (i == 0)                      /* all words matched, we             */
+        {
+            return new_integer(count);   // return the position
+        }
+        haystack = nextHaystack;         /* set the search position           */
+                                         /* step to next haytack pos          */
+        haystackWordLength = nextWord(&haystack, &haystackLength, &nextHaystack);
+        count++;                         /* remember the word position        */
+    }
+
+    return IntegerZero;                // not found
+}

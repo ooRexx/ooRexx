@@ -262,240 +262,32 @@ RexxInteger *RexxString::wordLength(RexxInteger *position)
     return StringUtil::wordIndex(getStringData(), getLength(), position);
 }
 
-/* the WORDPOS function */
-/******************************************************************************/
-/* Arguments:  phrase of words to lookfor                                     */
-/*             which word to satrt looking at.                                */
-/*                                                                            */
-/*  Returned:  position of 1st word in source matching phrase                 */
-/******************************************************************************/
-RexxInteger *RexxString::wordPos(RexxString  *phrase,
-                                 RexxInteger *pstart)
+
+/**
+ * Perform a wordpos search on a string object.
+ *
+ * @param phrase The search phrase
+ * @param pstart The starting search position.
+ *
+ * @return The index of the match location.
+ */
+RexxInteger *RexxString::wordPos(RexxString  *phrase, RexxInteger *pstart)
 {
-    RexxInteger *Retval;                 /* return value                      */
-    const char *Needle;                  /* start of needle string            */
-    const char *Haystack;                /* current haystack positon          */
-    const char *NextNeedle;              /* next search position              */
-    const char *NextHaystack;            /* next search position              */
-    size_t   Count;                      /* current haystack word pos         */
-    size_t   NeedleWords;                /* needle word count                 */
-    size_t   HaystackWords;              /* haystack word count               */
-    size_t   HaystackScanLength;         /* length to scan                    */
-    size_t   NeedleScanLength;           /* length of scan                    */
-    size_t   HaystackWordLength;         /* haystack word length              */
-    size_t   NeedleWordLength;           /* needle word length                */
-    size_t   SearchCount;                /* possible searches to do           */
-    size_t   FirstNeedle;                /* length of first needle word       */
-    size_t   NeedleLength;               /* length of needle                  */
-    size_t   HaystackLength;             /* length of haystack                */
-    const char *NeedlePosition;          /* temporary pointers for            */
-    const char *HaystackPosition;        /* the searches                      */
-    const char *NextHaystackPtr;         /* pointer to next word              */
-    const char *NextNeedlePtr;           /* pointer to next word              */
-    size_t   i;                          /* loop counter                      */
-
-    phrase = stringArgument(phrase, ARG_ONE);/* get the phrase we are looking for */
-    NeedleLength = phrase->getLength();       /* get the length also               */
-    /* get starting position, the default*/
-    /* is the first word                 */
-    Count = optionalPositionArgument(pstart, 1, ARG_TWO);
-
-    Needle = phrase->getStringData();    /* get friendly pointer              */
-    Haystack = this->getStringData();    /* and the second also               */
-    HaystackLength = this->getLength();  /* get the haystack length           */
-                                         /* count the words in needle         */
-    NeedleWords = StringUtil::wordCount(Needle, NeedleLength);
-    /* and haystack                      */
-    HaystackWords = StringUtil::wordCount(Haystack, HaystackLength);
-    /* if search string is longer        */
-    /* or no words in search             */
-    /* or count is longer than           */
-    /* haystack                          */
-    if (NeedleWords > (HaystackWords - Count + 1) ||
-        NeedleWords == 0 ||
-        Count > HaystackWords)
-    {
-        Retval = IntegerZero;              /* can't find anything,              */
-    }
-    else
-    {                               /* need to search                    */
-                                    /* point at first word               */
-        HaystackWordLength = StringUtil::nextWord(&Haystack, &HaystackLength, &NextHaystack);
-        /* now skip over count-1             */
-        for (i = Count - 1; i && HaystackWordLength != 0; i--)
-        {
-            Haystack = NextHaystack;         /* step past current word            */
-                                             /* find the next word                */
-            HaystackWordLength = StringUtil::nextWord(&Haystack, &HaystackLength, &NextHaystack);
-        }
-        /* get number of searches            */
-        SearchCount = (HaystackWords - NeedleWords - Count) + 2;
-        /* position at first needle          */
-        FirstNeedle = StringUtil::nextWord(&Needle, &NeedleLength, &NextNeedle);
-        /* loop for the possible times       */
-        for (; SearchCount; SearchCount--)
-        {
-            NeedleWordLength = FirstNeedle;  /* set the length                    */
-            NeedlePosition = Needle;         /* get the start of phrase           */
-            HaystackPosition = Haystack;     /* and the target string loop        */
-                                             /* for needlewords                   */
-            NextHaystackPtr = NextHaystack;  /* copy nextword information         */
-            NextNeedlePtr = NextNeedle;
-            /* including the lengths             */
-            HaystackScanLength = HaystackLength;
-            NeedleScanLength = NeedleLength;
-
-            for (i = NeedleWords; i; i--)
-            {  /* possible times                    */
-
-                if (HaystackWordLength !=      /* if wrong length, then it          */
-                    NeedleWordLength)          /* can't be a match...just           */
-                {
-                    break;                       /* leave the loop                    */
-                }
-
-                if (memcmp(NeedlePosition,     /* if the two words don't            */
-                           HaystackPosition,          /* match, then no sense              */
-                           NeedleWordLength))         /* checking the rest                 */
-                {
-                    break;                       /* get out fast.                     */
-                }
-
-                                                 /* the last words matched, so        */
-                                                 /* continue searching.               */
-
-                                                 /* set new search information        */
-                HaystackPosition = NextHaystackPtr;
-                NeedlePosition = NextNeedlePtr;
-                /* Scan off the next word            */
-                HaystackWordLength = StringUtil::nextWord(&HaystackPosition,
-                                              &HaystackScanLength,
-                                              &NextHaystackPtr);
-                /* repeat for the needle             */
-                NeedleWordLength = StringUtil::nextWord(&NeedlePosition,
-                                            &NeedleScanLength,
-                                            &NextNeedlePtr);
-            }
-
-            if (!i)                          /* all words matched, we             */
-            {
-                break;                         /* found it                          */
-            }
-            Haystack = NextHaystack;         /* set the search position           */
-                                             /* step to next haytack pos          */
-            HaystackWordLength = StringUtil::nextWord(&Haystack,
-                                          &HaystackLength,
-                                          &NextHaystack);
-            Count++;                         /* remember the word position        */
-        }
-
-        if (SearchCount != 0)              /* if we haven't scanned the         */
-        {
-            /* entire string                     */
-            Retval = new_integer(Count);     /* return the position               */
-        }
-        else                               /* it wasn't found, just             */
-        {
-            Retval = IntegerZero;            /* return a zero.                    */
-        }
-    }
-    return Retval;                       /* return the position               */
+    return StringUtil::wordPos(getStringData(), getLength(), phrase, pstart);
 }
 
 
+/**
+ * Perform a caseless wordpos search on a string object.
+ *
+ * @param phrase The search phrase
+ * @param pstart The starting search position.
+ *
+ * @return The index of the match location.
+ */
 RexxInteger *RexxString::caselessWordPos(RexxString  *phrase, RexxInteger *pstart)
 {
-    phrase = stringArgument(phrase, ARG_ONE);/* get the phrase we are looking for */
-    stringsize_t needleLength = phrase->getLength();       /* get the length also               */
-                                         /* get starting position, the default*/
-                                         /* is the first word                 */
-    stringsize_t count = optionalPositionArgument(pstart, 1, ARG_TWO);
-
-    const char *needle = phrase->getStringData();  /* get friendly pointer              */
-    const char *haystack = this->getStringData();  /* and the second also               */
-    stringsize_t haystackLength = this->getLength();  /* get the haystack length           */
-                                                 /* count the words in needle         */
-    stringsize_t needleWords = StringUtil::wordCount(needle, needleLength);
-                                         /* and haystack                      */
-    stringsize_t haystackWords = StringUtil::wordCount(haystack, haystackLength);
-                                         /* if search string is longer        */
-                                         /* or no words in search             */
-                                         /* or count is longer than           */
-                                         /* haystack, this is a failure       */
-    if (needleWords > (haystackWords - count + 1) || needleWords == 0 || count > haystackWords)
-    {
-        return IntegerZero;
-    }
-
-    const char *nextHaystack;
-    const char *nextNeedle;
-                                       /* point at first word               */
-    stringsize_t haystackWordLength = StringUtil::nextWord(&haystack, &haystackLength, &nextHaystack);
-                                       /* now skip over count-1             */
-    for (stringsize_t i = count - 1; i && haystackWordLength != 0; i--)
-    {
-        haystack = nextHaystack;         /* step past current word            */
-                                       /* find the next word                */
-        haystackWordLength = StringUtil::nextWord(&haystack, &haystackLength, &nextHaystack);
-    }
-                                       /* get number of searches            */
-    stringsize_t searchCount = (haystackWords - needleWords - count) + 2;
-                                       /* position at first needle          */
-    stringsize_t firstNeedle = StringUtil::nextWord(&needle, &needleLength, &nextNeedle);
-                                       /* loop for the possible times       */
-    for (; searchCount; searchCount--)
-    {
-        stringsize_t needleWordLength = firstNeedle;   /* set the length                    */
-        const char *needlePosition = needle;         /* get the start of phrase           */
-        const char *haystackPosition = haystack;     /* and the target string loop        */
-                                         /* for needlewords                   */
-        const char *nextHaystackPtr = nextHaystack;  /* copy nextword information         */
-        const char *nextNeedlePtr = nextNeedle;
-                                         /* including the lengths             */
-        stringsize_t haystackScanLength = haystackLength;
-        stringsize_t needleScanLength = needleLength;
-
-        stringsize_t i;
-
-        for (i = needleWords; i; i--)
-        {
-            // length mismatch, can't be a match
-
-            if (haystackWordLength != needleWordLength)
-            {
-                break;
-            }
-
-            // now compare the two words, using a caseless comparison
-            // if the words don't match, terminate now
-            if (StringUtil::caselessCompare(needlePosition, haystackPosition, needleWordLength))
-            {
-                break;                       /* get out fast.                     */
-            }
-
-                                           /* the last words matched, so        */
-                                           /* continue searching.               */
-
-                                           /* set new search information        */
-            haystackPosition = nextHaystackPtr;
-            needlePosition = nextNeedlePtr;
-                                           /* Scan off the next word            */
-            haystackWordLength = StringUtil::nextWord(&haystackPosition, &haystackScanLength, &nextHaystackPtr);
-                                           /* repeat for the needle             */
-            needleWordLength = StringUtil::nextWord(&needlePosition, &needleScanLength, &nextNeedlePtr);
-        }
-
-        if (i == 0)                      /* all words matched, we             */
-        {
-            return new_integer(count);   // return the position
-        }
-        haystack = nextHaystack;         /* set the search position           */
-                                         /* step to next haytack pos          */
-        haystackWordLength = StringUtil::nextWord(&haystack, &haystackLength, &nextHaystack);
-        count++;                         /* remember the word position        */
-    }
-
-    return IntegerZero;                // not found
+    return StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart);
 }
 
 /* the WORDS function */

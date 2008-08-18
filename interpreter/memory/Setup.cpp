@@ -958,6 +958,8 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_WORDINDEX                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::wordIndex), 1);
   defineKernelMethod(CHAR_WORDLENGTH                   ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::wordLength), 1);
   defineKernelMethod(CHAR_WORDS                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::words), 0);
+  defineKernelMethod(CHAR_WORDPOS                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::wordPos), 2);
+  defineKernelMethod(CHAR_CASELESSWORDPOS              ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessWordPos), 2);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

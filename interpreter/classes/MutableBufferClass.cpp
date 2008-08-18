@@ -1399,3 +1399,31 @@ RexxInteger *RexxMutableBuffer::words()
     size_t tempCount = StringUtil::wordCount(this->getStringData(), this->getLength());
     return new_integer(tempCount);
 }
+
+
+/**
+ * Perform a wordpos search on a mutablebuffer object.
+ *
+ * @param phrase The search phrase
+ * @param pstart The starting search position.
+ *
+ * @return The index of the match location.
+ */
+RexxInteger *RexxMutableBuffer::wordPos(RexxString  *phrase, RexxInteger *pstart)
+{
+    return StringUtil::wordPos(getStringData(), getLength(), phrase, pstart);
+}
+
+
+/**
+ * Perform a caseless wordpos search on a string object.
+ *
+ * @param phrase The search phrase
+ * @param pstart The starting search position.
+ *
+ * @return The index of the match location.
+ */
+RexxInteger *RexxMutableBuffer::caselessWordPos(RexxString  *phrase, RexxInteger *pstart)
+{
+    return StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart);
+}

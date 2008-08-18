@@ -112,6 +112,8 @@ class RexxMutableBufferClass : public RexxClass {
    RexxInteger *wordIndex(RexxInteger *);
    RexxInteger *wordLength(RexxInteger *);
    RexxInteger *words();
+   RexxInteger *wordPos(RexxString *, RexxInteger *);
+   RexxInteger *caselessWordPos(RexxString *, RexxInteger *);
 
    inline const char *getStringData() { return data->getData(); }
    inline size_t      getLength()     { return dataLength; }

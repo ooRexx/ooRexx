@@ -85,6 +85,8 @@ public:
     static RexxString *word(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordIndex(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordLength(const char *data, size_t length, RexxInteger *position);
+    static RexxInteger *wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
+    static RexxInteger *caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
 };
 
 #endif

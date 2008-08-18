@@ -870,6 +870,8 @@ CPPM(RexxMutableBuffer::word),
 CPPM(RexxMutableBuffer::wordIndex),
 CPPM(RexxMutableBuffer::wordLength),
 CPPM(RexxMutableBuffer::words),
+CPPM(RexxMutableBuffer::wordPos),
+CPPM(RexxMutableBuffer::caselessWordPos),
 
 CPPM(RexxSupplier::available),         /* Supplier methods                  */
 CPPM(RexxSupplier::next),
