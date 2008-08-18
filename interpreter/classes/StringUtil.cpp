@@ -1513,3 +1513,40 @@ RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *po
     /* extract the substring             */
     return new_string(wordStart, wordEnd - wordStart);
 }
+
+
+/**
+ * Extract a word from a buffer
+ *
+ * @param data     The data pointer
+ * @param length   the length of the data buffer.
+ * @param position the target word position.
+ *
+ * @return The string value of the word at the indicated position.
+ */
+RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *position)
+{
+                                         /* convert position to binary        */
+    size_t wordPos = positionArgument(position, ARG_ONE);
+
+    if (length == 0)                     /* null string?                      */
+    {
+        return OREF_NULLSTRING;          /* result is null also               */
+    }
+    const char *word = data;             /* point to the string               */
+    const char *nextSite = NULL;
+                                       /* get the first word                */
+    size_t wordLength = nextWord(&word, &length, &nextSite);
+    while (--wordPos > 0 && wordLength != 0)
+    {  /* loop until we reach target        */
+        word = nextSite;                 /* copy the start pointer            */
+                                         /* get the next word                 */
+        wordLength = nextWord(&word, &length, &nextSite);
+    }
+    if (wordLength != 0)               /* have a word                       */
+    {
+        /* extract the string                */
+        return new_string(word, wordLength);
+    }
+    return OREF_NULLSTRING;        /* no word, return a null            */
+}

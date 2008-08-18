@@ -1346,3 +1346,16 @@ RexxString *RexxMutableBuffer::subWord(RexxInteger *position, RexxInteger *pleng
 {
     return StringUtil::subWord(getStringData(), getLength(), position, plength);
 }
+
+
+/**
+ * Extract a given word from a mutable buffer.
+ *
+ * @param position The target word position.
+ *
+ * @return The extracted word, as a string.
+ */
+RexxString *RexxMutableBuffer::word(RexxInteger *position)
+{
+    return StringUtil::word(getStringData(), getLength(), position);
+}

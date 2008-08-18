@@ -237,43 +237,7 @@ RexxString *RexxString::subWord(RexxInteger *position, RexxInteger *plength)
 /******************************************************************************/
 RexxString *RexxString::word(RexxInteger *position)
 {
-    const char *Word;                    /* current word pointer              */
-    const char *NextSite;                /* next word                         */
-    size_t      WordPos;                 /* needed word position              */
-    size_t      Length;                  /* remaining length                  */
-    size_t      WordLength;              /* word size                         */
-    RexxString *Retval;                  /* return value                      */
-
-                                         /* convert position to binary        */
-    WordPos = positionArgument(position, ARG_ONE);
-
-    Length = this->getLength();          /* get Argument length               */
-    if (Length == 0)                     /* null string?                      */
-    {
-        Retval = OREF_NULLSTRING;          /* result is null also               */
-    }
-    else
-    {
-        Word = this->getStringData();      /* point to the string               */
-                                           /* get the first word                */
-        WordLength = StringUtil::nextWord(&Word, &Length, &NextSite);
-        while (--WordPos && WordLength)
-        {  /* loop until we reach target        */
-            Word = NextSite;                 /* copy the start pointer            */
-                                             /* get the next word                 */
-            WordLength = StringUtil::nextWord(&Word, &Length, &NextSite);
-        }
-        if (WordLength)                    /* have a word                       */
-        {
-            /* extract the string                */
-            Retval = (RexxString *)new_string(Word, WordLength);
-        }
-        else
-        {
-            Retval = OREF_NULLSTRING;        /* no word, return a null            */
-        }
-    }
-    return Retval;                       /* return extracted string           */
+    return StringUtil::word(getStringData(), getLength(), position);
 }
 
 /* the WORDINDEX function */
