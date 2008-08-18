@@ -39,38 +39,20 @@
 
 ::requires 'rxwinsys' LIBRARY
 
-/* This is the base class for all the other Windows... classes. It handles the
- * queue counter.
+/* This is the base class for all the other Windows... classes.  With ooRexx
+ * 4.0.0 and on, it no longer serves much puprpose.  Retained for backwards
+ * compatibility.
  */
 ::class 'WindowsClassesBase'
 
-::method InitCode attribute
+::attribute initCode
 
 ::method init
-   self~InitCode = 0
+   self~initCode = 0
+   return self~initCode
 
-   /* set the global queue to increase the usage counter */
-   queuename = RxQueue('CREATE', "WINSYS_GLOBAL_COUNT")
-   if queuename \= "WINSYS_GLOBAL_COUNT" then call RxQueue 'DELETE', queuename
-   oldqueue = RxQueue('SET', "WINSYS_GLOBAL_COUNT")
-   push time()
-   call RxQueue 'SET', oldqueue
-
-   return self~InitCode
-
-
-::method Deinstall
-   /* set the global queue to check the dialog counter */
-   oldqueue = RxQueue('SET', "WINSYS_GLOBAL_COUNT")
-   num = queued()
-   if num \= 0 then pull dummy
-   call RxQueue 'SET', oldqueue
-   /* if no other program uses functions, delete the queue */
-   if num = 1 then do
-       call RxQueue 'DELETE', "WINSYS_GLOBAL_COUNT"
-   end
-
-
+::method deinstall
+   nop
 
 
 ::class 'WindowsRegistry' subclass WindowsClassesBase public

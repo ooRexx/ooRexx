@@ -228,9 +228,18 @@ BOOL string2pointer(
   const char *string,                  /* string to convert          */
   void **pointer)                      /* converted number           */
 {
-    if ( ISHEX(string) )
+    if ( strlen(string) < 2 )
+    {
+        *pointer = NULL;
+        return FALSE;
+    }
+    else if ( string[1] == 'x' && string[0] == '0' )
     {
         return sscanf(string, "0x%p", pointer) == 1;
+    }
+    else if ( string[1] == 'X' && string[0] == '0' )
+    {
+        return sscanf(string, "0X%p", pointer) == 1;
     }
     else
     {
@@ -1599,23 +1608,6 @@ size_t RexxEntry WSProgManager(const char *funcname, size_t argc, CONSTRXSTRING 
     {
         RETC(0);
     }
-}
-
-
-size_t RexxEntry RemoveWinSysFuncs(const char *funcname, size_t argc, CONSTRXSTRING argv[], const char *qname, PRXSTRING retstr)
-{
-    // this is a NOP now
-    retstr->strlength = 0;               /* set return value           */
-    return VALID_ROUTINE;
-}
-
-
-
-size_t RexxEntry InstWinSysFuncs(const char *funcname, size_t argc, CONSTRXSTRING argv[], const char *qname, PRXSTRING retstr)
-{
-    // this is a NOP now
-    retstr->strlength = 0;               /* set return value           */
-    return VALID_ROUTINE;
 }
 
 
@@ -3282,8 +3274,6 @@ VOID Little2BigEndian(BYTE *pbInt, INT iSize)
 // now build the actual entry list
 RexxRoutineEntry rxwinsys_functions[] =
 {
-    REXX_CLASSIC_ROUTINE(InstWinSysFuncs,  InstWinSysFuncs),
-    REXX_CLASSIC_ROUTINE(RemoveWinSysFuncs,RemoveWinSysFuncs),
     REXX_CLASSIC_ROUTINE(WSRegistryKey,    WSRegistryKey),
     REXX_CLASSIC_ROUTINE(WSRegistryValue,  WSRegistryValue),
     REXX_CLASSIC_ROUTINE(WSRegistryFile,   WSRegistryFile),
