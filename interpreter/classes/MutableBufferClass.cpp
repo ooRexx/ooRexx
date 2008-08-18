@@ -1388,3 +1388,14 @@ RexxInteger *RexxMutableBuffer::wordLength(RexxInteger *position)
 {
     return StringUtil::wordLength(getStringData(), getLength(), position);
 }
+
+/**
+ * Return the count of words in the buffer.
+ *
+ * @return The buffer word count.
+ */
+RexxInteger *RexxMutableBuffer::words()
+{
+    size_t tempCount = StringUtil::wordCount(this->getStringData(), this->getLength());
+    return new_integer(tempCount);
+}
