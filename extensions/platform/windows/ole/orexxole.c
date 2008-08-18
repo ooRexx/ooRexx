@@ -4540,10 +4540,6 @@ RexxMethod3(RexxObjectPtr,                // Return type
     CHAR         szBuffer[2048];
     int          rc = 0;
     long         iLast = iInstanceCount;
-    static int counter = 0;
-
-    printf("counter=%d\n", counter);
-    counter++;
 
     RexxClassObject OLEObjectClass = context->FindClass("OLEOBJECT");
 
@@ -4562,15 +4558,8 @@ RexxMethod3(RexxObjectPtr,                // Return type
     if (iInstanceCount == 0)
     {
         hResult = OleInitialize(NULL);
-        printf("Normal OleInitialize thread=%d hResult=0x%08x\n", GetCurrentThreadId(), hResult);
     }
     iInstanceCount++;
-
-    if ( counter == 2 && iInstanceCount != 1 )
-    {
-        hResult = OleInitialize(NULL);
-        printf("Extra OleInitialize thread=%d hResult=0x%08x\n", GetCurrentThreadId(), hResult);
-    }
 
     lpUniBuffer = lpAnsiToUnicode( monikerName, strlen(monikerName) + 1);
 
