@@ -868,6 +868,7 @@ CPPM(RexxMutableBuffer::verify),
 CPPM(RexxMutableBuffer::subWord),
 CPPM(RexxMutableBuffer::word),
 CPPM(RexxMutableBuffer::wordIndex),
+CPPM(RexxMutableBuffer::wordLength),
 
 CPPM(RexxSupplier::available),         /* Supplier methods                  */
 CPPM(RexxSupplier::next),

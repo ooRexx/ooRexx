@@ -259,26 +259,7 @@ RexxInteger *RexxString::wordIndex(RexxInteger *position)
 /******************************************************************************/
 RexxInteger *RexxString::wordLength(RexxInteger *position)
 {
-    const char *Word;                    /* current word pointer              */
-    const char *NextSite;                /* next word                         */
-    size_t      Length;                  /* string length                     */
-    size_t      WordLength;              /* word length                       */
-    size_t      WordPos;                 /* desired word position             */
-
-    Length = this->getLength();               /* get the string length             */
-    /* convert count to binary           */
-    WordPos = positionArgument(position , ARG_ONE);
-    Word = this->getStringData();             /* point to word data                */
-
-    /* get the first word                */
-    WordLength = StringUtil::nextWord(&Word, &Length, &NextSite);
-    while (--WordPos && WordLength)
-    {    /* loop until we reach target        */
-        Word = NextSite;                   /* copy the start pointer            */
-                                           /* get the next word                 */
-        WordLength = StringUtil::nextWord(&Word, &Length, &NextSite);
-    }
-    return new_integer(WordLength);      /* return the word length            */
+    return StringUtil::wordIndex(getStringData(), getLength(), position);
 }
 
 /* the WORDPOS function */

@@ -84,6 +84,7 @@ public:
     static RexxString *subWord(const char *data, size_t length, RexxInteger *position, RexxInteger *plength);
     static RexxString *word(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordIndex(const char *data, size_t length, RexxInteger *position);
+    static RexxInteger *wordLength(const char *data, size_t length, RexxInteger *position);
 };
 
 #endif
