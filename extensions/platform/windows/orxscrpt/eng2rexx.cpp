@@ -255,6 +255,9 @@ int RexxEntry RexxCatchExternalFunc(RexxExitContext *context, int ExitNumber, in
                 if (SUCCEEDED(hResult))
                 {
                     // success, make REXX object from VARIANT
+
+                    // TODO note that Variant2Rexx() can / will return NULLOBJECT if it raises an
+                    // exception.
                     parmblock->rxfnc_retc = Variant2Rexx(context->threadContext, &sResult);
                     state = RXEXIT_HANDLED;
                     FPRINTF2(logfile,"COM invoke ok, got back rexx object %p\n", parmblock->rxfnc_retc);
