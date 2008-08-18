@@ -38,7 +38,12 @@
 #ifndef REXXPLATFORMDEFS_INCLUDED
 #define REXXPLATFORMDEFS_INCLUDED
 
-/* Currently there are no defines specific to windows */
+/* This define is needed for 64-bit compiles on Windows. */
+
+#ifndef __INT64_C
+#define __INT64_C(c)  c##LL
+#endif
+
 
 #endif /* REXXPLATFORMDEFS_INCLUDED */
 
