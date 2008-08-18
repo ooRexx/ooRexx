@@ -1324,10 +1324,11 @@ RexxInteger *RexxMutableBuffer::caselessMatchChar(RexxInteger *position_, RexxSt
  * @param ref    The reference string.
  * @param option The match/nomatch option.
  * @param _start The start position for the verify.
+ * @param range  The range to search
  *
  * @return The offset of the first match/mismatch within the buffer.
  */
-RexxInteger *RexxMutableBuffer::verify(RexxString *ref, RexxString *option, RexxInteger *_start)
+RexxInteger *RexxMutableBuffer::verify(RexxString *ref, RexxString *option, RexxInteger *_start, RexxInteger *range)
 {
-    return StringUtil::verify(getStringData(), getLength(), ref, option, _start);
+    return StringUtil::verify(getStringData(), getLength(), ref, option, _start, range);
 }

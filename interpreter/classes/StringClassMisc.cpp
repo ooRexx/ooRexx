@@ -822,12 +822,13 @@ RexxString *RexxString::translate(
 RexxInteger *RexxString::verify(
     RexxString  *ref,                  /* compare reference string          */
     RexxString  *option,               /* Match/NoMatch option              */
-    RexxInteger *_start)               /* optional starg position           */
+    RexxInteger *_start,               /* optional starg position           */
+    RexxInteger *range)                // length to search
 /******************************************************************************/
 /*  Function:  String class VERIFY function                                   */
 /******************************************************************************/
 {
-    return StringUtil::verify(getStringData(), getLength(), ref, option, _start);
+    return StringUtil::verify(getStringData(), getLength(), ref, option, _start, range);
 }
 
 

@@ -730,11 +730,12 @@ BUILTIN(TRANSLATE)
 }
 
 #define VERIFY_MIN 2
-#define VERIFY_MAX 4
+#define VERIFY_MAX 5
 #define VERIFY_string    1
 #define VERIFY_reference 2
 #define VERIFY_option    3
 #define VERIFY_start     4
+#define VERIFY_range     5
 
 BUILTIN(VERIFY)
 {
@@ -747,8 +748,10 @@ BUILTIN(VERIFY)
     RexxString *option = optional_string(VERIFY, option);
     /* start is optional                 */
     RexxInteger *start = optional_integer(VERIFY, start);
+    /* start is optional                 */
+    RexxInteger *range = optional_integer(VERIFY, range);
     /* do the verify function            */
-    return string->verify(reference, option, start);
+    return string->verify(reference, option, start, range);
 }
 
 #define DATATYPE_MIN 1

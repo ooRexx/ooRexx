@@ -842,7 +842,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_CASELESSLASTPOS              ,TheStringBehaviour, CPPM(RexxString::caselessLastPosRexx), 2);
   defineKernelMethod(CHAR_CASELESSPOS                  ,TheStringBehaviour, CPPM(RexxString::caselessPosRexx), 2);
   defineKernelMethod(CHAR_TRANSLATE                    ,TheStringBehaviour, CPPM(RexxString::translate), 5);
-  defineKernelMethod(CHAR_VERIFY                       ,TheStringBehaviour, CPPM(RexxString::verify), 3);
+  defineKernelMethod(CHAR_VERIFY                       ,TheStringBehaviour, CPPM(RexxString::verify), 4);
   defineKernelMethod(CHAR_BITAND                       ,TheStringBehaviour, CPPM(RexxString::bitAnd), 2);
   defineKernelMethod(CHAR_BITOR                        ,TheStringBehaviour, CPPM(RexxString::bitOr), 2);
   defineKernelMethod(CHAR_BITXOR                       ,TheStringBehaviour, CPPM(RexxString::bitXor), 2);
@@ -952,7 +952,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_CASELESSMATCH                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessMatch), 4);
   defineKernelMethod(CHAR_MATCHCHAR                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::matchChar), 2);
   defineKernelMethod(CHAR_CASELESSMATCHCHAR            ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessMatchChar), 2);
-  defineKernelMethod(CHAR_VERIFY                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::verify), 3);
+  defineKernelMethod(CHAR_VERIFY                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::verify), 4);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

@@ -80,7 +80,7 @@ public:
     static size_t countStr(const char *hayStack, size_t hayStackLength, RexxString *needle);
     static size_t caselessCountStr(const char *hayStack, size_t hayStackLength, RexxString *needle);
     static size_t memPos(const char *string, size_t length, char target);
-    static RexxInteger *verify(const char *data, size_t stringLen, RexxString  *ref, RexxString  *option, RexxInteger *_start);
+    static RexxInteger *verify(const char *data, size_t stringLen, RexxString  *ref, RexxString  *option, RexxInteger *_start, RexxInteger *range);
 };
 
 #endif

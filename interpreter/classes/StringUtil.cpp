@@ -1361,7 +1361,7 @@ size_t StringUtil::memPos(
  *
  * @return The match/nomatch position, or 0 if nothing was found.
  */
-RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  *ref, RexxString  *option, RexxInteger *_start)
+RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  *ref, RexxString  *option, RexxInteger *_start, RexxInteger *range)
 {
     // get the reference string information
     ref = stringArgument(ref, ARG_ONE);
@@ -1377,15 +1377,18 @@ RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  
 
     /* get starting position             */
     size_t startPos = optionalPositionArgument(_start, 1, ARG_THREE);
+    size_t stringRange = optionalLengthArgument(range, stringLen - startPos + 1, ARG_FOUR);
     if (startPos > stringLen)            /* beyond end of string?             */
     {
         return IntegerZero;              /* couldn't find it                  */
     }
     else
     {
+        // adjust the range for seaching
+        stringRange = Numerics::minVal(stringRange, stringLen - startPos + 1);
+
         /* point at start position           */
         const char *current = data + startPos - 1;
-        stringLen -= (startPos - 1);       /* reduce the length                 */
         size_t position = 0;               /* haven't found it yet              */
 
         if (referenceLen == 0)
@@ -1405,7 +1408,7 @@ RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  
             // return the first non-matching character
             if (opt == VERIFY_NOMATCH)
             {
-                while (stringLen-- != 0)
+                while (stringRange-- != 0)
                 {            /* while input left                  */
                     char ch = *current++;          /* get next char                     */
                                                    /* get reference string              */
