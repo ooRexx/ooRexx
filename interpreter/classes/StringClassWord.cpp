@@ -215,6 +215,7 @@ RexxString *RexxString::space(RexxInteger *space_count,
     return Retval;                       /* return spaced string              */
 }
 
+
 /* the SUBWORD function */
 /******************************************************************************/
 /* Arguments:  Starting word postion                                          */
@@ -222,63 +223,11 @@ RexxString *RexxString::space(RexxInteger *space_count,
 /*                                                                            */
 /*  Returned:  string, contains the requested number of words from source     */
 /******************************************************************************/
-RexxString *RexxString::subWord(RexxInteger *position,
-                                RexxInteger *plength)
+RexxString *RexxString::subWord(RexxInteger *position, RexxInteger *plength)
 {
-    const char *Word;                    /* current word pointer              */
-    const char *WordStart;               /* start of substring                */
-    const char *WordEnd;                 /* end of the substring              */
-    const char *NextSite;                /* next word                         */
-    size_t      WordPos;                 /* needed word position              */
-    size_t      Count;                   /* count of words                    */
-    size_t      Length;                  /* remaining length                  */
-    size_t      WordLength;              /* word size                         */
-    RexxString *Retval;                  /* return value                      */
-
-                                         /* convert position to binary        */
-    WordPos = positionArgument(position, ARG_ONE);
-    /* get num of words to delete, the   */
-    /* default is "a very large number"  */
-    Count = optionalLengthArgument(plength, MAXNUM, ARG_TWO);
-
-    Length = this->getLength();               /* get Argument length               */
-    if (!Length || !Count)               /* null string?                      */
-    {
-        Retval = OREF_NULLSTRING;          /* result is null also               */
-    }
-    else
-    {
-        Word = this->getStringData();      /* point to the string               */
-                                           /* get the first word                */
-        WordLength = StringUtil::nextWord(&Word, &Length, &NextSite);
-        while (--WordPos && WordLength)
-        {  /* loop until we reach tArget        */
-            Word = NextSite;                 /* copy the start pointer            */
-                                             /* get the next word                 */
-            WordLength = StringUtil::nextWord(&Word, &Length, &NextSite);
-        }
-        if (WordPos)                       /* run out of words first            */
-        {
-            Retval = OREF_NULLSTRING;        /* again a null string               */
-        }
-        else
-        {                             /* count off number of words         */
-            WordStart = Word;                /* save start position               */
-            WordEnd = Word;                  /* default end is the same           */
-                                             /* loop until we reach tArget        */
-            while (Count-- && WordLength)
-            {
-                WordEnd = Word + WordLength;   /* point to the word end             */
-                Word = NextSite;               /* copy the start pointer            */
-                                               /* get the next word                 */
-                WordLength = StringUtil::nextWord(&Word, &Length, &NextSite);
-            }
-            /* extract the substring             */
-            Retval = (RexxString *)new_string(WordStart, WordEnd - WordStart);
-        }
-    }
-    return Retval;                       /* return extracted string           */
+    return StringUtil::subWord(getStringData(), getLength(), position, plength);
 }
+
 
 /* the WORD function */
 /******************************************************************************/

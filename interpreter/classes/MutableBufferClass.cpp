@@ -1332,3 +1332,17 @@ RexxInteger *RexxMutableBuffer::verify(RexxString *ref, RexxString *option, Rexx
 {
     return StringUtil::verify(getStringData(), getLength(), ref, option, _start, range);
 }
+
+
+/**
+ * Perform a subword extraction from a mutable buffer.
+ *
+ * @param position The first word to be extracted.
+ * @param plength  The number of words to extract.
+ *
+ * @return The substring containing the extacted words.
+ */
+RexxString *RexxMutableBuffer::subWord(RexxInteger *position, RexxInteger *plength)
+{
+    return StringUtil::subWord(getStringData(), getLength(), position, plength);
+}

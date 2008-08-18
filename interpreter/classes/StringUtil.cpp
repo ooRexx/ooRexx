@@ -1459,3 +1459,57 @@ RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  
         }
     }
 }
+
+
+/**
+ * Do a subword operation on a buffer of data
+ *
+ * @param data     The start of the data buffer.
+ * @param length   The length of the buffer
+ * @param position The starting word position.
+ * @param plength  the count of words to return.
+ *
+ * @return The string containing the indicated subwords.
+ */
+RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *position, RexxInteger *plength)
+{
+                                         /* convert position to binary        */
+    size_t wordPos = positionArgument(position, ARG_ONE);
+    // get num of words to extract.  The default is a "very large number
+    size_t count = optionalLengthArgument(plength, MAXNUM, ARG_TWO);
+
+    // handle cases that will always result in a null string
+    if (length == 0 || count == 0)
+    {
+        return OREF_NULLSTRING;
+    }
+    const char *nextSite = NULL;
+    const char *word = data;
+                                       /* get the first word                */
+    size_t wordLength = nextWord(&word, &length, &nextSite);
+    while (--wordPos > 0 && wordLength != 0)
+    {  /* loop until we reach tArget        */
+        word = nextSite;                 /* copy the start pointer            */
+                                         /* get the next word                 */
+        wordLength = nextWord(&word, &length, &nextSite);
+    }
+    // we terminated because there was no word found before we reached the
+    // count position
+    if (wordPos != 0)
+    {
+        return OREF_NULLSTRING;        /* again a null string               */
+    }
+
+    const char *wordStart = data;                /* save start position               */
+    const char *wordEnd = data;                  /* default end is the same           */
+                                     /* loop until we reach tArget        */
+    while (count-- > 0 && wordLength != 0)
+    {
+        wordEnd = word + wordLength;   /* point to the word end             */
+        word = nextSite;               /* copy the start pointer            */
+                                       /* get the next word                 */
+        wordLength = nextWord(&word, &length, &nextSite);
+    }
+    /* extract the substring             */
+    return new_string(wordStart, wordEnd - wordStart);
+}
