@@ -948,6 +948,8 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_UPPER                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::upper), 2);
   defineKernelMethod(CHAR_LOWER                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lower), 2);
   defineKernelMethod(CHAR_TRANSLATE                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::translate), 5);
+  defineKernelMethod(CHAR_MATCH                        ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::match), 4);
+  defineKernelMethod(CHAR_CASELESSMATCH                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessMatch), 4);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

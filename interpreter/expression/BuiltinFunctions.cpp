@@ -879,6 +879,7 @@ BUILTIN(ARG)
             {
                 return OREF_NULLSTRING;      /* this too is a null string         */
             }
+            return result;                   // return the argument stuff
         }
     }
     else

@@ -100,6 +100,10 @@ class RexxMutableBufferClass : public RexxClass {
    RexxMutableBuffer *upper(RexxInteger *_start, RexxInteger *_length);
    RexxMutableBuffer *lower(RexxInteger *_start, RexxInteger *_length);
    RexxMutableBuffer *translate(RexxString *tableo, RexxString *tablei, RexxString *pad, RexxInteger *, RexxInteger *);
+   RexxInteger *match(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+   RexxInteger *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
+   bool primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
+   bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
 
    inline const char *getStringData() { return data->getData(); }
    inline size_t      getLength()     { return dataLength; }
