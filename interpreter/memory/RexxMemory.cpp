@@ -84,7 +84,7 @@ RexxMemory memoryObject;
 #define SaveStackSize 20             /* newly created objects to save */
 #define SaveStackAllocSize 500       /* pre-allocation for save stack  */
 
-#define MaxImageSize 1200000         /* maximum startup image size */
+#define MaxImageSize 1400000         /* maximum startup image size */
 
 RexxDirectory *RexxMemory::globalStrings = OREF_NULL;
 RexxDirectory *RexxMemory::environment = OREF_NULL;       // global environment
