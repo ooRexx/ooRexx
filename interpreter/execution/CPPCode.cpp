@@ -867,6 +867,7 @@ CPPM(RexxMutableBuffer::caselessMatchChar),
 CPPM(RexxMutableBuffer::verify),
 CPPM(RexxMutableBuffer::subWord),
 CPPM(RexxMutableBuffer::word),
+CPPM(RexxMutableBuffer::wordIndex),
 
 CPPM(RexxSupplier::available),         /* Supplier methods                  */
 CPPM(RexxSupplier::next),

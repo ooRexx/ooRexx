@@ -1550,3 +1550,36 @@ RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *posit
     }
     return OREF_NULLSTRING;        /* no word, return a null            */
 }
+
+
+/**
+ * Return the index position for a given word
+ *
+ * @param data     The data containing the words
+ * @param length   The length of the data buffer
+ * @param position The target word position
+ *
+ * @return The offset of the start of the indicated word.
+ */
+RexxInteger *StringUtil::wordIndex(const char *data, size_t length, RexxInteger *position)
+{
+                                         /* convert count to binary           */
+    size_t wordPos = positionArgument(position, ARG_ONE);
+    const char *word = data;             /* point to word data                */
+    const char *nextSite = NULL;
+
+                                         /* get the first word                */
+    size_t wordLength = nextWord(&word, &length, &nextSite);
+    while (--wordPos > 0 && wordLength != 0)
+    {    /* loop until we reach target        */
+        word = nextSite;                   /* copy the start pointer            */
+                                           /* get the next word                 */
+        wordLength = nextWord(&word, &length, &nextSite);
+    }
+
+    if (wordLength == 0)                 /* ran out of string                 */
+    {
+        return IntegerZero;              /* no index                          */
+    }
+    return new_integer(word - data + 1);
+}

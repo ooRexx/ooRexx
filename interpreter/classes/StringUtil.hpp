@@ -83,6 +83,7 @@ public:
     static RexxInteger *verify(const char *data, size_t stringLen, RexxString  *ref, RexxString  *option, RexxInteger *_start, RexxInteger *range);
     static RexxString *subWord(const char *data, size_t length, RexxInteger *position, RexxInteger *plength);
     static RexxString *word(const char *data, size_t length, RexxInteger *position);
+    static RexxInteger *wordIndex(const char *data, size_t length, RexxInteger *position);
 };
 
 #endif

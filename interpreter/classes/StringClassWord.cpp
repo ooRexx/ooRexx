@@ -248,37 +248,7 @@ RexxString *RexxString::word(RexxInteger *position)
 /******************************************************************************/
 RexxInteger *RexxString::wordIndex(RexxInteger *position)
 {
-    const char *Word;                    /* current word pointer              */
-    const char *NextSite;                /* next word                         */
-    size_t      Length;                  /* string length                     */
-    size_t      WordLength;              /* word length                       */
-    size_t      WordPos;                 /* desired word position             */
-    RexxInteger *Retval;                 /* return value                      */
-    size_t      tempIndex;
-
-    Length = this->getLength();          /* get the string length             */
-                                         /* convert count to binary           */
-    WordPos = positionArgument(position, ARG_ONE);
-    Word = this->getStringData();        /* point to word data                */
-
-                                         /* get the first word                */
-    WordLength = StringUtil::nextWord(&Word, &Length, &NextSite);
-    while (--WordPos && WordLength)
-    {    /* loop until we reach target        */
-        Word = NextSite;                   /* copy the start pointer            */
-                                           /* get the next word                 */
-        WordLength = StringUtil::nextWord(&Word, &Length, &NextSite);
-    }
-    if (WordLength == 0)                 /* ran out of string                 */
-    {
-        Retval = IntegerZero;              /* no index                          */
-    }
-    else
-    {                               /* calc the word index               */
-        tempIndex = Word - this->getStringData() + 1;
-        Retval = new_integer(tempIndex);
-    }
-    return Retval;                       /* return appopriate position        */
+    return StringUtil::wordIndex(getStringData(), getLength(), position);
 }
 
 /* the WORDLENGTH function */

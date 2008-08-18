@@ -1359,3 +1359,17 @@ RexxString *RexxMutableBuffer::word(RexxInteger *position)
 {
     return StringUtil::word(getStringData(), getLength(), position);
 }
+
+
+/**
+ * return the index of a given word position in a mutable buffer
+ *
+ *
+ * @param position The target word position.
+ *
+ * @return The extracted word, as a string.
+ */
+RexxInteger *RexxMutableBuffer::wordIndex(RexxInteger *position)
+{
+    return StringUtil::wordIndex(getStringData(), getLength(), position);
+}
