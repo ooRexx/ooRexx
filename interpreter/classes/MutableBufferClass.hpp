@@ -104,6 +104,8 @@ class RexxMutableBufferClass : public RexxClass {
    RexxInteger *caselessMatch(RexxInteger *start_, RexxString *other, RexxInteger *offset_, RexxInteger *len_);
    bool primitiveMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
    bool primitiveCaselessMatch(stringsize_t start, RexxString *other, stringsize_t offset, stringsize_t len);
+   RexxInteger *matchChar(RexxInteger *position_, RexxString *matchSet);
+   RexxInteger *caselessMatchChar(RexxInteger *position_, RexxString *matchSet);
 
    inline const char *getStringData() { return data->getData(); }
    inline size_t      getLength()     { return dataLength; }
@@ -113,6 +115,7 @@ class RexxMutableBufferClass : public RexxClass {
    inline void closeGap(size_t offset, size_t _size, size_t tailSize) { data->closeGap(offset, _size, tailSize); }
    inline void adjustGap(size_t offset, size_t _size, size_t _newSize) { data->adjustGap(offset, _size, _newSize); }
    inline void setData(size_t offset, char character, size_t l) { data->setData(offset, character, l); }
+   inline char getChar(size_t offset) { return getData()[offset]; }
 
    static void createInstance();
    static RexxClass *classInstance;

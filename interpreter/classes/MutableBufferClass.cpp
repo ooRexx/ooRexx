@@ -1242,3 +1242,77 @@ bool RexxMutableBuffer::primitiveCaselessMatch(stringsize_t _start, RexxString *
 
     return StringUtil::caselessCompare(getStringData() + _start, other->getStringData() + offset, len) == 0;
 }
+
+
+/**
+ * Compare a single character at a give position against
+ * a set of characters to see if any of the characters is
+ * a match.
+ *
+ * @param position_ The character position
+ * @param matchSet  The set to compare against.
+ *
+ * @return true if the character at the give position is any of the characters,
+ *         false if none of them match.
+ */
+RexxInteger *RexxMutableBuffer::matchChar(RexxInteger *position_, RexxString *matchSet)
+{
+    stringsize_t position = positionArgument(position_, ARG_ONE);
+    // the start position must be within the string bounds
+    if (position > getLength())
+    {
+        reportException(Error_Incorrect_method_position, position);
+    }
+    matchSet = stringArgument(matchSet, ARG_TWO);
+
+    stringsize_t _setLength = matchSet->getLength();
+    char         _matchChar = getChar(position - 1);
+
+    // iterate through the match set looking for a match
+    for (stringsize_t i = 0; i < _setLength; i++)
+    {
+        if (_matchChar == matchSet->getChar(i))
+        {
+            return TheTrueObject;
+        }
+    }
+    return TheFalseObject;
+}
+
+
+/**
+ * Compare a single character at a give position against
+ * a set of characters to see if any of the characters is
+ * a match.
+ *
+ * @param position_ The character position
+ * @param matchSet  The set to compare against.
+ *
+ * @return true if the character at the give position is any of the characters,
+ *         false if none of them match.
+ */
+RexxInteger *RexxMutableBuffer::caselessMatchChar(RexxInteger *position_, RexxString *matchSet)
+{
+    stringsize_t position = positionArgument(position_, ARG_ONE);
+    // the start position must be within the string bounds
+    if (position > getLength())
+    {
+        reportException(Error_Incorrect_method_position, position);
+    }
+    matchSet = stringArgument(matchSet, ARG_TWO);
+
+    stringsize_t _setLength = matchSet->getLength();
+    char         _matchChar = getChar(position - 1);
+    _matchChar = toupper(_matchChar);
+
+    // iterate through the match set looking for a match, using a
+    // caseless compare
+    for (stringsize_t i = 0; i < _setLength; i++)
+    {
+        if (_matchChar == toupper(matchSet->getChar(i)))
+        {
+            return TheTrueObject;
+        }
+    }
+    return TheFalseObject;
+}
