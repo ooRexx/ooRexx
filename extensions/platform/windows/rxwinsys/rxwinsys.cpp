@@ -88,6 +88,12 @@ void  memupper(
 
 VOID Little2BigEndian(BYTE *pbInt, INT iSize);
 
+size_t dwordPtrToRexx(DWORD_PTR val, PRXSTRING r)
+{
+    _snprintf(r->strptr, RXAUTOBUFLEN, "%Iu", val);
+    r->strlength = strlen(r->strptr);
+    return 0;
+}
 
 LONG HandleArgError(PRXSTRING r, BOOL ToMuch)
 {
@@ -3072,7 +3078,7 @@ size_t RexxEntry WSCtrlSend(const char *funcname, size_t argc, CONSTRXSTRING arg
         }
         else
         {
-            RETVAL(dwResult);
+            return dwordPtrToRexx(dwResult, retstr);
         }
     }
     else if ( strcmp(argv[0].strptr, "MAP") == 0 )
