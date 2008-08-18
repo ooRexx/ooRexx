@@ -1271,11 +1271,11 @@ size_t RexxEntry HandleControlEx(
     {
         if ( argc == 3 )
         {
-            RETVAL(GetWindowLong(hCtrl, GWL_USERDATA));
+            RETVAL(GetWindowLongPtr(hCtrl, GWLP_USERDATA));
         }
         else if ( argc == 4 )
         {
-            RETVAL(SetWindowLong(hCtrl, GWL_USERDATA, atol(argv[3].strptr)));
+            RETVAL(SetWindowLongPtr(hCtrl, GWLP_USERDATA, atol(argv[3].strptr)));
         }
         else RETERR
     }
@@ -4673,7 +4673,7 @@ RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, O
     }
 
     uint32_t red;
-    context->ObjectToUnsignedNumber(r, &red);
+    context->ObjectToUnsignedNumber(r, (size_t *)&red);
     return RGB((uint8_t)red, g, b);
 }
 

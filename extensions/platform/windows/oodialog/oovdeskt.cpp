@@ -269,7 +269,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
                HCURSOR oC, hC;
                res = atoi(argv[3].strptr);
                hC = LoadCursor(NULL, MAKEINTRESOURCE(res));
-               oC = (HCURSOR)SetClassLongPtr(hW, GCL_HCURSOR, (LONG_PTR)hC);
+               oC = (HCURSOR)SetClassLongPtr(hW, GCLP_HCURSOR, (LONG_PTR)hC);
                SetCursor(hC);
                RETHANDLE(oC)
            }
@@ -277,12 +277,12 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
            {
                HCURSOR hC = (HCURSOR)GET_HANDLE(argv[3]);
                if (hC) {
-                   SetClassLongPtr(hW, GCL_HCURSOR, (LONG_PTR)hC);
+                   SetClassLongPtr(hW, GCLP_HCURSOR, (LONG_PTR)hC);
                    RETHANDLE(SetCursor(hC))
                }
                else
                {
-                   SetClassLongPtr(hW, GCL_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
+                   SetClassLongPtr(hW, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
                    RETHANDLE(SetCursor(LoadCursor(NULL, IDC_ARROW)))
                }
            }

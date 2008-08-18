@@ -229,7 +229,7 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
             if (!TimerEvent)
             {
                 TimerEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
-                Timer = SetTimer(NULL,GetCurrentThreadId(), sleep, ScrollTimerProc);
+                Timer = SetTimer(NULL,GetCurrentThreadId(), sleep, (TIMERPROC)ScrollTimerProc);
                 TimerCount++;
             }
             else TimerCount++;
