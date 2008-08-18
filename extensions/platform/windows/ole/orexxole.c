@@ -4611,11 +4611,6 @@ RexxMethod3(RexxObjectPtr,                // Return type
         }
     }
 
-    if ( counter == 2 )
-    {
-        OleUninitialize();
-    }
-
     return ResultObj;
 }
 
