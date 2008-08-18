@@ -222,7 +222,14 @@ BOOL string2pointer(
   const char *string,                  /* string to convert          */
   void **pointer)                      /* converted number           */
 {
-  return sscanf(string, "0x%p", pointer) == 1;
+    if ( ISHEX(string) )
+    {
+        return sscanf(string, "0x%p", pointer) == 1;
+    }
+    else
+    {
+        return sscanf(string, "%p", pointer) == 1;
+    }
 }
 
 
@@ -1006,7 +1013,7 @@ BOOL ProgmanCmd(LPSTR lpszCmd)
 
 
     ui = DdeInitialize(&dwDDEInst,
-                       DDECallback,
+                       (PFNCALLBACK)DDECallback,
                        CBF_FAIL_ALLSVRXACTIONS,
                        0l);
 
@@ -2570,11 +2577,11 @@ size_t RexxEntry WSEventLog(const char *funcname, size_t argc, CONSTRXSTRING arg
 
 size_t RexxEntry WSCtrlWindow(const char *funcname, size_t argc, CONSTRXSTRING argv[], const char *qname, PRXSTRING retstr)
 {
-    HWND    hW;
-    HWND thW;
-    char   *tmp_ptr;
-    DWORD   dwResult;
-    LRESULT lResult;
+    HWND       hW;
+    HWND       thW;
+    char      *tmp_ptr;
+    DWORD_PTR  dwResult;
+    LRESULT    lResult;
 
     CHECKARG(1,10);
 
@@ -2997,33 +3004,26 @@ size_t RexxEntry WSCtrlSend(const char *funcname, size_t argc, CONSTRXSTRING arg
     }
     else if ( strcmp(argv[0].strptr, "MSG") == 0 )
     {
-        WPARAM n[4];
-        INT i;
+        UINT   msg;
+        WPARAM wp;
+        LPARAM lp;
 
         CHECKARG(5,6);
 
         GET_HANDLE(argv[1].strptr, hW);
-        for ( i = 0; i < 4; i++ )
-        {
-            if ( ISHEX(argv[i+1].strptr) )
-            {
-                n[i] = strtol(argv[i+1].strptr,'\0',16);
-            }
-            else
-            {
-                n[i] = atol(argv[i+1].strptr);
-            }
-        }
+        GET_HANDLE(argv[2].strptr, msg);
+        GET_HANDLE(argv[3].strptr, wp);
+        GET_HANDLE(argv[4].strptr, lp);
 
         /* The 6th arg can, optionally, be used as an extra qualifier.  Currently
          * only used in one case.
          */
         if ( argc > 5 && argv[5].strptr[0] == 'E' )
         {
-            n[3] = (WPARAM)"Environment";
+            lp = (LPARAM)"Environment";
         }
 
-        if ( SendNotifyMessage(hW, n[1], (WPARAM)n[2], (LPARAM)n[3]) )
+        if ( SendNotifyMessage(hW, msg, wp, lp) )
         {
             RETVAL(0)
         }
@@ -3034,36 +3034,29 @@ size_t RexxEntry WSCtrlSend(const char *funcname, size_t argc, CONSTRXSTRING arg
     }
     else if ( strcmp(argv[0].strptr,"TO") == 0 )  /* Send message Time Out */
     {
-        DWORD dwResult;
-        LRESULT lResult;
-        WPARAM n[5];
-        INT i;
+        UINT      msg, timeOut;
+        WPARAM    wp;
+        LPARAM    lp;
+        DWORD_PTR dwResult;
+        LRESULT   lResult;
 
         CHECKARG(6,7);
 
         GET_HANDLE(argv[1].strptr, hW);
-        for ( i = 0; i < 5; i++ )
-        {
-            if (ISHEX(argv[i+1].strptr))
-            {
-                n[i] = strtol(argv[i+1].strptr,'\0',16);
-            }
-            else
-            {
-                n[i] = atol(argv[i+1].strptr);
-            }
-        }
+        GET_HANDLE(argv[2].strptr, msg);
+        GET_HANDLE(argv[3].strptr, wp);
+        GET_HANDLE(argv[4].strptr, lp);
+        GET_HANDLE(argv[5].strptr, timeOut);
 
         /* The 7th arg can, optionally, be used as an extra qualifier.  Currently
          * only used in one case.
          */
         if ( argc > 6 && argv[6].strptr[0] == 'E' )
         {
-            n[3] = (WPARAM)"Environment";
+            lp = (LPARAM)"Environment";
         }
 
-        lResult = SendMessageTimeout(hW, n[1], (WPARAM)n[2], (LPARAM)n[3],
-                                     MSG_TIMEOUT_OPTS, n[4], &dwResult);
+        lResult = SendMessageTimeout(hW, msg, wp, lp, MSG_TIMEOUT_OPTS, timeOut, &dwResult);
         if ( lResult == 0 )
         {
             /* Some error occurred, if last error is 0 it is a time out,
@@ -3073,13 +3066,9 @@ size_t RexxEntry WSCtrlSend(const char *funcname, size_t argc, CONSTRXSTRING arg
             DWORD err = GetLastError();
             if ( err == 0 )
             {
-                i = -1;
+                err = 1;  // We are going to negate this.
             }
-            else
-            {
-                i = -(INT)err;
-            }
-            RETVAL(i);
+            RETVAL(-(INT)err);
         }
         else
         {
