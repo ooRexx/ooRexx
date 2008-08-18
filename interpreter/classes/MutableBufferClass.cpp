@@ -1427,3 +1427,64 @@ RexxInteger *RexxMutableBuffer::caselessWordPos(RexxString  *phrase, RexxInteger
 {
     return StringUtil::caselessWordPos(getStringData(), getLength(), phrase, pstart);
 }
+
+
+/**
+ * Perform a delword operation on a mutable buffer
+ *
+ * @param position The position to delete.
+ * @param plength  The number of words to delete
+ *
+ * @return Always returns the target mutable buffer.
+ */
+RexxMutableBuffer *RexxMutableBuffer::delWord(RexxInteger *position, RexxInteger *plength)
+{
+                                         /* convert position to binary        */
+    size_t wordPos = positionArgument(position, ARG_ONE);
+    /* get num of words to delete, the   */
+    /* default is "a very large number"  */
+    size_t count = optionalLengthArgument(plength, MAXNUM, ARG_TWO);
+
+    size_t length = getLength();         /* get string length                 */
+    if (length == 0)                     /* null string?                      */
+    {
+        return this;                     /* nothing to delete                 */
+    }
+    if (count == 0)                      /* deleting zero words?              */
+    {
+        return this;                     /* also very easy                    */
+    }
+    const char *word = getStringData();  /* point to the string               */
+    const char *nextSite = NULL;
+                                       /* get the first word                */
+    size_t wordLength = StringUtil::nextWord(&word, &length, &nextSite);
+    while (--wordPos > 0 && wordLength != 0)
+    {  /* loop until we reach tArget        */
+        word = nextSite;                 /* copy the start pointer            */
+                                         /* get the next word                 */
+        wordLength = StringUtil::nextWord(&word, &length, &nextSite);
+    }
+    if (wordPos != 0)                    /* run out of words first            */
+    {
+        return this;                     /* return the buffer unaltered       */
+    }
+    // get the deletion point as an offset
+    size_t deletePosition = word - this->getStringData();
+    while (--count > 0 && wordLength != 0)
+    {  /* loop until we reach tArget        */
+        word = nextSite;               /* copy the start pointer            */
+                                       /* get the next word                 */
+        wordLength = StringUtil::nextWord(&word, &length, &nextSite);
+    }
+    if (length != 0)                   /* didn't use up the string          */
+    {
+        StringUtil::skipBlanks(&nextSite, &length);/* skip over trailing blanks         */
+    }
+
+    size_t gapSize = (nextSite - getStringData()) - deletePosition;
+    // close up the delete part
+    closeGap(deletePosition, gapSize, length);
+    // adjust for the deleted data
+    dataLength -= gapSize;
+    return this;
+}
