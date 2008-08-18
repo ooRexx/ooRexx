@@ -952,6 +952,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_CASELESSMATCH                ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessMatch), 4);
   defineKernelMethod(CHAR_MATCHCHAR                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::matchChar), 2);
   defineKernelMethod(CHAR_CASELESSMATCHCHAR            ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::caselessMatchChar), 2);
+  defineKernelMethod(CHAR_VERIFY                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::verify), 3);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

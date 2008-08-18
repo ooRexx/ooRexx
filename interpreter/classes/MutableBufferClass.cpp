@@ -1316,3 +1316,18 @@ RexxInteger *RexxMutableBuffer::caselessMatchChar(RexxInteger *position_, RexxSt
     }
     return TheFalseObject;
 }
+
+
+/**
+ * Perform a character verify operation on a mutable buffer.
+ *
+ * @param ref    The reference string.
+ * @param option The match/nomatch option.
+ * @param _start The start position for the verify.
+ *
+ * @return The offset of the first match/mismatch within the buffer.
+ */
+RexxInteger *RexxMutableBuffer::verify(RexxString *ref, RexxString *option, RexxInteger *_start)
+{
+    return StringUtil::verify(getStringData(), getLength(), ref, option, _start);
+}

@@ -818,6 +818,7 @@ RexxString *RexxString::translate(
     return Retval;                        /* return translated string          */
 }
 
+
 RexxInteger *RexxString::verify(
     RexxString  *ref,                  /* compare reference string          */
     RexxString  *option,               /* Match/NoMatch option              */
@@ -826,86 +827,7 @@ RexxInteger *RexxString::verify(
 /*  Function:  String class VERIFY function                                   */
 /******************************************************************************/
 {
-    size_t    StartPos;                  /* start position                    */
-    size_t    StringLen;                 /* length of string                  */
-    size_t    Position;                  /* returned position                 */
-    size_t    ReferenceLen;              /* length of reference set           */
-    size_t    Temp;                      /* temporary scan length             */
-    RexxInteger *Retval;                 /* return value                      */
-    char      Option;                    /* verify option                     */
-    const char *Reference;               /* reference pointer                 */
-    const char *Current;                 /* current scan position             */
-    char      ch;                        /* scan character                    */
-    bool      Match;                     /* found a match                     */
-
-    ref = stringArgument(ref, ARG_ONE);  /* get the reference string          */
-    ReferenceLen = ref->getLength();     /* get a length also                 */
-                                         /* get the option, default 'Nomatch' */
-    Option = optionalOptionArgument(option, VERIFY_NOMATCH, ARG_TWO);
-    if (Option != VERIFY_MATCH &&        /* options are 'Match' and           */
-        Option != VERIFY_NOMATCH)        /* 'NoMatch'                         */
-    {
-        /* not that either, then its an error*/
-        reportException(Error_Incorrect_method_option, "MN", option);
-    }
-
-    /* get starting position             */
-    StartPos = optionalPositionArgument(_start, 1, ARG_THREE);
-    StringLen = this->getLength();       /* get the string length             */
-    if (StartPos > StringLen)            /* beyond end of string?             */
-    {
-        Retval = IntegerZero;              /* couldn't find it                  */
-    }
-    else
-    {
-        /* point at start position           */
-        Current = this->getStringData() + StartPos - 1;
-        StringLen -= (StartPos - 1);       /* reduce the length                 */
-        Position = 0;                      /* haven't found it yet              */
-
-        if (!ReferenceLen)
-        {               /* if verifying a nullstring         */
-            if (Option == VERIFY_MATCH)      /* can't match at all                */
-            {
-                Retval = IntegerZero;          /* so return zero                    */
-            }
-            else
-            {
-                Retval = new_integer(StartPos);/* non-match at start position       */
-            }
-        }
-        else
-        {                             /* need to really search             */
-            while (StringLen--)
-            {            /* while input left                  */
-                ch = *Current++;               /* get next char                     */
-                                               /* get reference string              */
-                Reference = ref->getStringData();
-                Temp = ReferenceLen;           /* copy the reference length         */
-                Match = false;                 /* no match yet                      */
-
-                while (Temp--)
-                {               /* spin thru reference               */
-                    if (ch == *Reference++)
-                    {    /* in reference ?                    */
-                        Match = true;              /* had a match                       */
-                        break;                     /* quit the loop                     */
-                    }
-                }
-                /* have needed matching?             */
-                if ((Match && Option == VERIFY_MATCH) ||
-                    (!Match && Option == VERIFY_NOMATCH))
-                {
-                    /* calculate the position            */
-                    Position = Current - this->getStringData();
-                    break;                       /* done searching                    */
-                }
-            }
-            /* format the position               */
-            Retval = Position ? new_integer(Position) : IntegerZero;
-        }
-    }
-    return Retval;                       /* return formatted number           */
+    return StringUtil::verify(getStringData(), getLength(), ref, option, _start);
 }
 
 
