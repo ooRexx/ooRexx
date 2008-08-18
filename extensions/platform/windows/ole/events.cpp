@@ -208,9 +208,20 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
 
                 rxArray = context->NewArray(pDispParams->cArgs);
                 // convert VARIANTs to Rexx Objects...
-                for (i=0;i<(int) pDispParams->cArgs;i++)
+                for ( i = 0; i < (int)pDispParams->cArgs; i++ )
                 {
                     rxResult = Variant2Rexx(context, &pDispParams->rgvarg[i]);
+
+                    if ( rxResult == NULLOBJECT )
+                    {
+                        // Variant2Rexx() raised an exception, we could not
+                        // convert this arg.  Be sure to detach and then
+                        // indicate the error to whoever invoked us.
+                        context->DetachThread();
+                        *puArgErr = i;
+                        return DISP_E_TYPEMISMATCH;
+                    }
+
                     context->ArrayPut(rxArray, rxResult, i + 1);
                 }
                 strcpy(upperBuffer,pList->pszFuncName);
@@ -263,9 +274,7 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                             }
                         }
                     }
-
                 }
-
                 hResult = S_OK;
             }
             else
@@ -275,7 +284,9 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
         }
     }
 
-    context->DetachThread();     // make sure we detach this thread, which will clean up our stack frame entries.
+    // make sure we detach this thread, which will clean up our stack frame
+    // entries.
+    context->DetachThread();
 
     return hResult;
 }

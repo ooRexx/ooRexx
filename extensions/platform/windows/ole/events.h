@@ -123,7 +123,8 @@ class OLEObjectEvent : public IDispatch {
     STDMETHOD(GetTypeInfoCount)(unsigned int *);
     STDMETHOD(Invoke)(DISPID, REFIID, LCID, WORD, DISPPARAMS *, VARIANT *, EXCEPINFO *, unsigned int *);
 
-    POLEFUNCINFO2 getEventList() { return pEventList; }  // return event list
+    inline POLEFUNCINFO2 getEventList() { return pEventList; }  // return event list
+    inline GUID getIntefaceID() { return interfaceID; }
 
   private:
     ULONG         ulRefCounter;         // reference counter
