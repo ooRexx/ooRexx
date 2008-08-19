@@ -216,10 +216,12 @@ bool SysFile::close()
     if (filename != NULL)
     {
         free(const_cast<char *>(filename));
+        filename = NULL;
     }
     if (buffer != NULL)
     {
         free(buffer);
+        buffer = NULL;
     }
     errInfo = 0;
     // if we opened this handle, we need to close it too.
