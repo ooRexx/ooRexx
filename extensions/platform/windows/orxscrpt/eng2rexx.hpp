@@ -53,9 +53,9 @@ int __stdcall scriptSecurity(CLSID,IUnknown*);
 
 // these three come from orexxole.c
 // TODO note that Variant2Rexx() can / will return NULLOBJECT if it raises an
-// exception.
+// exception.  Note that Rexx2Variant() now returns true or false.
 RexxObjectPtr Variant2Rexx(RexxThreadContext *, VARIANT *pVariant);
-VOID Rexx2Variant(RexxThreadContext *, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
+bool Rexx2Variant(RexxThreadContext *, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
 void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*));
 
 #endif
