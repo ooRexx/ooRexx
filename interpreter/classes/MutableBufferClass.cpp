@@ -561,9 +561,9 @@ RexxString *RexxMutableBuffer::substr(RexxInteger *argposition,
  * @return The index of the located string.  Returns 0 if no matches
  *         are found.
  */
-RexxInteger *RexxMutableBuffer::posRexx(RexxString  *needle, RexxInteger *pstart)
+RexxInteger *RexxMutableBuffer::posRexx(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
 {
-    return StringUtil::posRexx(getStringData(), getLength(), needle, pstart);
+    return StringUtil::posRexx(getStringData(), getLength(), needle, pstart, range);
 }
 
 
@@ -577,9 +577,9 @@ RexxInteger *RexxMutableBuffer::posRexx(RexxString  *needle, RexxInteger *pstart
  * @return The index of the located string.  Returns 0 if no matches
  *         are found.
  */
-RexxInteger *RexxMutableBuffer::lastPos(RexxString  *needle, RexxInteger *_start)
+RexxInteger *RexxMutableBuffer::lastPos(RexxString  *needle, RexxInteger *_start, RexxInteger *_range)
 {
-    return StringUtil::lastPosRexx(getStringData(), getLength(), needle, _start);
+    return StringUtil::lastPosRexx(getStringData(), getLength(), needle, _start, _range);
 }
 
 
@@ -592,15 +592,16 @@ RexxInteger *RexxMutableBuffer::lastPos(RexxString  *needle, RexxInteger *_start
  * @return The index of the located string.  Returns 0 if no matches
  *         are found.
  */
-RexxInteger *RexxMutableBuffer::caselessPos(RexxString  *needle, RexxInteger *pstart)
+RexxInteger *RexxMutableBuffer::caselessPos(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
 {
     /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
     /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
+    size_t _range = optionalLengthArgument(range, getLength() - _start + 1, ARG_THREE);
     /* pass on to the primitive function */
     /* and return as an integer object   */
-    return new_integer(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1));
+    return new_integer(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range));
 }
 
 
@@ -614,15 +615,16 @@ RexxInteger *RexxMutableBuffer::caselessPos(RexxString  *needle, RexxInteger *ps
  * @return The index of the located string.  Returns 0 if no matches
  *         are found.
  */
-RexxInteger *RexxMutableBuffer::caselessLastPos(RexxString  *needle, RexxInteger *pstart)
+RexxInteger *RexxMutableBuffer::caselessLastPos(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
 {
     /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
     /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, getLength(), ARG_TWO);
+    size_t _range = optionalPositionArgument(range, getLength(), ARG_THREE);
     /* pass on to the primitive function */
     /* and return as an integer object   */
-    return new_integer(StringUtil::caselessLastPos(getStringData(), getLength(), needle , _start - 1));
+    return new_integer(StringUtil::caselessLastPos(getStringData(), getLength(), needle , _start - 1, _range));
 }
 
 
@@ -724,7 +726,7 @@ RexxMutableBuffer *RexxMutableBuffer::changeStr(RexxString *needle, RexxString *
         {
             // search for the next occurrence...which should be there because we
             // already know the count
-            size_t matchPos = StringUtil::pos(source, sourceLength, needle, _start);
+            size_t matchPos = StringUtil::pos(source, sourceLength, needle, _start, sourceLength);
             copyData(matchPos - 1, newNeedle->getStringData(), newLength);
             // step to the next search position
             _start = matchPos + newLength - 1;
@@ -744,7 +746,7 @@ RexxMutableBuffer *RexxMutableBuffer::changeStr(RexxString *needle, RexxString *
         for (size_t i = 0; i < matches; i++)
         {
             // look for each instance and replace
-            size_t matchPos = StringUtil::pos(source, sourceLength, needle, _start);
+            size_t matchPos = StringUtil::pos(source, sourceLength, needle, _start, sourceLength);
             size_t copyLength = (matchPos - 1) - _start;  /* get the next length to copy       */
             // if this skipped over characters, we need to copy those
             if (copyLength != 0)
@@ -786,7 +788,7 @@ RexxMutableBuffer *RexxMutableBuffer::changeStr(RexxString *needle, RexxString *
         for (size_t i = 0; i < matches; i++)
         {
             // look for each instance and replace
-            size_t matchPos = StringUtil::pos(source, sourceLength, needle, _start);
+            size_t matchPos = StringUtil::pos(source, sourceLength, needle, _start, sourceLength);
             size_t copyLength = (matchPos - 1) - _start;  /* get the next length to copy       */
             // if this skipped over characters, we need to copy those
             if (copyLength != 0)
@@ -862,7 +864,7 @@ RexxMutableBuffer *RexxMutableBuffer::caselessChangeStr(RexxString *needle, Rexx
         {
             // search for the next occurrence...which should be there because we
             // already know the count
-            size_t matchPos = StringUtil::caselessPos(source, sourceLength, needle, _start);
+            size_t matchPos = StringUtil::caselessPos(source, sourceLength, needle, _start, sourceLength);
             copyData(matchPos - 1, newNeedle->getStringData(), newLength);
             // step to the next search position
             _start = matchPos + newLength - 1;
@@ -882,7 +884,7 @@ RexxMutableBuffer *RexxMutableBuffer::caselessChangeStr(RexxString *needle, Rexx
         for (size_t i = 0; i < matches; i++)
         {
             // look for each instance and replace
-            size_t matchPos = StringUtil::caselessPos(source, sourceLength, needle, _start);
+            size_t matchPos = StringUtil::caselessPos(source, sourceLength, needle, _start, sourceLength);
             size_t copyLength = (matchPos - 1) - _start;  /* get the next length to copy       */
             // if this skipped over characters, we need to copy those
             if (copyLength != 0)
@@ -924,7 +926,7 @@ RexxMutableBuffer *RexxMutableBuffer::caselessChangeStr(RexxString *needle, Rexx
         for (size_t i = 0; i < matches; i++)
         {
             // look for each instance and replace
-            size_t matchPos = StringUtil::caselessPos(source, sourceLength, needle, _start);
+            size_t matchPos = StringUtil::caselessPos(source, sourceLength, needle, _start, sourceLength);
             size_t copyLength = (matchPos - 1) - _start;  /* get the next length to copy       */
             // if this skipped over characters, we need to copy those
             if (copyLength != 0)

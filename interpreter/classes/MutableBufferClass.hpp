@@ -83,10 +83,10 @@ class RexxMutableBufferClass : public RexxClass {
    RexxMutableBuffer *replaceAt(RexxObject *str, RexxObject *pos, RexxObject *len, RexxObject *pad);
    RexxMutableBuffer *mydelete(RexxObject*, RexxObject*);
    RexxString        *substr(RexxInteger *startPosition, RexxInteger *len, RexxString *pad);
-   RexxInteger       *lastPos(RexxString *needle, RexxInteger *_start);
-   RexxInteger       *posRexx(RexxString *needle, RexxInteger *_start);
-   RexxInteger       *caselessLastPos(RexxString *needle, RexxInteger *_start);
-   RexxInteger       *caselessPos(RexxString *needle, RexxInteger *_start);
+   RexxInteger       *lastPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
+   RexxInteger       *posRexx(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
+   RexxInteger       *caselessLastPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
+   RexxInteger       *caselessPos(RexxString *needle, RexxInteger *_start, RexxInteger *_range);
    RexxString        *subchar(RexxInteger *startPosition);
 
    RexxInteger       *getBufferSize() { return new_integer(bufferLength); }

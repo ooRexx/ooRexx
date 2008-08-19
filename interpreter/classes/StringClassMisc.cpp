@@ -462,9 +462,9 @@ RexxObject *RexxString::dataType(RexxString *pType)
  * @return the offset of the match position (origin 1).  Returns 0
  *         if no match was found.
  */
-RexxInteger *RexxString::lastPosRexx(RexxString  *needle, RexxInteger *_start)
+RexxInteger *RexxString::lastPosRexx(RexxString  *needle, RexxInteger *_start, RexxInteger *_range)
 {
-    return StringUtil::lastPosRexx(getStringData(), getLength(), needle, _start);
+    return StringUtil::lastPosRexx(getStringData(), getLength(), needle, _start, _range);
 }
 
 
@@ -476,14 +476,15 @@ RexxInteger *RexxString::lastPosRexx(RexxString  *needle, RexxInteger *_start)
  *
  * @return The match position.  0 means not found.
  */
-RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *_start)
+RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *_start, RexxInteger *_range)
 {
     // validate that this is a good string argument
     needle = stringArgument(needle, ARG_ONE);
     // find out where to start the search. The default is at the very end.
     size_t startPos = optionalPositionArgument(_start, getLength(), ARG_TWO);
+    size_t range = optionalPositionArgument(_range, getLength(), ARG_THREE);
     // now perform the actual search.
-    return new_integer(caselessLastPos(needle, startPos));
+    return new_integer(StringUtil::caselessLastPos(getStringData(), getLength(), needle, startPos, range));
 }
 
 
@@ -500,7 +501,7 @@ RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *_
  */
 size_t RexxString::lastPos(RexxString  *needle, size_t _start)
 {
-    return StringUtil::lastPos(getStringData(), getLength(), needle, _start);
+    return StringUtil::lastPos(getStringData(), getLength(), needle, _start, getLength());
 }
 
 
@@ -517,7 +518,7 @@ size_t RexxString::lastPos(RexxString  *needle, size_t _start)
  */
 size_t RexxString::caselessLastPos(RexxString *needle, size_t _start)
 {
-    return StringUtil::caselessLastPos(getStringData(), getLength(), needle, _start);
+    return StringUtil::caselessLastPos(getStringData(), getLength(), needle, _start, getLength());
 }
 
 RexxInteger *RexxString::countStrRexx(RexxString *needle)
@@ -678,31 +679,34 @@ RexxString *RexxString::caselessChangeStr(RexxString *needle, RexxString *newNee
 }
 
 
-RexxInteger *RexxString::posRexx(
-    RexxString  *needle,               /* search string                     */
-    RexxInteger *pstart)               /* starting position                 */
+RexxInteger *RexxString::posRexx(RexxString  *needle, RexxInteger *pstart, RexxInteger *range)
 /******************************************************************************/
 /* Function:  String class POS method/function                                */
 /******************************************************************************/
 {
-    return StringUtil::posRexx(getStringData(), getLength(), needle, pstart);
+    return StringUtil::posRexx(getStringData(), getLength(), needle, pstart, range);
 }
 
 
-RexxInteger *RexxString::caselessPosRexx(
-    RexxString  *needle,               /* search string                     */
-    RexxInteger *pstart)               /* starting position                 */
-/******************************************************************************/
-/* Function:  String class POS method/function                                */
-/******************************************************************************/
+/**
+ * Do a caseless search for one string in another.
+ *
+ * @param needle The search string.
+ * @param pstart The starting position for the search.
+ * @param range  A maximum range for the search.
+ *
+ * @return The index of any match position, or 0 if not found.
+ */
+RexxInteger *RexxString::caselessPosRexx(RexxString *needle, RexxInteger *pstart, RexxInteger *range)
 {
     /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
     /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
+    size_t _range = optionalLengthArgument(range, getLength() - _start + 1, ARG_THREE);
     /* pass on to the primitive function */
     /* and return as an integer object   */
-    return new_integer(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1));
+    return new_integer(StringUtil::caselessPos(getStringData(), getLength(), needle , _start - 1, _range));
 }
 
 
@@ -716,7 +720,7 @@ RexxInteger *RexxString::caselessPosRexx(
  */
 size_t RexxString::pos(RexxString *needle, size_t _start)
 {
-    return StringUtil::pos(getStringData(), getLength(), needle, _start);
+    return StringUtil::pos(getStringData(), getLength(), needle, _start, getLength());
 }
 
 
@@ -730,7 +734,7 @@ size_t RexxString::pos(RexxString *needle, size_t _start)
  */
 size_t RexxString::caselessPos(RexxString *needle, size_t _start)
 {
-    return StringUtil::caselessPos(getStringData(), getLength(), needle, _start);
+    return StringUtil::caselessPos(getStringData(), getLength(), needle, _start, getLength());
 }
 
 

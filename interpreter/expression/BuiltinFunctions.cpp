@@ -212,10 +212,11 @@ BUILTIN(OVERLAY)
 }
 
 #define POS_MIN 2
-#define POS_MAX 3
+#define POS_MAX 4
 #define POS_needle   1
 #define POS_haystack 2
 #define POS_start    3
+#define POS_range    4
 
 BUILTIN(POS)
 {
@@ -225,8 +226,9 @@ BUILTIN(POS)
     /* get string for target             */
     RexxString *haystack = required_string(POS, haystack);
     RexxInteger *start = optional_integer(POS, start);/* start position is optional        */
+    RexxInteger *range = optional_integer(POS, range);
     /* go perform the pos function       */
-    return haystack->posRexx(needle, start);
+    return haystack->posRexx(needle, start, range);
 }
 
 #define LASTPOS_MIN 2
@@ -234,6 +236,7 @@ BUILTIN(POS)
 #define LASTPOS_needle   1
 #define LASTPOS_haystack 2
 #define LASTPOS_start    3
+#define LASTPOS_range    4
 
 BUILTIN(LASTPOS)
 {
@@ -244,8 +247,9 @@ BUILTIN(LASTPOS)
     RexxString *haystack = required_string(LASTPOS, haystack);
     /* start position is optional        */
     RexxInteger *start = optional_integer(LASTPOS, start);
+    RexxInteger *range = optional_integer(LASTPOS, range);
     /* go perform the lastpos function   */
-    return haystack->lastPosRexx(needle, start);
+    return haystack->lastPosRexx(needle, start, range);
 }
 
 #define REVERSE_MIN 1

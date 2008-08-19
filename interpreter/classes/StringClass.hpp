@@ -260,14 +260,14 @@ inline char IntToHexDigit(int n)
    RexxString  *copies(RexxInteger *);
    RexxObject  *dataType(RexxString *);
 
-   RexxInteger *lastPosRexx(RexxString *, RexxInteger *);
-   RexxInteger *caselessLastPosRexx(RexxString *, RexxInteger *);
+   RexxInteger *lastPosRexx(RexxString *, RexxInteger *, RexxInteger *);
+   RexxInteger *caselessLastPosRexx(RexxString *, RexxInteger *, RexxInteger *);
    size_t       lastPos(RexxString  *needle, size_t start);
    size_t       caselessLastPos(RexxString  *needle, size_t start);
    const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
 
-   RexxInteger *posRexx(RexxString *, RexxInteger *);
-   RexxInteger *caselessPosRexx(RexxString *, RexxInteger *);
+   RexxInteger *posRexx(RexxString *, RexxInteger *, RexxInteger *);
+   RexxInteger *caselessPosRexx(RexxString *, RexxInteger *, RexxInteger *);
    size_t       pos(RexxString *, size_t);
    size_t       caselessPos(RexxString *, size_t);
 

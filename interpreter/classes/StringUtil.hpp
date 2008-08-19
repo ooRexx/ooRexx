@@ -51,15 +51,15 @@ class StringUtil
 {
 public:
     static RexxString *substr(const char *, size_t, RexxInteger *, RexxInteger *, RexxString *);
-    static RexxInteger *posRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart);
-    static size_t pos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start);
-    static size_t caselessPos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start);
-    static RexxInteger *lastPosRexx(const char *stringData, size_t haystackLen, RexxString  *needle, RexxInteger *_start);
-    static size_t lastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start);
+    static RexxInteger *posRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart, RexxInteger *range);
+    static size_t pos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start, size_t _range);
+    static size_t caselessPos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start, size_t _range);
+    static RexxInteger *lastPosRexx(const char *stringData, size_t haystackLen, RexxString  *needle, RexxInteger *_start, RexxInteger *_range);
+    static size_t lastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start, size_t _range);
     static const char *lastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static RexxString *subchar(const char *stringData, size_t stringLength, RexxInteger *positionArg);
     static RexxArray *makearray(const char *start, size_t length, RexxString *separator);
-    static size_t caselessLastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start);
+    static size_t caselessLastPos(const char *stringData, size_t hastackLen, RexxString  *needle, size_t _start, size_t range);
     static const char * caselessLastPos(const char *needle, size_t needleLen, const char *haystack, size_t haystackLen);
     static int caselessCompare(const char *, const char *, size_t);
     static int hexDigitToInt(char  ch);

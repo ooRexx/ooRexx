@@ -127,15 +127,16 @@ RexxString *StringUtil::substr(const char *string, size_t stringLength, RexxInte
  *
  * @return An integer object giving the located position.
  */
-RexxInteger *StringUtil::posRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart)
+RexxInteger *StringUtil::posRexx(const char *stringData, size_t length, RexxString *needle, RexxInteger *pstart, RexxInteger *range)
 {
     /* force needle to a string          */
     needle = stringArgument(needle, ARG_ONE);
     /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, 1, ARG_TWO);
+    size_t _range = optionalLengthArgument(range, length - _start + 1, ARG_THREE);
     /* pass on to the primitive function */
     /* and return as an integer object   */
-    return new_integer(pos(stringData, length, needle, _start - 1));
+    return new_integer(pos(stringData, length, needle, _start - 1, _range));
 }
 
 
@@ -150,16 +151,18 @@ RexxInteger *StringUtil::posRexx(const char *stringData, size_t length, RexxStri
  *
  * @return The offset of the located needle, or 0 if the needle doesn't exist.
  */
-size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start)
+size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start, size_t _range)
 {
     // get the two working lengths
     size_t needle_length = needle->getLength();
+    // make sure the range is capped
+    _range = Numerics::minVal(_range, haystack_length - _start + 1);
 
     // ok, there are a few quick checks we can perform.  If the needle is
     // bigger than the haystack, or the needle is a null string or
     // our haystack length after adjusting to the starting position
     // zero, then we can quickly return zero.
-    if (needle_length > haystack_length + _start || needle_length == 0 || _start + needle_length > haystack_length)
+    if (_start > haystack_length || needle_length > _range || needle_length == 0)
     {
         return 0;
     }
@@ -169,7 +172,7 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
     const char *needlepointer = needle->getStringData();
     size_t location = _start + 1;         // this is the match location as an index
     // calculate the number of probes we can make in this string
-    size_t count = (haystack_length - _start) - needle_length + 1;
+    size_t count = _range - needle_length + 1;
 
     // now scan
     while (count--)
@@ -198,16 +201,18 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
  *
  * @return The offset of the located needle, or 0 if the needle doesn't exist.
  */
-size_t StringUtil::caselessPos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start)
+size_t StringUtil::caselessPos(const char *stringData, size_t haystack_length, RexxString *needle, size_t _start, size_t _range)
 {
     // get the two working lengths
     size_t needle_length = needle->getLength();
+    // make sure the range is capped
+    _range = Numerics::minVal(_range, haystack_length - _start + 1);
 
     // ok, there are a few quick checks we can perform.  If the needle is
     // bigger than the haystack, or the needle is a null string or
     // our haystack length after adjusting to the starting position
     // zero, then we can quickly return zero.
-    if (needle_length > haystack_length + _start || needle_length == 0 || _start + needle_length > haystack_length)
+    if (_start > haystack_length || needle_length > _range || needle_length == 0)
     {
         return 0;
     }
@@ -217,7 +222,7 @@ size_t StringUtil::caselessPos(const char *stringData, size_t haystack_length, R
     const char *needlepointer = needle->getStringData();
     size_t location = _start + 1;         // this is the match location as an index
     // calculate the number of probes we can make in this string
-    size_t count = (haystack_length - _start) - needle_length + 1;
+    size_t count = _range - needle_length + 1;
 
     // now scan
     while (count--)
@@ -246,13 +251,14 @@ size_t StringUtil::caselessPos(const char *stringData, size_t haystack_length, R
  *
  * @return An integer object giving the located position.
  */
-RexxInteger *StringUtil::lastPosRexx(const char *stringData, size_t haystackLen, RexxString  *needle, RexxInteger *_start)
+RexxInteger *StringUtil::lastPosRexx(const char *stringData, size_t haystackLen, RexxString  *needle, RexxInteger *_start, RexxInteger *_range)
 {
     needle = stringArgument(needle, ARG_ONE);
     // find out where to start the search. The default is at the very end.
     size_t startPos = optionalPositionArgument(_start, haystackLen, ARG_TWO);
+    size_t range = optionalPositionArgument(_range, haystackLen, ARG_THREE);
     // now perform the actual search.
-    return new_integer(lastPos(stringData, haystackLen, needle, startPos));
+    return new_integer(lastPos(stringData, haystackLen, needle, startPos, range));
 }
 
 
@@ -267,12 +273,12 @@ RexxInteger *StringUtil::lastPosRexx(const char *stringData, size_t haystackLen,
  *
  * @return The offset of the located needle, or 0 if the needle doesn't exist.
  */
-size_t StringUtil::lastPos(const char *stringData, size_t haystackLen, RexxString  *needle, size_t _start)
+size_t StringUtil::lastPos(const char *stringData, size_t haystackLen, RexxString  *needle, size_t _start, size_t range)
 {
     size_t needleLen = needle->getLength();          /* and get the length too            */
 
     // no match possible if either string is null
-    if (needleLen == 0 || haystackLen == 0)
+    if (needleLen == 0 || haystackLen == 0 || needleLen > range)
     {
         return 0;
     }
@@ -280,8 +286,11 @@ size_t StringUtil::lastPos(const char *stringData, size_t haystackLen, RexxStrin
     {
         // get the start position for the search.
         haystackLen = Numerics::minVal(_start, haystackLen);
+        range = Numerics::minVal(range, haystackLen);
+        // adjust the starting point
+        const char *startPoint = stringData + haystackLen - range;
                                          /* do the search                     */
-        const char *matchLocation = lastPos(needle->getStringData(), needleLen, stringData, haystackLen);
+        const char *matchLocation = lastPos(needle->getStringData(), needleLen, startPoint, haystackLen);
         if (matchLocation == NULL)
         {
             return 0;
@@ -346,12 +355,12 @@ const char *StringUtil::lastPos(const char *needle, size_t needleLen, const char
  *
  * @return The offset of the located needle, or 0 if the needle doesn't exist.
  */
-size_t StringUtil::caselessLastPos(const char *stringData, size_t haystackLen, RexxString *needle, size_t _start)
+size_t StringUtil::caselessLastPos(const char *stringData, size_t haystackLen, RexxString *needle, size_t _start, size_t range)
 {
     size_t needleLen = needle->getLength();          /* and get the length too            */
 
     // no match possible if either string is null
-    if (needleLen == 0 || haystackLen == 0)
+    if (needleLen == 0 || haystackLen == 0 || needleLen > range)
     {
         return 0;
     }
@@ -359,8 +368,11 @@ size_t StringUtil::caselessLastPos(const char *stringData, size_t haystackLen, R
     {
         // get the start position for the search.
         haystackLen = Numerics::minVal(_start, haystackLen);
+        range = Numerics::minVal(range, haystackLen);
+        // adjust the starting point
+        const char *startPoint = stringData + haystackLen - range;
                                          /* do the search                     */
-        const char *matchLocation = caselessLastPos(needle->getStringData(), needleLen, stringData, haystackLen);
+        const char *matchLocation = caselessLastPos(needle->getStringData(), needleLen, startPoint, haystackLen);
         if (matchLocation == NULL)
         {
             return 0;
@@ -1292,12 +1304,12 @@ size_t StringUtil::countStr(const char *hayStack, size_t hayStackLength, RexxStr
 {
     size_t count = 0;                           /* no matches yet                    */
     /* get the first match position      */
-    size_t matchPos = pos(hayStack, hayStackLength, needle, 0);
+    size_t matchPos = pos(hayStack, hayStackLength, needle, 0, hayStackLength);
     while (matchPos != 0)
     {
         count = count + 1;                 /* count this match                  */
         // step to the new position and search
-        matchPos = pos(hayStack, hayStackLength, needle, matchPos + needle->getLength() - 1);
+        matchPos = pos(hayStack, hayStackLength, needle, matchPos + needle->getLength() - 1, hayStackLength);
     }
     return count;                        /* return the match count            */
 }
@@ -1317,12 +1329,12 @@ size_t StringUtil::caselessCountStr(const char *hayStack, size_t hayStackLength,
 {
     size_t count = 0;                           /* no matches yet                    */
     /* get the first match position      */
-    size_t matchPos = caselessPos(hayStack, hayStackLength, needle, 0);
+    size_t matchPos = caselessPos(hayStack, hayStackLength, needle, 0, hayStackLength);
     while (matchPos != 0)
     {
         count = count + 1;                 /* count this match                  */
         // step to the new position and search
-        matchPos = caselessPos(hayStack, hayStackLength, needle, matchPos + needle->getLength() - 1);
+        matchPos = caselessPos(hayStack, hayStackLength, needle, matchPos + needle->getLength() - 1, hayStackLength);
     }
     return count;                        /* return the match count            */
 }
