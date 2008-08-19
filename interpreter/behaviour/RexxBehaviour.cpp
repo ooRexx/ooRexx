@@ -183,7 +183,7 @@ RexxObject *RexxBehaviour::copy()
     if (this->scopes != OREF_NULL)       /* scope information?                */
     {
         /* make a copy of it too             */
-        OrefSet(newBehaviour, newBehaviour->scopes, (RexxObjectTable *)this->scopes->copy());
+        OrefSet(newBehaviour, newBehaviour->scopes, (RexxIdentityTable *)this->scopes->copy());
     }
     /* do we have added methods?         */
     if (this->instanceMethodDictionary != OREF_NULL)
@@ -215,7 +215,7 @@ void RexxBehaviour::copyBehaviour(RexxBehaviour *source)
     if (source->scopes != OREF_NULL)       /* scope information?                */
     {
         /* make a copy of it too             */
-        OrefSet(this, this->scopes, (RexxObjectTable *)source->scopes->copy());
+        OrefSet(this, this->scopes, (RexxIdentityTable *)source->scopes->copy());
     }
     /* do we have added methods?         */
     if (source->instanceMethodDictionary != OREF_NULL)
@@ -590,7 +590,7 @@ RexxSupplier *RexxBehaviour::getMethods(RexxObject *scope)
 
 
 RexxObject *RexxBehaviour::setScopes(
-    RexxObjectTable *newscopes)        /* new table of scopes               */
+    RexxIdentityTable *newscopes)        /* new table of scopes               */
 /******************************************************************************/
 /* Function:  Set a new set of scoping information for an object              */
 /******************************************************************************/
@@ -609,7 +609,7 @@ RexxObject *RexxBehaviour::addScope(
   if (this->scopes == OREF_NULL)       /* no scopes set?                     */
   {
                                        /* add a scope table to add to        */
-      OrefSet(this, this->scopes, new_object_table());
+      OrefSet(this, this->scopes, new_identity_table());
   }
                                        /* set the scoping info              */
   this->scopes->add(scope, TheNilObject);

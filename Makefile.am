@@ -161,6 +161,7 @@ classesHeaders = $(build_classes_dir)/ArrayClass.hpp \
                  $(build_classes_dir)/StringUtil.hpp \
                  $(build_classes_dir)/SupplierClass.hpp \
                  $(build_classes_dir)/TableClass.hpp \
+                 $(build_classes_dir)/IdentityTableClass.hpp \
                  $(build_classes_dir)/WeakReferenceClass.hpp
 expressionHeaders = $(build_expression_dir)/BuiltinFunctions.hpp \
                     $(build_expression_dir)/ExpressionBaseVariable.hpp \
@@ -466,6 +467,7 @@ classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/StringUtil.cpp \
                   $(build_classes_dir)/SupplierClass.cpp \
                   $(build_classes_dir)/TableClass.cpp \
+                  $(build_classes_dir)/IdentityTableClass.cpp \
                   $(build_classes_dir)/WeakReferenceClass.cpp
 package_sources = $(build_package_dir)/LibraryPackage.cpp \
                   $(build_package_dir)/PackageManager.cpp

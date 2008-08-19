@@ -38,7 +38,7 @@
 #ifndef Included_ActivityManager
 #define Included_ActivityManager
 
-class RexxObjectTable;
+class RexxIdentityTable;
 class RexxStack;
 class RexxCode;
 class RoutineClass;
@@ -119,7 +119,7 @@ protected:
     static RexxList         *availableActivities;
                                         /* table of all localact             */
     static RexxList         *allActivities;
-    static RexxObjectTable  *subClasses;   /* SubClasses...one per system       */
+    static RexxIdentityTable  *subClasses;   /* SubClasses...one per system       */
                                         /* size of the activation cache      */
     static size_t            activationCacheSize;
     static RexxStack        *activations;  /* cached activations                */

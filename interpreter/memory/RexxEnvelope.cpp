@@ -179,8 +179,8 @@ RexxBuffer *RexxEnvelope::pack(
     OrefSet(this, this->receiver, _receiver);
     // create a save table to protect any objects (such as proxy
     // objects) we create during flattening.
-    OrefSet(this, this->savetable, new_object_table());
-    OrefSet(this, this->duptable, new_object_table());
+    OrefSet(this, this->savetable, new_identity_table());
+    OrefSet(this, this->duptable, new_identity_table());
     // this is a bit of a hack, but necessary.  This allows us to store
     // object offsets into a hashtable without having the hashtable
     // attempt to mark the references.
@@ -445,7 +445,7 @@ void RexxEnvelope::addTable(
     if (this->rehashtable == OREF_NULL)  /* first table added?                */
     {
         /* create the table now              */
-        OrefSet(this, this->rehashtable, new_object_table());
+        OrefSet(this, this->rehashtable, new_identity_table());
     }
     /* use put to make sure we only get  */
     /* a single version of each table    */

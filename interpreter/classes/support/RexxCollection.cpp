@@ -154,24 +154,44 @@ RexxObject *RexxHashTableCollection::mergeItem(RexxObject *_value, RexxObject *_
     return OREF_NULL;
 }
 
-RexxObject *RexxHashTableCollection::removeRexx(
-  RexxObject *_index)                   /* removed item index                */
-/******************************************************************************/
-/* Arguments:  Index                                                          */
-/*                                                                            */
-/*  Returned:  Value, or null if no entry found                               */
-/******************************************************************************/
+
+/**
+ * The exported remove() method for hash collection
+ * classes.  This is the Rexx stub method.  The removal
+ * operation is delegated to the virtual method defined
+ * by the implementing class.
+ *
+ * @param _index The target removal index.
+ *
+ * @return The removed object, or .nil if the index was not found.
+ */
+RexxObject *RexxHashTableCollection::removeRexx(RexxObject *_index)
 {
     required_arg(_index, ONE);            /* make sure we have an index        */
 
-    RexxObject *RemovedItem = this->remove(_index);   /* remove the item                   */
-    if (RemovedItem == OREF_NULL)        /* If nothing found, give back .nil  */
+    RexxObject *removedItem = this->remove(_index);   /* remove the item                   */
+    if (removedItem == OREF_NULL)        /* If nothing found, give back .nil  */
     {
         /* (never return OREF_NULL to REXX)  */
-        RemovedItem = (RexxObject *)TheNilObject;
+        return TheNilObject;
     }
-    return RemovedItem;                  /* return removed value              */
+    return removedItem;                  /* return removed value              */
 }
+
+
+/**
+ * Base virtual function for a table remove operation.
+ * This applies object equality semantics to the operation.
+ *
+ * @param _index The object index.
+ *
+ * @return The removed object.
+ */
+RexxObject *RexxHashTableCollection::remove(RexxObject *_index)
+{
+    return this->contents->remove(_index);
+}
+
 
 RexxObject *RexxHashTableCollection::allAt(
   RexxObject *_index)                   /* target index                      */
@@ -186,34 +206,78 @@ RexxObject *RexxHashTableCollection::allAt(
     return this->contents->getAll(_index);
 }
 
-RexxObject *RexxHashTableCollection::getRexx(
-  RexxObject *_index)                   /* target index                      */
-/******************************************************************************/
-/* Arguments:  Index                                                          */
-/*                                                                            */
-/*  Returned:  Associated value, or nil if index not found                    */
-/******************************************************************************/
+/**
+ * Exported get() accessor for a hash table collection.
+ * This delegates to a virtual method defined by the
+ * target collection.
+ *
+ * @param _index The target index.
+ *
+ * @return The fetched object, or .nil if the index does not
+ *         exist in the collection.
+ */
+RexxObject *RexxHashTableCollection::getRexx(RexxObject *_index)
 {
     required_arg(_index, ONE);            /* make sure we have an index        */
     RexxObject *object = this->get(_index);           /* get the item                      */
     if (object == OREF_NULL)             /* If nothing found, give back .nil  */
     {
-        object = TheNilObject;             /* (never return OREF_NULL to REXX)  */
+        return TheNilObject;             /* (never return OREF_NULL to REXX)  */
     }
     return object;                       /* return the item                   */
 }
 
-RexxObject *RexxHashTableCollection::put(
-  RexxObject *_value,                   /* value to insert                   */
-  RexxObject *_index)                   /* item index                        */
-/******************************************************************************/
-/* Arguments:  Value, index                                                   */
-/*                                                                            */
-/*  Returned:  Nothing                                                        */
-/******************************************************************************/
+
+/**
+ * Retrieve an item from a hash collection using a key.
+ * This is the base virtual implementation, which uses
+ * equality semantics for the retrieveal.  Other implementations
+ * may override this.
+ *
+ * @param key    The target key.
+ *
+ * @return The retrieved object.  Returns OREF_NULL if the object
+ *         was not found.
+ */
+RexxObject *RexxHashTableCollection::get(RexxObject *key)
+{
+    return this->contents->get(key);
+}
+
+
+/**
+ * Exported Rexx method for adding an item to a collection.
+ * The put operation is delegated to the implementing
+ * class virtual function.
+ *
+ * @param _value The value to add.
+ * @param _index The index for the added item.
+ *
+ * @return Always returns OREF_NULL.
+ */
+RexxObject *RexxHashTableCollection::putRexx(RexxObject *_value, RexxObject *_index)
 {
     required_arg(_value, ONE);            /* make sure we have an value        */
     required_arg(_index, TWO);            /* make sure we have an index        */
+    /* try to place in existing hashtab  */
+    return this->put(_value, _index);
+}
+
+
+/**
+ * Place an item into a hash collection using a key.
+ * This is the base virtual implementation, which uses
+ * equality semantics for the retrieveal.  Other implementations
+ * may override this.
+ *
+ * @param _value The inserted value.
+ * @param _index The insertion key.
+ *
+ * @return The retrieved object.  Returns OREF_NULL if the object
+ *         was not found.
+ */
+RexxObject *RexxHashTableCollection::put(RexxObject *_value, RexxObject *_index)
+{
     /* try to place in existing hashtab  */
     RexxHashTable *newHash = this->contents->put(_value, _index);
     if (newHash != OREF_NULL)            /* have a reallocation occur?        */
@@ -222,6 +286,20 @@ RexxObject *RexxHashTableCollection::put(
         OrefSet(this, this->contents, newHash);
     }
     return OREF_NULL;                    /* always return nothing             */
+}
+
+RexxObject *RexxHashTableCollection::addRexx(
+  RexxObject *_value,                   /* object to add                     */
+  RexxObject *_index)                   /* added index                       */
+/******************************************************************************/
+/* Arguments:  Value, index                                                   */
+/*                                                                            */
+/*  Returned:  Nothing                                                        */
+/******************************************************************************/
+{
+    required_arg(_value, ONE);            /* make sure we have an value        */
+    required_arg(_index, TWO);            /* make sure we have an index        */
+    return add(_value, _index);
 }
 
 RexxObject *RexxHashTableCollection::add(
@@ -233,8 +311,6 @@ RexxObject *RexxHashTableCollection::add(
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-    required_arg(_value, ONE);            /* make sure we have an value        */
-    required_arg(_index, TWO);            /* make sure we have an index        */
     /* try to place in existing hashtab  */
     RexxHashTable *newHash  = this->contents->add(_value, _index);
     if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
@@ -279,17 +355,22 @@ RexxObject *RexxHashTableCollection::copyValues(
     return OREF_NULL;
 }
 
-RexxObject *RexxHashTableCollection::hasIndex(
-  RexxObject *_index)                   /* requested index                   */
-/******************************************************************************/
-/* Arguments:  Index                                                          */
-/*                                                                            */
-/*  Returned:  True if table has an entry for the index, false otherwise      */
-/******************************************************************************/
+
+/**
+ * Test for the existence of an index in the collection.
+ * This uses the get() virtual function to determine if
+ * the item exists.
+ *
+ * @param _index The target index.
+ *
+ * @return True if the index exists, false if the index does not
+ *         exist.
+ */
+RexxObject *RexxHashTableCollection::hasIndexRexx(RexxObject *_index)
 {
     required_arg(_index, ONE);           /* make sure we have an index        */
                                          /* try to get the item               */
-    RexxObject *_value = this->contents->get(_index);
+    RexxObject *_value = this->get(_index);
     /* tell caller if we succeeded       */
     return(_value != OREF_NULL) ? (RexxObject *)TheTrueObject : (RexxObject *)TheFalseObject;
 }
@@ -309,13 +390,45 @@ RexxObject *RexxHashTableCollection::indexRexx(RexxObject *target)
     // required argument
     required_arg(target, ONE);
     // retrieve this from the hash table
-    RexxObject *result = this->contents->getIndex(target);
+    RexxObject *result = this->getIndex(target);
     // not found, return .nil
     if (result == OREF_NULL)
     {
         return TheNilObject;
     }
     return result;
+}
+
+
+/**
+ * Retrieve an index for a given item.  Which index is returned
+ * is indeterminate.
+ *
+ * @param target The target object.
+ *
+ * @return The index for the target object, or .nil if no object was
+ *         found.
+ */
+RexxObject *RexxHashTableCollection::getIndex(RexxObject *target)
+{
+    // retrieve this from the hash table
+    return contents->getIndex(target);
+}
+
+
+/**
+ * Exported method to remove an item specified by value.
+ *
+ * @param target The target object.
+ *
+ * @return The target object again.
+ */
+RexxObject *RexxHashTableCollection::removeItemRexx(RexxObject *target)
+{
+    // required argument
+    required_arg(target, ONE);
+    // the actual target class may use different semantics for this.
+    return this->removeItem(target);
 }
 
 
@@ -328,8 +441,6 @@ RexxObject *RexxHashTableCollection::indexRexx(RexxObject *target)
  */
 RexxObject *RexxHashTableCollection::removeItem(RexxObject *target)
 {
-    // required argument
-    required_arg(target, ONE);
     // the contents handle all of this.
     return this->contents->removeItem(target);
 }
@@ -342,9 +453,22 @@ RexxObject *RexxHashTableCollection::removeItem(RexxObject *target)
  *
  * @return .true if the object exists, .false otherwise.
  */
-RexxObject *RexxHashTableCollection::hasItem(RexxObject *target)
+RexxObject *RexxHashTableCollection::hasItemRexx(RexxObject *target)
 {
     required_arg(target, ONE);
+    return this->hasItem(target);
+}
+
+
+/**
+ * Test if a given item exists in the collection.
+ *
+ * @param target The target object.
+ *
+ * @return .true if the object exists, .false otherwise.
+ */
+RexxObject *RexxHashTableCollection::hasItem(RexxObject *target)
+{
     return this->contents->hasItem(target);
 }
 

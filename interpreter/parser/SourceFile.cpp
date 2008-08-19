@@ -1126,7 +1126,7 @@ void RexxSource::globalSetup()
                                        /* holding pen for temporaries       */
   OrefSet(this, this->holdstack, new (HOLDSIZE, false) RexxStack(HOLDSIZE));
                                        /* create a save table               */
-  OrefSet(this, this->savelist, new_object_table());
+  OrefSet(this, this->savelist, new_identity_table());
                                        /* allocate global control tables    */
   OrefSet(this, this->control, new_queue());
   OrefSet(this, this->terms, new_queue());
@@ -4148,7 +4148,7 @@ void RexxSource::setGuard()
     if (this->guard_variables == OREF_NULL)
     {
         /* create the guard table            */
-        OrefSet(this, this->guard_variables, new_object_table());
+        OrefSet(this, this->guard_variables, new_identity_table());
     }
 }
 

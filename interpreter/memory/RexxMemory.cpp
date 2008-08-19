@@ -212,7 +212,7 @@ void RexxMemory::initialize(bool _restoringImage)
     newSpaceNormalSegments.getInitialSet();
 
     // get the initial uninit table
-    uninitTable = new_object_table();
+    uninitTable = new_identity_table();
 
     // is this image creation?  This will build and save the image, then
     // terminate
@@ -1863,12 +1863,12 @@ RexxObject *RexxMemory::gutCheck(void)
     RexxObject *index;
     /* temp OREF used to hold original   */
     /*and test versions                  */
-    RexxObjectTable *tempold2new;
+    RexxIdentityTable *tempold2new;
 
     printf("Comparing old2new with the current system.\n");
 
     /* build a test remembered set       */
-    tempold2new = new_object_table();
+    tempold2new = new_identity_table();
     restoreimagesave = restoreimage;
     restoreimage = true;                 /* setting both of these to true will*/
                                          /* traverse System OldSpace and live */
@@ -2215,7 +2215,7 @@ void RexxMemory::shutdown()
 }
 
 
-void RexxMemory::setUpMemoryTables(RexxObjectTable *old2newTable)
+void RexxMemory::setUpMemoryTables(RexxIdentityTable *old2newTable)
 /******************************************************************************/
 /* Function:  Set up the initial memory table.                                */
 /******************************************************************************/
@@ -2245,7 +2245,7 @@ void RexxMemory::setUpMemoryTables(RexxObjectTable *old2newTable)
     /* processed earlier than we'd like. */
     saveStack = new (SaveStackAllocSize) RexxSaveStack(SaveStackSize, SaveStackAllocSize);
     /* from this point on, we push things on to the save stack */
-    saveTable = new_object_table();
+    saveTable = new_identity_table();
 }
 
 void RexxMemory::createLocks()
@@ -2354,7 +2354,7 @@ void RexxMemory::restore()
 
     memoryObject.setOldSpace();          /* Mark Memory Object as OldSpace    */
     /* initialize the tables used for garbage collection. */
-    memoryObject.setUpMemoryTables(new_object_table());
+    memoryObject.setUpMemoryTables(new_identity_table());
                                          /* If first one through, generate all*/
     IntegerZero   = new_integer(0);      /*  static integers we want to use...*/
     IntegerOne    = new_integer(1);      /* This will allow us to use static  */

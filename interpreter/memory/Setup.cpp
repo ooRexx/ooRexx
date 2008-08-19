@@ -160,6 +160,7 @@ void RexxMemory::createImage()
   RexxString::createInstance();
   RexxObject::createInstance();
   RexxTable::createInstance();
+  RexxIdentityTable::createInstance();
   RexxRelation::createInstance();
 
   TheFunctionsDirectory = new_directory();
@@ -715,7 +716,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_ALLINDEX     , TheRelationBehaviour, CPPM(RexxRelation::allIndex), 1);
   defineKernelMethod(CHAR_MAKEARRAY    , TheRelationBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
   defineKernelMethod(CHAR_AT           , TheRelationBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-  defineKernelMethod(CHAR_HASINDEX     , TheRelationBehaviour, CPPM(RexxHashTableCollection::hasIndex), 1);
+  defineKernelMethod(CHAR_HASINDEX     , TheRelationBehaviour, CPPM(RexxHashTableCollection::hasIndexRexx), 1);
   defineKernelMethod(CHAR_HASITEM      , TheRelationBehaviour, CPPM(RexxRelation::hasItem), 2);
   defineKernelMethod(CHAR_INDEX        , TheRelationBehaviour, CPPM(RexxHashTableCollection::indexRexx), 1);
   defineKernelMethod(CHAR_ITEMS        , TheRelationBehaviour, CPPM(RexxRelation::itemsRexx), 1);
@@ -1143,12 +1144,12 @@ void RexxMemory::createImage()
                                        /* Add the instance methods to the   */
                                        /* instance behaviour mdict          */
   defineKernelMethod(CHAR_BRACKETS     , TheTableBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-  defineKernelMethod(CHAR_BRACKETSEQUAL, TheTableBehaviour, CPPM(RexxHashTableCollection::put), 2);
+  defineKernelMethod(CHAR_BRACKETSEQUAL, TheTableBehaviour, CPPM(RexxHashTableCollection::putRexx), 2);
   defineKernelMethod(CHAR_MAKEARRAY    , TheTableBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
   defineKernelMethod(CHAR_AT           , TheTableBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
-  defineKernelMethod(CHAR_HASINDEX     , TheTableBehaviour, CPPM(RexxHashTableCollection::hasIndex), 1);
+  defineKernelMethod(CHAR_HASINDEX     , TheTableBehaviour, CPPM(RexxHashTableCollection::hasIndexRexx), 1);
   defineKernelMethod(CHAR_ITEMS        , TheTableBehaviour, CPPM(RexxTable::itemsRexx), 0);
-  defineKernelMethod(CHAR_PUT          , TheTableBehaviour, CPPM(RexxHashTableCollection::put), 2);
+  defineKernelMethod(CHAR_PUT          , TheTableBehaviour, CPPM(RexxHashTableCollection::putRexx), 2);
   defineKernelMethod(CHAR_REMOVE       , TheTableBehaviour, CPPM(RexxHashTableCollection::removeRexx), 1);
   defineKernelMethod(CHAR_SUPPLIER     , TheTableBehaviour, CPPM(RexxHashTableCollection::supplier), 0);
   defineKernelMethod(CHAR_ALLITEMS     , TheTableBehaviour, CPPM(RexxHashTableCollection::allItems), 0);
@@ -1156,8 +1157,8 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_EMPTY        , TheTableBehaviour, CPPM(RexxHashTableCollection::empty), 0);
   defineKernelMethod(CHAR_ISEMPTY      , TheTableBehaviour, CPPM(RexxHashTableCollection::isEmpty), 0);
   defineKernelMethod(CHAR_INDEX        , TheTableBehaviour, CPPM(RexxHashTableCollection::indexRexx), 1);
-  defineKernelMethod(CHAR_HASITEM      , TheTableBehaviour, CPPM(RexxHashTableCollection::hasItem), 1);
-  defineKernelMethod(CHAR_REMOVEITEM   , TheTableBehaviour, CPPM(RexxHashTableCollection::removeItem), 1);
+  defineKernelMethod(CHAR_HASITEM      , TheTableBehaviour, CPPM(RexxHashTableCollection::hasItemRexx), 1);
+  defineKernelMethod(CHAR_REMOVEITEM   , TheTableBehaviour, CPPM(RexxHashTableCollection::removeItemRexx), 1);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
@@ -1166,6 +1167,45 @@ void RexxMemory::createImage()
                                        /* Now call the class subclassable   */
                                        /* method                            */
   TheTableClass->subClassable(false);
+
+  /***************************************************************************/
+  /*           IDENTITYTABLE                                                 */
+  /***************************************************************************/
+
+                                       /* Add the NEW methods to the class  */
+                                       /* behaviour mdict                   */
+  defineKernelMethod(CHAR_NEW          , TheIdentityTableClassBehaviour, CPPM(RexxIdentityTable::newRexx), A_COUNT);
+
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheIdentityTableClassBehaviour->setMethodDictionaryScope(TheIdentityTableClass);
+
+                                       /* Add the instance methods to the   */
+                                       /* instance behaviour mdict          */
+  defineKernelMethod(CHAR_BRACKETS     , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
+  defineKernelMethod(CHAR_BRACKETSEQUAL, TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::putRexx), 2);
+  defineKernelMethod(CHAR_MAKEARRAY    , TheIdentityTableBehaviour, CPPM(RexxObject::makeArrayRexx), 0);
+  defineKernelMethod(CHAR_AT           , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::getRexx), 1);
+  defineKernelMethod(CHAR_HASINDEX     , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::hasIndexRexx), 1);
+  defineKernelMethod(CHAR_ITEMS        , TheIdentityTableBehaviour, CPPM(RexxTable::itemsRexx), 0);
+  defineKernelMethod(CHAR_PUT          , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::putRexx), 2);
+  defineKernelMethod(CHAR_REMOVE       , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::removeRexx), 1);
+  defineKernelMethod(CHAR_SUPPLIER     , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::supplier), 0);
+  defineKernelMethod(CHAR_ALLITEMS     , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::allItems), 0);
+  defineKernelMethod(CHAR_ALLINDEXES   , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::allIndexes), 0);
+  defineKernelMethod(CHAR_EMPTY        , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::empty), 0);
+  defineKernelMethod(CHAR_ISEMPTY      , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::isEmpty), 0);
+  defineKernelMethod(CHAR_INDEX        , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::indexRexx), 1);
+  defineKernelMethod(CHAR_HASITEM      , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::hasItemRexx), 1);
+  defineKernelMethod(CHAR_REMOVEITEM   , TheIdentityTableBehaviour, CPPM(RexxHashTableCollection::removeItemRexx), 1);
+
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheIdentityTableBehaviour->setMethodDictionaryScope(TheIdentityTableClass);
+
+                                       /* Now call the class subclassable   */
+                                       /* method                            */
+  TheIdentityTableClass->subClassable(false);
 
 
   /***************************************************************************/
@@ -1273,6 +1313,7 @@ void RexxMemory::createImage()
   kernel_public(CHAR_SUPPLIER         ,TheSupplierClass,TheEnvironment);
   kernel_public(CHAR_SYSTEM           ,TheSystem       ,TheEnvironment);
   kernel_public(CHAR_TABLE            ,TheTableClass   ,TheEnvironment);
+  kernel_public(CHAR_IDENTITYTABLE    ,TheIdentityTableClass,TheEnvironment);
   kernel_public(CHAR_POINTER          ,ThePointerClass ,TheEnvironment);
   kernel_public(CHAR_BUFFER           ,TheBufferClass  ,TheEnvironment);
   kernel_public(CHAR_WEAKREFERENCE    ,TheWeakReferenceClass  ,TheEnvironment);
@@ -1365,6 +1406,9 @@ void RexxMemory::createImage()
 
   TheTableClass->inherit(map, OREF_NULL);
   TheTableClass->setRexxDefined();
+
+  TheIdentityTableClass->inherit(map, OREF_NULL);
+  TheIdentityTableClass->setRexxDefined();
 
   TheRelationClass->inherit(map, OREF_NULL);
   TheRelationClass->setRexxDefined();

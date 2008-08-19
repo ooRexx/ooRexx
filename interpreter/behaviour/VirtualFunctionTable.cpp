@@ -75,6 +75,7 @@
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
 #include "ContextClass.hpp"
+#include "IdentityTableClass.hpp"
 #include "RexxBehaviour.hpp"
 #include "SourceFile.hpp"
 #include "LibraryPackage.hpp"
@@ -296,6 +297,12 @@ void RexxMemory::buildVirtualFunctionTable()
    
    objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_RexxContextClass] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) RexxIdentityTable(RESTOREIMAGE);
+   virtualFunctionTable[T_IdentityTable] = *((void **)objectPtr);
+   
+   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   virtualFunctionTable[T_IdentityTableClass] = *((void **)objectPtr);
    
    objectPtr = new (objectPtr) RexxNilObject(RESTOREIMAGE);
    virtualFunctionTable[T_NilObject] = *((void **)objectPtr);

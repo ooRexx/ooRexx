@@ -53,7 +53,7 @@
 #define ObjectHasNonPrimitiveBehaviour(o) (((uintptr_t)(((RexxObject *)o)->behaviour)) & BEHAVIOUR_NON_PRIMITIVE)
 
 class RexxSmartBuffer;
-class RexxBuffer; 
+class RexxBuffer;
 
 class RexxEnvelope : public RexxInternalObject
 {
@@ -78,18 +78,18 @@ class RexxEnvelope : public RexxInternalObject
    inline RexxSmartBuffer *getBuffer() {return this->buffer;}
    inline RexxObject *getReceiver() {return this->receiver;}
    inline size_t      getCurrentOffset() { return this->currentOffset; }
-   inline RexxObjectTable *getDuptable() {return this->duptable;}
-   inline RexxObjectTable *getRehashtable() {return this->rehashtable;}
+   inline RexxIdentityTable *getDuptable() {return this->duptable;}
+   inline RexxIdentityTable *getRehashtable() {return this->rehashtable;}
 
    size_t      currentOffset;          /* current flattening offset         */
 
 protected:
    RexxObject *home;
    RexxObject *receiver;               /* object to receive the message     */
-   RexxObjectTable  *duptable;         /* table of duplicates               */
-   RexxObjectTable  *savetable;        /* table of protected objects created during flattening */
+   RexxIdentityTable  *duptable;         /* table of duplicates               */
+   RexxIdentityTable  *savetable;        /* table of protected objects created during flattening */
    RexxSmartBuffer *buffer;            /* smart buffer wrapper              */
-   RexxObjectTable  *rehashtable;      /* table to rehash                   */
+   RexxIdentityTable  *rehashtable;      /* table to rehash                   */
    RexxStack  *flattenStack;           /* the flattening stack              */
 };
 #endif

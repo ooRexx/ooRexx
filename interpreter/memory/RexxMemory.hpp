@@ -46,6 +46,7 @@
 #define Included_RexxMemory
 
 #include "SysSemaphore.hpp"
+#include "IdentityTableClass.hpp"
 
 /* The minimum allocation unit for an object.   */
 #define ObjectGrain 8
@@ -78,6 +79,7 @@ class MemorySegmentPool;
 class RexxMethod;
 class RexxVariable;
 class WeakReference;
+class RexxIdentityTable;
 
 #ifdef _DEBUG
 class RexxMemory;
@@ -243,7 +245,7 @@ class RexxMemory : public RexxInternalObject
   static void createLocks();
   static void closeLocks();
   void        scavengeSegmentSets(MemorySegmentSet *requester, size_t allocationLength);
-  void        setUpMemoryTables(RexxObjectTable *old2newTable);
+  void        setUpMemoryTables(RexxIdentityTable *old2newTable);
   void        forceUninits();
   void        collectAndUninit();
   inline RexxDirectory *getGlobalStrings() { return globalStrings; }
@@ -338,12 +340,12 @@ enum
   RexxStack  *liveStack;
   RexxStack  *flattenStack;
   RexxSaveStack      *saveStack;
-  RexxObjectTable  *saveTable;
+  RexxIdentityTable  *saveTable;
   RexxTable  *markTable;               /* tabobjects to start a memory mark */
                                        /*  if building/restoring image,     */
                                        /*OREF_ENV, else old2new             */
-  RexxObjectTable  *old2new;           /* remd set                          */
-  RexxObjectTable  *uninitTable;       // the table of objects with uninit methods
+  RexxIdentityTable  *old2new;           /* remd set                          */
+  RexxIdentityTable  *uninitTable;       // the table of objects with uninit methods
   size_t            pendingUninits;    // objects waiting to have uninits run
   bool              processingUninits; // true when we are processing the uninit table
 

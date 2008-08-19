@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /****************************************************************************/
-/* REXX Kernel                                               TableClass.c   */
+/* REXX Kernel                                               TableClass.cpp */
 /*                                                                          */
 /* Primitive Table Class                                                    */
 /*                                                                          */
@@ -208,49 +208,6 @@ RexxTable *RexxTable::newInstance()
 /******************************************************************************/
 {
     return (RexxTable *)new_hashCollection(RexxHashTable::DEFAULT_HASH_SIZE, sizeof(RexxTable), T_Table);
-}
-
-RexxObjectTable *RexxObjectTable::newInstance(size_t size)
-/******************************************************************************/
-/* Function:  Create an instance of an object table                           */
-/******************************************************************************/
-{
-                                       /* get a new object                  */
-    return (RexxObjectTable *)new_hashCollection(size, sizeof(RexxObjectTable), T_Table);
-}
-
-RexxObject *RexxObjectTable::put(
-  RexxObject *_value,                   /* value to insert                   */
-  RexxObject *_index)                   /* item index                        */
-/******************************************************************************/
-/* Function:  Do a put operation into a primitive object table                */
-/******************************************************************************/
-{
-    /* try to place in existing hashtab  */
-    RexxHashTable *newHash = this->contents->primitivePut(_value, _index);
-    if (newHash != OREF_NULL)            /* have a reallocation occur?        */
-    {
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    return OREF_NULL;                    /* always return nothing             */
-}
-
-RexxObject *RexxObjectTable::add(
-  RexxObject *_value,                   /* object to add                     */
-  RexxObject *_index)                   /* added index                       */
-/******************************************************************************/
-/* Function:  do an add operation into a primitive object table               */
-/******************************************************************************/
-{
-    /* try to place in existing hashtab  */
-    RexxHashTable *newHash  = this->contents->primitiveAdd(_value, _index);
-    if (newHash  != OREF_NULL)           /* have a reallocation occur?        */
-    {
-        /* hook on the new hash table        */
-        OrefSet(this, this->contents, newHash);
-    }
-    return OREF_NULL;                    /* always return nothing             */
 }
 
 

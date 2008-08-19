@@ -123,7 +123,7 @@ void InterpreterInstance::initialize(RexxActivity *activity, RexxOption *options
     searchExtensions = new_list();     // this will be filled in during options processing
     // this gets added to the entire active list.
     allActivities->append((RexxObject *)activity);
-    globalReferences = new_object_table();
+    globalReferences = new_identity_table();
     // create a default wrapper for this security manager
     securityManager = new SecurityManager(OREF_NULL);
     // set the default system address environment (can be overridden by options)

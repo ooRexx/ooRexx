@@ -75,7 +75,7 @@
   RexxObject *superScope( RexxObject *);
   RexxMethod *superMethod(RexxString *, RexxObject *);
   void        setMethodDictionaryScope( RexxObject *);
-  RexxObject *setScopes( RexxObjectTable *);
+  RexxObject *setScopes( RexxIdentityTable *);
   RexxObject *addScope( RexxObject *);
   RexxObject *mergeScope( RexxObject *);
   bool        checkScope( RexxObject *);
@@ -88,7 +88,7 @@
   void methodDictionaryMerge( RexxTable *);
 
 
-   inline RexxObjectTable  *getScopes()       { return this->scopes; };
+   inline RexxIdentityTable  *getScopes()       { return this->scopes; };
    inline RexxTable  *getMethodDictionary()   { return this->methodDictionary; };
    inline void        setMethodDictionary(RexxTable * m) { OrefSet(this, this->methodDictionary, m); };
    inline void        setInstanceMethodDictionary(RexxTable * m) { OrefSet(this, this->instanceMethodDictionary, m); };
@@ -158,7 +158,7 @@
 
    uint16_t classType;         // primitive class identifier
    uint16_t behaviourFlags;    // various behaviour flag types
-   RexxObjectTable  *scopes;           /* scopes table                      */
+   RexxIdentityTable  *scopes;           /* scopes table                      */
    RexxTable  *methodDictionary;       /* method dictionary                 */
    PCPPM      *operatorMethods;        /* operator look-a-side table        */
    RexxClass  *owningClass;            /* class that created this object    */

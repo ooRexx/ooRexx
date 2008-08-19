@@ -89,7 +89,7 @@ void RexxVariable::inform(
     if (this->dependents == OREF_NULL)   /* no dependents yet?                */
     {
         /* set this up as an object table    */
-        OrefSet(this, this->dependents, new_object_table());
+        OrefSet(this, this->dependents, new_identity_table());
     }
     /* add this to the table             */
     this->dependents->put(TheNilObject, (RexxObject *)informee);

@@ -2012,6 +2012,7 @@ BUILTIN(LINEIN)
                 break;
         }
     }
+    return OREF_NULLSTRING;  // should never happen
 }
 
 #define CHARIN_MIN 0

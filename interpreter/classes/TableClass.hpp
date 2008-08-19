@@ -73,27 +73,6 @@ class RexxTable : public RexxHashTableCollection {
 
 };
 
-class RexxObjectTable : public RexxTable {
-  public:
-   void * operator new(size_t size, void *objectPtr) { return objectPtr; };
-                                       /* So it doesn't need to do anythin*/
-   inline RexxObjectTable(RESTORETYPE restoreType) { ; };
-
-   inline RexxObject   *remove(RexxObject *key) {return this->contents->primitiveRemove(key); };
-   inline RexxObject   *removeItem(RexxObject *newValue, RexxObject *targetIndex) {return this->contents->primitiveRemoveItem(newValue, targetIndex); };
-   inline RexxObject   *hasItem(RexxObject *newValue, RexxObject *targetIndex) {return this->contents->primitiveHasItem(newValue, targetIndex); };
-   inline RexxObject   *get(RexxObject *key) {return this->contents->primitiveGet(key); };
-   RexxObject   *put(RexxObject *, RexxObject *);
-   RexxObject   *add(RexxObject *, RexxObject *);
-   inline RexxArray    *allAt(RexxObject *key) {return this->contents->primitiveGetAll(key);}
-   inline RexxObject * findSuperScope(RexxObject *v) { return this->contents->primitiveNextItem(v, TheNilObject); };
-
-   static void createInstance();
-   static RexxObjectTable  *newInstance(size_t size);
-};
-
-
 inline RexxTable *new_table()             { return RexxTable::newInstance(); }
-inline RexxObjectTable *new_object_table() { return RexxObjectTable::newInstance(RexxHashTable::DEFAULT_HASH_SIZE); }
 
 #endif

@@ -93,6 +93,8 @@
 #define ThePackageClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_PackageClass])
 #define TheRexxContextBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxContext])
 #define TheRexxContextClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_RexxContextClass])
+#define TheIdentityTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_IdentityTable])
+#define TheIdentityTableClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_IdentityTableClass])
 #define TheNilObjectBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NilObject])
 #define TheBehaviourBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Behaviour])
 #define TheRexxSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxSource])

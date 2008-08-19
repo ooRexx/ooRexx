@@ -155,7 +155,7 @@
      RexxArray     *metaClass;          /* Metaclass of this class           */
                                         /* Metaclass mdict                   */
      RexxArray     *metaClassMethodDictionary;
-     RexxObjectTable *metaClassScopes;  /* Metaclass scopes                  */
+     RexxIdentityTable *metaClassScopes;  /* Metaclass scopes                  */
                                         /* The superclass and any inherited  */
      RexxArray     *classSuperClasses;  /* mixins for class behaviour        */
                                         /* The superclass and any inherited  */

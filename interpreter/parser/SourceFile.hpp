@@ -388,7 +388,7 @@ protected:
   RexxDirectory *methods;              /* methods found on directives       */
                                        /* start of global parsing section   */
 
-  RexxObjectTable *savelist;           /* saved objects                     */
+  RexxIdentityTable *savelist;           /* saved objects                     */
   RexxStack       *holdstack;          /* stack for holding temporaries     */
   RexxDirectory   *literals;           /* root of associated literal list   */
   RexxDirectory   *strings;            /* common pool of created strings    */
@@ -406,7 +406,7 @@ protected:
   RexxInstruction *currentInstruction; /* current "protected" instruction   */
   RexxDirectory   *variables;          /* root of associated variable list  */
   RexxDirectory   *labels;             /* root of associated label list     */
-  RexxObjectTable *guard_variables;    /* exposed variables in guard list   */
+  RexxIdentityTable *guard_variables;    /* exposed variables in guard list   */
   RexxDirectory   *exposed_variables;  /* root of exposed variables list    */
   RexxList        *calls;              /* root of call list                 */
   size_t           currentstack;       /* current expression stack depth    */

@@ -94,7 +94,7 @@ protected:
   RexxString *variable_name;           /* the name of the variable       */
   RexxObject *variableValue;           // the assigned value of the variable.
   RexxActivation *creator;             /* the activation that created this variable */
-  RexxObjectTable  *dependents;        /* guard expression dependents       */
+  RexxIdentityTable  *dependents;        /* guard expression dependents       */
 };
 
 

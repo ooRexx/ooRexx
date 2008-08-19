@@ -501,7 +501,7 @@ void RexxClass::subClassable(bool restricted)
         /* the metaclass mdict list           */
         OrefSet(this, this->metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
         /* and the metaclass scopes list      */
-        OrefSet(this, this->metaClassScopes, (RexxObjectTable *)TheClassClass->behaviour->getScopes()->copy());
+        OrefSet(this, this->metaClassScopes, (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy());
     }
 
     /* The Baseclass for non-mixin classes*/
@@ -1326,7 +1326,7 @@ void RexxClass::setMetaClass(
     OrefSet(this, this->metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
     this->metaClassMethodDictionary->addFirst(new_metaClass->instanceMethodDictionary);
                                        /* and the metaclass scopes list      */
-    OrefSet(this, this->metaClassScopes, (RexxObjectTable *)TheClassClass->behaviour->getScopes()->copy());
+    OrefSet(this, this->metaClassScopes, (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy());
                                        /* add the scope list for this scope  */
     this->metaClassScopes->add(new_metaClass, TheNilObject);
     this->metaClassScopes->add(this->metaClassScopes->allAt(TheNilObject), new_metaClass);
@@ -1473,7 +1473,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
         /* the metaclass mdict list           */
         OrefSet(new_class, new_class->metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
         /* and the metaclass scopes list      */
-        OrefSet(new_class, new_class->metaClassScopes, (RexxObjectTable *)TheClassClass->behaviour->getScopes()->copy());
+        OrefSet(new_class, new_class->metaClassScopes, (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy());
     }
     else
     {
@@ -1487,7 +1487,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
         /* and the metaclass scopes list      */
         /* this is done by adding all the     */
         /* scope information of the new class */
-        OrefSet(new_class, new_class->metaClassScopes, (RexxObjectTable *)new_class->metaClassScopes->copy());
+        OrefSet(new_class, new_class->metaClassScopes, (RexxIdentityTable *)new_class->metaClassScopes->copy());
         /* and update the scopes to include   */
         /* the metaclass scopes               */
         new_class->metaClassScopes->add(this, TheNilObject);
@@ -1508,7 +1508,7 @@ RexxClass  *RexxClass::newRexx(RexxObject **args, size_t argCount)
     /* and set the behaviour class        */
     new_class->instanceBehaviour->setOwningClass(TheObjectClass);
     /* and the instance behaviour scopes  */
-    new_class->instanceBehaviour->setScopes(new_object_table());
+    new_class->instanceBehaviour->setScopes(new_identity_table());
     /* set the scoping info               */
     new_class->instanceBehaviour->addScope(TheObjectClass);
     /* don't give access to this class'   */

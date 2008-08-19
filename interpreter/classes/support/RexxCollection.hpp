@@ -57,15 +57,23 @@
     RexxArray  * makeArray();
 
     virtual RexxObject *mergeItem(RexxObject *, RexxObject *);
+    virtual RexxObject *remove(RexxObject *key);
+    virtual RexxObject *get(RexxObject *key);
+    virtual RexxObject *put(RexxObject *, RexxObject *);
+    virtual RexxObject *add(RexxObject *, RexxObject *);
+    virtual RexxObject *removeItem(RexxObject *value);
+    virtual RexxObject *hasItem(RexxObject *);
+    virtual RexxObject *getIndex(RexxObject * value);
 
     RexxObject   *copyValues(int depth);
     RexxObject   *removeRexx(RexxObject *);
     RexxObject   *getRexx(RexxObject *);
-    RexxObject   *put(RexxObject *, RexxObject *);
-    RexxObject   *add(RexxObject *, RexxObject *);
+    RexxObject   *putRexx(RexxObject *, RexxObject *);
+    RexxObject   *addRexx(RexxObject *, RexxObject *);
+    RexxObject   *hasIndexRexx(RexxObject *);
+    RexxObject   *hasItemRexx(RexxObject *);
+    RexxObject   *removeItemRexx(RexxObject *value);
     RexxObject   *allAt(RexxObject *);
-    RexxObject   *hasItem(RexxObject *);
-    RexxObject   *hasIndex(RexxObject *);
     RexxObject   *indexRexx(RexxObject * value);
     RexxSupplier *supplier();
     RexxObject   *merge(RexxHashTableCollection *);
@@ -73,7 +81,6 @@
     RexxArray    *allIndexes();
     RexxObject   *empty();
     RexxObject   *isEmpty();
-    RexxObject   *removeItem(RexxObject *value);
 
     inline HashLink      items() { return this->contents->totalEntries(); };
     inline HashLink      first() { return this->contents->first(); };
@@ -81,8 +88,6 @@
     inline RexxObject   *value(HashLink pos) {return this->contents->value(pos); };
     inline RexxObject   *index(HashLink pos) {return this->contents->index(pos); };
     inline bool          available(HashLink pos) {return this->contents->available(pos); };
-    inline RexxObject   *remove(RexxObject *key) {return this->contents->remove(key); };
-    inline RexxObject   *get(RexxObject *key) {return this->contents->get(key); };
 
     RexxHashTable *contents;           /* collection associated hash table  */
  };

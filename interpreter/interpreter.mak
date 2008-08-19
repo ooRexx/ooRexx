@@ -124,7 +124,7 @@ OKPOBJ3=$(OR_OUTDIR)\ListClass.$(OBJ)   $(OR_OUTDIR)\RexxMemory.$(OBJ) $(OR_OUTD
         $(OR_OUTDIR)\StemClass.$(OBJ)   $(OR_OUTDIR)\ObjectClass.$(OBJ) $(OR_OUTDIR)\RexxCompoundTail.$(OBJ) \
         $(OR_OUTDIR)\RexxCompoundElement.$(OBJ) $(OR_OUTDIR)\RexxCompoundTable.$(OBJ)
 OKPOBJ4=$(OR_OUTDIR)\QueueClass.$(OBJ)  $(OR_OUTDIR)\SupplierClass.$(OBJ) $(OR_OUTDIR)\RexxQueueMethods.$(OBJ) \
-        $(OR_OUTDIR)\RelationClass.$(OBJ)  $(OR_OUTDIR)\TableClass.$(OBJ) \
+        $(OR_OUTDIR)\RelationClass.$(OBJ)  $(OR_OUTDIR)\TableClass.$(OBJ) $(OR_OUTDIR)\IdentityTableClass.$(OBJ)\
 	$(OR_OUTDIR)\PrimitiveBehaviours.$(OBJ) $(OR_OUTDIR)\VirtualFunctionTable.$(OBJ)
 OKPOBJ5=$(OR_OUTDIR)\IntegerClass.$(OBJ)    $(OR_OUTDIR)\NumberStringClass.$(OBJ)
 OKIOBJ1=$(OR_OUTDIR)\RexxActivation.$(OBJ) $(OR_OUTDIR)\RexxActivity.$(OBJ) $(OR_OUTDIR)\KeywordConstants.$(OBJ)  \

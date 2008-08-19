@@ -555,6 +555,18 @@ RexxObject *RexxHashTable::primitiveHasItem(
     return(RexxObject *)TheFalseObject; /* item was not found                */
 }
 
+
+RexxObject *RexxHashTable::primitiveHasItem(
+    RexxObject *_value)                 /* item to locate                    */
+/******************************************************************************/
+/* Function:  Determine if a tuple (value, item) pair exists in the hash      */
+/*            table.  Return true if found, false other wise.                 */
+/******************************************************************************/
+{
+    return primitiveGetIndex(_value) == OREF_NULL ? TheFalseObject : TheTrueObject;
+}
+
+
 RexxObject *RexxHashTable::hasItem(
     RexxObject *_value,                 /* item to locate                    */
     RexxObject *_index )                /* index to locate                   */
@@ -639,6 +651,38 @@ RexxObject *RexxHashTable::removeItem(RexxObject *_value)
                 // this is complicated, so it's easier to just remove
                 // this using the fully qualified tuple.
                 return removeItem(_value, ep->index);
+            }
+        }
+    }
+    return TheNilObject;
+}
+
+
+/**
+ * Removes an item from the hash table.
+ *
+ * @param value  The test value.
+ *
+ * @return .true if it exists, .false otherwise.
+ */
+RexxObject *RexxHashTable::primitiveRemoveItem(RexxObject *_value)
+{
+    // our size
+    size_t count = this->totalSlotsSize();
+
+    TABENTRY *ep = this->entries;
+    TABENTRY *endp = ep + count;
+                                         /* loop through all of the entries   */
+    for (; ep < endp; ep++)
+    {
+        // if we have an item, see if it's the one we're looking for.
+        if (ep->index != OREF_NULL)
+        {
+            if (_value == ep->value)
+            {
+                // this is complicated, so it's easier to just remove
+                // this using the fully qualified tuple.
+                return primitiveRemoveItem(_value, ep->index);
             }
         }
     }
@@ -958,6 +1002,35 @@ RexxObject *RexxHashTable::getIndex(
     }
     return result;                       /* return the count                  */
 }
+
+
+RexxObject *RexxHashTable::primitiveGetIndex(
+    RexxObject *_value)                 /* target object                     */
+/******************************************************************************/
+/* Function:  Return an index associated with the supplied item.  The result  */
+/*            is undefined for items that are referenced by multiple          */
+/*            indices.                                                        */
+/******************************************************************************/
+{
+    RexxObject *result = OREF_NULL;                  /* no item yet                       */
+    /* loop through them all             */
+    for (size_t i = this->totalSlotsSize(); i > 0; i--)
+    {
+        /* real entry?                       */
+        if (this->entries[i - 1].index != OREF_NULL)
+        {
+            /* is this the item we want?         */
+            if (_value == this->entries[i - 1].value)
+            {
+                /* get the index                     */
+                result = this->entries[i - 1].index;
+                break;                         /* finished                          */
+            }
+        }
+    }
+    return result;                       /* return the count                  */
+}
+
 
 RexxObject *RexxHashTable::get(
     RexxObject *_index)                 /* index of target item              */
