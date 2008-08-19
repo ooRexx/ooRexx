@@ -2171,7 +2171,6 @@ BUILTIN(LINES)
         bool added;
         /* get a stream for this name        */
         RexxObject *stream = resolve_stream(name, context, stack, true, NULL, &added);
-        RexxString *option;
 
         if (option != OREF_NULL)
         {
