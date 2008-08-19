@@ -2323,7 +2323,7 @@ BUILTIN(STREAM)
                     RexxObject *stream = resolve_stream(name, context, stack, true, &fullName, &added);
                     RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
                     /* if open failed, remove the stream object from stream table again */
-                    if (result->strCompare("READY:"))
+                    if (!result->strCompare("READY:"))
                     {
                         context->getStreams()->remove(fullName);
                     }
