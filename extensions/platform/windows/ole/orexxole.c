@@ -63,6 +63,8 @@ int             iClsInfoUsed = 0;
 
 long iInstanceCount = 0;    // count number of created OLE objects
 
+typedef enum {FailureReturn, SuccessReturn, ExceptionReturn} ThreeStateReturn;
+
 //******************************************************************************
 // function prototypes for local functions
 //******************************************************************************
@@ -85,13 +87,13 @@ BOOL fFindFunction(const char *, IDispatch *, IDispatchEx *, ITypeInfo *, POLECL
 BOOL fFindConstant(const char *pszConstName, POLECLASSINFO pClsInfo, PPOLECONSTINFO ppConstInfo );
 
 RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant);
-void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
+bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
 bool createEmptySafeArray(RexxThreadContext *, VARIANT *);
-BOOL fRexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos);
+bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos);
 BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO pClsInfo );
 VARTYPE getUserDefinedVT( ITypeInfo *pTypeInfo, HREFTYPE hrt );
 BOOL fExploreTypeInfo( ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo );
-BOOL checkForOverride(RexxThreadContext *, VARIANT *, RexxObjectPtr , VARTYPE, RexxObjectPtr *, VARTYPE * );
+ThreeStateReturn checkForOverride(RexxThreadContext *, VARIANT *, RexxObjectPtr , VARTYPE, RexxObjectPtr *, VARTYPE * );
 BOOL isOutParam(RexxThreadContext *, RexxObjectPtr , POLEFUNCINFO, size_t);
 VOID handleVariantClear(RexxMethodContext *, VARIANT *, RexxObjectPtr  );
 __inline BOOL okayToClear(RexxMethodContext *, RexxObjectPtr  );
@@ -1627,7 +1629,7 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
   *     Setting a VT_BOOL's value to 1 for true does not produce the correct
   *     result.
   */
-void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *pVariant, VARTYPE _DestVt, size_t iArgPos)
+bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *pVariant, VARTYPE _DestVt, size_t iArgPos)
 {
     BOOL          fDone = FALSE;
     BOOL          fByRef = FALSE;
@@ -1636,9 +1638,14 @@ void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
     RexxObjectPtr RxObject;
     VARTYPE       DestVt;
 
-    if ( checkForOverride(context, pVariant, _RxObject, _DestVt, &RxObject, &DestVt) )
+    switch ( checkForOverride(context, pVariant, _RxObject, _DestVt, &RxObject, &DestVt) )
     {
-        return;
+        case SuccessReturn :
+            return true;
+        case ExceptionReturn :
+            return false;
+        default:
+            ; // Drop through
     }
 
     if (DestVt & VT_BYREF)
@@ -1655,7 +1662,7 @@ void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
         /* omitted argument */
         V_VT(pVariant) = VT_ERROR;
         V_ERROR(pVariant) = DISP_E_PARAMNOTFOUND;
-        return;
+        return true;
     }
     RexxClassObject oleClass = context->FindClass("OLEOBJECT");
 
@@ -1677,18 +1684,14 @@ void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
                 V_VT(pVariant) = VT_DISPATCH;
                 V_DISPATCH(pVariant)->AddRef();
             }
-            return;
+            return true;
         }
     }
 
     /* or maybe this is an array? */
     if (context->IsArray(RxObject))
     {
-        // if this converts, return
-        if (fRexxArray2SafeArray(context, RxObject, pVariant, iArgPos)) // byRefCheck!!!!
-        {
-            return;
-        }
+        return RexxArray2SafeArray(context, RxObject, pVariant, iArgPos); // byRefCheck!!!!
     }
 
     /* if no target type is specified try original REXX types */
@@ -1706,7 +1709,7 @@ void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
                 V_VT(pVariant) = VT_BOOL;
                 V_BOOL(pVariant) = (RxObject==context->True()) ? VARIANT_TRUE : VARIANT_FALSE;
             }
-            return;
+            return true;
         }
 
         wholenumber_t intval;
@@ -1723,7 +1726,7 @@ void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
                 V_VT(pVariant) = VT_I4;
                 V_I4(pVariant) = (LONG)intval;
             }
-            return;
+            return true;
         }
 
         double val;
@@ -1739,7 +1742,7 @@ void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
                 V_VT(pVariant) = VT_R8;
                 V_R8(pVariant) = val;
             }
-            return;
+            return true;
         }
     }
 
@@ -1783,7 +1786,7 @@ void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
             V_VT(pVariant) = VT_BOOL;
             V_BOOL(pVariant) = targetValue;
         }
-        return;
+        return true;
     }
 
     LPOLESTR  lpUniBuffer = NULL;
@@ -1823,7 +1826,7 @@ void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
                     V_R4(pVariant) = (float)val;
                 }
             }
-            return;
+            return true;
         }
     }
 
@@ -1861,7 +1864,9 @@ void Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
         V_VT(pVariant) = VT_ERROR;
         V_ERROR(pVariant) = DISP_E_PARAMNOTFOUND;
         context->RaiseException1(Rexx_Error_Rexx2Variant, RxObject);
+        return false;
     }
+    return true;
 }
 
 
@@ -1896,9 +1901,8 @@ bool createEmptySafeArray(RexxThreadContext *context, VARIANT *VarArray)
 }
 
 
-BOOL fRexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos)
+bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARIANT *VarArray, size_t iArgPos)
 {
-    BOOL            fDone = FALSE;
     wholenumber_t   lDimensions;
     PLONG           lpIndices;              // vector of indices
     wholenumber_t   lSize = 1;              // number of elements that need to be considered
@@ -1912,6 +1916,7 @@ BOOL fRexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VAR
     BOOL            fCarryBit;
 
     context->ObjectToNumber(context->SendMessage0(RxArray,"DIMENSION"), &lDimensions);
+
     /* An empty array is valid, and necessary for some OLE Automation objects. */
     if ( lDimensions == 0 )
     {
@@ -1922,6 +1927,14 @@ BOOL fRexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VAR
     lpIndices=(PLONG) ORexxOleAlloc(sizeof(LONG)*lDimensions);
     /* alloc an array of SAFEARRAYBOUNDs */
     pArrayBounds=(SAFEARRAYBOUND*) ORexxOleAlloc(sizeof(SAFEARRAYBOUND)*lDimensions);
+
+    if ( ! lpIndices || ! pArrayBounds )
+    {
+        ORexxOleFree(pArrayBounds);
+        ORexxOleFree(lpIndices);
+        context->RaiseException(Rexx_Error_System_resources);
+        return false;
+    }
 
     /* get necessary information on array and set indices vector to initial state */
     for (i=0;i<lDimensions;i++)
@@ -1938,68 +1951,78 @@ BOOL fRexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VAR
 
     /* create the SafeArray */
     pSafeArray = SafeArrayCreate(VT_VARIANT,(UINT) lDimensions, pArrayBounds);
-
-    if (pSafeArray)
+    if ( ! pSafeArray )
     {
-        V_VT(VarArray) = VT_ARRAY | VT_VARIANT;
-        V_ARRAY(VarArray) = pSafeArray;
+        ORexxOleFree(pArrayBounds);
+        ORexxOleFree(lpIndices);
+        context->RaiseException(Rexx_Error_System_resources);
+        return false;
+    }
 
-        /* get each element and transform it into a VARIANT */
-        for (i=0; i<lSize; i++)
+    V_VT(VarArray) = VT_ARRAY | VT_VARIANT;
+    V_ARRAY(VarArray) = pSafeArray;
+
+    /* get each element and transform it into a VARIANT */
+    for (i=0; i<lSize; i++)
+    {
+        RexxArrayObject argArray = context->NewArray(lDimensions);
+        for (j=0; j < lDimensions; j++)
         {
-            RexxArrayObject argArray = context->NewArray(lDimensions);
-            for (j=0; j < lDimensions; j++)
+            // put j-th index in msg array
+            context->ArrayPut(argArray, context->NumberToObject(lpIndices[j]+1), j+1);
+        }
+        /* get item from RexxArray */
+        RexxItem = context->SendMessage1(RxArray, "AT", argArray);
+
+        /* convert it into a VARIANT */
+        VariantInit(&sVariant);
+
+        if (RexxItem == context->Nil())
+        {
+            // special handling of .nil (avoid VT_ERROR)
+            V_VT(&sVariant)=VT_EMPTY;
+        }
+        else
+        {
+            if ( ! Rexx2Variant(context, RexxItem, &sVariant, VT_EMPTY, 0) )
             {
-                context->ArrayPut(argArray, context->NumberToObject(lpIndices[j]+1), j+1);   // put j-th index in msg array
+                ORexxOleFree(pArrayBounds);
+                ORexxOleFree(lpIndices);
+                return false;
             }
-            /* get item from RexxArray */
-            RexxItem = context->SendMessage1(RxArray, "AT", argArray);
+        }
 
-            /* convert it into a VARIANT */
-            VariantInit(&sVariant);
+        /* set into the SafeArray */
+        hResult = SafeArrayPutElement(pSafeArray, lpIndices, &sVariant);
+        if (FAILED(hResult))
+        {
+            // safearrayputelement failed - action required?
+        }
+        /* clear the local copy */
+        VariantClear(&sVariant);
 
-            if (RexxItem == context->Nil())                          // special handling of .nil (avoid VT_ERROR)
+        /* increment indices vector */
+        fCarryBit=TRUE;
+        j=0;
+        while (fCarryBit && j<lDimensions)
+        {
+            if (lpIndices[j] == (long) pArrayBounds[j].cElements - 1)
             {
-                V_VT(&sVariant)=VT_EMPTY;
+                lpIndices[j] = 0;
             }
             else
             {
-                Rexx2Variant(context, RexxItem, &sVariant, VT_EMPTY, 0);
+                lpIndices[j]++;
+                fCarryBit=FALSE;
             }
-
-            /* set into the SafeArray */
-            hResult = SafeArrayPutElement(pSafeArray, lpIndices, &sVariant);
-            if (FAILED(hResult))
-            {
-                // safearrayputelement failed - action required?
-            }
-            /* clear the local copy */
-            VariantClear(&sVariant);
-
-            /* increment indices vector */
-            fCarryBit=TRUE;
-            j=0;
-            while (fCarryBit && j<lDimensions)
-            {
-                if (lpIndices[j] == (long) pArrayBounds[j].cElements - 1)
-                {
-                    lpIndices[j] = 0;
-                }
-                else
-                {
-                    lpIndices[j]++;
-                    fCarryBit=FALSE;
-                }
-                j++;
-            }
+            j++;
         }
-        fDone = TRUE;
     }
 
     ORexxOleFree(pArrayBounds);
     ORexxOleFree(lpIndices);
 
-    return fDone;
+    return true;
 }
 
 BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO pClsInfo )
@@ -3372,14 +3395,18 @@ RexxMethod3(RexxObjectPtr,                // Return type
 
         if (pTypeInfo && pFuncInfo)
         {
-            DestVt = (i< (size_t)pFuncInfo->iParmCount)?pFuncInfo->pOptVt[i]:VT_EMPTY;
+            DestVt = (i < (size_t)pFuncInfo->iParmCount) ? pFuncInfo->pOptVt[i] : VT_EMPTY;
         }
         else
         {
             DestVt = VT_EMPTY;
         }
 
-        Rexx2Variant(context->threadContext, arrItem, &(pVarArgs[iArgCount - i - 1]), DestVt, i + 1);
+        if ( ! Rexx2Variant(context->threadContext, arrItem, &(pVarArgs[iArgCount - i - 1]), DestVt, i + 1) )
+        {
+            // An exception was raised.
+            goto clean_up_exit;
+        }
 
         /* If an out parameter, the variant must be passed as a reference. The
          * original input variant is saved so that, if a new value is returned,
@@ -3606,13 +3633,17 @@ clean_up_exit:
  *
  * @param pDestVt    [Returned] The real VT type to coerce the ooRexx object to.
  *
- * @return           True, the conversion is complete, or false, the conversion
- *                   is not complete - continue with the automatic conversion.
+ * @return           SuccessReturn: the conversion is complete.
+ *
+ *                   FailureReturn: the conversion is not complete - continue
+ *                   with the automatic conversion.
+ *
+ *                   ExceptionReturn: an exception is raised.
  */
-BOOL checkForOverride(RexxThreadContext *context, VARIANT *pVariant, RexxObjectPtr RxObject, VARTYPE DestVt,
-                      RexxObjectPtr *pRxObject, VARTYPE *pDestVt )
+ThreeStateReturn checkForOverride(RexxThreadContext *context, VARIANT *pVariant, RexxObjectPtr RxObject,
+                                  VARTYPE DestVt, RexxObjectPtr *pRxObject, VARTYPE *pDestVt )
 {
-    BOOL converted = FALSE;
+    ThreeStateReturn converted = FailureReturn;
 
     // needed for instance of tests
     RexxClassObject variantClass = context->FindClass("OLEVARIANT");
@@ -3643,12 +3674,12 @@ BOOL checkForOverride(RexxThreadContext *context, VARIANT *pVariant, RexxObjectP
             {
                 case VT_NULL :
                     V_VT(pVariant) = VT_NULL;
-                    converted = TRUE;
+                    converted = SuccessReturn;
                     break;
 
                 case VT_EMPTY :
                     V_VT(pVariant) = VT_EMPTY;
-                    converted = TRUE;
+                    converted = SuccessReturn;
                     break;
 
                 case VT_DISPATCH :
@@ -3662,6 +3693,7 @@ BOOL checkForOverride(RexxThreadContext *context, VARIANT *pVariant, RexxObjectP
                             if ( ! ppDisp )
                             {
                                 context->RaiseException(Rexx_Error_System_resources);
+                                return ExceptionReturn;
                             }
                             *ppDisp = (IDispatch *)NULL;
 
@@ -3676,7 +3708,7 @@ BOOL checkForOverride(RexxThreadContext *context, VARIANT *pVariant, RexxObjectP
                         /* ooRexx, not VariantClear, must clear this variant. */
                         context->SendMessage1(RxObject, "!CLEARVARIANT_=", context->False());
                         context->SendMessage1(RxObject, "!VARIANTPOINTER_=", context->NewPointer(ppDisp));
-                        converted = TRUE;
+                        converted = SuccessReturn;
                         break;
                     }
                     /* Let default conversion handle non-nil. */
@@ -3693,6 +3725,7 @@ BOOL checkForOverride(RexxThreadContext *context, VARIANT *pVariant, RexxObjectP
                             if ( ! ppU )
                             {
                                 context->RaiseException(Rexx_Error_System_resources);
+                                return ExceptionReturn;
                             }
 
                             *ppU = (IUnknown *)NULL;
@@ -3707,7 +3740,7 @@ BOOL checkForOverride(RexxThreadContext *context, VARIANT *pVariant, RexxObjectP
                         /* ooRexx, not VariantClear, must clear this variant. */
                         context->SendMessage1(RxObject, "!CLEARVARIANT_=", context->False());
                         context->SendMessage1(RxObject, "!VARIANTPOINTER_=", context->NewPointer(ppU));
-                        converted = TRUE;
+                        converted = SuccessReturn;
                         break;
                     }
                     /* Let default conversion handle non-nil. */

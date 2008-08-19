@@ -55,7 +55,7 @@
 
 extern VOID ORexxOleFree(PVOID ptr);
 extern RexxObjectPtr Variant2Rexx(RexxThreadContext *, VARIANT *pVariant);
-extern VOID Rexx2Variant(RexxThreadContext *, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
+extern bool Rexx2Variant(RexxThreadContext *, RexxObjectPtr RxObject, VARIANT *pVariant, VARTYPE DestVt, size_t iArgPos);
 
 // CTOR
 // set reference count to one
@@ -249,7 +249,7 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                             {
                                 i++;
                             }
-                            // put value into out parameter
+                            // put value into out parameter TODO what if there is an exception?
                             Rexx2Variant(context, rxResult,&pDispParams->rgvarg[i],pDispParams->rgvarg[i].vt,-1);
                         }
                         else if (context->IsArray(rxResult))
@@ -267,6 +267,7 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                                 {
                                     if (pList->pusOptFlags[j] & PARAMFLAG_FOUT)
                                     {
+                                        // TODO what if there is an exception?
                                         Rexx2Variant(context, context->ArrayAt(rxArray, i),&pDispParams->rgvarg[j],pDispParams->rgvarg[j].vt,-1);
                                         i++;
                                     }
