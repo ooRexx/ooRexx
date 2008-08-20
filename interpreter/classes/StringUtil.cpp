@@ -1512,8 +1512,8 @@ RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *po
         return OREF_NULLSTRING;        /* again a null string               */
     }
 
-    const char *wordStart = data;                /* save start position               */
-    const char *wordEnd = data;                  /* default end is the same           */
+    const char *wordStart = word;                /* save start position               */
+    const char *wordEnd = word;                  /* default end is the same           */
                                      /* loop until we reach tArget        */
     while (count-- > 0 && wordLength != 0)
     {
