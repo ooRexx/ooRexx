@@ -588,9 +588,19 @@ void ServerQueueManager::createNamedQueue(ServiceMessage &message)
 // parameter1 -- session queue handle
 void ServerQueueManager::nestSessionQueue(ServiceMessage &message)
 {
-    DataQueue *queue = (DataQueue *)message.parameter1;
-    queue->addReference();
-    message.setResult(QUEUE_OK);
+    DataQueue *queue = (DataQueue *)message.parameter2;
+    if (queue != NULL)
+    {
+        queue->addReference();
+        // update the queue value
+        message.parameter1 = (uintptr_t)queue;
+        message.setResult(QUEUE_OK);
+    }
+    else
+    {
+        // process this as a create operation
+        createSessionQueue(message);
+    }
 }
 
 

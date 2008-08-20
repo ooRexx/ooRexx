@@ -141,14 +141,16 @@ QueueHandle LocalQueueManager::initializeSessionQueue(SessionID session)
     // we could be inheriting the session queue from a caller process...check first.
     if (SysLocalAPIManager::getActiveSessionQueue(mysessionQueue))
     {
-        nestSessionQueue(mysessionQueue);      // make sure we update the nest count
+        // make sure we update the nest count
+        // this might end up creating a new queue instance
+        mysessionQueue = nestSessionQueue(session, mysessionQueue);
     }
     else
     {
         // create a new session queue
         mysessionQueue = createSessionQueue(session);
-        SysLocalAPIManager::setActiveSessionQueue(mysessionQueue);
     }
+    SysLocalAPIManager::setActiveSessionQueue(mysessionQueue);
     return mysessionQueue;
 }
 
@@ -376,10 +378,14 @@ RexxReturnCode LocalQueueManager::pullFromQueue(const char *name, RXSTRING &data
  *
  * @param q      The handle of the session queue.
  */
-void LocalQueueManager::nestSessionQueue(QueueHandle q)
+QueueHandle LocalQueueManager::nestSessionQueue(SessionID session, QueueHandle q)
 {
-    ClientMessage message(QueueManager, NEST_SESSION_QUEUE, sessionQueue);
+    ClientMessage message(QueueManager, NEST_SESSION_QUEUE, session);
+    message.parameter2 = q;
     message.send();
+    // we either got back the queue handle for the nested one, or a new
+    // queue.
+    return (QueueHandle)message.parameter1;
 }
 
 

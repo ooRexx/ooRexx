@@ -77,7 +77,7 @@ public:
     RexxReturnCode addToNamedQueue(const char *name, CONSTRXSTRING &data, size_t lifoFifo);
     RexxReturnCode addToSessionQueue(CONSTRXSTRING &data, size_t lifoFifo);
     RexxReturnCode pullFromQueue(const char *name, RXSTRING &data, size_t waitFlag, REXXDATETIME *timeStamp);
-    void nestSessionQueue(QueueHandle q);
+    QueueHandle nestSessionQueue(SessionID s, QueueHandle q);
     virtual RexxReturnCode processServiceException(ServiceException *e);
     RexxReturnCode mapReturnResult(ServiceMessage &m);
 
