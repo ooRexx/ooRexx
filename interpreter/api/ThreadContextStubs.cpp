@@ -593,7 +593,20 @@ RexxObjectPtr RexxEntry UintptrToObject(RexxThreadContext *c, uintptr_t n)
     ApiContext context(c);
     try
     {
-        return context.ret(Numerics::ptrToObject(n));
+        return context.ret(Numerics::uintptrToObject(n));
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
+RexxObjectPtr RexxEntry IntptrToObject(RexxThreadContext *c, intptr_t n)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.ret(Numerics::intptrToObject(n));
     }
     catch (RexxNativeActivation *)
     {
@@ -764,6 +777,20 @@ logical_t RexxEntry ObjectToUintptr(RexxThreadContext * c, RexxObjectPtr o, uint
     {
         // this uses the entire value range
         return Numerics::objectToUintptr((RexxObject *)o, *n);
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return 0;
+}
+
+logical_t RexxEntry ObjectToIntptr(RexxThreadContext * c, RexxObjectPtr o, intptr_t * n)
+{
+    ApiContext context(c);
+    try
+    {
+        // this uses the entire value range
+        return Numerics::objectToIntptr((RexxObject *)o, *n);
     }
     catch (RexxNativeActivation *)
     {
@@ -1766,6 +1793,7 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     ObjectToCSelf,
     NumberToObject,
     UintptrToObject,
+    IntptrToObject,
     ValueToObject,
     ValuesToObject,
     ObjectToValue,
@@ -1777,6 +1805,7 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     ObjectToInt64,
     ObjectToUnsignedInt64,
     ObjectToUintptr,
+    ObjectToIntptr,
     DoubleToObject,
     DoubleToObjectWithPrecision,
     ObjectToDouble,

@@ -399,6 +399,45 @@ bool Numerics::objectToUintptr(RexxObject *source, uintptr_t &result)
 
 
 /**
+ * Convert an object into an intptr_t values.  Used for values
+ * that are numbers masking as pointers.
+ *
+ * @param source The source object.
+ * @param result The returned value.
+ *
+ * @return true if this converted, false for any conversion failures.
+ */
+bool Numerics::objectToIntptr(RexxObject *source, intptr_t &result)
+{
+    // is this an integer value (very common)
+    if (isInteger(source))
+    {
+        result = ((RexxInteger *)source)->wholeNumber();
+        return true;
+    }
+    else
+    {
+        // get this as a numberstring (which it might already be)
+        RexxNumberString *nString = source->numberString();
+        // not convertible to number string?  get out now
+        if (nString == OREF_NULL)
+        {
+            return false;
+        }
+        int64_t temp;
+
+        // if not a valid whole number, reject this too
+        if (nString->int64Value(&temp, ARGUMENT_DIGITS))
+        {
+            result = (intptr_t)temp;
+            return true;
+        }
+        return false;
+    }
+}
+
+
+/**
  * Do portable formatting of a wholenumber value into an ascii
  * string.
  *
@@ -587,7 +626,7 @@ stringsize_t Numerics::formatUnsignedInt64(uint64_t integer, char *dest)
  *
  * @return The Rexx object version of this number.
  */
-RexxObject *Numerics::ptrToObject(uintptr_t v)
+RexxObject *Numerics::uintptrToObject(uintptr_t v)
 {
     // in the range for an integer object?
     if (v <= (uintptr_t)MAX_WHOLENUMBER)
@@ -595,6 +634,29 @@ RexxObject *Numerics::ptrToObject(uintptr_t v)
         return new_integer((wholenumber_t)v);
     }
     // out of range, we need to use a numberstring for this, using the full
-    // allowable digits range
-    return new_numberstringFromWholenumber(v);
+    // allowable digits range.  Note that this assumes we maintain the connection
+    // that a wholenumber_t is the same size as an intptr_t.
+    return new_numberstringFromStringsize((stringsize_t)v);
+}
+
+
+/**
+ * Convert an signed ptr value into the appropriate Rexx object
+ * type.
+ *
+ * @param v      The value to convert.
+ *
+ * @return The Rexx object version of this number.
+ */
+RexxObject *Numerics::intptrToObject(intptr_t v)
+{
+    // in the range for an integer object?
+    if (v <= (intptr_t)MAX_WHOLENUMBER && v >=(intptr_t)MIN_WHOLENUMBER)
+    {
+        return new_integer((wholenumber_t)v);
+    }
+    // out of range, we need to use a numberstring for this, using the full
+    // allowable digits range.  Note that this assumes we maintain the connection
+    // that a wholenumber_t is the same size as an intptr_t.
+    return new_numberstringFromWholenumber((wholenumber_t)v);
 }

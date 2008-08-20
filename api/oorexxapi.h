@@ -509,6 +509,7 @@ typedef struct
     POINTER          (RexxEntry *ObjectToCSelf)(RexxThreadContext *, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *NumberToObject)(RexxThreadContext *, wholenumber_t);
     RexxObjectPtr    (RexxEntry *UintptrToObject)(RexxThreadContext *, uintptr_t);
+    RexxObjectPtr    (RexxEntry *IntptrToObject)(RexxThreadContext *, intptr_t);
     RexxObjectPtr    (RexxEntry *ValueToObject)(RexxThreadContext *, ValueDescriptor *);
     RexxArrayObject  (RexxEntry *ValuesToObject)(RexxThreadContext *, ValueDescriptor *, size_t count);
     logical_t        (RexxEntry *ObjectToValue)(RexxThreadContext *, RexxObjectPtr, ValueDescriptor *);
@@ -520,6 +521,7 @@ typedef struct
     logical_t        (RexxEntry *ObjectToInt64)(RexxThreadContext *, RexxObjectPtr, int64_t *);
     logical_t        (RexxEntry *ObjectToUnsignedInt64)(RexxThreadContext *, RexxObjectPtr, uint64_t *);
     logical_t        (RexxEntry *ObjectToUintptr)(RexxThreadContext *, RexxObjectPtr, uintptr_t *);
+    logical_t        (RexxEntry *ObjectToIntptr)(RexxThreadContext *, RexxObjectPtr, intptr_t *);
     RexxObjectPtr    (RexxEntry *DoubleToObject)(RexxThreadContext *, double);
     RexxObjectPtr    (RexxEntry *DoubleToObjectWithPrecision)(RexxThreadContext *, double, size_t precision);
     logical_t        (RexxEntry *ObjectToDouble)(RexxThreadContext *, RexxObjectPtr, double *);
@@ -856,6 +858,10 @@ struct RexxThreadContext_
     {
         return functions->UintptrToObject(this, n);
     }
+    RexxObjectPtr IntptrToObject(intptr_t n)
+    {
+        return functions->IntptrToObject(this, n);
+    }
     RexxObjectPtr UnsignedNumberToObject(size_t n)
     {
         return functions->UnsignedNumberToObject(this, n);
@@ -887,6 +893,10 @@ struct RexxThreadContext_
     logical_t ObjectToUintptr(RexxObjectPtr o, uintptr_t *n)
     {
         return functions->ObjectToUintptr(this, o, n);
+    }
+    logical_t ObjectToIntptr(RexxObjectPtr o, intptr_t *n)
+    {
+        return functions->ObjectToIntptr(this, o, n);
     }
     RexxObjectPtr DoubleToObject(double d)
     {
@@ -1374,6 +1384,10 @@ struct RexxMethodContext_
     {
         return threadContext->UintptrToObject(n);
     }
+    RexxObjectPtr IntptrToObject(intptr_t n)
+    {
+        return threadContext->IntptrToObject(n);
+    }
     RexxObjectPtr ValueToObject(ValueDescriptor *v)
     {
         return threadContext->ValueToObject(v);
@@ -1413,6 +1427,10 @@ struct RexxMethodContext_
     logical_t ObjectToUintptr(RexxObjectPtr o, uintptr_t *n)
     {
         return threadContext->ObjectToUintptr(o, n);
+    }
+    logical_t ObjectToIntptr(RexxObjectPtr o, intptr_t *n)
+    {
+        return threadContext->ObjectToIntptr(o, n);
     }
     RexxObjectPtr DoubleToObject(double d)
     {
@@ -1945,6 +1963,10 @@ struct RexxCallContext_
     {
         return threadContext->UintptrToObject(n);
     }
+    RexxObjectPtr IntptrToObject(intptr_t n)
+    {
+        return threadContext->IntptrToObject(n);
+    }
     RexxObjectPtr ValueToObject(ValueDescriptor *v)
     {
         return threadContext->ValueToObject(v);
@@ -1984,6 +2006,10 @@ struct RexxCallContext_
     logical_t ObjectToUintptr(RexxObjectPtr o, uintptr_t *n)
     {
         return threadContext->ObjectToUintptr(o, n);
+    }
+    logical_t ObjectToIntptr(RexxObjectPtr o, intptr_t *n)
+    {
+        return threadContext->ObjectToIntptr(o, n);
     }
     RexxObjectPtr DoubleToObject(double d)
     {
@@ -2510,9 +2536,13 @@ struct RexxExitContext_
     {
         return threadContext->NumberToObject(n);
     }
-    RexxObjectPtr intptrToObject(uintptr_t n)
+    RexxObjectPtr UintptrToObject(uintptr_t n)
     {
         return threadContext->UintptrToObject(n);
+    }
+    RexxObjectPtr IntptrToObject(intptr_t n)
+    {
+        return threadContext->IntptrToObject(n);
     }
     RexxObjectPtr ValueToObject(ValueDescriptor *v)
     {
@@ -2553,6 +2583,10 @@ struct RexxExitContext_
     logical_t ObjectToUintptr(RexxObjectPtr o, uintptr_t *n)
     {
         return threadContext->ObjectToUintptr(o, n);
+    }
+    logical_t ObjectToIntptr(RexxObjectPtr o, intptr_t *n)
+    {
+        return threadContext->ObjectToIntptr(o, n);
     }
     RexxObjectPtr DoubleToObject(double d)
     {
