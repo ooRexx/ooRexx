@@ -259,7 +259,7 @@ RexxInteger *RexxString::wordIndex(RexxInteger *position)
 /******************************************************************************/
 RexxInteger *RexxString::wordLength(RexxInteger *position)
 {
-    return StringUtil::wordIndex(getStringData(), getLength(), position);
+    return StringUtil::wordLength(getStringData(), getLength(), position);
 }
 
 
