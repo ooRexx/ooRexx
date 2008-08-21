@@ -221,22 +221,34 @@ RexxObject *Numerics::stringsizeToObject(stringsize_t v)
  */
 bool Numerics::objectToWholeNumber(RexxObject *source, wholenumber_t &result, wholenumber_t maxValue, wholenumber_t minValue)
 {
-    wholenumber_t temp;
-    // if not a valid whole number, reject this too
-    if (!source->numberValue(temp, ARGUMENT_DIGITS))
+    // is this an integer value (very common)
+    if (isInteger(source))
     {
+        result = ((RexxInteger *)source)->wholeNumber();
+        return result <= maxValue && result >= minValue ? true : false;
+    }
+    else
+    {
+        // get this as a numberstring (which it might already be)
+        RexxNumberString *nString = source->numberString();
+        // not convertible to number string?  get out now
+        if (nString == OREF_NULL)
+        {
+            return false;
+        }
+        int64_t temp;
+
+        // if not valid or outside of the minimum range, reject this too
+        if (nString->int64Value(&temp, ARGUMENT_DIGITS))
+        {
+            if (temp <= maxValue && temp >= minValue)
+            {
+                result = (wholenumber_t)temp;
+                return true;
+            }
+        }
         return false;
     }
-
-    // outside of the minimum range?  reject this too.
-    if (temp > maxValue || temp < minValue)
-    {
-        return false;
-    }
-
-    // pass this back and indicate success.
-    result = temp;
-    return true;
 }
 
 
