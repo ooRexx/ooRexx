@@ -104,7 +104,7 @@
 #define REXX_VALUE_OPTIONAL_uint8_t               (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_uint8_t)
 #define REXX_VALUE_OPTIONAL_uint16_t              (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_uint16_t)
 #define REXX_VALUE_OPTIONAL_uint32_t              (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_uint32_t)
-#define REXX_VALUE_OPTIONAL_uint64_t              (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_uint32_t)
+#define REXX_VALUE_OPTIONAL_uint64_t              (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_uint64_t)
 #define REXX_VALUE_OPTIONAL_size_t                (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_size_t)
 #define REXX_VALUE_OPTIONAL_ssize_t               (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_ssize_t)
 #define REXX_VALUE_OPTIONAL_intptr_t              (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_intptr_t)
