@@ -2671,7 +2671,7 @@ Output:
 -- 00:00:00.000000
 ::METHOD date
   use strict arg
-  return self~class~new(date('F', self~standardDate, 'S'), 0)
+  return self~class~new(date('F', self~standardDate, 'S'), self~offset)
 
 -- Returns the time of day as a TimeSpan object with the interval
 -- from 00:00:00.000000 of the datetime day.
