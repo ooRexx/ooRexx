@@ -385,7 +385,11 @@ bool SysServerStream::make(int port)
     memset(&addr, 0, sizeof (addr));
     addr.sin_family = domain;
     addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = INADDR_ANY;
+//    addr.sin_addr.s_addr = INADDR_ANY;
+    // The following replaces the line above. It forces the socket to be bound
+    // to the local interface only. Thus only the local machine will be allowed
+    // to connect to this socket.
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     if (bind(s, (struct sockaddr *) &addr, sizeof(addr)) == -1)
     {
         errcode = CSERROR_CONNX_EXISTS;
