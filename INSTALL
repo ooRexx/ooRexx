@@ -37,7 +37,7 @@ a directory other than the default.  The /D option must be last on the
 command line and the directory must NOT be enclosed in quotes, even if the
 directory name contains spaces.
 
-Using the 3.1.2 release as an example, to install without prompting into the
+Using this release as an example, to install without prompting into the
 "D:\Local Interpreters" directory, the following command line could be used:
 
 E:\downloads\ooRexx312.exe /S /D=D:\Local Interpreters\ooRexx

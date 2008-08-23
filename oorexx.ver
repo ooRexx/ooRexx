@@ -9,8 +9,10 @@ ORX_COPY_YEAR="2005-2008"
 # This defines the oorexx library version. For ooRexx this should always be the
 # same as the ORX_MAJOR number.
 ORX_CURRENT=$(ORX_MAJOR)
-# Each public release of ooRexx should increment this number by one.
-ORX_REVISION=6
+# Each public release of ooRexx should increment this number by one except
+# when the ORX_MINOR goes back to zero. If that is the case then this entry
+# should also be set to zero.
+ORX_REVISION=0
 # For ooRexx, this number should ALWAYS be zero. This will force the linker to
 # utilize all previous releases for linking.
 ORX_AGE=0

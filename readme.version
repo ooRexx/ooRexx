@@ -10,7 +10,6 @@ platform/unix/oorexx-config.1
 platform/unix/oorexx.spec.in
 platform/unix/rexx.1
 platform/unix/rexxc.1
-platform/unix/rxdelipc.1
 platform/unix/rxqueue.1
 platform/unix/rxsubcom.1
 

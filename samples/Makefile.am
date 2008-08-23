@@ -40,7 +40,7 @@
 SUBDIRS			= unix windows
 DIST_SUBDIRS            = unix windows
 
-MAINTAINERCLEANFILES 	= Makefile.in *~
+MAINTAINERCLEANFILES 	= Makefile.in *
 
 EXTRA_DIST = *.rex readme
 

@@ -43,7 +43,6 @@ MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config.guess config.sub
 			compile @REXXCAT@ rexx.img \
 			stamp-h.in cscope.files cscope.out $(distdir).tar.gz
 
-SUBDIRS			= samples
 DIST_SUBDIRS 		= samples
 
 # get version details
@@ -57,63 +56,96 @@ VERSION = $(ORX_MAJOR).$(ORX_MINOR).$(ORX_MOD_LVL)
 VERSION_INFO = -version-info ${ORX_CURRENT}:${ORX_REVISION}:${ORX_AGE}
 
 # These are the platform independent directories
-build_utils_dir = $(top_srcdir)/platform
+build_common_dir = $(top_srcdir)/common
+build_lib_dir = $(top_srcdir)/lib
+build_platform_dir = $(top_srcdir)/platform
 build_rexxapi_dir = $(top_srcdir)/rexxapi
 build_rexxapi_client_dir = $(build_rexxapi_dir)/client
-build_rexxapi_client_platform_dir = $(build_rexxapi_dir)/client/platform/unix
-build_rexxapi_server_dir = $(build_rexxapi_dir)/server
-build_rexxapi_server_platform_dir = $(build_rexxapi_dir)/server/platform/unix
 build_rexxapi_common_dir = $(build_rexxapi_dir)/common
-build_rexxapi_common_platform_dir = $(build_rexxapi_dir)/common/platform/unix
-build_common_dir = $(top_srcdir)/common
-build_common_platform_dir = $(top_srcdir)/common/platform/unix
+build_rexxapi_server_dir = $(build_rexxapi_dir)/server
 build_interpreter_dir = $(top_srcdir)/interpreter
-build_interpreter_common_dir = $(build_interpreter_dir)/platform/common
 build_interpreter_api_dir = $(build_interpreter_dir)/api
+build_behaviour_dir = $(build_interpreter_dir)/behaviour
 build_classes_dir = $(build_interpreter_dir)/classes
 build_classes_support_dir = $(build_interpreter_dir)/classes/support
-build_expression_dir = $(build_interpreter_dir)/expression
 build_concurrency_dir = $(build_interpreter_dir)/concurrency
-build_behaviour_dir = $(build_interpreter_dir)/behaviour
 build_execution_dir = $(build_interpreter_dir)/execution
-build_memory_dir = $(build_interpreter_dir)/memory
-build_package_dir = $(build_interpreter_dir)/package
+build_expression_dir = $(build_interpreter_dir)/expression
 build_instructions_dir = $(build_interpreter_dir)/instructions
+build_memory_dir = $(build_interpreter_dir)/memory
+build_messages_dir = $(build_interpreter_dir)/messages
+build_package_dir = $(build_interpreter_dir)/package
 build_parser_dir = $(build_interpreter_dir)/parser
+build_interpreter_common_dir = $(build_interpreter_dir)/platform/common
+build_rexxclasses_dir = $(build_interpreter_dir)/RexxClasses
 build_runtime_dir = $(build_interpreter_dir)/runtime
 build_streamlibrary_dir = $(build_interpreter_dir)/streamLibrary
-build_messages_dir = $(build_interpreter_dir)/messages
-build_lib_dir = $(top_srcdir)/lib
-build_api_dir = $(top_srcdir)/api
-build_rexutils_dir = $(top_srcdir)/extensions/rexxutil
-build_rxregexp_dir = $(top_srcdir)/extensions/rxregexp
-build_samples_dir = $(top_srcdir)/samples
-build_rexxclasses_dir = $(build_interpreter_dir)/RexxClasses
-build_utilities_dir = $(top_srcdir)/utilities
 build_extensions_dir = $(top_srcdir)/extensions
+build_extensions_rexutils_dir = $(build_extensions_dir)/rexxutil
+build_extensions_rxftp_dir = $(build_extensions_dir)/rxftp
+build_extensions_rxmath_dir = $(build_extensions_dir)/rxmath
+build_extensions_rxregexp_dir = $(build_extensions_dir)/rxregexp
+build_extensions_rxsock_dir = $(build_extensions_dir)/rxsock
+build_utilities_dir = $(top_srcdir)/utilities
+build_utilities_rexximage_dir = $(build_utilities_dir)/rexximage
+build_api_dir = $(top_srcdir)/api
+build_samples_dir = $(top_srcdir)/samples
+
 
 # These are the *nix directories
-utils_unix_dir = $(build_utils_dir)/unix
+common_unix_dir = $(build_common_dir)/platform/unix
+rexxapi_client_unix_dir = $(build_rexxapi_client_dir)/platform/unix
+rexxapi_server_unix_dir = $(build_rexxapi_server_dir)/platform/unix
+rexxapi_common_unix_dir = $(build_rexxapi_common_dir)/platform/unix
 interpreter_unix_dir = $(build_interpreter_dir)/platform/unix
+extensions_unix_dir = $(build_extensions_dir)/platform/unix
+extensions_rexutils_unix_dir = $(build_extensions_rexutils_dir)/platform/unix
+utilities_rexx_unix_dir = $(build_utilities_dir)/rexx/platform/unix
+utilities_rexxc_unix_dir = $(build_utilities_dir)/rexxc/platform/unix
+utilities_rxqueue_unix_dir = $(build_utilities_dir)/rxqueue/platform/unix
+utilities_rxsubcom_unix_dir = $(build_utilities_dir)/rxsubcom/platform/unix
 api_unix_dir = $(build_api_dir)/platform/unix
+platform_unix_dir = $(build_platform_dir)/unix
 samples_unix_dir = $(build_samples_dir)/unix
-rexutils_unix_dir = $(top_srcdir)/extensions/rexxutil/platform/unix
+
 
 # These are the Windows directories
-utils_windows_dir = $(build_utils_dir)/windows
-rexxapi_windows_dir = $(build_rexxapi_dir)/windows
+common_windows_dir = $(build_common_dir)/platform/windows
+rexxapi_client_windows_dir = $(build_rexxapi_client_dir)/platform/windows
+rexxapi_server_windows_dir = $(build_rexxapi_server_dir)/platform/windows
+rexxapi_common_windows_dir = $(build_rexxapi_common_dir)/platform/windows
 interpreter_windows_dir = $(build_interpreter_dir)/platform/windows
+extensions_windows_dir = $(build_extensions_dir)/platform/windows
+extensions_windows_ole_dir = $(build_extensions_dir)/platform/windows/ole
+extensions_windows_oodialog_dir = $(build_extensions_dir)/platform/windows/oodialog
+extensions_windows_orxscrpt_dir = $(build_extensions_dir)/platform/windows/orxscrpt
+extensions_windows_rxwinsys_dir = $(build_extensions_dir)/platform/windows/rxwinsys
+extensions_rexutils_windows_dir = $(build_extensions_rexutils_dir)/platform/windows
+utilities_rexxhide_windows_dir = $(build_utilities_dir)/platform/windows/rexxhide
+utilities_rexxpaws_windows_dir = $(build_utilities_dir)/platform/windows/rexxpaws
+utilities_rexx_windows_dir = $(build_utilities_dir)/rexx/platform/windows
+utilities_rexxc_windows_dir = $(build_utilities_dir)/rexxc/platform/windows
+utilities_rxqueue_windows_dir = $(build_utilities_dir)/rxqueue/platform/windows
+utilities_rxsubcom_windows_dir = $(build_utilities_dir)/rxsubcom/platform/windows
 api_windows_dir = $(build_api_dir)/platform/windows
+platform_windows_dir = $(build_platform_dir)/windows
 samples_windows_dir = $(build_samples_dir)/windows
-rexutils_windows_dir = $(top_srcdir)/extensions/rexxutil/platform/windows
+
 
 # These are the platform specific build directories
-build_utils_platform_dir = $(utils_@ORX_PLATFORM@_dir)
-build_rexxapi_platform_dir = $(rexxapi_@ORX_PLATFORM@_dir)
+build_common_platform_dir = $(common_@ORX_PLATFORM@_dir)
+build_rexxapi_client_platform_dir = $(rexxapi_client_@ORX_PLATFORM@_dir)
+build_rexxapi_server_platform_dir = $(rexxapi_server_@ORX_PLATFORM@_dir)
+build_rexxapi_common_platform_dir = $(rexxapi_common_@ORX_PLATFORM@_dir)
 build_interpreter_platform_dir = $(interpreter_@ORX_PLATFORM@_dir)
+build_utilities_rexx_platform_dir = $(utilities_rexx_@ORX_PLATFORM@_dir)
+build_utilities_rexxc_platform_dir = $(utilities_rexxc_@ORX_PLATFORM@_dir)
+build_utilities_rxqueue_platform_dir = $(utilities_rxqueue_@ORX_PLATFORM@_dir)
+build_utilities_rxsubcom_platform_dir = $(utilities_rxsubcom_@ORX_PLATFORM@_dir)
+build_extensions_rexutils_platform_dir = $(extensions_rexutils_@ORX_PLATFORM@_dir)
 build_api_platform_dir = $(api_@ORX_PLATFORM@_dir)
+build_os_platform_dir = $(platform_@ORX_PLATFORM@_dir)
 build_samples_platform_dir = $(samples_@ORX_PLATFORM@_dir)
-build_rexutils_platform_dir = $(rexutils_@ORX_PLATFORM@_dir)
 
 catdir = $(prefix)/bin
 
@@ -129,23 +161,25 @@ classesXML = $(build_behaviour_dir)/PrimitiveClasses.xml
 #
 # header files for source distribution
 #
-errorHeaders = $(build_messages_dir)/RexxMessageNumbers.h \
-               $(build_messages_dir)/RexxErrorCodes.h \
-               $(build_messages_dir)/RexxMessageTable.h
+
+# Common headers
+commonHeaders = $(build_common_dir)/SynchronizedBlock.hpp \
+                $(build_common_dir)/Utilities.hpp \
+                $(build_common_platform_dir)/SysFile.hpp \
+                $(build_common_platform_dir)/SysLibrary.hpp \
+                $(build_common_platform_dir)/SysSemaphore.hpp \
+                $(build_common_platform_dir)/SysThread.hpp
+# Interpreter headers
 interpreterApiHeaders = $(build_interpreter_api_dir)/ContextApi.hpp
-classesSupportHeaders = $(build_classes_support_dir)/ProgramMetaData.hpp \
-                        $(build_classes_support_dir)/RexxCollection.hpp \
-                        $(build_classes_support_dir)/RexxCompoundElement.hpp \
-                        $(build_classes_support_dir)/RexxCompoundTable.hpp \
-                        $(build_classes_support_dir)/RexxCompoundTail.hpp \
-                        $(build_classes_support_dir)/RexxDateTime.hpp \
-                        $(build_classes_support_dir)/RexxHashTable.hpp \
-                        $(build_classes_support_dir)/RexxListTable.hpp
+behaviourHeaders = $(build_behaviour_dir)/ClassTypeCodes.h \
+                   $(build_behaviour_dir)/PrimitiveBehaviourNames.h \
+                   $(build_behaviour_dir)/RexxBehaviour.hpp
 classesHeaders = $(build_classes_dir)/ArrayClass.hpp \
                  $(build_classes_dir)/BufferClass.hpp \
                  $(build_classes_dir)/ClassClass.hpp \
                  $(build_classes_dir)/ContextClass.hpp \
                  $(build_classes_dir)/DirectoryClass.hpp \
+                 $(build_classes_dir)/IdentityTableClass.hpp \
                  $(build_classes_dir)/IntegerClass.hpp \
                  $(build_classes_dir)/ListClass.hpp \
                  $(build_classes_dir)/MessageClass.hpp \
@@ -165,30 +199,24 @@ classesHeaders = $(build_classes_dir)/ArrayClass.hpp \
                  $(build_classes_dir)/StringUtil.hpp \
                  $(build_classes_dir)/SupplierClass.hpp \
                  $(build_classes_dir)/TableClass.hpp \
-                 $(build_classes_dir)/IdentityTableClass.hpp \
                  $(build_classes_dir)/WeakReferenceClass.hpp
-expressionHeaders = $(build_expression_dir)/BuiltinFunctions.hpp \
-                    $(build_expression_dir)/ExpressionBaseVariable.hpp \
-                    $(build_expression_dir)/ExpressionCompoundVariable.hpp \
-                    $(build_expression_dir)/ExpressionDotVariable.hpp \
-                    $(build_expression_dir)/ExpressionFunction.hpp \
-                    $(build_expression_dir)/ExpressionMessage.hpp \
-                    $(build_expression_dir)/ExpressionOperator.hpp \
-                    $(build_expression_dir)/ExpressionStack.hpp \
-                    $(build_expression_dir)/ExpressionStem.hpp \
-                    $(build_expression_dir)/ExpressionVariable.hpp \
-                    $(build_expression_dir)/IndirectVariableReference.hpp \
-                    $(build_expression_dir)/ExpressionLogical.hpp
-packageHeaders = $(build_package_dir)/LibraryPackage.hpp \
-                 $(build_package_dir)/PackageManager.hpp
-memoryHeaders = $(build_memory_dir)/DeadObject.hpp \
-                $(build_memory_dir)/MemorySegment.hpp \
-                $(build_memory_dir)/MemoryStats.hpp \
-                $(build_memory_dir)/ProtectedObject.hpp \
-                $(build_memory_dir)/RexxEnvelope.hpp \
-                $(build_memory_dir)/RexxInternalStack.hpp \
-                $(build_memory_dir)/RexxSmartBuffer.hpp \
-                $(build_memory_dir)/RexxMemory.hpp
+classesSupportHeaders = $(build_classes_support_dir)/ProgramMetaData.hpp \
+                        $(build_classes_support_dir)/RexxCollection.hpp \
+                        $(build_classes_support_dir)/RexxCompoundElement.hpp \
+                        $(build_classes_support_dir)/RexxCompoundTable.hpp \
+                        $(build_classes_support_dir)/RexxCompoundTail.hpp \
+                        $(build_classes_support_dir)/RexxDateTime.hpp \
+                        $(build_classes_support_dir)/RexxHashTable.hpp \
+                        $(build_classes_support_dir)/RexxListTable.hpp
+concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
+                     $(build_concurrency_dir)/ActivityDispatcher.hpp \
+                     $(build_concurrency_dir)/ActivityManager.hpp \
+                     $(build_concurrency_dir)/CallbackDispatcher.hpp \
+                     $(build_concurrency_dir)/ExitHandler.hpp \
+                     $(build_concurrency_dir)/MessageDispatcher.hpp \
+                     $(build_concurrency_dir)/RexxActivity.hpp \
+                     $(build_concurrency_dir)/RexxStartDispatcher.hpp \
+                     $(build_concurrency_dir)/TranslateDispatcher.hpp
 executionHeaders = $(build_execution_dir)/CPPCode.hpp \
                    $(build_execution_dir)/RexxActivation.hpp \
                    $(build_execution_dir)/RexxActivationStack.hpp \
@@ -199,18 +227,18 @@ executionHeaders = $(build_execution_dir)/CPPCode.hpp \
                    $(build_execution_dir)/RexxVariable.hpp \
                    $(build_execution_dir)/RexxVariableDictionary.hpp \
                    $(build_execution_dir)/SecurityManager.hpp
-behaviourHeaders = $(build_behaviour_dir)/ClassTypeCodes.h \
-                   $(build_behaviour_dir)/PrimitiveBehaviourNames.h \
-                   $(build_behaviour_dir)/RexxBehaviour.hpp
-concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
-                     $(build_concurrency_dir)/ActivityDispatcher.hpp \
-                     $(build_concurrency_dir)/ActivityManager.hpp \
-                     $(build_concurrency_dir)/CallbackDispatcher.hpp \
-                     $(build_concurrency_dir)/ExitHandler.hpp \
-                     $(build_concurrency_dir)/MessageDispatcher.hpp \
-                     $(build_concurrency_dir)/RexxActivity.hpp \
-                     $(build_concurrency_dir)/RexxStartDispatcher.hpp \
-                     $(build_concurrency_dir)/TranslateDispatcher.hpp
+expressionHeaders = $(build_expression_dir)/BuiltinFunctions.hpp \
+                    $(build_expression_dir)/ExpressionBaseVariable.hpp \
+                    $(build_expression_dir)/ExpressionCompoundVariable.hpp \
+                    $(build_expression_dir)/ExpressionDotVariable.hpp \
+                    $(build_expression_dir)/ExpressionFunction.hpp \
+                    $(build_expression_dir)/ExpressionLogical.hpp \
+                    $(build_expression_dir)/ExpressionMessage.hpp \
+                    $(build_expression_dir)/ExpressionOperator.hpp \
+                    $(build_expression_dir)/ExpressionStack.hpp \
+                    $(build_expression_dir)/ExpressionStem.hpp \
+                    $(build_expression_dir)/ExpressionVariable.hpp \
+                    $(build_expression_dir)/IndirectVariableReference.hpp
 instructionsHeaders = $(build_instructions_dir)/AddressInstruction.hpp \
                       $(build_instructions_dir)/AssignmentInstruction.hpp \
                       $(build_instructions_dir)/CallInstruction.hpp \
@@ -253,6 +281,19 @@ instructionsHeaders = $(build_instructions_dir)/AddressInstruction.hpp \
                       $(build_instructions_dir)/ThenInstruction.hpp \
                       $(build_instructions_dir)/TraceInstruction.hpp \
                       $(build_instructions_dir)/UseStrictInstruction.hpp
+memoryHeaders = $(build_memory_dir)/DeadObject.hpp \
+                $(build_memory_dir)/MemorySegment.hpp \
+                $(build_memory_dir)/MemoryStats.hpp \
+                $(build_memory_dir)/ProtectedObject.hpp \
+                $(build_memory_dir)/RexxEnvelope.hpp \
+                $(build_memory_dir)/RexxInternalStack.hpp \
+                $(build_memory_dir)/RexxMemory.hpp \
+                $(build_memory_dir)/RexxSmartBuffer.hpp
+errorHeaders = $(build_messages_dir)/RexxMessageNumbers.h \
+               $(build_messages_dir)/RexxErrorCodes.h \
+               $(build_messages_dir)/RexxMessageTable.h
+packageHeaders = $(build_package_dir)/LibraryPackage.hpp \
+                 $(build_package_dir)/PackageManager.hpp
 parserHeaders = $(build_parser_dir)/Clause.hpp \
                 $(build_parser_dir)/SourceFile.hpp \
                 $(build_parser_dir)/SourceLocation.hpp \
@@ -266,13 +307,6 @@ platformHeaders = $(build_interpreter_platform_dir)/APIDefinitions.h \
                   $(build_interpreter_platform_dir)/SysNativeMethods.h \
                   $(build_interpreter_platform_dir)/SystemCommands.h \
                   $(build_interpreter_platform_dir)/SystemInterpreter.hpp
-commonHeaders = $(build_common_dir)/SynchronizedBlock.hpp \
-                $(build_common_dir)/Utilities.hpp \
-                $(build_common_platform_dir)/SysFile.hpp \
-                $(build_common_platform_dir)/SysLibrary.hpp \
-                $(build_common_platform_dir)/SysSemaphore.hpp \
-                $(build_common_platform_dir)/SysThread.hpp
-
 runtimeHeaders = $(build_runtime_dir)/GlobalNames.h \
                  $(build_runtime_dir)/Interpreter.hpp \
                  $(build_runtime_dir)/InterpreterInstance.hpp \
@@ -284,14 +318,8 @@ runtimeHeaders = $(build_runtime_dir)/GlobalNames.h \
                  $(build_runtime_dir)/RexxMisc.hpp
 streamlibraryHeaders = $(build_streamlibrary_dir)/StreamCommandParser.h \
                        $(build_streamlibrary_dir)/StreamNative.hpp
-libHeaders = $(build_lib_dir)/RexxPlatformDefinitions.h \
-             $(build_lib_dir)/RexxInternalApis.h
-rexxapiServerHeaders = $(build_rexxapi_server_dir)/APIServer.hpp \
-                 $(build_rexxapi_server_dir)/APIServerInstance.hpp \
-                 $(build_rexxapi_server_dir)/APIServerThread.hpp \
-                 $(build_rexxapi_server_dir)/MacroSpaceManager.hpp \
-                 $(build_rexxapi_server_dir)/QueueManager.hpp \
-                 $(build_rexxapi_server_dir)/RegistrationManager.hpp
+libHeaders = $(build_lib_dir)/RexxInternalApis.h \
+             $(build_lib_dir)/RexxPlatformDefinitions.h
 rexxapiClientHeaders = $(build_rexxapi_client_dir)/ClientMessage.hpp \
                  $(build_rexxapi_client_dir)/LocalAPIContext.hpp \
                  $(build_rexxapi_client_dir)/LocalAPIManager.hpp \
@@ -300,44 +328,75 @@ rexxapiClientHeaders = $(build_rexxapi_client_dir)/ClientMessage.hpp \
                  $(build_rexxapi_client_dir)/LocalQueueManager.hpp \
                  $(build_rexxapi_client_dir)/LocalRegistrationManager.hpp \
                  $(build_rexxapi_client_dir)/RexxAPI.h \
-                 $(build_rexxapi_client_dir)/SysLocalAPIManager.hpp
+                 $(build_rexxapi_client_platform_dir)/SysLocalAPIManager.hpp
 rexxapiCommonHeaders = $(build_rexxapi_common_dir)/Encodings.hpp \
                  $(build_rexxapi_common_dir)/Rxstring.hpp \
                  $(build_rexxapi_common_dir)/ServiceException.hpp \
                  $(build_rexxapi_common_dir)/ServiceMessage.hpp \
-                 $(build_rexxapi_common_dir)platform/unix/SysAPIManager.hpp \
-                 $(build_rexxapi_common_dir)platform/unix/SysCSStream.hpp \
-                 $(build_rexxapi_common_dir)platform/unix/SysProcess.hpp \
-rxregexpHeaders = $(build_rxregexp_dir)/automaton.hpp \
-                  $(build_rxregexp_dir)/dblqueue.cpp \
-                  $(build_rxregexp_dir)/dblqueue.hpp \
-                  $(build_rxregexp_dir)/regexp.hpp
-rxsockHeaders = $(build_extensions_dir)/rxsock/rxsock.h
-windowsDefFiles = $(interpreter_windows_dir)/*.def \
-                  $(build_lib_dir)/*.def \
-                  $(rexutils_windows_dir)/*.def
-miscFiles = $(top_srcdir)/CPLv1.0.txt \
-            $(top_srcdir)/CHANGES \
-            $(top_srcdir)/CONTRIBUTORS \
-            $(top_srcdir)/NOTICE \
-            $(top_srcdir)/oorexx.ver \
-            $(top_srcdir)/unix-like-build.txt \
-            $(utils_unix_dir)/oorexx.spec \
-            $(utils_unix_dir)/makepkg.rex \
-            $(build_rxregexp_dir)/*.cls
-windowsFiles = \
-            $(top_srcdir)/makeorx.bat \
-            $(top_srcdir)/orxdb.bat \
-            $(top_srcdir)/windows-build.txt \
-            $(build_lib_dir)/*.mak \
-            $(interpreter_windows_dir)/*.cpp \
-            $(interpreter_windows_dir)/*.h \
-            $(interpreter_windows_dir)/*.rc \
-            $(interpreter_windows_dir)/*.xsl \
-            $(interpreter_windows_dir)/*.orx \
-            $(build_interpreter_dir)/*.mak \
-            $(rexutils_windows_dir)/* \
-            $(utils_windows_dir)/*
+                 $(build_rexxapi_common_platform_dir)/SysAPIManager.hpp \
+                 $(build_rexxapi_common_platform_dir)/SysCSStream.hpp \
+                 $(build_rexxapi_common_platform_dir)/SysProcess.hpp
+rexxapiServerHeaders = $(build_rexxapi_server_dir)/APIServer.hpp \
+                 $(build_rexxapi_server_dir)/APIServerInstance.hpp \
+                 $(build_rexxapi_server_dir)/APIServerThread.hpp \
+                 $(build_rexxapi_server_dir)/MacroSpaceManager.hpp \
+                 $(build_rexxapi_server_dir)/QueueManager.hpp \
+                 $(build_rexxapi_server_dir)/RegistrationManager.hpp
+# Extension headers
+rxregexpHeaders = $(build_extensions_rxregexp_dir)/automaton.hpp \
+                  $(build_extensions_rxregexp_dir)/dblqueue.hpp \
+                  $(build_extensions_rxregexp_dir)/regexp.hpp
+rxsockHeaders = $(build_extensions_rxsock_dir)/rxsock.h
+# Platform specific files
+windowsMiscFiles =
+unixMiscFiles = $(interpreter_unix_dir)/*.cat \
+                $(rexxapi_server_unix_dir)/rxapid.sh \
+                $(build_messages_dir)/gencat.inp \
+                $(build_os_platform_dir)/rexx.sh \
+                $(build_os_platform_dir)/rexx.csh \
+                $(build_os_platform_dir)/*.1 \
+                $(build_os_platform_dir)/oorexx.spec \
+                $(build_os_platform_dir)/oorexx-config
+commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
+                  $(top_srcdir)/CHANGES \
+                  $(top_srcdir)/CONTRIBUTORS \
+                  $(top_srcdir)/NOTICE \
+                  $(top_srcdir)/oorexx.ver \
+                  $(build_extensions_rxftp_dir)/rxftp.cls \
+                  $(build_extensions_rxregexp_dir)/*.cls \
+                  $(build_messages_dir)/*.xsl \
+                  $(build_messages_dir)/*.tpl \
+                  $(build_messages_dir)/*.sgml \
+                  $(build_messages_dir)/*.xml \
+                  $(build_messages_dir)/*.src \
+                  $(build_behaviour_dir)/*.xsl \
+                  $(build_behaviour_dir)/*.xml \
+                  $(commonHeaders) \
+                  $(interpreterApiHeaders) \
+                  $(behaviourHeaders) \
+                  $(classesHeaders) \
+                  $(classesSupportHeaders) \
+                  $(concurrencyHeaders) \
+                  $(executionHeaders) \
+                  $(expressionHeaders) \
+                  $(instructionsHeaders) \
+                  $(memoryHeaders) \
+                  $(errorHeaders) \
+                  $(packageHeaders) \
+                  $(parserHeaders) \
+                  $(platformHeaders) \
+                  $(build_interpreter_platform_dir)/*.orx \
+                  $(build_interpreter_platform_dir)/*.xsl \
+                  $(build_rexxclasses_dir)/*.orx \
+                  $(runtimeHeaders) \
+                  $(streamlibraryHeaders) \
+                  $(libHeaders) \
+                  $(rexxapiClientHeaders) \
+                  $(rexxapiCommonHeaders) \
+                  $(rexxapiServerHeaders) \
+                  $(rxregexpHeaders) \
+                  $(rxsockHeaders)
+
 #
 # These error message files are built BEFORE any other target
 #
@@ -356,7 +415,7 @@ pkglib_LTLIBRARIES = librexxapi.la librexx.la librexxutil.la librxmath.la librxr
 #
 # Scripts to install
 #
-pkgdata_SCRIPTS = $(build_utils_platform_dir)/rexx.sh $(build_utils_platform_dir)/rexx.csh
+pkgdata_SCRIPTS = $(top_srcdir)/platform/unix/rexx.sh $(top_srcdir)/platform/unix/rexx.csh
 
 #
 # headers to install
@@ -372,12 +431,13 @@ include_HEADERS = $(build_api_dir)/rexx.h \
 #
 # man pages to install
 #
-man_MANS = $(build_utils_platform_dir)/rexx.1 \
-           $(build_utils_platform_dir)/rexxc.1 \
-           $(build_utils_platform_dir)/rxsubcom.1 \
-           $(build_utils_platform_dir)/rxqueue.1
+man_MANS = $(top_srcdir)/platform/unix/rexx.1 \
+           $(top_srcdir)/platform/unix/rexxc.1 \
+           $(top_srcdir)/platform/unix/rxsubcom.1 \
+           $(top_srcdir)/platform/unix/rxqueue.1 \
+           $(top_srcdir)/platform/unix/oorexx-config.1
 
-#################### librexx.so ##########################
+#################### librexxapi.so ##########################
 # Sources for librexxapi.so
 #
 librexxapi_la_SOURCES = $(build_rexxapi_client_dir)/ClientMessage.cpp \
@@ -392,14 +452,14 @@ librexxapi_la_SOURCES = $(build_rexxapi_client_dir)/ClientMessage.cpp \
                         $(build_rexxapi_client_dir)/platform/unix/SysLegacyAPI.cpp \
                         $(build_rexxapi_client_dir)/platform/unix/SysLocalAPIManager.cpp \
                         $(build_rexxapi_common_dir)/ServiceMessage.cpp \
-                        $(build_rexxapi_common_dir)/platform/unix/SysAPIManager.cpp \
-                        $(build_rexxapi_common_dir)/platform/unix/SysCSStream.cpp \
-                        $(build_rexxapi_common_dir)/platform/unix/SysProcess.cpp \
+                        $(build_rexxapi_common_platform_dir)/SysAPIManager.cpp \
+                        $(build_rexxapi_common_platform_dir)/SysCSStream.cpp \
+                        $(build_rexxapi_common_platform_dir)/SysProcess.cpp \
                         $(build_common_dir)/Utilities.cpp \
-                        $(build_common_dir)/platform/unix/SysSemaphore.cpp \
-                        $(build_common_dir)/platform/unix/SysLibrary.cpp \
-                        $(build_common_dir)/platform/unix/SysFile.cpp \
-                        $(build_common_dir)/platform/unix/SysThread.cpp
+                        $(build_common_platform_dir)/SysSemaphore.cpp \
+                        $(build_common_platform_dir)/SysLibrary.cpp \
+                        $(build_common_platform_dir)/SysFile.cpp \
+                        $(build_common_platform_dir)/SysThread.cpp
 
 #
 # Preprocessor flags for librexxapi.so
@@ -636,6 +696,7 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_rexxapi_platform_dir)
 
 librexx_la_LDFLAGS = $(VERSION_INFO) -nostartfiles
+
 #################### rxapi ##########################
 # Sources for rxapi
 #
@@ -647,9 +708,9 @@ rxapi_SOURCES = $(build_rexxapi_server_dir)/APIServer.cpp \
                 $(build_rexxapi_server_dir)/RegistrationManager.cpp \
                 $(build_rexxapi_server_dir)/platform/unix/APIService.cpp \
                 $(build_rexxapi_common_dir)/ServiceMessage.cpp \
-                $(build_rexxapi_common_dir)/platform/unix/SysAPIManager.cpp \
-                $(build_rexxapi_common_dir)/platform/unix/SysCSStream.cpp \
-                $(build_rexxapi_common_dir)/platform/unix/SysProcess.cpp \
+                $(build_rexxapi_common_platform_dir)/SysAPIManager.cpp \
+                $(build_rexxapi_common_platform_dir)/SysCSStream.cpp \
+                $(build_rexxapi_common_platform_dir)/SysProcess.cpp \
                 $(build_common_dir)/Utilities.cpp \
                 $(build_common_dir)/platform/unix/SysSemaphore.cpp \
                 $(build_common_dir)/platform/unix/SysThread.cpp
@@ -676,7 +737,7 @@ rxapi_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rexx ##########################
 # Sources for rexx
 #
-rexx_SOURCES = $(build_utilities_dir)/rexx/platform/unix/rexx.cpp
+rexx_SOURCES = $(build_utilities_rexx_platform_dir)/rexx.cpp
 #
 # Preprocessor flags for rexx
 #
@@ -691,11 +752,10 @@ rexx_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 rexx_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
 rexx_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 
-
-#################### rexx ##########################
+#################### rexximage ##########################
 # Sources for rexx
 #
-rexximage_SOURCES = $(build_utilities_dir)/rexximage/rexximage.cpp
+rexximage_SOURCES = $(build_utilities_rexximage_dir)/rexximage.cpp
 #
 # Preprocessor flags for rexximage
 #
@@ -712,7 +772,7 @@ rexximage_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rexxc #########################
 # Sources for rexxc
 #
-rexxc_SOURCES = $(build_utilities_dir)/rexxc/platform/unix/RexxCompiler.cpp
+rexxc_SOURCES = $(build_utilities_rexxc_platform_dir)/RexxCompiler.cpp
 #
 # Preprocessor flags for rexxc
 #
@@ -728,11 +788,10 @@ rexxc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 rexxc_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
 rexxc_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 
-
 #################### rxqueue #########################
 # Sources for rxqueue
 #
-rxqueue_SOURCES =  $(build_utilities_dir)/rxqueue/platform/unix/rxqueue.cpp
+rxqueue_SOURCES =  $(build_utilities_rxqueue_platform_dir)/rxqueue.cpp
 #
 # Preprocessor flags for rxqueue
 #
@@ -752,7 +811,7 @@ rxqueue_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #################### rxsubcom #########################
 # Sources for rxsubcom
 #
-rxsubcom_SOURCES =  $(build_utilities_dir)/rxsubcom/platform/unix/rxsubcom.cpp
+rxsubcom_SOURCES =  $(build_utilities_rxsubcom_platform_dir)/rxsubcom.cpp
 #
 # Preprocessor flags for rxsubcom
 #
@@ -773,7 +832,7 @@ rxsubcom_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
 #
 # Sources for librexxutil.so
 #
-librexxutil_la_SOURCES = $(build_extensions_dir)/rexxutil/platform/unix/rexxutil.cpp
+librexxutil_la_SOURCES = $(build_extensions_rexutils_platform_dir)/rexxutil.cpp
 #
 # Preprocessor flags for librexxutil.so
 #
@@ -792,7 +851,7 @@ librexxutil_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 # Sources for librxmath.so
 #
-librxmath_la_SOURCES = $(build_extensions_dir)/rxmath/rxmath.cpp
+librxmath_la_SOURCES = $(build_extensions_rxmath_dir)/rxmath.cpp
 #
 # Preprocessor flags for librxmath.so
 #
@@ -810,8 +869,8 @@ librxmath_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 # Sources for librxsock.so
 #
-librxsock_la_SOURCES = $(build_extensions_dir)/rxsock/rxsock.cpp \
-                       $(build_extensions_dir)/rxsock/rxsockfn.cpp
+librxsock_la_SOURCES = $(build_extensions_rxsock_dir)/rxsock.cpp \
+                       $(build_extensions_rxsock_dir)/rxsockfn.cpp
 #
 # Preprocessor flags for librxsock.so
 #
@@ -829,9 +888,9 @@ librxsock_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_LIBRARY@
 #
 # Sources for librxregexp.so
 #
-librxregexp_la_SOURCES = $(build_rxregexp_dir)/automaton.cpp \
-                         $(build_rxregexp_dir)/dblqueue.cpp \
-                         $(build_rxregexp_dir)/rxregexp.cpp
+librxregexp_la_SOURCES = $(build_extensions_rxregexp_dir)/automaton.cpp \
+                         $(build_extensions_rxregexp_dir)/dblqueue.cpp \
+                         $(build_extensions_rxregexp_dir)/rxregexp.cpp
 #
 # Preprocessor flags for librxregexp.so
 #
@@ -886,58 +945,21 @@ rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 # This ensures a developer can run the test suite from the build directory
 #
 ooTest:
-	cp $(build_extensions_dir)/rxregexp/rxregexp.cls .
-	cp $(build_extensions_dir)/rxftp/rxftp.cls .
+	cp $(build_extensions_dir)/rxregexp/rxregexp.cls ./
+	cp $(build_extensions_dir)/rxftp/rxftp.cls ./
 
 #
 # distribution files
 #
-EXTRA_DIST = $(build_messages_dir)/RexxMessageNumbers.xsl \
-             $(build_messages_dir)/RexxErrorCodes.xsl \
-             $(build_messages_dir)/RexxMessageTable.xsl \
-             $(build_messages_dir)/DocBookErrors.xsl \
-             $(build_messages_dir)/DocErrorMessages.sgml \
-             $(build_messages_dir)/gencat.inp \
-             $(messageXML) \
-             $(classesXML) \
-             $(build_interpreter_platform_dir)/UnixGencat.xsl \
-             $(build_behaviour_dir)/ClassTypeCodes.xsl \
-             $(build_behaviour_dir)/PrimitiveBehaviourNames.xsl \
-             $(build_behaviour_dir)/PrimitiveBehaviours.xsl \
-             $(build_behaviour_dir)/VirtualFunctionTable.xsl \
-             $(errorHeaders) \
-             $(build_utils_platform_dir)/rexx.sh \
-             $(build_utils_platform_dir)/rexx.csh \
-             $(build_rxregexp_dir)/rxregexp.cls \
-             $(build_interpreter_platform_dir)/UnixMethods.orx \
-             $(build_interpreter_platform_dir)/PlatformObjects.orx \
-             $(build_rexxclasses_dir) \
-             $(classesHeaders) \
-             $(interpreterApiHeaders) \
-             $(expressionHeaders) \
-             $(instructionsHeaders) \
-             $(parserHeaders) \
-             $(platformHeaders) \
-             $(commonHeaders) \
-             $(runtimeHeaders) \
-             $(streamlibraryHeaders) \
-             $(libHeaders) \
-             $(include_HEADERS) \
-             $(rexxapiHeaders) \
-             $(rexxapiunixHeaders) \
-             $(rxregexpHeaders) \
-             $(rxsockHeaders) \
-             $(man_MANS) \
-             $(miscFiles) \
-             $(windowsFiles) \
-             $(windowsDefFiles)
+EXTRA_DIST = $(commonMiscFiles) \
+             $(@ORX_PLATFORM@MiscFiles)
 
 dist-hook:
 	rm -fr `find $(distdir) -name .svn`
-	rm -fr `find $(distdir) -name CVS`
 	rm -fr `find $(distdir) -name "*.bak"`
 	rm -fr `find $(distdir) -name "*.o"`
 	rm -fr `find $(distdir) -name "*.lo"`
+
 #
 # Force the timestamp of the message headers and the input to gencat
 # to have a later date than the source XML, so Xalan is not needed to
@@ -945,6 +967,7 @@ dist-hook:
 	touch $(distdir)/interpreter/messages/*.h
 	touch $(distdir)/interpreter/messages/DocErrorMessages.sgml
 	touch $(distdir)/interpreter/messages/gencat.inp
+
 #
 # Add oorexx.ver.incl, a file used by the Windows build, to the source
 # distribution.
@@ -971,9 +994,9 @@ install-exec-local:
 	else \
 		$(install_sh_SCRIPT) rexx.cat $(DESTDIR)$(catdir)/rexx.cat; \
 	fi
-	$(install_sh_SCRIPT) $(build_utils_platform_dir)/oorexx-config $(DESTDIR)$(prefix)/bin/oorexx-config
-	$(install_sh_SCRIPT) $(build_rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
-	$(install_sh_SCRIPT) $(build_extensions_dir)/rxftp/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
+	$(install_sh_SCRIPT) $(build_os_platform_dir)/oorexx-config $(DESTDIR)$(prefix)/bin/oorexx-config
+	$(install_sh_SCRIPT) $(build_extensions_rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
+	$(install_sh_SCRIPT) $(build_extensions_rxftp_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
 	for a in $(build_samples_dir)/*.rex; do \
 		bn=`basename $$a`; \
 		$(install_sh_SCRIPT) $$a $(DESTDIR)$(prefix)/share/ooRexx/$$bn; \
@@ -981,7 +1004,7 @@ install-exec-local:
 	$(install_sh_SCRIPT) $(build_samples_dir)/readme $(DESTDIR)$(prefix)/share/ooRexx/readme
 
 package:
-	./rexx $(top_srcdir)/platform/unix/makepkg.rex @PACKAGETYPE@ $(ORX_MAJOR).$(ORX_MINOR).$(ORX_MOD_LVL) $(target) $(prefix) $(DESTDIR)
+	./rexx $(build_os_platform_dir)/makepkg.rex @PACKAGETYPE@ $(ORX_MAJOR).$(ORX_MINOR).$(ORX_MOD_LVL) $(target) $(prefix) $(DESTDIR)
 
 rpm: dist
 	rm -fr $(top_srcdir)/rpm
@@ -991,25 +1014,25 @@ rpm: dist
 	mkdir rpm/SOURCES
 	mkdir rpm/SPECS
 	mkdir rpm/SRPMS
-	rpmbuild -ba platform/unix/oorexx.spec < /dev/null;
+	rpmbuild -ba $(build_os_platform_dir)/oorexx.spec < /dev/null;
 
 deb:
 	rm -fr $(top_srcdir)/debian
 	mkdir $(top_srcdir)/debian
 # Generate a current change log in the required Debian format
-	sed -n -e '1,2p' $(top_srcdir)/platform/unix/debian/changelog > ${top_srcdir}/debian/changelog
+	sed -n -e '1,2p' $(build_os_platform_dir)/debian/changelog > ${top_srcdir}/debian/changelog
 	sed -e 's/.*/  &/' CHANGES >> ${top_srcdir}/debian/changelog
-	sed -e "1,3d; 4,6s/date/`date -R`/" $(top_srcdir)/platform/unix/debian/changelog >>  ${top_srcdir}/debian/changelog
+	sed -e "1,3d; 4,6s/date/`date -R`/" $(build_os_platform_dir)/debian/changelog >>  ${top_srcdir}/debian/changelog
 # Just copy the rest of the files
-	cp $(top_srcdir)/platform/unix/debian/compat    ${top_srcdir}/debian
-	cp $(top_srcdir)/platform/unix/debian/control   ${top_srcdir}/debian
-	cp $(top_srcdir)/platform/unix/debian/copyright ${top_srcdir}/debian
-	cp $(top_srcdir)/platform/unix/debian/dirs      ${top_srcdir}/debian
-	cp $(top_srcdir)/platform/unix/debian/docs      ${top_srcdir}/debian
-	cp $(top_srcdir)/platform/unix/debian/postinst  ${top_srcdir}/debian
-	cp $(top_srcdir)/platform/unix/debian/postrm    ${top_srcdir}/debian
-	cp $(top_srcdir)/platform/unix/debian/prerm     ${top_srcdir}/debian
-	cp $(top_srcdir)/platform/unix/debian/rules     ${top_srcdir}/debian
+	cp $(build_os_platform_dir)/debian/compat    ${top_srcdir}/debian
+	cp $(build_os_platform_dir)/debian/control   ${top_srcdir}/debian
+	cp $(build_os_platform_dir)/debian/copyright ${top_srcdir}/debian
+	cp $(build_os_platform_dir)/debian/dirs      ${top_srcdir}/debian
+	cp $(build_os_platform_dir)/debian/docs      ${top_srcdir}/debian
+	cp $(build_os_platform_dir)/debian/postinst  ${top_srcdir}/debian
+	cp $(build_os_platform_dir)/debian/postrm    ${top_srcdir}/debian
+	cp $(build_os_platform_dir)/debian/prerm     ${top_srcdir}/debian
+	cp $(tbuild_os_platform_dir)/debian/rules     ${top_srcdir}/debian
 # Make the binaries
 	make all
 # Install into the debian package directory
