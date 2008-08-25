@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Source Files</h1>
+
+   <p>This is the main subdirectory for the core interpreter source files.
+      These files are used the build the rexx shared library.  The interpreter
+      is organized into a a number of different subsystems, each with a unique
+      subdirectory.</p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <p>The following are the available subdirectories.</p>
+
+
+   <table border="0">
+      <tr>
+         <td><a href="./api">api</a></td>
+         <td>Files related to APIs involving calls into the interpreter
+            functions.</td>
+      </tr>
+      <tr>
+         <td><a href="./behaviour">behaviour</a></td>
+         <td>Source files related to the underlying ooRexx object model.  The
+            files in this directory are used to create the object method
+            diectionary and associated type codes.</td>
+      </tr>
+      <tr>
+         <td><a href="./classes">classes</a></td>
+         <td>All externally visible ooRexx classes.  These are the core
+            classes visible to ooRexx programs.</td>
+      </tr>
+      <tr>
+         <td><a href="./execution">execution</a></td>
+         <td>Classes used to manage the execution state of running ooRexx
+            code.  This includes call contexts, variable management, etc.</td>
+      </tr>
+      <tr>
+         <td><a href="expression">expression/a></td>
+         <td>Runtime support for different categories of expression terms
+            (operators, method calls, functions, variables, etc.)</td>
+      </tr>
+      <tr>
+         <td><a href="./instructions">instructions</a></td>
+         <td>The implementations of the ooRexx keyword instructions and
+            directives.</td>
+      </tr>
+      <tr>
+         <td><a href="./memory">memory</a></td>
+         <td>The ooRexx garbage collector and memory manager.  The memory
+            management functions include the initial image bootstrap
+            processing.</td>
+      </tr>
+      <tr>
+         <td><a href="./messages">messages</a></td>
+         <td>Platform-independent error message files.  The error message
+            files are generated from a single source XML file using XSLT
+            transforms.</td>
+      </tr>
+      <tr>
+         <td><a href="./package">package</a></td>
+         <td>Source files for package/external library management
+            subsystem.</td>
+      </tr>
+      <tr>
+         <td><a href="./parser">parser</a></td>
+         <td>Files used to translate ooRexx source into an executable format.
+            </td>
+      </tr>
+      <tr>
+         <td><a href="./platform">platform</a></td>
+         <td>The portion of the interpreter core that is implemented by
+            platform-specific code.  The interface between the portable core is
+            defined in terms of classes that must be implemented by each
+            platform execution layer.  Each supported platform environment is
+            contained in a subdirectory of platform.
+            </td>
+      </tr>
+   </table>
+
+
+</body>
+</html>
+
