@@ -148,6 +148,7 @@ int __cdecl main(int argc, char *argv[])
   if (program_name == NULL) {
                                        /* give a simple error message       */
     #undef printf
+    printf("\n");
     printf("Syntax: REXX [-v] ProgramName [parameter_1....parameter_n]\n");
     printf("or    : REXX [-e] ProgramString [parameter_1....parameter_n]\n");
     return -1;

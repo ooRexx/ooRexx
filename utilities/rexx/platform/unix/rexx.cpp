@@ -133,6 +133,7 @@ int main (int argc, char **argv)
   if (program_name == NULL)
   {
                                        /* give a simple error message       */
+    fprintf(stderr,"\n");
     fprintf(stderr,"Syntax is \"rexx [-v] filename [arguments]\"\n");
     fprintf(stderr,"or        \"rexx [-e] program_string [arguments]\".\n");
     return -1;
