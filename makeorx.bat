@@ -82,44 +82,47 @@ if %2 == PACKAGE (
 :PACKAGE_CHECK_DONE
 
 REM Check for the type of build
-IF %1 == NODEBUG (
-  set MKNODEBUG=1
-  set MKDEBUG=0
-  IF %DOPACKAGE% == 1 SET PACKAGE_REL=1
-  set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
-  set OR_ERRLOG=%OR_OUTDIR%\Win32Rel.log
-  if not exist %OR_OUTDIR% md %OR_OUTDIR%
-  GOTO BUILD_CHECK_DONE
-)
 
-IF %1 == DEBUG (
-  set MKNODEBUG=0
-  set MKDEBUG=1
-  IF %DOPACKAGE% == 1 SET PACKAGE_DBG=1
-  set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Dbg
-  set OR_ERRLOG=%OR_OUTDIR%\Win32Dbg.log
-  if not exist %OR_OUTDIR% md %OR_OUTDIR%
-  GOTO BUILD_CHECK_DONE
-)
-
-REM We will create both directories both.  The log name will first be used in
-REM the non-debug build.  Then be corrected in the debug build.
-IF %1 == BOTH (
-  set MKNODEBUG=1
-  set MKDEBUG=1
-  IF %DOPACKAGE% == 1 (
-    set PACKAGE_REL=1
-    set PACKAGE_DBG=1
-  )
-  set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
-  set OR_ERRLOG=%SRC_DRV%%SRC_DIR%\Win32Rel\Win32Rel.log
-  if not exist %OR_OUTDIR% md %OR_OUTDIR%
-  if not exist %SRC_DRV%%SRC_DIR%\Win32Dbg md %SRC_DRV%%SRC_DIR%\Win32Dbg
-  GOTO BUILD_CHECK_DONE
-)
+if %1 == NODEBUG goto NO_DEBUG
+if %1 == DEBUG goto IS_DEBUG
+if %1 == BOTH goto DO_BOTH
 
 REM The first arg is not right, show help and quit.
 goto HELP
+
+:NO_DEBUG
+set MKNODEBUG=1
+set MKDEBUG=0
+IF %DOPACKAGE% == 1 SET PACKAGE_REL=1
+set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
+set OR_ERRLOG=%OR_OUTDIR%\Win32Rel.log
+if not exist %OR_OUTDIR% md %OR_OUTDIR%
+GOTO BUILD_CHECK_DONE
+
+
+:IS_DEBUG
+set MKNODEBUG=0
+set MKDEBUG=1
+IF %DOPACKAGE% == 1 SET PACKAGE_DBG=1
+set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Dbg
+set OR_ERRLOG=%OR_OUTDIR%\Win32Dbg.log
+if not exist %OR_OUTDIR% md %OR_OUTDIR%
+GOTO BUILD_CHECK_DONE
+
+
+REM We will create both directories both.  The log name will first be used in
+REM the non-debug build.  Then be corrected in the debug build.
+:DO_BOTH
+set MKNODEBUG=1
+set MKDEBUG=1
+IF %DOPACKAGE% == 1 (
+ set PACKAGE_REL=1
+ set PACKAGE_DBG=1
+)
+set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
+set OR_ERRLOG=%SRC_DRV%%SRC_DIR%\Win32Rel\Win32Rel.log
+if not exist %OR_OUTDIR% md %OR_OUTDIR%
+if not exist %SRC_DRV%%SRC_DIR%\Win32Dbg md %SRC_DRV%%SRC_DIR%\Win32Dbg
 
 :BUILD_CHECK_DONE
 
@@ -523,6 +526,42 @@ IF %USELOGFILE% equ 1 (
   ECHO. >>%OR_ERRLOG% 2>&1
   ECHO set NO_BUILD_LOG=1 >>%OR_ERRLOG% 2>&1
 )
+
+if %USELOGFILE% EQU 1 (
+  echo. >>%OR_ERRLOG%
+  echo Argument check --- >>%OR_ERRLOG%
+  echo. >>%OR_ERRLOG%
+  echo Arg 1 build type:   %1 >>%OR_ERRLOG%
+  echo Arg 2 package:      %2 >>%OR_ERRLOG%
+  echo Arg 3 doc location: %3 >>%OR_ERRLOG%
+  echo. >>%OR_ERRLOG%
+  echo Environment check --- >>%OR_ERRLOG%
+  echo. >>%OR_ERRLOG%
+  echo SRC_DRV: %SRC_DRV% >>%OR_ERRLOG%
+  echo SRC_DIR: %SRC_DIR% >>%OR_ERRLOG%
+  echo CPU: %CPU% >>%OR_ERRLOG%
+  echo MSVCVER: %MSVCVER% >>%OR_ERRLOG%
+  echo NO_BUILD_LOG: %NO_BUILD_LOG% >>%OR_ERRLOG%
+  echo DOC_LOCATION: %DOC_LOCATION% >>%OR_ERRLOG%
+  echo. >>%OR_ERRLOG%
+) else (
+  echo.
+  echo Argument check ---
+  echo.
+  echo Arg 1 build type: %1
+  echo Arg 2 package: %2
+  echo Arg 3 doc location: %3
+  echo.
+  echo Environment vars ---
+  echo SRC_DRV: %SRC_DRV%
+  echo SRC_DIR: %SRC_DIR%
+  echo CPU: %CPU%
+  echo MSVCVER: %MSVCVER%
+  echo NO_BUILD_LOG: %NO_BUILD_LOG%
+  echo DOC_LOCATION: %DOC_LOCATION%
+  echo.
+)
+
 GOTO ENV_VARS_CLEANUP
 
 
