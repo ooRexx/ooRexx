@@ -54,6 +54,7 @@ VCPP9 = 1
 VCPP8 = 1
 !ELSEIF "$(MSVCVER)" == "7.0"
 VCPP7 = 1
+VCPP8 = 1
 !ELSEIF "$(MSVCVER)" == "6.0"
 VCPP6 = 1
 !ELSE
