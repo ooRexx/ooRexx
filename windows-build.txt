@@ -132,11 +132,11 @@ common to run the batch files provided by the tools.
 The environment variables for the C++ compiler and the Platform SDK *MUST*
 be set correctly to build ooRexx.
 
-Over the years Microsoft has changed the name and location of the batch files
-provided with the compiler and SDK tools.  Plus this process is dependent on
-the options the individual chooses when installing the tools.  Because of
-this it is not feasible to describe every single variation of how to proper-
-ly set the environment for the Microsoft tools.
+Over the years Microsoft has changed the name and location of the batch
+files provided with the compiler and SDK tools.  Plus this process is
+dependent on the options the individual chooses when installing the tools.
+Because of this it is not feasible to describe every single variation of how
+to properly set the environment for the Microsoft tools.
 
 Nevertheless, the general procedure is the same.  Run the compiler batch
 file first, then the SDK batch file.  The builder needs to determine the
@@ -144,6 +144,26 @@ exact steps for her specific system, but as an example:
 
 F:\>call F:\Tools\MsVisualStudio.2005\VC\vcvarsall.bat x86
 F:\>call F:\Tools\MsPlatformSDK\SetEnv.cmd  /XP32 /RETAIL
+
+NOTE:
+-----
+In order to support the various VC++ compilers, the MSVCVER environment
+variable must be set.  In almost all cases, this happens automatically by
+using the batch files above.  However, with some combinations of Visual C++
+and the Platform SDK, it may not get set.  In these cases, the builder
+*MUST* set it manually in the environment.  Use these values, picking the
+value that matches the level of the Visual C++ compiler in use:
+
+Visual C++ 2008 == 9.0
+Visual C++ 2005 == 8.0
+Visual C++ 2003 == 7.0
+Visual C++ 6.0  == 6.0
+
+If, for instance, the compiler in use is Visual C++ 2003 and MSVCVER is not
+getting set, then the builder should set it in the environment with this
+command:
+
+set MSVCVER=7.0
 
 * Set the ooRexx build batch file variables.
 

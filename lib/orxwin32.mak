@@ -58,7 +58,7 @@ VCPP8 = 1
 !ELSEIF "$(MSVCVER)" == "6.0"
 VCPP6 = 1
 !ELSE
-!ERROR Build environment does not appear to be set. Check windows-build.txt for details
+!ERROR MSVCVER does not appear to be set. Check windows-build.txt for details
 !ENDIF
 
 # include the version information
