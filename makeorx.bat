@@ -1,6 +1,6 @@
 @REM
 @REM Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.
-@REM Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.
+@REM Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.
 @REM
 @REM This program and the accompanying materials are made available under
 @REM the terms of the Common Public License v1.0 which accompanies this
@@ -39,6 +39,10 @@ REM Note: This batch file will not work if command extensions are disabled.
 REM       Command extensions are enabled by default in W2K, XP, W2K3, and Vista
 REM       They are probably enabled in NT.
 
+REM No sense in starting if SRC_DIR and SRC_DRV are not set.
+IF %SRC_DRV%x == x GOTO HELP_SRC_DRV
+IF %SRC_DIR%x == x GOTO HELP_SRC_DRV
+
 REM Note: needed for XCOPY command under Win 2000 to suppress the overwrite question
 REM Win NT 4.0 ignores this environment variable
 SET COPYCMD=/Y
@@ -66,7 +70,7 @@ if %NO_BUILD_LOG%x == x (set USELOGFILE=1) else (set USELOGFILE=0)
 REM Check for the 'package' option
 if %2x == x (
   SET DOPACKAGE=0
-  GOTO DOC_CHECK_DONE
+  GOTO PACKAGE_CHECK_DONE
 )
 
 if %2 == PACKAGE (
@@ -75,91 +79,120 @@ if %2 == PACKAGE (
   SET PACKAGE_DBG=0
 ) ELSE GOTO HELP
 
-REM  The package step is being done, check for the docs.
-goto DOC_CHECK
-:DOC_CHECK_DONE
+:PACKAGE_CHECK_DONE
 
-REM Check that SRC_DIR and SRC_DRV are set
-IF %SRC_DRV%x == x GOTO HELP_SRC_DRV
-IF %SRC_DIR%x == x GOTO HELP_SRC_DRV
+REM Check for the type of build
+IF %1 == NODEBUG (
+  set MKNODEBUG=1
+  set MKDEBUG=0
+  IF %DOPACKAGE% == 1 SET PACKAGE_REL=1
+  set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
+  set OR_ERRLOG=%OR_OUTDIR%\Win32Rel.log
+  if not exist %OR_OUTDIR% md %OR_OUTDIR%
+  GOTO BUILD_CHECK_DONE
+)
+
+IF %1 == DEBUG (
+  set MKNODEBUG=0
+  set MKDEBUG=1
+  IF %DOPACKAGE% == 1 SET PACKAGE_DBG=1
+  set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Dbg
+  set OR_ERRLOG=%OR_OUTDIR%\Win32Dbg.log
+  if not exist %OR_OUTDIR% md %OR_OUTDIR%
+  GOTO BUILD_CHECK_DONE
+)
+
+REM We will create both directories both.  The log name will first be used in
+REM the non-debug build.  Then be corrected in the debug build.
+IF %1 == BOTH (
+  set MKNODEBUG=1
+  set MKDEBUG=1
+  IF %DOPACKAGE% == 1 (
+    set PACKAGE_REL=1
+    set PACKAGE_DBG=1
+  )
+  set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
+  set OR_ERRLOG=%SRC_DRV%%SRC_DIR%\Win32Rel\Win32Rel.log
+  if not exist %OR_OUTDIR% md %OR_OUTDIR%
+  if not exist %SRC_DRV%%SRC_DIR%\Win32Dbg md %SRC_DRV%%SRC_DIR%\Win32Dbg
+  GOTO BUILD_CHECK_DONE
+)
+
+REM The first arg is not right, show help and quit.
+goto HELP
+
+:BUILD_CHECK_DONE
+
+if %USELOGFILE% EQU 1 (
+  echo. >>%OR_ERRLOG%
+  echo Building Open Object REXX for Windows >>%OR_ERRLOG%
+  echo Argument check --- >>%OR_ERRLOG%
+  echo. >>%OR_ERRLOG%
+  echo Arg 1 build type:   %1 >>%OR_ERRLOG%
+  echo Arg 2 package:      %2 >>%OR_ERRLOG%
+  echo Arg 3 doc location: %3 >>%OR_ERRLOG%
+  echo. >>%OR_ERRLOG%
+  echo Environment check --- >>%OR_ERRLOG%
+  echo. >>%OR_ERRLOG%
+  echo SRC_DRV: %SRC_DRV% >>%OR_ERRLOG%
+  echo SRC_DIR: %SRC_DIR% >>%OR_ERRLOG%
+  echo CPU: %CPU% >>%OR_ERRLOG%
+  echo MSVCVER: %MSVCVER% >>%OR_ERRLOG%
+  echo NO_BUILD_LOG: %NO_BUILD_LOG% >>%OR_ERRLOG%
+  echo DOC_LOCATION: %DOC_LOCATION% >>%OR_ERRLOG%
+  echo. >>%OR_ERRLOG%
+) else (
+  echo.
+  echo Building Open Object REXX for Windows
+  echo Argument check ---
+  echo.
+  echo Arg 1 build type: %1
+  echo Arg 2 package: %2
+  echo Arg 3 doc location: %3
+  echo.
+  echo Environment vars ---
+  echo SRC_DRV: %SRC_DRV%
+  echo SRC_DIR: %SRC_DIR%
+  echo CPU: %CPU%
+  echo MSVCVER: %MSVCVER%
+  echo NO_BUILD_LOG: %NO_BUILD_LOG%
+  echo DOC_LOCATION: %DOC_LOCATION%
+  echo.
+)
+
+REM  If the package step is being done, check for the docs.
+IF %DOPACKAGE% == 1 goto DOC_CHECK
+:DOC_CHECK_DONE
 
 REM  Generate, (or use an existing,) oorexx.ver.incl file.
 goto GENERATE_VERSION_FILE
-
-REM Check for the type of build
-:CHECK_BUILD_TYPE
-IF %1 == NODEBUG GOTO NODEBUG
-IF %1 == DEBUG GOTO DEBUG
-IF %1 == BOTH GOTO BOTH
-
-:HELP
-ECHO Syntax: makeorx BUILD_TYPE [PACKAGE] [DOC_LOCATION]
-ECHO Where BUILD_TYPE is required and exactly one of DEBUG NODEBUG BOTH
-ECHO Where PACKAGE is optional.  If present and exactly PACKAGE the
-ECHO Windows ooRexx install package will be built.
-ECHO.
-ECHO If creating the install package, the ooRexx PDF documentation must be
-ECHO located in the doc subdirectory of the root build directory.  If it is
-ECHO not, an attempt will be made to copy it from the directory specified by
-ECHO the third optional argument: DOC_LOCATION.  Note that alternatively,
-ECHO DOC_LOCATION can be specified as an environment variable.  I.e.,
-ECHO.
-ECHO set DOC_LOCATION=C:\myDocs
-ECHO makeorx NODEBUG PACKAGE
-ECHO.
-ECHO and
-ECHO.
-ECHO makeorx NODEBUG PACKAGE C:\myDocs
-ECHO.
-ECHO are equivalent commands.
-ECHO.
-ECHO By default all output is redirected to a log file.  To turn this off,
-ECHO set the environment variable NO_BUILD_LOG to any value.  I.e.,
-ECHO.
-ECHO set NO_BUILD_LOG=1
-GOTO ENV_VARS_CLEANUP
-
-:HELP_SRC_DRV
-ECHO *==============================================================
-ECHO One of the environment variables SRC_DRV or SRC_DIR is not set
-ECHO Set the SRC_DRV variable to the build directory drive letter
-ECHO Set the SRC_DIR variable to the full build directory path
-ECHO e.g.
-ECHO "SET SRC_DRV=F:"
-ECHO "SET SRC_DIR=\oorexx\interpreter_3x"
-ECHO *======================================================
-GOTO ENV_VARS_CLEANUP
-
-:NODEBUG
-SET MKNODEBUG=1
-SET MKDEBUG=0
-IF %DOPACKAGE% == 1 SET PACKAGE_REL=1
-GOTO BUILD
-
-:DEBUG
-SET MKNODEBUG=0
-SET MKDEBUG=1
-IF %DOPACKAGE% == 1 SET PACKAGE_DBG=1
-GOTO BUILD
-
-:BOTH
-SET MKNODEBUG=1
-SET MKDEBUG=1
-IF %DOPACKAGE% == 1 (
-  SET PACKAGE_REL=1
-  SET PACKAGE_DBG=1
-)
+:GENERATE_VERSION_FILE_DONE
 
 :BUILD
 IF %MKNODEBUG% == 0 GOTO BLDDEBUG
 
-ECHO Building Open Object REXX for Windows - Non-Debug Version
+if %USELOGFILE% EQU 1 (
+  ECHO Building Open Object REXX for Windows - Non-Debug Version >>%OR_ERRLOG%
+) else (
+  ECHO Building Open Object REXX for Windows - Non-Debug Version
+)
+
 SET MKASM=1
 SET BLDRELEASE=1
 GOTO STARTBUILD
 
+REM If we are building BOTH, we need to reset the log name.  We just set it
+REM unconditionally.
 :BLDDEBUG
-ECHO Building Open Object REXX for Windows - Debug Version
+set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Dbg
+set OR_ERRLOG=%OR_OUTDIR%\Win32Dbg.log
+
+if %USELOGFILE% EQU 1 (
+  ECHO Building Open Object REXX for Windows - Debug Version >>%OR_ERRLOG%
+) else (
+  ECHO Building Open Object REXX for Windows - Debug Version
+)
+
 SET MKASM=0
 SET BLDRELEASE=0
 
@@ -269,53 +302,88 @@ if %MISSING_DOC% EQU 0 goto DOC_CHECK_DONE
 REM  Missing some doc, try to copy it from a specified location.
 if %DOC_LOCATION%x == x (
   if %3x == x (
-    ECHO The package option is specified, but some doc is missing and the
-    ECHO location to copy the doc from can not be determined.
-    ECHO.
+    if %USELOGFILE% EQU 1 (
+      echo The package option is specified, but some doc is missing and the >>%OR_ERRLOG%
+      echo location to copy the doc from can not be determined. >>%OR_ERRLOG%
+      echo. >>%OR_ERRLOG%
+    ) else (
+      echo The package option is specified, but some doc is missing and the
+      echo location to copy the doc from can not be determined.
+      echo.
+    )
     GOTO HELP
   ) else SET DOC_LOCATION=%3
 )
 
 if not exist doc\readme.pdf (
- if not exist %DOC_LOCATION%\readme.pdf goto NO_DOC_ERR
+  if not exist %DOC_LOCATION%\readme.pdf (
+    if %USELOGFILE% EQU 1 (echo readme.pdf is missing >>%OR_ERRLOG%) else (echo readme.pdf is missing)
+    goto NO_DOC_ERR
+  )
 )
 copy %DOC_LOCATION%\readme.pdf doc 1>nul 2>&1
 
 if not exist doc\rexxpg.pdf (
- if not exist %DOC_LOCATION%\rexxpg.pdf goto NO_DOC_ERR
+  if not exist %DOC_LOCATION%\rexxpg.pdf (
+    if %USELOGFILE% EQU 1 (echo rexxpg.pdf is missing >>%OR_ERRLOG%) else (echo rexxpg.pdf is missing)
+    goto NO_DOC_ERR
+  )
 )
 copy %DOC_LOCATION%\rexxpg.pdf doc 1>nul 2>&1
 
 if not exist doc\rexxref.pdf (
- if not exist %DOC_LOCATION%\rexxref.pdf goto NO_DOC_ERR
+  if not exist %DOC_LOCATION%\rexxref.pdf (
+    if %USELOGFILE% EQU 1 (echo rexxref.pdf is missing >>%OR_ERRLOG%) else (echo rexxref.pdf is missing)
+    goto NO_DOC_ERR
+  )
 )
 copy %DOC_LOCATION%\rexxref.pdf doc 1>nul 2>&1
 
 if not exist doc\rxmath.pdf (
- if not exist %DOC_LOCATION%\rxmath.pdf goto NO_DOC_ERR
+  if not exist %DOC_LOCATION%\rxmath.pdf (
+    if %USELOGFILE% EQU 1 (echo rxmath.pdf is missing >>%OR_ERRLOG%) else (echo rxmath.pdf is missing)
+    goto NO_DOC_ERR
+  )
 )
 copy %DOC_LOCATION%\rxmath.pdf doc 1>nul 2>&1
 
 if not exist doc\rxsock.pdf (
- if not exist %DOC_LOCATION%\rxsock.pdf goto NO_DOC_ERR
+  if not exist %DOC_LOCATION%\rxsock.pdf (
+    if %USELOGFILE% EQU 1 (echo rxsock.pdf is missing >>%OR_ERRLOG%) else (echo rxsock.pdf is missing)
+    goto NO_DOC_ERR
+  )
 )
 copy %DOC_LOCATION%\rxsock.pdf doc 1>nul 2>&1
 
 if not exist doc\rxftp.pdf (
- if not exist %DOC_LOCATION%\rxftp.pdf goto NO_DOC_ERR
+  if not exist %DOC_LOCATION%\rxftp.pdf (
+    if %USELOGFILE% EQU 1 (echo rxftp.pdf is missing >>%OR_ERRLOG%) else (echo rxftp.pdf is missing)
+    goto NO_DOC_ERR
+  )
 )
 copy %DOC_LOCATION%\rxftp.pdf doc 1>nul 2>&1
 
 if not exist doc\oodialog.pdf (
- if not exist %DOC_LOCATION%\oodialog.pdf goto NO_DOC_ERR
+  if not exist %DOC_LOCATION%\oodialog.pdf (
+    if %USELOGFILE% EQU 1 (echo oodialog.pdf is missing >>%OR_ERRLOG%) else (echo oodialog.pdf is missing)
+    goto NO_DOC_ERR
+  )
 )
 copy %DOC_LOCATION%\oodialog.pdf doc 1>nul 2>&1
 
 GOTO DOC_CHECK_DONE
 
 :NO_DOC_ERR
-ECHO Failed to locate some doc file(s) for the package option, aborting.
-GOTO ENV_VARS_CLEANUP
+if %USELOGFILE% EQU 1 (
+  echo.  >>%OR_ERRLOG%
+  echo Failed to locate at least one doc file for the package option, aborting. >>%OR_ERRLOG%
+  echo.
+) else (
+  echo.
+  echo Failed to locate at least one doc file for the package option, aborting.
+  echo.
+)
+goto HELP
 
 
 REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -369,7 +437,7 @@ for /F "delims== tokens=1,2,3*" %%i in (oorexx.ver) do (
  )
 )
 echo SVN_REVSION=%SVN_REV%>> oorexx.ver.incl
-goto CHECK_BUILD_TYPE
+goto GENERATE_VERSION_FILE_DONE
 
 :NOSVN
 if exist oorexx.ver.incl (
@@ -383,4 +451,94 @@ if exist oorexx.ver.incl (
   echo SVN_REVSION=%SVN_REV%>> oorexx.ver.incl
 )
 
-goto CHECK_BUILD_TYPE
+goto GENERATE_VERSION_FILE_DONE
+
+
+REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+REM  :HELP
+REM This section just displays help and then goes to the clean up / exit.  It
+REM always echo the help to the screen and also echo it into a build log if one
+REM is being used.
+REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+:HELP
+
+REM Need to be sure some of the vars are set.  By default the log name and build
+REM directory will be set to release.
+if %USELOGFILE%x == x set USELOGFILE=1
+if %OR_OUTDIR%x == x  set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
+if %OR_ERRLOG%x == x  set OR_ERRLOG=%OR_OUTDIR%\Win32Rel.log
+if not exist %OR_OUTDIR% md %OR_OUTDIR%
+
+REM First echo to the screen the help, no matter what. So that someone building
+REM from the command line is sure to see the problem
+ECHO Syntax: makeorx BUILD_TYPE [PACKAGE] [DOC_LOCATION]
+ECHO Where BUILD_TYPE is required and exactly one of DEBUG NODEBUG BOTH
+ECHO Where PACKAGE is optional.  If present and exactly PACKAGE the
+ECHO Windows ooRexx install package will be built.
+ECHO.
+ECHO If creating the install package, the ooRexx PDF documentation must be
+ECHO located in the doc subdirectory of the root build directory.  If it is
+ECHO not, an attempt will be made to copy it from the directory specified by
+ECHO the third optional argument: DOC_LOCATION.  Note that alternatively,
+ECHO DOC_LOCATION can be specified as an environment variable.  I.e.,
+ECHO.
+ECHO set DOC_LOCATION=C:\myDocs
+ECHO makeorx NODEBUG PACKAGE
+ECHO.
+ECHO and
+ECHO.
+ECHO makeorx NODEBUG PACKAGE C:\myDocs
+ECHO.
+ECHO are equivalent commands.
+ECHO.
+ECHO By default all output is redirected to a log file.  To turn this off,
+ECHO set the environment variable NO_BUILD_LOG to any value.  I.e.,
+ECHO.
+ECHO set NO_BUILD_LOG=1
+
+REM Now, if using a build log, echo the same thing into the log.
+IF %USELOGFILE% equ 1 (
+  ECHO Syntax: makeorx BUILD_TYPE [PACKAGE] [DOC_LOCATION] >>%OR_ERRLOG% 2>&1
+  ECHO Where BUILD_TYPE is required and exactly one of DEBUG NODEBUG BOTH >>%OR_ERRLOG% 2>&1
+  ECHO Where PACKAGE is optional.  If present and exactly PACKAGE the >>%OR_ERRLOG% 2>&1
+  ECHO Windows ooRexx install package will be built. >>%OR_ERRLOG% 2>&1
+  ECHO. >>%OR_ERRLOG% 2>&1
+  ECHO If creating the install package, the ooRexx PDF documentation must be >>%OR_ERRLOG% 2>&1
+  ECHO located in the doc subdirectory of the root build directory.  If it is >>%OR_ERRLOG% 2>&1
+  ECHO not, an attempt will be made to copy it from the directory specified by >>%OR_ERRLOG% 2>&1
+  ECHO the third optional argument: DOC_LOCATION.  Note that alternatively, >>%OR_ERRLOG% 2>&1
+  ECHO DOC_LOCATION can be specified as an environment variable.  I.e., >>%OR_ERRLOG% 2>&1
+  ECHO. >>%OR_ERRLOG% 2>&1
+  ECHO set DOC_LOCATION=C:\myDocs >>%OR_ERRLOG% 2>&1
+  ECHO makeorx NODEBUG PACKAGE >>%OR_ERRLOG% 2>&1
+  ECHO. >>%OR_ERRLOG% 2>&1
+  ECHO and >>%OR_ERRLOG% 2>&1
+  ECHO. >>%OR_ERRLOG% 2>&1
+  ECHO makeorx NODEBUG PACKAGE C:\myDocs >>%OR_ERRLOG% 2>&1
+  ECHO. >>%OR_ERRLOG% 2>&1
+  ECHO are equivalent commands. >>%OR_ERRLOG% 2>&1
+  ECHO. >>%OR_ERRLOG% 2>&1
+  ECHO By default all output is redirected to a log file.  To turn this off, >>%OR_ERRLOG% 2>&1
+  ECHO set the environment variable NO_BUILD_LOG to any value.  I.e., >>%OR_ERRLOG% 2>&1
+  ECHO. >>%OR_ERRLOG% 2>&1
+  ECHO set NO_BUILD_LOG=1 >>%OR_ERRLOG% 2>&1
+)
+GOTO ENV_VARS_CLEANUP
+
+
+REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+REM  :HELP_SRC_DRV
+REM This section is used when SRC_DRV and / or SRC_DIR are not set.  It is the
+REM very first check and we don't bother to echo this into a log, we just quit
+REM after printing the text to the screen.
+REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+:HELP_SRC_DRV
+ECHO *==============================================================
+ECHO One of the environment variables SRC_DRV or SRC_DIR is not set
+ECHO Set the SRC_DRV variable to the build directory drive letter
+ECHO Set the SRC_DIR variable to the full build directory path
+ECHO e.g.
+ECHO "SET SRC_DRV=F:"
+ECHO "SET SRC_DIR=\oorexx\interpreter_3x"
+ECHO *======================================================
+GOTO ENV_VARS_CLEANUP

@@ -35,38 +35,21 @@
 @REM
 @echo off
 SETLOCAL
-IF %MKASM%x == x GOTO HELP_MKASM
-REM The newer versions changed the name of the vars setup.  We require this
-REM to be done before attempting the build now.
-REM set variables for 32 bit compiler
-REM if (%OR_WIN32%)==(1) goto novars
-REM   call vcvars32 ix86
-REM   set OR_WIN32=1
 
-:novars
-REM
-REM set up the drive for the source files
-REM
+REM Check for variables we require to be set by makeorx.bat.
 IF %SRC_DRV%x == x GOTO HELP_SRC_DRV
-REM
-REM set up the drive for the source files
-REM
-REM set SRC_DIR=\OrxDev_OSS
+IF %MKASM%x == x GOTO HELP_MKASM
+IF %OR_ERRLOG%x == x GOTO HELP_LOG
 
-
-REM set the registry key for version check
-REM regedit /s %SRC_DRV%%SRC_DIR%\full.reg
 REM
 REM set up the directories for the generated files
 REM
 REM set OR_OUTDIR=O:\TESTDIR
 if (%1)==(1) goto release
 set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Dbg
-set OR_ERRLOG=%OR_OUTDIR%\Win32Dbg.Log
 goto cont
 :release
 set OR_OUTDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
-set OR_ERRLOG=%OR_OUTDIR%\Win32Rel.Log
 :cont
 REM
 REM set up the directories for the source files
@@ -164,10 +147,21 @@ ECHO *======================================================
 goto END
 
 :HELP_SRC_DRV
+ECHO *========================================================
+ECHO The environment variable SRC_DRV is not set.  makeorx.bat
+ECHO checks that this variable is set.  orxdb.bat should not
+ECHO called directly.  Use makeorx.bat to build the Windows
+ECHO version of the interpreter.
+ECHO *========================================================
+
+goto END
+
+:HELP_LOG
 ECHO *======================================================
-ECHO The environment variable SRC_DRV is not set
-ECHO Set the variable to the build directory drive letter
-ECHO e.g. "SET SRC_DRV=F:"
+ECHO The environment variable OR_ERRLOG is not set
+ECHO This variable is set by makeorx.bat.  orxdb.bat should
+ECHO not be called directly.  Use makeorx.bat to build the
+ECHO Windows version of the intepreter.
 ECHO *======================================================
 
 goto END
