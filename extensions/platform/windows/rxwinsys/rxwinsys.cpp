@@ -3024,16 +3024,12 @@ size_t RexxEntry WSCtrlSend(const char *funcname, size_t argc, CONSTRXSTRING arg
         {
             lp = (LPARAM)"Environment";
         }
-        printf("WSCtrlSend hw=%s msg=%s wp=%s lp=%s\n", argv[1].strptr, argv[2].strptr, argv[3].strptr, argv[4].strptr);
-        printf("WSCtrlSend hw=0x%08x msg=0x%08x wp=0x%08x lp=0x%08x\n", hW, msg, wp, lp);
         if ( SendNotifyMessage(hW, msg, wp, lp) )
         {
-            printf("SendNotify ok\n");
             RETVAL(0)
         }
         else
         {
-            printf("SendNotify err=%d\n", GetLastError());
             RETVAL(GetLastError())
         }
     }
