@@ -2441,7 +2441,7 @@ BUILTIN(CONDITION)
                 }
                 return result;
             }
-            return TheNilObject;
+            break;
 
         case 'C':                          /* 'C'ondition name                  */
             if (conditionobj != OREF_NULL)   /* have a condition object?          */
@@ -2449,7 +2449,7 @@ BUILTIN(CONDITION)
                 /* retrieve the condition name       */
                 return conditionobj->at(OREF_CONDITION);
             }
-            return TheNilObject;
+            break;
 
         case 'O':                          /* 'C'ondition name                  */
             if (conditionobj != OREF_NULL)   /* have a condition object?          */
@@ -2464,14 +2464,14 @@ BUILTIN(CONDITION)
                 /* get the current trap state        */
                 return context->trapState((RexxString *)conditionobj->at(OREF_CONDITION));
             }
-            return TheNilObject;         /* return the NIL object             */
+            break;
 
         default:                           /* unknown option                    */
             /* report an error                   */
             reportException(Error_Incorrect_call_list, CHAR_CONDITION, IntegerOne, "ACDIOS", option);
             break;
     }
-    return OREF_NULLSTRING;              /* should never happen               */
+    return OREF_NULLSTRING;
 }
 
 #define CHANGESTR_MIN 3
