@@ -3061,8 +3061,7 @@ size_t RexxEntry WSCtrlSend(const char *funcname, size_t argc, CONSTRXSTRING arg
         if ( lResult == 0 )
         {
             /* Some error occurred, if last error is 0 it is a time out,
-             * otherwise some other system error. Use i for the error return
-             * code.
+             * otherwise some other system error.
              */
             DWORD err = GetLastError();
             if ( err == 0 )
