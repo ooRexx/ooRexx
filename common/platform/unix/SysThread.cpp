@@ -129,7 +129,7 @@ static void * call_thread_function(void *argument)
 void SysThread::createThread(void)
 {
     pthread_attr_t  newThreadAttr;
-    int schedpolicy;
+    int schedpolicy, maxpri, minpri;
     struct sched_param schedparam;
 
     // Create an attr block for Thread.
@@ -138,7 +138,9 @@ void SysThread::createThread(void)
     /* scheduling on two threads controlled by the result method of the */
     /* message object do not work properly without an enhanced priority */
     pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
-    schedparam.sched_priority = 100;
+    maxpri = sched_get_priority_max(schedpolicy);
+    minpri = sched_get_priority_min(schedpolicy);
+    schedparam.sched_priority = (minpri + maxpri) / 2;
 
 #if defined(OPSYS_SUN) || defined(OPSYS_AIX43)
     /* PTHREAD_EXPLICIT_SCHED ==> use scheduling attributes of the new object */
@@ -155,12 +157,7 @@ void SysThread::createThread(void)
     pthread_attr_setstacksize(&newThreadAttr, THREAD_STACK_SIZE);
 
     // Now create the thread
-    // NB: The following line is commented out temporarily because it's failing on 
-    // the rxapi server for some unknown reason.  Using NULL for the thread attributes 
-    // seems to allow it to work.  With that argument specified, we get an invalid argument 
-    // error. 
-    // int rc = pthread_create(&_threadID, &newThreadAttr, call_thread_function, (void *)this);
-    int rc = pthread_create(&_threadID, NULL, call_thread_function, (void *)this);
+    int rc = pthread_create(&_threadID, &newThreadAttr, call_thread_function, (void *)this);
     if (rc != 0)
     {
         _threadID = 0;
