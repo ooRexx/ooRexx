@@ -1286,7 +1286,7 @@ BUILTIN(TIME)
         // null strings not allowed as an option character
         if (option->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEFHLMNRST", option);
+            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEFHLMNORST", option);
         }
         // we only use the first character
         style = toupper(option->getChar(0));
@@ -1306,7 +1306,7 @@ BUILTIN(TIME)
         // again, must be at least one character, of which we only use the first
         if (option2->getLength() == 0)
         {
-            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNST", option2);
+            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNOST", option2);
         }
         style2 = toupper(option2->getChar(0));
     }
@@ -1397,7 +1397,7 @@ BUILTIN(TIME)
 
             default:
                 work[0] = style2;              /* copy over the character           */
-                reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNS", new_string(work, 1));
+                reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerThree, "CFHLMNOST", new_string(work, 1));
                 break;
         }
         if (!valid)                        /* not convert cleanly?              */
@@ -1476,7 +1476,7 @@ BUILTIN(TIME)
 
         default:                          /* unknown format                    */
             work[0] = style;                /* copy over the character           */
-            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEFHLMNRST", new_string(work, 1));
+            reportException(Error_Incorrect_call_list, CHAR_TIME, IntegerOne, "CEFHLMNORST", new_string(work, 1));
             break;
     }
     /* now create a string object        */
