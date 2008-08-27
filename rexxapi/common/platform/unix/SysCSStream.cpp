@@ -443,7 +443,7 @@ bool SysServerStream::close()
 {
     if (s != -1)
     {
-        close();
+        ::close(s);
         s = -1;
     }
     else
