@@ -357,7 +357,7 @@ static bool get_line(char *buffer,   /* Read buffer                */
         if (actual == 0)                 // nothing read?  must be EOF
         {
             *linelen = length;           // set length
-            if (length != 0)             // nothing read?
+            if (length == 0)             // nothing read?
             {
                 return true;             // raise end of file
             }
