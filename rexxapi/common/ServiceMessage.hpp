@@ -187,8 +187,8 @@ typedef enum
 // message specific modifiers
 typedef enum
 {
-    QUEUE_LIFO,
     QUEUE_FIFO,
+    QUEUE_LIFO,
     QUEUE_WAIT_FOR_DATA,
     QUEUE_NO_WAIT,
 

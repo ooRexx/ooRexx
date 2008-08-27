@@ -358,7 +358,7 @@ RexxReturnCode LocalQueueManager::pullFromQueue(const char *name, RXSTRING &data
     }
     message.parameter1 = waitFlag != 0 ? QUEUE_WAIT_FOR_DATA : QUEUE_NO_WAIT;
     message.send();
-    if (message.result == MESSAGE_OK)
+    if (message.result == QUEUE_ITEM_PULLED)
     {
         MAKERXSTRING(data, (char *)message.getMessageData(), message.getMessageDataLength());
         // if the timestamp was requested, return it.
