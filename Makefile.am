@@ -196,7 +196,6 @@ classesHeaders = $(build_classes_dir)/ArrayClass.hpp \
                  $(build_classes_dir)/StackClass.hpp \
                  $(build_classes_dir)/StemClass.hpp \
                  $(build_classes_dir)/StringClass.hpp \
-                 $(build_classes_dir)/StringUtil.hpp \
                  $(build_classes_dir)/SupplierClass.hpp \
                  $(build_classes_dir)/TableClass.hpp \
                  $(build_classes_dir)/WeakReferenceClass.hpp
@@ -207,7 +206,8 @@ classesSupportHeaders = $(build_classes_support_dir)/ProgramMetaData.hpp \
                         $(build_classes_support_dir)/RexxCompoundTail.hpp \
                         $(build_classes_support_dir)/RexxDateTime.hpp \
                         $(build_classes_support_dir)/RexxHashTable.hpp \
-                        $(build_classes_support_dir)/RexxListTable.hpp
+                        $(build_classes_support_dir)/RexxListTable.hpp \
+                        $(build_classes_support_dir)/StringUtil.hpp
 concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
                      $(build_concurrency_dir)/ActivityDispatcher.hpp \
                      $(build_concurrency_dir)/ActivityManager.hpp \
@@ -492,7 +492,8 @@ classes_support_sources = $(build_classes_support_dir)/ProgramMetaData.cpp \
                           $(build_classes_support_dir)/RexxCompoundTail.cpp \
                           $(build_classes_support_dir)/RexxDateTime.cpp \
                           $(build_classes_support_dir)/RexxHashTable.cpp \
-                          $(build_classes_support_dir)/RexxListTable.cpp
+                          $(build_classes_support_dir)/RexxListTable.cpp \
+                          $(build_classes_support_dir)/StringUtil.cpp
 classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/BufferClass.cpp \
                   $(build_classes_dir)/ClassClass.cpp \
@@ -522,7 +523,6 @@ classes_sources = $(build_classes_dir)/ArrayClass.cpp \
                   $(build_classes_dir)/StringClassSub.cpp \
                   $(build_classes_dir)/StringClassUtil.cpp \
                   $(build_classes_dir)/StringClassWord.cpp \
-                  $(build_classes_dir)/StringUtil.cpp \
                   $(build_classes_dir)/SupplierClass.cpp \
                   $(build_classes_dir)/TableClass.cpp \
                   $(build_classes_dir)/IdentityTableClass.cpp \
