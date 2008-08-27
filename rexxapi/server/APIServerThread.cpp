@@ -52,7 +52,6 @@ void APIServerThread::start()
  */
 void APIServerThread::dispatch()
 {
-    printf("Dispatching server thread\n"); 
     // just dispatch this back to the api server for handling
     server->processMessages(connection);
 }

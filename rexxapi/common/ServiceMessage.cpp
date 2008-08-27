@@ -176,6 +176,11 @@ void ServiceMessage::readResult(SysClientStream &pipe)
             throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readResult() Failure reading service message");
         }
     }
+    else 
+    {
+        // make sure this is nulled out 
+        messageData = NULL; 
+    }
 }
 
 
