@@ -47,6 +47,7 @@
 #endif
 
 #include "SysThread.hpp"
+#include <stdio.h>
 
 
 // attach an activity to an existing thread
@@ -134,16 +135,15 @@ void SysThread::createThread(void)
     // Create an attr block for Thread.
     pthread_attr_init(&newThreadAttr);
 #if defined(OPSYS_AIX43) || defined(LINUX) ||  defined OPSYS_SUN
-
     /* scheduling on two threads controlled by the result method of the */
     /* message object do not work properly without an enhanced priority */
     pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
     schedparam.sched_priority = 100;
 
+#if defined(OPSYS_SUN) || defined(OPSYS_AIX43)
     /* PTHREAD_EXPLICIT_SCHED ==> use scheduling attributes of the new object */
     pthread_attr_setinheritsched(&newThreadAttr, PTHREAD_EXPLICIT_SCHED);
 
-#if defined(OPSYS_SUN) || defined(OPSYS_AIX43)
     /* Performance measurements show massive performance improvements > 50 % */
     /* using Round Robin scheduling instead of FIFO scheduling               */
     pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR); // not supported AIX4.1
@@ -155,7 +155,13 @@ void SysThread::createThread(void)
     pthread_attr_setstacksize(&newThreadAttr, THREAD_STACK_SIZE);
 
     // Now create the thread
-    if (pthread_create(&_threadID, &newThreadAttr, call_thread_function, this) != 0)
+    // NB: The following line is commented out temporarily because it's failing on 
+    // the rxapi server for some unknown reason.  Using NULL for the thread attributes 
+    // seems to allow it to work.  With that argument specified, we get an invalid argument 
+    // error. 
+    // int rc = pthread_create(&_threadID, &newThreadAttr, call_thread_function, (void *)this);
+    int rc = pthread_create(&_threadID, NULL, call_thread_function, (void *)this);
+    if (rc != 0)
     {
         _threadID = 0;
     }

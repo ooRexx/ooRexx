@@ -39,6 +39,7 @@
 #include "QueueManager.hpp"
 #include "APIServer.hpp"
 #include "APIServerThread.hpp"
+#include <stdio.h>
 
 // start up the reader thread.
 void APIServerThread::start()
@@ -51,6 +52,7 @@ void APIServerThread::start()
  */
 void APIServerThread::dispatch()
 {
+    printf("Dispatching server thread\n"); 
     // just dispatch this back to the api server for handling
     server->processMessages(connection);
 }

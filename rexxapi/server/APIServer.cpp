@@ -43,6 +43,7 @@
 #include <new>
 #include "ServiceMessage.hpp"
 #include "ServiceException.hpp"
+#include <stdio.h>
 
 
 /**
@@ -104,7 +105,6 @@ void APIServer::listenForConnections()
  */
 void APIServer::processMessages(SysServerConnection *connection)
 {
-
     while (serverActive)
     {
         ServiceMessage message;
