@@ -367,7 +367,6 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(build_messages_dir)/*.xsl \
                   $(build_messages_dir)/*.sgml \
                   $(build_messages_dir)/*.xml \
-                  $(build_messages_dir)/*.src \
                   $(build_behaviour_dir)/*.xsl \
                   $(build_behaviour_dir)/*.xml \
                   $(commonHeaders) \
