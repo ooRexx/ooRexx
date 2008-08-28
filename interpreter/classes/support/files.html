@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Class Support Source Files</h1>
+
+   <p>This directory contains support files used to implement the classes that
+      are exported to the ooRexx programmer.  These classes are not directly
+      visible to the ooRexx programmer, but are used internally by various
+      exported classes.  Most of the classes here are subclasses of
+      RexxInternalObject.  They are allocated from the ooRexx memory heap, but
+      can never be made visible to the ooRexx programmer.
+      directly altered.
+      </p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <dl>
+      <dt><b>ProgramMetaData.*</b></dt>
+      <dd>Support methods used by the MethodClass and the RoutineClass for
+         saving/restoring a translated program.
+         </dd>
+      <dt><b>RexxCollection.*</b></dt>
+      <dd>RexxCollection is the base C++ class for mapped collection classes
+         that are based on a hash table implementation (Table, Relation,
+         IdentityTable, Directory).
+         </dd>
+      <dt><b>RexxHashTable.*</b></dt>
+      <dd>The hash table that holds the index-item mappings for a RexxCollecton
+         based map class.  Each RexxCollection instance holds a reference to a
+         backing HashTable instance.  Whenever it's necessary for a collection
+         to expand its capacity, a larger hash table is allocated and the items
+         are rehashed into the new table.</dd>
+      <dt><b>RexxListTable.*</b></dt>
+      <dd>A backing table used to manage List and Queue class items.  This is
+         similar to the hash table used for the RexxCollection classes, but a
+         list table only contains an ordered list of items.
+         </dd>
+      <dt><b>StringUtil.*</b></dt>
+      <dd>Utility methods used by both the String and MutableBuffer classes for
+         implementing methods common to both classes.
+         </dd>
+      <dt><b>RexxCompoundTable.*</b></dt>
+      <dd>A table used to store elements of a Stem object.  This table manages
+         the individual variables as a balanced binary tree of
+         RexxCompoundElement items (see below).
+         </dd>
+      <dt><b>RexxCompoundElement.*</b></dt>
+      <dd>A class used to represent the nodes of a RexxConmpountTable.
+         </dd>
+      <dt><b>RexxCompoundTail.*</b></dt>
+      <dd>A utility class used to construct and manager lookups for compount
+         tail elements.  This class is NOT a subclass of RexxInternalObject, but
+         is rather intended to be created as a variable in a local stackframe.
+         </dd>
+      <dt><b>RexxDateTime.*</b></dt>
+      <dd>A utility class used by the Date() and Time() bifs.  This also
+         provides a lot of the logic behind the DateTime and TimeSpan classes.
+         </dd>
+   </dl>
+
+</body>
+</html>
+

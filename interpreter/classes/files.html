@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Classes Source Files</h1>
+
+   <p>This is the main subdirectory for the the classes that ooRexx exposes to
+      the user as ooRexx classes.  Each exported class will have an
+      xxxxClass.cpp file and an xxxxClass.hpp header file that defines the
+      class.  For example, the .Array class is contained in ArrayClass.cpp and
+      ArrayClass.hpp. The two exceptions to this rule are the StringClass and
+      the NumberStringClass.  The implementation of these two classes was quite
+      a bit of code, so the methods have been split across multiple source
+      files.</p>
+   <p>The root object definition (.Object) is contained in ObjectClass.*.
+      These files define two levels of RexxObject.  The first level,
+      RexxInternalObject, is used for any objects used to construct the
+      interpreter runtime that are not exported to the ooRexx user.  The second
+      level, RexxObject, adds in the necessary levels of support for an object
+      class to be exported to the ooRexx programmer.  RexxObject is a subclass
+      of RexxInternalObject, and all other classes in this directory are
+      subclasses of RexxObject.</p>
+   <p>There are two classes defined in this directory (NumberStringClass and
+      IntegerClass) that would not be recognizable to the ooRexx programmer.
+       These are special classes used to optimize internal arithmetic. These
+       classes are polymorphic with the String class and "masquerade" as String
+       objects when they are used.  All arithmethic operations are performed
+       either using Integer objects or NumberString objects.</p>
+
+   <p>The following are the available subdirectories.</p>
+
+
+   <table border="0">
+      <tr>
+         <td valign="top"><a href="./support/files.html">support</a></td>
+         <td>Contains supporting classes used for the implementation of
+            exported ooRexx objects.  A number of the classes defined here are
+            implemented using additional embedded object.  These objects are not
+            directly visible to the ooRexx programmer, but the objects may
+            contain internal references to instanced of these support objects.
+            Other support classes contain common utility code that gives
+            refactors common code into a central location.  For example, the
+            StringUtil class contains static methods used by both the String
+            class and the MutableBuffer class.
+            </td>
+      </tr>
+   </table>
+
+
+</body>
+</html>
+
