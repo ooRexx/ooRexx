@@ -83,9 +83,6 @@ bool ActivityManager::processTerminating = false;
 // number of active interpreter instances in this process
 size_t ActivityManager::interpreterInstances = 0;
 
-// the local environment
-RexxDirectory *ActivityManager::localEnvironment = OREF_NULL;
-
 // global lock for the interpreter
 SysMutex ActivityManager::kernelSemaphore;
 
@@ -129,7 +126,6 @@ void ActivityManager::init()
     nativeActivationCacheSize = NATIVE_ACTIVATION_CACHE_SIZE;
 
     currentActivity = OREF_NULL;
-    localEnvironment = new_directory();
 }
 
 void ActivityManager::live(size_t liveMark)
@@ -146,10 +142,9 @@ void ActivityManager::live(size_t liveMark)
   memory_mark(availableActivities);
   memory_mark(allActivities);
   memory_mark(activations);
-memory_mark(nativeActivations);
+  memory_mark(nativeActivations);
   memory_mark(firstWaitingActivity);
   memory_mark(lastWaitingActivity);
-  memory_mark(localEnvironment);
 }
 
 void ActivityManager::liveGeneral(int reason)
@@ -170,7 +165,6 @@ void ActivityManager::liveGeneral(int reason)
       memory_mark_general(nativeActivations);
       memory_mark_general(firstWaitingActivity);
       memory_mark_general(lastWaitingActivity);
-      memory_mark_general(localEnvironment);
   }
 }
 
@@ -305,10 +299,6 @@ void ActivityManager::shutdown()
                                        /* done after uninit calls. incas    */
                                        /*  uninits needed some.             */
     clearActivityPool();
-    // if there are no activities yet to shutdown, we can terminate immediately.
-    // Otherwise, we need to wait for the rest of the threads to finish cleaning
-    // up.  Once the last thread terminates, we can shutdown.
-    localEnvironment = OREF_NULL;      /* no local environment              */
 }
 
 
@@ -1011,6 +1001,39 @@ void ActivityManager::relinquish(RexxActivity *activity)
 
 
 /**
+ * Retrieve a variable from the current local environment
+ * object.
+ *
+ * @param name   The name of the environment variable.
+ *
+ * @return The object stored in .local at the requested name.
+ */
+RexxObject *ActivityManager::getLocalEnvironment(RexxString *name)
+{
+    if (currentActivity == OREF_NULL)
+    {
+        return TheNilObject;
+    }
+    return currentActivity->getLocalEnvironment(name);
+}
+
+
+/**
+ * Retrieve the current .local directory instance.
+ *
+ * @return The .local directory for the current activity.
+ */
+RexxDirectory *ActivityManager::getLocal()
+{
+    if (currentActivity == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+    return currentActivity->getLocal();
+}
+
+
+/**
  * Enter a native context block.  This will locate the appropriate
  * activity for this callback and acquire kernel access on that
  * activity.  If this thread has never been used, then a new
@@ -1067,3 +1090,4 @@ RexxObject *NativeContextBlock::protect(RexxObject *o)
     self->createLocalReference(o);
     return o;
 }
+

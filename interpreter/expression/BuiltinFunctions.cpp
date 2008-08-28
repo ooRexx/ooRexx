@@ -1856,6 +1856,8 @@ BUILTIN(TRACE)
     }
     return result;                       /* return old trace setting          */
 }
+
+
 /* resolve a stream name             */
 RexxObject *resolve_stream(
     RexxString          *name,           /* name of the stream                */
@@ -1883,31 +1885,31 @@ RexxObject *resolve_stream(
         if (input)                         /* input operation?                  */
         {
             /* get the default output stream     */
-            return ActivityManager::localEnvironment->at(OREF_INPUT);
+            return context->getLocalEnvironment(OREF_INPUT);
         }
         else
         {
             /* get the default output stream     */
-            return ActivityManager::localEnvironment->at(OREF_OUTPUT);
+            return context->getLocalEnvironment(OREF_OUTPUT);
         }
     }
     /* standard input stream?            */
     else if (name->strICompare(CHAR_STDIN) || name->strICompare(CHAR_CSTDIN))
     {
         /* get the default output stream     */
-        return ActivityManager::localEnvironment->at(OREF_INPUT);
+        return context->getLocalEnvironment(OREF_INPUT);
     }
     /* standard output stream?           */
     else if (name->strICompare(CHAR_STDOUT) || name->strICompare(CHAR_CSTDOUT))
     {
         /* get the default output stream     */
-        return ActivityManager::localEnvironment->at(OREF_OUTPUT);
+        return context->getLocalEnvironment(OREF_OUTPUT);
     }
     /* standard error stream?            */
     else if (name->strICompare(CHAR_STDERR) || name->strICompare(CHAR_CSTDERR))
     {
         /* get the default output stream     */
-        return ActivityManager::localEnvironment->at(OREF_ERRORNAME);
+        return context->getLocalEnvironment(OREF_ERRORNAME);
     }
     else
     {
@@ -1987,7 +1989,7 @@ BUILTIN(LINEIN)
         if (context->getActivity()->callPullExit(context, result))
         {
             /* get the default output stream     */
-            RexxObject *stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+            RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
             /* pull from the queue               */
             return stream->sendMessage(OREF_LINEIN);
         }
@@ -2078,7 +2080,7 @@ BUILTIN(LINEOUT)
             if (string != OREF_NULL)
             {       /* have an actual string to write?   */
                     /* get the default output stream     */
-                RexxObject *stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+                RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
                 /* push onto the queue               */
                 return stream->sendMessage(OREF_QUEUENAME, string);
             }
@@ -2167,7 +2169,7 @@ BUILTIN(LINES)
     if (check_queue(name))
     {             /* is this "QUEUE:"                  */
                   /* get the default output stream     */
-        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+        RexxObject *stream = context->getLocalEnvironment(OREF_REXXQUEUE);
         /* return count on the queue         */
         result = stream->sendMessage(OREF_QUERY);
     }
@@ -2365,7 +2367,7 @@ BUILTIN(QUEUED)
                                          /* get the default output stream     */
     if (context->getActivity()->callQueueSizeExit(context, queuesize))
     {
-        RexxObject *queue = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+        RexxObject *queue = context->getLocalEnvironment(OREF_REXXQUEUE);
         /* return count on the queue         */
         return queue->sendMessage(OREF_QUEUED);
     }

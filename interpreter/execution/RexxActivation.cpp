@@ -3644,7 +3644,7 @@ RexxObject  *RexxActivation::novalueHandler(
 /******************************************************************************/
 {
     /* get the handler from .local       */
-    RexxObject *novalue_handler = ActivityManager::localEnvironment->fastAt(OREF_NOVALUE);
+    RexxObject *novalue_handler = getLocalEnvironment(OREF_NOVALUE);
     if (novalue_handler != OREF_NULL)    /* have a novalue handler?           */
     {
         /* ask it to process this            */
@@ -4036,4 +4036,17 @@ SecurityManager *RexxActivation::getEffectiveSecurityManager()
         return manager;
     }
     return activity->getInstanceSecurityManager();
+}
+
+
+/**
+ * Retrieve a value from the instance local environment.
+ *
+ * @param name   The name of the .local object.
+ *
+ * @return The object stored at the given name.
+ */
+RexxObject *RexxActivation::getLocalEnvironment(RexxString *name)
+{
+    return activity->getLocalEnvironment(name);
 }

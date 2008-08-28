@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                            RexxConstants.h     */
+/* REXX Kernel                                            RexxConstants.hpp   */
 /*                                                                            */
 /* Global Object REXX constants                                               */
 /*                                                                            */
@@ -166,6 +166,7 @@ CHARCONSTANT(IMPORTEDPACKAGES, "IMPORTEDPACKAGES");
 CHARCONSTANT(IMPORTEDROUTINES, "IMPORTEDROUTINES");
 CHARCONSTANT(INDEX, "INDEX");
 CHARCONSTANT(INHERIT, "INHERIT");
+CHARCONSTANT(INITINSTANCE, "INITINSTANCE");
 CHARCONSTANT(INIT, "INIT");
 CHARCONSTANT(INITIALADDRESS, SYSINITIALADDRESS);
 CHARCONSTANT(INPUT, "INPUT");

@@ -48,6 +48,8 @@
 #include "ActivationApiContexts.hpp"
 #include "SysInterpreterInstance.hpp"
 
+class RexxDirectory;
+
 class InterpreterInstance : public RexxInternalObject
 {
 // the SysInterpreterInstance is essentially an extension of this class,
@@ -104,6 +106,8 @@ public:
     void setSecurityManager(RexxObject *m);
     RexxInstance *getInstanceContext() { return &context.instanceContext; }
     RexxThreadContext *getRootThreadContext();
+    RexxObject *getLocalEnvironment(RexxString *);
+    inline RexxDirectory *getLocal() { return localEnvironment; }
 
 
 protected:
@@ -120,11 +124,12 @@ protected:
     RexxList            *activeActivities;   // the activity table
     RexxList            *attachedActivities; // our list of attached vs. spawned activities
     RexxList            *spawnedActivities;  // activities this instance has spawned off
-    RexxIdentityTable     *globalReferences;   // our global reference table
+    RexxIdentityTable   *globalReferences;   // our global reference table
     RexxString          *defaultEnvironment; // the default address environment
     RexxString          *searchPath;         // additional Rexx search path
     RexxList            *searchExtensions;   // extensions to search on for external calls
     void                *applicationData;    // application specific data
+    RexxDirectory       *localEnvironment;   // the current local environment
 
     bool terminating;                // shutdown indicator
     bool terminated;                 // last thread cleared indicator

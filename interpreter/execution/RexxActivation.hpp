@@ -338,6 +338,7 @@ RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
    RexxSource       *getSourceObject();
    PackageClass     *getPackage();
    RexxObject       *getExecutableObject() { return executable; }
+   RexxObject       *getLocalEnvironment(RexxString *name);
 
    inline void              setCallType(RexxString *type) {this->settings.calltype = type; }
    inline void              pushBlock(RexxDoBlock *block) { block->setPrevious(this->dostack); this->dostack = block; }

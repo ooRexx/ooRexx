@@ -93,9 +93,10 @@ public:
     static void relinquish(RexxActivity *activity);
     static RexxActivity *getRootActivity();
     static RexxActivity *attachThread();
+    static RexxObject *getLocalEnvironment(RexxString *name);
+    static RexxDirectory *getLocal();
 
     static RexxActivity *currentActivity;   // the currently active thread
-    static RexxDirectory *localEnvironment; // the .local environment
 
     static inline void postTermination()
     {

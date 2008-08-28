@@ -209,7 +209,7 @@ RexxDirectoryObject RexxEntry GetLocalEnvironment(RexxThreadContext *c)
     ApiContext context(c);
     try
     {
-        return (RexxDirectoryObject)ActivityManager::localEnvironment;
+        return (RexxDirectoryObject)context.activity->getLocal();
     }
     catch (RexxNativeActivation *)
     {

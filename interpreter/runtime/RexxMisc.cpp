@@ -67,6 +67,6 @@ RexxDirectory *RexxLocal::local()
 {
                                        /* just return the current local     */
                                        /* environment                       */
-  return ActivityManager::localEnvironment;
+  return ActivityManager::getLocal();
 }
 

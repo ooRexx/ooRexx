@@ -98,6 +98,7 @@ server = .object~subclass('server')
 server_mdict = .table~new
 
 server_mdict~put(.methods~server_init, 'INIT')
+server_mdict~put(.methods~server_init_instance, 'INITINSTANCE')
 
 server~!define_methods(server_mdict)
 server~!rexxdefined                     /* Mark as unchangeable          */
@@ -403,20 +404,29 @@ nomethod:
 
 ::METHOD server_init
  /* initialize a server */
-  expose localenv
+  expose input output error
+ /* set system objects in the local environment */
+  input = .stream~new('STDIN')~~command('open nobuffer')
+  output = .stream~new('STDOUT')~~command('open nobuffer')
+  error = .stream~new('STDERR')~~command('open nobuffer')
+  self~initinstance
+
+::METHOD server_init_instance
+ /* initialize a server */
+  expose input output error
 
   .local~objectname = "The Local Directory"  -- give the local environment a nicer descriptive name.
 
   .local~setentry('LOCALSERVER', self)
 
  /* set system objects in the local environment */
-  .local~setentry('STDIN',.stream~new('STDIN')~~command('open nobuffer'))
+  .local~setentry('STDIN', input)
   .local~setentry('INPUT',.monitor~new(.stdin))
   .input~objectname = "The INPUT monitor"
-  .local~setentry('STDOUT',.stream~new('STDOUT')~~command('open nobuffer'))
+  .local~setentry('STDOUT', output)
   .local~setentry('OUTPUT',.monitor~new(.stdout))
   .output~objectname = "The OUTPUT monitor"
-  .local~setentry('STDERR',.stream~new('STDERR')~~command('open nobuffer'))
+  .local~setentry('STDERR', error)
   .local~setentry('ERROR', .monitor~new(.stderr))
   .error~objectname = "The ERROR monitor"
 

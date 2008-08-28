@@ -1851,12 +1851,13 @@ void RexxActivity::checkStackSpace()
 #endif
 }
 
-RexxObject *RexxActivity::localMethod()
+
+RexxDirectory *RexxActivity::getLocal()
 /******************************************************************************/
 /* Function:  Retrive the activities local environment                        */
 /******************************************************************************/
 {
-  return ActivityManager::localEnvironment; // just return the .local directory
+  return instance->getLocal();              // just return the .local directory
 }
 
 thread_id_t  RexxActivity::threadIdMethod()
@@ -2657,7 +2658,7 @@ void  RexxActivity::traceOutput(       /* write a line of trace information */
     if (this->callTraceExit(activation, line))
     {
         /* get the default output stream     */
-        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_ERRORNAME);
+        RexxObject *stream = getLocalEnvironment(OREF_ERRORNAME);
         /* have .local set up yet?           */
         if (stream != OREF_NULL && stream != TheNilObject)
         {
@@ -2681,7 +2682,7 @@ void RexxActivity::sayOutput(          /* write a line of say information   */
     if (this->callSayExit(activation, line))
     {
         /* get the default output stream     */
-        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_OUTPUT);
+        RexxObject *stream = getLocalEnvironment(OREF_OUTPUT);
         /* have .local set up yet?           */
         if (stream != OREF_NULL && stream != TheNilObject)
         {
@@ -2707,7 +2708,7 @@ RexxString *RexxActivity::traceInput(  /* read a line of trace input        */
     if (this->callDebugInputExit(activation, value))
     {
         /* get the input stream              */
-        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_INPUT);
+        RexxObject *stream = getLocalEnvironment(OREF_INPUT);
         if (stream != OREF_NULL)           /* have a stream?                    */
         {
             /* read from it                      */
@@ -2739,7 +2740,7 @@ RexxString *RexxActivity::pullInput(   /* read a line of pull input         */
     if (this->callPullExit(activation, value))
     {
         /* get the external data queue       */
-        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+        RexxObject *stream = getLocalEnvironment(OREF_REXXQUEUE);
         if (stream != OREF_NULL)           /* have a data queue?                */
         {
             /* pull from the queue               */
@@ -2782,7 +2783,7 @@ RexxString *RexxActivity::lineIn(
     if (this->callTerminalInputExit(activation, value))
     {
         /* get the input stream              */
-        RexxObject *stream = ActivityManager::localEnvironment->at(OREF_INPUT);
+        RexxObject *stream = getLocalEnvironment(OREF_INPUT);
         if (stream != OREF_NULL)           /* have a stream?                    */
         {
             /* read from it                      */
@@ -2814,7 +2815,7 @@ void RexxActivity::queue(              /* write a line to the queue         */
     if (this->callPushExit(activation, line, order))
     {
         /* get the default queue             */
-        RexxObject *targetQueue = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+        RexxObject *targetQueue = getLocalEnvironment(OREF_REXXQUEUE);
         if (targetQueue != OREF_NULL)      /* have a data queue?                */
         {
             /* pull from the queue               */
@@ -2997,4 +2998,17 @@ void RexxActivity::createExitContext(ExitContext &context, RexxNativeActivation 
 RexxString *RexxActivity::resolveProgramName(RexxString *name, RexxString *dir, RexxString *ext)
 {
     return instance->resolveProgramName(name, dir, ext);
+}
+
+
+/**
+ * Retrieve a value from the instance local environment.
+ *
+ * @param name   The name of the .local object.
+ *
+ * @return The object stored at the given name.
+ */
+RexxObject *RexxActivity::getLocalEnvironment(RexxString *name)
+{
+    return instance->getLocalEnvironment(name);
 }

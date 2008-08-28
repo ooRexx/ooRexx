@@ -94,6 +94,7 @@ public:
     static inline InterpreterInstance *createInterpreterInstance() { return createInterpreterInstance(NULL); }
     static bool terminateInterpreterInstance(InterpreterInstance *instance);
     static RexxString *getVersionNumber();
+    static void initLocal();
 
     static inline bool hasTimeSliceElapsed()
     {

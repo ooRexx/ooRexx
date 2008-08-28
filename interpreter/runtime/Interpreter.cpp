@@ -162,6 +162,21 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
 
 
 /**
+ * Initialize an instance .local object.
+ */
+void Interpreter::initLocal()
+{
+    // only do this if the local server has already been created.
+    if (localServer != OREF_NULL)
+    {
+        // this will insert the initial .local objects
+        ProtectedObject result;
+        localServer->messageSend(OREF_INITINSTANCE, 0, OREF_NULL, result);
+    }
+}
+
+
+/**
  * Terminate the global interpreter environment, shutting down
  * all of the interpreter instances that we can and releasing
  * the object heap memory.
@@ -462,7 +477,7 @@ RexxClass *Interpreter::findClass(RexxString *className)
 {
     RexxString *internalName = className->upper();   /* upper case it                     */
     /* send message to .local            */
-    RexxClass *classObject = (RexxClass *)(ActivityManager::localEnvironment->at(internalName));
+    RexxClass *classObject = (RexxClass *)(ActivityManager::getLocalEnvironment(internalName));
     if (classObject != OREF_NULL)
     {
         return classObject;
@@ -480,7 +495,7 @@ RexxClass *Interpreter::findClass(RexxString *className)
  */
 RexxString *Interpreter::getCurrentQueue()
 {
-    RexxObject *queue = ActivityManager::localEnvironment->at(OREF_REXXQUEUE);
+    RexxObject *queue = ActivityManager::getLocalEnvironment(OREF_REXXQUEUE);
 
     if (queue == OREF_NULL)              /* no queue?                         */
     {

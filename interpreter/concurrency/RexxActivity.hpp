@@ -199,10 +199,8 @@ typedef enum
    void        checkStackSpace();
    void        cleanupActivityResources();
    void        terminatePoolActivity();
-   RexxObject *localMethod();
    thread_id_t threadIdMethod();
    bool isThread(thread_id_t id) { return currentThread.equals(id); }
-   void setShvVal(RexxString *);
    inline bool isClauseExitUsed() { return clauseExitUsed; }
    void queryTrcHlt();
    bool callExit(RexxActivation * activation, const char *exitName, int function, int subfunction, void *exitbuffer);
@@ -313,6 +311,8 @@ typedef enum
    void createMethodContext(MethodContext &context, RexxNativeActivation *owner);
    void createCallContext(CallContext &context, RexxNativeActivation *owner);
    void createExitContext(ExitContext &context, RexxNativeActivation *owner);
+   RexxObject *getLocalEnvironment(RexxString *name);
+   RexxDirectory *getLocal();
 
    static void initializeThreadContext();
 

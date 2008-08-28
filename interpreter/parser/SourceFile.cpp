@@ -1588,7 +1588,7 @@ RexxClass *RexxSource::findClass(RexxString *className)
     }
 
     /* send message to .local            */
-    classObject = (RexxClass *)(ActivityManager::localEnvironment->at(internalName));
+    classObject = (RexxClass *)(ActivityManager::getLocalEnvironment(internalName));
     if (classObject != OREF_NULL)
     {
         return classObject;

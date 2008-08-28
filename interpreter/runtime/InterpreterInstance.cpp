@@ -46,6 +46,7 @@
 #include "ActivityManager.hpp"
 #include "RexxActivation.hpp"
 #include "PackageManager.hpp"
+#include "DirectoryClass.hpp"
 
 /**
  * Create a new Package object instance.
@@ -89,6 +90,7 @@ void InterpreterInstance::live(size_t liveMark)
     memory_mark(searchPath);
     memory_mark(searchExtensions);
     memory_mark(securityManager);
+    memory_mark(localEnvironment);
 }
 
 
@@ -104,6 +106,7 @@ void InterpreterInstance::liveGeneral(int reason)
     memory_mark_general(searchPath);
     memory_mark_general(searchExtensions);
     memory_mark_general(securityManager);
+    memory_mark_general(localEnvironment);
 }
 
 
@@ -134,7 +137,10 @@ void InterpreterInstance::initialize(RexxActivity *activity, RexxOption *options
 
     // associate the thread with this instance
     activity->setupAttachedActivity(this);
-
+    // create a local environment
+    localEnvironment = new_directory();
+    // now do the local initialization;
+    Interpreter::initLocal();
 }
 
 
@@ -668,4 +674,21 @@ bool InterpreterInstance::processOptions(RexxOption *options)
 RexxThreadContext *InterpreterInstance::getRootThreadContext()
 {
     return rootActivity->getThreadContext();
+}
+
+
+/**
+ * Retrieve a value from the instance local environment.
+ *
+ * @param name   The name of the .local object.
+ *
+ * @return The object stored at the given name.
+ */
+RexxObject *InterpreterInstance::getLocalEnvironment(RexxString *name)
+{
+    if (localEnvironment == OREF_NULL)
+    {
+        return TheNilObject;
+    }
+    return localEnvironment->at(name);
 }

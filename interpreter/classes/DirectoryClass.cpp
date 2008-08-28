@@ -600,7 +600,7 @@ RexxObject *RexxDirectory::atRexx(
                                          /* get as a string parameter         */
     _index = stringArgument(_index, ARG_ONE);
     // is this the .local object?  We'll need to check with the security manager
-    if ((RexxDirectory *)(ActivityManager::localEnvironment) == this)
+    if (ActivityManager::getLocal() == this)
     {
         SecurityManager *manager = ActivityManager::currentActivity->getEffectiveSecurityManager();
         temp = manager->checkLocalAccess(_index);
