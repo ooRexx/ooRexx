@@ -682,7 +682,9 @@ logical_t RexxEntry ObjectToNumber(RexxThreadContext *c, RexxObjectPtr o, wholen
     {
         wholenumber_t temp;
         // this uses the entire value range
-        if (Numerics::objectToWholeNumber((RexxObject *)o, temp, SSIZE_MAX, SSIZE_MIN))
+        // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms, 
+        // so we'll make things relative to SIZE_MAX. 
+        if (Numerics::objectToWholeNumber((RexxObject *)o, temp, SSIZE_MAX, (-SSIZE_MAX) - 1))
         {
             *n = (wholenumber_t)temp;
             return true;

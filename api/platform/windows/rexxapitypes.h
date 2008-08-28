@@ -77,7 +77,7 @@ typedef size_t (REXXENTRY *REXXPFN)();
 #define SIZE_MAX		(~((size_t)0))
 #endif
 #define SSIZE_MAX		((ssize_t)(SIZE_MAX >> 1))
-#define SSIZE_MIN		(~SSIZE_MAX)
+#define SSIZE_MIN		(~SSIZE_MAX - 1)
 
 #define UINTPTR_MAX     (~((uintptr_t)0))
 #define INTPTR_MAX      ((intptr_t)(UINTPTR_MAX >> 1))
