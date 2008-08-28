@@ -2144,7 +2144,7 @@ Output:
   raise syntax 88.918 array("time", time)
 
 
--- Create a DateTime object from a Iso date/time string.
+-- Create a DateTime object from a ISO date/time string.
 ::METHOD fromIsoDate class
   use strict arg time, offset=(time('O')/60000000)
   parse var time date 'T' time
@@ -2152,6 +2152,34 @@ Output:
 
   signal on syntax
   return self~new(date('F', date, 'S',,"-") + time("F", time, "L"), offset)
+
+
+-- Create a DateTime object from a UTC ISO date/time string.
+::METHOD fromUtcIsoDate class
+  use strict arg time
+  parse var time date 'T' time
+  numeric digits 18
+
+  signal on syntax
+  if time~right(1) == 'Z' then do
+      offset = 0
+      time = time~left(time~length - 1)
+  end
+  else if time~pos('+') > 0 then do
+      parse var time time '+' tz
+      offset = tz~left(2) * 60 + tz~right(2)
+  end
+  else if time~pos('-') > 0 then do
+      parse var time time '-' tz
+      offset = -(tz~left(2) * 60 + tz~right(2))
+  end
+
+  numeric digits 18
+  -- convert this time stamp to local time, then create the date time object
+  -- using the adjusted time and offset
+  time = date('F', date, 'S',,"-") + time("F", time, "L")
+  time = time + (offset *60000000)
+  return self~new(time, offset);
 
   syntax:
   raise syntax 88.918 array("date", date)
