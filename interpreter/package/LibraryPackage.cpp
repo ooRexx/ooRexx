@@ -277,8 +277,9 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
         }
 
         RoutineClass *routine = new RoutineClass(routineName, func);
-        // add this to our local table
-        routines->put(routine, target);
+        // add this to our local table.  Our local table needs to keep the original case,
+        // since those will be referenced by ::ROUTINE statements.
+        routines->put(routine, routineName);
 
         // add this to the global function pool
         PackageManager::addPackageRoutine(target, routine);
