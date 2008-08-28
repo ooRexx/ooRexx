@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Parser Source Files</h1>
+
+   <p>This directory contains the ooRexx syntax parser.  The code in this
+      directory is responsible for converting This code is responsible for
+      converting ooRexx programs into the exectuble format.
+      </p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <dl>
+      <dt><b>SourceFile.*</b></dt>
+      <dd>This is the main file for managing source translation.  This handles
+         the general structure of the file and the directives.  A lot of the
+         common parsing such as expression parsing is contained in here.
+         </dd>
+      <dt><b>InstructionParser.cpp*</b></dt>
+      <dd>Code for parsing most of the ooRexx keyword instructions.
+         </dd>
+      <dt><b>KeywordConstants.cpp*</b></dt>
+      <dd>Keyword tables identifying valid keyword tokens.
+         </dd>
+      <dt><b>Scanner.cpp*</b></dt>
+      <dd>The lexical scanner that identifies the basic ooRexx token types.
+         </dd>
+      <dt><b>Clause.*</b></dt>
+      <dd>A representation of an ooRexx clause, as a set of tokens.
+         </dd>
+      <dt><b>Token.*</b></dt>
+      <dd>A representation of an ooRexx lexical token.
+         </dd>
+   </dl>
+
+</body>
+</html>
+

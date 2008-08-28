@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter RexxClasses Source Files</h1>
+
+   <p>This directory contains the ooRexx code for core classes in rexx.img that
+      are written partially or fully in ooRexx itself.
+      </p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <dl>
+      <dt><b>CoreClasses.orx</b></dt>
+      <dd>This contains the main addtions to the core classes.  This file
+         contains fully constructed classes as well as additional methods that
+         are added to the C++ methods of the base classes.  The code contained
+         in here is saved in the rexx.img file.
+         </dd>
+      <dt><b>StreamClasses.orx*</b></dt>
+      <dd>The stream class definitions, plus the RexxQueue class.
+         </dd>
+      <dt><b>SystemMethods.orx*</b></dt>
+      <dd>This class is called during image build time to decide what platform
+         specific additional classes need to be included in the image.  This
+         just delegates processing to the appropriate platform specific file
+         based on the system name.
+         </dd>
+   </dl>
+
+</body>
+</html>
+
