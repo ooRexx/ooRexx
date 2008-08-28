@@ -365,7 +365,6 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(build_extensions_rxftp_dir)/rxftp.cls \
                   $(build_extensions_rxregexp_dir)/*.cls \
                   $(build_messages_dir)/*.xsl \
-                  $(build_messages_dir)/*.tpl \
                   $(build_messages_dir)/*.sgml \
                   $(build_messages_dir)/*.xml \
                   $(build_messages_dir)/*.src \
