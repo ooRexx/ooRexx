@@ -2220,8 +2220,8 @@ Output:
   if offset~isa(.TimeSpan) then
       offset = offset~totalMicroseconds
   else do
-     -- must be a whole number
-     .argUtil~validateWhole("offset", offset)
+     -- must be a whole number, but offset can be very big
+     .argUtil~validateWhole("offset", offset, 20)
      -- we need to convert from minutes to microseconds
      offset = offset * 60000000
   end
