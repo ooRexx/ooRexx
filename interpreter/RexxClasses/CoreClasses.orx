@@ -2360,7 +2360,7 @@ Output:
 
 -- add a datetime instance to a timespan instance, returning a new datetime.
 ::METHOD "+"
-  expose timestamp offset
+  expose timestamp
 
   numeric digits 18     -- need this to do math on the value
 
@@ -2368,7 +2368,7 @@ Output:
   if arg() == 0 then do
       -- this is pretty meaningless, but less so than
       -- prefix -.  We'll just make this a noop and return a copy of ourselves
-      return self~class~new(timestamp, offset)
+      return self~class~new(timestamp, self~offset)
   end
 
   -- ok, actually addition.  We require a timespan.  Trying to add
@@ -2380,7 +2380,7 @@ Output:
   -- When adding to a datatime, the result is a datetime.
   if other~isa(.timespan) then do
       -- combine the two intervals, using the same timezone value
-      return self~class~new(timestamp + other~totalMicroseconds, offset)
+      return self~class~new(timestamp + other~totalMicroseconds, self~offset)
   end
 
   raise syntax 93.948 array(1, "TimeSpan")
@@ -2391,7 +2391,7 @@ Output:
 -- will be February 29th in a non-leap year, the day is rolled back to the
 -- 28th.
 ::METHOD addYears
-  expose timestamp offset
+  expose timestamp
   use strict arg years
 
   .ArgUtil~validateWhole("years", years)
@@ -2420,38 +2420,38 @@ Output:
   end
 
   -- now adjust that component by the corresponding years
-  newDate = self~class~new(year, month, day, offset)
+  newDate = self~class~new(year, month, day, self~offset)
 
   -- and finally recombine with the time to get the adjusted timestamp
   return newDate + dayoffset
 
 -- Add a number of 7-day units to the datetime, returning a new instance
 ::METHOD addWeeks
-  expose timestamp offset
+  expose timestamp
   use strict arg weeks
 
   .ArgUtil~validateNumber("weeks", weeks)
 
   numeric digits 18
   -- return a new instance of DateTime
-  return self~class~new(trunc(timestamp + weeks * (7 * 24 * 3600 * 1000000)), offset)
+  return self~class~new(trunc(timestamp + weeks * (7 * 24 * 3600 * 1000000)), self~offset)
 
 
 -- Add a number of days to a datetime, returning a new datetime instance.
 ::METHOD addDays
-  expose timestamp offset
+  expose timestamp
   use strict arg days
 
   .ArgUtil~validateNumber("days", days)
 
   numeric digits 18
   -- return a new instance of DateTime
-  return self~class~new(trunc(timestamp + days * (24 * 3600 * 1000000)), offset)
+  return self~class~new(trunc(timestamp + days * (24 * 3600 * 1000000)), self~offset)
 
 
 -- Add a number of hours to a datetime, returning a new datetime instance.
 ::METHOD addHours
-  expose timestamp offset
+  expose timestamp
   use strict arg hours
 
   .ArgUtil~validateNumber("hours", hours)
@@ -2461,12 +2461,12 @@ Output:
   -- return a new instance of DateTime.
   -- NB, we trunk the value, as it's possible to add non-whole numbers of
   -- these units.
-  return self~class~new(trunc(timestamp + (hours * (3600 * 1000000))), offset)
+  return self~class~new(trunc(timestamp + (hours * (3600 * 1000000))), self~offset)
 
 
 -- Add a number of minutes to a datetime, returning a new datetime instance.
 ::METHOD addMinutes
-  expose timestamp offset
+  expose timestamp
   use strict arg minutes
 
   .ArgUtil~validateNumber("minutes", minutes)
@@ -2476,12 +2476,12 @@ Output:
   -- return a new instance of DateTime
   -- NB, we trunk the value, as it's possible to add non-whole numbers of
   -- these units.
-  return self~class~new(trunc(timestamp + (minutes * (60 * 1000000))), offset)
+  return self~class~new(trunc(timestamp + (minutes * (60 * 1000000))), self~offset)
 
 
 -- Add a number of seconds to a datetime, returning a new datetime instance.
 ::METHOD addSeconds
-  expose timestamp offset
+  expose timestamp
   use strict arg seconds
 
   .ArgUtil~validateNumber("seconds", seconds)
@@ -2491,12 +2491,12 @@ Output:
   -- return a new instance of DateTime
   -- NB, we trunk the value, as it's possible to add non-whole numbers of
   -- these units.
-  return self~class~new(trunc(timestamp + (seconds * 1000000)), offset)
+  return self~class~new(trunc(timestamp + (seconds * 1000000)), self~offset)
 
 
 -- Add a number of microseconds to a datetime, returning a new datetime instance.
 ::METHOD addMicroseconds
-  expose timestamp offset
+  expose timestamp
   use strict arg usecs
 
   numeric digits 18
@@ -2504,7 +2504,7 @@ Output:
   -- return a new instance of DateTime
   -- NB, we trunk the value, as it's possible to add non-whole numbers of
   -- these units.
-  return self~class~new(trunc(timestamp + usecs), offset)
+  return self~class~new(trunc(timestamp + usecs), self~offset)
 
 -- Format the datetime into ISO format, yyyy-mm-ddT00:00:00.000000
 ::METHOD isoDate
