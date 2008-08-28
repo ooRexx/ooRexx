@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Memory Source Files</h1>
+
+   <p>This directory contains the ooRexx memory manager and garbage collector.
+      Also included here is the code that manages building, saving, and
+      restoring of the initial rexx.img file and also support for saving
+      translated ooRexx program files (aka, "compiled").
+      </p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <dl>
+      <dt><b>RexxMemory.*</b></dt>
+      <dd>This the main memory manager/garbage collector.
+         </dd>
+      <dt><b>Setup.cpp</b></dt>
+      <dd>Portion of the RexxMemory class responsible for building the intial
+         ooRexx rexx.img file.  This is responsible for hand constructing the
+         initial set of ooRexx classes.
+         </dd>
+      <dt><b>MemorySegment.*</b></dt>
+      <dd>Object classes for managing each of the segments of memory requested
+         by RexxMemory.
+      <dt><b>DeadObject.*</b></dt>
+      <dd>A class for defining a block of memory existing in the free memory
+         chains.
+         </dd>
+      <dt><b>RexxInternalStack.*</b></dt>
+      <dd>A highly tuned stack that used for the memory hold object stack and
+         also for the mark stack during the garbage collection operations.
+         </dd>
+      <dt><b>ProtectedObject.*</b></dt>
+      <dd>A class for implementing the type-accurate support.  Protected object
+         is used to protect object instances that are not anchored within other
+         objects that are part of the root set.  ProtectedObject will ensure
+         these objects to not get garbage collected unexpectedly.
+         </dd>
+      <dt><b>RexxEnvelope.*</b></dt>
+      <dd>Support for serializing an ooRexx reference graph into a file.
+         </dd>
+      <dt><b>RexxSmartBuffer.*</b></dt>
+      <dd>An intelligent buffer class that can expand its size as necessary.
+         </dd>
+   </dl>
+
+</body>
+</html>
+

@@ -57,19 +57,19 @@ http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
             directives.</td>
       </tr>
       <tr>
-         <td valign="top"><a href="./memory">memory</a></td>
+         <td valign="top"><a href="./memory/files.html">memory</a></td>
          <td valign="top">The ooRexx garbage collector and memory manager.  The memory
             management functions include the initial image bootstrap
             processing.</td>
       </tr>
       <tr>
-         <td valign="top"><a href="./messages">messages</a></td>
+         <td valign="top"><a href="./messages/files.html">messages</a></td>
          <td valign="top">Platform-independent error message files.  The error message
             files are generated from a single source XML file using XSLT
             transforms.</td>
       </tr>
       <tr>
-         <td valign="top"><a href="./package">package</a></td>
+         <td valign="top"><a href="./package/files.html">package</a></td>
          <td valign="top">Source files for package/external library management
             subsystem.</td>
       </tr>
@@ -85,6 +85,30 @@ http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
             defined in terms of classes that must be implemented by each
             platform execution layer.  Each supported platform environment is
             contained in a subdirectory of platform.
+            </td>
+      </tr>
+      <tr>
+         <td valign="top"><a href="./RexxClasses">RexxClasses</a></td>
+         <td valign="top">The portion of the interpreter core that is
+            implemented on ooRexx code.  These files are loaded during the
+            rexximage build step, and are saved in ready-to-use form inside the
+            generated rexx.img file.
+            </td>
+      </tr>
+      <tr>
+         <td valign="top"><a href="./runtime">runtime</a></td>
+         <td valign="top">Core interpreter runtime support.  This is the portion
+            of code that defines the core interpreter and manages active
+            interpreter instances.  This is also where many of the core
+            interpreter data areas and constant definitions are located.
+            </td>
+      </tr>
+      <tr>
+         <td valign="top"><a href="./streamlibrary">streamlibrary</a></td>
+         <td valign="top">The native methods that implement the .Stream class.
+            These are implemented as external library methods so that
+            interpreter I/O does not block multi-threaded execution while
+            reading/writing.
             </td>
       </tr>
    </table>

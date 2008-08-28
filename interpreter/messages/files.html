@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Message Source Files</h1>
+
+   <p>This directory contains the ooRexx error message files.  The ooRexx error
+      messages are contained in a master xml file, and the header files,
+      platform-specific message files, and documentation are generated using
+      XSLT transforms.
+      </p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <dl>
+      <dt><b>rexxmsg.xml.*</b></dt>
+      <dd>This is the master error message files.  All new errors are defined in
+         here, and then the build process uses Xalan to generate any headers or
+         message files necessary to build the interpreter.  The generated files
+         are checked into SVN after an update.
+         </dd>
+      <dt><b>RexxErrorCodes.*</b></dt>
+      <dd>This is the header file that defines the symbolic error codes used for
+         raising ooRexx error conditions.
+         </dd>
+      <dt><b>RexxMessageNumbers.*</b></dt>
+      <dd>This is the header that creates symbolic error message numbers for
+         each of the ooRexx independent error conditions.  When adding new error
+         message numbers to rexxmsg.xsl, looking in this header file will let
+         you know the next available message number to use.
+         </dd>
+      <dt><b>RexxMessageTable.*</b></dt>
+      <dd>This is the header that defines a mapping from the ooRexx portable
+         error condition numbers to the corresponding error message number.
+         </dd>
+   </dl>
+
+</body>
+</html>
+
