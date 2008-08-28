@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Expression Source Files</h1>
+
+   <p>This directory contains files for different entities that are expression
+      execution elements.  That is, each of the term types that can appear in an
+      ooRexx expression are represented here.  Also included are the
+      implementations of the individual builtin functions.
+      </p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <dl>
+      <dt><b>BuiltinFunction.*</b></dt>
+      <dd>The implementations of the builtin functions.  Many of the builtins
+         are just stubs around the string methods.
+         </dd>
+      <dt><b>CommonExternalFunctions.cpp</b></dt>
+      <dd>Extension functions implemented as native library code.  These are the
+         functions that are common to all platforms (RxFuncAdd, etc.).
+         </dd>
+      <dt><b>ExpressionStack.*</b></dt>
+      <dd>Implements the activation expression stack.</dd>
+      <dt><b>ExpressionVariable.*</b></dt>
+      <dd>Implements expression variable terms.</dd>
+      <dt><b>ExpressionStem.*</b></dt>
+      <dd>Implements expression stem variable terms.</dd>
+      <dt><b>ExpressionStem.*</b></dt>
+      <dd>Implements expression stem variable terms.</dd>
+      <dt><b>ExpressionCompoundVariable.*</b></dt>
+      <dd>Implements expression compound variable terms.</dd>
+      <dt><b>ExpressionDotVariable.*</b></dt>
+      <dd>Implements expression dot variable terms.</dd>
+      <dt><b>IndirectVariableReference.*</b></dt>
+      <dd>Implements indirect variable references for things like
+          PROCEDURE EXPOSE.</dd>
+      <dt><b>ExpressionOperator.*</b></dt>
+      <dd>Implements expression operator invocation.</dd>
+      <dt><b>ExpressionLogicalOperator.*</b></dt>
+      <dd>Implements expression logical list operator invocation.</dd>
+      <dt><b>ExpressionFunction.*</b></dt>
+      <dd>Implements expression function calls.</dd>
+      <dt><b>ExpressionMessage.*</b></dt>
+      <dd>Implements expression message invocations.</dd>
+   </dl>
+
+</body>
+</html>
+

@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Execution Source Files</h1>
+
+   <p>This directory contains files used to implement the underlying ooRexx
+      execution model.  This includes elements of the call stack, ooRexx
+      variable management, and various code objects that implement
+      method/routine calls.
+      </p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <dl>
+      <dt><b>RexxActivation.*</b></dt>
+      <dd>RexxActivation represents a single stack frame context for running
+         ooRexx code.  The activation is the context in which ooRexx code
+         executes, holding the ooRexx variables, current settings (digits,
+         trace, etc.), as well as managing all of the source code functions.
+         </dd>
+      <dt><b>RexxNativeActivation.*</b></dt>
+      <dd>RexxNativeActivation represents a native code stack frame.  There will
+         be a RexxNativeActivation at the base of every RexxActivity call stack,
+         and additional native activations will be created for every call out to
+         library method or routine code.  The native activation acts as the
+         context used by the different context APIs to retrieve current
+         execution information.  The native activation is also responsible for
+         releasing exclusive interpreter access before callouts are made and
+         then reacquiring access upon return.
+         </dd>
+      <dt><b>RexxCode.*</b></dt>
+      <dd>RexxCode manages a single routine or method written in ooRexx code.
+         </dd>
+      <dt><b>CppCode.*</b></dt>
+      <dd>CppCode manages a methods written as native C++ methods.  This handles
+         the transition from ooRexx method invocations into the backing C++
+         method.
+         </dd>
+      <dt><b>NativeCode.*</b></dt>
+      <dd>NativeCode manages methods and routines written as external library
+         code.  The native code classes work with RexxNativeActivation to
+         orchestrate library callouts.
+         </dd>
+      <dt><b>RexxActivationStack.*</b></dt>
+      <dd>RexxActivationStack manages the execution stack for running ooRexx
+         code.  All operators, functions, etc. push intermediate results on to
+         the activation stack for the current running ooRexx context.
+         </dd>
+      <dt><b>RexxLocalVariables.*</b></dt>
+      <dd>RexxLocalVariables manages the the local variable pool for an active
+         RexxActivation instance.
+         </dd>
+      <dt><b>RexxVariableDictionary.*</b></dt>
+      <dd>RexxVariableDictionary implments a searchable dictionary of variables.
+         This class is also used by RexxObject to hold the object variables of
+         an object instance.
+         </dd>
+      <dt><b>RexxVariable.*</b></dt>
+      <dd>RexxVariable represents a single instance of an ooRexx variable.
+         </dd>
+   </dl>
+
+</body>
+</html>
+

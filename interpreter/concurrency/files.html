@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Concurrency Source Files</h1>
+
+   <p>This directory contains files used to implement the underlying ooRexx
+      thread management.  Many of the classes here a just supporting role
+      players used for initiating calls into the interpreter or callouts from
+      the interpreter.
+      </p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <dl>
+      <dt><b>ActivityManager.*</b></dt>
+      <dd>The master subsystem form managing threading issues.  ooRexx uses a
+         cooperative threading model, with only a single thread capable of
+         running interpreter code at one time.  The ActivityManager handles the
+         thread synchronization, scheduling, and dispatching needed to implement
+         the multi-threaded behavior.
+         </dd>
+      <dt><b>RexxActivity.*</b></dt>
+      <dd>A RexxActivity instance represents a thread of execution inside of an
+         interpreter instance.  Each active thread that the interpreter knows
+         about will have a RexxActivity object allocated for it.  The
+         RexxActivity manages the execution stack and also performs some memory
+         management functions on behalf of the memory subsystem.
+         </dd>
+   </dl>
+
+</body>
+</html>

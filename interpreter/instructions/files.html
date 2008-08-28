@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Instruction Source Files</h1>
+
+   <p>This directory contains files that implement each of the ooRexx keyword
+      instructions.  Generally, there will be a single set of source for each
+      implemented instruction.  For example, to find the code that implements
+      SAY, look in the SayInstruction.cpp and SayInstruction.hpp source files.
+      Also contained in here are classes for implementing some of the directives
+      instructions and a few support classes for some of the instructions.  Note
+      that for the most part, these classes handle on execution-time details of
+      the instructions.  Source code translation is managed in the parser
+      component.
+      </p>
+
+   <p>The following is a partial list of the files to be found in this
+       subdirectory.  Not all of the files are listed here as intent is
+       generally apparent from the name (e.g., SayInstruction is the SAY
+       instruction).</p>
+
+   <dl>
+      <dt><b>RexxInstruction.*</b></dt>
+      <dd>The implementations the base class for all ooRexx instructions.  Each
+         of the indidual instruction classes are subclass of RexxInstruction.
+         </dd>
+      <dt><b>RexxDirective.hpp</b></dt>
+      <dd>Defines a base class for directive instructions.  All directive
+         implementations will subclass RexxDirective.
+         </dd>
+      <dt><b>DoBlock.*</b></dt>
+      <dd>Runtime information about an active DO block.</dd>
+      <dt><b>EndIf.*</b></dt>
+      <dd>A synthetic instruction representing the end of an IF construct.
+          This is used to manage jumping to the end of conditions.</dd>
+      <dt><b>ParseTrigger.*</b></dt>
+      <dd>A parse instruction expresses the parse template as a list of trigger
+          elements that are processed at runtime.  There will be a single
+          ParseTrigger value for each parsing trigger in the template.</dd>
+      <dt><b>ParseTarget.*</b></dt>
+      <dd>Manages the runtime state of an active parse instruction.  This
+          manages the data to be parsed and all of the internal pointers used
+          during parsing..</dd>
+   </dl>
+
+</body>
+</html>
+
