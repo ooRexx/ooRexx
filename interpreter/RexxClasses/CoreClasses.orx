@@ -90,9 +90,6 @@ supplier_methods~put(.methods~supplier_supplier, 'SUPPLIER')
 .environment~setentry('INVERTINGCOMPARATOR', .invertingcomparator)
 .environment~setentry('ORDERABLE', .orderable)
 
-/* Call the system dependant routine to define addition methods */
-call 'SystemMethods.orx'           /* case sensitive           */
-
 say ('creating .!server and defining its instance methods')
 server = .object~subclass('server')
 server_mdict = .table~new

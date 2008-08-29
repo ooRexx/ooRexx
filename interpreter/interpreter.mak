@@ -185,7 +185,6 @@ ORYXKOBJ= $(OKCOBJS) $(OKAOBJS) $(OKPOBJS) $(OKIOBJS) $(OKSOBJS) $(OEPOBJS)\
 
 # define files copied by the make to the test directory
 ORXFILES=$(OR_OUTDIR)\CoreClasses.orx  $(OR_OUTDIR)\StreamClasses.orx \
-         $(OR_OUTDIR)\SystemMethods.orx  $(OR_OUTDIR)\WindowsMethods.orx \
 	 $(OR_OUTDIR)\PlatformObjects.orx $(OR_OUTDIR)\orexxole.cls
 
 #define critical header files for forcing recomp

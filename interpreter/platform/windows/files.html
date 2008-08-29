@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Object Rexx - Interpreter Source Files</title> <meta
+http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+
+   <h1>Open Object Rexx - Files</h1>
+
+   <h1>Interpreter Windows Platform Source Files</h1>
+
+   <p>This directory contains the native code for integrating the ooRexx
+      interpreter with the Windows platform.
+      </p>
+
+   <p>The following is a partial list of the files to be found in this subdirectory.</p>
+
+   <dl>
+      <dt><b>SystemInterpreter.*</b></dt>
+      <dd>This is the platform-specific analog to the Interpreter class.  This
+         is the holder of platform-specific global data and the definition point
+         for many of the methods that each platform needs to perform.  Many of
+         the methods defined in the header file are distributed around different
+         files specific to a particular need.
+         </dd>
+      <dt><b>SysInterpreterInstance.*</b></dt>
+      <dd>This is the platform-specific analog to the InterpreterInterpreter
+         class.  A SysInterpreterInstance object is embedded within the
+         InterpreterInstance class.  This provides additional services for
+         tailoring an interpreter instance.
+         </dd>
+      <dt><b>SystemInitialization.cpp</b></dt>
+      <dd>This is the Windows DLL load/unload stub for the rexx.dll library.
+         This drives the global interpreter initialization/termination
+         functions.
+         </dd>
+      <dt><b>PlatformDefinitions.h</b></dt>
+      <dd>The primary platform-specific header file for the interpreter.  This
+         pulls in any platform-specific includes, sets configuration variables
+         to indicate how certain subsystems should behave.
+         </dd>
+      <dt><b>ErrorMessage.cpp</b></dt>
+      <dd>Adapter code for retrieving error messages from the Windows dll
+         resources.
+         </dd>
+      <dt><b>FileSystem.cpp</b></dt>
+      <dd>The adapter for file system related operations.  The major operation
+         is implementing ooRexx file search order.
+         </dd>
+      <dt><b>SysFileSystem.cpp</b></dt>
+      <dd>A supporting object for managing platform-specific file system
+         operations.  This is finer-grained activities than FileSystem.cpp.
+         </dd>
+      <dt><b>MemorySupport.cpp</b></dt>
+      <dd>The adapter for memory related operations.  This allocates and
+         manages the memory segments used for the ooRexx object heap.
+         </dd>
+      <dt><b>RexxMain.cpp</b></dt>
+      <dd>The entry point for additional platform-specific APIs defined beyond
+         the portable set.
+         </dd>
+      <dt><b>SysActivity.cpp</b></dt>
+      <dd>A supporting object for managing platform-specific threading
+         operations.  A SysActivity object is embedded in each RexxActivity
+         instance.
+         </dd>
+      <dt><b>SystemCommands.cpp</b></dt>
+      <dd>Supporting methods for managing invocation for system commands.
+         </dd>
+      <dt><b>TimeSupport.cpp</b></dt>
+      <dd>Supporting methods for time and timer operations.
+         </dd>
+      <dt><b>UseridFunction.cpp</b></dt>
+      <dd>Supporting methods for retrieving user information.
+         </dd>
+      <dt><b>ValueFunction.cpp</b></dt>
+      <dd>Supporting methods implmenting the Value() BIF external environments.
+         </dd>
+      <dt><b>ValueFunction.cpp</b></dt>
+      <dd>Supporting methods implmenting the Value() BIF external environments.
+         </dd>
+   </dl>
+
+</body>
+</html>
+

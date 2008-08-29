@@ -662,10 +662,8 @@ librexx_la_SOURCES = $(classes_sources) \
                      $(runtime_sources) \
                      $(streamlibrary_sources)
 core_classes = $(build_rexxclasses_dir)/CoreClasses.orx \
-               $(build_rexxclasses_dir)/StreamClasses.orx \
-	       $(build_rexxclasses_dir)/SystemMethods.orx
-core_platform_classes = $(build_interpreter_platform_dir)/PlatformObjects.orx \
-                        $(build_interpreter_platform_dir)/UnixMethods.orx
+               $(build_rexxclasses_dir)/StreamClasses.orx
+core_platform_classes = $(build_interpreter_platform_dir)/PlatformObjects.orx
 #
 # Preprocessor flags for librexx.so
 #
