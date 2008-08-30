@@ -520,6 +520,10 @@ typedef struct
     RexxObjectPtr    (RexxEntry *UnsignedInt64ToObject)(RexxThreadContext *, uint64_t);
     logical_t        (RexxEntry *ObjectToInt64)(RexxThreadContext *, RexxObjectPtr, int64_t *);
     logical_t        (RexxEntry *ObjectToUnsignedInt64)(RexxThreadContext *, RexxObjectPtr, uint64_t *);
+    RexxObjectPtr    (RexxEntry *Int32ToObject)(RexxThreadContext *, int32_t);
+    RexxObjectPtr    (RexxEntry *UnsignedInt32ToObject)(RexxThreadContext *, uint32_t);
+    logical_t        (RexxEntry *ObjectToInt32)(RexxThreadContext *, RexxObjectPtr, int32_t *);
+    logical_t        (RexxEntry *ObjectToUnsignedInt32)(RexxThreadContext *, RexxObjectPtr, uint32_t *);
     logical_t        (RexxEntry *ObjectToUintptr)(RexxThreadContext *, RexxObjectPtr, uintptr_t *);
     logical_t        (RexxEntry *ObjectToIntptr)(RexxThreadContext *, RexxObjectPtr, intptr_t *);
     RexxObjectPtr    (RexxEntry *DoubleToObject)(RexxThreadContext *, double);
@@ -889,6 +893,22 @@ struct RexxThreadContext_
     logical_t ObjectToUnsignedInt64(RexxObjectPtr o, uint64_t *u)
     {
         return functions->ObjectToUnsignedInt64(this, o, u);
+    }
+    RexxObjectPtr Int32ToObject(int32_t i)
+    {
+        return functions->Int32ToObject(this, i);
+    }
+    RexxObjectPtr UnsignedInt32ToObject(uint32_t u)
+    {
+        return functions->UnsignedInt32ToObject(this, u);
+    }
+    logical_t ObjectToInt32(RexxObjectPtr o, int32_t *i)
+    {
+        return functions->ObjectToInt32(this, o, i);
+    }
+    logical_t ObjectToUnsignedInt32(RexxObjectPtr o, uint32_t *u)
+    {
+        return functions->ObjectToUnsignedInt32(this, o, u);
     }
     logical_t ObjectToUintptr(RexxObjectPtr o, uintptr_t *n)
     {
@@ -1423,6 +1443,22 @@ struct RexxMethodContext_
     logical_t ObjectToUnsignedInt64(RexxObjectPtr o, uint64_t *u)
     {
         return threadContext->ObjectToUnsignedInt64(o, u);
+    }
+    RexxObjectPtr Int32ToObject(int32_t i)
+    {
+        return threadContext->Int32ToObject(i);
+    }
+    RexxObjectPtr UnsignedInt32ToObject(uint32_t u)
+    {
+        return threadContext->UnsignedInt32ToObject(u);
+    }
+    logical_t ObjectToInt32(RexxObjectPtr o, int32_t *i)
+    {
+        return threadContext->ObjectToInt32(o, i);
+    }
+    logical_t ObjectToUnsignedInt32(RexxObjectPtr o, uint32_t *u)
+    {
+        return threadContext->ObjectToUnsignedInt32(o, u);
     }
     logical_t ObjectToUintptr(RexxObjectPtr o, uintptr_t *n)
     {
@@ -2003,6 +2039,22 @@ struct RexxCallContext_
     {
         return threadContext->ObjectToUnsignedInt64(o, u);
     }
+    RexxObjectPtr Int32ToObject(int32_t i)
+    {
+        return threadContext->Int32ToObject(i);
+    }
+    RexxObjectPtr UnsignedInt32ToObject(uint32_t u)
+    {
+        return threadContext->UnsignedInt32ToObject(u);
+    }
+    logical_t ObjectToInt32(RexxObjectPtr o, int32_t *i)
+    {
+        return threadContext->ObjectToInt32(o, i);
+    }
+    logical_t ObjectToUnsignedInt32(RexxObjectPtr o, uint32_t *u)
+    {
+        return threadContext->ObjectToUnsignedInt32(o, u);
+    }
     logical_t ObjectToUintptr(RexxObjectPtr o, uintptr_t *n)
     {
         return threadContext->ObjectToUintptr(o, n);
@@ -2579,6 +2631,22 @@ struct RexxExitContext_
     logical_t ObjectToUnsignedInt64(RexxObjectPtr o, uint64_t *u)
     {
         return threadContext->ObjectToUnsignedInt64(o, u);
+    }
+    RexxObjectPtr Int32ToObject(int32_t i)
+    {
+        return threadContext->Int32ToObject(i);
+    }
+    RexxObjectPtr UnsignedInt32ToObject(uint32_t u)
+    {
+        return threadContext->UnsignedInt32ToObject(u);
+    }
+    logical_t ObjectToInt32(RexxObjectPtr o, int32_t *i)
+    {
+        return threadContext->ObjectToInt32(o, i);
+    }
+    logical_t ObjectToUnsignedInt32(RexxObjectPtr o, uint32_t *u)
+    {
+        return threadContext->ObjectToUnsignedInt32(o, u);
     }
     logical_t ObjectToUintptr(RexxObjectPtr o, uintptr_t *n)
     {

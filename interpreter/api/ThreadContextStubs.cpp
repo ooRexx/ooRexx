@@ -682,8 +682,8 @@ logical_t RexxEntry ObjectToNumber(RexxThreadContext *c, RexxObjectPtr o, wholen
     {
         wholenumber_t temp;
         // this uses the entire value range
-        // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms, 
-        // so we'll make things relative to SIZE_MAX. 
+        // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms,
+        // so we'll make things relative to SIZE_MAX.
         if (Numerics::objectToWholeNumber((RexxObject *)o, temp, SSIZE_MAX, (-SSIZE_MAX) - 1))
         {
             *n = (wholenumber_t)temp;
@@ -695,6 +695,34 @@ logical_t RexxEntry ObjectToNumber(RexxThreadContext *c, RexxObjectPtr o, wholen
     {
     }
     return 0;
+}
+
+
+RexxObjectPtr RexxEntry Int32ToObject(RexxThreadContext *c, int32_t n)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.ret(Numerics::wholenumberToObject((wholenumber_t)n));
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
+
+RexxObjectPtr RexxEntry UnsignedInt32ToObject(RexxThreadContext *c, uint32_t n)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.ret(Numerics::stringsizeToObject((uint32_t)n));
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
 }
 
 
@@ -717,6 +745,51 @@ logical_t RexxEntry ObjectToUnsignedNumber(RexxThreadContext * c, RexxObjectPtr 
     }
     return 0;
 }
+
+
+logical_t RexxEntry ObjectToInt32(RexxThreadContext *c, RexxObjectPtr o, int32_t *n)
+{
+    ApiContext context(c);
+    try
+    {
+        wholenumber_t temp;
+        // this uses the entire value range
+        // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms,
+        // so we'll make things relative to SIZE_MAX.
+        if (Numerics::objectToWholeNumber((RexxObject *)o, temp, INT32_MAX, INT32_MIN))
+        {
+            *n = (int32_t)temp;
+            return true;
+        }
+        return false;
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return 0;
+}
+
+
+logical_t RexxEntry ObjectToUnsignedInt32(RexxThreadContext * c, RexxObjectPtr o, uint32_t *n)
+{
+    ApiContext context(c);
+    try
+    {
+        stringsize_t temp;
+        // this uses the entire value range
+        if (Numerics::objectToStringSize((RexxObject *)o, temp, UINT32_MAX))
+        {
+            *n = (uint32_t)temp;
+            return true;
+        }
+        return false;
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return 0;
+}
+
 
 RexxObjectPtr RexxEntry Int64ToObject(RexxThreadContext *c, int64_t n)
 {
@@ -1806,6 +1879,10 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     UnsignedInt64ToObject,
     ObjectToInt64,
     ObjectToUnsignedInt64,
+    Int32ToObject,
+    UnsignedInt32ToObject,
+    ObjectToInt32,
+    ObjectToUnsignedInt32,
     ObjectToUintptr,
     ObjectToIntptr,
     DoubleToObject,
