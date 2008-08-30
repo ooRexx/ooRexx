@@ -5138,7 +5138,7 @@ bool connectEventHandler(RexxMethodContext *context, IConnectionPointContainer *
         hResult = pConnectionPoint->Advise((IUnknown*) pEventHandler, &dwCookie);
         if ( hResult == S_OK )
         {
-            context->SetObjectVariable("!EVENTHANDLERCOOKIE", context->UnsignedNumberToObject(dwCookie));
+            context->SetObjectVariable("!EVENTHANDLERCOOKIE", context->UnsignedInt32ToObject(dwCookie));
             context->SetObjectVariable("!CONNECTIONPOINT", context->NewPointer(pConnectionPoint));
         }
         else
@@ -5630,7 +5630,7 @@ void GUIDFromTypeInfo(ITypeInfo *pTypeInfo, GUID *guid)
 bool maybeCreateEventHandler(RexxMethodContext * context, OLEObjectEvent **ppHandler,
                              IConnectionPointContainer **ppContainer, RexxObjectPtr self)
 {
-    RexxStringObject   value;
+    RexxObjectPtr   value;
     IDispatch      *pDispatch = NULL;
     ITypeInfo      *pTypeInfo = NULL;
     ITypeInfo      *pEventTypeInfo = NULL;
@@ -5649,10 +5649,10 @@ bool maybeCreateEventHandler(RexxMethodContext * context, OLEObjectEvent **ppHan
     {
         getCachedClassInfo(context, &pClsInfo, &pTypeInfo);
 
-        value = (RexxStringObject)context->GetObjectVariable("!CLSID");
+        value = context->GetObjectVariable("!CLSID");
         if (value != NULLOBJECT)
         {
-            getClsIDFromString(context->StringData(value), &clsID);
+            getClsIDFromString(context->ObjectToStringValue(value), &clsID);
         }
 
         if ( pClsInfo != NULL )
@@ -5745,7 +5745,8 @@ void disconnectEventHandler(RexxMethodContext *context)
         RexxObjectPtr cookie = context->GetObjectVariable("!EVENTHANDLERCOOKIE");
         if ( cookie != NULLOBJECT )
         {
-            dwCookie = (DWORD)context->IntegerValue((RexxIntegerObject)cookie);
+
+            context->ObjectToUnsignedInt32(cookie, (uint32_t *)&dwCookie);
         }
 
         if (pConnectionPoint != NULL) {
@@ -5753,8 +5754,8 @@ void disconnectEventHandler(RexxMethodContext *context)
           pConnectionPoint->Release();            // free cp
         }
 
-        context->SetObjectVariable("!CONNECTIONPOINT", NULLOBJECT);
-        context->SetObjectVariable("!EVENTHANDLERCOOKIE", NULLOBJECT);
+        context->DropObjectVariable("!CONNECTIONPOINT");
+        context->DropObjectVariable("!EVENTHANDLERCOOKIE");
     }
 }
 

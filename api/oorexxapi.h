@@ -241,7 +241,6 @@ class _RexxStringObject : public _RexxObjectPtr {};
 class _RexxBufferStringObject : public _RexxStringObject {};
 class _RexxArrayObject : public _RexxObjectPtr {};
 class _RexxBufferObject : public _RexxObjectPtr {};
-class _RexxIntegerObject : public _RexxObjectPtr {};
 class _RexxPointerObject : public _RexxObjectPtr {};
 class _RexxMethodObject : public _RexxObjectPtr {};
 class _RexxRoutineObject : public _RexxObjectPtr {};
@@ -257,7 +256,6 @@ typedef _RexxStringObject *RexxStringObject;
 typedef _RexxBufferStringObject *RexxBufferStringObject;
 typedef _RexxArrayObject *RexxArrayObject;
 typedef _RexxBufferObject *RexxBufferObject;
-typedef _RexxIntegerObject *RexxIntegerObject;
 typedef _RexxPointerObject *RexxPointerObject;
 typedef _RexxMethodObject *RexxMethodObject;
 typedef _RexxRoutineObject *RexxRoutineObject;
@@ -274,7 +272,6 @@ struct _RexxObjectPtr;
 struct _RexxStringObject;
 struct _RexxArrayObject;
 struct _RexxBufferObject;
-struct _RexxIntegerObject;
 struct _RexxPointerObject;
 struct _RexxMethodObject;
 struct _RexxRoutineObject;
@@ -290,7 +287,6 @@ typedef struct _RexxStringObject *RexxStringObject;
 typedef struct _RexxBufferStringObject *RexxBufferStringObject;
 typedef struct _RexxArrayObject *RexxArrayObject;
 typedef struct _RexxBufferObject *RexxBufferObject;
-typedef struct _RexxIntegerObject *RexxIntegerObject;
 typedef struct _RexxPointerObject *RexxPointerObject;
 typedef struct _RexxMethodObject *RexxMethodObject;
 typedef struct _RexxRoutineObject *RexxRoutineObject;
@@ -574,10 +570,6 @@ typedef struct
     size_t            (RexxEntry *BufferLength)(RexxThreadContext *, RexxBufferObject);
     RexxBufferObject  (RexxEntry *NewBuffer)(RexxThreadContext *, size_t);
     logical_t         (RexxEntry *IsBuffer)(RexxThreadContext *, RexxObjectPtr);
-
-    wholenumber_t        (RexxEntry *IntegerValue)(RexxThreadContext *, RexxIntegerObject);
-    RexxIntegerObject (RexxEntry *NewInteger)(RexxThreadContext *, wholenumber_t);
-    logical_t         (RexxEntry *IsInteger)(RexxThreadContext *, RexxObjectPtr);
 
     POINTER           (RexxEntry *PointerValue)(RexxThreadContext *, RexxPointerObject);
     RexxPointerObject (RexxEntry *NewPointer)(RexxThreadContext *, POINTER);
@@ -1108,19 +1100,6 @@ struct RexxThreadContext_
         return functions->IsBuffer(this, o);
     }
 
-    wholenumber_t IntegerValue(RexxIntegerObject io)
-    {
-        return functions->IntegerValue(this, io);
-    }
-    RexxIntegerObject NewInteger(wholenumber_t n)
-    {
-        return functions->NewInteger(this, n);
-    }
-    logical_t IsInteger(RexxObjectPtr o)
-    {
-        return functions->IsInteger(this, o);
-    }
-
     POINTER PointerValue(RexxPointerObject po)
     {
         return functions->PointerValue(this, po);
@@ -1644,19 +1623,6 @@ struct RexxMethodContext_
     logical_t IsBuffer(RexxObjectPtr o)
     {
         return threadContext->IsBuffer(o);
-    }
-
-    wholenumber_t IntegerValue(RexxIntegerObject io)
-    {
-        return threadContext->IntegerValue(io);
-    }
-    RexxIntegerObject NewInteger(wholenumber_t n)
-    {
-        return threadContext->NewInteger(n);
-    }
-    logical_t IsInteger(RexxObjectPtr o)
-    {
-        return threadContext->IsInteger(o);
     }
 
     POINTER PointerValue(RexxPointerObject po)
@@ -2241,19 +2207,6 @@ struct RexxCallContext_
         return threadContext->IsBuffer(o);
     }
 
-    wholenumber_t IntegerValue(RexxIntegerObject io)
-    {
-        return threadContext->IntegerValue(io);
-    }
-    RexxIntegerObject NewInteger(wholenumber_t n)
-    {
-        return threadContext->NewInteger(n);
-    }
-    logical_t IsInteger(RexxObjectPtr o)
-    {
-        return threadContext->IsInteger(o);
-    }
-
     POINTER PointerValue(RexxPointerObject po)
     {
         return threadContext->PointerValue(po);
@@ -2832,19 +2785,6 @@ struct RexxExitContext_
     logical_t IsBuffer(RexxObjectPtr o)
     {
         return threadContext->IsBuffer(o);
-    }
-
-    wholenumber_t IntegerValue(RexxIntegerObject io)
-    {
-        return threadContext->IntegerValue(io);
-    }
-    RexxIntegerObject NewInteger(wholenumber_t n)
-    {
-        return threadContext->NewInteger(n);
-    }
-    logical_t IsInteger(RexxObjectPtr o)
-    {
-        return threadContext->IsInteger(o);
     }
 
     POINTER PointerValue(RexxPointerObject po)

@@ -1432,45 +1432,6 @@ logical_t RexxEntry IsBuffer(RexxThreadContext *c, RexxObjectPtr o)
     return false;
 }
 
-wholenumber_t RexxEntry IntegerValue(RexxThreadContext *c, RexxIntegerObject o)
-{
-    ApiContext context(c);
-    try
-    {
-        return ((RexxInteger *)o)->wholeNumber();
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return 0;
-}
-
-RexxIntegerObject RexxEntry NewInteger(RexxThreadContext *c, wholenumber_t n)
-{
-    ApiContext context(c);
-    try
-    {
-        return (RexxIntegerObject)context.ret(new_integer(n));
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return NULLOBJECT;
-}
-
-logical_t RexxEntry IsInteger(RexxThreadContext *c, RexxObjectPtr o)
-{
-    ApiContext context(c);
-    try
-    {
-        return isInteger((RexxObject *)o);
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return false;
-}
-
 POINTER RexxEntry PointerValue(RexxThreadContext *c, RexxPointerObject o)
 {
     ApiContext context(c);
@@ -1933,10 +1894,6 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     BufferLength,
     NewBuffer,
     IsBuffer,
-
-    IntegerValue,
-    NewInteger,
-    IsInteger,
 
     PointerValue,
     NewPointer,

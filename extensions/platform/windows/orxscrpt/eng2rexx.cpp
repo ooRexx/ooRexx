@@ -88,10 +88,10 @@ int RexxEntry RexxRetrieveVariables(RexxExitContext *, int ExitNumber, int Subfu
         // now iterate through the directory, saving the list of routines (and the names).
         while (context->SupplierAvailable(supplier))
         {
-            RexxStringObject name = (RexxStringObject)context->SupplierIndex(supplier);
+            RexxObjectPtr name = context->SupplierIndex(supplier);
             RexxObjectPtr value = context->SupplierValue(supplier);
             context->RequestGlobalReference(value);
-            CurrentEngine->insertVariable(context->StringData(name), value);
+            CurrentEngine->insertVariable(context->ObjectToStringValue(name), value);
         }
     }
 
@@ -792,9 +792,9 @@ void OrxScript::processScriptFragment(RexxThreadContext *context, int locationOf
     while (context->SupplierAvailable(supplier))
     {
         PRCB  functionBlock = NULL;
-        RexxStringObject name = (RexxStringObject)context->SupplierIndex(supplier);
+        RexxObjectPtr name = context->SupplierIndex(supplier);
         RexxRoutineObject routine = (RexxRoutineObject)context->SupplierValue(supplier);
-        const char *functionName = context->StringData(name);
+        const char *functionName = context->ObjectToStringValue(name);
 
         hResult = BuildRCB(RCB::ParseScript, NULL, dwFlags, locationOffset, routine, &functionBlock);
         if (FAILED(hResult))

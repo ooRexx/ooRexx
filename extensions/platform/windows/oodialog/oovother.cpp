@@ -2980,10 +2980,10 @@ const char *comctl32VersionName(DWORD id)
 POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
 {
     CSTRING value = "";
-    RexxStringObject rxString = (RexxStringObject)context->SendMessage0(obj, name);
+    RexxObjectPtr rxString = context->SendMessage0(obj, name);
     if ( rxString != NULLOBJECT )
     {
-        value = context->StringData(rxString);
+        value = context->ObjectToStringValue(rxString);
     }
     return string2pointer(value);
 }
@@ -2997,9 +2997,9 @@ DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
          // similar to old 98.921
 
         TCHAR buf[128];
-        RexxStringObject name = (RexxStringObject)context->SendMessage0(dlg, "OBJECTNAME");
+        RexxObjectPtr name = context->SendMessage0(dlg, "OBJECTNAME");
         _snprintf(buf, sizeof(buf), "Could not retrieve the dialog administration block information for %s",
-                  context->StringData(name));
+                  context->ObjectToStringValue(name));
 
         context->RaiseException1(Rexx_Error_Execution_user_defined, context->NewStringFromAsciiz(buf));
     }
@@ -3062,14 +3062,14 @@ inline void outOfMemoryException(RexxMethodContext *c)
 
 inline void *wrongClassException(RexxMethodContext *c, int pos, const char *n)
 {
-    c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->NewInteger(pos), c->NewStringFromAsciiz(n));
+    c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->NumberToObject(pos), c->NewStringFromAsciiz(n));
     return NULL;
 }
 
 void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, RexxObjectPtr actual)
 {
     RexxArrayObject a = c->NewArray(3);
-    c->ArrayAppend(a, c->NewInteger(pos));
+    c->ArrayAppend(a, c->NumberToObject(pos));
     c->ArrayAppend(a, c->NewStringFromAsciiz(list));
     c->ArrayAppend(a, actual);
 
@@ -3149,10 +3149,10 @@ RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long
     if ( RectClass != NULL )
     {
         RexxArrayObject args = context->NewArray(4);
-        context->ArrayAppend(args, context->NewInteger(l));
-        context->ArrayAppend(args, context->NewInteger(t));
-        context->ArrayAppend(args, context->NewInteger(r));
-        context->ArrayAppend(args, context->NewInteger(b));
+        context->ArrayAppend(args, context->NumberToObject(l));
+        context->ArrayAppend(args, context->NumberToObject(t));
+        context->ArrayAppend(args, context->NumberToObject(r));
+        context->ArrayAppend(args, context->NumberToObject(b));
 
         rect = context->SendMessage(RectClass, "NEW", args);
     }
@@ -3174,7 +3174,7 @@ RexxObjectPtr rxNewPoint(RexxMethodContext *context, long x, long y)
     RexxClassObject PointClass = context->FindContextClass("POINT");
     if ( PointClass != NULL )
     {
-        point = context->SendMessage2(PointClass, "NEW", context->NewInteger(x), context->NewInteger(y));
+        point = context->SendMessage2(PointClass, "NEW", context->NumberToObject(x), context->NumberToObject(y));
     }
     return point;
 }
@@ -3272,7 +3272,7 @@ void oodSetSysErrCode(RexxMethodContext *context, DWORD code)
     RexxDirectoryObject local = context->GetLocalEnvironment();
     if ( local != NULLOBJECT )
     {
-        context->DirectoryPut(local, context->NewInteger(code), "SYSTEMERRORCODE");
+        context->DirectoryPut(local, context->NumberToObject(code), "SYSTEMERRORCODE");
     }
 }
 void oodSetSysErrCode(RexxMethodContext *context)
@@ -3310,11 +3310,7 @@ int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObje
     wholenumber_t result = -1;
     char *symbol = NULL;
 
-    if ( context->IsInteger(id) )
-    {
-        result = context->IntegerValue((RexxIntegerObject)id);
-    }
-    else if ( context->IsString(id) )
+    if (!context->ObjectToNumber(id, &result) )
     {
         RexxDirectoryObject constDir = (RexxDirectoryObject)context->SendMessage0(dlg, "CONSTDIR");
         if ( constDir != NULLOBJECT )
@@ -3325,7 +3321,7 @@ int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObje
              * But, I guess we need to preserve that.
              */
 
-            symbol = strdupupr_nospace(context->StringData((RexxStringObject)id));
+            symbol = strdupupr_nospace(context->ObjectToStringValue(id));
             if ( symbol == NULL )
             {
                 outOfMemoryException(context);
@@ -3335,14 +3331,7 @@ int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObje
             RexxObjectPtr item = context->DirectoryAt(constDir, symbol);
             if ( item != NULLOBJECT )
             {
-                if ( context->IsInteger(item) )
-                {
-                    result = context->IntegerValue((RexxIntegerObject)item);
-                }
-                else if ( context->IsString(item) )
-                {
-                    context->ObjectToNumber(item, &result);
-                }
+                 context->ObjectToNumber(item, &result);
             }
         }
     }
@@ -3508,7 +3497,7 @@ RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t
     }
     else
     {
-        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NewInteger(3));
+        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NumberToObject(3));
         return 0;
     }
 
@@ -3531,7 +3520,7 @@ RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_
     }
     else
     {
-        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NewInteger(3));
+        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NumberToObject(3));
         return 0;
     }
 
@@ -4347,11 +4336,11 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
         {
             context->RaiseException1(
                 Rexx_Error_Incorrect_method_array_nostring,
-                context->NewInteger(i + 1));
+                context->NumberToObject(i + 1));
             return NULL;
         }
 
-        const char *file = context->StringData((RexxStringObject)f);
+        const char *file = context->ObjectToStringValue(f);
 
         hBitmap = LoadImage(NULL, file, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
@@ -4615,7 +4604,7 @@ RexxMethod0(logical_t, dlgutil_init)
     if ( local != NULLOBJECT )
     {
         context->DirectoryPut(local, context->NewPointer(NULL), "NULLPOINTER");
-        context->DirectoryPut(local, context->NewInteger(0), "SYSTEMERRORCODE");
+        context->DirectoryPut(local, context->NumberToObject(0), "SYSTEMERRORCODE");
     }
 
     return true;
@@ -4662,18 +4651,17 @@ RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, O
 
     if ( count != 3 )
     {
-        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NewInteger(3));
-        return 0;
-    }
-
-    if ( ! context->IsInteger(r) )
-    {
-        context->RaiseException2(Rexx_Error_Incorrect_method_whole, context->NewInteger(1), r);
+        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NumberToObject(3));
         return 0;
     }
 
     uint32_t red;
-    context->ObjectToUnsignedNumber(r, (size_t *)&red);
+    if (!context->ObjectToUnsignedNumber(r, (size_t *)&red))
+    {
+        context->RaiseException2(Rexx_Error_Incorrect_method_whole, context->NumberToObject(1), r);
+        return 0;
+    }
+
     return RGB((uint8_t)red, g, b);
 }
 
