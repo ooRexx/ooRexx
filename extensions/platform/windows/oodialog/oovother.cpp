@@ -3307,10 +3307,10 @@ int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObje
         return OOD_ID_EXCEPTION;
     }
 
-    wholenumber_t result = -1;
+    int result = -1;
     char *symbol = NULL;
 
-    if (!context->ObjectToNumber(id, &result) )
+    if ( ! context->ObjectToInt32(id, &result) )
     {
         RexxDirectoryObject constDir = (RexxDirectoryObject)context->SendMessage0(dlg, "CONSTDIR");
         if ( constDir != NULLOBJECT )
@@ -3331,7 +3331,7 @@ int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObje
             RexxObjectPtr item = context->DirectoryAt(constDir, symbol);
             if ( item != NULLOBJECT )
             {
-                 context->ObjectToNumber(item, &result);
+                 context->ObjectToInt32(item, &result);
             }
         }
     }
@@ -3344,7 +3344,7 @@ int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObje
         return OOD_ID_EXCEPTION;
     }
 
-    return (int)result;
+    return result;
 }
 
 /**
@@ -4369,11 +4369,9 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
 }
 
 /* This method is used as a convenient way to test code. */
-RexxMethod2(RexxStringObject, bc_test, OPTIONAL_RexxObjectPtr, dlg, OPTIONAL_CSTRING, id)
+RexxMethod2(int, bc_test, RexxObjectPtr, dlg, RexxObjectPtr, id)
 {
-    char buf[64];
-    strcpy(buf, "This is my name: Mark");
-    return context->NewStringFromAsciiz(buf);
+    return 0;
 }
 
 /**
