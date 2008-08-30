@@ -50,7 +50,7 @@ BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, ULONG, ULONG, ULONG, ULONG, CSTR
 char *strdupupr_nospace(const char *str);
 void systemServiceException(RexxMethodContext *context, char *msg);
 bool requiredClass(RexxMethodContext *, RexxObjectPtr, const char *, int);
-inline bool rxArgOmitted(RexxMethodContext * context, size_t index);
+bool rxArgOmitted(RexxMethodContext * context, size_t index);
 POINTER rxGetPointerAttribute(RexxMethodContext *, RexxObjectPtr, CSTRING);
 DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 

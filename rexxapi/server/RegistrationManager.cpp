@@ -88,9 +88,9 @@ RegistrationData::RegistrationData(const char *n, SessionID s, ServiceRegistrati
  */
 RegistrationData::~RegistrationData()
 {
-    delete [] name;
-    delete [] moduleName;
-    delete [] procedureName;
+    delete [] (void *)name;
+    delete [] (void *)moduleName;
+    delete [] (void *)procedureName;
 
     SessionCookie *cookie = references;
     while (cookie != NULL)

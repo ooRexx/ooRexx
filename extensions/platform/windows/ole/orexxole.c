@@ -3243,7 +3243,7 @@ RexxMethod3(RexxObjectPtr,                // Return type
     ITypeInfo      *pTypeInfo = NULL;
     MEMBERID        MemId;
     POLECLASSINFO   pClsInfo = NULL;
-
+    RexxClassObject variantClass = NULL;
     size_t          iArgCount;
     unsigned short  wFlags = 0;
     DISPPARAMS      dp;
@@ -3489,7 +3489,7 @@ RexxMethod3(RexxObjectPtr,                // Return type
                                     wFlags, &dp, NULL, &sExc, &uArgErr);
     }
     // needed for instance of tests
-    RexxClassObject variantClass = context->FindClass("OLEVARIANT");
+    variantClass = context->FindClass("OLEVARIANT");
 
     for (i = 0; i < dp.cArgs; i++)
     {

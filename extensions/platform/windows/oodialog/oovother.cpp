@@ -3012,7 +3012,7 @@ inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr self)
     return (HWND)rxGetPointerAttribute(context, self, "HWND");
 }
 
-inline bool rxArgOmitted(RexxMethodContext * context, size_t index)
+bool rxArgOmitted(RexxMethodContext * context, size_t index)
 {
     return context->ArrayHasIndex(context->GetArguments(), index) == 0 ? true : false;
 }
