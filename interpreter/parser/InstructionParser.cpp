@@ -193,6 +193,7 @@ RexxInstruction *RexxSource::assignmentNew(
  */
 RexxInstruction *RexxSource::assignmentOpNew(RexxToken *target, RexxToken *operation)
 {
+    ProtectedObject p(target);
     this->needVariable(target);     // make sure this is a variable
     // we require an expression for the additional part, which is required
     RexxObject *_expression = this->expression(TERM_EOC);
@@ -1248,6 +1249,7 @@ RexxInstruction *RexxSource::messageAssignmentNew(
 RexxInstruction *RexxSource::messageAssignmentOpNew(RexxExpressionMessage *_message, RexxToken *operation, RexxObject *_expression)
 {
     ProtectedObject p(_message);        // protect this
+    ProtectedObject p2(_expression);    // also need to protect this portion
     // make a copy of the message term for use in the expression
     RexxObject *retriever = _message->copy();
 
