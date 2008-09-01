@@ -90,6 +90,15 @@ supplier_methods~put(.methods~supplier_supplier, 'SUPPLIER')
 .environment~setentry('INVERTINGCOMPARATOR', .invertingcomparator)
 .environment~setentry('ORDERABLE', .orderable)
 
+/* There are only 2 possibilities for end of line at this time. */
+sysIntName = .system~internalname~translate
+if 'WINDOWS' = sysIntName | 'WINDOWSNT' = sysIntName | 'WINDOWS95' = sysIntName then do
+    .environment~setentry('ENDOFLINE', '0d0a'x)
+end
+else do
+    .environment~setentry('ENDOFLINE', '0a'x)
+end
+
 say ('creating .!server and defining its instance methods')
 server = .object~subclass('server')
 server_mdict = .table~new
