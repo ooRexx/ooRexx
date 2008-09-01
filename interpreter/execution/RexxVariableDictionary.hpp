@@ -105,7 +105,7 @@ class RexxVariableDictionary : public RexxInternalObject {
     }
 
   void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value);
-  RexxSupplier *getAllVariables();
+  RexxDirectory *getAllVariables();
   inline void remove(RexxString *n) { contents->remove(n); }
 
   RexxVariable *nextVariable(RexxNativeActivation *);

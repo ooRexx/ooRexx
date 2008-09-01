@@ -719,6 +719,7 @@ CPPM(RexxStem::remove),
 CPPM(RexxStem::index),
 CPPM(RexxStem::hasItem),
 CPPM(RexxStem::removeItem),
+CPPM(RexxStem::toDirectory),
 
 CPPM(RexxStem::newRexx),
 

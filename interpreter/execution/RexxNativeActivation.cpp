@@ -876,8 +876,8 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
         {
             wholenumber_t temp = 0;
             // convert and copy                  */
-            // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms, 
-            // so we'll make things relative to SIZE_MAX. 
+            // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms,
+            // so we'll make things relative to SIZE_MAX.
             bool success = Numerics::objectToWholeNumber(o, temp, SSIZE_MAX, (-SSIZE_MAX) - 1);
             value->value.value_wholenumber_t = (wholenumber_t)temp;
             return success;
@@ -2405,7 +2405,7 @@ void RexxNativeActivation::dropContextVariable(const char *name)
 }
 
 
-RexxSupplier *RexxNativeActivation::getAllContextVariables()
+RexxDirectory *RexxNativeActivation::getAllContextVariables()
 /******************************************************************************/
 /* Function:  Retriev a list of all variables in the current context.         */
 /******************************************************************************/

@@ -55,6 +55,7 @@
 #define SORT_DECENDING 1
 
 class RexxSupplier;
+class RexxDirectory;
 class RexxCompoundTail;
 class RexxNativeActivation;
 
@@ -91,6 +92,7 @@ class RexxNativeActivation;
   RexxArray   *allItems();
   RexxArray   *allIndexes();
   RexxSupplier *supplier();
+  RexxDirectory *toDirectory();
   RexxObject  *request(RexxString *);
   RexxObject   *empty();
   RexxObject   *isEmpty();

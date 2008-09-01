@@ -445,10 +445,11 @@ void RexxVariableDictionary::liveGeneral(int reason)
  *
  * @return A supplier for iterating the variable sset.
  */
-RexxSupplier *RexxVariableDictionary::getAllVariables()
+RexxDirectory *RexxVariableDictionary::getAllVariables()
 {
-    size_t count = 0;                    // the size of the supplier arrays
     HashLink i;
+    RexxDirectory *result = new_directory();
+    ProtectedObject p1(result);
                                          /* loop through the hash table       */
     for (i = this->contents->first();
          i < this->contents->totalSlotsSize();
@@ -459,34 +460,11 @@ RexxSupplier *RexxVariableDictionary::getAllVariables()
         // if this variable has a value, bump the count
         if (variable->getVariableValue() != OREF_NULL)
         {
-            count ++;
+            result->put(variable->getVariableValue(), variable->getName());
         }
     }
 
-    RexxArray *names = new_array(count);
-    ProtectedObject p1(names);
-    RexxArray *values = new_array(count);
-    ProtectedObject p2(values);
-
-    count = 1;
-    // now loop again populating the supplier arrays
-    for (i = this->contents->first();
-         i < this->contents->totalSlotsSize();
-         i = this->contents->next(i))
-    {
-        // get the next variable from the dictionary
-        RexxVariable *variable = (RexxVariable *)this->contents->value(i);
-        // if this variable has a value, bump the count
-        if (variable->getVariableValue() != OREF_NULL)
-        {
-            // only add the real values to the list
-            names->put(variable->getName(), count);
-            values->put(variable->getVariableValue(), count);
-            count++;
-        }
-    }
-
-    return new_supplier(values, names);
+    return result;
 }
 
 

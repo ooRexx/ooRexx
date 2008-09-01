@@ -49,6 +49,7 @@
 #include "Interpreter.hpp"
 #include "MethodClass.hpp"
 #include "PackageClass.hpp"
+#include "DirectoryClass.hpp"
 
 BEGIN_EXTERN_C()
 
@@ -128,12 +129,12 @@ void RexxEntry DropContextVariable(RexxCallContext *c, CSTRING n)
     }
 }
 
-RexxSupplierObject RexxEntry GetAllContextVariables(RexxCallContext *c)
+RexxDirectoryObject RexxEntry GetAllContextVariables(RexxCallContext *c)
 {
     ApiContext context(c);
     try
     {
-        return (RexxSupplierObject)context.ret(context.context->getAllContextVariables());
+        return (RexxDirectoryObject)context.ret(context.context->getAllContextVariables());
     }
     catch (RexxNativeActivation *)
     {
@@ -207,12 +208,12 @@ void RexxEntry DropExitContextVariable(RexxExitContext *c, CSTRING n)
     }
 }
 
-RexxSupplierObject RexxEntry GetAllExitContextVariables(RexxExitContext *c)
+RexxDirectoryObject RexxEntry GetAllExitContextVariables(RexxExitContext *c)
 {
     ApiContext context(c);
     try
     {
-        return (RexxSupplierObject)context.ret(context.context->getAllContextVariables());
+        return (RexxDirectoryObject)context.ret(context.context->getAllContextVariables());
     }
     catch (RexxNativeActivation *)
     {

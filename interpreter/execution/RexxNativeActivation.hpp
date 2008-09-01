@@ -124,7 +124,7 @@ class RexxNativeActivation : public RexxActivationBase
   RexxObject *getObjectVariable(const char *name);
   void setObjectVariable(const char *name, RexxObject *value);
   void dropObjectVariable(const char *name);
-  RexxSupplier *getAllContextVariables();
+  RexxDirectory *getAllContextVariables();
   inline void setConditionInfo(RexxDirectory *info) { conditionObj = info; }
   inline RexxDirectory *getConditionInfo() { return conditionObj; }
   inline void clearException() { conditionObj = OREF_NULL; }

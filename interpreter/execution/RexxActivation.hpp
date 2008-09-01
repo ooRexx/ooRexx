@@ -452,7 +452,7 @@ RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
        return settings.local_variables.getDictionary();
    }
 
-   inline RexxSupplier *getAllLocalVariables()
+   inline RexxDirectory *getAllLocalVariables()
    {
        return getLocalVariables()->getAllVariables();
    }

@@ -769,6 +769,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_INDEX         ,TheStemBehaviour, CPPM(RexxStem::index), 1);
   defineKernelMethod(CHAR_HASITEM       ,TheStemBehaviour, CPPM(RexxStem::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM    ,TheStemBehaviour, CPPM(RexxStem::removeItem), 1);
+  defineKernelMethod(CHAR_TODIRECTORY   ,TheStemBehaviour, CPPM(RexxStem::toDirectory), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */

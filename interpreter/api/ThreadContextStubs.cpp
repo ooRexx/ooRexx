@@ -1630,12 +1630,12 @@ void RexxEntry DropStemArrayElement(RexxThreadContext *c, RexxStemObject s, size
     }
 }
 
-RexxSupplierObject RexxEntry GetAllStemElements(RexxThreadContext *c, RexxStemObject s)
+RexxDirectoryObject RexxEntry GetAllStemElements(RexxThreadContext *c, RexxStemObject s)
 {
     ApiContext context(c);
     try
     {
-        return (RexxSupplierObject)context.ret(((RexxStem *)s)->supplier());
+        return (RexxDirectoryObject)context.ret(((RexxStem *)s)->toDirectory());
     }
     catch (RexxNativeActivation *)
     {

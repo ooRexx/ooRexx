@@ -49,6 +49,7 @@
 #include "RexxVariableDictionary.hpp"
 #include "RexxVariable.hpp"
 #include "SupplierClass.hpp"
+#include "DirectoryClass.hpp"
 #include "StemClass.hpp"
 #include "RexxCompoundTail.hpp"
 
@@ -1006,6 +1007,31 @@ RexxSupplier *RexxStem::supplier()
     }
     // two arrays become one supplier
     return new_supplier(values, tailValues);
+}
+
+
+/**
+ * Create a directory from the stem.  Each tail with an
+ * assigned value will be an entry within the directory.
+ *
+ * @return A directory instance.
+ */
+RexxDirectory *RexxStem::toDirectory()
+{
+    RexxDirectory *result = new_directory();
+    ProtectedObject p1(result);
+    RexxCompoundElement *variable = tails.first();
+    while (variable != OREF_NULL)
+    {
+        // again, get the variable count
+        if (variable->getVariableValue() != OREF_NULL)
+        {
+            result->put(variable->getVariableValue(), variable->getName());
+        }
+        variable = tails.next(variable);
+    }
+
+    return result;
 }
 
 

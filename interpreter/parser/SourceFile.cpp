@@ -5247,7 +5247,7 @@ void *RexxSource::operator new (size_t size)
 
                                        /* Get new object                    */
   newObject = new_object(sizeof(RexxSource));
-  newObject->clearObject(sizeof(RexxSource)); /* clear object          */
+  newObject->clearObject();            /* clear object          */
                                        /* Give new object its behaviour     */
   newObject->setBehaviour(TheRexxSourceBehaviour);
   return newObject;                    /* return the new object             */

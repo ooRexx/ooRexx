@@ -588,7 +588,7 @@ typedef struct
     void             (RexxEntry *SetStemArrayElement)(RexxThreadContext *, RexxStemObject, size_t, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *GetStemArrayElement)(RexxThreadContext *, RexxStemObject, size_t);
     void             (RexxEntry *DropStemArrayElement)(RexxThreadContext *, RexxStemObject, size_t);
-    RexxSupplierObject (RexxEntry *GetAllStemElements)(RexxThreadContext *, RexxStemObject);
+    RexxDirectoryObject (RexxEntry *GetAllStemElements)(RexxThreadContext *, RexxStemObject);
     RexxObjectPtr    (RexxEntry *GetStemValue)(RexxThreadContext *, RexxStemObject);
     logical_t        (RexxEntry *IsStem)(RexxThreadContext *, RexxObjectPtr);
 
@@ -644,7 +644,7 @@ typedef struct
     void             (RexxEntry *SetContextVariable)(RexxCallContext *, CSTRING, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *GetContextVariable)(RexxCallContext *, CSTRING);
     void             (RexxEntry *DropContextVariable)(RexxCallContext *, CSTRING);
-    RexxSupplierObject (RexxEntry *GetAllContextVariables)(RexxCallContext *);
+    RexxDirectoryObject (RexxEntry *GetAllContextVariables)(RexxCallContext *);
     RexxStemObject   (RexxEntry *ResolveStemVariable)(RexxCallContext *, RexxObjectPtr);
     void             (RexxEntry *InvalidRoutine)(RexxCallContext *);
     wholenumber_t    (RexxEntry *GetContextDigits)(RexxCallContext *);
@@ -661,7 +661,7 @@ typedef struct
     void             (RexxEntry *SetContextVariable)(RexxExitContext *, CSTRING, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *GetContextVariable)(RexxExitContext *, CSTRING);
     void             (RexxEntry *DropContextVariable)(RexxExitContext *, CSTRING);
-    RexxSupplierObject (RexxEntry *GetAllContextVariables)(RexxExitContext *);
+    RexxDirectoryObject (RexxEntry *GetAllContextVariables)(RexxExitContext *);
     RexxObjectPtr    (RexxEntry *GetExitContext)(RexxExitContext *);
     RexxPackageObject  (RexxEntry *GetExitContextPackage)(RexxExitContext *);
 } ExitContextInterface;
@@ -1162,7 +1162,7 @@ struct RexxThreadContext_
     {
         functions->DropStemArrayElement(this, so, n);
     }
-    RexxSupplierObject GetAllStemElements(RexxStemObject so)
+    RexxDirectoryObject GetAllStemElements(RexxStemObject so)
     {
         return functions->GetAllStemElements(this, so);
     }
@@ -1687,7 +1687,7 @@ struct RexxMethodContext_
     {
         threadContext->DropStemArrayElement(so, n);
     }
-    RexxSupplierObject GetAllStemElements(RexxStemObject so)
+    RexxDirectoryObject GetAllStemElements(RexxStemObject so)
     {
         return threadContext->GetAllStemElements(so);
     }
@@ -2269,7 +2269,7 @@ struct RexxCallContext_
     {
         threadContext->DropStemArrayElement(so, n);
     }
-    RexxSupplierObject GetAllStemElements(RexxStemObject so)
+    RexxDirectoryObject GetAllStemElements(RexxStemObject so)
     {
         return threadContext->GetAllStemElements(so);
     }
@@ -2365,7 +2365,7 @@ struct RexxCallContext_
         return functions->ResolveStemVariable(this, v);
     }
 
-    RexxSupplierObject GetAllContextVariables()
+    RexxDirectoryObject GetAllContextVariables()
     {
         return functions->GetAllContextVariables(this);
     }
@@ -2849,7 +2849,7 @@ struct RexxExitContext_
     {
         threadContext->DropStemArrayElement(so, n);
     }
-    RexxSupplierObject GetAllStemElements(RexxStemObject so)
+    RexxDirectoryObject GetAllStemElements(RexxStemObject so)
     {
         return threadContext->GetAllStemElements(so);
     }
@@ -2927,7 +2927,7 @@ struct RexxExitContext_
     {
         functions->DropContextVariable(this, s);
     }
-    RexxSupplierObject GetAllContextVariables()
+    RexxDirectoryObject GetAllContextVariables()
     {
         return functions->GetAllContextVariables(this);
     }
