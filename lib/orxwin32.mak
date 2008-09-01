@@ -46,15 +46,12 @@
 # VCPP7 == Visual C++ 2003
 # VCPP6 == Visual C++ 6.0
 #
-# Not sure if there is a difference between VCPP7 and VCPP8, so if Visual C++
-# 2003 is detected, VCPP8 is also defined.  May need to change that.
 !IF "$(MSVCVER)" == "9.0"
 VCPP9 = 1
 !ELSEIF "$(MSVCVER)" == "8.0"
 VCPP8 = 1
 !ELSEIF "$(MSVCVER)" == "7.0"
 VCPP7 = 1
-VCPP8 = 1
 !ELSEIF "$(MSVCVER)" == "6.0"
 VCPP6 = 1
 !ELSE
@@ -97,9 +94,11 @@ VER_DEF = -DORX_VER=$(ORX_MAJOR) -DORX_REL=$(ORX_MINOR) -DORX_MOD=$(ORX_MOD_LVL)
 # The start of the warning flags for the compile flags.
 WARNING_FLAGS = /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
-# Visual C++ 6.0 chokes on /Wp64
-!IFNDEF VCPP6
-WARNING_FLAGS = /Wp64  $(WARNING_FLAGS)
+# Visual C++ 6.0 chokes on /Wp64 and in Visual C++ 9.0 the flag is deprecated
+!IFDEF VCPP7
+WARNING_FLAGS = /Wp64 $(WARNING_FLAGS)
+!ELSE IFDEF VCPP8
+WARNING_FLAGS = /Wp64 $(WARNING_FLAGS)
 !ENDIF
 
 # Turn on extra warnings by defining EXTRAWARNINGS to 1.
@@ -116,7 +115,9 @@ WARNING_FLAGS = /W4 /wd4100 /wd4706 /wd4701 $(WARNING_FLAGS)
 WARNING_FLAGS = /W3 $(WARNING_FLAGS)
 !ENDIF
 
-!IFDEF VCPP8
+!IFDEF VCPP9
+Z_FLAGS =
+!ELSE IFDEF VCPP8
 Z_FLAGS =
 !ELSE
 Z_FLAGS = -Zd
