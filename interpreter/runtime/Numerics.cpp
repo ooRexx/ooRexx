@@ -672,3 +672,27 @@ RexxObject *Numerics::intptrToObject(intptr_t v)
     // that a wholenumber_t is the same size as an intptr_t.
     return new_numberstringFromWholenumber((wholenumber_t)v);
 }
+
+
+/**
+ * Format a pointer into a string value using a consistent
+ * formatting style.
+ *
+ * @param p      The pointer valut to format.
+ *
+ * @return The pointer as a string value in the format 0xnnnnnnnn.
+ */
+RexxString *Numerics::pointerToString(void *p)
+{
+    // format this into a chracter string
+    char temp[32];
+    // unfortunately, the formation of %p is not consistent across platforms.
+    // We first format this directly, and if the value does not be
+    sprintf(temp, "%p", p);
+    if (temp[1] != 'x')
+    {
+        sprintf(temp, "0x%p", p);
+    }
+    return new_string(temp);
+
+}

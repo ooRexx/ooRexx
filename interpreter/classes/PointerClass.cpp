@@ -136,11 +136,13 @@ RexxObject *RexxPointer::newRexx(RexxObject **args, size_t argc)
 }
 
 
+/**
+ * Format this as a character string value.
+ *
+ * @return The character string value.
+ */
 RexxString *RexxPointer::stringValue()
 {
-    char buffer[36];        // large enough for even a 16-byte pointer value
-    // format the pointer value and transform into a string
-    sprintf(buffer, "0x%p", pointer());
-    return new_string(buffer);
+    return Numerics::pointerToString(pointer());
 }
 

@@ -724,9 +724,7 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
         case REXX_VALUE_POINTERSTRING:
         {
             // format this into a chracter string
-            char temp[32];
-            sprintf(temp, "0x%p", value->value.value_POINTER);
-            return new_string(temp);
+            return Numerics::pointerToString(value->value.value_POINTER);
         }
 
         case 0:

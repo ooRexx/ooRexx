@@ -126,6 +126,8 @@ public:
         return validMaxWhole[e - 1];
     }
 
+    static RexxString *pointerToString(void *);
+
 
 protected:
 
