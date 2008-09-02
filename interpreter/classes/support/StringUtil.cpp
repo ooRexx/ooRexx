@@ -1401,8 +1401,6 @@ RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  
 
         /* point at start position           */
         const char *current = data + startPos - 1;
-        size_t position = 0;               /* haven't found it yet              */
-
         if (referenceLen == 0)
         {               /* if verifying a nullstring         */
             if (opt == VERIFY_MATCH)      /* can't match at all                */

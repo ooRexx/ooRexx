@@ -983,12 +983,12 @@ RexxMutableBuffer *RexxMutableBuffer::lower(RexxInteger *_start, RexxInteger *_l
         return this;
     }
 
-    char *data = getData() + startPos;
+    char *bufferData = getData() + startPos;
     // now uppercase in place
     for (size_t i = 0; i < rangeLength; i++)
     {
-        *data = tolower(*data);
-        data++;
+        *bufferData = tolower(*bufferData);
+        bufferData++;
     }
     return this;
 }
@@ -1023,12 +1023,12 @@ RexxMutableBuffer *RexxMutableBuffer::upper(RexxInteger *_start, RexxInteger *_l
         return this;
     }
 
-    char *data = getData() + startPos;
+    char *bufferData = getData() + startPos;
     // now uppercase in place
     for (size_t i = 0; i < rangeLength; i++)
     {
-        *data = toupper(*data);
-        data++;
+        *bufferData = toupper(*bufferData);
+        bufferData++;
     }
     return this;
 }
@@ -1062,17 +1062,17 @@ RexxMutableBuffer *RexxMutableBuffer::translate(RexxString *tableo, RexxString *
     const char *outTable = tableo->getStringData();   /* and the output table              */
                                           /* get the pad character             */
     char padChar = optionalPadArgument(pad, ' ', ARG_THREE);
-    size_t start = optionalPositionArgument(_start, 1, ARG_FOUR);
-    size_t range = optionalLengthArgument(_range, getLength() - start + 1, ARG_FOUR);
+    size_t startPos = optionalPositionArgument(_start, 1, ARG_FOUR);
+    size_t range = optionalLengthArgument(_range, getLength() - startPos + 1, ARG_FOUR);
 
     // if nothing to translate, we can return now
-    if (start > getLength() || range == 0)
+    if (startPos > getLength() || range == 0)
     {
         return this;
     }
     // cape the real range
-    range = Numerics::maxVal(range, getLength() - start + 1);
-    char *scanPtr = getData() + start - 1;      /* point to data                     */
+    range = Numerics::maxVal(range, getLength() - startPos + 1);
+    char *scanPtr = getData() + startPos - 1;   /* point to data                     */
     size_t scanLength = range;                  /* get the length too                */
 
     while (scanLength--)
@@ -1442,7 +1442,7 @@ RexxInteger *RexxMutableBuffer::caselessWordPos(RexxString  *phrase, RexxInteger
 RexxMutableBuffer *RexxMutableBuffer::delWord(RexxInteger *position, RexxInteger *plength)
 {
                                          /* convert position to binary        */
-    size_t wordPos = positionArgument(position, ARG_ONE);
+    size_t _wordPos = positionArgument(position, ARG_ONE);
     /* get num of words to delete, the   */
     /* default is "a very large number"  */
     size_t count = optionalLengthArgument(plength, MAXNUM, ARG_TWO);
@@ -1456,27 +1456,27 @@ RexxMutableBuffer *RexxMutableBuffer::delWord(RexxInteger *position, RexxInteger
     {
         return this;                     /* also very easy                    */
     }
-    const char *word = getStringData();  /* point to the string               */
+    const char *_word = getStringData();  /* point to the string               */
     const char *nextSite = NULL;
                                        /* get the first word                */
-    size_t wordLength = StringUtil::nextWord(&word, &length, &nextSite);
-    while (--wordPos > 0 && wordLength != 0)
+    size_t _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
+    while (--_wordPos > 0 && _wordLength != 0)
     {  /* loop until we reach tArget        */
-        word = nextSite;                 /* copy the start pointer            */
+        _word = nextSite;                /* copy the start pointer            */
                                          /* get the next word                 */
-        wordLength = StringUtil::nextWord(&word, &length, &nextSite);
+        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
     }
-    if (wordPos != 0)                    /* run out of words first            */
+    if (_wordPos != 0)                   /* run out of words first            */
     {
         return this;                     /* return the buffer unaltered       */
     }
     // get the deletion point as an offset
-    size_t deletePosition = word - this->getStringData();
-    while (--count > 0 && wordLength != 0)
+    size_t deletePosition = _word - this->getStringData();
+    while (--count > 0 && _wordLength != 0)
     {  /* loop until we reach tArget        */
-        word = nextSite;               /* copy the start pointer            */
+        _word = nextSite;              /* copy the start pointer            */
                                        /* get the next word                 */
-        wordLength = StringUtil::nextWord(&word, &length, &nextSite);
+        _wordLength = StringUtil::nextWord(&_word, &length, &nextSite);
     }
     if (length != 0)                   /* didn't use up the string          */
     {

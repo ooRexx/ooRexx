@@ -775,21 +775,21 @@ RexxString *RexxString::translate(
     OutTable = tableo->getStringData();   /* and the output table              */
                                           /* get the pad character             */
     PadChar = optionalPadArgument(pad, ' ', ARG_THREE);
-    size_t start = optionalPositionArgument(_start, 1, ARG_FOUR);
-    size_t range = optionalLengthArgument(_range, getLength() - start + 1, ARG_FOUR);
+    size_t startPos = optionalPositionArgument(_start, 1, ARG_FOUR);
+    size_t range = optionalLengthArgument(_range, getLength() - startPos + 1, ARG_FOUR);
 
     // if nothing to translate, we can return now
-    if (start > getLength() || range == 0)
+    if (startPos > getLength() || range == 0)
     {
         return this;
     }
-    // cape the real range
-    range = Numerics::maxVal(range, getLength() - start + 1);
+    // cap the real range
+    range = Numerics::maxVal(range, getLength() - startPos + 1);
 
     /* allocate space for answer         */
     /* and copy the string               */
     Retval = new_string(this->getStringData(), this->getLength());
-    ScanPtr = Retval->getWritableData() + start - 1;  /* point to data                     */
+    ScanPtr = Retval->getWritableData() + startPos - 1;  /* point to data                     */
     ScanLength = range;                        /* get the length too                */
 
     while (ScanLength--)
