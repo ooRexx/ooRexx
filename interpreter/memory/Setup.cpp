@@ -1223,10 +1223,10 @@ void RexxMemory::createImage()
                                        /* Add the instance methods to the   */
                                        /* instance behaviour mdict          */
   defineKernelMethod(CHAR_EQUAL                        ,ThePointerBehaviour, CPPM(RexxPointer::equal), 1);
-  defineKernelMethod(CHAR_BACKSLASH_EQUAL              ,TheIntegerBehaviour, CPPM(RexxPointer::notEqual), 1);
+  defineKernelMethod(CHAR_BACKSLASH_EQUAL              ,ThePointerBehaviour, CPPM(RexxPointer::notEqual), 1);
   defineKernelMethod(CHAR_STRICT_EQUAL                 ,ThePointerBehaviour, CPPM(RexxPointer::equal), 1);
-  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       ,TheIntegerBehaviour, CPPM(RexxPointer::notEqual), 1);
-  defineKernelMethod(CHAR_ISNULL                       ,TheIntegerBehaviour, CPPM(RexxPointer::isNull), 0);
+  defineKernelMethod(CHAR_STRICT_BACKSLASH_EQUAL       ,ThePointerBehaviour, CPPM(RexxPointer::notEqual), 1);
+  defineKernelMethod(CHAR_ISNULL                       ,ThePointerBehaviour, CPPM(RexxPointer::isNull), 0);
 
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
