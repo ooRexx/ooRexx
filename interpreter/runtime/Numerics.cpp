@@ -684,6 +684,13 @@ RexxObject *Numerics::intptrToObject(intptr_t v)
  */
 RexxString *Numerics::pointerToString(void *p)
 {
+    // some platforms render a null pointer as "0x(nil)".  We want this
+    // to be just zero, so force it that way
+    if (p == 0)
+    {
+        return new_string("0x0");
+    }
+
     // format this into a chracter string
     char temp[32];
     // unfortunately, the formation of %p is not consistent across platforms.
