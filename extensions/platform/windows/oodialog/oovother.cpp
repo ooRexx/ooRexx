@@ -3834,7 +3834,7 @@ RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
     BUTTONSUBTYPE sub;
     DWORD style, oldStyle;
     BUTTONTYPE type;
-    DWORD typeStyle = 0, oldTypeStyle;
+    DWORD typeStyle, oldTypeStyle;
     bool changeDefButton = false;
 
     if ( strlen(opts) == 0 )
@@ -3846,6 +3846,7 @@ RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
     type = getButtonInfo(hwnd, &sub, &style);
     oldStyle = style;
     oldTypeStyle = ((DWORD)GetWindowLongPtr(hwnd, GWL_STYLE) & BS_TYPEMASK);
+    typeStyle = oldTypeStyle;
 
     char *token;
     char *str = strdupupr(opts);
