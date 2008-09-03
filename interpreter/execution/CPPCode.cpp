@@ -919,6 +919,7 @@ CPPM(RexxLocal::local),                /* the .local environment methods    */
 CPPM(RexxPointer::equal),
 CPPM(RexxPointer::notEqual),
 CPPM(RexxPointer::newRexx),
+CPPM(RexxPointer::isNull),
 
 CPPM(RexxBuffer::newRexx),
 

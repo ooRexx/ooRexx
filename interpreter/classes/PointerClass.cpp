@@ -146,3 +146,13 @@ RexxString *RexxPointer::stringValue()
     return Numerics::pointerToString(pointer());
 }
 
+
+/**
+ * Test if this is a null pointer value.
+ *
+ * @return True if the pointer value is NULL, false for non-null.
+ */
+RexxObject *RexxPointer::isNull()
+{
+    return pointer() == NULL ? TheTrueObject : TheFalseObject;
+}
