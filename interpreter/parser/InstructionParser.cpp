@@ -193,7 +193,6 @@ RexxInstruction *RexxSource::assignmentNew(
  */
 RexxInstruction *RexxSource::assignmentOpNew(RexxToken *target, RexxToken *operation)
 {
-    ProtectedObject p(target);
     this->needVariable(target);     // make sure this is a variable
     // we require an expression for the additional part, which is required
     RexxObject *_expression = this->expression(TERM_EOC);

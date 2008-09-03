@@ -123,7 +123,6 @@ protected:
   ObjectHeader  header;                /* header info just like any obj     */
   DeadObject *next;                    /* next dead object on this chain    */
   DeadObject *previous;                /* prev dead object on this chain    */
-
 };
 
 /* A pool of dead objects.  This is the anchor for a set of dead */

@@ -48,20 +48,40 @@
 #include "SysSemaphore.hpp"
 #include "IdentityTableClass.hpp"
 
+#ifdef __REXX64__
+// The minimum allocation unit for an object.
+// 16 is needed for 64-bit to maintain some required alignments
+#define ObjectGrain 16
+/* The unit of granularity for large allocation */
+#define LargeAllocationUnit 2048
+/* The unit of granularity for extremely large objects */
+#define VeryLargeAllocationUnit 8192
+/* Minimum size of an object.  This is not the actual minimum size, */
+/* but we allocate objects with an 8-byte granularity */
+/* this is the granularity for objects greater than 16Mb. */
+#define VeryLargeObjectGrain    512
+
+/* Minimum size of an object.  This is not the actual minimum size, */
+/* but we allocate objects with a defined granularity */
+/* This is the smallest object we'll allocate from storage.  */
+#define MinimumObjectSize ((size_t)48)
+#define MaximumObjectSize ((size_t)0xfffffffffffffff0ull)
+#else
 /* The minimum allocation unit for an object.   */
 #define ObjectGrain 8
 /* The unit of granularity for large allocation */
 #define LargeAllocationUnit 1024
 /* The unit of granularity for extremely large objects */
 #define VeryLargeAllocationUnit 4096
-/* Minimum size of an object.  This is not the actual minimum size, */
-/* but we allocate objects with an 8-byte granularity */
 /* this is the granularity for objects greater than 16Mb. */
 #define VeryLargeObjectGrain    256
 
+/* Minimum size of an object.  This is not the actual minimum size, */
+/* but we allocate objects with an 8-byte granularity */
 /* This is the smallest object we'll allocate from storage.  */
 #define MinimumObjectSize ((size_t)24)
 #define MaximumObjectSize ((size_t)0xfffffff0)
+#endif
 
 inline void SetObjectLive(void *o, size_t mark) {
     ((RexxObject *)o)->setObjectLive(mark);
