@@ -681,7 +681,11 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
 
        p = (WORD *)GET_POINTER(argv[1]);
 
+       // We support right or left aligned text.  By default the alignment is
+       // left so we only need to check for the RIGHT key word.
+
        lStyle = WS_CHILD | BS_GROUPBOX;
+       if (strstr(argv[6].strptr,"RIGHT")) lStyle |= BS_RIGHT;
        if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
        if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
        if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;

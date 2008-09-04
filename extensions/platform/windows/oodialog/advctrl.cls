@@ -55,6 +55,7 @@
        when type = "BUT" then class = .ButtonControl
        when type = "RB" then class = .RadioButton
        when type = "CH" then class = .CheckBox
+       when type = "GB" then class = .GroupBox
        when type = "LB" then class = .ListBox
        when type = "CB" then class = .ComboBox
        when type = "SB" then class = .ScrollBar
@@ -100,6 +101,11 @@
 ::method GetCheckControl unguarded
    arr = Arg(1,"A")
    arr[3] = "CH"
+   forward message "GetControl" Arguments (arr)
+
+::method GetGroupBox unguarded
+   arr = Arg(1,"A")
+   arr[3] = "GB"
    forward message "GetControl" Arguments (arr)
 
 ::method GetListBox unguarded
@@ -1683,6 +1689,9 @@
    return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "G")
 
 /******************* ButtonControl Classes ************************************/
+
+::class 'GroupBox' subclass DialogControl public
+::method "style=" external "LIBRARY oodialog gb_setStyle"
 
 ::class 'ButtonControl' subclass DialogControl public
 

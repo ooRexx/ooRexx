@@ -2146,6 +2146,7 @@ REXX_METHOD_PROTOTYPE(pbc_setBarColor);
 REXX_METHOD_PROTOTYPE(pbc_test);
 
 REXX_METHOD_PROTOTYPE(bc_cls_checkInGroup);
+REXX_METHOD_PROTOTYPE(gb_setStyle);
 REXX_METHOD_PROTOTYPE(bc_getState);
 REXX_METHOD_PROTOTYPE(bc_setState);
 REXX_METHOD_PROTOTYPE(bc_setStyle);
@@ -2208,6 +2209,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_cls_checkInGroup,     bc_cls_checkInGroup),
     REXX_METHOD(bc_getState,             bc_getState),
     REXX_METHOD(bc_setState,             bc_setState),
+    REXX_METHOD(gb_setStyle,             gb_setStyle),
     REXX_METHOD(bc_setStyle,             bc_setStyle),
     REXX_METHOD(bc_click,                bc_click),
     REXX_METHOD(bc_getImage,             bc_getImage),

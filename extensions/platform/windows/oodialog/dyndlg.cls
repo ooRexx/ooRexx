@@ -135,6 +135,7 @@
    else if style~wordpos("WS_VISIBLE") > 0 then ret = "VISIBLE"
    if style~wordpos("WS_DISABLED") > 0 & style~wordpos("NOT WS_DISABLED") == 0 then ret = ret || " DISABLED"
    if style~wordpos("WS_GROUP") > 0 & style~wordpos("NOT WS_GROUP") == 0 then ret = ret || " GROUP"
+
    if kind = "DLG" then do
       if style~wordpos("DS_CENTER") > 0 then ret = ret ||" CENTER"
       if style~wordpos("DS_SYSMODAL") > 0 then ret = ret ||" SYSTEMMODAL"
@@ -167,6 +168,12 @@
        if spec_kind == "R" then do  /* radio buttons need explicit WS_TABSTOP to be tab stops */
            if style~wordpos("WS_TABSTOP") = 0 then ret = ret || " NOTAB"
        end
+   end
+   else if kind = "GB" then do
+       if style~wordpos("BS_LEFT") > 0 then ret = ret || " LEFT"
+       if style~wordpos("BS_RIGHT") > 0 then ret = ret || " RIGHT"
+       if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+       if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
    end
    else if kind = "EDIT" then do
       if style~wordpos("ES_AUTOHSCROLL") > 0 then ret = ret || " AUTOSCROLLH"
@@ -428,7 +435,7 @@
                else if style~wordpos("BS_AUTOCHECKBOX") > 0 | style~wordpos("BS_CHECKBOX") > 0 then
                   self~InternAddRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
                else if style~wordpos("BS_GROUPBOX") > 0 then
-                  self~AddGroupBox(x, y, w, h, name, self~InternGetRCStyle(style, "ST"), id)
+                  self~AddGroupBox(x, y, w, h, name, self~InternGetRCStyle(style, "GB"), id)
                else if style~pos("BS_OWNERDRAW") = 0 & style~wordpos("BS_AUTO3STATE") > 0 then  /* if 3state is not ownerdrawn */
                   self~InternAddRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
                else self~InternAddRCButton(id, x, y, w, h, name, style, loadOptions)
@@ -547,7 +554,7 @@
             end
 
             when type = "GROUPBOX" then
-               self~AddGroupBox(x, y, w, h, name, self~InternGetRCStyle(style, "ST"), id)
+               self~AddGroupBox(x, y, w, h, name, self~InternGetRCStyle(style, "GB"), id)
 
             when type = "COMBOBOX" then
                self~AddComboBox(id, name, x, y, w, h, self~InternGetRCStyle(style, "CB"))

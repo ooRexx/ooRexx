@@ -3827,6 +3827,62 @@ HWND changeDefPushButton(HWND hCtrl)
 }
 
 
+#define MIN_HALFHEIGHT_GB 12
+
+/** .GroupBox~style =
+ *
+ * A group box is a button, but the only style change that makes much sense is
+ * the right or left alignment of the text.  Other changes either have no
+ * effect, or cause the group box / dialog to paint in a weird way.
+ */
+RexxMethod2(int, gb_setStyle, OSELF, self, CSTRING, opts)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    DWORD style = (DWORD)GetWindowLongPtr(hwnd, GWL_STYLE);
+
+    if ( stricmp(opts, "RIGHT") == 0 )
+    {
+        style = (style & ~BS_CENTER) | BS_RIGHT;
+    }
+    else if ( stricmp(opts, "LEFT") == 0 )
+    {
+        style = (style & ~BS_CENTER) | BS_LEFT;
+    }
+    else
+    {
+        wrongArgValueException(context, 1, "RIGHT, LEFT", opts);
+        return 0;
+    }
+
+    /**
+     * When the alignment changes, we need to force the dialog to redraw the
+     * area occupied by the group box.  Otherwise the old text remains on the
+     * screen.  But, it is only the top part of the group box that needs to be
+     * redrawn, so we only invalidate the top half of the group box.
+     */
+
+    HWND hDlg = GetParent(hwnd);
+    RECT r;
+
+    // Get the screen area of the group box and map it to the client area of the
+    // dialog.
+    GetWindowRect(hwnd, &r);
+    MapWindowPoints(NULL, hDlg, (LPPOINT)&r, 2);
+
+    LONG halfHeight = ((r.bottom - r.top) / 2);
+    r.bottom = (halfHeight >= MIN_HALFHEIGHT_GB ? r.top + halfHeight : r.bottom);
+
+    // Change the group box style, force the dialog to repaint.
+    SetWindowLongPtr(hwnd, GWL_STYLE, style);
+    SendMessage(hwnd, BM_SETSTYLE, (WPARAM)style, (LPARAM)TRUE);
+
+    InvalidateRect(hDlg, &r, TRUE);
+    UpdateWindow(hDlg);
+
+    return 0;
+}
+
 RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
