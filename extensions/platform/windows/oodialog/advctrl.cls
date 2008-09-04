@@ -393,7 +393,7 @@
       obj~Hwnd = 0
       obj~Id = 0
       if Arg() = 0 then do
-         self~initCode = obj~init_WindowBase
+         obj~init_WindowBase
          obj~oDlg = .nil
          return obj
       end
