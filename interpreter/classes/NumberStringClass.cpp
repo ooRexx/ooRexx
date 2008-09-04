@@ -255,7 +255,7 @@ RexxString *RexxNumberString::stringValue()
             carry = 0;                         /* assume rounding-up NOT necessary  */
 
                                                /*is number just flat out too big?   */
-            if ((( ExpValue + (int)LenValue - 1) > MAXNUM) ||
+            if ((( ExpValue + (wholenumber_t)LenValue - 1) > MAXNUM) ||
                 (ExpValue < (-MAXNUM)) )       /* Yes, report Overflow error.       */
             {
                 reportException(Error_Conversion_operator, this);
@@ -263,10 +263,10 @@ RexxString *RexxNumberString::stringValue()
 
 
             ExpFactor = 0;                     /* number not eponential yet..       */
-            temp = ExpValue + (int)LenValue - 1;  /* get size of this number           */
+            temp = ExpValue + (wholenumber_t)LenValue - 1;  /* get size of this number           */
             expstring[0] = '\0';               /* string vlaue of exp factor, Null  */
                                                /* is left of decimal > NumDigits or */
-            if ((temp >= (int)createdDigits) ||  /* exponent twice numDigits          */
+            if ((temp >= (wholenumber_t)createdDigits) ||  /* exponent twice numDigits          */
                 ((size_t)Numerics::abs(ExpValue) > (createdDigits*2)) )
             {
                 /* Yes, we need to go exponential.   */
@@ -313,7 +313,7 @@ RexxString *RexxNumberString::stringValue()
                     /* convert exponent value into string*/
                     sprintf(expstring, "E+%d", temp);
                 }
-                temp = labs((int)temp);           /* get positive exponent factor      */
+                temp = Numerics::abs(temp);           /* get positive exponent factor      */
 
             }
             /* Now compute size of result string */
@@ -354,7 +354,7 @@ RexxString *RexxNumberString::stringValue()
                            /* Yes, add in the negative sign.    */
                 StringObj->putChar(charpos, ch_MINUS);
             }
-            temp = ExpValue + (int)LenValue;   /* get the adjusted length.          */
+            temp = ExpValue + (wholenumber_t)LenValue;   /* get the adjusted length.          */
 
                                                /* Since we may have carry from round*/
                                                /* we'll fill in the number from the */
@@ -384,7 +384,7 @@ RexxString *RexxNumberString::stringValue()
 
                                 /* Start filling in digits           */
                                 /*   from the back....               */
-                for (numindex = (int)(LenValue-1);numindex >= 0 ;numindex-- )
+                for (numindex = (wholenumber_t)(LenValue-1);numindex >= 0 ;numindex-- )
                 {
                     /* are we carry from round?          */
                     num = this->number[numindex];   /* working copy of this Digit.       */
@@ -425,7 +425,7 @@ RexxString *RexxNumberString::stringValue()
 
 
                 /* start filling in digits           */
-                for (numindex = (int)LenValue-1;numindex >= 0 ;numindex-- )
+                for (numindex = (wholenumber_t)LenValue-1;numindex >= 0 ;numindex-- )
                 {
                     num = this->number[numindex];   /* working copy of this Digit.       */
                     num = num + ch_ZERO;            /* now put the number as a character */
@@ -1821,7 +1821,7 @@ int RexxNumberString::format(const char *_number, size_t _length)
 {
 
     int       ExpSign;                    /* Exponent Sign                     */
-    int       ExpValue;                   /* Exponent Value                    */
+    wholenumber_t  ExpValue;              /* Exponent Value                    */
     size_t    MaxDigits;                  /* Maximum number size               */
     char      ch;                         /* current character                 */
     char      MSDigit = 0;                /* Most Significant digit truncated  */
@@ -2140,7 +2140,7 @@ void RexxNumberString::formatInt64(int64_t integer)
         // to make them zero based, and B) portable numeric-to-ascii routines
         // don't really exist for the various 32/64 bit values.
         char buffer[32];
-        int index = sizeof(buffer);
+        size_t index = sizeof(buffer);
 
         while (integer > 0)
         {
@@ -2174,7 +2174,7 @@ void RexxNumberString::formatUnsignedInt64(uint64_t integer)
         // to make them zero based, and B) portable numeric-to-ascii routines
         // don't really exist for the various 32/64 bit values.
         char buffer[32];
-        int index = sizeof(buffer);
+        size_t index = sizeof(buffer);
 
         while (integer > 0)
         {

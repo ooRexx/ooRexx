@@ -88,6 +88,10 @@ char * MultiplyBaseTen(char *, char *);
 #define ROUND                  true                   /* Perform rounding           */
 #define NOROUND                false                  /* no Rounding                */
 
+// these are used for masking the power bits
+#define HIBIT            (~SSIZE_MAX)
+#define LOWBITS          (SSIZE_MAX)
+
                                        /* temporary buffer allocation       */
 #define buffer_alloc(s)  (new_buffer(s)->getData())
 /* define the digits limit for "fast path" processing */
