@@ -109,7 +109,7 @@ public:
         pthread_mutex_unlock(&mutexMutex);
     }
 #endif
-     inline bool requestImmediate() { return pthread_mutex_trylock(&mutexMutex);}
+     inline bool requestImmediate() { return pthread_mutex_trylock(&mutexMutex) == 0;}
 
 protected:
      pthread_mutex_t mutexMutex;

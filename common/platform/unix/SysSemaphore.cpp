@@ -227,7 +227,6 @@ void SysMutex::create()
 {
     int iRC = 0;
     // Clear Mutex prior to Init call
-//   this->mutexMutex = NULL;
     this->mutex_value = 0;
 
 /* The original settings for pthread_mutexattr_settype() were:
