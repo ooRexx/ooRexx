@@ -693,7 +693,7 @@ bool SysFileSystem::canonicalizeName(char *name)
     {
         return false;
     }
-    strcpy(tempName, name);
+    strcpy(name, tempName);
     return true;
 }
 
