@@ -131,6 +131,7 @@ class RexxMutableBufferClass : public RexxClass {
 
  protected:
 
+
    size_t             bufferLength;    /* buffer length                   */
    size_t             defaultSize;     /* default size when emptied       */
    size_t             dataLength;      // current length of data

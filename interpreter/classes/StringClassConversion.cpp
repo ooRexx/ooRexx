@@ -475,9 +475,9 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
     {             /* while more digits                 */
         ch = *Scan++;                      /* get the character                 */
                                            /* add high order nibble             */
-        HighDigit = AddToBaseTen((ch & 0xf0) >> 4, Accumulator, HighDigit);
+        HighDigit = RexxNumberString::addToBaseTen((ch & 0xf0) >> 4, Accumulator, HighDigit);
         /* multiply by 16                    */
-        HighDigit = MultiplyBaseTen(Accumulator, HighDigit);
+        HighDigit = RexxNumberString::multiplyBaseTen(Accumulator, HighDigit);
         /* get accumulator length            */
         DecLength = (Accumulator - HighDigit);
         if (DecLength > CurrentDigits)
@@ -492,11 +492,11 @@ RexxString *RexxString::x2dC2d(RexxInteger *_length,
             }
         }
         /* add high order nibble             */
-        HighDigit = AddToBaseTen(ch & 0x0f, Accumulator, HighDigit);
+        HighDigit = RexxNumberString::addToBaseTen(ch & 0x0f, Accumulator, HighDigit);
         if (StringLength != 0)             /* not the last one?                 */
         {
             /* multiply by 16                    */
-            HighDigit = MultiplyBaseTen(Accumulator, HighDigit);
+            HighDigit = RexxNumberString::multiplyBaseTen(Accumulator, HighDigit);
         }
         /* get accumulator length            */
         DecLength = (Accumulator - HighDigit);

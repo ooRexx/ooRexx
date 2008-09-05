@@ -244,24 +244,22 @@ void RexxNumberString::adjustPrecision()
     return;                               /* just return to caller.            */
 }
 
-size_t HighBits(size_t number)
+size_t RexxNumberString::highBits(size_t number)
 /*********************************************************************/
 /* Function:  Determine high order bit position of an unsigned       */
 /*            number setting.                                        */
 /*********************************************************************/
 {
-// TODO:  64-bit issues here
-
     size_t HighBit;
 
-    if (!number)                          /* is number 0?                      */
+    if (number == 0)                      /* is number 0?                      */
     {
-        return 0;                            /*  Yes, just return 0, no high bit  */
+        return 0;                         /*  Yes, just return 0, no high bit  */
     }
 
     HighBit = LONGBITS;                   /* get number of digits in number    */
 
-    while (!(number & 0x80000000u))
+    while ((number & HIBIT) == 0)
     {     /* loops though all bit positions    */
           /*  until first 1 bit is found.      */
         number <<= 1;                        /* shift number one bit pos left.    */
@@ -788,7 +786,7 @@ RexxNumberString *RexxNumberString::addSub(
         if ((aLeftExp + leftLength)>(aRightExp + rightLength))
         {
             /* yes, subtract right from left     */
-            Subtract_Numbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
+            subtractNumbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
             /* result exp is the adjusted exp of */
             /* smaller number.                   */
             if (aLeftExp)                     /* if adjusted left exp has a value  */
@@ -806,7 +804,7 @@ RexxNumberString *RexxNumberString::addSub(
         else if ((aLeftExp + leftLength)<(aRightExp + rightLength))
         {
             /* yes, subtract left from right     */
-            Subtract_Numbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
+            subtractNumbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
             /* result exp is adjusted exp of the */
             /* smaller number.                   */
             if (aLeftExp)                     /* if adjusted left exp has a value  */
@@ -836,13 +834,13 @@ RexxNumberString *RexxNumberString::addSub(
             if ((rc = memcmp(right->number, left->number, rightLength)) > 0)
             {
                 /* yes, subtract left from right     */
-                Subtract_Numbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
+                subtractNumbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
                 result->sign = right_sign;        /* result sign is that of right.     */
             }
             else
             {
                 /* no,  subtract right from left     */
-                Subtract_Numbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
+                subtractNumbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
                 result->sign = left->sign;        /* result sign is that of left.      */
             }
             result->exp = leftExp;             /* result exp is that of the longer  */
@@ -856,7 +854,7 @@ RexxNumberString *RexxNumberString::addSub(
             if ((rc = memcmp(left->number, right->number, leftLength)) > 0)
             {
                 /* yes, subtract right from left     */
-                Subtract_Numbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
+                subtractNumbers(left, leftPtr, aLeftExp, right, rightPtr, aRightExp, result, &resultPtr);
                 result->exp = rightExp;          /* result exp is that of the longer  */
                                                  /* number (smaller Exp.) which is    */
                                                  /* right number in this case.        */
@@ -866,7 +864,7 @@ RexxNumberString *RexxNumberString::addSub(
             else if (rc)
             {                     /* is the right number larger?       */
                                   /* no, subtract left from right      */
-                Subtract_Numbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
+                subtractNumbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
                 result->exp = rightExp;          /* result exp is that of the longer  */
                                                  /* number (smaller Exp.) which is the*/
                                                  /* right number in this case.        */
@@ -878,7 +876,7 @@ RexxNumberString *RexxNumberString::addSub(
                 {   /* does left have fewer digits?      */
                     /* Yes, then left is actuall smaller */
                     /*  so subtract left from right      */
-                    Subtract_Numbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
+                    subtractNumbers(right, rightPtr, aRightExp, left, leftPtr, aLeftExp, result, &resultPtr);
                     result->exp = rightExp;          /* result exp is that of the longer  */
                                                      /* number (smaller Exp.) which is    */
                                                      /* left number in this case.         */
@@ -911,7 +909,7 @@ RexxNumberString *RexxNumberString::addSub(
 
 }
 
-void Subtract_Numbers(
+void RexxNumberString::subtractNumbers(
     RexxNumberString *larger,          /* larger numberstring object        */
     const char       *largerPtr,       /* pointer to last digit in larger   */
     wholenumber_t     aLargerExp,      /* adjusted exponent of larger       */
@@ -1061,7 +1059,7 @@ void Subtract_Numbers(
     return;
 }
 
-char *AddToBaseSixteen(
+char *RexxNumberString::addToBaseSixteen(
   int      Digit,                      /* digit to add                      */
   char    *Value,                      /* number to add                     */
   char    *HighDigit )                 /* highest digit location            */
@@ -1095,7 +1093,7 @@ char *AddToBaseSixteen(
     }
 }
 
-char *MultiplyBaseSixteen(
+char *RexxNumberString::multiplyBaseSixteen(
   char *     Accum,                    /* number to multiply                */
   char *     HighDigit )               /* current high water mark           */
 /*********************************************************************/
@@ -1131,7 +1129,7 @@ char *MultiplyBaseSixteen(
     return OutPtr;                       /* return new high water mark        */
 }
 
-char *AddToBaseTen(
+char *RexxNumberString::addToBaseTen(
   int      Digit,                      /* digit to add                      */
   char    *Accum,                      /* number to add                     */
   char    *HighDigit )                 /* highest digit location            */
@@ -1169,7 +1167,7 @@ char *AddToBaseTen(
     }
 }
 
-char * MultiplyBaseTen(
+char *RexxNumberString::multiplyBaseTen(
   char *      Accum,                    /* number to multiply                */
   char *      HighDigit )               /* current high water mark           */
 

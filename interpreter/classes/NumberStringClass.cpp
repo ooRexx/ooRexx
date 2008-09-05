@@ -2963,26 +2963,26 @@ RexxString *RexxNumberString::d2xD2c(
     while (TargetLength--)
     {             /* while more digits                 */
                   /* add next digit                    */
-        HighDigit = AddToBaseSixteen(*Scan++, Accumulator, HighDigit);
+        HighDigit = addToBaseSixteen(*Scan++, Accumulator, HighDigit);
         if (TargetLength != 0)             /* not last digit?                   */
         {
             /* do another multiply               */
-            HighDigit = MultiplyBaseSixteen(Accumulator, HighDigit);
+            HighDigit = multiplyBaseSixteen(Accumulator, HighDigit);
         }
     }
     if (this->exp > 0)
     {                 /* have extra digits to worry about? */
                       /* do another multiply               */
-        HighDigit = MultiplyBaseSixteen(Accumulator, HighDigit);
+        HighDigit = multiplyBaseSixteen(Accumulator, HighDigit);
         TargetLength = this->exp;          /* copy the exponent                 */
         while (TargetLength--)
         {           /* while more digits                 */
                     /* add next zero digit               */
-            HighDigit = AddToBaseSixteen('\0', Accumulator, HighDigit);
+            HighDigit = addToBaseSixteen('\0', Accumulator, HighDigit);
             if (TargetLength != 0)           /* not last digit?                   */
             {
                 /* do the multiply                   */
-                HighDigit = MultiplyBaseSixteen(Accumulator, HighDigit);
+                HighDigit = multiplyBaseSixteen(Accumulator, HighDigit);
             }
         }
     }

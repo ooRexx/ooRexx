@@ -245,6 +245,19 @@
     static void createInstance();
     static RexxClass *classInstance;
 
+    static size_t highBits(size_t);
+    static void  subtractNumbers( RexxNumberString *larger, const char *largerPtr, wholenumber_t aLargerExp,
+                                  RexxNumberString *smaller, const char *smallerPtr, wholenumber_t aSmallerExp,
+                                  RexxNumberString *result, char **resultPtr);
+    static char *addMultiplier( char *, size_t, char *, int);
+    static char *subtractDivisor(char *data1, size_t length1, char *data2, size_t length2, char *result, int Mult);
+    static char *multiplyPower(char *leftPtr, RexxNumberStringBase *left, char *rightPtr, RexxNumberStringBase *right, char *OutPtr, size_t OutLen, size_t NumberDigits);
+    static char *dividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, size_t NumberDigits);
+    static char *addToBaseSixteen(int, char *, char *);
+    static char *addToBaseTen(int, char *, char *);
+    static char *multiplyBaseSixteen(char *, char *);
+    static char *multiplyBaseTen(char *, char *);
+
     char  number[4];
 };
 

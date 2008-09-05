@@ -58,27 +58,6 @@
 
 /* Function prototypes for NumberStringClass/StringClass */
 
-// TODO:  make all of these functions static methods on numberstring
-
-size_t HighBits(size_t number);
-void Subtract_Numbers( RexxNumberString *larger, const char *largerPtr, wholenumber_t aLargerExp,
-                       RexxNumberString *smaller, const char *smallerPtr, wholenumber_t aSmallerExp,
-                       RexxNumberString *result, char **resultPtr);
-                                            /* ************************************ */
-                                            /* Following functions are in oemath2.c */
-                                            /* ************************************ */
-char *AddMultiplier( char *, wholenumber_t, char *, int);
-char * SubtractDivisor(char *data1, size_t length1,
-                       char *data2, size_t length2,
-                       char *result, int Mult);
-char *MultiplyPower(char *leftPtr, RexxNumberStringBase *left,
-                     char *rightPtr, RexxNumberStringBase *right,
-                     char *OutPtr, size_t OutLen, size_t NumberDigits);
-char *DividePower(char *AccumPtr, RexxNumberStringBase *Accum, char *Output, size_t NumberDigits);
-char * AddToBaseSixteen(int, char *, char *);
-char * AddToBaseTen(int, char *, char *);
-char * MultiplyBaseSixteen(char *, char *);
-char * MultiplyBaseTen(char *, char *);
 
 #ifndef ORDCOMP
 #define ORDCOMP
