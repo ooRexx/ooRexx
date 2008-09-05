@@ -246,6 +246,13 @@ void SysFileSystem::qualifyStreamName(
     return;
 }
 
+/**
+ * Test if a given file exists.
+ *
+ * @param fname  The target file name.
+ *
+ * @return true if the file exists, false otherwise.
+ */
 bool SysFileSystem::fileExists(const char * fname)
 {
     struct stat filestat;                // file attributes
@@ -254,7 +261,7 @@ bool SysFileSystem::fileExists(const char * fname)
     rc = stat(fname, &filestat);
     if (rc == 0)
     {
-        if (S_ISREG(filestat.st_mode))
+        if (!S_ISREG(filestat.st_mode))
         {
             return false;
         }
