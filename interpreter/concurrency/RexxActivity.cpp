@@ -770,7 +770,7 @@ RexxDirectory *RexxActivity::createExceptionObject(
     char work[32];
                                          /* format the number (string) into   */
                                          /*  work buffer.                     */
-    sprintf(work,"%d.%1d", errcode/1000, errcode - primary);
+    sprintf(work,"%zd.%1zd", errcode/1000, errcode - primary);
     RexxString *code = new_string(work); /* get the formatted code            */
     exobj->put(code, OREF_CODE);
 

@@ -940,7 +940,7 @@ RexxString *RexxSource::traceBack(
         return OREF_NULL;                  /* don't trace this either           */
     }
                                            /* format the value                  */
-    sprintf(linenumber,"%u", location.getLineNumber());
+    sprintf(linenumber,"%zu", location.getLineNumber());
     if (indent < 0)                      /* possible negative indentation?    */
     {
         indent = 0;                        /* just reset it                     */

@@ -305,13 +305,13 @@ RexxString *RexxNumberString::stringValue()
                 if (temp < 0)
                 {
                     /* convert exponent value into string*/
-                    sprintf(expstring, "E%d", temp);
+                    sprintf(expstring, "E%zd", temp);
                 }
                 else if (temp > 0)
                 {
                     strcpy(expstring, "E+");
                     /* convert exponent value into string*/
-                    sprintf(expstring, "E+%d", temp);
+                    sprintf(expstring, "E+%zd", temp);
                 }
                 temp = Numerics::abs(temp);           /* get positive exponent factor      */
 
@@ -1472,7 +1472,7 @@ RexxString *RexxNumberString::formatInternal(
             expfactor = temp;                /* save the factor                   */
             temp = Numerics::abs(temp);      /* get positive exponent value       */
                                              /* format exponent to a string       */
-            sprintf(exponent, "%d", temp);
+            sprintf(exponent, "%zd", temp);
             /* get the number of digits needed   */
             exponentsize = strlen(exponent);
             if (mathexp == (size_t)-1)
@@ -1557,7 +1557,7 @@ RexxString *RexxNumberString::formatInternal(
                         /* adjust the exponent factor        */
                         expfactor = expfactor + temp;
                         /* format exponent to a string       */
-                        sprintf(exponent, "%d", expfactor);
+                        sprintf(exponent, "%zd", expfactor);
                         /* get the number of digits needed   */
                         exponentsize = strlen(exponent);
 
@@ -2076,7 +2076,7 @@ void RexxNumberString::formatNumber(wholenumber_t integer)
             integer = -integer;              /* take the positive version         */
         }
         /* convert value into string         */
-        sprintf(this->number, "%d", integer);
+        sprintf(this->number, "%zd", integer);
         current = this->number;            /* point to the data start           */
         while (*current != '\0')
         {         /* while still have digits           */
@@ -2104,7 +2104,7 @@ void RexxNumberString::formatUnsignedNumber(size_t integer)
     {                               /* number is non-zero                */
                                     /* Format the number                 */
                                     /* convert value into string         */
-        sprintf((char *)this->number, "%u", integer);
+        sprintf((char *)this->number, "%zu", integer);
         current = this->number;            /* point to the data start           */
         while (*current != '\0')
         {         /* while still have digits           */
