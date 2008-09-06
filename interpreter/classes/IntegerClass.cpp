@@ -99,8 +99,8 @@ void RexxInteger::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    memory_mark(this->objectVariables);
-    memory_mark(this->stringrep);
+  memory_mark(this->objectVariables);
+  memory_mark(this->stringrep);
 }
 
 void RexxInteger::liveGeneral(int reason)
@@ -108,8 +108,8 @@ void RexxInteger::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    memory_mark_general(this->objectVariables);
-    memory_mark_general(this->stringrep);
+  memory_mark_general(this->objectVariables);
+  memory_mark_general(this->stringrep);
 }
 
 void RexxInteger::flatten(RexxEnvelope *envelope)
@@ -130,7 +130,7 @@ RexxString *RexxInteger::makeString()
 /* Function:  Handle a REQUEST('STRING') request for a REXX integer object    */
 /******************************************************************************/
 {
-    return this->stringValue();          /* return the string value           */
+  return this->stringValue();          /* return the string value           */
 }
 
 RexxInteger *RexxInteger::hasMethod(RexxString *methodName)
@@ -139,7 +139,7 @@ RexxInteger *RexxInteger::hasMethod(RexxString *methodName)
 /******************************************************************************/
 {
                                        /* return the string value's answer  */
-    return this->stringValue()->hasMethod(methodName);
+  return this->stringValue()->hasMethod(methodName);
 }
 
 RexxString *RexxInteger::primitiveMakeString()
@@ -151,9 +151,9 @@ RexxString *RexxInteger::primitiveMakeString()
     {
         return this->stringrep;            /* return it directly                */
     }
-    char stringBuffer[32];                 /* integer formatting buffer         */
+    char        stringBuffer[32];        /* integer formatting buffer         */
                                            /* convert value into string         */
-    sprintf(stringBuffer, "%zd", this->value);
+    Numerics::formatWholeNumber(this->value, stringBuffer);
 
     /* return as a string                */
     RexxString *string = new_string(stringBuffer, strlen(stringBuffer));
@@ -172,9 +172,10 @@ RexxString *RexxInteger::stringValue()
     {
         return this->stringrep;            /* return it directly                */
     }
-    /* convert value into string         */
-    char stringBuffer[32];                 /* integer formatting buffer         */
-    sprintf(stringBuffer, "%zd", this->value);
+
+    char        stringBuffer[32];        /* integer formatting buffer         */
+                                           /* convert value into string         */
+    Numerics::formatWholeNumber(this->value, stringBuffer);
     /* return as a string                */
     RexxString *string = new_string(stringBuffer, strlen(stringBuffer));
     /* cache this away for later         */
@@ -196,7 +197,8 @@ void RexxInteger::copyIntoTail(RexxCompoundTail *tail)
         return;
     }
     char        stringBuffer[32];        /* integer formatting buffer         */
-    sprintf(stringBuffer, "%zd", this->value);
+    /* convert value into string         */
+    Numerics::formatWholeNumber(this->value, stringBuffer);
     /* append this to the buffer         */
     tail->append(stringBuffer, strlen(stringBuffer));
 }
@@ -329,7 +331,7 @@ RexxInteger *RexxInteger::integerValue(
 /* Function:  Convert an integer to an integer (real easy!)                   */
 /******************************************************************************/
 {
-    return this;                         /* just return directly              */
+  return this;                         /* just return directly              */
 }
 
 void RexxInteger::setString(
@@ -339,8 +341,8 @@ void RexxInteger::setString(
 /******************************************************************************/
 {
                                        /* set the strign                    */
-     OrefSet(this, this->stringrep, string);
-     this->setHasReferences();           /* we now have references            */
+   OrefSet(this, this->stringrep, string);
+   this->setHasReferences();           /* we now have references            */
 }
 
 bool RexxInteger::truthValue(
@@ -349,15 +351,11 @@ bool RexxInteger::truthValue(
 /* Function:  Determine the truth value of an integer object                  */
 /******************************************************************************/
 {
-    if (this->value == 0)               /* have a zero?                      */
-    {
-        return false;                      /* this is false                     */
-    }
-    else if (this->value != 1)          /* how about a one?                  */
-    {
-        reportException(errorcode, this);/* report the error                  */
-    }
-    return true;                         /* this is true                      */
+  if (this->value == 0L)               /* have a zero?                      */
+    return false;                      /* this is false                     */
+  else if (this->value != 1L)          /* how about a one?                  */
+    reportException(errorcode, this);/* report the error                  */
+  return true;                         /* this is true                      */
 }
 
 /******************************************************************************/
@@ -376,7 +374,7 @@ RexxObject *RexxInteger::unknown(
 /******************************************************************************/
 {
                                        /* just reissue this                 */
-    return this->stringValue()->sendMessage(msgname, arguments);
+  return this->stringValue()->sendMessage(msgname, arguments);
 }
 
 
@@ -443,10 +441,10 @@ RexxString *RexxInteger::concat(
 /* Function:  Concatenate an object to an integer                             */
 /******************************************************************************/
 {
-    required_arg(other, ONE);            /* this is required                  */
-    other = REQUEST_STRING(other);       /* ensure a string value             */
-                                         /* do the concatenate                */
-    return this->stringValue()->concat(other);
+  required_arg(other, ONE);            /* this is required                  */
+  other = REQUEST_STRING(other);       /* ensure a string value             */
+                                       /* do the concatenate                */
+  return this->stringValue()->concat(other);
 }
 
 RexxObject *RexxInteger::plus(
@@ -455,31 +453,23 @@ RexxObject *RexxInteger::plus(
 /* Function:  Add an integer to another object                                */
 /******************************************************************************/
 {
-    /* are we using default digits?      */
-    if (number_digits() != Numerics::DEFAULT_DIGITS )
-    {
-        /* nope, we can't do integer arith   */
-        return integer_forward(this, plus, other);
+                                       /* are we using default digits?      */
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
+                                       /* nope, we can't do integer arith   */
+    return integer_forward(this, plus, other);
+  if (other == OREF_NULL)              /* unary                             */
+    return this;                       /* just return ourselves             */
+  else {                               /* binary                            */
+    if (isOfClass(Integer, other)) {       /* adding two integers together?     */
+                                       /* add the numbers                   */
+      wholenumber_t tempVal = this->value + other->value;
+                                       /* result still within range?        */
+      if (tempVal <= Numerics::MAX_WHOLENUMBER && tempVal >= Numerics::MIN_WHOLENUMBER)
+        return new_integer(tempVal);   /* return as an integer number       */
     }
-    if (other == OREF_NULL)              /* unary                             */
-    {
-        return this;                       /* just return ourselves             */
-    }
-    else                               /* binary                            */
-    {
-        if (isOfClass(Integer, other))       /* adding two integers together?     */
-        {
-            /* add the numbers                   */
-            wholenumber_t tempVal = this->value + other->value;
-            /* result still within range?        */
-            if (tempVal <= Numerics::MAX_WHOLENUMBER && tempVal >= Numerics::MIN_WHOLENUMBER)
-            {
-                return new_integer(tempVal);   /* return as an integer number       */
-            }
-        }
-        /* need to do full arithmetic        */
-        return integer_forward(this, plus, other);
-    }
+                                       /* need to do full arithmetic        */
+    return integer_forward(this, plus, other);
+  }
 }
 
 RexxObject *RexxInteger::minus(
@@ -488,32 +478,25 @@ RexxObject *RexxInteger::minus(
 /* Function:  Subtract another object from an integer                         */
 /******************************************************************************/
 {
-    /* are we using default digits?      */
-    if (number_digits() != Numerics::DEFAULT_DIGITS )
-    {
-        /* nope, then we can do integer arith*/
-        return integer_forward(this, minus, other);
-    }
+                                       /* are we using default digits?      */
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
+                                       /* nope, then we can do integer arith*/
+    return integer_forward(this, minus, other);
 
-    if (other == OREF_NULL)            /* unary subtraction operator        */
-    {
-        return new_integer(-this->value);  /* and return a new integer          */
+  if (other == OREF_NULL) {            /* unary subtraction operator        */
+    return new_integer(-this->value);  /* and return a new integer          */
+  }
+  else {                               /* binary subtraction operation      */
+    if (isOfClass(Integer, other)) {       /* subtracting two integers?         */
+                                       /* subtract the numbers              */
+      wholenumber_t tempVal = this->value - other->value;
+                                       /* result still within range?        */
+      if (tempVal <= Numerics::MAX_WHOLENUMBER && tempVal >= Numerics::MIN_WHOLENUMBER)
+        return new_integer(tempVal);   /* return as an integer number       */
     }
-    else                               /* binary subtraction operation      */
-    {
-        if (isOfClass(Integer, other))       /* subtracting two integers?         */
-        {
-            /* subtract the numbers              */
-            wholenumber_t tempVal = this->value - other->value;
-            /* result still within range?        */
-            if (tempVal <= Numerics::MAX_WHOLENUMBER && tempVal >= Numerics::MIN_WHOLENUMBER)
-            {
-                return new_integer(tempVal);   /* return as an integer number       */
-            }
-        }
-        /* need to do full arithmetic        */
-        return integer_forward(this, minus, other);
-    }
+                                       /* need to do full arithmetic        */
+    return integer_forward(this, minus, other);
+  }
 }
 
 RexxObject *RexxInteger::multiply(
@@ -522,24 +505,20 @@ RexxObject *RexxInteger::multiply(
 /* Function:  Multiply an integer by another object                           */
 /******************************************************************************/
 {
-    /* are we using default digits?      */
-    if (number_digits() != Numerics::DEFAULT_DIGITS )
-    {
-        /* nope, we can't do integer math    */
-        return integer_forward(this, multiply, other);
-    }
-    required_arg(other, ONE);            /* make sure the argument is there   */
-                                         /* is the other an integer and will  */
-                                         /* the result be in a good range?    */
-    if (isOfClass(Integer, other) && Numerics::abs(this->value) <= 99999 && Numerics::abs(other->value) <= 9999)
-    {
-        /* multiply directly                 */
-        return new_integer(this->value * other->value);
-    }
-    else                                 /* do the slow way                   */
-    {
-        return integer_forward(this, multiply, other);
-    }
+                                       /* are we using default digits?      */
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
+                                       /* nope, we can't do integer math    */
+    return integer_forward(this, multiply, other);
+  required_arg(other, ONE);            /* make sure the argument is there   */
+                                       /* is the other an integer and will  */
+                                       /* the result be in a good range?    */
+  if (isOfClass(Integer, other) && Numerics::abs(this->value) <= 99999 && Numerics::abs(other->value) <= 9999)
+  {
+    /* multiply directly                 */
+    return new_integer(this->value * other->value);
+  }
+  else                                 /* do the slow way                   */
+    return integer_forward(this, multiply, other);
 }
 
 RexxObject *RexxInteger::divide(
@@ -549,7 +528,7 @@ RexxObject *RexxInteger::divide(
 /******************************************************************************/
 {
                                        /* just forward this                 */
-    return integer_forward(this, divide, other);
+  return integer_forward(this, divide, other);
 }
 
 RexxObject *RexxInteger::integerDivide(
@@ -558,30 +537,25 @@ RexxObject *RexxInteger::integerDivide(
 /* Function:  Perform integer division                                        */
 /******************************************************************************/
 {
-    /* are we using default digits?      */
-    if (number_digits() != Numerics::DEFAULT_DIGITS )
-    {
-        /* nope, we can't do integer arith   */
-        return integer_forward(this, integerDivide, other);
-    }
-    required_arg(other, ONE);            /* make sure this is really there    */
-
-    if (isOfClass(Integer, other))         /* is right object an integer?       */
-    {
-        /* is right number 0?                */
-        if (other->value != 0)
-        {
-            // do the division directly
-            return new_integer(this->value / other->value);
-        }
-        else                               /* yes, raise error.                 */
-        {
-            reportException(Error_Overflow_zero);
-        }
-    }
-    /* not integer, forward to           */
-    /*numberstring.                      */
+                                       /* are we using default digits?      */
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
+                                       /* nope, we can't do integer arith   */
     return integer_forward(this, integerDivide, other);
+  required_arg(other, ONE);            /* make sure this is really there    */
+
+  if (isOfClass(Integer, other)) {         /* is right object an integer?       */
+                                       /* is right number 0?                */
+    if (other->value != 0)
+    {
+        // do the division directly
+        return new_integer(this->value / other->value);
+    }
+    else                               /* yes, raise error.                 */
+      reportException(Error_Overflow_zero);
+  }
+                                       /* not integer, forward to           */
+                                       /*numberstring.                      */
+  return integer_forward(this, integerDivide, other);
 }
 
 RexxObject *RexxInteger::remainder(
@@ -590,30 +564,25 @@ RexxObject *RexxInteger::remainder(
 /* Function:  Perform remainder division                                      */
 /******************************************************************************/
 {
-    /* are we using default digits?      */
-    if (number_digits() != Numerics::DEFAULT_DIGITS )
-    {
-        /* nope, we can't do integer arith   */
-        return integer_forward(this, remainder, other);
-    }
-    required_arg(other, ONE);            /* make sure this is really there    */
-
-    if (isOfClass(Integer, other))         /* is right object an integer?       */
-    {
-        /* is right number 0?                */
-        if (other->value != 0)
-        {
-            // we can do this directly
-            return new_integer(this->value % other->value);
-        }
-        else                               /* yes, raise error.                 */
-        {
-            reportException(Error_Overflow_zero);
-        }
-    }
-    /* not integer, forward to           */
-    /*numberstring.                      */
+                                       /* are we using default digits?      */
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
+                                       /* nope, we can't do integer arith   */
     return integer_forward(this, remainder, other);
+  required_arg(other, ONE);            /* make sure this is really there    */
+
+  if (isOfClass(Integer, other)) {         /* is right object an integer?       */
+                                       /* is right number 0?                */
+    if (other->value != 0)
+    {
+      // we can do this directly
+      return new_integer(this->value % other->value);
+    }
+    else                               /* yes, raise error.                 */
+      reportException(Error_Overflow_zero);
+  }
+                                       /* not integer, forward to           */
+                                       /*numberstring.                      */
+  return integer_forward(this, remainder, other);
 }
 
 RexxObject *RexxInteger::power(
@@ -623,7 +592,7 @@ RexxObject *RexxInteger::power(
 /******************************************************************************/
 {
                                        /* just send along                   */
-    return integer_forward(this, power, other);
+  return integer_forward(this, power, other);
 }
 
 bool RexxInteger::isEqual(
@@ -633,19 +602,17 @@ bool RexxInteger::isEqual(
 /*            only strict equality, not greater or less than values.          */
 /******************************************************************************/
 {
-    if (this->isSubClassOrEnhanced())      /* not a primitive?                  */
-    {
-        /* do the full lookup compare        */
-        return this->sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
-    }
+  if (this->isSubClassOrEnhanced())      /* not a primitive?                  */
+  {
+                                       /* do the full lookup compare        */
+      return this->sendMessage(OREF_STRICT_EQUAL, other)->truthValue(Error_Logical_value_method);
+  }
 
-    if (isOfClass(Integer, other))           /* two integers?                     */
-    {
-        /* just directly compare the values  */
-        return this->value == ((RexxInteger *)other)->value;
-    }
-    /* go do a string compare            */
-    return this->stringValue()->isEqual(other);
+  if (isOfClass(Integer, other))           /* two integers?                     */
+                                       /* just directly compare the values  */
+    return this->value == ((RexxInteger *)other)->value;
+                                       /* go do a string compare            */
+  return this->stringValue()->isEqual(other);
 }
 
 wholenumber_t RexxInteger::strictComp(
@@ -658,16 +625,12 @@ wholenumber_t RexxInteger::strictComp(
 /*             return >0 if this is greater than other                        */
 /******************************************************************************/
 {
-    required_arg(other, ONE);            /* make sure this is really there    */
-    if (isOfClass(Integer, other))           /* string compare is simple          */
-    {
-        /* just return their difference      */
-        return this->value - ((RexxInteger *)other)->value;
-    }
-    else                                 /* go do a string compare            */
-    {
-        return this->stringValue()->strictComp((RexxString *)other);
-    }
+  required_arg(other, ONE);            /* make sure this is really there    */
+  if (isOfClass(Integer, other))           /* string compare is simple          */
+                                       /* just return their difference      */
+    return this->value - ((RexxInteger *)other)->value;
+  else                                 /* go do a string compare            */
+    return this->stringValue()->strictComp((RexxString *)other);
 }
 
 
@@ -728,7 +691,7 @@ RexxInteger *RexxInteger::strictNotEqual(
 /******************************************************************************/
 {
                                        /* return strict compare result      */
-    return (this->strictComp(other) != 0) ? TheTrueObject : TheFalseObject;
+  return (this->strictComp(other) != 0) ? TheTrueObject : TheFalseObject;
 }
 
 RexxInteger *RexxInteger::equal(
@@ -737,7 +700,7 @@ RexxInteger *RexxInteger::equal(
 /* Function:  non-strict "=" operator                                         */
 /******************************************************************************/
 {
-    return this->comp(other) == 0 ? TheTrueObject : TheFalseObject;
+  return this->comp(other) == 0 ? TheTrueObject : TheFalseObject;
 }
 
 RexxInteger *RexxInteger::notEqual(
@@ -746,7 +709,7 @@ RexxInteger *RexxInteger::notEqual(
 /* Function:  non-strict "\=" operator                                        */
 /******************************************************************************/
 {
-    return this->comp(other) != 0 ? TheTrueObject : TheFalseObject;
+  return this->comp(other) != 0 ? TheTrueObject : TheFalseObject;
 }
 
 RexxInteger *RexxInteger::isGreaterThan(
@@ -755,7 +718,7 @@ RexxInteger *RexxInteger::isGreaterThan(
 /* Function:  non-strict ">" operator                                         */
 /******************************************************************************/
 {
-    return this->comp(other) > 0 ? TheTrueObject : TheFalseObject;
+  return this->comp(other) > 0 ? TheTrueObject : TheFalseObject;
 }
 
 RexxInteger *RexxInteger::isLessThan(
@@ -764,7 +727,7 @@ RexxInteger *RexxInteger::isLessThan(
 /* Function:  non-strict "<" operator                                         */
 /******************************************************************************/
 {
-    return this->comp(other) < 0 ? TheTrueObject : TheFalseObject;
+  return this->comp(other) < 0 ? TheTrueObject : TheFalseObject;
 }
 
 RexxInteger *RexxInteger::isGreaterOrEqual(
@@ -773,7 +736,7 @@ RexxInteger *RexxInteger::isGreaterOrEqual(
 /* Function:  non-strict ">=" operator                                        */
 /******************************************************************************/
 {
-    return this->comp(other) >= 0 ? TheTrueObject : TheFalseObject;
+  return this->comp(other) >= 0 ? TheTrueObject : TheFalseObject;
 }
 
 RexxInteger *RexxInteger::isLessOrEqual(
@@ -782,7 +745,7 @@ RexxInteger *RexxInteger::isLessOrEqual(
 /* Function:  non-strict "<=" operator                                        */
 /******************************************************************************/
 {
-    return this->comp(other) <= 0 ? TheTrueObject : TheFalseObject;
+  return this->comp(other) <= 0 ? TheTrueObject : TheFalseObject;
 }
 
 
@@ -792,7 +755,7 @@ RexxInteger *RexxInteger::strictGreaterThan(
 /* Function:  strict ">>" operator                                            */
 /******************************************************************************/
 {
-    return this->strictComp(other) > 0 ? TheTrueObject : TheFalseObject;
+  return this->strictComp(other) > 0 ? TheTrueObject : TheFalseObject;
 }
 
 RexxInteger *RexxInteger::strictLessThan(
@@ -801,7 +764,7 @@ RexxInteger *RexxInteger::strictLessThan(
 /* Function:  strict "<<" operator                                            */
 /******************************************************************************/
 {
-    return this->strictComp(other) < 0 ? TheTrueObject : TheFalseObject;
+  return this->strictComp(other) < 0 ? TheTrueObject : TheFalseObject;
 }
 
 RexxInteger *RexxInteger::strictGreaterOrEqual(
@@ -810,7 +773,7 @@ RexxInteger *RexxInteger::strictGreaterOrEqual(
 /* Function:  strict ">>=" operator                                           */
 /******************************************************************************/
 {
-    return this->strictComp(other) >= 0 ? TheTrueObject : TheFalseObject;
+  return this->strictComp(other) >= 0 ? TheTrueObject : TheFalseObject;
 }
 
 RexxInteger *RexxInteger::strictLessOrEqual(
@@ -819,7 +782,7 @@ RexxInteger *RexxInteger::strictLessOrEqual(
 /* Function:  strict "<<=" operator                                           */
 /******************************************************************************/
 {
-    return this->strictComp(other) <= 0 ? TheTrueObject : TheFalseObject;
+  return this->strictComp(other) <= 0 ? TheTrueObject : TheFalseObject;
 }
 
 RexxObject *RexxInteger::notOp()
@@ -828,7 +791,7 @@ RexxObject *RexxInteger::notOp()
 /******************************************************************************/
 {
                                        /* perform the operation             */
-    return this->truthValue(Error_Logical_value_method) ? TheFalseObject : TheTrueObject;
+  return this->truthValue(Error_Logical_value_method) ? TheFalseObject : TheTrueObject;
 }
 
 RexxObject *RexxInteger::operatorNot(
@@ -838,7 +801,7 @@ RexxObject *RexxInteger::operatorNot(
 /******************************************************************************/
 {
                                        /* perform the operation             */
-    return this->truthValue(Error_Logical_value_method) ? TheFalseObject : TheTrueObject;
+  return this->truthValue(Error_Logical_value_method) ? TheFalseObject : TheTrueObject;
 }
 
 RexxObject *RexxInteger::andOp(
@@ -847,11 +810,13 @@ RexxObject *RexxInteger::andOp(
 /* Function:  Logically AND two objects together                              */
 /******************************************************************************/
 {
-    required_arg(other, ONE);            /* make sure the argument is there   */
-                                         /* validate the boolean              */
-    RexxObject *otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
-    /* perform the operation             */
-    return(!this->truthValue(Error_Logical_value_method)) ? TheFalseObject : otherTruth;
+  RexxObject *otherTruth;              /* truth value of the other object   */
+
+  required_arg(other, ONE);            /* make sure the argument is there   */
+                                       /* validate the boolean              */
+  otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
+                                       /* perform the operation             */
+  return (!this->truthValue(Error_Logical_value_method)) ? TheFalseObject : otherTruth;
 }
 
 RexxObject *RexxInteger::orOp(
@@ -860,11 +825,13 @@ RexxObject *RexxInteger::orOp(
 /* Function:  Logically OR two objects together                               */
 /******************************************************************************/
 {
-    required_arg(other, ONE);            /* make sure the argument is there   */
-                                         /* validate the boolean              */
-    RexxObject *otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
-    /* perform the operation             */
-    return(this->truthValue(Error_Logical_value_method)) ? TheTrueObject : otherTruth;
+  RexxObject *otherTruth;              /* truth value of the other object   */
+
+  required_arg(other, ONE);            /* make sure the argument is there   */
+                                       /* validate the boolean              */
+  otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
+                                       /* perform the operation             */
+  return (this->truthValue(Error_Logical_value_method)) ? TheTrueObject : otherTruth;
 }
 
 RexxObject *RexxInteger::xorOp(
@@ -873,19 +840,15 @@ RexxObject *RexxInteger::xorOp(
 /* Function:  Logically XOR two objects together                              */
 /******************************************************************************/
 {
-    required_arg(other, ONE);            /* make sure the argument is there   */
-                                         /* get as a boolean                  */
-    bool truth = other->truthValue(Error_Logical_value_method);
-    /* first one false?                  */
-    if (!this->truthValue(Error_Logical_value_method))
-    {
-        /* value is always the second        */
-        return truth ? TheTrueObject : TheFalseObject;
-    }
-    else                                 /* value is inverse of second        */
-    {
-        return(truth) ? TheFalseObject : TheTrueObject;
-    }
+  required_arg(other, ONE);            /* make sure the argument is there   */
+                                       /* get as a boolean                  */
+  bool truth = other->truthValue(Error_Logical_value_method);
+                                       /* first one false?                  */
+  if (!this->truthValue(Error_Logical_value_method))
+                                       /* value is always the second        */
+    return truth ? TheTrueObject : TheFalseObject;
+  else                                 /* value is inverse of second        */
+    return (truth) ? TheFalseObject : TheTrueObject;
 }
 
 RexxObject *RexxInteger::abs()
@@ -893,20 +856,16 @@ RexxObject *RexxInteger::abs()
 /* Function:  Take the absolute value of an integer object                    */
 /******************************************************************************/
 {
-    /* working under the default digits? */
-    if (number_digits() == Numerics::DEFAULT_DIGITS)
-    {
-        /* if we're already positive, this is a quick return */
-        if (value >= 0)
-        {
-            return this;
-        }
-        return new_integer(-value);       /* return as an integer object       */
-    }
-    else
-    {
-        return this->numberString()->abs(); /* do a numberstring operation       */
-    }
+                                       /* working under the default digits? */
+ if (number_digits() == Numerics::DEFAULT_DIGITS) {
+     /* if we're already positive, this is a quick return */
+     if (value >= 0) {
+         return this;
+     }
+     return new_integer(-value);       /* return as an integer object       */
+ }
+ else
+   return this->numberString()->abs(); /* do a numberstring operation       */
 }
 
 RexxObject *RexxInteger::sign()
@@ -914,18 +873,15 @@ RexxObject *RexxInteger::sign()
 /* Function:  SIGN() function on an integer object                            */
 /******************************************************************************/
 {
-    if (this->value > 0)                  /* positive number?                  */
-    {
-        return IntegerOne;                /* result is "1"                     */
-    }
-    else if (this->value < 0)             /* negative number?                  */
-    {
-        return new_integer(-1);            /* result is "-1"                    */
-    }
-    else
-    {
-        return IntegerZero;                /* exactly zero                      */
-    }
+  RexxObject *result;                  /* returned result                   */
+
+ if (this->value > 0)                  /* positive number?                  */
+   result = IntegerOne;                /* result is "1"                     */
+ else if (this->value < 0)             /* negative number?                  */
+  result = new_integer(-1);            /* result is "-1"                    */
+ else
+  result = IntegerZero;                /* exactly zero                      */
+ return result;                        /* return the value                  */
 }
 
 RexxObject *RexxInteger::Max(
@@ -935,54 +891,45 @@ RexxObject *RexxInteger::Max(
 /* Function:  Perform MAX function on integer objects                         */
 /******************************************************************************/
 {
-    wholenumber_t maxvalue;              /* current maximum                   */
-    size_t       arg;                    /* current arg position              */
-    RexxObject * argument;               /* current argument object           */
+  wholenumber_t maxvalue;              /* current maximum                   */
+  size_t       arg;                    /* current arg position              */
+  RexxObject * argument;               /* current argument object           */
 
 
-                                         /* are we using default digits?      */
-    if (number_digits() != Numerics::DEFAULT_DIGITS )
-    {
-        /* nope, we can't do integer max.    */
-        return this->numberString()->Max(args, argCount);
+                                       /* are we using default digits?      */
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
+                                       /* nope, we can't do integer max.    */
+   return this->numberString()->Max(args, argCount);
+
+  if (argCount < 1)                    /* no comparisons to do?             */
+    return (RexxObject *)this;         /* just return this as the result    */
+
+  maxvalue = this->value;              /* assume first number is our max.   */
+
+                                       /* check each numbers to see if      */
+                                       /* larger than the max.              */
+  for (arg = 0; arg < argCount; arg++) {
+    argument = args[arg];              /* get next argument element         */
+
+    if (argument == OREF_NULL)         /* was argument missging ?           */
+                                       /* Yes, report the error.            */
+      reportException(Error_Incorrect_method_noarg, arg);
+
+    if (isOfClass(Integer, argument)) {    /* is this an INTEGER object?        */
+                                       /* yes, gets its value.              */
+      wholenumber_t v = ((RexxInteger *)argument)->getValue();
+      if (v > maxvalue)                /* is this number larger than max?   */
+        maxvalue = v;                  /* yes, it is our new max.           */
     }
-
-    if (argCount < 1)                    /* no comparisons to do?             */
-    {
-        return(RexxObject *)this;         /* just return this as the result    */
+    else {                             /* not an integer, compare isn't     */
+                                         /* not all integers, convert into a  */
+                                         /* NumberString, and let NumberString*/
+                                         /* figure this out.                  */
+      return this->numberString()->Max(args, argCount);
     }
-    maxvalue = this->value;              /* assume first number is our max.   */
+  }
 
-                                         /* check each numbers to see if      */
-                                         /* larger than the max.              */
-    for (arg = 0; arg < argCount; arg++)
-    {
-        argument = args[arg];              /* get next argument element         */
-
-        if (argument == OREF_NULL)         /* was argument missging ?           */
-        {
-                                           /* Yes, report the error.            */
-            reportException(Error_Incorrect_method_noarg, arg);
-        }
-
-        if (isOfClass(Integer, argument))    /* is this an INTEGER object?        */
-        {
-            /* yes, gets its value.              */
-            wholenumber_t v = ((RexxInteger *)argument)->getValue();
-            if (v > maxvalue)                /* is this number larger than max?   */
-            {
-                maxvalue = v;                  /* yes, it is our new max.           */
-            }
-        }
-        else                             /* not an integer, compare isn't     */
-        {
-            /* not all integers, convert into a  */
-            /* NumberString, and let NumberString*/
-            /* figure this out.                  */
-            return this->numberString()->Max(args, argCount);
-        }
-    }
-    return new_integer(maxvalue);      /* yes, then max is our max number   */
+  return new_integer(maxvalue);      /* yes, then max is our max number   */
 }
 
 RexxObject *RexxInteger::Min(
@@ -992,55 +939,44 @@ RexxObject *RexxInteger::Min(
 /* Function:  Perform MAX function on integer objects                         */
 /******************************************************************************/
 {
-    wholenumber_t minvalue;              /* current minimum                   */
-    size_t       arg;                    /* current arg position              */
-    RexxObject * argument;               /* current argument object           */
+  wholenumber_t minvalue;              /* current minimum                   */
+  size_t       arg;                    /* current arg position              */
+  RexxObject * argument;               /* current argument object           */
 
-                                         /* are we using default digits?      */
-    if (number_digits() != Numerics::DEFAULT_DIGITS )
-    {
-        /* nope, we can't do integer max.    */
-        return this->numberString()->Min(args, argCount);
+                                       /* are we using default digits?      */
+  if (number_digits() != Numerics::DEFAULT_DIGITS )
+                                       /* nope, we can't do integer max.    */
+   return this->numberString()->Min(args, argCount);
+
+  if (argCount < 1)                    /* no comparisons to do?             */
+    return (RexxObject *)this;         /* just return this as the result    */
+
+  minvalue = this->value;              /* assume first number is our min.   */
+
+                                       /* check each numbers to see if      */
+                                       /* larger than the max.              */
+  for (arg = 0; arg < argCount; arg++) {
+    argument = args[arg];              /* get next argument element         */
+
+    if (argument == OREF_NULL)         /* was argument missging ?           */
+                                       /* Yes, report the error.            */
+      reportException(Error_Incorrect_method_noarg, arg);
+
+    if (isOfClass(Integer, argument)) {    /* is this an INTEGER object?        */
+                                       /* yes, gets its value.              */
+      wholenumber_t v = ((RexxInteger *)argument)->getValue();
+      if (v < minvalue)                /* is this number larger than min?   */
+        minvalue = v;                  /* yes, it is our new max.           */
     }
-
-    if (argCount < 1)                    /* no comparisons to do?             */
-    {
-        return(RexxObject *)this;         /* just return this as the result    */
+    else {                             /* not an integer, compare isn't     */
+                                         /* not all integers, convert into a  */
+                                         /* NumberString, and let NumberString*/
+                                         /* figure this out.                  */
+      return this->numberString()->Min(args, argCount);
     }
+  }
 
-    minvalue = this->value;              /* assume first number is our min.   */
-
-                                         /* check each numbers to see if      */
-                                         /* larger than the max.              */
-    for (arg = 0; arg < argCount; arg++)
-    {
-        argument = args[arg];              /* get next argument element         */
-
-        if (argument == OREF_NULL)         /* was argument missging ?           */
-        {
-                                           /* Yes, report the error.            */
-            reportException(Error_Incorrect_method_noarg, arg);
-        }
-
-        if (isOfClass(Integer, argument))    /* is this an INTEGER object?        */
-        {
-            /* yes, gets its value.              */
-            wholenumber_t v = ((RexxInteger *)argument)->getValue();
-            if (v < minvalue)                /* is this number larger than min?   */
-            {
-                minvalue = v;                  /* yes, it is our new max.           */
-            }
-        }
-        else                             /* not an integer, compare isn't     */
-        {
-            /* not all integers, convert into a  */
-            /* NumberString, and let NumberString*/
-            /* figure this out.                  */
-            return this->numberString()->Min(args, argCount);
-        }
-    }
-
-    return new_integer(minvalue);      /* yes, then max is our max number   */
+  return new_integer(minvalue);      /* yes, then max is our max number   */
 }
 
 RexxObject *RexxInteger::trunc(
@@ -1050,7 +986,7 @@ RexxObject *RexxInteger::trunc(
 /******************************************************************************/
 {
                                        /* just forward to numberstring      */
-    return this->numberString()->trunc(decimals);
+  return this->numberString()->trunc(decimals);
 }
 
 RexxObject *RexxInteger::format(
@@ -1062,7 +998,7 @@ RexxObject *RexxInteger::format(
 /* Function:  Act as a front end for the actual FORMAT REXX method            */
 /******************************************************************************/
 {
-    return this->numberString()->formatRexx(Integers, Decimals, MathExp, ExpTrigger);
+  return this->numberString()->formatRexx(Integers, Decimals, MathExp, ExpTrigger);
 }
 
 RexxObject *RexxInteger::d2c(
@@ -1072,7 +1008,7 @@ RexxObject *RexxInteger::d2c(
 /******************************************************************************/
 {
                                        /* format as a string value          */
-    return this->numberString()->d2xD2c(length, true);
+  return this->numberString()->d2xD2c(length, true);
 }
 
 RexxObject *RexxInteger::d2x(
@@ -1082,7 +1018,7 @@ RexxObject *RexxInteger::d2x(
 /******************************************************************************/
 {
                                        /* format as a string value          */
-    return this->numberString()->d2xD2c(length, false);
+  return this->numberString()->d2xD2c(length, false);
 }
 
 RexxObject  *RexxInteger::evaluate(
@@ -1093,10 +1029,10 @@ RexxObject  *RexxInteger::evaluate(
 /*            term for literals                                               */
 /******************************************************************************/
 {
-    stack->push(this);                   /* place on the evaluation stack     */
+  stack->push(this);                   /* place on the evaluation stack     */
                                        /* trace if necessary                */
-    context->traceIntermediate(this, TRACE_PREFIX_LITERAL);
-    return this;                         /* also return the result            */
+  context->traceIntermediate(this, TRACE_PREFIX_LITERAL);
+  return this;                         /* also return the result            */
 }
 
 
@@ -1106,7 +1042,7 @@ RexxObject  *RexxInteger::getValue(
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
 {
-    return (RexxObject *)this;           /* just return this value            */
+  return (RexxObject *)this;           /* just return this value            */
 }
 
 
@@ -1116,7 +1052,7 @@ RexxObject  *RexxInteger::getValue(
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
 {
-    return (RexxObject *)this;           /* just return this value            */
+  return (RexxObject *)this;           /* just return this value            */
 }
 
 
@@ -1126,7 +1062,7 @@ RexxObject  *RexxInteger::getRealValue(
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
 {
-    return (RexxObject *)this;           /* just return this value            */
+  return (RexxObject *)this;           /* just return this value            */
 }
 
 
@@ -1136,7 +1072,7 @@ RexxObject  *RexxInteger::getRealValue(
 /* Function:  Polymorphic get_value function used with expression terms       */
 /******************************************************************************/
 {
-    return (RexxObject *)this;           /* just return this value            */
+  return (RexxObject *)this;           /* just return this value            */
 }
 
 /* **************************************** */
@@ -1151,17 +1087,16 @@ RexxIntegerClass::RexxIntegerClass()
 /*  memory_new.                                                               */
 /******************************************************************************/
 {
-    int i;                                /* loop counter                      */
+ int i;                                /* loop counter                      */
 
-    for (i=INTEGERCACHELOW; i<INTEGERCACHESIZE; i++ )  /* now create all our cached integers*/
-    {
-        OrefSet(this, this->integercache[i - INTEGERCACHELOW], new  RexxInteger (i));
-        /* force the item to create its string value too.  This can save */
-        /* us a lot of time when string indices are used for compound */
-        /* variables and also eliminate a bunch of old-new table */
-        /* references. */
-        this->integercache[i - INTEGERCACHELOW]->stringValue();
-    }
+ for (i=INTEGERCACHELOW; i<INTEGERCACHESIZE; i++ ) {  /* now create all our cached integers*/
+   OrefSet(this, this->integercache[i - INTEGERCACHELOW], new  RexxInteger (i));
+   /* force the item to create its string value too.  This can save */
+   /* us a lot of time when string indices are used for compound */
+   /* variables and also eliminate a bunch of old-new table */
+   /* references. */
+   this->integercache[i - INTEGERCACHELOW]->stringValue();
+ }
 }
 
 void RexxIntegerClass::live(size_t liveMark)
@@ -1169,15 +1104,15 @@ void RexxIntegerClass::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    int i;                               /* loop counter                      */
+  int i;                               /* loop counter                      */
 
-    this->RexxClass::live(liveMark);     /* do RexxClass level marking        */
+  this->RexxClass::live(liveMark);     /* do RexxClass level marking        */
 
-                                         /* now mark the cached integers      */
-    for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
-    {
-        memory_mark(this->integercache[i - INTEGERCACHELOW]);
-    }
+                                       /* now mark the cached integers      */
+  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
+  {
+       memory_mark(this->integercache[i - INTEGERCACHELOW]);
+  }
 }
 
 void RexxIntegerClass::liveGeneral(int reason)
@@ -1185,15 +1120,15 @@ void RexxIntegerClass::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    int  i;                              /* loop counter                      */
+  int  i;                              /* loop counter                      */
 
-    this->RexxClass::liveGeneral(reason); /* do RexxClass level marking        */
+  this->RexxClass::liveGeneral(reason); /* do RexxClass level marking        */
 
-    /* now mark the cached integers      */
-    for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
-    {
-        memory_mark_general(this->integercache[i - INTEGERCACHELOW]);
-    }
+                                       /* now mark the cached integers      */
+  for (i = INTEGERCACHELOW; i < INTEGERCACHESIZE ;i++ )
+  {
+      memory_mark_general(this->integercache[i - INTEGERCACHELOW]);
+  }
 }
 
 void *RexxInteger::operator new(size_t size)
@@ -1201,10 +1136,15 @@ void *RexxInteger::operator new(size_t size)
 /* Function:  Create a new integer object                                     */
 /******************************************************************************/
 {
-    RexxObject *newObject = new_object(size, T_Integer);  /* get a new object                  */
-    newObject->clearObject();            /* clear the object                  */
-    newObject->setHasNoReferences();     /* Tell GC, not to bother with Live  */
-    return newObject;                    /* return the new object.            */
+  RexxObject * newObject;              /* newly create object               */
+
+  newObject = new_object(size);        /* get a new object                  */
+                                       /* add in the integer behaviour, and */
+                                       /* make sure old2new knows about it  */
+  newObject->setBehaviour(TheIntegerBehaviour);
+  newObject->clearObject();            /* clear the object                  */
+  newObject->setHasNoReferences();     /* Tell GC, not to bother with Live  */
+  return newObject;                    /* return the new object.            */
 }
 
 void RexxInteger::createInstance()

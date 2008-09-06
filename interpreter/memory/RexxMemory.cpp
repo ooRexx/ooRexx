@@ -737,13 +737,13 @@ MemorySegment *RexxMemory::newSegment(size_t requestedBytes, size_t minBytes)
     MemorySegment *segment;
 
 #ifdef MEMPROFILE
-    printf("Allocating a new segment of %zu bytes\n", requestedBytes);
+    printf("Allocating a new segment of %d bytes\n", requestedBytes);
 #endif
     /* first make sure we've got enough space for the control */
     /* information, and round this to a proper boundary */
     requestedBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
 #ifdef MEMPROFILE
-    printf("Allocating boundary a new segment of %zu bytes\n", requestedBytes);
+    printf("Allocating boundary a new segment of %d bytes\n", requestedBytes);
 #endif
     /*Get a new segment                  */
     segment = currentPool->newSegment(requestedBytes);
@@ -777,13 +777,13 @@ MemorySegment *RexxMemory::newLargeSegment(size_t requestedBytes, size_t minByte
     MemorySegment *segment;
 
 #ifdef MEMPROFILE
-    printf("Allocating large new segment of %zu bytes\n", requestedBytes);
+    printf("Allocating large new segment of %d bytes\n", requestedBytes);
 #endif
     /* first make sure we've got enough space for the control */
     /* information, and round this to a proper boundary */
     requestedBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
 #ifdef MEMPROFILE
-    printf("Allocating large boundary new segment of %zu bytes\n", requestedBytes);
+    printf("Allocating large boundary new segment of %d bytes\n", requestedBytes);
 #endif
     /*Get a new segment                  */
     segment = currentPool->newLargeSegment(requestedBytes);
@@ -1036,7 +1036,7 @@ void RexxMemory::collect()
     /* operation. */
 
     verboseMessage("End collecting memory\n");
-    verboseMessage("Object save table contains %zu objects\n", this->saveTable->items());
+    verboseMessage("Object save table contains %d objects\n", this->saveTable->items());
 }
 
 RexxObject *RexxMemory::oldObject(size_t requestLength)
@@ -1599,7 +1599,7 @@ void RexxMemory::orphanCheckMark(RexxObject *markObject, RexxObject **pMarkObjec
                     objectClassName = className->getStringData();
                 if (firstnode)
                 {             /* is this the first node??          */
-                    printf("-->Parent node was marking offset %zu\n", (char *)pMarkObject - (char *)markObject);
+                    printf("-->Parent node was marking offset '%u'x \n", (char *)pMarkObject - (char *)markObject);
                     dumpObject(markObject, outfile);
                     firstnode = false;
                     logMemoryCheck(outfile, "Parent node is at %p, of type %s(%d) \n",
@@ -1772,7 +1772,7 @@ void RexxMemory::saveImage(void)
 
     printf("Object stats for this image save are \n");
     _imageStats.printSavedImageStats();
-    printf("\n\n Total bytes for this image %zu bytes \n", image_offset);
+    printf("\n\n Total bytes for this image %d bytes \n", image_offset);
 }
 
 

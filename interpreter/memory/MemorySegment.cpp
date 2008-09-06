@@ -51,10 +51,10 @@ void MemorySegment::dump(const char *owner, size_t counter, FILE *keyfile, FILE 
 /******************************************************************************/
 {
                                        /* print header for segment          */
-      fprintf(stderr,"Dumping %s Segment %zd from %p for %zu\n", owner, counter, &segmentStart, segmentSize);
+      fprintf(stderr,"Dumping %s Segment %d from %p for %u\n", owner, counter, &segmentStart, segmentSize);
                                        /* now dump the segment              */
-      fprintf(keyfile, "%s addr.%zd = %p\n", owner, counter, &segmentStart);
-      fprintf(keyfile, "%s size.%zd = %zu\n", owner, counter, segmentSize);
+      fprintf(keyfile, "%s addr.%d = %p\n", owner, counter, &segmentStart);
+      fprintf(keyfile, "%s size.%d = %u\n", owner, counter, segmentSize);
       fwrite(&segmentStart, 1, segmentSize, dumpfile);
 }
 
@@ -216,7 +216,7 @@ NormalSegmentSet::NormalSegmentSet(RexxMemory *mem) :
     {  /* there are only                    */
         /* DeadPools subpools! (<, not <=)   */
         char buffer[100];
-        sprintf(buffer, "Normal allocation subpool %d for blocks of size %zu", i, DeadPoolToLength(i));
+        sprintf(buffer, "Normal allocation subpool %d for blocks of size %d", i, DeadPoolToLength(i));
         subpools[i].setID(buffer);
         /* make sure these are properly set up as single size */
         /* keepers */
@@ -498,7 +498,7 @@ void MemorySegmentSet::addSegment(MemorySegment *segment, bool createDeadObject)
         /* entire block as a dead object. */
         size_t deadLength = segment->realSize();
         previous->combine(segment);
-        memory->verboseMessage("Combining newly allocated segment of %zu bytes to create new segment of %zu bytes\n", deadLength, previous->size());
+        memory->verboseMessage("Combining newly allocated segment of %d bytes to create new segment of %d bytes\n", deadLength, previous->size());
         addDeadObject((char *)segment, deadLength);
     }
     else
@@ -895,7 +895,7 @@ void MemorySegmentSet::adjustMemorySize()
     {
         /* go add as many segments as are required to reach that */
         /* level. */
-        memory->verboseMessage("Expanding normal segment set by %zu\n", suggestedExpansion);
+        memory->verboseMessage("Expanding normal segment set by %d\n", suggestedExpansion);
         addSegments(suggestedExpansion);
     }
 #if 0
@@ -1096,7 +1096,7 @@ void LargeSegmentSet::completeSweepOperation()
 /******************************************************************************/
 {
 #ifdef VERBOSE_GC
-    memory->verboseMessage("Large segment sweep complete.  Largest block is %zu, smallest block is %zu\n", largestObject, smallestObject);
+    memory->verboseMessage("Large segment sweep complete.  Largest block is %d, smallest block is %d\n", largestObject, smallestObject);
 #endif
 }
 
@@ -1661,7 +1661,7 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
                 /* merge these two segments together. */
                 removeSegment(tailSegment);
                 segment->combine(tailSegment);
-                memory->verboseMessage("Non-empty segments combined to create segment of %zu bytes\n", segment->size());
+                memory->verboseMessage("Non-empty segments combined to create segment of %d bytes\n", segment->size());
                 /* Now that this has been combined with one or more */
                 /* segments, the merged segment may still be a */
                 /* candidate for one more level of merge.  Step to the */
@@ -1699,7 +1699,7 @@ void MemorySegmentSet::combineEmptySegments(
     /* add the space to the front segment */
     front->combine(back);
 
-    memory->verboseMessage("Two segments combined to create segment of %zu bytes\n", front->size());
+    memory->verboseMessage("Two segments combined to create segment of %d bytes\n", front->size());
     /* and add the resulting dead object to the cache */
     DeadObject *ptr = front->createDeadObject();
     addDeadObject(ptr);
@@ -1732,7 +1732,7 @@ void LargeSegmentSet::expandSegmentSet(
         /* we allocate this as the size we need.  No sense in */
         /* trying to over allocate here, as we'd like to free */
         /* this up as soon as we can. */
-        memory->verboseMessage("Expanding large segment set by %zu\n", allocationLength);
+        memory->verboseMessage("Expanding large segment set by %d\n", allocationLength);
         newSegment(allocationLength, allocationLength);
     }
     /* for the smaller of the large blocks, we expand by a full */
@@ -1741,7 +1741,7 @@ void LargeSegmentSet::expandSegmentSet(
     /* smaller size segment. */
     else if (allocationLength < SegmentDeadSpace)
     {
-        memory->verboseMessage("Expanding large segment set by %zu\n", LargeSegmentDeadSpace);
+        memory->verboseMessage("Expanding large segment set by %d\n", LargeSegmentDeadSpace);
         newSegment(LargeSegmentDeadSpace, SegmentDeadSpace);
     }
     /* we've got a "tweener" block.  We'll round up to the next */
@@ -1756,7 +1756,7 @@ void LargeSegmentSet::expandSegmentSet(
         {
             requestLength += SegmentDeadSpace;
         }
-        memory->verboseMessage("Expanding large segment set by %zu\n", requestLength);
+        memory->verboseMessage("Expanding large segment set by %d\n", requestLength);
         newSegment(requestLength, allocationLength);
     }
 }
