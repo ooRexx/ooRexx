@@ -371,10 +371,15 @@ int   ValidateMath(
     RxErrMsgSet1("The second argument is invalid");
     rc = INVALID_ROUTINE;              /* this is invalid            */
   }
-  else if ( (*precision > MAX_PRECISION)  || (*precision < MIN_PRECISION) )
+  else if (*precision < MIN_PRECISION)
   {
-    RxErrMsgSet1("The precision is not in the valid range (1-16)");
+    RxErrMsgSet1("The precision must be greater than zero");
     rc = INVALID_ROUTINE;
+  }
+  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
+  if (*precision > MAX_PRECISION)
+  {
+      *precision = MAX_PRECISION;
   }
   return rc;                           /* return success code        */
 }
