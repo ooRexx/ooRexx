@@ -57,10 +57,12 @@
 #include <conio.h>
 #define MAX_STDOUT_LENGTH     32767    /* max. amount of data to push to STDOUT @THU007A */ /* @HOL007M */
 
+#if (WINVER < 0x0600)
 #define COMPILE_NEWAPIS_STUBS          /* Allows GetLongPathName to run on  */
-#define WANT_GETLONGPATHNAME_WRAPPER   /* NT and Windows 95                 */
-#define NO_SHOBJIDL_SORTDIRECTION
+#define WANT_GETLONGPATHNAME_WRAPPER   /* NT versions less than SP 3 and on */
+#define NO_SHOBJIDL_SORTDIRECTION      /* Windows 95                        */
 #include <NewAPIs.h>
+#endif
 
 
 /**
