@@ -437,12 +437,17 @@ int   ValidateTrig(
     RxErrMsgSet1("The second argument is invalid");
     rc = INVALID_ROUTINE;              /* this is invalid            */
   }
-  else if ( (precision > MAX_PRECISION)  | (precision < MIN_PRECISION) )
+  else if (precision < MIN_PRECISION)
   {
-    RxErrMsgSet1("The precision is not in the valid range (1-16)");
+    RxErrMsgSet1("The precision must be greater than zero");
     rc = INVALID_ROUTINE;
   }
-  else if (numargs == 3)
+  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
+  if (precision > MAX_PRECISION)
+  {
+      precision = MAX_PRECISION;
+  }
+  if (numargs == 3)
   {                                    /* have an option             */
     if (RXZEROLENSTRING(args[2]))      /* null string?               */
     {
@@ -589,12 +594,17 @@ int   ValidateArcTrig(
     RxErrMsgSet1("The second argument is invalid");
     rc = INVALID_ROUTINE;              /* this is invalid            */
   }
-  else if ( (precision > MAX_PRECISION)  || (precision < MIN_PRECISION) )
+  else if (precision < MIN_PRECISION)
   {
-    RxErrMsgSet1("The precision is not in the valid range (1-16)");
+    RxErrMsgSet1("The precision must be greater than zero");
     rc = INVALID_ROUTINE;
   }
-  else if (numargs == 3)
+  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
+  if (precision > MAX_PRECISION)
+  {
+      precision = MAX_PRECISION;
+  }
+  if (numargs == 3)
   {                                    /* have an option             */
     if (RXZEROLENSTRING(args[2]))      /* null string?               */
     {
@@ -878,10 +888,15 @@ size_t RexxEntry RxCalcPower(            /* Power function.           */
     rc = INVALID_ROUTINE;              /* this is invalid            */
   }
 
-  else if ( (precision > MAX_PRECISION)  || (precision < MIN_PRECISION) )
+  else if (precision < MIN_PRECISION)
   {
-    RxErrMsgSet1("The precision is not in the valid range (1-16)");
+    RxErrMsgSet1("The precision must be greater than zero");
     rc = INVALID_ROUTINE;
+  }
+  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
+  if (precision > MAX_PRECISION)
+  {
+      precision = MAX_PRECISION;
   }
                                        /* format the result          */
   if (!rc)
@@ -993,11 +1008,15 @@ size_t RexxEntry RxCalcPi(               /* Pi function                */
     RxErrMsgSet1("The argument is invalid");
     rc = INVALID_ROUTINE;              /* this is invalid            */
   }
-                                       /* keep to maximum            */
-  else if ( (precision > MAX_PRECISION)  || (precision < MIN_PRECISION) )
+  else if (precision < MIN_PRECISION)
   {
-    RxErrMsgSet1("The precision is not in the valid range (1-16)");
+    RxErrMsgSet1("The precision must be greater than zero");
     rc = INVALID_ROUTINE;
+  }
+  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
+  if (precision > MAX_PRECISION)
+  {
+      precision = MAX_PRECISION;
   }
                                        /* format the result          */
   if (!rc)
