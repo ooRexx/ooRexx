@@ -1121,7 +1121,8 @@ bool SysFile::hasData()
         tv.tv_sec = 0;
         tv.tv_usec = 0;
 
-        return (select(fileno(stdin) + 1, &rset, NULL, NULL, &tv) == -1) ? false : true;
+        int result = select(fileno(stdin), &rset, NULL, NULL, &tv);
+        return (result > 0) ? true : false; 
     }
 
     return fileeof;
