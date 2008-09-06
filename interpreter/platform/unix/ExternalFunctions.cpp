@@ -125,7 +125,7 @@ int putflag = 0;                            /* static or dynamic env memory   */
 /*                      the screen                                   */
 /*********************************************************************/
 
-RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
+RexxRoutine2(CSTRING, sysBeep, OPTIONAL_wholenumber_t, Frequency, OPTIONAL_wholenumber_t, Duration)
 {
                                         /* console beep for Unix     */
   printf("\a");
@@ -293,7 +293,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 
     default:                           /* unknown option                    */
                                        /* raise an error                    */
-      context->InvalidRoutine(); 
+      context->InvalidRoutine();
       return NULLOBJECT;
   }
 }
@@ -433,7 +433,7 @@ RexxObject *SystemInterpreter::buildEnvlist()
                                          /* allocating the new buffer  */
     newBuffer = new_buffer(size);        /* let's do it                */
                                          /* Get starting address of buf*/
-    New = newBuffer->getData(); 
+    New = newBuffer->getData();
     ((ENVENTRY*)New)->size = size;       /* first write the size       */
     New +=4;                             /* update the pointer         */
                                          /* now write the curr dir     */
