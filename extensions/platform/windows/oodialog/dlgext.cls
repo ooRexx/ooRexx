@@ -753,7 +753,7 @@
    if (cursy > yl) then cursy = yl
 
    hwnd = self~GetItem(id)
-   if hwnd = 0 then return -1
+   if hwnd~substr(3) = 0 then return -1
 
    parse value self~GetWindowRect(hwnd) with r.left r.top r.right r.bottom
    r.right = r.right - r.left
@@ -800,7 +800,7 @@
 
       ret = ScrollTheWindow(self~Adm, hwnd, stepx, stepy, sleft, s_top, srgt, sbot, "yes")
       if ret = 1 then do
-         if (timer > 0) then ret = WinTimer("STOP", timer)
+         if (timer \== 0) then ret = WinTimer("STOP", timer)
          return 1
       end
 
@@ -817,7 +817,7 @@
 
       if stepx \= 0 & drawx=1 then self~DrawBitmap(hwnd, id, left, top, cursx, cursy, abs(stepx), yl)
       if stepy \= 0 & drawy=1 then self~DrawBitmap(hwnd, id, left, top, cursx, cursy, xl, abs(stepy))
-      if (timer > 0) then ret = WinTimer("WAIT", timer)
+      if (timer \== 0) then ret = WinTimer("WAIT", timer)
 
       drawx = 0
       if (stepx <= 0) then do
@@ -858,7 +858,7 @@
       if (stepx<0) & (curx+stepx >= tox) then worktodo = 1
       if (stepy<0) & (cury+stepy >= toy) then worktodo = 1
    end
-   if (timer > 0) then ret = WinTimer("STOP", timer)
+   if (timer \== 0) then ret = WinTimer("STOP", timer)
    self~DisplaceBitmap(id, tox, toy);
    self~RedrawButton(id,0)
    return 0
