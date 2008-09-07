@@ -280,7 +280,7 @@ $(INTERPRETER_MESSAGES)\RexxMessageTable.h: $(INTERPRETER_MESSAGES)\RexxMessageT
     @ECHO Generating $(@)
     xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\RexxMessageTable.xsl
 
-$(OR_APISRC)\api\oorexxerrors.h: $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
+$(OR_APISRC)\oorexxerrors.h: $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl $(INTERPRETER_MESSAGES)\rexxmsg.xml
     @ECHO .
     @ECHO Generating $(@)
     xalan -o $(@) $(INTERPRETER_MESSAGES)\rexxmsg.xml $(INTERPRETER_MESSAGES)\ApiErrorCodes.xsl
