@@ -131,48 +131,6 @@ bool bErrorFlag = false;               // flags math errors
 #pragma optimize( "", off )
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/*************************************************************************
-* Function:  MathLoadFuncs                                               *
-*                                                                        *
-* Syntax:    call MathLoadFuncs                                          *
-*                                                                        *
-* Purpose:   load the function package                                   *
-*                                                                        *
-* Params:    none                                                        *
-*                                                                        *
-* Return:    null string                                                 *
-*************************************************************************/
-RexxRoutine1(CSTRING, MathLoadFuncs, OPTIONAL_CSTRING, version)
-{
-   if (version != NULL)
-   {
-      fprintf(stdout, "%s %s - %s\n",PROG_NAME,PROG_VERS,PROG_DESC);
-      fprintf(stdout, "%s\n",PROG_COPY);
-      fprintf(stdout, "%s\n",PROG_ALRR);
-      fprintf(stdout, "\n");
-   }
-
-   // the rest is a nop now that this uses automatic loading.
-   return "";
-}
-
-/*************************************************************************
-* Function:  MathDropFuncs                                               *
-*                                                                        *
-* Syntax:    call MathDropFuncs                                          *
-*                                                                        *
-* Return:    NO_UTIL_ERROR - Successful.                                 *
-*************************************************************************/
-
-RexxRoutine0(CSTRING, MathDropFuncs)
-{
-    // this is a nop now.
-    return "";
-}
 
 
 
@@ -492,6 +450,44 @@ int matherr(struct __exception *x)         /* return string            */
 }
 #endif
 
+/*************************************************************************
+* Function:  MathLoadFuncs                                               *
+*                                                                        *
+* Syntax:    call MathLoadFuncs                                          *
+*                                                                        *
+* Purpose:   load the function package                                   *
+*                                                                        *
+* Params:    none                                                        *
+*                                                                        *
+* Return:    null string                                                 *
+*************************************************************************/
+RexxRoutine1(CSTRING, MathLoadFuncs, OPTIONAL_CSTRING, version)
+{
+   if (version != NULL)
+   {
+      fprintf(stdout, "%s %s - %s\n",PROG_NAME,PROG_VERS,PROG_DESC);
+      fprintf(stdout, "%s\n",PROG_COPY);
+      fprintf(stdout, "%s\n",PROG_ALRR);
+      fprintf(stdout, "\n");
+   }
+
+   // the rest is a nop now that this uses automatic loading.
+   return "";
+}
+
+/*************************************************************************
+* Function:  MathDropFuncs                                               *
+*                                                                        *
+* Syntax:    call MathDropFuncs                                          *
+*                                                                        *
+* Return:    NO_UTIL_ERROR - Successful.                                 *
+*************************************************************************/
+
+RexxRoutine0(CSTRING, MathDropFuncs)
+{
+    // this is a nop now.
+    return "";
+}
 
 /* Mathematical function package *************************************/
 
@@ -692,11 +688,6 @@ RexxRoutine3(RexxObjectPtr, RxCalcArcTan, double, x, OPTIONAL_uint32_t, precisio
     // calculate and return
     return formatter.evaluateArc(x, ARCTANGENT);
 }
-
-#ifdef __cplusplus
-}
-#endif
-
 
 // now build the actual entry list
 RexxRoutineEntry rxmath_functions[] =
