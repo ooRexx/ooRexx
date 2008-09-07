@@ -3182,7 +3182,7 @@ RexxNumberString *RexxNumberString::newInstanceFromFloat(float num)
 /******************************************************************************/
 {
     // make a nan value a string value
-    if (_isnan(num))
+    if (isnan(num))
     {
         return (RexxNumberString *)new_string("nan");
     }
@@ -3209,7 +3209,7 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
 /******************************************************************************/
 {
     // make a nan value a string value
-    if (_isnan(number))
+    if (isnan(number))
     {
         return (RexxNumberString *)new_string("nan");
     }
@@ -3243,7 +3243,7 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
 RexxNumberString *RexxNumberString::newInstanceFromDouble(double number, size_t precision)
 {
     // make a nan value a string value
-    if (_isnan(number))
+    if (isnan(number))
     {
         return (RexxNumberString *)new_string("nan");
     }
