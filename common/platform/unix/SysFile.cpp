@@ -75,7 +75,7 @@ SysFile::SysFile()
     mode = 0;
     share = 0;
     filename = NULL;
-    buffered = false;
+    buffered = true;
     transient = false;
     device = false;
     writeable = false;
@@ -708,7 +708,7 @@ bool SysFile::nextLine(size_t &bytesRead)
     // this is the length including the line terminators
     bytesRead = len;
     // return an error state, but not EOF status.
-    return error();
+    return !error();
 }
 
 bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_t &endPosition)
