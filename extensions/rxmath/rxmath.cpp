@@ -96,7 +96,6 @@ extern int errno;
 
 #include <math.h>
 #include <fcntl.h>
-#include <float.h>
 
 /*------------------------------------------------------------------
  * rexx includes
@@ -123,8 +122,6 @@ extern int errno;
 #define MAX_PRECISION     16           /* maximum available precision*/
 #define MIN_PRECISION     1            /* minimum available precision*/
 
-bool bErrorFlag = false;               // flags math errors
-
 /* Turn off optimization under Windows. If this is compiler under    */
 /* Windows with the MS Visual C++ copiler and optimization is on     */
 /* then the function _matherr is not called                          */
@@ -144,7 +141,6 @@ public:
         optionError = false;
         precision = p;
         context = c;
-        errorFlag = false;
         if (explicitPrecision)
         {
             if (p == 0)
@@ -174,18 +170,7 @@ public:
             return NULLOBJECT;
         }
 
-        if (errorFlag || _isnan(x))
-        {
-            return context->NewStringFromAsciiz("ERROR");
-        }
-
         return context->DoubleToObjectWithPrecision(x, precision);
-    }
-
-    static void setErrorFlag(const char *msg)
-    {
-        errorFlag = true;
-        errorMessage = msg;
     }
 
 protected:
@@ -193,14 +178,7 @@ protected:
     RexxCallContext *context;
 
     bool optionError;     // had invalid options and we're going to raise an error
-    static bool errorFlag;
-    static const char *errorMessage;
 };
-
-// global values for the error handler routine
-bool NumericFormatter::errorFlag = false;
-const char *NumericFormatter::errorMessage = NULL;
-
 
 class TrigFormatter : public NumericFormatter
 {
@@ -419,36 +397,8 @@ int matherr(struct __exception *x)         /* return string            */
 #endif
 #if defined(WIN32) || defined(OPSYS_SUN) || defined(OPSYS_AIX)
 {
-    char *message;
-
-    switch (x->type)
-    {
-        case DOMAIN:
-            message = "Argument domain error";
-            break;
-        case OVERFLOW:
-            message = "Overflow range error";
-            break;
-        case UNDERFLOW:
-            message = "Underflow range error";
-            break;
-        case SING:
-            message = "Argument singularity";
-            break;
-        case TLOSS:
-            message = "Total loss of significance";
-            break;
-        case PLOSS:
-            message = "Total loss of significance";
-            break;
-        default:
-            message = "Mathematical error occured";
-            break;
-    }
-
-    NumericFormatter::setErrorFlag(message);
-
-    return(1);                            /* otherwhile system throws exception */
+    // we'll just swallow this and allow nans to be generated
+    return(1);
 }
 #endif
 

@@ -3181,6 +3181,12 @@ RexxNumberString *RexxNumberString::newInstanceFromFloat(float num)
 /* Function:  Create a numberstring object from a floating point number       */
 /******************************************************************************/
 {
+    // make a nan value a string value
+    if (_isnan(num))
+    {
+        return (RexxNumberString *)new_string("nan");
+    }
+
     RexxNumberString *result;
     size_t resultLen;
     /* Max length of double str is       */
@@ -3202,6 +3208,12 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
 /* Function:  Create a NumberString from a double value                       */
 /******************************************************************************/
 {
+    // make a nan value a string value
+    if (_isnan(number))
+    {
+        return (RexxNumberString *)new_string("nan");
+    }
+
     RexxNumberString *result;
     size_t resultLen;
     /* Max length of double str is       */
@@ -3230,6 +3242,12 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
  */
 RexxNumberString *RexxNumberString::newInstanceFromDouble(double number, size_t precision)
 {
+    // make a nan value a string value
+    if (_isnan(number))
+    {
+        return (RexxNumberString *)new_string("nan");
+    }
+
     RexxNumberString *result;
     size_t resultLen;
     /* Max length of double str is       */
