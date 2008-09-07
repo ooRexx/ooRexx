@@ -96,6 +96,7 @@ extern int errno;
 
 #include <math.h>
 #include <fcntl.h>
+#include <float.h>
 
 /*------------------------------------------------------------------
  * rexx includes
@@ -173,10 +174,11 @@ public:
             return NULLOBJECT;
         }
 
-        if (errorFlag)
+        if (errorFlag || _isnan(x))
         {
             return context->NewStringFromAsciiz("ERROR");
         }
+
         return context->DoubleToObjectWithPrecision(x, precision);
     }
 
