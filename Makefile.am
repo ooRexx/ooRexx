@@ -291,7 +291,8 @@ memoryHeaders = $(build_memory_dir)/DeadObject.hpp \
                 $(build_memory_dir)/RexxSmartBuffer.hpp
 errorHeaders = $(build_messages_dir)/RexxMessageNumbers.h \
                $(build_messages_dir)/RexxErrorCodes.h \
-               $(build_messages_dir)/RexxMessageTable.h
+               $(build_messages_dir)/RexxMessageTable.h \
+               $(build_api_dir)/oorexxerrors.h
 packageHeaders = $(build_package_dir)/LibraryPackage.hpp \
                  $(build_package_dir)/PackageManager.hpp
 parserHeaders = $(build_parser_dir)/Clause.hpp \
@@ -913,6 +914,9 @@ $(build_messages_dir)/RexxMessageNumbers.h: $(build_messages_dir)/RexxMessageNum
 $(build_messages_dir)/RexxErrorCodes.h: $(build_messages_dir)/RexxErrorCodes.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/RexxErrorCodes.xsl
 
+$(build_api_dir)/oorexxerrors.h: $(build_messages_dir)/ApiErrorCodes.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/ApiErrorCodes.xsl
+
 $(build_messages_dir)/RexxMessageTable.h: $(build_messages_dir)/RexxMessageTable.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/RexxMessageTable.xsl
 
@@ -961,6 +965,7 @@ dist-hook:
 # to have a later date than the source XML, so Xalan is not needed to
 # be executed by the user
 	touch $(distdir)/interpreter/messages/*.h
+	touch $(distdir)/api/oorexxerrors.h
 	touch $(distdir)/interpreter/messages/DocErrorMessages.sgml
 	touch $(distdir)/interpreter/messages/gencat.inp
 
