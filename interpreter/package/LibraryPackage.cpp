@@ -263,7 +263,7 @@ void LibraryPackage::loadRoutines(RexxRoutineEntry *table)
         // table names tend to be specified in friendly form, we need to
         // convert them to uppercase because "normal" Rexx function names
         // tend to be uppercase.
-        RexxString *target = new_upper_string(table->name)->upper();
+        RexxString *target = new_upper_string(table->name);
         RexxString *routineName = new_string(table->name);
 
         RexxRoutine *func = OREF_NULL;

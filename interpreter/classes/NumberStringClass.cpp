@@ -77,13 +77,34 @@ RexxObject *RexxNumberString::##method(RexxObject *operand)\
  }
 
 
+/**
+ * Constructor for a new number string value.
+ *
+ * @param len    The length we require for the value.
+ */
 RexxNumberString::RexxNumberString(size_t len)
-/******************************************************************************/
-/* Function:  low level copy of a number string object                        */
-/******************************************************************************/
 {
     this->clearObject();
     this->NumDigits = number_digits();
+    this->sign = 1;
+    this->length = len;
+    if (number_form() == Numerics::FORM_SCIENTIFIC)
+    {
+        this->NumFlags |= NumFormScientific;
+    }
+}
+
+
+/**
+ * Create a number string for a given digits precision
+ *
+ * @param len       The length of value we need to accomodate
+ * @param precision The precision to be used for formatting.
+ */
+RexxNumberString::RexxNumberString(size_t len, size_t precision)
+{
+    this->clearObject();
+    this->NumDigits = precision;
     this->sign = 1;
     this->length = len;
     if (number_form() == Numerics::FORM_SCIENTIFIC)
@@ -3167,13 +3188,13 @@ RexxNumberString *RexxNumberString::newInstanceFromFloat(float num)
     char floatStr[30];
     /* get float  as a string value.     */
     /* Use digits as precision.          */
-    sprintf(floatStr, "%.*g", number_digits() + 1, num);
+    sprintf(floatStr, "%.*g", number_digits() + 2, num);
     resultLen = strlen(floatStr);        /* Compute length of floatString     */
                                          /* Create new NumberString           */
     result = new (resultLen) RexxNumberString (resultLen);
     /* now format as a numberstring      */
     result->format(floatStr, resultLen);
-    return result;
+    return result->prepareNumber(number_digits(), ROUND);
 }
 
 RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
@@ -3188,13 +3209,41 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
     char doubleStr[30];
     /* get double as a string value.     */
     /* Use digits as precision.          */
-    sprintf(doubleStr, "%.*g", number_digits() + 1, number);
+    sprintf(doubleStr, "%.*g", number_digits() + 2, number);
     resultLen = strlen(doubleStr);       /* Compute length of floatString     */
                                          /* Create new NumberString           */
     result = new (resultLen) RexxNumberString (resultLen);
     /* now format as a numberstring      */
     result->format(doubleStr, resultLen);
-    return result;
+    return result->prepareNumber(number_digits(), ROUND);
+}
+
+
+/**
+ * Create a numberstring from a double value using a given
+ * formatting precision.
+ *
+ * @param number    The double number to convert
+ * @param precision The precision to apply to the result.
+ *
+ * @return The formatted number, as a numberstring value.
+ */
+RexxNumberString *RexxNumberString::newInstanceFromDouble(double number, size_t precision)
+{
+    RexxNumberString *result;
+    size_t resultLen;
+    /* Max length of double str is       */
+    /*  22, make 30 just to be safe      */
+    char doubleStr[30];
+    /* get double as a string value.     */
+    /* Use digits as precision.          */
+    sprintf(doubleStr, "%.*g", precision + 2, number);
+    resultLen = strlen(doubleStr);       /* Compute length of floatString     */
+                                         /* Create new NumberString           */
+    result = new (resultLen) RexxNumberString (resultLen, precision);
+    /* now format as a numberstring      */
+    result->format(doubleStr, resultLen);
+    return result->prepareNumber(precision, ROUND);
 }
 
 RexxNumberString *RexxNumberString::newInstanceFromWholenumber(wholenumber_t integer)

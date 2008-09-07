@@ -107,6 +107,7 @@
 
 
     RexxNumberString(size_t) ;
+    RexxNumberString(size_t, size_t) ;
     inline RexxNumberString(RESTORETYPE restoreType) { ; };
     virtual HashCode getHashValue();
     void        live(size_t);
@@ -234,6 +235,7 @@
     static PCPPM operatorMethods[];
 
     static RexxNumberString *newInstanceFromDouble(double);
+    static RexxNumberString *newInstanceFromDouble(double, size_t);
     static RexxNumberString *newInstanceFromFloat(float);
     static RexxNumberString *newInstanceFromWholenumber(wholenumber_t);
     static RexxNumberString *newInstanceFromInt64(int64_t);
@@ -291,6 +293,11 @@ inline RexxNumberString *new_numberstringFromUint64(uint64_t n)
 inline RexxNumberString *new_numberstringFromDouble(double n)
 {
     return RexxNumberString::newInstanceFromDouble(n);
+}
+
+inline RexxNumberString *new_numberstringFromDouble(double n, size_t p)
+{
+    return RexxNumberString::newInstanceFromDouble(n, p);
 }
 
 inline RexxNumberString *new_numberstringFromFloat(float n)

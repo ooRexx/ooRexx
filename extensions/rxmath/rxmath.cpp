@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.ibm.com/developerworks/oss/CPLv1.0.htm                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -72,14 +72,17 @@ extern int errno;
 /*------------------------------------------------------------------
  * program defines
  *------------------------------------------------------------------*/
-#if defined(OPSYS_AIX) || defined(LINUX)
-#define PROG_NAME "rxmath"
+#if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
+    #define PROG_NAME "rxmath"
 #else
-#define PROG_NAME "RxMath"
+    #define PROG_NAME "RxMath"
 #endif
 
+
 #define PROG_DESC "REXX mathematical function package"
-#define PROG_COPY "(c) Copyright RexxLanguage Association 2005-2006."
+#define PROG_VERS "1.1"
+#define PROG_SECU " "
+#define PROG_COPY "(c) Copyright RexxLanguage Association 2005."
 #define PROG_ALRR "All Rights Reserved."
 
 /*------------------------------------------------------------------
@@ -90,7 +93,6 @@ extern int errno;
 #include <string.h>
 
 #include <ctype.h>
-#include <sys/types.h>
 
 #include <math.h>
 #include <fcntl.h>
@@ -99,14 +101,7 @@ extern int errno;
  * rexx includes
  *------------------------------------------------------------------*/
 #include "oorexxapi.h"
-#include "RexxInternalApis.h"
-
-#if defined(OPSYS_AIX) || defined(LINUX)
-#include "locale.h"
-#endif
-
 #include <sys/types.h>
-#include <errno.h>
 
 #define MAX_DIGITS     9
 
@@ -122,26 +117,12 @@ extern int errno;
 #define ARCCOSINE   1                  /* functions.  Ordering is    */
 #define ARCTANGENT  2                  /* not as important here      */
 
-
 #define pi  3.14159265358979323846l    /* pi value                   */
 
-#define DEGREES    'D'                 /* degrees option             */
-#define RADIANS    'R'                 /* radians option             */
-#define GRADES     'G'                 /* grades option              */
-
-#define DEFAULT_PRECISION  9           /* default precision to use   */
 #define MAX_PRECISION     16           /* maximum available precision*/
 #define MIN_PRECISION     1            /* minimum available precision*/
 
-/*********************************************************************/
-/* Numeric Return calls                                              */
-/*********************************************************************/
-
-#define  INVALID_ROUTINE 40            /* Raise Rexx error           */
-#define  VALID_ROUTINE    0            /* Successful completion      */
-
-
-bool bErrorFlag = false;
+bool bErrorFlag = false;               // flags math errors
 
 /* Turn off optimization under Windows. If this is compiler under    */
 /* Windows with the MS Visual C++ copiler and optimization is on     */
@@ -154,9 +135,6 @@ bool bErrorFlag = false;
 extern "C" {
 #endif
 
-void RxErrMsgSet(const char *);
-void RxErrMsgSet1(const char *);
-
 /*************************************************************************
 * Function:  MathLoadFuncs                                               *
 *                                                                        *
@@ -168,19 +146,18 @@ void RxErrMsgSet1(const char *);
 *                                                                        *
 * Return:    null string                                                 *
 *************************************************************************/
-/*------------------------------------------------------------------
- * load the function package
- *------------------------------------------------------------------*/
-size_t RexxEntry MathLoadFuncs (
-    const char *name,                    /* Function name              */
-    size_t      argc,                    /* Number of arguments        */
-    PCONSTRXSTRING argv,                 /* Argument array             */
-    const char * qName,                  /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine1(CSTRING, MathLoadFuncs, OPTIONAL_CSTRING, version)
 {
-    // this is a NOP now
-    retstr->strlength = 0;               /* set return value           */
-    return VALID_ROUTINE;
+   if (version != NULL)
+   {
+      fprintf(stdout, "%s %s - %s\n",PROG_NAME,PROG_VERS,PROG_DESC);
+      fprintf(stdout, "%s\n",PROG_COPY);
+      fprintf(stdout, "%s\n",PROG_ALRR);
+      fprintf(stdout, "\n");
+   }
+
+   // the rest is a nop now that this uses automatic loading.
+   return "";
 }
 
 /*************************************************************************
@@ -191,17 +168,276 @@ size_t RexxEntry MathLoadFuncs (
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-size_t RexxEntry MathDropFuncs(
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    PCONSTRXSTRING argv,                 /* Argument array             */
-    const char * qName,                  /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine0(CSTRING, MathDropFuncs)
 {
-    // this is a NOP now
-    retstr->strlength = 0;               /* set return value           */
-    return VALID_ROUTINE;
+    // this is a nop now.
+    return "";
 }
+
+
+
+// simple class for handling numeric values
+class NumericFormatter
+{
+public:
+    NumericFormatter(RexxCallContext *c, bool explicitPrecision, uint32_t p)
+    {
+        optionError = false;
+        precision = p;
+        context = c;
+        errorFlag = false;
+        if (explicitPrecision)
+        {
+            if (p == 0)
+            {
+                // raise an error on return
+                context->InvalidRoutine();
+                // remember we rejected this
+                optionError = true;
+            }
+        }
+        else
+        {
+            precision = (int)context->GetContextDigits();
+        }
+        // cap this value
+        if (precision > MAX_PRECISION)
+        {
+            precision = MAX_PRECISION;
+        }
+    }
+
+    RexxObjectPtr format(double x)
+    {
+        // we've already raised an error here, so don't bother formatting a value
+        if (optionError)
+        {
+            return NULLOBJECT;
+        }
+
+        if (errorFlag)
+        {
+            return context->NewStringFromAsciiz("ERROR");
+        }
+        return context->DoubleToObjectWithPrecision(x, precision);
+    }
+
+    static void setErrorFlag(const char *msg)
+    {
+        errorFlag = true;
+        errorMessage = msg;
+    }
+
+protected:
+    uint32_t precision;
+    RexxCallContext *context;
+
+    bool optionError;     // had invalid options and we're going to raise an error
+    static bool errorFlag;
+    static const char *errorMessage;
+};
+
+// global values for the error handler routine
+bool NumericFormatter::errorFlag = false;
+const char *NumericFormatter::errorMessage = NULL;
+
+
+class TrigFormatter : public NumericFormatter
+{
+public:
+
+    TrigFormatter(RexxCallContext *c, bool explicitPrecision, uint32_t p, const char *u) : NumericFormatter(c, explicitPrecision, p)
+    {
+        units = DEGREES;
+        // process any units option
+        if (u != NULL)
+        {
+            switch (*u)
+            {
+                case 'D':
+                case 'd':
+                    units = DEGREES;
+                    break;
+
+                case 'R':
+                case 'r':
+                    units = RADIANS;
+                    break;
+
+                case 'G':
+                case 'g':
+                    units = GRADES;
+                    break;
+
+                default:
+                    context->InvalidRoutine();
+                    optionError = true;
+            }
+        }
+    }
+
+    RexxObjectPtr evaluate(double angle, int function)
+    {
+        // if we've had an option error, we can't contine
+        if (optionError)
+        {
+            return NULLOBJECT;
+        }
+
+        double    nsi;                       /* convertion factor          */
+        double    nco;                       /* convertion factor          */
+        double    result;                    /* result                     */
+
+        nsi = 1.;                            /* set default conversion     */
+        nco = 1.;                            /* set default conversion     */
+
+        switch (units)
+        {
+            case DEGREES:         {            /* need to convert degrees    */
+                    nsi = (angle < 0.) ? -1. : 1.;   /* get the direction          */
+                    angle = fmod(fabs(angle), 360.); /* make modulo 360            */
+                    if (angle <= 45.)                /* less than 45?              */
+                    {
+                        angle = angle * pi / 180.;
+                    }
+                    else if (angle < 135.)
+                    {         /* over on the other side?    */
+                        angle = (90. - angle) * pi / 180.;
+                        function = MAXTRIG - function; /* change the function        */
+                        nco = nsi;                     /* swap around the conversions*/
+                        nsi = 1.;
+                    }
+                    else if (angle <= 225.)
+                    {        /* around the other way?      */
+                        angle = (180. - angle) * pi / 180.;
+                        nco = -1.;
+                    }
+                    else if (angle < 315.)
+                    {         /* close to the origin?       */
+                        angle = (angle - 270.) * pi / 180.;
+                        function = MAXTRIG - function; /* change the function        */
+                        nco = -nsi;
+                        nsi = 1.;
+                    }
+                    else
+                    {
+                        angle = (angle - 360.) * pi / 180.;
+                    }
+                    break;
+                }
+
+            case GRADES:              {        /* need to convert degrees    */
+                    nsi = (angle < 0.) ? -1. : 1.;   /* get the direction          */
+                    angle = fmod(fabs(angle), 400.); /* make modulo 400            */
+                    if (angle <= 50.)
+                    {
+                        angle = angle * pi / 200.;
+                    }
+                    else if (angle < 150.)
+                    {
+                        angle = (100. - angle) * pi / 200.;
+                        function = MAXTRIG - function; /* change the function        */
+                        nco = nsi;                     /* swap the conversions       */
+                        nsi = 1.;
+                    }
+                    else if (angle <= 250.)
+                    {
+                        angle = (200. - angle) * pi / 200.;
+                        nco = -1.;
+                    }
+                    else if (angle < 350.)
+                    {
+                        angle = (angle - 300.) * pi / 200.;
+                        function = MAXTRIG - function; /* change the function        */
+                        nco = -nsi;
+                        nsi = 1.;
+                    }
+                    else
+                    {
+                        angle = (angle - 400.) * pi / 200.;
+                    }
+                    break;
+                }
+
+                // radians are already ok
+            case RADIANS:
+                break;
+        }
+        switch (function)                /* process the function       */
+        {
+            case SINE:                       /* Sine function              */
+                result = nsi * sin(angle);
+                break;
+            case COSINE:                     /* Cosine function            */
+                result = nco * cos(angle);
+                break;
+            case TANGENT:                    /* Tangent function           */
+                result = nsi * nco * tan(angle);
+                break;
+            case COTANGENT:                  /* cotangent function         */
+                /* overflow?                  */
+                if ((result = tan(angle)) == 0.0)
+                {
+                    context->InvalidRoutine();
+                    return NULLOBJECT;
+                }
+                result = nsi * nco / result; /* real result                */
+                break;
+        }
+
+        // now format based on precision setting
+        return format(result);
+    }
+
+    RexxObjectPtr evaluateArc(double x, int function)
+    {
+        // if we've had an option error, we can't contine
+        if (optionError)
+        {
+            return NULLOBJECT;
+        }
+
+        double    angle;                     /* working angle              */
+        double    nsi;                       /* convertion factor          */
+        double    nco;                       /* convertion factor          */
+
+        nsi = 1.;                            /* set default conversion     */
+        nco = 1.;                            /* set default conversion     */
+
+        switch (function)                /* process the function       */
+        {
+            case ARCSINE:                    /* ArcSine function           */
+                angle = asin(x);
+                break;
+            case ARCCOSINE:                  /* ArcCosine function         */
+                angle = acos(x);
+                break;
+            case ARCTANGENT:                 /* ArcTangent function        */
+                angle = atan(x);
+                break;
+        }
+        if (units == DEGREES)              /* have to convert the result?*/
+        {
+            angle = angle * 180. / pi;       /* make into degrees          */
+        }
+        else if (units == GRADES)          /* need it in grades?         */
+        {
+            angle = angle * 200. / pi;       /* convert to base 400        */
+        }
+        // now format based on precision setting
+        return format(angle);
+    }
+
+protected:
+    typedef enum
+    {
+        DEGREES,
+        RADIANS,
+        GRADES
+    } Units;
+
+    Units units;              // the type of units to process
+};
 
 
 /* Helper functions **************************************************/
@@ -215,7 +451,7 @@ size_t RexxEntry MathDropFuncs(
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 #ifdef WIN32
-int _cdecl _matherr( struct _exception *x )
+int _cdecl _matherr(struct _exception *x )
 #elif OPSYS_SUN
 int matherr(struct __math_exception *x)    /* return string            */
 #elif OPSYS_AIX
@@ -223,431 +459,39 @@ int matherr(struct __exception *x)         /* return string            */
 #endif
 #if defined(WIN32) || defined(OPSYS_SUN) || defined(OPSYS_AIX)
 {
-  int  rc;
-  rc = errno;
-  bErrorFlag = true;
+    char *message;
 
-  if (x->type == DOMAIN)
-  {
-      RxErrMsgSet1("Argument domain error");
-  }
-  else if (x->type == OVERFLOW)
-  {
-      RxErrMsgSet1("Overflow range error");
-  }
-  else if (x->type == UNDERFLOW)
-  {
-      RxErrMsgSet1("Underflow range error");
-  }
-  else if (x->type == SING)
-  {
-      RxErrMsgSet1("Argument singularity");
-  }
-  else if (x->type == TLOSS)
-  {
-      RxErrMsgSet1("Total loss of significance");
-  }
-  else if (x->type == PLOSS)
-  {
-      RxErrMsgSet1("Total loss of significance");
-  }
-  else
-  {
-      RxErrMsgSet1("Mathematical error occured");
-  }
+    switch (x->type)
+    {
+        case DOMAIN:
+            message = "Argument domain error";
+            break;
+        case OVERFLOW:
+            message = "Overflow range error";
+            break;
+        case UNDERFLOW:
+            message = "Underflow range error";
+            break;
+        case SING:
+            message = "Argument singularity";
+            break;
+        case TLOSS:
+            message = "Total loss of significance";
+            break;
+        case PLOSS:
+            message = "Total loss of significance";
+            break;
+        default:
+            message = "Mathematical error occured";
+            break;
+    }
 
-  return(1);                            /* otherwhile system throws exception */
+    NumericFormatter::setErrorFlag(message);
 
+    return(1);                            /* otherwhile system throws exception */
 }
 #endif
 
-/********************************************************************
-* Function:  string2size_t(string, number)                          *
-*                                                                   *
-* Purpose:   Validates and converts an ASCII-Z string from string   *
-*            form to an unsigned long.  Returns false if the number *
-*            is not valid, true if the number was successfully      *
-*            converted.                                             *
-*                                                                   *
-* RC:        true - Good number converted                           *
-*            false - Invalid number supplied.                       *
-*********************************************************************/
-bool string2size_t(
-  const char *string,                  /* string to convert          */
-  size_t *number)                      /* converted number           */
-{
-  size_t   accumulator;                /* converted number           */
-  size_t   length;                     /* length of number           */
-
-  length = strlen(string);             /* get length of string       */
-  if (length == 0 ||                   /* if null string             */
-      length > MAX_DIGITS + 1)         /* or too long                */
-    return false;                      /* not valid                  */
-
-  accumulator = 0;                     /* start with zero            */
-
-  while (length) {                     /* while more digits          */
-    if (!isdigit(*string))             /* not a digit?               */
-      return false;                    /* tell caller                */
-                                       /* add to accumulator         */
-    accumulator = accumulator * 10 + (*string - '0');
-    length--;                          /* reduce length              */
-    string++;                          /* step pointer               */
-  }
-  *number = accumulator;               /* return the value           */
-  return true;                         /* good number                */
-}
-
-/*********************************************************************/
-/* Function FormatFloat:  Common routine to format a floating point  */
-/* result for the math functions                                     */
-/*********************************************************************/
-int MathFormatResult(
-  double    result,                    /* formatted result           */
-  size_t    precision,                 /* required precision         */
-  PRXSTRING retstr )                   /* return string              */
-{
-
-  int       rc;                        /* validation code            */
-  rc = VALID_ROUTINE;                  /* set default completion     */
-
-  if (bErrorFlag)                      /* error occured during       */
-  {
-    bErrorFlag = false;
-    strcpy(retstr->strptr, "ERROR");   /* matherr has set bErrorFlag */
-    retstr->strlength = strlen(retstr->strptr);
-    rc = VALID_ROUTINE;
-    return rc;
-  }
-  else if (result == 0)                /* zero result?               */
-    strcpy(retstr->strptr, "0");       /* make exactly 0             */
-  else
-    sprintf(retstr->strptr, "%.*g", precision, result);
-                                       /* set the length             */
-  retstr->strlength = strlen(retstr->strptr);
-                                       /* end in a period?           */
-  if (retstr->strptr[retstr->strlength - 1] == '.')
-    retstr->strlength--;               /* remove the period          */
-  return rc;
-}
-
-/*********************************************************************/
-/* Function ValidateMath: Common validation routine for math         */
-/* that are of the form fn(number, <precision>)                      */
-/*********************************************************************/
-int   ValidateMath(
-  size_t    numargs,                   /* Number of arguments.       */
-  CONSTRXSTRING  args[],               /* Function arguments.        */
-  double   *x,                         /* input number               */
-  size_t   *precision )                /* returned precision         */
-{
-  int       rc;                        /* validation code            */
-
-  rc = VALID_ROUTINE;                  /* set default completion     */
-
-  RxErrMsgSet1("0");
-
-  *precision = RexxGetCurrentPrecision();
-
-  if (numargs < 1 || numargs > 2)
-  {
-    RxErrMsgSet1("Invalid number of arguments");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (!RXVALIDSTRING(args[0]))         /* first is omitted           */
-  {
-    RxErrMsgSet1("The first argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-                                       /* convert input number       */
-  else if (sscanf(args[0].strptr, " %lf", x) != 1)
-  {
-    RxErrMsgSet1("The first argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (numargs == 2 &&             /* have a precision, override activity precision */
-      !string2size_t(args[1].strptr, precision))
-  {
-    RxErrMsgSet1("The second argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (*precision < MIN_PRECISION)
-  {
-    RxErrMsgSet1("The precision must be greater than zero");
-    rc = INVALID_ROUTINE;
-  }
-  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
-  if (*precision > MAX_PRECISION)
-  {
-      *precision = MAX_PRECISION;
-  }
-  return rc;                           /* return success code        */
-}
-
-/*********************************************************************/
-/* Function ValidateTrig: Common validation routine for math         */
-/* that are of the form fn(number, <precision>, <unit>)              */
-/*********************************************************************/
-int   ValidateTrig(
-  size_t    numargs,                   /* Number of arguments.       */
-  CONSTRXSTRING  args[],               /* Function arguments.        */
-  PRXSTRING retstr,                    /* return string              */
-  int       function )                 /* function to perform        */
-{
-  int       rc;                        /* validation code            */
-  int       units;                     /* angle type                 */
-  double    angle;                     /* working angle              */
-  double    nsi;                       /* convertion factor          */
-  double    nco;                       /* convertion factor          */
-  size_t    precision;                 /* returned precision         */
-  double    result = 0.0;              /* result                     */
-
-  rc = VALID_ROUTINE;                  /* set default completion     */
-  units = DEGREES;                     /* default angle is degrees   */
-  nsi = 1.;                            /* set default conversion     */
-  nco = 1.;                            /* set default conversion     */
-
-
-  RxErrMsgSet1("0");
-
-/* give me the numeric digits settings of the current actitity       */
-
-  precision = RexxGetCurrentPrecision();
-
-  if (numargs < 1 || numargs > 3)
-  {
-    RxErrMsgSet1("Invalid number of arguments");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (!RXVALIDSTRING(args[0]))         /* first is omitted           */
-  {
-    RxErrMsgSet1("The first argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-                                       /* convert input number       */
-  else if (sscanf(args[0].strptr, " %lf", &angle) != 1)
-  {
-    RxErrMsgSet1("The first argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (numargs >= 2 &&             /* have a precision           */
-      RXVALIDSTRING(args[1]) &&        /* and it is real string      */
-      !string2size_t(args[1].strptr, &precision))
-  {
-    RxErrMsgSet1("The second argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (precision < MIN_PRECISION)
-  {
-    RxErrMsgSet1("The precision must be greater than zero");
-    rc = INVALID_ROUTINE;
-  }
-  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
-  if (precision > MAX_PRECISION)
-  {
-      precision = MAX_PRECISION;
-  }
-  if (numargs == 3)
-  {                                    /* have an option             */
-    if (RXZEROLENSTRING(args[2]))      /* null string?               */
-    {
-      RxErrMsgSet1("The third argument is invalid");
-      rc = INVALID_ROUTINE;            /* this is invalid            */
-    }
-    else
-    {                                  /* process the options        */
-                                       /* get the option character   */
-      units = toupper(args[2].strptr[0]);
-                                       /* was it a good option?      */
-      if (units != DEGREES && units != RADIANS && units != GRADES)
-      {
-        rc = INVALID_ROUTINE;          /* bad option is error        */
-        RxErrMsgSet1("The third argument is invalid");
-        rc = INVALID_ROUTINE;            /* this is invalid            */
-      }
-    }
-  }
-  if (!rc)
-  {                                    /* everything went well?      */
-    if (units == DEGREES) {            /* need to convert degrees    */
-      nsi = (angle < 0.) ? -1. : 1.;   /* get the direction          */
-      angle = fmod(fabs(angle), 360.); /* make modulo 360            */
-      if (angle <= 45.)                /* less than 45?              */
-        angle = angle * pi / 180.;
-      else if (angle < 135.) {         /* over on the other side?    */
-        angle = (90. - angle) * pi / 180.;
-        function = MAXTRIG - function; /* change the function        */
-        nco = nsi;                     /* swap around the conversions*/
-        nsi = 1.;
-      }
-      else if (angle <= 225.) {        /* around the other way?      */
-        angle = (180. - angle) * pi / 180.;
-        nco = -1.;
-      }
-      else if (angle < 315.) {         /* close to the origin?       */
-        angle = (angle - 270.) * pi / 180.;
-        function = MAXTRIG - function; /* change the function        */
-        nco = -nsi;
-        nsi = 1.;
-      }
-      else
-        angle = (angle - 360.) * pi / 180.;
-    }
-    else if (units == GRADES) {        /* need to convert degrees    */
-      nsi = (angle < 0.) ? -1. : 1.;   /* get the direction          */
-      angle = fmod(fabs(angle), 400.); /* make modulo 400            */
-      if (angle <= 50.)
-        angle = angle * pi / 200.;
-      else if (angle < 150.) {
-        angle = (100. - angle) * pi / 200.;
-        function = MAXTRIG - function; /* change the function        */
-        nco = nsi;                     /* swap the conversions       */
-        nsi = 1.;
-      }
-      else if (angle <= 250.) {
-        angle = (200. - angle) * pi / 200.;
-        nco = -1.;
-      }
-      else if (angle < 350.) {
-        angle = (angle - 300.) * pi / 200.;
-        function = MAXTRIG - function; /* change the function        */
-        nco = -nsi;
-        nsi = 1.;
-      }
-      else
-        angle = (angle - 400.) * pi / 200.;
-    }
-    switch (function) {                /* process the function       */
-      case SINE:                       /* Sine function              */
-        result = nsi * sin(angle);
-        break;
-      case COSINE:                     /* Cosine function            */
-        result = nco * cos(angle);
-        break;
-      case TANGENT:                    /* Tangent function           */
-        result = nsi * nco * tan(angle);
-        break;
-      case COTANGENT:                  /* cotangent function         */
-                                       /* overflow?                  */
-        if ((result = tan(angle)) == 0.0)
-        {
-           RxErrMsgSet1("Unable to calculate value. Overflow occured");
-           rc = INVALID_ROUTINE;              /* this is invalid            */
-        }
-        else
-          result = nsi * nco / result; /* real result                */
-        break;
-    }
-    if (!rc)                           /* good result?               */
-                                       /* format the result          */
-      rc = MathFormatResult(result, precision, retstr);
-  }
-  return rc;                           /* return success code        */
-}
-
-/*********************************************************************/
-/* Function ValidateATrig: Common validation routine for math        */
-/* that are of the form fn(number, <precision>, <units>)             */
-/*********************************************************************/
-int   ValidateArcTrig(
-  size_t     numargs,                  /* Number of arguments.       */
-  CONSTRXSTRING   args[],              /* Function arguments.        */
-  PRXSTRING  retstr,                   /* return string              */
-  int        function )                /* function to perform        */
-{
-  int       rc;                        /* validation code            */
-  int       units;                     /* angle type                 */
-  double    angle = 0.0;               /* working angle              */
-  double    nsi;                       /* convertion factor          */
-  double    nco;                       /* convertion factor          */
-  size_t    precision;                 /* returned precision         */
-  double    x;                         /* input number               */
-
-  rc = VALID_ROUTINE;                  /* set default completion     */
-  units = DEGREES;                     /* default angle is degrees   */
-  nsi = 1.;                            /* set default conversion     */
-  nco = 1.;                            /* set default conversion     */
-
-  RxErrMsgSet1("0");
-  precision = RexxGetCurrentPrecision();
-
-  if (numargs < 1 || numargs > 3)
-  {
-    RxErrMsgSet1("Invalid number of arguments");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else  if (!RXVALIDSTRING(args[0]))         /* first is omitted           */
-  {
-    RxErrMsgSet1("The first argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-                                       /* convert input number       */
-  else if (sscanf(args[0].strptr, " %lf", &x) != 1)
-  {
-    RxErrMsgSet1("The first argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (numargs >= 2 &&             /* have a precision           */
-      RXVALIDSTRING(args[1]) &&        /* and it is real string      */
-      !string2size_t(args[1].strptr, &precision))
-  {
-    RxErrMsgSet1("The second argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (precision < MIN_PRECISION)
-  {
-    RxErrMsgSet1("The precision must be greater than zero");
-    rc = INVALID_ROUTINE;
-  }
-  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
-  if (precision > MAX_PRECISION)
-  {
-      precision = MAX_PRECISION;
-  }
-  if (numargs == 3)
-  {                                    /* have an option             */
-    if (RXZEROLENSTRING(args[2]))      /* null string?               */
-    {
-      RxErrMsgSet1("The third argument is invalid");
-      rc = INVALID_ROUTINE;            /* this is invalid            */
-    }
-    else
-    {                                  /* process the options        */
-                                       /* get the option character   */
-      units = toupper(args[2].strptr[0]);
-                                       /* was it a good option?      */
-      if (units != DEGREES && units != RADIANS && units != GRADES)
-      {
-        rc = INVALID_ROUTINE;          /* bad option is error        */
-        RxErrMsgSet1("The third argument is invalid");
-        rc = INVALID_ROUTINE;            /* this is invalid            */
-      }
-    }
-  }
-
-  if (!rc) {                           /* everything went well?      */
-                                       /* truncate to maximum        */
-//    precision = min(precision, MAX_PRECISION);
-    switch (function) {                /* process the function       */
-      case ARCSINE:                    /* ArcSine function           */
-        angle = asin(x);
-        break;
-      case ARCCOSINE:                  /* ArcCosine function         */
-        angle = acos(x);
-        break;
-      case ARCTANGENT:                 /* ArcTangent function        */
-        angle = atan(x);
-        break;
-    }
-    if (units == DEGREES)              /* have to convert the result?*/
-      angle = angle * 180. / pi;       /* make into degrees          */
-    else if (units == GRADES)          /* need it in grades?         */
-      angle = angle * 200. / pi;       /* convert to base 400        */
-                                       /* format the result          */
-    rc = MathFormatResult(angle, precision, retstr);
-  }
-  return rc;                           /* return success code        */
-}
 
 /* Mathematical function package *************************************/
 
@@ -666,157 +510,66 @@ int   ValidateArcTrig(
 /*   result = func_name(x <, prec>)                                 */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry RxCalcSqrt(             /* Square root function.      */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine2(RexxObjectPtr, RxCalcSqrt, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
-  int       rc;                        /* function return code       */
+    NumericFormatter formatter(context, argumentExists(2), precision);
 
-  errno = 0;                                     /* validate the inputs        */
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    rc = MathFormatResult(sqrt(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(sqrt(x));
 }
 
 /*==================================================================*/
-size_t RexxEntry RxCalcExp(              /* Exponential function.      */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine2(RexxObjectPtr, RxCalcExp, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
+    NumericFormatter formatter(context, argumentExists(2), precision);
 
-  int       rc;                        /* validation return code     */
-
-  errno = 0;                                     /* validate the inputs        */
-
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    rc = MathFormatResult(exp(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(exp(x));
 }
 
 /*==================================================================*/
-size_t RexxEntry RxCalcLog(              /* Logarithm function.        */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine2(RexxObjectPtr, RxCalcLog, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
+    NumericFormatter formatter(context, argumentExists(2), precision);
 
-  int       rc;                        /* validation return code     */
+    // calculate and return
+    return formatter.format(log(x));
+}
 
-  errno = 0;                                     /* validate the inputs        */
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    rc = MathFormatResult(log(x), precision, retstr);
-  return rc;                           /* return error code          */
+RexxRoutine2(RexxObjectPtr, RxCalcLog10, double, x, OPTIONAL_uint32_t, precision)
+{
+    NumericFormatter formatter(context, argumentExists(2), precision);
+
+    // calculate and return
+    return formatter.format(log10(x));
 }
 
 
 /*==================================================================*/
-size_t RexxEntry RxCalcLog10(            /* Log base 10 function.      */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine2(RexxObjectPtr, RxCalcSinH, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
+    NumericFormatter formatter(context, argumentExists(2), precision);
 
-  int       rc;                        /* validation return code     */
-
-  errno = 0;                                     /* validate the inputs        */
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    rc = MathFormatResult(log10(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(sinh(x));
 }
 
 /*==================================================================*/
-size_t RexxEntry RxCalcSinH(             /* Hyperbolic sine function.  */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine2(RexxObjectPtr, RxCalcCosH, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
+    NumericFormatter formatter(context, argumentExists(2), precision);
 
-  int       rc;                        /* validation return code     */
-
-  errno = 0;                                     /* validate the inputs        */
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    rc = MathFormatResult(sinh(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(cosh(x));
 }
 
 /*==================================================================*/
-size_t RexxEntry RxCalcCosH(             /* Hyperbolic cosine funct.   */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine2(RexxObjectPtr, RxCalcTanH, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
+    NumericFormatter formatter(context, argumentExists(2), precision);
 
-  int       rc;                        /* validation return code     */
-
-  errno = 0;                                     /* validate the inputs        */
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    rc = MathFormatResult(cosh(x), precision, retstr);
-  return rc;                           /* return error code          */
-}
-
-/*==================================================================*/
-size_t RexxEntry RxCalcTanH(             /* Hyperbolic tangent funct.  */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
-{
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
-
-  int       rc;                        /* validation return code     */
-
-  errno = 0;                                     /* validate the inputs        */
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    rc = MathFormatResult(tanh(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(tanh(x));
 }
 
 /********************************************************************/
@@ -833,77 +586,12 @@ size_t RexxEntry RxCalcTanH(             /* Hyperbolic tangent funct.  */
 /*   result = func_name(x, y <, prec>)                              */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry RxCalcPower(            /* Power function.           */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine3(RexxObjectPtr, RxCalcPower, double, x, double, y, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  double    y;                         /* second input number        */
-  size_t    precision;                 /* precision used             */
+    NumericFormatter formatter(context, argumentExists(3), precision);
 
-  int       rc;                        /* validation code            */
-
-  errno = 0;                                     /* validate the inputs        */
-
-  rc = VALID_ROUTINE;                  /* set default completion     */
-
-  RxErrMsgSet1("0");
-
-  precision = RexxGetCurrentPrecision();
-
-  if (numargs < 2 || numargs > 3)
-  {
-    RxErrMsgSet1("Invalid number of arguments");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-                                       /* convert input number       */
-  else if (!RXVALIDSTRING(args[0]) )   /* first is omitted           */
-  {
-    RxErrMsgSet1("The first argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (sscanf(args[0].strptr, " %lf", &x) != 1)
-  {
-    RxErrMsgSet1("The first argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (!RXVALIDSTRING(args[1]) )        /* first is omitted           */
-  {
-    RxErrMsgSet1("The second argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-                                       /* convert second input       */
-  else if (sscanf(args[1].strptr, " %lf", &y) != 1)
-  {
-    RxErrMsgSet1("The second argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (numargs == 3 &&             /* have a precision           */
-      !string2size_t(args[2].strptr, &precision))
-  {
-    RxErrMsgSet1("The third argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-
-  else if (precision < MIN_PRECISION)
-  {
-    RxErrMsgSet1("The precision must be greater than zero");
-    rc = INVALID_ROUTINE;
-  }
-  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
-  if (precision > MAX_PRECISION)
-  {
-      precision = MAX_PRECISION;
-  }
-                                       /* format the result          */
-  if (!rc)
-  {
-    rc = MathFormatResult(pow(x,y), precision, retstr);
-  }
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(pow(x, y));
 }
 
 /********************************************************************/
@@ -920,55 +608,35 @@ size_t RexxEntry RxCalcPower(            /* Power function.           */
 /*   x = func_name(angle <, prec> <, [R | D | G]>)                  */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry RxCalcSin(              /* Sine function.             */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine3(RexxObjectPtr, RxCalcSin, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  errno = 0;                                     /* validate the inputs        */
-  return ValidateTrig(numargs, args, retstr, SINE);
+    TrigFormatter formatter(context, argumentExists(2), precision, units);
+    // calculate and return
+    return formatter.evaluate(angle, SINE);
 }
 
 /*==================================================================*/
-size_t RexxEntry RxCalcCos(              /* Cosine function.           */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine3(RexxObjectPtr, RxCalcCos, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  errno = 0;                                     /* validate the inputs        */
-  return ValidateTrig(numargs, args, retstr, COSINE);
+    TrigFormatter formatter(context, argumentExists(2), precision, units);
+    // calculate and return
+    return formatter.evaluate(angle, COSINE);
 }
 
 /*==================================================================*/
-size_t RexxEntry RxCalcTan(              /* Tangent function.          */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine3(RexxObjectPtr, RxCalcTan, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  errno = 0;                                     /* validate the inputs        */
-  return ValidateTrig(numargs, args, retstr, TANGENT);
+    TrigFormatter formatter(context, argumentExists(2), precision, units);
+    // calculate and return
+    return formatter.evaluate(angle, TANGENT);
 }
 
 /*==================================================================*/
-size_t RexxEntry RxCalcCotan(            /* Cotangent function.        */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine3(RexxObjectPtr, RxCalcCotan, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  errno = 0;                                     /* validate the inputs        */
-  return ValidateTrig(numargs, args, retstr, COTANGENT);
+    TrigFormatter formatter(context, argumentExists(2), precision, units);
+    // calculate and return
+    return formatter.evaluate(angle, COTANGENT);
 }
 
 /********************************************************************/
@@ -982,48 +650,10 @@ size_t RexxEntry RxCalcCotan(            /* Cotangent function.        */
 /*   result = RxCalcpi(<precision>)                                    */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry RxCalcPi(               /* Pi function                */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine1(RexxObjectPtr, RxCalcPi, OPTIONAL_uint32_t, precision)
 {
-  size_t    precision;                 /* required precision         */
-  int  rc;
-  errno = 0;                                     /* validate the inputs        */
-  rc = VALID_ROUTINE;
-
-  precision = RexxGetCurrentPrecision();
-
-  RxErrMsgSet1("0");               /* setting MATHERROR to 0     */
-
-  if (numargs > 1)
-  {
-    RxErrMsgSet1("Invalid number of arguments");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if ( (numargs == 1) &&  (!string2size_t(args[0].strptr, &precision)) )
-  {
-    RxErrMsgSet1("The argument is invalid");
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  }
-  else if (precision < MIN_PRECISION)
-  {
-    RxErrMsgSet1("The precision must be greater than zero");
-    rc = INVALID_ROUTINE;
-  }
-  // on 64-bit systems, the default digits setting is 18.  Our cap is 16.
-  if (precision > MAX_PRECISION)
-  {
-      precision = MAX_PRECISION;
-  }
-                                       /* format the result          */
-  if (!rc)
-  {                           /* good function call         */
-     rc = MathFormatResult(pi, precision, retstr); /* format the result */
-  }
-  return rc;                           /* good result                */
+    NumericFormatter formatter(context, argumentExists(1), precision);
+    return formatter.format(pi);
 }
 
 /********************************************************************/
@@ -1040,102 +670,55 @@ size_t RexxEntry RxCalcPi(               /* Pi function                */
 /*   a = func_name(arg <, prec> <, [R | D | G]>)                    */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry RxCalcArcSin(           /* Arc Sine function.         */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine3(RexxObjectPtr, RxCalcArcSin, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  errno = 0;                                     /* validate the inputs        */
-  return ValidateArcTrig(numargs, args, retstr, ARCSINE);
+    TrigFormatter formatter(context, argumentExists(2), precision, units);
+    // calculate and return
+    return formatter.evaluateArc(x, ARCSINE);
 }
 
 /*==================================================================*/
-size_t RexxEntry RxCalcArcCos(           /* Arc Cosine function.       */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine3(RexxObjectPtr, RxCalcArcCos, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  errno = 0;                                     /* validate the inputs        */
-  return ValidateArcTrig(numargs, args, retstr, ARCCOSINE);
+    TrigFormatter formatter(context, argumentExists(2), precision, units);
+    // calculate and return
+    return formatter.evaluateArc(x, ARCCOSINE);
 }
 
 /*==================================================================*/
-size_t RexxEntry RxCalcArcTan(           /* Arc Tangent function.      */
-    const char *name,                    /* Function name              */
-    size_t      numargs,                 /* Number of arguments        */
-    CONSTRXSTRING args[],                /* Argument array             */
-    const char * queuename,              /* Current queue              */
-    PRXSTRING retstr )                   /* Return RXSTRING            */
+RexxRoutine3(RexxObjectPtr, RxCalcArcTan, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  errno = 0;                                     /* validate the inputs        */
-  return ValidateArcTrig(numargs, args, retstr, ARCTANGENT);
-
-}
-
-void RxErrMsgSet1(
-   const char * name)
-{
-   SHVBLOCK shv;
-   char *  pszVariable;
-   char *  pszValue;
-
-   pszVariable = (char *)malloc((strlen("MATHERRNO"))+1);
-   strcpy(pszVariable,"MATHERRNO");
-   pszValue = (char *)malloc((strlen(name)+1));
-   strcpy(pszValue, name);
-
-   /*---------------------------------------------------------------
-    * set variable pool
-    *---------------------------------------------------------------*/
-   shv.shvcode            = RXSHV_SYSET;
-   shv.shvnext            = NULL;
-   shv.shvname.strptr     = pszVariable;
-   shv.shvname.strlength  = strlen(pszVariable);
-   shv.shvvalue.strptr    = pszValue;
-   shv.shvvalue.strlength = strlen(pszValue);
-
-   RexxVariablePool(&shv);
-   free(pszVariable);
-   free(pszValue);
+    TrigFormatter formatter(context, argumentExists(2), precision, units);
+    // calculate and return
+    return formatter.evaluateArc(x, ARCTANGENT);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-#ifdef WIN32
-#pragma optimize( "", on )
-#endif
-
 
 // now build the actual entry list
 RexxRoutineEntry rxmath_functions[] =
 {
-    REXX_CLASSIC_ROUTINE(MathLoadFuncs, MathLoadFuncs),
-    REXX_CLASSIC_ROUTINE(MathDropFuncs, MathDropFuncs),
-    REXX_CLASSIC_ROUTINE(RxCalcPi,      RxCalcPi),
-    REXX_CLASSIC_ROUTINE(RxCalcSqrt,    RxCalcSqrt),
-    REXX_CLASSIC_ROUTINE(RxCalcExp,     RxCalcExp),
-    REXX_CLASSIC_ROUTINE(RxCalcLog,     RxCalcLog),
-    REXX_CLASSIC_ROUTINE(RxCalcLog10,   RxCalcLog10),
-    REXX_CLASSIC_ROUTINE(RxCalcSinH,    RxCalcSinH),
-    REXX_CLASSIC_ROUTINE(RxCalcCosH,    RxCalcCosH),
-    REXX_CLASSIC_ROUTINE(RxCalcTanH,    RxCalcTanH),
-    REXX_CLASSIC_ROUTINE(RxCalcPower,   RxCalcPower),
-    REXX_CLASSIC_ROUTINE(RxCalcSin,     RxCalcSin),
-    REXX_CLASSIC_ROUTINE(RxCalcCos,     RxCalcCos),
-    REXX_CLASSIC_ROUTINE(RxCalcTan,     RxCalcTan),
-    REXX_CLASSIC_ROUTINE(RxCalcCotan,   RxCalcCotan),
-    REXX_CLASSIC_ROUTINE(RxCalcArcSin,  RxCalcArcSin),
-    REXX_CLASSIC_ROUTINE(RxCalcArcCos,  RxCalcArcCos),
-    REXX_CLASSIC_ROUTINE(RxCalcArcTan,  RxCalcArcTan),
+    REXX_TYPED_ROUTINE(MathLoadFuncs, MathLoadFuncs),
+    REXX_TYPED_ROUTINE(MathDropFuncs, MathDropFuncs),
+    REXX_TYPED_ROUTINE(RxCalcPi,      RxCalcPi),
+    REXX_TYPED_ROUTINE(RxCalcSqrt,    RxCalcSqrt),
+    REXX_TYPED_ROUTINE(RxCalcExp,     RxCalcExp),
+    REXX_TYPED_ROUTINE(RxCalcLog,     RxCalcLog),
+    REXX_TYPED_ROUTINE(RxCalcLog10,   RxCalcLog10),
+    REXX_TYPED_ROUTINE(RxCalcSinH,    RxCalcSinH),
+    REXX_TYPED_ROUTINE(RxCalcCosH,    RxCalcCosH),
+    REXX_TYPED_ROUTINE(RxCalcTanH,    RxCalcTanH),
+    REXX_TYPED_ROUTINE(RxCalcPower,   RxCalcPower),
+    REXX_TYPED_ROUTINE(RxCalcSin,     RxCalcSin),
+    REXX_TYPED_ROUTINE(RxCalcCos,     RxCalcCos),
+    REXX_TYPED_ROUTINE(RxCalcTan,     RxCalcTan),
+    REXX_TYPED_ROUTINE(RxCalcCotan,   RxCalcCotan),
+    REXX_TYPED_ROUTINE(RxCalcArcSin,  RxCalcArcSin),
+    REXX_TYPED_ROUTINE(RxCalcArcCos,  RxCalcArcCos),
+    REXX_TYPED_ROUTINE(RxCalcArcTan,  RxCalcArcTan),
     REXX_LAST_ROUTINE()
 };
 
@@ -1148,8 +731,12 @@ RexxPackageEntry rxmath_package_entry =
     NULL,                                // no load/unload functions
     NULL,
     rxmath_functions,                    // the exported functions
-    NULL                                 // no methods in this package
+    NULL                                 // no methods in rxmath.
 };
 
 // package loading stub.
 OOREXX_GET_PACKAGE(rxmath);
+
+#ifdef WIN32
+#pragma optimize( "", on )
+#endif

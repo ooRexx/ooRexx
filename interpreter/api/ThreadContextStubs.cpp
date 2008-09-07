@@ -891,7 +891,7 @@ RexxObjectPtr RexxEntry DoubleToObjectWithPrecision(RexxThreadContext *c, double
     ApiContext context(c);
     try
     {
-        return context.ret(new_string(n, precision));
+        return context.ret(new_numberstringFromDouble(n, precision));
     }
     catch (RexxNativeActivation *)
     {

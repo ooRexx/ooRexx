@@ -164,7 +164,7 @@ void RexxEntry InvalidRoutine(RexxCallContext *c)
     try
     {
         // raise an exception which will be reraised when the caller returns.
-        reportException(Error_Incorrect_call);
+        reportException(Error_Incorrect_call_external);
     }
     catch (RexxNativeActivation *)
     {
