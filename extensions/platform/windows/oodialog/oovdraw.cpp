@@ -257,7 +257,7 @@ size_t RexxEntry HandleDC_Obj(const char *funcname, size_t argc, CONSTRXSTRING *
    else
    if (argv[0].strptr[0] == 'D')      /* delete a graphic object (pen, brush, font) */
    {
-       HGDIOBJ obj = (HGDIOBJ)GET_HANDLE(argv[2]);
+       HGDIOBJ obj = (HGDIOBJ)GET_HANDLE(argv[1]);
        RETC(!DeleteObject(obj));
    }
    else
