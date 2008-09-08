@@ -276,8 +276,8 @@ RexxString *RexxNumberString::stringValue()
             carry = 0;                         /* assume rounding-up NOT necessary  */
 
                                                /*is number just flat out too big?   */
-            if ((( ExpValue + (wholenumber_t)LenValue - 1) > MAXNUM) ||
-                (ExpValue < (-MAXNUM)) )       /* Yes, report Overflow error.       */
+            if ((( ExpValue + (wholenumber_t)LenValue - 1) > Numerics::MAX_EXPONENT) ||
+                (ExpValue < (Numerics::MIN_EXPONENT)) )       /* Yes, report Overflow error.       */
             {
                 reportException(Error_Conversion_operator, this);
             }
@@ -300,17 +300,17 @@ RexxString *RexxNumberString::stringValue()
                     }
                     temp = (temp/3) * 3;             /* get count to the right of Decimal */
                 }
-                if (Numerics::abs(temp) > MAXNUM)
+                if (Numerics::abs(temp) > Numerics::MAX_EXPONENT)
                 {        /* is adjusted number too big?       */
-                    if (temp > MAXNUM)              /* did it overflow?                  */
+                    if (temp > Numerics::MAX_EXPONENT)              /* did it overflow?                  */
                     {
                         /* Yes, report overflow error.       */
-                        reportException(Error_Overflow_expoverflow, temp, IntegerNine);
+                        reportException(Error_Overflow_expoverflow, temp, Numerics::DEFAULT_DIGITS);
                     }
                     else
                     {
                         /* Actually an underflow error.      */
-                        reportException(Error_Overflow_expunderflow, temp, IntegerNine);
+                        reportException(Error_Overflow_expunderflow, temp, Numerics::DEFAULT_DIGITS);
                     }
                 }
                 ExpValue -= temp;                 /* adjust the exponent               */
@@ -321,7 +321,7 @@ RexxString *RexxNumberString::stringValue()
                 else
                 {
                     ExpFactor = false;             /* no need to save the factor        */
-                } /* endif */
+                }
 
                 if (temp < 0)
                 {
@@ -2070,7 +2070,7 @@ int RexxNumberString::format(const char *_number, size_t _length)
 
     this->roundUp(MSDigit);             /* Round up the number if necessary  */
                                         /*is number just flat out too big?   */
-    if ((this->exp + (wholenumber_t)this->length - 1) > MAXNUM)
+    if ((this->exp + (wholenumber_t)this->length - 1) > Numerics::MAX_EXPONENT)
     {
         return 1;                         /* also bad                          */
     }

@@ -737,13 +737,13 @@ RexxNumberString *RexxNumberString::power(RexxObject *PowerObj)
          highBits(Numerics::abs(powerValue)) + 1) > LONGBITS )
     {
         /* yes, report error and return.     */
-        reportException(Error_Overflow_overflow, this, (RexxObject *)OREF_POWER, PowerObj);
+        reportException(Error_Overflow_overflow, this, OREF_POWER, PowerObj);
     }
     /* Will the result overflow ?        */
-    if (Numerics::abs((wholenumber_t)(left->exp + left->length - 1)) * powerValue > MAXNUM)
+    if (Numerics::abs((wholenumber_t)(left->exp + left->length - 1)) * powerValue > Numerics::MAX_EXPONENT)
     {
         /* yes, report error and return.     */
-        reportException(Error_Overflow_overflow, this, (RexxObject *)OREF_POWER, PowerObj);
+        reportException(Error_Overflow_overflow, this, OREF_POWER, PowerObj);
     }
 
     if (powerValue != 0)

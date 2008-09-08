@@ -194,14 +194,14 @@ void RexxNumberStringBase::mathRound(
     /* At this point number is all setup,*/
     /*  Check for overflow               */
     numVal = this->exp + this->length - 1;
-    if (numVal > MAXNUM)
+    if (numVal > Numerics::MAX_EXPONENT)
     {
-        reportException(Error_Overflow_expoverflow, numVal, IntegerNine);
+        reportException(Error_Overflow_expoverflow, numVal, Numerics::DEFAULT_DIGITS);
     }
     /*  Check for underflow.             */
-    else if (this->exp < -MAXNUM)
+    else if (this->exp < Numerics::MIN_EXPONENT)
     {
-        reportException(Error_Overflow_expunderflow, this->exp, IntegerNine);
+        reportException(Error_Overflow_expunderflow, this->exp, Numerics::DEFAULT_DIGITS);
     }
     return;
 }
@@ -232,13 +232,13 @@ void RexxNumberString::adjustPrecision()
         /* At this point number is all setup,*/
         /*  Check for overflow               */
         resultVal = this->exp + this->length - 1;
-        if (resultVal > MAXNUM)
+        if (resultVal > Numerics::MAX_EXPONENT)
         {
-            reportException(Error_Overflow_expoverflow, resultVal, IntegerNine);
+            reportException(Error_Overflow_expoverflow, resultVal, Numerics::DEFAULT_DIGITS);
         }
-        else if (this->exp < -MAXNUM)
+        else if (this->exp < Numerics::MIN_EXPONENT)
         {      /*  Check for underflow.             */
-            reportException(Error_Overflow_expunderflow, this->exp, IntegerNine);
+            reportException(Error_Overflow_expunderflow, this->exp, Numerics::DEFAULT_DIGITS);
         }
     }
     return;                               /* just return to caller.            */
@@ -370,13 +370,13 @@ void RexxNumberString::adjustPrecision(char *resultPtr, size_t NumberDigits)
         /* At this point number is all setup,*/
         /*  Check for overflow               */
         resultVal = this->exp + this->length - 1;
-        if (resultVal > MAXNUM)
+        if (resultVal > Numerics::MAX_EXPONENT)
         {
-            reportException(Error_Overflow_expoverflow, resultVal, IntegerNine);
+            reportException(Error_Overflow_expoverflow, resultVal, Numerics::DEFAULT_DIGITS);
         }
-        else if (this->exp < -MAXNUM)
+        else if (this->exp < Numerics::MIN_EXPONENT)
         {      /*  Check for underflow.             */
-            reportException(Error_Overflow_expunderflow, this->exp, IntegerNine);
+            reportException(Error_Overflow_expunderflow, this->exp, Numerics::DEFAULT_DIGITS);
         }
     }
     return;                               /* just return to caller.            */

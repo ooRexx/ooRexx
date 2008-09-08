@@ -1486,7 +1486,7 @@ RexxString *StringUtil::subWord(const char *data, size_t length, RexxInteger *po
                                          /* convert position to binary        */
     size_t wordPos = positionArgument(position, ARG_ONE);
     // get num of words to extract.  The default is a "very large number
-    size_t count = optionalLengthArgument(plength, MAXNUM, ARG_TWO);
+    size_t count = optionalLengthArgument(plength, Numerics::MAX_WHOLENUMBER, ARG_TWO);
 
     // handle cases that will always result in a null string
     if (length == 0 || count == 0)

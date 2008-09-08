@@ -75,7 +75,7 @@ RexxString *RexxString::delWord(RexxInteger *position,
     WordPos = positionArgument(position, ARG_ONE);
     /* get num of words to delete, the   */
     /* default is "a very large number"  */
-    Count = optionalLengthArgument(plength, MAXNUM, ARG_TWO);
+    Count = optionalLengthArgument(plength, Numerics::MAX_WHOLENUMBER, ARG_TWO);
 
     Length = this->getLength();               /* get string length                 */
     if (!Length)                         /* null string?                      */

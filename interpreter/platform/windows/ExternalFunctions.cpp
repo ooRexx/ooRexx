@@ -105,15 +105,31 @@ typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
 
 RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration)
 {
-                                       /* out of range?              */
-  if (Frequency > MAX_FREQUENCY || Frequency < MIN_FREQUENCY || Duration > MAX_DURATION || Duration < MIN_DURATION)
-  {
-      context->InvalidRoutine();
-      return NULLOBJECT;
-  }
+                                         /* out of range?              */
+    if (Frequency > MAX_FREQUENCY || Frequency < MIN_FREQUENCY)
+    {
+        RexxArrayObject subs = context->NewArray(4);
+        context->ArrayAppend(subs, context->NewStringFromAsciiz("frequency"));
+        context->ArrayAppend(subs, context->NumberToObject(MIN_FREQUENCY));
+        context->ArrayAppend(subs, context->NumberToObject(MAX_FREQUENCY));
+        context->ArrayAppend(subs, context->NumberToObject(Frequency));
+        context->RaiseExceptionArray(Rexx_Error_Invalid_argument_range, subs);
+        return NULL;
+    }
+                                         /* out of range?              */
+    if (Duration > MAX_DURATION || Duration < MIN_DURATION)
+    {
+        RexxArrayObject subs = context->NewArray(4);
+        context->ArrayAppend(subs, context->NewStringFromAsciiz("duration"));
+        context->ArrayAppend(subs, context->NumberToObject(MIN_DURATION));
+        context->ArrayAppend(subs, context->NumberToObject(MAX_DURATION));
+        context->ArrayAppend(subs, context->NumberToObject(Duration));
+        context->RaiseExceptionArray(Rexx_Error_Invalid_argument_range, subs);
+        return NULL;
+    }
 
-  Beep((DWORD)Frequency, (DWORD)Duration);  /* sound beep                 */
-  return "";                           /* always returns a null      */
+    Beep((DWORD)Frequency, (DWORD)Duration);  /* sound beep                 */
+    return "";                           /* always returns a null      */
 }
 
 

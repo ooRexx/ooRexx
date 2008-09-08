@@ -164,7 +164,7 @@ void RexxEntry InvalidRoutine(RexxCallContext *c)
     try
     {
         // raise an exception which will be reraised when the caller returns.
-        reportException(Error_Incorrect_call_external);
+        reportException(Error_Incorrect_call_external, context.context->getMessageName());
     }
     catch (RexxNativeActivation *)
     {

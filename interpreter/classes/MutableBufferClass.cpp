@@ -1445,7 +1445,7 @@ RexxMutableBuffer *RexxMutableBuffer::delWord(RexxInteger *position, RexxInteger
     size_t _wordPos = positionArgument(position, ARG_ONE);
     /* get num of words to delete, the   */
     /* default is "a very large number"  */
-    size_t count = optionalLengthArgument(plength, MAXNUM, ARG_TWO);
+    size_t count = optionalLengthArgument(plength, Numerics::MAX_WHOLENUMBER, ARG_TWO);
 
     size_t length = getLength();         /* get string length                 */
     if (length == 0)                     /* null string?                      */

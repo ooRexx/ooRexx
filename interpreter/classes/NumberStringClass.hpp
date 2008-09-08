@@ -46,12 +46,6 @@
 
 #include "Numerics.hpp"
 
-// TODO:  redo these
-#define MAXNUM      999999999               /* maximum size of 9 digits int         */
-#define MAXPOSNUM  4294967294u              /* maximum size of a ULONG              */
-#define MAXNEGNUM  2147483647u              /* maximum size of a negative long      */
-#define MAXPOSBASE  429496729               /* maximum size value ULONG before * 10 */
-#define MAXNEGBASE  214748365               /* maximum size neg long before * 10    */
 /* Define char data used in OKNUMSTR   */
 #define ch_BLANK  ' '                       /* Define a Blank character.            */
 #define ch_MINUS  '-'                       /* Define the MINUS character           */
@@ -62,9 +56,6 @@
 #define ch_FIVE   '5'                       /* Define the Five  character.          */
 #define ch_NINE   '9'                       /* Define the Nine  character.          */
 #define ch_TAB    '\t'                      /* Define the alternate whitespace char */
-
-#define DEFAULTDIGITS  9                    /* Define the default digits setting.   */
-#define DEFAULTFUZZ    0                    /* Define the default fuzz   setting.   */
 
 #define NumFormScientific  0x00000001       /* Define Numeric form setting at Object*/
                                             /*  creation time.                      */
