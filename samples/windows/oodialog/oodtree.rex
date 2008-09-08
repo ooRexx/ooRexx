@@ -186,11 +186,11 @@ CleanUp:
   curTree = self~GetTreeControl(tree)
   itemInfo. = curTree~ItemInfo(item)
 
-  /* if this special item is selected, load the child items dynamiccally from a files */
-  /* and delete all childs of the item if it will be collapsed                        */
+  /* if the special item is selected, load the child items dynamically from a file */
+  /* and delete all children of the item if it will be collapsed                   */
   if itemInfo.!TEXT = "Special Offers" then
   do
-    if what = "COLLAPSED" & curTree~Child(item) = 0 then
+    if what = "COLLAPSED" & curTree~Child(item)~substr(3) = 0 then
     do
       do while lines(itemFile)
         line = linein(itemFile)
@@ -200,7 +200,7 @@ CleanUp:
       curTree~Expand(item)
     end
     else
-      if what = "EXPANDED" & curTree~Child(item) \= 0 then
+      if what = "EXPANDED" & curTree~Child(item)~substr(3) \= 0 then
       do
         curTree~CollapseAndReset(item)
         say curTree~Child(item)
