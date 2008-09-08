@@ -1561,7 +1561,8 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_whole_number</SymbolicName>
     <Text>Invalid whole number</Text>
-    <Explanation><para>An expression was found that did not evaluate to a whole number or is greater than the limit (the default is 999 999 999):
+    <Explanation><para>An expression was found that did not evaluate to a whole number or is greater than the limit (the default is 999,999,999 for 32-bit system
+    and 999,999,999,999,999,999 for 64-bit systems):
     <itemizedlist>
     <listitem><para>The positional patterns in parsing templates (including variable positional patterns)</para></listitem>
     <listitem><para>The operand to the right of the power operator</para></listitem>
@@ -2656,7 +2657,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_call_toobig</SymbolicName>
-        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must not exceed 999,999,999</Text>
+        <Text><Sub position="1" name="function_name"/> argument <Sub position="2" name="argument_number"/> must not exceed the whole number limit.</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>
@@ -2911,7 +2912,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Conversion</SymbolicName>
     <Text>Bad arithmetic conversion</Text>
-    <Explanation><para>A term in an arithmetic expression is not a valid number or has an exponent outside the allowed range of -999 999 999 to +999 999 999.</para>
+    <Explanation><para>A term in an arithmetic expression is not a valid number or has an exponent outside the allowed range of whole number range.</para>
     <para>You might have mistyped a variable name, or included an arithmetic operator in a character expression without putting it in quotation marks.</para></Explanation>
     <Subcodes>
       <SubMessage>
@@ -2996,7 +2997,7 @@ special character (such as a parenthesis).
     <Severity>Warning</Severity>
     <SymbolicName>Error_Overflow</SymbolicName>
     <Text>Arithmetic overflow/underflow</Text>
-    <Explanation><para>The result of an arithmetic operation requires an exponent that is greater than the limit of nine digits (more than 999 999 999 or less than -999 999 999).</para>
+    <Explanation><para>The result of an arithmetic operation requires an exponent that is greater than the platform limit of nine digits for 32-bit systems or 18 for 64-bit systems.</para>
     <para>This error can occur during the evaluation of an expression (often as a result of trying to divide a number by 0) or while stepping a DO loop control variable.</para></Explanation>
     <Subcodes>
       <SubMessage>
