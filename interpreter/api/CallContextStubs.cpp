@@ -79,6 +79,19 @@ RexxObjectPtr RexxEntry GetCallArgument(RexxCallContext *c, stringsize_t i)
     return NULLOBJECT;
 }
 
+CSTRING RexxEntry GetRoutineName(RexxCallContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        return (CSTRING)context.context->getMessageName()->getStringData();
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULL;
+}
+
 RexxRoutineObject RexxEntry GetCurrentRoutine(RexxCallContext *c)
 {
     ApiContext context(c);
@@ -310,6 +323,7 @@ CallContextInterface RexxActivity::callContextFunctions =
     CALL_INTERFACE_VERSION,
     GetCallArguments,
     GetCallArgument,
+    GetRoutineName,
     GetCurrentRoutine,
     SetContextVariable,
     GetContextVariable,

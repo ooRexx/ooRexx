@@ -640,6 +640,7 @@ typedef struct
 
     RexxArrayObject  (RexxEntry *GetArguments)(RexxCallContext *);
     RexxObjectPtr    (RexxEntry *GetArgument)(RexxCallContext *, size_t);
+    CSTRING          (RexxEntry *GetRoutineName)(RexxCallContext *);
     RexxRoutineObject (RexxEntry *GetRoutine)(RexxCallContext *);
     void             (RexxEntry *SetContextVariable)(RexxCallContext *, CSTRING, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *GetContextVariable)(RexxCallContext *, CSTRING);
@@ -2343,6 +2344,10 @@ struct RexxCallContext_
     RexxObjectPtr GetArgument(size_t n)
     {
         return functions->GetArgument(this, n);
+    }
+    CSTRING GetRoutineName()
+    {
+        return functions->GetRoutineName(this);
     }
     RexxRoutineObject GetRoutine()
     {
