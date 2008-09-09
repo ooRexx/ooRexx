@@ -59,24 +59,26 @@ class NumericSettings                  // "global" numeric settings         */
 class Numerics
 {
 public:
-    static wholenumber_t MAX_WHOLENUMBER;
-    static wholenumber_t MIN_WHOLENUMBER;
-    static wholenumber_t MAX_EXPONENT;
-    static wholenumber_t MIN_EXPONENT;
-    static stringsize_t DEFAULT_DIGITS;
+    static const wholenumber_t MAX_WHOLENUMBER;
+    static const wholenumber_t MIN_WHOLENUMBER;
+    static const wholenumber_t MAX_EXPONENT;
+    static const wholenumber_t MIN_EXPONENT;
+    static const size_t DEFAULT_DIGITS;
     // the digits setting used internally for function/method arguments to allow
     // for the full range
-    static stringsize_t ARGUMENT_DIGITS;
-    static stringsize_t  MAX_STRINGSIZE;
+    static const size_t ARGUMENT_DIGITS;
+    static const size_t  MAX_STRINGSIZE;
 
     // max numeric digits value for explicit 64-bit conversions
-    static stringsize_t DIGITS64;
-    static bool FORM_SCIENTIFIC;
-    static bool FORM_ENGINEERING;
+    static const size_t DIGITS64;
+    static const bool FORM_SCIENTIFIC;
+    static const bool FORM_ENGINEERING;
 
-    static stringsize_t DEFAULT_FUZZ;
+    static const size_t DEFAULT_FUZZ;
                                      /* default numeric form setting      */
-    static bool DEFAULT_FORM;
+    static const bool DEFAULT_FORM;
+
+    static const wholenumber_t validMaxWhole[];      // table of maximum values per digits setting
 
     static RexxObject *wholenumberToObject(wholenumber_t v);
     static RexxObject *stringsizeToObject(stringsize_t v);
@@ -97,7 +99,6 @@ public:
     static stringsize_t formatInt64(int64_t integer, char *dest);
     static stringsize_t formatUnsignedInt64(uint64_t integer, char *dest);
 
-    static wholenumber_t validMaxWhole[];          // table of maximum values per digits setting
     static size_t digits() { return settings->digits; }
     static size_t fuzz()   { return settings->fuzz; }
     static bool   form()   { return settings->form; }

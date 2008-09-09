@@ -44,11 +44,6 @@
 #ifndef Included_RexxArray
 #define Included_RexxArray
 
-#define MAX_FIXEDARRAY_SIZE 100000000L
-#define ARRAY_EXTEND_EXTRA_SIZE  10
-#define ARRAY_EXTEND_EXTRA_LARGE_SIZE  100
-#define ARRAY_MIN_SIZE          4
-
 #define RaiseBoundsNone     0x00000000
 #define RaiseBoundsUpper    0x00000001
 #define RaiseBoundsInvalid  0x00000002
@@ -188,6 +183,10 @@ typedef struct copyElelmentParm {
    static RexxArray *nullArray;
 
  protected:
+
+   static const size_t MAX_FIXEDARRAY_SIZE;
+   static const size_t ARRAY_MIN_SIZE;
+   static const size_t ARRAY_DEFAULT_SIZE;   // default size for ooRexx allocation
 
    size_t arraySize;                   /* current size of array         */
    size_t maximumSize;                 /* Maximum size array can grow   */

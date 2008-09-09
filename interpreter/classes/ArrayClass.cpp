@@ -81,6 +81,9 @@
 RexxClass *RexxArray::classInstance = OREF_NULL;
 RexxArray *RexxArray::nullArray = OREF_NULL;
 
+const size_t RexxArray::MAX_FIXEDARRAY_SIZE = (Numerics::MAX_WHOLENUMBER/10) + 1;
+const size_t RexxArray::ARRAY_MIN_SIZE = 4;
+const size_t RexxArray::ARRAY_DEFAULT_SIZE = 10;    // we use a larger default for ooRexx allocated arrays
 
 /**
  * Create initial class object at bootstrap time.
@@ -1505,18 +1508,7 @@ RexxArray *RexxArray::extend(          /* join two arrays into one          */
     }
 
     size_t newSize = this->size() + extension;
-    size_t extendSize;
-    /* are we still a relative small array? */
-    if (newSize < ARRAY_EXTEND_EXTRA_LARGE_SIZE)
-    {
-        /* just bump this the small extra amount */
-        extendSize = ARRAY_EXTEND_EXTRA_SIZE;
-    }
-    else
-    {
-        /* we're getting large.  We'll start bumping by a larger amount. */
-        extendSize = this->size() / 2;   /*               add 50% to the size */
-    }
+    size_t extendSize = this->size() / 2;
 
     /* get a new array, total size is    */
     /* size of both arrays.              */
@@ -2028,7 +2020,7 @@ void *   RexxArray::operator new(size_t size,
     return newArray;                     /* return the new array              */
 }
 
-void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount, RexxClass *arrayClass)
+void *RexxArray::operator new(size_t size, RexxObject **args, size_t argCount, RexxClass *arrayClass)
 /******************************************************************************/
 /* Function:  Rexx level creation of an ARRAY object                          */
 /******************************************************************************/
@@ -2046,7 +2038,7 @@ void *   RexxArray::operator new(size_t size, RexxObject **args, size_t argCount
     {
         /* If no argument is passed          */
         /*  create an empty array.           */
-        temp = new ((size_t)0, arrayClass) RexxArray;
+        temp = new (ARRAY_DEFAULT_SIZE, arrayClass) RexxArray;
         ProtectedObject p(temp);
         temp->sendMessage(OREF_INIT);      /* call any rexx init's              */
         return temp;
@@ -2579,7 +2571,7 @@ void *  RexxArray::operator new(size_t size, RexxObject *first)
   RexxArray *aref;
 
   aref = (RexxArray *)new_array(1);
-  aref->put(first, 1L);
+  aref->put(first, 1);
 
   return aref;
 }
@@ -2589,8 +2581,8 @@ void *   RexxArray::operator new(size_t size, RexxObject *first, RexxObject *sec
   RexxArray *aref;
 
   aref = new_array(2);
-  aref->put(first, 1L);
-  aref->put(second, 2L);
+  aref->put(first, 1);
+  aref->put(second, 2);
   return aref;
 }
 
@@ -2605,9 +2597,9 @@ void *   RexxArray::operator new(size_t size,
   RexxArray *aref;
 
   aref = new_array(3);
-  aref->put(first,  1L);
-  aref->put(second, 2L);
-  aref->put(third,  3L);
+  aref->put(first,  1);
+  aref->put(second, 2);
+  aref->put(third,  3);
 
   return aref;
 }
@@ -2624,16 +2616,15 @@ void *   RexxArray::operator new(size_t size,
   RexxArray *aref;
 
   aref = new_array(4);
-  aref->put(first,  1L);
-  aref->put(second, 2L);
-  aref->put(third,  3L);
-  aref->put(fourth, 4L);
+  aref->put(first,  1);
+  aref->put(second, 2);
+  aref->put(third,  3);
+  aref->put(fourth, 4);
 
   return aref;
 }
 
-void *   RexxArray::operator new(size_t newSize,
-                                 size_t size, RexxClass *arrayClass)
+void *RexxArray::operator new(size_t newSize, size_t size, RexxClass *arrayClass)
 /******************************************************************************/
 /* Function:  Low level array creation                                        */
 /******************************************************************************/
