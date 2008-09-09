@@ -641,9 +641,16 @@ RexxRoutine3(RexxObjectPtr, RxCalcArcTan, double, x, OPTIONAL_uint32_t, precisio
     return formatter.evaluateArc(x, ARCTANGENT);
 }
 
+/*==================================================================*/
+RexxRoutine1(int64_t, TestInt64, int64_t, a)
+{
+    return a;
+}
+
 // now build the actual entry list
 RexxRoutineEntry rxmath_functions[] =
 {
+    REXX_TYPED_ROUTINE(TestInt64,     TestInt64),
     REXX_TYPED_ROUTINE(MathLoadFuncs, MathLoadFuncs),
     REXX_TYPED_ROUTINE(MathDropFuncs, MathDropFuncs),
     REXX_TYPED_ROUTINE(RxCalcPi,      RxCalcPi),

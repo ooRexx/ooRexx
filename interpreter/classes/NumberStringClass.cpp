@@ -2175,7 +2175,7 @@ void RexxNumberString::formatInt64(int64_t integer)
 
         // copy into the buffer and set the length
         this->length = sizeof(buffer) - index;
-        memcpy(this->number, buffer, this->length);
+        memcpy(this->number, &buffer[index], this->length);
     }
 }
 
