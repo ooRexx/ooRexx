@@ -127,6 +127,19 @@ RexxClassObject RexxEntry GetSuper(RexxMethodContext *c)
     return NULLOBJECT;
 }
 
+RexxObjectPtr RexxEntry GetScope(RexxMethodContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        return (RexxObjectPtr)context.context->getScope();
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
 void RexxEntry SetObjectVariable(RexxMethodContext *c, CSTRING n, RexxObjectPtr v)
 {
     ApiContext context(c);
@@ -162,45 +175,6 @@ void RexxEntry DropObjectVariable(RexxMethodContext *c, CSTRING n)
     catch (RexxNativeActivation *)
     {
     }
-}
-
-
-RexxObjectPtr RexxEntry SendSuperMessage(RexxMethodContext *c, CSTRING n, RexxArrayObject a)
-{
-    ApiContext context(c);
-    try
-    {
-        RexxObject *self = context.context->getSelf();
-        RexxObject *super = context.context->getSuper();
-        RexxString *message = new_upper_string(n);
-        RexxArray *args = (RexxArray *)a;
-        ProtectedObject result;
-        self->messageSend(message, args->data(), args->size(), super, result);
-        return context.ret((RexxObject *)result);
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return NULLOBJECT;
-}
-
-RexxObjectPtr RexxEntry SendOverrideMessage(RexxMethodContext *c, CSTRING n, RexxClassObject clazz, RexxArrayObject a)
-{
-    ApiContext context(c);
-    try
-    {
-        RexxObject *self = context.context->getSelf();
-        RexxObject *super = (RexxObject *)clazz;
-        RexxString *message = new_upper_string(n);
-        RexxArray *args = (RexxArray *)a;
-        ProtectedObject result;
-        self->messageSend(message, args->data(), args->size(), super, result);
-        return context.ret((RexxObject *)result);
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return NULLOBJECT;
 }
 
 RexxObjectPtr RexxEntry ForwardMessage(RexxMethodContext *c, RexxObjectPtr o, CSTRING n, RexxClassObject clazz, RexxArrayObject a)
@@ -270,11 +244,10 @@ MethodContextInterface RexxActivity::methodContextFunctions =
     GetCurrentMethod,
     GetSelf,
     GetSuper,
+    GetScope,
     SetObjectVariable,
     GetObjectVariable,
     DropObjectVariable,
-    SendSuperMessage,
-    SendOverrideMessage,
     ForwardMessage,
     SetGuardOn,
     SetGuardOff,

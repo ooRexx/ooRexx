@@ -106,6 +106,7 @@ class RexxNativeActivation : public RexxActivationBase
   RexxArray *getArguments();
   RexxObject *getArgument(size_t index);
   RexxObject *getSuper();
+  RexxObject *getScope();
   RexxStem *resolveStemVariable(RexxObject *s);
   RexxClass *findClass(RexxString *className);
   RexxClass *findCallerClass(RexxString *className);

@@ -57,6 +57,7 @@
 #define REXX_VALUE_SCOPE       4
 #define REXX_VALUE_CSELF       5
 #define REXX_VALUE_OSELF       6
+#define REXX_VALUE_SUPER       7
 
 // each of the following types have an optional equivalent
 
@@ -314,9 +315,10 @@ typedef struct
     {
         RexxArrayObject       value_ARGLIST;
         CSTRING               value_NAME;
-        RexxClassObject       value_SCOPE;
+        RexxObjectPtr         value_SCOPE;
         POINTER               value_CSELF;
-        RexxObjectPtr         value_OSELF;
+        RexxClassObject       value_OSELF;
+        RexxObjectPtr         value_SUPER;
         RexxObjectPtr         value_RexxObjectPtr;
         int                   value_int;
         wholenumber_t         value_wholenumber_t;
@@ -622,11 +624,10 @@ typedef struct
     RexxMethodObject (RexxEntry *GetMethod)(RexxMethodContext *);
     RexxObjectPtr    (RexxEntry *GetSelf)(RexxMethodContext *);
     RexxClassObject  (RexxEntry *GetSuper)(RexxMethodContext *);
+    RexxObjectPtr    (RexxEntry *GetScope)(RexxMethodContext *);
     void             (RexxEntry *SetObjectVariable)(RexxMethodContext *, CSTRING, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *GetObjectVariable)(RexxMethodContext *, CSTRING);
     void             (RexxEntry *DropObjectVariable)(RexxMethodContext *, CSTRING);
-    RexxObjectPtr    (RexxEntry *SendSuperMessage)(RexxMethodContext *, CSTRING, RexxArrayObject);
-    RexxObjectPtr    (RexxEntry *SendOverrideMessage)(RexxMethodContext *, CSTRING, RexxClassObject, RexxArrayObject);
     RexxObjectPtr    (RexxEntry *ForwardMessage)(RexxMethodContext *, RexxObjectPtr, CSTRING, RexxClassObject, RexxArrayObject);
     void             (RexxEntry *SetGuardOn)(RexxMethodContext *);
     void             (RexxEntry *SetGuardOff)(RexxMethodContext *);
@@ -1780,6 +1781,10 @@ struct RexxMethodContext_
     {
         return functions->GetSuper(this);
     }
+    RexxObjectPtr GetScope()
+    {
+        return functions->GetScope(this);
+    }
     void SetObjectVariable(CSTRING s, RexxObjectPtr o)
     {
         functions->SetObjectVariable(this, s, o);
@@ -1792,17 +1797,9 @@ struct RexxMethodContext_
     {
         functions->DropObjectVariable(this, s);
     }
-    RexxObjectPtr SendSuperMessage(CSTRING s, RexxArrayObject o)
+    RexxObjectPtr ForwardMessage(RexxObjectPtr o, CSTRING s, RexxClassObject c, RexxArrayObject a)
     {
-        return functions->SendSuperMessage(this, s, o);
-    }
-    RexxObjectPtr SendOverrideMessage(CSTRING s, RexxClassObject c, RexxArrayObject o)
-    {
-        return functions->SendOverrideMessage(this, s, c, o);
-    }
-    RexxObjectPtr ForwardMessage(RexxObjectPtr, CSTRING s, RexxClassObject c, RexxArrayObject o)
-    {
-        return functions->SendOverrideMessage(this, s, c, o);
+        return functions->ForwardMessage(this, o, s, c, a);
     }
     void SetGuardOn()
     {
@@ -2961,9 +2958,10 @@ RexxReturnCode RexxEntry RexxCreateInterpreter(RexxInstance **, RexxThreadContex
 
 #define ARGUMENT_TYPE_ARGLIST    RexxArrayObject
 #define ARGUMENT_TYPE_NAME       CSTRING
-#define ARGUMENT_TYPE_SCOPE      RexxClassObject
+#define ARGUMENT_TYPE_SCOPE      RexxObjectPtr
 #define ARGUMENT_TYPE_CSELF      POINTER
 #define ARGUMENT_TYPE_OSELF      RexxObjectPtr
+#define ARGUMENT_TYPE_SUPER      RexxClassObject
 
 // each of the following types have an optional equivalent
 
@@ -3578,7 +3576,8 @@ typedef RexxObjectPtr OSELF;
 typedef void *        CSELF;
 typedef void *        BUFFER;
 typedef RexxArrayObject ARGLIST;
-typedef RexxClassObject SCOPE;
+typedef RexxObjectPtr   SCOPE;
+typedef RexxClassObject SUPER;
 typedef CSTRING         NAME;
 
 #endif

@@ -250,6 +250,36 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                 break;
             }
 
+            // reference to the method scope...if this is a function call,
+            // then this will be OREF NULL.
+            case REXX_VALUE_SCOPE:
+            {
+                // this doesn't make any sense for a function call
+                if (activationType != METHOD_ACTIVATION)
+                {
+                    reportSignatureError();
+                }
+                // fill in the receiver object and mark it...
+                descriptors[outputIndex].value.value_RexxObjectPtr = (RexxObjectPtr)this->getScope();
+                descriptors[outputIndex].flags = ARGUMENT_EXISTS | SPECIAL_ARGUMENT;
+                break;
+            }
+
+            // reference to the superclass scope...if this is a function call,
+            // then this will be OREF NULL.
+            case REXX_VALUE_SUPER:
+            {
+                // this doesn't make any sense for a function call
+                if (activationType != METHOD_ACTIVATION)
+                {
+                    reportSignatureError();
+                }
+                // fill in the receiver object and mark it...
+                descriptors[outputIndex].value.value_RexxObjectPtr = (RexxClassObject)this->getSuper();
+                descriptors[outputIndex].flags = ARGUMENT_EXISTS | SPECIAL_ARGUMENT;
+                break;
+            }
+
             case REXX_VALUE_CSELF:                /* reference to CSELF                */
             {
                 // this doesn't make any sense for a function call
@@ -2279,6 +2309,16 @@ RexxObject *RexxNativeActivation::getArgument(size_t index)
 RexxObject *RexxNativeActivation::getSuper()
 {
     return receiver->superScope(((RexxMethod *)executable)->getScope());
+}
+
+/**
+ * Return the current method scope.
+ *
+ * @return The current method scope object.
+ */
+RexxObject *RexxNativeActivation::getScope()
+{
+    return ((RexxMethod *)executable)->getScope();
 }
 
 /**
