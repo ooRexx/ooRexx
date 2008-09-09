@@ -172,6 +172,8 @@ class RexxNativeActivation : public RexxActivationBase
   int stemSort(const char *stemname, int order, int type, size_t start, size_t end, size_t firstcol, size_t lastcol);
   inline void enableConditionTrap() { trapConditions = true; }
 
+  void forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, RexxArray *args, ProtectedObject &result);
+
 protected:
 
     typedef enum

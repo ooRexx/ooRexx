@@ -203,6 +203,22 @@ RexxObjectPtr RexxEntry SendOverrideMessage(RexxMethodContext *c, CSTRING n, Rex
     return NULLOBJECT;
 }
 
+RexxObjectPtr RexxEntry ForwardMessage(RexxMethodContext *c, RexxObjectPtr o, CSTRING n, RexxClassObject clazz, RexxArrayObject a)
+{
+    ApiContext context(c);
+    try
+    {
+        RexxString *message = n == NULL ? OREF_NULL : new_upper_string(n);
+        ProtectedObject result;
+        context.context->forwardMessage((RexxObject *)o, message, (RexxClass *)clazz, (RexxArray *)a, result);
+        return context.ret((RexxObject *)result);
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
 void RexxEntry SetGuardOn(RexxMethodContext *c)
 {
     ApiContext context(c);
@@ -259,6 +275,7 @@ MethodContextInterface RexxActivity::methodContextFunctions =
     DropObjectVariable,
     SendSuperMessage,
     SendOverrideMessage,
+    ForwardMessage,
     SetGuardOn,
     SetGuardOff,
     FindContextClass

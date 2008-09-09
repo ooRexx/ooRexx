@@ -2985,5 +2985,43 @@ int RexxNativeActivation::stemSort(const char *stemname, int order, int type, si
 }
 
 
+/**
+ * Implement the equivalent of a FORWARD CONTINUE instruction
+ * as an API call.  All null arguments are filled in with
+ * the method context args.
+ *
+ * @param to     The target object.  Defaults to SELF
+ * @param msg    The target message name.  Defaults to current message.
+ * @param super  Any superclass override.  Defaults to none.
+ * @param args   The message arguments.  Defaults to current argument set.
+ *
+ * @return The message send result.
+ */
+void RexxNativeActivation::forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, RexxArray *args, ProtectedObject &result)
+{
+    // process all of the non-overridden values
+    if (to == OREF_NULL)
+    {
+        to = getSelf();
+    }
+    if (msg == OREF_NULL)
+    {
+        msg = getMessageName();
+    }
+    if (args == OREF_NULL)
+    {
+        args = getArguments();
+    }
+
+    // no super class override?  Normal message send
+    if (super == OREF_NULL)
+    {
+        to->messageSend(msg, args->data(), args->size(), result);
+    }
+    else
+    {
+        to->messageSend(msg, args->data(), args->size(), super, result);
+    }
+}
 
 

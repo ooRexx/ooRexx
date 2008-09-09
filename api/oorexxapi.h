@@ -627,6 +627,7 @@ typedef struct
     void             (RexxEntry *DropObjectVariable)(RexxMethodContext *, CSTRING);
     RexxObjectPtr    (RexxEntry *SendSuperMessage)(RexxMethodContext *, CSTRING, RexxArrayObject);
     RexxObjectPtr    (RexxEntry *SendOverrideMessage)(RexxMethodContext *, CSTRING, RexxClassObject, RexxArrayObject);
+    RexxObjectPtr    (RexxEntry *ForwardMessage)(RexxMethodContext *, RexxObjectPtr, CSTRING, RexxClassObject, RexxArrayObject);
     void             (RexxEntry *SetGuardOn)(RexxMethodContext *);
     void             (RexxEntry *SetGuardOff)(RexxMethodContext *);
     RexxClassObject  (RexxEntry *FindContextClass)(RexxMethodContext *, CSTRING);
@@ -1796,6 +1797,10 @@ struct RexxMethodContext_
         return functions->SendSuperMessage(this, s, o);
     }
     RexxObjectPtr SendOverrideMessage(CSTRING s, RexxClassObject c, RexxArrayObject o)
+    {
+        return functions->SendOverrideMessage(this, s, c, o);
+    }
+    RexxObjectPtr ForwardMessage(RexxObjectPtr, CSTRING s, RexxClassObject c, RexxArrayObject o)
     {
         return functions->SendOverrideMessage(this, s, c, o);
     }
