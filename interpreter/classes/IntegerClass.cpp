@@ -351,11 +351,42 @@ bool RexxInteger::truthValue(
 /* Function:  Determine the truth value of an integer object                  */
 /******************************************************************************/
 {
-  if (this->value == 0L)               /* have a zero?                      */
-    return false;                      /* this is false                     */
-  else if (this->value != 1L)          /* how about a one?                  */
-    reportException(errorcode, this);/* report the error                  */
-  return true;                         /* this is true                      */
+    if (this->value == 0)                /* have a zero?                      */
+    {
+        return false;                      /* this is false                     */
+    }
+    else if (this->value != 1)           /* how about a one?                  */
+    {
+        reportException(errorcode, this);/* report the error                  */
+    }
+    return true;                         /* this is true                      */
+}
+
+
+/**
+ * Convert an object to a logical value without raising an
+ * error.
+ *
+ * @param result The converted value.
+ *
+ * @return true if this converted ok, false for an invalid logical.
+ */
+bool RexxInteger::logicalValue(logical_t &result)
+{
+    if (this->value == 0)                /* have a zero?                      */
+    {
+        result = false;                  // this is false and the conversion worked
+        return true;
+    }
+    else if (this->value == 1)           /* how about a one?                  */
+    {
+        result = true;                   // this is true and the conversion worked
+        return true;
+    }
+    else
+    {
+        return false;                    // bad conversion
+    }
 }
 
 /******************************************************************************/

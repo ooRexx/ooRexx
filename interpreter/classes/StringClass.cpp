@@ -1257,6 +1257,46 @@ bool RexxString::truthValue(int errorCode)
     return true;                         /* this is true                      */
 }
 
+
+/**
+ * Convert an object to a logical value without raising an
+ * error.
+ *
+ * @param result The converted value.
+ *
+ * @return true if this converted ok, false for an invalid logical.
+ */
+bool RexxString::logicalValue(logical_t &result)
+{
+    RexxString *testString;              /* string to test                    */
+
+    if (!isOfClass(String, this))            /*  a nonprimitive object?           */
+    {
+        testString = this->requestString();/* get the real string value         */
+    }
+    else
+    {
+        testString = this;                 /* just use the string directly      */
+    }
+
+    if (testString->getLength() != 1)    /* not exactly 1 character long?     */
+    {
+        return false;     // not a valid logical
+    }
+    if (testString->getChar(0) == '0')/* exactly '0'?                      */
+    {
+        result = false;                  // this is false and the conversion worked
+        return true;
+    }
+                                         /* exactly '1'?                  */
+    else if (testString->getChar(0) == '1')
+    {
+        result = true;                   // this is true and the conversion worked
+        return true;
+    }
+    return false;       // did not convert correctly
+}
+
 bool RexxString::checkLower()
 /******************************************************************************/
 /* Function:  Tests for existence of lowercase characters                     */

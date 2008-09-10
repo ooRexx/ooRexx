@@ -524,6 +524,8 @@ typedef struct
     logical_t        (RexxEntry *ObjectToUnsignedInt32)(RexxThreadContext *, RexxObjectPtr, uint32_t *);
     logical_t        (RexxEntry *ObjectToUintptr)(RexxThreadContext *, RexxObjectPtr, uintptr_t *);
     logical_t        (RexxEntry *ObjectToIntptr)(RexxThreadContext *, RexxObjectPtr, intptr_t *);
+    logical_t        (RexxEntry *ObjectToLogical)(RexxThreadContext *, RexxObjectPtr, logical_t *);
+    RexxObjectPtr    (RexxEntry *LogicalToObject)(RexxThreadContext *, logical_t);
     RexxObjectPtr    (RexxEntry *DoubleToObject)(RexxThreadContext *, double);
     RexxObjectPtr    (RexxEntry *DoubleToObjectWithPrecision)(RexxThreadContext *, double, size_t precision);
     logical_t        (RexxEntry *ObjectToDouble)(RexxThreadContext *, RexxObjectPtr, double *);
@@ -912,6 +914,14 @@ struct RexxThreadContext_
     logical_t ObjectToIntptr(RexxObjectPtr o, intptr_t *n)
     {
         return functions->ObjectToIntptr(this, o, n);
+    }
+    logical_t ObjectToLogical(RexxObjectPtr o, logical_t *n)
+    {
+        return functions->ObjectToLogical(this, o, n);
+    }
+    RexxObjectPtr LogicalToObject(logical_t l)
+    {
+        return functions->LogicalToObject(this, l);
     }
     RexxObjectPtr DoubleToObject(double d)
     {
@@ -1449,6 +1459,14 @@ struct RexxMethodContext_
     logical_t ObjectToIntptr(RexxObjectPtr o, intptr_t *n)
     {
         return threadContext->ObjectToIntptr(o, n);
+    }
+    logical_t ObjectToLogical(RexxObjectPtr o, logical_t *n)
+    {
+        return threadContext->ObjectToLogical(o, n);
+    }
+    RexxObjectPtr LogicalToObject(logical_t l)
+    {
+        return threadContext->LogicalToObject(l);
     }
     RexxObjectPtr DoubleToObject(double d)
     {
@@ -2031,6 +2049,14 @@ struct RexxCallContext_
     logical_t ObjectToIntptr(RexxObjectPtr o, intptr_t *n)
     {
         return threadContext->ObjectToIntptr(o, n);
+    }
+    logical_t ObjectToLogical(RexxObjectPtr o, logical_t *n)
+    {
+        return threadContext->ObjectToLogical(o, n);
+    }
+    RexxObjectPtr LogicalToObject(logical_t l)
+    {
+        return threadContext->LogicalToObject(l);
     }
     RexxObjectPtr DoubleToObject(double d)
     {
@@ -2615,6 +2641,14 @@ struct RexxExitContext_
     logical_t ObjectToIntptr(RexxObjectPtr o, intptr_t *n)
     {
         return threadContext->ObjectToIntptr(o, n);
+    }
+    logical_t ObjectToLogical(RexxObjectPtr o, logical_t *n)
+    {
+        return threadContext->ObjectToLogical(o, n);
+    }
+    RexxObjectPtr LogicalToObject(logical_t l)
+    {
+        return threadContext->LogicalToObject(l);
     }
     RexxObjectPtr DoubleToObject(double d)
     {

@@ -884,9 +884,8 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
 
         case REXX_VALUE_logical_t:         /* integer value                     */
         {
-            // this will raise an error, which we'll clear before return
-            value->value.value_logical_t = o->truthValue(Error_Logical_value_method);
-            return true;
+            // this converts without raising an error
+            return o->logicalValue(value->value.value_logical_t);
         }
 
         // The Rexx whole number one is checked against the human digits limit

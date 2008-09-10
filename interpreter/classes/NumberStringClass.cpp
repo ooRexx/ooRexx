@@ -1084,6 +1084,34 @@ bool  RexxNumberString::truthValue(
     return true;                         /* this is true                      */
 }
 
+
+/**
+ * Convert an object to a logical value without raising an
+ * error.
+ *
+ * @param result The converted value.
+ *
+ * @return true if this converted ok, false for an invalid logical.
+ */
+bool RexxNumberString::logicalValue(logical_t &result)
+{
+    if (this->sign == 0 )                /* exactly zero?                     */
+    {
+        result = false;                  // this is false and the conversion worked
+        return true;
+    }
+                                           /* exactly 1?                    */
+    else if (this->sign == 1 && this->exp == 0 && this->length == 1 && *(this->number) == 1)
+    {
+        result = true;                   // this is true and the conversion worked
+        return true;
+    }
+    else
+    {
+        return false;                    // bad conversion
+    }
+}
+
 bool numberStringScan(const char *number, size_t length)
 /******************************************************************************/
 /* Arguments:  Number data, number length                                     */

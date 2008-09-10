@@ -163,6 +163,7 @@ inline char IntToHexDigit(int n)
    void         copyIntoTail(RexxCompoundTail *buffer);
    RexxString  *stringValue();
    bool         truthValue(int);
+   virtual bool logicalValue(logical_t &);
 
    bool        isEqual(RexxObject *);
    bool        primitiveIsEqual(RexxObject *);

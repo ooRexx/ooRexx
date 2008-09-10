@@ -873,6 +873,33 @@ logical_t RexxEntry ObjectToIntptr(RexxThreadContext * c, RexxObjectPtr o, intpt
     return 0;
 }
 
+logical_t RexxEntry ObjectToLogical(RexxThreadContext * c, RexxObjectPtr o, logical_t * n)
+{
+    ApiContext context(c);
+    try
+    {
+        // this uses the entire value range
+        return ((RexxObject *)o)->logicalValue(*n);
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return 0;
+}
+
+RexxObjectPtr RexxEntry LogicalToObject(RexxThreadContext *c, logical_t n)
+{
+    ApiContext context(c);
+    try
+    {
+        return n == 0 ? (RexxObjectPtr)TheFalseObject : (RexxObjectPtr)TheTrueObject;
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
 RexxObjectPtr RexxEntry DoubleToObject(RexxThreadContext *c, double n)
 {
     ApiContext context(c);
@@ -1846,6 +1873,8 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     ObjectToUnsignedInt32,
     ObjectToUintptr,
     ObjectToIntptr,
+    ObjectToLogical,
+    LogicalToObject,
     DoubleToObject,
     DoubleToObjectWithPrecision,
     ObjectToDouble,

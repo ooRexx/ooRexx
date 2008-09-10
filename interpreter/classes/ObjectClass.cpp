@@ -426,6 +426,34 @@ RexxObject *RexxObject::notEqual(RexxObject *other)
    return this != other ? TheTrueObject : TheFalseObject;
 }
 
+/**
+ * Convert an object to a logical value without raising an
+ * error.
+ *
+ * @param result The converted value.
+ *
+ * @return true if this converted ok, false for an invalid logical.
+ */
+bool RexxInternalObject::logicalValue(logical_t &result)
+{
+    return false;
+}
+
+
+/**
+ * Convert an object to a logical value without raising an
+ * error.
+ *
+ * @param result The converted value.
+ *
+ * @return true if this converted ok, false for an invalid logical.
+ */
+bool RexxObject::logicalValue(logical_t &result)
+{
+    return REQUEST_STRING(this)->logicalValue(result);
+}
+
+
 bool RexxInternalObject::truthValue(
     int    errorCode )                 /* error to issue for bad conversion */
 /******************************************************************************/

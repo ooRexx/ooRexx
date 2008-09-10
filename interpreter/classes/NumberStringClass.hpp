@@ -117,6 +117,7 @@
     RexxString  *primitiveMakeString();
     RexxString  *stringValue();
     bool         truthValue(int);
+    virtual bool logicalValue(logical_t &);
 
     bool        isEqual(RexxObject *);
     wholenumber_t strictComp(RexxObject *);

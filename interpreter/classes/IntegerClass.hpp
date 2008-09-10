@@ -77,6 +77,7 @@ class RexxInteger : public RexxObject {
   RexxString  *primitiveMakeString();
   RexxString  *stringValue();
   bool         truthValue(int);
+  virtual bool logicalValue(logical_t &);
   bool         isInstanceOf(RexxClass *);
   RexxMethod   *instanceMethod(RexxString *);
   RexxSupplier *instanceMethods(RexxClass *);

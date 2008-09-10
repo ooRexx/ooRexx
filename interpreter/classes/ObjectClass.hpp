@@ -273,6 +273,7 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
      inline  HashCode     identityHash() { return HASHOREF(this); }
 
      virtual bool         truthValue(int);
+     virtual bool         logicalValue(logical_t &);
      virtual RexxString  *makeString();
      virtual void         copyIntoTail(RexxCompoundTail *buffer);
      virtual RexxString  *primitiveMakeString();
@@ -374,6 +375,7 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *copy();
      HashCode     hash();
      bool         truthValue(int);
+     virtual bool logicalValue(logical_t &);
      virtual bool numberValue(wholenumber_t &result, size_t precision);
      virtual bool numberValue(wholenumber_t &result);
      virtual bool unsignedNumberValue(stringsize_t &result, size_t precision);
