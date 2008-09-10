@@ -448,7 +448,7 @@ void StreamInfo::close()
     // and raise a NOTREADY condition if anything went amiss
     if (!closed)
     {
-        defaultResult = context->NumberToObject(fileInfo.errorInfo());
+        defaultResult = context->WholeNumberToObject(fileInfo.errorInfo());
         notreadyError();
     }
     // no longer open for business
@@ -1098,7 +1098,7 @@ void StreamInfo::setCharReadPosition(int64_t position)
 
     if (position < 1)                  /* too small?                        */
     {
-        raiseException(Rexx_Error_Incorrect_method_positive, context->NumberToObject(1), context->Int64ToObject(position));
+        raiseException(Rexx_Error_Incorrect_method_positive, context->WholeNumberToObject(1), context->Int64ToObject(position));
     }
                                        /* make sure we're within the bounds */
     if (size() >= position)
@@ -1128,7 +1128,7 @@ void StreamInfo::setLineReadPosition(int64_t position)
 
     if (position < 1)                  /* too small?                        */
     {
-        raiseException(Rexx_Error_Incorrect_method_positive, context->NumberToObject(1), context->Int64ToObject(position));
+        raiseException(Rexx_Error_Incorrect_method_positive, context->WholeNumberToObject(1), context->Int64ToObject(position));
     }
 
     // go set the new locations information.
@@ -1150,7 +1150,7 @@ void StreamInfo::setCharWritePosition(int64_t position)
     }
     if (position < 1)                  /* too small?                        */
     {
-        raiseException(Rexx_Error_Incorrect_method_positive, context->NumberToObject(1), context->Int64ToObject(position));
+        raiseException(Rexx_Error_Incorrect_method_positive, context->WholeNumberToObject(1), context->Int64ToObject(position));
     }
     // go move to this position
     setWritePosition(position);
@@ -1173,7 +1173,7 @@ void StreamInfo::setLineWritePosition(int64_t position)
     if (position < 1)                  /* too small?                        */
     {
         /* report an error also              */
-        raiseException(Rexx_Error_Incorrect_method_positive, context->NumberToObject(1), context->Int64ToObject(position));
+        raiseException(Rexx_Error_Incorrect_method_positive, context->WholeNumberToObject(1), context->Int64ToObject(position));
 
     }
 
@@ -1425,7 +1425,7 @@ size_t StreamInfo::charout(RexxStringObject data, bool _setPosition, int64_t pos
     const char *stringData = context->StringData(data);
     // errors from here return the residual count, so set up the default
     // result based on the string size.
-    defaultResult = context->NumberToObject(length);
+    defaultResult = context->WholeNumberToObject(length);
     // and prepare for the write
     writeSetup();
     // set the output position to the new location, if given.
@@ -1439,7 +1439,7 @@ size_t StreamInfo::charout(RexxStringObject data, bool _setPosition, int64_t pos
     // unable to write for some reason?
     if (bytesWritten != length)
     {
-        defaultResult = context->NumberToObject(length - bytesWritten);
+        defaultResult = context->WholeNumberToObject(length - bytesWritten);
         notreadyError();
     }
     // reset any line positioning information.
@@ -1743,7 +1743,7 @@ RexxMethod2(int64_t, stream_lines, CSELF, streamPtr, OPTIONAL_CSTRING, option)
     }
 
     StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NumberToObject(0));
+    stream_info->setContext(context, context->WholeNumberToObject(0));
 
     try
     {
@@ -1798,7 +1798,7 @@ int64_t StreamInfo::chars()
 RexxMethod1(int64_t, stream_chars, CSELF, streamPtr)
 {
     StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NumberToObject(0));
+    stream_info->setContext(context, context->WholeNumberToObject(0));
 
     try
     {
@@ -2768,7 +2768,7 @@ int64_t StreamInfo::setLinePosition(int64_t new_line, int64_t &current_line, int
 RexxMethod2(int64_t, stream_position, CSELF, streamPtr, CSTRING, options)
 {
     StreamInfo *stream_info = (StreamInfo *)streamPtr;
-    stream_info->setContext(context, context->NumberToObject(0));
+    stream_info->setContext(context, context->WholeNumberToObject(0));
 
     try
     {
@@ -2882,7 +2882,7 @@ RexxObjectPtr StreamInfo::queryStreamPosition(const char *options)
     // transient streams alwasy return 1
     if (transient)
     {
-        return context->NumberToObject(1);   // always a position one
+        return context->WholeNumberToObject(1);   // always a position one
     }
     // querying the system position?
     if (position_flags & query_system_position)

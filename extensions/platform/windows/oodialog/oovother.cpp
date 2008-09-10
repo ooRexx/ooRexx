@@ -3067,14 +3067,14 @@ inline void outOfMemoryException(RexxMethodContext *c)
 
 inline void *wrongClassException(RexxMethodContext *c, int pos, const char *n)
 {
-    c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->NumberToObject(pos), c->NewStringFromAsciiz(n));
+    c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->WholeNumberToObject(pos), c->NewStringFromAsciiz(n));
     return NULL;
 }
 
 void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, RexxObjectPtr actual)
 {
     RexxArrayObject a = c->NewArray(3);
-    c->ArrayAppend(a, c->NumberToObject(pos));
+    c->ArrayAppend(a, c->WholeNumberToObject(pos));
     c->ArrayAppend(a, c->NewStringFromAsciiz(list));
     c->ArrayAppend(a, actual);
 
@@ -3154,10 +3154,10 @@ RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long
     if ( RectClass != NULL )
     {
         RexxArrayObject args = context->NewArray(4);
-        context->ArrayAppend(args, context->NumberToObject(l));
-        context->ArrayAppend(args, context->NumberToObject(t));
-        context->ArrayAppend(args, context->NumberToObject(r));
-        context->ArrayAppend(args, context->NumberToObject(b));
+        context->ArrayAppend(args, context->WholeNumberToObject(l));
+        context->ArrayAppend(args, context->WholeNumberToObject(t));
+        context->ArrayAppend(args, context->WholeNumberToObject(r));
+        context->ArrayAppend(args, context->WholeNumberToObject(b));
 
         rect = context->SendMessage(RectClass, "NEW", args);
     }
@@ -3179,7 +3179,7 @@ RexxObjectPtr rxNewPoint(RexxMethodContext *context, long x, long y)
     RexxClassObject PointClass = context->FindContextClass("POINT");
     if ( PointClass != NULL )
     {
-        point = context->SendMessage2(PointClass, "NEW", context->NumberToObject(x), context->NumberToObject(y));
+        point = context->SendMessage2(PointClass, "NEW", context->WholeNumberToObject(x), context->WholeNumberToObject(y));
     }
     return point;
 }
@@ -3277,7 +3277,7 @@ void oodSetSysErrCode(RexxMethodContext *context, DWORD code)
     RexxDirectoryObject local = context->GetLocalEnvironment();
     if ( local != NULLOBJECT )
     {
-        context->DirectoryPut(local, context->NumberToObject(code), "SYSTEMERRORCODE");
+        context->DirectoryPut(local, context->WholeNumberToObject(code), "SYSTEMERRORCODE");
     }
 }
 void oodSetSysErrCode(RexxMethodContext *context)
@@ -3502,7 +3502,7 @@ RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t
     }
     else
     {
-        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NumberToObject(3));
+        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->WholeNumberToObject(3));
         return 0;
     }
 
@@ -3525,7 +3525,7 @@ RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_
     }
     else
     {
-        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NumberToObject(3));
+        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->WholeNumberToObject(3));
         return 0;
     }
 
@@ -4398,7 +4398,7 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
         {
             context->RaiseException1(
                 Rexx_Error_Incorrect_method_array_nostring,
-                context->NumberToObject(i + 1));
+                context->WholeNumberToObject(i + 1));
             return NULL;
         }
 
@@ -4664,7 +4664,7 @@ RexxMethod0(logical_t, dlgutil_init)
     if ( local != NULLOBJECT )
     {
         context->DirectoryPut(local, context->NewPointer(NULL), "NULLPOINTER");
-        context->DirectoryPut(local, context->NumberToObject(0), "SYSTEMERRORCODE");
+        context->DirectoryPut(local, context->WholeNumberToObject(0), "SYSTEMERRORCODE");
     }
 
     return true;
@@ -4711,14 +4711,14 @@ RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, O
 
     if ( count != 3 )
     {
-        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->NumberToObject(3));
+        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->WholeNumberToObject(3));
         return 0;
     }
 
     uint32_t red;
-    if (!context->ObjectToUnsignedNumber(r, (size_t *)&red))
+    if (!context->ObjectToUnsignedInt32(r, &red))
     {
-        context->RaiseException2(Rexx_Error_Incorrect_method_whole, context->NumberToObject(1), r);
+        context->RaiseException2(Rexx_Error_Incorrect_method_whole, context->WholeNumberToObject(1), r);
         return 0;
     }
 

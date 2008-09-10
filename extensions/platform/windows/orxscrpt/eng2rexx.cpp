@@ -860,7 +860,7 @@ RexxObjectPtr OrxScript::createSecurityObject()
 
         memset((void*) &condData,0,sizeof(RexxConditionData));
 
-        RexxObjectPtr flags = context->NumberToObject(getSafetyOptions());
+        RexxObjectPtr flags = context->WholeNumberToObject(getSafetyOptions());
 
         FPRINTF2(logfile,"Create_securityObject - About to use SecurityManager %p\n", getSecurityManager());
 

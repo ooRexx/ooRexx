@@ -575,7 +575,7 @@ POINTER RexxEntry ObjectToCSelf(RexxThreadContext *c, RexxObjectPtr o)
 }
 
 
-RexxObjectPtr RexxEntry NumberToObject(RexxThreadContext *c, wholenumber_t n)
+RexxObjectPtr RexxEntry WholeNumberToObject(RexxThreadContext *c, wholenumber_t n)
 {
     ApiContext context(c);
     try
@@ -661,7 +661,7 @@ logical_t RexxEntry ObjectToValue(RexxThreadContext *c, RexxObjectPtr o, ValueDe
     return false;
 }
 
-RexxObjectPtr RexxEntry UnsignedNumberToObject(RexxThreadContext *c, stringsize_t n)
+RexxObjectPtr RexxEntry StringSizeToObject(RexxThreadContext *c, stringsize_t n)
 {
     ApiContext context(c);
     try
@@ -675,7 +675,7 @@ RexxObjectPtr RexxEntry UnsignedNumberToObject(RexxThreadContext *c, stringsize_
 }
 
 
-logical_t RexxEntry ObjectToNumber(RexxThreadContext *c, RexxObjectPtr o, wholenumber_t *n)
+logical_t RexxEntry ObjectToWholeNumber(RexxThreadContext *c, RexxObjectPtr o, wholenumber_t *n)
 {
     ApiContext context(c);
     try
@@ -726,7 +726,7 @@ RexxObjectPtr RexxEntry UnsignedInt32ToObject(RexxThreadContext *c, uint32_t n)
 }
 
 
-logical_t RexxEntry ObjectToUnsignedNumber(RexxThreadContext * c, RexxObjectPtr o, stringsize_t * n)
+logical_t RexxEntry ObjectToStringSize(RexxThreadContext * c, RexxObjectPtr o, stringsize_t * n)
 {
     ApiContext context(c);
     try
@@ -1827,15 +1827,15 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
 
     NewObject,
     ObjectToCSelf,
-    NumberToObject,
+    WholeNumberToObject,
     UintptrToObject,
     IntptrToObject,
     ValueToObject,
     ValuesToObject,
     ObjectToValue,
-    UnsignedNumberToObject,
-    ObjectToNumber,
-    ObjectToUnsignedNumber,
+    StringSizeToObject,
+    ObjectToWholeNumber,
+    ObjectToStringSize,
     Int64ToObject,
     UnsignedInt64ToObject,
     ObjectToInt64,

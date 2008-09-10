@@ -1310,7 +1310,7 @@ RexxObjectPtr SafeArray2RexxArray(RexxThreadContext *context, VARIANT *pVariant)
         hResult = SafeArrayGetUBound(pSafeArray, lDIdx, lpUpperBound+lDIdx-1);
         lNumOfElements*=(lpUpperBound[lDIdx-1]-lpLowBound[lDIdx-1]+1);
         // put number of elements for this dimension into argument array
-        context->ArrayPut(argArray, context->NumberToObject(lpUpperBound[lDIdx-1]-lpLowBound[lDIdx-1]+1), lDIdx);
+        context->ArrayPut(argArray, context->WholeNumberToObject(lpUpperBound[lDIdx-1]-lpLowBound[lDIdx-1]+1), lDIdx);
         // initial value of indices vector = [LowBound[1],...,LowBound[n]]
         lpIndices[lDIdx-1]=lpLowBound[lDIdx-1];
     }
@@ -1328,7 +1328,7 @@ RexxObjectPtr SafeArray2RexxArray(RexxThreadContext *context, VARIANT *pVariant)
         argArray = context->NewArray(lDimensions);
         for (i=0; i<lDimensions; i++)
         {
-            context->ArrayPut(argArray, context->NumberToObject(1-lpLowBound[i]+lpIndices[i]), i + 1);
+            context->ArrayPut(argArray, context->WholeNumberToObject(1-lpLowBound[i]+lpIndices[i]), i + 1);
         }
 
         /* get the element at current indices, transform it into a rexx object and */
@@ -1714,7 +1714,7 @@ bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
 
         wholenumber_t intval;
 
-        if (context->ObjectToNumber(RxObject, &intval))
+        if (context->ObjectToWholeNumber(RxObject, &intval))
         {
             if (fByRef)
             {
@@ -1763,7 +1763,7 @@ bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
             LPOLESTR  lpUniBuffer = NULL;
             wholenumber_t intval;
 
-            if (context->ObjectToNumber(RxObject, &intval))
+            if (context->ObjectToWholeNumber(RxObject, &intval))
             {
                 if (intval == 0)
                 {
@@ -1915,7 +1915,7 @@ bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARI
     HRESULT         hResult;
     BOOL            fCarryBit;
 
-    context->ObjectToNumber(context->SendMessage0(RxArray,"DIMENSION"), &lDimensions);
+    context->ObjectToWholeNumber(context->SendMessage0(RxArray,"DIMENSION"), &lDimensions);
 
     /* An empty array is valid, and necessary for some OLE Automation objects. */
     if ( lDimensions == 0 )
@@ -1939,7 +1939,7 @@ bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARI
     /* get necessary information on array and set indices vector to initial state */
     for (i=0;i<lDimensions;i++)
     {
-        context->ObjectToNumber(context->SendMessage1(RxArray,"DIMENSION", context->NumberToObject(i + 1)), &lCount);
+        context->ObjectToWholeNumber(context->SendMessage1(RxArray,"DIMENSION", context->WholeNumberToObject(i + 1)), &lCount);
         // calculate the number of overall elements
         lSize *= lCount;
         /* initialize the SAFEARRAYBOUNDs */
@@ -1969,7 +1969,7 @@ bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARI
         for (j=0; j < lDimensions; j++)
         {
             // put j-th index in msg array
-            context->ArrayPut(argArray, context->NumberToObject(lpIndices[j]+1), j+1);
+            context->ArrayPut(argArray, context->WholeNumberToObject(lpIndices[j]+1), j+1);
         }
         /* get item from RexxArray */
         RexxItem = context->SendMessage1(RxArray, "AT", argArray);
@@ -3576,7 +3576,7 @@ RexxMethod3(RexxObjectPtr,                // Return type
                 context->RaiseException(Rexx_Error_Coercion_Failed_Overflow);
                 break;
             case DISP_E_TYPEMISMATCH:
-                context->RaiseException1(Rexx_Error_Coercion_Failed_Type_Mismatch, context->NumberToObject(uArgErr + 1));
+                context->RaiseException1(Rexx_Error_Coercion_Failed_Type_Mismatch, context->WholeNumberToObject(uArgErr + 1));
                 break;
             case DISP_E_PARAMNOTOPTIONAL:
                 context->RaiseException(Rexx_Error_Parameter_Omitted);
@@ -3666,7 +3666,7 @@ ThreeStateReturn checkForOverride(RexxThreadContext *context, VARIANT *pVariant,
         else
         {
             wholenumber_t intval;
-            context->ObjectToNumber(tmpRxObj, &intval);
+            context->ObjectToWholeNumber(tmpRxObj, &intval);
 
             *pDestVt = (VARTYPE)intval;
 
@@ -3789,7 +3789,7 @@ BOOL isOutParam(RexxThreadContext *context, RexxObjectPtr param, POLEFUNCINFO pF
         if ( tmpRxObj != context->Nil() )
         {
             wholenumber_t intval;
-            context->ObjectToNumber(tmpRxObj, &intval);
+            context->ObjectToWholeNumber(tmpRxObj, &intval);
 
             paramFlags = (USHORT)intval;
             overridden = TRUE;
@@ -4342,7 +4342,7 @@ void InsertTypeInfo(RexxMethodContext *context, ITypeInfo *pTypeInfo, TYPEATTR *
 
                 // store invoke kind
                 sprintf(szSmallBuffer,"%d.!INVKIND",*pIndex);
-                context->SetStemElement(RxResult, szSmallBuffer, context->NumberToObject(pFuncDesc->invkind));
+                context->SetStemElement(RxResult, szSmallBuffer, context->WholeNumberToObject(pFuncDesc->invkind));
 
                 if (bName)
                 {
@@ -4367,7 +4367,7 @@ void InsertTypeInfo(RexxMethodContext *context, ITypeInfo *pTypeInfo, TYPEATTR *
                 }
 
                 sprintf(szSmallBuffer,"%d.!PARAMS.0",*pIndex);
-                context->SetStemElement(RxResult, szSmallBuffer, context->NumberToObject(pFuncDesc->cParams));
+                context->SetStemElement(RxResult, szSmallBuffer, context->WholeNumberToObject(pFuncDesc->cParams));
                 for (i=0;i<pFuncDesc->cParams;i++)
                 {
 
@@ -4530,7 +4530,7 @@ RexxMethod1(RexxObjectPtr,                // Return type
                 SysFreeString(bName);
                 SysFreeString(bDoc);
 
-                context->SetStemElement(RxResult, "0", context->NumberToObject(iCount));
+                context->SetStemElement(RxResult, "0", context->WholeNumberToObject(iCount));
             }
 
             if (pTypeLib)
@@ -4814,7 +4814,7 @@ RexxMethod2(RexxObjectPtr,                      // Return type
                     pTypeInfo2->Release();                                     // Release type info pointer2
                 }
 
-                context->SetStemElement(RxStem, "0", context->NumberToObject(iCount));
+                context->SetStemElement(RxStem, "0", context->WholeNumberToObject(iCount));
                 RxResult = RxStem;
             }
             if (pTypeLib)
@@ -4895,7 +4895,7 @@ RexxMethod1(RexxObjectPtr,                // Return type
                 context->SetStemElement(RxStem, pszSmall, context->NewStringFromAsciiz(pEventList->pszDocString));
 
                 sprintf(pszSmall,"%d.!PARAMS.0",iCount);
-                context->SetStemElement(RxStem, pszSmall, context->NumberToObject(pEventList->iParmCount));
+                context->SetStemElement(RxStem, pszSmall, context->WholeNumberToObject(pEventList->iParmCount));
 
                 for ( j=0;j<pEventList->iParmCount;j++ )
                 {
@@ -4926,7 +4926,7 @@ RexxMethod1(RexxObjectPtr,                // Return type
 
                 pEventList = pEventList->pNext;
             }
-            context->SetStemElement(RxStem, "0", context->NumberToObject(iCount));
+            context->SetStemElement(RxStem, "0", context->WholeNumberToObject(iCount));
             RxResult = RxStem;
         }
     }

@@ -119,7 +119,7 @@ RexxMethod3(int,                          // Return type
             }
         }
         int i = pAutomaton->parse( expression);
-        context->SetObjectVariable("!POS", context->NumberToObject(pAutomaton->getCurrentPos()));
+        context->SetObjectVariable("!POS", context->WholeNumberToObject(pAutomaton->getCurrentPos()));
         return i;
     }
     return -1;
@@ -134,7 +134,7 @@ RexxMethod2(int,                          // Return type
     if (pAutomaton)
     {
         int i = pAutomaton->match( context->StringData(string), (int)context->StringLength(string));
-        context->SetObjectVariable("!POS", context->NumberToObject(pAutomaton->getCurrentPos()));
+        context->SetObjectVariable("!POS", context->WholeNumberToObject(pAutomaton->getCurrentPos()));
         return i;
     }
     return 0;
@@ -190,7 +190,7 @@ RexxMethod2(int,                          // Return type
             matchPosition = i + pAutomaton->getCurrentPos() - 1;
         }
 
-        context->SetObjectVariable("!POS", context->NumberToObject(matchPosition));
+        context->SetObjectVariable("!POS", context->WholeNumberToObject(matchPosition));
         pAutomaton->setMinimal(fOldState);  // restore to state at POS invocation time
         return i;
     }

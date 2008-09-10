@@ -110,9 +110,9 @@ RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration
     {
         RexxArrayObject subs = context->NewArray(4);
         context->ArrayAppend(subs, context->NewStringFromAsciiz("frequency"));
-        context->ArrayAppend(subs, context->NumberToObject(MIN_FREQUENCY));
-        context->ArrayAppend(subs, context->NumberToObject(MAX_FREQUENCY));
-        context->ArrayAppend(subs, context->NumberToObject(Frequency));
+        context->ArrayAppend(subs, context->WholeNumberToObject(MIN_FREQUENCY));
+        context->ArrayAppend(subs, context->WholeNumberToObject(MAX_FREQUENCY));
+        context->ArrayAppend(subs, context->WholeNumberToObject(Frequency));
         context->RaiseExceptionArray(Rexx_Error_Invalid_argument_range, subs);
         return NULL;
     }
@@ -121,9 +121,9 @@ RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration
     {
         RexxArrayObject subs = context->NewArray(4);
         context->ArrayAppend(subs, context->NewStringFromAsciiz("duration"));
-        context->ArrayAppend(subs, context->NumberToObject(MIN_DURATION));
-        context->ArrayAppend(subs, context->NumberToObject(MAX_DURATION));
-        context->ArrayAppend(subs, context->NumberToObject(Duration));
+        context->ArrayAppend(subs, context->WholeNumberToObject(MIN_DURATION));
+        context->ArrayAppend(subs, context->WholeNumberToObject(MAX_DURATION));
+        context->ArrayAppend(subs, context->WholeNumberToObject(Duration));
         context->RaiseExceptionArray(Rexx_Error_Invalid_argument_range, subs);
         return NULL;
     }

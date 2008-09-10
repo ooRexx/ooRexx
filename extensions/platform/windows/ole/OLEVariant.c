@@ -166,7 +166,7 @@ static void convertToVT(RexxMethodContext *context,  RexxObjectPtr v_type, int p
         vtString = stringToVT(context, vtString);
         if ( ! vtString )
         {
-            context->RaiseException2(Rexx_Error_Incorrect_method_argType, context->NumberToObject(position), context->NewStringFromAsciiz("VARTYPE"));
+            context->RaiseException2(Rexx_Error_Incorrect_method_argType, context->WholeNumberToObject(position), context->NewStringFromAsciiz("VARTYPE"));
         }
     }
 
@@ -195,7 +195,7 @@ static void convertToParamFlag(RexxMethodContext *context,  RexxObjectPtr param_
         flagsString = stringToFlags(context, flagsString);
         if ( ! flagsString )
         {
-            context->RaiseException2(Rexx_Error_Incorrect_method_argType, context->NumberToObject(position), context->NewStringFromAsciiz("PARAMFLAG"));
+            context->RaiseException2(Rexx_Error_Incorrect_method_argType, context->WholeNumberToObject(position), context->NewStringFromAsciiz("PARAMFLAG"));
         }
     }
 
@@ -240,7 +240,7 @@ static RexxObjectPtr stringToVT(RexxMethodContext *context, RexxObjectPtr rxStr 
                  v1 != VT_ARRAY )
             {
                 sprintf(szBuffer, "%d", v1);
-                rxResult = context->NumberToObject(v1);
+                rxResult = context->WholeNumberToObject(v1);
             }
             break;
 
@@ -254,7 +254,7 @@ static RexxObjectPtr stringToVT(RexxMethodContext *context, RexxObjectPtr rxStr 
             if ( v1 != VT_ILLEGAL && v2 != VT_ILLEGAL && areValidVTs(v1, v2) )
             {
                 sprintf(szBuffer, "%d", v1 | v2);
-                rxResult = context->NumberToObject(v1 | v2);
+                rxResult = context->WholeNumberToObject(v1 | v2);
             }
             break;
 
@@ -319,7 +319,7 @@ static RexxObjectPtr stringToFlags(RexxMethodContext *context, RexxObjectPtr rxS
         tmp = findFlag(stripNonCSyms(pszRxStr));
         if ( tmp != PARAMFLAG_ILLEGAL )
         {
-            rxResult = context->NumberToObject(val | tmp);
+            rxResult = context->WholeNumberToObject(val | tmp);
         }
     }
 

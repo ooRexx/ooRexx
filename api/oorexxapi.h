@@ -505,15 +505,15 @@ typedef struct
 
     RexxObjectPtr    (RexxEntry *NewObject)(RexxThreadContext *);
     POINTER          (RexxEntry *ObjectToCSelf)(RexxThreadContext *, RexxObjectPtr);
-    RexxObjectPtr    (RexxEntry *NumberToObject)(RexxThreadContext *, wholenumber_t);
+    RexxObjectPtr    (RexxEntry *WholeNumberToObject)(RexxThreadContext *, wholenumber_t);
     RexxObjectPtr    (RexxEntry *UintptrToObject)(RexxThreadContext *, uintptr_t);
     RexxObjectPtr    (RexxEntry *IntptrToObject)(RexxThreadContext *, intptr_t);
     RexxObjectPtr    (RexxEntry *ValueToObject)(RexxThreadContext *, ValueDescriptor *);
     RexxArrayObject  (RexxEntry *ValuesToObject)(RexxThreadContext *, ValueDescriptor *, size_t count);
     logical_t        (RexxEntry *ObjectToValue)(RexxThreadContext *, RexxObjectPtr, ValueDescriptor *);
-    RexxObjectPtr    (RexxEntry *UnsignedNumberToObject)(RexxThreadContext *, stringsize_t);
-    logical_t        (RexxEntry *ObjectToNumber)(RexxThreadContext *, RexxObjectPtr, wholenumber_t *);
-    logical_t        (RexxEntry *ObjectToUnsignedNumber)(RexxThreadContext *, RexxObjectPtr, stringsize_t *);
+    RexxObjectPtr    (RexxEntry *StringSizeToObject)(RexxThreadContext *, stringsize_t);
+    logical_t        (RexxEntry *ObjectToWholeNumber)(RexxThreadContext *, RexxObjectPtr, wholenumber_t *);
+    logical_t        (RexxEntry *ObjectToStringSize)(RexxThreadContext *, RexxObjectPtr, stringsize_t *);
     RexxObjectPtr    (RexxEntry *Int64ToObject)(RexxThreadContext *, int64_t);
     RexxObjectPtr    (RexxEntry *UnsignedInt64ToObject)(RexxThreadContext *, uint64_t);
     logical_t        (RexxEntry *ObjectToInt64)(RexxThreadContext *, RexxObjectPtr, int64_t *);
@@ -849,9 +849,9 @@ struct RexxThreadContext_
     {
         return functions->ObjectToCSelf(this, o);
     }
-    RexxObjectPtr NumberToObject(wholenumber_t n)
+    RexxObjectPtr WholeNumberToObject(wholenumber_t n)
     {
-        return functions->NumberToObject(this, n);
+        return functions->WholeNumberToObject(this, n);
     }
     RexxObjectPtr UintptrToObject(uintptr_t n)
     {
@@ -861,17 +861,17 @@ struct RexxThreadContext_
     {
         return functions->IntptrToObject(this, n);
     }
-    RexxObjectPtr UnsignedNumberToObject(size_t n)
+    RexxObjectPtr StringSizeToObject(size_t n)
     {
-        return functions->UnsignedNumberToObject(this, n);
+        return functions->StringSizeToObject(this, n);
     }
-    logical_t ObjectToNumber(RexxObjectPtr o, wholenumber_t *n)
+    logical_t ObjectToWholeNumber(RexxObjectPtr o, wholenumber_t *n)
     {
-        return functions->ObjectToNumber(this, o, n);
+        return functions->ObjectToWholeNumber(this, o, n);
     }
-    logical_t ObjectToUnsignedNumber(RexxObjectPtr o, size_t *n)
+    logical_t ObjectToStringSize(RexxObjectPtr o, size_t *n)
     {
-        return functions->ObjectToUnsignedNumber(this, o, n);
+        return functions->ObjectToStringSize(this, o, n);
     }
     RexxObjectPtr Int64ToObject(int64_t i)
     {
@@ -1378,9 +1378,9 @@ struct RexxMethodContext_
     {
         return threadContext->ObjectToCSelf(o);
     }
-    RexxObjectPtr NumberToObject(wholenumber_t n)
+    RexxObjectPtr WholeNumberToObject(wholenumber_t n)
     {
-        return threadContext->NumberToObject(n);
+        return threadContext->WholeNumberToObject(n);
     }
     RexxObjectPtr UintptrToObject(uintptr_t n)
     {
@@ -1398,17 +1398,17 @@ struct RexxMethodContext_
     {
         return threadContext->ValuesToObject(v, c);
     }
-    RexxObjectPtr UnsignedNumberToObject(size_t u)
+    RexxObjectPtr StringSizeToObject(size_t u)
     {
-        return threadContext->UnsignedNumberToObject(u);
+        return threadContext->StringSizeToObject(u);
     }
-    logical_t ObjectToNumber(RexxObjectPtr o, wholenumber_t *n)
+    logical_t ObjectToWholeNumber(RexxObjectPtr o, wholenumber_t *n)
     {
-        return threadContext->ObjectToNumber(o, n);
+        return threadContext->ObjectToWholeNumber(o, n);
     }
-    logical_t ObjectToUnsignedNumber(RexxObjectPtr o, size_t *n)
+    logical_t ObjectToStringSize(RexxObjectPtr o, size_t *n)
     {
-        return threadContext->ObjectToUnsignedNumber(o, n);
+        return threadContext->ObjectToStringSize(o, n);
     }
     RexxObjectPtr Int64ToObject(int64_t i)
     {
@@ -1960,9 +1960,9 @@ struct RexxCallContext_
     {
         return threadContext->ObjectToCSelf(o);
     }
-    RexxObjectPtr NumberToObject(wholenumber_t n)
+    RexxObjectPtr WholeNumberToObject(wholenumber_t n)
     {
-        return threadContext->NumberToObject(n);
+        return threadContext->WholeNumberToObject(n);
     }
     RexxObjectPtr UintptrToObject(uintptr_t n)
     {
@@ -1980,17 +1980,17 @@ struct RexxCallContext_
     {
         return threadContext->ValuesToObject(v, c);
     }
-    RexxObjectPtr UnsignedNumberToObject(size_t u)
+    RexxObjectPtr StringSizeToObject(size_t u)
     {
-        return threadContext->UnsignedNumberToObject(u);
+        return threadContext->StringSizeToObject(u);
     }
-    logical_t ObjectToNumber(RexxObjectPtr o, wholenumber_t *n)
+    logical_t ObjectToWholeNumber(RexxObjectPtr o, wholenumber_t *n)
     {
-        return threadContext->ObjectToNumber(o, n);
+        return threadContext->ObjectToWholeNumber(o, n);
     }
-    logical_t ObjectToUnsignedNumber(RexxObjectPtr o, size_t *n)
+    logical_t ObjectToStringSize(RexxObjectPtr o, size_t *n)
     {
-        return threadContext->ObjectToUnsignedNumber(o, n);
+        return threadContext->ObjectToStringSize(o, n);
     }
     RexxObjectPtr Int64ToObject(int64_t i)
     {
@@ -2544,9 +2544,9 @@ struct RexxExitContext_
     {
         return threadContext->ObjectToCSelf(o);
     }
-    RexxObjectPtr NumberToObject(wholenumber_t n)
+    RexxObjectPtr WholeNumberToObject(wholenumber_t n)
     {
-        return threadContext->NumberToObject(n);
+        return threadContext->WholeNumberToObject(n);
     }
     RexxObjectPtr UintptrToObject(uintptr_t n)
     {
@@ -2564,17 +2564,17 @@ struct RexxExitContext_
     {
         return threadContext->ValuesToObject(v, c);
     }
-    RexxObjectPtr UnsignedNumberToObject(size_t u)
+    RexxObjectPtr StringSizeToObject(size_t u)
     {
-        return threadContext->UnsignedNumberToObject(u);
+        return threadContext->StringSizeToObject(u);
     }
-    logical_t ObjectToNumber(RexxObjectPtr o, wholenumber_t *n)
+    logical_t ObjectToWholeNumber(RexxObjectPtr o, wholenumber_t *n)
     {
-        return threadContext->ObjectToNumber(o, n);
+        return threadContext->ObjectToWholeNumber(o, n);
     }
-    logical_t ObjectToUnsignedNumber(RexxObjectPtr o, size_t *n)
+    logical_t ObjectToStringSize(RexxObjectPtr o, size_t *n)
     {
-        return threadContext->ObjectToUnsignedNumber(o, n);
+        return threadContext->ObjectToStringSize(o, n);
     }
     RexxObjectPtr Int64ToObject(int64_t i)
     {

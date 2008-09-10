@@ -259,7 +259,7 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                             const char *pString = NULL;
                             wholenumber_t k;
 
-                            context->ObjectToNumber(context->SendMessage0(rxArray,"DIMENSION"), &k);
+                            context->ObjectToWholeNumber(context->SendMessage0(rxArray,"DIMENSION"), &k);
                             if (k == 1)
                             {
                                 k = (int)context->ArraySize(rxArray);
