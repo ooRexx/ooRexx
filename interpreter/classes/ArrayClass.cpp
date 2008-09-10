@@ -2038,7 +2038,7 @@ void *RexxArray::operator new(size_t size, RexxObject **args, size_t argCount, R
     {
         /* If no argument is passed          */
         /*  create an empty array.           */
-        temp = new (ARRAY_DEFAULT_SIZE, arrayClass) RexxArray;
+        temp = new ((size_t)0, ARRAY_DEFAULT_SIZE, arrayClass) RexxArray;
         ProtectedObject p(temp);
         temp->sendMessage(OREF_INIT);      /* call any rexx init's              */
         return temp;
@@ -2624,22 +2624,22 @@ void *   RexxArray::operator new(size_t size,
   return aref;
 }
 
-void *RexxArray::operator new(size_t newSize, size_t size, RexxClass *arrayClass)
+void *RexxArray::operator new(size_t newSize, size_t size, size_t maxSize, RexxClass *arrayClass)
 /******************************************************************************/
 /* Function:  Low level array creation                                        */
 /******************************************************************************/
 {
     size_t bytes;
     RexxArray *newArray;
-    size_t maxSize;
     /* is hintsize lower than minimal    */
-    if (size <= ARRAY_MIN_SIZE)
+    if (maxSize <= ARRAY_MIN_SIZE)
     {        /*  allocation array size?           */
         maxSize = ARRAY_MIN_SIZE;          /* yes, we will actually min size    */
     }
-    else
+    // if the max is smaller than the size, just use the max size.
+    if (maxSize < size)
     {
-        maxSize = size;                    /* nope, hintSize is allocat size    */
+        maxSize = size;
     }
     /* compute size of new array obj     */
     bytes = newSize + (sizeof(RexxObject *) * (maxSize - 1));

@@ -75,7 +75,7 @@ typedef struct copyElelmentParm {
    void * operator new(size_t, RexxObject *, RexxObject *, RexxObject *);
    void * operator new(size_t, RexxObject *, RexxObject *, RexxObject *, RexxObject *);
    void * operator new(size_t, size_t, RexxObject **);
-   void * operator new(size_t, size_t, RexxClass *cls = TheArrayClass);
+   void * operator new(size_t, size_t, size_t, RexxClass *cls = TheArrayClass);
 
    inline void operator delete(void *) {;}
    inline void operator delete(void *, void *) {;}
@@ -85,7 +85,7 @@ typedef struct copyElelmentParm {
    inline void operator delete(void *, RexxObject *, RexxObject *, RexxObject *) {;}
    inline void operator delete(void *, RexxObject *, RexxObject *, RexxObject *, RexxObject *) {;}
    inline void operator delete(void *, size_t, RexxObject **) {;}
-   inline void operator delete(void *, size_t, RexxClass *cls) {;}
+   inline void operator delete(void *, size_t, size_t, RexxClass *cls) {;}
    inline void operator delete(void *, RexxObject **) { ; }
 
    inline RexxArray(RESTORETYPE restoreType) { ; };
@@ -182,11 +182,12 @@ typedef struct copyElelmentParm {
    static RexxClass *classInstance;
    static RexxArray *nullArray;
 
+   static const size_t ARRAY_MIN_SIZE;
+   static const size_t ARRAY_DEFAULT_SIZE;   // default size for ooRexx allocation
+
  protected:
 
    static const size_t MAX_FIXEDARRAY_SIZE;
-   static const size_t ARRAY_MIN_SIZE;
-   static const size_t ARRAY_DEFAULT_SIZE;   // default size for ooRexx allocation
 
    size_t arraySize;                   /* current size of array         */
    size_t maximumSize;                 /* Maximum size array can grow   */
@@ -199,12 +200,12 @@ typedef struct copyElelmentParm {
 
 inline RexxArray *new_externalArray(size_t s, RexxClass *c)
 {
-    return new (s, c) RexxArray;
+    return new (s, RexxArray::ARRAY_DEFAULT_SIZE, c) RexxArray;
 }
 
 inline RexxArray *new_array(size_t s)
 {
-    return new (s, TheArrayClass) RexxArray;
+    return new (s, RexxArray::ARRAY_MIN_SIZE, TheArrayClass) RexxArray;
 }
 
 inline RexxArray *new_array(RexxObject *o1)
