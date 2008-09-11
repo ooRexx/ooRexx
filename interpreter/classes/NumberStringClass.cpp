@@ -666,21 +666,12 @@ bool RexxNumberString::doubleValue(double &result)
 /******************************************************************************/
 {
     RexxString *string;                   /* string version of the number      */
-    double doubleNumber;                  /* converted value                   */
 
     string = this->stringValue();         /* get the string value              */
                                           /* convert the number                */
-    doubleNumber = strtod(string->getStringData(), NULL);
-    /* out of range?                     */
-    if (doubleNumber == +HUGE_VAL || doubleNumber == -HUGE_VAL)
-    {
-        return false;                      /* got a bad value                   */
-    }
-    else
-    {
-        result = doubleNumber;             /* return the converted value        */
-        return true;
-    }
+    result = strtod(string->getStringData(), NULL);
+    // and let pass all of the special cases
+    return true;
 }
 
 RexxInteger *RexxNumberString::integerValue(
@@ -3209,26 +3200,7 @@ RexxNumberString *RexxNumberString::newInstanceFromFloat(float num)
 /* Function:  Create a numberstring object from a floating point number       */
 /******************************************************************************/
 {
-    // make a nan value a string value
-    if (isnan(num))
-    {
-        return (RexxNumberString *)new_string("nan");
-    }
-
-    RexxNumberString *result;
-    size_t resultLen;
-    /* Max length of double str is       */
-    /*  10, make 15 just to be safe      */
-    char floatStr[30];
-    /* get float  as a string value.     */
-    /* Use digits as precision.          */
-    sprintf(floatStr, "%.*g", number_digits() + 2, num);
-    resultLen = strlen(floatStr);        /* Compute length of floatString     */
-                                         /* Create new NumberString           */
-    result = new (resultLen) RexxNumberString (resultLen);
-    /* now format as a numberstring      */
-    result->format(floatStr, resultLen);
-    return result->prepareNumber(number_digits(), ROUND);
+    return newInstanceFromDouble((double)num, number_digits());
 }
 
 RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
@@ -3236,26 +3208,7 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number)
 /* Function:  Create a NumberString from a double value                       */
 /******************************************************************************/
 {
-    // make a nan value a string value
-    if (isnan(number))
-    {
-        return (RexxNumberString *)new_string("nan");
-    }
-
-    RexxNumberString *result;
-    size_t resultLen;
-    /* Max length of double str is       */
-    /*  22, make 30 just to be safe      */
-    char doubleStr[30];
-    /* get double as a string value.     */
-    /* Use digits as precision.          */
-    sprintf(doubleStr, "%.*g", number_digits() + 2, number);
-    resultLen = strlen(doubleStr);       /* Compute length of floatString     */
-                                         /* Create new NumberString           */
-    result = new (resultLen) RexxNumberString (resultLen);
-    /* now format as a numberstring      */
-    result->format(doubleStr, resultLen);
-    return result->prepareNumber(number_digits(), ROUND);
+    return newInstanceFromDouble(number, number_digits());
 }
 
 
@@ -3274,6 +3227,14 @@ RexxNumberString *RexxNumberString::newInstanceFromDouble(double number, size_t 
     if (isnan(number))
     {
         return (RexxNumberString *)new_string("nan");
+    }
+    else if (number == +HUGE_VAL)
+    {
+        return (RexxNumberString *)new_string("+infinity");
+    }
+    else if (number == -HUGE_VAL)
+    {
+        return (RexxNumberString *)new_string("-infinity");
     }
 
     RexxNumberString *result;

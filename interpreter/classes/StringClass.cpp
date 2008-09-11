@@ -45,6 +45,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <limits>
 
 #include "RexxCore.h"
 #include "StringClass.hpp"
@@ -324,6 +325,22 @@ bool RexxString::doubleValue(double &result)
     if (numberDouble != OREF_NULL)       /* Did we get a numberstring?        */
     {
         return numberDouble->doubleValue(result);/* Yup, convert it to double         */
+    }
+    // non numeric, so this could be one of the special cases
+    if (strCompare("nan"))
+    {
+        result = std::numeric_limits<double>::signaling_NaN();
+        return true;
+    }
+    if (strCompare("+infinity"))
+    {
+        result = +HUGE_VAL;
+        return true;
+    }
+    if (strCompare("-infinity"))
+    {
+        result = -HUGE_VAL;
+        return true;
     }
     return false;                      /* not number string, so NODOUBLE    */
 }
