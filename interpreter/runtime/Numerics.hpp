@@ -94,10 +94,12 @@ public:
     static bool objectToUintptr(RexxObject *source, uintptr_t &result);
     static bool objectToIntptr(RexxObject *source, intptr_t &result);
 
-    static stringsize_t formatWholeNumber(wholenumber_t integer, char *dest);
-    static stringsize_t formatStringSize(stringsize_t integer, char *dest);
-    static stringsize_t formatInt64(int64_t integer, char *dest);
-    static stringsize_t formatUnsignedInt64(uint64_t integer, char *dest);
+    static size_t formatWholeNumber(wholenumber_t integer, char *dest);
+    static size_t formatStringSize(stringsize_t integer, char *dest);
+    static size_t formatInt64(int64_t integer, char *dest);
+    static size_t formatUnsignedInt64(uint64_t integer, char *dest);
+
+    static size_t normalizeWholeNumber(wholenumber_t integer, char *dest);
 
     static size_t digits() { return settings->digits; }
     static size_t fuzz()   { return settings->fuzz; }

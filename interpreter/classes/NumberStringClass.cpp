@@ -2101,8 +2101,6 @@ void RexxNumberString::formatNumber(wholenumber_t integer)
 /* Function : Format the integer num into a numberstring.                     */
 /******************************************************************************/
 {
-    char  *current;                      /* current position                  */
-
     if (integer == 0)
     {                  /* is integer 0?                     */
                        /* indicate this.                    */
@@ -2114,18 +2112,9 @@ void RexxNumberString::formatNumber(wholenumber_t integer)
         if (integer < 0 )
         {                /* Negative integer number?          */
             this->sign = -1;
-            integer = -integer;              /* take the positive version         */
         }
         /* convert value into string         */
-        Numerics::formatWholeNumber(integer, (char *)this->number);
-        current = this->number;            /* point to the data start           */
-        while (*current != '\0')
-        {         /* while still have digits           */
-            *current -= '0';                 /* make zero based                   */
-            current++;                       /* step to the next one              */
-        }
-        /* set the proper length             */
-        this->length = current - this->number;
+        this->length = Numerics::normalizeWholeNumber(integer, (char *)this->number);
     }
 }
 

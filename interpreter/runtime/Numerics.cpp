@@ -463,31 +463,57 @@ stringsize_t Numerics::formatWholeNumber(wholenumber_t integer, char *dest)
     // zero? this is pretty easy
     if (integer == 0)
     {
-        strcpy((char *)dest, "0");
+        strcpy(dest, "0");
         return 1;
     }
 
     size_t sign = 0;
-    // negative number?  copy a negative sign, and take the abs value
-    if (integer < 0)
-    {
-        *dest++ = '-';
-        integer = -integer;
-        sign = 1;   // added in to the length
-    }
-
     // we convert this directly because portable numeric-to-ascii routines
     // don't really exist for the various 32/64 bit values.
     char buffer[24];
     size_t index = sizeof(buffer);
 
-    while (integer > 0)
+    // negative number?  copy a negative sign, and take the abs value
+    if (integer < 0)
     {
-        // get the digit and reduce the size of the integer
-        int digit = (int)(integer % 10) + '0';
-        integer = integer / 10;
-        // store the digit
-        buffer[--index] = digit;
+        *dest++ = '-';
+        integer = -(integer + 1);
+        sign = 1;   // added in to the length
+        int carry = 1;  // we add this in when handling the first digit
+
+        while (integer > 0)
+        {
+            // get the digit and reduce the size of the integer
+            int digit = (int)(integer % 10) + carry;
+            // if adding the carry caused a carry, we need to propagate this along
+            if (digit > 9)
+            {
+                digit = 0;       // this is a zero digit, keep the carry
+            }
+            else
+            {
+                carry = 0;       // done adding in
+            }
+            integer = integer / 10;
+            // store the digit
+            buffer[--index] = digit + '0';
+        }
+        // we might have a carry out here
+        if (carry != 0)
+        {
+            buffer[--index] = '1';
+        }
+    }
+    else
+    {
+        while (integer > 0)
+        {
+            // get the digit and reduce the size of the integer
+            int digit = (int)(integer % 10) + '0';
+            integer = integer / 10;
+            // store the digit
+            buffer[--index] = digit;
+        }
     }
 
     // copy into the buffer and set the length
@@ -496,6 +522,78 @@ stringsize_t Numerics::formatWholeNumber(wholenumber_t integer, char *dest)
     // make sure we have a terminating null
     dest[length] = '\0';
     return length + sign;
+}
+
+
+/**
+ * Do portable formatting of a wholenumber value into
+ * numberstring format.
+ *
+ * @param integer The value to convert.
+ * @param dest    The location to store the formatted string.
+ *
+ * @return The length of the converted number.
+ */
+stringsize_t Numerics::normalizeWholeNumber(wholenumber_t integer, char *dest)
+{
+    // zero? this is pretty easy
+    if (integer == 0)
+    {
+        *dest = '\0';
+        return 1;
+    }
+
+    // we convert this directly because portable numeric-to-ascii routines
+    // don't really exist for the various 32/64 bit values.
+    char buffer[24];
+    size_t index = sizeof(buffer);
+
+    // negative number?  copy a negative sign, and take the abs value
+    if (integer < 0)
+    {
+        integer = -(integer + 1);
+        int carry = 1;  // we add this in when handling the first digit
+        while (integer > 0)
+        {
+            // get the digit and reduce the size of the integer
+            int digit = (int)(integer % 10) + carry;
+            // if adding the carry caused a carry, we need to propagate this along
+            if (digit > 9)
+            {
+                digit = 0;       // this is a zero digit, keep the carry
+            }
+            else
+            {
+                carry = 0;       // done adding in
+            }
+            integer = integer / 10;
+            // store the digit
+            buffer[--index] = digit;
+        }
+        // we might have had a carry out
+        if (carry != 0)
+        {
+            buffer[--index] = 1;
+        }
+    }
+    else
+    {
+        while (integer > 0)
+        {
+            // get the digit and reduce the size of the integer
+            int digit = (int)(integer % 10);
+            integer = integer / 10;
+            // store the digit
+            buffer[--index] = digit;
+        }
+    }
+
+    // copy into the buffer and set the length
+    stringsize_t length = sizeof(buffer) - index;
+    memcpy(dest, &buffer[index], length);
+    // make sure we have a terminating null
+    dest[length] = '\0';
+    return length;
 }
 
 /**
@@ -557,27 +655,53 @@ stringsize_t Numerics::formatInt64(int64_t integer, char *dest)
         return 1;
     }
 
-    size_t sign = 0;
-    // negative number?  copy a negative sign, and take the abs value
-    if (integer < 0)
-    {
-        *dest++ = '-';
-        integer = -integer;
-        sign = 1;   // added in to the length
-    }
-
     // we convert this directly because portable numeric-to-ascii routines
     // don't really exist for the various 32/64 bit values.
     char buffer[32];
     size_t index = sizeof(buffer);
+    size_t sign = 0;
 
-    while (integer > 0)
+    // negative number?  copy a negative sign, and take the abs value
+    if (integer < 0)
     {
-        // get the digit and reduce the size of the integer
-        int digit = (int)(integer % 10) + '0';
-        integer = integer / 10;
-        // store the digit
-        buffer[--index] = digit;
+        *dest++ = '-';
+        integer = -(integer + 1);
+        sign = 1;       // added in to the length
+        int carry = 1;  // we add this in when handling the first digit
+
+        while (integer > 0)
+        {
+            // get the digit and reduce the size of the integer
+            int digit = (int)(integer % 10) + carry;
+            // if adding the carry caused a carry, we need to propagate this along
+            if (digit > 9)
+            {
+                digit = 0;       // this is a zero digit, keep the carry
+            }
+            else
+            {
+                carry = 0;       // done adding in
+            }
+            integer = integer / 10;
+            // store the digit
+            buffer[--index] = digit + '0';
+        }
+        // we might have a carry out here
+        if (carry != 0)
+        {
+            buffer[--index] = '1';
+        }
+    }
+    else
+    {
+        while (integer > 0)
+        {
+            // get the digit and reduce the size of the integer
+            int digit = (int)(integer % 10) + '0';
+            integer = integer / 10;
+            // store the digit
+            buffer[--index] = digit;
+        }
     }
 
     // copy into the buffer and set the length
