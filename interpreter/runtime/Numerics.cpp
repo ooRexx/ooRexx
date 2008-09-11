@@ -267,6 +267,12 @@ bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stri
     // is this an integer value (very common)
     if (isInteger(source))
     {
+        // reject any signed values.
+        if (((RexxInteger *)source)->wholeNumber() < 0)
+        {
+            return false;
+        }
+
         result = ((RexxInteger *)source)->stringSize();
         return result <= maxValue ? true : false;
     }
