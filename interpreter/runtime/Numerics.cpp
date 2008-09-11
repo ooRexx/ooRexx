@@ -477,31 +477,20 @@ stringsize_t Numerics::formatWholeNumber(wholenumber_t integer, char *dest)
     if (integer < 0)
     {
         *dest++ = '-';
-        integer = -(integer + 1);
+        // work from an unsigned version that can hold all of the digits
+        // we need to use a version we can negate first, then add the
+        // digit back in
+        size_t working = (size_t)(-(integer + 1));
+        working++;      // undoes the +1 above
         sign = 1;   // added in to the length
-        int carry = 1;  // we add this in when handling the first digit
 
-        while (integer > 0)
+        while (working > 0)
         {
             // get the digit and reduce the size of the integer
-            int digit = (int)(integer % 10) + carry;
-            // if adding the carry caused a carry, we need to propagate this along
-            if (digit > 9)
-            {
-                digit = 0;       // this is a zero digit, keep the carry
-            }
-            else
-            {
-                carry = 0;       // done adding in
-            }
-            integer = integer / 10;
+            int digit = (int)(working % 10);
+            working = working / 10;
             // store the digit
             buffer[--index] = digit + '0';
-        }
-        // we might have a carry out here
-        if (carry != 0)
-        {
-            buffer[--index] = '1';
         }
     }
     else
@@ -551,29 +540,19 @@ stringsize_t Numerics::normalizeWholeNumber(wholenumber_t integer, char *dest)
     // negative number?  copy a negative sign, and take the abs value
     if (integer < 0)
     {
-        integer = -(integer + 1);
-        int carry = 1;  // we add this in when handling the first digit
-        while (integer > 0)
+        // work from an unsigned version that can hold all of the digits
+        // we need to use a version we can negate first, then add the
+        // digit back in
+        size_t working = (size_t)(-(integer + 1));
+        working++;      // undoes the +1 above
+
+        while (working > 0)
         {
             // get the digit and reduce the size of the integer
-            int digit = (int)(integer % 10) + carry;
-            // if adding the carry caused a carry, we need to propagate this along
-            if (digit > 9)
-            {
-                digit = 0;       // this is a zero digit, keep the carry
-            }
-            else
-            {
-                carry = 0;       // done adding in
-            }
-            integer = integer / 10;
+            int digit = (int)(working % 10);
+            working = working / 10;
             // store the digit
             buffer[--index] = digit;
-        }
-        // we might have had a carry out
-        if (carry != 0)
-        {
-            buffer[--index] = 1;
         }
     }
     else
@@ -665,31 +644,20 @@ stringsize_t Numerics::formatInt64(int64_t integer, char *dest)
     if (integer < 0)
     {
         *dest++ = '-';
-        integer = -(integer + 1);
-        sign = 1;       // added in to the length
-        int carry = 1;  // we add this in when handling the first digit
+        // work from an unsigned version that can hold all of the digits
+        // we need to use a version we can negate first, then add the
+        // digit back in
+        uint64_t working = (uint64_t)(-(integer + 1));
+        working++;      // undoes the +1 above
+        sign = 1;   // added in to the length
 
-        while (integer > 0)
+        while (working > 0)
         {
             // get the digit and reduce the size of the integer
-            int digit = (int)(integer % 10) + carry;
-            // if adding the carry caused a carry, we need to propagate this along
-            if (digit > 9)
-            {
-                digit = 0;       // this is a zero digit, keep the carry
-            }
-            else
-            {
-                carry = 0;       // done adding in
-            }
-            integer = integer / 10;
+            int digit = (int)(working % 10);
+            working = working / 10;
             // store the digit
             buffer[--index] = digit + '0';
-        }
-        // we might have a carry out here
-        if (carry != 0)
-        {
-            buffer[--index] = '1';
         }
     }
     else
