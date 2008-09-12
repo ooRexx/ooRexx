@@ -1719,7 +1719,7 @@ uint64_t RexxNativeActivation::unsignedInt64Value(RexxObject *o, size_t position
     // convert using the whole value range
     if (!Numerics::objectToUnsignedInt64(o, temp))
     {
-        reportException(Error_Invalid_argument_nonnegative, position + 1, o);
+        reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), IntegerZero, Numerics::int64ToObject(INT64_MAX), o));
     }
     return temp;
 }

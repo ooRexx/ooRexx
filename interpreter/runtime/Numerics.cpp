@@ -359,6 +359,11 @@ bool Numerics::objectToUnsignedInt64(RexxObject *source, uint64_t &result)
     // is this an integer value (very common)
     if (isInteger(source))
     {
+        // reject any signed values.
+        if (((RexxInteger *)source)->wholeNumber() < 0)
+        {
+            return false;
+        }
         result = ((RexxInteger *)source)->stringSize();
         return true;
     }

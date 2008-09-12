@@ -1039,6 +1039,12 @@ bool RexxNumberString::unsignedInt64Value(uint64_t *result, stringsize_t numDigi
         return true;
     }
 
+    // no signed values allowed
+    if (sign == -1)
+    {
+        return false;
+    }
+
     // is this easily within limits (very common)?
     if (length <= numDigits && numberExp >= 0)
     {
