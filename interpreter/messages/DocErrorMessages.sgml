@@ -2495,7 +2495,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>907</term>
 <listitem>
-<para>Argument <emphasis>argument</emphasis> must be in the range <emphasis>min</emphasis>-<emphasis>max</emphasis>; found "<emphasis>value</emphasis>"</para>
+<para>Argument <emphasis>argument</emphasis> must be in the range <emphasis>min</emphasis> to <emphasis>max</emphasis>; found "<emphasis>value</emphasis>"</para>
 </listitem>
 </varlistentry>
 <varlistentry>

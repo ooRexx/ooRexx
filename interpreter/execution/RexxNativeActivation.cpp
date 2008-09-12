@@ -1654,7 +1654,7 @@ wholenumber_t RexxNativeActivation::wholeNumberValue(RexxObject *o, size_t posit
     // convert using the whole value range
     if (!Numerics::objectToWholeNumber(o, temp, maxValue, minValue))
     {
-        reportException(Error_Invalid_argument_whole, position + 1, o);
+        reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), Numerics::wholenumberToObject(minValue), Numerics::wholenumberToObject(maxValue), o));
     }
     return temp;
 }
@@ -1677,7 +1677,7 @@ stringsize_t RexxNativeActivation::unsignedNumberValue(RexxObject *o, size_t pos
     // convert using the whole value range
     if (!Numerics::objectToStringSize(o, temp, maxValue))
     {
-        reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), IntegerZero, new_numberstringFromStringsize(maxValue), o));
+        reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), IntegerZero, Numerics::stringsizeToObject(maxValue), o));
     }
     return temp;
 }

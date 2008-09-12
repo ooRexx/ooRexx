@@ -3373,7 +3373,7 @@ special character (such as a parenthesis).
           <Component>Rexx</Component>
           <Severity>Warning</Severity>
           <SymbolicName>Error_Invalid_argument_range</SymbolicName>
-          <Text>Argument <Sub position="1" name="argument"/> must be in the range <Sub position="2" name="min"/>-<Sub position="3" name="max"/>; found <q><Sub position="4" name="value"/></q></Text>
+          <Text>Argument <Sub position="1" name="argument"/> must be in the range <Sub position="2" name="min"/> to <Sub position="3" name="max"/>; found <q><Sub position="4" name="value"/></q></Text>
         </SubMessage>
         <SubMessage>
           <Code>88</Code>
