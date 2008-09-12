@@ -1698,7 +1698,7 @@ int64_t RexxNativeActivation::int64Value(RexxObject *o, size_t position)
     // convert using the whole value range
     if (!Numerics::objectToInt64(o, temp))
     {
-        reportException(Error_Invalid_argument_whole, position + 1, o);
+        reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), Numerics::int64ToObject(INT64_MAX), Numerics::int64ToObject(INT64_MIN), o));
     }
     return temp;
 }

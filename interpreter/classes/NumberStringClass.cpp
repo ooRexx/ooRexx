@@ -942,12 +942,26 @@ bool RexxNumberString::int64Value(int64_t *result, stringsize_t numDigits)
     // is this easily within limits (very common)?
     if (length <= numDigits && numberExp >= 0)
     {
-        if (!createUnsignedInt64Value(number, length, false, numberExp, INT64_MAX, intnum))
+        // the minimum negative value requires one more than the max positive
+        if (!createUnsignedInt64Value(number, length, false, numberExp, ((uint64_t)INT64_MAX) + 1, intnum))
         {
             return false;                   // too big to handle
         }
-        // adjust for the sign
-        *result = ((int64_t)intnum) * sign;
+        // this edge case can be a problem, so check for it specifically
+        if (intnum == ((uint64_t)INT64_MAX) + 1)
+        {
+            // if at the limit, this must be a negative number
+            if (sign != -1)
+            {
+                return false;
+            }
+            *result = INT64_MIN;
+        }
+        else
+        {
+            // adjust for the sign
+            *result = ((int64_t)intnum) * sign;
+        }
         return true;
     }
 
@@ -976,21 +990,33 @@ bool RexxNumberString::int64Value(int64_t *result, stringsize_t numDigits)
     if (numberExp < 0)
     {
         // now convert this into an unsigned value
-        if (!createUnsignedInt64Value(number, numberLength + numberExp, carry, 0, INT64_MAX, intnum))
+        if (!createUnsignedInt64Value(number, numberLength + numberExp, carry, 0, ((uint64_t)INT64_MAX) + 1, intnum))
         {
             return false;                   // to big to handle
         }
     }
     else
     {                             /* straight out number. just compute.*/
-        if (!createUnsignedInt64Value(number, numberLength, carry, numberExp, INT64_MAX, intnum))
+        if (!createUnsignedInt64Value(number, numberLength, carry, numberExp, ((uint64_t)INT64_MAX) + 1, intnum))
         {
             return false;                   // to big to handle
         }
     }
-
-    // adjust for the sign
-    *result = ((int64_t)intnum) * sign;
+    // the edge case is a problem, so handle it directly
+    if (intnum == ((uint64_t)INT64_MAX) + 1)
+    {
+        // if at the limit, this must be a negative number
+        if (sign != -1)
+        {
+            return false;
+        }
+        *result = INT64_MAX;
+    }
+    else
+    {
+        // adjust for the sign
+        *result = ((int64_t)intnum) * sign;
+    }
     return true;
 }
 
@@ -2159,26 +2185,41 @@ void RexxNumberString::formatInt64(int64_t integer)
     }
     else
     {                               /* number is non-zero                */
-                                    /* Format the number                 */
-        if (integer < 0 )
-        {                /* Negative integer number?          */
-            this->sign = -1;
-            integer = -integer;              /* take the positive version         */
-        }
-
-        // we convert this directly because A)  we need to post-process the numbers
-        // to make them zero based, and B) portable numeric-to-ascii routines
+        // we convert this directly because portable numeric-to-ascii routines
         // don't really exist for the various 32/64 bit values.
         char buffer[32];
         size_t index = sizeof(buffer);
 
-        while (integer > 0)
+        // negative number?  copy a negative sign, and take the abs value
+        if (integer < 0)
         {
-            // get the digit and reduce the size of the integer
-            int digit = (int)(integer % 10);
-            integer = integer / 10;
-            // store the digit
-            buffer[--index] = digit;
+            // work from an unsigned version that can hold all of the digits
+            // we need to use a version we can negate first, then add the
+            // digit back in
+            uint64_t working = (uint64_t)(-(integer + 1));
+            working++;      // undoes the +1 above
+            sign = -1;      // negative number
+
+            while (working > 0)
+            {
+                // get the digit and reduce the size of the integer
+                int digit = (int)(working % 10);
+                working = working / 10;
+                // store the digit
+                buffer[--index] = digit;
+            }
+        }
+        else
+        {
+            sign = 1;              // positive number
+            while (integer > 0)
+            {
+                // get the digit and reduce the size of the integer
+                int digit = (int)(integer % 10);
+                integer = integer / 10;
+                // store the digit
+                buffer[--index] = digit;
+            }
         }
 
         // copy into the buffer and set the length
