@@ -244,6 +244,8 @@ void RexxSource::comment()
             {
                 /* record current position in clause */
                 this->clause->setEnd(this->line_count, this->line_offset);
+                // update the error information
+                clauseLocation = clause->getLocation();
                 /* error, must report                */
                 syntaxError(Error_Unmatched_quote_comment, new_integer(startline));
             }
@@ -460,6 +462,8 @@ RexxString *RexxSource::packLiteral(
                       ((count&3) && type == LITERAL_BIN))))
                 {
                     m = i+1;                        /* place holder for new_integer invocation */
+                    // update the error information
+                    clauseLocation = clause->getLocation();
                     if (type == LITERAL_HEX)        /* hex string?                       */
                     {
                         /* report correct error              */
@@ -492,6 +496,8 @@ RexxString *RexxSource::packLiteral(
               ((count&3) && type == LITERAL_BIN))))
         {
             m = i-1;                           /* place holder for new_integer invocation */
+            // update the error information
+            clauseLocation = clause->getLocation();
             if (type == LITERAL_HEX)           /* hex string?                       */
             {
                 /* report correct error              */
@@ -547,6 +553,8 @@ RexxString *RexxSource::packLiteral(
                     }
                     else
                     {
+                        // update the error information
+                        clauseLocation = clause->getLocation();
                         error_output[0] = nibble;    /* copy the error character          */
                                                      /* report the invalid character      */
                         syntaxError(Error_Invalid_hex_invhex, new_string(&error_output[0]));
@@ -592,6 +600,8 @@ RexxString *RexxSource::packLiteral(
                     }
                     else if (nibble != '0')
                     {      /* not a '0' either?                 */
+                        // update the error information
+                        clauseLocation = clause->getLocation();
                         error_output[0] = nibble;    /* copy the error character          */
                                                      /* report the invalid character      */
                         syntaxError(Error_Invalid_hex_invbin, new_string(&error_output[0]));
@@ -876,6 +886,8 @@ RexxToken *RexxSource::sourceNextToken(
                 this->clause->setEnd(this->line_number, this->line_offset);
                 if (length > (size_t)MAX_SYMBOL_LENGTH)/* result too long?                  */
                 {
+                    // update the error information
+                    clauseLocation = clause->getLocation();
                     /* report the error                  */
                     syntaxError(Error_Name_too_long_name, value);
                 }
@@ -951,6 +963,8 @@ RexxToken *RexxSource::sourceNextToken(
                     {         /* reached the end of the line?      */
                               /* record current position in clause */
                         this->clause->setEnd(this->line_number, this->line_offset);
+                        // update the error information
+                        clauseLocation = clause->getLocation();
                         if (literal_delimiter == '\'')
                         {
                             /* raise the appropriate error       */
@@ -1376,6 +1390,8 @@ RexxToken *RexxSource::sourceNextToken(
                     default:                      /* something else found              */
                         /* record current position in clause */
                         this->clause->setEnd(this->line_number, this->line_offset);
+                        // update the error information
+                        clauseLocation = clause->getLocation();
                         sprintf(badchar, "%c", inch);
                         sprintf(hexbadchar, "%2.2X", inch);
                         /* report the error                  */
