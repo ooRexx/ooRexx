@@ -103,7 +103,8 @@ const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            100000000,
                                            1000000000};
 #endif
-const stringsize_t  Numerics::MAX_STRINGSIZE = SIZE_MAX;
+// this is the matching component to a whole number
+const stringsize_t  Numerics::MAX_STRINGSIZE = MAX_WHOLENUMBER;
     // max numeric digits value for explicit 64-bit conversions
 const size_t Numerics::DIGITS64 = ((size_t)20);
 const bool Numerics::FORM_SCIENTIFIC    = false;
