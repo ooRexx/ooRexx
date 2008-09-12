@@ -364,6 +364,12 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                             break;
                         }
 
+                        case REXX_VALUE_intptr_t:         /* integer value                     */
+                        {
+                            descriptors[outputIndex].value.value_intptr_t = (intptr_t)wholeNumberValue(argument, inputIndex, INTPTR_MAX, INTPTR_MIN);
+                            break;
+                        }
+
                         case REXX_VALUE_uint8_t:            /* 8-bit integer value               */
                         {
                             descriptors[outputIndex].value.value_uint8_t = (uint8_t)unsignedNumberValue(argument, inputIndex, UINT8_MAX);
@@ -391,6 +397,12 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                         case REXX_VALUE_size_t:            /* integer value                     */
                         {
                             descriptors[outputIndex].value.value_size_t = (size_t)unsignedNumberValue(argument, inputIndex, SIZE_MAX);
+                            break;
+                        }
+
+                        case REXX_VALUE_uintptr_t:         /* integer value                     */
+                        {
+                            descriptors[outputIndex].value.value_uintptr_t = (uintptr_t)unsignedNumberValue(argument, inputIndex, UINTPTR_MAX);
                             break;
                         }
 
