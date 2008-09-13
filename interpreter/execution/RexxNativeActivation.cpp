@@ -511,7 +511,11 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                             }
 
                             /* force to a string value           */
-                            RexxString *temp = stringArgument(argument, inputIndex + 1) ;
+                            RexxString *temp = argument->requestString();
+                            if ((RexxObject *)temp == TheNilObject)
+                            {
+                                reportStemError(inputIndex, argument);
+                            }
                             // if this forced a string object to be created,
                             // we need to protect it here.
                             if (temp != argument)
