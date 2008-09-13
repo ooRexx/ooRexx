@@ -1408,6 +1408,10 @@ struct RexxMethodContext_
     {
         return threadContext->ValuesToObject(v, c);
     }
+    logical_t ObjectToValue(RexxObjectPtr o, ValueDescriptor *v)
+    {
+        return threadContext->ObjectToValue(o, v);
+    }
     RexxObjectPtr StringSizeToObject(size_t u)
     {
         return threadContext->StringSizeToObject(u);
@@ -1997,6 +2001,10 @@ struct RexxCallContext_
     RexxArrayObject ValuesToObject(ValueDescriptor *v, size_t c)
     {
         return threadContext->ValuesToObject(v, c);
+    }
+    logical_t ObjectToValue(RexxObjectPtr o, ValueDescriptor *v)
+    {
+        return threadContext->ObjectToValue(o, v);
     }
     RexxObjectPtr StringSizeToObject(size_t u)
     {
@@ -2589,6 +2597,10 @@ struct RexxExitContext_
     RexxArrayObject ValuesToObject(ValueDescriptor *v, size_t c)
     {
         return threadContext->ValuesToObject(v, c);
+    }
+    logical_t ObjectToValue(RexxObjectPtr o, ValueDescriptor *v)
+    {
+        return threadContext->ObjectToValue(o, v);
     }
     RexxObjectPtr StringSizeToObject(size_t u)
     {
