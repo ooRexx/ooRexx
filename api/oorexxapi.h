@@ -77,13 +77,13 @@
 #define REXX_VALUE_uint8_t                24
 #define REXX_VALUE_uint16_t               25
 #define REXX_VALUE_uint32_t               26
-#define REXX_VALUE_size_t                 27
+#define REXX_VALUE_uint64_t               27
 #define REXX_VALUE_intptr_t               28
 #define REXX_VALUE_uintptr_t              29
 #define REXX_VALUE_logical_t              30
 #define REXX_VALUE_RexxArrayObject        31
 #define REXX_VALUE_RexxStemObject         32
-#define REXX_VALUE_uint64_t               33
+#define REXX_VALUE_size_t                 33
 #define REXX_VALUE_ssize_t                34
 #define REXX_VALUE_POINTERSTRING          35
 
