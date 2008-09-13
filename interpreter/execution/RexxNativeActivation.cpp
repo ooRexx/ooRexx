@@ -190,7 +190,14 @@ void RexxNativeActivation::reportStemError(size_t position, RexxObject *object)
 /* Function:  Report a method signature error                                 */
 /******************************************************************************/
 {
-     reportException(Error_Invalid_argument_nostem, position + 1, object);
+    if (activationType == METHOD_ACTIVATION)
+    {
+        reportException(Error_Incorrect_method_nostem, position + 1, object);
+    }
+    else
+    {
+        reportException(Error_Incorrect_call_nostem, position + 1, object);
+    }
 }
 
 
