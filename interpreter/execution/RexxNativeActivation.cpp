@@ -533,7 +533,18 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                             /* set the result in                 */
                             descriptors[outputIndex].value.value_RexxStemObject = (RexxStemObject)stem;
                             break;
+                        }
 
+                        case REXX_VALUE_RexxClassObject: // required class object
+                        {
+                            // this must be a class object
+                            if (!argument->isInstanceOf(TheClassClass))
+                            {
+                                reportException(Error_Invalid_argument_noclass, inputIndex + 1, TheClassClass->getId());
+                            }
+                            /* set the result in                 */
+                            descriptors[outputIndex].value.value_RexxClassObject = (RexxClassObject)argument;
+                            break;
                         }
 
                         case REXX_VALUE_POINTER:
@@ -819,6 +830,17 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
         {
             // silly, but this always works.
             value->value.value_RexxObjectPtr = (RexxObjectPtr)o;
+            return true;
+        }
+        case REXX_VALUE_RexxClassObject: // required class object
+        {
+            // this must be a class object
+            if (!o->isInstanceOf(TheClassClass))
+            {
+                return false;
+            }
+            /* set the result in                 */
+            value->value.value_RexxClassObject = (RexxClassObject)o;
             return true;
         }
         case REXX_VALUE_int:            /* integer value                     */

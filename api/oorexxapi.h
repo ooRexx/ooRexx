@@ -86,6 +86,7 @@
 #define REXX_VALUE_size_t                 33
 #define REXX_VALUE_ssize_t                34
 #define REXX_VALUE_POINTERSTRING          35
+#define REXX_VALUE_RexxClassObject        36
 
 #define REXX_OPTIONAL_ARGUMENT                 0x8000
 
@@ -318,15 +319,15 @@ typedef struct
         RexxObjectPtr         value_SCOPE;
         POINTER               value_CSELF;
         RexxClassObject       value_OSELF;
-        RexxObjectPtr         value_SUPER;
+        RexxClassObject       value_SUPER;
         RexxObjectPtr         value_RexxObjectPtr;
+        RexxClassObject       value_RexxClassObject;
         int                   value_int;
         wholenumber_t         value_wholenumber_t;
         stringsize_t          value_stringsize_t;
         logical_t             value_logical_t;
         double                value_double;
         CSTRING               value_CSTRING;
-        RexxClassObject       value_RexxClassObject;
         POINTER               value_POINTER;
         RexxStringObject      value_RexxStringObject;
         float                 value_float;
@@ -3012,6 +3013,7 @@ RexxReturnCode RexxEntry RexxCreateInterpreter(RexxInstance **, RexxThreadContex
 // each of the following types have an optional equivalent
 
 #define ARGUMENT_TYPE_RexxObjectPtr         RexxObjectPtr
+#define ARGUMENT_TYPE_RexxClassObject       RexxClassObject
 #define ARGUMENT_TYPE_int                   int
 #define ARGUMENT_TYPE_wholenumber_t         wholenumber_t
 #define ARGUMENT_TYPE_stringsize_t          stringsize_t
