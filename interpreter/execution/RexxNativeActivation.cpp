@@ -846,6 +846,15 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
             return success;
         }
 
+        case REXX_VALUE_intptr_t:           /* integer value                     */
+        {
+            wholenumber_t temp = 0;
+            // convert and copy                  */
+            bool success = Numerics::objectToWholeNumber(o, temp, INTPTR_MAX, INTPTR_MIN);
+            value->value.value_intptr_t = (intptr_t)temp;
+            return success;
+        }
+
         case REXX_VALUE_int64_t:            /* integer value                     */
         {
             int64_t temp = 0;
@@ -879,6 +888,15 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
             // convert and copy                  */
             bool success = Numerics::objectToStringSize(o, temp, UINT32_MAX);
             value->value.value_uint32_t = (uint32_t)temp;
+            return success;
+        }
+
+        case REXX_VALUE_uintptr_t:         /* integer value                     */
+        {
+            stringsize_t temp = 0;
+            // convert and copy                  */
+            bool success = Numerics::objectToStringSize(o, temp, UINTPTR_MAX);
+            value->value.value_uintptr_t = (uintptr_t)temp;
             return success;
         }
 
