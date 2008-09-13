@@ -684,7 +684,7 @@ logical_t RexxEntry ObjectToWholeNumber(RexxThreadContext *c, RexxObjectPtr o, w
         // this uses the entire value range
         // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms,
         // so we'll make things relative to SIZE_MAX.
-        if (Numerics::objectToWholeNumber((RexxObject *)o, temp, SSIZE_MAX, (-SSIZE_MAX) - 1))
+        if (Numerics::objectToWholeNumber((RexxObject *)o, temp, Numerics::MAX_WHOLENUMBER, Numerics::MIN_WHOLENUMBER))
         {
             *n = (wholenumber_t)temp;
             return true;
@@ -733,7 +733,7 @@ logical_t RexxEntry ObjectToStringSize(RexxThreadContext * c, RexxObjectPtr o, s
     {
         stringsize_t temp;
         // this uses the entire value range
-        if (Numerics::objectToStringSize((RexxObject *)o, temp, SIZE_MAX))
+        if (Numerics::objectToStringSize((RexxObject *)o, temp, Numerics::MAX_WHOLENUMBER))
         {
             *n = (stringsize_t)temp;
             return true;

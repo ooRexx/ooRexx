@@ -394,31 +394,15 @@ bool Numerics::objectToUnsignedInt64(RexxObject *source, uint64_t &result)
  */
 bool Numerics::objectToUintptr(RexxObject *source, uintptr_t &result)
 {
-    // is this an integer value (very common)
-    if (isInteger(source))
+    stringsize_t temp;
+    // if it didn't convert for the range, give a failure back
+    if (!Numerics::objectToStringSize(source, temp, UINTPTR_MAX))
     {
-        result = ((RexxInteger *)source)->stringSize();
-        return true;
-    }
-    else
-    {
-        // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
-        // not convertible to number string?  get out now
-        if (nString == OREF_NULL)
-        {
-            return false;
-        }
-        uint64_t temp;
-
-        // if not a valid whole number, reject this too
-        if (nString->unsignedInt64Value(&temp, ARGUMENT_DIGITS))
-        {
-            result = (uintptr_t)temp;
-            return true;
-        }
         return false;
     }
+    // ok, this worked
+    result = (uintptr_t)temp;
+    return true;
 }
 
 
@@ -433,31 +417,15 @@ bool Numerics::objectToUintptr(RexxObject *source, uintptr_t &result)
  */
 bool Numerics::objectToIntptr(RexxObject *source, intptr_t &result)
 {
-    // is this an integer value (very common)
-    if (isInteger(source))
+    wholenumber_t temp;
+    // if it didn't convert for the range, give a failure back
+    if (!Numerics::objectToWholeNumber(source, temp, INTPTR_MAX, INTPTR_MIN))
     {
-        result = ((RexxInteger *)source)->wholeNumber();
-        return true;
-    }
-    else
-    {
-        // get this as a numberstring (which it might already be)
-        RexxNumberString *nString = source->numberString();
-        // not convertible to number string?  get out now
-        if (nString == OREF_NULL)
-        {
-            return false;
-        }
-        int64_t temp;
-
-        // if not a valid whole number, reject this too
-        if (nString->int64Value(&temp, ARGUMENT_DIGITS))
-        {
-            result = (intptr_t)temp;
-            return true;
-        }
         return false;
     }
+    // ok, this worked
+    result = (intptr_t)temp;
+    return true;
 }
 
 
