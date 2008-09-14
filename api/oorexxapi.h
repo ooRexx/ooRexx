@@ -653,8 +653,8 @@ typedef struct
     RexxDirectoryObject (RexxEntry *GetAllContextVariables)(RexxCallContext *);
     RexxStemObject   (RexxEntry *ResolveStemVariable)(RexxCallContext *, RexxObjectPtr);
     void             (RexxEntry *InvalidRoutine)(RexxCallContext *);
-    wholenumber_t    (RexxEntry *GetContextDigits)(RexxCallContext *);
-    wholenumber_t    (RexxEntry *GetContextFuzz)(RexxCallContext *);
+    stringsize_t     (RexxEntry *GetContextDigits)(RexxCallContext *);
+    stringsize_t     (RexxEntry *GetContextFuzz)(RexxCallContext *);
     logical_t        (RexxEntry *GetContextForm)(RexxCallContext *);
     RexxClassObject  (RexxEntry *FindContextClass)(RexxCallContext *, CSTRING);
 } CallContextInterface;
@@ -2415,11 +2415,11 @@ struct RexxCallContext_
     {
         functions->InvalidRoutine(this);
     }
-    wholenumber_t GetContextDigits()
+    stringsize_t GetContextDigits()
     {
         return functions->GetContextDigits(this);
     }
-    wholenumber_t GetContextFuzz()
+    stringsize_t GetContextFuzz()
     {
         return functions->GetContextFuzz(this);
     }

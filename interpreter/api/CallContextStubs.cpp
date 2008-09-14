@@ -262,7 +262,7 @@ RexxPackageObject RexxEntry GetExitContextPackage(RexxExitContext *c)
     return NULLOBJECT;
 }
 
-wholenumber_t RexxEntry GetContextDigits(RexxCallContext *c)
+stringsize_t RexxEntry GetContextDigits(RexxCallContext *c)
 {
     ApiContext context(c);
     try
@@ -274,7 +274,8 @@ wholenumber_t RexxEntry GetContextDigits(RexxCallContext *c)
     }
     return 0;
 }
-wholenumber_t RexxEntry GetContextFuzz(RexxCallContext *c)
+
+stringsize_t RexxEntry GetContextFuzz(RexxCallContext *c)
 {
     ApiContext context(c);
     try
