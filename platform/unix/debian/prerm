@@ -45,6 +45,7 @@ rm -f /usr/bin/rexx.img
 rm -f /usr/bin/rexx.cat
 rm -f /usr/bin/rxregexp.cls
 rm -f /usr/bin/rxftp.cls
+rm -f /usr/bin/socket.cls
 rm -f /usr/bin/oorexx-config
 
 rm -f /usr/lib/librexx.*

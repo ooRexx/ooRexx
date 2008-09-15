@@ -53,6 +53,7 @@ if [ -d /opt/ooRexx ]; then
    ln -sf /opt/ooRexx/bin/rexx.cat                         /usr/bin/rexx.cat
    ln -sf /opt/ooRexx/bin/rxregexp.cls                     /usr/bin/rxregexp.cls
    ln -sf /opt/ooRexx/bin/rxftp.cls                        /usr/bin/rxftp.cls
+   ln -sf /opt/ooRexx/bin/socket.cls                       /usr/bin/socket.cls
    ln -sf /opt/ooRexx/bin/oorexx-config                    /usr/bin/oorexx-config
 
    ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so.${orx_libversion}
