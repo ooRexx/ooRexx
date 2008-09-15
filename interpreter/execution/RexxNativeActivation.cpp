@@ -2363,9 +2363,9 @@ RexxArray *RexxNativeActivation::getArguments()
  */
 RexxObject *RexxNativeActivation::getArgument(size_t index)
 {
-    if (index < argcount)
+    if (index <= argcount)
     {
-        return arglist[index];
+        return arglist[index - 1];
     }
     return OREF_NULL;
 }
