@@ -261,7 +261,7 @@ void RexxStemVariable::drop(
 void RexxStemVariable::drop(RexxVariableDictionary *dictionary)
 {
     // dropping the stem name is sufficient
-    dictionary->drop(stem);
+    dictionary->dropStemVariable(stem);
 }
 
 void RexxStemVariable::procedureExpose(

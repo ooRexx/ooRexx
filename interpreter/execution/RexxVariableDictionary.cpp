@@ -128,6 +128,24 @@ void RexxVariableDictionary::drop(RexxString *name)
 }
 
 
+/**
+ * Drop the value of a named variable in the method dictionary.
+ *
+ * @param name   The string name of the variable.
+ */
+void RexxVariableDictionary::dropStemVariable(RexxString *name)
+{
+    // if the variable exists, drop the value
+    RexxVariable *variable = resolveVariable(name);
+    if (variable != OREF_NULL)
+    {
+        variable->drop();
+        /* create a new stem element and set this */
+        variable->set(new RexxStem(name));
+    }
+}
+
+
 RexxCompoundElement *RexxVariableDictionary::getCompoundVariable(
      RexxString *stemName,             /* name of stem for compound         */
      RexxObject **tail,                /* tail of the compound element      */
