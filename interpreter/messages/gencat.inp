@@ -849,7 +849,7 @@ $ Error_Incorrect_call_positive
 380 &1 argument &2 must be positive; found "&3"
 
 $ Error_Incorrect_call_toobig
-381 &1 argument &2 must not exceed 999,999,999
+381 &1 argument &2 must not exceed the whole number limit.
 
 $ Error_Incorrect_call_range
 382 &1 argument &2 must be in the range 0-99; found "&3"
@@ -1635,7 +1635,7 @@ $ Error_Invalid_argument_toobig
 677 Argument &1 must not exceed &2; found "&3"
 
 $ Error_Invalid_argument_range
-678 Argument &1 must be in the range &2-&3; found "&4"
+678 Argument &1 must be in the range &2 to &3; found "&4"
 
 $ Error_Invalid_argument_null
 679 Argument &1 must not be a null string
