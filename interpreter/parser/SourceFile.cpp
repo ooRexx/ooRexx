@@ -4069,7 +4069,7 @@ RexxVariableBase *RexxSource::getRetriever(
 
         case STRING_COMPOUND_NAME:         /* compound variable name            */
             /* get a direct retriever for this   */
-            retriever = (RexxVariableBase *)buildCompoundVariable(name, true);
+            retriever = (RexxVariableBase *)RexxVariableDictionary::buildCompoundVariable(name, true);
             break;
 
         default:                           /* all other invalid cases           */

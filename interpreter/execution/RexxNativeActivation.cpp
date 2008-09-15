@@ -2426,7 +2426,7 @@ RexxObject *RexxNativeActivation::getContextStem(RexxString *name)
         name = name->concatWithCstring(".");
     }
 
-    RexxVariableBase *retriever = activation->getVariableRetriever(name);
+    RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(name);
     // if this didn't parse, it's an illegal name
     // it must also resolve to a stem type...this could be a compound one
     if (retriever == OREF_NULL || !isOfClass(StemVariableTerm, retriever))
@@ -2448,7 +2448,7 @@ RexxObject *RexxNativeActivation::getContextStem(RexxString *name)
  */
 RexxObject *RexxNativeActivation::getContextVariable(const char *name)
 {
-    RexxVariableBase *retriever = activation->getVariableRetriever(new_string(name));
+    RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(new_string(name));
     // if this didn't parse, it's an illegal name
     if (retriever == OREF_NULL)
     {
@@ -2478,7 +2478,7 @@ RexxObject *RexxNativeActivation::getContextVariable(const char *name)
 void RexxNativeActivation::setContextVariable(const char *name, RexxObject *value)
 {
     // get the REXX activation for the target context
-    RexxVariableBase *retriever = activation->getVariableRetriever(new_string(name));
+    RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(new_string(name));
     // if this didn't parse, it's an illegal name
     if (retriever == OREF_NULL || isString((RexxObject *)retriever))
     {
@@ -2499,7 +2499,7 @@ void RexxNativeActivation::setContextVariable(const char *name, RexxObject *valu
 void RexxNativeActivation::dropContextVariable(const char *name)
 {
     // get the REXX activation for the target context
-    RexxVariableBase *retriever = activation->getVariableRetriever(new_string(name));
+    RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(new_string(name));
     // if this didn't parse, it's an illegal name
     if (retriever == OREF_NULL || isString((RexxObject *)retriever))
     {
@@ -2532,7 +2532,17 @@ RexxDirectory *RexxNativeActivation::getAllContextVariables()
  */
 RexxObject *RexxNativeActivation::getObjectVariable(const char *name)
 {
-    return methodVariables()->realValue(new_upper_string(name));
+    // get the REXX activation for the target context
+    RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(new_string(name));
+    // if this didn't parse, it's an illegal name
+    // we also don't allow compound variables here because the source for
+    // resolving the tail pieces is not defined.
+    if (retriever == OREF_NULL || isString((RexxObject *)retriever) || isOfClassType(CompoundVariableTerm, retriever))
+    {
+        return OREF_NULL;
+    }
+    // retrieve the value
+    return retriever->getRealValue(methodVariables());
 }
 
 /**
@@ -2543,7 +2553,17 @@ RexxObject *RexxNativeActivation::getObjectVariable(const char *name)
  */
 void RexxNativeActivation::setObjectVariable(const char *name, RexxObject *value)
 {
-    methodVariables()->set(new_upper_string(name), value);
+    // get the REXX activation for the target context
+    RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(new_string(name));
+    // if this didn't parse, it's an illegal name
+    // we also don't allow compound variables here because the source for
+    // resolving the tail pieces is not defined.
+    if (retriever == OREF_NULL || isString((RexxObject *)retriever) || isOfClassType(CompoundVariableTerm, retriever))
+    {
+        return;
+    }
+    // do the assignment
+    retriever->set(methodVariables(), value);
 }
 
 /**
@@ -2553,7 +2573,17 @@ void RexxNativeActivation::setObjectVariable(const char *name, RexxObject *value
  */
 void RexxNativeActivation::dropObjectVariable(const char *name)
 {
-    methodVariables()->drop(new_upper_string(name));
+    // get the REXX activation for the target context
+    RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(new_string(name));
+    // if this didn't parse, it's an illegal name
+    // we also don't allow compound variables here because the source for
+    // resolving the tail pieces is not defined.
+    if (retriever == OREF_NULL || isString((RexxObject *)retriever) || isOfClassType(CompoundVariableTerm, retriever))
+    {
+        return;
+    }
+    // do the assignment
+    retriever->drop(methodVariables());
 }
 
 
@@ -2694,11 +2724,11 @@ RexxVariableBase *RexxNativeActivation::variablePoolGetVariable(PSHVBLOCK pshvbl
         if (symbolic)
         {
             /* get a symbolic retriever          */
-            retriever = activation->getVariableRetriever(variable);
+            retriever = RexxVariableDictionary::getVariableRetriever(variable);
         }
         else                             /* need a direct retriever           */
         {
-            retriever = activation->getDirectVariableRetriever(variable);
+            retriever = RexxVariableDictionary::getDirectVariableRetriever(variable);
         }
         if (retriever == OREF_NULL)      /* have a bad name?                  */
         {
@@ -3061,7 +3091,7 @@ int RexxNativeActivation::stemSort(const char *stemname, int order, int type, si
         RexxString *variable = new_string(stemname);
         ProtectedObject p1(variable);
         /* and get a retriever for this variable */
-        RexxStemVariable *retriever = (RexxStemVariable *)contextActivation->getVariableRetriever(variable);
+        RexxStemVariable *retriever = (RexxStemVariable *)RexxVariableDictionary::getVariableRetriever(variable);
 
         /* this must be a stem variable in order for the sorting to work. */
 

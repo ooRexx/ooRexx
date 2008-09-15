@@ -50,12 +50,15 @@
 #include "ListClass.hpp"
 #include "RexxVariableDictionary.hpp"
 #include "StemClass.hpp"
+#include "ExpressionBaseVariable.hpp"
 #include "ExpressionStem.hpp"
 #include "ExpressionVariable.hpp"
 #include "ExpressionCompoundVariable.hpp"
+#include "ExpressionDotVariable.hpp"
 #include "ProtectedObject.hpp"
 #include "SupplierClass.hpp"
 #include "RexxCompoundTail.hpp"
+#include "SourceFile.hpp"
 
 
 RexxObject  *RexxVariableDictionary::copy()
@@ -526,7 +529,6 @@ RexxVariableDictionary *RexxVariableDictionary::newInstance(
 }
 
 
-
 /**
  * Set a compound variable in the dictionary.
  *
@@ -543,4 +545,245 @@ void RexxVariableDictionary::setCompoundVariable(RexxString *stemName, RexxObjec
     RexxStem *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
                                          /* and set the value                 */
     stem_table->setCompoundVariable(&resolved_tail, value);
+}
+
+
+/**
+ * Drop a compound variable in the dictionary.
+ *
+ * @param stemName  The name of the stem.
+ * @param tail      The tail elements.
+ * @param tailCount The count of tail elements.
+ * @param value     The value to set.
+ */
+void RexxVariableDictionary::dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount)
+{
+                                         /* new tail for compound             */
+    RexxCompoundTail resolved_tail(this, tail, tailCount);
+
+    RexxStem *stem_table = getStem(stemName);      /* get the stem entry from this dictionary */
+                                         /* and set the value                 */
+    stem_table->dropCompoundVariable(&resolved_tail);
+}
+
+
+RexxVariableBase  *RexxVariableDictionary::getVariableRetriever(
+     RexxString  *variable )           /* name of the variable              */
+/******************************************************************************/
+/* Arguments:  Name of variable to generate retriever                         */
+/*                                                                            */
+/*  Returned:  Retriever for variable (returns OREF_NULL for invalids)        */
+/******************************************************************************/
+{
+    variable = variable->upper();        /* upper case the variable           */
+    int type = variable->isSymbol();         /* validate the symbol               */
+    /* create a retriever object         */
+    switch (type)
+    {
+        case STRING_BAD_VARIABLE:          /* if it didn't validate             */
+            return OREF_NULL;                /* don't return a retriever object   */
+
+        case STRING_LITERAL_DOT:           /* if is is a literal                */
+        case STRING_NUMERIC:
+            /* these are literals                */
+            return(RexxVariableBase *)variable;
+
+            // Dot variables retrieve from the environment
+        case STRING_LITERAL:
+            // this is only a dot variable if it begins with a period
+            if (variable->getChar(0) == '.')
+            {
+                return (RexxVariableBase *)new RexxDotVariable(variable->extract(1, variable->getLength() - 1));
+            }
+            // this is a literal symbol not beginning with a period
+            return (RexxVariableBase *)variable;
+
+            /* if it is a stem                   */
+        case STRING_STEM:
+            /* create a new stem retriever       */
+            return(RexxVariableBase *)new RexxStemVariable(variable, 0);
+            /* if it is a compound               */
+        case STRING_COMPOUND_NAME:
+            /* create a new compound retriever   */
+            return(RexxVariableBase *)buildCompoundVariable(variable, false);
+            /* if it is a simple                 */
+        case STRING_NAME:
+            /* create a new variable retriever   */
+            return(RexxVariableBase *)new RexxParseVariable(variable, 0);
+            /* if we don't know what it is       */
+        default:
+            return OREF_NULL;                /* don't return a retriever object   */
+    }
+}
+
+
+RexxVariableBase  *RexxVariableDictionary::getDirectVariableRetriever(
+     RexxString *variable )            /* name of the variable              */
+/******************************************************************************/
+/* Function:  Return a retriever for a variable using direct access (i.e.     */
+/*            no substitution in compound variable tails)                     */
+/******************************************************************************/
+{
+    size_t length = variable->getLength();      /* get the name length               */
+    /* get the first character           */
+    char character = variable->getChar(0);
+    bool        literal = false;         /* literal indicator                 */
+                                         /* constant symbol?                  */
+    if (character == '.' || (character >= '0' && character <= '9'))
+    {
+        literal = true;                    /* this is a literal value           */
+    }
+                                           /* have a valid length?              */
+    if (length <= (size_t)MAX_SYMBOL_LENGTH && length > 0)
+    {
+        size_t compound = 0;                      /* no periods yet                    */
+        size_t scan = 0;                          /* start at string beginning         */
+        size_t nonnumeric = 0;                    /* count of non-numeric characters   */
+        char last = 0;                            /* no last character                 */
+        while (scan < length)
+        {
+            /* get the next character            */
+            character = variable->getChar(scan);
+            /* have a period?                    */
+            if (character == '.')
+            {
+                if (!literal)                  /* not a literal value?              */
+                {
+                    /* don't process past here           */
+                    return(RexxVariableBase *)buildCompoundVariable(variable, true);
+                }
+                else
+                {
+                    compound++;                  /* count the character               */
+                }
+            }
+            /* may have a special character      */
+            else if (!RexxSource::isSymbolCharacter(character))
+            {
+                /* maybe exponential form?           */
+                if (character == '+' || character == '-')
+                {
+                    /* front part not valid?             */
+                    if (compound > 1 || nonnumeric > 1 || last != 'E')
+                    {
+                        return OREF_NULL;          /* got a bad symbol                  */
+                    }
+                    scan++;                      /* step over the sign                */
+                    if (scan >= length)          /* sign as last character?           */
+                    {
+                        return OREF_NULL;          /* this is bad also                  */
+                    }
+                    /* scan remainder                    */
+                    while (scan < length)
+                    {
+                        /* get the next character            */
+                        character = variable->getChar(scan);
+                        /* outside numeric range?            */
+                        if (character < '0' || character > '9')
+                        {
+                            return OREF_NULL;        /* not valid either                  */
+                        }
+                        scan++;                    /* step scan position                */
+                    }
+                    break;                       /* done with scanning                */
+                }
+            }
+            /* non-numeric character?            */
+            else if (character < '0' || character > '9')
+            {
+                nonnumeric++;                  /* count the non-numeric             */
+            }
+                                               /* lower case character?             */
+            else if (RexxSource::translateChar(character) != character)
+            {
+                return OREF_NULL;              /* this is bad, return               */
+            }
+            last = character;                /* remember last one                 */
+            scan++;                          /* step the pointer                  */
+        }
+    }
+    if (literal)                         /* was this a literal?               */
+    {
+        /* these are both just literals      */
+        return(RexxVariableBase *)variable;
+    }
+    else                                 /* simple variable                   */
+    {
+        /* create a new variable retriever   */
+        return(RexxVariableBase *)new RexxParseVariable(variable, 0);
+    }
+}
+
+
+RexxObject *RexxVariableDictionary::buildCompoundVariable(
+    RexxString *variable_name,          /* full variable name of compound    */
+    bool direct)                        /* this is direct access             */
+/******************************************************************************/
+/* Function:  Build a dynamically created compound variable                   */
+/******************************************************************************/
+{
+    size_t length = variable_name->getLength();      /* get the string length             */
+    size_t position = 0;                        /* start scanning at first character */
+    /* scan to the first period          */
+    while (variable_name->getChar(position) != '.')
+    {
+        position++;                        /* step to the next character        */
+        length--;                          /* reduce the length also            */
+    }
+    /* extract the stem part             */
+    RexxString *stem = variable_name->extract(0, position + 1);
+    ProtectedObject p(stem);
+    /* processing to decompose the name  */
+    /* into its component parts          */
+
+    RexxQueue *tails = new_queue();      /* get a new list for the tails      */
+    ProtectedObject p1(tails);
+    position++;                          /* step past previous period         */
+    length--;                            /* adjust the length                 */
+    /* direct access?                    */
+    if (direct == true)
+    {
+        /* extract the tail part             */
+        RexxString *tail = variable_name->extract(position, length);
+        tails->push(tail);                 /* add to the tail piece list        */
+    }
+    else
+    {
+        size_t endPosition = position + length;
+
+        while (position < endPosition)     /* process rest of the variable      */
+        {
+            size_t start = position;                /* save the start position           */
+                                             /* scan for the next period          */
+            while (position < endPosition && variable_name->getChar(position) != '.')
+            {
+                position++;                    /* step to the next character        */
+            }
+            /* extract the tail part             */
+            RexxString *tail = variable_name->extract(start, position - start);
+            /* have a null tail piece or         */
+            /* section begin with a digit?       */
+            /* ASCII '0' to '9' to recognize a digit                              */
+
+            RexxObject *tailPart;
+            if (tail->getLength() == 0 || (tail->getChar(0) >= '0' && tail->getChar(0) <= '9'))
+            {
+                tailPart = (RexxObject *)tail; /* this is a literal piece           */
+            }
+            else
+            {
+                /* create a new variable retriever   */
+                tailPart = (RexxObject *)new RexxParseVariable(tail, 0);
+            }
+            tails->push(tailPart);           /* add to the tail piece list        */
+            position++;                      /* step past previous period         */
+        }
+        /* have a trailing period?           */
+        if (variable_name->getChar(position - 1) == '.')
+        {
+            tails->push(OREF_NULLSTRING);    /* add to the tail piece list        */
+        }
+    }
+    /* create and return a new compound  */
+    return(RexxObject *)new (tails->getSize()) RexxCompoundVariable(stem, 0, tails, tails->getSize());
 }

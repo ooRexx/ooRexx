@@ -318,6 +318,17 @@ void RexxCompoundVariable::drop(
   context->dropLocalCompoundVariable(stemName, index, &tails[0], tailCount);
 }
 
+/**
+ * Drop a variable that's directly in a variable dictionary.
+ *
+ * @param dictionary The target dictionary
+ */
+void RexxCompoundVariable::drop(RexxVariableDictionary *dictionary)
+{
+                                       /* the dictionary manages all of these details */
+    dictionary->dropCompoundVariable(stemName, &tails[0], tailCount);
+}
+
 
 void RexxCompoundVariable::procedureExpose(
   RexxActivation      *context,        /* current activation context        */

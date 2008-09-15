@@ -97,46 +97,45 @@ RexxList *RexxVariableReference::list(
 /*            retrievers.                                                     */
 /******************************************************************************/
 {
-  RexxList   *name_list;               /* list of variables                 */
-  RexxString *name_string;             /* string of variable names          */
-  RexxString *variable_name;           /* current variable name             */
-  RexxVariableBase *retriever;         /* variable retriever                */
-  RexxObject *value;                   /* variable value                    */
-  size_t  i;                           /* loop variable                     */
-  int     character;                   /* first character of name           */
-
-                                       /* get the variable value            */
-  value = this->variableObject->evaluate(context, stack);
-  stack->toss();                       /* remove the stack item             */
-  name_string = REQUEST_STRING(value); /* force to string form              */
-  stack->push(name_string);            /* protect this on the stack         */
-  name_list = new_list();              /* create a new list item            */
-  stack->push(name_list);              /* protect this also                 */
-  i = 1;                               /* start with the first word         */
-                                       /* get the next variable             */
-  variable_name = (RexxString *)name_string->word(new_integer(i));
-  i++;                                 /* step the index                    */
-  while (variable_name->getLength() != 0) {
-                                       /* get the first character           */
-    character = variable_name->getChar(0);
-    if (character == '.')              /* start with a period?              */
-                                       /* report that error                 */
-      reportException(Error_Invalid_variable_period, variable_name);
-                                       /* how about a digit?                */
-    else if (character >= '0' && character <= '9')
-                                       /* constant symbol                   */
-      reportException(Error_Invalid_variable_number, variable_name);
-                                       /* convert into a variable reference */
-    retriever = context->getVariableRetriever(variable_name);
-    if (retriever == OREF_NULL)        /* not converted ok?                 */
-      reportException(Error_Symbol_expected_expose);
-                                       /* add to the processing list        */
-    name_list->addLast((RexxObject *)retriever);
-                                       /* get the next variable             */
-    variable_name = (RexxString *)name_string->word(new_integer(i));
-    i++;                               /* and step the index                */
-  }
-  return name_list;                    /* return the list directly          */
+                                         /* get the variable value            */
+    RexxObject *value = this->variableObject->evaluate(context, stack);
+    stack->toss();                       /* remove the stack item             */
+    RexxString *name_string = REQUEST_STRING(value); /* force to string form              */
+    stack->push(name_string);            /* protect this on the stack         */
+    RexxList *name_list = new_list();    /* create a new list item            */
+    stack->push(name_list);              /* protect this also                 */
+    size_t i = 1;                        /* start with the first word         */
+                                         /* get the next variable             */
+    RexxString *variable_name = (RexxString *)name_string->word(new_integer(i));
+    i++;                                 /* step the index                    */
+    while (variable_name->getLength() != 0)
+    {
+        /* get the first character           */
+        int character = variable_name->getChar(0);
+        if (character == '.')              /* start with a period?              */
+        {
+                                           /* report that error                 */
+            reportException(Error_Invalid_variable_period, variable_name);
+        }
+        /* how about a digit?                */
+        else if (character >= '0' && character <= '9')
+        {
+            /* constant symbol                   */
+            reportException(Error_Invalid_variable_number, variable_name);
+        }
+        /* convert into a variable reference */
+        RexxVariableBase *retriever = RexxVariableDictionary::getVariableRetriever(variable_name);
+        if (retriever == OREF_NULL)        /* not converted ok?                 */
+        {
+            reportException(Error_Symbol_expected_expose);
+        }
+        /* add to the processing list        */
+        name_list->addLast((RexxObject *)retriever);
+        /* get the next variable             */
+        variable_name = (RexxString *)name_string->word(new_integer(i));
+        i++;                               /* and step the index                */
+    }
+    return name_list;                    /* return the list directly          */
 }
 
 void RexxVariableReference::drop(
@@ -145,21 +144,18 @@ void RexxVariableReference::drop(
 /* Function:  Drop a subsidiary list of variables                             */
 /******************************************************************************/
 {
-  RexxList            *name_list;      /* list of names to process          */
-  RexxVariableBase    *variable;       /* current variable                  */
-  RexxExpressionStack *stack;          /* evaluation stack                  */
-
-  stack = context->getStack();         /* get the stack from the context    */
-                                       /* evaluate into a variable list     */
-  name_list = this->list(context, stack);
-                                       /* get the first list item           */
-  variable = (RexxVariableBase *)name_list->removeFirst();
-                                       /* while more list items             */
-  while (variable != (RexxVariableBase *)TheNilObject) {
-    variable->drop(context);           /* drop the this variable            */
-                                       /* get the next list item            */
-    variable = (RexxVariableBase *)name_list->removeFirst();
-  }
+    RexxExpressionStack *stack = context->getStack();         /* get the stack from the context    */
+    /* evaluate into a variable list     */
+    RexxList *name_list = this->list(context, stack);
+    /* get the first list item           */
+    RexxVariableBase *variable = (RexxVariableBase *)name_list->removeFirst();
+    /* while more list items             */
+    while (variable != (RexxVariableBase *)TheNilObject)
+    {
+        variable->drop(context);           /* drop the this variable            */
+                                           /* get the next list item            */
+        variable = (RexxVariableBase *)name_list->removeFirst();
+    }
 }
 
 
@@ -171,22 +167,20 @@ void RexxVariableReference::procedureExpose(
 /* Function:  Expose a subsidiary list of variables                           */
 /******************************************************************************/
 {
-  RexxList         *name_list;         /* list of names to process          */
-  RexxVariableBase *variable;          /* current variable                  */
-
-                                       /* expose the variable first         */
-  variableObject->procedureExpose(context, parent, stack);
-                                       /* evaluate into a variable list     */
-  name_list = this->list(context, stack);
-                                       /* get the first list item           */
-  variable = (RexxVariableBase *)name_list->removeFirst();
-                                       /* while more list items             */
-  while (variable != (RexxVariableBase *)TheNilObject) {
-                                       /* expose this variable              */
-    variable->procedureExpose(context, parent, stack);
-                                       /* get the next list item            */
-    variable = (RexxVariableBase *)name_list->removeFirst();
-  }
+    /* expose the variable first         */
+    variableObject->procedureExpose(context, parent, stack);
+    /* evaluate into a variable list     */
+    RexxList *name_list = this->list(context, stack);
+    /* get the first list item           */
+    RexxVariableBase *variable = (RexxVariableBase *)name_list->removeFirst();
+    /* while more list items             */
+    while (variable != (RexxVariableBase *)TheNilObject)
+    {
+        /* expose this variable              */
+        variable->procedureExpose(context, parent, stack);
+        /* get the next list item            */
+        variable = (RexxVariableBase *)name_list->removeFirst();
+    }
 }
 
 
@@ -199,22 +193,20 @@ void RexxVariableReference::expose(
 /* Function:  Expose a subsidiary list of variables                           */
 /******************************************************************************/
 {
-  RexxList         *name_list;         /* list of names to process          */
-  RexxVariableBase *variable;          /* current variable                  */
-
-                                       /* expose the variable first         */
-  variableObject->expose(context, stack, object_dictionary);
-                                       /* evaluate into a variable list     */
-  name_list = this->list(context, stack);
-                                       /* get the first list item           */
-  variable = (RexxVariableBase *)name_list->removeFirst();
-                                       /* while more list items             */
-  while (variable != (RexxVariableBase *)TheNilObject) {
-                                       /* expose this variable              */
-    variable->expose(context, stack, object_dictionary);
-                                       /* get the next list item            */
-    variable = (RexxVariableBase *)name_list->removeFirst();
-  }
+    /* expose the variable first         */
+    variableObject->expose(context, stack, object_dictionary);
+    /* evaluate into a variable list     */
+    RexxList *name_list = this->list(context, stack);
+    /* get the first list item           */
+    RexxVariableBase *variable = (RexxVariableBase *)name_list->removeFirst();
+    /* while more list items             */
+    while (variable != (RexxVariableBase *)TheNilObject)
+    {
+        /* expose this variable              */
+        variable->expose(context, stack, object_dictionary);
+        /* get the next list item            */
+        variable = (RexxVariableBase *)name_list->removeFirst();
+    }
 }
 
 
@@ -223,13 +215,7 @@ void *RexxVariableReference::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject *newObject;
-
                                        /* Get new object                        */
-  newObject = (RexxObject *)new_object(size);
-                                       /* object parse_assignment behaviour     */
-  newObject->setBehaviour(TheIndirectVariableTermBehaviour);
-                                       /* Initialize this new method            */
-  return newObject;
+    return new_object(size, T_IndirectVariableTerm);
 }
 

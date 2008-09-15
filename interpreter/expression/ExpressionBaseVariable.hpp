@@ -52,6 +52,7 @@ class RexxVariableBase : public RexxInternalObject {
   virtual void set(RexxVariableDictionary *, RexxObject *) {;}
   virtual void assign(RexxActivation *, RexxExpressionStack *, RexxObject *) {;}
   virtual void drop(RexxActivation *) {;}
+  virtual void drop(RexxVariableDictionary *) {;}
   virtual void setGuard(RexxActivation *) {;}
   virtual void clearGuard(RexxActivation *) {;}
   virtual void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *) {;}

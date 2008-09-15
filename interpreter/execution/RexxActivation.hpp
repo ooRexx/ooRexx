@@ -173,8 +173,6 @@ class ActivationSettings
 #define SCOPE_RESERVED  1
 #define SCOPE_RELEASED  0
 
-RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
-
  class RexxActivation : public RexxActivationBase {
   public:
    void *operator new(size_t);
@@ -234,8 +232,6 @@ RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
    void              exitFrom(RexxObject *);
    void              procedureExpose(RexxVariableBase **variables, size_t count);
    void              expose(RexxVariableBase **variables, size_t count);
-   RexxVariableBase *getVariableRetriever(RexxString  *variable);
-   RexxVariableBase *getDirectVariableRetriever(RexxString  *variable);
    void              setTrace(size_t, size_t);
    void              setTrace(RexxString *);
    void              raise(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *, RexxDirectory *);

@@ -73,6 +73,7 @@ class RexxCompoundVariable : public RexxVariableBase {
   void set(RexxVariableDictionary *, RexxObject *);
   void assign(RexxActivation *, RexxExpressionStack *, RexxObject *);
   void drop(RexxActivation *);
+  void drop(RexxVariableDictionary *);
   void setGuard(RexxActivation *);
   void clearGuard(RexxActivation *);
   void expose(RexxActivation *, RexxExpressionStack *, RexxVariableDictionary *);

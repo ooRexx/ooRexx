@@ -98,21 +98,18 @@ RexxObject  *RexxParseVariable::evaluate(
 /* Function:  Evaluate a REXX simple variable                                 */
 /******************************************************************************/
 {
-  RexxVariable *variable;              /* retrieved variable entry          */
-  RexxObject   *value;                 /* final variable value              */
-
-                                       /* look up the name                  */
-  variable = context->getLocalVariable(variableName, index);
-  value = variable->getVariableValue();/* get the value                     */
-  if (value == OREF_NULL)              /* no value yet?                     */
-  {
-      // try the various novalue mechanisms
-      value = context->handleNovalueEvent(variableName, variable);
-  }
-  stack->push(value);                  /* place on the evaluation stack     */
-                                       /* trace if necessary                */
-  context->traceVariable(variableName, value);
-  return value;                        /* return the located variable       */
+    /* look up the name                  */
+    RexxVariable *variable = context->getLocalVariable(variableName, index);
+    RexxObject *value = variable->getVariableValue();/* get the value                     */
+    if (value == OREF_NULL)              /* no value yet?                     */
+    {
+        // try the various novalue mechanisms
+        value = context->handleNovalueEvent(variableName, variable);
+    }
+    stack->push(value);                  /* place on the evaluation stack     */
+                                         /* trace if necessary                */
+    context->traceVariable(variableName, value);
+    return value;                        /* return the located variable       */
 }
 
 RexxObject  *RexxParseVariable::getValue(
@@ -122,15 +119,14 @@ RexxObject  *RexxParseVariable::getValue(
 /*            not be raised)                                                  */
 /******************************************************************************/
 {
-  RexxVariable *variable;              /* retrieved variable entry          */
-  RexxObject   *value;                 /* final variable value              */
-
-                                       /* look up the name                  */
-  variable = dictionary->getVariable(variableName);
-  value = variable->getVariableValue();/* get the value                     */
-  if (value == OREF_NULL)              /* no value yet?                     */
-    value = this->variableName;        /* just use the name                 */
-  return value;                        /* return the located variable       */
+    /* look up the name                  */
+    RexxVariable *variable = dictionary->getVariable(variableName);
+    RexxObject *value = variable->getVariableValue();/* get the value                     */
+    if (value == OREF_NULL)              /* no value yet?                     */
+    {
+        value = this->variableName;        /* just use the name                 */
+    }
+    return value;                        /* return the located variable       */
 }
 
 RexxObject  *RexxParseVariable::getValue(
@@ -140,15 +136,14 @@ RexxObject  *RexxParseVariable::getValue(
 /*            not be raised)                                                  */
 /******************************************************************************/
 {
-  RexxVariable *variable;              /* retrieved variable entry          */
-  RexxObject   *value;                 /* final variable value              */
-
-                                       /* look up the name                  */
-  variable = context->getLocalVariable(variableName, index);
-  value = variable->getVariableValue();/* get the value                     */
-  if (value == OREF_NULL)              /* no value yet?                     */
-    value = this->variableName;        /* just use the name                 */
-  return value;                        /* return the located variable       */
+    /* look up the name                  */
+    RexxVariable *variable = context->getLocalVariable(variableName, index);
+    RexxObject *value = variable->getVariableValue();/* get the value                     */
+    if (value == OREF_NULL)              /* no value yet?                     */
+    {
+        value = this->variableName;        /* just use the name                 */
+    }
+    return value;                        /* return the located variable       */
 }
 
 /**
@@ -163,8 +158,8 @@ RexxObject  *RexxParseVariable::getValue(
 RexxObject  *RexxParseVariable::getRealValue(RexxVariableDictionary *dictionary)
 {
                                        /* look up the name                  */
-  RexxVariable *variable = dictionary->getVariable(variableName);
-  return variable->getVariableValue();/* get the value                     */
+    RexxVariable *variable = dictionary->getVariable(variableName);
+    return variable->getVariableValue();/* get the value                     */
 }
 
 
@@ -180,8 +175,8 @@ RexxObject  *RexxParseVariable::getRealValue(RexxVariableDictionary *dictionary)
  */
 RexxObject  *RexxParseVariable::getRealValue(RexxActivation *context)
 {
-  RexxVariable *variable = context->getLocalVariable(variableName, index);
-  return variable->getVariableValue();/* get the value                     */
+    RexxVariable *variable = context->getLocalVariable(variableName, index);
+    return variable->getVariableValue();/* get the value                     */
 }
 
 void RexxParseVariable::set(
@@ -191,11 +186,9 @@ void RexxParseVariable::set(
 /* Function:  Fast set of a variable value                                    */
 /******************************************************************************/
 {
-  RexxVariable *variable;              /* target variable object            */
-
                                        /* look up the name                  */
-  variable = dictionary->getVariable(variableName);
-  variable->set(value);                /* and perform the set               */
+    RexxVariable *variable = dictionary->getVariable(variableName);
+    variable->set(value);                /* and perform the set               */
 }
 
 void RexxParseVariable::set(
@@ -241,17 +234,27 @@ void RexxParseVariable::drop(
   context->dropLocalVariable(variableName, index);
 }
 
+/**
+ * Drop a variable that's directly in a variable dictionary.
+ *
+ * @param dictionary The target dictionary
+ */
+void RexxParseVariable::drop(RexxVariableDictionary *dictionary)
+{
+                                       /* look up the name                  */
+    RexxVariable *variable = dictionary->getVariable(variableName);
+    variable->drop();                    /* and perform the set               */
+}
+
 void RexxParseVariable::setGuard(
   RexxActivation *context )            /* current activation context        */
 /******************************************************************************/
 /* Set a guard variable notification on an object variable                    */
 /******************************************************************************/
 {
-  RexxVariable *variable;              /* target variable object            */
-
                                        /* look up the name                  */
-  variable = context->getLocalVariable(variableName, index);
-  variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
+    RexxVariable *variable = context->getLocalVariable(variableName, index);
+    variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
 }
 
 void RexxParseVariable::clearGuard(
@@ -260,11 +263,9 @@ void RexxParseVariable::clearGuard(
 /* Remove a guard variable notification on an object variable                 */
 /******************************************************************************/
 {
-  RexxVariable *variable;              /* target variable object            */
-
                                        /* look up the name                  */
-  variable = context->getLocalVariable(variableName, index);
-  variable->uninform(ActivityManager::currentActivity); /* remove the notification           */
+    RexxVariable *variable = context->getLocalVariable(variableName, index);
+    variable->uninform(ActivityManager::currentActivity); /* remove the notification           */
 }
 
 void RexxParseVariable::procedureExpose(
@@ -275,12 +276,10 @@ void RexxParseVariable::procedureExpose(
 /* Function:  Expose a variable                                               */
 /******************************************************************************/
 {
-  RexxVariable *old_variable;          /* variable from the prior level     */
-
-                                       /* get the old variable entry        */
-  old_variable = parent->getLocalVariable(variableName, index);
-                                       /* set the entry in the new table    */
-  context->putLocalVariable(old_variable, index);
+                                         /* get the old variable entry        */
+    RexxVariable *old_variable = parent->getLocalVariable(variableName, index);
+                                         /* set the entry in the new table    */
+    context->putLocalVariable(old_variable, index);
 }
 
 
@@ -293,12 +292,10 @@ void RexxParseVariable::expose(
 /* Function:  Expose a variable                                               */
 /******************************************************************************/
 {
-  RexxVariable *old_variable;          /* variable from the prior level     */
-
-                                       /* get the old variable entry        */
-  old_variable = object_dictionary->getVariable(variableName);
-                                       /* set the entry in the new table    */
-  context->putLocalVariable(old_variable, index);
+    /* get the old variable entry        */
+    RexxVariable *old_variable = object_dictionary->getVariable(variableName);
+    /* set the entry in the new table    */
+    context->putLocalVariable(old_variable, index);
 }
 
 /**
@@ -317,11 +314,6 @@ void *RexxParseVariable::operator new(size_t size)
 /* Function:  Create a REXX variable translator object                        */
 /******************************************************************************/
 {
-  RexxObject *newObject;
-
-  newObject = new_object(size);        /* Get new object                    */
-                                       /* object parse_assignment behaviour */
-  newObject->setBehaviour(TheVariableTermBehaviour);
-  return newObject;
+    return new_object(size, T_VariableTerm);        /* Get new object                    */
 }
 

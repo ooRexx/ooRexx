@@ -105,6 +105,7 @@ class RexxVariableDictionary : public RexxInternalObject {
     }
 
   void setCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount, RexxObject *value);
+  void dropCompoundVariable(RexxString *stemName, RexxObject **tail, size_t tailCount);
   RexxDirectory *getAllVariables();
   inline void remove(RexxString *n) { contents->remove(n); }
 
@@ -126,6 +127,10 @@ class RexxVariableDictionary : public RexxInternalObject {
   inline RexxActivity *getReservingActivity() { return reservingActivity; }
 
   void setNextDictionary(RexxVariableDictionary *next);
+
+  static RexxVariableBase *getVariableRetriever(RexxString  *variable);
+  static RexxVariableBase *getDirectVariableRetriever(RexxString  *variable);
+  static RexxObject *buildCompoundVariable(RexxString * variable_name, bool direct);
 
   static RexxVariableDictionary *newInstance(size_t);
   static RexxVariableDictionary *newInstance(RexxObject *);

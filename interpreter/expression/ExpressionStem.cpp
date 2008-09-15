@@ -253,6 +253,17 @@ void RexxStemVariable::drop(
     context->dropLocalStem(stem, index);
 }
 
+/**
+ * Drop a variable that's directly in a variable dictionary.
+ *
+ * @param dictionary The target dictionary
+ */
+void RexxStemVariable::drop(RexxVariableDictionary *dictionary)
+{
+    // dropping the stem name is sufficient
+    dictionary->drop(stem);
+}
+
 void RexxStemVariable::procedureExpose(
   RexxActivation      *context,        /* current activation context        */
   RexxActivation      *parent,         /* the parent activation context     */
