@@ -2532,7 +2532,7 @@ RexxDirectory *RexxNativeActivation::getAllContextVariables()
  */
 RexxObject *RexxNativeActivation::getObjectVariable(const char *name)
 {
-    return methodVariables()->realValue(new_string(name));
+    return methodVariables()->realValue(new_upper_string(name));
 }
 
 /**
@@ -2543,7 +2543,7 @@ RexxObject *RexxNativeActivation::getObjectVariable(const char *name)
  */
 void RexxNativeActivation::setObjectVariable(const char *name, RexxObject *value)
 {
-    methodVariables()->set(new_string(name), value);
+    methodVariables()->set(new_upper_string(name), value);
 }
 
 /**
@@ -2553,7 +2553,7 @@ void RexxNativeActivation::setObjectVariable(const char *name, RexxObject *value
  */
 void RexxNativeActivation::dropObjectVariable(const char *name)
 {
-    methodVariables()->drop(new_string(name));
+    methodVariables()->drop(new_upper_string(name));
 }
 
 
