@@ -364,6 +364,7 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(top_srcdir)/NOTICE \
                   $(top_srcdir)/oorexx.ver \
                   $(build_extensions_rxftp_dir)/rxftp.cls \
+                  $(build_extensions_rxsock_dir)/socket.cls \
                   $(build_extensions_rxregexp_dir)/*.cls \
                   $(build_messages_dir)/*.xsl \
                   $(build_messages_dir)/*.sgml \
@@ -947,6 +948,7 @@ rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
 ooTest:
 	cp $(build_extensions_dir)/rxregexp/rxregexp.cls ./
 	cp $(build_extensions_dir)/rxftp/rxftp.cls ./
+	cp $(build_extensions_dir)/rxsock/socket.cls ./
 
 #
 # distribution files
@@ -998,6 +1000,7 @@ install-exec-local:
 	$(install_sh_SCRIPT) $(build_os_platform_dir)/oorexx-config $(DESTDIR)$(prefix)/bin/oorexx-config
 	$(install_sh_SCRIPT) $(build_extensions_rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxftp_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
+	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/socket.cls $(DESTDIR)$(prefix)/bin/socket.cls
 	for a in $(build_samples_dir)/*.rex; do \
 		bn=`basename $$a`; \
 		$(install_sh_SCRIPT) $$a $(DESTDIR)$(prefix)/share/ooRexx/$$bn; \
