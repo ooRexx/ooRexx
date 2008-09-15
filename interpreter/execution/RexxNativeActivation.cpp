@@ -679,6 +679,7 @@ RexxObject *RexxNativeActivation::valueToObject(ValueDescriptor *value)
         case REXX_VALUE_RexxObjectPtr:          // object reference.  All object types get
         case REXX_VALUE_RexxStringObject:       // returned as a Rexx object
         case REXX_VALUE_RexxArrayObject:
+        case REXX_VALUE_RexxClassObject:
         case REXX_VALUE_RexxStemObject:
         {
             return (RexxObject *)value->value.value_RexxObjectPtr; // just return the object value
