@@ -458,6 +458,24 @@ RexxClass *PackageClass::findClass(RexxString *name)
 
 
 /**
+ * Resolve a class in the context of a package.
+ *
+ * @param name   The required class name.
+ *
+ * @return The resolved class object.
+ */
+RexxClass *PackageClass::findClassRexx(RexxString *name)
+{
+    RexxClass *cls = source->findClass(name);
+    if (cls == OREF_NULL)
+    {
+        return (RexxClass *)TheNilObject;
+    }
+    return cls;
+}
+
+
+/**
  * Resolve a routine in the context of a package.
  *
  * @param name   The required routine name.
@@ -467,6 +485,23 @@ RexxClass *PackageClass::findClass(RexxString *name)
 RoutineClass *PackageClass::findRoutine(RexxString *name)
 {
     return source->findRoutine(name);
+}
+
+/**
+ * Resolve a routine in the context of a package.
+ *
+ * @param name   The required routine name.
+ *
+ * @return The resolved routine object.
+ */
+RoutineClass *PackageClass::findRoutineRexx(RexxString *name)
+{
+    RoutineClass *routine = findRoutine(name);
+    if (routine == OREF_NULL)
+    {
+        return (RoutineClass *)TheNilObject;
+    }
+    return routine;
 }
 
 
