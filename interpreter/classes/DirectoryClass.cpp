@@ -409,19 +409,34 @@ RexxObject *RexxDirectory::setEntry(
     return OREF_NULL;                    /* don't return a value              */
 }
 
+
+/**
+ * ooRexx exported version of the directory remove method.
+ *
+ * @param entryname The index name.
+ *
+ * @return The removed item.  Returns .nil if the item did not exist
+ *         in the directory.
+ */
+RexxObject *RexxDirectory::removeRexx(RexxString *entryname)
+{
+    /* get as a string parameter         */
+    entryname = stringArgument(entryname, ARG_ONE);
+    RexxObject *oldVal = remove(entryname);
+    if (oldVal == OREF_NULL)
+    {
+        oldVal = TheNilObject;
+    }
+    return oldVal;
+}
+
 RexxObject *RexxDirectory::remove(
     RexxString *entryname)             /* name to retrieve                  */
 /******************************************************************************/
 /* Function:  Remove an entry from a directory.                               */
 /******************************************************************************/
 {
-    /* get as a string parameter         */
-    entryname = stringArgument(entryname, ARG_ONE);
     RexxObject *oldVal = this->at(entryname);        /* go get the directory value        */
-    if (oldVal == OREF_NULL)             /* nothing to return?                */
-    {
-        oldVal = TheNilObject;             /* return TheNilObject as a default  */
-    }
                                            /* have a real entry?                */
     if (this->contents->stringGet(entryname) != OREF_NULL)
     {

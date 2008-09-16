@@ -413,12 +413,12 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_EMPTY         , TheDirectoryBehaviour, CPPM(RexxDirectory::empty), 0);
   defineKernelMethod(CHAR_ISEMPTY       , TheDirectoryBehaviour, CPPM(RexxDirectory::isEmpty), 0);
   defineKernelMethod(CHAR_PUT           , TheDirectoryBehaviour, CPPM(RexxDirectory::put), 2);
-  defineKernelMethod(CHAR_REMOVE        , TheDirectoryBehaviour, CPPM(RexxDirectory::remove), 1);
+  defineKernelMethod(CHAR_REMOVE        , TheDirectoryBehaviour, CPPM(RexxDirectory::removeRexx), 1);
   defineKernelMethod(CHAR_SETENTRY      , TheDirectoryBehaviour, CPPM(RexxDirectory::setEntry), 2);
   defineProtectedKernelMethod(CHAR_SETMETHOD   , TheDirectoryBehaviour, CPPM(RexxDirectory::setMethod), 2);
   defineKernelMethod(CHAR_SUPPLIER      , TheDirectoryBehaviour, CPPM(RexxDirectory::supplier), 0);
   defineKernelMethod(CHAR_UNKNOWN       , TheDirectoryBehaviour, CPPM(RexxObject::unknownRexx), 2);
-  defineProtectedKernelMethod(CHAR_UNSETMETHOD   , TheDirectoryBehaviour, CPPM(RexxDirectory::remove), 1);
+  defineProtectedKernelMethod(CHAR_UNSETMETHOD   , TheDirectoryBehaviour, CPPM(RexxDirectory::removeRexx), 1);
   defineKernelMethod(CHAR_INDEX        , TheDirectoryBehaviour, CPPM(RexxDirectory::indexRexx), 1);
   defineKernelMethod(CHAR_HASITEM      , TheDirectoryBehaviour, CPPM(RexxDirectory::hasItem), 1);
   defineKernelMethod(CHAR_REMOVEITEM   , TheDirectoryBehaviour, CPPM(RexxDirectory::removeItem), 1);
