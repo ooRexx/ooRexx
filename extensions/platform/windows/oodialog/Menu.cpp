@@ -50,7 +50,6 @@ BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, ULONG, ULONG, ULONG, ULONG, CSTR
 char *strdupupr_nospace(const char *str);
 void systemServiceException(RexxMethodContext *context, char *msg);
 bool requiredClass(RexxMethodContext *, RexxObjectPtr, const char *, int);
-bool rxArgOmitted(RexxMethodContext * context, size_t index);
 POINTER rxGetPointerAttribute(RexxMethodContext *, RexxObjectPtr, CSTRING);
 DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
@@ -250,7 +249,7 @@ HMENU menuGetHandle(RexxMethodContext * context, RexxObjectPtr self)
 
 RexxObjectPtr menuGetDialogObj(RexxMethodContext *context, RexxObjectPtr menu, RexxObjectPtr dlg, int argPos)
 {
-    if ( rxArgOmitted(context, argPos) )
+    if ( argumentOmitted(argPos) )
     {
         dlg  = context->SendMessage0(menu, "DLG");
         if ( dlg == NULLOBJECT || dlg == context->Nil() )

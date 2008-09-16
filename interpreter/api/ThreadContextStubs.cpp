@@ -1273,18 +1273,6 @@ RexxObjectPtr RexxEntry ArrayAt(RexxThreadContext *c, RexxArrayObject a, size_t 
     return OREF_NULL;
 }
 
-logical_t RexxEntry ArrayHasIndex(RexxThreadContext *c, RexxArrayObject a, size_t i)
-{
-    ApiContext context(c);
-    try
-    {
-        return ((RexxArray *)a)->hasIndexApi(i);
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return false;
-}
 
 void RexxEntry ArrayPut(RexxThreadContext *c, RexxArrayObject a, RexxObjectPtr o, size_t i)
 {
@@ -1908,7 +1896,6 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     IsDirectory,
 
     ArrayAt,
-    ArrayHasIndex,
     ArrayPut,
     ArrayAppend,
     ArrayAppendString,

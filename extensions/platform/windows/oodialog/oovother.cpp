@@ -3017,15 +3017,6 @@ inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr self)
     return (HWND)rxGetPointerAttribute(context, self, "HWND");
 }
 
-bool rxArgOmitted(RexxMethodContext * context, size_t index)
-{
-    return context->ArrayHasIndex(context->GetArguments(), index) == 0 ? true : false;
-}
-
-inline bool rxArgExists(RexxMethodContext * context, size_t index)
-{
-    return context->ArrayHasIndex(context->GetArguments(), index) == 1 ? true : false;
-}
 
 void systemServiceException(RexxMethodContext *context, char *msg)
 {
@@ -3130,7 +3121,7 @@ size_t rxArgCount(RexxMethodContext * context)
     size_t count = context->ArraySize(context->GetArguments());
     for( size_t i = 1; i <= count; i++ )
     {
-        if ( rxArgExists(context, i) )
+        if ( argumentExists(i) )
         {
             j++;
         }
@@ -3372,7 +3363,7 @@ RexxMethod2(int, pbc_stepIt, OSELF, self, OPTIONAL_uint32_t, delta)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    if ( rxArgOmitted(context, 1) )
+    if ( argumentOmitted(1) )
     {
         return (int)SendMessage(hwnd, PBM_STEPIT, 0, 0);
     }
@@ -3406,11 +3397,11 @@ RexxMethod3(RexxStringObject, pbc_setRange, OSELF, self, OPTIONAL_int32_t, min, 
     TCHAR buf[64];
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    if ( rxArgOmitted(context, 1) )
+    if ( argumentOmitted(1) )
     {
         min = 0;
     }
-    if ( rxArgOmitted(context, 2) )
+    if ( argumentOmitted(2) )
     {
         max = 100;
     }
@@ -3437,7 +3428,7 @@ RexxMethod2(int, pbc_setStep, OSELF, self, OPTIONAL_int32_t, newStep)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    if ( rxArgOmitted(context, 1) )
+    if ( argumentOmitted(1) )
     {
         newStep = 10;
     }
@@ -3472,11 +3463,11 @@ RexxMethod3(logical_t, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, OPTI
         return 0;
     }
 
-    if ( rxArgOmitted(context, 1) )
+    if ( argumentOmitted(1) )
     {
         on = 1;
     }
-    if ( rxArgOmitted(context, 2) )
+    if ( argumentOmitted(2) )
     {
         pause = 1000;
     }
@@ -4103,7 +4094,7 @@ RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
 static int getImageType(RexxMethodContext *context, int argPos, const char *opt)
 {
     int type = IMAGE_BITMAP;
-    if ( rxArgExists(context, 1) )
+    if ( argumentExists(1) )
     {
         switch ( *opt )
         {
@@ -4352,7 +4343,7 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
 
     BUTTON_IMAGELIST biml;
 
-    if ( rxArgExists(context, 4) )
+    if ( argumentExists(4) )
     {
         PRECT pRect = rxGetRect(context, margin, 4);
         if ( pRect == NULL )
@@ -4372,7 +4363,7 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
         biml.margin.bottom = 3;
     }
 
-    biml.uAlign = rxArgExists(context, 5) ? align : BUTTON_IMAGELIST_ALIGN_CENTER;
+    biml.uAlign = argumentExists(5) ? align : BUTTON_IMAGELIST_ALIGN_CENTER;
 
     HIMAGELIST himl = ImageList_Create(pSize->x, pSize->y, flag, 5, 5);
     if ( himl == NULL )
@@ -4446,8 +4437,8 @@ RexxMethod2(RexxObjectPtr, point_init, OPTIONAL_int32_t,  x, OPTIONAL_int32_t, y
 
     POINT *p = (POINT *)context->BufferData(obj);
 
-    p->x = rxArgExists(context, 1) ? x : 0;
-    p->y = rxArgExists(context, 2) ? y : p->x;
+    p->x = argumentExists(1) ? x : 0;
+    p->y = argumentExists(2) ? y : p->x;
 
     return NULLOBJECT;
 }
@@ -4468,10 +4459,10 @@ RexxMethod4(RexxObjectPtr, rect_init, OPTIONAL_int32_t, left, OPTIONAL_int32_t, 
 
     RECT *r = (RECT *)context->BufferData(obj);
 
-    r->left = rxArgExists(context, 1) ? left : 0;
-    r->top = rxArgExists(context, 2) ? top : r->left;
-    r->right = rxArgExists(context, 3) ? right : r->left;
-    r->bottom = rxArgExists(context, 4) ? bottom : r->left;
+    r->left = argumentExists(1) ? left : 0;
+    r->top = argumentExists(2) ? top : r->left;
+    r->right = argumentExists(3) ? right : r->left;
+    r->bottom = argumentExists(4) ? bottom : r->left;
 
     return NULLOBJECT;
 }
@@ -4688,7 +4679,7 @@ RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, O
 
     if ( count == 1 )
     {
-        if ( ! context->IsString(r) )
+        if (! context->IsString(r) )
         {
             wrongClassException(context, 1, "String");
             return 0;

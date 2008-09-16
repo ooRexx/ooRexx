@@ -560,7 +560,6 @@ typedef struct
     logical_t        (RexxEntry *IsDirectory)(RexxThreadContext *, RexxObjectPtr);
 
     RexxObjectPtr   (RexxEntry *ArrayAt)(RexxThreadContext *, RexxArrayObject, size_t);
-    logical_t       (RexxEntry *ArrayHasIndex)(RexxThreadContext *, RexxArrayObject, size_t);
     void            (RexxEntry *ArrayPut)(RexxThreadContext *, RexxArrayObject, RexxObjectPtr, size_t);
     size_t          (RexxEntry *ArrayAppend)(RexxThreadContext *, RexxArrayObject, RexxObjectPtr);
     size_t          (RexxEntry *ArrayAppendString)(RexxThreadContext *, RexxArrayObject, CSTRING, size_t);
@@ -1055,10 +1054,6 @@ struct RexxThreadContext_
     RexxObjectPtr ArrayAt(RexxArrayObject ao, size_t n)
     {
         return functions->ArrayAt(this, ao, n);
-    }
-    logical_t ArrayHasIndex(RexxArrayObject ao, size_t n)
-    {
-        return functions->ArrayHasIndex(this, ao, n);
     }
     void ArrayPut(RexxArrayObject ao, RexxObjectPtr o, size_t n)
     {
@@ -1592,10 +1587,6 @@ struct RexxMethodContext_
     RexxObjectPtr ArrayAt(RexxArrayObject ao, size_t n)
     {
         return threadContext->ArrayAt(ao, n);
-    }
-    logical_t ArrayHasIndex(RexxArrayObject ao, size_t n)
-    {
-        return threadContext->ArrayHasIndex(ao, n);
     }
     void ArrayPut(RexxArrayObject ao, RexxObjectPtr o, size_t n)
     {
@@ -2186,10 +2177,6 @@ struct RexxCallContext_
     RexxObjectPtr ArrayAt(RexxArrayObject ao, size_t n)
     {
         return threadContext->ArrayAt(ao, n);
-    }
-    logical_t ArrayHasIndex(RexxArrayObject ao, size_t n)
-    {
-        return threadContext->ArrayHasIndex(ao, n);
     }
     void ArrayPut(RexxArrayObject ao, RexxObjectPtr o, size_t n)
     {
@@ -2782,10 +2769,6 @@ struct RexxExitContext_
     RexxObjectPtr ArrayAt(RexxArrayObject ao, size_t n)
     {
         return threadContext->ArrayAt(ao, n);
-    }
-    logical_t ArrayHasIndex(RexxArrayObject ao, size_t n)
-    {
-        return threadContext->ArrayHasIndex(ao, n);
     }
     void ArrayPut(RexxArrayObject ao, RexxObjectPtr o, size_t n)
     {
