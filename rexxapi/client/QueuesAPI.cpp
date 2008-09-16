@@ -164,7 +164,6 @@ RexxReturnCode RexxEntry RexxClearQueue(
 {
     ENTER_REXX_API(QueueManager)
     {
-        lam->queueManager.clearNamedQueue(name);
         // "SESSION" means get the session queue
         if (lam->queueManager.isSessionQueue(name))
         {

@@ -86,6 +86,8 @@ void DataQueue::clear()
         item = localnext;
     }
     firstItem = NULL;
+    lastItem = NULL;
+    itemCount = 0;
 }
 
 /**
