@@ -549,7 +549,7 @@ typedef struct
     RexxStringObject  (RexxEntry *FinishBufferString)(RexxThreadContext *, RexxBufferStringObject, size_t);
 
     void             (RexxEntry *TablePut)(RexxThreadContext *, RexxTableObject, RexxObjectPtr, RexxObjectPtr);
-    RexxObjectPtr    (RexxEntry *TableGet)(RexxThreadContext *, RexxTableObject, RexxObjectPtr);
+    RexxObjectPtr    (RexxEntry *TableAt)(RexxThreadContext *, RexxTableObject, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *TableRemove)(RexxThreadContext *, RexxTableObject, RexxObjectPtr);
     RexxTableObject  (RexxEntry *NewTable)(RexxThreadContext *);
     logical_t        (RexxEntry *IsTable)(RexxThreadContext *, RexxObjectPtr);
@@ -1016,10 +1016,10 @@ struct RexxThreadContext_
     {
         functions->TablePut(this, to, o1, o2);
     }
-    RexxObjectPtr TableGet(RexxTableObject to, RexxObjectPtr o)
+    RexxObjectPtr TableAt(RexxTableObject to, RexxObjectPtr o)
     {
 
-        return functions->TableGet(this, to, o);
+        return functions->TableAt(this, to, o);
     }
     RexxObjectPtr TableRemove(RexxTableObject to, RexxObjectPtr o)
     {
@@ -1562,9 +1562,9 @@ struct RexxMethodContext_
     {
         threadContext->TablePut(to, o1, o2);
     }
-    RexxObjectPtr TableGet(RexxTableObject to, RexxObjectPtr o)
+    RexxObjectPtr TableAt(RexxTableObject to, RexxObjectPtr o)
     {
-        return threadContext->TableGet(to, o);
+        return threadContext->TableAt(to, o);
     }
     RexxObjectPtr TableRemove(RexxTableObject to, RexxObjectPtr o)
     {
@@ -2164,9 +2164,9 @@ struct RexxCallContext_
     {
         threadContext->TablePut(to, o1, o2);
     }
-    RexxObjectPtr TableGet(RexxTableObject to, RexxObjectPtr o)
+    RexxObjectPtr TableAt(RexxTableObject to, RexxObjectPtr o)
     {
-        return threadContext->TableGet(to, o);
+        return threadContext->TableAt(to, o);
     }
     RexxObjectPtr TableRemove(RexxTableObject to, RexxObjectPtr o)
     {
@@ -2768,9 +2768,9 @@ struct RexxExitContext_
     {
         threadContext->TablePut(to, o1, o2);
     }
-    RexxObjectPtr TableGet(RexxTableObject to, RexxObjectPtr o)
+    RexxObjectPtr TableAt(RexxTableObject to, RexxObjectPtr o)
     {
-        return threadContext->TableGet(to, o);
+        return threadContext->TableAt(to, o);
     }
     RexxObjectPtr TableRemove(RexxTableObject to, RexxObjectPtr o)
     {

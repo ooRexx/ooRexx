@@ -1144,7 +1144,7 @@ void  RexxEntry TablePut(RexxThreadContext *c, RexxTableObject t, RexxObjectPtr 
     }
 }
 
-RexxObjectPtr RexxEntry TableGet(RexxThreadContext *c, RexxTableObject t, RexxObjectPtr i)
+RexxObjectPtr RexxEntry TableAt(RexxThreadContext *c, RexxTableObject t, RexxObjectPtr i)
 {
     ApiContext context(c);
     try
@@ -1924,7 +1924,7 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     FinishBufferString,
 
     TablePut,
-    TableGet,
+    TableAt,
     TableRemove,
     NewTable,
     IsTable,
