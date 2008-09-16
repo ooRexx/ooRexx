@@ -1341,7 +1341,7 @@ size_t RexxEntry ArraySize(RexxThreadContext *c, RexxArrayObject a)
     return 0;
 }
 
-wholenumber_t RexxEntry ArrayDimension(RexxThreadContext *c, RexxArrayObject a)
+size_t RexxEntry ArrayDimension(RexxThreadContext *c, RexxArrayObject a)
 {
     ApiContext context(c);
     try
