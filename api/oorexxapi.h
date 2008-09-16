@@ -568,6 +568,8 @@ typedef struct
     RexxArrayObject (RexxEntry *NewArray)(RexxThreadContext *, size_t);
     RexxArrayObject (RexxEntry *ArrayOfOne)(RexxThreadContext *, RexxObjectPtr);
     RexxArrayObject (RexxEntry *ArrayOfTwo)(RexxThreadContext *, RexxObjectPtr, RexxObjectPtr);
+    RexxArrayObject (RexxEntry *ArrayOfThree)(RexxThreadContext *, RexxObjectPtr, RexxObjectPtr, RexxObjectPtr);
+    RexxArrayObject (RexxEntry *ArrayOfFour)(RexxThreadContext *, RexxObjectPtr, RexxObjectPtr, RexxObjectPtr, RexxObjectPtr);
     logical_t       (RexxEntry *IsArray)(RexxThreadContext *, RexxObjectPtr);
 
     POINTER (RexxEntry *BufferData)(RexxThreadContext *, RexxBufferObject);
@@ -1086,6 +1088,14 @@ struct RexxThreadContext_
     RexxArrayObject ArrayOfTwo(RexxObjectPtr o1, RexxObjectPtr o2)
     {
         return functions->ArrayOfTwo(this, o1, o2);
+    }
+    RexxArrayObject ArrayOfThree(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3)
+    {
+        return functions->ArrayOfThree(this, o1, o2, o3);
+    }
+    RexxArrayObject ArrayOfFour(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
+    {
+        return functions->ArrayOfFour(this, o1, o2, o3, o4);
     }
     logical_t IsArray(RexxObjectPtr o)
     {
@@ -1619,6 +1629,14 @@ struct RexxMethodContext_
     RexxArrayObject ArrayOfTwo(RexxObjectPtr o1, RexxObjectPtr o2)
     {
         return threadContext->ArrayOfTwo(o1, o2);
+    }
+    RexxArrayObject ArrayOfThree(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3)
+    {
+        return threadContext->ArrayOfThree(o1, o2, o3);
+    }
+    RexxArrayObject ArrayOfFour(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
+    {
+        return threadContext->ArrayOfFour(o1, o2, o3, o4);
     }
     logical_t IsArray(RexxObjectPtr o)
     {
@@ -2209,6 +2227,14 @@ struct RexxCallContext_
     RexxArrayObject ArrayOfTwo(RexxObjectPtr o1, RexxObjectPtr o2)
     {
         return threadContext->ArrayOfTwo(o1, o2);
+    }
+    RexxArrayObject ArrayOfThree(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3)
+    {
+        return threadContext->ArrayOfThree(o1, o2, o3);
+    }
+    RexxArrayObject ArrayOfFour(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
+    {
+        return threadContext->ArrayOfFour(o1, o2, o3, o4);
     }
     logical_t IsArray(RexxObjectPtr o)
     {
@@ -2801,6 +2827,14 @@ struct RexxExitContext_
     RexxArrayObject ArrayOfTwo(RexxObjectPtr o1, RexxObjectPtr o2)
     {
         return threadContext->ArrayOfTwo(o1, o2);
+    }
+    RexxArrayObject ArrayOfThree(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3)
+    {
+        return threadContext->ArrayOfThree(o1, o2, o3);
+    }
+    RexxArrayObject ArrayOfFour(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
+    {
+        return threadContext->ArrayOfFour(o1, o2, o3, o4);
     }
     logical_t IsArray(RexxObjectPtr o)
     {

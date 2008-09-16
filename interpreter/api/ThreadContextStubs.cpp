@@ -1381,6 +1381,32 @@ RexxArrayObject RexxEntry ArrayOfTwo(RexxThreadContext *c, RexxObjectPtr o1, Rex
     return NULLOBJECT;
 }
 
+RexxArrayObject RexxEntry ArrayOfThree(RexxThreadContext *c, RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3)
+{
+    ApiContext context(c);
+    try
+    {
+        return (RexxArrayObject)context.ret(new_array((RexxObject *)o1, (RexxObject *)o2, (RexxObject *)o3));
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
+RexxArrayObject RexxEntry ArrayOfFour(RexxThreadContext *c, RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
+{
+    ApiContext context(c);
+    try
+    {
+        return (RexxArrayObject)context.ret(new_array((RexxObject *)o1, (RexxObject *)o2, (RexxObject *)o3, (RexxObject *)o4));
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
 
 logical_t RexxEntry IsArray(RexxThreadContext *c, RexxObjectPtr o)
 {
@@ -1904,6 +1930,8 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     NewArray,
     ArrayOfOne,
     ArrayOfTwo,
+    ArrayOfThree,
+    ArrayOfFour,
     IsArray,
 
     BufferData,
