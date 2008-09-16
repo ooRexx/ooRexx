@@ -602,6 +602,7 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                         case REXX_VALUE_logical_t:         // this must be a boolean value
                         case REXX_VALUE_RexxArrayObject:   // no object here
                         case REXX_VALUE_RexxStemObject:
+                        case REXX_VALUE_RexxClassObject:
                         case REXX_VALUE_POINTERSTRING:
                         {
                             // set this as a 64-bit value to clear everything out

@@ -115,6 +115,7 @@
 #define REXX_VALUE_OPTIONAL_RexxArrayObject       (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_RexxArrayObject)
 #define REXX_VALUE_OPTIONAL_RexxStemObject        (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_RexxStemObject)
 #define REXX_VALUE_OPTIONAL_POINTERSTRING         (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_POINTERSTRING)
+#define REXX_VALUE_OPTIONAL_RexxClassObject       (REXX_OPTIONAL_ARGUMENT | REXX_VALUE_RexxClassObject)
 
 BEGIN_EXTERN_C()
 
@@ -3081,6 +3082,7 @@ RexxReturnCode RexxEntry RexxCreateInterpreter(RexxInstance **, RexxThreadContex
 #define ARGUMENT_TYPE_OPTIONAL_RexxArrayObject       RexxArrayObject
 #define ARGUMENT_TYPE_OPTIONAL_RexxStemObject        RexxStemObject
 #define ARGUMENT_TYPE_OPTIONAL_POINTERSTRING         POINTER
+#define ARGUMENT_TYPE_OPTIONAL_RexxClassObject       RexxClassObject
 
 #define ARGUMENT_TYPE(t) ((t) & ~REXX_OPTIONAL_ARGUMENT)
 #define IS_OPTIONAL_ARGUMENT(t) (((t) & REXX_OPTIONAL_ARGUMENT) != 0)
