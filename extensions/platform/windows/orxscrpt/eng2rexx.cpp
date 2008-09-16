@@ -89,7 +89,7 @@ int RexxEntry RexxRetrieveVariables(RexxExitContext *, int ExitNumber, int Subfu
         while (context->SupplierAvailable(supplier))
         {
             RexxObjectPtr name = context->SupplierIndex(supplier);
-            RexxObjectPtr value = context->SupplierValue(supplier);
+            RexxObjectPtr value = context->SupplierItem(supplier);
             context->RequestGlobalReference(value);
             CurrentEngine->insertVariable(context->ObjectToStringValue(name), value);
         }
@@ -793,7 +793,7 @@ void OrxScript::processScriptFragment(RexxThreadContext *context, int locationOf
     {
         PRCB  functionBlock = NULL;
         RexxObjectPtr name = context->SupplierIndex(supplier);
-        RexxRoutineObject routine = (RexxRoutineObject)context->SupplierValue(supplier);
+        RexxRoutineObject routine = (RexxRoutineObject)context->SupplierItem(supplier);
         const char *functionName = context->ObjectToStringValue(name);
 
         hResult = BuildRCB(RCB::ParseScript, NULL, dwFlags, locationOffset, routine, &functionBlock);

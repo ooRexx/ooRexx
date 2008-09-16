@@ -582,7 +582,7 @@ typedef struct
     RexxPointerObject (RexxEntry *NewPointer)(RexxThreadContext *, POINTER);
     logical_t         (RexxEntry *IsPointer)(RexxThreadContext *, RexxObjectPtr);
 
-    RexxObjectPtr    (RexxEntry *SupplierValue)(RexxThreadContext *, RexxSupplierObject);
+    RexxObjectPtr    (RexxEntry *SupplierItem)(RexxThreadContext *, RexxSupplierObject);
     RexxObjectPtr    (RexxEntry *SupplierIndex)(RexxThreadContext *, RexxSupplierObject);
     logical_t        (RexxEntry *SupplierAvailable)(RexxThreadContext *, RexxSupplierObject);
     void             (RexxEntry *SupplierNext)(RexxThreadContext *, RexxSupplierObject);
@@ -1133,9 +1133,9 @@ struct RexxThreadContext_
         return functions->IsPointer(this, o);
     }
 
-    RexxObjectPtr SupplierValue(RexxSupplierObject so)
+    RexxObjectPtr SupplierItem(RexxSupplierObject so)
     {
-        return functions->SupplierValue(this, so);
+        return functions->SupplierItem(this, so);
     }
     RexxObjectPtr SupplierIndex(RexxSupplierObject so)
     {
@@ -1674,9 +1674,9 @@ struct RexxMethodContext_
         return threadContext->IsPointer(o);
     }
 
-    RexxObjectPtr SupplierValue(RexxSupplierObject so)
+    RexxObjectPtr SupplierItem(RexxSupplierObject so)
     {
-        return threadContext->SupplierValue(so);
+        return threadContext->SupplierItem(so);
     }
     RexxObjectPtr SupplierIndex(RexxSupplierObject so)
     {
@@ -2272,9 +2272,9 @@ struct RexxCallContext_
         return threadContext->IsPointer(o);
     }
 
-    RexxObjectPtr SupplierValue(RexxSupplierObject so)
+    RexxObjectPtr SupplierItem(RexxSupplierObject so)
     {
-        return threadContext->SupplierValue(so);
+        return threadContext->SupplierItem(so);
     }
     RexxObjectPtr SupplierIndex(RexxSupplierObject so)
     {
@@ -2872,9 +2872,9 @@ struct RexxExitContext_
         return threadContext->IsPointer(o);
     }
 
-    RexxObjectPtr SupplierValue(RexxSupplierObject so)
+    RexxObjectPtr SupplierItem(RexxSupplierObject so)
     {
-        return threadContext->SupplierValue(so);
+        return threadContext->SupplierItem(so);
     }
     RexxObjectPtr SupplierIndex(RexxSupplierObject so)
     {

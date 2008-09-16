@@ -1512,7 +1512,7 @@ logical_t RexxEntry IsPointer(RexxThreadContext *c, RexxObjectPtr o)
     return false;
 }
 
-RexxObjectPtr RexxEntry SupplierValue(RexxThreadContext *c, RexxSupplierObject o)
+RexxObjectPtr RexxEntry SupplierItem(RexxThreadContext *c, RexxSupplierObject o)
 {
     ApiContext context(c);
     try
@@ -1943,7 +1943,7 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     NewPointer,
     IsPointer,
 
-    SupplierValue,
+    SupplierItem,
     SupplierIndex,
     SupplierAvailable,
     SupplierNext,
