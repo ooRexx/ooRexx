@@ -254,7 +254,7 @@ RexxObject *RexxArray::empty()
  */
 RexxObject *RexxArray::isEmpty()
 {
-    return (numItems() == 0) ? TheTrueObject : TheFalseObject;
+    return (items() == 0) ? TheTrueObject : TheFalseObject;
 }
 
 
@@ -453,7 +453,7 @@ RexxObject  *RexxArray::removeRexx(RexxObject **arguments, size_t argCount)
     return result;                       /* return this value                 */
 }
 
-size_t RexxArray::numItems(void)
+size_t RexxArray::items()
 /******************************************************************************/
 /* Function:  Return count of actual items in an array                        */
 /******************************************************************************/
@@ -475,18 +475,15 @@ size_t RexxArray::numItems(void)
     return count;                        /* return the count object           */
 }
 
-RexxObject  *RexxArray::items()
+RexxObject  *RexxArray::itemsRexx()
 /******************************************************************************/
 /* Function:  Return count of actual items in an array                        */
 /******************************************************************************/
 {
-   size_t tempNumItems;
-
-   tempNumItems = this->numItems();    /* place holder to invoke new_integer */
-   return (RexxObject *)(new_integer(tempNumItems));
+   return new_integer(items());
 }
 
-size_t RexxArray::getDimension(void)
+size_t RexxArray::getDimension()
 /******************************************************************************/
 /* Function:  Query array dimension information                               */
 /******************************************************************************/
@@ -564,7 +561,7 @@ RexxObject *RexxArray::supplier()
 /******************************************************************************/
 {
     size_t slotCount = this->size();            /* get the array size                */
-    size_t itemCount = this->numItems();        /* and the actual count in the array */
+    size_t itemCount = this->items();           /* and the actual count in the array */
 
     RexxArray *values = new_array(itemCount);       /* get the values array              */
     RexxArray *indexes = new_array(itemCount);      /* and an index array                */
@@ -635,7 +632,7 @@ bool  RexxArray::validateIndex(        /* validate an array index           */
         // we process this exactly the same way, but swap the count and
         // pointers around to be the array data.
         RexxArray *indirect = (RexxArray *)_index[0];
-        indexCount = indirect->numItems();
+        indexCount = indirect->items();
         _index = indirect->data();
     }
 
@@ -1206,7 +1203,7 @@ RexxArray *RexxArray::makeArray(void)
 RexxArray *RexxArray::allItems(void)
 {
     // get a result array of the appropriate size
-    RexxArray *newArray = (RexxArray *)new_array(this->numItems());
+    RexxArray *newArray = (RexxArray *)new_array(this->items());
 
     // we need to fill in based on actual items, not the index.
     size_t count = 0;
@@ -1230,10 +1227,10 @@ RexxArray *RexxArray::allItems(void)
  *
  * @return An array with all of the array indices (non-sparse).
  */
-RexxArray *RexxArray::allIndexes(void)
+RexxArray *RexxArray::allIndexes()
 {
     // get a result array of the appropriate size
-    RexxArray *newArray = (RexxArray *)new_array(this->numItems());
+    RexxArray *newArray = (RexxArray *)new_array(this->items());
     ProtectedObject p(newArray);
 
     // we need to fill in based on actual items, not the index.
@@ -1290,7 +1287,7 @@ RexxString *RexxArray::toString(       /* concatenate array elements to create s
     newArray = this->makeArray();          /* maybe multidimensional, make onedimensional  */
     ProtectedObject p2(newArray);
 
-    _items = newArray->numItems();         /* and the actual count in the array */
+    _items = newArray->items();            /* and the actual count in the array */
 
     if (format != OREF_NULL)
     {
@@ -2442,7 +2439,7 @@ wholenumber_t RexxArray::sortCompare(RexxObject *comparator, RexxObject *left, R
  */
 RexxArray *RexxArray::sortRexx()
 {
-    size_t count = numItems();
+    size_t count = items();
     if (count == 0)         // if the count is zero, sorting is easy!
     {
         return this;
@@ -2473,7 +2470,7 @@ RexxArray *RexxArray::sortWithRexx(RexxObject *comparator)
 {
     required_arg(comparator, ONE);
 
-    size_t count = numItems();
+    size_t count = items();
     if (count <= 1)         // if the count is zero, sorting is easy!
     {
         return this;
@@ -2502,7 +2499,7 @@ RexxArray *RexxArray::sortWithRexx(RexxObject *comparator)
  */
 RexxArray *RexxArray::stableSortRexx()
 {
-    size_t count = numItems();
+    size_t count = items();
     if (count == 0)         // if the count is zero, sorting is easy!
     {
         return this;
@@ -2537,7 +2534,7 @@ RexxArray *RexxArray::stableSortWithRexx(RexxObject *comparator)
 {
     required_arg(comparator, ONE);
 
-    size_t count = numItems();
+    size_t count = items();
     if (count <= 1)         // if the count is zero, sorting is easy!
     {
         return this;

@@ -131,8 +131,8 @@ typedef struct copyElelmentParm {
    bool         hasIndexNative(size_t);
    RexxObject  *hasIndexRexx(RexxObject **, size_t);
    bool         hasIndexApi(size_t);
-   size_t       numItems();
-   RexxObject  *items();
+   size_t       items();
+   RexxObject  *itemsRexx();
    RexxObject  *dimension(RexxObject *);
    size_t       getDimension();
    RexxObject  *supplier();

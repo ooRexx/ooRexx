@@ -565,6 +565,7 @@ typedef struct
     size_t          (RexxEntry *ArrayAppend)(RexxThreadContext *, RexxArrayObject, RexxObjectPtr);
     size_t          (RexxEntry *ArrayAppendString)(RexxThreadContext *, RexxArrayObject, CSTRING, size_t);
     size_t          (RexxEntry *ArraySize)(RexxThreadContext *, RexxArrayObject);
+    size_t          (RexxEntry *ArrayItems)(RexxThreadContext *, RexxArrayObject);
     size_t          (RexxEntry *ArrayDimension)(RexxThreadContext *, RexxArrayObject);
     RexxArrayObject (RexxEntry *NewArray)(RexxThreadContext *, size_t);
     RexxArrayObject (RexxEntry *ArrayOfOne)(RexxThreadContext *, RexxObjectPtr);
@@ -1073,6 +1074,10 @@ struct RexxThreadContext_
     size_t ArraySize(RexxArrayObject ao)
     {
         return functions->ArraySize(this, ao);
+    }
+    size_t ArrayItems(RexxArrayObject ao)
+    {
+        return functions->ArrayItems(this, ao);
     }
     size_t ArrayDimension(RexxArrayObject ao)
     {
@@ -1614,6 +1619,10 @@ struct RexxMethodContext_
     size_t ArraySize(RexxArrayObject ao)
     {
         return threadContext->ArraySize(ao);
+    }
+    size_t ArrayItems(RexxArrayObject ao)
+    {
+        return threadContext->ArrayItems(ao);
     }
     size_t ArrayDimension(RexxArrayObject ao)
     {
@@ -2212,6 +2221,10 @@ struct RexxCallContext_
     size_t ArraySize(RexxArrayObject ao)
     {
         return threadContext->ArraySize(ao);
+    }
+    size_t ArrayItems(RexxArrayObject ao)
+    {
+        return threadContext->ArrayItems(ao);
     }
     size_t ArrayDimension(RexxArrayObject ao)
     {
@@ -2812,6 +2825,10 @@ struct RexxExitContext_
     size_t ArraySize(RexxArrayObject ao)
     {
         return threadContext->ArraySize(ao);
+    }
+    size_t ArrayItems(RexxArrayObject ao)
+    {
+        return threadContext->ArrayItems(ao);
     }
     size_t ArrayDimension(RexxArrayObject ao)
     {

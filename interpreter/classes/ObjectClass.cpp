@@ -1650,7 +1650,7 @@ RexxMessage *RexxObject::start(
         {
             RexxClass *theClass = message->classObject();
             RexxArray *classes = theClass->getClassSuperClasses();
-            size_t i = classes->numItems();
+            size_t i = classes->items();
             for (; i != 0; i--)
             {
                 if (classes->get(i) == TheStringClass)
