@@ -1719,7 +1719,7 @@ void RexxEntry RaiseException2(RexxThreadContext *c, size_t n, RexxObjectPtr o1,
     }
 }
 
-void RexxEntry RaiseExceptionArray(RexxThreadContext *c, size_t n, RexxArrayObject a)
+void RexxEntry APIRaiseException(RexxThreadContext *c, size_t n, RexxArrayObject a)
 {
     ApiContext context(c);
     try
@@ -1934,7 +1934,7 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     RaiseException0,
     RaiseException1,
     RaiseException2,
-    RaiseExceptionArray,
+    APIRaiseException,
     RaiseCondition,
     CheckCondition,
     GetConditionInfo,

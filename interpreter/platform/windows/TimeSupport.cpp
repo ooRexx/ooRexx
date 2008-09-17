@@ -231,7 +231,7 @@ RexxMethod2(int, alarm_startTimer,
     SemHandle = CreateEvent(NULL, TRUE, fState, NULL);
     if ( !SemHandle )
     {
-        context->RaiseException(Rexx_Error_System_service);
+        context->RaiseException0(Rexx_Error_System_service);
         return 0;
     }
 
@@ -249,7 +249,7 @@ RexxMethod2(int, alarm_startTimer,
         {
             /* Couldn't create a timer, raise an exception. */
             CloseHandle(SemHandle);
-            context->RaiseException(Rexx_Error_System_service);
+            context->RaiseException0(Rexx_Error_System_service);
             return 0;
         }
 
@@ -282,7 +282,7 @@ RexxMethod2(int, alarm_startTimer,
         {
             /* Couldn't create a timer, raise an exception. */
             CloseHandle(SemHandle);
-            context->RaiseException(Rexx_Error_System_service);
+            context->RaiseException0(Rexx_Error_System_service);
             return 0;
         }
 
@@ -315,7 +315,7 @@ RexxMethod1(int, alarm_stopTimer, POINTER, eventSemHandle)
     if ( ! SetEvent((HANDLE)eventSemHandle) )
     {
         /* Raise an error if the semaphore could not be posted. */
-        context->RaiseException(Rexx_Error_System_service);
+        context->RaiseException0(Rexx_Error_System_service);
     }
     return 0;
 }

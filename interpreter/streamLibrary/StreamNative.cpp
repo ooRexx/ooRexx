@@ -317,7 +317,7 @@ void StreamInfo::notreadyError(int error_code, RexxObjectPtr result)
  */
 void StreamInfo::raiseException(int err)
 {
-    context->RaiseException(err);
+    context->RaiseException0(err);
     // and throw a C++ exception to go back to base camp.
     throw err;
 }
@@ -1737,7 +1737,7 @@ RexxMethod2(int64_t, stream_lines, CSELF, streamPtr, OPTIONAL_CSTRING, option)
         }
         else if (toupper(*option) != 'C')
         {
-            context->RaiseException(Rexx_Error_Incorrect_method);
+            context->RaiseException0(Rexx_Error_Incorrect_method);
             return 0;
         }
     }

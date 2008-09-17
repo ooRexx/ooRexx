@@ -72,7 +72,7 @@ RexxMethod2(int,                          // Return type
         iResult = pAutomaton->parse(expression);
         if (iResult != 0)
         {
-            context->RaiseException(Rexx_Error_Invalid_template);
+            context->RaiseException0(Rexx_Error_Invalid_template);
         }
     }
 

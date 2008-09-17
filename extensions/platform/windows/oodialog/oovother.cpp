@@ -3069,7 +3069,7 @@ void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, Rex
     c->ArrayAppend(a, c->NewStringFromAsciiz(list));
     c->ArrayAppend(a, actual);
 
-    c->RaiseExceptionArray(Rexx_Error_Incorrect_method_list, a);
+    c->RaiseException(Rexx_Error_Incorrect_method_list, a);
 }
 
 void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, const char *actual)

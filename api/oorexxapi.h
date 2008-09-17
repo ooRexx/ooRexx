@@ -596,10 +596,10 @@ typedef struct
     RexxObjectPtr    (RexxEntry *GetStemValue)(RexxThreadContext *, RexxStemObject);
     logical_t        (RexxEntry *IsStem)(RexxThreadContext *, RexxObjectPtr);
 
-    void             (RexxEntry *RaiseException)(RexxThreadContext *, size_t);
+    void             (RexxEntry *RaiseException0)(RexxThreadContext *, size_t);
     void             (RexxEntry *RaiseException1)(RexxThreadContext *, size_t, RexxObjectPtr);
     void             (RexxEntry *RaiseException2)(RexxThreadContext *, size_t, RexxObjectPtr, RexxObjectPtr);
-    void             (RexxEntry *RaiseExceptionArray)(RexxThreadContext *, size_t, RexxArrayObject);
+    void             (RexxEntry *RaiseException)(RexxThreadContext *, size_t, RexxArrayObject);
     void             (RexxEntry *RaiseCondition)(RexxThreadContext *, CSTRING, CSTRING, RexxArrayObject, RexxObjectPtr);
     logical_t        (RexxEntry *CheckCondition)(RexxThreadContext *);
     RexxDirectoryObject (RexxEntry *GetConditionInfo)(RexxThreadContext *);
@@ -1183,10 +1183,9 @@ struct RexxThreadContext_
     {
         return functions->IsStem(this, o);
     }
-
-    void RaiseException(size_t n)
+    void RaiseException0(size_t n)
     {
-        functions->RaiseException(this, n);
+        functions->RaiseException0(this, n);
     }
     void RaiseException1(size_t n, RexxObjectPtr o)
     {
@@ -1196,9 +1195,9 @@ struct RexxThreadContext_
     {
         functions->RaiseException2(this, n, o1, o2);
     }
-    void RaiseExceptionArray(size_t n, RexxArrayObject ao)
+    void RaiseException(size_t n, RexxArrayObject ao)
     {
-        functions->RaiseExceptionArray(this, n, ao);
+        functions->RaiseException(this, n, ao);
     }
     void RaiseCondition(CSTRING s1, CSTRING s2, RexxArrayObject ao, RexxObjectPtr o)
     {
@@ -1717,9 +1716,9 @@ struct RexxMethodContext_
         return threadContext->IsStem(o);
     }
 
-    void RaiseException(size_t n)
+    void RaiseException0(size_t n)
     {
-        threadContext->RaiseException(n);
+        threadContext->RaiseException0(n);
     }
     void RaiseException1(size_t n, RexxObjectPtr o)
     {
@@ -1729,9 +1728,9 @@ struct RexxMethodContext_
     {
         threadContext->RaiseException2(n, o1, o2);
     }
-    void RaiseExceptionArray(size_t n, RexxArrayObject ao)
+    void RaiseException(size_t n, RexxArrayObject ao)
     {
-        threadContext->RaiseExceptionArray(n, ao);
+        threadContext->RaiseException(n, ao);
     }
     void RaiseCondition(CSTRING s1, CSTRING s2, RexxArrayObject ao, RexxObjectPtr o)
     {
@@ -2307,9 +2306,9 @@ struct RexxCallContext_
         return threadContext->IsStem(o);
     }
 
-    void RaiseException(size_t n)
+    void RaiseException0(size_t n)
     {
-        threadContext->RaiseException(n);
+        threadContext->RaiseException0(n);
     }
     void RaiseException1(size_t n, RexxObjectPtr o)
     {
@@ -2319,9 +2318,9 @@ struct RexxCallContext_
     {
         threadContext->RaiseException2(n, o1, o2);
     }
-    void RaiseExceptionArray(size_t n, RexxArrayObject ao)
+    void RaiseException(size_t n, RexxArrayObject ao)
     {
-        threadContext->RaiseExceptionArray(n, ao);
+        threadContext->RaiseException(n, ao);
     }
     void RaiseCondition(CSTRING s1, CSTRING s2, RexxArrayObject ao, RexxObjectPtr o)
     {
@@ -2899,9 +2898,9 @@ struct RexxExitContext_
         return threadContext->IsStem(o);
     }
 
-    void RaiseException(size_t n)
+    void RaiseException0(size_t n)
     {
-        threadContext->RaiseException(n);
+        threadContext->RaiseException0(n);
     }
     void RaiseException1(size_t n, RexxObjectPtr o)
     {
@@ -2911,9 +2910,9 @@ struct RexxExitContext_
     {
         threadContext->RaiseException2(n, o1, o2);
     }
-    void RaiseExceptionArray(size_t n, RexxArrayObject ao)
+    void RaiseException(size_t n, RexxArrayObject ao)
     {
-        threadContext->RaiseExceptionArray(n, ao);
+        threadContext->RaiseException(n, ao);
     }
     void RaiseCondition(CSTRING s1, CSTRING s2, RexxArrayObject ao, RexxObjectPtr o)
     {

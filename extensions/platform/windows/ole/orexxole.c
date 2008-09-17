@@ -693,7 +693,7 @@ bool getDispatchPtr(RexxMethodContext *context, IDispatch **pDispatch)
     // we must have this
     if (*pDispatch == NULL)
     {
-        context->RaiseException(Rexx_Error_Interpretation_initialization);
+        context->RaiseException0(Rexx_Error_Interpretation_initialization);
         return false;
     }
     return true;
@@ -866,7 +866,7 @@ bool psFindClassInfo(RexxThreadContext *context, const char *pszCLSId, ITypeInfo
         ppClsInfo = (PPOLECLASSINFO)ORexxOleAlloc(sizeof(POLECLASSINFO) * 10);
         if ( ppClsInfo == NULL )
         {
-            context->RaiseException(Rexx_Error_System_resources);
+            context->RaiseException0(Rexx_Error_System_resources);
             return false;
         }
         iClsInfoSize = 10;
@@ -910,7 +910,7 @@ bool psFindClassInfo(RexxThreadContext *context, const char *pszCLSId, ITypeInfo
             ppNewBlock = (PPOLECLASSINFO)ORexxOleReAlloc(ppClsInfo, sizeof(POLECLASSINFO) * iClsInfoSize * 2);
             if ( ppNewBlock == NULL)
             {
-                context->RaiseException(Rexx_Error_System_resources);
+                context->RaiseException0(Rexx_Error_System_resources);
                 return false;
             }
 
@@ -922,7 +922,7 @@ bool psFindClassInfo(RexxThreadContext *context, const char *pszCLSId, ITypeInfo
         ppClsInfo[iFound] = (POLECLASSINFO)ORexxOleAlloc(sizeof(OLECLASSINFO));
         if ( ppClsInfo[iFound] == NULL)
         {
-            context->RaiseException(Rexx_Error_System_resources);
+            context->RaiseException0(Rexx_Error_System_resources);
             return false;
         }
 
@@ -1296,7 +1296,7 @@ RexxObjectPtr SafeArray2RexxArray(RexxThreadContext *context, VARIANT *pVariant)
         ORexxOleFree(lpUpperBound);
         ORexxOleFree(lpIndices);
 
-        context->RaiseException(Rexx_Error_System_resources);
+        context->RaiseException0(Rexx_Error_System_resources);
         return NULLOBJECT;
     }
 
@@ -1891,7 +1891,7 @@ bool createEmptySafeArray(RexxThreadContext *context, VARIANT *VarArray)
     pSafeArray = SafeArrayCreate(VT_VARIANT, 1, pArrayBound);
     if ( ! pSafeArray )
     {
-        context->RaiseException(Rexx_Error_System_resources);
+        context->RaiseException0(Rexx_Error_System_resources);
         false;
     }
 
@@ -1932,7 +1932,7 @@ bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARI
     {
         ORexxOleFree(pArrayBounds);
         ORexxOleFree(lpIndices);
-        context->RaiseException(Rexx_Error_System_resources);
+        context->RaiseException0(Rexx_Error_System_resources);
         return false;
     }
 
@@ -1955,7 +1955,7 @@ bool RexxArray2SafeArray(RexxThreadContext *context, RexxObjectPtr RxArray, VARI
     {
         ORexxOleFree(pArrayBounds);
         ORexxOleFree(lpIndices);
-        context->RaiseException(Rexx_Error_System_resources);
+        context->RaiseException0(Rexx_Error_System_resources);
         return false;
     }
 
@@ -2564,7 +2564,7 @@ RexxMethod4(int,                             // Return type
     }
     else
     {
-        context->RaiseException(Rexx_Error_Interpretation_initialization);
+        context->RaiseException0(Rexx_Error_Interpretation_initialization);
         return 0;
     }
 
@@ -2706,7 +2706,7 @@ RexxMethod4(int,                             // Return type
             }
             else
             {
-                context->RaiseException(Rexx_Error_Interpretation_initialization);
+                context->RaiseException0(Rexx_Error_Interpretation_initialization);
                 return 0;
             }
         }
@@ -2721,7 +2721,7 @@ RexxMethod4(int,                             // Return type
 
     if ( (hResult != S_OK) || (pDispatch == NULL) )
     {
-        context->RaiseException(Rexx_Error_No_OLE_instance);
+        context->RaiseException0(Rexx_Error_No_OLE_instance);
         return 0;
     }
 
@@ -3277,7 +3277,7 @@ RexxMethod3(RexxObjectPtr,                // Return type
     pszFunction = pszStringDupe(msgName);
     if (!pszFunction)
     {
-        context->RaiseException(Rexx_Error_System_resources);
+        context->RaiseException0(Rexx_Error_System_resources);
         return NULLOBJECT;
     }
 
@@ -3378,7 +3378,7 @@ RexxMethod3(RexxObjectPtr,                // Return type
         pVarArgs = (VARIANTARG *) ORexxOleAlloc(sizeof(VARIANTARG) * iArgCount * 2);
         if ( pVarArgs == NULL )
         {
-            context->RaiseException(Rexx_Error_System_resources);
+            context->RaiseException0(Rexx_Error_System_resources);
             goto clean_up_exit;
         }
         // point to second half
@@ -3560,29 +3560,29 @@ RexxMethod3(RexxObjectPtr,                // Return type
         switch ( hResult )
         {
             case DISP_E_BADPARAMCOUNT:
-                context->RaiseException(Rexx_Error_Argument_Count_Mismatch);
+                context->RaiseException0(Rexx_Error_Argument_Count_Mismatch);
                 break;
             case DISP_E_BADVARTYPE:
-                context->RaiseException(Rexx_Error_Invalid_Variant);
+                context->RaiseException0(Rexx_Error_Invalid_Variant);
                 break;
             case DISP_E_EXCEPTION:
                 formatDispatchException(&sExc, szBuffer);
                 context->RaiseException1(Rexx_Error_OLE_Exception, context->NewStringFromAsciiz(szBuffer));
                 break;
             case DISP_E_MEMBERNOTFOUND:
-                context->RaiseException(Rexx_Error_Unknown_OLE_Method);
+                context->RaiseException0(Rexx_Error_Unknown_OLE_Method);
                 break;
             case DISP_E_OVERFLOW:
-                context->RaiseException(Rexx_Error_Coercion_Failed_Overflow);
+                context->RaiseException0(Rexx_Error_Coercion_Failed_Overflow);
                 break;
             case DISP_E_TYPEMISMATCH:
                 context->RaiseException1(Rexx_Error_Coercion_Failed_Type_Mismatch, context->WholeNumberToObject(uArgErr + 1));
                 break;
             case DISP_E_PARAMNOTOPTIONAL:
-                context->RaiseException(Rexx_Error_Parameter_Omitted);
+                context->RaiseException0(Rexx_Error_Parameter_Omitted);
                 break;
             case RPC_E_DISCONNECTED:
-                context->RaiseException(Rexx_Error_Client_Disconnected_From_Server);
+                context->RaiseException0(Rexx_Error_Client_Disconnected_From_Server);
                 break;
             case DISP_E_NONAMEDARGS:
             case DISP_E_UNKNOWNLCID:
@@ -3692,7 +3692,7 @@ ThreeStateReturn checkForOverride(RexxThreadContext *context, VARIANT *pVariant,
                             ppDisp = (IDispatch **)ORexxOleAlloc(sizeof(IDispatch **));
                             if ( ! ppDisp )
                             {
-                                context->RaiseException(Rexx_Error_System_resources);
+                                context->RaiseException0(Rexx_Error_System_resources);
                                 return ExceptionReturn;
                             }
                             *ppDisp = (IDispatch *)NULL;
@@ -3724,7 +3724,7 @@ ThreeStateReturn checkForOverride(RexxThreadContext *context, VARIANT *pVariant,
                             ppU = (IUnknown **)ORexxOleAlloc(sizeof(IUnknown **));
                             if ( ! ppU )
                             {
-                                context->RaiseException(Rexx_Error_System_resources);
+                                context->RaiseException0(Rexx_Error_System_resources);
                                 return ExceptionReturn;
                             }
 

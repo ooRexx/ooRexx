@@ -113,7 +113,7 @@ RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration
         context->ArrayAppend(subs, context->WholeNumberToObject(MIN_FREQUENCY));
         context->ArrayAppend(subs, context->WholeNumberToObject(MAX_FREQUENCY));
         context->ArrayAppend(subs, context->WholeNumberToObject(Frequency));
-        context->RaiseExceptionArray(Rexx_Error_Invalid_argument_range, subs);
+        context->RaiseException(Rexx_Error_Invalid_argument_range, subs);
         return NULL;
     }
                                          /* out of range?              */
@@ -124,7 +124,7 @@ RexxRoutine2(CSTRING, sysBeep, wholenumber_t, Frequency, wholenumber_t, Duration
         context->ArrayAppend(subs, context->WholeNumberToObject(MIN_DURATION));
         context->ArrayAppend(subs, context->WholeNumberToObject(MAX_DURATION));
         context->ArrayAppend(subs, context->WholeNumberToObject(Duration));
-        context->RaiseExceptionArray(Rexx_Error_Invalid_argument_range, subs);
+        context->RaiseException(Rexx_Error_Invalid_argument_range, subs);
         return NULL;
     }
 

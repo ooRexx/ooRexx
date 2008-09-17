@@ -225,7 +225,7 @@ static RexxObjectPtr stringToVT(RexxMethodContext *context, RexxObjectPtr rxStr 
     pszRxStr = pszStringDupe(context->ObjectToStringValue(rxStr));
     if ( !pszRxStr )
     {
-        context->RaiseException(Rexx_Error_System_resources);
+        context->RaiseException0(Rexx_Error_System_resources);
     }
 
     // Allow case insensitive.
@@ -290,7 +290,7 @@ static RexxObjectPtr stringToFlags(RexxMethodContext *context, RexxObjectPtr rxS
     pszRxStr = pszStringDupe(context->ObjectToStringValue(rxStr));
     if ( !pszRxStr )
     {
-        context->RaiseException(Rexx_Error_System_resources);
+        context->RaiseException0(Rexx_Error_System_resources);
     }
 
     // Allow case insensitive.
