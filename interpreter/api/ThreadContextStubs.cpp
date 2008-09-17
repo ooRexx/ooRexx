@@ -518,18 +518,6 @@ RexxPackageObject RexxEntry GetMethodPackage(RexxThreadContext *c, RexxMethodObj
     return false;
 }
 
-RexxObjectPtr RexxEntry NewObject(RexxThreadContext *c)
-{
-    ApiContext context(c);
-    try
-    {
-        return context.ret(new (TheObjectClass) RexxObject());
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return NULLOBJECT;
-}
 
 POINTER RexxEntry ObjectToCSelf(RexxThreadContext *c, RexxObjectPtr o)
 {
@@ -1849,7 +1837,6 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     GetRoutinePackage,
     GetMethodPackage,
 
-    NewObject,
     ObjectToCSelf,
     WholeNumberToObject,
     UintptrToObject,

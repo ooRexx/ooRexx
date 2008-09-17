@@ -502,7 +502,6 @@ typedef struct
     RexxPackageObject (RexxEntry *GetRoutinePackage)(RexxThreadContext *, RexxRoutineObject);
     RexxPackageObject (RexxEntry *GetMethodPackage)(RexxThreadContext *, RexxMethodObject);
 
-    RexxObjectPtr    (RexxEntry *NewObject)(RexxThreadContext *);
     POINTER          (RexxEntry *ObjectToCSelf)(RexxThreadContext *, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *WholeNumberToObject)(RexxThreadContext *, wholenumber_t);
     RexxObjectPtr    (RexxEntry *UintptrToObject)(RexxThreadContext *, uintptr_t);
@@ -835,10 +834,6 @@ struct RexxThreadContext_
     RexxPackageObject LoadPackageFromData(CSTRING n, CSTRING d, size_t l)
     {
         return functions->LoadPackageFromData(this, n, d, l);
-    }
-    RexxObjectPtr NewObject()
-    {
-        return functions->NewObject(this);
     }
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {
@@ -1373,10 +1368,6 @@ struct RexxMethodContext_
         return threadContext->LoadPackageFromData(n, d, l);
     }
 
-    RexxObjectPtr NewObject()
-    {
-        return threadContext->NewObject();
-    }
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {
         return threadContext->ObjectToCSelf(o);
@@ -1966,10 +1957,6 @@ struct RexxCallContext_
     RexxPackageObject LoadPackageFromData(CSTRING n, CSTRING d, size_t l)
     {
         return threadContext->LoadPackageFromData(n, d, l);
-    }
-    RexxObjectPtr NewObject()
-    {
-        return threadContext->NewObject();
     }
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {
@@ -2562,10 +2549,6 @@ struct RexxExitContext_
     RexxPackageObject LoadPackageFromData(CSTRING n, CSTRING d, size_t l)
     {
         return threadContext->LoadPackageFromData(n, d, l);
-    }
-    RexxObjectPtr NewObject()
-    {
-        return threadContext->NewObject();
     }
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {
