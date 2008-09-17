@@ -518,21 +518,6 @@ RexxPackageObject RexxEntry GetMethodPackage(RexxThreadContext *c, RexxMethodObj
     return false;
 }
 
-
-
-RexxBufferObject RexxEntry SaveRoutine(RexxThreadContext *c, RexxRoutineObject m)
-{
-    ApiContext context(c);
-    try
-    {
-        return (RexxBufferObject)context.ret(((RoutineClass *)m)->save());
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return NULLOBJECT;
-}
-
 RexxObjectPtr RexxEntry NewObject(RexxThreadContext *c)
 {
     ApiContext context(c);
@@ -1863,7 +1848,6 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     IsMethod,
     GetRoutinePackage,
     GetMethodPackage,
-    SaveRoutine,
 
     NewObject,
     ObjectToCSelf,

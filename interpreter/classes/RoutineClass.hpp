@@ -80,6 +80,7 @@ public:
     RoutineClass *newFileRexx(RexxString *);
 
     static RoutineClass *restore(RexxBuffer *, char *);
+    static RoutineClass *restore(const char *data, size_t length);
     static RoutineClass *restore(RexxString *fileName, RexxBuffer *buffer);
     static RoutineClass *restoreFromMacroSpace(RexxString *name);
     static RoutineClass *restore(RexxBuffer *buffer);

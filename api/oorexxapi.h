@@ -502,8 +502,6 @@ typedef struct
     RexxPackageObject (RexxEntry *GetRoutinePackage)(RexxThreadContext *, RexxRoutineObject);
     RexxPackageObject (RexxEntry *GetMethodPackage)(RexxThreadContext *, RexxMethodObject);
 
-    RexxBufferObject  (RexxEntry *SaveRoutine)(RexxThreadContext *, RexxRoutineObject);
-
     RexxObjectPtr    (RexxEntry *NewObject)(RexxThreadContext *);
     POINTER          (RexxEntry *ObjectToCSelf)(RexxThreadContext *, RexxObjectPtr);
     RexxObjectPtr    (RexxEntry *WholeNumberToObject)(RexxThreadContext *, wholenumber_t);
@@ -829,10 +827,6 @@ struct RexxThreadContext_
     RexxObjectPtr CallProgram(CSTRING n,RexxArrayObject a)
     {
         return functions->CallProgram(this, n, a);
-    }
-    RexxBufferObject SaveRoutine(RexxRoutineObject m)
-    {
-        return functions->SaveRoutine(this, m);
     }
     RexxPackageObject LoadPackage(CSTRING d)
     {
@@ -1369,10 +1363,6 @@ struct RexxMethodContext_
     RexxObjectPtr CallProgram(CSTRING n,RexxArrayObject a)
     {
         return threadContext->CallProgram(n, a);
-    }
-    RexxBufferObject SaveRoutine(RexxRoutineObject m)
-    {
-        return threadContext->SaveRoutine(m);
     }
     RexxPackageObject LoadPackage(CSTRING d)
     {
@@ -1969,10 +1959,6 @@ struct RexxCallContext_
     {
         return threadContext->CallProgram(n, a);
     }
-    RexxBufferObject SaveRoutine(RexxRoutineObject m)
-    {
-        return threadContext->SaveRoutine(m);
-    }
     RexxPackageObject LoadPackage(CSTRING d)
     {
         return threadContext->LoadPackage(d);
@@ -2568,10 +2554,6 @@ struct RexxExitContext_
     RexxObjectPtr CallProgram(CSTRING n,RexxArrayObject a)
     {
         return threadContext->CallProgram(n, a);
-    }
-    RexxBufferObject SaveRoutine(RexxRoutineObject m)
-    {
-        return threadContext->SaveRoutine(m);
     }
     RexxPackageObject LoadPackage(CSTRING d)
     {

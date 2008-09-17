@@ -708,6 +708,22 @@ RoutineClass *RoutineClass::processInstore(PRXSTRING instore, RexxString * name 
     return OREF_NULL;                    /* processing failed                 */
 }
 
+/**
+ * Restore a saved routine directly from character data.
+ *
+ * @param data   The data pointer.
+ * @param length the data length.
+ *
+ * @return The unflattened routine object.
+ */
+RoutineClass *RoutineClass::restore(const char *data, size_t length)
+{
+    // create a buffer object and restore from it
+    RexxBuffer *buffer = new_buffer(data, length);
+    ProtectedObject p(buffer);
+    return restore(buffer, buffer->getData());
+}
+
 
 RoutineClass *RoutineClass::restore(
     RexxBuffer *buffer,                /* buffer containing the method      */
