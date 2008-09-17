@@ -201,3 +201,13 @@ RexxMethod1(wholenumber_t, rexx_delete_queue,
   return RexxDeleteQueue(queue_name);
 }
 
+/********************************************************************************************/
+/* Rexx_clear_queue                                                                         */                                                                         
+/********************************************************************************************/
+RexxMethod0(int, rexx_clear_queue)
+{
+                                       /* get the queue name                */
+  RexxObjectPtr queue_name = context->GetObjectVariable("NAMED_QUEUE");
+                                       /* Clear the queue                   */
+  return RexxClearQueue(context->ObjectToStringValue(queue_name));
+}

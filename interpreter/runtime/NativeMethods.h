@@ -76,3 +76,4 @@
    INTERNAL_METHOD(rexx_queue_queue)
    INTERNAL_METHOD(rexx_pull_queue)
    INTERNAL_METHOD(rexx_linein_queue)
+   INTERNAL_METHOD(rexx_clear_queue)

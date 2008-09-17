@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -474,8 +474,23 @@ return position
 ::METHOD say
   forward message 'QUEUE'
 
+::METHOD makearray
+  qItems = self~queued
+  arr = .array~new(qItems)
+  do i = 1 to qItems
+     line = self~pull
+     if .nil = line /* items have been removed by another thread or process */
+     then do 
+        arr = arr~section(1, i - 1)
+        leave
+     end /* DO */
+     arr[i]=line
+  end /* DO */
+  return arr
+
 ::METHOD push            EXTERNAL 'LIBRARY REXX rexx_push_queue'
 ::METHOD queue           EXTERNAL 'LIBRARY REXX rexx_queue_queue'
 ::METHOD pull            EXTERNAL 'LIBRARY REXX rexx_pull_queue'
 ::METHOD linein          EXTERNAL 'LIBRARY REXX rexx_linein_queue'
 ::METHOD queued          EXTERNAL 'LIBRARY REXX rexx_query_queue'
+::METHOD empty           EXTERNAL 'LIBRARY REXX rexx_clear_queue'
