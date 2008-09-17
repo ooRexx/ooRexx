@@ -480,7 +480,6 @@ typedef struct
     RexxDirectoryObject (RexxEntry *GetLocalEnvironment)(RexxThreadContext *);
     RexxDirectoryObject (RexxEntry *GetGlobalEnvironment)(RexxThreadContext *);
 
-    logical_t        (RexxEntry *IsSameType)(RexxThreadContext *, RexxObjectPtr, RexxObjectPtr);
     logical_t        (RexxEntry *IsInstanceOf)(RexxThreadContext *, RexxObjectPtr, RexxClassObject);
     logical_t        (RexxEntry *HasMethod)(RexxThreadContext *, RexxObjectPtr, CSTRING);
 
@@ -760,10 +759,6 @@ struct RexxThreadContext_
     RexxDirectoryObject GetGlobalEnvironment()
     {
         return functions->GetGlobalEnvironment(this);
-    }
-    logical_t IsSameType(RexxObjectPtr o1, RexxObjectPtr o2)
-    {
-        return functions->IsSameType(this, o1, o2);
     }
     logical_t IsInstanceOf(RexxObjectPtr o, RexxClassObject co)
     {
@@ -1306,10 +1301,6 @@ struct RexxMethodContext_
         return threadContext->GetGlobalEnvironment();
     }
 
-    logical_t IsSameType(RexxObjectPtr o1, RexxObjectPtr o2)
-    {
-        return threadContext->IsSameType(o1, o2);
-    }
     logical_t IsInstanceOf(RexxObjectPtr o, RexxClassObject co)
     {
         return threadContext->IsInstanceOf(o, co);
@@ -1907,10 +1898,6 @@ struct RexxCallContext_
         return threadContext->GetGlobalEnvironment();
     }
 
-    logical_t IsSameType(RexxObjectPtr o1, RexxObjectPtr o2)
-    {
-        return threadContext->IsSameType(o1, o2);
-    }
     logical_t IsInstanceOf(RexxObjectPtr o, RexxClassObject co)
     {
         return threadContext->IsInstanceOf(o, co);
@@ -2512,10 +2499,6 @@ struct RexxExitContext_
         return threadContext->GetGlobalEnvironment();
     }
 
-    logical_t IsSameType(RexxObjectPtr o1, RexxObjectPtr o2)
-    {
-        return threadContext->IsSameType(o1, o2);
-    }
     logical_t IsInstanceOf(RexxObjectPtr o, RexxClassObject co)
     {
         return threadContext->IsInstanceOf(o, co);

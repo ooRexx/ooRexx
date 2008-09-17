@@ -232,20 +232,6 @@ RexxDirectoryObject RexxEntry GetGlobalEnvironment(RexxThreadContext *c)
 }
 
 
-logical_t RexxEntry IsSameType(RexxThreadContext *c, RexxObjectPtr o1, RexxObjectPtr o2)
-{
-    ApiContext context(c);
-    try
-    {
-        return ((RexxObject *)o1)->isSameType((RexxObject *)o2);
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return 0;
-}
-
-
 logical_t RexxEntry IsInstanceOf(RexxThreadContext *c, RexxObjectPtr o, RexxClassObject cl)
 {
     ApiContext context(c);
@@ -1857,7 +1843,6 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     GetLocalEnvironment,
     GetGlobalEnvironment,
 
-    IsSameType,
     IsInstanceOf,
     HasMethod,
     LoadPackage,
