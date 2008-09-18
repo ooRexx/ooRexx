@@ -351,7 +351,7 @@ rxsockHeaders = $(build_extensions_rxsock_dir)/rxsock.h
 # Platform specific files
 windowsMiscFiles =
 unixMiscFiles = $(interpreter_unix_dir)/*.cat \
-                $(rexxapi_server_unix_dir)/rxapid.sh \
+                $(rexxapi_server_unix_dir)/rxapid \
                 $(build_messages_dir)/gencat.inp \
                 $(build_os_platform_dir)/rexx.sh \
                 $(build_os_platform_dir)/rexx.csh \
@@ -1001,6 +1001,7 @@ install-exec-local:
 	$(install_sh_SCRIPT) $(build_extensions_rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxftp_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/socket.cls $(DESTDIR)$(prefix)/bin/socket.cls
+	$(install_sh_SCRIPT) $(rexxapi_server_unix_dir)/rxapid $(DESTDIR)$(prefix)/bin/rxapid
 	for a in $(build_samples_dir)/*.rex; do \
 		bn=`basename $$a`; \
 		$(install_sh_SCRIPT) $$a $(DESTDIR)$(prefix)/share/ooRexx/$$bn; \
