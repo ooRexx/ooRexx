@@ -406,7 +406,7 @@ AC_CONFIG_FILES([
 	platform/unix/oorexx.spec
 	platform/unix/debian/changelog
 	platform/unix/debian/postinst
-	rexxapi/server/platform/unix/rxapid.sh
+	rexxapi/server/platform/unix/rxapid
         samples/Makefile
         samples/unix/Makefile
         samples/unix/api/Makefile
