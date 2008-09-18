@@ -229,9 +229,9 @@ if [ -d /opt/ooRexx ]; then
 # allow backwards compatibility to Object REXX 2.x
    ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.2
 fi
-cp %{_prefix}/bin/rxapid   /etc/rc.d/init.d
-ln -sf /etc/rc.d/init.d    /etc/rc.d/rc3.d/S89rxapid
-ln -sf /etc/rc.d/init.d    /etc/rc.d/rc5.d/S89rxapid
+cp %{_prefix}/bin/rxapid          /etc/rc.d/init.d
+ln -sf /etc/rc.d/init.d/rxapid    /etc/rc.d/rc3.d/S89rxapid
+ln -sf /etc/rc.d/init.d/rxapid    /etc/rc.d/rc5.d/S89rxapid
 ldconfig
 /etc/rc.d/init.d/rxapid start
 
