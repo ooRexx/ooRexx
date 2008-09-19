@@ -1477,7 +1477,7 @@ LONG setKeyPressData(KEYPRESSDATA *pData, CONSTRXSTRING method, CONSTRXSTRING ke
         pFilter = (KEYFILTER *)LocalAlloc(LPTR, sizeof(KEYFILTER));
         if ( ! pFilter )
         {
-            free(pMethod);
+            LocalFree(pMethod);
             return -5;
         }
     }
@@ -1503,7 +1503,7 @@ LONG setKeyPressData(KEYPRESSDATA *pData, CONSTRXSTRING method, CONSTRXSTRING ke
         if ( ((! pFilter->and) && pFilter->shift && pFilter->control && pFilter->alt) ||
              (pFilter->and && ! pFilter->shift && ! pFilter->control && ! pFilter->alt) )
         {
-            free(pFilter);
+            LocalFree(pFilter);
             pFilter = NULL;
             ret = -1;
         }
