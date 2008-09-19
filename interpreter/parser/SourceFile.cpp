@@ -1159,14 +1159,8 @@ RexxCode *RexxSource::generateCode(bool isMethod)
   // if generating a method object, then process the directive installation now
   if (isMethod)
   {
-      // In order to install, we need to call something.  We manage this by
-      // creating a dummy stub routine that we can call to force things to install
-      RexxCode *stub = new RexxCode(this, OREF_NULL, OREF_NULL, 10, FIRST_VARIABLE_INDEX);
-      ProtectedObject p2(stub);
-      RoutineClass *code = new RoutineClass(programName, stub);
-      p2 = code;
-      ProtectedObject dummy;
-      code->call(ActivityManager::currentActivity, programName, NULL, 0, dummy);
+      // force this to install now
+      install();
   }
   return newCode;                      /* return the method                 */
 }
@@ -1606,6 +1600,25 @@ RexxClass *RexxSource::findClass(RexxString *className)
 
     /* last chance, try the environment  */
     return(RexxClass *)(TheEnvironment->at(internalName));
+}
+
+
+/**
+ * Perform a non-contextual install of a package.
+ */
+void RexxSource::install()
+{
+    if (needsInstallation())
+    {
+        // In order to install, we need to call something.  We manage this by
+        // creating a dummy stub routine that we can call to force things to install
+        RexxCode *stub = new RexxCode(this, OREF_NULL, OREF_NULL, 10, FIRST_VARIABLE_INDEX);
+        ProtectedObject p2(stub);
+        RoutineClass *code = new RoutineClass(programName, stub);
+        p2 = code;
+        ProtectedObject dummy;
+        code->call(ActivityManager::currentActivity, programName, NULL, 0, dummy);
+    }
 }
 
 
@@ -5687,6 +5700,8 @@ PackageClass *RexxSource::getPackage()
 {
     if (package == OREF_NULL)
     {
+        // force the directives to be processed first
+        install();
         OrefSet(this, this->package, new PackageClass(this));
     }
     return package;

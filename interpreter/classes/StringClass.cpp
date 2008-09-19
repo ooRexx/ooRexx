@@ -430,7 +430,7 @@ RexxNumberString *RexxString::createNumberString()
 }
 
 
-size_t RexxString::get(size_t startPos, char *buffer, size_t bufl)
+size_t RexxString::copyData(size_t startPos, char *buffer, size_t bufl)
 /******************************************************************************/
 /* Function:  Get a section of a string and copy it into a buffer             */
 /******************************************************************************/
@@ -441,21 +441,16 @@ size_t RexxString::get(size_t startPos, char *buffer, size_t bufl)
     {
         if (bufl <= this->getLength() - startPos)
         {
-            copylen = bufl - 1;
+            copylen = bufl;
         }
         else
         {
             copylen = this->getLength() - startPos;
-            *(buffer + copylen) = '\0';
         }
         memcpy(buffer, this->getStringData() + startPos, (size_t)copylen);
     }
-    else
-    {
-        *buffer = '\0';
-    }
 
-    return copylen + 1;
+    return copylen;
 }
 
 RexxObject *RexxString::lengthRexx()

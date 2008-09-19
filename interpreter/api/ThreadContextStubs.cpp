@@ -932,7 +932,7 @@ size_t RexxEntry StringGet(RexxThreadContext *c, RexxStringObject s, size_t o, P
     try
     {
         RexxString *temp = (RexxString *)s;
-        return temp->get(o, (char *)r, l);
+        return temp->copyData(o - 1, (char *)r, l);
     }
     catch (RexxNativeActivation *)
     {

@@ -61,6 +61,7 @@
 #include "SupplierClass.hpp"
 #include "PointerClass.hpp"
 #include "BufferClass.hpp"
+#include "PackageClass.hpp"
 #include "WeakReferenceClass.hpp"
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
@@ -2341,11 +2342,15 @@ void RexxMemory::restore()
     RESTORE_CLASS(List, RexxClass);
     RESTORE_CLASS(Message, RexxClass);
     RESTORE_CLASS(Method, RexxClass);
+    RESTORE_CLASS(Routine, RexxClass);
+    RESTORE_CLASS(Package, RexxClass);
+    RESTORE_CLASS(RexxContext, RexxClass);
     RESTORE_CLASS(NumberString, RexxClass);
     RESTORE_CLASS(Queue, RexxClass);
     RESTORE_CLASS(Stem, RexxClass);
     RESTORE_CLASS(Supplier, RexxClass);
     RESTORE_CLASS(Table, RexxClass);
+    RESTORE_CLASS(IdentityTable, RexxClass);
     RESTORE_CLASS(Relation, RexxClass);
     RESTORE_CLASS(MutableBuffer, RexxMutableBufferClass);
     RESTORE_CLASS(Pointer, RexxClass);

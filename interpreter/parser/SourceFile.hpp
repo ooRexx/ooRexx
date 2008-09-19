@@ -163,6 +163,7 @@ class RexxSource : public RexxInternalObject {
   RexxClass  *findPublicClass(RexxString *name);
   RexxString *resolveProgramName(RexxActivity *activity, RexxString *name);
   void        processInstall(RexxActivation *);
+  void        install();
   RexxCode   *translate(RexxDirectory *);
   void        resolveDependencies();
   void        directive();

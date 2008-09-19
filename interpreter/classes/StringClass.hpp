@@ -184,7 +184,7 @@ inline char IntToHexDigit(int n)
    RexxInteger *strictGreaterOrEqual(RexxObject *);
    RexxInteger *strictLessOrEqual(RexxObject *);
 
-   size_t      get(size_t, char *, size_t);
+   size_t      copyData(size_t, char *, size_t);
    RexxObject *lengthRexx();
    RexxString *concatRexx(RexxObject *);
    RexxString *concat(RexxString *);
