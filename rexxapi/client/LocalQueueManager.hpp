@@ -68,6 +68,8 @@ public:
     QueueHandle initializeSessionQueue(SessionID s);
     QueueHandle createSessionQueue(SessionID session);
     RexxReturnCode createNamedQueue(const char *name, size_t size, char *createdName, size_t *dup);
+    RexxReturnCode openNamedQueue(const char *name, size_t *dup);
+    RexxReturnCode queryNamedQueue(const char *name);
     RexxReturnCode deleteSessionQueue();
     RexxReturnCode deleteNamedQueue(const char * name);
     RexxReturnCode clearSessionQueue();

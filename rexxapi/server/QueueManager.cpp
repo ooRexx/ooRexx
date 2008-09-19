@@ -584,6 +584,52 @@ void ServerQueueManager::createNamedQueue(ServiceMessage &message)
 }
 
 
+// Create a named queue.  The message arguments have the
+// following meanings:
+//
+// parameter1 -- caller's session id, only used with duplicates
+// nameArg    -- ASCII-Z name of the queue
+void ServerQueueManager::openNamedQueue(ServiceMessage &message)
+{
+    DataQueue *queue = namedQueues.locate(message.nameArg);
+    // not previously created?
+    if (queue == NULL)
+    {
+        // this is easy, just create a new queue and add it to the table
+        queue = new DataQueue(message.nameArg);
+        namedQueues.add(queue);
+        message.setResult(QUEUE_CREATED);
+    }
+    else
+    {
+        // indicate this already exists
+        message.setResult(QUEUE_EXISTS);
+    }
+}
+
+
+// Query a named queue.  The message arguments have the
+// following meanings:
+//
+// parameter1 -- caller's session id, only used with duplicates
+// nameArg    -- ASCII-Z name of the queue
+void ServerQueueManager::queryNamedQueue(ServiceMessage &message)
+{
+    DataQueue *queue = namedQueues.locate(message.nameArg);
+    // not previously created?
+    if (queue == NULL)
+    {
+        // not here
+        message.setResult(QUEUE_DOES_NOT_EXIST);
+    }
+    else
+    {
+        // indicate this already exists
+        message.setResult(QUEUE_EXISTS);
+    }
+}
+
+
 // Increment the reference count on a session queue.  The message arguments have the
 // following meanings:
 //
@@ -785,6 +831,12 @@ void ServerQueueManager::dispatch(ServiceMessage &message)
                 break;
             case CREATE_NAMED_QUEUE:
                 createNamedQueue(message);
+                break;
+            case OPEN_NAMED_QUEUE:
+                openNamedQueue(message);
+                break;
+            case QUERY_NAMED_QUEUE:
+                queryNamedQueue(message);
                 break;
             case DELETE_SESSION_QUEUE:
                 deleteSessionQueue(message);

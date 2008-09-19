@@ -199,6 +199,31 @@ RexxReturnCode LocalQueueManager::createNamedQueue(const char *name, size_t size
     return RXQUEUE_OK;
 }
 
+
+/**
+ * Create a named queue
+ *
+ * @param name   The requested queue name.
+ * @param dup    The duplicate flag.
+ *
+ * @return true if the requested name already exists
+ */
+RexxReturnCode LocalQueueManager::openNamedQueue(const char *name, size_t *dup)
+{
+    if (!validateQueueName(name))            // make sure this is a valid name
+    {
+        return RXQUEUE_BADQNAME;
+    }
+
+    ClientMessage message(QueueManager, OPEN_NAMED_QUEUE, name);
+
+    message.send();
+    // return the dup name indicator
+    *dup = message.result == QUEUE_EXISTS;
+    // everything worked here.
+    return RXQUEUE_OK;
+}
+
 /**
  * Delete the current session queue.
  */
@@ -223,6 +248,24 @@ RexxReturnCode LocalQueueManager::deleteNamedQueue(const char *name)
     }
 
     ClientMessage message(QueueManager, DELETE_NAMED_QUEUE, name);
+    message.send();
+    // map the server result to an API return code.
+    return mapReturnResult(message);
+}
+
+/**
+ * Delete a named queue.
+ *
+ * @param name   The name of the queue.
+ */
+RexxReturnCode LocalQueueManager::queryNamedQueue(const char *name)
+{
+    if (!validateQueueName(name))            // make sure this is a valid name
+    {
+        return RXQUEUE_BADQNAME;
+    }
+
+    ClientMessage message(QueueManager, QUERY_NAMED_QUEUE, name);
     message.send();
     // map the server result to an API return code.
     return mapReturnResult(message);

@@ -684,6 +684,7 @@ PackageClass *PackageManager::getRequiresFile(RexxActivity *activity, RexxString
     // try to load this from a previously compiled source file or
     // translate it a new if not.
     RoutineClass *code = RoutineClass::fromFile(name);
+    result = code;   // we need to protect this until things are fully resolved.
 
     PackageClass *package = code->getPackage();
     result = package;

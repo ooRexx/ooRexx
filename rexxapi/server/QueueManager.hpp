@@ -254,6 +254,8 @@ public:
     void createSessionQueue(ServiceMessage &message);
     void createUniqueQueue(ServiceMessage &message);
     void createNamedQueue(ServiceMessage &message);
+    void openNamedQueue(ServiceMessage &message);
+    void queryNamedQueue(ServiceMessage &message);
     void nestSessionQueue(ServiceMessage &message);
     void deleteSessionQueue(ServiceMessage &message);
     void deleteSessionQueue(DataQueue *queue);

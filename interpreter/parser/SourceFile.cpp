@@ -5671,6 +5671,8 @@ PackageClass *RexxSource::loadRequired(RexxString *target, RexxArray *s)
  */
 void RexxSource::addPackage(PackageClass *p)
 {
+    // force the directives to be processed first
+    install();
     // we only create this on the first use
     if (loadedPackages == OREF_NULL)
     {
@@ -5700,8 +5702,6 @@ PackageClass *RexxSource::getPackage()
 {
     if (package == OREF_NULL)
     {
-        // force the directives to be processed first
-        install();
         OrefSet(this, this->package, new PackageClass(this));
     }
     return package;
@@ -5719,6 +5719,8 @@ PackageClass *RexxSource::getPackage()
  */
 void RexxSource::addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass)
 {
+    // force the directives to be processed first
+    install();
     installed_classes->setEntry(name, classObject);
     if (publicClass)
     {
@@ -5738,6 +5740,8 @@ void RexxSource::addInstalledClass(RexxString *name, RexxClass *classObject, boo
  */
 void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine)
 {
+    // force the directives to be processed first
+    install();
     routines->setEntry(name, routineObject);
     if (publicRoutine)
     {

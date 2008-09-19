@@ -341,14 +341,14 @@ class RexxSource : public RexxInternalObject {
   void addInstalledClass(RexxString *name, RexxClass *classObject, bool publicClass);
   void addInstalledRoutine(RexxString *name, RoutineClass *routineObject, bool publicRoutine);
 
-  RexxDirectory *getInstalledClasses() { return installed_classes; }
-  RexxDirectory *getInstalledPublicClasses() { return installed_public_classes; }
-  RexxDirectory *getImportedClasses() { return merged_public_classes; }
-  RexxDirectory *getInstalledRoutines() { return routines; }
-  RexxDirectory *getInstalledPublicRoutines() { return public_routines; }
-  RexxDirectory *getImportedRoutines() { return merged_public_routines; }
-  RexxDirectory *getDefinedMethods() { return methods; }
-  RexxList      *getPackages() { return loadedPackages; }
+  RexxDirectory *getInstalledClasses() { install(); return installed_classes; }
+  RexxDirectory *getInstalledPublicClasses() { install(); return installed_public_classes; }
+  RexxDirectory *getImportedClasses() { install(); return merged_public_classes; }
+  RexxDirectory *getInstalledRoutines() { install(); return routines; }
+  RexxDirectory *getInstalledPublicRoutines() { install(); return public_routines; }
+  RexxDirectory *getImportedRoutines() { install(); return merged_public_routines; }
+  RexxDirectory *getDefinedMethods() { install(); return methods; }
+  RexxList      *getPackages() { install(); return loadedPackages; }
 
 protected:
 

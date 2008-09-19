@@ -117,6 +117,8 @@ typedef enum
     PULL_FROM_SESSION_QUEUE,
     CLEAR_SESSION_QUEUE,
     CLEAR_NAMED_QUEUE,
+    OPEN_NAMED_QUEUE,
+    QUERY_NAMED_QUEUE,
 
     // registration manager operations
     REGISTER_LIBRARY,
