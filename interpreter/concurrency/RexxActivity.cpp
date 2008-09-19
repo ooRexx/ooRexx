@@ -81,6 +81,7 @@ const size_t ACT_STACK_SIZE = 20;
  */
 void RexxActivity::runThread()
 {
+    bool firstDispatch = true;           // somethings only occur on subsequent requests
                                          /* establish the stack base pointer  */
     this->stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
     for (;;)
@@ -97,7 +98,13 @@ void RexxActivity::runThread()
                 break;                       /* we're out of here                 */
             }
             this->requestAccess();           /* now get the kernel lock           */
-            this->activate();                // make sure this is marked as active
+            // we're already marked as active when first called to keep us from
+            // getting terminated prematurely before we get a chance to run
+            if (!firstDispatch)
+            {
+                this->activate();                // make sure this is marked as active
+            }
+            firstDispatch = true;                // we need to activate every time after this
             activityLevel = getActivationLevel();
 
             // if we have a dispatch message set, send it the send message to kick everything off
@@ -245,6 +252,10 @@ RexxActivity::RexxActivity(bool createThread)
     if (createThread)                    /* need to create a thread?          */
     {
         runsem.reset();                  /* set the run semaphore             */
+        // we need to enter this thread already marked as active, otherwise
+        // the main thread might shut us down before we get a chance to perform
+        // whatever function we're getting asked to run.
+        activate();
                                          /* create a thread                   */
         currentThread.create(this, C_STACK_SIZE);
     }
