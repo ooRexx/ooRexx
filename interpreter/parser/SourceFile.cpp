@@ -5721,9 +5721,19 @@ void RexxSource::addInstalledClass(RexxString *name, RexxClass *classObject, boo
 {
     // force the directives to be processed first
     install();
+    // make sure we have this created
+    if (installed_classes == OREF_NULL)
+    {
+        OrefSet(this, installed_classes, new_directory());
+    }
     installed_classes->setEntry(name, classObject);
     if (publicClass)
     {
+        // make sure we have this created also
+        if (installed_public_classes == OREF_NULL)
+        {
+            OrefSet(this, installed_public_classes, new_directory());
+        }
         installed_public_classes->setEntry(name, classObject);
     }
 }
@@ -5742,9 +5752,19 @@ void RexxSource::addInstalledRoutine(RexxString *name, RoutineClass *routineObje
 {
     // force the directives to be processed first
     install();
+    // make sure we have this created
+    if (routines == OREF_NULL)
+    {
+        OrefSet(this, routines, new_directory());
+    }
     routines->setEntry(name, routineObject);
     if (publicRoutine)
     {
+        // make sure we have this created
+        if (public_routines == OREF_NULL)
+        {
+            OrefSet(this, public_routines, new_directory());
+        }
         public_routines->setEntry(name, routineObject);
     }
 }
