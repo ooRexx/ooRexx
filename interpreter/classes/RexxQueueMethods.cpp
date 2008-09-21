@@ -192,6 +192,25 @@ RexxMethod1(RexxStringObject, rexx_create_queue,
 }
 
 /********************************************************************************************/
+/* Rexx_open_queue                                                                        */
+/********************************************************************************************/
+RexxMethod1(logical_t, rexx_open_queue, CSTRING, queue_name)
+{
+   size_t        dup_flag = 0;         /* duplicate name flag               */
+                                       /* create a queue                    */
+   return RexxOpenQueue(queue_name, &dup_flag);
+}
+
+/********************************************************************************************/
+/* Rexx_queue_exists                                                                      */
+/********************************************************************************************/
+RexxMethod1(logical_t, rexx_queue_exists, CSTRING, queue_name)
+{
+                                       /* create a queue                    */
+   return RexxQueueExists(queue_name) == 0;
+}
+
+/********************************************************************************************/
 /* Rexx_delete_queue                                                                        */
 /********************************************************************************************/
 RexxMethod1(wholenumber_t, rexx_delete_queue,
@@ -202,7 +221,7 @@ RexxMethod1(wholenumber_t, rexx_delete_queue,
 }
 
 /********************************************************************************************/
-/* Rexx_clear_queue                                                                         */                                                                         
+/* Rexx_clear_queue                                                                         */
 /********************************************************************************************/
 RexxMethod0(int, rexx_clear_queue)
 {

@@ -39,6 +39,8 @@ LIBRARY REXXAPI
 
 EXPORTS
      RexxCreateQueue
+     RexxOpenQueue
+     RexxQueueExists
      RexxDeleteQueue
      RexxAddQueue
      RexxPullQueue

@@ -70,6 +70,8 @@
    INTERNAL_METHOD(stream_close)
    INTERNAL_METHOD(stream_open)
    INTERNAL_METHOD(rexx_create_queue)
+   INTERNAL_METHOD(rexx_open_queue)
+   INTERNAL_METHOD(rexx_queue_exists)
    INTERNAL_METHOD(rexx_delete_queue)
    INTERNAL_METHOD(rexx_query_queue)
    INTERNAL_METHOD(rexx_push_queue)

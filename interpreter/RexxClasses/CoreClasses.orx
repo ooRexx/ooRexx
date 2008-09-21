@@ -3364,6 +3364,18 @@ Output:
     return .RexxQueue~create(queue_name)
   end
 
+  if substr(keyword,1,1) = 'O' then do
+    if symbol(queue_name) = 'BAD' then
+      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
+    return .RexxQueue~open(queue_name)
+  end
+
+  if substr(keyword,1,1) = 'e' then do
+    if symbol(queue_name) = 'BAD' then
+      raise syntax 40.026 array ('RXQUEUE', 2, queue_name)
+    return .RexxQueue~exists(queue_name)
+  end
+
   if substr(keyword,1,1) = 'D' then do
     if symbol(queue_name) = 'BAD' then
       raise syntax 40.026 array ('RXQUEUE', 2, queue_name)

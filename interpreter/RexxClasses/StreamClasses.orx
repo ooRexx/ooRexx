@@ -437,15 +437,14 @@ return position
 ::CLASS 'RexxQueue'
 ::METHOD create  CLASS   EXTERNAL 'LIBRARY REXX rexx_create_queue'
 ::METHOD delete  CLASS   EXTERNAL 'LIBRARY REXX rexx_delete_queue'
+::METHOD exists  CLASS   EXTERNAL 'LIBRARY REXX rexx_queue_exists'
+::METHOD open    CLASS   EXTERNAL 'LIBRARY REXX rexx_open_queue'
 
 ::METHOD init
   use strict arg name = "SESSION"
   name = name~upper
   if name \= 'SESSION' then do
-      createdName = self~class~create(name)
-      if createdName \= name then do
-          self~class~delete(createdName)
-      end
+      self~class~open(name)
   end
   self~set(name)
 
@@ -480,7 +479,7 @@ return position
   do i = 1 to qItems
      line = self~pull
      if .nil = line /* items have been removed by another thread or process */
-     then do 
+     then do
         arr = arr~section(1, i - 1)
         leave
      end /* DO */

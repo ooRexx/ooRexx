@@ -694,6 +694,19 @@ RexxReturnCode REXXENTRY RexxCreateQueue (
         size_t *);                             /* Duplicate name flag.        */
 typedef RexxReturnCode (REXXENTRY *PFNREXXCREATEQUEUE)(char *, size_t, const char *, size_t);
 
+/***    RexxOpenQueue - Create a named external queue, if necessary */
+
+RexxReturnCode REXXENTRY RexxOpenQueue (
+        const char *,                          /* Requested name for queue    */
+        size_t *);                             /* Flag for already created queue */
+typedef RexxReturnCode (REXXENTRY *PFNREXXOPENQUEUE)(const char *, size_t);
+
+
+/***    RexxQueueExists - Check for the existance of an external data queue */
+
+RexxReturnCode REXXENTRY RexxQueueExists (
+        const char * );                         /* Name of queue to be deleted */
+typedef RexxReturnCode (REXXENTRY *PFNREXXQUEUEEXISTS)(const char *);
 
 /***    RexxDeleteQueue - Delete an External Data Queue */
 

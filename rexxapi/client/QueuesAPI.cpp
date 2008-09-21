@@ -118,6 +118,43 @@ RexxReturnCode RexxEntry RexxCreateQueue(
 }
 
 
+/**
+ * Get access to a named queue, creating it if necessary.
+ *
+ * @param name   The name of the desired queue.
+ * @param pdup   A flag indicating whether the queue already existed.
+ *
+ * @return 0 if the queue was accessed ok, otherwise the error code
+ *         for any errors.
+ */
+RexxReturnCode RexxEntry RexxOpenQueue(const char *name, size_t *pdup)
+{
+    ENTER_REXX_API(QueueManager)
+    {
+        return lam->queueManager.openNamedQueue(name, pdup);
+    }
+    EXIT_REXX_API();
+}
+
+
+/**
+ * Check to see if a given named queue exists
+ *
+ * @param name   The name of the desired queue.
+ *
+ * @return 0 if the queue was accessed ok, otherwise the error code
+ *         for any errors.
+ */
+RexxReturnCode RexxEntry RexxQueueExists(const char *name)
+{
+    ENTER_REXX_API(QueueManager)
+    {
+        return lam->queueManager.queryNamedQueue(name);
+    }
+    EXIT_REXX_API();
+}
+
+
 /*********************************************************************/
 /*                                                                   */
 /*  Function:         RexxDeleteQueue()                              */
