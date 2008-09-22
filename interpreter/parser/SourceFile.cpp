@@ -1022,6 +1022,7 @@ RexxArray *RexxSource::extractSource()
 
     location.setLineNumber(1);
     location.setEndLine(0);
+    location.setOffset(0);
 
     return extractSource(location);
 }
