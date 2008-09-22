@@ -595,6 +595,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_DEFINEDMETHODS, ThePackageBehaviour, CPPM(PackageClass::getMethods), 0);
   defineKernelMethod(CHAR_ROUTINES    ,ThePackageBehaviour, CPPM(PackageClass::getRoutines), 0);
   defineKernelMethod(CHAR_PUBLICROUTINES    ,ThePackageBehaviour, CPPM(PackageClass::getPublicRoutines), 0);
+  defineKernelMethod(CHAR_IMPORTEDROUTINES    ,ThePackageBehaviour, CPPM(PackageClass::getImportedRoutines), 0);
   defineKernelMethod(CHAR_IMPORTEDPACKAGES    ,ThePackageBehaviour, CPPM(PackageClass::getImportedPackages), 0);
   defineKernelMethod(CHAR_LOADPACKAGE         ,ThePackageBehaviour, CPPM(PackageClass::loadPackage), 2);
   defineKernelMethod(CHAR_ADDPACKAGE          ,ThePackageBehaviour, CPPM(PackageClass::addPackage), 1);

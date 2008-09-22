@@ -336,7 +336,16 @@ RexxDirectory *PackageClass::getMethods()
  */
 RexxArray *PackageClass::getImportedPackages()
 {
-    return source->getPackages()->makeArray();
+    RexxList *packages = source->getPackages();
+    if (packages != OREF_NULL)
+    {
+        return packages->makeArray();
+    }
+    else
+    {
+        return new_array((size_t)0);
+    }
+
 }
 
 
