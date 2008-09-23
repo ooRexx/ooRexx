@@ -475,6 +475,7 @@ RexxClass *PackageClass::findClass(RexxString *name)
  */
 RexxClass *PackageClass::findClassRexx(RexxString *name)
 {
+    name = stringArgument(name, "name");
     RexxClass *cls = source->findClass(name);
     if (cls == OREF_NULL)
     {
@@ -505,6 +506,7 @@ RoutineClass *PackageClass::findRoutine(RexxString *name)
  */
 RoutineClass *PackageClass::findRoutineRexx(RexxString *name)
 {
+    name = stringArgument(name, "name");
     RoutineClass *routine = findRoutine(name);
     if (routine == OREF_NULL)
     {
