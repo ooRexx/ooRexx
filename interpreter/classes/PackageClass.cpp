@@ -503,6 +503,7 @@ RoutineClass *PackageClass::findRoutine(RexxString *name)
     return source->findRoutine(name);
 }
 
+
 /**
  * Resolve a routine in the context of a package.
  *
@@ -578,4 +579,22 @@ PackageClass *PackageClass::newRexx(
     /* now send an INIT message          */
     package->sendMessage(OREF_INIT, init_args, initCount);
     return package;                      /* return the new method             */
+}
+
+
+/**
+ * Dynamically load a library package
+ *
+ * @param name   The required package name.
+ *
+ * @return True if the package was loaded and resolved, false if
+ *         the package could not be loaded.
+ */
+RexxObject *PackageClass::loadLibrary(RexxString *name)
+{
+    name = stringArgument(name, "name");
+    // have we already loaded this package?
+    // may need to bootstrap it up first.
+    LibraryPackage *package = PackageManager::loadLibrary(name);
+    return package == NULL ? TheFalseObject : TheTrueObject;
 }

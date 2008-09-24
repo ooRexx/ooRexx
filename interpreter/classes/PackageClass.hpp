@@ -85,6 +85,7 @@ public:
     RexxObject    *addPublicRoutine(RexxString *name, RoutineClass *routine);
     RexxObject    *addClass(RexxString *name, RexxClass *clazz);
     RexxObject    *addPublicClass(RexxString *name, RexxClass *clazz);
+    RexxObject    *loadLibrary(RexxString *name);
 
     PackageClass  *newRexx(RexxObject **init_args, size_t argCount);
 

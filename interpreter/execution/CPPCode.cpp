@@ -647,6 +647,7 @@ CPPM(PackageClass::addPublicRoutine),
 CPPM(PackageClass::addClass),
 CPPM(PackageClass::addPublicClass),
 CPPM(PackageClass::getName),
+CPPM(PackageClass::loadLibrary),
 
 CPPM(PackageClass::newRexx),
 

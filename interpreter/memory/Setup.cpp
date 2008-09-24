@@ -606,6 +606,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_ADDCLASS            ,ThePackageBehaviour, CPPM(PackageClass::addClass), 2);
   defineKernelMethod(CHAR_ADDPUBLICCLASS      ,ThePackageBehaviour, CPPM(PackageClass::addPublicClass), 2);
   defineKernelMethod(CHAR_NAME                ,ThePackageBehaviour, CPPM(PackageClass::getName), 0);
+  defineKernelMethod("LOADLIBRARY"            ,ThePackageBehaviour, CPPM(PackageClass::loadLibrary), 1);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   ThePackageBehaviour->setMethodDictionaryScope(ThePackageClass);
