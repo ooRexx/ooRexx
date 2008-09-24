@@ -415,46 +415,41 @@ BOOL Uninstall()
  *
  *  Purpose:
  *
- *  Test if the service is currently installed
+ *  Test if the service is currently installed and not disabled.
  *
- * Returns TRUE if installed, FALSE if not
- * Note: processing some arguments causes output to stdout to be generated.
+ * Returns TRUE if installed, FALSE if not installed or installed but
+ * disabled.
  *
  *==========================================================================*/
 BOOL IsInstalled(void)
 {
-  LPQUERY_SERVICE_CONFIG lpServiceConfig;
-  DWORD BytesNeeded ;  // address of variable for bytes needed
-  BOOL bResult = FALSE;
+    LPQUERY_SERVICE_CONFIG lpServiceConfig = NULL;
+    DWORD BytesNeeded ;  // address of variable for bytes needed
+    BOOL bResult = FALSE;
 
     // Open the Service Control Manager
-    SC_HANDLE hSCM = OpenSCManager(NULL, // local machine
-                                   NULL, // ServicesActive database
-                                   SC_MANAGER_ALL_ACCESS); // full access
-    if (hSCM)
+    SC_HANDLE hSCM = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_ALL_ACCESS);
+    if ( hSCM )
     {
         // Try to open the service
-        SC_HANDLE hService = OpenService(hSCM,
-                                         SERVICENAME,
-                                         SERVICE_QUERY_CONFIG);
-        if (hService)
+        SC_HANDLE hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_CONFIG);
+        if ( hService )
         {
-          // Query Service Configuration
-          lpServiceConfig = (LPQUERY_SERVICE_CONFIG) LocalAlloc( LPTR, 4096);
-          if ( QueryServiceConfig( hService,       // handle of service
-                                   lpServiceConfig, // address of service config. structure
-                                   (DWORD)4096,     // size of service configuration buffer
-                                   &BytesNeeded  )  )  // address of variable for bytes needed
-          {
-            // See, if Service is NOT DISABLED ??
-            if (lpServiceConfig->dwStartType != SERVICE_DISABLED)
+            // The service is installed, make sure it is not currently disabled.
+            lpServiceConfig = (LPQUERY_SERVICE_CONFIG) LocalAlloc(LPTR, 4096);
+            if ( lpServiceConfig )
             {
-              bResult = TRUE;
+                if ( QueryServiceConfig(hService, lpServiceConfig, 4096, &BytesNeeded) )
+                {
+                    if ( lpServiceConfig->dwStartType != SERVICE_DISABLED )
+                    {
+                        bResult = TRUE;
+                    }
+                }
+                LocalFree(lpServiceConfig);
             }
-          }
-          CloseServiceHandle(hService);
+            CloseServiceHandle(hService);
         }
-
         CloseServiceHandle(hSCM);
     }
 
