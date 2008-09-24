@@ -46,6 +46,7 @@
 
 class RexxString;
 class RexxInteger;
+class RexxArray;
 
 class StringUtil
 {
@@ -87,6 +88,7 @@ public:
     static RexxInteger *wordLength(const char *data, size_t length, RexxInteger *position);
     static RexxInteger *wordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
     static RexxInteger *caselessWordPos(const char *data, size_t length, RexxString  *phrase, RexxInteger *pstart);
+    static RexxArray   *words(const char *data, size_t length);
 };
 
 #endif

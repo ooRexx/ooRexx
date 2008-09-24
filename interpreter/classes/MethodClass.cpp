@@ -61,6 +61,7 @@
 #include "RoutineClass.hpp"
 #include "Interpreter.hpp"
 #include "RexxCode.hpp"
+#include "PackageManager.hpp"
 
 // singleton class instance
 RexxClass *RexxMethod::classInstance = OREF_NULL;
@@ -833,3 +834,60 @@ PackageClass *BaseCode::getPackage()
 
     return OREF_NULL;
 }
+
+
+/**
+ * Create a method from an external library source.
+ *
+ * @param name   The method name.
+ *
+ * @return The resolved method object, or OREF_NULL if unable to
+ *         load the routine.
+ */
+RexxMethod *RexxMethod::loadExternalMethod(RexxString *name, RexxString *descriptor)
+{
+    name = stringArgument(name, "name");
+    descriptor = stringArgument(descriptor, "descriptor");
+    /* convert external into words       */
+    RexxArray *_words = StringUtil::words(descriptor->getStringData(), descriptor->getLength());
+    ProtectedObject p(_words);
+    // "LIBRARY libbar [foo]"
+    if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
+    {
+        RexxString *library = OREF_NULL;
+        // the default entry point name is the internal name
+        RexxString *entry = name;
+
+        // full library with entry name version?
+        if (_words->size() == 3)
+        {
+            library = (RexxString *)_words->get(2);
+            entry = (RexxString *)_words->get(3);
+        }
+        else if (_words->size() == 2)
+        {
+            library = (RexxString *)_words->get(2);
+        }
+        else  // wrong number of tokens
+        {
+            /* this is an error                  */
+            reportException(Error_Translation_bad_external, descriptor);
+        }
+                                     /* create a new native method        */
+        RexxNativeCode *nmethod = PackageManager::loadMethod(library, entry);
+        // raise an exception if this entry point is not found.
+        if (nmethod == OREF_NULL)
+        {
+            return (RexxMethod *)TheNilObject;
+        }
+        /* turn into a real method object    */
+        return new RexxMethod(name, nmethod);
+    }
+    else
+    {
+        /* unknown external type             */
+        reportException(Error_Translation_bad_external, descriptor);
+    }
+    return OREF_NULL;
+}
+

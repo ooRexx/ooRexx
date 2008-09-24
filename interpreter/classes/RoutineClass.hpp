@@ -78,6 +78,7 @@ public:
 
     RoutineClass *newRexx(RexxObject **, size_t);
     RoutineClass *newFileRexx(RexxString *);
+    RoutineClass *loadExternalRoutine(RexxString *name, RexxString *descriptor);
 
     static RoutineClass *restore(RexxBuffer *, char *);
     static RoutineClass *restore(const char *data, size_t length);

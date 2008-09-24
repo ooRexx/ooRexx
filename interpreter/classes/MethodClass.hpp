@@ -144,6 +144,7 @@ protected:
    inline BaseCode  *getCode()     { return this->code; }
    RexxMethod  *newRexx(RexxObject **, size_t);
    RexxMethod  *newFileRexx(RexxString *);
+   RexxMethod  *loadExternalMethod(RexxString *name, RexxString *descriptor);
 
    static RexxMethod  *newMethodObject(RexxString *, RexxObject *, RexxObject *, RexxSource *a);
    static RexxMethod  *restore(RexxBuffer *, char *);

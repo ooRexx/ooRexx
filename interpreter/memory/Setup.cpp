@@ -520,6 +520,7 @@ void RexxMemory::createImage()
                                        /* class behaviour                   */
   defineKernelMethod(CHAR_NEW     , TheMethodClassBehaviour, CPPM(RexxMethod::newRexx), A_COUNT);
   defineKernelMethod(CHAR_NEWFILE , TheMethodClassBehaviour, CPPM(RexxMethod::newFileRexx), 1);
+  defineKernelMethod("LOADEXTERNALMETHOD" , TheMethodClassBehaviour, CPPM(RexxMethod::loadExternalMethod), 2);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheMethodClassBehaviour->setMethodDictionaryScope(TheMethodClass);
@@ -552,6 +553,7 @@ void RexxMemory::createImage()
                                        /* class behaviour                   */
   defineKernelMethod(CHAR_NEW     , TheRoutineClassBehaviour, CPPM(RoutineClass::newRexx), A_COUNT);
   defineKernelMethod(CHAR_NEWFILE , TheRoutineClassBehaviour, CPPM(RoutineClass::newFileRexx), 1);
+  defineKernelMethod("LOADEXTERNALROUTINE" , TheRoutineClassBehaviour, CPPM(RoutineClass::loadExternalRoutine), 2);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheRoutineClassBehaviour->setMethodDictionaryScope(TheRoutineClass);

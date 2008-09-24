@@ -1563,6 +1563,36 @@ RexxString *StringUtil::word(const char *data, size_t length, RexxInteger *posit
 
 
 /**
+ * Extract all words from a buffer
+ *
+ * @param data     The data pointer
+ * @param length   the length of the data buffer.
+ * @param position the target word position.
+ *
+ * @return The string value of the word at the indicated position.
+ */
+RexxArray *StringUtil::words(const char *data, size_t length)
+{
+    const char *word = data;             /* point to the string               */
+    const char *nextSite = NULL;
+
+    RexxArray *result = new_array((size_t)0);
+    ProtectedObject p(result);
+                                       /* get the first word                */
+    size_t wordLength = nextWord(&word, &length, &nextSite);
+    while (wordLength != 0)
+    {
+        // add to the result array
+        result->append(new_string(word, wordLength));
+        word = nextSite;                 /* copy the start pointer            */
+                                         /* get the next word                 */
+        wordLength = nextWord(&word, &length, &nextSite);
+    }
+    return result;      // return whatever we've accumulated
+}
+
+
+/**
  * Return the index position for a given word
  *
  * @param data     The data containing the words

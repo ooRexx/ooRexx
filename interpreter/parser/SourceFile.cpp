@@ -2292,7 +2292,7 @@ void RexxSource::methodDirective()
     {
                                 /* convert external into words       */
         RexxArray *_words = this->words(externalname);
-        /* not 'PACKAGE library [entry]' form? */
+        /* not 'LIBRARY library [entry]' form? */
         if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
         {
             RexxString *library = OREF_NULL;
@@ -2809,7 +2809,7 @@ void RexxSource::routineDirective()
         {
             /* convert external into words       */
             RexxArray *_words = this->words(externalname);
-            // ::ROUTINE foo EXTERNAL "PACKAGE libbar [foo]"
+            // ::ROUTINE foo EXTERNAL "LIBRARY libbar [foo]"
             if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
             {
                 RexxString *library = OREF_NULL;

@@ -618,6 +618,7 @@ CPPM(RexxMethod::isProtectedRexx),
 
 CPPM(RexxMethod::newFileRexx),
 CPPM(RexxMethod::newRexx),
+CPPM(RexxMethod::loadExternalMethod),
 
 CPPM(RoutineClass::setSecurityManager),
 CPPM(RoutineClass::callRexx),
@@ -625,6 +626,7 @@ CPPM(RoutineClass::callWithRexx),
 
 CPPM(RoutineClass::newFileRexx),
 CPPM(RoutineClass::newRexx),
+CPPM(RoutineClass::loadExternalRoutine),
 
 CPPM(PackageClass::setSecurityManager),
 CPPM(PackageClass::getSource),

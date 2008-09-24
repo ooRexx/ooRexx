@@ -241,6 +241,33 @@ RexxNativeMethod *PackageManager::resolveMethod(RexxString *packageName, RexxStr
 }
 
 
+/**
+ * Quietly create a Native method from a registered package.
+ *
+ * @param packageName
+ *                   The name of the package the library is loaded from.
+ *
+ * @param methodName The name of the procedure to resolve from the package.
+ *
+ * @return A Native method that represents this package entry.  Returns
+ *         NULL if not found.
+ */
+RexxNativeMethod *PackageManager::loadMethod(RexxString *packageName, RexxString *methodName)
+{
+    // have we already loaded this package?
+    // may need to bootstrap it up first.
+    LibraryPackage *package = loadLibrary(packageName);
+    // silently fail this if it couldn't load
+    if (package == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+
+    // now see if this can be resolved.
+    return package->resolveMethod(methodName);
+}
+
+
 
 /**
  * Resolve a package function activator.
@@ -272,7 +299,6 @@ RoutineClass *PackageManager::resolveRoutine(RexxString *function, RexxString *p
 }
 
 
-
 /**
  * Resolve a registered function.
  *
@@ -297,13 +323,12 @@ RoutineClass *PackageManager::resolveRoutine(RexxString *function)
 }
 
 
-
 /**
- * Resolve a registered function.  This goes explicitly to a
- * loaded package to resolve the name rather than relying
- * on the global cache.  This will resolve to the same routine
- * object as the global cache, but this prevents us from
- * picking one a different one in case of a name conflict.
+ * Resolve a package function.  This goes explicitly to a loaded
+ * package to resolve the name rather than relying on the global
+ * cache.  This will resolve to the same routine object as the
+ * global cache, but this prevents us from picking one a
+ * different one in case of a name conflict.
  *
  * @param packageName
  *                 The package name.
@@ -316,6 +341,34 @@ RoutineClass *PackageManager::resolveRoutine(RexxString *packageName, RexxString
     // have we already loaded this package?
     // may need to bootstrap it up first.
     LibraryPackage *package = getLibrary(packageName);
+
+    // now see if this can be resolved.
+    return package->resolveRoutine(function);
+}
+
+
+/**
+ * Quietly load a package function.  This goes explicitly to a
+ * loaded package to resolve the name rather than relying on the
+ * global cache.  This will resolve to the same routine object
+ * as the global cache, but this prevents us from picking one a
+ * different one in case of a name conflict.
+ *
+ * @param packageName
+ *                 The package name.
+ * @param function The function name.
+ *
+ * @return A routine object for this function.
+ */
+RoutineClass *PackageManager::loadRoutine(RexxString *packageName, RexxString *function)
+{
+    // have we already loaded this package?
+    // may need to bootstrap it up first.
+    LibraryPackage *package = loadLibrary(packageName);
+    if (package == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
 
     // now see if this can be resolved.
     return package->resolveRoutine(function);
