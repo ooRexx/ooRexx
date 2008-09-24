@@ -262,7 +262,7 @@ class ActivationSettings
    static RoutineClass* getMacroCode(RexxString *macroName);
    RexxString       *resolveProgramName(RexxString *name);
    RexxClass        *findClass(RexxString *name);
-   RexxClass        *findCallerClass(RexxString *name);
+   RexxObject       *resolveDotVariable(RexxString *name);
    RexxObject      * command(RexxString *, RexxString *);
    int64_t           getElapsed();
    RexxDateTime      getTime();

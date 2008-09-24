@@ -2416,6 +2416,25 @@ RexxString *RexxActivation::resolveProgramName(RexxString *name)
  */
 RexxClass *RexxActivation::findClass(RexxString *name)
 {
+    RexxClass *classObject = getSourceObject()->findClass(name);
+    // we need to filter this to always return a class object
+    if (classObject != OREF_NULL && classObject->isInstanceOf(TheClassClass))
+    {
+        return classObject;
+    }
+    return OREF_NULL;
+}
+
+
+/**
+ * Resolve a class in this activation's context.
+ *
+ * @param name   The name to resolve.
+ *
+ * @return The resolved class, or OREF_NULL if not found.
+ */
+RexxObject *RexxActivation::resolveDotVariable(RexxString *name)
+{
     return getSourceObject()->findClass(name);
 }
 

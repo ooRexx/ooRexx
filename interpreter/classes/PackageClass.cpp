@@ -462,7 +462,13 @@ RexxObject *PackageClass::addPublicClass(RexxString *name, RexxClass *clazz)
  */
 RexxClass *PackageClass::findClass(RexxString *name)
 {
-    return source->findClass(name);
+    RexxClass *classObject = source->findClass(name);
+    // we need to filter this to always return a class object
+    if (classObject != OREF_NULL && classObject->isInstanceOf(TheClassClass))
+    {
+        return classObject;
+    }
+    return OREF_NULL;
 }
 
 

@@ -2597,12 +2597,23 @@ void RexxNativeActivation::dropObjectVariable(const char *name)
  */
 RexxClass *RexxNativeActivation::findClass(RexxString *className)
 {
+    RexxClass *classObject;
+
     // if we have an executable context, use that as the context.
     if (executable != OREF_NULL)
     {
-        return executable->findClass(className);
+        classObject = executable->findClass(className);
     }
-    return Interpreter::findClass(className);
+    else
+    {
+        classObject = Interpreter::findClass(className);
+    }
+    // we need to filter this to always return a class object
+    if (classObject != OREF_NULL && classObject->isInstanceOf(TheClassClass))
+    {
+        return classObject;
+    }
+    return OREF_NULL;
 }
 
 
@@ -2616,16 +2627,23 @@ RexxClass *RexxNativeActivation::findClass(RexxString *className)
  */
 RexxClass *RexxNativeActivation::findCallerClass(RexxString *className)
 {
+    RexxClass *classObject;
     // have a caller context?  if not, just do the default environment searches
     if (activation == OREF_NULL)
     {
-        return Interpreter::findClass(className);
+        classObject = Interpreter::findClass(className);
     }
     else
     {
         // use the caller activation to resolve this
-        return activation->findClass(className);
+        classObject = activation->findClass(className);
     }
+    // we need to filter this to always return a class object
+    if (classObject != OREF_NULL && classObject->isInstanceOf(TheClassClass))
+    {
+        return classObject;
+    }
+    return OREF_NULL;
 }
 
 

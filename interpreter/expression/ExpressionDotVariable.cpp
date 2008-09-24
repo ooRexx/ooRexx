@@ -94,7 +94,7 @@ RexxObject * RexxDotVariable::evaluate(
 /****************************************************************************/
 {
     /* get this from the source          */
-    RexxObject *result = context->findClass(this->variableName);
+    RexxObject *result = context->resolveDotVariable(this->variableName);
     if (result == OREF_NULL)             /* not there?                        */
     {
         /* try for a REXX defined name       */
@@ -119,7 +119,7 @@ RexxObject * RexxDotVariable::getValue(
 /****************************************************************************/
 {
     /* get this from the source          */
-    RexxObject *result = context->findClass(this->variableName);
+    RexxObject *result = context->resolveDotVariable(this->variableName);
     if (result == OREF_NULL)             /* not there?                        */
     {
         /* try for a REXX defined name       */
