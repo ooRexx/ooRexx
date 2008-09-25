@@ -376,7 +376,7 @@ size_t RexxEntry HandleDialogAdmin(const char *funcname, size_t argc, CONSTRXSTR
         }
         else
         {
-            MessageBox(0,"To many active Dialogs","Error",MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+            MessageBox(0,"Too many active Dialogs","Error",MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
         }
     }
     LeaveCriticalSection(&crit_sec);
