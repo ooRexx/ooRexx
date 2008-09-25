@@ -231,13 +231,34 @@ RexxDirectoryObject RexxEntry GetGlobalEnvironment(RexxThreadContext *c)
     return NULLOBJECT;
 }
 
-
 logical_t RexxEntry IsInstanceOf(RexxThreadContext *c, RexxObjectPtr o, RexxClassObject cl)
 {
     ApiContext context(c);
     try
     {
         return ((RexxObject *)o)->isInstanceOf((RexxClass *)cl);
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return 0;
+}
+
+logical_t RexxEntry IsOfType(RexxThreadContext *c, RexxObjectPtr o, CSTRING cn)
+{
+    ApiContext context(c);
+    try
+    {
+        // convert the name to a string instance, and get the class object from
+        // our current context
+        RexxString *name = new_upper_string(cn);
+        RexxClass *classObject = context.context->findClass(name);
+        // if not found, this is always false
+        if (classObject == OREF_NULL)
+        {
+            return false;
+        }
+        return ((RexxObject *)o)->isInstanceOf(classObject);
     }
     catch (RexxNativeActivation *)
     {
@@ -1817,6 +1838,7 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     GetGlobalEnvironment,
 
     IsInstanceOf,
+    IsOfType,
     HasMethod,
     LoadPackage,
     LoadPackageFromData,

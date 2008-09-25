@@ -481,6 +481,7 @@ typedef struct
     RexxDirectoryObject (RexxEntry *GetGlobalEnvironment)(RexxThreadContext *);
 
     logical_t        (RexxEntry *IsInstanceOf)(RexxThreadContext *, RexxObjectPtr, RexxClassObject);
+    logical_t        (RexxEntry *IsOfType)(RexxThreadContext *, RexxObjectPtr, CSTRING);
     logical_t        (RexxEntry *HasMethod)(RexxThreadContext *, RexxObjectPtr, CSTRING);
 
     RexxPackageObject (RexxEntry *LoadPackage)(RexxThreadContext *, CSTRING d);
@@ -760,6 +761,10 @@ struct RexxThreadContext_
     logical_t IsInstanceOf(RexxObjectPtr o, RexxClassObject co)
     {
         return functions->IsInstanceOf(this, o, co);
+    }
+    logical_t IsOfType(RexxObjectPtr o, CSTRING cn)
+    {
+        return functions->IsOfType(this, o, cn);
     }
     RexxClassObject FindClass(CSTRING s)
     {
@@ -1292,6 +1297,10 @@ struct RexxMethodContext_
     logical_t IsInstanceOf(RexxObjectPtr o, RexxClassObject co)
     {
         return threadContext->IsInstanceOf(o, co);
+    }
+    logical_t IsOfType(RexxObjectPtr o, CSTRING cn)
+    {
+        return threadContext->IsOfType(o, cn);
     }
     RexxClassObject FindClass(CSTRING s)
     {
@@ -1881,6 +1890,10 @@ struct RexxCallContext_
     logical_t IsInstanceOf(RexxObjectPtr o, RexxClassObject co)
     {
         return threadContext->IsInstanceOf(o, co);
+    }
+    logical_t IsOfType(RexxObjectPtr o, CSTRING cn)
+    {
+        return threadContext->IsOfType(o, cn);
     }
     RexxClassObject FindClass(CSTRING s)
     {
@@ -2474,6 +2487,10 @@ struct RexxExitContext_
     logical_t IsInstanceOf(RexxObjectPtr o, RexxClassObject co)
     {
         return threadContext->IsInstanceOf(o, co);
+    }
+    logical_t IsOfType(RexxObjectPtr o, CSTRING cn)
+    {
+        return threadContext->IsOfType(o, cn);
     }
     RexxClassObject FindClass(CSTRING s)
     {
