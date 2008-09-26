@@ -250,7 +250,6 @@ class _RexxRoutineObject : public _RexxObjectPtr {};
 class _RexxPackageObject : public _RexxObjectPtr {};
 class _RexxClassObject : public _RexxObjectPtr {};
 class _RexxDirectoryObject : public _RexxObjectPtr {};
-class _RexxTableObject : public _RexxObjectPtr {};
 class _RexxSupplierObject : public _RexxObjectPtr {};
 class _RexxStemObject : public _RexxObjectPtr {};
 
@@ -265,7 +264,6 @@ typedef _RexxRoutineObject *RexxRoutineObject;
 typedef _RexxPackageObject *RexxPackageObject;
 typedef _RexxClassObject *RexxClassObject;
 typedef _RexxDirectoryObject *RexxDirectoryObject;
-typedef _RexxTableObject *RexxTableObject;
 typedef _RexxSupplierObject *RexxSupplierObject;
 typedef _RexxStemObject *RexxStemObject;
 
@@ -281,7 +279,6 @@ struct _RexxRoutineObject;
 struct _RexxPackageObject;
 struct _RexxClassObject;
 struct _RexxDirectoryObject;
-struct _RexxTableObject;
 struct _RexxSupplierObject;
 struct _RexxStemObject;
 
@@ -296,7 +293,6 @@ typedef struct _RexxRoutineObject *RexxRoutineObject;
 typedef struct _RexxPackageObject *RexxPackageObject;
 typedef struct _RexxClassObject *RexxClassObject;
 typedef struct _RexxDirectoryObject *RexxDirectoryObject;
-typedef struct _RexxTableObject *RexxTableObject;
 typedef struct _RexxSupplierObject *RexxSupplierObject;
 typedef struct _RexxStemObject *RexxStemObject;
 
@@ -544,12 +540,6 @@ typedef struct
     size_t  (RexxEntry *BufferStringLength)(RexxThreadContext *, RexxBufferStringObject);
     POINTER (RexxEntry *BufferStringData)(RexxThreadContext *, RexxBufferStringObject);
     RexxStringObject  (RexxEntry *FinishBufferString)(RexxThreadContext *, RexxBufferStringObject, size_t);
-
-    void             (RexxEntry *TablePut)(RexxThreadContext *, RexxTableObject, RexxObjectPtr, RexxObjectPtr);
-    RexxObjectPtr    (RexxEntry *TableAt)(RexxThreadContext *, RexxTableObject, RexxObjectPtr);
-    RexxObjectPtr    (RexxEntry *TableRemove)(RexxThreadContext *, RexxTableObject, RexxObjectPtr);
-    RexxTableObject  (RexxEntry *NewTable)(RexxThreadContext *);
-    logical_t        (RexxEntry *IsTable)(RexxThreadContext *, RexxObjectPtr);
 
     void             (RexxEntry *DirectoryPut)(RexxThreadContext *, RexxDirectoryObject, RexxObjectPtr, CSTRING);
     RexxObjectPtr    (RexxEntry *DirectoryAt)(RexxThreadContext *, RexxDirectoryObject, CSTRING);
@@ -999,28 +989,6 @@ struct RexxThreadContext_
     RexxStringObject FinishBufferString(RexxBufferStringObject o, size_t l)
     {
         return functions->FinishBufferString(this, o, l);
-    }
-
-    void TablePut(RexxTableObject to, RexxObjectPtr o1, RexxObjectPtr o2)
-    {
-        functions->TablePut(this, to, o1, o2);
-    }
-    RexxObjectPtr TableAt(RexxTableObject to, RexxObjectPtr o)
-    {
-
-        return functions->TableAt(this, to, o);
-    }
-    RexxObjectPtr TableRemove(RexxTableObject to, RexxObjectPtr o)
-    {
-        return functions->TableRemove(this, to, o);
-    }
-    RexxTableObject NewTable()
-    {
-        return functions->NewTable(this);
-    }
-    logical_t IsTable(RexxObjectPtr o)
-    {
-        return functions->IsTable(this, o);
     }
 
     void DirectoryPut(RexxDirectoryObject diro, RexxObjectPtr o, CSTRING s)
@@ -1536,27 +1504,6 @@ struct RexxMethodContext_
     RexxStringObject FinishBufferString(RexxBufferStringObject o, size_t l)
     {
         return threadContext->FinishBufferString(o, l);
-    }
-
-    void TablePut(RexxTableObject to, RexxObjectPtr o1, RexxObjectPtr o2)
-    {
-        threadContext->TablePut(to, o1, o2);
-    }
-    RexxObjectPtr TableAt(RexxTableObject to, RexxObjectPtr o)
-    {
-        return threadContext->TableAt(to, o);
-    }
-    RexxObjectPtr TableRemove(RexxTableObject to, RexxObjectPtr o)
-    {
-        return threadContext->TableRemove(to, o);
-    }
-    RexxTableObject NewTable()
-    {
-        return threadContext->NewTable();
-    }
-    logical_t IsTable(RexxObjectPtr o)
-    {
-        return threadContext->IsTable(o);
     }
 
     void DirectoryPut(RexxDirectoryObject diro, RexxObjectPtr o, CSTRING s)
@@ -2132,27 +2079,6 @@ struct RexxCallContext_
         return threadContext->FinishBufferString(o, l);
     }
 
-    void TablePut(RexxTableObject to, RexxObjectPtr o1, RexxObjectPtr o2)
-    {
-        threadContext->TablePut(to, o1, o2);
-    }
-    RexxObjectPtr TableAt(RexxTableObject to, RexxObjectPtr o)
-    {
-        return threadContext->TableAt(to, o);
-    }
-    RexxObjectPtr TableRemove(RexxTableObject to, RexxObjectPtr o)
-    {
-        return threadContext->TableRemove(to, o);
-    }
-    RexxTableObject  NewTable()
-    {
-        return threadContext->NewTable();
-    }
-    logical_t IsTable(RexxObjectPtr o)
-    {
-        return threadContext->IsTable(o);
-    }
-
     void DirectoryPut(RexxDirectoryObject diro, RexxObjectPtr o, CSTRING s)
     {
         threadContext->DirectoryPut(diro, o, s);
@@ -2726,27 +2652,6 @@ struct RexxExitContext_
     RexxStringObject FinishBufferString(RexxBufferStringObject o, size_t l)
     {
         return threadContext->FinishBufferString(o, l);
-    }
-
-    void TablePut(RexxTableObject to, RexxObjectPtr o1, RexxObjectPtr o2)
-    {
-        threadContext->TablePut(to, o1, o2);
-    }
-    RexxObjectPtr TableAt(RexxTableObject to, RexxObjectPtr o)
-    {
-        return threadContext->TableAt(to, o);
-    }
-    RexxObjectPtr TableRemove(RexxTableObject to, RexxObjectPtr o)
-    {
-        return threadContext->TableRemove(to, o);
-    }
-    RexxTableObject NewTable()
-    {
-        return threadContext->NewTable();
-    }
-    logical_t IsTable(RexxObjectPtr o)
-    {
-        return threadContext->IsTable(o);
     }
 
     void DirectoryPut(RexxDirectoryObject diro, RexxObjectPtr o, CSTRING s)

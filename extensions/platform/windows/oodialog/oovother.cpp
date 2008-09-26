@@ -4262,20 +4262,20 @@ RexxMethod1(RexxObjectPtr, bc_getImageList, OSELF, self)
 
     if ( Button_GetImageList(hwnd, &biml) )
     {
-        RexxTableObject table = context->NewTable();
+        RexxDirectoryObject table = context->NewDirectory();
         if ( table != NULLOBJECT )
         {
             RexxObjectPtr ptr = (RexxObjectPtr)context->NewPointer(biml.himl);
             if ( ptr != NULLOBJECT )
             {
-                context->TablePut(table, ptr, context->NewStringFromAsciiz("himl"));
+                context->DirectoryPut(table, ptr, "himl");
             }
 
             RexxObjectPtr rect = rxNewRect(context, biml.margin.left, biml.margin.top,
                                            biml.margin.right, biml.margin.bottom);
             if ( rect != NULL )
             {
-                context->TablePut(table, rect, context->NewStringFromAsciiz("rect"));
+                context->DirectoryPut(table, rect, "rect");
             }
 
             char *align;
@@ -4300,7 +4300,7 @@ RexxMethod1(RexxObjectPtr, bc_getImageList, OSELF, self)
             RexxStringObject alignment = context->NewStringFromAsciiz(align);
             if ( alignment != NULLOBJECT )
             {
-                context->TablePut(table, alignment, context->NewStringFromAsciiz("alignment"));
+                context->DirectoryPut(table, alignment, "alignment");
             }
 
             result = table;

@@ -51,7 +51,6 @@
 #include "SupplierClass.hpp"
 #include "ArrayClass.hpp"
 #include "DirectoryClass.hpp"
-#include "TableClass.hpp"
 #include "MethodClass.hpp"
 #include "RoutineClass.hpp"
 #include "PackageClass.hpp"
@@ -1112,70 +1111,6 @@ RexxStringObject RexxEntry FinishBufferString(RexxThreadContext *c, RexxBufferSt
     return NULL;
 }
 
-void  RexxEntry TablePut(RexxThreadContext *c, RexxTableObject t, RexxObjectPtr o, RexxObjectPtr i)
-{
-    ApiContext context(c);
-    try
-    {
-        ((RexxTable *)t)->put((RexxObject *)o, (RexxObject *)i);
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-}
-
-RexxObjectPtr RexxEntry TableAt(RexxThreadContext *c, RexxTableObject t, RexxObjectPtr i)
-{
-    ApiContext context(c);
-    try
-    {
-        return context.ret(((RexxTable *)t)->get((RexxObject *)i));
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return OREF_NULL;
-}
-
-RexxObjectPtr RexxEntry TableRemove(RexxThreadContext *c, RexxTableObject t, RexxObjectPtr i)
-{
-    ApiContext context(c);
-    try
-    {
-        return context.ret(((RexxTable *)t)->remove((RexxObject *)i));
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return OREF_NULL;
-}
-
-RexxTableObject RexxEntry NewTable(RexxThreadContext *c)
-{
-    ApiContext context(c);
-    try
-    {
-        return (RexxTableObject)context.ret(new_table());
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return OREF_NULL;
-}
-
-logical_t RexxEntry IsTable(RexxThreadContext *c, RexxObjectPtr o)
-{
-    ApiContext context(c);
-    try
-    {
-        return isOfClass(Table, (RexxObject *)o);
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return false;
-}
-
 void  RexxEntry DirectoryPut(RexxThreadContext *c, RexxDirectoryObject t, RexxObjectPtr o, CSTRING i)
 {
     ApiContext context(c);
@@ -1900,12 +1835,6 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     BufferStringLength,
     BufferStringData,
     FinishBufferString,
-
-    TablePut,
-    TableAt,
-    TableRemove,
-    NewTable,
-    IsTable,
 
     DirectoryPut,
     DirectoryAt,
