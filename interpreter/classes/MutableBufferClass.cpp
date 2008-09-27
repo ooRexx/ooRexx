@@ -1483,7 +1483,7 @@ RexxMutableBuffer *RexxMutableBuffer::delWord(RexxInteger *position, RexxInteger
         StringUtil::skipBlanks(&nextSite, &length);/* skip over trailing blanks         */
     }
 
-    size_t gapSize = (nextSite - getStringData()) - deletePosition;
+    size_t gapSize = dataLength - (deletePosition + length);
     // close up the delete part
     closeGap(deletePosition, gapSize, length);
     // adjust for the deleted data
