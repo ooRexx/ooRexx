@@ -624,7 +624,7 @@ void RexxMemory::createImage()
 
                                        /* Add the NEW methods to the        */
                                        /* class behaviour                   */
-  defineKernelMethod(CHAR_NEW     , TheRexxContextBehaviour, CPPM(RexxContext::newRexx), A_COUNT);
+  defineKernelMethod(CHAR_NEW     ,TheRexxContextClassBehaviour, CPPM(RexxContext::newRexx), A_COUNT);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   TheRexxContextBehaviour->setMethodDictionaryScope(TheRexxContextClass);

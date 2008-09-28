@@ -4308,7 +4308,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Unsupported_new_method</SymbolicName>
-        <Text>New method is not supported for the <Sub position="1" name="name"/> class</Text>
+        <Text>NEW method is not supported for the <Sub position="1" name="name"/> class</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
