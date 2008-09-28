@@ -3139,7 +3139,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>967</term>
 <listitem>
-<para>New method is not supported for the <emphasis>name</emphasis> class</para>
+<para>NEW method is not supported for the <emphasis>name</emphasis> class</para>
 </listitem>
 </varlistentry>
 <varlistentry>
