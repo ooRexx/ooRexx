@@ -889,9 +889,9 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        p = (WORD *)GET_POINTER(argv[1]);
 
        lStyle = WS_CHILD;
-       if (strstr(argv[7].strptr,"METAFILE")) lStyle |= SS_ENHMETAFILE; else
-       if (strstr(argv[7].strptr,"BITMAP")) lStyle |= SS_BITMAP; else
-       if (strstr(argv[7].strptr,"ICON")) lStyle |= SS_ICON;
+       if (strstr(argv[7].strptr,"METAFILE")) lStyle |= SS_ENHMETAFILE;
+       else if (strstr(argv[7].strptr,"BITMAP")) lStyle |= SS_BITMAP;
+       else lStyle |= SS_ICON;
 
        if (strstr(argv[7].strptr,"NOTIFY")) lStyle |= SS_NOTIFY;
        if (strstr(argv[7].strptr,"CENTERIMAGE")) lStyle |= SS_CENTERIMAGE;

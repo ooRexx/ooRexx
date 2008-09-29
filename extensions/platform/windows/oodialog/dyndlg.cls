@@ -626,51 +626,44 @@
 
 
 ::method AddStatic
-   use arg id = (-1), x, y, cx = 0, cy = 0, options, text = ""
+   use strict arg id = (-1), x, y, cx = 0, cy = 0, opts = "", text = ""
    argA = .array~new
-   options = self~GetDefaultOpts(options)
+   opts = self~GetDefaultOpts(opts)
    argA[1] = x
    argA[2] = y
    argA[3] = cx
    argA[4] = cy
-   argA[5] = options
+   argA[5] = opts
    argA[6] = id
 
    select
-     when options~wordpos("WHITERECT") > 0 then return self~InternAddStatic(argA, 0)
-     when options~wordpos("GRAYRECT") > 0 then return self~InternAddStatic(argA, 1)
-     when options~wordpos("BLACKRECT") > 0 then return self~InternAddStatic(argA, 2)
-     when options~wordpos("WHITEFRAME") > 0 then return self~InternAddStatic(argA, 3)
-     when options~wordpos("GRAYFRAME") > 0 then return self~InternAddStatic(argA, 4)
-     when options~wordpos("BLACKFRAME") > 0 then return self~InternAddStatic(argA, 5)
-     when options~wordpos("ETCHED") > 0 then return self~InternAddStatic(argA, 6)
-     when options~wordpos("HORZ") > 0 then return self~InternAddStatic(argA, 7)
-     when options~wordpos("VERT") > 0 then return self~InternAddStatic(argA, 8)
+     when opts~wordpos("BITMAP") > 0 | opts~wordpos("METAFILE") > 0 | opts~wordpos("ICON") > 0 then do
+        forward message "AddImage"
+     end
 
-     when options~wordpos("BITMAP") > 0 then forward message "AddImage"
-     when options~wordpos("METAFILE") > 0 then forward message "AddImage"
-     when options~wordpos("ICON") > 0 then forward message "AddImage"
+     when opts~wordpos("WHITERECT") > 0 then return self~InternAddStatic(argA, 0)
+     when opts~wordpos("GRAYRECT") > 0 then return self~InternAddStatic(argA, 1)
+     when opts~wordpos("BLACKRECT") > 0 then return self~InternAddStatic(argA, 2)
+     when opts~wordpos("WHITEFRAME") > 0 then return self~InternAddStatic(argA, 3)
+     when opts~wordpos("GRAYFRAME") > 0 then return self~InternAddStatic(argA, 4)
+     when opts~wordpos("BLACKFRAME") > 0 then return self~InternAddStatic(argA, 5)
+     when opts~wordpos("ETCHED") > 0 then return self~InternAddStatic(argA, 6)
+     when opts~wordpos("HORZ") > 0 then return self~InternAddStatic(argA, 7)
+     when opts~wordpos("VERT") > 0 then return self~InternAddStatic(argA, 8)
 
-     when options~wordpos("LEFT") > 0 then return self~addText(x, y, cx, cy, text, options, id)
-     when options~wordpos("RIGHT") > 0 then return self~addText(x, y, cx, cy, text, options, id)
-     when options~wordpos("CENTER") > 0 then return self~addText(x, y, cx, cy, text, options, id)
-     when options~wordpos("SIMPLE") > 0 then return self~addText(x, y, cx, cy, text, options, id)
-     when options~wordpos("LEFTNOWRAP") > 0 then return self~addText(x, y, cx, cy, text, options, id)
-     otherwise return -1
+     otherwise return self~addText(x, y, cx, cy, text, opts, id)
    end
    -- End select
 
-   return 0
-
 ::method AddImage
-   use arg id, x, y, cx, cy, options
+   use strict arg id, x, y, cx, cy, options = ""
    id = self~ItemAdd(id)
    if id < 0 then return id
    options = self~GetDefaultOpts(options)
    self~AktPtr = UsrAddControl("IMG", self~AktPtr, id, x, y, cx, cy, options)
 
 ::method AddText
-   use arg x, y, cx = 0, cy = 0, text = "", opts, id = (-1)
+   use arg x, y, cx = 0, cy = 0, text = "", opts = "", id = (-1)
 
    if cx = 0 | cy = 0 then do
       parse value GetStdTextSize(text) with icx icy
