@@ -1586,9 +1586,9 @@ size_t RexxEntry WSProgManager(const char *funcname, size_t argc, CONSTRXSTRING 
     {
         RETC(!DeletePMItem(argv[1].strptr));
     }
-    else if (strcmp(argv[0].strptr, "LEAVE"))
+    else if (strcmp(argv[0].strptr, "LEAVE") == 0 )
     {
-        if ( strcmp(argv[1].strptr, "SAVE") == 0)
+        if ( strcmp(argv[1].strptr, "SAVE") == 0 )
         {
             RETC(!LeavePM(TRUE));
         }
