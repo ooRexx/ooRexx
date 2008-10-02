@@ -474,7 +474,7 @@ RexxString *RexxString::replaceAt(RexxString  *newStrObj, RexxInteger *position,
         frontLen = replacePos - 1;
     }
     // is this within the bounds of the string?
-    if (replacePos + replaceLen < targetLen)
+    if (replacePos + replaceLen - 1 < targetLen)
     {
         // calculate the back part we need to copy
         backLen = targetLen - (replacePos + replaceLen - 1);
