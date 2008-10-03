@@ -232,7 +232,7 @@ BUILTIN(POS)
 }
 
 #define LASTPOS_MIN 2
-#define LASTPOS_MAX 3
+#define LASTPOS_MAX 4
 #define LASTPOS_needle   1
 #define LASTPOS_haystack 2
 #define LASTPOS_start    3
