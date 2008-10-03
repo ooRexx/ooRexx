@@ -256,7 +256,7 @@ RexxInteger *StringUtil::lastPosRexx(const char *stringData, size_t haystackLen,
     needle = stringArgument(needle, ARG_ONE);
     // find out where to start the search. The default is at the very end.
     size_t startPos = optionalPositionArgument(_start, haystackLen, ARG_TWO);
-    size_t range = optionalPositionArgument(_range, haystackLen, ARG_THREE);
+    size_t range = optionalLengthArgument(_range, haystackLen, ARG_THREE);
     // now perform the actual search.
     return new_integer(lastPos(stringData, haystackLen, needle, startPos, range));
 }
