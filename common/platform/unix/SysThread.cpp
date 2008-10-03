@@ -48,7 +48,7 @@
 
 #include "SysThread.hpp"
 #include <stdio.h>
-
+#include <unistd.h>
 
 // attach an activity to an existing thread
 void SysThread::attachThread()
@@ -138,8 +138,10 @@ void SysThread::createThread(void)
     /* scheduling on two threads controlled by the result method of the */
     /* message object do not work properly without an enhanced priority */
     pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
+#ifdef _POSIX_PRIORITY_SCHEDULING
     maxpri = sched_get_priority_max(schedpolicy);
     minpri = sched_get_priority_min(schedpolicy);
+#endif
     schedparam.sched_priority = (minpri + maxpri) / 2;
 
 #if defined(OPSYS_SUN) || defined(OPSYS_AIX43)
