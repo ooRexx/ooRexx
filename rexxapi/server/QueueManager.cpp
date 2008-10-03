@@ -68,7 +68,7 @@ DataQueue::~DataQueue()
 {
     waitSem.close();     // make sure our semaphore cleans up if we've used it.
     clear();
-    delete [] (void *)queueName;        // also delete the name
+    delete [] queueName;        // also delete the name
 }
 
 /**

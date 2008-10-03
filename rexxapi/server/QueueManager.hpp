@@ -63,7 +63,7 @@ public:
     {
         if (elementData != NULL)
         {
-            delete [] (void *)elementData;      // release the element data too
+            delete [] elementData;      // release the element data too
         }
     }
 

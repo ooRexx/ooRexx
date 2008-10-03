@@ -50,8 +50,8 @@ public:
     void update(const char *, size_t l, size_t p);
     ~MacroItem()
     {
-        delete [] (void *)name;             // release the name and
-        delete [] (void*)imageBuffer;      // image buffer
+        delete [] name;             // release the name and
+        delete [] imageBuffer;      // image buffer
     }
 
     MacroItem *next;                   // next macro in chain
