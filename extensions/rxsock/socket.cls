@@ -108,7 +108,7 @@ return SockGetHostID()
 
 ::method convert_err_number private
 use strict arg err
-if err~datatype('W') <> 1 then retrun err
+if err~datatype('W') <> 1 then return err
 select
    when err = 1 then return 'EPERM'            /* Operation not permitted */
    when err = 2 then return 'ENOENT'           /* No such file or directory */
@@ -249,7 +249,7 @@ return err
 
 ::method convert_address_family private
 use strict arg fam
-if fam~datatype('W') <> 1 then retrun fam
+if fam~datatype('W') <> 1 then return fam
 select
    when fam = 0 then return 'AF_UNSPEC'
    when fam = 1 then return 'AF_LOCAL'
@@ -296,7 +296,7 @@ return fam
 /* Arguments: none                                                            */
 /*----------------------------------------------------------------------------*/
 
-::method accept
+::method accept unguarded
 expose s errno
 use strict arg
 newsocket = SockAccept(s)
