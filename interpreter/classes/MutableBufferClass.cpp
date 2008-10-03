@@ -621,7 +621,7 @@ RexxInteger *RexxMutableBuffer::caselessLastPos(RexxString  *needle, RexxInteger
     needle = stringArgument(needle, ARG_ONE);
     /* get the starting position         */
     size_t _start = optionalPositionArgument(pstart, getLength(), ARG_TWO);
-    size_t _range = optionalPositionArgument(range, getLength(), ARG_THREE);
+    size_t _range = optionalLengthArgument(range, getLength(), ARG_THREE);
     /* pass on to the primitive function */
     /* and return as an integer object   */
     return new_integer(StringUtil::caselessLastPos(getStringData(), getLength(), needle , _start, _range));

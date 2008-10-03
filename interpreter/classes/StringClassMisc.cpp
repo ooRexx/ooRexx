@@ -482,7 +482,7 @@ RexxInteger *RexxString::caselessLastPosRexx(RexxString  *needle, RexxInteger *_
     needle = stringArgument(needle, ARG_ONE);
     // find out where to start the search. The default is at the very end.
     size_t startPos = optionalPositionArgument(_start, getLength(), ARG_TWO);
-    size_t range = optionalPositionArgument(_range, getLength(), ARG_THREE);
+    size_t range = optionalLengthArgument(_range, getLength(), ARG_THREE);
     // now perform the actual search.
     return new_integer(StringUtil::caselessLastPos(getStringData(), getLength(), needle, startPos, range));
 }
