@@ -784,7 +784,7 @@ RexxString *RexxString::translate(
         return this;
     }
     // cap the real range
-    range = Numerics::maxVal(range, getLength() - startPos + 1);
+    range = Numerics::minVal(range, getLength() - startPos + 1);
 
     /* allocate space for answer         */
     /* and copy the string               */

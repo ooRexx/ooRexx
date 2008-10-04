@@ -1071,7 +1071,7 @@ RexxMutableBuffer *RexxMutableBuffer::translate(RexxString *tableo, RexxString *
         return this;
     }
     // cape the real range
-    range = Numerics::maxVal(range, getLength() - startPos + 1);
+    range = Numerics::minVal(range, getLength() - startPos + 1);
     char *scanPtr = getData() + startPos - 1;   /* point to data                     */
     size_t scanLength = range;                  /* get the length too                */
 
