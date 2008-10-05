@@ -2682,14 +2682,18 @@ Output:
   numeric digits 18
   -- if this is a timespan, then grab the number of microseconds in the
   -- span, retaining the sign
-  if offset~isa(.TimeSpan) then
-      offset = offset~totalMicroseconds
-  else
+  if offset~isa(.TimeSpan) then do
+      adjustment = offset~totalMicroseconds
+      offset = adjustment/60000000
+  end
+  else do
      -- must be a whole number
      .argUtil~validateWhole("offset", offset, 18)
+     adjustment = offset * 60000000
+  end
   -- we create a new DateTime by converting the UTC time to
   -- the target timezone, then create a new object using that offset
-  return self~class~new(utcTimeStamp + offset, offset)
+  return self~class~new(utcTimeStamp + adjustment, offset)
 
 -- return the time zone offset, as a TimeSpan object
 ::METHOD offset

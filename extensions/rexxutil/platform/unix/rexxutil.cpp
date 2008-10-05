@@ -284,7 +284,6 @@ union semun {
 };
 #endif
 
-extern thread_id_t opencnt[][2];       /* open count array for sems  */
 extern char *resolve_tilde(const char *);
 
 #define INVALID_ROUTINE 40
