@@ -303,16 +303,19 @@ RexxMethodEntry *LibraryPackage::locateMethodEntry(RexxString *name)
 {
     RexxMethodEntry *entry = package->methods;
 
-    // scan the exported method table for the required method
-    while (entry->style != 0)
+    if (entry != NULL)
     {
-        // is this one a name match?  Make a method, add it to
-        // the table, and return.
-        if (name->strICompare(entry->name))
+        // scan the exported method table for the required method
+        while (entry->style != 0)
         {
-            return entry;
+            // is this one a name match?  Make a method, add it to
+            // the table, and return.
+            if (name->strICompare(entry->name))
+            {
+                return entry;
+            }
+            entry++;
         }
-        entry++;
     }
     return NULL;
 }
@@ -331,16 +334,19 @@ RexxRoutineEntry *LibraryPackage::locateRoutineEntry(RexxString *name)
 {
     RexxRoutineEntry *entry = package->routines;
 
-    // scan the exported method table for the required method
-    while (entry->style != 0)
+    if ( entry != NULL )
     {
-        // is this one a name match?  Make a method, add it to
-        // the table, and return.
-        if (name->strICompare(entry->name))
+        // scan the exported method table for the required method
+        while (entry->style != 0)
         {
-            return entry;
+            // is this one a name match?  Make a method, add it to
+            // the table, and return.
+            if (name->strICompare(entry->name))
+            {
+                return entry;
+            }
+            entry++;
         }
-        entry++;
     }
     return NULL;
 }
