@@ -97,16 +97,6 @@ void SystemInterpreter::liveGeneral(int reason)
 }
 
 
-void SystemInterpreter::initializeInstance(InterpreterInstance *instance)
-{
-}
-
-
-void SystemInterpreter::terminateInstance(InterpreterInstance *instance)
-{
-}
-
-
 /**
  * Get the current working directory for the process.
  *

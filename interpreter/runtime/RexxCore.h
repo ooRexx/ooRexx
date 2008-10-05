@@ -139,12 +139,6 @@ class RexxArray;
 class RexxMemory;
 class RexxString;
 
-                                       /* builtin function prototype        */
-typedef RexxObject *builtin_func(RexxActivation *, size_t, RexxExpressionStack *);
-typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
-
-                                       /*  as "overLoading" of hashValue  */
-
 
 /******************************************************************************/
 /* Change EXTERN definition if not already created by GDATA                   */

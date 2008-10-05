@@ -53,17 +53,6 @@
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 
-extern "C" void activity_thread (RexxActivity *objp);
-
-unsigned int iClauseCounter=0;         // count of clauses
-
-extern "C" _declspec(dllimport) HANDLE ExceptionQueueSem;
-extern ULONG ExceptionHostProcessId;
-extern HANDLE ExceptionHostProcess;
-extern bool ExceptionConsole;
-static int SignalCount = 0;
-
-
 RexxString *SystemInterpreter::getInternalSystemName()
 {
     return getSystemName();     // this is the same
@@ -177,53 +166,6 @@ RexxString *SystemInterpreter::getSourceString(
                                          /* copy the system name              */
     memcpy(outPtr, programName->getStringData(), programName->getLength());
     return source_string;                /* return the source string          */
-}
-
-
-BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
-/******************************************************************************/
-/* Arguments:  Report record, registration record, context record,            */
-/*             dispatcher context                                             */
-/*                                                                            */
-/* DESCRIPTION : For Control Break conditions issue a halt to activation      */
-/*               Control-C or control-Break is pressed.                       */
-/*                                                                            */
-/*  Returned:  Action code                                                    */
-/******************************************************************************/
-{
-    /* set halt condition for all threads of this process */
-  char envp[65];
-
-  if ((dwCtrlType == CTRL_CLOSE_EVENT) || (dwCtrlType == CTRL_SHUTDOWN_EVENT)) return false;  /* send to system */
-
-  /* if RXCTRLBREAK=NO then ignore SIGBREAK exception */
-  if (((dwCtrlType == CTRL_BREAK_EVENT) || (dwCtrlType == CTRL_LOGOFF_EVENT)) &&
-      (GetEnvironmentVariable("RXCTRLBREAK", envp, 64) > 0)
-      && (strcmp("NO",envp) == 0))
-    return true;    /* ignore signal */
-
-  if (dwCtrlType == CTRL_LOGOFF_EVENT) return false;    /* send to system */
-
-  /* Ignore Ctrl+C if console is running in console */
-  if (ExceptionConsole)
-  {
-      GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, ExceptionHostProcessId);
-      return true;   /* ignore signal */
-  }
-  if (ExceptionHostProcess)
-  {
-      GenerateConsoleCtrlEvent(CTRL_C_EVENT, ExceptionHostProcessId);
-      TerminateProcess(ExceptionHostProcess, -1);
-  }
-
-  if (dwCtrlType == CTRL_C_EVENT)
-  {
-      SignalCount++;
-      if (SignalCount > 1) return FALSE;    /* send signal to system */
-  }
-
-  Interpreter::haltAllActivities();
-  return true;      /* ignore signal */
 }
 
 

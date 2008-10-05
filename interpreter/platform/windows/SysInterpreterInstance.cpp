@@ -45,6 +45,48 @@
 #include "ListClass.hpp"
 #include "SystemInterpreter.hpp"
 
+#include <stdio.h>
+#include <fcntl.h>
+#include <io.h>
+
+
+BOOL __stdcall WinConsoleCtrlHandler(DWORD dwCtrlType)
+/******************************************************************************/
+/* Arguments:  Report record, registration record, context record,            */
+/*             dispatcher context                                             */
+/*                                                                            */
+/* DESCRIPTION : For Control Break conditions issue a halt to activation      */
+/*               Control-C or control-Break is pressed.                       */
+/*                                                                            */
+/*  Returned:  Action code                                                    */
+/******************************************************************************/
+{
+    // check to condition for all threads of this process */
+
+    if ((dwCtrlType == CTRL_CLOSE_EVENT) || (dwCtrlType == CTRL_SHUTDOWN_EVENT))
+    {
+        return false;  /* send to system */
+    }
+
+    /* if RXCTRLBREAK=NO then ignore SIGBREAK exception */
+    if (dwCtrlType == CTRL_BREAK_EVENT || dwCtrlType == CTRL_LOGOFF_EVENT)
+    {
+        char envp[65];
+        if (GetEnvironmentVariable("RXCTRLBREAK", envp, sizeof(envp)) > 0 && strcmp("NO",envp) == 0)
+        {
+            return true;    /* ignore signal */
+        }
+    }
+
+    if (dwCtrlType == CTRL_LOGOFF_EVENT)
+    {
+        return false;    /* send to system */
+    }
+
+    // we need to do something about this one, let the system interpreter handle
+    return SystemInterpreter::processSignal(dwCtrlType);
+}
+
 /**
  * Initialize the interpreter instance.
  *
@@ -54,10 +96,37 @@
  */
 void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOption *options)
 {
+    /* Because of using the stand-alone runtime library or when using different compilers,
+       the std-streams of the calling program and the REXX.DLL might be located at different
+       addresses and therefore _file might be -1. If so, std-streams are reassigned to the
+       file standard handles returned by the system */
+    if ((stdin->_file == -1) && (GetFileType(GetStdHandle(STD_INPUT_HANDLE)) != FILE_TYPE_UNKNOWN))
+    {
+        *stdin = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE),_O_RDONLY), "r");
+    }
+    if ((stdout->_file == -1) && (GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) != FILE_TYPE_UNKNOWN))
+    {
+        *stdout = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE),_O_APPEND), "a");
+    }
+    if ((stderr->_file == -1) && (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_UNKNOWN))
+    {
+        *stderr = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE),_O_APPEND), "a");
+    }
+    // enable trapping for CTRL_C exceptions
+    SetConsoleCtrlHandler(&WinConsoleCtrlHandler, true);
     instance = i;
 
     // add our default search extension
     addSearchExtension(".REX");
+}
+
+
+/**
+ * Terminate the interpreter instance.
+ */
+void SysInterpreterInstance::terminate()
+{
+    SetConsoleCtrlHandler(&WinConsoleCtrlHandler, false);
 }
 
 

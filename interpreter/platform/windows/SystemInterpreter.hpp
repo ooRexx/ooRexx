@@ -97,6 +97,13 @@ public:
     static void setupProgram(RexxActivation *activation);
     static void loadImage(char **imageBuffer, size_t *imageSize);
     static RexxBuffer *readProgram(const char *file_name);
+    static bool processSignal(DWORD dwCtrlType);
+
+    static ULONG exceptionHostProcessId;
+    static HANDLE exceptionHostProcess;
+    static bool exceptionConsole;
+    static bool explicitConsole;
+    static int signalCount;
 
 protected:
 

@@ -62,6 +62,8 @@ class RoutineClass;
 class RexxCode;
 class PackageClass;
 class ClassDirective;
+class RexxActivation;
+class RexxExpressionStack;
 
                                        /* handy defines to easy coding      */
 #define new_instruction(name, type) this->sourceNewObject(sizeof(RexxInstruction##type), The##type##InstructionBehaviour, KEYWORD_##name)
@@ -73,6 +75,9 @@ class ClassDirective;
 #define reclaim_possible 0x00000020    /* can re-establish source connect   */
 #define no_clause        0x00000040    /* last clause of a block reached    */
 
+                                       /* builtin function prototype        */
+typedef RexxObject *builtin_func(RexxActivation *, size_t, RexxExpressionStack *);
+typedef builtin_func *pbuiltin;        /* pointer to a builtin function     */
 
 /**
  * A class for intializing the keyword tables.
@@ -349,6 +354,8 @@ class RexxSource : public RexxInternalObject {
   RexxDirectory *getImportedRoutines() { install(); return merged_public_routines; }
   RexxDirectory *getDefinedMethods() { install(); return methods; }
   RexxList      *getPackages() { install(); return loadedPackages; }
+
+  static pbuiltin builtinTable[];      /* table of builtin function stubs   */
 
 protected:
 

@@ -53,8 +53,6 @@
 #include "SourceFile.hpp"
 #include "ProtectedObject.hpp"
 
-extern pbuiltin builtin_table[];       /* table of builtin function stubs   */
-
 RexxInstructionCall::RexxInstructionCall(
     RexxObject *_name,                 /* CALL name                         */
     RexxString *_condition,            /* CALL ON/OFF condition             */
@@ -248,7 +246,7 @@ void RexxInstructionCall::execute(
 
       case call_builtin:               /* builtin function call             */
                                        /* call the function                 */
-        result = (*(builtin_table[builtin_index]))(context, argcount, stack);
+        result = (*(RexxSource::builtinTable[builtin_index]))(context, argcount, stack);
         break;
 
       case call_external:              /* need to call externally           */
@@ -287,7 +285,7 @@ void RexxInstructionCall::trap(
 
     case call_builtin:                 /* builtin function call             */
                                        /* call the function                 */
-      (*(builtin_table[builtinIndex]))(context, 0, context->getStack());
+      (*(RexxSource::builtinTable[builtinIndex]))(context, 0, context->getStack());
       break;
 
     case call_external:                /* need to call externally           */

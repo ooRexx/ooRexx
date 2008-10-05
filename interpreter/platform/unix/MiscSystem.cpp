@@ -86,7 +86,6 @@
     #include <sys/utsname.h>               /* get the uname() function   */
 #endif
 
-unsigned int iClauseCounter=0;         // count of clauses
 #define LOADED_OBJECTS 100
 
 RexxString *SystemInterpreter::getInternalSystemName()

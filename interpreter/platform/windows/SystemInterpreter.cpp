@@ -51,9 +51,12 @@
 #include "Interpreter.hpp"
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <io.h>
+
+ULONG SystemInterpreter::exceptionHostProcessId = 0;
+HANDLE SystemInterpreter::exceptionHostProcess = NULL;
+bool SystemInterpreter::exceptionConsole = false;
+bool SystemInterpreter::explicitConsole = false;
+int SystemInterpreter::signalCount = 0;
 
 class InterpreterInstance;
 
@@ -116,24 +119,39 @@ bool SystemInterpreter::loadMessage(wholenumber_t code, char *buffer, size_t buf
     return LoadString(moduleHandle, (UINT)code, buffer, (int)bufferLength) != 0;
 }
 
-//TODO:  Add a system field in the instance class
-
-void SystemInterpreter::initializeInstance(InterpreterInstance *instance)
+/**
+ * Process a signal based on current command handler settings.
+ *
+ * @param dwCtrlType The type of exception.
+ *
+ * @return true if we handled the signal, false if it should be
+ *         passed up the handler chain.
+ */
+bool SystemInterpreter::processSignal(DWORD dwCtrlType)
 {
-    /* Because of using the stand-alone runtime library or when using different compilers,
-       the std-streams of the calling program and the REXX.DLL might be located at different
-       addresses and therefore _file might be -1. If so, std-streams are reassigned to the
-       file standard handles returned by the system */
-    if ((stdin->_file == -1) && (GetFileType(GetStdHandle(STD_INPUT_HANDLE)) != FILE_TYPE_UNKNOWN))
-        *stdin = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE),_O_RDONLY), "r");
-    if ((stdout->_file == -1) && (GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) != FILE_TYPE_UNKNOWN))
-        *stdout = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE),_O_APPEND), "a");
-    if ((stderr->_file == -1) && (GetFileType(GetStdHandle(STD_ERROR_HANDLE)) != FILE_TYPE_UNKNOWN))
-        *stderr = *_fdopen(_open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE),_O_APPEND), "a");
-}
+    /* Ignore Ctrl+C if console is running in console */
+    if (exceptionConsole)
+    {
+        GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, exceptionHostProcessId);
+        return true;   /* ignore signal */
+    }
 
+    if (exceptionHostProcess)
+    {
+        GenerateConsoleCtrlEvent(CTRL_C_EVENT, exceptionHostProcessId);
+        TerminateProcess(exceptionHostProcess, -1);
+    }
 
-void SystemInterpreter::terminateInstance(InterpreterInstance *instance)
-{
+    if (dwCtrlType == CTRL_C_EVENT)
+    {
+        signalCount++;
+        if (signalCount > 1)
+        {
+            return false;    /* send signal to system */
+        }
+    }
+
+    Interpreter::haltAllActivities();
+    return true;      /* ignore signal */
 }
 

@@ -492,6 +492,10 @@ bool InterpreterInstance::terminate()
     // before we update of the data structures, make sure we process any
     // pending uninit activity.
     memoryObject.collectAndUninit();
+
+    // do system specific termination of an instance
+    sysInstance.terminate();
+
     // ok, deactivate this again...this will return the activity because the terminating
     // flag is on.
     exitCurrentThread();
@@ -532,14 +536,18 @@ void InterpreterInstance::removeGlobalReference(RexxObject *o)
  */
 void InterpreterInstance::haltAllActivities()
 {
-    for (size_t listIndex = activeActivities->firstIndex() ;
+    for (size_t listIndex = allActivities->firstIndex() ;
          listIndex != LIST_END;
-         listIndex = activeActivities->nextIndex(listIndex) )
+         listIndex = allActivities->nextIndex(listIndex) )
     {
                                          /* Get the next message object to    */
                                          /*process                            */
         RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
-        activity->halt(OREF_NULL);
+        // only halt the active ones
+        if (activity->isActive())
+        {
+            activity->halt(OREF_NULL);
+        }
     }
 }
 
@@ -549,14 +557,18 @@ void InterpreterInstance::haltAllActivities()
  */
 void InterpreterInstance::traceAllActivities(bool on)
 {
-    for (size_t listIndex = activeActivities->firstIndex() ;
+    for (size_t listIndex = allActivities->firstIndex() ;
          listIndex != LIST_END;
-         listIndex = activeActivities->nextIndex(listIndex) )
+         listIndex = allActivities->nextIndex(listIndex) )
     {
                                          /* Get the next message object to    */
                                          /*process                            */
         RexxActivity *activity = (RexxActivity *)allActivities->getValue(listIndex);
-        activity->setTrace(on);
+        // only activate the active ones
+        if (activity->isActive())
+        {
+            activity->setTrace(on);
+        }
     }
 }
 

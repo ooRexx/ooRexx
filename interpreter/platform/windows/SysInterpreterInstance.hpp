@@ -52,6 +52,7 @@ public:
     void liveGeneral(int);
 
     void initialize(InterpreterInstance *i, RexxOption *options);
+    void terminate();
     RexxString *resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension);
 
 protected:

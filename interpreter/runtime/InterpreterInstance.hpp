@@ -121,9 +121,6 @@ protected:
     RexxActivity        *rootActivity;       // the initial activity
     SecurityManager     *securityManager;    // the security manager for our instance
     RexxList            *allActivities;      // all activities associated with this instance
-    RexxList            *activeActivities;   // the activity table
-    RexxList            *attachedActivities; // our list of attached vs. spawned activities
-    RexxList            *spawnedActivities;  // activities this instance has spawned off
     RexxIdentityTable   *globalReferences;   // our global reference table
     RexxString          *defaultEnvironment; // the default address environment
     RexxString          *searchPath;         // additional Rexx search path

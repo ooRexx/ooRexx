@@ -62,6 +62,14 @@ void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOption *opti
 
 
 /**
+ * Terminate the interpreter instance.
+ */
+void SysInterpreterInstance::terminate();
+{
+}
+
+
+/**
  * Append a system default extension to the extension search order.
  *
  * @param name   The name to add.

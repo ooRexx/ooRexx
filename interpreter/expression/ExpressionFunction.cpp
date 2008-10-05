@@ -54,8 +54,6 @@
 #include "RexxActivity.hpp"
 #include "ProtectedObject.hpp"
 
-extern pbuiltin builtin_table[];       /* table of builtin function stubs   */
-
 RexxExpressionFunction::RexxExpressionFunction(
     RexxString *function_name,         /* name of the function              */
     size_t      argCount,              /* count of arguments                */
@@ -197,7 +195,7 @@ RexxObject *RexxExpressionFunction::evaluate(
     /* process various call types        */
     switch (this->flags&function_type_mask)
     {
-        
+
         case function_internal:            /* need to process internal routine  */
             /* go process the internal call      */
             context->internalCall(this->target, argcount, stack, result);
@@ -205,7 +203,7 @@ RexxObject *RexxExpressionFunction::evaluate(
 
         case function_builtin:             /* builtin function call             */
             /* call the function                 */
-            result = (RexxObject *) (*(builtin_table[this->builtin_index]))(context, argcount, stack);
+            result = (RexxObject *) (*(RexxSource::builtinTable[this->builtin_index]))(context, argcount, stack);
             break;
 
         case function_external:            /* need to call externally           */

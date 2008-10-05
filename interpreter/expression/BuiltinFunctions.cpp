@@ -2638,7 +2638,7 @@ BUILTIN(QUALIFY)
 /* as the builtin function codes used*/
 /* in the token class builtin        */
 /* builtin function lookup           */
-pbuiltin builtin_table[] = {
+pbuiltin RexxSource::builtinTable[] = {
     NULL,                                /* NULL first entry as dummy         */
     &builtin_function_ABBREV           ,
     &builtin_function_ABS              ,
