@@ -281,6 +281,7 @@ APIServerInstance *APIServer::getInstance(ServiceMessage &m)
         {
             return current;
         }
+        current = current->next;
     }
 
     current = new APIServerInstance(m);
