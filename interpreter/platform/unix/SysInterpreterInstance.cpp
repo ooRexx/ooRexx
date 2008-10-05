@@ -64,7 +64,7 @@ void SysInterpreterInstance::initialize(InterpreterInstance *i, RexxOption *opti
 /**
  * Terminate the interpreter instance.
  */
-void SysInterpreterInstance::terminate();
+void SysInterpreterInstance::terminate()
 {
 }
 
