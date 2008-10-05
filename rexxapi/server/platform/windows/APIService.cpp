@@ -573,7 +573,7 @@ BOOL ParseStandardArgs( LPSTR lpCmdLine )
           {
             if (!bSilent )
             {
-              printf( chString, "%s failed to install. Error %d\n", SERVICENAME, GetLastError());
+              sprintf( chString, "%s failed to install. Error %d\n", SERVICENAME, GetLastError());
               MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONERROR ) ;
             }
           }
@@ -597,9 +597,6 @@ BOOL ParseStandardArgs( LPSTR lpCmdLine )
           // Try and remove the copy that's installed
           if (Uninstall())
           {
-            // Get the executable file path
-            char szFilePath[_MAX_PATH];
-            GetModuleFileName(NULL, szFilePath, sizeof(szFilePath));
             if (!bSilent )
             {
               sprintf( chString, "%s uninstalled as service.\n(Object REXX is NOT uninstalled.)",
