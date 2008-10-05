@@ -502,8 +502,8 @@ BOOL ParseStandardArgs( LPSTR lpCmdLine )
             // to allow correct connection to service controller
             iRet = system("NET start rxapi") ;
           }
-        return FALSE ;   // Do NOT Continue the program
         }
+        return FALSE;   // Do NOT Continue the program
       }
       // either NOT installed as Service, or Service is set to DISABLED
       // Continue as standard RXAPI.EXE
