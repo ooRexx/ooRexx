@@ -60,6 +60,10 @@
         - usepipe.rex    program that uses pipeline implementation: pip.rex
         - makestring.rex program that uses makestring method
         - properties.rex an example of the Properties class
+        - scserver.rex   simple socket server that uses the socket class
+        - scclient.rex   simple socket client that uses the socket class
+        - sfserver.rex   simple socket server that uses the socket function package
+        - sfclient.rex   simple socket client that uses the socket function package
 
       These programs are executable without any change on all supported
       platforms.
