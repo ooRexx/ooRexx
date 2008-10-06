@@ -169,17 +169,19 @@ void ServiceMessage::readResult(SysClientStream &pipe)
     if (messageDataLength != 0)
     {
         // allocate a data buffer for the extra information and read it in.
-        messageData = (char *)allocateResultMemory(messageDataLength);
+        // we add a courtesy null terminator on this message, so we read one extra bit
+        messageData = allocateResultMemory(messageDataLength + 1);
+        ((char *)messageData)[messageDataLength] = '\0';
         if (!pipe.read(messageData, messageDataLength, &actual) || actual != messageDataLength)
         {
             releaseResultMemory(messageData);
             throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readResult() Failure reading service message");
         }
     }
-    else 
+    else
     {
-        // make sure this is nulled out 
-        messageData = NULL; 
+        // make sure this is nulled out
+        messageData = NULL;
     }
 }
 
