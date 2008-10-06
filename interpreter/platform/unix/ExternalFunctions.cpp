@@ -375,15 +375,16 @@ RexxObject *SystemInterpreter::pushEnvironment(RexxActivation *context)
  */
 RexxObject *SystemInterpreter::popEnvironment(RexxActivation *context)
 {
-        RexxObject    *Current;          /* new save block                    */
-
-    Current =  context->popEnvironment();/*  block, if ixisted.               */
+    RexxBuffer *Current =  (RexxBuffer *)context->popEnvironment();/*  block, if ixisted.               */
     if (TheNilObject == Current)         /* nothing saved?                    */
-      return TheFalseObject;             /* return failure value              */
-    else {
-                                         /* restore everything                */
-      restoreEnvironment(Current);
-      return TheTrueObject;              /* this worked ok                    */
+    {
+        return TheFalseObject;             /* return failure value              */
+    }
+    else
+    {
+        /* restore everything                */
+        restoreEnvironment(Current->getData());
+        return TheTrueObject;              /* this worked ok                    */
     }
 }
 
@@ -425,17 +426,16 @@ RexxObject *SystemInterpreter::buildEnvlist()
 
     // start with a copy of the current working directory
     SystemInterpreter::getCurrentWorkingDirectory(curr_dir);
-
     size += strlen(curr_dir);            /* add the space for curr dir */
     size++;                              /* and its terminating '\0'   */
-    size += 4;                           /* this is for the size itself*/
+    size += sizeof(size_t);              /* this is for the size itself*/
                                          /* Now we have the size for   */
                                          /* allocating the new buffer  */
     newBuffer = new_buffer(size);        /* let's do it                */
                                          /* Get starting address of buf*/
     New = newBuffer->getData();
     ((ENVENTRY*)New)->size = size;       /* first write the size       */
-    New +=4;                             /* update the pointer         */
+    New += sizeof(size_t);               /* update the pointer         */
                                          /* now write the curr dir     */
     memcpy(New,curr_dir,strlen(curr_dir));
     New += strlen(curr_dir);             /* update the pointer         */
@@ -489,10 +489,12 @@ void SystemInterpreter::restoreEnvironment(
 
     begin = current = (char *)CurrentEnv;/* get the saved space        */
     size = ((ENVENTRY*)current)->size;   /* first read out the size    */
-    current += 4;                        /* update the pointer         */
+    current += sizeof(size_t);           /* update the pointer         */
     if (chdir(current) == -1)             /* restore the curr dir       */
     {
-        reportException(Error_System_service_service, "ERROR CHANGING DIRECTORY");
+        char msg[1024]; 
+        sprintf(msg, "Error restoring current directory: %s", current); 
+        reportException(Error_System_service_service, msg);
     }
     current += strlen(current);          /* update the pointer         */
     current++;                           /* jump over '\0'             */
@@ -545,11 +547,11 @@ void SystemInterpreter::restoreEnvironment(
         }
         if (putenv(current) == -1)
         {
-            reportException(Error_System_service_service, "ERROR RESTORING ENVIRONMENT VARIABLE");
+            reportException(Error_System_service_service, "Error restoring environment variable");
         }
-        if (del)                            /* if there was an old entry  */
-        {
-            free(del);                       /* free it                    */
-        }
+//        if (del)                            /* if there was an old entry  */
+//        {
+//            free(del);                       /* free it                    */
+//        }
     }
 }
