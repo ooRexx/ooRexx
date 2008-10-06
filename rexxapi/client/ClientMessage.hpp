@@ -64,7 +64,14 @@ public:
     {
         messageTarget = target;
         operation = op;
-        strncpy(nameArg, p1, NAMESIZE);
+        if (p1 != NULL)
+        {
+            strncpy(nameArg, p1, NAMESIZE);
+        }
+        else
+        {
+            strncpy(nameArg, "", NAMESIZE);
+        }
     }
 
     inline ClientMessage(ServerManager target, ServerOperation op, uintptr_t p1, const char *name) : ServiceMessage()
@@ -72,7 +79,14 @@ public:
         messageTarget = target;
         operation = op;
         parameter1 = p1;
-        strncpy(nameArg, name, NAMESIZE);
+        if (name != NULL)
+        {
+            strncpy(nameArg, name, NAMESIZE);
+        }
+        else
+        {
+            strncpy(nameArg, "", NAMESIZE);
+        }
     }
 
     inline ~ClientMessage()
