@@ -549,9 +549,9 @@ void SystemInterpreter::restoreEnvironment(
         {
             reportException(Error_System_service_service, "Error restoring environment variable");
         }
-//        if (del)                            /* if there was an old entry  */
-//        {
-//            free(del);                       /* free it                    */
-//        }
+        if (del)                            /* if there was an old entry  */
+        {
+            free(del);                       /* free it                    */
+        }
     }
 }
