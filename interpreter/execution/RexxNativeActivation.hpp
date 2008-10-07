@@ -114,7 +114,7 @@ class RexxNativeActivation : public RexxActivationBase
   inline void   termination() { this->guardOff();}
 
   void   accessCallerContext();
-  inline char        getVpavailable()   {return this->vpavailable;}
+  inline bool        getVpavailable()   {return this->vpavailable;}
   inline RexxString *getMessageName()   {return this->msgname;}
   inline size_t      nextVariable()     {return this->nextvariable;}
   inline RexxStem   *nextStem()         {return this->nextstem;}

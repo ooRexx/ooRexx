@@ -1301,6 +1301,7 @@ void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeR
     trapErrors = true;                       // we trap error conditions now
     try
     {
+        enableVariablepool();                // enable the variable pool interface here
         activity->releaseAccess();           /* force this to "safe" mode         */
                                              /* process the method call           */
         (*methp)((RexxCallContext *)&context, arguments);
@@ -1321,6 +1322,7 @@ void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeR
     }
 
     trapErrors = false;        // no more error trapping
+    disableVariablepool();                // disable the variable pool from here
     // belt and braces...this restores the activity level to whatever
     // level we had when we made the callout.
     this->activity->restoreActivationLevel(activityLevel);
@@ -2518,6 +2520,7 @@ RexxDirectory *RexxNativeActivation::getAllContextVariables()
 /* Function:  Retriev a list of all variables in the current context.         */
 /******************************************************************************/
 {
+    this->resetNext();               // all next operations must be reset
     return activation->getAllLocalVariables();
 }
 
