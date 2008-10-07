@@ -73,6 +73,8 @@ public:
     RexxObject *getExecutable();
     RexxObject *getArgs();
     RexxObject *getCondition();
+    RexxObject *getLine();
+    RexxObject *getRS();
     RexxObject *copyRexx();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);

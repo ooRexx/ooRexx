@@ -2210,6 +2210,46 @@ RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry        
 
 
 /**
+ * Return the line context information for a context.
+ *
+ * @return The current execution line.
+ */
+RexxObject *RexxActivation::getContextLine()
+{
+    // if this is an interpret, we need to report the line number of
+    // the context that calls the interpret.
+    if (this->isInterpret())
+    {
+        return parent->getContextLine();
+    }
+    else
+    {
+
+        return new_integer(this->current->getLineNumber());
+    }
+}
+
+
+/**
+ * Return the RS context information for a activation.
+ *
+ * @return The current execution line.
+ */
+RexxObject *RexxActivation::getContextReturnStatus()
+{
+    if (this->settings.flags&return_status_set)
+    {
+        /* returned as an integer object     */
+        return new_integer(this->settings.return_status);
+    }
+    else
+    {
+        return TheNilObject;
+    }
+}
+
+
+/**
  * Attempt to call a function stored in the macrospace.
  *
  * @param target    The target function name.

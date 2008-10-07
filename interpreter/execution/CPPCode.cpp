@@ -940,6 +940,8 @@ CPPM(RexxContext::getVariables),
 CPPM(RexxContext::getExecutable),
 CPPM(RexxContext::getArgs),
 CPPM(RexxContext::getCondition),
+CPPM(RexxContext::getLine),
+CPPM(RexxContext::getRS),
 NULL                                   /* final terminating method          */
 };
 

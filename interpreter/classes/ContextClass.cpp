@@ -257,3 +257,26 @@ RexxObject *RexxContext::getCondition()
     return conditionobj == OREF_NULL ? TheNilObject : conditionobj->copy();
 }
 
+
+/**
+ * Return the execution context current line position.
+ *
+ * @return The current line number of the context.
+ */
+RexxObject *RexxContext::getLine()
+{
+    checkValid();
+    return activation->getContextLine();
+}
+
+
+/**
+ * Return the execution context return status
+ *
+ * @return The .RS value of the context.
+ */
+RexxObject *RexxContext::getRS()
+{
+    checkValid();
+    return activation->getContextReturnStatus();
+}

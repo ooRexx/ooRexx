@@ -443,6 +443,9 @@ class ActivationSettings
        }
    }
 
+   RexxObject *getContextLine();
+   RexxObject *getContextReturnStatus();
+
    inline RexxVariableDictionary *getLocalVariables()
    {
        return settings.local_variables.getDictionary();
