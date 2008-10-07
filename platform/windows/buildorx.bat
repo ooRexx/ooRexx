@@ -131,7 +131,6 @@ if ERRORLEVEL 1 goto error
 
 
 @ECHO Building rxwinsys.dll
-CD  %OR_REXXUTILSRC%
 IF %USELOGFILE% equ 1 ( NMAKE /F %OR_EXTENSIONS%\platform\windows\rxwinsys\rxwinsys.mak >>%OR_ERRLOG% 2>&1 ) else ( NMAKE /F %OR_EXTENSIONS%\platform\windows\rxwinsys\rxwinsys.mak )
 if ERRORLEVEL 1 goto error
 
