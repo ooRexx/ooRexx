@@ -194,9 +194,6 @@
 #define RXTER   10                    /* Termination processing.     */
 #define    RXTEREXT 1                 /* subcode value.              */
 
-#define RXDBG    11                   /* Test ext trace indicator before instruction.   */
-#define    RXDBGTST  1                /* subcode value.              */
-
 #define RXEXF    12                   /* scripting function call     */
 #define    RXEXFCAL 1                 /* subcode value.              */
 
@@ -206,19 +203,9 @@
 #define RXVAL    14                   /* value() function exit       */
 #define    RXVALCALL    1             /* subcode value.              */
 
-/* Return codes for the debug exit */
+#define RXOFNC   15                   /* Process external functions using object values. */
+#define    RXOFNCCAL 1                /* subcode value.              */
 
-#define    RXDBGOFF  0                /* set trace off */
-#define    RXDBGSTEPIN  1             /* set trace on (normal)       */
-#define    RXDBGSTEPOVER  2           /* set trace on but step over  */
-#define    RXDBGSTEPOUT  3            /* set step out                */
-#define    RXDBGENDSTEP 4             /* leaving a subroutine        */
-#define    RXDBGENTERSUB 5            /* entering a subroutine       */
-#define    RXDBGLEAVESUB 6            /* leaving a subroutine        */
-#define    RXDBGLOCATELINE 7          /* locate current line         */
-#define    RXDBGSTEPAGAIN 8           /* repeat debug pause          */
-#define    RXDBGSIGNAL 9              /* processing a signal instr.  */
-#define    RXDBGRECURSIVEOFF 10       /* switch dbg off recursively  */
 #define RXEXF     12                  /* Post order function exit    */
 #define    RXEXFCAL 1                 /* subcode value.              */
 #define RXNOVAL   13                  /* NOVALUE exit                */
@@ -226,7 +213,7 @@
 #define RXVALUE   14                  /* VALUE function exit         */
 #define    RXVALUECALL 1
 
-#define    RXNOOFEXITS 15             /* 1 + largest exit number.    */
+#define    RXNOOFEXITS 16             /* 1 + largest exit number.    */
 
 /***    Asynchronous Request Interface defines */
 

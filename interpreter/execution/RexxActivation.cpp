@@ -2319,7 +2319,13 @@ RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, R
         routine->call(this->activity, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
         return(RexxObject *)resultObj;
     }
-    // Step 2:  See if the function call exit fields this one
+    // Step 2a:  See if the function call exit fields this one
+    if (!activity->callObjectFunctionExit(this, target, calltype, resultObj, _arguments, _argcount))
+    {
+        return(RexxObject *)resultObj;
+    }
+
+    // Step 2b:  See if the function call exit fields this one
     if (!activity->callFunctionExit(this, target, calltype, resultObj, _arguments, _argcount))
     {
         return(RexxObject *)resultObj;

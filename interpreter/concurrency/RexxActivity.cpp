@@ -2213,6 +2213,67 @@ bool RexxActivity::callFunctionExit(
 }
 
 
+bool RexxActivity::callObjectFunctionExit(
+    RexxActivation *activation,        /* calling activation                */
+    RexxString     *rname,             /* routine name                      */
+    RexxObject     *calltype,          /* type of call                      */
+    ProtectedObject &funcresult,       /* function result                   */
+    RexxObject    **arguments,         /* argument array                    */
+    size_t          argcount)          /* argument count                    */
+/******************************************************************************/
+/* Function:   Calls the SysExitHandler method on the System Object to run    */
+/*             the function system exit.                                      */
+/******************************************************************************/
+{
+    if (isExitEnabled(RXOFNC))  // is the exit enabled?
+    {
+        RXOFNCCAL_PARM exit_parm;             /* exit parameters                   */
+        /* Start building the exit block  */
+        exit_parm.rxfnc_flags.rxfferr = 0; /* Initialize error codes to zero */
+        exit_parm.rxfnc_flags.rxffnfnd = 0;
+
+
+        exit_parm.rxfnc_flags.rxffsub = calltype == OREF_FUNCTIONNAME ? 0 : 1;
+        /* fill in the name parameter        */
+        rname->toRxstring(exit_parm.rxfnc_name);
+
+        /* get number of args                */
+        exit_parm.rxfnc_argc = argcount;
+        // the argument pointers get passed as is
+        exit_parm.rxfnc_argv = (REXXOBJECT *)arguments;
+        // no result value
+        exit_parm.rxfnc_retc = NULLOBJECT;
+        /* call the handler                  */
+        if (!callExit(activation, "RXOFNC", RXOFNC, RXOFNCCAL, (void *)&exit_parm))
+        {
+            return true;                     /* this wasn't handled               */
+        }
+
+        if (exit_parm.rxfnc_flags.rxfferr) /* function error?                   */
+        {
+            /* raise an error                    */
+            reportException(Error_Incorrect_call_external, rname);
+        }
+        /* Did we find the function??        */
+        else if (exit_parm.rxfnc_flags.rxffnfnd)
+        {
+            /* also an error                     */
+            reportException(Error_Routine_not_found_name,rname);
+        }
+        /* Was it a function call??          */
+        if (exit_parm.rxfnc_retc == NULLOBJECT && calltype == OREF_FUNCTIONNAME)
+        {
+            /* Have to return data               */
+            reportException(Error_Function_no_data_function,rname);
+        }
+        // set the function result back
+        funcresult = (RexxObject *)exit_parm.rxfnc_retc;
+        return false;                      /* this was handled                  */
+    }
+    return true;                         /* not handled                       */
+}
+
+
 bool RexxActivity::callScriptingExit(
     RexxActivation *activation,        /* calling activation                */
     RexxString     *rname,             /* routine name                      */

@@ -210,6 +210,7 @@ typedef enum
    bool callTraceExit(RexxActivation *, RexxString *);
    bool callTerminalInputExit(RexxActivation *, RexxString *&);
    bool callDebugInputExit(RexxActivation *, RexxString *&);
+   bool callObjectFunctionExit(RexxActivation *, RexxString *, RexxObject *, ProtectedObject &, RexxObject **, size_t);
    bool callFunctionExit(RexxActivation *, RexxString *, RexxObject *, ProtectedObject &, RexxObject **, size_t);
    bool callScriptingExit(RexxActivation *, RexxString *, RexxObject *, ProtectedObject &, RexxObject **, size_t);
    bool callCommandExit(RexxActivation *, RexxString *, RexxString *, RexxString **, RexxObject **);

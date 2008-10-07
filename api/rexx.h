@@ -386,6 +386,23 @@ typedef  struct _RXFNCCAL_PARM {        /* fnc */
 }  RXFNCCAL_PARM;
 
 
+/***    Subfunction RXOFNCCAL - Object valued external function call */
+
+typedef  struct _RXOFNC_FLAGS {        /* fl */
+   unsigned rxfferr  : 1;              /* Invalid call to routine.   */
+   unsigned rxffnfnd : 1;              /* Function not found.        */
+   unsigned rxffsub  : 1;              /* Called as a subroutine     */
+}  RXOFNC_FLAGS ;
+
+typedef  struct _RXOFNCCAL_PARM {      /* fnc */
+   RXOFNC_FLAGS      rxfnc_flags ;     /* function flags             */
+   CONSTRXSTRING     rxfnc_name;       // the called function name
+   size_t            rxfnc_argc;       /* Number of args in list.    */
+   REXXOBJECT       *rxfnc_argv;       /* Pointer to argument list.  */
+   REXXOBJECT        rxfnc_retc;       /* Return value.              */
+}  RXOFNCCAL_PARM;
+
+
 
 /***    Subfunction RXEXFCAL - Scripting Function Calls */
 
@@ -396,7 +413,7 @@ typedef  struct _RXEXF_FLAGS {          /* fl */
 }  RXEXF_FLAGS ;
 
 typedef  struct _RXEXFCAL_PARM {        /* fnc */
-   RXFNC_FLAGS       rxfnc_flags ;     /* function flags             */
+   RXEXF_FLAGS       rxfnc_flags ;     /* function flags             */
    CONSTRXSTRING     rxfnc_name;       // the called function name
    size_t            rxfnc_argc;       /* Number of args in list.    */
    REXXOBJECT       *rxfnc_argv;       /* Pointer to argument list.  */
@@ -505,19 +522,6 @@ typedef struct _RXTRC_FLAGS {          /* fl Trace flags             */
 typedef struct _RXTRCTST_PARM {        /* tst */
    RXTRC_FLAGS rxtrc_flags;            /* Set to run external trace  */
 }  RXTRCTST_PARM;
-
-
-typedef struct _RXDBG_FLAGS {          /* fl Trace flags             */
-   unsigned rxftrace;                  /* Set to run external trace. */
-}  RXDBG_FLAGS;
-
-
-typedef struct _RXDBGTST_PARM {        /* tst */
-   RXDBG_FLAGS   rxdbg_flags;          /* Set to run external trace before */
-   size_t        rxdbg_line;
-   CONSTRXSTRING rxdbg_filename;
-   CONSTRXSTRING rxdbg_routine;
-}  RXDBGTST_PARM;
 
 
 typedef  struct _RXVARNOVALUE_PARM {   /* var */
