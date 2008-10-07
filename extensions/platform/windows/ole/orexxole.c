@@ -1419,7 +1419,6 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
     RexxObjectPtr  OLEObjectClass = NULL;
     HRESULT        hResult;
     BOOL           fByRef = FALSE;
-    VARIANT       *pVariant2 = NULL;
     IDispatch     *pOleObject = NULL;
 
     if ( V_VT(pVariant) & VT_BYREF )
@@ -1631,7 +1630,6 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
   */
 bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *pVariant, VARTYPE _DestVt, size_t iArgPos)
 {
-    BOOL          fDone = FALSE;
     BOOL          fByRef = FALSE;
     VARIANT       sVariant;
     HRESULT       hResult;
@@ -1760,7 +1758,6 @@ bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
         }
         else
         {
-            LPOLESTR  lpUniBuffer = NULL;
             wholenumber_t intval;
 
             if (context->ObjectToWholeNumber(RxObject, &intval))
@@ -2036,8 +2033,6 @@ BOOL fExploreTypeAttr( ITypeInfo *pTypeInfo, TYPEATTR *pTypeAttr, POLECLASSINFO 
     POLEFUNCINFO    pFuncInfo = NULL;
     POLECONSTINFO   pConstInfo = NULL;
     BSTR            bstrName;
-    // cleanup only to avoid compiler warning OLECHAR         OleBuffer[100];
-    LPOLESTR        lpOleStrBuffer = NULL; // = OleBuffer;
     PSZ             pszName = NULL;
 
     /* get information for all functions */
@@ -2306,7 +2301,6 @@ POLEFUNCINFO2 GetEventInfo(ITypeInfo *pTypeInfo, RexxObjectPtr self, POLECLASSIN
     POLEFUNCINFO2 pTemp;
     POLEFUNCINFO  pFuncInfo = NULL;
     BSTR     *pbStrings;
-    BOOL      fNonHidden = TRUE;
     int j;
     unsigned short i;
     unsigned int uFlags;
@@ -2421,7 +2415,6 @@ BOOL GetEventTypeInfo(ITypeInfo *pTypeInfo, CLSID *clsID, ITypeInfo **ppTypeInfo
     TYPEATTR *pTypeAttr = NULL;
     ITypeInfo *pCoClass = NULL;
     TYPEKIND kind;
-    OLEObjectEvent *pEventHandler = NULL;
     unsigned int index;
     unsigned int icnt, icnt2;
     int implFlags=0;
@@ -2853,9 +2846,6 @@ RexxMethod1(int, OLEObject_Uninit, OSELF, self)
     IDispatch        *pDispatch = NULL;
     ITypeInfo        *pTypeInfo = NULL;
     POLECLASSINFO     pClsInfo = NULL;
-    OLEObjectEvent   *pEventHandler = NULL;  // event handling
-    IConnectionPoint *pConnectionPoint = NULL; // event handling
-    DWORD             dwCookie = 0;  // event handling
 
     if ( !fInitialized )
         OLEInit();
@@ -3964,7 +3954,6 @@ RexxMethod2(RexxObjectPtr,                // Return type
     ITypeInfo      *pTypeInfo = NULL;
     MEMBERID        MemId;
     POLECLASSINFO   pClsInfo = NULL;
-    POLEFUNCINFO    pFuncInfo = NULL;
     BOOL            fFound = FALSE;
     DISPPARAMS      dp;
     VARIANT         sResult;
@@ -5393,7 +5382,6 @@ bool getClassInfoFromCLSID(ITypeInfo *pTypeInfo, CLSID *pClsID, ITypeInfo **ppCo
 bool getClassInfoFromTypeInfo(ITypeInfo *pInterfaceTypeInfo, ITypeInfo **ppCoClassTypeInfo)
 {
     ITypeLib   *pTypeLib = NULL;
-    TYPEATTR   *pTypeAttr = NULL;
     ITypeInfo  *pTypeInfo = NULL;
     TYPEKIND    kind;
     HRESULT     hResult;
@@ -5458,7 +5446,6 @@ bool isImplementedInterface(ITypeInfo *pCoClass, GUID *guid)
     ITypeInfo *pTypeInfo = NULL;
     HREFTYPE   hRefType = NULL;
     unsigned int i;
-    int flags = 0;
     bool match = false;
     HRESULT hResult;
 

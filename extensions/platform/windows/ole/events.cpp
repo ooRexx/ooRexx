@@ -255,8 +255,6 @@ STDMETHODIMP OLEObjectEvent::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                         else if (context->IsArray(rxResult))
                         {
                             RexxArrayObject rxArray = (RexxArrayObject)rxResult;
-                            RexxObjectPtr  RexxStr = NULL;
-                            const char *pString = NULL;
                             wholenumber_t k;
 
                             context->ObjectToWholeNumber(context->SendMessage0(rxArray,"DIMENSION"), &k);
