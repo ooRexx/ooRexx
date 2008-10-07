@@ -662,14 +662,11 @@ size_t RexxEntry WSRegistryValue(const char *funcname, size_t argc, CONSTRXSTRIN
                 }
 
                 GlobalFree(valData);
-
                 return 0;
             }
-            else
-            {
-                RETC(0);
-            }
+
             GlobalFree(valData);
+            RETC(0);
         }
         else
         {
