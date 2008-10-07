@@ -24,7 +24,8 @@ The 'interpreter' at the end of the command will be the root directory of
 the source tree.  This directory can be given any name.
 
 Release Source File Archive:  Download from SourceForge the archive desired,
-for instance, ooRexx-3.1.2.zip, and unzip it in a work directory.
+for instance, ooRexx-3.2.0.zip or ooRexx-4.0.0.zip, and unzip it in a work
+directory.
 
 Build Requirements
 ==================
@@ -33,19 +34,27 @@ Some of these items are optional, have alternatives, or have caveats.  The
 options, alternatives, or caveats are discussed at the relevant point in the
 build instructions.
 
-[Required] Microsoft Visual C++ V 6.0 plus service packs, or later.
+[Required] Visual C++ .NET 2003 (known also as Visual C++ 7.1), plus service
+packs, or later.  Visual C++ 2005 is a good choice.
 
-[Required] Microsoft Platform SDK February 2003, or later.
+Note:
+-----
+Visual C++ 6.0 is no longer supported and the code base will not compile
+using that version of Visual C++.
+
+[Required] Microsoft Platform SDK February 2003, or later.  A later version
+of the SDK is preferable.
 
 The environment variables for the C++ compiler and the Platform SDK *MUST*
 be set correctly to build ooRexx.  See the Environment set up section below
 for details.
 
 Note: The release ooRexx, built by the project team, is built using Visual
-C++ 6.0 and the February 2003 SDK.  However, ooRexx builds without problems
-using later versions of these tools.  For instance, ooRexx is easily built
-using Microsoft Visual Studio 2005 and the Windows Server 2003 R2 Platform
-SDK.
+C++ 2005 and the Windows Server 2003 R2 Platform SDK.  However, ooRexx
+builds without problems using later versions of these tools.  For instance,
+ooRexx can be built using Microsoft Visual Studio 2008 and the latest
+version of the Windows SDK.  In addition, ooRexx will build using the free
+Visual C++ Express editions.
 
 Microsoft has the tendency to move the download URL for the SDKs, often.  A
 good starting point for locating a SDK is:
@@ -68,7 +77,7 @@ build batch files.  For instance, on XP systems taskkill is part of the OS.
 If building on an XP system, the builder could edit the batch file(s) and
 replace killer with taskkill.
 
-[Required] Some form of a touch program, (or Xalan/Xerces.)
+[Required] Some form of a touch program, or Xalan/Xerces.
 
 Note: When using source checked out from SVN, 'touching' the proper files
 negates the necessity of having Xalan available.  The easiest approach here
@@ -123,6 +132,14 @@ their desired location.  Add the bin directory of both packages to the path.
 Environment set up
 -----------------
 
+* Set the ooRexx build batch file variables.
+
+Set SRC_DIR to the top-level directory of the source tree.  Set SRC_DRV to
+the drive letter of the drive the source is located on.  For example:
+
+F:\>set SRC_DIR=\interpreter-3.x
+F:\>set SRC_DRV=E:
+
 * Set the environment variables for the C++ compiler and the Platform SDK.
 
 Depending on how the builder has installed these tools, the environment
@@ -145,33 +162,21 @@ exact steps for her specific system, but as an example:
 F:\>call F:\Tools\MsVisualStudio.2005\VC\vcvarsall.bat x86
 F:\>call F:\Tools\MsPlatformSDK\SetEnv.cmd  /XP32 /RETAIL
 
-NOTE:
------
-In order to support the various VC++ compilers, the MSVCVER environment
-variable must be set.  In almost all cases, this happens automatically by
-using the batch files above.  However, with some combinations of Visual C++
-and the Platform SDK, it may not get set.  In these cases, the builder
-*MUST* set it manually in the environment.  Use these values, picking the
-value that matches the level of the Visual C++ compiler in use:
+NOTE - Building 64-bit ooRexx:
+-----------------------------
+ooRexx can be built as a 32-bit or 64-bit application with no changes to the
+ooRexx source code.  Whether a 32-bit or 64-bit ooRexx is built is
+determined by how the builder sets up the Visual C++ environment.
 
-Visual C++ 2008 == 9.0
-Visual C++ 2005 == 8.0
-Visual C++ 2003 == 7.0
-Visual C++ 6.0  == 6.0
+To build the 64-bit version, use the 64-bit compiler tools.  The 64-bit
+compiler tools are used when the builder provides the correct options to
+vcvarsall.bat and / or SetEnv.cmd.  To determine the options use the /?
+arg.  For example:
 
-If, for instance, the compiler in use is Visual C++ 2003 and MSVCVER is not
-getting set, then the builder should set it in the environment with this
-command:
+C:\home\Tools\Visual.Studio.8\VC\vcvarsall.bat /?
 
-set MSVCVER=7.0
-
-* Set the ooRexx build batch file variables.
-
-Set SRC_DIR to the top-level directory of the source tree.  Set SRC_DRV to
-the drive letter of the drive the source is located on.  For example:
-
-F:\>set SRC_DIR=\interpreter-3.x
-F:\>set SRC_DRV=E:
+In general, the amd64 option is what is needed to use the 64-bit tools.
+This may vary depending on the exact version of VC++ and the SDK.
 
 Build
 -----
