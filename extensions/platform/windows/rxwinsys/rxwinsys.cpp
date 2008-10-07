@@ -2461,9 +2461,8 @@ size_t RexxEntry WSEventLog(const char *funcname, size_t argc, CONSTRXSTRING arg
                     //get index to event type string
                     GET_TYPE_INDEX(pEvLogRecord->EventType, evTypeIndex);
 
-                    //get time and date
-                    //DateTime = localtime(&pEvLogRecord->TimeGenerated);   // convert to local time
-                    DateTime = localtime((const time_t *)&pEvLogRecord->TimeWritten);   // convert to local time
+                    // Get time and date converted to local time.
+                    DateTime = _localtime32((const __time32_t *)&pEvLogRecord->TimeWritten);
                     strftime(date, MAX_TIME_DATE,"%x", DateTime);
                     strftime(time, MAX_TIME_DATE,"%X", DateTime);
 
