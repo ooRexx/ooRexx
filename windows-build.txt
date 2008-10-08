@@ -40,7 +40,11 @@ packs, or later.  Visual C++ 2005 is a good choice.
 Note:
 -----
 Visual C++ 6.0 is no longer supported and the code base will not compile
-using that version of Visual C++.
+using that version of Visual C++. Microsoft releases a free C++ complier under
+the Visual Studio Express label. More information and download options are
+available on Microsoft's website here:
+
+  http://www.microsoft.com/express/
 
 [Required] Microsoft Platform SDK February 2003, or later.  A later version
 of the SDK is preferable.
