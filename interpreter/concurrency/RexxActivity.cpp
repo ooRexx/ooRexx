@@ -2100,15 +2100,6 @@ bool RexxActivity::callFunctionExit(
 /*             the function system exit.                                      */
 /******************************************************************************/
 {
-    // give the security manager the first pass
-    SecurityManager *manager = activation->getEffectiveSecurityManager();
-    if (manager != OREF_NULL)
-    {
-        if (manager->checkFunctionCall(rname, argcount, arguments, funcresult))
-        {
-            return false;
-        }
-    }
 
     if (isExitEnabled(RXFNC))  // is the exit enabled?
     {
@@ -2225,6 +2216,16 @@ bool RexxActivity::callObjectFunctionExit(
 /*             the function system exit.                                      */
 /******************************************************************************/
 {
+    // give the security manager the first pass
+    SecurityManager *manager = activation->getEffectiveSecurityManager();
+    if (manager != OREF_NULL)
+    {
+        if (manager->checkFunctionCall(rname, argcount, arguments, funcresult))
+        {
+            return false;
+        }
+    }
+
     if (isExitEnabled(RXOFNC))  // is the exit enabled?
     {
         RXOFNCCAL_PARM exit_parm;             /* exit parameters                   */
@@ -2990,8 +2991,6 @@ void RexxActivity::run(CallbackDispatcher &target)
 
     // go run this
     new_activation->run(target);
-
-    requestAccess();                     /* get the kernel lock back          */
     this->popStackFrame(new_activation); /* pop the top activation            */
 }
 

@@ -41,6 +41,7 @@
 #include "Interpreter.hpp"
 #include "InterpreterInstance.hpp"
 #include "RexxActivity.hpp"
+#include "RexxNativeActivation.hpp"
 
 
 /**
@@ -78,7 +79,8 @@ void CallbackDispatcher::handleError(RexxDirectory *c)
     // this only gets added if there is a condition
     if (c != OREF_NULL)
     {
-        handleError(activity->errorNumber(c), c);
+        // raise this as a normal error by default
+        activation->checkConditions();
     }
 }
 

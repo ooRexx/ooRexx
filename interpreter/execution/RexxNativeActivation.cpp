@@ -1575,7 +1575,6 @@ void RexxNativeActivation::run(CallbackDispatcher &dispatcher)
     try
     {
         // make the activation hookup
-        // make the activation hookup
         dispatcher.setContext(activity, this);
         activity->releaseAccess();           /* force this to "safe" mode         */
         dispatcher.run();
