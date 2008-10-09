@@ -46,7 +46,7 @@
 ::class myserver
 
 ::method init
-    expose socket
+    expose socket shutdown
 
 /*  load socket function package if it's not already loaded  */
     if rxfuncquery('SockDropFuncs') then do
@@ -57,20 +57,35 @@
 /*  create a socket  */
     socket = socksocket('AF_INET', 'SOCK_STREAM', '0')
 
+    shutdown = .false
+
 ::method monitor unguarded
-    expose socket
+    expose socket shutdown
 
-    say 'Press Ctrl-C To Shutdown'
-    do forever
-        if sysgetkey('noecho')~c2x() = '03' then leave
-    end
+/*  this seems to be the only cross platform way of cleanly shutting down.
+    this may not be the best method of shutting down, but does work on both
+    Linux and Windows  */
+    say 'Press [Enter] To Shutdown'
+    pull .
 
-/*  close the socket  */
-    if sockclose(socket) < 0 then
-        say 'SockClose Failed'
+    shutdown = .true
+
+/*  create a socket (to connect to ourselves)  */
+    socket = socksocket('AF_INET', 'SOCK_STREAM', 'IPPROTO_TCP')
+
+/*  specify the host we will connect to  */
+    host.!family = 'AF_INET'
+    host.!addr = SockGetHostId()
+    host.!port = '726578'
+
+/*  connect to the server (if it hasn't already shutdown)  */
+    if sockconnect(socket, 'host.!') < 0 then
+    /*  close the socket connection  */
+        call sockclose(socket)
+
 
 ::method listen
-    expose socket
+    expose socket shutdown
 
 /*  specify the host we will run as  */
     host.!family = 'AF_INET'        --  Protocol family (only AF_INET is supported)
@@ -92,11 +107,18 @@
     self~start('monitor')   --  this will allow the server to be shutdown cleanly
 
     do forever
-        clientsocket = sockaccept(socket)   --  prepare to accept a new client
-        if clientsocket = '-1' then leave   --  if the socket is closed (by monitor) sockaccept will fail
+        cs = sockaccept(socket)   --  prepare to accept a new client
+        if cs = -1 | shutdown then leave   --  if the socket is closed (by monitor) sockaccept will fail
     /*  this will spawn a thread to handle the new client and then return to accept the next client  */
-        self~start('respond', clientsocket)
+        self~start('respond', cs)
     end
+
+    if cs <> -1 then
+        if sockclose(cs) < 0 then
+            say 'SockClose Failed'
+
+    if sockclose(socket) < 0 then
+        say 'SockClose Failed'
 
 ::method respond unguarded
     use arg socket

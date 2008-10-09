@@ -48,25 +48,33 @@ srv~listen()
 ::class myserver
 
 ::method init
-    expose sock
+    expose sock shutdown
 
 /*  instaniate an instance of the socket class  */
     sock = .socket~new()
 
+    shutdown = .false
+
 ::method monitor unguarded
-    expose sock
+    expose sock shutdown
 
-    say 'Press Ctrl-C To Shutdown'
-    do forever
-        if sysgetkey('noecho')~c2x() = '03' then leave
-    end
+    say 'Press [Enter] To Shutdown'
+    pull .
 
-/*  close the socket  */
-    if sock~close() < 0 then
-        say 'SockClose Failed'
+    shutdown = .true
+
+/*  instaniate an instance of the socket class  */
+    sock = .socket~new()
+
+    host = .inetaddress~new(.socket~gethostid(), '726578')
+
+/*  connect to the server (if it hasn't already shutdown)  */
+    if sock~connect(host) < 0 then
+    /*  close the socket connection  */
+        sock~close()
 
 ::method listen
-    expose sock
+    expose sock shutdown
 
 /*  instaniate an instance of the inetaddress class
     with the host information of the server we will
@@ -90,10 +98,17 @@ srv~listen()
 
     do forever
         csock = sock~accept()   --  prepare to accept a new client
-        if .nil = csock then leave  --  if the socket is closed (by monitor) sockaccept will return .nil
+        if .nil = csock | shutdown then leave   --  if the socket has closed or the shutdown flag is set
     /*  this will spawn a thread to handle the new client and then return to accept the next client  */
         self~start('respond', csock)
     end
+
+    if csock~isa(.socket) then
+        if csock~close() < 0 then
+            say 'SockClose Failed'
+
+    if sock~close() < 0 then
+        say 'SockClose Failed'
 
 ::method respond unguarded
     use arg sock
