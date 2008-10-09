@@ -705,6 +705,11 @@ RexxVariableBase  *RexxVariableDictionary::getDirectVariableRetriever(
                     }
                     break;                       /* done with scanning                */
                 }
+                else
+                {
+                    // invalid character in a symbol
+                    return OREF_NULL;
+                }
             }
             /* non-numeric character?            */
             else if (character < '0' || character > '9')

@@ -2815,6 +2815,11 @@ void RexxNativeActivation::variablePoolFetchVariable(PSHVBLOCK pshvblock)
         /* copy the value                    */
         pshvblock->shvret |= copyValue(value, &pshvblock->shvvalue, (size_t *)&pshvblock->shvvaluelen);
     }
+    else
+    {
+        /* this is bad                       */
+        pshvblock->shvret = RXSHV_BADN;
+    }
 }
 
 
