@@ -135,7 +135,7 @@ typedef RXSYSEXIT *PRXSYSEXIT;         /* pointer to a RXSYSEXIT     */
 
 typedef struct _SHVBLOCK {            /* shvb */
     struct _SHVBLOCK  *shvnext;       /* pointer to the next block   */
-    RXSTRING           shvname;       /* Pointer to the name buffer  */
+    CONSTRXSTRING      shvname;       /* Pointer to the name buffer  */
     RXSTRING           shvvalue;      /* Pointer to the value buffer */
     size_t             shvnamelen;    /* Length of the name value    */
     size_t             shvvaluelen;   /* Length of the fetch value   */

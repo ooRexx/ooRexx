@@ -1674,7 +1674,7 @@ $ Error_Invalid_argument_format
 690 Argument &1 is not in a valid format; found "&2"
 
 $ Error_Unsupported_new_method
-691 NEW method is not supported for the &1 class
+691 New method is not supported for the &1 class
 
 $ Error_Symbol_or_string_attribute
 692 String or symbol expected as ::ATTRIBUTE directive name
