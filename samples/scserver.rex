@@ -58,6 +58,9 @@ srv~listen()
 ::method monitor unguarded
     expose sock shutdown
 
+/*  this seems to be the only cross platform way of cleanly shutting down.
+    this may not be the best method of shutting down, but does work on both
+    Linux and Windows  */
     say 'Press [Enter] To Shutdown'
     pull .
 
