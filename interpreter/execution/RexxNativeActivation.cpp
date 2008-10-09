@@ -1228,7 +1228,6 @@ void RexxNativeActivation::run(RexxMethod *_method, RexxNativeMethod *_code, Rex
     {
         activity->requestAccess();
     }
-    trapErrors = false;                // no more error trapping
     this->guardOff();                  /* release any variable locks        */
     this->argcount = 0;                /* make sure we don't try to mark any arguments */
     // the lock holder gets here by longjmp from a kernel reentry.  We need to
@@ -1321,7 +1320,6 @@ void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeR
         activity->requestAccess();
     }
 
-    trapErrors = false;        // no more error trapping
     disableVariablepool();                // disable the variable pool from here
     // belt and braces...this restores the activity level to whatever
     // level we had when we made the callout.
@@ -1624,6 +1622,8 @@ void RexxNativeActivation::accessCallerContext()
  */
 void RexxNativeActivation::checkConditions()
 {
+    trapErrors = false;                // no more error trapping
+
     // if we have a stashed condition object, we need to raise this now
     if (conditionObj != OREF_NULL)
     {
