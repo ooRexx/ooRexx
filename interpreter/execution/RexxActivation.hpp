@@ -443,6 +443,7 @@ class ActivationSettings
        }
    }
 
+   RexxObject *getContextObject();
    RexxObject *getContextLine();
    RexxObject *getContextReturnStatus();
 

@@ -235,26 +235,12 @@ RexxDirectoryObject RexxEntry GetAllExitContextVariables(RexxExitContext *c)
 }
 
 
-RexxObjectPtr RexxEntry GetExitContext(RexxExitContext *c)
+RexxObjectPtr RexxEntry GetExitCallerContext(RexxExitContext *c)
 {
     ApiContext context(c);
     try
     {
-        return (RexxObjectPtr)context.ret(context.context->getRexxContextExecutable());
-    }
-    catch (RexxNativeActivation *)
-    {
-    }
-    return NULLOBJECT;
-}
-
-
-RexxPackageObject RexxEntry GetExitContextPackage(RexxExitContext *c)
-{
-    ApiContext context(c);
-    try
-    {
-        return (RexxPackageObject)context.ret(context.context->getRexxContextExecutable()->getPackage());
+        return (RexxObjectPtr)context.ret(context.context->getRexxContextObject());
     }
     catch (RexxNativeActivation *)
     {
@@ -301,6 +287,20 @@ logical_t RexxEntry GetContextForm(RexxCallContext *c)
     return false;
 }
 
+RexxObjectPtr RexxEntry GetCallerContext(RexxCallContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        return (RexxObjectPtr)context.ret(context.context->getRexxContextObject());
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
+
 RexxClassObject RexxEntry FindCallContextClass(RexxCallContext *c, CSTRING n)
 {
     ApiContext context(c);
@@ -335,6 +335,7 @@ CallContextInterface RexxActivity::callContextFunctions =
     GetContextDigits,
     GetContextFuzz,
     GetContextForm,
+    GetCallerContext,
     FindCallContextClass
 };
 
@@ -345,7 +346,6 @@ ExitContextInterface RexxActivity::exitContextFunctions =
     GetExitContextVariable,
     DropExitContextVariable,
     GetAllExitContextVariables,
-    GetExitContext,
-    GetExitContextPackage,
+    GetExitCallerContext,
 };
 

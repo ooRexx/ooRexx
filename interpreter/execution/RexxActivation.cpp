@@ -2196,16 +2196,28 @@ RexxObject * RexxActivation::rexxVariable(   /* retrieve a program entry        
         }
         else
         {
-            // the context object is created on demand...much of the time, this
-            // is not needed for an actvation
-            if (contextObject == OREF_NULL)
-            {
-                contextObject = new RexxContext(this);
-            }
-            return contextObject;
+            // retrieve the context object (potentially creating it on the first request)
+            return getContextObject();
         }
     }
     return OREF_NULL;                    // not recognized
+}
+
+
+/**
+ * Get the context object for this activation.
+ *
+ * @return The created context object.
+ */
+RexxObject *RexxActivation::getContextObject()
+{
+    // the context object is created on demand...much of the time, this
+    // is not needed for an actvation
+    if (contextObject == OREF_NULL)
+    {
+        contextObject = new RexxContext(this);
+    }
+    return contextObject;
 }
 
 

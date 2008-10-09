@@ -646,6 +646,7 @@ typedef struct
     stringsize_t     (RexxEntry *GetContextDigits)(RexxCallContext *);
     stringsize_t     (RexxEntry *GetContextFuzz)(RexxCallContext *);
     logical_t        (RexxEntry *GetContextForm)(RexxCallContext *);
+    RexxObjectPtr    (RexxEntry *GetCallerContext)(RexxCallContext *);
     RexxClassObject  (RexxEntry *FindContextClass)(RexxCallContext *, CSTRING);
 } CallContextInterface;
 
@@ -658,8 +659,7 @@ typedef struct
     RexxObjectPtr    (RexxEntry *GetContextVariable)(RexxExitContext *, CSTRING);
     void             (RexxEntry *DropContextVariable)(RexxExitContext *, CSTRING);
     RexxDirectoryObject (RexxEntry *GetAllContextVariables)(RexxExitContext *);
-    RexxObjectPtr    (RexxEntry *GetExitContext)(RexxExitContext *);
-    RexxPackageObject  (RexxEntry *GetExitContextPackage)(RexxExitContext *);
+    RexxObjectPtr    (RexxEntry *GetCallerContext)(RexxExitContext *);
 } ExitContextInterface;
 
 END_EXTERN_C()
@@ -2352,6 +2352,10 @@ struct RexxCallContext_
     {
         return functions->GetContextForm(this);
     }
+    RexxObjectPtr GetCallerContext()
+    {
+        return functions->GetCallerContext(this);
+    }
     RexxClassObject FindContextClass(CSTRING n)
     {
         return functions->FindContextClass(this, n);
@@ -2889,15 +2893,10 @@ struct RexxExitContext_
     {
         return functions->GetAllContextVariables(this);
     }
-    RexxObjectPtr GetExitContext()
+    RexxObjectPtr GetCallerContext()
     {
-        return functions->GetExitContext(this);
+        return functions->GetCallerContext(this);
     }
-    RexxPackageObject GetExitContextPackage()
-    {
-        return functions->GetExitContextPackage(this);
-    }
-
 #endif
 };
 

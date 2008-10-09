@@ -2069,6 +2069,24 @@ BaseExecutable *RexxNativeActivation::getRexxContextExecutable()
 
 
 /**
+ * Return the Rexx context object for our immediate caller.
+ * Depending on the context, this could be null.
+ *
+ * @return The parent Rexx context.
+ */
+RexxObject *RexxNativeActivation::getRexxContextObject()
+{
+    // since this should only be used for exit calls, in theory, we always
+    // have one of these.
+    if (activation != OREF_NULL)
+    {
+        return activation->getContextObject();
+    }
+    return OREF_NULL;
+}
+
+
+/**
  * Return the Rexx context this operates under.  Depending on the
  * context, this could be null.
  *

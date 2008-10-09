@@ -141,6 +141,7 @@ class RexxNativeActivation : public RexxActivationBase
   virtual bool isStackBase();
   virtual RexxActivation *getRexxContext();
   BaseExecutable *getRexxContextExecutable();
+  RexxObject *getRexxContextObject();
   virtual RexxActivation *findRexxContext();
   virtual NumericSettings *getNumericSettings();
   virtual RexxObject *getReceiver();
