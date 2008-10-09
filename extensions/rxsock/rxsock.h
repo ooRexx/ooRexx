@@ -105,12 +105,12 @@ char *RxVarGet(const char *pszStem, const char *pszTail);
 /*------------------------------------------------------------------
  * convert a rexx string to an unsigned int
  *------------------------------------------------------------------*/
-size_t rxs2size_t(PCONSTRXSTRING  pRxStr, int *rc);
+size_t rxs2size_t(PRXSTRING  pRxStr, int *rc);
 
 /*------------------------------------------------------------------
  * convert a rexx string to a LONG
  *------------------------------------------------------------------*/
-int rxs2int(PCONSTRXSTRING  pRxStr, int *rc);
+int rxs2int(PRXSTRING  pRxStr, int *rc);
 
 /*------------------------------------------------------------------
  * convert an int to a rexx string (already allocated)
@@ -120,12 +120,12 @@ void int2rxs(int i, PRXSTRING  pRxStr);
 /*------------------------------------------------------------------
  * convert a stem variable to an array of ints
  *------------------------------------------------------------------*/
-void rxstem2intarray(PCONSTRXSTRING pRxStr, int *count, int **arr);
+void rxstem2intarray(PRXSTRING pRxStr, int *count, int **arr);
 
 /*------------------------------------------------------------------
  * convert an array of ints to a stem variable
  *------------------------------------------------------------------*/
-void intarray2rxstem(PCONSTRXSTRING pRxStr, int count, int *arr);
+void intarray2rxstem(PRXSTRING pRxStr, int count, int *arr);
 
 /*------------------------------------------------------------------
  * convert a stemmed variable to a sockaddr

@@ -192,7 +192,7 @@ void RxVarSet(const char * pszStem, const char * pszTail, const char * pszValue 
 /*------------------------------------------------------------------
  * set a rexx variable
  *------------------------------------------------------------------*/
-void RxVarSet(const char * pszVariable, const char * pszValue)
+void RxVarSet(char * pszVariable, const char * pszValue)
 {
     SHVBLOCK shv;
 
@@ -215,7 +215,7 @@ void RxVarSet(const char * pszVariable, const char * pszValue)
 /*------------------------------------------------------------------
  * get a rexx variable - return value must be freed by caller
  *------------------------------------------------------------------*/
-char * RxVarGet(const char * pszVariable)
+char * RxVarGet(char * pszVariable)
 {
     SHVBLOCK shv;
     char *      pszValue;
@@ -318,7 +318,7 @@ char * RxVarGet(const char * pszStem, const char * pszTail)
 /*------------------------------------------------------------------
  * convert a rexx string to a size_t
  *------------------------------------------------------------------*/
-size_t rxs2size_t(PCONSTRXSTRING  pRxStr, int *rc)
+size_t rxs2size_t(PRXSTRING  pRxStr, int *rc)
 {
     size_t n;
     char *   dummy;
@@ -344,7 +344,7 @@ size_t rxs2size_t(PCONSTRXSTRING  pRxStr, int *rc)
 /*------------------------------------------------------------------
  * convert a rexx string to an int
  *------------------------------------------------------------------*/
-int rxs2int(PCONSTRXSTRING  pRxStr, int *rc)
+int rxs2int(PRXSTRING  pRxStr, int *rc)
 {
     int   n;
 
@@ -376,7 +376,7 @@ void int2rxs(int i, PRXSTRING  pRxStr)
 /*------------------------------------------------------------------
  * convert a stem variable to an array of ints
  *------------------------------------------------------------------*/
-void rxstem2intarray(PCONSTRXSTRING   pRxStr, int *count, int **arr)
+void rxstem2intarray(PRXSTRING   pRxStr, int *count, int **arr)
 {
     char *   countStr;
     char *   dummy;
@@ -437,7 +437,7 @@ void rxstem2intarray(PCONSTRXSTRING   pRxStr, int *count, int **arr)
 /*------------------------------------------------------------------
  * convert an array of ints to a stem variable
  *------------------------------------------------------------------*/
-void intarray2rxstem(PCONSTRXSTRING   pRxStr, int count, int *arr)
+void intarray2rxstem(PRXSTRING   pRxStr, int count, int *arr)
 {
     int   i;
     char  numBuff1[10];
@@ -812,7 +812,7 @@ size_t RexxEntry SockVersion(const char *name, size_t argc, PCONSTRXSTRING argv,
 /*------------------------------------------------------------------
  * load the function package
  *------------------------------------------------------------------*/
-size_t RexxEntry SockLoadFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
+size_t RexxEntry SockLoadFuncs(const char *name, size_t argc, PRXSTRING argv, const char *qName, PRXSTRING  retstr)
 {
     // this is a NOP now
     retstr->strlength = 0;               /* set return value           */
@@ -838,7 +838,7 @@ size_t RexxEntry SockDropFuncs(const char *name, size_t argc, PCONSTRXSTRING arg
 /*------------------------------------------------------------------
  * cause a trap to unload the DLL
  *------------------------------------------------------------------*/
-size_t RexxEntry SockDie(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
+size_t RexxEntry SockDie(const char *name, size_t argc, PRXSTRING argv, const char *qName, PRXSTRING  retstr)
 {
     int *p;
 
