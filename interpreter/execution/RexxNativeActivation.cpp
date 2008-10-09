@@ -3085,7 +3085,7 @@ RexxReturnCode RexxNativeActivation::copyValue(RexxObject * value, RXSTRING *rxs
         {
             return RXSHV_MEMFL;                  /* couldn't allocate, return flag */
         }
-        rxstring->strlength = string_length;
+        rxstring->strlength = string_length + 1;
     }
     /* buffer too short?              */
     if (string_length > rxstring->strlength)
