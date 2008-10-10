@@ -216,9 +216,6 @@ RexxReturnCode LocalRegistrationManager::resolveCallback(RegistrationType type, 
     ServiceRegistrationData regData(module);
     message.setMessageData((char *)&regData, sizeof(ServiceRegistrationData));
 
-    // the environment name always goes into name argument buffer
-    strcpy(message.nameArg, module == NULL ? "" : module);
-
     message.send();
 
     // if this was there, now try to load the module, if necessary.

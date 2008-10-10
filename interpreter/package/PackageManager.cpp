@@ -291,8 +291,16 @@ RoutineClass *PackageManager::resolveRoutine(RexxString *function, RexxString *p
         return func;
     }
 
-    // go register this (unconditionally....at this point, we don't care if this fails)
-    RexxRegisterFunctionDll(function->getStringData(), packageName->getStringData(), procedure->getStringData());
+    const char *functionName = function->getStringData();
+    const char *libraryName = packageName->getStringData();
+    const char *procedureName = procedure->getStringData();
+
+    {
+        UnsafeBlock releaser;   // don't hold the block while making the API call
+        // go register this (unconditionally....at this point, we don't care if this fails)
+        RexxRegisterFunctionDll(functionName, libraryName, procedureName);
+    }
+
 
     // resolve a registered entry, if we can and add it to the cache
     return createRegisteredRoutine(function);
@@ -412,8 +420,13 @@ RoutineClass *PackageManager::createRegisteredRoutine(RexxString *function)
 {
     REXXPFN entry = NULL;
 
-    // now go resolve this entry pointer
-    RexxResolveRoutine(function->getStringData(), &entry);
+    const char *functionName = function->getStringData();
+
+    {
+        UnsafeBlock releaser;    // don't hold the lock while calling
+        // now go resolve this entry pointer
+        RexxResolveRoutine(functionName, &entry);
+    }
 
     // this is a failure
     if (entry == NULL)
@@ -423,7 +436,7 @@ RoutineClass *PackageManager::createRegisteredRoutine(RexxString *function)
 
     // create a code handler and add to the cache
     RoutineClass *func = new RoutineClass(function, new RegisteredRoutine(function, (RexxRoutineHandler *)entry));
-    registeredRoutines->put(func, function);
+    registeredRoutines->put(func, function->upper());
     // we got this
     return func;
 }
@@ -499,7 +512,7 @@ RexxObject *PackageManager::addRegisteredRoutine(RexxString *name, RexxString *m
 
     // ok, this is not a converted new-style package.  Now try registering the function and
     // resolving it in this process.  This will also add this to the local cache
-    return resolveRoutine(name, module, proc) != OREF_NULL ? TheTrueObject : TheFalseObject;
+    return resolveRoutine(name, module, proc) != OREF_NULL ? TheFalseObject : TheTrueObject;
 }
 
 

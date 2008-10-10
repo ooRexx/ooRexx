@@ -328,9 +328,9 @@ void RegistrationTable::queryCallback(ServiceMessage &message)
     else
     {
         message.setResult(CALLBACK_NOT_FOUND);
+        // make sure the data message buffer is not passed back.
+        message.freeMessageData();
     }
-    // make sure the data message buffer is not passed back.
-    message.freeMessageData();
 }
 
 
@@ -761,7 +761,7 @@ void ServerRegistrationManager::dispatch(ServiceMessage &message)
             table->queryLibraryCallback(message);
             break;
         case REGISTER_LOAD_LIBRARY:
-            table->queryLibraryCallback(message);
+            table->queryCallback(message);
             break;
         case UPDATE_CALLBACK:
             table->updateCallback(message);

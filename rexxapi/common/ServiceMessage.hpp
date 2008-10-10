@@ -385,7 +385,7 @@ public:
         if (messageData != NULL && !retainMessageData)
         {
             // this is real message information
-            delete[] ((char *)messageData);
+            releaseResultMemory(messageData);
             clearMessageData();
         }
     }
