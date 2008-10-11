@@ -207,9 +207,12 @@ typedef struct _RexxMethodEntry
 
 #define REXX_PACKAGE_API_NO 20081030
 // The interpreter version gets defined using two digits for major, minor, and revision.
-#define REXX_INTERPRETER_4_0_0  40000
+#define REXX_INTERPRETER_4_0_0  0x00040000
 #define REXX_CURRENT_INTERPRETER_VERSION REXX_INTERPRETER_4_0_0
 #define NO_VERSION_YET NULL
+
+#define REXX_LANGUAGE_6_03 0x00000603
+#define REXX_CURRENT_LANGUAGE_LEVEL REXX_LANGUAGE_6_03
 
 #define STANDARD_PACKAGE_HEADER sizeof(RexxPackageEntry), REXX_PACKAGE_API_NO,
 
@@ -449,6 +452,8 @@ typedef struct
 
     void        (RexxEntry *Terminate)(RexxInstance *);
     logical_t   (RexxEntry *AttachThread)(RexxInstance *, RexxThreadContext **);
+    size_t      (RexxEntry *InterpreterVersion)(RexxInstance *);
+    size_t      (RexxEntry *LanguageLevel)(RexxInstance *);
     void        (RexxEntry *Halt)(RexxInstance *);
     void        (RexxEntry *SetTrace)(RexxInstance *, logical_t);
 } RexxInstanceInterface;
@@ -677,6 +682,14 @@ struct RexxInstance_
     {
         return functions->AttachThread(this, tc);
     }
+    size_t InterpreterVersion()
+    {
+        return functions->InterpreterVersion(this);
+    }
+    size_t LanguageLevel()
+    {
+        return functions->LanguageLevel(this);
+    }
     void Halt()
     {
         functions->Halt(this);
@@ -697,6 +710,14 @@ struct RexxThreadContext_
     POINTER GetApplicationData()
     {
         return instance->applicationData;
+    }
+    size_t InterpreterVersion()
+    {
+        return instance->InterpreterVersion();
+    }
+    size_t LanguageLevel()
+    {
+        return instance->LanguageLevel();
     }
     void DetachThread()
     {
@@ -1222,6 +1243,14 @@ struct RexxMethodContext_
     POINTER GetApplicationData()
     {
         return threadContext->GetApplicationData();
+    }
+    size_t InterpreterVersion()
+    {
+        return threadContext->InterpreterVersion();
+    }
+    size_t LanguageLevel()
+    {
+        return threadContext->LanguageLevel();
     }
     RexxObjectPtr RequestGlobalReference(RexxObjectPtr o)
     {
@@ -1795,6 +1824,14 @@ struct RexxCallContext_
     POINTER GetApplicationData()
     {
         return threadContext->GetApplicationData();
+    }
+    size_t InterpreterVersion()
+    {
+        return threadContext->InterpreterVersion();
+    }
+    size_t LanguageLevel()
+    {
+        return threadContext->LanguageLevel();
     }
     RexxObjectPtr RequestGlobalReference(RexxObjectPtr o)
     {
@@ -2374,6 +2411,14 @@ struct RexxExitContext_
     POINTER GetApplicationData()
     {
         return threadContext->GetApplicationData();
+    }
+    size_t InterpreterVersion()
+    {
+        return threadContext->InterpreterVersion();
+    }
+    size_t LanguageLevel()
+    {
+        return threadContext->LanguageLevel();
     }
     RexxObjectPtr RequestGlobalReference(RexxObjectPtr o)
     {

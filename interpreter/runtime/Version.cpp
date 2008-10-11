@@ -75,3 +75,26 @@ RexxString *Interpreter::getVersionNumber()
     }
     return versionNumber;
 }
+
+
+/**
+ * Get the interpreter version level as a binary number
+ * to be returned in the APIs.
+ *
+ * @return The binary interpreter version level.
+ */
+size_t Interpreter::getInterpreterVersion()
+{
+    return REXX_CURRENT_INTERPRETER_VERSION;
+}
+
+/**
+ * Return the current language level implemented by this
+ * interpreter version.
+ *
+ * @return The current defined language level.
+ */
+size_t Interpreter::getLanguageLevel()
+{
+    return REXX_CURRENT_LANGUAGE_LEVEL;
+}

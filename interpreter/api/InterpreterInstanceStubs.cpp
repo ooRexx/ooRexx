@@ -71,6 +71,17 @@ void RexxEntry SetTrace(RexxInstance *c, logical_t setting)
     InstanceApiContext context(c);
     context.instance->traceAllActivities(setting != 0);
 }
+
+size_t RexxEntry InterpreterVersion(RexxInstance *)
+{
+    return Interpreter::getInterpreterVersion();
+}
+
+size_t RexxEntry LanguageLevel(RexxInstance *)
+{
+    return Interpreter::getLanguageLevel();
+}
+
 END_EXTERN_C()
 
 
@@ -79,6 +90,8 @@ RexxInstanceInterface InterpreterInstance::interfaceVector =
     INSTANCE_INTERFACE_VERSION,
     Terminate,
     AttachThread,
+    InterpreterVersion,
+    LanguageLevel,
     Halt,
     SetTrace,
 };

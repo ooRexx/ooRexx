@@ -95,6 +95,8 @@ public:
     static bool terminateInterpreterInstance(InterpreterInstance *instance);
     static RexxString *getVersionNumber();
     static void initLocal();
+    static size_t getInterpreterVersion();
+    static size_t getLanguageLevel();
 
     static inline bool hasTimeSliceElapsed()
     {

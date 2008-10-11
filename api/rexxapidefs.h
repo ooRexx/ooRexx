@@ -57,7 +57,6 @@
 
 #define RXAUTOBUFLEN         256
 
-
 #define RXAPI_OK 0
 #define RXAPI_MEMFAIL 1002
 
