@@ -47,9 +47,6 @@
 /*                                                                            */
 /*  C methods:                                                                */
 /*    sysDirectory- Method for the DIRECTORY BIF                              */
-/*    activation_rxfuncadd - Method to support the RXFUNCADD function         */
-/*    activation_rxfuncdrop - Method to support the RXFUNCDROP function       */
-/*    activation_rxfuncquery - Method to support the RXFUNCQUERY function     */
 /*    SysExternalFunction- Method for searching/invoking an external function */
 /*                                                                            */
 /*  Internal routines:                                                        */
@@ -492,8 +489,8 @@ void SystemInterpreter::restoreEnvironment(
     current += sizeof(size_t);           /* update the pointer         */
     if (chdir(current) == -1)             /* restore the curr dir       */
     {
-        char msg[1024]; 
-        sprintf(msg, "Error restoring current directory: %s", current); 
+        char msg[1024];
+        sprintf(msg, "Error restoring current directory: %s", current);
         reportException(Error_System_service_service, msg);
     }
     current += strlen(current);          /* update the pointer         */

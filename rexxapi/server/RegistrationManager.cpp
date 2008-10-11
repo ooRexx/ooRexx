@@ -114,10 +114,18 @@ void RegistrationData::getRegistrationData(ServiceRegistrationData &regData)
     {
         strcpy(regData.moduleName, moduleName);
     }
+    else
+    {
+        strcpy(regData.moduleName, "");
+    }
 
     if (procedureName != NULL)
     {
         strcpy(regData.procedureName, procedureName);
+    }
+    else
+    {
+        strcpy(regData.procedureName, "");
     }
     regData.userData[0] = userData[0];
     regData.userData[1] = userData[1];
@@ -348,6 +356,13 @@ void RegistrationTable::queryLibraryCallback(ServiceMessage &message)
     const char *name = message.nameArg;
     const char *module = regData->moduleName;
 
+    // if not requesting by module name, handle like a normal request
+    if (strlen(module) == 0)
+    {
+        queryCallback(message);
+        return;
+    }
+
     // now check a library version first.
     RegistrationData *callback = locate(name, module);
     // copy the data if we found this
@@ -360,9 +375,9 @@ void RegistrationTable::queryLibraryCallback(ServiceMessage &message)
     else
     {
         message.setResult(CALLBACK_NOT_FOUND);
+        // make sure the data message buffer is not passed back.
+        message.freeMessageData();
     }
-    // make sure the data message buffer is not passed back.
-    message.freeMessageData();
 }
 
 
@@ -401,13 +416,21 @@ void RegistrationTable::updateCallback(ServiceMessage &message)
 //
 // parameter1 -- registration type
 // nameArg    -- The registration name
-void RegistrationTable::dropLibraryCallback(ServiceMessage &message)
+void RegistrationTable::dropCallback(ServiceMessage &message)
 {
+    ServiceRegistrationData *regData = (ServiceRegistrationData *)message.allocateMessageData(sizeof(ServiceRegistrationData));
     // get the argument name (local copy only)
     const char *name = message.nameArg;
+    RegistrationData **anchor = &firstEntryPoint;
 
-    // now check a library version first.
-    RegistrationData *callback = locate(name);
+    // now check the exe version first.
+    RegistrationData *callback = locate(name, message.session);
+    // not found?  try a library version
+    if (callback == NULL)
+    {
+        callback = locate(firstLibrary, name);
+        anchor = &firstLibrary;
+    }
     if (callback != NULL)
     {
         // an attempt to drop by somebody other than the owner?
@@ -427,7 +450,7 @@ void RegistrationTable::dropLibraryCallback(ServiceMessage &message)
             }
             else
             {
-                remove(&firstLibrary, callback);
+                remove(anchor, callback);
                 delete callback;
                 message.setResult(CALLBACK_DROPPED);
             }
@@ -447,18 +470,25 @@ void RegistrationTable::dropLibraryCallback(ServiceMessage &message)
 //
 // parameter1 -- registration type
 // nameArg    -- The registration name
-void RegistrationTable::dropCallback(ServiceMessage &message)
+void RegistrationTable::dropLibraryCallback(ServiceMessage &message)
 {
+    // we're sent an extra registration block here with input data.  We can just
+    // reuse this buffer to send the information back.
+    ServiceRegistrationData *regData = (ServiceRegistrationData *)message.getMessageData();
     // get the argument name (local copy only)
     const char *name = message.nameArg;
+    const char *module = regData->moduleName;
 
-    // now check the exe version first.
-    RegistrationData *callback = locate(name, message.session);
-    // not found?  try a Library version
-    if (callback == NULL)
+    // if not requesting by module name, handle like a normal request
+    if (strlen(module) == 0)
     {
-        callback = locate(firstLibrary, name);
+        queryCallback(message);
+        return;
     }
+
+    // now check a library version first.
+    RegistrationData *callback = locate(name, module);
+
     // copy the data into the buffer if we found one
     if (callback != NULL)
     {

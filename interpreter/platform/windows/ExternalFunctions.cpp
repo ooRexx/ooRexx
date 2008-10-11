@@ -43,9 +43,6 @@
 /*    sysSetLocal - Method for the SETLOCAL BIF                               */
 /*    sysEndLocal - Method for the ENDLOCAL BIF                               */
 /*    sysDirectory- Method for the DIRECTORY BIF                              */
-/*    activation_rxfuncadd - Method to support the RXFUNCADD function         */
-/*    activation_rxfuncdrop - Method to support the RXFUNCDROP function       */
-/*    activation_rxfuncquery - Method to support the RXFUNCQUERY function     */
 /*    SysExternalFunction- Method for searching/invoking an external function */
 /*    sysMessageBox - Method to pop up message box                            */
 /*                                                                            */

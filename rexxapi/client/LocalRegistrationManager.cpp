@@ -229,6 +229,10 @@ RexxReturnCode LocalRegistrationManager::resolveCallback(RegistrationType type, 
             if (lib.load(retData->moduleName))
             {
                 entryPoint = (REXXPFN)lib.getProcedure(retData->procedureName);
+                if (entryPoint == NULL)
+                {
+                    return RXSUBCOM_NOTREG;
+                }
             }
         }
         else

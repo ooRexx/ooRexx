@@ -374,7 +374,7 @@ public:
 
     inline void *allocateMessageData(size_t length)
     {
-        messageData = new char[length];
+        messageData = allocateResultMemory(length);
         messageDataLength = length;
         retainMessageData = false;
         return messageData;
@@ -395,8 +395,8 @@ public:
     void writeMessage(SysClientStream &server);
     void readResult(SysClientStream &server);
 
-    void *allocateResultMemory(size_t length);
-    void  releaseResultMemory(void *mem);
+    static void *allocateResultMemory(size_t length);
+    static void  releaseResultMemory(void *mem);
 
     ServerManager messageTarget;         // end receiver of the message
     ServerOperation operation;           // operation to be performed

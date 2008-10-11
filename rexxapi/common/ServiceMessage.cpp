@@ -77,10 +77,10 @@ void ServiceMessage::readMessage(SysServerConnection *connection)
     if (messageDataLength != 0)
     {
         // allocate a data buffer for the extra information and read it in.
-        messageData = new char[messageDataLength];
+        messageData = allocateResultMemory(messageDataLength);
         if (!connection->read(messageData, messageDataLength, &actual) || actual != messageDataLength)
         {
-            delete[] ((char *)messageData);
+            releaseResultMemory(messageData);
             // make sure these are cleared out
             messageData = NULL;
             messageDataLength = 0;

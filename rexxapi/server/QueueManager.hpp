@@ -63,7 +63,10 @@ public:
     {
         if (elementData != NULL)
         {
-            delete [] elementData;      // release the element data too
+            // make sure we release this too.  This was allocated by the
+            // incoming message, so we need to use the other mechanism for
+            // releasing this memory
+            ServiceMessage::releaseResultMemory((void *)elementData);
         }
     }
 

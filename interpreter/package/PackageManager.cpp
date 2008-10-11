@@ -498,7 +498,7 @@ RexxObject *PackageManager::addRegisteredRoutine(RexxString *name, RexxString *m
     // if we have this, then we can return it directly.
     if (func != OREF_NULL)
     {
-        return func;
+        return TheFalseObject;
     }
 
     // see if this package is resolveable/loadable.
@@ -507,7 +507,7 @@ RexxObject *PackageManager::addRegisteredRoutine(RexxString *name, RexxString *m
     {
         // See if this is resolvable in this context.  If we got it,
         // return True.
-        return getLoadedRoutine(name) != OREF_NULL ? TheTrueObject : TheFalseObject;
+        return getLoadedRoutine(name) != OREF_NULL ? TheFalseObject : TheTrueObject;
     }
 
     // ok, this is not a converted new-style package.  Now try registering the function and
@@ -526,14 +526,21 @@ RexxObject *PackageManager::addRegisteredRoutine(RexxString *name, RexxString *m
  */
 RexxObject *PackageManager::dropRegisteredRoutine(RexxString *name)
 {
+    // we register this using the uppercase name, so make sure we uppercase it
+    // before looking in the tables.
+    name = name->upper();
     // remove this from the local cache, then remove it from the global function
     // registration.
     registeredRoutines->remove(name);
+    const char *functionName = name->getStringData();
 
-    // just allow this to pass through to Rexxapi.  If this was truely registered
-    // instead of loaded implicitly, this will remove the entry.  Otherwise, it will
-    // return false.  Regardless, we leave it in our internal tables until we exit.
-    return RexxDeregisterFunction(name->getStringData()) ? TheTrueObject : TheFalseObject;
+    {
+        UnsafeBlock releaser;
+        // just allow this to pass through to Rexxapi.  If this was truely registered
+        // instead of loaded implicitly, this will remove the entry.  Otherwise, it will
+        // return false.  Regardless, we leave it in our internal tables until we exit.
+        return RexxDeregisterFunction(functionName) == 0 ? TheFalseObject : TheTrueObject;
+    }
 }
 
 
@@ -549,14 +556,22 @@ RexxObject *PackageManager::dropRegisteredRoutine(RexxString *name)
  */
 RexxObject *PackageManager::queryRegisteredRoutine(RexxString *name)
 {
+    // we register this using the uppercase name, so make sure we uppercase it
+    // before looking in the tables.
+    name = name->upper();
     // does this name exist in our table?
     if (getLoadedRoutine(name) != OREF_NULL)
     {
-        return TheTrueObject;
+        return TheFalseObject;
     }
-    // just allow this to pass through to Rexxapi.  If this was truly registered
-    // instead of loaded implicitly, it will find it.
-    return RexxQueryFunction(name->getStringData()) ? TheTrueObject : TheFalseObject;
+
+    const char *functionName = name->getStringData();
+    {
+        UnsafeBlock releaser;
+        // just allow this to pass through to Rexxapi.  If this was truly registered
+        // instead of loaded implicitly, it will find it.
+        return RexxQueryFunction(functionName) != 0 ? TheTrueObject : TheFalseObject;
+    }
 }
 
 
@@ -933,8 +948,12 @@ PREGISTEREDROUTINE PackageManager::resolveRegisteredRoutineEntry(RexxString *pac
     {
         REXXPFN entry = NULL;
 
-        // now go resolve this entry pointer
-        RexxResolveRoutine(name->getStringData(), &entry);
+        const char *functionName = name->getStringData();
+        {
+            UnsafeBlock releaser;
+            // now go resolve this entry pointer
+            RexxResolveRoutine(functionName, &entry);
+        }
 
         // this is a failure
         if (entry == NULL)

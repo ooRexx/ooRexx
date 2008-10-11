@@ -40,35 +40,3 @@
 #include "oorexxapi.h"                      /* Lot's of useful REXX macros    */
 
 
-/******************************************************************************/
-/* activation_rxfuncadd - Method to support RXFUNCADD function                */
-/******************************************************************************/
-RexxRoutine3(logical_t, sysRxfuncadd, CSTRING,name, CSTRING,module, OPTIONAL_CSTRING, proc)
-{
-    if (proc == NO_CSTRING)              /* no procedure given?               */
-    {
-        proc = name;                       /* use the defined name              */
-    }
-    /* try to register the function      */
-    return RexxRegisterFunctionDll(name, module, proc) != 0;
-}
-
-
-/******************************************************************************/
-/* activation_rxfuncdrop - Method to support RXFUNCDROP function              */
-/******************************************************************************/
-RexxRoutine1(logical_t, sysRxfuncdrop, CSTRING, name)
-{
-    /* try to drop the function          */
-    return RexxDeregisterFunction(name) != 0;
-}
-
-
-/******************************************************************************/
-/* activation_rxfuncquery - Method to support RXFUNCQUERY function            */
-/******************************************************************************/
-RexxRoutine1(logical_t, sysRxfuncquery, CSTRING,name)
-{
-    // see if the function is there
-    return RexxQueryFunction(name) != 0;
-}
