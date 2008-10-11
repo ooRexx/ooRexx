@@ -248,8 +248,8 @@ public:
         }
         else
         {
-            userData[0] = NULL;
-            userData[1] = NULL;
+            userData[0] = 0;
+            userData[1] = 0;
         }
     }
 

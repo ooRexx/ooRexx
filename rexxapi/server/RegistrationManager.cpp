@@ -58,7 +58,7 @@ RegistrationData::RegistrationData(const char *n, const char *m, SessionID s, Se
     dropAuthority = regData->dropAuthority;
     userData[0] = regData->userData[0];
     userData[1] = regData->userData[1];
-    entryPoint = NULL;
+    entryPoint = 0;
     references = NULL;
 }
 

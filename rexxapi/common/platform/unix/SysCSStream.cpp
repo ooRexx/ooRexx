@@ -50,7 +50,9 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <netdb.h>
-#include <byteswap.h>
+#if !defined(__OpenBSD__)
+ #include <byteswap.h>
+#endif
 #include <errno.h>
 #include "SysCSStream.hpp"
 
