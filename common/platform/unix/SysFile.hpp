@@ -47,6 +47,9 @@
 
 #include "rexxapitypes.h"
 #include <fcntl.h>
+#if defined(__OpenBSD__)
+#include <sys/stat.h>
+#endif
 
 // The following define the platform independent open flags
 // openFlags argument flags
