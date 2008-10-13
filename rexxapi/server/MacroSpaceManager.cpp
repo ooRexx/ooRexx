@@ -65,7 +65,7 @@ MacroItem::MacroItem(const char *n, const char *data, size_t l, size_t p)
  */
 void MacroItem::update(const char *data, size_t l, size_t p)
 {
-    delete [] imageBuffer;
+    ServiceMessage::releaseResultMemory((void *)imageBuffer);
     imageBuffer = data;
     imageSize = l;
     searchPosition = p;
@@ -85,6 +85,7 @@ void MacroTable::clear()
         delete current;
         current = next;
     }
+    macros = NULL;          // clear the anchor
 }
 
 

@@ -702,6 +702,7 @@ RoutineClass *RoutineClass::processInstore(PRXSTRING instore, RexxString * name 
 
         /* translate this source             */
         RoutineClass *routine = new RoutineClass(name, source_buffer);
+        ProtectedObject p(routine);
         /* return this back in instore[1]    */
         routine->save(&instore[1]);
         return routine;                    /* return translated source          */
@@ -722,13 +723,14 @@ RoutineClass *RoutineClass::restore(const char *data, size_t length)
     // create a buffer object and restore from it
     RexxBuffer *buffer = new_buffer(data, length);
     ProtectedObject p(buffer);
-    return restore(buffer, buffer->getData());
+    return restore(buffer, buffer->getData(), length);
 }
 
 
 RoutineClass *RoutineClass::restore(
     RexxBuffer *buffer,                /* buffer containing the method      */
-    char *startPointer)                /* first character of the method     */
+    char *startPointer,                /* first character of the method     */
+    size_t length)                     // length of data to unflatten
 /******************************************************************************/
 /* Function: Unflatten a translated method.  Passed a buffer object containing*/
 /*           the method                                                       */
@@ -738,7 +740,7 @@ RoutineClass *RoutineClass::restore(
   RexxEnvelope *envelope  = new RexxEnvelope;
   ProtectedObject p(envelope);
                                        /* now puff up the method object     */
-  envelope->puff(buffer, startPointer);
+  envelope->puff(buffer, startPointer, length);
                                        /* The receiver object is an envelope*/
                                        /* whose receiver is the actual      */
                                        /* method object we're restoring     */
@@ -777,7 +779,7 @@ RoutineClass *RoutineClass::restore(RexxString *fileName, RexxBuffer *buffer)
         return OREF_NULL;
     }
     // this should be valid...try to restore.
-    RoutineClass *routine = restore(buffer, metaData->getImageData());
+    RoutineClass *routine = restore(buffer, buffer->getData(), metaData->getImageSize());
     routine->getSourceObject()->setProgramName(fileName);
     return routine;
 }
@@ -817,7 +819,7 @@ RoutineClass *RoutineClass::restore(RXSTRING *inData)
     RexxBuffer *bufferData = metaData->extractBufferData();
     ProtectedObject p(bufferData);
     // we're restoring from the beginning of this.
-    return restore(bufferData, bufferData->getData());
+    return restore(bufferData, bufferData->getData(), metaData->getImageSize());
 }
 
 

@@ -136,7 +136,9 @@ void TranslateInstoreDispatcher::run()
         /* got an error here                 */
         reportException(Error_Program_unreadable_name, name);
     }
-    savedObjects.add(program);
+    // copy the image information back
+    image->strptr = instore[1].strptr;
+    image->strlength = instore[1].strlength;
 }
 
 

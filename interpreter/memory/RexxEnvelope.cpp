@@ -230,19 +230,24 @@ RexxBuffer *RexxEnvelope::pack(
     return letter;
 }
 
-void RexxEnvelope::puff(
-    RexxBuffer *sourceBuffer,                /* buffer object to unflatten        */
-    char *startPointer)                /* start of buffered data            */
-/******************************************************************************/
-/* Function:  Puff into an envelope and remove its contents (unflatten the    */
-/*            stuff )                                                         */
-/******************************************************************************/
+/**
+ * Perform an in-place unflatten operation on an object
+ * in a buffer.
+ *
+ * @param sourceBuffer
+ *                   The buffer containing the flattened object.
+ * @param startPointer
+ *                   The starting data location in the buffer.
+ * @param dataLength The length of the data to unflatten
+ */
+void RexxEnvelope::puff(RexxBuffer *sourceBuffer, char *startPointer, size_t dataLength)
 {
     size_t primitiveTypeNum = 0;         /* primitive behaviour type number   */
 
     char *bufferPointer = startPointer;  /* copy the starting point           */
                                          /* point to end of buffer            */
-    char *endPointer = (char *)sourceBuffer + sourceBuffer->getObjectSize();
+    char *endPointer = (char *)startPointer + dataLength;
+    RexxObject *puffObject = OREF_NULL;
 
     /* Set objoffset to the real address of the new objects.  This tells              */
     /* mark_general to fix the object's refs and set their live flags.                */
@@ -250,16 +255,15 @@ void RexxEnvelope::puff(
     /* Now traverse the buffer fixing all of the behaviour pointers of the objects.   */
     while (bufferPointer < endPointer)
     {
-        RexxObject *puffObject = (RexxObject *)bufferPointer;
+        puffObject = (RexxObject *)bufferPointer;
 
         /* a non-primitive behaviour         */
         /* These are actually in flattened   */
         /* storgage.                         */
-        if (ObjectHasNonPrimitiveBehaviour(puffObject))
+        if (puffObject->isNonPrimitive())
         {
-
             /* Yes, lets get the behaviour Object*/
-            RexxBehaviour *objBehav = (RexxBehaviour *)(((uintptr_t)(puffObject->behaviour) & ~BEHAVIOUR_NON_PRIMITIVE) + sourceBuffer->getData());
+            RexxBehaviour *objBehav = (RexxBehaviour *)(((uintptr_t)puffObject->behaviour) + sourceBuffer->getData());
             /* Resolve the static behaviour info */
             objBehav->resolveNonPrimitiveBehaviour();
             /* Set this objects behaviour.       */
@@ -273,6 +277,7 @@ void RexxEnvelope::puff(
             // convert this from a type number to the actuall class.  This will unnormalize the
             // type number to the different object classes.
             puffObject->behaviour = RexxBehaviour::restoreSavedPrimitiveBehaviour(puffObject->behaviour);
+            primitiveTypeNum = puffObject->behaviour->getClassType();
         }
         /* Force fix-up of                   */
         /*VirtualFunctionTable,              */
@@ -288,22 +293,28 @@ void RexxEnvelope::puff(
     }
     memoryObject.setObjectOffset(0);     /* all done with the fixups!         */
 
-                                         /* Prepare to reveal the objects in  */
-                                         /*the buffer.                        */
-                                         /* our receiver object is the inital */
-                                         /* envelope.  This also keeps a      */
-                                         /* reference to original envelope so */
-                                         /* we don't loose it.                */
-    OrefSet(this,this->receiver, (RexxObject *)(startPointer + ((RexxObject *)startPointer)->getObjectSize()));
+    // Prepare to reveal the objects in  the buffer.
+    // the first object in the buffer is a dummy added
+    // for padding.  We need to step past that one to the
+    // beginning of the real unflattened objects
+    OrefSet(this, this->receiver, (RexxObject *)(startPointer + ((RexxObject *)startPointer)->getObjectSize()));
     /* chop off end of buffer to reveal  */
     /* its contents to memory obj        */
 
+    // this is the location of the next object after the buffer
+    char *nextObject = ((char *)sourceBuffer) + sourceBuffer->getObjectSize();
+    // this is the size of any tailing buffer portion after the last unflattened object.
+    size_t tailSize = nextObject - endPointer;
+
+    // puffObject is the last object we processed.  Add any tail data size on to that object
+    // so we don't create an invalid gap in the heap.
+    puffObject->setObjectSize(puffObject->getObjectSize() + tailSize);
+    // now adjust the front portion of the buffer object to reveal all of the
+    // unflattened data.
     sourceBuffer->setObjectSize((char *)startPointer - (char *)sourceBuffer + ((RexxObject *)startPointer)->getObjectSize());
-    /* HOL: otherwise an object with 20 bytes will be left */
 
-
-    /* move past header to envelope    */
-    bufferPointer = startPointer + ((RexxObject *)startPointer)->getObjectSize();
+    // move past the header to the real unflattened data
+    bufferPointer = (char *)this->receiver;
     /* Set envelope to the real address of the new objects.  This tells               */
     /* mark_general to send unflatten to run any proxies.                             */
     memoryObject.setEnvelope(this);      /* tell memory to send unflatten     */
@@ -311,30 +322,25 @@ void RexxEnvelope::puff(
     /* Now traverse the buffer running any proxies.                                   */
     while (bufferPointer < endPointer)
     {
-        /* Since a GC could happen at anytime*/
-        /*  we need to check to make sure the*/
-        /*  we are going now unflatten is    */
-        /*  still alive, since all who       */
-        /*  reference it may have already    */
-        /*  run and gotten the info from it  */
-        /*  and no longer reference it.      */
-        if (((RexxObject *)bufferPointer)->isObjectLive(memoryObject.markWord))
-            /* Mark other referenced objs        */
-            ((RexxObject *)bufferPointer)->liveGeneral(UNFLATTENINGOBJECT);
-        /* Note that this flavor of          */
-        /* mark_general will run any proxies */
-        /* created by unflatten and fixup    */
-        /* the refs to them.                 */
-        /* Point to next object in image.    */
-        bufferPointer += ((RexxObject *)bufferPointer)->getObjectSize();
+        puffObject = (RexxObject *)bufferPointer;
+        // Since a GC could happen at anytime we need to check to make sure the object
+        //  we are going now unflatten is still alive, since all who reference it may have already
+        //  run and gotten the info from it and no longer reference it.
+        if (puffObject->isObjectLive(memoryObject.markWord))
+        {
+            // Note that this flavor of  liveGeneral will run any proxies
+            // created by unflatten and fixup  the refs to them.
+            puffObject->liveGeneral(UNFLATTENINGOBJECT);
+        }
+
+        // Point to next object in image.
+        bufferPointer += puffObject->getObjectSize();
     }
 
-    /* Tell memory we're done            */
-    memoryObject.setEnvelope(OREF_NULL); /* unflattening.                     */
-
-                                         /* Before we run the method we need  */
-                                         /* to give the tables a chance to    */
-    this->rehash();                      /* rehash...                         */
+    // Tell memory we're done unflattening
+    memoryObject.setEnvelope(OREF_NULL);
+    // Before we run the method we need to give any tables a chance to rehash...
+    this->rehash();
 }
 
 size_t RexxEnvelope::queryObj(
@@ -364,7 +370,6 @@ size_t RexxEnvelope::copyBuffer(
         void *behavPtr = &newObj->behaviour;
 
         this->flattenReference(&newObj, objOffset, (RexxObject **)behavPtr);
-        newObj->behaviour = (RexxBehaviour *)((size_t)(newObj->behaviour) | BEHAVIOUR_NON_PRIMITIVE);
     }
     else
     {

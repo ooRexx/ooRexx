@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                RexxBuffer.c    */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Buffer Class                                                     */
 /*                                                                            */
@@ -73,7 +73,7 @@ RexxBuffer *RexxBuffer::expand(
                                          /* buffer, or this size of           */
                                          /* current(this)buffer + requested   */
                                          /* minimum length.                   */
-    if (l > this->getLength())           /* need more than double?            */
+    if (l > this->getLength() * 2)       /* need more than double?            */
     {
         /* increase by the requested amount  */
         newBuffer = new_buffer(this->getLength() + l);
@@ -84,7 +84,7 @@ RexxBuffer *RexxBuffer::expand(
     }
     /* have new buffer, so copy data from*/
     /* current buffer into new buffer.   */
-    memcpy(newBuffer->getData(), this->data, this->getLength());
+    memcpy(newBuffer->getData(), this->getData(), this->getLength());
     return newBuffer;                    /* all done, return new buffer       */
 
 }

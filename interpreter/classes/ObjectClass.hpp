@@ -130,18 +130,15 @@ protected:
     enum
 
       {
-        IsNonPrimitive   =  0x0001,    // use for flattened objects to indicated behaviour status
         MarkBit1         =  0x0001,    // location of the first mark bit.  Note:  shared with IsNonPrimitive
         MarkBit2         =  0x0002,    // Second of the mark bits
         ProxiedObject    =  0x0004,    // This requires a proxy
         ProxyObject      =  0x0008,    // This object is a PROXY(String) Obj
+        IsNonPrimitive   =  0x0010,    // use for flattened objects to indicated behaviour status
         NoRefBit         =  0x0020     // location of No References Bit.
 
     };
 
-
-    // TODO:  Once all portable types are available for the build, the sizes of these
-    // fields need to be changed to unintptr_t for force them to be pointer sized.
     size_t    objectSize;              // allocated size of the object
     union
     {

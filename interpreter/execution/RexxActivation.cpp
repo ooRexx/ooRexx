@@ -2438,7 +2438,15 @@ RoutineClass *RexxActivation::getMacroCode(RexxString *macroName)
     RoutineClass * macroRoutine = OREF_NULL;
 
     macroImage.strptr = NULL;
-    if (RexxResolveMacroFunction(macroName->getStringData(), &macroImage) == 0)
+    const char *name = macroName->getStringData();
+    int rc;
+    {
+        UnsafeBlock releaser;
+
+        rc = RexxResolveMacroFunction(name, &macroImage);
+    }
+
+    if (rc == 0)
     {
         macroRoutine = RoutineClass::restore(&macroImage, macroName);
         // return the allocated buffer

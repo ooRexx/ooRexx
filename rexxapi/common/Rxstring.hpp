@@ -81,7 +81,7 @@ public:
 
     void ensureCapacity(size_t size)
     {
-        if (strlength < size)
+        if (strlength < size || strptr == NULL)
         {
             if (strptr != NULL)
             {

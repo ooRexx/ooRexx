@@ -667,7 +667,8 @@ RexxMethod *RexxMethod::newFileRexx(RexxString *filename)
 
 RexxMethod *RexxMethod::restore(
     RexxBuffer *buffer,                /* buffer containing the method      */
-    char *startPointer)                /* first character of the method     */
+    char *startPointer,                /* first character of the method     */
+    size_t length)                     // length of the data to restore
 /******************************************************************************/
 /* Function: Unflatten a translated method.  Passed a buffer object containing*/
 /*           the method                                                       */
@@ -677,7 +678,7 @@ RexxMethod *RexxMethod::restore(
   RexxEnvelope *envelope  = new RexxEnvelope;
   ProtectedObject p(envelope);
                                        /* now puff up the method object     */
-  envelope->puff(buffer, startPointer);
+  envelope->puff(buffer, startPointer, length);
                                        /* The receiver object is an envelope*/
                                        /* whose receiver is the actual      */
                                        /* method object we're restoring     */

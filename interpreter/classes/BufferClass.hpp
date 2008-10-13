@@ -76,8 +76,15 @@ public:
     }
 protected:
 
-   size_t size;                        // size of the buffer
-   size_t length;                      // length of the buffer data (freqently the same)
+    // the following field is padding required to get the start of the of the
+    // buffer data aligned on an object grain boundary.  Since we unflatten saved programs
+    // by reducing the size of the surrounding buffer to reveal the exposed data, we need
+    // to ensure appropriate data alignment.  Fortunately, because the sizes of all of the
+    // fields doubles when going to 64-bit, this single padding item is sufficient to
+    // get everything lined up on all platforms.
+    size_t reserved;
+    size_t size;                        // size of the buffer
+    size_t length;                      // length of the buffer data (freqently the same)
 };
 
 
@@ -105,25 +112,6 @@ protected:
 };
 
 
-class RexxMappedBuffer : public RexxBufferBase
-{
-public:
-    void *operator new(size_t);
-    inline void *operator new(size_t size, void *ptr) {return ptr;};
-    inline void  operator delete(void *) { ; }
-    inline void  operator delete(void *, void *) { ; }
-
-    inline RexxMappedBuffer(void *d, size_t l) { data = d; size = l; length = l; }
-    inline RexxMappedBuffer(RESTORETYPE restoreType) { ; }
-
-    virtual char *getData() { return (char *)data; }
-
-protected:
-    void *data;                         /* actual data length                */
-};
-
-
-
  inline RexxBuffer *new_buffer(size_t s) { return new (s) RexxBuffer; }
  inline RexxBuffer *new_buffer(CONSTRXSTRING &r)
  {
@@ -145,11 +133,4 @@ protected:
      b->copyData(0, data, length);
      return b;
  }
-
- inline RexxMappedBuffer *new_mapped_buffer(void *data, size_t length)
- {
-     return new RexxMappedBuffer(data, length);
- }
-
-
 #endif

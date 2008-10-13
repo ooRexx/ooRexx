@@ -51,7 +51,7 @@ public:
     ~MacroItem()
     {
         delete [] name;             // release the name and
-        delete [] imageBuffer;      // image buffer
+        ServiceMessage::releaseResultMemory((void *)imageBuffer);
     }
 
     MacroItem *next;                   // next macro in chain

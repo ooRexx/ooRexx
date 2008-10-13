@@ -44,14 +44,6 @@
 #ifndef Included_RexxEnvelope
 #define Included_RexxEnvelope
 
-/* The following bits define the type of envelope we are creating */
-#define MOBILE_ENVELOPE 0x00000001     /* This envelope will be mobile  a mobi*/
-#define METHOD_ENVELOPE 0x00000010     /* This envelope used to preserve      */
-                                       /* a translated method in EA's         */
-
-#define BEHAVIOUR_NON_PRIMITIVE 0x80000000
-#define ObjectHasNonPrimitiveBehaviour(o) (((uintptr_t)(((RexxObject *)o)->behaviour)) & BEHAVIOUR_NON_PRIMITIVE)
-
 class RexxSmartBuffer;
 class RexxBuffer;
 
@@ -67,7 +59,7 @@ class RexxEnvelope : public RexxInternalObject
 
    void flattenReference(void *, size_t, void *);
    RexxBuffer *pack(RexxObject *);
-   void        puff(RexxBuffer *, char *);
+   void        puff(RexxBuffer *, char *, size_t length);
    size_t queryObj(RexxObject *);
    size_t copyBuffer(RexxObject *);
    void rehash();
