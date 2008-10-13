@@ -4249,23 +4249,32 @@ size_t RexxEntry SysShutDownSystem(const char *name, size_t numargs, CONSTRXSTRI
 
 size_t RexxEntry SysSwitchSession(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  HWND hwnd;
+    HWND hwnd;
 
-  if (numargs != 1)                    /* wrong number?              */
-    return INVALID_ROUTINE;            /* raise error condition      */
+    if ( numargs != 1 )
+    {
+        /* raise error condition  */
+        return INVALID_ROUTINE;
+    }
 
-  hwnd = FindWindow(NULL, args[0].strptr);
+    hwnd = FindWindow(NULL, args[0].strptr);
 
-  if (hwnd)
-  {
-     if (!SetForegroundWindow(hwnd))
+    if ( hwnd == NULL )
+    {
         RETVAL(GetLastError())
-     else
-        RETVAL(0)
-  }
-  else
-     RETVAL(1)
-  return VALID_ROUTINE;                /* good completion            */
+    }
+    else
+    {
+      if ( !SetForegroundWindow(hwnd) )
+      {
+          RETVAL(GetLastError())
+      }
+      else
+      {
+          RETVAL(0)
+      }
+    }
+    return VALID_ROUTINE;                /* good completion            */
 }
 
 /*************************************************************************
