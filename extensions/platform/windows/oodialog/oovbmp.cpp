@@ -895,7 +895,27 @@ LPBITMAPINFO LoadDIB(const char *szFile)
 
 
     fd = OpenFile(szFile, &os, OF_READ);
-    if (fd < 1) return NULL;
+    if (fd < 1)
+    {
+        char *msg;
+        char *errBuff;
+        DWORD err = GetLastError();
+
+        msg = (char *)LocalAlloc(LPTR, 512);
+        if ( msg )
+        {
+            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, err,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&errBuff, 0, NULL);
+
+            _snprintf(msg, 512, "Failed to open the bitmap file: %s.\n\nSystem error (%u):\n%s",
+                      szFile, err, errBuff);
+            MessageBox(NULL, msg,  "ooDialog Error", MB_OK | MB_ICONASTERISK);
+
+            LocalFree(msg);
+            LocalFree(errBuff);
+        }
+        return NULL;
+    }
 
     wBytes = _lread(fd, (LPSTR)&BmpFileHdr, sizeof(BmpFileHdr));
     if (wBytes != sizeof(BmpFileHdr)) goto $abort;
