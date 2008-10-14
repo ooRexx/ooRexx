@@ -158,6 +158,7 @@ void ServerMacroSpaceManager::addMacro(ServiceMessage &message)
     if (item == NULL)
     {
         item = new MacroItem(message.nameArg, (const char *)message.getMessageData(), message.getMessageDataLength(), message.parameter2);
+        macros.add(item);
     }
     else
     {
@@ -165,7 +166,6 @@ void ServerMacroSpaceManager::addMacro(ServiceMessage &message)
     }
     // we're keeping the storage here, so detach it from the message.
     message.clearMessageData();
-    macros.add(item);
     message.setResult(MACRO_ADDED);
 }
 

@@ -71,6 +71,8 @@ MacroSpaceFile::~MacroSpaceFile()
 void MacroSpaceFile::close()
 {
     fileInst->close();
+    delete fileInst;
+    fileInst = NULL;
 }
 
 
@@ -150,7 +152,6 @@ void MacroSpaceFile::nextMacro(NameTable names, char *name, ManagedRxstring &ima
     MacroSpaceDescriptor desc;
 
     read(&desc, sizeof(desc));
-    descriptorBase += sizeof(desc);
 
     // we only read the image data in if this is in the requested list
     if (names.inTable(desc.name))
@@ -178,7 +179,7 @@ void MacroSpaceFile::nextMacro(NameTable names, char *name, ManagedRxstring &ima
 void MacroSpaceFile::setFilePosition(size_t p)
 {
     int64_t position;
-    if (fileInst->seek(p, SEEK_CUR, position) == false)
+    if (fileInst->seek(p, SEEK_SET, position) == false)
     {
         throw new ServiceException(FILE_READ_ERROR, "Error reading from macrospace file");
     }

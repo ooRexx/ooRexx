@@ -202,6 +202,11 @@ void SysFile::setBuffering(bool buffering, size_t length)
  */
 bool SysFile::close()
 {
+    // don't do anything if not opened
+    if (fileHandle == -1)
+    {
+        return true;
+    }
     // if we're buffering, make sure the buffers are flushed
     if (buffered)
     {
@@ -227,8 +232,9 @@ bool SysFile::close()
             errInfo = errno;
             return false;
         }
-        fileHandle = -1;
     }
+    // always clear this on a close
+    fileHandle = -1;
 
     return true;
 }
@@ -431,6 +437,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
             return true;
         }
 
+        bytesWritten = len;
         // ok, we have can fit in the buffer, but we might need to do this
         // in chunks
         while (len > 0)
