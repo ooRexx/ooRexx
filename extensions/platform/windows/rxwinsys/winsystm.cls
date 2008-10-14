@@ -358,92 +358,44 @@
 
 
 
-::class 'WindowsEventLog' subclass WindowsClassesBase public
+::class 'WindowsEventLog' public
 
-::method CurrentHandle attribute
-::method Events attribute
+::attribute currentHandle private
+::attribute events get
+::attribute minimumReadBuffer get
+::attribute minimumReadMin get
+::attribute minimumReadMax get
 
-::method init
-   forward class (super) continue
-   self~CurrentHandle = 0
-   return self~InitCode
+::method init external "LIBRARY rxwinsys WSEventLog_init"
+::method uninit external "LIBRARY rxwinsys WSEventLog_uninit"
+::method open external "LIBRARY rxwinsys WSEventLog_open"
+::method close external "LIBRARY rxwinsys WSEventLog_close"
+::method getNumber external "LIBRARY rxwinsys WSEventLog_getNumber"
+::method getFirst external "LIBRARY rxwinsys WSEventLog_getFirst"
+::method getLast external "LIBRARY rxwinsys WSEventLog_getLast"
+::method getLogNames external "LIBRARY rxwinsys WSEventLog_getLogNames"
+::method isFull external "LIBRARY rxwinsys WSEventLog_isFull"
+::method clear external "LIBRARY rxwinsys WSEventLog_clear"
+::method write external "LIBRARY rxwinsys WSEventLog_write"
+::method readRecords external "LIBRARY rxwinsys WSEventLog_readRecords"
+::method minimumRead external "LIBRARY rxwinsys WSEventLog_minimumReadGet"
+::method "minimumRead=" external "LIBRARY rxwinsys WSEventLog_minimumReadSet"
 
-::method Open
-   use arg server, source
-   if arg(1,'o') = 1 then server = ""
-   if arg(2,'o') = 1 then source = ""
-   retc = WSEventLog("open",,,,server,source)
-   if (retc \= 0) then
-   do
-      self~CurrentHandle = retc
-      return 0
-   end
-   else
-      return 1
-
-::method Close
-   use arg
-   retc = WSEventLog("close",,self~CurrentHandle)
-   self~CurrentHandle = 0
-   return 0
-
+-- Deprecated.  Provided for backwards compatibilty.  Use readRecords() instead.
 ::method Read
-   use arg option, server, source, start, num
-   if arg(1,'o') = 1 then option = ""
-   if arg(2,'o') = 1 then server = ""
-   if arg(3,'o') = 1 then source = ""
-   if arg(4,'o') = 1 then start  = ""
-   if arg(5,'o') = 1 then num    = ""
-   drop InternEvlReadStem.
-   retc = WSEventLog("read",option,self~CurrentHandle,"InternEvlReadStem",server,source,start,num)
+  forward message "readRecords" continue
+  ret = result
+  if ret == 0 then return self~events
+  else return .nil
 
-   if retc = 0 then
-   do
-       self~Events = .array~new(InternEvlReadStem.0)
-       do i = 1 to InternEvlReadStem.0
-       self~Events[i] = InternEvlReadStem.i
-       end
-       return self~Events
-   end
-   return .nil
+-- Deprecated.  Provided for backwards compatibility, does nothing.
+::method deinstall
 
-::method GetNumber
-   use arg server, source
-   if arg(1,'o') = 1 then server = ""
-   if arg(2,'o') = 1 then source = ""
+-- Deprecated.  Provided for backwards compatiblity, will always return 0
+::attribute initCode get
 
-   retc = WSEventLog("num",,self~CurrentHandle,,server,source)
-
-   return retc
-
-::method Clear
-   use arg server, source, backupFileName
-   if arg(1,'o') = 1 then server = ""
-   if arg(2,'o') = 1 then source = ""
-   if arg(3,'o') = 1 then backupFileName = ""
-
-   retc = WSEventLog("clear",,self~CurrentHandle,,server,source,,,backupFileName)
-   return retc
-
-::method Write
-   use arg server, source, type, category, id, data
-   if arg(1,'o') = 1 then server   = ""
-   if arg(2,'o') = 1 then source   = ""
-   if arg(3,'o') = 1 then type     = 1
-   if arg(4,'o') = 1 then category = 0
-   if arg(5,'o') = 1 then id       = 0
-   if arg(6,'o') = 1 then data     = ""
-   CallString = "retc = WsEventLog("write",,,,server,source,,,,type,category,id,data"
-   if arg() > 6 then do
-      do i = 7 to arg()
-          CallString = CallString","""arg(i)""""
-      end
-   end
-   CallString = CallString")"
-   interpret CallString
-   return retc
-
-
+-- Internal test method, do not use.
+::method test external "LIBRARY rxwinsys WSEventLog_test"
 
 
 

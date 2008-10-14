@@ -43,10 +43,13 @@
 #include <ddeml.h>
 #include <time.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 
 #define STR_BUFFER    256
 #define MAX_TIME_DATE 128
-#define MAX_VARNAME   256
+
+// The OS specifies a maximum size for a registry key name as 255.
+#define MAX_REGISTRY_KEY_SIZE 256
 
 #define MSG_TIMEOUT  5000 // 5000ms
 #if (WINVER >= 0x0500)
@@ -1612,966 +1615,1515 @@ size_t RexxEntry WSProgManager(const char *funcname, size_t argc, CONSTRXSTRING 
 }
 
 
-//Functions for reading Event Log
 
 //-----------------------------------------------------------------------------
 //
-//  Function GetEvPaMessageFile
-//
-//  Gets the name of the message file from the registry
-//
-//  char * GetEvPaMessageFile(char * pMessageFile, char * pchSource,char * pchSourceName, char * chMessageFile)
-//
-//       pMessaegFile  - (in) What to get
-//                            "EventMessageFile"     get event message file name
-//                            "ParameterMessageFile" get parameter message file
-//
-//       pchSource     - (in) second part of the key to build
-//
-//       pchSourceName - (in) third part of the key to build
-//
-//       chMessageFile - (in/out) name of the message file
-//                                string buffer with length MAX_PATH
+//  Section for the WindowsEventLog class
 //
 //-----------------------------------------------------------------------------
-void GetEvPaMessageFile(char * pMessageFile, char * pchSource,char * pchSourceName, char * chMessageFile)
+
+#define WSEL_DEFAULT_EVENTS_ARRAY_SIZE      512
+#define WSEL_DEFAULT_SOURCE                 "Application"
+#define HANDLE_ATTRIBUTE                    "CURRENTHANDLE"
+#define RECORDS_ATTRIBUTE                   "EVENTS"
+#define INITCODE_ATTRIBUTE                  "INITCODE"
+#define MIN_READ_BUFFER_ATTRIBUTE           "MINIMUMREADBUFFER"
+#define MIN_READ_MIN_ATTRIBUTE              "MINIMUMREADMIN"
+#define MIN_READ_MAX_ATTRIBUTE              "MINIMUMREADMAX"
+
+// This is the OS defined maximum size for any single record.
+#define MAX_RECORD_SIZE                     256 * 1024
+
+// The default max and min read buffer sizes.
+#define MAX_READ_KB_COUNT                   256
+#define MAX_READ_BUFFER                     MAX_READ_KB_COUNT * 1024
+#define MIN_READ_KB_COUNT                   16
+#define MIN_READ_BUFFER                     MIN_READ_KB_COUNT  * 1024
+
+#define BAD_RECORD_ARRAY_MSG   "The events attribute has been altered so it is no longer an array object"
+#define BAD_RECORD_START_MSG   "Requested start exceeds number of records"
+#define TOO_SMALLBUFFER_MSG    "An event log record is too large (%u) for the read buffer (%u.)"
+#define START_RECORD_OUT_OF_RANGE_MSG "The start record (%u) is out of range; (%u - %u)"
+#define END_RECORD_OUT_OF_RANGE_MSG "start and count produce an end record (%u) out of range; (%u - %u)"
+
+typedef enum {record_count, oldest_record, youngest_record} LogNumberOp;
+
+/**
+ * Query the registery for the name of an event record's message file. The file
+ * name of the message file is stored as a value of a subkey under an
+ * application log. The subkey name is the source name of the event.  The value
+ * name corresponds to the type of message file, event, parameter, or category.
+ * (Although the category message file is not currently used by the
+ * WindowsEventLog object.)
+ *
+ * @param pValueName  The name of the value whose data is being sought. The data
+ *                    is the message file name.
+ * @param logName     The name of the event log.
+ * @param source      The source of the event in the specified event log.
+ * @param fileBuffer  [out] The message file path name is returned in this
+ *                    buffer, which must be at least MAX_PATH in size.
+ */
+void lookupMessageFile(char *pValueName, char *logName, char *source, char *fileBuffer)
 {
-   DWORD dataSize;                 //size of the message file name returned from RegQueryValueEx
-   DWORD valType = REG_EXPAND_SZ;  //type for call to RegQueryValueEx
-   char chKey[] = "SYSTEM\\CurrentControlSet\\Services\\EventLog\\";  //first part of key for message files
-   char *pchKey;                   //contains name of complete key
-   char *valData;                  //value returned from RegQueryValueEx
-   HKEY hKey;                      //handle of key
-   int rc;
+    char eventLogKey[] = "SYSTEM\\CurrentControlSet\\Services\\EventLog\\";
 
-   chMessageFile[0] ='\0';         //initialize return
+    DWORD  dataSize;                   // size of the message file name returned from RegQueryValueEx
+    DWORD  valueType = REG_EXPAND_SZ;  // type for call to RegQueryValueEx
+    char  *valueData;                  // value returned from RegQueryValueEx
+    char  *pKey;                       // name of complete key
+    HKEY   hKey;                       // handle of key
 
-   //build the complete key --> first part + second part from input + third part from input
-   pchKey = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, strlen(chKey) + strlen(pchSource) + 1 + strlen(pchSourceName) +1);
-   sprintf(pchKey, "%s%s\\%s", chKey, pchSource, pchSourceName);
+    // If there is no value in the registry for the message file, or an error
+    // happens, return the empty string
+    fileBuffer[0] ='\0';
 
-   if ( (rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     pchKey,
-                     0,
-                     KEY_QUERY_VALUE,
-                     &hKey)) == ERROR_SUCCESS )
-   {
-      if ( (rc = RegQueryValueEx(hKey,                      // handle of key to query
-                           pMessageFile,                  // address of name of value to query
-                           NULL,                            // reserved
-                           &valType,                      // address of buffer for value type
-                           NULL,                            // NULL to get the size ...
-                           &dataSize)) == ERROR_SUCCESS )// .. returned here
-      {
-         //no error getting the size of message file name, allocate buffer and get the value
-         valData = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, dataSize);
+    // Build the complete key name
+    pKey = (char *)LocalAlloc(LPTR, strlen(eventLogKey) + strlen(logName) + 1 + strlen(source) + 1);
+    sprintf(pKey, "%s%s\\%s", eventLogKey, logName, source);
 
-         if ( (rc = RegQueryValueEx(hKey,                   // handle of key to query
-                              pMessageFile,                 // address of name of value to query
-                              NULL,                         // reserved
-                              &valType,                     // address of buffer for value type
-                              (LPBYTE)valData,              // address of buffer for value data
-                              &dataSize)) == ERROR_SUCCESS )
-         {
-            ExpandEnvironmentStrings(valData,chMessageFile,MAX_PATH);
-         }
-         GlobalFree(valData);
-      }
-   }
-   GlobalFree(pchKey);
-}
-
-//-----------------------------------------------------------------------------
-//
-//  Function SearchMessage
-//
-//  Load message files.
-//  Search the message in message files, format and return the message
-//
-//  BOOL SearchMessage(char * chFileNames, DWORD dwMessageID, char ** pchInsertArray, LPVOID *lpMsgBuf )
-//
-//       chFileNames    - (in) filenames, separated by semicolons
-//       dwMessageID    - (in) message id to be searched
-//       pchInsertArray - (in) array with replacement strings for message formatting
-//       lpMsgBuf       - (out) buffer containing the formatted message
-//
-//  return : 1 - message found and returned in lpMsgBuf
-//           0 -  message not found or other error
-//-----------------------------------------------------------------------------
-
-BOOL SearchMessage(char * chFileNames, DWORD dwMessageID, char ** pchInsertArray, LPVOID *lpMsgBuf )
-{
-   HINSTANCE hInstance = 0;   //return value
-   char *    pBuffer=0;       //buffer where chFileNames is copied to
-   char *    pTemp=0;         //pointers for parsing ...
-   char *    pNext=0;         //the file names
-   int       rc;
-   BOOL      fRc=0;
-
-   if (chFileNames[0] != '\0')
-   {
-      pBuffer = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, strlen(chFileNames)+1);
-      strcpy(pBuffer,chFileNames);
-      pTemp = pBuffer;
-
-      while (pTemp != 0 && fRc != 1)
-      {
-         pNext  = strchr(pTemp,';');
-         if (pNext != NULL )
-         {
-            *pNext = '\0';
-            pNext++;
-         }
-
-         if ( (hInstance = LoadLibrary(pTemp)) != 0 )
-         {
-            rc = FormatMessage(
-                  FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                  hInstance,                                 //message file handle
-                  dwMessageID,                               //message id
-                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-                  (LPTSTR)lpMsgBuf,                          //output for formatted message
-                  0,                                         //not needed for FORMAT_MESSAGE_ALLOCATE_BUFFER
-                  pchInsertArray );                          //replacement strings
-
-            if ( rc != 0 ) //no error
-               fRc = 1;
-
-            FreeLibrary(hInstance);
-            hInstance = 0;
-         }
-         pTemp = pNext;
-      }
-      if (pBuffer)
-         GlobalFree(pBuffer);
-   }
-   return fRc;
-}
-
-//-----------------------------------------------------------------------------
-//
-//  Function BuildMessage
-//
-//  Extracts the user name from an event log record
-//
-//  void BuildMessager(PEVENTLOGRECORD pEvLogRecord, char * pchSource, char ** pMessage)
-//
-//       pEvLogRecord - (in)event log record
-//       pchSource    - (in)source within event log record
-//       pMessage     - (out)formatted message
-//
-//-----------------------------------------------------------------------------
-void BuildMessage(PEVENTLOGRECORD pEvLogRecord , const char * pchSource, char ** pMessage )
-{
-   char * pchString = (char*)0;      //pointer to replacement string within event log record
-   int    iStringLen = 0;            //accumulation of the string length
-   int    i, rc;
-
-   HINSTANCE hInstance=0;             //handle for message files
-   LPVOID    lpMsgBuf=0;              //buffer to format the string
-   char      *pchInsertArray[100];    //pointer array to replacement strings
-   char      chMessageFile[MAX_PATH]; //name of message file
-   char      *pchPercent;             //pointer to "%%" within a replacement string
-
-   //initialize insert array
-   memset(pchInsertArray,0,sizeof(pchInsertArray));
-
-   //point to first replacement string
-   pchString = (char*)pEvLogRecord + pEvLogRecord->StringOffset;
-
-   //loop over all replacement strings, substitute "%%" and build an array of replacement strings
-   for (i=0; i < pEvLogRecord->NumStrings ; i++)
-   {
-      //If a replacement string contains "%%", the name of the parameter message file must be
-      //read from the registry log. "%%" is followed by an id which is the id of parameter strings
-      //to be loaded from the parameter message file
-      if ( (pchPercent = strstr(pchString,"%%")) )
-      {
-         //the replacement strings contains placeholder for parameters
-         //get name of parameter message file from registry
-            GetEvPaMessageFile("ParameterMessageFile", const_cast<char *>(pchSource), (char *)pEvLogRecord + sizeof(EVENTLOGRECORD),chMessageFile);
-
-         //load strings from the parameter message file
-         if ( (hInstance = LoadLibrary(chMessageFile)) != 0 )
-         {
-            //load the parameters to be inserted into the replacement string
-            rc = FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                hInstance,                                 //handle to message file
-                                atoi(pchPercent+2),                        //id of message to be loaded
-                                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-                                (LPTSTR)&pchInsertArray[i],
-                                0,
-                                0 );
-
-            if (rc == 0) //error getting strings
-            {
-               //use empty string
-               pchInsertArray[i] = (char *)LocalAlloc(LMEM_FIXED,1);
-               *pchInsertArray[i] ='\0';
-            }
-            FreeLibrary(hInstance);
-            hInstance =0;
-         }
-         else
-         {
-            //parameter message file could not be loaded, use empty string
-            pchInsertArray[i] = (char *)LocalAlloc(LMEM_FIXED,1);
-            *pchInsertArray[i] ='\0';
-         }
-         //accumulate sum of string length
-         iStringLen += (int)strlen(pchInsertArray[i])+1;
-      }
-      else
-      {
-         //the replacement strings contains NO placeholder for parameters, use them as is
-         iStringLen += (int)strlen(pchString)+1;
-         pchInsertArray[i] = (char *)LocalAlloc(LMEM_FIXED,strlen(pchString)+1);
-         strcpy(pchInsertArray[i],pchString);
-      }
-      //point to next replacement string within log record
-      pchString += strlen(pchString)+1;
-   }
-
-   //get name of event log  message file from registry
-    GetEvPaMessageFile("EventMessageFile",const_cast<char *>(pchSource),(char *)pEvLogRecord + sizeof(EVENTLOGRECORD),chMessageFile);
-
-   //Search the message in the all event message files
-   rc = SearchMessage(chMessageFile,pEvLogRecord->EventID,pchInsertArray,&lpMsgBuf);
-
-   if (rc == 0) //no message found or any other error
-   {
-      //use replacement strings for the message if available
-      if (pEvLogRecord->NumStrings)
-      {
-         *pMessage = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, iStringLen+1);
-
-         for (i=0;i < pEvLogRecord->NumStrings;i++)
-         {
-            strcat(*pMessage,pchInsertArray[i]);
-            strcat(*pMessage," ");
-         }
-      }
-      else //return empty string
-      {
-         *pMessage    = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, 1);
-         *pMessage[0] = '\0';
-      }
-   }
-   else
-   {
-      //message formatted return it
-      *pMessage = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, strlen((char*)lpMsgBuf) + 1);
-      strcpy(*pMessage, (const char *)lpMsgBuf);
-      //lpMsgBuf must be given free with LocalFree
-      LocalFree(lpMsgBuf);
-   }
-
-   //free replacement strings
-   for (i=0; i < pEvLogRecord->NumStrings ; i++)
-   {
-      LocalFree(pchInsertArray[i]);
-   }
-}
-
-//-----------------------------------------------------------------------------
-//
-//  Function GetUser
-//
-//  Extracts the user name from an event log record
-//
-//  char * GetUser(PEVENTLOGRECORD pEvLogRecord)
-//
-//       pEvLogRecord - (in)pointer to event log record
-//
-//  return  char * - pointer to user name (account) from event log record or
-//                   pointer to "N/A" when no user available or in error case
-//                   (pointer is allocated from heap)
-//                   must be freed vy caller
-//
-//-----------------------------------------------------------------------------
-char * GetUser(PEVENTLOGRECORD pEvLogRecord)
-{
-   SID   *psid;                           //points to security structure withi event log record
-   char * pchUserId=0;                    //returned userid, from heap, chDefUserId in any error case
-                                          //or when no userid available
-   DWORD  sizeId=0;                        //0 to get the size of the uder id
-   char   chDefUserId[] = "N/A";          //default userid
-   int    rc;
-   SID_NAME_USE strDummy;                 //dummies needed for call to ...
-   char  *pchDummy=0;                     //LookupAccontSid ...
-   DWORD sizeDummy=0;                     //but not subject of interest
-
-
-   if (pEvLogRecord->UserSidLength != 0) //no SID record avaialable return default userid
-   {
-      //get the SID record within event log record
-      psid = (SID *)((char*)pEvLogRecord + pEvLogRecord->UserSidOffset);
-
-      //get the size of the pchUserIid and pchDummy
-      rc = LookupAccountSid(NULL,        // address of string for system name
-                            psid,        // address of security identifier
-                            pchUserId,   // address of string for account name
-                            &sizeId,     // address of size account string
-                            pchDummy,    // address of string for referenced domain (not needed)
-                            &sizeDummy,  // address of size domain string
-                            &strDummy ); // address of structure for SID type
-      if (rc == 0) //error
-      {
-         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) //expected because sizes are set to 0
-         {
-            pchUserId = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, max(sizeId,(DWORD)strlen(chDefUserId)+1));
-            pchDummy = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, sizeDummy);
-            //now get it ...
-            rc = LookupAccountSid(NULL,                    // address of string for system name
-                                  psid,                    // address of security identifier
-                                  pchUserId,               // address of string for account name
-                                  &sizeId,                 // address of size account string
-                                  pchDummy,                // address of string for referenced domain
-                                  &sizeDummy,              // address of size domain string
-                                  &strDummy );                 // address of structure for SID type
-            GlobalFree(pchDummy); //don't want this
-            //error: return default
-            if (rc == 0) strcpy(pchUserId,chDefUserId);
-         }
-      }
-   }
-
-   //if not already set return default
-   if (pchUserId == (char*)0)
-   {
-      pchUserId = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, strlen(chDefUserId)+1);
-      strcpy(pchUserId,chDefUserId);
-   }
-   return pchUserId;
-}
-
-//-----------------------------------------------------------------------------
-//
-//  Function GetEvData
-//
-//  Extracts the data  name from an event log record
-//
-//  char * GetEvData(PEVENTLOGRECORD pEvLogRecord, char ** pchData)
-//
-//       pEvLogRecord - (in)pointer to event log record
-//
-//       pchData      - (in/out) data, allocated from heap
-//                               empty string when no data
-//
-//-----------------------------------------------------------------------------
-void GetEvData(PEVENTLOGRECORD pEvLogRecord, char ** pchData)
-{
-    char * puchAct;
-    char            pTemp[3];
-    DWORD           i;
-
-    if (pEvLogRecord->DataLength != 0)
+    if ( RegOpenKeyEx(HKEY_LOCAL_MACHINE, pKey, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS )
     {
-       *pchData = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT,(pEvLogRecord->DataLength + 1) * 2);
+        // Use null for the data value to query for the size of the data.
+        if ( RegQueryValueEx(hKey, pValueName, NULL, &valueType, NULL, &dataSize) == ERROR_SUCCESS )
+        {
+            // No error getting the size of the message file name, allocate a
+            // buffer and get the value
+            valueData = (char *)LocalAlloc(LPTR, dataSize);
 
-       puchAct =  (char*)pEvLogRecord + pEvLogRecord->DataOffset;
+            if ( RegQueryValueEx(hKey, pValueName, NULL, &valueType, (LPBYTE)valueData, &dataSize) == ERROR_SUCCESS )
+            {
+                // Place the message file path name in the return buffer,
+                // expanding any environment variables in the process.
+                ExpandEnvironmentStrings(valueData, fileBuffer, MAX_PATH);
+            }
+            LocalFree(valueData);
+        }
+    }
+    LocalFree(pKey);
+}
 
-       for ( i=0; i<pEvLogRecord->DataLength; i++)
-       {
-         sprintf(pTemp, "%02x", *puchAct);
-         strcat(*pchData, pTemp);
-         puchAct++;
-       }
+/**
+ * Search a list of messages files for a specified message ID and, if found,
+ * format and return the message.
+ *
+ * @param files      List of message files separated by a semi-colon.
+ * @param msgID      The message ID to search for.
+ * @param ppInserts  Possible array of insertion strings to use when formatting
+ *                   the message.
+ * @param lpMsgBuf   On success, a returned buffer containing the formatted
+ *                   message.
+ *
+ * @return True if the message was found and formatted, false if not found or
+ *         any other error.
+ *
+ * @note On success, lpMsgBuf will have been allocated by FormatMessage().  This
+ *       buffer must be freed by the caller with LocalFree().
+ */
+BOOL findAndFormatDescription(char *files, DWORD msgID, char **ppInserts, LPVOID *lpMsgBuf )
+{
+    HINSTANCE h = NULL;
+    char     *pBuffer = NULL;
+    char     *pTemp = NULL;
+    char     *pNext = NULL;
+    DWORD     count = 0;
+
+    if ( *files != '\0' )
+    {
+        DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY;
+        DWORD langID = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+
+        pBuffer = (char *)LocalAlloc(LPTR, strlen(files) + 1);
+        if ( pBuffer != NULL )
+        {
+            strcpy(pBuffer, files);
+            pTemp = pBuffer;
+
+            while ( pTemp != NULL && count == 0 )
+            {
+                pNext = strchr(pTemp, ';');
+                if ( pNext != NULL )
+                {
+                    *pNext = '\0';
+                    pNext++;
+                }
+
+                h = LoadLibrary(pTemp);
+                if ( h != NULL )
+                {
+                    count = FormatMessage(flags, h, msgID, langID, (LPTSTR)lpMsgBuf, 0, ppInserts);
+                    FreeLibrary(h);
+                    h = NULL;
+                }
+                pTemp = pNext;
+            }
+            LocalFree(pBuffer);
+        }
+    }
+    return(count != 0);
+}
+
+/**
+ * Builds up the descriptive message that goes with an event record.
+ *
+ * @param pEvLogRecord  Event record of interest.
+ * @param pchSource     Source of event with an event log.
+ * @param ppMessage     Formatted description is returned here.
+ */
+void getEventDescription(PEVENTLOGRECORD pEvLogRecord , const char *pchSource, char **ppMessage)
+{
+    char  *pchString = NULL;           // pointer to substitution string within event log record
+    int    iStringLen = 0;             // accumulation of the string length
+
+    HINSTANCE hInstance = NULL;        // handle for message files
+    LPVOID    lpMsgBuf = NULL;         // buffer to format the string
+    char      *pSubstitutions[100];    // array of substitution strings
+    char      chMessageFile[MAX_PATH]; // name of message file
+    char      *pchPercent;             // pointer to "%%" within a substitution string
+
+    // Initialize the array of substitution strings.
+    memset(pSubstitutions, 0, sizeof(pSubstitutions));
+
+    // Point to first substitution string in the event log record.
+    pchString = (char*)pEvLogRecord + pEvLogRecord->StringOffset;
+
+    // It is possible that the substitution strings themselves contain
+    // substitutions in the form of %%nn.  The replacement for these comes from
+    // the 'ParameterMessageFile'
+    //
+    // Loop over all the substitution strings, replacing each "%%" with a value
+    // from the ParameterMessageFile. This builds an array of formatted
+    // substitution strings.
+    for ( int i = 0; i < pEvLogRecord->NumStrings; i++ )
+    {
+        // If a substitution string contains "%%", the name of the parameter
+        // message file is read from the registry log. Each "%%" is followed by
+        // an id, which is the id of the parameter string to be loaded from the
+        // parameter message file.  The %% and id are then replaced by the
+        // parameter string in the substitution string by FormatMessage().
+        if ( (pchPercent = strstr(pchString, "%%")) )
+        {
+            // This substitution string contains a placeholder for parameters.
+            // Get the name of parameter message file from the registry.
+            lookupMessageFile("ParameterMessageFile", const_cast<char *>(pchSource),
+                              (char *)pEvLogRecord + sizeof(EVENTLOGRECORD), chMessageFile);
+
+            DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS;
+            DWORD langID = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+            int   id = atoi(pchPercent + 2);   // ID of message to be loaded
+
+            // Load the parameter message file and format the substitution
+            // string.
+            if ( (hInstance = LoadLibrary(chMessageFile)) != NULL )
+            {
+                if ( FormatMessage(flags, hInstance, id, langID, (LPTSTR)&pSubstitutions[i], 0, 0) == 0 )
+                {
+                    // An error occurred formatting the string, use the empty
+                    // string.
+                    pSubstitutions[i] = (char *)LocalAlloc(LPTR, 1);
+                }
+                FreeLibrary(hInstance);
+                hInstance = NULL;
+            }
+            else
+            {
+                // The parameter message file could not be loaded, use the empty
+                // string.
+                pSubstitutions[i] = (char *)LocalAlloc(LPTR, 1);
+            }
+
+            // Accumulate the total string length.
+            iStringLen += (int)strlen(pSubstitutions[i]) + 1;
+        }
+        else
+        {
+            // The substitution string does not have any replaceable parameters,
+            // use them as is.
+            iStringLen += (int)strlen(pchString) + 1;
+            pSubstitutions[i] = (char *)LocalAlloc(LMEM_FIXED, strlen(pchString) + 1);
+            strcpy(pSubstitutions[i], pchString);
+        }
+        // Point to next substitution string within the log record.
+        pchString += strlen(pchString) + 1;
+    }
+
+    // Get the name of event log  message file from the registry
+    lookupMessageFile("EventMessageFile", const_cast<char *>(pchSource),
+                      (char *)pEvLogRecord + sizeof(EVENTLOGRECORD), chMessageFile);
+
+    // Search for the message ID in the all event message files and format the
+    // descriptive message if it is found.
+    if ( findAndFormatDescription(chMessageFile, pEvLogRecord->EventID, pSubstitutions, &lpMsgBuf) )
+    {
+        // The message ID was found and the descriptive message was formatted.
+        // So return that.
+        *ppMessage = (char *)LocalAlloc(LPTR, strlen((char*)lpMsgBuf) + 1);
+        strcpy(*ppMessage, (const char *)lpMsgBuf);
+
+        // lpMsgBuf will have been allocated by FormatMessage(), it is no longer
+        // needed so free it here.
+        LocalFree(lpMsgBuf);
     }
     else
     {
-        *pchData = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, 1);
+        // The  message ID was not found, or some other error. Use the
+        // substitution strings for the descriptive message, if there are any.
+        if ( pEvLogRecord->NumStrings )
+        {
+            *ppMessage = (char *)LocalAlloc(LPTR, iStringLen + 1);
+
+            for ( int i = 0; i < pEvLogRecord->NumStrings; i++ )
+            {
+                strcat(*ppMessage, pSubstitutions[i]);
+                strcat(*ppMessage, " ");
+            }
+        }
+        else
+        {
+            // No substitution strings, just return the empty string for the
+            // descriptive message.
+            *ppMessage = (char *)LocalAlloc(LPTR, 1);
+        }
+    }
+
+    // Free any substitution strings.
+    for ( int i = 0; i < pEvLogRecord->NumStrings; i++ )
+    {
+        LocalFree(pSubstitutions[i]);
     }
 }
 
-//-----------------------------------------------------------------------------
-//
-// Function: WSEventLog
-//
-// This function reads the contents of the event log file. Each event log record is
-// returned in a stem.# variable.
-//
-//                            0        1          2         3       4         5         6       7     8
-// Syntax:   call WSEventLog( access, [options], [hEvent], [stem], [server], [source], [start],[num],[backupFileName]
-//                            9     10        11  12    13
-//                            type, category, id, data, strings
-//                          )
-//
-// Params:
-//
-//   access - What to do with the event log
-//            'OPEN'    returns event log handle
-//                      0 in error case
-//            'CLOSE'
-//            'READ'    returns a stem containing the records
-//            'NUM'     returns number of record or 0 if no records available or error
-//            'CLEAR"   clear an backup the event log ........................
-//
-//   options - 'FORWARDS'       - The log is read in forward chronological order. (default)
-//                              (oldest first)
-//             'BACKWARDS'      - The log is read in backward chronological order.
-//                              (youngest first)
-//
-//   hEvent -  eventlog handle, returned when eventlog is opened before
-//
-//   stem      Name of stem variable to store results in.
-//             stem.0 contains the number of returned records
-//
-//   server -  Universal Naming Convention (UNC) name of the server on which the
-//             event log is to be opened. If this parameter is not spcified,
-//             the log is opened on the local computer.
-//
-//   source -  Name of the source. The source name must be a subkey of a logfile
-//             entry under the EventLog key in the registry.
-//             'System'       - system log
-//             'Security'     - security log
-//             'Application'  - application log (default if source is empty or when source not found
-//
-//   start  -  Record number of event log record to start. The oldest record is always the first record !!!
-//             (independent if BACKEWRDS or FORWARDS is specified)
-//
-//   num  -    Number of event log record to read
-//
-//   backupFileName - if specified togetherr with 'CLEAR' the event log is backed up
-//                    before it is cleared
-//
-//-----------------------------------------------------------------------------
-
-size_t RexxEntry WSEventLog(const char *funcname, size_t argc, CONSTRXSTRING argv[], const char *qname, PRXSTRING retstr)
+/**
+ * Translates the security ID value in the event log record to a user name, or
+ * "N/A" if that is not possible.
+ *
+ * @param pEvLogRecord  Pointer to event log record.
+ *
+ * @return  Allocated string naming the user.
+ *
+ * @note The string is allocated using LocalAlloc and must be freed using
+ *       LocalFree.
+ */
+char * getEventUserName(PEVENTLOGRECORD pEvLogRecord)
 {
-    HANDLE hEventLog=0;                  //handle of event log
-    const char * pchServer = NULL;       //server name, must be NULL if local
-    const char * pchSource = NULL;       //source from input, or default
-    const char * pchBackupFileName = NULL;     //name of the backup file name for CLEAR
-    char   chDefSource[] = {"Application"}; //default source if no input
-    char   varName[MAX_VARNAME];         //name of stem variable
-    size_t stemLen;                      //length of stem vaiable
-    char   access;                       //what to do with the log
-    DWORD  dwReadFlags;                  //read flags
-    LONG   rc = 0;                       //return code
-    LONG   rcGetLastError = 0;           //rc from GetLastError
-    DWORD  bufSize = 1024;               //initial size for event log buffer
-    ULONG  start,num;                    //start Record number and number of of event log record to read
-    DWORD numEvRecords;                  //number of all record within a event log
-    SHVBLOCK shvb;                       //shared variable block
+    SID   *psid;
+    char  *pUserID = NULL;
+    DWORD  sizeID = 0;
+    char   defUserID[] = "N/A";
 
+    // Needed for LookupAccountSid(), but not used.
+    SID_NAME_USE strDummy;
+    char  *pDomain = NULL;
+    DWORD sizeDomain = 0;
 
-
-    //check parameter access(required); GET_ACESSS returns when invcalid access
-    if (argc >= 1 && argv[0].strlength != 0)
+    if ( pEvLogRecord->UserSidLength == 0 )
     {
-        GET_ACCESS(argv[0].strptr,access);
-        // in case of write, a variable number of arguments (strings at the end) are possible
-        if ( access != 'W' )
+        // No SID record avaialable return default user ID
+        pUserID = (char *)LocalAlloc(LPTR, strlen(defUserID) + 1);
+        strcpy(pUserID, defUserID);
+    }
+    else
+    {
+        // Get the SID record within the event log record
+        psid = (SID *)((char*)pEvLogRecord + pEvLogRecord->UserSidOffset);
+
+        // Get the size required for the return buffers
+        LookupAccountSid(NULL, psid, pUserID, &sizeID, pDomain, &sizeDomain, &strDummy);
+
+        pUserID = (char *)LocalAlloc(LPTR, max(sizeID, (DWORD)strlen(defUserID) + 1));
+        pDomain = (char *)LocalAlloc(LPTR, sizeDomain);
+
+        if ( LookupAccountSid(NULL, psid, pUserID, &sizeID, pDomain, &sizeDomain, &strDummy) == 0 )
         {
-            CHECKARG(1,14); //minimum of one and maximum of 14 parameters allowed
+            // Some type of error, just use the default.
+            strcpy(pUserID, defUserID);
+        }
+
+        // Historically, the domain name has not been returned to the ooRexx
+        // user.  Seems as though some one might want it.
+        LocalFree(pDomain);
+    }
+    return pUserID;
+}
+
+/**
+ * Allocates a buffer and fills it with the event log record's binary data field
+ * converted to a character representation.  I.e., 4115 would be converted to a
+ * series of chars: 01000103 (0x1013 == 4115) and returned in the buffer.
+ *
+ * @param pEvLogRecord  [in]  Pointer to an event log record.
+ * @param ppBinData     [out] Allocated buffer address is returned here.
+ *
+ * @return  Number of characters used to represent the binary data bytes, with 0
+ *          having the special meaning that there was no binary data in the
+ *          event record. When 0 is returned, the actual size of the buffer is
+ *          1.
+ *
+ * @note The buffer is allocated using LocalAlloc and must be freed using
+ *       LocalFree.
+ */
+size_t getEventBinaryData(PEVENTLOGRECORD pEvLogRecord, char **ppBinData )
+{
+    char  *pRecData;
+    char   pTemp[3];
+    char  *p;
+
+    if ( pEvLogRecord->DataLength != 0 )
+    {
+        *ppBinData = (char *)LocalAlloc(LPTR, (pEvLogRecord->DataLength + 1) * 2);
+        p = *ppBinData;
+
+        pRecData = (char*)pEvLogRecord + pEvLogRecord->DataOffset;
+
+        for ( DWORD i = 0; i < pEvLogRecord->DataLength; i++ )
+        {
+            _snprintf(pTemp, sizeof(pTemp), "%02x", *pRecData);
+            memcpy(p, pTemp, 2);
+            p += 2;
+            pRecData++;
         }
     }
     else
     {
-        RETERR;
+        *ppBinData = (char *)LocalAlloc(LPTR, 1);
     }
 
-    if (access == 'R') //read access
+    return (pEvLogRecord->DataLength * 2);
+}
+
+void systemServiceException(RexxMethodContext *context, char *msg)
+{
+    context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
+}
+
+inline void outOfMemoryException(RexxMethodContext *c)
+{
+    systemServiceException(c, "Failed to allocate memory");
+}
+
+void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, RexxObjectPtr actual)
+{
+    c->RaiseException(Rexx_Error_Incorrect_method_list,
+                      c->ArrayOfThree(c->WholeNumberToObject(pos), c->NewStringFromAsciiz(list), actual));
+}
+
+void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, const char *actual)
+{
+    wrongArgValueException(c, pos, list, c->NewStringFromAsciiz(actual));
+}
+
+inline unsigned int wrongClassException(RexxMethodContext *c, int pos, const char *n)
+{
+    c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->WholeNumberToObject(pos), c->NewStringFromAsciiz(n));
+    return 0;
+}
+
+
+inline void setCurrentHandle(RexxMethodContext *context, HANDLE h)
+{
+    context->SetObjectVariable(HANDLE_ATTRIBUTE, context->NewPointer(h));
+}
+
+/**
+ * Gets the handle value at the CURRENTHANDLE attribute. If the handle is not
+ * null, it is an open handle to an event log.
+ *
+ * @param context  The method context we are operating under.
+ *
+ * @return An event handle.  It is not unexpected that this handle is NULL.
+ */
+HANDLE getCurrentHandle(RexxMethodContext *context)
+{
+    HANDLE h = NULL;
+
+    RexxObjectPtr ptr = context->GetObjectVariable(HANDLE_ATTRIBUTE);
+    if ( ptr != NULLOBJECT )
     {
-        dwReadFlags = EVENTLOG_FORWARDS_READ; //default
-        //check parameter options
-        if (argv[1].strlength != 0)
-        {
-            if (stricmp(argv[1].strptr,"FORWARDS"))
-            {
-                if (!stricmp(argv[1].strptr,"BACKWARDS"))
-                {
-                    dwReadFlags = EVENTLOG_BACKWARDS_READ;
-                }
-                else
-                {
-                    RETERR;
-                }
-            }
-        }
+        h = (HANDLE)context->PointerValue((RexxPointerObject)ptr);
+    }
+    return h;
+}
 
-        //preset defaults for start record and number of records to read
-        start = 1;
-        num   = 0xffffffff;
-        bufSize = 64 * bufSize; //assume that when complete log should be read (64K)
+/**
+ * Gets the minimum read buffer size for reading event records from the object
+ * attribute.  This minimum can be changed by the user.  If some error happens,
+ * then the original default value is returned.
+ *
+ * @param c  The method context we are operating under.
+ *
+ * @return  The current minimum buffer size.
+ */
+DWORD getMinimumReadBufferSize(RexxMethodContext *c)
+{
+    uint32_t val = 0;
 
-        //check parameter start and num
-        if (argc >= 7 )
+    RexxObjectPtr ptr = c->GetObjectVariable(MIN_READ_BUFFER_ATTRIBUTE);
+    if ( ptr != NULLOBJECT )
+    {
+        if ( ! c->ObjectToUnsignedInt32(ptr, &val) )
         {
-            if (argc >= 8 )
-            {
-                //start and num are available
-                if ( (argv[6].strlength != 0) && (argv[7].strlength != 0) )
-                {
-                    //start and num contains values
-                    dwReadFlags |= EVENTLOG_SEEK_READ;
-                    start = atoi(argv[6].strptr);
-                    num   = atoi(argv[7].strptr);
-                    bufSize = num * bufSize;
-                }
-                else
-                {
-                    dwReadFlags |= EVENTLOG_SEQUENTIAL_READ;
-                }
-            }
-            else //only start available, num is then required
-            {
-                RETERR;
-            }
-        }
-        else
-        {
-            dwReadFlags |= EVENTLOG_SEQUENTIAL_READ;
-        }
-
-        //check parameter hEventLog (initialized with 0 means that event log will be opened)
-        if ( argc >= 3 )
-        {
-            if (argv[2].strlength != 0)
-            {
-                GET_HANDLE(argv[2].strptr, hEventLog);
-            }
-        }
-
-        //check parameter stem, add dot if necesssary
-        if (argc >= 4 )
-        {
-            if ( RXVALIDSTRING(argv[3]) )
-            {
-                strcpy(varName, argv[3].strptr);
-                memupper(varName, strlen(varName));
-                stemLen = argv[3].strlength;
-                if (varName[stemLen-1] != '.')
-                {
-                    varName[stemLen++] = '.';
-                }
-            }
-            else
-            {
-                RETERR;
-            }
+            val = MIN_READ_BUFFER;
         }
     }
-    //check parameter server
-    //if no server, use local machine, 0 pointer required !
-    if ( argc >= 5 )
+    return (DWORD)val;
+}
+
+/**
+ * Gets the records array (the array at the EVENTS attribute.)  The array is
+ * emptied before it is returnd.
+ *
+ * @param context  The method context we are operating under.
+ *
+ * @return The empty records array on success, a null object on error.
+ *
+ * @note  If NULLOBJECT is returned an exception has been raised.
+ */
+RexxArrayObject getRecordArray(RexxMethodContext *context)
+{
+    RexxArrayObject records = NULLOBJECT;
+
+    RexxObjectPtr ptr = context->GetObjectVariable(RECORDS_ATTRIBUTE);
+    if ( ptr != NULLOBJECT )
     {
-        if (argv[4].strlength != 0)
+        if ( context->IsArray(ptr) )
         {
-            pchServer = argv[4].strptr;
+            records = (RexxArrayObject)ptr;
         }
     }
 
-    //check parameter source, if empty use default source "Application"
-    if ( (argc >= 6) &&  (argv[5].strlength != 0) )
+    if ( records == NULLOBJECT )
     {
-        pchSource = argv[5].strptr;
+        context->RaiseException1(Rexx_Error_Execution_user_defined,
+                                 context->NewStringFromAsciiz(BAD_RECORD_ARRAY_MSG));
     }
     else
     {
-        pchSource = chDefSource;
+        context->SendMessage0(records, "EMPTY");
     }
 
-    //open
-    if (access == 'O')
+    return records;
+}
+
+/**  getOpenEventLog()
+ *
+ * Gets the opened handle to the specified event log.
+ *
+ * For the WindowsEventLog class, a currently opened event log handle always
+ * take precedence over anything specified by the user.  If currentHandle is not
+ * null, then server and source are always ignored.
+ *
+ * If there is not a currently opened handle, then the user specified server and
+ * source are used.  Both server and source have defaults, so the user does not
+ * need to specify either.
+ *
+ * Note that in the OpenEventLog() call, null is used to indicate the default
+ * server (the local machine.)  If the user omitted the server arg, then sever
+ * will be null, which gives us the default automatically.  Also note that
+ * historically the empty string has also been used to indicate the default, so
+ * that is maintained here.
+ *
+ * @param context  The method context pointer
+ * @param server   The server to open the event log on.  If specified this must
+ *                 be in UNC format, but we do not check for that, merely let
+ *                 the function fail.
+ * @param source   The source event log to open, may be omitted.
+ * @param pHandle  The opened handle is returned here.
+ * @param pRC      On an OS error, the value of GetLastError() is returned here,
+ *                 otherwise 0 is returned here.
+ *
+ * @return         True indicates that the event log handle was opened by this
+ *                 function and should be closed by the caller.  False
+ *                 indicates that the handle comes from the currentHandle
+ *                 attribute and should not be closed by the caller.
+ */
+bool getOpenEventLog(RexxMethodContext *context, const char *server, const char *source, HANDLE *pHandle, DWORD *pRC)
+{
+    bool didOpen = false;
+
+    *pRC = 0;
+    HANDLE hEventLog = getCurrentHandle(context);
+
+    if ( hEventLog == NULL )
     {
-        if ( (hEventLog = OpenEventLog(pchServer,pchSource) ) != 0 )
+        if ( server != NULL && strlen(server) == 0 )
         {
-            RET_HANDLE(hEventLog);
+            server = NULL;
+        }
+        if ( source == NULL || strlen(source) == 0 )
+        {
+            source = WSEL_DEFAULT_SOURCE;
+        }
+
+        hEventLog = OpenEventLog(server, source);
+        if ( hEventLog == NULL )
+        {
+            *pRC = GetLastError();
         }
         else
         {
-            RETC(0);
+            didOpen = true;
         }
     }
-    //close
-    if (access == 'C')
+
+    *pHandle = hEventLog;
+    return didOpen;
+}
+
+/**
+ * If the current handle attribute has an opened handle, then it is closed.
+ *
+ * @param context  The method context we are operating under.
+ *
+ * @return  0 if there is no open handle, or on success.  If there is an error
+ *          closing an open handle, then the system error code is returned.
+ */
+DWORD closeEventLog(RexxMethodContext *context)
+{
+    DWORD rc = 0;
+    HANDLE hEventLog = getCurrentHandle(context);
+
+    if ( hEventLog != NULL )
     {
-        if (argc >= 3 )
+        rc = (CloseEventLog(hEventLog) == 0) ? GetLastError() : 0;
+        setCurrentHandle(context, NULL);
+    }
+    return rc;
+}
+
+/**
+ * Gets either the total count of records in the event log, or the record number
+ * of the oldest record, or the record number of the youngest record in the
+ * event log.
+ *
+ * The first record written to the log is record number 1, so 1 is often the
+ * oldest record.  However, if the user elects to have the log records
+ * over-written when the log is full, the oldest record will no longer be 1 as
+ * soon as the log starts to overwrite exsiting records.
+ *
+ * @param context     The method context we are operating under.
+ * @param numberType  The number operation, i.e. what to do.
+ * @param server      The server arg, see getOpenEventLog() for details.
+ * @param source      The source arg, see getOpenEventLog() for details.
+ *
+ * @return The number requested on success, or the negated system error code on
+ *         failure.
+ */
+int32_t getEventLogNumber(RexxMethodContext *context, LogNumberOp numberType, CSTRING server, CSTRING source)
+{
+    int32_t retNum = 0;
+    HANDLE hEventLog;
+    DWORD number;
+    BOOL success;
+
+    // We use number to hold a returned error code, if there is one.
+    bool didOpen = getOpenEventLog(context, server, source, &hEventLog, &number);
+
+    if ( hEventLog == NULL )
+    {
+        retNum = -(int32_t)number;
+        goto finished;
+    }
+
+    // Unfortunately, on Vista, GetOldestEventLogRecord() returns an error if
+    // the log is empty.  So, we work around that.
+    DWORD count;
+    success = GetNumberOfEventLogRecords(hEventLog, &count);
+    if ( ! success )
+    {
+        retNum = -(int32_t)GetLastError();
+        goto finished;
+    }
+
+    if ( count == 0 )
+    {
+        retNum = 0;
+        goto finished;
+    }
+
+    DWORD oldest;
+    success = GetOldestEventLogRecord(hEventLog, &oldest);
+    if ( ! success )
+    {
+        retNum = -(int32_t)GetLastError();
+        goto finished;
+    }
+
+    switch ( numberType )
+    {
+        case record_count :
+            retNum = count;
+            break;
+
+        case oldest_record :
+            retNum = oldest;
+            break;
+
+        case youngest_record :
+            retNum = oldest + count - 1;
+            break;
+
+        default :
+            // This really should be impossible.
+            break;
+    }
+
+finished:
+
+    if ( didOpen )
+    {
+        CloseEventLog(hEventLog);
+    }
+    return retNum;
+}
+
+/**
+ * Convenience function to do most of the arg checking for the
+ * WindowsEventLog::readRecords() method.
+ *
+ * @param context    The method context we're operating under.
+ * @param hLog       The opened handle to the event log we are dealing with.
+ * @param direction  The direction arg (arg 1) passed to the method.
+ * @param start      The start arg (arg 4) passed to the method.
+ * @param count      Pointer to the count arg (arg 5) passed to the method.  The
+ *                   true count of records to be read is returned here.
+ * @param flags      Pointer to the flags to use in the ReadEventLog() API.  The
+ *                   actual flags to use are based on the args passed to the
+ *                   method and returned here.
+ * @param rc         A returned error code, 0 or a system error code.
+ *
+ * @return           True if things should continue, or false if they should not
+ *                   continue.
+ *
+ * @note             If false is returned, it is likely that an exception has
+ *                   been raised.  But, it may just be an OS system error.  In
+ *                   all cases the value of rc should be returned to the
+ *                   interpreter. If an exception has not been raised, it is the
+ *                   system error code that needs to be returned to the ooRexx
+ *                   programmer.
+ */
+bool checkReadRecordsArgs(RexxMethodContext *context, HANDLE hLog, CSTRING direction,
+                          uint32_t start, uint32_t *count, DWORD *flags, DWORD *rc)
+{
+    *flags = EVENTLOG_FORWARDS_READ;
+    if ( argumentExists(1) )
+    {
+        if ( stricmp("FORWARDS", direction) == 0 )
         {
-            if (argv[2].strlength != 0)
-            {
-                GET_HANDLE(argv[2].strptr, hEventLog);
-            }
-            else
-            {
-                RETERR;
-            }
-            if (CloseEventLog(hEventLog))
-            {
-                RETC(0);
-            }
-            else
-            {
-                RETC(1);
-            }
+            ; // Do nothing, flags are correct.
+        }
+        else if ( stricmp("BACKWARDS", direction) == 0 )
+        {
+            *flags = EVENTLOG_BACKWARDS_READ;
         }
         else
         {
-            RETERR;
+            wrongArgValueException(context, 1, "FORWARDS, BACKWARDS", direction);
+            return false;
         }
     }
-    //NUM or CLEAR (and backup)
-    if (access == 'N' || access == 'L')
+
+    if ( argumentExists(4) || argumentExists(5) )
     {
-        //check parameter hEventLog (initialized with 0 means that event log must be opened)
-        if ( argc >= 3 )
+        if ( argumentOmitted(4) )
         {
-            if (argv[2].strlength != 0)
-            {
-                GET_HANDLE(argv[2].strptr, hEventLog);
-            }
+            context->RaiseException1(Rexx_Error_Incorrect_method_noarg, context->WholeNumberToObject(4));
+            return false;
+        }
+        if ( argumentOmitted(5) )
+        {
+
+            context->RaiseException1(Rexx_Error_Incorrect_method_noarg, context->WholeNumberToObject(5));
+            return false;
+        }
+        *flags |= EVENTLOG_SEEK_READ;
+    }
+    else
+    {
+        *flags |= EVENTLOG_SEQUENTIAL_READ;
+    }
+
+    DWORD totalRecords;
+    if ( GetNumberOfEventLogRecords(hLog, &totalRecords) == 0 )
+    {
+        *rc = GetLastError();
+        return false;
+    }
+
+    // We only need good start and count values if we are doing a seek read.
+    // The start value is ignored on sequential reads.  The oldest record has
+    // the smallest record number, always.
+    if ( *flags & EVENTLOG_SEEK_READ )
+    {
+        DWORD oldestRecord;
+        if ( GetOldestEventLogRecord(hLog, &oldestRecord) == 0 )
+        {
+            *rc = GetLastError();
+            return false;
         }
 
-        if (access == 'L')
+        DWORD youngestRecord = oldestRecord + totalRecords - 1;
+        char  tmp[256];
+
+        if ( youngestRecord < start || start < oldestRecord )
         {
-            //check parameter BackupFileName
-            //if no BackupFileName, no backup, 0 pointer required !, pchBackupFileName is initialized with NULL)
-            if ( argc >= 9 )
-            {
-                if (argv[8].strlength != 0)
-                {
-                    pchBackupFileName = argv[8].strptr;
-                }
-            }
+            _snprintf(tmp, sizeof(tmp), START_RECORD_OUT_OF_RANGE_MSG, start, oldestRecord, youngestRecord);
+
+            context->RaiseException1(Rexx_Error_Incorrect_method_user_defined,
+                                     context->NewStringFromAsciiz(tmp));
+            return false;
         }
 
-        //no handle as input, so the event log must be opened
-        if (hEventLog == 0)
+        DWORD endRecord;
+        if ( *flags & EVENTLOG_FORWARDS_READ )
         {
-            if ( (hEventLog = OpenEventLog(pchServer,pchSource)) == 0 )
-            {
-                RETVAL(GetLastError());
-            }
-            else
-            {
-                if (access == 'N')
-                {
-                    rc = GetNumberOfEventLogRecords(hEventLog,&numEvRecords);
-                }
-                else
-                {
-                    rc = ClearEventLog(hEventLog,pchBackupFileName);
-                }
-
-                CloseEventLog(hEventLog);
-
-                if (access == 'N')
-                {
-                    if (rc)
-                    {
-                        RETVAL((INT)numEvRecords);
-                    }
-                    else
-                    {
-                        RETC(0)
-                    }
-                }
-                else
-                {
-                    if (rc)
-                    {
-                        RETC(0);
-                    }
-                    else
-                    {
-                        RETVAL(GetLastError());
-                    }
-                }
-            }
+            endRecord = start + *count - 1;
         }
         else
         {
-            if (access == 'N')
-            {
-                if ( GetNumberOfEventLogRecords(hEventLog,&numEvRecords) )
-                {
-                    RETVAL((INT)numEvRecords);
-                }
-                else
-                {
-                    RETC(0);
-                }
-            }
-            else
-            {
-                rc = ClearEventLog(hEventLog,pchBackupFileName);
-                if (rc)
-                {
-                    RETC(0);
-                }
-                else
-                {
-                    RETVAL(GetLastError());
-                }
-            }
+            endRecord = start - *count + 1;
+        }
+
+        if ( youngestRecord < endRecord || endRecord < oldestRecord )
+        {
+            _snprintf(tmp, sizeof(tmp), END_RECORD_OUT_OF_RANGE_MSG, endRecord, oldestRecord, youngestRecord);
+
+            context->RaiseException1(Rexx_Error_Incorrect_method_user_defined,
+                                     context->NewStringFromAsciiz(tmp));
+            return false;
+        }
+    }
+    else
+    {
+        // For a sequential read, start is ignored.  But having a valid count
+        // value makes looping through the log easier.
+        *count = totalRecords;
+    }
+    return true;
+}
+
+inline bool isGoodEventType(uint16_t type)
+{
+    return (type == EVENTLOG_SUCCESS          ||
+            type == EVENTLOG_AUDIT_FAILURE    ||
+            type == EVENTLOG_AUDIT_SUCCESS    ||
+            type == EVENTLOG_ERROR_TYPE       ||
+            type == EVENTLOG_INFORMATION_TYPE ||
+            type == EVENTLOG_WARNING_TYPE);
+}
+
+/** WindowsEventLog::init()
+ *
+ * The init() method for the WindowsEventLog object.  Sets the object attributes
+ * to their default values.
+ */
+RexxMethod0(int, WSEventLog_init)
+{
+    RexxArrayObject obj = context->NewArray(WSEL_DEFAULT_EVENTS_ARRAY_SIZE);
+    context->SetObjectVariable(RECORDS_ATTRIBUTE, obj);
+
+    context->SetObjectVariable(MIN_READ_BUFFER_ATTRIBUTE, context->WholeNumberToObject(MIN_READ_BUFFER));
+    context->SetObjectVariable(MIN_READ_MIN_ATTRIBUTE, context->WholeNumberToObject(MIN_READ_KB_COUNT));
+    context->SetObjectVariable(MIN_READ_MAX_ATTRIBUTE, context->WholeNumberToObject(MAX_READ_KB_COUNT));
+
+    context->SetObjectVariable(INITCODE_ATTRIBUTE, context->WholeNumberToObject(0));
+
+    setCurrentHandle(context, NULL);
+
+    return 0;
+}
+
+/** WindowsEventLog::open()
+ *
+ *  Opens a handle to the specified event log.
+ *
+ * @param server   [optional] The server to open the event log on.  If specified
+ *                 this should be in UNC format.  The default is the local
+ *                 machine.  The empty string can also be used to specify the
+ *                 local macnine.
+ *
+ * @param source   [optional] The event log to open, the default is the
+ *                 Application log.  The empty string can also be used to
+ *                 specify the local machine.
+ *
+ * @note  The event logging service will open the Application log if the
+ *        specified log (the source arg) can not be found.
+ */
+RexxMethod2(uint32_t, WSEventLog_open, OPTIONAL_CSTRING, server, OPTIONAL_CSTRING, source)
+{
+    // Close an already opened handle if there is one.
+    closeEventLog(context);
+
+    // See the comment header for getOpenEventLog() for detail on the server and
+    // source arguments.
+    if ( server != NULL && strlen(server) == 0 )
+    {
+        server = NULL;
+    }
+    if ( source == NULL || strlen(source) == 0 )
+    {
+        source = WSEL_DEFAULT_SOURCE;
+    }
+
+    HANDLE hEventLog = OpenEventLog(server, source);
+    if ( hEventLog == NULL )
+    {
+        return GetLastError();
+    }
+
+    setCurrentHandle(context, hEventLog);
+    return 0;
+}
+
+/** WindowsEventLog::getNumber()
+ *
+ * Returns the number of event records in the specified log.
+ *
+ * @param server     The server to open the event log on.  If specified this
+ *                   should be in UNC format.  The default is the local machine.
+ *                   The empty string can also be used to specify the local
+ *                   macnine.
+ *
+ * @param source     The event log to open, the default is the Application log.
+ *                   The empty string can also be used to specify the local
+ *                   machine.
+ *
+ * @return  The count of records in the log.
+ */
+RexxMethod2(int32_t, WSEventLog_getNumber, OPTIONAL_CSTRING, server, OPTIONAL_CSTRING, source)
+{
+    return getEventLogNumber(context, record_count, server, source);
+}
+
+/** WindowsEventLog::getFirst()
+ *
+ * Returns the record number of the first recorded, or oldest, event.  Event
+ * log messages are numbered sequentially, with the oldest record having the
+ * lowest record number.
+ *
+ * @param server     The server to open the event log on.  If specified this
+ *                   should be in UNC format.  The default is the local machine.
+ *                   The empty string can also be used to specify the local
+ *                   macnine.
+ *
+ * @param source     The event log to open, the default is the Application log.
+ *                   The empty string can also be used to specify the local
+ *                   machine.
+ *
+ * @return  The record number of the first recorded event.
+ */
+RexxMethod2(int32_t, WSEventLog_getFirst, OPTIONAL_CSTRING, server, OPTIONAL_CSTRING, source)
+{
+    return getEventLogNumber(context, oldest_record, server, source);
+}
+
+/** WindowsEventLog::getLast()
+ *
+ * Returns the record number of the last recorded, or youngest, event.  Event
+ * log messages are numbered sequentially, with the oldest record have the
+ * lowest record number.
+ *
+ * @param server     The server to open the event log on.  If specified this
+ *                   should be in UNC format.  The default is the local machine.
+ *                   The empty string can also be used to specify the local
+ *                   macnine.
+ *
+ * @param source     The event log to open, the default is the Application log.
+ *                   The empty string can also be used to specify the local
+ *                   machine.
+ *
+ * @return  The record number of the last recorded event.
+ */
+RexxMethod2(int32_t, WSEventLog_getLast, OPTIONAL_CSTRING, server, OPTIONAL_CSTRING, source)
+{
+    return getEventLogNumber(context, youngest_record, server, source);
+}
+
+/** WindowsEventLog::isFull()
+ *
+ * Queries the event log to see if it is full.
+ *
+ * @return  True if event log is full, othewise false.  False is also returned
+ *          if any system error happens.
+ */
+RexxMethod2(logical_t, WSEventLog_isFull, OPTIONAL_CSTRING, server, OPTIONAL_CSTRING, source)
+{
+    HANDLE hLog;
+    DWORD rc = 0;
+    BOOL isFull = FALSE;
+
+    // An error is just ignored and false returned.
+    bool didOpen = getOpenEventLog(context, server, source, &hLog, &rc);
+
+    if ( hLog != NULL )
+    {
+        EVENTLOG_FULL_INFORMATION efi;
+        DWORD needed;
+        if ( GetEventLogInformation(hLog, EVENTLOG_FULL_INFO, (void *)&efi, sizeof(efi), &needed) != 0 )
+        {
+            isFull = efi.dwFull ? TRUE : FALSE;
         }
     }
 
-    if (access == 'W')
+    if ( didOpen )
     {
-        WORD     wEventType       = 1;
-        WORD     wEventCategory   = 0;
-        DWORD    dwEventId        = 0;
-        char    *lpData           = NULL;
-        DWORD    dwDataSize       = 0;
-        WORD     wNumStrings      = 0;
-        const char *lpStrings[100];
+        CloseEventLog(hLog);
+    }
+    return isFull;
+}
 
-        //check and prepare event log data
+/** WindowsEventLog::clear()
+ *
+ * Clears, empties, the specified event log.  Optionally backs up the log before
+ * clearing it.
+ *
+ * @param server     The server to open the event log on.  If specified this
+ *                   should be in UNC format.  The default is the local machine.
+ *                   The empty string can also be used to specify the local
+ *                   macnine.
+ *
+ * @param source     The event log to open, the default is the Application log.
+ *                   The empty string can also be used to specify the local
+ *                   machine.
+ *
+ * @param backupFile  If specified, the log will be backed up to this file.
+ *                    There is no default value.  If backupFile is omitted, the
+ *                    log is not backed up.  If a file name is supplied with no
+ *                    extension, the the default event log extension of ".evt"
+ *                    is added.
+ *
+ * @return            0 on success, the system error code otherwise.
+ */
+RexxMethod3(uint32_t, WSEventLog_clear, OPTIONAL_CSTRING, server, OPTIONAL_CSTRING, source,
+            OPTIONAL_CSTRING, backupFile)
+{
+    HANDLE hEventLog;
+    DWORD rc = 0;
 
-        // check the event type (initialized to 1 = default)
-        // EVENTLOG_SUCCESS                   0X0000
-        // EVENTLOG_ERROR_TYPE                0x0001
-        // EVENTLOG_WARNING_TYPE              0x0002
-        // EVENTLOG_INFORMATION_TYPE         0x0004
-        // EVENTLOG_AUDIT_SUCCESS            0x0008
-        // EVENTLOG_AUDIT_FAILURE           0x0010
-        if ( argc >= 10 && argv[9].strlength != 0 )
-        {
-            wEventType = atoi(argv[9].strptr);
-        }
-        // check the event category (initialized to 0 = default)
-        if ( argc >= 11 && argv[10].strlength != 0 )
-        {
-            wEventCategory = atoi(argv[10].strptr);
-        }
-        // check the event id (initialized to 0 = default)
-        if ( argc >= 12 && argv[11].strlength != 0 )
-        {
-            dwEventId = atoi(argv[11].strptr);
-        }
-        // check the event data (initialized to NULL = default)
-        if ( argc >= 13 && argv[12].strlength != 0 )
-        {
-            lpData = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT,argv[12].strlength+1);
-            sprintf(lpData, "%s", argv[12].strptr);
-            dwDataSize = (DWORD)argv[12].strlength;
-        }
-        // check the event strings (initialized to NULL = default)
-        if ( argc >= 14 && argv[13].strlength != 0 )
-        {
-            int   j=0;
-            ULONG i;
-            for ( i = 13; i < argc; i++ )
-            {
-                //count the number of strings and create the string array
-                wNumStrings++;
-                lpStrings[j] = argv[i].strptr;
-                j++;
-            }
-        }
-        //register the event source
-        if ( (hEventLog = RegisterEventSource( pchServer, pchSource)) == NULL )
-        {
-            rcGetLastError = GetLastError();
-        }
+    bool didOpen = getOpenEventLog(context, server, source, &hEventLog, &rc);
 
-        if ( !rcGetLastError )
+    if ( hEventLog == NULL )
+    {
+        return rc;
+    }
+
+    if ( backupFile != NULL && strlen(backupFile) == 0 )
+    {
+        backupFile = NULL;
+    }
+
+    // If the user supplied a backup file name, and it does not have an
+    // extension, then add the default extension for event log files.  Note that
+    // PathAddExtension() only adds the extension if the file does not already
+    // have any extension.
+
+    char *pDupeName = NULL;
+    if ( backupFile != NULL )
+    {
+        pDupeName = (char *)LocalAlloc(LPTR, MAX_PATH);
+        if ( ! pDupeName )
         {
-            //write the log
-            if ( ReportEvent( hEventLog, wEventType, wEventCategory, dwEventId, NULL, wNumStrings, dwDataSize, lpStrings, lpData) == NULL )
-            {
-                rcGetLastError = GetLastError();
-            }
-
-            //deregister the event source
-            DeregisterEventSource( hEventLog);
-
-            //free buffer for data
-            if ( lpData != NULL )
-            {
-                GlobalFree(lpData);
-            }
+            outOfMemoryException(context);
+            return 0;
         }
+        strcpy(pDupeName, backupFile);
+        PathAddExtension(pDupeName, ".evt");
+    }
 
-        if ( rcGetLastError )
+    if ( ClearEventLog(hEventLog, pDupeName) == 0 )
+    {
+        rc = GetLastError();
+    }
+
+    // If the arg to LocalFree() is null, LocalFree() does nothing.
+    LocalFree(pDupeName);
+
+    if ( didOpen )
+    {
+        CloseEventLog(hEventLog);
+    }
+
+    return rc;
+}
+
+/**  WindowsEventLog::write()
+ *
+ * Write an event to an event log.  In theory all args are optional, but that
+ * would not be much of an event.
+ *
+ * @param server     The server to open the event log on.  If specified this
+ *                   should be in UNC format.  The default is the local machine.
+ *                   The empty string can also be used to specify the local
+ *                   macnine.
+ *
+ * @param source     The event log to open, the default is the Application log.
+ *                   The empty string can also be used to specify the local
+ *                   machine.
+ *
+ * @param type       The event type (EVENTLOG_SUCCESS EVENTLOG_AUDIT_FAILURE,
+ *                   etc.,) the default is 1.
+ * @param category   The event category, default is 0.
+ * @param id         The event ID, default is 0.
+ * @param data       Raw binary data, default is none.
+ * @param strings    Args 7 to any number.  Any number of strings.  These are
+ *                   the insertion strings used to contruct the event
+ *                   descripiton.
+ *
+ * @return 0 on success, system error code on failure.
+ */
+RexxMethod7(uint32_t, WSEventLog_write, OPTIONAL_CSTRING, server, OPTIONAL_CSTRING, source,
+            OPTIONAL_uint16_t, t, OPTIONAL_uint16_t, category, OPTIONAL_uint32_t, id,
+            OPTIONAL_RexxStringObject, rawData, ARGLIST, args)
+{
+    DWORD rc = 0;
+
+    WORD         type         = 1;
+    void        *data         = NULL;
+    DWORD        dataSize     = 0;
+    WORD         countStrings = 0;
+    const char **strings      = NULL;
+
+    // See the comment header for getOpenEventLog() for detail on the server and
+    // source arguments.
+    if ( server != NULL && strlen(server) == 0 )
+    {
+        server = NULL;
+    }
+    if ( source == NULL || strlen(source) == 0 )
+    {
+        source = WSEL_DEFAULT_SOURCE;
+    }
+
+    if ( argumentExists(3) && isGoodEventType(t) )
+    {
+        type = t;
+    }
+
+    if ( argumentExists(6) )
+    {
+        dataSize = (DWORD)context->StringLength(rawData);
+        data = malloc(dataSize);
+        if ( data != NULL )
         {
-            RETVAL(rcGetLastError);
+            memcpy(data, (void *)context->StringData(rawData), dataSize);
         }
         else
         {
-            RETC(0);
+            dataSize = 0;
         }
     }
 
-    //read
-    if (access == 'R')
+    size_t argc = context->ArraySize(args);
+    if ( argc > 6 )
     {
-        PEVENTLOGRECORD pEvLogRecord;        //pointer to one event record
-        PVOID  pBuffer = 0;                  //buffer for event records
-        DWORD  pnBytesRead;                  //returned from ReadEventlog
-        DWORD  pnMinNumberOfBytesNeeded;     //returned from ReadEventlog if not all read
-        char * pchEventSource  = (char *)0;  //source from event log record
-        char * pchComputerName = (char *)0;  //computer name of event
-        char * pchMessage=0;                 //text of detail string
-        char * pchData=0;                    //data of event log record
-        char   time[MAX_TIME_DATE];          //converted time of event
-        char   date[MAX_TIME_DATE];          //converted date of event
-        struct tm * DateTime;                //converted from elapsed seconds
-        char * pchStrBuf = (char *)0;        //temp buffer for event string
-        DWORD  bufferPos=0;                  //position within the eventlog buffer
-        BOOL   cont = 1;                     //continue flag for while loop
-        char   evType[5][12]={"Error","Warning","Information","Success","Failure"}; //event type strings
-        int    evTypeIndex;
-        char * pchUser;
-        ULONG  count;                        //number of event log records retuned in stem
-
-        //no handle as input, so the event log must be opened
-        if (hEventLog == 0)
+        strings = (const char **)malloc((argc - 6) * sizeof(const char **));
+        if ( strings != NULL )
         {
-            if ( (hEventLog = OpenEventLog(pchServer,pchSource)) == 0 )
+            const char **p = strings;
+            for ( size_t i = 7; i <= argc; i++, countStrings++)
             {
-                RETVAL(GetLastError());
-            }
-        }
-
-        GetNumberOfEventLogRecords(hEventLog,&numEvRecords);
-        if (start > numEvRecords)
-        {
-            RETC(1);
-        }
-
-        pBuffer = GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, bufSize);
-        count = 0;
-
-        while (cont)
-        {
-            while ( (rc = ReadEventLog(hEventLog, dwReadFlags, start, pBuffer, bufSize, &pnBytesRead, &pnMinNumberOfBytesNeeded) ) && (count < num) )
-            {
-                pEvLogRecord = (PEVENTLOGRECORD)pBuffer;
-                bufferPos = 0;
-
-                while ( (bufferPos < pnBytesRead) && (count < num) )
+                RexxObjectPtr obj = context->ArrayAt(args, i);
+                if ( obj == NULLOBJECT )
                 {
-                    if (dwReadFlags & EVENTLOG_FORWARDS_READ)
-                    {
-                        start = pEvLogRecord->RecordNumber+1;
-                    }
-                    else
-                    {
-                        start = pEvLogRecord->RecordNumber-1;
-                    }
-                    count++; //count number of events
-
-                    //get index to event type string
-                    GET_TYPE_INDEX(pEvLogRecord->EventType, evTypeIndex);
-
-                    // Get time and date converted to local time.
-                    DateTime = _localtime32((const __time32_t *)&pEvLogRecord->TimeWritten);
-                    strftime(date, MAX_TIME_DATE,"%x", DateTime);
-                    strftime(time, MAX_TIME_DATE,"%X", DateTime);
-
-                    pchEventSource  = (char*)pEvLogRecord + sizeof(EVENTLOGRECORD);
-                    pchComputerName = pchEventSource + strlen(pchEventSource)+1;
-
-                    pchUser = GetUser(pEvLogRecord);
-
-                    BuildMessage(pEvLogRecord,pchSource,&pchMessage);
-
-                    GetEvData(pEvLogRecord,&pchData);
-
-                    pchStrBuf = (char *)GlobalAlloc(GMEM_FIXED,
-                                            strlen(evType[evTypeIndex])+1+
-                                            strlen(date)+1+
-                                            strlen(time)+1+
-                                            strlen(pchEventSource)+3+
-                                            12+
-                                            strlen(pchUser)+1+
-                                            strlen(pchComputerName)+1+
-                                            strlen(pchMessage)+3+
-                                            strlen(pchData)+3+10);
-
-                    //Type Date Time Source Id User Computer Details
-                    sprintf( pchStrBuf,
-                             "%s %s %s '%s' %u %s %s '%s' '%s'",
-                             evType[evTypeIndex],
-                             date,
-                             time,
-                             pchEventSource,
-                             LOWORD(pEvLogRecord->EventID),
-                             pchUser,
-                             pchComputerName,
-                             pchMessage,
-                             pchData);
-
-                    GlobalFree(pchMessage);
-                    GlobalFree(pchData);
-                    pchMessage = 0;
-                    GlobalFree(pchUser);
-
-                    //write record to to stem
-                    ltoa(count, varName+stemLen, 10);
-
-                    shvb.shvnext            = NULL;
-                    shvb.shvname.strptr     = varName;
-                    shvb.shvname.strlength  = strlen(varName);
-                    shvb.shvvalue.strptr    = pchStrBuf;
-                    shvb.shvvalue.strlength = strlen(pchStrBuf);
-                    shvb.shvnamelen         = shvb.shvname.strlength;
-                    shvb.shvvaluelen        = shvb.shvvalue.strlength;
-                    shvb.shvcode            = RXSHV_SET;
-                    shvb.shvret             = 0;
-                    rc = RexxVariablePool(&shvb);
-                    GlobalFree(pchStrBuf);
-                    if (rc == RXSHV_BADN)
-                    {
-                        if (pBuffer) GlobalFree(pBuffer);
-                        return 2;
-                    }
-                    bufferPos += pEvLogRecord->Length;
-
-                    //position to next event record
-                    pEvLogRecord = (PEVENTLOGRECORD)(((char*)pEvLogRecord) + pEvLogRecord->Length);
+                    break;
                 }
-                memset(pBuffer,0,bufSize);
+                else
+                {
+                    *p++ = context->ObjectToStringValue(obj);
+                }
             }
+        }
+    }
+
+    HANDLE hSource = RegisterEventSource(server, source);
+    if ( hSource != NULL )
+    {
+        if ( ReportEvent(hSource, type, category, id, NULL, countStrings, dataSize, strings, data) == 0 )
+        {
             rc = GetLastError();
-            // if buffer is to small, reallocate it, pnMinNumberOfBytesNeeded is returned from ReadEventLog
+        }
 
-            if ( (count == num) || (start > numEvRecords) || (start < 1) )
+        DeregisterEventSource(hSource);
+    }
+    else
+    {
+        rc = GetLastError();
+    }
+
+    if ( data != NULL )
+    {
+        free(data);
+    }
+    if ( strings != NULL )
+    {
+        free(strings);
+    }
+
+    return rc;
+}
+
+/** WindowsEventLog::minimumRead=
+ *
+ * Sets the minimumReadBuffer attribute.  This attribute controls the minimum
+ * allocation size of the buffer used to read in event log records.  This value
+ * is specified in multiples of 1 KB and must be wtihin the range of
+ * MIN_READ_KB_COUNT and MAX_READ_KB_COUNT.
+ *
+ * @param  countKB  The number of kilobytes for the minimum buffer allocation.
+ */
+RexxMethod1(int, WSEventLog_minimumReadSet, uint32_t, countKB)
+{
+    if ( countKB < MIN_READ_KB_COUNT || MAX_READ_KB_COUNT < countKB )
+    {
+        context->RaiseException(
+            Rexx_Error_Invalid_argument_range,
+            context->ArrayOfFour(context->Int32ToObject(1),
+                                 context->Int32ToObject(MIN_READ_KB_COUNT),
+                                 context->Int32ToObject(MAX_READ_KB_COUNT),
+                                 context->Int32ToObject(countKB)));
+    }
+    else
+    {
+        context->SetObjectVariable(MIN_READ_BUFFER_ATTRIBUTE, context->WholeNumberToObject(countKB * 1024));
+    }
+    return 0;
+}
+
+/** WindowsEventLog::minimumRead
+ *
+ * Returns the current setting for the minimum read buffer.  The value returned
+ * is the size of the buffer in KiloBytes.
+ *
+ * @return  The minimum size allocation size of the event log read buffer
+ *          buffer, in KiloBytes.  E.g., if the minimum is set at a 4096 byte
+ *          buffer, then the return will be 4.
+ */
+RexxMethod0(uint32_t, WSEventLog_minimumReadGet)
+{
+    return getMinimumReadBufferSize(context) / 1024;
+}
+
+/**  WindowsEventLog::read()
+ *
+ * Reads records from an event log.  If no args are given then all records from
+ * the default system (the local machine) and the default source (the
+ * Application log) are read.
+ *
+ * Each record is read from the event log, formatted into a string
+ * representation and placed in an ooRexx array object. The array object is the
+ * 'events' attribute of the WindowsEventLog.  Before the read is started, the
+ * array is emptied.  After each read, the array will contain the records for
+ * the previous read.
+ *
+ * @param direction  FORWARDS or BACKWARDS default is forwards.  The oldest
+ *                   record is considered record 1.
+ * @param server     The server to open the event log on.  If specified this
+ *                   should be in UNC format.  The default is the local machine.
+ *                   The empty string can also be used to specify the local
+ *                   macnine.
+ * @param source     The event log to open, the default is the Application log.
+ *                   The empty string can also be used to specify the local
+ *                   machine.
+ * @param start      First record to read.  The default is all records.  If a
+ *                   start record is specified then count is mandatory.
+ * @param count      Count of records to read.  Only used if start is specified,
+ *                   in which case count is not optional.
+ *
+ * @return           0 on success, the system error code on failure.
+ */
+RexxMethod5(uint32_t, WSEventLog_readRecords, OPTIONAL_CSTRING, direction, OPTIONAL_CSTRING, server,
+            OPTIONAL_CSTRING, source, OPTIONAL_uint32_t, start, OPTIONAL_uint32_t, count)
+{
+    DWORD rc = 0;
+    HANDLE hLog;
+
+    bool didOpen = getOpenEventLog(context, server, source, &hLog, &rc);
+
+    if ( hLog == NULL )
+    {
+        return rc;
+    }
+
+    // source is optional, but if it was omitted we need to set the variable to
+    // the default.  It is used later.
+    if ( source == NULL )
+    {
+        source = WSEL_DEFAULT_SOURCE;
+    }
+
+    DWORD flags;
+    if ( ! checkReadRecordsArgs(context, hLog, direction, start, &count, &flags, &rc) )
+    {
+        if ( didOpen )
+        {
+            CloseEventLog(hLog);
+        }
+        return rc;
+    }
+
+    // Array to convert the event type into its string representation.
+    char   evType[5][12]={"Error","Warning","Information","Success","Failure"};
+    int    evTypeIndex;
+
+    PEVENTLOGRECORD pEvLogRecord;        // pointer to one event record
+    PVOID  pBuffer = NULL;               // buffer for event records
+    DWORD  bufferPos = 0;                // position within the eventlog buffer
+    DWORD  bytesRead;                    // count of bytes read into buffer by ReadEventlog
+    DWORD  needed;                       // returned from ReadEventlog if buffer to small
+    char * pchEventSource  = NULL;       // source from event log record
+    char * pchComputerName = NULL;       // computer name of event
+    char * pchMessage = NULL;            // text of description string
+    char * pBinaryData = NULL;           // raw data of event log record
+    char   time[MAX_TIME_DATE];          // converted time of event
+    char   date[MAX_TIME_DATE];          // converted date of event
+    struct tm * DateTime;                // converted from elapsed seconds
+    char * pchStrBuf = NULL;             // temp buffer for event string
+    char * pchUser = NULL;               // user name for event
+    DWORD  countRecords = 0;             //number of event log records processed
+
+    // We'll try to allocate a buffer big enough to hold all the records, but
+    // not bigger than our max.  Same idea for a minimum, we'll make sure the
+    // buffer is at least a minimum size.  The minimum size can be adjusted by
+    // the user, up to the maximum size of one record.
+    DWORD bufSize = count * 1024;
+    DWORD minSize = getMinimumReadBufferSize(context);
+    bufSize = bufSize > MAX_READ_BUFFER ? MAX_READ_BUFFER : bufSize;
+    bufSize = bufSize < minSize ? minSize : bufSize;
+
+    pBuffer = LocalAlloc(LPTR, bufSize);
+    if ( pBuffer == NULL )
+    {
+        outOfMemoryException(context);
+        return 0;
+    }
+
+    // Get the ooRexx array object that will hold the event records.
+    RexxArrayObject rxRecords = getRecordArray(context);
+    if ( rxRecords == NULLOBJECT )
+    {
+        return 0;
+    }
+
+    BOOL success = TRUE;
+
+    // Loop through the event log reading the number of records specified by the
+    // ooRexx programmer.
+    while ( (countRecords < count) && (success = ReadEventLog(hLog, flags, start, pBuffer, bufSize, &bytesRead, &needed)) )
+    {
+        pEvLogRecord = (PEVENTLOGRECORD)pBuffer;
+        bufferPos = 0;
+
+        while ( (bufferPos < bytesRead) && (countRecords < count) )
+        {
+            if (flags & EVENTLOG_FORWARDS_READ)
             {
-                cont = 0;
+                start = pEvLogRecord->RecordNumber + 1;
             }
             else
             {
-                if (rc == ERROR_INSUFFICIENT_BUFFER)
-                {
-                    bufSize += pnMinNumberOfBytesNeeded;
-                    pBuffer = GlobalReAlloc(pBuffer,bufSize,GMEM_FIXED|GMEM_ZEROINIT);
-                }
-                else
-                {
-                    cont = 0; //stop reading, reached end or error (except ERROR_INSUFFICIENT_BUFFER)
-                }
+                start = pEvLogRecord->RecordNumber - 1;
             }
-        }//while (cont)
 
-        //close event log only if it was not opened before (imnplicit open during read)
-        if ( atoi(argv[2].strptr) == 0 )
+            // Count each event record
+            countRecords++;
+
+            // Gather together all the pieces that will make up our final string
+            // representation of this record.
+
+            // Get index to event type string
+            GET_TYPE_INDEX(pEvLogRecord->EventType, evTypeIndex);
+
+            // Get time and date converted to local time.
+            DateTime = _localtime32((const __time32_t *)&pEvLogRecord->TimeWritten);
+            strftime(date, MAX_TIME_DATE,"%x", DateTime);
+            strftime(time, MAX_TIME_DATE,"%X", DateTime);
+
+            // Get the event source, computer name, and user name strings.
+            pchEventSource  = (char*)pEvLogRecord + sizeof(EVENTLOGRECORD);
+            pchComputerName = pchEventSource + strlen(pchEventSource)+1;
+            pchUser = getEventUserName(pEvLogRecord);
+
+            // Build the description string, which involves a look up from the
+            // message files and possibly some string substitution.
+            getEventDescription(pEvLogRecord, source, &pchMessage);
+
+            // Get any binary data associated with the record.
+            size_t cch = getEventBinaryData(pEvLogRecord, &pBinaryData);
+
+            // Calculate how big a buffer we need for the final string, and
+            // allocate it.
+            size_t len = strlen(evType[evTypeIndex]) + 1 +
+                         strlen(date) + 1 +
+                         strlen(time) + 1 +
+                         strlen(pchEventSource) + 3 +
+                         12 +
+                         strlen(pchUser) + 1 +
+                         strlen(pchComputerName) + 1 +
+                         strlen(pchMessage) + 3 +
+                         cch + 3;
+
+            pchStrBuf = (char *)LocalAlloc(LPTR, len);
+
+            // Put it all together.  The binary data is surrounded by single
+            // quotes so that the ooRexx user can parse it out.
+            //
+            // Type Date Time Source Id User Computer Details rawData
+            sprintf(pchStrBuf,
+                    "%s %s %s '%s' %u %s %s '%s' '",
+                    evType[evTypeIndex],
+                    date,
+                    time,
+                    pchEventSource,
+                    LOWORD(pEvLogRecord->EventID),
+                    pchUser,
+                    pchComputerName,
+                    pchMessage);
+
+            // Now we need to tack on the binary data, the last apostrophe,
+            // and the trailing null.
+            len = strlen(pchStrBuf);
+            memcpy((pchStrBuf + len), pBinaryData, cch);
+            len += cch;
+
+            *(pchStrBuf + len++) = '\'';
+            *(pchStrBuf + len) = '\0';
+
+            LocalFree(pchMessage);
+            pchMessage = NULL;
+            LocalFree(pBinaryData);
+            LocalFree(pchUser);
+            pchMessage = NULL;
+
+            // Add the record to the array.
+            context->ArrayPut(rxRecords, context->NewString(pchStrBuf, len), countRecords);
+
+            LocalFree(pchStrBuf);
+
+            // Update postion and point to next event record
+            bufferPos += pEvLogRecord->Length;
+            pEvLogRecord = (PEVENTLOGRECORD)(((char*)pEvLogRecord) + pEvLogRecord->Length);
+        }
+        memset(pBuffer, 0, bufSize);
+    }
+
+    if ( ! success )
+    {
+        rc = GetLastError();
+
+        if ( rc == ERROR_INSUFFICIENT_BUFFER )
         {
-            CloseEventLog(hEventLog);
+            // Seems unlikely the buffer could be too small, but if it is we're
+            // not going to fool with trying to reallocate a bigger buffer.
+            char tmp[256];
+            _snprintf(tmp, sizeof(tmp), TOO_SMALLBUFFER_MSG, needed, bufSize);
+            context->RaiseException1(Rexx_Error_Execution_user_defined, context->NewStringFromAsciiz(tmp));
+        }
+        else if ( rc == ERROR_HANDLE_EOF )
+        {
+            // If we read to the end of log, we'll count that as okay.
+            rc = 0;
+        }
+    }
+
+    // Clean up and return.
+    LocalFree(pBuffer);
+
+    if ( didOpen )
+    {
+        CloseEventLog(hLog);
+    }
+    return rc;
+}
+
+/** WindowsEventLog::getLogNames()
+ *
+ * Obtains a list of all the event log names on the current system.
+ *
+ * @param   logNames [in/out]
+ *            An .array object in which the event log names are returned.
+ *
+ * @return  An OS return code, 0 on success, the system error code on failure.
+ *
+ * @note    The passed in array is emptied before the log names are added.  On
+ *          error, the array will also be empty.
+ */
+RexxMethod1(uint32_t, WSEventLog_getLogNames, RexxObjectPtr, obj)
+{
+    DWORD rc = 0;
+    const char key[] = "SYSTEM\\CurrentControlSet\\Services\\EventLog\\";
+    HKEY hKey;
+
+    if ( ! context->IsOfType(obj, "ARRAY") )
+    {
+        return wrongClassException(context, 1, "Array");
+    }
+    RexxArrayObject logNames = (RexxArrayObject)obj;
+
+    context->SendMessage0(logNames, "EMPTY");
+
+    // Open the ..\Services\EventLog key and then enumerate each of its subkeys.
+    // The name of each subkey is the name of an event log.
+
+    rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE, key, 0, KEY_ENUMERATE_SUB_KEYS, &hKey);
+    if ( rc == ERROR_SUCCESS )
+    {
+        DWORD index = 0;
+        TCHAR name[MAX_REGISTRY_KEY_SIZE];
+        DWORD cName = MAX_REGISTRY_KEY_SIZE;
+
+        while ( (rc = RegEnumKeyEx(hKey, index, name, &cName, NULL, NULL, NULL, NULL)) == ERROR_SUCCESS )
+        {
+            context->ArrayAppendString(logNames, name, strlen(name));
+            index++;
+            cName = MAX_REGISTRY_KEY_SIZE;
         }
 
-        if (pBuffer) GlobalFree(pBuffer);
-
-        if ( rc == ERROR_HANDLE_EOF || count == num || (start > numEvRecords) || (start < 1) ) //all OK complete log read, also true for an empty log
+        if ( rc == ERROR_NO_MORE_ITEMS )
         {
-            char   strBuffer[8];                 //string for number of records read
-
-            itoa(0, varName+stemLen, 10);
-            itoa(count, strBuffer, 10);
-            SET_VARIABLE(varName, strBuffer, 2);
-            RETC(0)
+            // Not an error, this is the expected.
+            rc = 0;
         }
         else
         {
-            RETVAL(rc);
+            // An actual error, empty the array.
+            context->SendMessage0(logNames, "EMPTY");
         }
+
+        RegCloseKey(hKey);
     }
-    RETERR;
+
+    return rc;
 }
+
+/** WindowsEventLog::close()
+ *
+ *  If we have an open open event log handle, closes it.
+ *
+ *  @return   Returns 0 on success and if there is no open handle to begin with.
+ *            If there is an error attempting to close an open handle, the OS
+ *            system error code is returned.
+ */
+RexxMethod0(uint32_t, WSEventLog_close)
+{
+    return closeEventLog(context);
+}
+
+/** WindowsEventLog::uninit()
+ *
+ *  Uninit method for the class.  Simply makes sure, if we have an open handle,
+ *  it gets closed.
+ */
+RexxMethod0(uint32_t, WSEventLog_uninit)
+{
+    closeEventLog(context);
+    return 0;
+}
+
+/* This method is used as a convenient way to test code. */
+RexxMethod4(int, WSEventLog_test, RexxStringObject, data, OPTIONAL_CSTRING, server, OPTIONAL_CSTRING, source, ARGLIST, args)
+{
+    return 0;
+}
+
+
 
 size_t RexxEntry WSCtrlWindow(const char *funcname, size_t argc, CONSTRXSTRING argv[], const char *qname, PRXSTRING retstr)
 {
@@ -3269,19 +3821,38 @@ VOID Little2BigEndian(BYTE *pbInt, INT iSize)
 }
 
 
-// now build the actual entry list
+// now build the actual entry lists
 RexxRoutineEntry rxwinsys_functions[] =
 {
     REXX_CLASSIC_ROUTINE(WSRegistryKey,    WSRegistryKey),
     REXX_CLASSIC_ROUTINE(WSRegistryValue,  WSRegistryValue),
     REXX_CLASSIC_ROUTINE(WSRegistryFile,   WSRegistryFile),
     REXX_CLASSIC_ROUTINE(WSProgManager,    WSProgManager),
-    REXX_CLASSIC_ROUTINE(WSEventLog,       WSEventLog),
     REXX_CLASSIC_ROUTINE(WSCtrlWindow,     WSCtrlWindow),
     REXX_CLASSIC_ROUTINE(WSCtrlSend,       WSCtrlSend),
     REXX_CLASSIC_ROUTINE(WSCtrlMenu,       WSCtrlMenu),
     REXX_CLASSIC_ROUTINE(WSClipboard,      WSClipboard),
     REXX_LAST_ROUTINE()
+};
+
+
+RexxMethodEntry rxwinsys_methods[] = {
+    REXX_METHOD(WSEventLog_test,            WSEventLog_test),
+    REXX_METHOD(WSEventLog_init,            WSEventLog_init),
+    REXX_METHOD(WSEventLog_uninit,          WSEventLog_uninit),
+    REXX_METHOD(WSEventLog_open,            WSEventLog_open),
+    REXX_METHOD(WSEventLog_close,           WSEventLog_close),
+    REXX_METHOD(WSEventLog_write,           WSEventLog_write),
+    REXX_METHOD(WSEventLog_readRecords,     WSEventLog_readRecords),
+    REXX_METHOD(WSEventLog_minimumReadSet,  WSEventLog_minimumReadSet),
+    REXX_METHOD(WSEventLog_minimumReadGet,  WSEventLog_minimumReadGet),
+    REXX_METHOD(WSEventLog_getNumber,       WSEventLog_getNumber),
+    REXX_METHOD(WSEventLog_getFirst,        WSEventLog_getFirst),
+    REXX_METHOD(WSEventLog_getLast,         WSEventLog_getLast),
+    REXX_METHOD(WSEventLog_isFull,          WSEventLog_isFull),
+    REXX_METHOD(WSEventLog_getLogNames,     WSEventLog_getLogNames),
+    REXX_METHOD(WSEventLog_clear,           WSEventLog_clear),
+    REXX_LAST_METHOD()
 };
 
 RexxPackageEntry rxwinsys_package_entry =
@@ -3293,7 +3864,7 @@ RexxPackageEntry rxwinsys_package_entry =
     NULL,                                // no load/unload functions
     NULL,
     rxwinsys_functions,                  // the exported functions
-    NULL                                 // no methods in this package
+    rxwinsys_methods                     // the exported methods
 };
 
 // package loading stub.
