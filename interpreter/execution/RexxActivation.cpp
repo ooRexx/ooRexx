@@ -1562,7 +1562,7 @@ RexxDirectory *RexxActivation::getStreams()
     if (this->settings.streams == OREF_NULL)
     {
         /* first entry into here?            */
-        if (this->isProgramOrMethod())
+        if (this->isTopLevelCall())
         {
             /* always use a new directory        */
             this->settings.streams = new_directory();
