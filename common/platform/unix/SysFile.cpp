@@ -107,6 +107,11 @@ bool SysFile::open(const char *name, int openFlags, int openMode, int shareMode)
 
     // we must open this with the NOINHERIT flag added
     fileHandle = ::open(name, openFlags, (mode_t)openMode);
+    if ( fileHandle == -1 )
+    {
+        errInfo = errno;
+        return false;
+    }
 
     // mark that we opened this handle
     openedHandle = true;
