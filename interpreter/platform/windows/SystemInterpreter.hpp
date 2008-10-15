@@ -92,7 +92,6 @@ public:
     static bool valueFunction(RexxString *name, RexxObject *newValue, RexxString *selector, RexxObject *&result);
     static RexxString *getDefaultAddressName();
     static bool invokeExternalFunction(RexxActivation *, RexxActivity *, RexxString *, RexxObject **, size_t, RexxString *, ProtectedObject &);
-    static RexxObject *invokeHostCommand(RexxActivation *, RexxActivity *, RexxString *, RexxString *, RexxString **);
     static void validateAddressName(RexxString *name );
     static void setupProgram(RexxActivation *activation);
     static void loadImage(char **imageBuffer, size_t *imageSize);

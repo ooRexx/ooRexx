@@ -172,7 +172,7 @@ bool sys_process_cd(RexxExitContext *context, const char *command, const char * 
  | Notes:      Handles processing of a system command on a Windows NT system  |
  |                                                                      |
   ----------------------------------------------------------------------------*/
-RexxObjectPtr sysCommandNT(RexxExitContext *context, const char *command, const char *cmdstring_ptr, bool direct)
+bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmdstring_ptr, bool direct, RexxObjectPtr &result)
 {
     DWORD rc;
     STARTUPINFO siStartInfo;                  // process startup info
@@ -249,7 +249,8 @@ RexxObjectPtr sysCommandNT(RexxExitContext *context, const char *command, const 
         {
             rc = GetLastError ();         // bad termination? get error code
             context->RaiseCondition("FAILURE", command, NULLOBJECT, context->WholeNumberToObject(rc));
-            return NULLOBJECT;
+            result = NULLOBJECT;
+            return true;
         }
         /* the new process must be detached so it will be discarded automatically after execution */
         /* The thread must be closed first */
@@ -262,9 +263,8 @@ RexxObjectPtr sysCommandNT(RexxExitContext *context, const char *command, const 
     }
     else
     {
-        rc = GetLastError ();           // Couldn't create process
-        context->RaiseCondition("FAILURE", command, NULLOBJECT, context->WholeNumberToObject(rc));
-        return NULLOBJECT;
+        // return this as a failure for now...we might try this again later
+        return false;
     }
 
     SystemInterpreter::exceptionHostProcess = NULL;
@@ -273,9 +273,12 @@ RexxObjectPtr sysCommandNT(RexxExitContext *context, const char *command, const 
     if (rc != 0)
     {
         context->RaiseCondition("ERROR", command, NULLOBJECT, context->WholeNumberToObject(rc));
-        return NULLOBJECT;
+        result = NULLOBJECT;
+        return true;
     }
-    return context->WholeNumberToObject(rc);
+    // this is a zero return
+    result = context->False();
+    return true;
 }
 
 
@@ -467,7 +470,12 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     /* first check whether we can run command directly as a program (no file redirection when not cmd or command) */
     if (SystemInterpreter::explicitConsole || !noDirectInvoc)
     {
-        return sysCommandNT(context, cmd, &interncmd[j], true);
+        // try to invoke this directly.  A true failure allows us to fall through (for now)
+        RexxObjectPtr result = NULLOBJECT;
+        if (sysCommandNT(context, cmd, &interncmd[j], true, result))
+        {
+            return result;
+        }
     }
     /* no we couldn't, so pass command to cmd.exe or command.com */
 
@@ -497,8 +505,14 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     // reflect errors from WinExec; where WinExec rc=0 is mapped to 1
     /****************************************************************************/
     // Call system specific routine
-    RexxObjectPtr rc = sysCommandNT(context, cmd, cmdstring_ptr, false);
+    RexxObjectPtr rc = NULLOBJECT;
 
+    if (!sysCommandNT(context, cmd, cmdstring_ptr, false, rc))
+    {
+        // bad termination? get error code
+        context->RaiseCondition("FAILURE", cmd, NULLOBJECT, context->WholeNumberToObject(GetLastError()));
+        return NULLOBJECT;
+    }
     SystemInterpreter::exceptionConsole = false;
     return rc;
 }                                      // SystemCommand
