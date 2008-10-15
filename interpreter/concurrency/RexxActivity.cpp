@@ -391,72 +391,96 @@ wholenumber_t RexxActivity::errorNumber(RexxDirectory *conditionObject)
 }
 
 
-bool RexxActivity::raiseCondition(
-    RexxString    *condition,          /* condition to raise                */
-    RexxObject    *rc,                 /* return code value                 */
-    RexxString    *description,        /* description information           */
-    RexxObject    *additional,         /* additional information            */
-    RexxObject    *result,             /* result value                      */
-    RexxDirectory *exobj)              /* exception object                  */
-/******************************************************************************/
-/* Function:   Raise an actual condition, causing termination for untrapped   */
-/*             conditions                                                     */
-/******************************************************************************/
+/**
+ * Raise a condition, with potential trapping.
+ *
+ * @param condition  The condition name.
+ * @param rc         The rc value
+ * @param description
+ *                   The description value.
+ * @param additional the exception additional information.
+ * @param result     The condition result info.
+ *
+ * @return true if this was trapped via CALL ON, false for untrapped
+ *         conditions.
+ */
+bool RexxActivity::raiseCondition(RexxString *condition, RexxObject *rc, RexxString *description, RexxObject *additional, RexxObject *result)
 {
-  RexxActivationBase *activation;      /* current activation                */
-  bool                handled;         /* this condition has been handled   */
-  RexxDirectory      *conditionObj;    /* object for created condition      */
+    // just create a condition object and process the traps.
+    RexxDirectory *conditionObj = createConditionObject(condition, rc, description, additional, result);
+    return raiseCondition(conditionObj);
+}
+
+/**
+ * Process condition trapping for a condition or syntax
+ * error.
+ *
+ * @param conditionObj
+ *               The condition object that describes the condition.
+ *
+ * @return true if this was trapped, false otherwise.  If trapped
+ *         via a SIGNAL ON, this will NOT return to here.
+ */
+bool RexxActivity::raiseCondition(RexxDirectory *conditionObj)
+{
+    bool handled = false;                     /* condition not handled yet         */
+    RexxString *condition = (RexxString *)conditionObj->at(OREF_CONDITION);
+
+    /* invoke the error traps, on all    */
+    /*  nativeacts until reach 1st       */
+    /*  also give 1st activation a shot. */
+    for (RexxActivationBase *activation = this->getTopStackFrame() ; !activation->isStackBase(); activation = activation->getPreviousStackFrame())
+    {
+        handled = activation->trap(condition, conditionObj);
+        if (isOfClass(Activation, activation)) /* reached our 1st activation yet.   */
+        {
+            break;                           /* yes, break out of loop            */
+        }
+    }
+
+    /* Control will not return here if the condition was trapped via*/
+    /* SIGNAL ON SYNTAX.  For CALL ON conditions, handled will be   */
+    /* true if a trap is pending.                                   */
+
+    return handled;                      /* this has been handled             */
+}
 
 
-  handled = false;                     /* condition not handled yet         */
-  if (exobj == OREF_NULL)              /* need to create a condition object?*/
-  {
-    conditionObj = new_directory();    /* get a new directory               */
+/**
+ * Create a condition object from the provided information.
+ *
+ * @param condition  The name of the raised condition.
+ * @param rc         The rc value (can be null)
+ * @param description
+ *                   The description string.
+ * @param additional Additional information.
+ * @param result     result information.
+ *
+ * @return The constructed condition object (a directory).
+ */
+RexxDirectory *RexxActivity::createConditionObject(RexxString *condition, RexxObject *rc, RexxString *description, RexxObject *additional, RexxObject *result)
+{
+    // condition objects are directories
+    RexxDirectory *conditionObj = new_directory();
                                        /* put in the condition name         */
     conditionObj->put(condition, OREF_CONDITION);
                                        /* fill in default description       */
-    conditionObj->put(OREF_NULLSTRING, OREF_DESCRIPTION);
+    conditionObj->put(description == OREF_NULL ? OREF_NULLSTRING : description, OREF_DESCRIPTION);
                                        /* fill in the propagation status    */
     conditionObj->put(TheFalseObject, OREF_PROPAGATED);
-  }
-  else
-  {
-      conditionObj = exobj;              /* use the existing object           */
-  }
-  if (rc != OREF_NULL)                 /* have an RC value?                 */
-  {
-      conditionObj->put(rc, OREF_RC);    /* add to the condition argument     */
-  }
-  if (description != OREF_NULL)        /* any description to add?           */
-  {
-      conditionObj->put(description, OREF_DESCRIPTION);
-  }
-  if (additional != OREF_NULL)         /* or additional information         */
-  {
-      conditionObj->put(additional, OREF_ADDITIONAL);
-  }
-  if (result != OREF_NULL)             /* given a return result?            */
-  {
-      conditionObj->put(result, OREF_RESULT);
-  }
-
-                                       /* invoke the error traps, on all    */
-                                       /*  nativeacts until reach 1st       */
-                                       /*  also give 1st activation a shot. */
-  for (activation = this->getTopStackFrame() ; !activation->isStackBase(); activation = activation->getPreviousStackFrame())
-  {
-      handled = activation->trap(condition, conditionObj);
-      if (isOfClass(Activation, activation)) /* reached our 1st activation yet.   */
-      {
-          break;                           /* yes, break out of loop            */
-      }
-  }
-
-  /* Control will not return here if the condition was trapped via*/
-  /* SIGNAL ON SYNTAX.  For CALL ON conditions, handled will be   */
-  /* true if a trap is pending.                                   */
-
-  return handled;                      /* this has been handled             */
+    if (rc != OREF_NULL)                 /* have an RC value?                 */
+    {
+        conditionObj->put(rc, OREF_RC);    /* add to the condition argument     */
+    }
+    if (additional != OREF_NULL)         /* or additional information         */
+    {
+        conditionObj->put(additional, OREF_ADDITIONAL);
+    }
+    if (result != OREF_NULL)             /* given a return result?            */
+    {
+        conditionObj->put(result, OREF_RESULT);
+    }
+    return conditionObj;
 }
 
 void RexxActivity::reportAnException(
@@ -725,7 +749,7 @@ void RexxActivity::raiseException(
     this->conditionobj = createExceptionObject(errcode, activation, location, source, description, additional, result);
 
     /* process as common condition       */
-    if (!this->raiseCondition(OREF_SYNTAX, OREF_NULL, OREF_NULL, OREF_NULL, OREF_NULL, conditionobj))
+    if (!this->raiseCondition(conditionobj))
     {
         // get the traceback list so we can append to it was we unwind
         RexxList *_traceback = (RexxList *)conditionobj->get(OREF_TRACEBACK);
@@ -816,7 +840,7 @@ RexxDirectory *RexxActivity::createExceptionObject(
             reportException(Error_Execution_error_condition, code);
         }
         /* do required substitutions         */
-        message = this->messageSubstitution(message, additional);
+        message = messageSubstitution(message, additional);
         /* replace the original message text */
         exobj->put(message, OREF_NAME_MESSAGE);
     }
@@ -906,76 +930,71 @@ RexxString *RexxActivity::messageSubstitution(
 /*            error message.                                                  */
 /******************************************************************************/
 {
-  size_t      substitutions;           /* number of substitutions           */
-  size_t      subposition;             /* substitution position             */
-  size_t      i;                       /* loop counter                      */
-  size_t      selector;                /* substitution position             */
-  RexxString *newmessage;              /* resulting new error message       */
-  RexxString *front;                   /* front message part                */
-  RexxString *back;                    /* back message part                 */
-  RexxObject *value;                   /* substituted message value         */
-  RexxString *stringVal;               /* converted substitution value      */
-
-  substitutions = additional->size();  /* get the substitution count        */
-  newmessage = OREF_NULLSTRING;        /* start with a null string          */
-                                       /* loop through and substitute values*/
-  for (i = 1; i <= substitutions; i++) {
-                                       /* search for a substitution         */
-    subposition = message->pos(OREF_AND, 0);
-    if (subposition == 0)              /* not found?                        */
-      break;                           /* get outta here...                 */
-                                       /* get the leading part              */
-    front = message->extract(0, subposition - 1);
-                                       /* pull off the remainder            */
-    back = message->extract(subposition + 1, message->getLength() - (subposition + 1));
-                                       /* get the descriptor position       */
-    selector = message->getChar(subposition);
-                                       /* not a good number?                */
-    if (selector < '0' || selector > '9')
-                                       /* use a default message             */
-      stringVal = new_string("<BAD MESSAGE>"); /* must be stringValue, not value, otherwise trap */
-    else {
-      selector -= '0';                 /* convert to a number               */
-      if (selector > substitutions)    /* out of our range?                 */
-        stringVal = OREF_NULLSTRING;   /* use a null string                 */
-      else {                           /* get the indicated selector value  */
-        value = additional->get(selector);
-        if (value != OREF_NULL) {      /* have a value?                     */
-                                       /* set the reentry flag              */
-          this->requestingString = true;
-          this->stackcheck = false;    /* disable the checking              */
-          // save the actitivation level in case there's an error unwind for an unhandled
-          // exception;
-          size_t activityLevel = getActivationLevel();
-                                       /* now protect against reentry       */
-          try
-          {
-                                       /* force to character form           */
-              stringVal = value->stringValue();
-          }
-          catch (ActivityException)
-          {
-              stringVal = value->defaultName();
-          }
-
-          // make sure we get restored to the same base activation level.
-          restoreActivationLevel(activityLevel);
-                                       /* we're safe again                  */
-          this->requestingString = false;
-          this->stackcheck = true;     /* disable the checking              */
+    size_t substitutions = additional->size();  /* get the substitution count        */
+    RexxString *newmessage = OREF_NULLSTRING;        /* start with a null string          */
+                                         /* loop through and substitute values*/
+    for (size_t i = 1; i <= substitutions; i++)
+    {
+        /* search for a substitution         */
+        size_t subposition = message->pos(OREF_AND, 0);
+        if (subposition == 0)              /* not found?                        */
+        {
+            break;                           /* get outta here...                 */
+        }
+                                             /* get the leading part              */
+        RexxString *front = message->extract(0, subposition - 1);
+        /* pull off the remainder            */
+        RexxString *back = message->extract(subposition + 1, message->getLength() - (subposition + 1));
+        /* get the descriptor position       */
+        size_t selector = message->getChar(subposition);
+        /* not a good number?                */
+        RexxString *stringVal = OREF_NULLSTRING;
+        if (selector < '0' || selector > '9')
+        {
+            /* use a default message             */
+            stringVal = new_string("<BAD MESSAGE>"); /* must be stringValue, not value, otherwise trap */
         }
         else
-                                       /* use a null string                 */
-          stringVal = OREF_NULLSTRING;
-      }
+        {
+            selector -= '0';                 /* convert to a number               */
+            // still in range?
+            if (selector <= substitutions)    /* out of our range?                 */
+            {
+                RexxObject *value = additional->get(selector);
+                if (value != OREF_NULL)      /* have a value?                     */
+                {
+                    /* set the reentry flag              */
+                    this->requestingString = true;
+                    this->stackcheck = false;    /* disable the checking              */
+                    // save the actitivation level in case there's an error unwind for an unhandled
+                    // exception;
+                    size_t activityLevel = getActivationLevel();
+                    /* now protect against reentry       */
+                    try
+                    {
+                        /* force to character form           */
+                        stringVal = value->stringValue();
+                    }
+                    catch (ActivityException)
+                    {
+                        stringVal = value->defaultName();
+                    }
+
+                    // make sure we get restored to the same base activation level.
+                    restoreActivationLevel(activityLevel);
+                    /* we're safe again                  */
+                    this->requestingString = false;
+                    this->stackcheck = true;     /* disable the checking              */
+                }
+            }
+        }
+        /* accumulate the front part         */
+        newmessage = newmessage->concat(front->concat(stringVal));
+        message = back;                    /* replace with the remainder        */
     }
-                                       /* accumulate the front part         */
-    newmessage = newmessage->concat(front->concat(stringVal));
-    message = back;                    /* replace with the remainder        */
-  }
-                                       /* add on any remainder              */
-  newmessage = newmessage->concat(message);
-  return newmessage;                   /* return the message                */
+    /* add on any remainder              */
+    newmessage = newmessage->concat(message);
+    return newmessage;                   /* return the message                */
 }
 
 /**
@@ -2336,22 +2355,13 @@ bool RexxActivity::callScriptingExit(
 }
 
 
-bool RexxActivity::callCommandExit(
-     RexxActivation *activation,       /* issuing activation                */
-     RexxString *cmdname,              /* command name                      */
-     RexxString *environment,          /* environment                       */
-     RexxString **conditions,          /* failure/error conditions status   */
-     RexxObject **cmdresult)           /* function result                   */
-/******************************************************************************/
-/* Function:   Calls the SysExitHandler method on the System Object to run    */
-/*             the command system exit.                                       */
-/******************************************************************************/
+bool RexxActivity::callCommandExit(RexxActivation *activation, RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
 {
     // give the security manager the first pass
     SecurityManager *manager = activation->getEffectiveSecurityManager();
     if (manager != OREF_NULL)
     {
-        if (manager->checkCommand(cmdname, environment, conditions, cmdresult))
+        if (manager->checkCommand(address, command, result, condition))
         {
             return false;
         }
@@ -2365,10 +2375,10 @@ bool RexxActivity::callCommandExit(
         exit_parm.rxcmd_flags.rxfcfail = 0;/* Initialize failure/error to zero  */
         exit_parm.rxcmd_flags.rxfcerr = 0;
         /* fill in the environment parm      */
-        exit_parm.rxcmd_addressl = (unsigned short)environment->getLength();
-        exit_parm.rxcmd_address = environment->getStringData();
+        exit_parm.rxcmd_addressl = (unsigned short)address->getLength();
+        exit_parm.rxcmd_address = address->getStringData();
         /* make cmdaname into RXSTRING form  */
-        cmdname->toRxstring(exit_parm.rxcmd_command);
+        command->toRxstring(exit_parm.rxcmd_command);
 
         exit_parm.rxcmd_dll = NULL;        /* Currently no DLL support          */
         exit_parm.rxcmd_dll_len = 0;       /* 0 means .EXE style                */
@@ -2381,17 +2391,18 @@ bool RexxActivity::callCommandExit(
         }
         if (exit_parm.rxcmd_flags.rxfcfail)/* need to raise failure condition?  */
         {
-            *conditions = OREF_FAILURENAME;  /* raise an FAILURE condition        */
+            // raise the condition when things are done
+            condition = RexxActivity::createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
 
         /* Did we find the function??        */
         else if (exit_parm.rxcmd_flags.rxfcerr)
         {
-            /* Need to raise error condition?    */
-            *conditions = OREF_ERRORNAME;    /* raise an ERROR condition          */
+            // raise the condition when things are done
+            condition = RexxActivity::createConditionObject(OREF_ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
         /* Get input string and return it    */
-        *cmdresult = new_string(exit_parm.rxcmd_retc);
+        result = new_string(exit_parm.rxcmd_retc);
         /* user give us a new buffer?        */
         if (exit_parm.rxcmd_retc.strptr != retbuffer)
         {
@@ -3082,4 +3093,19 @@ RexxString *RexxActivity::resolveProgramName(RexxString *name, RexxString *dir, 
 RexxObject *RexxActivity::getLocalEnvironment(RexxString *name)
 {
     return instance->getLocalEnvironment(name);
+}
+
+
+/**
+ * Resolve a command handler from the interpreter
+ * instance.
+ *
+ * @param name   The name of the command environment.
+ *
+ * @return A configured command environment, or OREF_NULL if the
+ *         target environment is not found.
+ */
+CommandHandler *RexxActivity::resolveCommandHandler(RexxString *name)
+{
+    return instance->resolveCommandHandler(name);
 }

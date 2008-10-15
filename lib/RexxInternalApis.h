@@ -56,10 +56,6 @@ void REXXENTRY RexxCreateInterpreterImage();
 
 size_t REXXENTRY RexxGetCurrentPrecision();
 
-/***    RexxCallSubcom - Execute a command in an environment */
-RexxReturnCode REXXENTRY RexxCallSubcom(const char *, PCONSTRXSTRING,
-         unsigned short *, wholenumber_t *, PRXSTRING );
-
 RexxReturnCode REXXENTRY RexxLoadSubcom(const char *, const char *);
 
 RexxReturnCode REXXENTRY RexxResolveSubcom(const char *name, REXXPFN *);

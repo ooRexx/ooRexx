@@ -160,6 +160,7 @@ typedef const struct RexxExitContext_ *RexxExitContext;
 typedef int REXXENTRY RexxContextExitHandler(RexxExitContext *, int, int, PEXIT);
 
 
+
 typedef struct _RexxContextExit
 {
    RexxContextExitHandler *handler;    /* subcom enviro for sysexit  */
@@ -423,7 +424,28 @@ typedef struct
 // The set of exits to use.  These are new-style exits, using direct exit addresses and
 // the object oriented RexxExitContext calling convention.
 #define DIRECT_EXITS                "DirectExits"
+// The set of command envronments to use.  These use registered command handler names.
+#define REGISTERED_ENVIRONMENTS     "RegisteredEnvironments"
+// The set of command environments to use.  These are direct call addresses using the
+// object-oriented calling convetion.
+#define DIRECT_ENVIRONMENTS         "DirectEnvironments"
 
+/* This typedef simplifies coding of an Exit handler.                */
+typedef RexxObjectPtr REXXENTRY RexxContextCommandHandler(RexxExitContext *, RexxStringObject, RexxStringObject);
+
+
+typedef struct _RexxContextEnvironment
+{
+   RexxContextCommandHandler *handler;    // the environment handler
+   const char *name;                      // the handler name
+}  RexxContextEnvironment;
+
+
+typedef struct _RexxRegisteredEnvironment
+{
+   const char *registeredName;            // the environment handler
+   const char *name;                      // the handler name
+}  RexxRegisteredEnvironment;
 
 typedef struct
 {

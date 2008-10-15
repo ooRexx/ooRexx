@@ -1693,8 +1693,7 @@ void RexxEntry RaiseCondition(RexxThreadContext *c, CSTRING name, CSTRING desc, 
     try
     {
         context.context->enableConditionTrap();
-        context.activity->raiseCondition(new_upper_string(name), OREF_NULL, new_string(desc),
-            (RexxArray *)add, (RexxObject *)result, OREF_NULL);
+        context.activity->raiseCondition(new_upper_string(name), OREF_NULL, new_string(desc), (RexxArray *)add, (RexxObject *)result);
     }
     catch (RexxNativeActivation *)
     {

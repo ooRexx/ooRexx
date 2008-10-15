@@ -100,7 +100,7 @@ OTEOBJ2=$(OR_OUTDIR)\ExpressionStem.$(OBJ)  $(OR_OUTDIR)\ExpressionVariable.$(OB
         $(OR_OUTDIR)\ExpressionOperator.$(OBJ)
 OTEOBJ3=$(OR_OUTDIR)\ParseTarget.$(OBJ) $(OR_OUTDIR)\ParseTrigger.$(OBJ) $(OR_OUTDIR)\RexxInternalStack.$(OBJ) \
         $(OR_OUTDIR)\RexxLocalVariables.$(OBJ) $(OR_OUTDIR)\RexxActivationStack.$(OBJ) $(OR_OUTDIR)\ProtectedObject.$(OBJ) \
-	$(OR_OUTDIR)\ExitHandler.$(OBJ)
+	$(OR_OUTDIR)\ExitHandler.$(OBJ) $(OR_OUTDIR)\CommandHandler.$(OBJ)
 OTPOBJS=$(OTSOBJ1)  $(OTSOBJ2) $(OTIOBJ1) $(OTIOBJ2) $(OTIOBJ3) \
         $(OTIOBJ4)  $(OTIOBJ5) $(OTIOBJ6) $(OTIOBJ7) $(OTIOBJ8) $(OTIOBJ9) \
         $(OTIOBJ10) $(OTEOBJ1) $(OTEOBJ2) $(OTEOBJ3)

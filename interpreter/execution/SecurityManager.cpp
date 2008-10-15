@@ -230,7 +230,7 @@ bool SecurityManager::checkFunctionCall(RexxString *functionName, size_t count, 
  *
  * @return true if the security manager handled this call, false otherwise.
  */
-bool SecurityManager::checkCommand(RexxString *command, RexxString *env, RexxString **conditions, RexxObject **result)
+bool SecurityManager::checkCommand(RexxString *address, RexxString *command, ProtectedObject &result, ProtectedObject &condition)
 {
     // no method here
     if (manager == OREF_NULL)
@@ -242,27 +242,29 @@ bool SecurityManager::checkCommand(RexxString *command, RexxString *env, RexxStr
                                        /* add the command                   */
     securityArgs->put(command, OREF_COMMAND);
     /* and the target                    */
-    securityArgs->put(env, OREF_ADDRESS);
+    securityArgs->put(address, OREF_ADDRESS);
     /* did manager handle this?          */
     if (callSecurityManager(OREF_COMMAND, securityArgs))
     {
         /* get the return code               */
-        *result = securityArgs->fastAt(OREF_RC);
-        if (*result == OREF_NULL)     /* no return code provide?           */
+        result = securityArgs->fastAt(OREF_RC);
+        if ((RexxObject *)result == OREF_NULL)     /* no return code provide?           */
         {
-            *result = IntegerZero;      /* use a zero return code            */
+            result = IntegerZero;      /* use a zero return code            */
         }
         /* failure indicated?                */
         if (securityArgs->fastAt(OREF_FAILURENAME) != OREF_NULL)
         {
-            *conditions = OREF_FAILURENAME;/* raise a FAILURE condition         */
+            // raise the condition when things are done
+            condition = RexxActivity::createConditionObject(OREF_FAILURENAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
         /* how about an error condition?     */
         else if (securityArgs->fastAt(OREF_ERRORNAME) != OREF_NULL)
         {
-            *conditions = OREF_ERRORNAME;  /* raise an ERROR condition          */
+            // raise the condition when things are done
+            condition = RexxActivity::createConditionObject(OREF_ERRORNAME, (RexxObject *)result, command, OREF_NULL, OREF_NULL);
         }
-        return true;                     /* we've handled this                */
+        return true;
     }
 
     return false;       // not handled

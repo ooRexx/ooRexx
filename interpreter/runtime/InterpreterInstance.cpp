@@ -47,6 +47,7 @@
 #include "RexxActivation.hpp"
 #include "PackageManager.hpp"
 #include "DirectoryClass.hpp"
+#include "CommandHandler.hpp"
 
 /**
  * Create a new Package object instance.
@@ -91,6 +92,7 @@ void InterpreterInstance::live(size_t liveMark)
     memory_mark(searchExtensions);
     memory_mark(securityManager);
     memory_mark(localEnvironment);
+    memory_mark(commandHandlers);
 }
 
 
@@ -107,6 +109,7 @@ void InterpreterInstance::liveGeneral(int reason)
     memory_mark_general(searchExtensions);
     memory_mark_general(securityManager);
     memory_mark_general(localEnvironment);
+    memory_mark_general(commandHandlers);
 }
 
 
@@ -131,9 +134,13 @@ void InterpreterInstance::initialize(RexxActivity *activity, RexxOption *options
     securityManager = new SecurityManager(OREF_NULL);
     // set the default system address environment (can be overridden by options)
     defaultEnvironment = SystemInterpreter::getDefaultAddressName();
+    // our list of command handlers (must be done before options are processed)
+    commandHandlers = new_directory();
     processOptions(options);
     // do system specific initialization
     sysInstance.initialize(this, options);
+    // register the system command handlers for this platform.
+    sysInstance.registerCommandHandlers(this);
 
     // associate the thread with this instance
     activity->setupAttachedActivity(this);
@@ -657,6 +664,36 @@ bool InterpreterInstance::processOptions(RexxOption *options)
                 }
             }
         }
+        // old-style registered command handler
+        else if (strcmp(options->optionName, REGISTERED_ENVIRONMENTS) == 0)
+        {
+            RexxRegisteredEnvironment *handlers = (RexxRegisteredEnvironment *)options->option.value.value_POINTER;
+            // if we have handlers, initialize the array
+            if (handlers != NULL)
+            {
+                                               /* while not the list ender          */
+                for (int i= 0; handlers[i].registeredName != NULL; i++)
+                {
+                    // add the handler to this setup
+                    addCommandHandler(handlers[i].name, handlers[i].registeredName);
+                }
+            }
+        }
+        // a direct call command handler
+        else if (strcmp(options->optionName, DIRECT_ENVIRONMENTS) == 0)
+        {
+            RexxContextEnvironment *handlers = (RexxContextEnvironment *)options->option.value.value_POINTER;
+            // if we have handlers, initialize the array
+            if (handlers != NULL)
+            {
+                                               /* while not the list ender          */
+                for (int i= 0; handlers[i].handler != NULL; i++)
+                {
+                    // add the handler to this setup
+                    addCommandHandler(handlers[i].name, (REXXPFN)handlers[i].handler);
+                }
+            }
+        }
         // a package to load at startup
         else if (strcmp(options->optionName, LOAD_REQUIRED_LIBRARY) == 0)
         {
@@ -704,3 +741,61 @@ RexxObject *InterpreterInstance::getLocalEnvironment(RexxString *name)
     }
     return localEnvironment->at(name);
 }
+
+/**
+ * Add a handler to the environment list.
+ *
+ * @param name       The name of the address environment this services.
+ * @param entryPoint The entry point address of the handler.
+ */
+void InterpreterInstance::addCommandHandler(const char *name, REXXPFN entryPoint)
+{
+    RexxString *handlerName = new_upper_string(name);
+    commandHandlers->put((RexxObject *)new CommandHandler(entryPoint), handlerName);
+}
+
+/**
+ * Add a handler for a registered subcom handler to the
+ * address handler list.
+ *
+ * @param name   The environment name of the handler.
+ * @param registeredName
+ *               The name of the registered subcom handler.
+ */
+void InterpreterInstance::addCommandHandler(const char *name, const char *registeredName)
+{
+    RexxString *handlerName = new_upper_string(name);
+    CommandHandler *handler = new CommandHandler(registeredName);
+    // it's possible we were give a bogus name, so validate this first
+    if (handler->isResolved())
+    {
+        commandHandlers->put((RexxObject *)handler, handlerName);
+    }
+}
+
+
+/**
+ * Resolve a command handler for invoking a command.
+ *
+ * @param name   The name of the target address environment.
+ *
+ * @return The resolved handler, or OREF_NULL if this is not known.
+ */
+CommandHandler *InterpreterInstance::resolveCommandHandler(RexxString *name)
+{
+    // all names in the cache are in upper case
+    RexxString *upperName = name->upper();
+    CommandHandler *handler = (CommandHandler *)commandHandlers->at(upperName);
+    if (handler == OREF_NULL)
+    {
+        handler = new CommandHandler(name->getStringData());
+        if (!handler->isResolved())
+        {
+            return OREF_NULL;   // can't find this
+        }
+        commandHandlers->put((RexxObject *)handler, upperName);
+    }
+    return handler;
+}
+
+

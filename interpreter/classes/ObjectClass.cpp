@@ -1117,7 +1117,7 @@ RexxString *RexxObject::requestString()
          /* get the final string value        */
             string_value = this->stringValue();
             /* raise a NOSTRING condition        */
-            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, string_value, (RexxObject *)this, OREF_NULL, OREF_NULL);
+            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, string_value, this, OREF_NULL);
         }
         return string_value;               /* return the converted form         */
     }
@@ -1131,7 +1131,7 @@ RexxString *RexxObject::requestString()
          /* get the final string value        */
             this->sendMessage(OREF_STRINGSYM, string_value);
             /* raise a NOSTRING condition        */
-            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, (RexxString *)string_value, this, OREF_NULL, OREF_NULL);
+            ActivityManager::currentActivity->raiseCondition(OREF_NOSTRING, OREF_NULL, (RexxString *)string_value, this, OREF_NULL);
         }
         return(RexxString *)string_value;   /* return the converted form         */
     }

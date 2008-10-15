@@ -148,6 +148,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="DoBlock" class="RexxDoBlock" include="DoBlock.hpp"/>
 <Class id="InterpreterInstance" class="InterpreterInstance" include="InterpreterInstance.hpp"/>
 <Class id="SecurityManager" class="SecurityManager" include="SecurityManager.hpp"/>
+<Class id="CommandHandler" class="CommandHandler" include="CommandHandler.hpp"/>
 </Transient>
 </Classes>
 </RexxClasses>

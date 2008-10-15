@@ -54,6 +54,7 @@ public:
     void initialize(InterpreterInstance *i, RexxOption *options);
     void terminate();
     RexxString *resolveProgramName(RexxString *_name, RexxString *_parentDir, RexxString *_parentExtension);
+    void registerCommandHandlers(InterpreterInstance *i);
 
 protected:
     void addSearchExtension(const char *name);

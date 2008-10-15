@@ -72,6 +72,7 @@
 #include "RexxInternalApis.h"
 #include "PackageManager.hpp"
 #include "RexxCompoundTail.hpp"
+#include "CommandHandler.hpp"
 
 /* max instructions without a yield */
 #define MAX_INSTRUCTIONS  100
@@ -3473,20 +3474,23 @@ void RexxActivation::traceClause(      /* trace a REXX instruction          */
     }
 }
 
-RexxObject * RexxActivation::command(
-     RexxString * commandString,       /* command to issue                  */
-     RexxString * address )            /* target address environment        */
-/******************************************************************************/
-/* Function:  Issue a command to a host environment                           */
-/******************************************************************************/
+/**
+ * Issue a command to a named host evironment
+ *
+ * @param commandString
+ *                The command to issue
+ * @param address The target address
+ *
+ * @return The return code object
+ */
+void RexxActivation::command(RexxString *address, RexxString *commandString)
 {
-    RexxObject * rc;                     /* return code                       */
-    RexxString * condition;              /* raised conditions                 */
-    RexxString * rc_trace;               /* traced return code                */
     bool         instruction_traced;     /* instruction has been traced       */
+    ProtectedObject condition;
+    ProtectedObject commandResult;
 
                                          /* instruction already traced?       */
-    if ((this->settings.flags&trace_all) || (this->settings.flags&trace_commands))
+    if (tracingAll() || tracingCommands())
     {
         instruction_traced = true;         /* remember we traced this           */
     }
@@ -3495,20 +3499,80 @@ RexxObject * RexxActivation::command(
         instruction_traced = false;        /* not traced yet                    */
     }
                                            /* if exit declines call             */
-    if (this->activity->callCommandExit(this, commandString, address, &condition, &rc))
+    if (this->activity->callCommandExit(this, address, commandString, commandResult, condition))
     {
-        /* go issue the command              */
-        rc = SystemInterpreter::invokeHostCommand(this, this->activity, address, commandString, &condition);
+        // first check for registered command handlers
+        CommandHandler *handler = activity->resolveCommandHandler(address);
+        if (handler != OREF_NULL)
+        {
+            handler->call(activity, this, address, commandString, commandResult, condition);
+        }
+        else
+        {
+            // No handler for this environment
+            result = new_integer(RXSUBCOM_NOTREG);   // just use the not registered return code
+            // raise the condition when things are done
+            condition = RexxActivity::createConditionObject(OREF_FAILURENAME, (RexxObject *)commandResult, commandString, OREF_NULL, OREF_NULL);
+        }
     }
-    this->stack.push(rc);                /* save on the expression stack      */
+
+    RexxObject *rc = (RexxObject *)commandResult;
+    RexxDirectory *conditionObj = (RexxDirectory *)(RexxObject *)condition;
+
+    bool failureCondition = false;    // don't have a failure condition yet
+
+    int returnStatus = RETURN_STATUS_NORMAL;
+    // did a handler raise a condition?  We need to pull the rc value from the
+    // condition object
+    if (conditionObj != OREF_NULL)
+    {
+        RexxObject *temp = conditionObj->at(OREF_RC);
+        if (temp == OREF_NULL)
+        {
+            // see if we have a result and make sure the condition object
+            // fills this as the RC value
+            temp = conditionObj->at(OREF_RESULT);
+            if (temp != OREF_NULL)
+            {
+                conditionObj->put(temp, OREF_RC);
+            }
+        }
+        // replace the RC value
+        if (temp != OREF_NULL)
+        {
+            rc = temp;
+        }
+
+        RexxString *conditionName = (RexxString *)conditionObj->at(OREF_CONDITION);
+        // check for an error or failure condition, since these get special handling
+        if (conditionName->strCompare(CHAR_FAILURENAME))
+        {
+            // unconditionally update the RC value
+            conditionObj->put(temp, OREF_RC);
+            // failure conditions require special handling when raising the condition
+            // we'll need to reraise this as an ERROR condition if not trapped.
+            failureCondition = true;
+            // set the appropriate return status
+            returnStatus = RETURN_STATUS_FAILURE;
+        }
+        if (conditionName->strCompare(CHAR_ERROR))
+        {
+            // unconditionally update the RC value
+            conditionObj->put(temp, OREF_RC);
+            // set the appropriate return status
+            returnStatus = RETURN_STATUS_ERROR;
+        }
+    }
+
+    // if this was done during a debug pause, we don't update RC
+    // and .RS.
     if (!this->debug_pause)
-    {            /* not a debug pause?                */
-                 /* set the RC variable to the        */
-                 /* command return value              */
+    {
+        // set the RC value before anything
         this->setLocalVariable(OREF_RC, VARIABLE_RC, rc);
         /* tracing command errors or fails?  */
-        if ((condition == OREF_ERRORNAME && (this->settings.flags&trace_errors)) ||
-            (condition == OREF_FAILURENAME && (this->settings.flags&trace_failures)))
+        if ((returnStatus == RETURN_STATUS_ERROR && tracingErrors()) ||
+            (returnStatus == RETURN_STATUS_FAILURE && (tracingFailures())))
         {
             /* trace the current instruction     */
             this->traceClause(this->current, TRACE_PREFIX_CLAUSE);
@@ -3522,7 +3586,7 @@ RexxObject * RexxActivation::command(
         if (instruction_traced && rc->numberValue(rcValue) && rcValue != 0)
         {
             /* get RC as a string                */
-            rc_trace = rc->stringValue();
+            RexxString *rc_trace = rc->stringValue();
             /* tack on the return code           */
             rc_trace = rc_trace->concatToCstring("RC(");
             /* add the closing part              */
@@ -3530,42 +3594,49 @@ RexxObject * RexxActivation::command(
             /* trace the return code             */
             this->traceValue(rc_trace, TRACE_PREFIX_ERROR);
         }
-        /* now have a return status          */
-        this->settings.flags |= return_status_set;
-        this->settings.return_status = 0;  /* set default return status         */
-                                           /* have a failure condition?         */
-        if (condition == OREF_FAILURENAME)
+        // set the return status
+        setReturnStatus(returnStatus);
+
+        // now handle any conditions we might need to raise
+        // these are also not raised if it's a debug pause.
+        if (conditionObj != OREF_NULL)
         {
-            /* return status is negative         */
-            this->settings.return_status = -1;
-            /* try to raise the condition        */
-            if (!ActivityManager::currentActivity->raiseCondition(condition, rc, commandString, OREF_NULL, OREF_NULL, OREF_NULL))
+            // try to raise the condition, and if it isn't handled, we might
+            // munge this into an ERROR condition
+            if (!activity->raiseCondition(conditionObj))
             {
-                /* try to raise an error condition   */
-                ActivityManager::currentActivity->raiseCondition(OREF_ERRORNAME, rc, commandString, OREF_NULL, OREF_NULL, OREF_NULL);
+                // untrapped failure condition?  Turn into an ERROR condition and
+                // reraise
+                if (failureCondition)
+                {
+                    // just change the condition name
+                    conditionObj->put(OREF_ERRORNAME, OREF_CONDITION);
+                    activity->raiseCondition(conditionObj);
+                }
             }
         }
-        /* have an error condition?          */
-        else if (condition == OREF_ERRORNAME)
+        // do debug pause if necessary.  necessary is defined by:  we are
+        // tracing ALL or COMMANDS, OR, we /* using TRACE NORMAL and a FAILURE
+        // return code was received OR we receive an ERROR return code and
+        // have TRACE ERROR in effect.
+        if (instruction_traced && inDebug())
         {
-            this->settings.return_status = 1;/* return status is positive         */
-                                             /* try to raise the condition        */
-            ActivityManager::currentActivity->raiseCondition(condition, rc, commandString, OREF_NULL, OREF_NULL, OREF_NULL);
+            this->debugPause();                /* do the debug pause                */
         }
     }
-    /* do debug pause if necessary       */
-    /* necessary is defined by:  we are  */
-    /* tracing ALL or COMMANDS, OR, we   */
-    /* using TRACE NORMAL and a FAILURE  */
-    /* return code was received OR we are*/
-    /* receive an ERROR return code and  */
-    /* have TRACE ERROR in effect.       */
-    if (instruction_traced && this->settings.flags&trace_debug)
-    {
-        this->debugPause();                /* do the debug pause                */
-    }
-    return rc;
 }
+
+/**
+ * Set the return status flag for an activation context.
+ *
+ * @param status The new status value.
+ */
+void RexxActivation::setReturnStatus(int status)
+{
+    this->settings.return_status = status;
+    this->settings.flags |= return_status_set;
+}
+
 
 RexxString * RexxActivation::getProgramName()
 /******************************************************************************/

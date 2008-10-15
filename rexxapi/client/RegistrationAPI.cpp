@@ -254,33 +254,6 @@ RexxReturnCode RexxEntry RexxLoadSubcom(
     EXIT_REXX_API();
 }
 
-/**
- * Invoke a registered subcommand handler.
- *
- * @param name   The name of the handler.
- * @param cmd    The command string passed to the handler.
- * @param flags  The return flags from the handler.
- * @param sbrc   The returned numeric return code from the handler.
- * @param rv     The return value string that the handle potentially sets.
- *
- * @return RXSUBCOM_OK if the handler could be invoked, and the
- *         appropriate error conditions for any resolution failure.
- */
-RexxReturnCode REXXENTRY RexxCallSubcom(const char *name, PCONSTRXSTRING cmd,
-    unsigned short *flags, wholenumber_t *sbrc, PRXSTRING rv)
-{
-    RexxSubcomHandler *subcom_addr;
-    RexxReturnCode  rc;                          /* Function return code.      */
-
-    /* Load the handler           */
-    if ((rc = RexxResolveSubcom(name, (REXXPFN *)&subcom_addr)) == 0)
-    {
-        *sbrc = (*subcom_addr )(cmd, flags, rv );
-        rc = RXSUBCOM_OK;
-    }
-    return(rc);                         /* and exit with return code  */
-}
-
 
 /*********************************************************************/
 /*                                                                   */

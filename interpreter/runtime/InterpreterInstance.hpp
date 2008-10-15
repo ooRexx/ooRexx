@@ -49,6 +49,7 @@
 #include "SysInterpreterInstance.hpp"
 
 class RexxDirectory;
+class CommandHandler;
 
 class InterpreterInstance : public RexxInternalObject
 {
@@ -108,7 +109,9 @@ public:
     RexxThreadContext *getRootThreadContext();
     RexxObject *getLocalEnvironment(RexxString *);
     inline RexxDirectory *getLocal() { return localEnvironment; }
-
+    void addCommandHandler(const char *name, const char *registeredName);
+    void addCommandHandler(const char *name, REXXPFN entryPoint);
+    CommandHandler *resolveCommandHandler(RexxString *name);
 
 protected:
 
@@ -127,6 +130,7 @@ protected:
     RexxList            *searchExtensions;   // extensions to search on for external calls
     void                *applicationData;    // application specific data
     RexxDirectory       *localEnvironment;   // the current local environment
+    RexxDirectory       *commandHandlers;    // our list of command environment handlers
 
     bool terminating;                // shutdown indicator
     bool terminated;                 // last thread cleared indicator

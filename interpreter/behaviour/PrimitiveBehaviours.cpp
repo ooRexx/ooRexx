@@ -186,6 +186,7 @@ RexxBehaviour RexxBehaviour::primitiveBehaviours[T_Last_Primitive_Class + 1] =
     RexxBehaviour(T_DoBlock, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_InterpreterInstance, (PCPPM *)RexxObject::operatorMethods),
     RexxBehaviour(T_SecurityManager, (PCPPM *)RexxObject::operatorMethods),
+    RexxBehaviour(T_CommandHandler, (PCPPM *)RexxObject::operatorMethods),
 };
 
 

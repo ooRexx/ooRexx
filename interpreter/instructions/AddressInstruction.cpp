@@ -107,9 +107,6 @@ void RexxInstructionAddress::execute(
 /* Function:  Execute a REXX LEAVE instruction                              */
 /****************************************************************************/
 {
-    RexxObject *result;                  /* expression evaluation result      */
-    RexxString *_command;                 /* command to be issued              */
-
     context->traceInstruction(this);     /* trace if necessary                */
                                          /* is this an address toggle?        */
     if (this->environment == OREF_NULL && this->expression == OREF_NULL)
@@ -123,13 +120,13 @@ void RexxInstructionAddress::execute(
         if (this->command != OREF_NULL)
         {  /* actually the command form?        */
            /* get the expression value          */
-            result = this->command->evaluate(context, stack);
-            _command = REQUEST_STRING(result);/* force to string form              */
+            RexxObject *result = this->command->evaluate(context, stack);
+            RexxString *_command = REQUEST_STRING(result);/* force to string form              */
             context->traceResult(command);   /* trace if necessary                */
                                              /* validate the address name         */
             SystemInterpreter::validateAddressName(this->environment);
             /* go process the command            */
-            context->command(_command, this->environment);
+            context->command(this->environment, _command);
         }
         else
         {                             /* just change the address           */
@@ -143,11 +140,11 @@ void RexxInstructionAddress::execute(
     else
     {                               /* we have an ADDRESS VALUE form     */
                                     /* get the expression value          */
-        result = this->expression->evaluate(context, stack);
-        _command = REQUEST_STRING(result); /* force to string form              */
-        context->traceResult(_command);    /* trace if necessary                */
-        SystemInterpreter::validateAddressName(_command);  /* validate the address name         */
-        context->setAddress(_command);     /* just change the address           */
+        RexxObject *result = this->expression->evaluate(context, stack);
+        RexxString *_address = REQUEST_STRING(result); /* force to string form              */
+        context->traceResult(_address);    /* trace if necessary                */
+        SystemInterpreter::validateAddressName(_address);  /* validate the address name         */
+        context->setAddress(_address);     /* just change the address           */
         context->pauseInstruction();       /* do debug pause if necessary       */
     }
 }

@@ -2346,7 +2346,7 @@ void RexxNativeActivation::raiseCondition(RexxString *condition, RexxString *des
 {
     this->result = (RexxObject *)_result; /* save the result                   */
                                          /* go raise the condition            */
-    this->activity->raiseCondition(condition, OREF_NULL, description, additional, result, OREF_NULL);
+    this->activity->raiseCondition(condition, OREF_NULL, description, additional, result);
 
     // We only return here if no activation above us has trapped this.  If we do return, then
     // we terminate the call by throw this up the stack.
@@ -3128,9 +3128,6 @@ int RexxNativeActivation::stemSort(const char *stemname, int order, int type, si
     // NB:  The braces here are to ensure the ProtectedObjects get released before the
     // currentActivity gets zeroed out.
     {
-        /* get the REXX activation */
-        RexxActivation *contextActivation = getRexxContext();
-
         /* get the stem name as a string */
         RexxString *variable = new_string(stemname);
         ProtectedObject p1(variable);
@@ -3180,7 +3177,7 @@ int RexxNativeActivation::stemSort(const char *stemname, int order, int type, si
  *
  * @return The message send result.
  */
-void RexxNativeActivation::forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, RexxArray *args, ProtectedObject &result)
+void RexxNativeActivation::forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, RexxArray *args, ProtectedObject &_result)
 {
     // process all of the non-overridden values
     if (to == OREF_NULL)
@@ -3199,11 +3196,11 @@ void RexxNativeActivation::forwardMessage(RexxObject *to, RexxString *msg, RexxC
     // no super class override?  Normal message send
     if (super == OREF_NULL)
     {
-        to->messageSend(msg, args->data(), args->size(), result);
+        to->messageSend(msg, args->data(), args->size(), _result);
     }
     else
     {
-        to->messageSend(msg, args->data(), args->size(), super, result);
+        to->messageSend(msg, args->data(), args->size(), super, _result);
     }
 }
 

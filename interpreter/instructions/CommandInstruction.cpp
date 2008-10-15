@@ -64,20 +64,17 @@ void RexxInstructionCommand::execute(
 /* Function:  Execute a REXX command instruction                            */
 /****************************************************************************/
 {
-  RexxObject *result;                  /* rc result                         */
-  RexxString *command;                 /* command expression result         */
-
-  context->traceCommand(this);         /* trace if necessary                */
-                                       /* get the expression value          */
-  result = this->expression->evaluate(context, stack);
-  command = REQUEST_STRING(result);    /* force to string form              */
-                                       /* are we tracing commands?          */
-  if (context->tracingCommands())
-  {
-                                         /* then we always trace full command */
-      context->traceValue((RexxObject *)command, TRACE_PREFIX_RESULT);
-  }
-                                       /* go process the command            */
-  context->command(command, context->getAddress());
+    context->traceCommand(this);         /* trace if necessary                */
+                                         /* get the expression value          */
+    RexxObject *result = this->expression->evaluate(context, stack);
+    RexxString *command = REQUEST_STRING(result);    /* force to string form              */
+    /* are we tracing commands?          */
+    if (context->tracingCommands())
+    {
+        /* then we always trace full command */
+        context->traceValue((RexxObject *)command, TRACE_PREFIX_RESULT);
+    }
+    /* go process the command            */
+    context->command(context->getAddress(), command);
 }
 

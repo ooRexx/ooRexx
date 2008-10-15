@@ -176,6 +176,7 @@
 #define TheDoBlockBehaviour      (&RexxBehaviour::primitiveBehaviours[T_DoBlock])
 #define TheInterpreterInstanceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_InterpreterInstance])
 #define TheSecurityManagerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_SecurityManager])
+#define TheCommandHandlerBehaviour      (&RexxBehaviour::primitiveBehaviours[T_CommandHandler])
 
 
 /* -------------------------------------------------------------------------- */

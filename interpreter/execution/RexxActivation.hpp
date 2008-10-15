@@ -98,6 +98,10 @@ class PackageClass;
 #define REPLIED   1
 #define RETURNED  2
 
+#define RETURN_STATUS_NORMAL 0
+#define RETURN_STATUS_ERROR 1
+#define RETURN_STATUS_FAILURE -1
+
 
 #define MS_PREORDER   0x01                  /* Macro Space Pre-Search         */
 #define MS_POSTORDER  0x02                  /* Macro Space Post-Search        */
@@ -263,7 +267,7 @@ class ActivationSettings
    RexxString       *resolveProgramName(RexxString *name);
    RexxClass        *findClass(RexxString *name);
    RexxObject       *resolveDotVariable(RexxString *name);
-   RexxObject      * command(RexxString *, RexxString *);
+   void              command(RexxString *, RexxString *);
    int64_t           getElapsed();
    RexxDateTime      getTime();
    RexxInteger     * random(RexxInteger *, RexxInteger *, RexxInteger *);
@@ -335,6 +339,7 @@ class ActivationSettings
    PackageClass     *getPackage();
    RexxObject       *getExecutableObject() { return executable; }
    RexxObject       *getLocalEnvironment(RexxString *name);
+   void              setReturnStatus(int status);
 
    inline void              setCallType(RexxString *type) {this->settings.calltype = type; }
    inline void              pushBlock(RexxDoBlock *block) { block->setPrevious(this->dostack); this->dostack = block; }
@@ -366,6 +371,7 @@ class ActivationSettings
    inline void              setNext(RexxInstruction * v) {this->next=v;};
    inline void              setCurrent(RexxInstruction * v) {this->current=v;};
    inline bool              inDebug() { return ((this->settings.flags&trace_debug) != 0) && !this->debug_pause;}
+
    inline RexxExpressionStack * getStack() {return &this->stack; };
 
    virtual NumericSettings *getNumericSettings();
@@ -395,10 +401,13 @@ class ActivationSettings
    inline void              traceCompoundAssignment(RexxString *stemVar, RexxObject **tails, size_t tailCount, RexxObject *value) { if (this->settings.intermediate_trace) this->traceCompoundValue(TRACE_PREFIX_ASSIGNMENT, stemVar, tails, tailCount, ASSIGNMENT_MARKER, value); };
    inline void              traceResult(RexxObject * v) { if ((this->settings.flags&trace_results)) this->traceValue(v, TRACE_PREFIX_RESULT); };
    inline bool              tracingInstructions(void) { return (this->settings.flags&trace_all) != 0; }
+   inline bool              tracingErrors(void) { return (this->settings.flags&trace_errors) != 0; }
+   inline bool              tracingFailures(void) { return (this->settings.flags&trace_failures) != 0; }
    inline void              traceInstruction(RexxInstruction * v) { if (this->settings.flags&trace_all) this->traceClause(v, TRACE_PREFIX_CLAUSE); }
    inline void              traceLabel(RexxInstruction * v) { if ((this->settings.flags&trace_labels) != 0) this->traceClause(v, TRACE_PREFIX_CLAUSE); };
    inline void              traceCommand(RexxInstruction * v) { if ((this->settings.flags&trace_commands) != 0) this->traceClause(v, TRACE_PREFIX_CLAUSE); }
    inline bool              tracingCommands(void) { return (this->settings.flags&trace_commands) != 0; }
+   inline bool              tracingAll(void) { return (this->settings.flags&trace_all) != 0; }
    inline void              pauseInstruction() {  if ((this->settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) this->debugPause(); };
    inline int               conditionalPauseInstruction() { return (((this->settings.flags&(trace_all | trace_debug)) == (trace_all | trace_debug)) ? this->debugPause(): false); };
    inline void              pauseLabel() { if ((this->settings.flags&(trace_labels | trace_debug)) == (trace_labels | trace_debug)) this->debugPause(); };

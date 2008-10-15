@@ -56,7 +56,7 @@ EXPORTS
      RexxDeregisterExit
      RexxQueryExit
      RexxResolveExit
-     RexxCallSubcom
+     RexxResolveSubcom
      RexxLoadSubcom
      RexxResolveSubcom
      RexxRegisterFunctionDll

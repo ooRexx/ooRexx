@@ -213,6 +213,7 @@ concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
                      $(build_concurrency_dir)/ActivityManager.hpp \
                      $(build_concurrency_dir)/CallbackDispatcher.hpp \
                      $(build_concurrency_dir)/ExitHandler.hpp \
+                     $(build_concurrency_dir)/CommandHandler.hpp \
                      $(build_concurrency_dir)/MessageDispatcher.hpp \
                      $(build_concurrency_dir)/RexxActivity.hpp \
                      $(build_concurrency_dir)/RexxStartDispatcher.hpp \
@@ -555,6 +556,7 @@ concurrency_sources = $(build_concurrency_dir)/ActivityDispatcher.cpp \
                       $(build_concurrency_dir)/ActivityManager.cpp \
                       $(build_concurrency_dir)/CallbackDispatcher.cpp \
                       $(build_concurrency_dir)/ExitHandler.cpp \
+                      $(build_concurrency_dir)/CommandHandler.cpp \
                       $(build_concurrency_dir)/MessageDispatcher.cpp \
                       $(build_concurrency_dir)/RexxActivity.cpp \
                       $(build_concurrency_dir)/RexxStartDispatcher.cpp \

@@ -191,10 +191,11 @@ typedef enum
     T_DoBlock = 124,
     T_InterpreterInstance = 125,
     T_SecurityManager = 126,
+    T_CommandHandler = 127,
 
-    T_Last_Transient_Class = 126,
-    T_Last_Primitive_Class = 126,
-    T_Last_Class_Type = 126,
+    T_Last_Transient_Class = 127,
+    T_Last_Primitive_Class = 127,
+    T_Last_Class_Type = 127,
     
 } ClassTypeCode;
 
