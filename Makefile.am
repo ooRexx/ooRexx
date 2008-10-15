@@ -307,7 +307,6 @@ platformHeaders = $(build_interpreter_platform_dir)/APIDefinitions.h \
                   $(build_interpreter_platform_dir)/SysInterpreterInstance.hpp \
                   $(build_interpreter_platform_dir)/SysNativeFunctions.h \
                   $(build_interpreter_platform_dir)/SysNativeMethods.h \
-                  $(build_interpreter_platform_dir)/SystemCommands.h \
                   $(build_interpreter_platform_dir)/SystemInterpreter.hpp
 runtimeHeaders = $(build_runtime_dir)/GlobalNames.h \
                  $(build_runtime_dir)/Interpreter.hpp \
