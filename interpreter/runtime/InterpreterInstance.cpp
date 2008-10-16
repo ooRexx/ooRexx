@@ -507,6 +507,12 @@ bool InterpreterInstance::terminate()
     // flag is on.
     exitCurrentThread();
     terminationSem.close();
+
+    // make sure the root activity is removed by the ActivityManager;
+    ActivityManager::returnRootActivity(current);
+
+    // tell the main interpreter controller we're gone.
+    Interpreter::terminateInterpreterInstance(this);
     return true;
 }
 

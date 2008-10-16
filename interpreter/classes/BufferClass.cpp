@@ -95,7 +95,7 @@ void *RexxBuffer::operator new(size_t size, size_t _length)
 /******************************************************************************/
 {
                                          /* Get new object                    */
-    RexxBuffer *newBuffer = (RexxBuffer *) new_object(size + _length - sizeof(char[4]));
+    RexxBuffer *newBuffer = (RexxBuffer *) new_object(size + _length);
     /* Give new object its behaviour     */
     newBuffer->setBehaviour(TheBufferBehaviour);
     /* Initialize this new buffer        */

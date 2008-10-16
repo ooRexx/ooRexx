@@ -92,6 +92,7 @@ public:
     static void exit(int retcode);
     static void relinquish(RexxActivity *activity);
     static RexxActivity *getRootActivity();
+    static void returnRootActivity(RexxActivity *activity);
     static RexxActivity *attachThread();
     static RexxObject *getLocalEnvironment(RexxString *name);
     static RexxDirectory *getLocal();

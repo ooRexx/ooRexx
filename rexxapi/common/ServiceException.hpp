@@ -70,19 +70,18 @@ public:
     ServiceException(ErrorCode c, const char *m)
     {
         errCode = c;
-        size_t length = strlen(m);
-        message = new char[length + 1];
-        strcpy(message, m);
+        //NOTE:  this does not get released, so it MUST be a literal string
+        message = m;
     }
 
-    ~ServiceException() { delete message; }
+    ~ServiceException() { }
 
     inline ErrorCode getErrorCode() { return errCode; }
 
-    inline char *getMessage() { return message; }
+    inline const char *getMessage() { return message; }
 protected:
     ErrorCode errCode;
-    char  *message;
+    const char  *message;
 };
 
 #endif

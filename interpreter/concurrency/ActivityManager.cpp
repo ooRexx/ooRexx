@@ -919,6 +919,23 @@ RexxActivity *ActivityManager::getRootActivity()
 
 
 /**
+ * return a root activity when an interpreter instance
+ * terminates.
+ */
+void ActivityManager::returnRootActivity(RexxActivity *activity)
+{
+    // detach this from the instance.  This will also reactivate
+    // and nested activity that's been pushed down.
+    activity->detachInstance();
+
+    ResourceSection lock;                // need the control block locks
+    // remove this from the activity list so it will never get
+    // picked up again.
+    allActivities->removeItem((RexxObject *)activity);
+}
+
+
+/**
  * Attach an activity to an interpreter instance
  *
  * @param instance The interpreter instance involved.

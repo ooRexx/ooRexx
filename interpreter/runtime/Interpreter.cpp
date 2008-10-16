@@ -298,12 +298,8 @@ InterpreterInstance *Interpreter::createInterpreterInstance(RexxOption *options)
  */
 bool Interpreter::terminateInterpreterInstance(InterpreterInstance *instance)
 {
-    // this might not be in a state where it can be terminated
-    if (!instance->terminate())
-    {
-        return false;
-    }
-
+    // instance has already shut itself down....we need to remove it from
+    // the active list.
     ResourceSection lock;
 
     interpreterInstances->removeItem((RexxObject *)instance);
