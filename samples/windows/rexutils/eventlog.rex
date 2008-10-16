@@ -238,7 +238,7 @@ say
 /******************************************************************************/
 say "=========================================================================="
 say "Going to read the complete System event log in reverse chronological"
-say "order.  If there are a log of records, this will produce substantial"
+say "order.  If there are a lot of records, this will produce substantial"
 say "output.  You can cancel if you wish."
 /******************************************************************************/
 ok = doPause(.true)
