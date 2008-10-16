@@ -73,7 +73,7 @@ RexxBuffer *RexxBuffer::expand(
                                          /* buffer, or this size of           */
                                          /* current(this)buffer + requested   */
                                          /* minimum length.                   */
-    if (l > this->getLength() * 2)       /* need more than double?            */
+    if (l > this->getLength())           /* need more than double?            */
     {
         /* increase by the requested amount  */
         newBuffer = new_buffer(this->getLength() + l);
