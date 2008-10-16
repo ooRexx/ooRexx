@@ -2591,6 +2591,11 @@ RexxMethod2(logical_t, WSEventLog_isFull, OPTIONAL_CSTRING, server, OPTIONAL_CST
  *                    is added.
  *
  * @return            0 on success, the system error code otherwise.
+ *
+ * @note Note for the ooRexx docs:  The backup file can not exist on a remote
+ *       machine. In particular, you can not use a backup file that is on a
+ *       network mapped drive.  The clear operation will fail with rc 3 'The
+ *       system cannot find the path specified.'
  */
 RexxMethod3(uint32_t, WSEventLog_clear, OPTIONAL_CSTRING, server, OPTIONAL_CSTRING, source,
             OPTIONAL_CSTRING, backupFile)
