@@ -213,13 +213,8 @@ void *RexxActivity::operator new(size_t size)
 /* Function:  Create a new activity                                           */
 /******************************************************************************/
 {
-   RexxActivity  *newActivity;
-
                                        /* get the new activity storage      */
-   newActivity  = (RexxActivity *)new_object(size);
-                                       /* Give new object its behaviour     */
-   newActivity->setBehaviour(TheActivityBehaviour);
-   return newActivity;                 /* and return it                     */
+   return new_object(size, T_Activity);
 }
 
 

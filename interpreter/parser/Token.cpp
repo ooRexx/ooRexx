@@ -118,6 +118,6 @@ void *RexxToken::operator new(size_t size)
 /******************************************************************************/
 {
                                        /* Get new object                    */
-    return new_object(sizeof(RexxToken), T_Token);
+    return new_object(size, T_Token);
 }
 

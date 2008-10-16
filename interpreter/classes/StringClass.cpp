@@ -1879,35 +1879,28 @@ RexxString *RexxString::newString(const char *string, size_t length)
 /* Function:  Allocate (and initialize) a string object                       */
 /******************************************************************************/
 {
-  RexxString *newObj;                  /* new string object                 */
-  size_t      size2;                   /* allocated size                    */
-
-                                       /* calculate the size                */
-                                       /* STRINGOBJ - excess chars (3)      */
-                                       /* + length. only sub 3 to allow     */
-                                       /* for terminating NULL              */
-  size2 = sizeof(RexxString) - (sizeof(char) * 3) + length;
-                                       /* allocate the new object           */
-  newObj = (RexxString *)new_object(size2);
-                                       /* set the behaviour from the class*/
-  newObj->setBehaviour(TheStringBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_String]);
-                                       /* clear the front part              */
-  newObj->clearObject(sizeof(RexxString));
-  newObj->setLength(length);           /* save the length                   */
-  newObj->hashValue = 0;               // make sure the hash value is zeroed
-                                       /* Null terminate, allows faster     */
-                                       /* conversion to ASCII-Z string      */
-  newObj->putChar(length, '\0');
-                                       /* copy it over                      */
-  newObj->put(0, string, length);
-                                       /* by  default, we don't need Live   */
-  newObj->setHasNoReferences();        /*sent                               */
-                                       /* NOTE: That if we can set          */
-                                       /*  this->NumebrString elsewhere     */
-                                       /*we need to mark ourselves as       */
-  return newObj;                       /*having OREFs                       */
+    /* calculate the size                */
+    /* STRINGOBJ - excess chars (3)      */
+    /* + length. only sub 3 to allow     */
+    /* for terminating NULL              */
+    size_t size2 = sizeof(RexxString) - (sizeof(char) * 3) + length;
+    /* allocate the new object           */
+    RexxString *newObj = (RexxString *)new_object(size2, T_String);
+    /* clear the front part              */
+    newObj->clearObject(sizeof(RexxString));
+    newObj->setLength(length);           /* save the length                   */
+    newObj->hashValue = 0;               // make sure the hash value is zeroed
+                                         /* Null terminate, allows faster     */
+                                         /* conversion to ASCII-Z string      */
+    newObj->putChar(length, '\0');
+    /* copy it over                      */
+    newObj->put(0, string, length);
+    /* by  default, we don't need Live   */
+    newObj->setHasNoReferences();        /*sent                               */
+                                         /* NOTE: That if we can set          */
+                                         /*  this->NumebrString elsewhere     */
+                                         /*we need to mark ourselves as       */
+    return newObj;                       /*having OREFs                       */
 }
 
 RexxString *RexxString::rawString(size_t length)
@@ -1915,20 +1908,13 @@ RexxString *RexxString::rawString(size_t length)
 /* Function:  Allocate (and initialize) an empty string object                */
 /******************************************************************************/
 {
-  RexxString *newObj;                  /* new string object                 */
-  size_t      size2;                   /* allocated size                    */
-
                                        /* calculate the size                */
                                        /* STRINGOBJ - excess chars (3)      */
                                        /* + length. only sub 3 to allow     */
                                        /* for terminating NULL              */
-  size2 = sizeof(RexxString) - (sizeof(char) * 3) + length;
+  size_t size2 = sizeof(RexxString) - (sizeof(char) * 3) + length;
                                        /* allocate the new object           */
-  newObj = (RexxString *)new_object(size2);
-                                       /* set the behaviour from the class*/
-  newObj->setBehaviour(TheStringBehaviour);
-                                       /* set the virtual function table    */
-  newObj->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_String]);
+  RexxString *newObj = (RexxString *)new_object(size2, T_String);
                                        /* clear the front part              */
   newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
@@ -1958,20 +1944,13 @@ RexxString *RexxString::rawString(size_t length)
  */
 RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
 {
-    RexxString *newObj;                  /* new string object                 */
-    stringsize_t      size2;                   /* allocated size                    */
-
     /* calculate the size                */
     /* STRINGOBJ - excess chars (3)      */
     /* + length. only sub 3 to allow     */
     /* for terminating NULL              */
-    size2 = sizeof(RexxString) - (sizeof(char) * 3) + length;
+    size_t size2 = sizeof(RexxString) - (sizeof(char) * 3) + length;
     /* allocate the new object           */
-    newObj = (RexxString *)new_object(size2);
-    /* set the behaviour from the class*/
-    newObj->setBehaviour(TheStringBehaviour);
-    /* set the virtual function table    */
-    newObj->setVirtualFunctions(RexxMemory::virtualFunctionTable[T_String]);
+    RexxString *newObj = (RexxString *)new_object(size2, T_String);
     /* clear the front part              */
     newObj->clearObject(sizeof(RexxString));
     newObj->length = length;             /* save the length                   */

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                           ExpressionStack.c    */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Expression Stack Class                                           */
 /*                                                                            */
@@ -79,17 +79,19 @@ void RexxExpressionStack::flatten(RexxEnvelope * envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxExpressionStack)
+    setUpFlatten(RexxExpressionStack)
 
-  size_t i;                            /* pointer for scanning stack entries*/
-  size_t count;                        /* number of elements                */
+    size_t i;                            /* pointer for scanning stack entries*/
+    size_t count;                        /* number of elements                */
 
-  count = this->top - this->stack;     /* get the total count               */
-                                       /* loop through the stack entries    */
-   for (i = 0; i < count; i++)
-     flatten_reference(newThis->stack[i], envelope);
+    count = this->top - this->stack;     /* get the total count               */
+                                         /* loop through the stack entries    */
+    for (i = 0; i < count; i++)
+    {
+        flatten_reference(newThis->stack[i], envelope);
+    }
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 void RexxExpressionStack::migrate(RexxActivity *activity)
@@ -114,27 +116,34 @@ void RexxExpressionStack::expandArgs(
 /*            arguments, and did not receive extras.                          */
 /******************************************************************************/
 {
-  size_t       i;                      /* loop counter                      */
-  size_t       j;
-  RexxObject **current;                /* pointer to the current stack item */
+    size_t       i;                      /* loop counter                      */
+    size_t       j;
+    RexxObject **current;                /* pointer to the current stack item */
 
-  if (argcount < min)                  /* too few arguments?                */
-                                       /* report an error                   */
-    reportException(Error_Incorrect_call_minarg, function, min);
-  else if (argcount > max)             /* too many arguments?               */
-                                       /* report an error                   */
-    reportException(Error_Incorrect_call_maxarg, function, max);
-  else {                               /* need to expand number of args     */
-                                       /* address the stack elements        */
-    current = this->pointer(argcount - 1);
-    for (i = min; i; i--) {            /* check on required arguments       */
-      if (*current++ == OREF_NULL) {   /* omitted argument?                 */
-        j = min - i + 1;               /* argument location                 */
-                                       /* missing required argument         */
-        reportException(Error_Incorrect_call_noarg, function, j);
-      }
+    if (argcount < min)                  /* too few arguments?                */
+    {
+                                         /* report an error                   */
+        reportException(Error_Incorrect_call_minarg, function, min);
     }
-  }
+    else if (argcount > max)             /* too many arguments?               */
+    {
+                                         /* report an error                   */
+        reportException(Error_Incorrect_call_maxarg, function, max);
+    }
+    else                               /* need to expand number of args     */
+    {
+        /* address the stack elements        */
+        current = this->pointer(argcount - 1);
+        for (i = min; i; i--)            /* check on required arguments       */
+        {
+            if (*current++ == OREF_NULL)   /* omitted argument?                 */
+            {
+                j = min - i + 1;               /* argument location                 */
+                                               /* missing required argument         */
+                reportException(Error_Incorrect_call_noarg, function, j);
+            }
+        }
+    }
 }
 
 RexxString *RexxExpressionStack::requiredStringArg(
@@ -144,17 +153,16 @@ RexxString *RexxExpressionStack::requiredStringArg(
 /*            convert it into a string argument.                              */
 /******************************************************************************/
 {
-  RexxObject *argument;                /* processed argument                */
-  RexxString *newStr;                  /* converted value                   */
-
-  argument = this->peek(position);     /* get the argument in question      */
-  if (isOfClass(String, argument))         /* string object already?            */
-    return (RexxString *)argument;     /* finished                          */
-                                       /* get the string form, raising a    */
-                                       /* NOSTRING condition if necessary   */
-  newStr = argument->requestString();
-  this->replace(position, newStr);     /* replace the argument              */
-  return newStr;                       /* return the replacement value      */
+    RexxObject *argument = this->peek(position);     /* get the argument in question      */
+    if (isOfClass(String, argument))         /* string object already?            */
+    {
+        return(RexxString *)argument;     /* finished                          */
+    }
+                                          /* get the string form, raising a    */
+                                          /* NOSTRING condition if necessary   */
+    RexxString *newStr = argument->requestString();
+    this->replace(position, newStr);     /* replace the argument              */
+    return newStr;                       /* return the replacement value      */
 }
 
 RexxString *RexxExpressionStack::optionalStringArg(
@@ -164,19 +172,20 @@ RexxString *RexxExpressionStack::optionalStringArg(
 /*            convert it into a string argument.                              */
 /******************************************************************************/
 {
-  RexxObject *argument;                /* processed argument                */
-  RexxString *newStr;                  /* converted value                   */
-
-  argument = this->peek(position);     /* get the argument in question      */
-  if (argument == OREF_NULL)           /* missing a required argument?      */
-    return OREF_NULL;                  /* finished already                  */
-  if (isOfClass(String, argument))     /* string object already?            */
-    return (RexxString *)argument;     /* finished                          */
-                                       /* get the string form, raising a    */
-                                       /* NOSTRING condition if necessary   */
-  newStr = argument->requestString();
-  this->replace(position, newStr);     /* replace the argument              */
-  return newStr;                       /* return the replacement value      */
+    RexxObject *argument = this->peek(position);     /* get the argument in question      */
+    if (argument == OREF_NULL)           /* missing a required argument?      */
+    {
+        return OREF_NULL;                  /* finished already                  */
+    }
+    if (isOfClass(String, argument))     /* string object already?            */
+    {
+        return(RexxString *)argument;     /* finished                          */
+    }
+                                          /* get the string form, raising a    */
+                                          /* NOSTRING condition if necessary   */
+    RexxString *newStr = argument->requestString();
+    this->replace(position, newStr);     /* replace the argument              */
+    return newStr;                       /* return the replacement value      */
 }
 
 RexxInteger *RexxExpressionStack::requiredIntegerArg(

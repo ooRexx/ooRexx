@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                      ParseInstruction.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Parse Parse Class                                                */
 /*                                                                            */
@@ -65,14 +65,16 @@ RexxInstructionParse::RexxInstructionParse(
 /* Function:  Complete parse instruction initialization                       */
 /******************************************************************************/
 {
-                                       /* save the expression               */
-  OrefSet(this, this->expression, _expression);
-  instructionFlags = (uint16_t)flags;  /* save the expression               */
-  stringSource = string_source;        // our instruction type is determined by the source
-  this->trigger_count = templateCount; /* save the size                     */
-  while (templateCount > 0)            /* loop through the template list    */
-                                       /* copying each trigger              */
-    OrefSet(this, this->triggers[--templateCount], (RexxTrigger *)parse_template->pop());
+    /* save the expression               */
+    OrefSet(this, this->expression, _expression);
+    instructionFlags = (uint16_t)flags;  /* save the expression               */
+    stringSource = string_source;        // our instruction type is determined by the source
+    this->trigger_count = templateCount; /* save the size                     */
+    while (templateCount > 0)            /* loop through the template list    */
+    {
+                                         /* copying each trigger              */
+        OrefSet(this, this->triggers[--templateCount], (RexxTrigger *)parse_template->pop());
+    }
 }
 
 void RexxInstructionParse::execute(
@@ -82,81 +84,91 @@ void RexxInstructionParse::execute(
 /* Function:  Execute a REXX PARSE instruction                              */
 /****************************************************************************/
 {
-  RexxObject       *value;             /* parsed value                      */
-  RexxObject      **argList;           /* current argument list             */
-  size_t            argCount;          /* the argument list size            */
-  RexxTarget        target;            /* created target value              */
-  RexxTrigger      *trigger;           /* current trigger                   */
-  size_t            size;              /* size of template array            */
-  bool              multiple;          /* processing an argument list       */
-  size_t            i;                 /* loop counter                      */
+    RexxObject       *value;             /* parsed value                      */
+    RexxObject      **argList;           /* current argument list             */
+    size_t            argCount;          /* the argument list size            */
+    RexxTarget        target;            /* created target value              */
+    RexxTrigger      *trigger;           /* current trigger                   */
+    size_t            size;              /* size of template array            */
+    bool              multiple;          /* processing an argument list       */
+    size_t            i;                 /* loop counter                      */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-  multiple = false;                    /* default to no argument list       */
-  value = OREF_NULLSTRING;             /* no value yet                      */
-  argList = OREF_NULL;                 /* neither is there an argument list */
-  argCount = 0;
+    context->traceInstruction(this);     /* trace if necessary                */
+    multiple = false;                    /* default to no argument list       */
+    value = OREF_NULLSTRING;             /* no value yet                      */
+    argList = OREF_NULL;                 /* neither is there an argument list */
+    argCount = 0;
 
-  switch (stringSource) {              /* get data from variaous sources    */
+    switch (stringSource)              /* get data from variaous sources    */
+    {
 
-    case SUBKEY_PULL:                  /* PARSE PULL instruction            */
-                                       /* read a line from the queue        */
-      value = ActivityManager::currentActivity->pullInput(context);
-      stack->push(value);              /* add the value to the stack        */
-      break;
+        case SUBKEY_PULL:                  /* PARSE PULL instruction            */
+            /* read a line from the queue        */
+            value = ActivityManager::currentActivity->pullInput(context);
+            stack->push(value);              /* add the value to the stack        */
+            break;
 
-    case SUBKEY_LINEIN:                /* PARSE LINEIN instruction          */
-                                       /* read a line from the stream       */
-      value = ActivityManager::currentActivity->lineIn(context);
-      stack->push(value);              /* add the value to the stack        */
-      break;
+        case SUBKEY_LINEIN:                /* PARSE LINEIN instruction          */
+            /* read a line from the stream       */
+            value = ActivityManager::currentActivity->lineIn(context);
+            stack->push(value);              /* add the value to the stack        */
+            break;
 
-    case SUBKEY_ARG:                   /* PARSE ARG instruction             */
-      multiple = true;                 /* have an argument list             */
-      /* get the current argument list     */
-      argList = context->getMethodArgumentList();
-      argCount = context->getMethodArgumentCount();
-      break;
+        case SUBKEY_ARG:                   /* PARSE ARG instruction             */
+            multiple = true;                 /* have an argument list             */
+            /* get the current argument list     */
+            argList = context->getMethodArgumentList();
+            argCount = context->getMethodArgumentCount();
+            break;
 
-    case SUBKEY_SOURCE:                /* PARSE SOURCE instruction          */
-      value = context->sourceString(); /* retrieve the source string        */
-      stack->push(value);              /* add the value to the stack        */
-      break;
+        case SUBKEY_SOURCE:                /* PARSE SOURCE instruction          */
+            value = context->sourceString(); /* retrieve the source string        */
+            stack->push(value);              /* add the value to the stack        */
+            break;
 
-    case SUBKEY_VERSION:               /* PARSE VERSION instruction         */
-                                       /* retrieve the version string       */
-      value = Interpreter::getVersionNumber();
-      break;
+        case SUBKEY_VERSION:               /* PARSE VERSION instruction         */
+            /* retrieve the version string       */
+            value = Interpreter::getVersionNumber();
+            break;
 
-    case SUBKEY_VAR:                   /* PARSE VAR name instruction        */
-                                       /* get the variable value            */
-      value = this->expression->evaluate(context, stack);
-      stack->push(value);              /* add the value to the stack        */
-      break;
+        case SUBKEY_VAR:                   /* PARSE VAR name instruction        */
+            /* get the variable value            */
+            value = this->expression->evaluate(context, stack);
+            stack->push(value);              /* add the value to the stack        */
+            break;
 
-    case SUBKEY_VALUE:                 /* PARSE VALUE expr WITH instruction */
-                                       /* have an expression?               */
-      if (this->expression != OREF_NULL)
-                                       /* get the expression value          */
-        value = this->expression->evaluate(context, stack);
-      else
-        value = OREF_NULLSTRING;       /* must have been "parse value with" */
-      stack->push(value);              /* add the value to the stack        */
-      context->traceResult(value);     /* trace if necessary                */
-      break;
-  }
-                                       /* create the parse target           */
-  target.init(value, argList, argCount, instructionFlags&parse_translate, multiple, context, stack);
+        case SUBKEY_VALUE:                 /* PARSE VALUE expr WITH instruction */
+            /* have an expression?               */
+            if (this->expression != OREF_NULL)
+            {
+                /* get the expression value          */
+                value = this->expression->evaluate(context, stack);
+            }
+            else
+            {
+                value = OREF_NULLSTRING;       /* must have been "parse value with" */
+            }
+            stack->push(value);              /* add the value to the stack        */
+            context->traceResult(value);     /* trace if necessary                */
+            break;
+    }
+    /* create the parse target           */
+    target.init(value, argList, argCount, instructionFlags&parse_translate, multiple, context, stack);
 
-  size = this->trigger_count;          /* get the template size             */
-  for (i = 0; i < size; i++) {         /* loop through the template list    */
-    trigger = this->triggers[i];       /* get the next trigger value        */
-    if (trigger == OREF_NULL)          /* end of this template portion?     */
-      target.next(context);            /* reset for the next string         */
-    else                               /* process this trigger              */
-      trigger->parse(context, stack, &target);
-  }
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    size = this->trigger_count;          /* get the template size             */
+    for (i = 0; i < size; i++)         /* loop through the template list    */
+    {
+        trigger = this->triggers[i];       /* get the next trigger value        */
+        if (trigger == OREF_NULL)          /* end of this template portion?     */
+        {
+            target.next(context);            /* reset for the next string         */
+        }
+        else                               /* process this trigger              */
+        {
+            trigger->parse(context, stack, &target);
+        }
+    }
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
 
 void RexxInstructionParse::live(size_t liveMark)
@@ -164,15 +176,15 @@ void RexxInstructionParse::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  for (i = 0, count = this->trigger_count; i < count; i++)
-  {
-      memory_mark(this->triggers[i]);
-  }
-  memory_mark(this->expression);
+    memory_mark(this->nextInstruction);  /* must be first one marked          */
+    for (i = 0, count = this->trigger_count; i < count; i++)
+    {
+        memory_mark(this->triggers[i]);
+    }
+    memory_mark(this->expression);
 }
 
 void RexxInstructionParse::liveGeneral(int reason)
@@ -180,16 +192,16 @@ void RexxInstructionParse::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  for (i = 0, count = this->trigger_count; i < count; i++)
-  {
-      memory_mark_general(this->triggers[i]);
-  }
-  memory_mark_general(this->expression);
+                                         /* must be first one marked          */
+    memory_mark_general(this->nextInstruction);
+    for (i = 0, count = this->trigger_count; i < count; i++)
+    {
+        memory_mark_general(this->triggers[i]);
+    }
+    memory_mark_general(this->expression);
 }
 
 void RexxInstructionParse::flatten(RexxEnvelope *envelope)
@@ -197,15 +209,17 @@ void RexxInstructionParse::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  setUpFlatten(RexxInstructionParse)
+    setUpFlatten(RexxInstructionParse)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  for (i = 0, count = this->trigger_count; i < count; i++)
-    flatten_reference(newThis->triggers[i], envelope);
-  flatten_reference(newThis->expression, envelope);
-  cleanUpFlatten
+    flatten_reference(newThis->nextInstruction, envelope);
+    for (i = 0, count = this->trigger_count; i < count; i++)
+    {
+        flatten_reference(newThis->triggers[i], envelope);
+    }
+    flatten_reference(newThis->expression, envelope);
+    cleanUpFlatten
 }
 

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                    ExpressionLogical.c     */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive logical list evaluator                                           */
 /*                                                                            */
@@ -178,9 +178,6 @@ RexxObject *RexxExpressionLogical::evaluate(RexxActivation *context, RexxExpress
 void *RexxExpressionLogical::operator new(size_t size, size_t  count)
 {
                                          /* Get new object                    */
-    RexxObject *newObject = new_object(size + (count - 1) * sizeof(RexxObject *));
-                                         /* Give new object its behaviour     */
-    newObject->setBehaviour(TheLogicalTermBehaviour);
-    return newObject;                    /* and return the function           */
+    return new_object(size + (count - 1) * sizeof(RexxObject *), T_LogicalTerm);
 }
 

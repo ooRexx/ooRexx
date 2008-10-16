@@ -59,12 +59,15 @@ RexxTrigger::RexxTrigger(
 /* Function:  Initialize a parse trigger translator object                    */
 /******************************************************************************/
 {
-  this->setType(type);                 /* set the type (and hashvalue)      */
-  this->variableCount = _variableCount; /* set the number of variables also  */
-  OrefSet(this, this->value, _value);   /* save the associated value         */
-                                       /* loop through the variable list    */
-  while (_variableCount > 0)            /* copying each variable             */
-    OrefSet(this, this->variables[--_variableCount], (RexxVariableBase *)_variables->pop());
+    clearObject();
+    this->setType(type);                 /* set the type (and hashvalue)      */
+    this->variableCount = _variableCount; /* set the number of variables also  */
+    OrefSet(this, this->value, _value);   /* save the associated value         */
+    /* loop through the variable list    */
+    while (_variableCount > 0)            /* copying each variable             */
+    {
+        OrefSet(this, this->variables[--_variableCount], (RexxVariableBase *)_variables->pop());
+    }
 }
 
 
@@ -75,14 +78,14 @@ stringsize_t RexxTrigger::integerTrigger(
 /*            reporting.                                                      */
 /******************************************************************************/
 {
-  stringsize_t result;                 /* converted result                  */
-                                       /* convert the value                 */
-  if (!trigger->requestUnsignedNumber(result, number_digits()))
-  {
-                                       /* report an exception               */
-      reportException(Error_Invalid_whole_number_parse, trigger);
-  }
-  return result;                       /* finished                          */
+    stringsize_t result;                 /* converted result                  */
+                                         /* convert the value                 */
+    if (!trigger->requestUnsignedNumber(result, number_digits()))
+    {
+        /* report an exception               */
+        reportException(Error_Invalid_whole_number_parse, trigger);
+    }
+    return result;                       /* finished                          */
 }
 
 
@@ -231,14 +234,14 @@ void RexxTrigger::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  for (i = 0, count = this->variableCount; i < count; i++)
-  {
-      memory_mark(this->variables[i]);
-  }
-  memory_mark(this->value);
+    for (i = 0, count = this->variableCount; i < count; i++)
+    {
+        memory_mark(this->variables[i]);
+    }
+    memory_mark(this->value);
 }
 
 void RexxTrigger::liveGeneral(int reason)
@@ -246,14 +249,14 @@ void RexxTrigger::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  for (i = 0, count = this->variableCount; i < count; i++)
-  {
-      memory_mark_general(this->variables[i]);
-  }
-  memory_mark_general(this->value);
+    for (i = 0, count = this->variableCount; i < count; i++)
+    {
+        memory_mark_general(this->variables[i]);
+    }
+    memory_mark_general(this->value);
 }
 
 void RexxTrigger::flatten(RexxEnvelope *envelope)
@@ -261,16 +264,18 @@ void RexxTrigger::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  setUpFlatten(RexxTrigger)            /* set up for the flatten            */
+    setUpFlatten(RexxTrigger)            /* set up for the flatten            */
 
     flatten_reference(newThis->value, envelope);
     for (i = 0, count = this->variableCount; i < count; i++)
-      flatten_reference(newThis->variables[i], envelope);
+    {
+        flatten_reference(newThis->variables[i], envelope);
+    }
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 void  *RexxTrigger::operator new(size_t size,
@@ -279,13 +284,7 @@ void  *RexxTrigger::operator new(size_t size,
 /* Function:  Create a new parsing trigger object                             */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
-                                       /* Get new object                    */
-  newObject = new_object(size + (variableCount - 1) * sizeof(RexxObject *));
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheParseTriggerBehaviour);
-  newObject->clearObject();            /* initialize the object             */
-  return newObject;                    /* return the new trigger            */
+    /* Get new object                    */
+    return new_object(size + (variableCount - 1) * sizeof(RexxObject *), T_ParseTrigger);
 }
 

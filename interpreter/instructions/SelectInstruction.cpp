@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                   SelectInstruction.c      */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Select Parse Class                                               */
 /*                                                                            */
@@ -204,64 +204,67 @@ void RexxInstructionSelect::matchEnd(
 /* Function:  Match an END instruction up with a SELECT                       */
 /******************************************************************************/
 {
-  RexxInstructionIf    *when;          /* target WHEN clause                */
-  SourceLocation        location;      /* location of the end               */
-  size_t                lineNum;       /* Instruction line number           */
+    RexxInstructionIf    *when;          /* target WHEN clause                */
+    SourceLocation        location;      /* location of the end               */
+    size_t                lineNum;       /* Instruction line number           */
 
-  location = partner->getLocation();   /* get location of END instruction   */
-  lineNum = this->getLineNumber();     /* get the instruction line number   */
+    location = partner->getLocation();   /* get location of END instruction   */
+    lineNum = this->getLineNumber();     /* get the instruction line number   */
 
-  RexxString *name = partner->name;    /* get then END name                 */
-  if (name != OREF_NULL) {             /* was a name given?                 */
-    RexxString *myLabel = getLabel();
-    if (myLabel == OREF_NULL)          /* name given on non-control form?   */
+    RexxString *name = partner->name;    /* get then END name                 */
+    if (name != OREF_NULL)             /* was a name given?                 */
     {
-        ActivityManager::currentActivity->raiseException(Error_Unexpected_end_select_nolabel, &location, source, OREF_NULL, new_array(partner->name, new_integer(lineNum)), OREF_NULL);
+        RexxString *myLabel = getLabel();
+        if (myLabel == OREF_NULL)          /* name given on non-control form?   */
+        {
+            ActivityManager::currentActivity->raiseException(Error_Unexpected_end_select_nolabel, &location, source, OREF_NULL, new_array(partner->name, new_integer(lineNum)), OREF_NULL);
+        }
+        else if (name != myLabel)          /* not the same name?                */
+        {
+            ActivityManager::currentActivity->raiseException(Error_Unexpected_end_select, &location, source, OREF_NULL, new_array(name, myLabel, new_integer(lineNum)), OREF_NULL);
+        }
     }
-    else if (name != myLabel)          /* not the same name?                */
-    {
-        ActivityManager::currentActivity->raiseException(Error_Unexpected_end_select, &location, source, OREF_NULL, new_array(name, myLabel, new_integer(lineNum)), OREF_NULL);
-    }
-  }
-                                       /* misplaced END instruction         */
-  OrefSet(this, this->end, partner);   /* match up with the END instruction */
-                                       /* get first item off of WHEN list   */
-  when = (RexxInstructionIf *)(this->when_list->pullRexx());
-                                       /* nothing there?                    */
-  if (when == (RexxInstructionIf *)TheNilObject) {
-    location = this->getLocation();    /* get the location info             */
-                                       /* need at least one WHEN here       */
-    ActivityManager::currentActivity->raiseException(Error_When_expected_when, &location, source, OREF_NULL, new_array(new_integer(lineNum)), OREF_NULL);
-  }
-                                       /* link up each WHEN with the END    */
-  while (when != (RexxInstructionIf *)TheNilObject) {
-                                       /* hook up with the partner END      */
-    when->fixWhen((RexxInstructionEndIf *)partner);
-                                       /* get the next list item            */
+    /* misplaced END instruction         */
+    OrefSet(this, this->end, partner);   /* match up with the END instruction */
+                                         /* get first item off of WHEN list   */
     when = (RexxInstructionIf *)(this->when_list->pullRexx());
-  }
-                                       /* get rid of the lists              */
-  OrefSet(this, this->when_list, OREF_NULL);
-  if (this->otherwise != OREF_NULL)    /* an other wise block?              */
-  {
-      // for the END terminator on an OTHERWISE, we need to see if this
-      // select has a label.  If it does, this needs special handling.
-      if (getLabel() == OREF_NULL)
-      {
-          partner->setStyle(OTHERWISE_BLOCK);
-      }
-      else
-      {
-          partner->setStyle(LABELED_OTHERWISE_BLOCK);
-      }
-  }
-  else
-  {
-      // the SELECT style will raise an error if hit, since it means
-      // there is not OTHERWISE clause.  This doesn't matter if there
-      // is a label or not.
-      partner->setStyle(SELECT_BLOCK);
-  }
+    /* nothing there?                    */
+    if (when == (RexxInstructionIf *)TheNilObject)
+    {
+        location = this->getLocation();    /* get the location info             */
+                                           /* need at least one WHEN here       */
+        ActivityManager::currentActivity->raiseException(Error_When_expected_when, &location, source, OREF_NULL, new_array(new_integer(lineNum)), OREF_NULL);
+    }
+    /* link up each WHEN with the END    */
+    while (when != (RexxInstructionIf *)TheNilObject)
+    {
+        /* hook up with the partner END      */
+        when->fixWhen((RexxInstructionEndIf *)partner);
+        /* get the next list item            */
+        when = (RexxInstructionIf *)(this->when_list->pullRexx());
+    }
+    /* get rid of the lists              */
+    OrefSet(this, this->when_list, OREF_NULL);
+    if (this->otherwise != OREF_NULL)    /* an other wise block?              */
+    {
+        // for the END terminator on an OTHERWISE, we need to see if this
+        // select has a label.  If it does, this needs special handling.
+        if (getLabel() == OREF_NULL)
+        {
+            partner->setStyle(OTHERWISE_BLOCK);
+        }
+        else
+        {
+            partner->setStyle(LABELED_OTHERWISE_BLOCK);
+        }
+    }
+    else
+    {
+        // the SELECT style will raise an error if hit, since it means
+        // there is not OTHERWISE clause.  This doesn't matter if there
+        // is a label or not.
+        partner->setStyle(SELECT_BLOCK);
+    }
 }
 
 

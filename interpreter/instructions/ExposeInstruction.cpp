@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ExposeInstruction.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Expose Parse Class                                               */
 /*                                                                            */
@@ -55,11 +55,13 @@ RexxInstructionExpose::RexxInstructionExpose(
 /* Function:  Complete initialization of an EXPOSE instruction object         */
 /******************************************************************************/
  {
-                                       /* get the variable size             */
-  variableCount = varCount;
-  while (varCount > 0)                 /* loop through the variable list    */
-                                       /* copying each variable             */
-    OrefSet(this, this->variables[--varCount], (RexxVariableBase *)(variable_list->pop()));
+    /* get the variable size             */
+    variableCount = varCount;
+    while (varCount > 0)                 /* loop through the variable list    */
+    {
+                                         /* copying each variable             */
+        OrefSet(this, this->variables[--varCount], (RexxVariableBase *)(variable_list->pop()));
+    }
 }
 
 void RexxInstructionExpose::live(size_t liveMark)
@@ -67,14 +69,14 @@ void RexxInstructionExpose::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
+    size_t i;                            /* loop counter                      */
+    size_t count;                        /* argument count                    */
 
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  for (i = 0, count = variableCount; i < count; i++)
-  {
-      memory_mark(this->variables[i]);
-  }
+    memory_mark(this->nextInstruction);  /* must be first one marked          */
+    for (i = 0, count = variableCount; i < count; i++)
+    {
+        memory_mark(this->variables[i]);
+    }
 }
 
 void RexxInstructionExpose::liveGeneral(int reason)
@@ -82,15 +84,15 @@ void RexxInstructionExpose::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
+    size_t i;                            /* loop counter                      */
+    size_t count;                        /* argument count                    */
 
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  for (i = 0, count = variableCount; i < count; i++)
-  {
-      memory_mark_general(this->variables[i]);
-  }
+                                         /* must be first one marked          */
+    memory_mark_general(this->nextInstruction);
+    for (i = 0, count = variableCount; i < count; i++)
+    {
+        memory_mark_general(this->variables[i]);
+    }
 }
 
 void RexxInstructionExpose::flatten(RexxEnvelope *envelope)
@@ -98,16 +100,18 @@ void RexxInstructionExpose::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
+    size_t i;                            /* loop counter                      */
+    size_t count;                        /* argument count                    */
 
-  setUpFlatten(RexxInstructionExpose)
+    setUpFlatten(RexxInstructionExpose)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  for (i = 0, count = variableCount; i < count; i++)
-    flatten_reference(newThis->variables[i], envelope);
+    flatten_reference(newThis->nextInstruction, envelope);
+    for (i = 0, count = variableCount; i < count; i++)
+    {
+        flatten_reference(newThis->variables[i], envelope);
+    }
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 void RexxInstructionExpose::execute(
@@ -117,13 +121,15 @@ void RexxInstructionExpose::execute(
 /* Function:  Execute a REXX EXPOSE instruction                               */
 /******************************************************************************/
 {
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (!context->inMethod())            /* is this a method clause?          */
-                                       /* raise an error                    */
-    reportException(Error_Translation_expose);
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (!context->inMethod())            /* is this a method clause?          */
+    {
+                                         /* raise an error                    */
+        reportException(Error_Translation_expose);
+    }
 
-  /* have the context expose these */
-  context->expose(variables, variableCount);
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    /* have the context expose these */
+    context->expose(variables, variableCount);
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                   ExpressionOperator.c     */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Operator Parse Class                                             */
 /*                                                                            */
@@ -107,21 +107,17 @@ RexxObject *RexxBinaryOperator::evaluate(
 /* Function:  Execute a REXX binary operator                                  */
 /******************************************************************************/
 {
-  RexxObject *result;                  /* message expression result         */
-  RexxObject *left;                    /* left term result                  */
-  RexxObject *right;                   /* right term result                 */
-
-                                       /* evaluate the target               */
-  left = this->left_term->evaluate(context, stack);
-                                       /* evaluate the right term           */
-  right = this->right_term->evaluate(context, stack);
-                                       /* evaluate the message              */
-  result = callOperatorMethod(left, this->oper, right);
-                                       /* replace top two stack elements    */
-  stack->operatorResult(result);       /* with this one                     */
-                                       /* trace if necessary                */
-  context->traceOperator(operatorName(), result);
-  return result;                       /* return the result                 */
+    /* evaluate the target               */
+    RexxObject *left = this->left_term->evaluate(context, stack);
+    /* evaluate the right term           */
+    RexxObject *right = this->right_term->evaluate(context, stack);
+    /* evaluate the message              */
+    RexxObject *result = callOperatorMethod(left, this->oper, right);
+    /* replace top two stack elements    */
+    stack->operatorResult(result);       /* with this one                     */
+                                         /* trace if necessary                */
+    context->traceOperator(operatorName(), result);
+    return result;                       /* return the result                 */
 }
 
 RexxObject *RexxUnaryOperator::evaluate(
@@ -131,17 +127,14 @@ RexxObject *RexxUnaryOperator::evaluate(
 /* Function:  Execute a REXX prefix operator                                  */
 /******************************************************************************/
 {
-  RexxObject *result;                  /* message expression result         */
-  RexxObject *term;                    /* left term result                  */
-
-                                       /* evaluate the target               */
-  term = this->left_term->evaluate(context, stack);
-                                       /* process this directly             */
-  result = callOperatorMethod(term, this->oper, OREF_NULL);
-  stack->prefixResult(result);         /* replace the top element           */
-                                       /* trace if necessary                */
-  context->tracePrefix(operatorName(), result);
-  return result;                       /* return the result                 */
+    /* evaluate the target               */
+    RexxObject *term = this->left_term->evaluate(context, stack);
+    /* process this directly             */
+    RexxObject *result = callOperatorMethod(term, this->oper, OREF_NULL);
+    stack->prefixResult(result);         /* replace the top element           */
+                                         /* trace if necessary                */
+    context->tracePrefix(operatorName(), result);
+    return result;                       /* return the result                 */
 }
 
 void RexxExpressionOperator::live(size_t liveMark)
@@ -181,13 +174,8 @@ void *RexxUnaryOperator::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
                                        /* Get new object                    */
-  newObject = new_object(sizeof(RexxUnaryOperator));
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheUnaryOperatorTermBehaviour);
-  return newObject;
+    return new_object(size, T_UnaryOperatorTerm);
 }
 
 void *RexxBinaryOperator::operator new(size_t size)
@@ -195,12 +183,7 @@ void *RexxBinaryOperator::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
                                        /* Get new object                    */
-  newObject = new_object(sizeof(RexxBinaryOperator));
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheBinaryOperatorTermBehaviour);
-  return newObject;
+    return new_object(size, T_BinaryOperatorTerm);
 }
 

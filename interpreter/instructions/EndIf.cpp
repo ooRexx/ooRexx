@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              EndIf.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive End-If Parse Class                                               */
 /*                                                                            */
@@ -54,16 +54,20 @@ RexxInstructionEndIf::RexxInstructionEndIf(
 /* Function:  Complete initialization of a PARSE ENDIF object                 */
 /******************************************************************************/
 {
-  this->setType(KEYWORD_ENDTHEN);      /* set the default type              */
-  OrefSet(this, this->parent, _parent);/* remember parent IF/WHEN/ELSE      */
-  parent->setEndInstruction(this);     /* hook up with the parent object    */
-                                       /* is this the ELSE end?             */
-  if (parent->instructionType == KEYWORD_ELSE)
+    this->setType(KEYWORD_ENDTHEN);      /* set the default type              */
+    OrefSet(this, this->parent, _parent);/* remember parent IF/WHEN/ELSE      */
+    parent->setEndInstruction(this);     /* hook up with the parent object    */
+                                         /* is this the ELSE end?             */
+    if (parent->instructionType == KEYWORD_ELSE)
+    {
 
-    this->setType(KEYWORD_ENDELSE);    /* change this into an ELSE end      */
-                                       /* is this the ELSE end?             */
-  else if (parent->instructionType == KEYWORD_WHENTHEN)
-    this->setType(KEYWORD_ENDWHEN);    /* change this into an WHEN end      */
+        this->setType(KEYWORD_ENDELSE);    /* change this into an ELSE end      */
+    }
+                                           /* is this the ELSE end?             */
+    else if (parent->instructionType == KEYWORD_WHENTHEN)
+    {
+        this->setType(KEYWORD_ENDWHEN);    /* change this into an WHEN end      */
+    }
 }
 
 void RexxInstructionEndIf::setEndInstruction(
@@ -119,18 +123,20 @@ void RexxInstructionEndIf::execute(
 /* Function:  Execute a REXX ENDIF instruction                              */
 /****************************************************************************/
 {
-  context->unindent();                 /* unindent the context              */
-  context->unindent();                 /* unindent for the total            */
-                                       /* this the end of a WHEN block?     */
-  if (this->instructionType == KEYWORD_ENDWHEN) {
-    context->removeBlock();            /* remove item from block stack      */
-    context->unindent();               /* unindent for the SELECT           */
-                                       /* set the restart point             */
-    context->setNext((this->else_end)->nextInstruction);
-  }
-  if (this->else_end != OREF_NULL)     /* have to jump around an else?      */
-                                       /* set the restart point             */
-    context->setNext((this->else_end)->nextInstruction);
-
+    context->unindent();                 /* unindent the context              */
+    context->unindent();                 /* unindent for the total            */
+                                         /* this the end of a WHEN block?     */
+    if (this->instructionType == KEYWORD_ENDWHEN)
+    {
+        context->removeBlock();            /* remove item from block stack      */
+        context->unindent();               /* unindent for the SELECT           */
+                                           /* set the restart point             */
+        context->setNext((this->else_end)->nextInstruction);
+    }
+    if (this->else_end != OREF_NULL)     /* have to jump around an else?      */
+    {
+                                         /* set the restart point             */
+        context->setNext((this->else_end)->nextInstruction);
+    }
 }
 

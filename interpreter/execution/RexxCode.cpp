@@ -213,12 +213,7 @@ void * RexxCode::operator new(size_t size)
 /* Function:  Create a new rexx method code instance                          */
 /******************************************************************************/
 {
-  RexxObject * newMethod;              /* newly created object              */
-
-  newMethod = new_object(size);        /* Get new object                    */
-                                       /* Give new object its behaviour     */
-  newMethod->setBehaviour(TheRexxCodeBehaviour);
-  return newMethod;                    /* return the new method             */
+    return new_object(size, T_RexxCode);        /* Get new object                    */
 }
 
 

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                  MessageInstruction.c      */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Message Instruction Parse Class                                  */
 /*                                                                            */
@@ -56,24 +56,28 @@ RexxInstructionMessage::RexxInstructionMessage(
 /* Function:  Initialize a message instruction                                */
 /******************************************************************************/
 {
-  RexxObject **argument_pointer;       /* pointer to message args           */
-  size_t       i;                      /* loop counter                      */
+    RexxObject **argument_pointer;       /* pointer to message args           */
+    size_t       i;                      /* loop counter                      */
 
-                                       /* copy the message info             */
-  OrefSet(this, this->target, message->target);
-  OrefSet(this, this->super, message->super);
-                                       /* get the name                      */
-  OrefSet(this, this->name, message->messageName);
-                                       /* get the argument count            */
-  argumentCount = message->argumentCount;
-                                       /* and pointer to arguments          */
-  argument_pointer = (RexxObject **)message->arguments;
-                                       /* copy each argument                */
-  for (i = 0; i < argumentCount; i++)
-                                       /* into the message instruction      */
-    OrefSet(this, this->arguments[i], argument_pointer[i]);
-  if (message->doubleTilde)            /* double twiddle form?              */
-    instructionFlags |= message_i_double;   /* turn this on                      */
+                                         /* copy the message info             */
+    OrefSet(this, this->target, message->target);
+    OrefSet(this, this->super, message->super);
+    /* get the name                      */
+    OrefSet(this, this->name, message->messageName);
+    /* get the argument count            */
+    argumentCount = message->argumentCount;
+    /* and pointer to arguments          */
+    argument_pointer = (RexxObject **)message->arguments;
+    /* copy each argument                */
+    for (i = 0; i < argumentCount; i++)
+    {
+        /* into the message instruction      */
+        OrefSet(this, this->arguments[i], argument_pointer[i]);
+    }
+    if (message->doubleTilde)            /* double twiddle form?              */
+    {
+        instructionFlags |= message_i_double;   /* turn this on                      */
+    }
 }
 
 RexxInstructionMessage::RexxInstructionMessage(
@@ -83,25 +87,29 @@ RexxInstructionMessage::RexxInstructionMessage(
 /* Function:  Initialize an assignment message instruction                    */
 /******************************************************************************/
 {
-  RexxObject  **argument_pointer;      /* pointer to message args           */
-  size_t i;                            /* loop counter                      */
+    RexxObject  **argument_pointer;      /* pointer to message args           */
+    size_t i;                            /* loop counter                      */
 
-                                       /* copy the message info             */
-  OrefSet(this, this->target, message->target);
-  OrefSet(this, this->super, message->super);
-  OrefSet(this, this->name, message->messageName);  /* get the name                      */
-                                       /* get the argument count            */
-  argumentCount = message->argumentCount + 1;
-                                       /* and the argument pointer          */
-  argument_pointer = (RexxObject **)message->arguments;
-                                       /* make the expression the first     */
-  OrefSet(this, this->arguments[0], expression);
-                                       /* copy each argument                */
-  for (i = 1; i < argumentCount; i++)
-                                       /* into the message instruction      */
-    OrefSet(this, this->arguments[i], argument_pointer[i - 1]);
-  if (message->doubleTilde)            /* double twiddle form?              */
-    instructionFlags |= message_i_double; /* turn this on                      */
+                                         /* copy the message info             */
+    OrefSet(this, this->target, message->target);
+    OrefSet(this, this->super, message->super);
+    OrefSet(this, this->name, message->messageName);  /* get the name                      */
+    /* get the argument count            */
+    argumentCount = message->argumentCount + 1;
+    /* and the argument pointer          */
+    argument_pointer = (RexxObject **)message->arguments;
+    /* make the expression the first     */
+    OrefSet(this, this->arguments[0], expression);
+    /* copy each argument                */
+    for (i = 1; i < argumentCount; i++)
+    {
+        /* into the message instruction      */
+        OrefSet(this, this->arguments[i], argument_pointer[i - 1]);
+    }
+    if (message->doubleTilde)            /* double twiddle form?              */
+    {
+        instructionFlags |= message_i_double; /* turn this on                      */
+    }
 }
 
 void RexxInstructionMessage::live(size_t liveMark)
@@ -109,17 +117,17 @@ void RexxInstructionMessage::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  memory_mark(this->name);
-  memory_mark(this->target);
-  memory_mark(this->super);
-  for (i = 0, count = argumentCount; i < count; i++)
-  {
-      memory_mark(this->arguments[i]);
-  }
+    memory_mark(this->nextInstruction);  /* must be first one marked          */
+    memory_mark(this->name);
+    memory_mark(this->target);
+    memory_mark(this->super);
+    for (i = 0, count = argumentCount; i < count; i++)
+    {
+        memory_mark(this->arguments[i]);
+    }
 }
 
 void RexxInstructionMessage::liveGeneral(int reason)
@@ -127,18 +135,18 @@ void RexxInstructionMessage::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->name);
-  memory_mark_general(this->target);
-  memory_mark_general(this->super);
-  for (i = 0, count = argumentCount; i < count; i++)
-  {
-      memory_mark_general(this->arguments[i]);
-  }
+                                         /* must be first one marked          */
+    memory_mark_general(this->nextInstruction);
+    memory_mark_general(this->name);
+    memory_mark_general(this->target);
+    memory_mark_general(this->super);
+    for (i = 0, count = argumentCount; i < count; i++)
+    {
+        memory_mark_general(this->arguments[i]);
+    }
 }
 
 void RexxInstructionMessage::flatten(RexxEnvelope *envelope)
@@ -146,19 +154,21 @@ void RexxInstructionMessage::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  setUpFlatten(RexxInstructionMessage)
+    setUpFlatten(RexxInstructionMessage)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->name, envelope);
-  flatten_reference(newThis->target, envelope);
-  flatten_reference(newThis->super, envelope);
-  for (i = 0, count = argumentCount; i < count; i++)
-    flatten_reference(newThis->arguments[i], envelope);
+    flatten_reference(newThis->nextInstruction, envelope);
+    flatten_reference(newThis->name, envelope);
+    flatten_reference(newThis->target, envelope);
+    flatten_reference(newThis->super, envelope);
+    for (i = 0, count = argumentCount; i < count; i++)
+    {
+        flatten_reference(newThis->arguments[i], envelope);
+    }
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 void RexxInstructionMessage::execute (
@@ -168,58 +178,75 @@ void RexxInstructionMessage::execute (
 /* Function:  Execute a REXX THEN instruction                               */
 /****************************************************************************/
 {
-  ProtectedObject result;              /* message expression result         */
-  RexxObject *_super;                  /* target super class                */
-  size_t      argcount;                /* count of arguments                */
-  RexxObject *_target;                 /* message target                    */
-  size_t      i;                       /* loop counter                      */
+    ProtectedObject result;              /* message expression result         */
+    RexxObject *_super;                  /* target super class                */
+    size_t      argcount;                /* count of arguments                */
+    RexxObject *_target;                 /* message target                    */
+    size_t      i;                       /* loop counter                      */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-                                       /* evaluate the target               */
-  _target = this->target->evaluate(context, stack);
-  if (this->super != OREF_NULL) {      /* have a message lookup override?   */
-    if (_target != context->getReceiver())  /* sender and receiver different?    */
-                                       /* this is an error                  */
-      reportException(Error_Execution_super);
-                                       /* get the variable value            */
-    _super = this->super->evaluate(context, stack);
-    stack->toss();                     /* pop the top item                  */
-  }
-  else
-    _super = OREF_NULL;                 /* use the default lookup            */
+    context->traceInstruction(this);     /* trace if necessary                */
+                                         /* evaluate the target               */
+    _target = this->target->evaluate(context, stack);
+    if (this->super != OREF_NULL)      /* have a message lookup override?   */
+    {
+        if (_target != context->getReceiver())  /* sender and receiver different?    */
+        {
+            /* this is an error                  */
+            reportException(Error_Execution_super);
+        }
+        /* get the variable value            */
+        _super = this->super->evaluate(context, stack);
+        stack->toss();                     /* pop the top item                  */
+    }
+    else
+    {
+        _super = OREF_NULL;                 /* use the default lookup            */
+    }
 
-  argcount = argumentCount;            /* get the argument count            */
-  for (i = 0; i < argcount; i++) {     /* loop through the argument list    */
-                                       /* real argument?                    */
-    if (this->arguments[i] != OREF_NULL) {
-                                       /* evaluate the expression           */
-      result = this->arguments[i]->evaluate(context, stack);
-                                     /* trace if necessary                */
-      context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
+    argcount = argumentCount;            /* get the argument count            */
+    for (i = 0; i < argcount; i++)     /* loop through the argument list    */
+    {
+        /* real argument?                    */
+        if (this->arguments[i] != OREF_NULL)
+        {
+            /* evaluate the expression           */
+            result = this->arguments[i]->evaluate(context, stack);
+            /* trace if necessary                */
+            context->traceIntermediate(result, TRACE_PREFIX_ARGUMENT);
+        }
+        else
+        {
+            stack->push(OREF_NULL);          /* push an non-existent argument     */
+                                             /* trace if necessary                */
+            context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
+        }
     }
-    else {
-      stack->push(OREF_NULL);          /* push an non-existent argument     */
-                                       /* trace if necessary                */
-      context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
+    if (super == OREF_NULL)              /* no super class override?          */
+    {
+                                         /* issue the fast message            */
+        stack->send(this->name, argcount, result);
     }
-  }
-  if (super == OREF_NULL)              /* no super class override?          */
-                                       /* issue the fast message            */
-    stack->send(this->name, argcount, result);
-  else
-                                       /* evaluate the message w/override   */
-    stack->send(this->name, _super, argcount, result);
-  stack->popn(argcount);               /* remove any arguments              */
-  if (instructionFlags&message_i_double) /* double twiddle form?              */
-    result = _target;                  /* get the target element            */
-  if (result != OREF_NULL) {           /* result returned?                  */
-    context->traceResult((RexxObject *)result);  /* trace if necessary                */
-                                       /* set the RESULT variable to the    */
-                                       /* message return value              */
-    context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
-  }
-  else                                 /* drop the variable RESULT          */
-    context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    else
+    {
+        /* evaluate the message w/override   */
+        stack->send(this->name, _super, argcount, result);
+    }
+    stack->popn(argcount);               /* remove any arguments              */
+    if (instructionFlags&message_i_double) /* double twiddle form?              */
+    {
+        result = _target;                  /* get the target element            */
+    }
+    if (result != OREF_NULL)           /* result returned?                  */
+    {
+        context->traceResult((RexxObject *)result);  /* trace if necessary                */
+        /* set the RESULT variable to the    */
+        /* message return value              */
+        context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
+    }
+    else                                 /* drop the variable RESULT          */
+    {
+        context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
+    }
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

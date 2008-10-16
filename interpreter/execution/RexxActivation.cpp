@@ -92,10 +92,7 @@ void * RexxActivation::operator new(size_t size)
 /******************************************************************************/
 {
                                          /* Get new object                    */
-    RexxActivation *newObject = (RexxActivation *)new_object(size);
-                                         /* Give new object its behaviour     */
-    newObject->setBehaviour(TheActivationBehaviour);
-    return (RexxObject *)newObject;      /* return the new object             */
+    return new_object(size, T_Activation);
 }
 
 

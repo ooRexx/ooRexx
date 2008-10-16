@@ -5257,14 +5257,8 @@ void *RexxSource::operator new (size_t size)
 /* Function:  Create a new translator object from an array                    */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly created object              */
-
-                                       /* Get new object                    */
-  newObject = new_object(sizeof(RexxSource));
-  newObject->clearObject();            /* clear object          */
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheRexxSourceBehaviour);
-  return newObject;                    /* return the new object             */
+    /* Get new object                    */
+    return new_object(sizeof(RexxSource), T_RexxSource);
 }
 
 

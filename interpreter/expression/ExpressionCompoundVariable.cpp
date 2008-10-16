@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                           ExpressionCompoundVariable.c     */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Translator Expression Parsing Compound Variable Reference Class  */
 /*                                                                            */
@@ -64,15 +64,16 @@ RexxCompoundVariable::RexxCompoundVariable(
 /* Function:  Complete compound variable initialization                       */
 /******************************************************************************/
 {
-  this->clearObject();                 /* initialize the object             */
-  this->tailCount= TailCount;          /* set the count (and hash value)    */
-  OrefSet(this, this->stemName, _stemName); /* save the associate value          */
-  this->index = stemIndex;             /* set the stem index                */
+    this->clearObject();                 /* initialize the object             */
+    this->tailCount= TailCount;          /* set the count (and hash value)    */
+    OrefSet(this, this->stemName, _stemName); /* save the associate value          */
+    this->index = stemIndex;             /* set the stem index                */
 
-  while (TailCount > 0) {              /* loop through the variable list    */
-                                       /* copying each variable             */
-    OrefSet(this, this->tails[--TailCount], tailList->pop());
-  }
+    while (TailCount > 0)              /* loop through the variable list    */
+    {
+        /* copying each variable             */
+        OrefSet(this, this->tails[--TailCount], tailList->pop());
+    }
 }
 
 RexxObject * build(
@@ -82,66 +83,76 @@ RexxObject * build(
 /* Function:  Build a dynamically created compound variable                   */
 /******************************************************************************/
 {
-  RexxString *   stem;                 /* stem part of compound variable    */
-  RexxString *   tail;                 /* tail section string value         */
-  RexxQueue  *   tails;                /* tail elements                     */
-  RexxObject *   tailPart;             /* tail element retriever            */
-  size_t  position;                    /* scan position within compound name*/
-  size_t  start;                       /* starting scan position            */
-  size_t  length;                      /* length of tail section            */
+    RexxString *   stem;                 /* stem part of compound variable    */
+    RexxString *   tail;                 /* tail section string value         */
+    RexxQueue  *   tails;                /* tail elements                     */
+    RexxObject *   tailPart;             /* tail element retriever            */
+    size_t  position;                    /* scan position within compound name*/
+    size_t  start;                       /* starting scan position            */
+    size_t  length;                      /* length of tail section            */
 
-  length = variable_name->getLength(); /* get the string length             */
-  position = 0;                        /* start scanning at first character */
-                                       /* scan to the first period          */
-  while (variable_name->getChar(position) != '.') {
-    position++;                        /* step to the next character        */
-    length--;                          /* reduce the length also            */
-  }
-                                       /* extract the stem part             */
-  stem = variable_name->extract(0, position + 1);
-  ProtectedObject p1(stem);
-                                       /* processing to decompose the name  */
-                                       /* into its component parts          */
-
-  tails = new_queue();                 /* get a new list for the tails      */
-  ProtectedObject p2(tails);
-  position++;                          /* step past previous period         */
-  length--;                            /* adjust the length                 */
-  if (direct == true) {                /* direct access?                    */
-                                       /* extract the tail part             */
-    tail = variable_name->extract(position, length);
-    tails->push(tail);                 /* add to the tail piece list        */
-  }
-  else {
-    while (length > 0) {               /* process rest of the variable      */
-      start = position;                /* save the start position           */
-                                       /* scan for the next period          */
-      while (length > 0 && variable_name->getChar(position) != '.') {
-        position++;                    /* step to the next character        */
-        length--;                      /* reduce the length also            */
-      }
-                                       /* extract the tail part             */
-      tail = variable_name->extract(start, position - start);
-                                       /* have a null tail piece or         */
-                                       /* section begin with a digit?       */
-      /* CHM - defect 87: change index start to 0 and compare for range     */
-      /* ASCII '0' to '9' to recognize a digit                              */
-      if (tail->getLength() == 0 || (tail->getChar(0) >= '0' && tail->getChar(0) <= '9'))
-        tailPart = (RexxObject *)tail; /* this is a literal piece           */
-      else {
-                                       /* create a new variable retriever   */
-        tailPart = (RexxObject *)new RexxParseVariable(tail, 0);
-      }
-      tails->push(tailPart);           /* add to the tail piece list        */
-      position++;                      /* step past previous period         */
-      length--;                        /* adjust the length                 */
+    length = variable_name->getLength(); /* get the string length             */
+    position = 0;                        /* start scanning at first character */
+                                         /* scan to the first period          */
+    while (variable_name->getChar(position) != '.')
+    {
+        position++;                        /* step to the next character        */
+        length--;                          /* reduce the length also            */
     }
-                                       /* have a trailing period?           */
-    if (variable_name->getChar(position - 1) == '.')
-      tails->push(OREF_NULLSTRING);    /* add to the tail piece list        */
-  }
-                                       /* create and return a new compound  */
-  return (RexxObject *)new (tails->getSize()) RexxCompoundVariable(stem, 0, tails, tails->getSize());
+    /* extract the stem part             */
+    stem = variable_name->extract(0, position + 1);
+    ProtectedObject p1(stem);
+    /* processing to decompose the name  */
+    /* into its component parts          */
+
+    tails = new_queue();                 /* get a new list for the tails      */
+    ProtectedObject p2(tails);
+    position++;                          /* step past previous period         */
+    length--;                            /* adjust the length                 */
+    if (direct == true)                /* direct access?                    */
+    {
+        /* extract the tail part             */
+        tail = variable_name->extract(position, length);
+        tails->push(tail);                 /* add to the tail piece list        */
+    }
+    else
+    {
+        while (length > 0)               /* process rest of the variable      */
+        {
+            start = position;                /* save the start position           */
+                                             /* scan for the next period          */
+            while (length > 0 && variable_name->getChar(position) != '.')
+            {
+                position++;                    /* step to the next character        */
+                length--;                      /* reduce the length also            */
+            }
+            /* extract the tail part             */
+            tail = variable_name->extract(start, position - start);
+            /* have a null tail piece or         */
+            /* section begin with a digit?       */
+            /* CHM - defect 87: change index start to 0 and compare for range     */
+            /* ASCII '0' to '9' to recognize a digit                              */
+            if (tail->getLength() == 0 || (tail->getChar(0) >= '0' && tail->getChar(0) <= '9'))
+            {
+                tailPart = (RexxObject *)tail; /* this is a literal piece           */
+            }
+            else
+            {
+                /* create a new variable retriever   */
+                tailPart = (RexxObject *)new RexxParseVariable(tail, 0);
+            }
+            tails->push(tailPart);           /* add to the tail piece list        */
+            position++;                      /* step past previous period         */
+            length--;                        /* adjust the length                 */
+        }
+        /* have a trailing period?           */
+        if (variable_name->getChar(position - 1) == '.')
+        {
+            tails->push(OREF_NULLSTRING);    /* add to the tail piece list        */
+        }
+    }
+    /* create and return a new compound  */
+    return(RexxObject *)new (tails->getSize()) RexxCompoundVariable(stem, 0, tails, tails->getSize());
 }
 
 void RexxCompoundVariable::live(size_t liveMark)
@@ -149,14 +160,14 @@ void RexxCompoundVariable::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  for (i = 0, count = this->tailCount; i < count; i++)
-  {
-      memory_mark(this->tails[i]);
-  }
-  memory_mark(this->stemName);
+    for (i = 0, count = this->tailCount; i < count; i++)
+    {
+        memory_mark(this->tails[i]);
+    }
+    memory_mark(this->stemName);
 }
 
 void RexxCompoundVariable::liveGeneral(int reason)
@@ -164,14 +175,14 @@ void RexxCompoundVariable::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  for (i = 0, count = this->tailCount; i < count; i++)
-  {
-      memory_mark_general(this->tails[i]);
-  }
-  memory_mark_general(this->stemName);
+    for (i = 0, count = this->tailCount; i < count; i++)
+    {
+        memory_mark_general(this->tails[i]);
+    }
+    memory_mark_general(this->stemName);
 }
 
 void RexxCompoundVariable::flatten(RexxEnvelope *envelope)
@@ -179,17 +190,18 @@ void RexxCompoundVariable::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
+    size_t  i;                           /* loop counter                      */
+    size_t  count;                       /* argument count                    */
 
-  size_t  i;                           /* loop counter                      */
-  size_t  count;                       /* argument count                    */
+    setUpFlatten(RexxCompoundVariable)
 
-  setUpFlatten(RexxCompoundVariable)
+    flatten_reference(newThis->stemName, envelope);
+    for (i = 0, count = this->tailCount; i < count; i++)
+    {
+        flatten_reference(newThis->tails[i], envelope);
+    }
 
-  flatten_reference(newThis->stemName, envelope);
-  for (i = 0, count = this->tailCount; i < count; i++)
-    flatten_reference(newThis->tails[i], envelope);
-
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 RexxObject * RexxCompoundVariable::evaluate(
@@ -199,13 +211,11 @@ RexxObject * RexxCompoundVariable::evaluate(
 /* Function:  Evaluate a REXX compound variable                               */
 /******************************************************************************/
 {
-  RexxObject   *value;                 /* final variable value              */
+    /* and ask it for the value          */
+    RexxObject *value = context->evaluateLocalCompoundVariable(stemName, index, &tails[0], tailCount);
 
-                                       /* and ask it for the value          */
-  value = context->evaluateLocalCompoundVariable(stemName, index, &tails[0], tailCount);
-
-  stack->push(value);                  /* place on the evaluation stack     */
-  return value;                        /* return the located variable       */
+    stack->push(value);                  /* place on the evaluation stack     */
+    return value;                        /* return the located variable       */
 }
 
 RexxObject  *RexxCompoundVariable::getValue(
@@ -215,7 +225,7 @@ RexxObject  *RexxCompoundVariable::getValue(
 /******************************************************************************/
 {
                                        /* resolve the tail element          */
-  return dictionary->getCompoundVariableValue(stemName, &tails[0], tailCount);
+    return dictionary->getCompoundVariableValue(stemName, &tails[0], tailCount);
 }
 
 RexxObject  *RexxCompoundVariable::getValue(
@@ -386,10 +396,8 @@ void RexxCompoundVariable::setGuard(
 /* Function:  Set a guard wait in a compound variable                         */
 /******************************************************************************/
 {
-  RexxCompoundElement *variable;       /* compound variable object          */
-
                                        /* get the variable item             */
-  variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
+  RexxCompoundElement *variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
   variable->inform(ActivityManager::currentActivity);   /* mark the variable entry           */
 }
 
@@ -399,10 +407,8 @@ void RexxCompoundVariable::clearGuard(
 /* Function:  Clear a guard wait on a compound variable                       */
 /******************************************************************************/
 {
-  RexxCompoundElement *variable;       /* compound variable object          */
-
                                        /* get the variable item             */
-  variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
+  RexxCompoundElement *variable = context->getLocalCompoundVariable(stemName, index, &tails[0], tailCount);
   variable->uninform(ActivityManager::currentActivity); /* mark the variable entry           */
 }
 
@@ -412,17 +418,15 @@ void * RexxCompoundVariable::operator new(size_t size,
 /* Function:  Create a new compound variable object                           */
 /******************************************************************************/
 {
-  RexxObject * newObject;              /* newly created object              */
-  if (tailCount == 0)
-  {
-     // this object is normal sized, minus the dummy tail element
-     newObject = new_object(size - sizeof(RexxObject *), T_CompoundVariableTerm);
-  }
-  else
-  {
-                                       /* Get new object                    */
-      newObject = new_object(size + ((tailCount - 1) * sizeof(RexxObject *)), T_CompoundVariableTerm);
-  }
-  return newObject;                    /* return the new compound variable  */
+    if (tailCount == 0)
+    {
+        // this object is normal sized, minus the dummy tail element
+        return new_object(size - sizeof(RexxObject *), T_CompoundVariableTerm);
+    }
+    else
+    {
+        /* Get new object                    */
+        return new_object(size + ((tailCount - 1) * sizeof(RexxObject *)), T_CompoundVariableTerm);
+    }
 }
 

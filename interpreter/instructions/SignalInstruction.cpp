@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              SignalInstruction.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Signal Parse Class                                               */
 /*                                                                            */
@@ -111,12 +111,16 @@ void RexxInstructionSignal::resolve(
 /* Function:  Resolve a SIGNAL instruction label target                       */
 /******************************************************************************/
 {
-  if (this->name == OREF_NULL)         /* not a name target form?           */
-    return;                            /* just return                       */
-                                       /* have a labels table?              */
-  if (labels != OREF_NULL && this->name != OREF_NULL)
-                                       /* just get this from the table      */
-    OrefSet(this, this->target, (RexxInstruction *)labels->at(this->name));
+    if (this->name == OREF_NULL)         /* not a name target form?           */
+    {
+        return;                            /* just return                       */
+    }
+                                           /* have a labels table?              */
+    if (labels != OREF_NULL && this->name != OREF_NULL)
+    {
+        /* just get this from the table      */
+        OrefSet(this, this->target, (RexxInstruction *)labels->at(this->name));
+    }
 }
 
 void RexxInstructionSignal::execute(
@@ -126,37 +130,47 @@ void RexxInstructionSignal::execute(
 /* Function:  Execute a REXX SIGNAL instruction                               */
 /******************************************************************************/
 {
-  RexxObject *result;                  /* evaluated expression              */
-  RexxString *stringResult;            /* string version of the result      */
+    RexxObject *result;                  /* evaluated expression              */
+    RexxString *stringResult;            /* string version of the result      */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (this->condition != OREF_NULL) {  /* is this the ON/OFF form?          */
-    if (instructionFlags&signal_on)    /* ON form?                          */
-                                       /* turn on the trap                  */
-      context->trapOn(this->condition, (RexxInstructionCallBase *)this);
-    else
-                                       /* turn off the trap                 */
-      context->trapOff(this->condition);
-    context->pauseInstruction();       /* do debug pause if necessary       */
-  }
-  else {                               /* a normal signal?                  */
-    if (this->expression == OREF_NULL){/* already have the target?          */
-      if (this->target == OREF_NULL)   /* unknown target?                   */
-        reportException(Error_Label_not_found_name, this->name);
-                                       /* tell the activation to perform    */
-      context->signalTo(this->target); /* the signal                        */
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (this->condition != OREF_NULL)  /* is this the ON/OFF form?          */
+    {
+        if (instructionFlags&signal_on)    /* ON form?                          */
+        {
+                                           /* turn on the trap                  */
+            context->trapOn(this->condition, (RexxInstructionCallBase *)this);
+        }
+        else
+        {
+            /* turn off the trap                 */
+            context->trapOff(this->condition);
+        }
+        context->pauseInstruction();       /* do debug pause if necessary       */
     }
-    else {                             /* need to evaluate an expression    */
-                                       /* get the expression value          */
-      result = this->expression->evaluate(context, stack);
-                                       /* force to a string value           */
-      stringResult = REQUEST_STRING(result);
-      context->traceResult(result);    /* trace if necessary                */
-                                       /* tell the activation to perform    */
-                                       /* the signal                        */
-      context->signalValue(stringResult);
+    else                               /* a normal signal?                  */
+    {
+        if (this->expression == OREF_NULL)/* already have the target?          */
+        {
+            if (this->target == OREF_NULL)   /* unknown target?                   */
+            {
+                reportException(Error_Label_not_found_name, this->name);
+            }
+            /* tell the activation to perform    */
+            context->signalTo(this->target); /* the signal                        */
+        }
+        else                             /* need to evaluate an expression    */
+        {
+            /* get the expression value          */
+            result = this->expression->evaluate(context, stack);
+            /* force to a string value           */
+            stringResult = REQUEST_STRING(result);
+            context->traceResult(result);    /* trace if necessary                */
+                                             /* tell the activation to perform    */
+                                             /* the signal                        */
+            context->signalValue(stringResult);
+        }
     }
-  }
 }
 
 void RexxInstructionSignal::trap(
@@ -166,12 +180,14 @@ void RexxInstructionSignal::trap(
 /* Function:  Process a SIGNAL ON trap                                        */
 /******************************************************************************/
 {
-  context->trapOff(this->condition);   /* turn off the trap                 */
-  if (this->target == OREF_NULL)       /* unknown target?                   */
-    reportException(Error_Label_not_found_name, this->name);
-                                       /* set the new condition object      */
-  context->setConditionObj(conditionObj);
-                                       /* tell the activation to perform    */
-  context->signalTo(this->target);     /* the signal                        */
+    context->trapOff(this->condition);   /* turn off the trap                 */
+    if (this->target == OREF_NULL)       /* unknown target?                   */
+    {
+        reportException(Error_Label_not_found_name, this->name);
+    }
+    /* set the new condition object      */
+    context->setConditionObj(conditionObj);
+    /* tell the activation to perform    */
+    context->signalTo(this->target);     /* the signal                        */
 }
 

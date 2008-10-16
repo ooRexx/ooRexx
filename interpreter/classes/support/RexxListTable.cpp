@@ -91,9 +91,7 @@ void *RexxListTable::operator new(size_t size, size_t initialSize)
 /******************************************************************************/
 {
     /* Get new object                    */
-    RexxListTable *newTable = (RexxListTable *)new_object(size + sizeof(LISTENTRY) * (initialSize - 1));
-    /* Give new object its behaviour     */
-    newTable->setBehaviour(TheListTableBehaviour);
+    RexxListTable *newTable = (RexxListTable *)new_object(size + sizeof(LISTENTRY) * (initialSize - 1), T_ListTable);
     newTable->clearObject();
     newTable->size = initialSize;
     return newTable;                     /* return the new list item          */

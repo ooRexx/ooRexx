@@ -186,9 +186,6 @@ void *RexxClause::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-    RexxObject *newObject = new_object(sizeof(RexxClause));
-    /* Give new object its behaviour     */
-    newObject->setBehaviour(TheClauseBehaviour);
-    return newObject;
+    return new_object(size, T_Clause);
 }
 

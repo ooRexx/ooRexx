@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                ExpressionDotVariable.c     */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Translator Expression Parsing Dot Variable Reference Class       */
 /*                                                                            */
@@ -138,12 +138,7 @@ void * RexxDotVariable::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject *  newObject;             /* newly created object              */
-
                                        /* Get new object                    */
-  newObject = new_object(sizeof(RexxDotVariable));
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheDotVariableTermBehaviour);
-  return newObject;                    /* return the object                 */
+    return new_object(size, T_DotVariableTerm);
 }
 

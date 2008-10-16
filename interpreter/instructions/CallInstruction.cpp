@@ -171,99 +171,122 @@ void RexxInstructionCall::execute(
 /* Function:  Execute a REXX CALL instruction                                 */
 /******************************************************************************/
 {
-  size_t  argcount;                    /* count of arguments                */
-  size_t  i;                           /* loop counter                      */
-  int     type;                        /* type of call                      */
-  size_t  builtin_index;               /* builtin function index            */
-  ProtectedObject   result;            /* returned result                   */
-  RexxInstruction  *_target;            /* resolved call target              */
-  RexxString       *_name;              /* resolved function name            */
-  RexxDirectory    *labels;            /* labels table                      */
+    size_t  argcount;                    /* count of arguments                */
+    size_t  i;                           /* loop counter                      */
+    int     type;                        /* type of call                      */
+    size_t  builtin_index;               /* builtin function index            */
+    ProtectedObject   result;            /* returned result                   */
+    RexxInstruction  *_target;            /* resolved call target              */
+    RexxString       *_name;              /* resolved function name            */
+    RexxDirectory    *labels;            /* labels table                      */
 
-  ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (this->condition != OREF_NULL) {  /* is this the ON/OFF form?          */
-    if (instructionFlags&call_on_off)           /* ON form?                          */
-                                       /* turn on the trap                  */
-      context->trapOn(this->condition, (RexxInstructionCallBase *)this);
-    else
-                                       /* turn off the trap                 */
-      context->trapOff(this->condition);
-  }
-  else {                               /* normal form of CALL               */
-    if (instructionFlags&call_dynamic) {        /* dynamic form of call?             */
-                                       /* evaluate the variable             */
-      result = this->name->evaluate(context, stack);
-      stack->toss();                   /* toss the top item                 */
-      _name = REQUEST_STRING(result);   /* force to string form              */
-      context->traceResult(name);      /* trace if necessary                */
-                                       /* resolve potential builtins        */
-      builtin_index = RexxSource::resolveBuiltin(_name);
-      _target = OREF_NULL;              /* clear out the target              */
-      labels = context->getLabels();   /* get the labels table              */
-      if (labels != OREF_NULL)         /* have labels in the program?       */
-                                       /* look up label and go to normal    */
-                                       /* signal processing                 */
-        _target = (RexxInstruction *)(labels->at(_name));
-      if (_target != OREF_NULL)        /* found one?                        */
-        type = call_internal;          /* have an internal call             */
-                                       /* have a builtin by this name?      */
-      else if (builtin_index != NO_BUILTIN)
-        type = call_builtin;           /* set for a builtin                 */
-      else                             /* must be external                  */
-        type = call_external;          /* set as so                         */
+    ActivityManager::currentActivity->checkStackSpace();       /* have enough stack space?          */
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (this->condition != OREF_NULL)  /* is this the ON/OFF form?          */
+    {
+        if (instructionFlags&call_on_off)           /* ON form?                          */
+        {
+            /* turn on the trap                  */
+            context->trapOn(this->condition, (RexxInstructionCallBase *)this);
+        }
+        else
+        {
+            /* turn off the trap                 */
+            context->trapOff(this->condition);
+        }
     }
-    else {                             /* set up for a normal call          */
-      _target = this->target;           /* copy the target                   */
-      _name = (RexxString *)this->name; /* the name value                    */
-                                       /* and the builtin index             */
-      builtin_index = builtinIndex;
-      type = instructionFlags&call_type_mask;   /* just copy the type info           */
+    else                               /* normal form of CALL               */
+    {
+        if (instructionFlags&call_dynamic)        /* dynamic form of call?             */
+        {
+            /* evaluate the variable             */
+            result = this->name->evaluate(context, stack);
+            stack->toss();                   /* toss the top item                 */
+            _name = REQUEST_STRING(result);   /* force to string form              */
+            context->traceResult(name);      /* trace if necessary                */
+                                             /* resolve potential builtins        */
+            builtin_index = RexxSource::resolveBuiltin(_name);
+            _target = OREF_NULL;              /* clear out the target              */
+            labels = context->getLabels();   /* get the labels table              */
+            if (labels != OREF_NULL)         /* have labels in the program?       */
+            {
+                                             /* look up label and go to normal    */
+                                             /* signal processing                 */
+                _target = (RexxInstruction *)(labels->at(_name));
+            }
+            if (_target != OREF_NULL)        /* found one?                        */
+            {
+                type = call_internal;          /* have an internal call             */
+            }
+                                               /* have a builtin by this name?      */
+            else if (builtin_index != NO_BUILTIN)
+            {
+                type = call_builtin;           /* set for a builtin                 */
+            }
+            else                             /* must be external                  */
+            {
+                type = call_external;          /* set as so                         */
+            }
+        }
+        else                             /* set up for a normal call          */
+        {
+            _target = this->target;           /* copy the target                   */
+            _name = (RexxString *)this->name; /* the name value                    */
+            /* and the builtin index             */
+            builtin_index = builtinIndex;
+            type = instructionFlags&call_type_mask;   /* just copy the type info           */
+        }
+
+        argcount = argumentCount;          /* get the argument count            */
+        for (i = 0; i < argcount; i++)   /* loop through the argument list    */
+        {
+            /* real argument?                    */
+            if (this->arguments[i] != OREF_NULL)
+            {
+                /* evaluate the expression           */
+                RexxObject *argResult = this->arguments[i]->evaluate(context, stack);
+
+                /* trace if necessary                */
+                context->traceIntermediate(argResult, TRACE_PREFIX_ARGUMENT);
+            }
+            else
+            {
+                stack->push(OREF_NULL);        /* push an non-existent argument     */
+                                               /* trace if necessary                */
+                context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
+            }
+        }
+        switch (type)                    /* process various call types        */
+        {
+
+            case call_internal:              /* need to process internal routine  */
+                /* go process the internal call      */
+                context->internalCall(_target, argcount, stack, result);
+                break;
+
+            case call_builtin:               /* builtin function call             */
+                /* call the function                 */
+                result = (*(RexxSource::builtinTable[builtin_index]))(context, argcount, stack);
+                break;
+
+            case call_external:              /* need to call externally           */
+                /* go process the external call      */
+                context->externalCall(_name, argcount, stack, OREF_ROUTINENAME, result);
+                break;
+        }
+        if (result != OREF_NULL)         /* result returned?                  */
+        {
+            /* set the RESULT variable to the    */
+            /* message return value              */
+            context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
+            context->traceResult((RexxObject *)result);  /* trace if necessary                */
+        }
+        else                               /* drop the variable RESULT          */
+        {
+            context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
+        }
     }
-
-    argcount = argumentCount;          /* get the argument count            */
-    for (i = 0; i < argcount; i++) {   /* loop through the argument list    */
-                                       /* real argument?                    */
-      if (this->arguments[i] != OREF_NULL) {
-                                       /* evaluate the expression           */
-        RexxObject *argResult = this->arguments[i]->evaluate(context, stack);
-
-                                       /* trace if necessary                */
-        context->traceIntermediate(argResult, TRACE_PREFIX_ARGUMENT);
-      }
-      else {
-        stack->push(OREF_NULL);        /* push an non-existent argument     */
-                                       /* trace if necessary                */
-        context->traceIntermediate(OREF_NULLSTRING, TRACE_PREFIX_ARGUMENT);
-      }
-    }
-    switch (type) {                    /* process various call types        */
-
-      case call_internal:              /* need to process internal routine  */
-                                       /* go process the internal call      */
-        context->internalCall(_target, argcount, stack, result);
-        break;
-
-      case call_builtin:               /* builtin function call             */
-                                       /* call the function                 */
-        result = (*(RexxSource::builtinTable[builtin_index]))(context, argcount, stack);
-        break;
-
-      case call_external:              /* need to call externally           */
-                                       /* go process the external call      */
-        context->externalCall(_name, argcount, stack, OREF_ROUTINENAME, result);
-        break;
-    }
-    if (result != OREF_NULL) {         /* result returned?                  */
-                                       /* set the RESULT variable to the    */
-                                       /* message return value              */
-      context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, (RexxObject *)result);
-      context->traceResult((RexxObject *)result);  /* trace if necessary                */
-    }
-    else                               /* drop the variable RESULT          */
-      context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
-  }
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
 
 void RexxInstructionCall::trap(
@@ -273,27 +296,28 @@ void RexxInstructionCall::trap(
 /* Function:  Process a CALL ON trap                                          */
 /******************************************************************************/
 {
-  ProtectedObject result;
-  context->trapDelay(this->condition); /* put trap into delay state         */
+    ProtectedObject result;
+    context->trapDelay(this->condition); /* put trap into delay state         */
 
-  switch (instructionFlags&call_type_mask) {    /* process various call types        */
+    switch (instructionFlags&call_type_mask)    /* process various call types        */
+    {
 
-    case call_internal:                /* need to process internal routine  */
-                                       /* go process the internal call      */
-      context->internalCallTrap(this->target, conditionObj, result);
-      break;
+        case call_internal:                /* need to process internal routine  */
+            /* go process the internal call      */
+            context->internalCallTrap(this->target, conditionObj, result);
+            break;
 
-    case call_builtin:                 /* builtin function call             */
-                                       /* call the function                 */
-      (*(RexxSource::builtinTable[builtinIndex]))(context, 0, context->getStack());
-      break;
+        case call_builtin:                 /* builtin function call             */
+            /* call the function                 */
+            (*(RexxSource::builtinTable[builtinIndex]))(context, 0, context->getStack());
+            break;
 
-    case call_external:                /* need to call externally           */
-                                       /* go process the externnl call      */
-      context->externalCall((RexxString *)this->name, 0, context->getStack(), OREF_ROUTINENAME, result);
-      break;
-  }
-                                       /* restore the trap state            */
-  context->trapUndelay(this->condition);
+        case call_external:                /* need to call externally           */
+            /* go process the externnl call      */
+            context->externalCall((RexxString *)this->name, 0, context->getStack(), OREF_ROUTINENAME, result);
+            break;
+    }
+    /* restore the trap state            */
+    context->trapUndelay(this->condition);
 }
 

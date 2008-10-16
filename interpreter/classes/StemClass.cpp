@@ -533,11 +533,7 @@ void *RexxStem::operator new(size_t size)
 /******************************************************************************/
 {
     /* Get new object                    */
-    RexxObject *newObject = new_object(size);
-    /* default to stem behaviour         */
-    newObject->setBehaviour(TheStemBehaviour);
-    newObject->clearObject();            /* ensure the state data is clean    */
-    return newObject;                    /* and return                        */
+    return new_object(size, T_Stem);
 }
 
 

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ReplyInstruction.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Reply Parse Class                                                */
 /*                                                                            */
@@ -63,20 +63,25 @@ void RexxInstructionReply::execute(
 /* Function:  Execute a REXX REPLY instruction                                */
 /******************************************************************************/
 {
-  RexxObject *result;                  /* expression result                 */
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (!context->inMethod())            /* is this a method clause?          */
-                                       /* raise an error                    */
-    reportException(Error_Translation_reply);
-  if (this->expression != OREF_NULL) { /* given an expression value?        */
-                                       /* evaluate the expression           */
-    result = this->expression->evaluate(context, stack);
-    context->traceResult(result);      /* trace if necessary                */
-                                       /* get the expression value and tell */
-    context->reply(result);            /* the activation to reply with it   */
-  }
-  else
-    context->reply(OREF_NULL);         /* return with no value              */
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    RexxObject *result;                  /* expression result                 */
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (!context->inMethod())            /* is this a method clause?          */
+    {
+                                         /* raise an error                    */
+        reportException(Error_Translation_reply);
+    }
+    if (this->expression != OREF_NULL) /* given an expression value?        */
+    {
+        /* evaluate the expression           */
+        result = this->expression->evaluate(context, stack);
+        context->traceResult(result);      /* trace if necessary                */
+                                           /* get the expression value and tell */
+        context->reply(result);            /* the activation to reply with it   */
+    }
+    else
+    {
+        context->reply(OREF_NULL);         /* return with no value              */
+    }
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

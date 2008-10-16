@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                  ForwardInstruction.c      */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Forward Translator Class                                         */
 /*                                                                            */
@@ -100,89 +100,111 @@ void RexxInstructionForward::execute(
 /* Function:  Execute a forward instruction                                   */
 /******************************************************************************/
 {
-  RexxObject *_target;                  /* evaluated target                  */
-  RexxString *_message;                 /* evaluated message                 */
-  RexxObject *_superClass;              /* evaluated super class             */
-  RexxObject *result;                  /* message result                    */
-  RexxObject *temp;                    /* temporary object                  */
-  size_t      count = 0;               /* count of array expressions        */
-  size_t      i;                       /* loop counter                      */
-  RexxObject **_arguments;
+    RexxObject *_target;                  /* evaluated target                  */
+    RexxString *_message;                 /* evaluated message                 */
+    RexxObject *_superClass;              /* evaluated super class             */
+    RexxObject *result;                  /* message result                    */
+    RexxObject *temp;                    /* temporary object                  */
+    size_t      count = 0;               /* count of array expressions        */
+    size_t      i;                       /* loop counter                      */
+    RexxObject **_arguments;
 
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (!context->inMethod())            /* is this a method clause?          */
-                                       /* raise an error                    */
-    reportException(Error_Execution_forward);
-  _target = OREF_NULL;                  /* no object yet                     */
-  _message = OREF_NULL;                 /* no message over ride              */
-  _superClass = OREF_NULL;              /* no super class over ride          */
-  _arguments = OREF_NULL;               /* no argument over ride             */
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (!context->inMethod())            /* is this a method clause?          */
+    {
+                                         /* raise an error                    */
+        reportException(Error_Execution_forward);
+    }
+    _target = OREF_NULL;                  /* no object yet                     */
+    _message = OREF_NULL;                 /* no message over ride              */
+    _superClass = OREF_NULL;              /* no super class over ride          */
+    _arguments = OREF_NULL;               /* no argument over ride             */
 
-  if (this->target != OREF_NULL)       /* sent to a different object?       */
-                                       /* get the expression value          */
-    _target = this->target->evaluate(context, stack);
-  if (this->message != OREF_NULL) {    /* sending a different message?      */
-                                       /* get the expression value          */
-    temp = this->message->evaluate(context, stack);
-    _message = REQUEST_STRING(temp);    /* get the string version            */
-    _message = _message->upper();       /* and force to uppercase            */
-  }
-  if (this->superClass != OREF_NULL)   /* overriding the super class?       */
-                                       /* get the expression value          */
-    _superClass = this->superClass->evaluate(context, stack);
-  if (this->arguments != OREF_NULL) {  /* overriding the arguments?         */
-                                       /* get the expression value          */
-    temp = this->arguments->evaluate(context, stack);
-    /* get an array version              */
-    RexxArray *argArray = REQUEST_ARRAY(temp);
-    stack->push(argArray);           /* protect this on the stack         */
-                                       /* not an array item or a multiple   */
-                                       /* dimension one?                    */
-    if (argArray == TheNilObject || argArray->getDimension() != 1)
-                                       /* this is an error                  */
-      reportException(Error_Execution_forward_arguments);
-    count = argArray->size();          /* get the size                      */
-                                       /* omitted trailing arguments?       */
-    if (count != 0 && argArray->get(count) == OREF_NULL) {
-      count--;                         /* decrement the count               */
-      while (count > 0) {              /* loop down to first full one       */
-                                       /* find a real argument              */
-        if (argArray->get(count) != OREF_NULL)
-          break;                       /* break out of here                 */
-        count--;                       /* step back the count               */
-      }
+    if (this->target != OREF_NULL)       /* sent to a different object?       */
+    {
+                                         /* get the expression value          */
+        _target = this->target->evaluate(context, stack);
     }
-    _arguments = argArray->data();    /* point directly to the argument data */
-  }
-  if (this->array != OREF_NULL) {      /* have an array of extra info?      */
-    count = this->array->size();       /* get the expression count          */
-    for (i = 1; i <= count; i++) {     /* loop through the expression list  */
-        RexxObject *argElement = this->array->get(i);
-                                       /* real argument?                    */
-      if (argElement != OREF_NULL) {
-                                       /* evaluate the expression           */
-        argElement->evaluate(context, stack);
-      }
-      else {
-        /* just push a null reference for the missing ones */
-        stack->push(OREF_NULL);
-      }
+    if (this->message != OREF_NULL)    /* sending a different message?      */
+    {
+        /* get the expression value          */
+        temp = this->message->evaluate(context, stack);
+        _message = REQUEST_STRING(temp);    /* get the string version            */
+        _message = _message->upper();       /* and force to uppercase            */
     }
-    /* now point at the stacked values */
-    _arguments = stack->arguments(count);
-  }
-                                       /* go forward this                   */
-  result = context->forward(_target, _message, _superClass, _arguments, count, instructionFlags&forward_continue);
-  if (instructionFlags&forward_continue) {  /* not exiting?                      */
-    if (result != OREF_NULL) {         /* result returned?                  */
-      context->traceResult(result);    /* trace if necessary                */
-                                       /* set the RESULT variable to the    */
-                                       /* message return value              */
-      context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, result);
+    if (this->superClass != OREF_NULL)   /* overriding the super class?       */
+    {
+                                         /* get the expression value          */
+        _superClass = this->superClass->evaluate(context, stack);
     }
-    else                               /* drop the variable RESULT          */
-      context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
-    context->pauseInstruction();       /* do debug pause if necessary       */
-  }
+    if (this->arguments != OREF_NULL)  /* overriding the arguments?         */
+    {
+        /* get the expression value          */
+        temp = this->arguments->evaluate(context, stack);
+        /* get an array version              */
+        RexxArray *argArray = REQUEST_ARRAY(temp);
+        stack->push(argArray);           /* protect this on the stack         */
+        /* not an array item or a multiple   */
+        /* dimension one?                    */
+        if (argArray == TheNilObject || argArray->getDimension() != 1)
+        {
+            /* this is an error                  */
+            reportException(Error_Execution_forward_arguments);
+        }
+        count = argArray->size();          /* get the size                      */
+                                           /* omitted trailing arguments?       */
+        if (count != 0 && argArray->get(count) == OREF_NULL)
+        {
+            count--;                         /* decrement the count               */
+            while (count > 0)              /* loop down to first full one       */
+            {
+                /* find a real argument              */
+                if (argArray->get(count) != OREF_NULL)
+                {
+                    break;                       /* break out of here                 */
+                }
+                count--;                       /* step back the count               */
+            }
+        }
+        _arguments = argArray->data();    /* point directly to the argument data */
+    }
+    if (this->array != OREF_NULL)      /* have an array of extra info?      */
+    {
+        count = this->array->size();       /* get the expression count          */
+        for (i = 1; i <= count; i++)     /* loop through the expression list  */
+        {
+            RexxObject *argElement = this->array->get(i);
+            /* real argument?                    */
+            if (argElement != OREF_NULL)
+            {
+                /* evaluate the expression           */
+                argElement->evaluate(context, stack);
+            }
+            else
+            {
+                /* just push a null reference for the missing ones */
+                stack->push(OREF_NULL);
+            }
+        }
+        /* now point at the stacked values */
+        _arguments = stack->arguments(count);
+    }
+    /* go forward this                   */
+    result = context->forward(_target, _message, _superClass, _arguments, count, instructionFlags&forward_continue);
+    if (instructionFlags&forward_continue)  /* not exiting?                      */
+    {
+        if (result != OREF_NULL)         /* result returned?                  */
+        {
+            context->traceResult(result);    /* trace if necessary                */
+                                             /* set the RESULT variable to the    */
+                                             /* message return value              */
+            context->setLocalVariable(OREF_RESULT, VARIABLE_RESULT, result);
+        }
+        else                               /* drop the variable RESULT          */
+        {
+            context->dropLocalVariable(OREF_RESULT, VARIABLE_RESULT);
+        }
+        context->pauseInstruction();       /* do debug pause if necessary       */
+    }
 }
 

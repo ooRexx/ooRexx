@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              IfInstruction.c       */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive If Parse Class                                                   */
 /*                                                                            */
@@ -117,27 +117,29 @@ void RexxInstructionIf::execute(
 /* Function:  Execute a REXX IF instruction                                   */
 /******************************************************************************/
 {
-  RexxObject   *result;                /* expression evaluation result      */
+    context->traceInstruction(this);     /* trace if necessary                */
+                                         /* get the expression value          */
+    RexxObject *result = this->condition->evaluate(context, stack);
+    context->traceResult(result);        /* trace if necessary                */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-                                       /* get the expression value          */
-  result = this->condition->evaluate(context, stack);
-  context->traceResult(result);        /* trace if necessary                */
-
-  /* the comparison methods return either .true or .false, so we */
-  /* can to a quick test against those. */
-  if (result == TheFalseObject) {
-                                       /* we execute the ELSE branch        */
-    context->setNext(this->else_location->nextInstruction);
-  }
-  /* if it is not the True object, we need to perform a fuller */
-  /* evaluation of the result. */
-  else if (result != TheTrueObject) {
-                                           /* is the condition false?           */
-      if (!result->truthValue(Error_Logical_value_if))
-                                           /* we execute the ELSE branch        */
+    /* the comparison methods return either .true or .false, so we */
+    /* can to a quick test against those. */
+    if (result == TheFalseObject)
+    {
+        /* we execute the ELSE branch        */
         context->setNext(this->else_location->nextInstruction);
-  }
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    }
+    /* if it is not the True object, we need to perform a fuller */
+    /* evaluation of the result. */
+    else if (result != TheTrueObject)
+    {
+        /* is the condition false?           */
+        if (!result->truthValue(Error_Logical_value_if))
+        {
+            /* we execute the ELSE branch        */
+            context->setNext(this->else_location->nextInstruction);
+        }
+    }
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

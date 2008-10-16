@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                   ExpressionFunction.c     */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Function Invocation Class                                        */
 /*                                                                            */
@@ -64,24 +64,27 @@ RexxExpressionFunction::RexxExpressionFunction(
 /* Function:  Create a function expression object                             */
 /******************************************************************************/
 {
-  this->clearObject();                 /* initialize the object             */
-                                       /* NOTE: the name oref needs to      */
-                                       /* be filled in prior to doing any   */
-                                       /* thing that might cause a gc       */
-                                       /* set the default target            */
-  OrefSet(this, this->functionName, function_name);
-  /* save the argument count           */
-  this->argument_count = (uint8_t)argCount;
-  while (argCount > 0) {               /* now copy the argument pointers    */
-                                       /* in reverse order                  */
-    OrefSet(this, this->arguments[--argCount], arglist->pop());
-  }
-                                       /* set the builtin index for later   */
-  /* resolution step                   */
-  this->builtin_index = (uint16_t)builtinIndex;
+    this->clearObject();                 /* initialize the object             */
+                                         /* NOTE: the name oref needs to      */
+                                         /* be filled in prior to doing any   */
+                                         /* thing that might cause a gc       */
+                                         /* set the default target            */
+    OrefSet(this, this->functionName, function_name);
+    /* save the argument count           */
+    this->argument_count = (uint8_t)argCount;
+    while (argCount > 0)               /* now copy the argument pointers    */
+    {
+        /* in reverse order                  */
+        OrefSet(this, this->arguments[--argCount], arglist->pop());
+    }
+    /* set the builtin index for later   */
+    /* resolution step                   */
+    this->builtin_index = (uint16_t)builtinIndex;
 
-  if (string)                          /* have a string lookup?             */
-    this->flags |= function_nointernal;/* do not check for internal routines*/
+    if (string)                          /* have a string lookup?             */
+    {
+        this->flags |= function_nointernal;/* do not check for internal routines*/
+    }
 }
 
 void RexxExpressionFunction::resolve(
@@ -90,21 +93,28 @@ void RexxExpressionFunction::resolve(
 /* Function:  Resolve a function target location                              */
 /******************************************************************************/
 {
-                                       /* internal routines allowed?        */
-  if (!(this->flags&function_nointernal)) {
-    if (labels != OREF_NULL)           /* have a labels table?              */
-                                       /* check the label table             */
-      OrefSet(this, this->target, (RexxInstruction *)labels->at(this->functionName));
-    this->flags |= function_internal;  /* this is an internal call          */
-  }
-  if (this->target == OREF_NULL) {     /* not found yet?                    */
-                                       /* have a builtin function?          */
-    if (this->builtin_index != NO_BUILTIN) {
-      this->flags |= function_builtin; /* this is a builtin function        */
+    /* internal routines allowed?        */
+    if (!(this->flags&function_nointernal))
+    {
+        if (labels != OREF_NULL)           /* have a labels table?              */
+        {
+                                           /* check the label table             */
+            OrefSet(this, this->target, (RexxInstruction *)labels->at(this->functionName));
+        }
+        this->flags |= function_internal;  /* this is an internal call          */
     }
-    else
-      this->flags |= function_external;/* have an external routine          */
-  }
+    if (this->target == OREF_NULL)     /* not found yet?                    */
+    {
+        /* have a builtin function?          */
+        if (this->builtin_index != NO_BUILTIN)
+        {
+            this->flags |= function_builtin; /* this is a builtin function        */
+        }
+        else
+        {
+            this->flags |= function_external;/* have an external routine          */
+        }
+    }
 }
 
 void RexxExpressionFunction::live(size_t liveMark)
@@ -112,15 +122,15 @@ void RexxExpressionFunction::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
+    size_t i;                            /* loop counter                      */
+    size_t count;                        /* argument count                    */
 
-  memory_mark(this->functionName);
-  memory_mark(this->target);
-  for (i = 0, count = this->argument_count; i < count; i++)
-  {
-      memory_mark(this->arguments[i]);
-  }
+    memory_mark(this->functionName);
+    memory_mark(this->target);
+    for (i = 0, count = this->argument_count; i < count; i++)
+    {
+        memory_mark(this->arguments[i]);
+    }
 }
 
 void RexxExpressionFunction::liveGeneral(int reason)
@@ -128,15 +138,15 @@ void RexxExpressionFunction::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
+    size_t i;                            /* loop counter                      */
+    size_t count;                        /* argument count                    */
 
-  memory_mark_general(this->functionName);
-  memory_mark_general(this->target);
-  for (i = 0, count = this->argument_count; i < count; i++)
-  {
-      memory_mark_general(this->arguments[i]);
-  }
+    memory_mark_general(this->functionName);
+    memory_mark_general(this->target);
+    for (i = 0, count = this->argument_count; i < count; i++)
+    {
+        memory_mark_general(this->arguments[i]);
+    }
 }
 
 void RexxExpressionFunction::flatten(RexxEnvelope *envelope)
@@ -144,17 +154,19 @@ void RexxExpressionFunction::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
+    size_t i;                            /* loop counter                      */
+    size_t count;                        /* argument count                    */
 
-  setUpFlatten(RexxExpressionFunction)
+    setUpFlatten(RexxExpressionFunction)
 
-  flatten_reference(newThis->functionName, envelope);
-  flatten_reference(newThis->target, envelope);
-  for (i = 0, count = this->argument_count; i < count; i++)
-    flatten_reference(newThis->arguments[i], envelope);
+    flatten_reference(newThis->functionName, envelope);
+    flatten_reference(newThis->target, envelope);
+    for (i = 0, count = this->argument_count; i < count; i++)
+    {
+        flatten_reference(newThis->arguments[i], envelope);
+    }
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 RexxObject *RexxExpressionFunction::evaluate(
@@ -236,17 +248,14 @@ void *RexxExpressionFunction::operator new(size_t size,
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject *newObject;               /* newly create object               */
-
-  if (argCount == 0)
-  {
-      // allocate with singleton item chopped off
-      newObject = new_object(size - sizeof(RexxObject *), T_FunctionCallTerm);
-  }
-  else
-  {
-                                           /* Get new object                    */
-      newObject = new_object(size + (argCount - 1) * sizeof(RexxObject *), T_FunctionCallTerm);
-  }
-  return newObject;                    /* and return the function           */
+    if (argCount == 0)
+    {
+        // allocate with singleton item chopped off
+        return new_object(size - sizeof(RexxObject *), T_FunctionCallTerm);
+    }
+    else
+    {
+        /* Get new object                    */
+        return new_object(size + (argCount - 1) * sizeof(RexxObject *), T_FunctionCallTerm);
+    }
 }

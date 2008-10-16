@@ -498,10 +498,7 @@ void *RexxMessage::operator new(size_t size)
 /* Function:  Construct a new message object                                  */
 /******************************************************************************/
 {
-    RexxObject *newMessage = new_object(size);       /* Get new object                    */
-    /* Give new object its behaviour     */
-    newMessage->setBehaviour(TheMessageBehaviour);
-    return newMessage;                   /* return the new message object     */
+    return new_object(size, T_Message);       /* Get new object                    */
 }
 
 

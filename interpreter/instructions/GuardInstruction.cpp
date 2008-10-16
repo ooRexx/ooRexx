@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              GuardInstruction.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Guard Parse Class                                                */
 /*                                                                            */
@@ -56,25 +56,30 @@ RexxInstructionGuard::RexxInstructionGuard(
 /******************************************************************************/
 /* Function:  Complete initialization of a GUARD instruction object           */
 /******************************************************************************/
- {
-  size_t i;                            /* loop counter                      */
+{
+    size_t i;                            /* loop counter                      */
 
-                                       /* save the guard expression         */
-  OrefSet(this, this->expression, _expression);
-  if (on_off)                          /* this the ON form?                 */
-    instructionFlags |= guard_on_form; /* turn on the flag                  */
-  if (variable_list != OREF_NULL) {    /* got a guard expression?           */
-                                       /* get the variable size             */
-    variableCount = variable_list->size();
-                                       /* loop through the variable list    */
-    for (i = 1; i <= variableCount; i++)
-                                       /* copying each variable             */
-      OrefSet(this, this->variables[i-1], (RexxVariableBase *)(variable_list->get(i)));
-  }
-  else
-  {
-      variableCount = 0;                 /* no extra variables                */
-  }
+                                         /* save the guard expression         */
+    OrefSet(this, this->expression, _expression);
+    if (on_off)                          /* this the ON form?                 */
+    {
+        instructionFlags |= guard_on_form; /* turn on the flag                  */
+    }
+    if (variable_list != OREF_NULL)    /* got a guard expression?           */
+    {
+        /* get the variable size             */
+        variableCount = variable_list->size();
+        /* loop through the variable list    */
+        for (i = 1; i <= variableCount; i++)
+        {
+            /* copying each variable             */
+            OrefSet(this, this->variables[i-1], (RexxVariableBase *)(variable_list->get(i)));
+        }
+    }
+    else
+    {
+        variableCount = 0;                 /* no extra variables                */
+    }
 }
 
 void RexxInstructionGuard::execute(
@@ -84,60 +89,76 @@ void RexxInstructionGuard::execute(
 /* Function:  Execute a REXX GUARD instruction                              */
 /****************************************************************************/
 {
-  size_t      size;                    /* size of guard variables list      */
-  size_t      i;                       /* loop counter                      */
-  RexxObject *result;                  /* guard expression result           */
+    size_t      size;                    /* size of guard variables list      */
+    size_t      i;                       /* loop counter                      */
+    RexxObject *result;                  /* guard expression result           */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (!context->inMethod())            /* is this a method clause?          */
-                                       /* raise an error                    */
-    reportException(Error_Translation_guard_guard);
-                                       /* non-expression form?              */
-  else if (this->expression == OREF_NULL) {
-
-    if (!(instructionFlags&guard_on_form))      /* is this the OFF form?             */
-      context->guardOff();             /* set unguarded status in activation*/
-    else
-      context->guardOn();              /* set guarded status in activation  */
-  }
-  else {
-    size = variableCount;              /* get variable list count           */
-    for (i = 0; i < size; i++) {       /* loop through the variable list    */
-                                       /* set a guard on each variable,     */
-                                       /* counting the guards on each       */
-                                       /* variable that is actually exposed */
-      this->variables[i]->setGuard(context);
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (!context->inMethod())            /* is this a method clause?          */
+    {
+                                         /* raise an error                    */
+        reportException(Error_Translation_guard_guard);
     }
+    /* non-expression form?              */
+    else if (this->expression == OREF_NULL)
+    {
 
-    if (!(instructionFlags&guard_on_form)) /* is this the OFF form?             */
-      context->guardOff();             /* set unguarded status in activation*/
+        if (!(instructionFlags&guard_on_form))      /* is this the OFF form?             */
+        {
+            context->guardOff();             /* set unguarded status in activation*/
+        }
+        else
+        {
+            context->guardOn();              /* set guarded status in activation  */
+        }
+    }
     else
-      context->guardOn();              /* set guarded status in activation  */
+    {
+        size = variableCount;              /* get variable list count           */
+        for (i = 0; i < size; i++)       /* loop through the variable list    */
+        {
+            /* set a guard on each variable,     */
+            /* counting the guards on each       */
+            /* variable that is actually exposed */
+            this->variables[i]->setGuard(context);
+        }
 
-    ActivityManager::currentActivity->guardSet();       /* initialize the guard sem          */
-                                       /* get the expression value          */
-    result = this->expression->evaluate(context, stack);
-    context->traceResult(result);      /* trace if necessary                */
-                                       /* do first evaluation without       */
-                                       /* establishing any variable guards  */
-                                       /* false on first attempt?           */
-    if (!result->truthValue(Error_Logical_value_guard)) {
-      do {                             /* need to loop until true           */
-        stack->clear();                /* clear the expression stack        */
-        context->guardWait();       /* establish guards and wait         */
-        ActivityManager::currentActivity->guardSet();   /* initialize the guard sem          */
+        if (!(instructionFlags&guard_on_form)) /* is this the OFF form?             */
+        {
+            context->guardOff();             /* set unguarded status in activation*/
+        }
+        else
+        {
+            context->guardOn();              /* set guarded status in activation  */
+        }
+
+        ActivityManager::currentActivity->guardSet();       /* initialize the guard sem          */
+        /* get the expression value          */
         result = this->expression->evaluate(context, stack);
-        context->traceResult(result);  /* trace if necessary                */
-                                       /* while this is still false         */
-      } while (!result->truthValue(Error_Logical_value_guard));
+        context->traceResult(result);      /* trace if necessary                */
+                                           /* do first evaluation without       */
+                                           /* establishing any variable guards  */
+                                           /* false on first attempt?           */
+        if (!result->truthValue(Error_Logical_value_guard))
+        {
+            do                             /* need to loop until true           */
+            {
+                stack->clear();                /* clear the expression stack        */
+                context->guardWait();       /* establish guards and wait         */
+                ActivityManager::currentActivity->guardSet();   /* initialize the guard sem          */
+                result = this->expression->evaluate(context, stack);
+                context->traceResult(result);  /* trace if necessary                */
+                                               /* while this is still false         */
+            } while (!result->truthValue(Error_Logical_value_guard));
+        }
+        for (i = 0; i < size; i++)       /* loop through the variable list    */
+        {
+            /* set a guard on each variable,     */
+            /* counting the guards on each       */
+            /* variable that is actually exposed */
+            this->variables[i]->clearGuard(context);
+        }
     }
-    for (i = 0; i < size; i++) {       /* loop through the variable list    */
-                                       /* set a guard on each variable,     */
-                                       /* counting the guards on each       */
-                                       /* variable that is actually exposed */
-      this->variables[i]->clearGuard(context);
-    }
-  }
 }
 
 void RexxInstructionGuard::live(size_t liveMark)
@@ -145,15 +166,15 @@ void RexxInstructionGuard::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
+    size_t i;                            /* loop counter                      */
+    size_t count;                        /* argument count                    */
 
-  memory_mark(this->nextInstruction);  /* must be first one marked          */
-  for (i = 0, count = variableCount; i < count; i++)
-  {
-      memory_mark(this->variables[i]);
-  }
-  memory_mark(this->expression);
+    memory_mark(this->nextInstruction);  /* must be first one marked          */
+    for (i = 0, count = variableCount; i < count; i++)
+    {
+        memory_mark(this->variables[i]);
+    }
+    memory_mark(this->expression);
 }
 
 
@@ -163,16 +184,16 @@ void RexxInstructionGuard::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
+    size_t i;                            /* loop counter                      */
+    size_t count;                        /* argument count                    */
 
-                                       /* must be first one marked          */
-  memory_mark_general(this->nextInstruction);
-  memory_mark_general(this->expression);
-  for (i = 0, count = variableCount; i < count; i++)
-  {
-      memory_mark_general(this->variables[i]);
-  }
+                                         /* must be first one marked          */
+    memory_mark_general(this->nextInstruction);
+    memory_mark_general(this->expression);
+    for (i = 0, count = variableCount; i < count; i++)
+    {
+        memory_mark_general(this->variables[i]);
+    }
 }
 
 void RexxInstructionGuard::flatten(RexxEnvelope *envelope)
@@ -180,16 +201,18 @@ void RexxInstructionGuard::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  size_t i;                            /* loop counter                      */
-  size_t count;                        /* argument count                    */
+    size_t i;                            /* loop counter                      */
+    size_t count;                        /* argument count                    */
 
-  setUpFlatten(RexxInstructionGuard)
+    setUpFlatten(RexxInstructionGuard)
 
-  flatten_reference(newThis->nextInstruction, envelope);
-  flatten_reference(newThis->expression, envelope);
-  for (i = 0, count = variableCount; i < count; i++)
-    flatten_reference(newThis->variables[i], envelope);
+    flatten_reference(newThis->nextInstruction, envelope);
+    flatten_reference(newThis->expression, envelope);
+    for (i = 0, count = variableCount; i < count; i++)
+    {
+        flatten_reference(newThis->variables[i], envelope);
+    }
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 

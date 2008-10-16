@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                      TraceInstruction.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Trace Parse Class                                                */
 /*                                                                            */
@@ -103,31 +103,43 @@ void RexxInstructionTrace::execute(
 /* Function:  Execute a REXX TRACE instruction                                */
 /******************************************************************************/
 {
-  RexxObject  *result;                 /* expression result                 */
-  RexxString  *value;                  /* string version of expression      */
+    RexxObject  *result;                 /* expression result                 */
+    RexxString  *value;                  /* string version of expression      */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (traceSetting == 0)               /* interactive debug mode request?   */
-                                       /* turn on the skip mode             */
-    context->debugSkip(this->debugskip, (instructionFlags&trace_notrace) != 0);
-                                       /* non-dynamic form?                 */
-  else if (this->expression == OREF_NULL) {
-    if (!context->inDebug())           /* not in debug mode?                */
-                                       /* just change the setting           */
-      context->setTrace(traceSetting, instructionFlags & trace_debug_mask);
-    else
-      context->pauseInstruction();     /* do debug pause if necessary       */
-  }
-  else {                               /* need to evaluate an expression    */
-                                       /* get the expression value          */
-    result = this->expression->evaluate(context, stack);
-    value = REQUEST_STRING(result);    /* force to string form              */
-    context->traceResult(result);      /* trace if necessary                */
-    if (!context->inDebug())           /* not in debug mode?                */
-                                       /* now change the setting            */
-      context->setTrace(value);
-    else
-      context->pauseInstruction();     /* do debug pause if necessary       */
-  }
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (traceSetting == 0)               /* interactive debug mode request?   */
+    {
+                                         /* turn on the skip mode             */
+        context->debugSkip(this->debugskip, (instructionFlags&trace_notrace) != 0);
+    }
+    /* non-dynamic form?                 */
+    else if (this->expression == OREF_NULL)
+    {
+        if (!context->inDebug())           /* not in debug mode?                */
+        {
+                                           /* just change the setting           */
+            context->setTrace(traceSetting, instructionFlags & trace_debug_mask);
+        }
+        else
+        {
+            context->pauseInstruction();     /* do debug pause if necessary       */
+        }
+    }
+    else                               /* need to evaluate an expression    */
+    {
+        /* get the expression value          */
+        result = this->expression->evaluate(context, stack);
+        value = REQUEST_STRING(result);    /* force to string form              */
+        context->traceResult(result);      /* trace if necessary                */
+        if (!context->inDebug())           /* not in debug mode?                */
+        {
+                                           /* now change the setting            */
+            context->setTrace(value);
+        }
+        else
+        {
+            context->pauseInstruction();     /* do debug pause if necessary       */
+        }
+    }
 }
 

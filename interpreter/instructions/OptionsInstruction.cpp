@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              OptionsInstruction.c      */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Options Parse Class                                              */
 /*                                                                            */
@@ -63,29 +63,33 @@ void RexxInstructionOptions::execute(
 /* Function:  Execute a REXX OPTIONS instruction                              */
 /******************************************************************************/
 {
-  RexxObject *value;                   /* output value                      */
-  RexxString *stringVal;               /* string version of the value       */
-  size_t i;                            /* loop counter                      */
-  RexxString *word;                    /* current word                      */
+    RexxObject *value;                   /* output value                      */
+    RexxString *stringVal;               /* string version of the value       */
+    size_t i;                            /* loop counter                      */
+    RexxString *word;                    /* current word                      */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-                                       /* get the expression value          */
-  value = this->expression->evaluate(context, stack);
-  stringVal = REQUEST_STRING(value);   /* get the string version            */
-  context->traceResult(value);         /* trace the output value            */
-  for (i = 1; ;i++) {                  /* now process each word             */
-                                       /* get the next word                 */
-    word = (RexxString *)(stringVal->word(new_integer(i)));
-    if (word->getLength() == 0)        /* get the length of the word        */
-      break;                           /* if length of word = 0 then stop   */
+    context->traceInstruction(this);     /* trace if necessary                */
+                                         /* get the expression value          */
+    value = this->expression->evaluate(context, stack);
+    stringVal = REQUEST_STRING(value);   /* get the string version            */
+    context->traceResult(value);         /* trace the output value            */
+    for (i = 1; ;i++)                  /* now process each word             */
+    {
+        /* get the next word                 */
+        word = (RexxString *)(stringVal->word(new_integer(i)));
+        if (word->getLength() == 0)        /* get the length of the word        */
+        {
+            break;                           /* if length of word = 0 then stop   */
+        }
 
 #ifdef _DEBUG
-    if (word->strICompare("DUMPMEMORY")) {
-      memoryObject.dumpEnable = true;
-      memoryObject.dump();
-    }
+        if (word->strICompare("DUMPMEMORY"))
+        {
+            memoryObject.dumpEnable = true;
+            memoryObject.dump();
+        }
 #endif
-  }
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    }
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

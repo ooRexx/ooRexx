@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              LeaveInstruction.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Leave Parse Class                                                */
 /*                                                                            */
@@ -98,14 +98,18 @@ void RexxInstructionLeave::execute(
 /* Function:  Execute a REXX LEAVE instruction                              */
 /****************************************************************************/
 {
-  context->traceInstruction(this);     /* trace if necessary                */
-                                       /* is it a LEAVE?                    */
-  if (this->instructionType == KEYWORD_LEAVE)
-                                       /* tell the activation to exit the   */
-    context->leaveLoop(this->name);    /* appopriate loop                   */
-  else
-                                       /* tell the activation to iterate    */
-    context->iterate(this->name);      /* the appopriate loop               */
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    context->traceInstruction(this);     /* trace if necessary                */
+                                         /* is it a LEAVE?                    */
+    if (this->instructionType == KEYWORD_LEAVE)
+    {
+        /* tell the activation to exit the   */
+        context->leaveLoop(this->name);    /* appopriate loop                   */
+    }
+    else
+    {
+        /* tell the activation to iterate    */
+        context->iterate(this->name);      /* the appopriate loop               */
+    }
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

@@ -345,9 +345,6 @@ void *RexxStemVariable::operator new(size_t size)
 /******************************************************************************/
 {
                                          /* Get new object                    */
-    RexxObject *newObject = (RexxObject *)new_object(size);
-                                         /* Give new object its behaviour     */
-    newObject->setBehaviour(TheStemVariableTermBehaviour);
-    return newObject;                    /* return the new object             */
+    return new_object(size, T_StemVariableTerm);
 }
 

@@ -62,13 +62,10 @@ void *WeakReference::operator new(size_t size)
 /* Function:  Create a new pointer object                                     */
 /******************************************************************************/
 {
-  WeakReference *newObject;            /* new object                        */
-
                                        /* Get new object                    */
-  newObject = (WeakReference *) new_object(size, T_WeakReference);
-  // NB:  We can't just mark this as having no references.  There are operations
-  // where we need to have the marking routines called.
-  return (void *)newObject;            /* return the new object             */
+    // NB:  We can't just mark this as having no references.  There are operations
+    // where we need to have the marking routines called.
+    return new_object(size, T_WeakReference);
 }
 
 

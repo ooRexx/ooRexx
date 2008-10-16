@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              AssignmentInstruction.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Assignment Parse Class                                           */
 /*                                                                            */
@@ -106,19 +106,20 @@ void RexxInstructionAssignment::execute(
 /*            heavily executed instruction.                                   */
 /******************************************************************************/
 {
-  RexxObject *result;                  /* assignment expression result      */
-
-  if (context->tracingInstructions()) {/* tracing?                          */
-    context->traceInstruction(this);   /* trace if necessary                */
-                                       /* get the expression value          */
-    result = this->expression->evaluate(context, stack);
-    context->traceResult(result);      /* trace if necessary                */
-                                       /* do the assignment                 */
-    this->variable->assign(context, stack, result);
-    context->pauseInstruction();       /* do debug pause if necessary       */
-  }
-  else                                 /* non-traced execution              */
-                                       /* do the assignment                 */
-    this->variable->assign(context, stack, this->expression->evaluate(context, stack));
+    if (context->tracingInstructions())/* tracing?                          */
+    {
+        context->traceInstruction(this);   /* trace if necessary                */
+                                           /* get the expression value          */
+        RexxObject *result = this->expression->evaluate(context, stack);
+        context->traceResult(result);      /* trace if necessary                */
+                                           /* do the assignment                 */
+        this->variable->assign(context, stack, result);
+        context->pauseInstruction();       /* do debug pause if necessary       */
+    }
+    else                                 /* non-traced execution              */
+    {
+                                         /* do the assignment                 */
+        this->variable->assign(context, stack, this->expression->evaluate(context, stack));
+    }
 }
 

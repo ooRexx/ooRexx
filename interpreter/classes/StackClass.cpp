@@ -163,15 +163,15 @@ void *RexxStack::operator new(
     if (!temporary)                      /* normal stack object?              */
     {
         /* Get new object                    */
-        newObject = new_object(size + ((stksize-1) * sizeof(RexxObject *)));
+        newObject = new_object(size + ((stksize-1) * sizeof(RexxObject *)), T_Stack);
     }
     else
     {
         /* Get new object                    */
         newObject = memoryObject.temporaryObject(size + ((stksize-1) * sizeof(RexxObject *)));
+        /* set the behaviour                 */
+        newObject->setBehaviour(TheStackBehaviour);
     }
-    /* set the behaviour                 */
-    newObject->setBehaviour(TheStackBehaviour);
     return newObject;                    /* return the new object             */
 }
 
@@ -208,11 +208,7 @@ void *RexxSaveStack::operator new(
 /******************************************************************************/
 {
     /* Get new object                    */
-    RexxObject *newObject = new_object(size + ((allocSize-1) * sizeof(RexxObject *)));
-
-    /* set the behaviour                 */
-    newObject->setBehaviour(TheStackBehaviour);
-    return newObject;                    /* return the new object             */
+    return new_object(size + ((allocSize-1) * sizeof(RexxObject *)), T_Stack);
 }
 
 void RexxSaveStack::extend(

@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ExitInstruction.c     */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Exit Parse Class                                                 */
 /*                                                                            */
@@ -63,17 +63,18 @@ void RexxInstructionExit::execute(
 /* Function:  Execute a REXX EXIT instruction                               */
 /****************************************************************************/
 {
-  RexxObject *result;                  /* expression result                 */
-
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (this->expression != OREF_NULL) { /* given an expression value?        */
-                                       /* evaluate the expression           */
-    result = this->expression->evaluate(context, stack);
-    context->traceResult(result);      /* trace if necessary                */
-                                       /* get the expression value and tell */
-    context->exitFrom(result);         /* the activation to exit with it    */
-  }
-  else
-    context->exitFrom(OREF_NULL);      /* exit with no value                */
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (this->expression != OREF_NULL) /* given an expression value?        */
+    {
+        /* evaluate the expression           */
+        RexxObject *result = this->expression->evaluate(context, stack);
+        context->traceResult(result);      /* trace if necessary                */
+                                           /* get the expression value and tell */
+        context->exitFrom(result);         /* the activation to exit with it    */
+    }
+    else
+    {
+        context->exitFrom(OREF_NULL);      /* exit with no value                */
+    }
 }
 

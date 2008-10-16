@@ -1167,15 +1167,10 @@ void *RexxInteger::operator new(size_t size)
 /* Function:  Create a new integer object                                     */
 /******************************************************************************/
 {
-  RexxObject * newObject;              /* newly create object               */
-
-  newObject = new_object(size);        /* get a new object                  */
-                                       /* add in the integer behaviour, and */
-                                       /* make sure old2new knows about it  */
-  newObject->setBehaviour(TheIntegerBehaviour);
-  newObject->clearObject();            /* clear the object                  */
-  newObject->setHasNoReferences();     /* Tell GC, not to bother with Live  */
-  return newObject;                    /* return the new object.            */
+    RexxObject *newObject = new_object(size, T_Integer);        /* get a new object                  */
+    newObject->clearObject();            /* clear the object                  */
+    newObject->setHasNoReferences();     /* Tell GC, not to bother with Live  */
+    return newObject;                    /* return the new object.            */
 }
 
 void RexxInteger::createInstance()

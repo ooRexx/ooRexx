@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                      QueueInstruction.c    */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Queue Parse Class                                                */
 /*                                                                            */
@@ -55,12 +55,12 @@ RexxInstructionQueue::RexxInstructionQueue(
 /* Function:   Initialize a QUEUE instruction object                          */
 /******************************************************************************/
 {
-                                       /* process the expression            */
-  OrefSet(this, this->expression, _expression);
-  if (type == QUEUE_LIFO)
-  {
-      instructionFlags |= queue_lifo;
-  }
+    /* process the expression            */
+    OrefSet(this, this->expression, _expression);
+    if (type == QUEUE_LIFO)
+    {
+        instructionFlags |= queue_lifo;
+    }
 }
 
 void RexxInstructionQueue::execute(
@@ -70,20 +70,23 @@ void RexxInstructionQueue::execute(
 /* Function:  Execute a REXX QUEUE or PUSH instruction                      */
 /****************************************************************************/
 {
-  RexxObject *result;                  /* expression result                 */
-  RexxString *value;                   /* output value                      */
+    RexxObject *result;                  /* expression result                 */
+    RexxString *value;                   /* output value                      */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-  if (this->expression != OREF_NULL) { /* have an expression value?         */
-                                       /* get the expression value          */
-    result = this->expression->evaluate(context, stack);
-    value = REQUEST_STRING(result);    /* get the string version            */
-  }
-  else
-    value =  OREF_NULLSTRING;          /* use a NULL string                 */
-  context->traceResult(value);         /* trace if necessary                */
-                                       /* write out the line                */
-  ActivityManager::currentActivity->queue(context, value, ((instructionFlags&queue_lifo) != 0) ? QUEUE_LIFO : QUEUE_FIFO);
-  context->pauseInstruction();         /* do debug pause if necessary       */
+    context->traceInstruction(this);     /* trace if necessary                */
+    if (this->expression != OREF_NULL) /* have an expression value?         */
+    {
+        /* get the expression value          */
+        result = this->expression->evaluate(context, stack);
+        value = REQUEST_STRING(result);    /* get the string version            */
+    }
+    else
+    {
+        value =  OREF_NULLSTRING;          /* use a NULL string                 */
+    }
+    context->traceResult(value);         /* trace if necessary                */
+                                         /* write out the line                */
+    ActivityManager::currentActivity->queue(context, value, ((instructionFlags&queue_lifo) != 0) ? QUEUE_LIFO : QUEUE_FIFO);
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

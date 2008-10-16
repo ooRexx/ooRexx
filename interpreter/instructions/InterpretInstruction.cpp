@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              InterpretInstruction.c      */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Interpret Parse Class                                            */
 /*                                                                            */
@@ -64,19 +64,18 @@ void RexxInstructionInterpret::execute(
 /* Function:  Execute a REXX EXIT instruction                               */
 /****************************************************************************/
 {
-  RexxObject *result;                  /* evaluated expression              */
-  RexxString *interpretString;         /* string to interpret               */
-
-  context->traceInstruction(this);     /* trace if necessary                */
-                                       /* evaluate the expression           */
-  result = this->expression->evaluate(context, stack);
-                                       /* get the string version            */
-  interpretString = REQUEST_STRING(result);
-                                       /* trace if necessary                */
-  context->traceResult(interpretString);
-                                       /* no re-execute requested?          */
-  if (!context->conditionalPauseInstruction())
-                                       /* evaluate and interpret            */
-    context->interpret(interpretString);
+    context->traceInstruction(this);     /* trace if necessary                */
+                                         /* evaluate the expression           */
+    RexxObject *result = this->expression->evaluate(context, stack);
+    /* get the string version            */
+    RexxString *interpretString = REQUEST_STRING(result);
+    /* trace if necessary                */
+    context->traceResult(interpretString);
+    /* no re-execute requested?          */
+    if (!context->conditionalPauseInstruction())
+    {
+        /* evaluate and interpret            */
+        context->interpret(interpretString);
+    }
 }
 

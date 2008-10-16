@@ -113,12 +113,7 @@ void   *RexxSmartBuffer::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-    RexxObject * newObject;              /* newly allocated object            */
-
-    newObject = new_object(size);        /* get storage for a new object      */
-                                         /* Give new object its behaviour     */
-    newObject->setBehaviour(TheSmartBufferBehaviour);
-    return(void *)newObject;            /* return the new object             */
+    return new_object(size, T_SmartBuffer);        /* get storage for a new object      */
 }
 
 size_t RexxSmartBuffer::space()

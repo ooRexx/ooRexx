@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              otblock.c     */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive DO/SELECT block class                                            */
 /*                                                                            */
@@ -99,12 +99,7 @@ void * RexxDoBlock::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-  RexxObject * newObject;              /* newly created block               */
-
                                        /* Get new object                    */
-  newObject = new_object(sizeof(RexxDoBlock));
-                                       /* Give new object its behaviour     */
-  newObject->setBehaviour(TheDoBlockBehaviour);
-  return newObject;                    /* return the new method             */
+    return new_object(size, T_DoBlock);
 }
 

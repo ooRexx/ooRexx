@@ -463,12 +463,7 @@ void *RexxEnvelope::operator new(size_t size)
 /* Function:  Create a new translator object                                  */
 /******************************************************************************/
 {
-    RexxObject *newObject;               /* newly created object              */
-
     /* Get new object                    */
-    newObject = new_object(sizeof(RexxEnvelope));
-    /* Give new object its behaviour     */
-    newObject->setBehaviour(TheEnvelopeBehaviour);
-    return newObject;                    /* return the new object             */
+    return new_object(sizeof(RexxEnvelope), T_Envelope);
 }
 

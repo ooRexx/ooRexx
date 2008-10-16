@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                              ThenInstruction.c     */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Then Parse Class                                                 */
 /*                                                                            */
@@ -56,17 +56,21 @@ RexxInstructionThen::RexxInstructionThen(
 /* Function:  Initialize a THEN object                                        */
 /******************************************************************************/
 {
-  SourceLocation location;             /* clause token location             */
+    SourceLocation location;             /* clause token location             */
 
-  OrefSet(this, this->parent, _parent); /* remember the parent IF instruction*/
-                                       /* parent an IF instruction?         */
-  if (this->parent->instructionType == KEYWORD_IF)
-                                       /* this is an IF ... THEN clause     */
-    this->instructionType = KEYWORD_IFTHEN;
-  else                                 /* actually a WHEN                   */
-    this->instructionType = KEYWORD_WHENTHEN;
-  location = token->getLocation();     /* get the token location info       */
-  this->setLocation(location);         /* set the clause location also      */
+    OrefSet(this, this->parent, _parent); /* remember the parent IF instruction*/
+    /* parent an IF instruction?         */
+    if (this->parent->instructionType == KEYWORD_IF)
+    {
+        /* this is an IF ... THEN clause     */
+        this->instructionType = KEYWORD_IFTHEN;
+    }
+    else                                 /* actually a WHEN                   */
+    {
+        this->instructionType = KEYWORD_WHENTHEN;
+    }
+    location = token->getLocation();     /* get the token location info       */
+    this->setLocation(location);         /* set the clause location also      */
 }
 
 void  RexxInstructionThen::setEndInstruction(

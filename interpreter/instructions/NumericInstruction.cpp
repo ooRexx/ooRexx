@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                  NumericInstruction.c      */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Numeric Parse Class                                              */
 /*                                                                            */
@@ -80,87 +80,103 @@ void RexxInstructionNumeric::execute(
 /* Function:  Execute a REXX LEAVE instruction                              */
 /****************************************************************************/
 {
-  RexxObject  *result;                 /* expression evaluation result      */
-  RexxString  *stringResult;           /* converted string                  */
-  stringsize_t setting;                /* binary form of the setting        */
+    RexxObject  *result;                 /* expression evaluation result      */
+    RexxString  *stringResult;           /* converted string                  */
+    stringsize_t setting;                /* binary form of the setting        */
 
-  context->traceInstruction(this);     /* trace if necessary                */
-                                       /* process the different types of    */
-  switch (instructionFlags & numeric_type_mask)           /* numeric instruction               */
-  {
-    case numeric_digits:               /* NUMERIC DIGITS instruction        */
-                                       /* resetting to default digits?      */
-      if (this->expression == OREF_NULL)
-                                       /* just set it to the default        */
-        context->setDigits(Numerics::DEFAULT_DIGITS);
-      else {                           /* need to evaluate an expression    */
-                                       /* get the expression value          */
-        result = this->expression->evaluate(context, stack);
-        context->traceResult(result);  /* trace if necessary                */
-                                       /* bad value?                        */
-        if (!result->requestUnsignedNumber(setting, number_digits()) || setting < 1)
-        {
-                                       /* report an exception               */
-            reportException(Error_Invalid_whole_number_digits, result);
-        }
-                                       /* problem with the fuzz setting?    */
-        if (setting <= context->fuzz()) {
-                                       /* this is an error                  */
-          reportException(Error_Expression_result_digits, setting, context->fuzz());
-        }
-        context->setDigits(setting);   /* now adjust the setting            */
-      }
-      break;
+    context->traceInstruction(this);     /* trace if necessary                */
+                                         /* process the different types of    */
+    switch (instructionFlags & numeric_type_mask)           /* numeric instruction               */
+    {
+        case numeric_digits:               /* NUMERIC DIGITS instruction        */
+            /* resetting to default digits?      */
+            if (this->expression == OREF_NULL)
+            {
+                /* just set it to the default        */
+                context->setDigits(Numerics::DEFAULT_DIGITS);
+            }
+            else                           /* need to evaluate an expression    */
+            {
+                /* get the expression value          */
+                result = this->expression->evaluate(context, stack);
+                context->traceResult(result);  /* trace if necessary                */
+                                               /* bad value?                        */
+                if (!result->requestUnsignedNumber(setting, number_digits()) || setting < 1)
+                {
+                    /* report an exception               */
+                    reportException(Error_Invalid_whole_number_digits, result);
+                }
+                /* problem with the fuzz setting?    */
+                if (setting <= context->fuzz())
+                {
+                    /* this is an error                  */
+                    reportException(Error_Expression_result_digits, setting, context->fuzz());
+                }
+                context->setDigits(setting);   /* now adjust the setting            */
+            }
+            break;
 
-    case numeric_fuzz:                 /* NUMERIC FUZZ instruction          */
-                                       /* resetting to default fuzz?        */
-      if (this->expression == OREF_NULL)
-        context->setFuzz(Numerics::DEFAULT_FUZZ);/* just set it to the default        */
-      else {                           /* need to evaluate an expression    */
-                                       /* get the expression value          */
-        result = this->expression->evaluate(context, stack);
-        context->traceResult(result);  /* trace if necessary                */
-                                       /* bad value?                        */
-        if (!result->requestUnsignedNumber(setting, number_digits()))
-        {
-                                       /* report an exception               */
-            reportException(Error_Invalid_whole_number_fuzz, result);
-        }
-                                       /* problem with the digits setting?  */
-        if (setting >= context->digits())
-        {
-                                       /* and issue the error               */
-            reportException(Error_Expression_result_digits, context->digits(), setting);
-        }
-        context->setFuzz(setting);     /* set the new value                 */
-      }
-      break;
+        case numeric_fuzz:                 /* NUMERIC FUZZ instruction          */
+            /* resetting to default fuzz?        */
+            if (this->expression == OREF_NULL)
+            {
+                context->setFuzz(Numerics::DEFAULT_FUZZ);/* just set it to the default        */
+            }
+            else                           /* need to evaluate an expression    */
+            {
+                /* get the expression value          */
+                result = this->expression->evaluate(context, stack);
+                context->traceResult(result);  /* trace if necessary                */
+                                               /* bad value?                        */
+                if (!result->requestUnsignedNumber(setting, number_digits()))
+                {
+                    /* report an exception               */
+                    reportException(Error_Invalid_whole_number_fuzz, result);
+                }
+                /* problem with the digits setting?  */
+                if (setting >= context->digits())
+                {
+                    /* and issue the error               */
+                    reportException(Error_Expression_result_digits, context->digits(), setting);
+                }
+                context->setFuzz(setting);     /* set the new value                 */
+            }
+            break;
 
-    case numeric_form:                 /* NUMERIC FORM instruction          */
-                                       /* non-VALUE form?                   */
-      if (this->expression == OREF_NULL)
-                                       /* just set it to the default        */
-        context->setForm(instructionFlags&numeric_engineering ? Numerics::FORM_ENGINEERING : Numerics::FORM_SCIENTIFIC);
-      else {                           /* need to evaluate an expression    */
-                                       /* get the expression value          */
-        result = this->expression->evaluate(context, stack);
-                                       /* get the string version            */
-        stringResult = REQUEST_STRING(result);
-                                       /* trace if necessary                */
-        context->traceResult(stringResult);
-                                       /* Scientific form?                  */
-        if (stringResult->strCompare(CHAR_SCIENTIFIC))
-                                       /* set the proper form               */
-          context->setForm(Numerics::FORM_SCIENTIFIC);
-                                       /* Scientific form?                  */
-        else if (stringResult->strCompare(CHAR_ENGINEERING))
-                                       /* set the engineering form          */
-          context->setForm(Numerics::FORM_ENGINEERING);
-        else
-                                       /* report an exception               */
-          reportException(Error_Invalid_subkeyword_form, result);
-      }
-      break;
-  }
-  context->pauseInstruction();         /* do debug pause if necessary       */
+        case numeric_form:                 /* NUMERIC FORM instruction          */
+            /* non-VALUE form?                   */
+            if (this->expression == OREF_NULL)
+            {
+                /* just set it to the default        */
+                context->setForm(instructionFlags&numeric_engineering ? Numerics::FORM_ENGINEERING : Numerics::FORM_SCIENTIFIC);
+            }
+            else                           /* need to evaluate an expression    */
+            {
+                /* get the expression value          */
+                result = this->expression->evaluate(context, stack);
+                /* get the string version            */
+                stringResult = REQUEST_STRING(result);
+                /* trace if necessary                */
+                context->traceResult(stringResult);
+                /* Scientific form?                  */
+                if (stringResult->strCompare(CHAR_SCIENTIFIC))
+                {
+                    /* set the proper form               */
+                    context->setForm(Numerics::FORM_SCIENTIFIC);
+                }
+                /* Scientific form?                  */
+                else if (stringResult->strCompare(CHAR_ENGINEERING))
+                {
+                    /* set the engineering form          */
+                    context->setForm(Numerics::FORM_ENGINEERING);
+                }
+                else
+                {
+                    /* report an exception               */
+                    reportException(Error_Invalid_subkeyword_form, result);
+                }
+            }
+            break;
+    }
+    context->pauseInstruction();         /* do debug pause if necessary       */
 }
