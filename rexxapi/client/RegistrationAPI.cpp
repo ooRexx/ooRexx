@@ -371,7 +371,7 @@ RexxReturnCode RexxEntry RexxDeregisterExit(
 RexxReturnCode RexxEntry RexxQueryExit(
   const char *      name,              /* Environment Name           */
   const char *      module,            /* Associated Name (of DLL)   */
-  size_t             *exist,           /* existence information      */
+  unsigned short     *exist,           /* existence information      */
   char               *userWord)        /* data from registration     */
 {
     *exist = 0;
