@@ -2255,7 +2255,7 @@ bool RexxActivity::callObjectFunctionExit(
         /* get number of args                */
         exit_parm.rxfnc_argc = argcount;
         // the argument pointers get passed as is
-        exit_parm.rxfnc_argv = (REXXOBJECT *)arguments;
+        exit_parm.rxfnc_argv = (RexxObjectPtr *)arguments;
         // no result value
         exit_parm.rxfnc_retc = NULLOBJECT;
         /* call the handler                  */
@@ -2316,7 +2316,7 @@ bool RexxActivity::callScriptingExit(
         /* get number of args                */
         exit_parm.rxfnc_argc = argcount;
         // the argument pointers get passed as is
-        exit_parm.rxfnc_argv = (REXXOBJECT *)arguments;
+        exit_parm.rxfnc_argv = (RexxObjectPtr *)arguments;
         // no result value
         exit_parm.rxfnc_retc = NULLOBJECT;
         /* call the handler                  */
@@ -2678,7 +2678,7 @@ bool RexxActivity::callValueExit(
         variableName->toRxstring(exit_parm.variable_name);
         // the value is returned as an object, and the old value is
         // also passed that way
-        exit_parm.value = (REXXOBJECT)newValue;
+        exit_parm.value = (RexxObjectPtr)newValue;
                                            /* call the handler                  */
         if (!callExit(activation, "RXVAL", RXVAL, RXVALCALL, (void *)&exit_parm))
         {

@@ -77,9 +77,15 @@ typedef int RexxReturnCode;           // API return type
 /******************************************************************************/
 typedef const char *CSTRING;          /* pointer to zero-terminated string */
 typedef void *POINTER;
-typedef void *REXXOBJECT;             /* reference to a REXX object        */
-typedef REXXOBJECT STRING;            /* REXX string object                */
-typedef REXXOBJECT REXXSTRING;        /* REXX string object                */
+
+#ifdef __cplusplus
+
+class _RexxObjectPtr {};
+typedef _RexxObjectPtr *RexxObjectPtr;
+#else
+struct _RexxObjectPtr;
+typedef struct _RexxObjectPtr *RexxObjectPtr;
+#endif
 
 /******************************************************************************/
 /* Constant values (for general use)                                          */
@@ -398,8 +404,8 @@ typedef  struct _RXOFNCCAL_PARM {      /* fnc */
    RXOFNC_FLAGS      rxfnc_flags ;     /* function flags             */
    CONSTRXSTRING     rxfnc_name;       // the called function name
    size_t            rxfnc_argc;       /* Number of args in list.    */
-   REXXOBJECT       *rxfnc_argv;       /* Pointer to argument list.  */
-   REXXOBJECT        rxfnc_retc;       /* Return value.              */
+   RexxObjectPtr    *rxfnc_argv;       /* Pointer to argument list.  */
+   RexxObjectPtr     rxfnc_retc;       /* Return value.              */
 }  RXOFNCCAL_PARM;
 
 
@@ -416,8 +422,8 @@ typedef  struct _RXEXFCAL_PARM {        /* fnc */
    RXEXF_FLAGS       rxfnc_flags ;     /* function flags             */
    CONSTRXSTRING     rxfnc_name;       // the called function name
    size_t            rxfnc_argc;       /* Number of args in list.    */
-   REXXOBJECT       *rxfnc_argv;       /* Pointer to argument list.  */
-   REXXOBJECT        rxfnc_retc;       /* Return value.              */
+   RexxObjectPtr    *rxfnc_argv;       /* Pointer to argument list.  */
+   RexxObjectPtr     rxfnc_retc;       /* Return value.              */
 }  RXEXFCAL_PARM;
 
 /***    Subfunction RXCMDHST -- Process Host Commands     */
@@ -526,14 +532,14 @@ typedef struct _RXTRCTST_PARM {        /* tst */
 
 typedef  struct _RXVARNOVALUE_PARM {   /* var */
    CONSTRXSTRING     variable_name;    // the request variable name
-   REXXOBJECT        value;            // returned variable value
+   RexxObjectPtr     value;            // returned variable value
 }  RXVARNOVALUE_PARM;
 
 
 typedef  struct _RXVALCALL_PARM {      /* val */
    CONSTRXSTRING     selector;         // the environment selector name
    CONSTRXSTRING     variable_name;    // the request variable name
-   REXXOBJECT        value;            // returned variable value
+   RexxObjectPtr     value;            // returned variable value
 }  RXVALCALL_PARM;
 
 /* This typedef simplifies coding of an Exit handler.                */

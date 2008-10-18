@@ -243,7 +243,6 @@ END_EXTERN_C()
 
 #ifdef __cplusplus
 
-class _RexxObjectPtr {};
 class _RexxStringObject : public _RexxObjectPtr {};
 class _RexxBufferStringObject : public _RexxStringObject {};
 class _RexxArrayObject : public _RexxObjectPtr {};
@@ -257,7 +256,6 @@ class _RexxDirectoryObject : public _RexxObjectPtr {};
 class _RexxSupplierObject : public _RexxObjectPtr {};
 class _RexxStemObject : public _RexxObjectPtr {};
 
-typedef _RexxObjectPtr *RexxObjectPtr;
 typedef _RexxStringObject *RexxStringObject;
 typedef _RexxBufferStringObject *RexxBufferStringObject;
 typedef _RexxArrayObject *RexxArrayObject;
@@ -273,7 +271,6 @@ typedef _RexxStemObject *RexxStemObject;
 
 #else
 
-struct _RexxObjectPtr;
 struct _RexxStringObject;
 struct _RexxArrayObject;
 struct _RexxBufferObject;
@@ -286,7 +283,6 @@ struct _RexxDirectoryObject;
 struct _RexxSupplierObject;
 struct _RexxStemObject;
 
-typedef struct _RexxObjectPtr *RexxObjectPtr;
 typedef struct _RexxStringObject *RexxStringObject;
 typedef struct _RexxBufferStringObject *RexxBufferStringObject;
 typedef struct _RexxArrayObject *RexxArrayObject;
