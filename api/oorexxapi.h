@@ -881,6 +881,10 @@ struct RexxThreadContext_
     {
         return functions->WholeNumberToObject(this, n);
     }
+    RexxObjectPtr WholeNumber(wholenumber_t n)
+    {
+        return functions->WholeNumberToObject(this, n);
+    }
     RexxObjectPtr UintptrToObject(uintptr_t n)
     {
         return functions->UintptrToObject(this, n);
@@ -893,11 +897,23 @@ struct RexxThreadContext_
     {
         return functions->StringSizeToObject(this, n);
     }
+    RexxObjectPtr StringSize(size_t n)
+    {
+        return functions->StringSizeToObject(this, n);
+    }
     logical_t ObjectToWholeNumber(RexxObjectPtr o, wholenumber_t *n)
     {
         return functions->ObjectToWholeNumber(this, o, n);
     }
+    logical_t WholeNumber(RexxObjectPtr o, wholenumber_t *n)
+    {
+        return functions->ObjectToWholeNumber(this, o, n);
+    }
     logical_t ObjectToStringSize(RexxObjectPtr o, size_t *n)
+    {
+        return functions->ObjectToStringSize(this, o, n);
+    }
+    logical_t StringSize(RexxObjectPtr o, size_t *n)
     {
         return functions->ObjectToStringSize(this, o, n);
     }
@@ -1427,6 +1443,10 @@ struct RexxMethodContext_
     {
         return threadContext->WholeNumberToObject(n);
     }
+    RexxObjectPtr WholeNumber(wholenumber_t n)
+    {
+        return threadContext->WholeNumberToObject(n);
+    }
     RexxObjectPtr UintptrToObject(uintptr_t n)
     {
         return threadContext->UintptrToObject(n);
@@ -1451,11 +1471,23 @@ struct RexxMethodContext_
     {
         return threadContext->StringSizeToObject(u);
     }
+    RexxObjectPtr StringSize(size_t u)
+    {
+        return threadContext->StringSizeToObject(u);
+    }
     logical_t ObjectToWholeNumber(RexxObjectPtr o, wholenumber_t *n)
     {
         return threadContext->ObjectToWholeNumber(o, n);
     }
+    logical_t WholeNumber(RexxObjectPtr o, wholenumber_t *n)
+    {
+        return threadContext->ObjectToWholeNumber(o, n);
+    }
     logical_t ObjectToStringSize(RexxObjectPtr o, size_t *n)
+    {
+        return threadContext->ObjectToStringSize(o, n);
+    }
+    logical_t StringSize(RexxObjectPtr o, size_t *n)
     {
         return threadContext->ObjectToStringSize(o, n);
     }
@@ -2032,6 +2064,10 @@ struct RexxCallContext_
     {
         return threadContext->WholeNumberToObject(n);
     }
+    RexxObjectPtr WholeNumber(wholenumber_t n)
+    {
+        return threadContext->WholeNumberToObject(n);
+    }
     RexxObjectPtr UintptrToObject(uintptr_t n)
     {
         return threadContext->UintptrToObject(n);
@@ -2056,11 +2092,23 @@ struct RexxCallContext_
     {
         return threadContext->StringSizeToObject(u);
     }
+    RexxObjectPtr StringSize(size_t u)
+    {
+        return threadContext->StringSizeToObject(u);
+    }
     logical_t ObjectToWholeNumber(RexxObjectPtr o, wholenumber_t *n)
     {
         return threadContext->ObjectToWholeNumber(o, n);
     }
+    logical_t WholeNumber(RexxObjectPtr o, wholenumber_t *n)
+    {
+        return threadContext->ObjectToWholeNumber(o, n);
+    }
     logical_t ObjectToStringSize(RexxObjectPtr o, size_t *n)
+    {
+        return threadContext->ObjectToStringSize(o, n);
+    }
+    logical_t StringSize(RexxObjectPtr o, size_t *n)
     {
         return threadContext->ObjectToStringSize(o, n);
     }
@@ -2643,6 +2691,10 @@ struct RexxExitContext_
     {
         return threadContext->WholeNumberToObject(n);
     }
+    RexxObjectPtr WholeNumber(wholenumber_t n)
+    {
+        return threadContext->WholeNumberToObject(n);
+    }
     RexxObjectPtr UintptrToObject(uintptr_t n)
     {
         return threadContext->UintptrToObject(n);
@@ -2667,11 +2719,23 @@ struct RexxExitContext_
     {
         return threadContext->StringSizeToObject(u);
     }
+    RexxObjectPtr StringSize(size_t u)
+    {
+        return threadContext->StringSizeToObject(u);
+    }
     logical_t ObjectToWholeNumber(RexxObjectPtr o, wholenumber_t *n)
     {
         return threadContext->ObjectToWholeNumber(o, n);
     }
+    logical_t WholeNumber(RexxObjectPtr o, wholenumber_t *n)
+    {
+        return threadContext->ObjectToWholeNumber(o, n);
+    }
     logical_t ObjectToStringSize(RexxObjectPtr o, size_t *n)
+    {
+        return threadContext->ObjectToStringSize(o, n);
+    }
+    logical_t StringSize(RexxObjectPtr o, size_t *n)
     {
         return threadContext->ObjectToStringSize(o, n);
     }
