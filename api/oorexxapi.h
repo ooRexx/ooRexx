@@ -1001,6 +1001,14 @@ struct RexxThreadContext_
     {
         return functions->NewStringFromAsciiz(this, s);
     }
+    RexxStringObject String(CSTRING s, size_t len)
+    {
+        return functions->NewString(this, s, len);
+    }
+    RexxStringObject String(CSTRING s)
+    {
+        return functions->NewStringFromAsciiz(this, s);
+    }
     RexxStringObject StringUpper(RexxStringObject s)
     {
         return functions->StringUpper(this, s);
@@ -1100,6 +1108,22 @@ struct RexxThreadContext_
         return functions->ArrayOfThree(this, o1, o2, o3);
     }
     RexxArrayObject ArrayOfFour(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
+    {
+        return functions->ArrayOfFour(this, o1, o2, o3, o4);
+    }
+    RexxArrayObject Array(RexxObjectPtr o)
+    {
+        return functions->ArrayOfOne(this, o);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2)
+    {
+        return functions->ArrayOfTwo(this, o1, o2);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3)
+    {
+        return functions->ArrayOfThree(this, o1, o2, o3);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
     {
         return functions->ArrayOfFour(this, o1, o2, o3, o4);
     }
@@ -1524,6 +1548,14 @@ struct RexxMethodContext_
     {
         return threadContext->NewStringFromAsciiz(s);
     }
+    RexxStringObject String(CSTRING s, size_t len)
+    {
+        return threadContext->NewString(s, len);
+    }
+    RexxStringObject String(CSTRING s)
+    {
+        return threadContext->NewStringFromAsciiz(s);
+    }
     RexxStringObject StringUpper(RexxStringObject s)
     {
         return threadContext->StringUpper(s);
@@ -1623,6 +1655,22 @@ struct RexxMethodContext_
         return threadContext->ArrayOfThree(o1, o2, o3);
     }
     RexxArrayObject ArrayOfFour(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
+    {
+        return threadContext->ArrayOfFour(o1, o2, o3, o4);
+    }
+    RexxArrayObject Array(RexxObjectPtr o)
+    {
+        return threadContext->ArrayOfOne(o);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2)
+    {
+        return threadContext->ArrayOfTwo(o1, o2);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3)
+    {
+        return threadContext->ArrayOfThree(o1, o2, o3);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
     {
         return threadContext->ArrayOfFour(o1, o2, o3, o4);
     }
@@ -2105,6 +2153,14 @@ struct RexxCallContext_
     {
         return threadContext->NewStringFromAsciiz(s);
     }
+    RexxStringObject String(CSTRING s, size_t len)
+    {
+        return threadContext->NewString(s, len);
+    }
+    RexxStringObject String(CSTRING s)
+    {
+        return threadContext->NewStringFromAsciiz(s);
+    }
     RexxStringObject StringUpper(RexxStringObject s)
     {
         return threadContext->StringUpper(s);
@@ -2204,6 +2260,22 @@ struct RexxCallContext_
         return threadContext->ArrayOfThree(o1, o2, o3);
     }
     RexxArrayObject ArrayOfFour(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
+    {
+        return threadContext->ArrayOfFour(o1, o2, o3, o4);
+    }
+    RexxArrayObject Array(RexxObjectPtr o)
+    {
+        return threadContext->ArrayOfOne(o);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2)
+    {
+        return threadContext->ArrayOfTwo(o1, o2);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3)
+    {
+        return threadContext->ArrayOfThree(o1, o2, o3);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
     {
         return threadContext->ArrayOfFour(o1, o2, o3, o4);
     }
@@ -2692,6 +2764,14 @@ struct RexxExitContext_
     {
         return threadContext->NewStringFromAsciiz(s);
     }
+    RexxStringObject String(CSTRING s, size_t len)
+    {
+        return threadContext->NewString(s, len);
+    }
+    RexxStringObject String(CSTRING s)
+    {
+        return threadContext->NewStringFromAsciiz(s);
+    }
     RexxStringObject StringUpper(RexxStringObject s)
     {
         return threadContext->StringUpper(s);
@@ -2791,6 +2871,22 @@ struct RexxExitContext_
         return threadContext->ArrayOfThree(o1, o2, o3);
     }
     RexxArrayObject ArrayOfFour(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
+    {
+        return threadContext->ArrayOfFour(o1, o2, o3, o4);
+    }
+    RexxArrayObject Array(RexxObjectPtr o)
+    {
+        return threadContext->ArrayOfOne(o);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2)
+    {
+        return threadContext->ArrayOfTwo(o1, o2);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3)
+    {
+        return threadContext->ArrayOfThree(o1, o2, o3);
+    }
+    RexxArrayObject Array(RexxObjectPtr o1, RexxObjectPtr o2, RexxObjectPtr o3, RexxObjectPtr o4)
     {
         return threadContext->ArrayOfFour(o1, o2, o3, o4);
     }

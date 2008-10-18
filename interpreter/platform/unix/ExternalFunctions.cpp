@@ -268,17 +268,17 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
     {
         case FILESPEC_PATH:                /* extract the path                  */
             {
-                return context->NewString(pathStart, pathEnd - pathStart);
+                return context->String(pathStart, pathEnd - pathStart);
             }
 
         case FILESPEC_NAME:                  /* extract the file name               */
             {                                /* everything to right of slash        */
-                return context->NewString(nameStart, endPtr - nameStart);
+                return context->String(nameStart, endPtr - nameStart);
             }
 
         case FILESPEC_LOCATION:          /* extract the file name               */
             {                                /* everything to left of slash        */
-                return context->NewString(name, pathEnd - name);
+                return context->String(name, pathEnd - name);
             }
 
         case FILESPEC_EXTENSION:           // extract the file extension
@@ -290,7 +290,7 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
                 {
                     // we don't extract the period
                     lastDot++;
-                    return context->NewString(lastDot, endPtr - lastDot);
+                    return context->String(lastDot, endPtr - lastDot);
                 }
                 else
                 {
@@ -304,8 +304,8 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
             optionChar[0] = *option;
             optionChar[1] = '\0';
 
-            RexxArrayObject subs = context->ArrayOfFour(context->NewStringFromAsciiz("FILESPEC"), context->WholeNumberToObject(1),
-                context->NewStringFromAsciiz("ELNP"), context->NewStringFromAsciiz(optionChar));
+            RexxArrayObject subs = context->Array(context->String("FILESPEC"), context->WholeNumberToObject(1),
+                context->String("ELNP"), context->String(optionChar));
             /* raise an error                    */
             context->RaiseException(Rexx_Error_Incorrect_call_list, subs);
             return NULLOBJECT;
