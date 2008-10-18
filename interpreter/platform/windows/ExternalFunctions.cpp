@@ -46,11 +46,6 @@
 /*    SysExternalFunction- Method for searching/invoking an external function */
 /*    sysMessageBox - Method to pop up message box                            */
 /*                                                                            */
-/*  Internal routines:                                                        */
-/*    ExecExternalSearch - Search for and execute a REXX program from disk.   */
-/*    MacroSpaceSearch - Search for and execute a function in REXX macrospace.*/
-/*    RegExternalFunction - Search for and execute a registered external      */
-/*                          function.                                         */
 /******************************************************************************/
 #include <stdio.h>                          /* Get printf, FILE type, etc.    */
 #include <string.h>                         /* Get strcpy, strcat, etc.       */
@@ -82,6 +77,8 @@
 #define FILESPEC_DRIVE        'D'
 #define FILESPEC_PATH         'P'
 #define FILESPEC_NAME         'N'
+#define FILESPEC_LOCATION     'L'
+#define FILESPEC_EXTENSION    'E'
 
 typedef struct _ENVENTRY {                  /* setlocal/endlocal structure    */
   size_t   DriveNumber;                     /* saved drive                    */
@@ -166,121 +163,77 @@ RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 /********************************************************************************************/
 RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 {
-  size_t nameLength;                   /* file name length                  */
-  const char *scanPtr;                 /* scanning pointer                  */
-  const char *endPtr;                  /* end of string                     */
-  const char *pathPtr;                 /* path pointer                      */
-  const char *pathEnd;                 /* path end pointer                  */
+    const char *endPtr = name + strlen(name);        // point to last character
+    const char *pathEnd = strrchr(name, '\\');       // find the last backslash in name
+    const char *driveEnd = strchr(name, ':');        // and first colon
+    // get the end of the path portion (if any)
+    const char *pathStart = driveEnd == NULL ? name : driveEnd + 1;
+    // note that pathend is one character past the end of the path.
+    // this means the length is easily calculated as pathEnd - pathStart,
+    // even in the cases where there is no patch portion
+    pathEnd = pathEnd == NULL ? pathStart : pathEnd + 1;
+    // this one needs a little adjustment for the case where this is all name
+    const char *nameStart = pathEnd == name ? name : pathEnd;
 
-  nameLength = strlen(name);           /* get filename length               */
-
-  endPtr = name + nameLength;          /* point to last character           */
-
-  switch (toupper(*option)) {          /* process each option               */
-
-    case FILESPEC_DRIVE:               /* extract the drive                 */
-      if (nameLength > 0) {            /* have a real string?               */
-                                       /* scan for the character            */
-        scanPtr = (char *)memchr(name, ':', nameLength);
-        if (scanPtr != NULL)           /* found one?                        */
-        {
-            return context->NewString(name, scanPtr - name + 1);
-        }
-      }
-      break;
-
-    case FILESPEC_PATH:                /* extract the path                  */
-      if (nameLength > 0) {            /* have a real string?               */
-                                       /* find colon or backslash           */
-        scanPtr = Utilities::locateCharacter(name, ":\\/", nameLength);
-        if (scanPtr != NULL) {
-          if (*scanPtr == ':') {       /* found a colon?                    */
-            scanPtr++;                 /* step past the colon               */
-            if (scanPtr < endPtr) {    /* not last character?               */
-              pathEnd = NULL;          /* no end here                       */
-                                       /* search for backslashes            */
-              pathPtr = Utilities::locateCharacter(scanPtr, "\\/", endPtr - scanPtr);
-              while (pathPtr != NULL) {  /* while more backslashes            */
-                pathEnd = pathPtr;     /* save the position                 */
-                                       /* search for more backslashes       */
-                pathPtr++;             /* step past the last match          */
-                pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
-              }
-              if (pathEnd != NULL)     /* have backslashes?                 */
-              {
-                  return context->NewString(scanPtr, pathEnd - scanPtr + 1);
-              }
-            }
-          }
-          else {
-            pathPtr = scanPtr;         /* save start position               */
-            pathEnd = pathPtr;         /* CHM - defect 85: save end pos.    */
-            pathPtr++;                 /* step past first one               */
-                                       /* search for backslashes            */
-            pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
-            while (pathPtr) {          /* while more backslashes            */
-              pathEnd = pathPtr;       /* save the position                 */
-              pathPtr++;               /* step past the last match          */
-                                       /* search for more backslashes       */
-              pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
-            }
-                                       /* extract the path                  */
-            return context->NewString(name, pathEnd - name + 1);
-          }
-        }
-      }
-      break;                           /* finished                          */
-
-    case FILESPEC_NAME:                /* extract the file name             */
-      if (nameLength > 0) {            /* filename null string?             */
-                                       /* find colon or backslash           */
-        scanPtr = Utilities::locateCharacter(name, ":\\/", nameLength);
-        if (scanPtr != NULL) {
-          if (*scanPtr == ':') {       /* found a colon?                    */
-            scanPtr++;                 /* step past the colon               */
-            pathEnd = scanPtr;         /* save current position             */
-            pathPtr = Utilities::locateCharacter(scanPtr, "\\/", endPtr - scanPtr);
-            while (pathPtr) {          /* while more backslashes            */
-              pathPtr++;               /* step past the last match          */
-              pathEnd = pathPtr;       /* save the position                 */
-                                       /* search for more backslashes       */
-              pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
-            }
-            if (pathEnd < endPtr)      /* stuff to return?                  */
+    switch (toupper(*option))              /* process each option               */
+    {
+        case FILESPEC_PATH:                /* extract the path                  */
             {
-                return context->NewString(pathEnd, endPtr - pathEnd);
+                return context->NewString(pathStart, pathEnd - pathStart);
             }
-          }
-          else {
-            pathPtr = scanPtr + 1;     /* save start position               */
-            pathEnd = pathPtr;         /* step past first one               */
-                                       /* search for backslashes            */
-            pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
-            while (pathPtr != NULL) {  /* while more backslashes            */
-              pathPtr++;               /* step past the last match          */
-              pathEnd = pathPtr;       /* save the position                 */
-                                       /* search for more backslashes       */
-              pathPtr = Utilities::locateCharacter(pathPtr, "\\/", endPtr - pathPtr);
-            }
-            if (pathEnd < endPtr)      /* stuff to return?                  */
-            {
-                return context->NewString(pathEnd, endPtr - pathEnd);
-            }
-          }
-        }
-        else
-        {
-            // entire string is the result
-            return context->NewStringFromAsciiz(name);
-        }
-      }
-      break;                           /* finished                          */
 
-    default:                           /* unknown option                    */
-      context->InvalidRoutine();       // this is an error
-      return NULLOBJECT;
-  }
-  return context->NullString();        // nothing found, return the empty string
+        case FILESPEC_NAME:                  /* extract the file name               */
+            {                                /* everything to right of slash        */
+                return context->NewString(nameStart, endPtr - nameStart);
+            }
+
+        case FILESPEC_LOCATION:          /* extract the file name               */
+            {                                /* everything to left of slash        */
+                return context->NewString(name, pathEnd - name);
+            }
+
+        case FILESPEC_DRIVE:               /* extract the drive                 */
+            {
+                if (driveEnd != NULL)          /* have a real string?               */
+                {
+                    return context->NewString(name, driveEnd + 1 - name);
+                }
+                else
+                {
+                    return context->NullString();        // nothing found, return the empty string
+                }
+            }
+
+        case FILESPEC_EXTENSION:           // extract the file extension
+            {
+                // find the position of the last dot
+                const char *lastDot = strrchr(name, '.');
+
+                if (lastDot >= nameStart)
+                {
+                    // we don't extract the period
+                    lastDot++;
+                    return context->NewString(lastDot, endPtr - lastDot);
+                }
+                else
+                {
+                    return context->NullString();        // nothing found, return the empty string
+                }
+
+            }
+        default:                           /* unknown option                    */
+        {
+            char optionChar[2];
+            optionChar[0] = *option;
+            optionChar[1] = '\0';
+
+            RexxArrayObject subs = context->ArrayOfFour(context->NewStringFromAsciiz("FILESPEC"), context->WholeNumberToObject(1),
+                context->NewStringFromAsciiz("DELNP"), context->NewStringFromAsciiz(optionChar));
+            /* raise an error                    */
+            context->RaiseException(Rexx_Error_Incorrect_call_list, subs);
+            return NULLOBJECT;
+        }
+    }
 }
 
 

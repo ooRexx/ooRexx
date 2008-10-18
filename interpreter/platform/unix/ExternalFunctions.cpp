@@ -103,6 +103,7 @@
                                             /* FILESPEC function options      */
 #define FILESPEC_PATH         'P'
 #define FILESPEC_NAME         'N'
+#define FILESPEC_LOCATION     'L'
 
 #define KIOCSOUND   0x4B2F              /* start sound generation (0 for off) */
 
@@ -252,47 +253,64 @@ RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 /*****************************************************************************/
 RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 {
-  size_t nameLength = strlen(name);     /* get filename length               */
+    const char *endPtr = name + strlen(name);        // point to last character
+    const char *pathEnd = strrchr(name, '\\');       // find the last backslash in name
+    // get the end of the path portion (if any)
+    const char *pathStart = name;
+    // note that pathend is one character past the end of the path.
+    // this means the length is easily calculated as pathEnd - pathStart,
+    // even in the cases where there is no patch portion
+    pathEnd = pathEnd == NULL ? pathStart : pathEnd + 1;
+    // this one needs a little adjustment for the case where this is all name
+    const char *nameStart = pathEnd == name ? name : pathEnd;
 
-  const char *endPtr = name + nameLength;          /* point to last character           */
-  const char *pathEnd = strrchr(name, '/');        /* find the last slash in Name       */
+    switch (toupper(*option))              /* process each option               */
+    {
+        case FILESPEC_PATH:                /* extract the path                  */
+            {
+                return context->NewString(pathStart, pathEnd - pathStart);
+            }
 
-  switch (toupper(*option))              /* process each option               */
-  {
-      case FILESPEC_PATH:                /* extract the path                  */
-      {
-         if (pathEnd != NULL)            /* if there is a path spec. , return */
-                                         /* up to and including last slash.   */
-                                         /* else return OREF_NULLSTRING       */
-         {
-             return context->NewString(name, pathEnd - name + 1);
-         }
-         else
-         {
-             return context->NullString();
-         }
-      }
-      break;                           /* finished                            */
+        case FILESPEC_NAME:                  /* extract the file name               */
+            {                                /* everything to right of slash        */
+                return context->NewString(nameStart, endPtr - nameStart);
+            }
 
-      case FILESPEC_NAME:              /* extract the file name               */
-      {                                /* everything to right of slash        */
-         if (pathEnd != NULL)
-         {
-             return context->NewString(pathEnd + 1, endPtr - pathEnd);
-         }
-         else
-         {
-             // this is all name
-             return context->NewStringFromAsciiz(name);
-         }
-      }
-      break;                           /* finished                          */
+        case FILESPEC_LOCATION:          /* extract the file name               */
+            {                                /* everything to left of slash        */
+                return context->NewString(name, pathEnd - name);
+            }
 
-    default:                           /* unknown option                    */
-                                       /* raise an error                    */
-      context->InvalidRoutine();
-      return NULLOBJECT;
-  }
+        case FILESPEC_EXTENSION:           // extract the file extension
+            {
+                // find the position of the last dot
+                const char *lastDot = strrchr(name, '.');
+
+                if (lastDot >= nameStart)
+                {
+                    // we don't extract the period
+                    lastDot++;
+                    return context->NewString(lastDot, endPtr - lastDot);
+                }
+                else
+                {
+                    return context->NullString();        // nothing found, return the empty string
+                }
+
+            }
+        default:                           /* unknown option                    */
+        {
+            char optionChar[2];
+            optionChar[0] = *option;
+            optionChar[1] = '\0';
+
+            RexxArrayObject subs = context->ArrayOfFour(context->NewStringFromAsciiz("FILESPEC"), context->WholeNumberToObject(1),
+                context->NewStringFromAsciiz("ELNP"), context->NewStringFromAsciiz(optionChar));
+            /* raise an error                    */
+            context->RaiseException(Rexx_Error_Incorrect_call_list, subs);
+            return NULLOBJECT;
+        }
+    }
 }
 
 
@@ -316,28 +334,28 @@ bool SystemInterpreter::invokeExternalFunction(
   RexxString     * calltype,           /* Type of call                      */
   ProtectedObject &result)
 {
-  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_PREORDER, result))
-  {
-      return true;
-  }
-                                       /* no luck try for a registered func */
-  if (PackageManager::callNativeRoutine(activity, target, arguments, argcount, result))
-  {
-      return true;
-  }
-                                       /* have activation do the call       */
-  if (activation->callExternalRexx(target, arguments, argcount, calltype, result))
-  {
-      return true;
-  }
-                                       /* function.  If still not found,    */
-                                       /* then raise an error               */
-  if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_POSTORDER, result))
-  {
-      return true;
-  }
+    if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_PREORDER, result))
+    {
+        return true;
+    }
+    /* no luck try for a registered func */
+    if (PackageManager::callNativeRoutine(activity, target, arguments, argcount, result))
+    {
+        return true;
+    }
+    /* have activation do the call       */
+    if (activation->callExternalRexx(target, arguments, argcount, calltype, result))
+    {
+        return true;
+    }
+    /* function.  If still not found,    */
+    /* then raise an error               */
+    if (activation->callMacroSpaceFunction(target, arguments, argcount, calltype, MS_POSTORDER, result))
+    {
+        return true;
+    }
 
-  return false;
+    return false;
 }
 
 
