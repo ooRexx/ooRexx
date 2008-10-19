@@ -48,15 +48,18 @@
 /* This class extends the 'PlainBaseDialog' class */
 ::class 'PlainUserDialog' subclass PlainBaseDialog public inherit DynamicDialog
 
-  /* The init method */
-::method Init
+::method init
    use arg DlgData., includeFile
 
-   if arg() >= 2 then ret = self~init:super(0, 0, DlgData., includeFile)
-   else ret = self~init:super(0, 0, DlgData.)
+   newArgs = .array~new(2)
+   newArgs[1] = 0
+   newArgs[2] = 0
+   if arg(1, 'E') then newArgs[3] = dlgData.
+   if Arg(2, 'E') then newArgs[4] = includeFile
+   forward class (super) arguments (newArgs) continue
 
-   if ret = 0 then forward message "DynamicInit"
-   else return ret
+   if result = 0 then forward message "DynamicInit"
+   else return result
 
 ::method StopIt
    forward class (super) continue

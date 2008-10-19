@@ -49,16 +49,18 @@
 /* This class extends the 'BaseDialog' class */
 ::class 'UserDialog' subclass BaseDialog public inherit DynamicDialog
 
-  /* The init method */
-::method Init
-   select
-      when Arg() >= 2 then InitRet = self~init:super(0, 0, Arg(1),Arg(2))
-      when Arg() == 1 then InitRet = self~init:super(0, 0, Arg(1))
-      otherwise InitRet = self~init:super
-   end
+::method init
+   use arg DlgData., includeFile
 
-   if InitRet = 0 then forward message "DynamicInit"
-   else return InitRet
+   newArgs = .array~new(2)
+   newArgs[1] = 0
+   newArgs[2] = 0
+   if arg(1, 'E') then newArgs[3] = dlgData.
+   if Arg(2, 'E') then newArgs[4] = includeFile
+   forward class (super) arguments (newArgs) continue
+
+   if result = 0 then forward message "DynamicInit"
+   else return result
 
 ::method StopIt
    forward class (super) continue
