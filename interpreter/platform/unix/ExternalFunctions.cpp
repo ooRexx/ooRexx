@@ -104,6 +104,7 @@
 #define FILESPEC_PATH         'P'
 #define FILESPEC_NAME         'N'
 #define FILESPEC_LOCATION     'L'
+#define FILESPEC_EXTENSION    'E'
 
 #define KIOCSOUND   0x4B2F              /* start sound generation (0 for off) */
 

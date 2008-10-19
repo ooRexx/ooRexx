@@ -520,6 +520,7 @@ bool scan_cmd(const char *parm_cmd, char **argPtr)
 
     /* Finally, put a null pointer in args[] to indicate the end.      */
     argPtr[i] = NULL;
+    return true; 
 }
 
 /******************************************************************************/

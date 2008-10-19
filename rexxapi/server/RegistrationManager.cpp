@@ -418,7 +418,6 @@ void RegistrationTable::updateCallback(ServiceMessage &message)
 // nameArg    -- The registration name
 void RegistrationTable::dropCallback(ServiceMessage &message)
 {
-    ServiceRegistrationData *regData = (ServiceRegistrationData *)message.allocateMessageData(sizeof(ServiceRegistrationData));
     // get the argument name (local copy only)
     const char *name = message.nameArg;
     RegistrationData **anchor = &firstEntryPoint;
