@@ -76,9 +76,9 @@ void   RexxListTable::flatten(RexxEnvelope *envelope)
 {
  setUpFlatten(RexxListTable)
 
-   for (size_t i = this->size - 1; i >= 0 ; i--)
+   for (size_t i = this->size; i > 0 ; i--)
    {
-       flatten_reference(newThis->elements[i].value, envelope);
+       flatten_reference(newThis->elements[i - 1].value, envelope);
    }
 
  cleanUpFlatten
