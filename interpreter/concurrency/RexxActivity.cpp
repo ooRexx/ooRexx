@@ -2645,7 +2645,7 @@ bool RexxActivity::callNovalueExit(
 /* Function:   Calls the novalue handler for uninitialized variables          */
 /******************************************************************************/
 {
-    if (isExitEnabled(RXVAR))         // is the exit enabled?
+    if (isExitEnabled(RXNOVAL))         // is the exit enabled?
     {
         RXVARNOVALUE_PARM exit_parm;       /* exit parameters                   */
         // the name is passed as an rxstring
@@ -2653,7 +2653,7 @@ bool RexxActivity::callNovalueExit(
         // the value is returned as an object
         exit_parm.value = NULLOBJECT;      /* no value at the start             */
                                            /* call the handler                  */
-        if (!callExit(activation, "RXVAR", RXVAR, RXVARNOVALUE, (void *)&exit_parm))
+        if (!callExit(activation, "RXNOVAL", RXNOVAL, RXNOVALCALL, (void *)&exit_parm))
         {
             value = (RexxObject *)exit_parm.value;
             return false;
@@ -2673,7 +2673,7 @@ bool RexxActivity::callValueExit(
 /* Function:   Calls the exit for the VALUE() BIF                             */
 /******************************************************************************/
 {
-    if (isExitEnabled(RXVAL))         // is the exit enabled?
+    if (isExitEnabled(RXVALUE))         // is the exit enabled?
     {
         RXVALCALL_PARM exit_parm;       /* exit parameters                   */
         // the name is passed as an rxstring
@@ -2682,7 +2682,7 @@ bool RexxActivity::callValueExit(
         // also passed that way
         exit_parm.value = (RexxObjectPtr)newValue;
                                            /* call the handler                  */
-        if (!callExit(activation, "RXVAL", RXVAL, RXVALCALL, (void *)&exit_parm))
+        if (!callExit(activation, "RXVALUE", RXVALUE, RXVALUECALL, (void *)&exit_parm))
         {
             value = (RexxObject *)exit_parm.value;
             return false;

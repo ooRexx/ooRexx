@@ -195,22 +195,13 @@
 
 #define RXEXF    12                   /* scripting function call     */
 #define    RXEXFCAL 1                 /* subcode value.              */
-
-#define RXVAR    13                   /* novalue variable exit       */
-#define    RXVARNOVALUE 1             /* subcode value.              */
-
-#define RXVAL    14                   /* value() function exit       */
-#define    RXVALCALL    1             /* subcode value.              */
-
-#define RXOFNC   15                   /* Process external functions using object values. */
-#define    RXOFNCCAL 1                /* subcode value.              */
-
-#define RXEXF     12                  /* Post order function exit    */
-#define    RXEXFCAL 1                 /* subcode value.              */
 #define RXNOVAL   13                  /* NOVALUE exit                */
 #define    RXNOVALCALL 1
 #define RXVALUE   14                  /* VALUE function exit         */
 #define    RXVALUECALL 1
+#define RXOFNC   15                   /* Process external functions using object values. */
+#define    RXOFNCCAL 1                /* subcode value.              */
+
 
 #define    RXNOOFEXITS 16             /* 1 + largest exit number.    */
 
