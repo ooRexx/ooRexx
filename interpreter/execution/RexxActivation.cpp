@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                            RexxActivation.c    */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Activation Class                                                 */
 /*                                                                            */
@@ -81,10 +81,6 @@
                                        /* whenever the settings definition  */
                                        /* changes                           */
 static ActivationSettings activationSettingsTemplate;
-
-// randomization value added to random seeds
-size_t RexxActivation::randomizer = 1;
-
 
 void * RexxActivation::operator new(size_t size)
 /******************************************************************************/
@@ -205,12 +201,12 @@ RexxActivation::RexxActivation(RexxActivity *_activity, RexxActivation *_parent,
                                          /* when creating the stack avoids it.*/
     _activity->allocateStackFrame(&stack, code->getMaxStackSize());
     this->setHasReferences();
+    /* inherit parents settings          */
+    _parent->putSettings(this->settings);
     // the random seed is copied from the calling activity, this led
     // to reproducable random sequences even though no specific seed was given!
     // see feat. 900 for example program.
     adjustRandomSeed();
-    /* inherit parents settings          */
-    _parent->putSettings(this->settings);
     if (context == INTERNALCALL)       /* internal call?                    */
     {
         /* force a new copy of the traps     */
@@ -261,10 +257,6 @@ RexxActivation::RexxActivation(RexxActivity *_activity, RoutineClass *_routine, 
                                          /* when creating the stack avoids it.*/
     _activity->allocateStackFrame(&stack, code->getMaxStackSize());
     this->setHasReferences();
-    // the random seed is copied from the calling activity, this led
-    // to reproducable random sequences even though no specific seed was given!
-    // see feat. 900 for example program.
-    adjustRandomSeed();
     /* get initial settings template     */
     this->settings = activationSettingsTemplate;
     /* save the source also              */
@@ -279,6 +271,10 @@ RexxActivation::RexxActivation(RexxActivity *_activity, RoutineClass *_routine, 
     this->settings.alternate_env = this->settings.current_env;
     /* get initial random seed value     */
     this->random_seed = this->activity->getRandomSeed();
+    // the random seed is copied from the calling activity, this led
+    // to reproducable random sequences even though no specific seed was given!
+    // see feat. 900 for example program.
+    adjustRandomSeed();
     /* copy the source security manager  */
     this->settings.securityManager = this->code->getSecurityManager();
     // but use the default if not set
@@ -2696,14 +2692,10 @@ void RexxActivation::resetElapsed()     /* reset activation elapsed time     */
 
 #define DEFAULT_MIN 0                  /* default random minimum value      */
 #define DEFAULT_MAX 999                /* default random maximum value      */
-#define MAX_DIFFERENCE 100000          /* max spread between min and max    */
+#define MAX_DIFFERENCE 999999999       /* max spread between min and max    */
 
 
-size_t RexxActivation::getRandomSeed(
-  RexxInteger * seed )                 /* user specified seed               */
-/******************************************************************************/
-/* Function:  Return the current random seed                                  */
-/******************************************************************************/
+uint64_t RexxActivation::getRandomSeed(RexxInteger * seed )
 {
     /* currently in an internal routine  */
     /* or interpret instruction?         */
@@ -2749,14 +2741,13 @@ RexxInteger * RexxActivation::random(
 /*            seed value.                                                     */
 /******************************************************************************/
 {
-    size_t work;                        /* working random number             */
     size_t i;                           /* loop counter                      */
 
                                         /* go get the seed value             */
-    size_t seed = this->getRandomSeed(randseed);
+    uint64_t seed = this->getRandomSeed(randseed);
 
-    wholenumber_t minimum = DEFAULT_MIN;              /* get the default MIN value         */
-    wholenumber_t maximum = DEFAULT_MAX;              /* get the default MAX value         */
+    wholenumber_t minimum = DEFAULT_MIN;  /* get the default MIN value         */
+    wholenumber_t maximum = DEFAULT_MAX;  /* get the default MAX value         */
     /* minimum specified?                */
     if (randmin != OREF_NULL)
     {
@@ -2770,7 +2761,9 @@ RexxInteger * RexxActivation::random(
         /* maximum value not specified       */
         /* seed specified                    */
         else if ((randmin != OREF_NULL) && (randmax == OREF_NULL) && (randseed != OREF_NULL))
+        {
             minimum = randmin->getValue();
+        }
         else
         {
             minimum = randmin->getValue();  /* give both max and min values      */
@@ -2782,21 +2775,13 @@ RexxInteger * RexxActivation::random(
         maximum = randmax->getValue();    /* use the supplied maximum          */
     }
 
-    if (minimum < 0)                    /* minimum too small?                */
-    {
-        reportException(Error_Incorrect_call_nonnegative, CHAR_RANDOM, IntegerOne, randmin);
-    }
-    if (maximum < 0)                    /* maximum too small?                */
-    {
-        reportException(Error_Incorrect_call_nonnegative, CHAR_RANDOM, IntegerTwo, randmax);
-    }
     if (maximum < minimum)              /* range problem?                    */
     {
         /* this is an error                  */
         reportException(Error_Incorrect_call_random, randmin, randmax);
     }
-    /* to big of a spread ?              */
-    if (maximum - minimum > MAX_DIFFERENCE)
+    /* too big of a spread ?              */
+    if (maximum - minimum  >= MAX_DIFFERENCE)
     {
         /* this is an error                  */
         reportException(Error_Incorrect_call_random_range, randmin, randmax);
@@ -2806,16 +2791,16 @@ RexxInteger * RexxActivation::random(
     if (minimum != maximum)
     {
         // this will invert the bits of the value
-        work = 0;                         /* start with zero                   */
-        for (i = 0; i < SIZE_BITS; i++)
+        uint64_t work = 0;                  /* start with zero                   */
+        for (i = 0; i < sizeof(uint64_t) * 8; i++)
         {
             work <<= 1;                     /* shift working num left one        */
                                             /* add in next seed bit value        */
-            work = work | (seed & (size_t)0x01);
+            work = work | (seed & 0x01LL);
             seed >>= 1;                     /* shift off the right most seed bit */
         }
         /* adjust for requested range        */
-        minimum += (work % (maximum - minimum + 1));
+        minimum += (wholenumber_t)(work % (uint64_t)(maximum - minimum + 1));
     }
     return new_integer(minimum);        /* return the random number          */
 }

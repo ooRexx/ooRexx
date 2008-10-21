@@ -120,9 +120,10 @@ const int DEBUG_TOGGLE      =  0x04;
 /* Random number generation constants                                         */
 /******************************************************************************/
 
-const size_t RANDOM_FACTOR = 1664525;   /* random multiplication factor      */
+const uint64_t RANDOM_FACTOR = 25214903917LL;   /* random multiplication factor      */
+const uint64_t RANDOM_ADDER = 11LL;
                                        /* randomize a seed number           */
-inline size_t RANDOMIZE(size_t seed) { return (seed * RANDOM_FACTOR + 1); }
+inline uint64_t RANDOMIZE(uint64_t seed) { return (seed * RANDOM_FACTOR + RANDOM_ADDER); }
                                         // size of a size_t value in bits
 const size_t SIZE_BITS = sizeof(void *) * 8;
 
@@ -354,8 +355,8 @@ class ActivationSettings
    RexxObject      * popEnvironment();
    void              processTraps();
    void              mergeTraps(RexxQueue *, RexxQueue *);
-   size_t            getRandomSeed(RexxInteger *);
-   void              adjustRandomSeed() { random_seed += randomizer++; }
+   uint64_t          getRandomSeed(RexxInteger *);
+   void              adjustRandomSeed() { random_seed += (uint64_t)(uintptr_t)this; }
    RexxVariableDictionary * getObjectVariables();
    RexxDirectory   * getLabels();
    RexxString      * getProgramName();
@@ -661,11 +662,9 @@ class ActivationSettings
    RexxQueue           *handler_queue; /* queue of trapped condition handler*/
                                        /* queue of trapped conditions       */
    RexxQueue           *condition_queue;
-   size_t               random_seed;   /* random number seed                */
+   uint64_t             random_seed;   /* random number seed                */
    bool                 random_set;    /* random seed has been set          */
    size_t               blockNest;     /* block instruction nesting level   */
    size_t               lookaside_size;/* size of the lookaside table       */
-
-   static size_t        randomizer;    // randomization value added to timestamp random seeds
  };
  #endif

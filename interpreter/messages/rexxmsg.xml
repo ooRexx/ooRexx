@@ -2801,7 +2801,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_call_random_range</SymbolicName>
-        <Text>RANDOM difference between argument 1 (<q><Sub position="1" name="value"/></q>) and argument 2 (<q><Sub position="2" name="value"/></q>) must not exceed 100000</Text>
+        <Text>RANDOM difference between argument 1 (<q><Sub position="1" name="value"/></q>) and argument 2 (<q><Sub position="2" name="value"/></q>) must not exceed 999,999,999</Text>
       </SubMessage>
       <SubMessage>
         <Code>40</Code>

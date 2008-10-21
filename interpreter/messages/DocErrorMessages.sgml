@@ -2005,7 +2005,7 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>032</term>
 <listitem>
-<para>RANDOM difference between argument 1 ("<emphasis>value</emphasis>") and argument 2 ("<emphasis>value</emphasis>") must not exceed 100000</para>
+<para>RANDOM difference between argument 1 ("<emphasis>value</emphasis>") and argument 2 ("<emphasis>value</emphasis>") must not exceed 999,999,999</para>
 </listitem>
 </varlistentry>
 <varlistentry>

@@ -279,8 +279,8 @@ typedef enum
    inline RexxActivity *getNextWaitingActivity() { return nextWaitingActivity; }
    inline void        waitKernel() { runsem.wait(); }
    inline void        clearWait()  { runsem.reset(); }
-   inline size_t      getRandomSeed() { return randomSeed; }
-   inline void setRandomSeed(size_t seed) { randomSeed = seed; };
+   inline uint64_t    getRandomSeed() { return randomSeed; }
+   inline void setRandomSeed(uint64_t seed) { randomSeed = seed; };
    inline RexxString *getLastMessageName() { return lastMessageName; }
    inline RexxMethod *getLastMethod() { return lastMethod; }
    inline void setLastMethod(RexxString *n, RexxMethod *m) { lastMessageName = n; lastMethod = m; }
@@ -373,7 +373,7 @@ typedef enum
    size_t   attachCount;               // extent of nested attaches
    char       *stackBase;              /* pointer to base of C stack        */
    bool        clauseExitUsed;         /* halt/trace sys exit not set ==> 1 */
-   size_t      randomSeed;             /* random number seed                */
+   uint64_t    randomSeed;             /* random number seed                */
    ExitHandler sysexits[LAST_EXIT];    /* Array to hold system exits        */
    ProtectedObject *protectedObjects;  // list of stack-based object protectors
    RexxString *lastMessageName;        // class called message
