@@ -700,14 +700,13 @@
 
 ::method PreviousVisible
    use arg hitem
-   if arg(1, 'O') | hItem = 0 then return -1
+   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
    return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PREVIOUSVISIBLE")
 
 ::method Delete
-   use arg item
-   if arg(1, 'O') then return -1
-   if item \= 0 & item~Datatype("N") = 1 then return HandleTreeCtrl("DEL",self~hwnd, item)
-   else return -1
+   use arg hItem
+   if arg(1, 'O') | hItem~substr(3) = 0 | (\ hItem~substr(3)~datatype("W")) then return -1
+   return HandleTreeCtrl("DEL",self~hwnd, item)
 
 ::method DeleteAll
    return HandleTreeCtrl("DEL", self~Hwnd,"ROOT")
@@ -719,7 +718,7 @@
 
 ::method CollapseAndReset
    use arg hitem
-   if Arg(1,'o') = 1 | hItem~substr(3) = 0 then return -1
+   if arg(1,'O') | hItem~substr(3) = 0 then return -1
    return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "COLLAPSE RESET")
 
 ::method Expand
@@ -813,18 +812,18 @@
 
 ::method ReplaceStyle
    use arg oldstyle, newstyle
-   if Arg(1,'o') = 1 | Arg(2,'o') = 1 then return 0
+   if arg(1,'O') | arg(2,'O') then return 0
    ret = HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", oldstyle)
    return HandleListCtrl("M","SETSTYLE", self~Hwnd, "A", newstyle)
 
 ::method AddStyle
    use arg style
-   if Arg(1,'o') = 1 then return 0
+   if arg(1,'O') then return 0
    return HandleListCtrl("M","SETSTYLE", self~Hwnd, "A", style)
 
 ::method RemoveStyle
    use arg style
-   if Arg(1,'o') = 1 then return 0
+   if arg(1,'O') then return 0
    return HandleListCtrl("M","SETSTYLE", self~Hwnd, "R", style)
 
 ::method ReplaceExtendedStyle  -- Replace
@@ -883,7 +882,7 @@
 
 ::method InsertColumn
    use arg nr, text, width, fmt
-   if Arg(1,'o') = 1 then nr = 0
+   if arg(1,'O') then nr = 0
    if Arg(3,'o') = 1 then width = -1; else width = width*self~FactorX
    if Arg(4,'o') = 1 then fmt = "LEFT"
    return HandleListCtrl("C","INS", self~Hwnd, nr, text, width, fmt~translate)
@@ -963,7 +962,7 @@
 
 ::method Insert
    use arg nr, subnr, text, image
-   if Arg(2,'o') = 1 then subnr = 0
+   if arg(2,'O') then subnr = 0
    if Arg(1,'o') = 1 then do
         if subnr = 0 then nr = self~LastItem + 1
         else nr = self~LastItem
@@ -980,14 +979,14 @@
 ::method Modify
    use arg nr, subnr, text, image
    if Arg(1,'o') = 1 then nr = self~Selected
-   if Arg(2,'o') = 1 then subnr = 0
+   if arg(2,'O') then subnr = 0
    if Arg(4,'o') = 1 then image = -1
    return HandleListCtrl("I","SET", self~Hwnd, nr, subnr, text, image)
 
 ::method SetItemText
    use arg item, subitem, text
    if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then subitem = 0
+   if arg(2,'O') then subitem = 0
    return HandleListCtrl("I","SET", self~Hwnd, item, subitem, text,"TXT")
 
 ::method SetItemState
@@ -1054,14 +1053,14 @@
 ::method ItemInfo
    use arg item, subitem
    if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then subitem = 0
+   if arg(2,'O') then subitem = 0
    ret = HandleListCtrl("I","GET", self~Hwnd, item, subitem, "InternalLVItemInfo", "")
    return InternalLVItemInfo.
 
 ::method ItemText
    use arg item, subitem
    if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then subitem = 0
+   if arg(2,'O') then subitem = 0
    return HandleListCtrl("I","GET", self~Hwnd, item, subitem, "", "TXT")
 
 ::method ItemState
@@ -1091,7 +1090,7 @@
 
 ::method Focus
    use arg item
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'O') then return -1
    return HandleListCtrl("I", "SET", self~Hwnd, item, 0, "FOCUSED","STATE")
 
 ::method DropHighlighted
@@ -1102,12 +1101,12 @@
 
 ::method NextSelected
    use arg startItem
-   if Arg(1,'o') = 1 then startItem = -1
+   if arg(1,'O') then startItem = -1
    return HandleListCtrl("I", "GETNEXT", self~Hwnd, startItem, "BELOW TORIGHT SELECTED")
 
 ::method PreviousSelected
    use arg startItem
-   if Arg(1,'o') = 1 then startItem = -1
+   if arg(1,'O') then startItem = -1
    return HandleListCtrl("I", "GETNEXT", self~Hwnd, startItem, "ABOVE TOLEFT SELECTED")
 
 ::method Next
@@ -1116,7 +1115,7 @@
    -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
    -- a -1 value to mark the iteration end.
    if self~Items < 2 then return -1
-   if Arg(1,'o') = 1 then startItem = -1
+   if arg(1,'O') then startItem = -1
    return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "BELOW TORIGHT")
 
 ::method Previous
