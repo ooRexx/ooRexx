@@ -297,9 +297,15 @@ void RexxActivity::generateRandomNumberSeed()
 {
     RexxDateTime  timestamp;             /* current timestamp                 */
     int           i;                     /* loop counter                      */
-    static int rnd = 0;
 
-    rnd++;
+    // a good random value for a starting point would be the address of the
+    // activity.
+    size_t rnd = (size_t)(uintptr_t)this;
+    // flip the bits to generate a little more noise.  This value is
+    // largely to ensure that the timestamp value doesn't produce similar
+    // seeds because of low timer resolution.
+    rnd = ~rnd;
+
     SystemInterpreter::getCurrentTime(&timestamp);       /* get a fresh time stamp            */
                                          /* take the seed from the time       */
     randomSeed = rnd + (((timestamp.hours * 60 + timestamp.minutes) * 60 + timestamp.seconds) * 1000) + timestamp.microseconds/1000;

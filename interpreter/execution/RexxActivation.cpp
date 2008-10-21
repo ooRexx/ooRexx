@@ -2724,7 +2724,7 @@ size_t RexxActivation::getRandomSeed(
         /* set the saved seed value          */
         this->random_seed = seed_value;
         /* flip all of the bits              */
-        this->random_seed = this->random_seed^(0xffffffff);
+        this->random_seed = ~this->random_seed;
         /* randomize the seed number a bit   */
         for (size_t i = 0; i < 13; i++)
         {
@@ -2805,12 +2805,13 @@ RexxInteger * RexxActivation::random(
     /* have real work to do?             */
     if (minimum != maximum)
     {
+        // this will invert the bits of the value
         work = 0;                         /* start with zero                   */
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < SIZE_BITS; i++)
         {
             work <<= 1;                     /* shift working num left one        */
                                             /* add in next seed bit value        */
-            work = work | (seed & 0x00000001);
+            work = work | (seed & (size_t)0x01);
             seed >>= 1;                     /* shift off the right most seed bit */
         }
         /* adjust for requested range        */

@@ -93,6 +93,39 @@ class PackageClass;
 #define elapsed_reset       0x20000000 // The elapsed time stamp was reset via time('r')
 #define guarded_method      0x40000000 // this is a guarded method
 
+/******************************************************************************/
+/* Constants used for setting trace                                           */
+/******************************************************************************/
+
+const char TRACE_ALL           = 'A';
+const char TRACE_COMMANDS      = 'C';
+const char TRACE_LABELS        = 'L';
+const char TRACE_NORMAL        = 'N';
+const char TRACE_FAILURES      = 'F';
+const char TRACE_ERRORS        = 'E';
+const char TRACE_RESULTS       = 'R';
+const char TRACE_INTERMEDIATES = 'I';
+const char TRACE_OFF           = 'O';
+const char TRACE_IGNORE        = '0';
+
+/******************************************************************************/
+/* Constants used for setting trace interactive debug                         */
+/******************************************************************************/
+const int DEBUG_IGNORE      =  0x00;
+const int DEBUG_ON          =  0x01;
+const int DEBUG_OFF         =  0x02;
+const int DEBUG_TOGGLE      =  0x04;
+
+/******************************************************************************/
+/* Random number generation constants                                         */
+/******************************************************************************/
+
+const size_t RANDOM_FACTOR = 1664525;   /* random multiplication factor      */
+                                       /* randomize a seed number           */
+inline size_t RANDOMIZE(size_t seed) { return (seed * RANDOM_FACTOR + 1); }
+                                        // size of a size_t value in bits
+const size_t SIZE_BITS = sizeof(void *) * 8;
+
 /* execution_state values */
 #define ACTIVE    0
 #define REPLIED   1
