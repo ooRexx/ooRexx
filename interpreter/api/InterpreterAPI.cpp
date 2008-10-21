@@ -234,7 +234,7 @@ char *REXXENTRY RexxGetVersionInformation()
 {
     char ver[100];
     sprintf( ver, " %d.%d.%d", ORX_VER, ORX_REL, ORX_MOD );
-    char vbuf0[] = "Open Object Rexx %s Version";
+    char vbuf0[] = "Open Object Rexx Version";
   #ifdef _DEBUG
     char vbuf1[] = " - Internal Test Version\nBuild date: ";
   #else
