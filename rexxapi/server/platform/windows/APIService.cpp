@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -36,43 +36,116 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
+#include <aclapi.h>
 #include "APIServer.hpp"
 #include "stdio.h"
 
 #define SERVICENAME "RXAPI"
-#define MAJORVERSION 3
-#define MINORVERSION 0
-#define SUBVERSION   0
-#define SERVICEDESCRIPTION "RXAPI Service for Open Object Rexx version 3.0.0.0" /* @DOE002C @DOE003C @RIN005 */
+#define SERVICEDESCRIPTION "%s Service for Open Object Rexx version %d.%d.%d"
+
+#define SYNTAX_HELP  "Syntax: rxapi opt [/s]\n\n"     \
+                     "Where opt is exactly one of:\n" \
+                     "/i :\tinstall as Service.\n"    \
+                     "/u :\tuninstall as Service.\n"  \
+                     "/v :\tshow Version number\n\n"  \
+                     "The /s (silent) is optional and prevents any messages from displaying."
+
+#define APP_LOG_KEYNAME  "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\"
+
+typedef enum {installed_state, disabled_state, uninstalled_state} ServiceStateType;
+typedef enum {Windows_NT, Windows_2K} WindowsVersionType;
+
+// Prototypes
+void setServiceDACL(SC_HANDLE hService);
 
 // Globals for Service
-
 static SERVICE_STATUS_HANDLE m_hServiceStatus;
-static SERVICE_STATUS m_Status ;
+static SERVICE_STATUS m_Status;
 static SERVICE_DESCRIPTION Info;
 
-// End Globals for Service
 
+/* - - - - Temporary stuff for debugging help, will be removed  - - - - - - - */
+#if 0
+#include <shlobj.h>
+#include <shlwapi.h>
 
-/* module static data -------------------------------------------------*/
+TCHAR fileBuf[MAX_PATH];
+static const char *fileName = NULL;
+
+void __cdecl DebugMsg(const char* pszFormat, ...)
+{
+  FILE *stream;
+  va_list arglist;
+  char buf[1024];
+  sprintf(buf, "[%s](%lu)(%lu){%d}: ", SERVICENAME, GetCurrentThreadId(),GetCurrentProcessId(),
+          m_Status.dwCurrentState);
+  va_start(arglist, pszFormat);
+  vsprintf(&buf[strlen(buf)], pszFormat, arglist);
+  va_end(arglist);
+  strcat(buf, "\n");
+
+  if ( fileName == NULL )
+  {
+      SHGetFolderPath(NULL, CSIDL_COMMON_DOCUMENTS | CSIDL_FLAG_CREATE, NULL, 0, fileBuf);
+      PathAppend(fileBuf, "apiService.log");
+      fileName = fileBuf;
+  }
+
+  stream = fopen(fileName, "a+");
+  if ( stream )
+  {
+    fwrite(buf, 1, strlen(buf), stream);
+    fclose(stream);
+  }
+}
+#endif
+/* - - End Temporary stuff for debugging help - - - - - - - - - - - - - - - - */
 
 APIServer apiServer;             // the real server instance
 
-/*==========================================================================*
- *  Function: Run
+// A couple of helper functions.
+inline void showMessage(const char *msg, unsigned int icon)
+{
+    MessageBox(NULL, msg, SERVICENAME, MB_OK | icon);
+}
+
+#define WINDOWS_95_98_ME  VER_PLATFORM_WIN32_WINDOWS
+
+bool isAtLeastVersion(WindowsVersionType type)
+{
+    OSVERSIONINFO version_info;
+    bool answer = false;
+
+    version_info.dwOSVersionInfoSize = sizeof(version_info);
+    GetVersionEx(&version_info);
+
+    switch ( type )
+    {
+        case Windows_NT :
+            answer = version_info.dwPlatformId != WINDOWS_95_98_ME;
+            break;
+
+        case Windows_2K :
+            answer = version_info.dwMajorVersion >= 5;
+            break;
+
+        default :
+            break;
+    }
+    return answer;
+}
+
+/**
+ * Starts up the API server and has it listen for messages.
  *
- *  Purpose:
+ * Run() is either called from ServiceMain() in which case the API server will
+ * be running in a Service process.  If rxapi is not installed as a service, or
+ * for some reason the service can not be started, then Run() is called from
+ * WinMain() and the API server runs in a standard process.
  *
- *  handles the original RXAPI functions.
- *    Register window classes, create windows,
- *    perform a message loop
- *
- *  RIN006 : is either called from WINMAIN, if no arguments and
- *           RXAPI is NOT installed as an service,
- *           or, from ServiceMain, if RXAPI is installed as an service.
- *
- *
- *==========================================================================*/
+ * @param asService  If true, Run() was called from ServiceMain(), otherwise
+ *                   Run() was called from WinMain().
+ */
 void Run (bool asService)
 {
     try
@@ -86,20 +159,21 @@ void Run (bool asService)
     apiServer.terminateServer();     // shut everything down
 }
 
-//////////////////////////////////////////////////////////////////////////////////////
-// Control request handlers
-
+/**
+ * The following functions handle the Service control requests.
+ */
 
 // Called when the service is first initialized
-BOOL OnInit()
+bool OnInit()
 {
-    return TRUE;
+    return true;
 }
 
 // Called when the service control manager wants to stop the service
 void OnStop()
 {
-    apiServer.stop();    // tell the server to stop processing messages.
+    //apiServer.stop();    // tell the server to stop processing messages.
+    apiServer.terminateServer();    // tell the server to stop processing messages.
 }
 
 // called when the service is interrogated
@@ -128,19 +202,24 @@ BOOL OnUserControl(DWORD dwOpcode)
     return FALSE; // say not handled
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// status functions
-
+/**
+ * Updates the Service Control Manager with our current state.
+ *
+ * @param dwState  The current state.
+ */
 void SetStatus(DWORD dwState)
 {
     m_Status.dwCurrentState = dwState;
     SetServiceStatus(m_hServiceStatus, &m_Status);
 }
 
-
-// static member function (callback) to handle commands from the
-// service control manager
+/**
+ * The handler function registered with the Service Control dispatcher.  The
+ * dispatcher uses this function to send service control messages to the service
+ * process.
+ *
+ * @param dwOpcode  The control message.
+ */
 static void __cdecl Handler(DWORD dwOpcode)
 {
     switch (dwOpcode) {
@@ -173,83 +252,87 @@ static void __cdecl Handler(DWORD dwOpcode)
     SetServiceStatus(m_hServiceStatus, &m_Status);
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Service initialization
-
-BOOL Initialize()
+bool Initialize()
 {
+    bool result;
 
-  BOOL bResult ;
-    // Start the initialization
+    // Inform the Service Control Manager that we are about to start.
     SetStatus(SERVICE_START_PENDING);
 
     // Perform the actual initialization
-    bResult = OnInit();
+    result = OnInit();
 
-    // Set final state
+    // Inform the Service Control Manager of our final state.
     m_Status.dwWin32ExitCode = GetLastError();
     m_Status.dwCheckPoint = 0;
     m_Status.dwWaitHint = 0;
-    if (!bResult)
+
+    if ( ! result )
     {
         SetStatus(SERVICE_STOPPED);
-        return FALSE;
+        return false;
     }
     SetStatus(SERVICE_RUNNING);
-    return TRUE;
+    return true;
 }
 
-
-/*==========================================================================*
- *  Function: ServiceMain
+/**
+ * After the service control dislpatcher receives a start request, (see
+ * startTheService(),) it creates a new thread and invokes this function on that
+ * thread to do the actual work of the service.
  *
- *  Purpose:
- *
- *  static member function (callback)
- *
- *==========================================================================*/
+ * @param dwArgc    Count of args  (not used by rxapi)
+ * @param lpszArgv  Args           (not used by rxapi)
+ */
 static void WINAPI ServiceMain(DWORD dwArgc, LPTSTR* lpszArgv)
 {
-  // Register the control request handler
+    // Register the handler.  The Service Control Manager will call back to this
+    // function to issue control requests.
     m_Status.dwCurrentState = SERVICE_START_PENDING;
-    m_hServiceStatus = RegisterServiceCtrlHandler(SERVICENAME,
-        (LPHANDLER_FUNCTION )Handler);
-    if (m_hServiceStatus ==  (SERVICE_STATUS_HANDLE )NULL)
+    m_hServiceStatus = RegisterServiceCtrlHandler(SERVICENAME, (LPHANDLER_FUNCTION)Handler);
+    if ( m_hServiceStatus ==  (SERVICE_STATUS_HANDLE)NULL )
     {
         return;
     }
 
     // Start the initialisation
-    if (Initialize()) {
-
-        // Do the real work.
-        // When the Run function returns, the service has stopped.
+    if ( Initialize() )
+    {
+        // Do the actual work.  When the Run function returns, the service has
+        // stopped.
         m_Status.dwWin32ExitCode = 0;
         m_Status.dwCheckPoint = 0;
         m_Status.dwWaitHint = 0;
+
         Run(true);
     }
 
-    // Tell the service manager we have stopped
+    // Tell the service control manager we have stopped
     SetStatus(SERVICE_STOPPED);
 }
 
-
-/*==========================================================================*
- *  Function: StartTheService
+/**
+ * Connects the main thread of this service process to the Service Control
+ * Manager.  When this function succeeds, it will not return until the rxapi
+ * Service is stopped.
  *
- *  Purpose:
+ * @return A return of true indicates that rxapi was successfully started as a
+ *         service process and has run to completion.  A return of false
+ *         indicates the rxapi service process was not started.
  *
- *  Start the Service and do all necessaries functions and tests
- *
- *==========================================================================*/
-BOOL StartTheService ( void )
+ * @note   When rxapi is installed as a service, it can not run as a service
+ *         process unless it is started through the Service Control Manager.  If
+ *         rxapi is started through the command line or by CreateProcess(),
+ *         StartServiceCtrlDispatcher() will return
+ *         ERROR_FAILED_SERVICE_CONTROLLER_CONNECT and the service process will
+ *         not have run.
+ */
+bool startTheService(void)
 {
     SERVICE_TABLE_ENTRY st[] =
     {
       {
-        (LPTSTR )SERVICENAME,
+        (LPTSTR)SERVICENAME,
         ServiceMain
       },
       {
@@ -265,404 +348,590 @@ BOOL StartTheService ( void )
     m_Status.dwCheckPoint = 0;
     m_Status.dwWaitHint = 0;
 
-    return StartServiceCtrlDispatcher(st);
+    return StartServiceCtrlDispatcher(st) != 0;
 }
-/*==========================================================================*
- *  Function: Install
- *
- *  Purpose:
- *
- *  Install the service in the Service Control Manager.
- *
- * Returns TRUE if OK, FALSE if not
- *
- *==========================================================================*/
 
-BOOL Install()
+/**
+ * If rxapi is currently running as a Service process, then stop it.
+ *
+ * @param timeOut  Time to wait, in miliseconds for a pending stop to clear.
+ *
+ * @return  True if the service is stopped, false if not sure that the service
+ *          is stopped.
+ */
+bool stopTheService(DWORD timeOut)
+{
+    SERVICE_STATUS ss;
+    SC_HANDLE hService = NULL;
+    DWORD startTicks = GetTickCount();
+    DWORD waitTime = timeOut / 20;
+    DWORD needed;
+    bool success = false;
+
+    SC_HANDLE hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+    if ( hSCM == NULL )
+    {
+        goto cleanup;
+    }
+
+    hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_STATUS | SERVICE_STOP);
+    if ( hService == NULL)
+    {
+        goto cleanup;
+    }
+
+    // See if the service is already stopped.
+    if ( ! QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ss, sizeof(SERVICE_STATUS_PROCESS), &needed) )
+    {
+        goto cleanup;
+    }
+
+    if ( ss.dwCurrentState == SERVICE_STOPPED )
+    {
+        success = true;
+        goto cleanup;
+    }
+
+    // When a service has a stop pending, we'll wait for it.
+    while ( ss.dwCurrentState == SERVICE_STOP_PENDING )
+    {
+        Sleep(waitTime);
+        if ( ! QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ss, sizeof(SERVICE_STATUS_PROCESS), &needed) )
+        {
+            goto cleanup;
+        }
+
+        if ( ss.dwCurrentState == SERVICE_STOPPED )
+        {
+            success = true;
+            goto cleanup;
+        }
+
+        if ( GetTickCount() - startTicks > timeOut )
+        {
+            goto cleanup;
+        }
+    }
+
+    // Send a stop code through the Sevice Control Manager to the service
+    if ( ! ControlService(hService, SERVICE_CONTROL_STOP, &ss) )
+    {
+        goto cleanup;
+    }
+
+    // Wait for the service to stop
+    while ( ss.dwCurrentState != SERVICE_STOPPED )
+    {
+        Sleep(waitTime);
+        if ( ! QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ss, sizeof(SERVICE_STATUS_PROCESS), &needed) )
+        {
+            break;
+        }
+
+        if ( ss.dwCurrentState == SERVICE_STOPPED )
+        {
+            success = true;
+            break;
+        }
+
+        if ( GetTickCount() - startTicks > timeOut )
+        {
+            break;
+        }
+    }
+
+cleanup:
+    if ( hSCM != NULL )
+    {
+        CloseServiceHandle(hSCM);
+    }
+    if ( hService != NULL )
+    {
+        CloseServiceHandle(hService);
+    }
+    return success;
+}
+
+void setServiceDACL(SC_HANDLE hService)
+{
+    EXPLICIT_ACCESS      ea;
+    SECURITY_DESCRIPTOR  sd;
+    PSECURITY_DESCRIPTOR psd            = NULL;
+    PACL                 pacl           = NULL;
+    PACL                 pNewAcl        = NULL;
+    BOOL                 bDaclPresent   = FALSE;
+    BOOL                 bDaclDefaulted = FALSE;
+    DWORD                dwError        = 0;
+    DWORD                needed         = 0;
+
+    // Get the current security descriptor for the service.  First query with a
+    // size of 0 to get the needed size.
+    if ( ! QueryServiceObjectSecurity(hService, DACL_SECURITY_INFORMATION, &psd, 0, &needed) )
+    {
+        if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER )
+        {
+            DWORD size = needed;
+            psd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, size);
+            if (psd == NULL)
+            {
+                goto cleanup;
+            }
+
+            if ( ! QueryServiceObjectSecurity( hService, DACL_SECURITY_INFORMATION, psd, size, &needed) )
+            {
+                goto cleanup;
+            }
+        }
+        else
+        {
+            goto cleanup;
+        }
+    }
+
+    // Get the current DACL from the security descriptor.
+    if ( ! GetSecurityDescriptorDacl(psd, &bDaclPresent, &pacl, &bDaclDefaulted) )
+    {
+        goto cleanup;
+    }
+
+    // Build the ACE.
+    BuildExplicitAccessWithName(&ea, TEXT("Users"), SERVICE_START | SERVICE_STOP | GENERIC_READ, SET_ACCESS, NO_INHERITANCE);
+
+    dwError = SetEntriesInAcl(1, (PEXPLICIT_ACCESS)&ea, pacl, &pNewAcl);
+    if ( dwError != ERROR_SUCCESS )
+    {
+        goto cleanup;
+    }
+
+    // Initialize a new security descriptor.
+    if ( ! InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION) )
+    {
+        goto cleanup;
+    }
+
+    // Set the new DACL in the security descriptor.
+    if ( ! SetSecurityDescriptorDacl(&sd, TRUE, pNewAcl, FALSE) )
+    {
+        goto cleanup;
+    }
+
+    // Set the new security descriptor for the service object.
+    SetServiceObjectSecurity(hService, DACL_SECURITY_INFORMATION, &sd);
+
+cleanup:
+    if( pNewAcl != NULL )
+    {
+        LocalFree((HLOCAL)pNewAcl);
+    }
+    if( psd != NULL )
+    {
+        LocalFree((LPVOID)psd);
+    }
+}
+
+/**
+ * Install rxapi as a Windows service and add the registry entries to allow
+ * logging through the Event Log service.
+ *
+ * @return True if the service was installed, otherwise false.
+ */
+bool Install()
 {
     char szFilePath[_MAX_PATH];
-    SC_HANDLE hService ;
-    SC_HANDLE hSCM ;
-    char szKey[256];
+    SC_HANDLE hService = NULL;
+    char szKey[_MAX_PATH];
     HKEY hKey = NULL;
     DWORD dwData;
-    OSVERSIONINFO vi;
+    bool success = false;
 
     // Open the Service Control Manager
-    hSCM = OpenSCManager(NULL, // local machine
-                         NULL, // ServicesActive database
-                         SC_MANAGER_ALL_ACCESS); // full access
-    if (!hSCM)
-      return FALSE;
+    SC_HANDLE hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT);
+    if ( hSCM == NULL )
+    {
+      goto cleanup;
+    }
 
-    // Get the executable file path
-    GetModuleFileName(NULL, szFilePath, sizeof(szFilePath));
+    // Get the executable file path.  The docs for Services say that if the path
+    // contains spaces it must be quoted.
+
+    // Use szKey as a temp buffer.
+    GetModuleFileName(NULL, szKey, sizeof(szKey));
+    if ( strstr(szKey, " ") == 0 )
+    {
+        strcpy(szFilePath, szKey);
+    }
+    else
+    {
+        _snprintf(szFilePath, sizeof(szFilePath), "\"%s\"", szKey);
+    }
 
     // Create the service
-    hService = CreateService(hSCM,
-                             SERVICENAME ,
-                             SERVICENAME ,
-                             SERVICE_ALL_ACCESS,
-                             SERVICE_WIN32_OWN_PROCESS,
-                             SERVICE_AUTO_START,        // start condition
-                             SERVICE_ERROR_NORMAL,
-                             szFilePath,
-                             NULL,
-                             NULL,
-                             NULL,
-                             NULL,
+    hService = CreateService(hSCM, SERVICENAME, SERVICENAME, SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
+                             SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, szFilePath, NULL, NULL, NULL, NULL,
                              NULL);
 
-    Info.lpDescription = SERVICEDESCRIPTION ;
-
-
-    // Info is only setable from NT 5 up (Win2K)
-    vi.dwOSVersionInfoSize = sizeof(vi);
-    GetVersionEx(&vi);              // get version with extended api
-    if ( vi.dwMajorVersion >= 5 )
+    if ( hService == NULL )
     {
-      // NT version 5 ( Win2000) Set Description
-      ChangeServiceConfig2(hService,
-                           SERVICE_CONFIG_DESCRIPTION,
-                           &Info );
+        goto cleanup;
     }
 
+    // At this point, the service is installed, so success is set to true.  The
+    // rest of the stuff is icing on the cake so to speak.  If something fails,
+    // it might be nice to notify someone, but we shouldn't say the service
+    // install failed, because it hasn't.
+    success = true;
 
-
-
-    if (!hService)
+    // ChangeServiceConfig2() needs W2K or later.
+    if ( isAtLeastVersion(Windows_2K) )
     {
-        CloseServiceHandle(hSCM);
-        return FALSE;
+        // Use szKey as a temporary buffer
+        sprintf(szKey, SERVICEDESCRIPTION, SERVICENAME, ORX_VER, ORX_REL, ORX_MOD);
+        Info.lpDescription = szKey;
+
+        ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &Info);
     }
 
-    // make registry entries to support logging messages
-    // Add the source name as a subkey under the Application
-    // key in the EventLog service portion of the registry.
-    strcpy(szKey, "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\");
+    // Set the discretionary ACL for the service.
+    setServiceDACL(hService);
+
+    // Add the registry entries to support logging messages.  The source name is
+    // added as a subkey under the Application key in the EventLog service
+    // portion of the registry.
+    strcpy(szKey, APP_LOG_KEYNAME);
     strcat(szKey, SERVICENAME);
-    if (RegCreateKey(HKEY_LOCAL_MACHINE, szKey, &hKey) != ERROR_SUCCESS) {
-        CloseServiceHandle(hService);
-        CloseServiceHandle(hSCM);
-        return FALSE;
-    }
 
-    // Add the Event ID message-file name to the 'EventMessageFile' subkey.
-    RegSetValueEx(hKey,
-                  "EventMessageFile",
-                  0,
-                  REG_EXPAND_SZ,
-                  (CONST BYTE*)szFilePath,
-                  (DWORD)strlen(szFilePath) + 1);
-
-    // Set the supported types flags.
-    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
-    RegSetValueEx(hKey,
-                  "TypesSupported",
-                  0,
-                  REG_DWORD,
-                  (CONST BYTE*)&dwData,
-                  sizeof(DWORD));
-    RegCloseKey(hKey);
-
-    // tidy up
-    CloseServiceHandle(hService);
-    CloseServiceHandle(hSCM);
-    return TRUE;
-}
-
-/*==========================================================================*
- *  Function: Uninstall
- *
- *  Purpose:
- *
- *  Removes the Service in the Service Control Manager.
- *
- * Returns TRUE if OK, FALSE if not
- *
- *==========================================================================*/
-BOOL Uninstall()
-{
-  BOOL bResult = FALSE ;
-  SC_HANDLE hService ;
-  SC_HANDLE hSCM ;
-
-  // Open the Service Control Manager
-  hSCM = OpenSCManager(NULL, // local machine
-                       NULL, // ServicesActive database
-                       SC_MANAGER_ALL_ACCESS); // full access
-  if (!hSCM)
-    return FALSE;
-
-  hService = OpenService(hSCM,
-                         SERVICENAME,
-                         DELETE);
-  if (hService)
-  {
-    if (DeleteService(hService))
+    if ( RegCreateKey(HKEY_LOCAL_MACHINE, szKey, &hKey) == ERROR_SUCCESS )
     {
-      bResult = TRUE;
-    }
-     CloseServiceHandle(hService);
-  }
+        // Set the value of 'EventMessageFile' to the Event ID message-file name.
+        RegSetValueEx(hKey, "EventMessageFile", 0, REG_EXPAND_SZ, (CONST BYTE*)szFilePath,
+                      (DWORD)strlen(szFilePath) + 1);
 
-    CloseServiceHandle(hSCM);
-    return bResult;
+        // Set the value of 'TypesSupported' to the supported types.
+        dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
+        RegSetValueEx(hKey, "TypesSupported", 0, REG_DWORD, (CONST BYTE*)&dwData, sizeof(DWORD));
+
+        RegCloseKey(hKey);
+    }
+
+cleanup:
+    if ( hService != NULL )
+    {
+        CloseServiceHandle(hService);
+    }
+    if ( hSCM != NULL )
+    {
+        CloseServiceHandle(hSCM);
+    }
+    return success;
 }
 
-/*==========================================================================*
- *  Function: IsInstalled
+/**
+ * Deletes rxapi as a service and cleans up the registry entries that were made
+ * when rxapi was installed as a service.
  *
- *  Purpose:
- *
- *  Test if the service is currently installed and not disabled.
- *
- * Returns TRUE if installed, FALSE if not installed or installed but
- * disabled.
- *
- *==========================================================================*/
-BOOL IsInstalled(void)
+ * @return true on success, othewise false.
+ */
+bool Uninstall()
 {
-    LPQUERY_SERVICE_CONFIG lpServiceConfig = NULL;
-    DWORD BytesNeeded ;  // address of variable for bytes needed
-    BOOL bResult = FALSE;
+    bool success = false;
 
     // Open the Service Control Manager
-    SC_HANDLE hSCM = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_ALL_ACCESS);
-    if ( hSCM )
+    SC_HANDLE hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+    if ( hSCM != NULL )
     {
-        // Try to open the service
-        SC_HANDLE hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_CONFIG);
-        if ( hService )
+        SC_HANDLE hService = OpenService(hSCM, SERVICENAME, DELETE);
+        if ( hService != NULL )
         {
-            // The service is installed, make sure it is not currently disabled.
-            lpServiceConfig = (LPQUERY_SERVICE_CONFIG) LocalAlloc(LPTR, 4096);
-            if ( lpServiceConfig )
+            // First stop the service if it is running, which allows the Service
+            // Control Manger to clean up the database immediately.  If we fail
+            // to stop the service we just ignore it.  The database will be
+            // cleaned up at the next reboot. (Or sooner if the rxapi process is
+            // killed.)
+            stopTheService(1000);
+
+            if ( DeleteService(hService) )
             {
-                if ( QueryServiceConfig(hService, lpServiceConfig, 4096, &BytesNeeded) )
-                {
-                    if ( lpServiceConfig->dwStartType != SERVICE_DISABLED )
-                    {
-                        bResult = TRUE;
-                    }
-                }
-                LocalFree(lpServiceConfig);
+                success = true;
             }
             CloseServiceHandle(hService);
         }
         CloseServiceHandle(hSCM);
     }
 
-    return bResult;
+    // Remove the Event Log service entries in the registry for rxapi.  These
+    // entries are added during the Service installation function.  Any errors
+    // are just ignored.
+    if ( success )
+    {
+        HKEY hKey = NULL;
+        if ( RegOpenKeyEx(HKEY_LOCAL_MACHINE, APP_LOG_KEYNAME, 0, DELETE, &hKey) == ERROR_SUCCESS )
+        {
+            if ( RegDeleteKey(hKey, SERVICENAME) == ERROR_SUCCESS )
+            {
+                RegCloseKey(hKey);
+            }
+        }
+    }
+    return success;
 }
 
-/////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////
-// Routines to run RXAPI as an Service BEGIN
-
-
-
-
-/*==========================================================================*
- *  Function: ParseStandardArgs
+/**
+ * Determines if: rxapi is installed as a service, installed but the service is
+ * currently disabled, or not installed as a service.
  *
- *  Purpose:
- *
- *  Parse the cmdlinearguments, if any, and handle.
- *
- * Returns TRUE if it found an arg it recognised, FALSE if not
- * Note: processing some arguments causes output to stdout to be generated.
- *
- *==========================================================================*/
-BOOL ParseStandardArgs( LPSTR lpCmdLine )
+ * @return  One of the 3 service state enums.
+ */
+ServiceStateType getServiceState(void)
 {
-    char chString[255] ;
-    BOOL bRet ;
-    DWORD dwRet ;
-    int iRet ;
-    BOOL bVersionInfo  = FALSE ;
-    BOOL bInstall  = FALSE ;
-    BOOL bUninstall  = FALSE ;
-    BOOL bSilent  = FALSE ;
+    ServiceStateType state = uninstalled_state;
 
-
-   // See if we have any command line args we recognise
-    if (strlen ( lpCmdLine ) == 0 )
+    // Open the Service Control Manager
+    SC_HANDLE hSCM = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CONNECT);
+    if ( hSCM )
     {
-      if ( IsInstalled() )  // As service installed ??
-      {
-        bRet = StartTheService ( ) ; // we return control, if Service has ended.
-        if ( !bRet )
+        // Try to open the service, if this fails, rxapi is not installed as a
+        // service.
+        SC_HANDLE hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_CONFIG);
+        if ( hService )
         {
-          // Error, see the reason
-          dwRet = GetLastError ( );
-          if (dwRet == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
-          {
-            // Not correct started, use NET START RXAPI,
-            // to allow correct connection to service controller
-            iRet = system("NET start rxapi") ;
-          }
+            // The service is definitely installed, we'll mark it as disabled
+            // until we know for sure it is not disabled.
+            state = disabled_state;
+
+            LPQUERY_SERVICE_CONFIG pqsc = (LPQUERY_SERVICE_CONFIG)LocalAlloc(LPTR, 4096);
+            if ( pqsc )
+            {
+                DWORD needed;
+                if ( QueryServiceConfig(hService, pqsc, 4096, &needed) )
+                {
+                    if ( pqsc->dwStartType != SERVICE_DISABLED )
+                    {
+                        state = installed_state;
+                    }
+                }
+                LocalFree(pqsc);
+            }
+            CloseServiceHandle(hService);
         }
-        return FALSE;   // Do NOT Continue the program
-      }
-      // either NOT installed as Service, or Service is set to DISABLED
-      // Continue as standard RXAPI.EXE
-      return TRUE;       // Continue as standard RXAPI.EXE
+        CloseServiceHandle(hSCM);
     }
-
-
-    // ADD SILENT PARMS
-    if ( lpCmdLine[0] == '/' )
-    {
-      // must be parameters, set BOOLeans for them
-      if ( strchr( lpCmdLine , (int) 'v' ) != NULL )    // show Version
-        bVersionInfo = TRUE ;
-      if ( strchr( lpCmdLine , (int) 'V' ) != NULL )    // show Version
-        bVersionInfo = TRUE ;
-      if ( strchr( lpCmdLine , (int) 'i' ) != NULL )    // Install as service
-        bInstall = TRUE ;
-      if ( strchr( lpCmdLine , (int) 'I' ) != NULL )    // Install as service
-        bInstall = TRUE ;
-      if ( strchr( lpCmdLine , (int) 'u' ) != NULL )    // Uninstall as service
-        bUninstall = TRUE ;
-      if ( strchr( lpCmdLine , (int) 'U' ) != NULL )    // Uninstall as service
-        bUninstall = TRUE ;
-      if ( strchr( lpCmdLine , (int) 's' ) != NULL )    // Silent install as service, no messages
-        bSilent = TRUE ;
-      if ( strchr( lpCmdLine , (int) 'S' ) != NULL )    // Silent install as service, no messages
-        bSilent = TRUE ;
-      if ( strchr( lpCmdLine , (int) 'q' ) != NULL )    // Silent install as service, no messages
-        bSilent = TRUE ;
-      if ( strchr( lpCmdLine , (int) 'Q' ) != NULL )    // Silent install as service, no messages
-        bSilent = TRUE ;
-
-
-
-      if ( bVersionInfo )
-      {
-        // Spit out version info
-        sprintf(chString ,"%s Version %d.%d.%d\nThe service is %s installed",
-               SERVICENAME, MAJORVERSION, MINORVERSION, SUBVERSION, IsInstalled() ? "currently" : "not");
-        MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONINFORMATION ) ;
-        return FALSE ; // say we processed the argument
-      } // If CmdLine includes /v
-
-      if ( bInstall )
-      {
-        // Request to install.
-        if (IsInstalled())
-        {
-          if (!bSilent )
-          {
-            sprintf( chString, "%s is already installed.", SERVICENAME);
-            MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONINFORMATION ) ;
-          }
-        }
-        else
-        {
-          // Try and install the copy that's running
-          if (Install())
-          {
-            if (!bSilent )
-            {
-              sprintf( chString, "%s installed\n", SERVICENAME);
-             MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONINFORMATION ) ;
-            }
-          }
-          else
-          {
-            if (!bSilent )
-            {
-              sprintf( chString, "%s failed to install. Error %d\n", SERVICENAME, GetLastError());
-              MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONERROR ) ;
-            }
-          }
-        }
-        return FALSE ; // say we processed the argument
-      } // If CmdLine includes /i
-
-      if ( bUninstall )
-      {
-        // Request to uninstall.
-        if (!IsInstalled())
-        {
-          if (!bSilent )
-          {
-            sprintf( chString, "%s is not installed\n", SERVICENAME);
-            MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONINFORMATION ) ;
-          }
-        }
-        else
-        {
-          // Try and remove the copy that's installed
-          if (Uninstall())
-          {
-            if (!bSilent )
-            {
-              sprintf( chString, "%s uninstalled as service.\n(Object REXX is NOT uninstalled.)",
-                     SERVICENAME);
-              MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONINFORMATION ) ;
-            }
-          }
-          else
-          {
-            if (!bSilent )
-            {
-              sprintf( chString, "Could not remove %s. Error %d\n", SERVICENAME, GetLastError());
-              MessageBox ( NULL , chString, SERVICENAME , MB_OK | MB_ICONERROR ) ;
-            }
-          }
-        }
-        return FALSE; // say we processed the argument
-      } // If CmdLine includes /u
-    }
-
-    // Don't recognise the args
-    // Spit out the help info
-    if (!bSilent )
-    {
-      MessageBox ( NULL , "Available parms :\n/i : install as Service.\n\
-/u : uninstall as Service.\n/v : show Version number\n\
-an additional s installs silent.",
-                 SERVICENAME , MB_OK | MB_ICONINFORMATION ) ;
-    }
-
-    return FALSE;
+    return state;
 }
 
-// Routines to run RXAPI as an Service END
-/////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////
-
-
-/*==========================================================================*
- *  Function: WinMain
+/**
+ * Start rxapi as a Windows Service, if possible.  This function determines if
+ * rxapi is installed as a Service, and, if so, starts up the Service.
  *
- *  Purpose:
- *
- *  Main entry point. Register window classes, create windows,
- *  parse command line arguments and then perform a message loop
- *
- *==========================================================================*/
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-        LPSTR lpCmdLine, int nCmdShow)
+ * @return bool
+ */
+bool startAsWindowsService(void)
 {
-    OSVERSIONINFO version_info;
-    // GetVersionEx called for the first time */
-    version_info.dwOSVersionInfoSize = sizeof(version_info);
-    GetVersionEx(&version_info);
+    bool started;
+    DWORD errRC;
+    int iRet;
 
-    if (version_info.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS)
+    if ( getServiceState() == installed_state )
     {
-        // Test Commandline for parameters
-        if ( !ParseStandardArgs( lpCmdLine ) )
+        // When the service is started successfully here, we do not return until
+        // the service has been stopped.
+        started = startTheService();
+
+        if ( ! started )
         {
-            exit (0) ;                 // Stop RXAPI
+            // The service did not start, get the error code.
+            errRC = GetLastError();
+            if ( errRC == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT )
+            {
+                // This specific error happens when rxapi is not running and is
+                // started from the command line or by CreateProcess().  Service
+                // processes can not run when started as console programs.
+                // (Really we should educate the user not to do this.)  We use
+                // NET START RXAPI, which will invoke the service controller to
+                // start rxapi correctly. When we return from system(), rxapi
+                // will be running as a service in another process, so it is
+                // important to exit this process.
+
+                iRet = system("NET start rxapi");
+
+                // If the return is not 0, rxapi was not started as a service.
+                return iRet == 0;
+            }
+            else
+            {
+                // The service could not be started for some un-anticipated
+                // reason.  Return false so that rxapi will continue by running
+                // as a standard process.
+                return false;
+            }
+        }
+
+        // Do not continue by running rxapi as a standard process.
+        return true;
+    }
+
+    // Either rxapi is not installed as a Service, or the Service has been set
+    // to disabled. Continue by running rxapi as a standard process.
+    return false;
+}
+
+/**
+ * We have command line args, process them.  Most likely the args are to install
+ * or uninstall rxapi as a service.
+ *
+ * @param cmdLine The command line, must not be null.
+ */
+void processCmdLine(const char *cmdLine)
+{
+    char msg[256];
+    bool verbose = true;
+
+    size_t len = strlen(cmdLine);
+
+    if ( cmdLine[0] != '/' || len < 2 )
+    {
+        showMessage(SYNTAX_HELP, MB_ICONERROR);
+        return;
+    }
+
+    if ( len >= 5 )
+    {
+        char opt = cmdLine[4];
+        if ( opt == 's' || opt == 'S' || opt == 'q' || opt == 'Q' )
+        {
+            verbose = false;
         }
     }
 
-    // Main portion is moved to RUN() function, since it is global
-    // for standard and service invocation.
+    bool isInstalled = (getServiceState() != uninstalled_state);
+
+    switch ( cmdLine[1] )
+    {
+        case 'v' :
+        case 'V' :
+            sprintf(msg ,"%s Version %d.%d.%d\n\nThe service is %s installed", SERVICENAME,
+                    ORX_VER, ORX_REL, ORX_MOD, isInstalled ? "currently" : "not");
+            showMessage(msg, MB_ICONINFORMATION);
+            break;
+
+        case 'i' :
+        case 'I' :
+            if ( isInstalled )
+            {
+                if ( verbose )
+                {
+                    sprintf(msg, "%s is already installed as a service.", SERVICENAME);
+                    showMessage(msg, MB_ICONWARNING);
+                }
+            }
+            else
+            {
+                if ( Install() )
+                {
+                    if ( verbose )
+                    {
+                        sprintf(msg, "The %s service was installed\n", SERVICENAME);
+                        showMessage(msg, MB_ICONINFORMATION);
+                    }
+                }
+                else
+                {
+                    if ( verbose )
+                    {
+                        sprintf(msg, "The %s service failed to install.\n"
+                                     "Error %d\n", SERVICENAME, GetLastError());
+                        showMessage(msg, MB_ICONERROR);
+                    }
+                }
+            }
+            break;
+
+        case 'u' :
+        case 'U' :
+            if ( ! isInstalled )
+            {
+                if ( verbose )
+                {
+                    sprintf(msg, "%s is not installed as a service\n", SERVICENAME);
+                    showMessage(msg, MB_ICONWARNING);
+                }
+            }
+            else
+            {
+                if ( Uninstall() )
+                {
+                    if ( verbose )
+                    {
+                        sprintf(msg, "%s was uninstalled as a service.\n\n"
+                                     "(Open Object REXX is not uninstalled.)", SERVICENAME);
+                        showMessage(msg, MB_ICONINFORMATION);
+                    }
+                }
+                else
+                {
+                    if ( verbose )
+                    {
+                        sprintf(msg, "The %s service could not be uninstalled.\n"
+                                     "Error %d\n", SERVICENAME, GetLastError());
+                        showMessage(msg, MB_ICONERROR);
+                    }
+                }
+            }
+            break;
+
+        default :
+            showMessage(SYNTAX_HELP, MB_ICONERROR);
+            break;
+    }
+    return;
+}
+
+/**
+ * The main entry point for rxapi.exe.
+ *
+ * When rxapi is installed as a service, the invoker might be the service
+ * control manager, or the interpreter could be starting rxapi as a service
+ * because rxapi was not running.
+ *
+ * When rxapi is not installed as a service, then the invoker is most likely the
+ * interpreter starting up rxapi.  Although, the user could also be invoking
+ * rxapi from the command line.
+ *
+ * The third possibility is that rxapi is being invoked from the command line
+ * with arguments to either install, uninstall, or query rxapi as a service.
+ *
+ *
+ * @param hInstance
+ * @param hPrevInstance
+ * @param lpCmdLine       The only arg we are interested in, the command line
+ *                        arguments.
+ * @param nCmdShow
+ *
+ * @return 0
+ */
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+    if ( isAtLeastVersion(Windows_NT) )
+    {
+        // If there are args, we always process them and exit.
+        if ( strlen(lpCmdLine) != 0 )
+        {
+            processCmdLine(lpCmdLine);
+            exit(0);
+        }
+
+        // When rxapi is successfully started as a service, we do not return
+        // from startAsWindowsService() until the service is stopped.
+        if ( startAsWindowsService() )
+        {
+            // rxapi ran as a service, and is now ended / stopped.
+            exit(0);
+        }
+    }
+
+    // For some reason we did not run as a service, (either not installed as
+    // service, the user does not have the authority to start a stoppled
+    // service, or some other reason.) In this case, run rxapi as a normal
+    // process.
     Run(false);
 
     return 0;

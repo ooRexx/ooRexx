@@ -96,7 +96,7 @@ $(OR_OUTDIR)\rexxapi.dll : $(CLIENTOBJS) \
              $(CLIENTOBJS) \
              $(OR_OUTDIR)\verinfo.res \
              $(OR_OUTDIR)\$(@B).exp \
-             wsock32.lib
+             wsock32.lib shlwapi.lib
 
 #
 # *** rxapi.EXE
@@ -105,7 +105,7 @@ $(OR_OUTDIR)\rxapi.exe : $(SERVEROBJS) $(OR_OUTDIR)\rxapi.res
     $(OR_LINK) $(SERVEROBJS) $(OR_OUTDIR)\rxapi.res /MAP \
     $(lflags_common) $(lflags_exe) \
     -out:$(OR_OUTDIR)\$(@B).exe \
-    wsock32.lib
+    wsock32.lib shlwapi.lib
 
 
 # Update the resource if necessary

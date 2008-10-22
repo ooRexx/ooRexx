@@ -54,8 +54,8 @@ Name "${LONGNAME} ${VERSION}"
   ;Folder-select dialog
   InstallDir "$PROGRAMFILES\${SHORTNAME}"
 
-  LangString TEXT_IO_PAGETITLE_RXAPI ${LANG_ENGLISH} "ooRexx rxapi Service"
-  LangString TEXT_IO_SUBTITLE_RXAPI ${LANG_ENGLISH} "Install ooRexx rxapi Service"
+  LangString TEXT_IO_PAGETITLE_RXAPI ${LANG_ENGLISH} "The ooRexx rxapi process"
+  LangString TEXT_IO_SUBTITLE_RXAPI ${LANG_ENGLISH} "Install rxapi as a Windows Service"
 ;--------------------------------
 ;Pages
 
@@ -539,7 +539,7 @@ Function CheckForRxAPI
   StrCmp $R0 0 NotRunning
   ;
   ; rxapi.exe is running, we need to stop it
-  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST "The Open Object Rexx memory manager (RXAPI) is currently active.$\nSelect OK to stop it (possible loss of data) and continue.$\nSelect CANCEL to continue with the installation without stopping the service." /SD IDOK IDCANCEL NotRunning
+  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST "The Open Object Rexx memory manager (RXAPI) is currently active.$\nSelect OK to stop it (possible loss of data) and continue.$\nSelect CANCEL to continue with the installation without stopping the memory manager." /SD IDOK IDCANCEL NotRunning
   ;
   ; Stop rxapi.exe
   KillProcDLL::KillProc "rxapi.exe"
@@ -603,13 +603,14 @@ Function Installrxapi
   Pop $R0
   Strcmp $R0 0 exitss
     ; do the install of rxapi
-    DetailPrint "Installing ooRexx rxapi Service"
-    nsExec::ExecToLog "$INSTDIR\rxapi /s /i"
+    DetailPrint "Installing rxapi as a Windows Service"
+    nsExec::ExecToLog "$INSTDIR\rxapi /i /s"
     Pop $R0
     StrCmp $R0 0 dostart
-      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to install the ooRexx rxapi service:$\n$R0" /SD IDOK
+      MessageBox MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST "Failed to install rxapi as a Windows Service:$\n$R0" /SD IDOK
       Goto exitss
     dostart:
+    DetailPrint "rxapi successfully installed as a Windows Service"
     StrCmp $R1 0 exitss
       ; start the service
       Services::SendServiceCommand 'start' 'RXAPI'
@@ -637,13 +638,25 @@ Section "Uninstall"
 
   ; removes the rxapi service - ignore if we get errors
   StrCmp $IsAdminUser "false" NotAdmin
+    Services::IsServiceInstalled 'RXAPI'
+    Pop $R0
+    StrCmp $R0 'No' NotAdmin
+    DetailPrint "Uninstalling ooRexx rxapi Service"
     Services::SendServiceCommand 'stop' 'RXAPI'
     Pop $R0
     StrCmp $R0 'Ok' StoppedOK
-      ; Stop rxapi.exe (again!) the Stop process starts rxapi.exe GRRRR!!!
+      ; rxapi.exe used to have a bug where after the Service stopped, rxapi would restart as a
+      ; normal process.  This code is a hold over from that, probably not needed anymore.
+      DetailPrint "Service Control Manager failed to stop rxapi, forcing termination"
       KillProcDLL::KillProc "rxapi.exe"
     StoppedOK:
-    Exec "$INSTDIR\rxapi /s /u"
+    nsExec::ExecToLog "$INSTDIR\rxapi /u /s"
+    Pop $R0
+    StrCmp $R0 0 doprintok
+      DetailPrint "Failed to uninstall rxapi as a service"
+      goto NotAdmin
+    doprintok:
+      DetailPrint "Uninstalled rxapi as a service"
   NotAdmin:
 
   ; Stop rxapi.exe (again!) just in case
