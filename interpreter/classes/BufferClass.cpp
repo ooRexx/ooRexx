@@ -73,18 +73,18 @@ RexxBuffer *RexxBuffer::expand(
                                          /* buffer, or this size of           */
                                          /* current(this)buffer + requested   */
                                          /* minimum length.                   */
-    if (l > this->getLength())           /* need more than double?            */
+    if (l > this->getBufferSize())       /* need more than double?            */
     {
         /* increase by the requested amount  */
-        newBuffer = new_buffer(this->getLength() + l);
+        newBuffer = new_buffer(this->getBufferSize() + l);
     }
     else                                 /* just double the existing length   */
     {
-        newBuffer = new_buffer(this->getLength() * 2);
+        newBuffer = new_buffer(this->getBufferSize() * 2);
     }
     /* have new buffer, so copy data from*/
     /* current buffer into new buffer.   */
-    memcpy(newBuffer->getData(), this->getData(), this->getLength());
+    memcpy(newBuffer->getData(), this->getData(), this->getDataLength());
     return newBuffer;                    /* all done, return new buffer       */
 
 }
@@ -97,8 +97,8 @@ void *RexxBuffer::operator new(size_t size, size_t _length)
                                          /* Get new object                    */
     RexxBuffer *newBuffer = (RexxBuffer *) new_object(size + _length, T_Buffer);
     /* Initialize this new buffer        */
-    newBuffer->size = _length;           /* set the length of the buffer      */
-    newBuffer->length = _length;         // by default, the data length and size are the same
+    newBuffer->bufferSize = _length;     /* set the length of the buffer      */
+    newBuffer->dataLength = _length;     // by default, the data length and size are the same
     newBuffer->setHasNoReferences();     /* this has no references            */
     return(void *)newBuffer;            /* return the new buffer             */
 }

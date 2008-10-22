@@ -470,7 +470,7 @@ RexxMutableBuffer *RexxMutableBuffer::mydelete(RexxObject *_start, RexxObject *l
 /******************************************************************************/
 {
     size_t begin = positionArgument(_start, ARG_ONE) - 1;
-    size_t range = optionalLengthArgument(len, this->data->getLength() - begin, ARG_TWO);
+    size_t range = optionalLengthArgument(len, this->data->getDataLength() - begin, ARG_TWO);
 
     // is the begin point actually within the string?
     if (begin < dataLength)

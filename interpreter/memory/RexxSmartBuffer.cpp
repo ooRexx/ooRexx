@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                           RexxSmartBuffer.c    */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Smart Buffer Class                                               */
 /*                                                                            */
@@ -52,10 +52,10 @@ RexxSmartBuffer::RexxSmartBuffer(size_t startSize)
 /* Function:  Initialize a smart buffer object                                */
 /******************************************************************************/
 {
-  this->clearObject();                 /* start out fresh                   */
+    this->clearObject();                 /* start out fresh                   */
                                        /* default initial buffersize, 1 page*/
                                        /* for buffer + data.                */
-  OrefSet(this, this->buffer, (RexxBuffer *)new_buffer(startSize));
+    OrefSet(this, this->buffer, (RexxBuffer *)new_buffer(startSize));
 }
 
 void RexxSmartBuffer::live(size_t liveMark)
@@ -63,14 +63,14 @@ void RexxSmartBuffer::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-  memory_mark(this->buffer);
+    memory_mark(this->buffer);
 }
 void RexxSmartBuffer::liveGeneral(int reason)
 /******************************************************************************/
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-  memory_mark_general(this->buffer);
+    memory_mark_general(this->buffer);
 }
 
 void RexxSmartBuffer::flatten(RexxEnvelope *envelope)
@@ -78,11 +78,11 @@ void RexxSmartBuffer::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-  setUpFlatten(RexxSmartBuffer)
+    setUpFlatten(RexxSmartBuffer)
 
-   flatten_reference(newThis->buffer, envelope);
+    flatten_reference(newThis->buffer, envelope);
 
-  cleanUpFlatten
+    cleanUpFlatten
 }
 
 size_t RexxSmartBuffer::copyData(
@@ -121,6 +121,6 @@ size_t RexxSmartBuffer::space()
 /* Function:  Return the space remaining in the buffer                        */
 /******************************************************************************/
 {
-  return this->buffer->getLength() - this->current;
+    return this->buffer->getBufferSize() - this->current;
 }
 

@@ -60,7 +60,7 @@ const char * compiledHeader = "/**/@REXX";
 void *ProgramMetaData::operator new (size_t size, RexxBuffer *buff)
 {
     // allocate a new buffer for this
-    return SystemInterpreter::allocateResultMemory(buff->getSize() + size - sizeof(char[4]));
+    return SystemInterpreter::allocateResultMemory(buff->getDataLength() + size - sizeof(char[4]));
 }
 
 
@@ -84,7 +84,7 @@ ProgramMetaData::ProgramMetaData(RexxBuffer *image)
     strncpy(rexxVersion, versionNumber->getStringData(), sizeof(rexxVersion));
 
     // copy in the image information
-    imageSize = image->getSize();
+    imageSize = image->getDataLength();
     memcpy(imageData, image->getData(), imageSize);
 }
 
@@ -96,6 +96,8 @@ ProgramMetaData::ProgramMetaData(RexxBuffer *image)
  */
 ProgramMetaData::ProgramMetaData(size_t size)
 {
+    // add the leading header
+    strcpy(fileTag, compiledHeader);
     // fill in the version specifics and the hardward architecture type
     magicNumber = MAGICNUMBER;
     imageVersion = METAVERSION;
@@ -198,7 +200,7 @@ void ProgramMetaData::write(FILE *handle, RexxBuffer *program)
 {
     fwrite(this, 1, getHeaderSize(), handle);
     /* and finally the flattened method  */
-    fwrite(program->getData(), 1, program->getSize(), handle);
+    fwrite(program->getData(), 1, program->getDataLength(), handle);
 }
 
 

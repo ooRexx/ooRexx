@@ -226,7 +226,7 @@ RexxBuffer *RexxEnvelope::pack(
     // now unwrap the smart buffer and fix the length of the real buffer
     // behind it to the size we've written to it.
     RexxBuffer *letter = buffer->getBuffer();
-    letter->setLength(buffer->getLength());
+    letter->setDataLength(buffer->getDataLength());
     return letter;
 }
 

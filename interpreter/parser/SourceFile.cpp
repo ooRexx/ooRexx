@@ -199,7 +199,7 @@ void RexxSource::initBuffered(
     /* point to the data part            */
     start = this->sourceBuffer->getData();
     /* get the buffer length             */
-    length = this->sourceBuffer->getLength();
+    length = this->sourceBuffer->getDataLength();
 
     // neutralize shell '#!...'
     if (start[0] == '#' && start[1] == '!')
@@ -286,19 +286,19 @@ void RexxSource::initFile()
     }
 
 #ifdef SCRIPTING
-    if (program_source->getLength() > 9)
+    if (program_source->getDataLength() > 9)
     {
         char begin[10];
         char end[4];
         // check, if XML comments have to be removed from the script... (engine situation)
         memcpy(begin,program_source->getData(), 9);
         // hashvalue is the length of the buffer
-        memcpy(end, program_source->getData()+ (program_source->getLength()-3), 3);
+        memcpy(end, program_source->getData()+ (program_source->getDataLength()-3), 3);
         begin[9]=end[3]=0x00;
         if (!Utilities::strCaselessCompare("<![CDATA[",begin) && !Utilities::strCaselessCompare("]]>",end))
         {
             memcpy(program_source->getData(), "         ", 9);
-            memcpy(program_source->getData() + (program_source->getLength() - 3), "   ", 3);
+            memcpy(program_source->getData() + (program_source->getDataLength() - 3), "   ", 3);
         }
     }
 #endif

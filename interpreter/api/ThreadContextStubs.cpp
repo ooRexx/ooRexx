@@ -1368,7 +1368,7 @@ size_t RexxEntry BufferLength(RexxThreadContext *c, RexxBufferObject b)
     ApiContext context(c);
     try
     {
-        return ((RexxBuffer *)b)->getLength();
+        return ((RexxBuffer *)b)->getDataLength();
     }
     catch (RexxNativeActivation *)
     {

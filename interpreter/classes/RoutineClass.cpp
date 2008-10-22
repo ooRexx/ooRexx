@@ -372,10 +372,10 @@ void RoutineClass::save(PRXSTRING outBuffer)
 void RoutineClass::save(const char *filename)
 {
     FILE *handle = fopen(filename, "wb");/* open the output file              */
+    if (handle == NULL)                  /* get an open error?                */
     {
-        if (handle == NULL)                  /* get an open error?                */
-            /* got an error here                 */
-            reportException(Error_Program_unreadable_output_error, filename);
+        /* got an error here                 */
+        reportException(Error_Program_unreadable_output_error, filename);
     }
     ProtectedObject p(this);
 
@@ -384,7 +384,7 @@ void RoutineClass::save(const char *filename)
     ProtectedObject p2(buffer);
 
     // create an image header
-    ProgramMetaData metaData(buffer->getLength());
+    ProgramMetaData metaData(buffer->getDataLength());
     {
         UnsafeBlock releaser;
 
@@ -763,7 +763,7 @@ RoutineClass *RoutineClass::restore(RexxString *fileName, RexxBuffer *buffer)
     // newline character
     if (data[0] == '#' && data[1] == '!')
     {
-        data = Utilities::strnchr(data, buffer->getLength(), '\n');
+        data = Utilities::strnchr(data, buffer->getDataLength(), '\n');
         if (data == OREF_NULL)
         {
             return OREF_NULL;
@@ -779,7 +779,7 @@ RoutineClass *RoutineClass::restore(RexxString *fileName, RexxBuffer *buffer)
         return OREF_NULL;
     }
     // this should be valid...try to restore.
-    RoutineClass *routine = restore(buffer, buffer->getData(), metaData->getImageSize());
+    RoutineClass *routine = restore(buffer, metaData->getImageData(), metaData->getImageSize());
     routine->getSourceObject()->setProgramName(fileName);
     return routine;
 }

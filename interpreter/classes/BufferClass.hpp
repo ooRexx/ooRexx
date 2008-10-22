@@ -50,9 +50,9 @@ public:
 
     inline RexxBufferBase() {;};
 
-    inline size_t getLength() { return this->length; }
-    inline size_t getSize() { return this->size; }
-    inline void   setLength(size_t l) { this->size = l; }
+    inline size_t getDataLength() { return this->dataLength; }
+    inline size_t getBufferSize() { return this->bufferSize; }
+    inline void   setDataLength(size_t l) { this->dataLength = l; }
     virtual char *getData() = 0;
     inline void copyData(size_t offset, const char *string, size_t l) { memcpy(this->getData() + offset, string, l); }
     inline void copyData(CONSTRXSTRING &r) { copyData(0, r.strptr, r.strlength); }
@@ -68,7 +68,7 @@ public:
 
     inline void adjustGap(size_t offset, size_t _size, size_t _newSize)
     {
-        memmove(getData() + offset + _newSize, getData() + offset + _size, getLength() - (offset + _size));
+        memmove(getData() + offset + _newSize, getData() + offset + _size, getDataLength() - (offset + _size));
     }
     inline void setData(size_t offset, char character, size_t l)
     {
@@ -83,8 +83,8 @@ protected:
     // fields doubles when going to 64-bit, this single padding item is sufficient to
     // get everything lined up on all platforms.
     size_t reserved;
-    size_t size;                        // size of the buffer
-    size_t length;                      // length of the buffer data (freqently the same)
+    size_t bufferSize;                  // size of the buffer
+    size_t dataLength;                  // length of the buffer data (freqently the same)
 };
 
 
