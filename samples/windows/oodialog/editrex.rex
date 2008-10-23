@@ -72,100 +72,112 @@ end
 r~Current_Key = CLASSES_ROOT
 
 /* Open the Key with Options QUERY and WRITE */
-if r~open(,"REXXScript\Shell\Edit\Command","QUERY WRITE") \= 0 then do
-
-  /* Retrieves information about a given key in a compound variable */
-  /* q.values holds the number of value entries. */
-  q. = r~Query
-
-  /* Retrieves all value entries of a given key into a compound variable */
-  if r~ListValues(,vals.) = 0 then do
-    /* There are 3 possible values for each entry:
-       vals.i.name  the Name of the value
-       vals.i.data  the data of the entry
-       vals.i.type  the type : NORMAL for alphabetic values,
-                               EXPAND for expandable strings such as a path,
-                               NONE for no specified type,
-                               MULTI for multiple strings,
-                               NUMBER for a 4-byte value, and
-                               BINARY for any data format.
-    */
-    /* get the current program only. Do not show the "%1" parameter */
-    /* TRANSLATE it to UPPER CASE */
-    program = vals.1.data~word(1)~TRANSLATE
-  end
-  else do
-    call ErrorMessage 'Error reading the registry. Program aborted.'
-    exit
-  end
-
-  /* Ask user what to do */
-  if Interface = "CONSOLE" then do
-    /* The next lines use an plain text interface */
-    /* Show the curent content */
-    say 'Current Edit Setting is : ' || program
-    say 'Please enter a number + <Enter> to set it to :'
-    say '1 to EDIT it with NOTEPAD.EXE'
-    say '2 to EDIT with another program'
-    say 'Any other number to leave without changes'
-    say
-    /* Get selection */
-    pull answer
-  end
-  else do
-    /* Get the current state, to make preselection in the dialog */
-    if program~LASTPOS('NOTEPAD.EXE') > 0 then answer = '1'
-    else answer = '2'
-    /* The next lines use an "Single Selection Dialog" as interface to the user */
-    sel.1 = "EDIT it with NOTEPAD.EXE"
-    sel.2 = "SELECT another program, currently set to : " || program
-    /* prepare the dialog */
-    dlg = .SingleSelection~new("Please select what to do","Ftype EDIT setting for ooRexx",sel.,answer,,answer)
-    /* show the dialog */
-    answer = dlg~execute
-    /* end of user interaction */
-  end
-
-  /* verify what to do */
-  select
-
-    when answer = '1'  then do
-      newval = 'notepad.exe "%1"'
-    end
-
-    when answer = '2' then do
-      if Interface = "CONSOLE" then do
-        say
-        say 'Please enter Path and name of the wanted editor '
-        pull program
-      end
-      else do
-        /* Use the FilenameDialog to let the user select an other program */
-        program = FilenameDialog('',,'Executables (*.EXE)'||'0'x||'*.EXE'||'0'x||'All Files (*.*)'||'0'x||'*.*','LOAD','Select program to use','EXE')
-      end
-      if program = '0' then exit  /* Canceled by user */
-      newval = program || ' "%1"'
-    end
-    otherwise exit
-  end
-
-  /* Set the new value */
-  /* Sets a named value of a given key */
-  /* If name is blank or omitted, the default value is set */
-  r~SetValue(r~Current_Key,"",newval,NORMAL)
-
-  /* Forces the system to write the cache buffer of a given key to disk */
-  /* If key_handle is omitted, CURRENT_KEY is flushed */
-  r~flush(r~Current_Key)
-
-  /* Closes a previously opened key specified by its handle */
-  /* Since it can take several seconds before all data is written to disk,*/
-  /* FLUSH was used before to empty the cache */
-  /* If key_handle is omitted, CURRENT_KEY is closed */
-  r~close(r~Current_Key)
-
+if r~open(,"REXXScript\Shell\Edit\Command","QUERY WRITE") == 0 then do
+  call ErrorMessage 'Error opening the registry key with write access.' || '0d0a0d0a'x || -
+                    'If you are on Vista you must run this program with' || '0d0a'x || -
+                    'elevated privileges to see it work.'
+  exit
 end
 
+/* Retrieves information about a given key in a compound variable */
+/* q.values holds the number of value entries. */
+q. = r~Query
+
+/* Retrieves all value entries of a given key into a compound variable */
+if r~ListValues(,vals.) = 0 then do
+  /* There are 3 possible values for each entry:
+     vals.i.name  the Name of the value
+     vals.i.data  the data of the entry
+     vals.i.type  the type : NORMAL for alphabetic values,
+                             EXPAND for expandable strings such as a path,
+                             NONE for no specified type,
+                             MULTI for multiple strings,
+                             NUMBER for a 4-byte value, and
+                             BINARY for any data format.
+  */
+  /* get the current program only. Do not show the "%1" parameter */
+  /* TRANSLATE it to UPPER CASE */
+  program = vals.1.data~word(1)~TRANSLATE
+end
+else do
+  call ErrorMessage 'Error reading the registry. Program aborted.'
+  exit
+end
+
+/* Ask user what to do */
+if Interface = "CONSOLE" then do
+  /* The next lines use an plain text interface */
+  /* Show the curent content */
+  say 'Current Edit Setting is : ' || program
+  say 'Please enter a number + <Enter> to set it to :'
+  say '1 to EDIT it with NOTEPAD.EXE'
+  say '2 to EDIT with another program'
+  say 'Any other number to leave without changes'
+  say
+  /* Get selection */
+  pull answer
+end
+else do
+  /* Get the current state, to make preselection in the dialog */
+  if program~LASTPOS('NOTEPAD.EXE') > 0 then answer = '1'
+  else answer = '2'
+  /* The next lines use an "Single Selection Dialog" as interface to the user */
+  sel.1 = "EDIT it with NOTEPAD.EXE"
+  sel.2 = "SELECT another program, currently set to : " || program
+  /* prepare the dialog */
+  dlg = .SingleSelection~new("Please select what to do","Ftype EDIT setting for ooRexx",sel.,answer,,answer)
+  /* show the dialog */
+  answer = dlg~execute
+
+  /* end of user interaction */
+end
+
+/* verify what to do */
+select
+
+  when answer = '1'  then do
+    newval = 'notepad.exe "%1"'
+  end
+
+  when answer = '2' then do
+    if Interface = "CONSOLE" then do
+      say
+      say 'Please enter Path and name of the wanted editor '
+      pull program
+    end
+    else do
+      /* Use the FilenameDialog to let the user select an other program */
+      program = FilenameDialog('',,'Executables (*.EXE)'||'0'x||'*.EXE'||'0'x||'All Files (*.*)'||'0'x||'*.*','LOAD','Select program to use','EXE')
+    end
+    if program = '0' then exit  /* Canceled by user */
+    newval = program || ' "%1"'
+  end
+  otherwise exit
+end
+
+/* Set the new value */
+/* Sets a named value of a given key */
+/* If name is blank or omitted, the default value is set */
+r~SetValue(r~Current_Key,"",newval,NORMAL)
+
+/* Forces the system to write the cache buffer of a given key to disk */
+/* If key_handle is omitted, CURRENT_KEY is flushed */
+r~flush(r~Current_Key)
+
+/* Closes a previously opened key specified by its handle */
+/* Since it can take several seconds before all data is written to disk,*/
+/* FLUSH was used before to empty the cache */
+/* If key_handle is omitted, CURRENT_KEY is closed */
+r~close(r~Current_Key)
+
+msg = 'The EDIT setting for ooRexx should now be' program
+
+if Interface = "CONSOLE" then do
+  say msg
+end
+else do
+  call InfoDialog msg
+end
 
 ::requires "winsystm.cls" -- required for the registry class
 ::requires "OODPLAIN.cls" -- required for the dialog class
