@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                SourceFile.c    */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Translator Source File Class                                     */
 /*                                                                            */
@@ -2271,7 +2271,8 @@ void RexxSource::methodDirective()
                                        /* Go check the next clause to make  */
         this->checkDirective();        /* sure that no code follows         */
         // this uses a special code block
-        _method = new RexxMethod(name, new AbstractCode());
+        BaseCode *code = new AbstractCode();
+        _method = new RexxMethod(name, code);
     }
     /* not an external method?           */
     else if (externalname == OREF_NULL)
@@ -2667,7 +2668,8 @@ void RexxSource::createAttributeGetterMethod(RexxString *name, RexxVariableBase 
     bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
     // create the kernel method for the accessor
-    RexxMethod *_method = new RexxMethod(name, new AttributeGetterCode(retriever));
+    BaseCode *code = new AttributeGetterCode(retriever);
+    RexxMethod *_method = new RexxMethod(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // add this to the target
     addMethod(name, _method, classMethod);
@@ -2691,7 +2693,8 @@ void RexxSource::createAttributeSetterMethod(RexxString *name, RexxVariableBase 
     bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod)
 {
     // create the kernel method for the accessor
-    RexxMethod *_method = new RexxMethod(name, new AttributeSetterCode(retriever));
+    BaseCode *code = new AttributeSetterCode(retriever);
+    RexxMethod *_method = new RexxMethod(name, code);
     _method->setAttributes(privateMethod, protectedMethod, guardedMethod);
     // add this to the target
     addMethod(name, _method, classMethod);
