@@ -48,7 +48,7 @@
 #include "SysActivity.hpp"
 
 // The currently active activity.
-RexxActivity *ActivityManager::currentActivity = OREF_NULL;
+RexxActivity * volatile ActivityManager::currentActivity = OREF_NULL;
 
 // this is a volatile variable used to ensure instruction ordering
 volatile bool ActivityManager::sentinel = false;

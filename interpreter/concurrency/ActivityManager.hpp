@@ -97,7 +97,7 @@ public:
     static RexxObject *getLocalEnvironment(RexxString *name);
     static RexxDirectory *getLocal();
 
-    static RexxActivity *currentActivity;   // the currently active thread
+    static RexxActivity * volatile currentActivity;   // the currently active thread
 
     static inline void postTermination()
     {
