@@ -129,9 +129,9 @@ protected:
     static size_t            nativeActivationCacheSize;
     static RexxStack        *nativeActivations;  /* cached activations                */
                                         /* head of the waiting activity queue*/
-    static RexxActivity     *firstWaitingActivity;
+    static RexxActivity     * volatile firstWaitingActivity;
                                         /* tail of the waiting activity queue*/
-    static RexxActivity     *lastWaitingActivity;
+    static RexxActivity     * volatile lastWaitingActivity;
     static size_t            waitingActivities; /* number of waiting activities      */
     static bool              processTerminating;  // shutdown processing started
     static size_t            interpreterInstances;  // number of times an interpreter has been created.

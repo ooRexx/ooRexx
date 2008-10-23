@@ -47,32 +47,60 @@ class ProtectedObject
 {
 friend class RexxActivity;
 public:
-    inline ProtectedObject() : protectedObject(OREF_NULL), next(NULL)
+    inline ProtectedObject() : protectedObject(OREF_NULL)
+    {
+        // save the activity
+        activity = ActivityManager::currentActivity;
+
+        // it would be better to have the activity class do this, but because
+        // we're doing this with inline methods, we run into a bit of a
+        // circular reference problem
+        next = activity->protectedObjects;
+        activity->protectedObjects = this;
+    }
+
+    inline ProtectedObject(RexxActivity *a) : protectedObject(OREF_NULL), activity(a)
     {
         // it would be better to have the activity class do this, but because
         // we're doing this with inline methods, we run into a bit of a
         // circular reference problem
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
+        next = activity->protectedObjects;
+        activity->protectedObjects = this;
     }
 
     inline ProtectedObject(RexxObject *o) : protectedObject(o), next(NULL)
     {
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
+        // save the activity
+        activity = ActivityManager::currentActivity;
+        next = activity->protectedObjects;
+        activity->protectedObjects = this;
+    }
+
+    inline ProtectedObject(RexxObject *o, RexxActivity *a) : protectedObject(o), next(NULL), activity(a)
+    {
+        next = activity->protectedObjects;
+        activity->protectedObjects = this;
     }
 
     inline ProtectedObject(RexxInternalObject *o) : protectedObject((RexxObject *)o), next(NULL)
     {
-        next = ActivityManager::currentActivity->protectedObjects;
-        ActivityManager::currentActivity->protectedObjects = this;
+        // save the activity
+        activity = ActivityManager::currentActivity;
+        next = activity->protectedObjects;
+        activity->protectedObjects = this;
+    }
+
+    inline ProtectedObject(RexxInternalObject *o, RexxActivity *a) : protectedObject((RexxObject *)o), next(NULL), activity(a)
+    {
+        next = activity->protectedObjects;
+        activity->protectedObjects = this;
     }
 
     inline ~ProtectedObject()
     {
         // remove ourselves from the list and give this object a
         // little hold protection.
-        ActivityManager::currentActivity->protectedObjects = next;
+        activity->protectedObjects = next;
         if (protectedObject != OREF_NULL)
         {
             holdObject(protectedObject);
@@ -135,6 +163,7 @@ public:
 protected:
     RexxObject *protectedObject;       // next in the chain of protected object
     ProtectedObject *next;             // the pointer protected by the object
+    RexxActivity *activity;            // the activity we're running on
 };
 
 
@@ -142,6 +171,7 @@ class ProtectedSet : public ProtectedObject
 {
 public:
     inline ProtectedSet() : ProtectedObject() { }
+    inline ProtectedSet(RexxActivity *a) : ProtectedObject(a) { }
     inline ~ProtectedSet() { }
 
     void add(RexxObject *);

@@ -72,10 +72,10 @@ RexxStack *ActivityManager::nativeActivations = OREF_NULL;
 size_t ActivityManager::nativeActivationCacheSize = 0;
 
 // this is the head of the waiting activity chain
-RexxActivity *ActivityManager::firstWaitingActivity = OREF_NULL;
+RexxActivity * volatile ActivityManager::firstWaitingActivity = OREF_NULL;
 
 // tail of the waiting activity chain
-RexxActivity *ActivityManager::lastWaitingActivity = OREF_NULL;
+RexxActivity * volatile ActivityManager::lastWaitingActivity = OREF_NULL;
 
 // process shutting down flag
 bool ActivityManager::processTerminating = false;
