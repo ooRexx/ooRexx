@@ -46,17 +46,6 @@
 /****************************************************************************/
 
 
-/* load the RxMath functions, if they are not already loaded */
-If RxFuncQuery("MathLoadFuncs") = 1 then do
-	call RxFuncAdd MathLoadFuncs, rxmath, MathLoadFuncs
-	call MathLoadFuncs
-	if result <> '' then do
-		say "Error loading RxMath! Exiting..."
-		exit 1
-	end
-	else say "RxMath loaded!"
-end
-
 reStart:
 signal on any	/* go to the error handling on any error that signal can catch */
 
@@ -75,10 +64,6 @@ end
 
 CalcDlg~deinstall
 
-/* unload the RxMath functions before exiting */
-If RxFuncQuery("MathDropFuncs") = 0 then do
-	call MathDropFuncs
-end
 exit   /* leave program */
 
 /* error handling: Display the cause of the error and restart the programm */
@@ -88,14 +73,18 @@ any:
 	  CalcDlg~StopIt
 	signal reStart
 
-/* This file contains the AdvancedControls class */
+/* If you use a requires directive for oodwin32.cls, you don't need to use a
+ * requires directive for any of the other ooDialog class files.  oodwin32.cls
+ * has a requires directive for oodialog.cls, which in turn has a requires
+ * directive for oodplain.cls.
+ */
 ::requires "oodwin32.cls"
-/* This file contains the OODIALOG classes */
-::requires "OODIALOG.CLS"
 
+/* This requires loads the RxMath functions. */
+::requires "rxmath" library
 
-/* The Calculator vclass */
-/* Advanced controls are required to geth the dialog-item objects */
+/* The Calculator dialog class */
+/* Advanced controls are required to get the dialog-item objects */
 ::class Calculator subclass UserDialog inherit AdvancedControls
 
 ::method Init
