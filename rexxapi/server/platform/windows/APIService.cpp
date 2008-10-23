@@ -172,8 +172,7 @@ bool OnInit()
 // Called when the service control manager wants to stop the service
 void OnStop()
 {
-    //apiServer.stop();    // tell the server to stop processing messages.
-    apiServer.terminateServer();    // tell the server to stop processing messages.
+    apiServer.terminateServer();    // terminate the server.
 }
 
 // called when the service is interrogated
@@ -929,9 +928,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     // For some reason we did not run as a service, (either not installed as
-    // service, the user does not have the authority to start a stoppled
-    // service, or some other reason.) In this case, run rxapi as a normal
-    // process.
+    // service, the user does not have the authority to start a stopped service,
+    // or some other reason.) In this case, run rxapi as a normal process.
     Run(false);
 
     return 0;
