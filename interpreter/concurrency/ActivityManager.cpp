@@ -178,6 +178,7 @@ void ActivityManager::addWaitingActivity(
 {
     ResourceSection lock;                // need the control block locks
 
+    sentinel = true;
                                          /* NOTE:  The following assignments  */
                                          /* do not use OrefSet intentionally. */
                                          /* because we do have yet have kernel*/
@@ -204,7 +205,9 @@ void ActivityManager::addWaitingActivity(
         lastWaitingActivity = waitingAct;
         sentinel = false;                  // another synchronization point
         waitingAct->clearWait();           /* clear the run semaphore           */
+        sentinel = true;
         lock.release();                    // release the lock now
+        sentinel = false;
         if (release)                       /* current semaphore owner?          */
         {
             unlockKernel();
@@ -213,7 +216,9 @@ void ActivityManager::addWaitingActivity(
         SysActivity::relinquish();           /* now allow system stuff to run     */
         waitingAct->waitKernel();          /* and wait for permission           */
     }
+    sentinel = true;
     lockKernel();                        // get the kernel lock now
+    sentinel = false;
     lock.reacquire();                    // get the resource lock back
                                          /* NOTE:  The following assignments  */
                                          /* do not use OrefSet intentionally. */
@@ -241,6 +246,7 @@ void ActivityManager::addWaitingActivity(
        the linked list */
 
     waitingAct->setNextWaitingActivity(OREF_NULL);
+    sentinel = true;
     /* was this the only one?            */
     if (firstWaitingActivity == OREF_NULL)
     {
