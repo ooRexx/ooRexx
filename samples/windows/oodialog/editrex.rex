@@ -170,7 +170,7 @@ r~flush(r~Current_Key)
 /* If key_handle is omitted, CURRENT_KEY is closed */
 r~close(r~Current_Key)
 
-msg = 'The EDIT setting for ooRexx should now be' program
+msg = 'The EDIT setting for ooRexx should now be' newVal
 
 if Interface = "CONSOLE" then do
   say msg
