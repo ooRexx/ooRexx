@@ -63,15 +63,15 @@
 ::class BmpDialog subclass UserDialog
 
 ::method DefineDialog
+   ret = directory("bmp")
    self~AddText(10,10,,, "&Filename: ")
    self~AddComboBox(101,"Filename",60,10,130,80,"VSCROLL")
    self~ConnectList(101,"FileSelected")
-   self~AddBitmapButton(102,13,33,self~SizeX - 26, self~SizeY - 30 - 36 )
+   self~AddBitmapButton(102,13,33,self~SizeX - 26, self~SizeY - 30 - 36, , , "blank.bmp")
    self~AddButtonGroup(100, self~sizeY - 18,,, "&Show 1 OK &Cancel 2 CANCEL", 1)
    self~AddBlackFrame(10,30,self~SizeX - 20, self~SizeY - 30 - 30)
 
 ::method InitDialog
-   ret = directory("bmp")
    self~AddComboEntry(101, "...")
    self~ComboAddDirectory(101, "*.bmp", "READWRITE")
    self~ComboAddDirectory(101, "*.dib", "READWRITE")
