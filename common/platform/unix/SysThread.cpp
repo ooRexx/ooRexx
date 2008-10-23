@@ -134,7 +134,7 @@ void SysThread::createThread(void)
 
     // Create an attr block for Thread.
     pthread_attr_init(&newThreadAttr);
-#if defined(OPSYS_AIX43) || defined(LINUX) ||  defined OPSYS_SUN
+#if defined(LINUX) ||  defined OPSYS_SUN
     /* scheduling on two threads controlled by the result method of the */
     /* message object do not work properly without an enhanced priority */
     pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
@@ -144,7 +144,7 @@ void SysThread::createThread(void)
 #endif
     schedparam.sched_priority = (minpri + maxpri) / 2;
 
-#if defined(OPSYS_SUN) || defined(OPSYS_AIX43)
+#if defined(OPSYS_SUN)
     /* PTHREAD_EXPLICIT_SCHED ==> use scheduling attributes of the new object */
     pthread_attr_setinheritsched(&newThreadAttr, PTHREAD_EXPLICIT_SCHED);
 

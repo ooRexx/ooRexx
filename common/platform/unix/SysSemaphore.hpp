@@ -78,37 +78,8 @@ public:
      void create();
      inline void open() { ; }
      void close();
-#ifdef OPSYS_AIX43
-     inline void request()
-     {
-         if (pthread_mutex_lock(&mutexMutex))
-         {
-             mutex_value++;
-         }
-     }
-
-     inline void release()
-     {
-         if (!mutex_value)
-         {
-             pthread_mutex_unlock(&mutexMutex);
-         }
-         else
-         {
-             mutex_value--;
-         };
-     }
-#else
-    inline void request()
-    {
-        pthread_mutex_lock(&mutexMutex);
-    }
-
-    inline void release()
-    {
-        pthread_mutex_unlock(&mutexMutex);
-    }
-#endif
+     inline void request() { pthread_mutex_lock(&mutexMutex); }
+     inline void release() { pthread_mutex_unlock(&mutexMutex); }
      inline bool requestImmediate() { return pthread_mutex_trylock(&mutexMutex) == 0;}
 
 protected:

@@ -97,7 +97,7 @@ void SysActivity::create(RexxActivity *activity, size_t stackSize)
                                // Create an attr block for Thread.
     rc = pthread_attr_init(&newThreadAttr);
                                // Set the stack size.
- #if defined(OPSYS_AIX43) || defined(LINUX) ||  defined OPSYS_SUN
+ #if defined(LINUX) || defined OPSYS_SUN
 
  /* scheduling on two threads controlled by the result method of the message object */
  /* do not work proper without an enhanced priority                                 */
@@ -105,7 +105,7 @@ void SysActivity::create(RexxActivity *activity, size_t stackSize)
     pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);
     schedparam.sched_priority = 100;
 
- #if defined(OPSYS_SUN) || defined(OPSYS_AIX43)
+ #if defined(OPSYS_SUN)
  /* PTHREAD_EXPLICIT_SCHED ==> use scheduling attributes of the new object    */
 
     rc = pthread_attr_setinheritsched(&newThreadAttr, PTHREAD_EXPLICIT_SCHED);

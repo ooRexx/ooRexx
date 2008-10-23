@@ -750,6 +750,7 @@ void ActivityManager::unlockKernel()
 {
     // the use of the sentinel variables will ensure that the assignment of
     // current activity occurs BEFORE the kernel semaphore is released.
+    sentinel = false;
     currentActivity = OREF_NULL;         /* no current activation             */
     sentinel = true;
     kernelSemaphore.release();           /* release the kernel semaphore      */

@@ -1863,6 +1863,8 @@ void RexxActivity::requestAccess()
     }
     /* can't get it, go stand in line    */
     ActivityManager::addWaitingActivity(this, false);
+    // belt and braces to ensure this is done on this thread
+    ActivityManager::currentActivity = this;          /* set new current activity          */
 }
 
 void RexxActivity::checkStackSpace()
@@ -1873,8 +1875,10 @@ void RexxActivity::checkStackSpace()
 #ifdef STACKCHECK
   size_t temp;                          /* if checking and there isn't room  */
   if (((char *)&temp - (char *)this->stackBase) < MIN_C_STACK && this->stackcheck == true)
+  {
                                        /* go raise an exception             */
-    reportException(Error_Control_stack_full);
+      reportException(Error_Control_stack_full);
+  }
 #endif
 }
 
