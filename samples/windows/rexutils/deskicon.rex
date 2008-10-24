@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -46,27 +46,50 @@
 
 pm = .WindowsProgramManager~new
 
-if pm~InitCode \= 0 then exit
-
-
-/* Create a shortcut to notepad editor with shortcut key CONTROL+ALT+N */
-/* The shortcut should be personal for the current user                */
+/* Create a shortcut to notepad editor with shortcut key CONTROL+ALT+N.
+ * The shortcut will be a personal shortcut for the current user.  "PERSONAL"
+ * is the default.
+ */
 rc = pm~AddDesktopIcon("My Notepad 1","%SystemRoot%\system32\notepad.exe",,,"%HOMEDRIVE%%HOMEPATH%",,,"n")
 
-if rc then say "Error creating shortcut: My Notepad 1"
+if rc then call ErrorMessage "Error.  Could not create the 'My Notepad 1' shortcut."
 
-/* Create a shortcut to run REXXTRY, use the REXX.ICO icon, working diretory is %TEMP%           */
-/* The shortcut should be common for all users, argument is REXXTRY. shortcut key is CTRL+ALT+T. */
-rc = pm~AddDesktopIcon("RexxTry","rexx.exe","rexx.ico",0,"%TEMP%","COMMON","rexxtry","T","MAXIMIZED")
+/* Create a shortcut to run REXXTRY, use the REXX.ICO icon, working diretory is
+ * %TEMP%, th argument is REXXTRY, the shortcut key is CTRL+ALT+T. The shortcut
+ * should be common for all users, but on Vista you can not write to the all
+ * users area unless you have elevated Administrator pivileges.
+ */
+parse value SysVersion() with name version
+if version >= 6 then do
+  msg = "The next shortcut is intended to be an 'All Users' shortcut." || '0d0a0d0a'x || -
+        "But, on Vista you can not write to the 'All Users' area without" || '0d0a'x || -
+        "elevated privileges.  If you run this program with elevated" || '0d0a'x || -
+        "privileges, then creating an 'All Users' shortcut will succeed," || '0d0a'x || -
+        "otherwise it will fail.  You can choose to create an 'All Users'" || '0d0a'x || -
+        "shortcut, or a 'Personal' shortcut.  (Creating a 'Personal'" || '0d0a'x || -
+        "shortcut will always succeed.)"|| '0d0a0d0a'x || -
+        "Create an 'All Users' shortcut?"
 
-if rc then say "Error creating shortcut: RexxTry"
+  isYes = YesNoMessage(msg)
+  if isYes then location = "COMMON"
+  else location = "PERSONAL"
+end
+else do
+  location = "COMMON"
+end
 
-/* Create a shortcut to NOTEPAD editor, working diretory is c:\temp */
-/* The shortcut should be personal for the current user             */
+rc = pm~AddDesktopIcon("RexxTry","rexx.exe","rexx.ico",0,"%TEMP%",location,"rexxtry","T","MAXIMIZED")
+
+if rc then call ErrorMessage "Error.  Could not create the 'RexxTry' shortcut."
+
+/* Create a shortcut to NOTEPAD editor, with the working diretory as c:\temp.
+ * The shortcut will be a personal shortcut for the current user.
+ */
 rc = pm~AddDesktopIcon("My Notepad 2","notepad.exe", , ,VALUE( 'TEMP',, 'ENVIRONMENT' ) || '\',"PERSONAL", , ,"MAXIMIZED")
 
-if rc then say "Error creating shortcut: My Notepad 2"
+if rc then call ErrorMessage "Error.  Could not create the 'My Notepad 2' shortcut."
 
-exit 0
+return 0
 
 ::requires "winsystm.cls"
+::requires "oodplain.cls"  -- For ErrorMessage() / YesNoMessage()
