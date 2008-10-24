@@ -40,6 +40,11 @@
 #include "SystemInterpreter.hpp"
 
 
+#ifdef _AIX
+extern "C"
+{
+#endif
+
 int _init(void) __attribute__((constructor));
 int _fini(void) __attribute__((destructor));
 
@@ -57,3 +62,8 @@ int _fini(void)
     SystemInterpreter::processShutdown();
     return 0;
 }
+
+
+#ifdef _AIX
+}
+#endif

@@ -104,11 +104,7 @@ void SysThread::shutdown()
 
 void SysThread::yield()
 {
-#ifdef OPSYS_AIX41
-    pthread_yield();
-#else
     sched_yield();
-#endif
 }
 
 
@@ -150,7 +146,7 @@ void SysThread::createThread(void)
 
     /* Performance measurements show massive performance improvements > 50 % */
     /* using Round Robin scheduling instead of FIFO scheduling               */
-    pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR); // not supported AIX4.1
+    pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR);
 #endif
     pthread_attr_setschedparam(&newThreadAttr, &schedparam);
 #endif

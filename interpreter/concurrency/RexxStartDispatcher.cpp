@@ -139,7 +139,7 @@ void RexxStartDispatcher::run()
         if (result != NULL)          /* if return provided for            */
         {
             /* actually have a result to return? */
-            if (program_result != OREF_NULL)
+            if ((RexxObject *)program_result != OREF_NULL)
             {
                 /* force to a string value           */
                 program_result = ((RexxObject *)program_result)->stringValue();
@@ -152,7 +152,7 @@ void RexxStartDispatcher::run()
             }
         }
                                              /* If there is a return val...       */
-        if (program_result != OREF_NULL)
+        if ((RexxObject *)program_result != OREF_NULL)
         {
             wholenumber_t return_code;
 

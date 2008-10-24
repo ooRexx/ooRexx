@@ -88,11 +88,7 @@ public:
     static inline void relinquish() { }
     static inline void yield()
     {
-#ifdef OPSYS_AIX41
-        pthread_yield();
-#else
         sched_yield();
-#endif
     }
 
 protected:

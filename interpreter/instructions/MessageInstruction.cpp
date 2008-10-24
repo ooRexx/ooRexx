@@ -236,7 +236,7 @@ void RexxInstructionMessage::execute (
     {
         result = _target;                  /* get the target element            */
     }
-    if (result != OREF_NULL)           /* result returned?                  */
+    if ((RexxObject *)result != OREF_NULL)   /* result returned?                  */
     {
         context->traceResult((RexxObject *)result);  /* trace if necessary                */
         /* set the RESULT variable to the    */

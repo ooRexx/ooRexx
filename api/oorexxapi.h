@@ -3414,9 +3414,6 @@ struct RexxExitContext_
 
 RexxReturnCode RexxEntry RexxCreateInterpreter(RexxInstance **, RexxThreadContext **, RexxOption *);
 
-
-
-
 #define ARGUMENT_TYPE_ARGLIST    RexxArrayObject
 #define ARGUMENT_TYPE_NAME       CSTRING
 #define ARGUMENT_TYPE_SCOPE      RexxObjectPtr

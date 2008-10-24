@@ -48,14 +48,6 @@
 #include "automaton.hpp"
 #include "regexp.hpp"
 
-#ifdef OPSYS_AIX41
-#include <rexx.h>
-
-#define bool   bool
-#define false  false
-#define true   TRUE
-#endif
-
 // constructor: initialize automaton
 automaton::automaton() : ch(NULL), next1(NULL), next2(NULL), final(-1), regexp(NULL),
                          setArray(NULL), setSize(0), size(16), freeState(1), currentPos(0), minimal(false)

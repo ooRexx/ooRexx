@@ -152,7 +152,7 @@ RexxObject *RexxExpressionMessage::evaluate(
         stack->prefixResult(result);       /* replace top element on stack      */
     }
 
-    if (result == OREF_NULL)             /* in an expression and need a result*/
+    if ((RexxObject *)result == OREF_NULL)   /* in an expression and need a result*/
     {
                                          /* need to raise an exception        */
         reportException(Error_No_result_object_message, this->messageName);

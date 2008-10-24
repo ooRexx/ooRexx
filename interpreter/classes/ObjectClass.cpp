@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* Object REXX Kernel                                        ObjectClass.c    */
+/* Object REXX Kernel                                                         */
 /*                                                                            */
 /* The main REXX object definitions                                           */
 /*                                                                            */
@@ -188,7 +188,7 @@ wholenumber_t RexxObject::compareTo(RexxObject *other )
     ProtectedObject result;
 
     sendMessage(OREF_COMPARETO, other, result);
-    if (result == OREF_NULL)
+    if ((RexxObject *)result == OREF_NULL)
     {
         reportException(Error_No_result_object_message, OREF_COMPARETO);
     }
@@ -2159,26 +2159,30 @@ RexxObject *RexxInternalObject::clone()
 #undef operatorMethod
 #define operatorMethod(name, message) RexxObject * RexxObject::name(RexxObject *operand) \
 {\
-  ProtectedObject result;              /* returned result                   */\
-                                       /* do a real message send            */\
-  this->messageSend(OREF_##message, &operand, 1, result);                      \
-  if (result == OREF_NULL)             /* in an expression and need a result*/ \
-                                       /* need to raise an exception        */ \
-    reportException(Error_No_result_object_message, OREF_##message); \
-  return (RexxObject *)result;         /* return the final result           */ \
+    ProtectedObject result;              /* returned result                   */\
+                                         /* do a real message send            */\
+    this->messageSend(OREF_##message, &operand, 1, result);                      \
+    if ((RexxObject *)result == OREF_NULL)   /* in an expression and need a result*/ \
+    {  \
+                                         /* need to raise an exception        */ \
+        reportException(Error_No_result_object_message, OREF_##message); \
+    }  \
+    return (RexxObject *)result;         /* return the final result           */ \
 }\
 
 
 #undef prefixOperatorMethod
 #define prefixOperatorMethod(name, message) RexxObject * RexxObject::name(RexxObject *operand) \
 {\
-  ProtectedObject result;              /* returned result                   */\
-                                       /* do a real message send            */\
-  this->messageSend(OREF_##message, &operand, operand == OREF_NULL ? 0 : 1, result); \
-  if (result == OREF_NULL)             /* in an expression and need a result*/ \
-                                       /* need to raise an exception        */ \
-    reportException(Error_No_result_object_message, OREF_##message); \
-  return (RexxObject *)result;         /* return the final result           */ \
+    ProtectedObject result;              /* returned result                   */\
+                                         /* do a real message send            */\
+    this->messageSend(OREF_##message, &operand, operand == OREF_NULL ? 0 : 1, result); \
+    if ((RexxObject *)result == OREF_NULL)             /* in an expression and need a result*/ \
+    {  \
+                                         /* need to raise an exception        */ \
+        reportException(Error_No_result_object_message, OREF_##message); \
+    }  \
+    return (RexxObject *)result;         /* return the final result           */ \
 }\
 
 

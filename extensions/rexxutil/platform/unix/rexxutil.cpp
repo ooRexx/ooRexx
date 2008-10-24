@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX AIX/LINUX Support                                         lrxutil.c   */
+/* REXX AIX/LINUX Support                                                     */
 /*                                                                            */
 /* AIX  system utility functions                                              */
 /*                                                                            */
@@ -1152,6 +1152,7 @@ size_t FormatFile(
     strcpy(ldp->Temp, ldp->truefile);  /* just copy it over          */
   else {
 #ifdef AIX
+    struct tm stTimestamp;               /* Time info about the file   */
     timestamp = localtime_r(&(finfo->st_mtime),&stTimestamp); /* get the time info */
 #else
     timestamp = localtime(&(finfo->st_mtime));/* get the time info   */
@@ -3603,7 +3604,7 @@ size_t RexxEntry SysGetKey(const char *name, size_t numargs, CONSTRXSTRING args[
 }
 
 
-#ifdef AIX
+#ifdef AIX_DISABLED
 /*************************************************************************
 * Function:  SysAddFuncPkg                                               *
 *                                                                        *
@@ -3775,7 +3776,9 @@ size_t RexxEntry SysDropCmdPkg(const char *name, size_t numargs, CONSTRXSTRING a
                         queuename,     /* Current queue              */
                         retstr );      /* Return RXSTRING            */
 }
+#endif                                 /* CREXX funcs                */
 
+#ifdef AIX
 /*************************************************************************
 * Function:  SysGetpid                                                   *
 *                                                                        *
@@ -5183,11 +5186,13 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysClearRexxMacroSpace, SysClearRexxMacroSpace),
     REXX_CLASSIC_ROUTINE(SysLoadRexxMacroSpace,  SysLoadRexxMacroSpace),
     REXX_CLASSIC_ROUTINE(SysSaveRexxMacroSpace,  SysSaveRexxMacroSpace),
-#if defined(AIX)
+#if defined(AIX_DISABLED)
     REXX_CLASSIC_ROUTINE(SysAddFuncPkg,          SysAddFuncPkg),
     REXX_CLASSIC_ROUTINE(SysAddCmdPkg,           SysAddCmdPkg),
     REXX_CLASSIC_ROUTINE(SysDropFuncPkg,         SysDropFuncPkg),
     REXX_CLASSIC_ROUTINE(SysDropCmdPkg,          SysDropCmdPkg),
+#endif
+#if defined(AIX)
     REXX_CLASSIC_ROUTINE(SysGetpid,              SysGetpid),
 #endif
     REXX_CLASSIC_ROUTINE(SysFork,                SysFork),

@@ -223,7 +223,7 @@ RexxObject *RexxExpressionFunction::evaluate(
             context->externalCall(this->functionName, argcount, stack, OREF_FUNCTIONNAME, result);
             break;
     }
-    if (result == OREF_NULL)             /* result returned?                  */
+    if ((RexxObject *)result == OREF_NULL)    /* result returned?                  */
     {
         /* raise an error                    */
         if (this->functionName)

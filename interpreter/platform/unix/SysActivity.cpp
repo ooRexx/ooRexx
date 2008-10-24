@@ -112,7 +112,7 @@ void SysActivity::create(RexxActivity *activity, size_t stackSize)
 
  /* Performance measurements show massive performance improvements > 50 %     */
  /* using Round Robin scheduling instead of FIFO scheduling                   */
-    rc = pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR); /* not supported AIX4.1 */
+    rc = pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR);
  #endif
     rc = pthread_attr_setschedparam(&newThreadAttr, &schedparam);
 

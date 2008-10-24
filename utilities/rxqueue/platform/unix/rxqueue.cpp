@@ -73,7 +73,9 @@
 #define MSG_BUF_SIZE    256    /* Error message buffer size          */
 
 #define REXXMESSAGEFILE    "rexx.cat"
+#ifndef CATD_ERR
 #define CATD_ERR -1
+#endif
 
 char  line[4096];              /* buffer for data to add to queue    */
 char  work[256];               /* buffer for queue name, if default  */

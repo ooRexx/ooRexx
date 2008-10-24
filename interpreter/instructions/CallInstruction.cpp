@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Translator                                      CallInstruction.c     */
+/* REXX Translator                                                            */
 /*                                                                            */
 /* Primitive Call Parse Class                                                 */
 /*                                                                            */
@@ -274,7 +274,7 @@ void RexxInstructionCall::execute(
                 context->externalCall(_name, argcount, stack, OREF_ROUTINENAME, result);
                 break;
         }
-        if (result != OREF_NULL)         /* result returned?                  */
+        if ((RexxObject *)result != OREF_NULL)   /* result returned?                  */
         {
             /* set the RESULT variable to the    */
             /* message return value              */

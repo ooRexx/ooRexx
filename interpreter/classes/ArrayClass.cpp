@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                               ArrayClass.c     */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Array Class                                                      */
 /*                                                                            */
@@ -2418,7 +2418,7 @@ wholenumber_t RexxArray::sortCompare(RexxObject *comparator, RexxObject *left, R
 {
     ProtectedObject result;
     comparator->sendMessage(OREF_COMPARE, left, right, result);
-    if (result == OREF_NULL)
+    if ((RexxObject *)result == OREF_NULL)
     {
         reportException(Error_No_result_object_message, OREF_COMPARE);
     }
