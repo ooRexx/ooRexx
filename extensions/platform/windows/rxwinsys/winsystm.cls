@@ -40,8 +40,8 @@
 ::requires 'rxwinsys' LIBRARY
 
 /* This is the base class for all the other Windows... classes.  With ooRexx
- * 4.0.0 and on, it no longer serves much puprpose.  Retained for backwards
- * compatibility.
+ * 4.0.0 and on, it no longer serves any puprpose.  Retained temporarily for
+ * backwards compatibility.
  */
 ::class 'WindowsClassesBase'
 
@@ -227,38 +227,24 @@
 
 /*********************************** WindowsProgramManager ****************************************/
 
-::class 'WindowsProgramManager' subclass WindowsClassesBase public inherit VirtualKeyCodes
-
-::method ActGroup
-
-::method init
-   forward class (super) continue
-   ActGroup = ""
-   return self~InitCode
-
+::class 'WindowsProgramManager' public inherit VirtualKeyCodes
 
 ::method AddGroup
    use arg name
-   ActGroup = name
    return WSProgManager("ADDGROUP", name, "")
 
 ::method DeleteGroup
    use arg name
-   ActGroup = ""
    return WSProgManager("DELGROUP", name)
 
 ::method ShowGroup
    use arg name, cmd
    cmd = cmd~translate
-   ActGroup = name
    return WSProgManager("SHOWGROUP", name, cmd)
 
 ::method AddItem
    use arg name, prog, iconfile, iconnr, workdir, placelast, minimized, hotkey
-   if ActGroup = "" then do
-      say "Error: No group is selected"
-      return 1
-   end
+
    if arg(3,'o') = 1 then iconfile = ""
    if arg(4,'o') = 1 then iconnr = 0
    if arg(5,'o') = 1 then workdir = ""
@@ -295,15 +281,10 @@
 
 ::method DeleteItem
    use arg name
-   if ActGroup = "" then do
-      say "Error: No group is selected"
-      return 1
-   end
    return WSProgManager("DELITEM", name)
 
 ::method Close
    parse upper arg savegrp
-   ActGroup = ""
    return WSProgManager("LEAVE", savegrp)
 
 ::method DeleteDesktopIcon
@@ -355,6 +336,13 @@
    newarg[6] = ""  /* not COMMON nor PERSONAL */
    do i = 5 to 1 by -1; if arga~hasindex(i) = 1 then newarg[i] = arga[i]; end   /* copy first 5 */
    forward message "AddDesktopIcon" Arguments (newarg)
+
+-- Deprecated.  Provided for backwards compatibility, does nothing.
+::method deinstall
+
+-- Deprecated.  Provided for backwards compatiblity, will always return 0
+::attribute initCode get
+  return 0
 
 
 
