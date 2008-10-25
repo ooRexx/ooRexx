@@ -255,6 +255,7 @@ bool APIServer::isStoppable()
         {
             return false;
         }
+        current = current->next;
     }
     return true;
 }
