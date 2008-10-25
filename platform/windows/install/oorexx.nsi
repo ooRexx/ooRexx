@@ -268,13 +268,14 @@ Section "${LONGNAME} Samples" SecDemo
   ; Distribution files...
   File "${SRCDIR}\samples\windows\ole\wmi\sysinfo\*.rex"
   File "${SRCDIR}\samples\windows\ole\wmi\sysinfo\*.rc"
-  ; Set output path to the installation directory.
-  SetOutPath $INSTDIR\samples\wsh
-  ; Distribution files...
-  File "${SRCDIR}\samples\windows\wsh\*.rex"
-  File "${SRCDIR}\samples\windows\wsh\*.htm"
-  File "${SRCDIR}\samples\windows\wsh\*.wsf"
-  File "${SRCDIR}\samples\windows\wsh\*.wsc"
+;;; Temporarily block out the orxscrpt samples
+;;;   ; Set output path to the installation directory.
+;;;   SetOutPath $INSTDIR\samples\wsh
+;;;   ; Distribution files...
+;;;   File "${SRCDIR}\samples\windows\wsh\*.rex"
+;;;   File "${SRCDIR}\samples\windows\wsh\*.htm"
+;;;   File "${SRCDIR}\samples\windows\wsh\*.wsf"
+;;;   File "${SRCDIR}\samples\windows\wsh\*.wsc"
   ; Create start menu shortcuts
   SetOutPath $INSTDIR\samples
   CreateDirectory "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples"
