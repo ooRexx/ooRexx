@@ -61,8 +61,8 @@
 
 --creating temporary input and output file
 
-file_name_in = SysTempFileName('tst_input.???')
-file_name_out = SysTempFileName('tst_output.???')
+file_name_in = getTempFileName('tst_input.???')
+file_name_out = getTempFileName('tst_output.???')
 file_in = .stream~new(file_name_in)
 file_out = .stream~new(file_name_out)
 
@@ -215,3 +215,31 @@ call SysFileDelete file_name_out
 return
 
 ::requires "rxregexp.cls"
+
+/**
+ * On Windows Vista, the user can not write to the directory the samples are
+ * installed in.  So, for Windows, this function returns the name of a temporary
+ * file in the temp directory.  The function is designed so that the same logic
+ * could be applied to other operating systems if need be.
+ */
+::routine getTempFileName
+  use strict arg template
+
+  fileName = SysTempFileName(template)
+  parse upper source os .
+
+  -- Add code for other operating systems here if needed.
+  select
+    when os~abbrev(WIN) then do
+      tempDir = value("TEMP", , "ENVIRONMENT")
+      if tempDir == "" then tempDir = value("TMP", , "ENVIRONMENT")
+      if tempDir == "" then leave  -- Give up.
+
+      if tempDir~right(1) \== '\' then tempDir = tempDir'\'
+      fileName = tempDir || fileName
+    end
+    otherwise
+      nop
+  end
+
+return fileName
