@@ -177,7 +177,14 @@ file_out~close
 file_in~close
 
 -- show results
-call SysCls
+say 'going to display the results'
+.stdout~charout('clear the screen? (y/n) ')
+parse lower pull ans
+say
+if ans~left(1) == 'y' then do
+  call SysCls
+end
+
 say '***************** content of input file: ' file_name_in  '**************'
 file_in~open
 do while file_in~lines > 0
@@ -195,7 +202,7 @@ say '*****************        end of output file               **************'
 
 -- do the cleanup
 
-say 'press any key to continue'
+say 'press enter to continue'
 pull
 say 'now removing input file'
 
