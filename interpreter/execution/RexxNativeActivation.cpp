@@ -1873,6 +1873,9 @@ void *RexxNativeActivation::cself()
     // if this is a method invocation, ask the receiver object to figure this out.
     if (receiver != OREF_NULL)
     {
+        // this is necessary to get turn on a guard lock if the method
+        // is guarded.  Failure to do this can cause multithreading problems.
+        methodVariables();
         return receiver->getCSelf();
     }
     // nope, call context doesn't allow this

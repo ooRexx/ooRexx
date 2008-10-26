@@ -304,39 +304,23 @@ RexxActivity *InterpreterInstance::spawnActivity(RexxActivity *parent)
  */
 bool InterpreterInstance::poolActivity(RexxActivity *activity)
 {
-    bool signalShutdown = false;
-
+    ResourceSection lock;
+    // detach from this instance
+    activity->detachInstance();
+    // remove from the activities lists for the instance
+    allActivities->removeItem((RexxObject*)activity);
     if (terminating)
     {
         // is this the last one to finish up?  Generally, the main thread
         // will be waiting for this to terminate.  That is thread 1, we're thread
         // 2.  In reality, this is the test for the last "spawned" thread.
-        if (allActivities->items() <= 2)
+        if (allActivities->items() <= 1)
         {
-            // This activity is currently the current activity.  We're going to run the
-            // uninits on this one, so reactivate it until we're done running
-            activity->activate();
-            // before we update of the data structures, make sure we process any
-            // pending uninit activity.
-            memoryObject.runUninits();
-            // ok, deactivate this again.
-            activity->deactivate();
-            signalShutdown = true;
+            terminationSem.post();
         }
+        // don't allow this to be pooled
+        return false;
     }
-
-    ResourceSection lock;
-
-    // detach from this instance
-    activity->detachInstance();
-    // remove from the activities lists for the instance
-    allActivities->removeItem((RexxObject*)activity);
-    // if this is a shutdown event signal it now.
-    if (signalShutdown)
-    {
-        terminationSem.post();
-    }
-
     // and move this to the global activity pool
     return ActivityManager::poolActivity(activity);
 }
@@ -470,11 +454,11 @@ bool InterpreterInstance::terminate()
     terminating = true;
 
     {
+
+        ResourceSection lock;
         // remove the current activity from the list so we don't clean everything
         // up.  We need to
         allActivities->removeItem((RexxObject *)current);
-
-        ResourceSection lock;
         // go remove all of the activities that are not doing work for this instance
         removeInactiveActivities();
         // no activities left?  We can leave now

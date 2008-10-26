@@ -845,19 +845,6 @@ void ActivityManager::returnActivity(RexxActivity *activityObject)
  */
 void ActivityManager::activityEnded(RexxActivity *activityObject)
 {
-    // was that our last working activity for this interpreter invocation?
-    if (allActivities->items() == 1)
-    {
-        // This activity is currently the current activity.  We're going to run the
-        // uninits on this one, so reactivate it until we're done running
-        activityObject->activate();
-        // before we update of the data structures, make sure we process any
-        // pending uninit activity.
-        memoryObject.forceUninits();
-        // ok, deactivate this again.
-        activityObject->deactivate();
-    }
-
     // START OF CRITICAL SECTION
     {
         ResourceSection lock;       // this is a critical section
@@ -872,11 +859,6 @@ void ActivityManager::activityEnded(RexxActivity *activityObject)
             postTermination();
         }
     }
-    // END OF CRITICAL SECTION
-
-    // this activity owned the kernel semaphore before entering here...release it
-    // now.
-    activityObject->releaseAccess();
 }
 
 

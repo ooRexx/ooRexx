@@ -152,9 +152,6 @@ void RexxActivity::runThread()
         // release the kernel lock and go wait for more work
         this->releaseAccess();
     }
-
-    this->requestAccess();               /* get the kernel access             */
-
     // tell the activity manager we're going away
     ActivityManager::activityEnded(this);
     currentThread.terminate();           /* system specific thread termination*/
