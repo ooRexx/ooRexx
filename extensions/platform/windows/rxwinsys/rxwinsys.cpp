@@ -538,7 +538,6 @@ size_t RexxEntry WSRegistryValue(const char *funcname, size_t argc, CONSTRXSTRIN
     {
         DWORD valType, cbData;
         char * valData, *vType;
-        ULONG intsize;
 
         cbData = sizeof(valData);
 
@@ -549,8 +548,8 @@ size_t RexxEntry WSRegistryValue(const char *funcname, size_t argc, CONSTRXSTRIN
                             NULL,        // reserved
                             &valType,    // address of buffer for value type
                             NULL,        // NULL to get the size
-                            &cbData) == ERROR_SUCCESS)
-        {        // address of data buffer size
+                            &cbData) == ERROR_SUCCESS) // address of data buffer size
+        {
             valData = (char *)GlobalAlloc(GPTR, cbData);
 
             if (!valData)
@@ -563,28 +562,18 @@ size_t RexxEntry WSRegistryValue(const char *funcname, size_t argc, CONSTRXSTRIN
                                 NULL,    // reserved
                                 &valType,    // address of buffer for value type
                                 (LPBYTE)valData,    // address of data buffer
-                                &cbData) == ERROR_SUCCESS)
-            {        // address of data buffer size
-
-                if ((GlobalFlags(retstr->strptr) != GMEM_INVALID_HANDLE) && !GetLastError())
+                                &cbData) == ERROR_SUCCESS) // address of data buffer size
+            {
+                // If the size of the value data is larger than the default
+                // return string buffer, we need to allocate a bigger buffer.
+                if ( cbData + sizeof("RESOURCEDESC, ") > STR_BUFFER )
                 {
-                    intsize = (ULONG)GlobalSize(retstr->strptr);
-                }
-                else
-                {
-                    intsize = STR_BUFFER;
-                }
-                if (intsize > retstr->strlength+1)
-                {
-                    intsize = (ULONG)retstr->strlength+1;
-                }
-                if (cbData+10 > intsize)
-                {
-                    if ((GlobalFlags(retstr->strptr) != GMEM_INVALID_HANDLE) && !GetLastError())
-                    {
-                        GlobalFree(retstr->strptr);
-                    }
+                    GlobalFree(retstr->strptr);
                     retstr->strptr = (char *)GlobalAlloc(GMEM_FIXED, cbData + 10);
+                    if ( retstr->strptr == NULL )
+                    {
+                        RETERR;
+                    }
                 }
 
                 switch (valType)

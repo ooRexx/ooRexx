@@ -2431,7 +2431,8 @@ size_t RexxEntry SysIni(const char *name, size_t numargs, CONSTRXSTRING args[], 
     {
         lSize = 0x0000ffffL;
         /* Allocate a large buffer    */
-        if (!(returnVal = (char *)GlobalAlloc(GPTR, lSize)))
+        returnVal = (char *)GlobalAlloc(GPTR, lSize);
+        if (returnVal == NULL)
         {
             BUILDRXSTRING(retstr, ERROR_NOMEM);
             return VALID_ROUTINE;
@@ -2457,9 +2458,10 @@ size_t RexxEntry SysIni(const char *name, size_t numargs, CONSTRXSTRING args[], 
         else if (WildCard == false)
         {
             if (lSize > buffersize)
-                if (!(retstr->strptr = (PCH)GlobalAlloc(GMEM_FIXED, lSize)))
-                { /* use GlobalAlloc */
-                    if (GlobalFlags(returnVal) != GMEM_INVALID_HANDLE) GlobalFree(returnVal);  /* release buffer */
+                retstr->strptr = (PCH)GlobalAlloc(GMEM_FIXED, lSize);
+                if (retstr->strptr == NULL)
+                {
+                    GlobalFree(returnVal);  /* release buffer */
                     BUILDRXSTRING(retstr, ERROR_NOMEM);
                     return VALID_ROUTINE;
                 }
@@ -2539,7 +2541,10 @@ size_t RexxEntry SysIni(const char *name, size_t numargs, CONSTRXSTRING args[], 
                     ldp.shvb.shvret = 0;
                     if (RexxVariablePool(&ldp.shvb) == RXSHV_BADN)
                     {
-                        if (GlobalFlags(returnVal) != GMEM_INVALID_HANDLE) GlobalFree(returnVal);  /* release buffer */
+                        if (returnVal != NULL)
+                        {
+                            GlobalFree(returnVal);  /* release buffer */
+                        }
                         return INVALID_ROUTINE;    /* error on non-zero          */
                     }
                 }
@@ -2551,10 +2556,10 @@ size_t RexxEntry SysIni(const char *name, size_t numargs, CONSTRXSTRING args[], 
         else
             ldp.count = 0;
 
-        if (GlobalFlags(returnVal) != GMEM_INVALID_HANDLE)
+        if (returnVal != NULL)
         {
             GlobalFree(returnVal);
-            Val = NULL;
+            returnVal = NULL;
         }
 
         /* set number returned        */
@@ -2574,7 +2579,7 @@ size_t RexxEntry SysIni(const char *name, size_t numargs, CONSTRXSTRING args[], 
             return INVALID_ROUTINE;          /* error on non-zero          */
 
     }                                    /* * End - IF (Wildcard ... * */
-    if (returnVal != NULL && ((GlobalFlags(returnVal) != GMEM_INVALID_HANDLE)))
+    if (returnVal != NULL)
     {
         GlobalFree(returnVal);  /* release buffer                              */
     }
