@@ -37,27 +37,36 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-    call SysCls
+    say 'Going to execute the properties demo and display the results'
+    .stdout~charout('Clear the screen first? (y/n) ')
+    parse lower pull ans
+    say
+    if ans~left(1) == 'y' then do
+      call SysCls
+    end
 
 -- Determine the OS
     .local~isWindows = .false
     parse upper source os .
     if os~abbrev("WIN") then .local~isWindows = .true
 
--- Create a default path for any OS / ooRexx Installation
+-- Create a default path for any OS / ooRexx Installation, along with a different
+-- data path to use in the demo.
     default_path = value("REXX_HOME", , 'ENVIRONMENT' )
     if .isWindows then
         do
             if default_path == "" then
                 default_path = "C:\Program Files\ooRexx"
-            default_path = default_path'\'
+            if default_path~left(1) \== '\' then default_path = default_path'\'
         end
     else
         do
             if default_path == "" then
                 default_path = "/opt/ooRexx"
-            default_path = default_path'/'
+            if default_path~left(1) \== '/' then default_path = default_path'/'
         end
+
+    data_path = default_path || 'data'
 
 /*
 In this demonstration we will expect to find 3 "properties" to use within our code
@@ -71,28 +80,28 @@ In this demonstration we will expect to find 3 "properties" to use within our co
 3) save_on_exit - use its "logical value" IF it is set, if not use logical .false
 */
 
+-- Define the name of our "properties" file
+    my_prop_file = getPropertiesFileName('initdata.txt')
+
 /*
 Note: This first section of code is only applicable to this demonstration.  It will delete our properties file
       if it exists.  This code should NOT be included in a live application.
 */
-    p_stream = .stream~new('initdata.txt')
+    p_stream = .stream~new(my_prop_file)
     if p_stream~query('exists') \= '' then
         do
-            rv = SysFileDelete('initdata.txt')
+            rv = SysFileDelete(my_prop_file)
             if rv = 0 then
-                say 'Existing Properties File Deleted'
+                say 'The existing properties file was deleted.'
             else
-                say 'Error In Deleting Existing Properties File.' rv
+                say 'Error deleting the existing properties file.  RC:' rv
         end
     else
-        say 'Properties File Did Not Exist'
+        say 'An existing properties file did not exist.'
     say
 -- End of "demostration only" code
 
--- At this point there should NOT be a file in the current folder named 'initdata.txt'
--- Define the name of our "properties" file
-    my_prop_file = 'initdata.txt'
-
+-- At this point there should NOT be an existing file with our property file's name.
 -- Load the file's contents in our properties collection (remember, it doesn't even exist now)
     props = .properties~load(my_prop_file)
 
@@ -102,28 +111,31 @@ Note: This first section of code is only applicable to this demonstration.  It w
     .local~s_o_e = props~getLogical('save_on_exit',0)
 
 -- We should see that each property is set to its default value
-    say "All Properties Are Set To Their Default Value Since"
-    say "They Didn't Exist On Startup"
+    say "All properties are set to their default value since"
+    say "they didn't exist on startup."
     say 'd_p   =' .d_p
     say 's_d   =' .s_d
     say 's_o_e =' .s_o_e
     say
 
--- Set the values of each property
-    props~setProperty('data_path',default_path)
+-- Set the values of each property to a value different than the default
+    props~setProperty('data_path',data_path)
     props~setWhole('start_dow',2)
     props~setLogical('save_on_exit',.true)
 -- Another way to add an item to our collection
     props~put(value("REXX_HOME",,'ENVIRONMENT'),'ooRexxHome')
 
--- Load each of our properties again
+-- Load each of our properties again, note that the optional 'default' arg is
+-- different than the values used above to set the properties.  Since in each
+-- case below, the property already has a set value, the default value will be
+-- ignored.
     .local~d_p   = props~getProperty('data_path','c:\program files\oorexx\')
     .local~s_d   = props~getWhole('start_dow',1)
-    .local~s_o_e = props~getLogical('save_on_exit',1)
+    .local~s_o_e = props~getLogical('save_on_exit',0)
     .local~r_h   = props~getProperty('ooRexxHome','')
 
 -- We should see that each property is set to its new value even though we have NOT yet saved the values
-    say "All Properties Now Have A New Value"
+    say "All properties now have a new value."
     say 'd_p   =' .d_p
     say 's_d   =' .s_d
     say 's_o_e =' .s_o_e
@@ -134,6 +146,39 @@ Note: This first section of code is only applicable to this demonstration.  It w
     if .s_o_e then
         props~save(my_prop_file)
 
-    say 'There should now be a file named "initdata.txt" in the directory'
-    say 'this program was executed from.'
+    say 'The properties file should now exist.'
+    say '  File:' my_prop_file
 
+return 0
+
+/**
+ * On Windows the normal user can not write to the directory the samples are
+ * installed in.  So, if it is Windows, we write to the user's documents
+ * directory.
+ *
+ * This routine could be expanded to do a similar thing on other operateing
+ * systems.
+ *
+ */
+::routine getPropertiesFileName
+    use strict arg fileName
+
+    -- Insert code for other operating systems here, if needed.
+    select
+        when .isWindows then do
+          -- Find this user's Documents directory.
+
+          shell = .oleObject~new('Shell.Application')
+          folderConstant = '5'~x2d()
+          folderObj = shell~nameSpace(folderConstant)
+          documentsFolder = folderObj~self~path
+          if documentsFolder~right(1) \== '\' then documentsFolder = documentsFolder'\'
+
+          fileName = documentsFolder || fileName
+        end
+
+        otherwise
+            nop
+    end
+
+return fileName
