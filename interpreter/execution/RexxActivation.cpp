@@ -527,7 +527,7 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
                     }
                 }
                 this->activity->run();             /* continue running the new activity */
-                oldActivity->yieldControl();       /* give other activity a chance to go*/
+                oldActivity->relinquish();         /* give other activity a chance to go*/
             }
             return resultObj;                    /* return the result object          */
         }

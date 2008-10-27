@@ -1746,19 +1746,6 @@ void RexxActivity::relinquish()
     ActivityManager::relinquish(this);
 }
 
-void RexxActivity::yieldControl()
-/******************************************************************************/
-/* Function:  Yield control so some other activity can run                    */
-/******************************************************************************/
-{
-    /* other's waiting to go?            */
-    if (ActivityManager::hasWaiters())
-    {
-        /* now join the line                 */
-        ActivityManager::addWaitingActivity(this, true);
-    }
-}
-
 
 /**
  * Tap the current running activation on this activity to

@@ -133,7 +133,7 @@ void RexxCode::run(
     activity->pushStackFrame(newacta);
                                        /* run the method and return result  */
     newacta->run(receiver, msgname, argPtr, argcount, OREF_NULL, result);
-    ActivityManager::currentActivity->yieldControl();    /* yield control now */
+    activity->relinquish();            /* yield control now */
 }
 
 
