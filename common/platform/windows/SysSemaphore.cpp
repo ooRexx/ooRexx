@@ -71,14 +71,6 @@ void SysSemaphore::create()
    }
 }
 
-void SysSemaphore::createGuard()
-{
-   if (sem == 0 )
-   {
-       sem = CreateEvent(NULL, false, true, NULL);
-   }
-}
-
 void SysSemaphore::close()
 {
     if (sem != 0)
@@ -115,19 +107,6 @@ void SysMutex::create()
     {
         mutexMutex = CreateMutex(NULL, false, NULL);
     }
-}
-
-void SysMutex::create(char *name)
-{
-    if (mutexMutex == 0)
-    {
-        mutexMutex = CreateMutex(NULL, false, name);
-    }
-}
-
-void SysMutex::open(char *name)
-{
-    mutexMutex = OpenMutex(MUTEX_ALL_ACCESS, true, name);
 }
 
 void SysMutex::close()

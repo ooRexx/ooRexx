@@ -95,7 +95,6 @@ public:
      SysSemaphore(bool);
      ~SysSemaphore() { ; }
      void create();
-     void createGuard();
      inline void open() { ; }
      void close();
      void post() { SetEvent(sem); };
@@ -123,8 +122,6 @@ public:
      SysMutex(bool);
      ~SysMutex() { ; }
      void create();
-     void create(char *);
-     void open(char *);
      void close();
      inline void request()
      {

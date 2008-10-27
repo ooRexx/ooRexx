@@ -86,65 +86,74 @@ SysSemaphore::SysSemaphore(bool createSem)
 void SysSemaphore::create()
 {
     int iRC = 0;
-                                    // Clear mutex/cond prior to init
-//  this->semMutex = NULL;
-//  this->semCond = NULL;
 
-/* The original settings for pthread_mutexattr_settype() were:
-   SUNOS: PTHREAD_MUTEX_ERRORCHECK
-   LINUX: PTHREAD_MUTEX_RECURSIVE_NP
-*/
+    if (semCond == 0)
+    {
+                                        // Clear mutex/cond prior to init
+    //  this->semMutex = NULL;
+    //  this->semCond = NULL;
 
-#if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
-    pthread_mutexattr_t mutexattr;
+    /* The original settings for pthread_mutexattr_settype() were:
+       SUNOS: PTHREAD_MUTEX_ERRORCHECK
+       LINUX: PTHREAD_MUTEX_RECURSIVE_NP
+    */
 
-    iRC = pthread_mutexattr_init(&mutexattr);
-    if ( iRC == 0 )
-    {
-#if defined( HAVE_PTHREAD_MUTEX_RECURSIVE_NP ) /* Linux most likely */
-        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
-#elif defined( HAVE_PTHREAD_MUTEX_RECURSIVE )
-        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
-#elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
-        iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
-#else
-        fprintf(stderr," *** ERROR: Unknown 2nd argument to pthread_mutexattr_settype()!\n");
-#endif
-    }
-    if ( iRC == 0 )
-    {
-        iRC = pthread_mutex_init(&(this->semMutex), &mutexattr);
-    }
-    if ( iRC == 0 )
-    {
-        iRC = pthread_mutexattr_destroy(&mutexattr); /* It does not affect       */
-    }
-    if ( iRC == 0 )                                 /* mutexes created with it  */
-    {
-        iRC = pthread_cond_init(&(this->semCond), NULL);
-    }
-#else
-    iRC = pthread_mutex_init(&(this->semMutex), NULL);
-    if ( iRC == 0 )
-    {
-        iRC = pthread_cond_init(&(this->semCond), NULL);
-    }
-#endif
-    if ( iRC != 0 )
-    {
-        fprintf(stderr," *** ERROR: At RexxSemaphore(), pthread_mutex_init - RC = %d !\n", iRC);
-        if ( iRC == EINVAL )
+    #if defined( HAVE_PTHREAD_MUTEXATTR_SETTYPE )
+        pthread_mutexattr_t mutexattr;
+
+        iRC = pthread_mutexattr_init(&mutexattr);
+        if ( iRC == 0 )
         {
-            fprintf(stderr," *** ERROR: Application was not built thread safe!\n");
+    #if defined( HAVE_PTHREAD_MUTEX_RECURSIVE_NP ) /* Linux most likely */
+            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
+    #elif defined( HAVE_PTHREAD_MUTEX_RECURSIVE )
+            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+    #elif defined( HAVE_PTHREAD_MUTEX_ERRORCHECK )
+            iRC = pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_ERRORCHECK);
+    #else
+            fprintf(stderr," *** ERROR: Unknown 2nd argument to pthread_mutexattr_settype()!\n");
+    #endif
         }
+        if ( iRC == 0 )
+        {
+            iRC = pthread_mutex_init(&(this->semMutex), &mutexattr);
+        }
+        if ( iRC == 0 )
+        {
+            iRC = pthread_mutexattr_destroy(&mutexattr); /* It does not affect       */
+        }
+        if ( iRC == 0 )                                 /* mutexes created with it  */
+        {
+            iRC = pthread_cond_init(&(this->semCond), NULL);
+        }
+    #else
+        iRC = pthread_mutex_init(&(this->semMutex), NULL);
+        if ( iRC == 0 )
+        {
+            iRC = pthread_cond_init(&(this->semCond), NULL);
+        }
+    #endif
+        if ( iRC != 0 )
+        {
+            fprintf(stderr," *** ERROR: At RexxSemaphore(), pthread_mutex_init - RC = %d !\n", iRC);
+            if ( iRC == EINVAL )
+            {
+                fprintf(stderr," *** ERROR: Application was not built thread safe!\n");
+            }
+        }
+        this->postedCount = 0;
     }
-    this->postedCount = 0;
 }
 
 void SysSemaphore::close()
 {
-    pthread_cond_destroy(&(this->semCond));
-    pthread_mutex_destroy(&(this->semMutex));
+    if (semCond != 0)
+    {
+        pthread_cond_destroy(&(this->semCond));
+        pthread_mutex_destroy(&(this->semMutex));
+        semCond = 0;
+        semMutex = 0;
+    }
 }
 
 
@@ -169,7 +178,7 @@ void SysSemaphore::wait()
     schedparam.sched_priority = 100;
     pthread_setschedparam(pthread_self(),SCHED_OTHER, &schedparam);
     rc = pthread_mutex_lock(&(this->semMutex));      // Lock access to semaphore
-    if (!this->postedCount)                     // Has it been posted?
+    if (this->postedCount == 0)                      // Has it been posted?
     {
         rc = pthread_cond_wait(&(this->semCond), &(this->semMutex)); // Nope, then wait on it.
     }
@@ -224,9 +233,12 @@ SysMutex::SysMutex(bool createSem)
 
 void SysMutex::create()
 {
+    // don't create this multiple times
+    if (mutexMutex != 0)
+    {
+        return;
+    }
     int iRC = 0;
-    // Clear Mutex prior to Init call
-    this->mutex_value = 0;
 
 /* The original settings for pthread_mutexattr_settype() were:
    SUNOS: PTHREAD_MUTEX_ERRORCHECK
@@ -268,6 +280,9 @@ void SysMutex::create()
 
 void SysMutex::close()
 {
-    this->mutex_value = 0;
-    pthread_mutex_destroy(&(this->mutexMutex));
+    if (mutexMutex != 0)
+    {
+        pthread_mutex_destroy(&(this->mutexMutex));
+        mutexMutex = 0;
+    }
 }

@@ -1289,7 +1289,7 @@ void RexxActivity::run()
 {
     guardsem.post();                     /* and the guard semaphore           */
     runsem.post();                       /* post the run semaphore            */
-    SysActivity::yield();                  /* yield the thread                  */
+    SysActivity::yield();                /* yield the thread                  */
 }
 
 
@@ -1305,7 +1305,7 @@ void RexxActivity::run(RexxMessage *target)
 
     guardsem.post();                     /* and the guard semaphore           */
     runsem.post();                       /* post the run semaphore            */
-    SysActivity::yield();                  /* yield the thread                  */
+    SysActivity::yield();                /* yield the thread                  */
 }
 
 

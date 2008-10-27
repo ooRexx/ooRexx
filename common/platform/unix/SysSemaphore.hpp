@@ -51,11 +51,10 @@
 
 class SysSemaphore {
 public:
-     SysSemaphore() { ; }
+     SysSemaphore() : semCond(0), semMutex(0), postedCount(0) { ; }
      SysSemaphore(bool);
      ~SysSemaphore() { ; }
      void create();
-     inline void createGuard() { create(); }
      inline void open() { ; }
      void close();
      void post();
@@ -72,7 +71,7 @@ protected:
 
 class SysMutex {
 public:
-     SysMutex() { ; }
+     SysMutex() mutexMutex(0) { ; }
      SysMutex(bool);
      ~SysMutex() { ; }
      void create();
@@ -84,6 +83,5 @@ public:
 
 protected:
      pthread_mutex_t mutexMutex;
-     int mutex_value;
 };
 #endif
