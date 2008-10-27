@@ -830,10 +830,6 @@ void ActivityManager::returnActivity(RexxActivity *activityObject)
         // cleanup any system resources this activity might own
         activityObject->cleanupActivityResources();
     }
-
-    // this activity owned the kernel semaphore before entering here...release it
-    // now.
-    activityObject->releaseAccess();
 }
 
 

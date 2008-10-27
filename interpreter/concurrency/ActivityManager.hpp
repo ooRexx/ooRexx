@@ -56,7 +56,6 @@ public:
     static RexxActivity *findActivity();
     static RexxActivity *findActivity(thread_id_t);
     static RexxActivity *getActivity();
-    static void returnActivity() { returnActivity(currentActivity); }
     static void returnActivity(RexxActivity *);
     static void activityEnded(RexxActivity *);
     static void shutdown();

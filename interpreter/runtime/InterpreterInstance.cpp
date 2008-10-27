@@ -242,6 +242,10 @@ bool InterpreterInstance::detachThread(RexxActivity *activity)
         return true;
     }
 
+
+    // this activity owned the kernel semaphore before entering here...release it
+    // now.
+    activity->releaseAccess();
     ResourceSection lock;
 
     allActivities->removeItem((RexxObject *)activity);
