@@ -1440,7 +1440,7 @@ RexxString *RexxObject::objectName()
     RexxObject *scope = lastMethod()->getScope();    /* get the method's scope            */
                                          /* get the object name variable      */
     string_value = (RexxString *)this->getObjectVariable(OREF_NAME, scope);
-    if (string_value == OREF_NULL)
+    if ((RexxObject *)string_value == OREF_NULL)
     {     /* no name?                          */
         if (this->isBaseClass())           /* primitive object?                 */
         {

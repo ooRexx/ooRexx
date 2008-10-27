@@ -50,10 +50,10 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <netdb.h>
-#if !defined(__OpenBSD__) && !defined(_AIX)
+#if !defined(__OpenBSD__) && !defined(AIX)
  #include <byteswap.h>
 #endif
-#ifdef _AIX
+#ifdef AIX
 #include <strings.h>
 #endif
 #include <errno.h>

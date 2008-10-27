@@ -115,6 +115,7 @@ ORX_LDFLAGS_EXECUTABLE=""
 ORX_LDFLAGS_LIBRARY=""
 ORX_LDFLAGS_PACKAGE="-Xcompiler -nostartfiles"
 ORX_PLATFORM="unix"
+ORX_INIT_LDFLAGS=""
 case "$target" in
    *ibm-aix*)
       GENERIC_OS="-DAIX"
@@ -130,6 +131,7 @@ case "$target" in
             CC_WARNINGS="$XLC_WARNINGS"
             CXX_WARNINGS="$XLCXX_WARNINGS"
             LDFLAGS="-Wl,-brtl"
+            ORX_INIT_LDFLAGS="-Wl,-binitfini:_init:_fini"
             ;;
          *)
 dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
@@ -255,6 +257,7 @@ AC_SUBST(ORX_LDFLAGS_EXECUTABLE)
 AC_SUBST(ORX_LDFLAGS_LIBRARY)
 AC_SUBST(ORX_LDFLAGS_PACKAGE)
 AC_SUBST(ORX_PLATFORM)
+AC_SUBST(ORX_INIT_LDFLAGS)
 
 dnl Checks for header files.
 AC_HEADER_STDC

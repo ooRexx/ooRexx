@@ -749,7 +749,7 @@ rexx_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 # Extra libraries for rexx
 #
 rexx_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
-rexx_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
+rexx_LDFLAGS = @ORX_INIT_LDFLAGS@ @ORX_LDFLAGS_EXECUTABLE@
 
 #################### rexximage ##########################
 # Sources for rexx
@@ -766,7 +766,7 @@ rexximage_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 # Extra libraries for rexx
 #
 rexximage_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
-rexximage_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
+rexximage_LDFLAGS = @ORX_INIT_LDFLAGS@ @ORX_LDFLAGS_EXECUTABLE@
 
 #################### rexxc #########################
 # Sources for rexxc
@@ -785,7 +785,7 @@ rexxc_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 # Extra libraries for rexxc
 #
 rexxc_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
-rexxc_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
+rexxc_LDFLAGS = @ORX_INIT_LDFLAGS@ @ORX_LDFLAGS_EXECUTABLE@
 
 #################### rxqueue #########################
 # Sources for rxqueue
@@ -805,7 +805,7 @@ rxqueue_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 # Extra libraries for rxqueue
 #
 rxqueue_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
-rxqueue_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
+rxqueue_LDFLAGS = @ORX_INIT_LDFLAGS@ @ORX_LDFLAGS_EXECUTABLE@
 
 #################### rxsubcom #########################
 # Sources for rxsubcom
@@ -825,7 +825,7 @@ rxsubcom_CXXFLAGS  = $(COMMON_CPPFLAGS) \
 # Extra libraries for rxsubcom
 #
 rxsubcom_LDADD   = librexx.la librexxapi.la @ORX_LDADD_EXECUTABLE@
-rxsubcom_LDFLAGS = @ORX_LDFLAGS_EXECUTABLE@
+rxsubcom_LDFLAGS = @ORX_INIT_LDFLAGS@ @ORX_LDFLAGS_EXECUTABLE@
 
 #################### librexxutil.so ################
 #
