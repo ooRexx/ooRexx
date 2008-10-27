@@ -68,7 +68,6 @@ void *threadFnc(void *args)
  */
 void SysActivity::close()
 {
-    pthread_detach(threadId);
     threadId = 0;
 }
 

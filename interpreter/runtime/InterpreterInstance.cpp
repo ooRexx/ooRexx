@@ -429,9 +429,8 @@ void InterpreterInstance::removeInactiveActivities()
         }
         else
         {
-            // have the activity manager remove this from the global tables
-            // and perform resource cleanup
-            ActivityManager::returnActivity(activity);
+            // have the inactive thread wake up and terminate 
+            activity->terminatePoolActivity();
         }
     }
 }
