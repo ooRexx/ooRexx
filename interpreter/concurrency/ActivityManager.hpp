@@ -51,11 +51,8 @@ public:
     static void liveGeneral(int reason);
 
     static void addWaitingActivity(RexxActivity *a, bool release);
-    static bool hasWaiters() { return firstWaitingActivity != OREF_NULL; }
-    static inline RexxActivity *waitingActivity()
-    {
-        return firstWaitingActivity;
-    }
+    static inline bool hasWaiters() { return firstWaitingActivity != OREF_NULL; }
+    static inline RexxActivity *waitingActivity() { return firstWaitingActivity; }
     static RexxActivity *findActivity();
     static RexxActivity *findActivity(thread_id_t);
     static RexxActivity *getActivity();

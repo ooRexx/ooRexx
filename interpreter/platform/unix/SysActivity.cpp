@@ -68,18 +68,9 @@ void *threadFnc(void *args)
  */
 void SysActivity::close()
 {
+    pthread_detach(threadId);
     threadId = 0;
 }
-
-
-/**
- * Perform any platform-specific termination steps.
- */
-void SysActivity::terminate()
-{
-    pthread_detach(threadId);
-}
-
 
 /**
  * Create a new thread for an activity.

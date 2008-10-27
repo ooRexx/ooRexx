@@ -57,7 +57,6 @@ public:
 
     inline SysActivity() : threadId(0), hThread(NULL) { }
     inline bool equals(thread_id_t t) { return threadId == t; }
-    inline void terminate() { }
     void create(RexxActivity *activity, size_t stackSize);
     void close();
     void useCurrentThread();

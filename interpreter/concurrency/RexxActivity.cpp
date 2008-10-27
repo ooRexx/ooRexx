@@ -84,6 +84,7 @@ void RexxActivity::runThread()
     bool firstDispatch = true;           // somethings only occur on subsequent requests
                                          /* establish the stack base pointer  */
     this->stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
+
     for (;;)
     {
         // save the actitivation level in case there's an error unwind for an unhandled
@@ -133,7 +134,6 @@ void RexxActivity::runThread()
 
         // make sure we get restored to the same base activation level.
         restoreActivationLevel(activityLevel);
-
         memoryObject.runUninits();         /* run any needed UNINIT methods now */
 
         this->deactivate();                // no longer an active activity
@@ -154,7 +154,6 @@ void RexxActivity::runThread()
     }
     // tell the activity manager we're going away
     ActivityManager::activityEnded(this);
-    currentThread.terminate();           /* system specific thread termination*/
     return;                              /* finished                          */
 }
 
@@ -1745,7 +1744,6 @@ void RexxActivity::relinquish()
 {
     ActivityManager::relinquish(this);
 }
-
 
 /**
  * Tap the current running activation on this activity to

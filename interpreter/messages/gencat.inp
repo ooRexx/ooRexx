@@ -894,7 +894,7 @@ $ Error_Incorrect_call_invalid_conversion
 395 &1 conversion to format "&2" is not allowed
 
 $ Error_Incorrect_call_random_range
-396 RANDOM difference between argument 1 ("&1") and argument 2 ("&2") must not exceed 100000
+396 RANDOM difference between argument 1 ("&1") and argument 2 ("&2") must not exceed 999,999,999
 
 $ Error_Incorrect_call_stream_name
 397 &1 argument 1 must be a valid stream name; found "&2"
@@ -1674,7 +1674,7 @@ $ Error_Invalid_argument_format
 690 Argument &1 is not in a valid format; found "&2"
 
 $ Error_Unsupported_new_method
-691 New method is not supported for the &1 class
+691 NEW method is not supported for the &1 class
 
 $ Error_Symbol_or_string_attribute
 692 String or symbol expected as ::ATTRIBUTE directive name

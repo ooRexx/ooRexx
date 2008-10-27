@@ -212,9 +212,9 @@ void ActivityManager::addWaitingActivity(
         {
             unlockKernel();
         }
-        SysActivity::yield();                /* yield the thread                  */
-        SysActivity::relinquish();           /* now allow system stuff to run     */
-        waitingAct->waitKernel();          /* and wait for permission           */
+        SysActivity::yield();            /* yield the thread                  */
+        SysActivity::relinquish();       /* now allow system stuff to run     */
+        waitingAct->waitKernel();        /* and wait for permission           */
     }
     sentinel = true;
     lockKernel();                        // get the kernel lock now

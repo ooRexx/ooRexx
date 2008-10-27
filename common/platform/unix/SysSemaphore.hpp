@@ -51,7 +51,7 @@
 
 class SysSemaphore {
 public:
-     SysSemaphore() : semCond(0), semMutex(0), postedCount(0) { ; }
+     SysSemaphore() : postedCount(0), created(false) { }
      SysSemaphore(bool);
      ~SysSemaphore() { ; }
      void create();
@@ -67,11 +67,12 @@ protected:
      pthread_cond_t  semCond;
      pthread_mutex_t semMutex;
      int postedCount;
+     bool created; 
 };
 
 class SysMutex {
 public:
-     SysMutex() mutexMutex(0) { ; }
+     SysMutex() : created(false) { ; }
      SysMutex(bool);
      ~SysMutex() { ; }
      void create();
@@ -83,5 +84,6 @@ public:
 
 protected:
      pthread_mutex_t mutexMutex;
+     bool created; 
 };
 #endif

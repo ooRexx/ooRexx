@@ -87,7 +87,7 @@ void SysSemaphore::create()
 {
     int iRC = 0;
 
-    if (semCond == 0)
+    if (!created)
     {
                                         // Clear mutex/cond prior to init
     //  this->semMutex = NULL;
@@ -142,17 +142,17 @@ void SysSemaphore::create()
             }
         }
         this->postedCount = 0;
+        created = true; 
     }
 }
 
 void SysSemaphore::close()
 {
-    if (semCond != 0)
+    if (created)
     {
         pthread_cond_destroy(&(this->semCond));
         pthread_mutex_destroy(&(this->semMutex));
-        semCond = 0;
-        semMutex = 0;
+        created = false; 
     }
 }
 
@@ -234,7 +234,7 @@ SysMutex::SysMutex(bool createSem)
 void SysMutex::create()
 {
     // don't create this multiple times
-    if (mutexMutex != 0)
+    if (created)
     {
         return;
     }
@@ -275,14 +275,16 @@ void SysMutex::create()
     {
         fprintf(stderr," *** ERROR: At RexxMutex(), pthread_mutex_init - RC = %d !\n", iRC);
     }
+
+    created = true; 
 }
 
 
 void SysMutex::close()
 {
-    if (mutexMutex != 0)
+    if (created)
     {
         pthread_mutex_destroy(&(this->mutexMutex));
-        mutexMutex = 0;
+        created = false; 
     }
 }
