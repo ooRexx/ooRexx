@@ -39,23 +39,7 @@
 
 ::requires 'rxwinsys' LIBRARY
 
-/* This is the base class for all the other Windows... classes.  With ooRexx
- * 4.0.0 and on, it no longer serves any puprpose.  Retained temporarily for
- * backwards compatibility.
- */
-::class 'WindowsClassesBase'
-
-::attribute initCode
-
-::method init
-   self~initCode = 0
-   return self~initCode
-
-::method deinstall
-   nop
-
-
-::class 'WindowsRegistry' subclass WindowsClassesBase public
+::class 'WindowsRegistry' public
 
 ::method Local_Machine attribute
 ::method Current_User attribute
@@ -66,17 +50,13 @@
 ::method Current_Config attribute
 
 ::method init
-    if self~Init:super = 0 then do
-      self~Local_Machine = WSRegistryKey("OPEN","MACHINE");
-      self~Current_User = WSRegistryKey("OPEN","CURRENT_USER");
-      self~Users = WSRegistryKey("OPEN","USERS");
-      self~Classes_Root = WSRegistryKey("OPEN","CLASSES");
-      self~Performance_Data = WSRegistryKey("OPEN","PERFORMANCE");
-      self~Current_Config = WSRegistryKey("OPEN","CURRENT_CONFIG");
-      self~Current_Key = self~Local_Machine
-   end
-   return self~InitCode
-
+   self~Local_Machine = WSRegistryKey("OPEN","MACHINE");
+   self~Current_User = WSRegistryKey("OPEN","CURRENT_USER");
+   self~Users = WSRegistryKey("OPEN","USERS");
+   self~Classes_Root = WSRegistryKey("OPEN","CLASSES");
+   self~Performance_Data = WSRegistryKey("OPEN","PERFORMANCE");
+   self~Current_Config = WSRegistryKey("OPEN","CURRENT_CONFIG");
+   self~Current_Key = self~Local_Machine
 
 /* support previous version */
 ::method CurrentKey
@@ -223,6 +203,12 @@
    retc = WSRegistryFile("UNLOAD", hkey, subkeyname)
    return retc
 
+-- Deprecated.  Provided for backwards compatibility, does nothing.
+::method deinstall
+
+-- Deprecated.  Provided for backwards compatiblity, will always return 0
+::attribute initCode get
+  return 0
 
 
 /*********************************** WindowsProgramManager ****************************************/
@@ -626,23 +612,23 @@
 
 /********************* WindowsManager **********************/
 
-::class 'WindowsManager' subclass WindowsClassesBase public
+::class 'WindowsManager' public
 
 ::method Find
    parse arg title
    hw = WSCtrlWindow("FIND", title)
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method ForegroundWindow
    hW = WSCtrlWindow("GETFG")
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method WindowAtPosition
    hW = WSCtrlWindow("ATPOS", x, y)
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method ConsoleTitle
    return WSCtrlWindow("TITLE", 0)
@@ -654,34 +640,34 @@
 ::Method SendTextToWindow
    use arg title, text
    w = self~find(title)
-   if w \= .Nil then w~SendText(text)
+   if w \= .nil then w~SendText(text)
 
 ::method PushButtonInWindow
    use arg title, text
    w = self~find(title)
-   if w \= .Nil then do
+   if w \= .nil then do
        cW = w~FindChild(text)
-       if cW \= .Nil then cW~SendKey("SPACE")
+       if cW \= .nil then cW~SendKey("SPACE")
    end
 
 ::method ProcessMenuCommand
    if Arg() < 2 then return 0
    if Arg() = 2 then do
        wnd = self~Find(Arg(1))
-       if wnd = .Nil then return 0
+       if wnd = .nil then return 0
        men = wnd~Menu
-       if men = .Nil then return 0
+       if men = .nil then return 0
        men~ProcessItem(men~FindItem(Arg(1)))
    end
    else do
        wnd = self~Find(Arg(1))
-       if wnd = .Nil then return 0
+       if wnd = .nil then return 0
        sub = wnd~Menu
-       if sub = .Nil then return 0
+       if sub = .nil then return 0
        do i = 2 to Arg()-1
            sub = sub~FindSubMenu(Arg(i))
        end
-       if sub = .Nil then return 0
+       if sub = .nil then return 0
        sub~ProcessItem(sub~FindItem(Arg(Arg())))
    end
 
@@ -704,6 +690,12 @@
    if milliseconds < 1 then milliseconds = 5000
    return WSCtrlSend("TO", "0xFFFF", "0x001A", "0x0", "0x0", milliseconds, 'E')
 
+-- Deprecated.  Provided for backwards compatibility, does nothing.
+::method deinstall
+
+-- Deprecated.  Provided for backwards compatiblity, will always return 0
+::attribute initCode get
+  return 0
 
 
 /********************* WindowsObject **********************/
@@ -783,45 +775,45 @@
 
 ::method FindChild
    parse arg title
-   hW = WSCtrlWindow("FINDCHILD", self~hwnd, title)
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   hw = WSCtrlWindow("FINDCHILD", self~hwnd, title)
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method ChildAtPosition
    use arg x, y
    hw = WSCtrlWindow("ATPOS", x, y, self~hwnd)
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method Next
    hw = WSCtrlWindow("HNDL", self~hwnd, "NEXT")
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method Previous
    hw = WSCtrlWindow("HNDL", self~hwnd, "PREVIOUS")
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method First
    hw = WSCtrlWindow("HNDL", self~hwnd, "FIRST")
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method FirstChild
    hw = WSCtrlWindow("HNDL", self~hwnd, "FIRSTCHILD")
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method Last
    hw = WSCtrlWindow("HNDL", self~hwnd, "LAST")
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method Owner
    hw = WSCtrlWindow("HNDL", self~hwnd, "OWNER")
-   if hw \= 0 then return .WindowObject~new(hw)
-   else return .Nil
+   if hw~substr(3) = 0 then return .nil
+   else return .WindowObject~new(hw)
 
 ::method EnumerateChildren
    fc = self~FirstChild
@@ -843,7 +835,6 @@
    end
    wndlist.0 = cnt
    return wndlist.
-
 
 ::method SendMessage
    use arg message, wParam, lParam
@@ -979,7 +970,7 @@
 
 ::method Menu
    hw = WSCtrlMenu("GET", self~hwnd)
-   if hw \= 0 then do
+   if hw~substr(3) \= 0 then do
        obj = .MenuObject~new(hw, self)
        if obj~IsMenu = 0 then return .Nil
        else return obj
@@ -988,7 +979,7 @@
 
 ::method SystemMenu
    hw = WSCtrlMenu("SYS", self~hwnd)
-   if hw \= 0 then do
+   if hw~substr(3) \= 0 then do
        obj = .MenuObject~new(hw, self)
        if obj~IsMenu = 0 then return .Nil
        else return obj
@@ -1052,7 +1043,7 @@
    use arg pos
    if Arg(1,'o') = 1 then return .Nil
    hw = WSCtrlMenu("SUB", self~hwnd, pos)
-   if hw \= 0 then return .MenuObject~new(hw, self~MainWnd)
+   if hw~substr(3) \= 0 then return .MenuObject~new(hw, self~MainWnd)
    else return .Nil
 
 ::method FindSubMenu
@@ -1088,7 +1079,7 @@
 
 /********************* WindowsClipboard **********************/
 
-::class 'WindowsClipboard' subclass WindowsClassesBase public
+::class 'WindowsClipboard' public
 
 ::method Copy
    use arg txt
@@ -1106,3 +1097,9 @@
 ::method makeArray
    return WSClipboard("PASTE")~makeArray
 
+-- Deprecated.  Provided for backwards compatibility, does nothing.
+::method deinstall
+
+-- Deprecated.  Provided for backwards compatiblity, will always return 0
+::attribute initCode get
+  return 0

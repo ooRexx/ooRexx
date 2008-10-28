@@ -569,7 +569,7 @@ size_t RexxEntry WSRegistryValue(const char *funcname, size_t argc, CONSTRXSTRIN
                 if ( cbData + sizeof("RESOURCEDESC, ") > STR_BUFFER )
                 {
                     GlobalFree(retstr->strptr);
-                    retstr->strptr = (char *)GlobalAlloc(GMEM_FIXED, cbData + 10);
+                    retstr->strptr = (char *)GlobalAlloc(GMEM_FIXED, cbData + sizeof("RESOURCEDESC, "));
                     if ( retstr->strptr == NULL )
                     {
                         RETERR;
