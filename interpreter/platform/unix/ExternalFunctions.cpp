@@ -255,7 +255,7 @@ RexxRoutine1(RexxStringObject, sysDirectory, OPTIONAL_CSTRING, dir)
 RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 {
     const char *endPtr = name + strlen(name);        // point to last character
-    const char *pathEnd = strrchr(name, '\\');       // find the last backslash in name
+    const char *pathEnd = strrchr(name, '/');       // find the last slash in name
     // get the end of the path portion (if any)
     const char *pathStart = name;
     // note that pathend is one character past the end of the path.
