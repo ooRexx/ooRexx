@@ -176,17 +176,29 @@ char *ProgramMetaData::getImageData()
  * Validate that this saved program image is valid for this
  * interpreter.
  *
+ * @param badVersion Indicates whether this is a version
+ *                   failure.
+ *
  * @return true if this is good data, false otherwise.
  */
-bool ProgramMetaData::validate()
+bool ProgramMetaData::validate(bool &badVersion)
 {
+    badVersion = false;
     // we always add the compiled program tag to the front
     if (strcmp(fileTag, compiledHeader) != 0)
     {
         return false;
     }
-    return (magicNumber == MAGICNUMBER) && (imageVersion == METAVERSION) && (wordSize == Interpreter::getWordSize()) &&
-        ((bigEndian != 0) == Interpreter::isBigEndian());
+    // check all of the version specifics
+    if (magicNumber != MAGICNUMBER || imageVersion != METAVERSION || wordSize != Interpreter::getWordSize() ||
+        (bigEndian != 0) != Interpreter::isBigEndian())
+    {
+        // this is a version failure, mark it as such
+        badVersion = true;
+        return false;
+    }
+    // good to go.
+    return true;
 }
 
 
@@ -213,13 +225,22 @@ void ProgramMetaData::write(FILE *handle, RexxBuffer *program)
  * @return A RexxBuffer instance containing the program data, or OREF_NULL
  *         if the file is not a valid image.
  */
-RexxBuffer *ProgramMetaData::read(FILE *handle)
+RexxBuffer *ProgramMetaData::read(RexxString *fileName, FILE *handle)
 {
+    bool badVersion = false;
+
     // now read the control info
     fread((char *)this, 1, getHeaderSize(), handle);
     // validate all of the meta information
-    if (!validate())
+    if (!validate(badVersion))
     {
+        // if this failed because of the version signature, we need to raise an error now.
+        if (badVersion)
+        {
+            fclose(handle);                    /* close the file                    */
+            reportException(Error_Program_unreadable_version, fileName);
+        }
+
         // if it didn't validate, it might be because we have a unix-style "hash bang" line at the
         // beginning of the file.  The first read in bit has a "#!", then we need to read
         // beyond the first linend and try again.
@@ -245,9 +266,14 @@ RexxBuffer *ProgramMetaData::read(FILE *handle)
                 // if this doesn't work, no point in being pushy about it.
                 fread((char *)this, 1, getHeaderSize(), handle);
                 // validate all of the meta information
-                if (!validate())
+                if (!validate(badVersion))
                 {
                     fclose(handle);                    /* close the file                    */
+                    // if because of a bad version sig, we can close now
+                    if (badVersion)
+                    {
+                        reportException(Error_Program_unreadable_version, fileName);
+                    }
                     return OREF_NULL;
                 }
             }

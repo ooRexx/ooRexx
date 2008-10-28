@@ -57,9 +57,9 @@ public:
     RexxBuffer *extractBufferData();
     char *getImageData();
     size_t getImageSize() { return imageSize; }
-    bool validate();
+    bool validate(bool &);
     void write(FILE *handle, RexxBuffer *program);
-    RexxBuffer *read(FILE *handle);
+    RexxBuffer *read(RexxString *name, FILE *handle);
 
 protected:
     enum

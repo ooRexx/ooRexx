@@ -773,9 +773,15 @@ RoutineClass *RoutineClass::restore(RexxString *fileName, RexxBuffer *buffer)
     }
 
     ProgramMetaData *metaData = (ProgramMetaData *)data;
+    bool badVersion = false;
     // make sure this is valid for interpreter
-    if (!metaData->validate())
+    if (!metaData->validate(badVersion))
     {
+        // if the failure was due to a version mismatch, this is an error condition.
+        if (badVersion)
+        {
+            reportException(Error_Program_unreadable_version, fileName);
+        }
         return OREF_NULL;
     }
     // this should be valid...try to restore.
@@ -792,7 +798,7 @@ RoutineClass *RoutineClass::restore(RexxString *fileName, RexxBuffer *buffer)
  *
  * @return The unflattened object.
  */
-RoutineClass *RoutineClass::restore(RXSTRING *inData)
+RoutineClass *RoutineClass::restore(RXSTRING *inData, RexxString *name)
 {
     const char *data = inData->strptr;
 
@@ -811,28 +817,22 @@ RoutineClass *RoutineClass::restore(RXSTRING *inData)
 
 
     ProgramMetaData *metaData = (ProgramMetaData *)data;
+    bool badVersion;
     // make sure this is valid for interpreter
-    if (!metaData->validate())
+    if (!metaData->validate(badVersion))
     {
+        // if the failure was due to a version mismatch, this is an error condition.
+        if (badVersion)
+        {
+            reportException(Error_Program_unreadable_version, name);
+        }
         return OREF_NULL;
     }
     RexxBuffer *bufferData = metaData->extractBufferData();
     ProtectedObject p(bufferData);
     // we're restoring from the beginning of this.
-    return restore(bufferData, bufferData->getData(), metaData->getImageSize());
-}
-
-
-/**
- * Restore a routine object from a previously saved instore buffer.
- *
- * @param inData The input data (in RXSTRING form).
- *
- * @return The unflattened object.
- */
-RoutineClass *RoutineClass::restore(RXSTRING *inData, RexxString *name)
-{
-    RoutineClass *routine = restore(inData);
+    RoutineClass *routine = restore(bufferData, bufferData->getData(), metaData->getImageSize());
+    // if this restored properly (and it should), reconnect it to the source file
     if (routine != OREF_NULL)
     {
         routine->getSourceObject()->setProgramName(name);
