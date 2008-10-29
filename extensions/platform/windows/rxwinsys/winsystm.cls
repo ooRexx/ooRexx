@@ -840,33 +840,34 @@
    use arg message, wParam, lParam
    return WSCtrlSend("MSG", self~hwnd, message, wParam, lParam)
 
+-- TODO, document that cmd has to be a hexidecimal number or string in 0x format
 ::method SendCommand
    use arg cmd
    self~SendMessage("0x111", cmd, 0)
 
 ::method SendMenuCommand
    use arg cmd
-   self~SendMessage("0x111", "10000"~x2D + cmd, 0)
+   self~SendMessage("0x111", ("10000"~x2D + cmd)~d2x, 0)
 
 ::method SendSysCommand
    use arg command
    command = command~translate
    select
-      when command = "SIZE" then cmd = "F000"~x2d
-      when command = "MOVE" then cmd = "F010"~x2d
-      when command = "MINIMIZE" then cmd = "F020"~x2d
-      when command = "MAXIMIZE" then cmd = "F030"~x2d
-      when command = "NEXTWINDOW" then cmd = "F040"~x2d
-      when command = "PREVWINDOW" then cmd = "F050"~x2d
-      when command = "CLOSE" then cmd = "F060"~x2d
-      when command = "VSCROLL" then cmd = "F070"~x2d
-      when command = "HSCROLL" then cmd = "F080"~x2d
-      when command = "ARRANGE" then cmd = "F110"~x2d
-      when command = "RESTORE"  then cmd = "F120"~x2d
-      when command = "TASKLIST"  then cmd = "F130"~x2d
-      when command = "SCREENSAVE" then cmd = "F140"~x2d
-      when command = "MONITORPOWER" then cmd = "F170"~x2d
-      when command = "CONTEXTHELP" then cmd = "F180"~x2d
+      when command = "SIZE" then cmd = "0xF000"
+      when command = "MOVE" then cmd = "0xF010"
+      when command = "MINIMIZE" then cmd = "0xF020"
+      when command = "MAXIMIZE" then cmd = "0xF030"
+      when command = "NEXTWINDOW" then cmd = "0xF040"
+      when command = "PREVWINDOW" then cmd = "0xF050"
+      when command = "CLOSE" then cmd = "0xF060"
+      when command = "VSCROLL" then cmd = "0xF070"
+      when command = "HSCROLL" then cmd = "0xF080"
+      when command = "ARRANGE" then cmd = "0xF110"
+      when command = "RESTORE"  then cmd = "0xF120"
+      when command = "TASKLIST"  then cmd = "0xF130"
+      when command = "SCREENSAVE" then cmd = "0xF140"
+      when command = "MONITORPOWER" then cmd = "0xF170"
+      when command = "CONTEXTHELP" then cmd = "0xF180"
       otherwise cmd = 0
    end
    if cmd \= 0 then self~SendMessage("0x112", cmd, 0)
@@ -903,7 +904,7 @@
         if ext~pos("SHIFT") > 0 then wP = wP + 4
         if ext~pos("CONTROL") > 0 then wP = wp + 8
     end
-    self~SendMessage(s + cmd , wP, y * "10000"~x2d + x)
+    self~SendMessage((s + cmd)~d2x, wP~d2x, (y * "10000"~x2d + x)~d2x)
 
 ::method PushButton
    use arg text
@@ -1072,7 +1073,7 @@
 
 ::method ProcessItem
    use arg cmd
-   if cmd \= 0 then self~MainWnd~SendMessage("0x111", "10000"~x2D + cmd, 0)
+   if cmd \= 0 then self~MainWnd~SendMessage("0x111", ("10000"~x2D + cmd)~d2x, 0)
 
 
 
