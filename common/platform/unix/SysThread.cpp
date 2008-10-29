@@ -130,7 +130,7 @@ void SysThread::createThread(void)
 
     // Create an attr block for Thread.
     pthread_attr_init(&newThreadAttr);
-#if defined(LINUX) ||  defined OPSYS_SUN
+#if defined(LINUX) ||  defined(OPSYS_SUN) || defined(AIX)
     /* scheduling on two threads controlled by the result method of the */
     /* message object do not work properly without an enhanced priority */
     pthread_getschedparam(pthread_self(), &schedpolicy, &schedparam);

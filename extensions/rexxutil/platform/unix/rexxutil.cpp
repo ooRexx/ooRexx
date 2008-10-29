@@ -232,6 +232,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+
 #if defined( HAVE_SYS_SEM_H )
 # include <sys/sem.h>
 #endif
@@ -473,7 +474,7 @@ typedef struct _SORT_MEM {
 } SORTMEM, *PSORTMEM;
 
 
-#ifdef __cplusplus
+#ifdef XX__cplusplus
 extern "C" {
 #endif
 
@@ -962,7 +963,6 @@ void getpath(
   iLen = strlen(string);               /* Get length of full file    */
                                        /* spec                       */
   LastSlashPos = iLen-1;               /* Get max pos of last '/'    */
-
   /* Step back through string until it begins or at last '/' char    */
   do
     LastSlashPos--;
@@ -1605,14 +1605,6 @@ size_t RexxEntry SysSleep(const char *name, size_t numargs, CONSTRXSTRING args[]
 *                                                                        *
 * Return:    null string                                                 *
 *************************************************************************/
-/* Entry for upper case function name                                */
-size_t RexxEntry SYSLOADFUNCS(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-{
-    // this is a NOP now
-    retstr->strlength = 0;               /* set return value           */
-    return VALID_ROUTINE;
-}
-
 size_t RexxEntry SysLoadFuncs(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
     // this is a NOP now
@@ -5159,7 +5151,7 @@ size_t RexxEntry SysIsFileLink(const char *name, size_t numargs, CONSTRXSTRING a
 }
 
 
-#ifdef __cplusplus
+#ifdef XX__cplusplus
 }
 #endif
 

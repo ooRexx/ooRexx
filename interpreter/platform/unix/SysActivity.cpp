@@ -87,7 +87,7 @@ void SysActivity::create(RexxActivity *activity, size_t stackSize)
                                // Create an attr block for Thread.
     rc = pthread_attr_init(&newThreadAttr);
                                // Set the stack size.
- #if defined(LINUX) || defined OPSYS_SUN
+ #if defined(LINUX) || defined(OPSYS_SUN) || defined(AIX)
 
  /* scheduling on two threads controlled by the result method of the message object */
  /* do not work proper without an enhanced priority                                 */

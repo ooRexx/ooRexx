@@ -40,7 +40,7 @@
 #include "SystemInterpreter.hpp"
 
 
-#ifdef _AIX
+#ifdef AIX
 extern "C"
 {
 #endif
@@ -64,6 +64,6 @@ int _fini(void)
 }
 
 
-#ifdef _AIX
+#ifdef AIX
 }
 #endif

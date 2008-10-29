@@ -94,6 +94,7 @@ void SysSemaphore::create()
     //  this->semCond = NULL;
 
     /* The original settings for pthread_mutexattr_settype() were:
+       AIX  : PTHREAD_MUTEX_RECURSIVE
        SUNOS: PTHREAD_MUTEX_ERRORCHECK
        LINUX: PTHREAD_MUTEX_RECURSIVE_NP
     */
