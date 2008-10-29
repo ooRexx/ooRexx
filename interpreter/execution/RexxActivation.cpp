@@ -2781,7 +2781,7 @@ RexxInteger * RexxActivation::random(
         reportException(Error_Incorrect_call_random, randmin, randmax);
     }
     /* too big of a spread ?              */
-    if (maximum - minimum  >= MAX_DIFFERENCE)
+    if (maximum - minimum > MAX_DIFFERENCE)
     {
         /* this is an error                  */
         reportException(Error_Incorrect_call_random_range, randmin, randmax);
