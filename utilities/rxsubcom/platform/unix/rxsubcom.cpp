@@ -85,7 +85,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
     /* Must be at lease 1 argument*/
     if (argc<2)
     {
-        parmerr(Error_RXSUBC_general);
+        parmerr(Error_RXSUBC_general_msg);
     }
 
     CASE("REGISTER")
@@ -93,7 +93,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         /* requires 4 parameters */
         if (argc<5)
         {
-            parmerr(Error_RXSUBC_register);
+            parmerr(Error_RXSUBC_register_msg);
         }
         scbname=argv[2];                  /* Should be Environment Name */
         scbdll_name=argv[3];              /* Should be Dll Name         */
@@ -106,7 +106,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         /* requires 3 parameters */
         if (argc<3)
         {
-            parmerr(Error_RXSUBC_query);
+            parmerr(Error_RXSUBC_query_msg);
         }
         /* if only 3 passed, dummy 4  */
         if (argc<4)
@@ -125,7 +125,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         /* Must pass at least 3 args*/
         if (argc<3)
         {
-            parmerr(Error_RXSUBC_drop);
+            parmerr(Error_RXSUBC_drop_msg);
         }
         /* if only 3 passed, dummy 4  */
         if (argc<4)
@@ -142,7 +142,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
     {
         if (argc<3)
         {
-            parmerr(Error_RXSUBC_load);
+            parmerr(Error_RXSUBC_load_msg);
         }
         if (argc<4)
         {
@@ -154,7 +154,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
         }
         return RexxLoadSubcom(argv[2], argv[3]);
     }
-    parmerr(Error_RXSUBC_general);      /* Otherwise, must be a error */
+    parmerr(Error_RXSUBC_general_msg);      /* Otherwise, must be a error */
     return 0;                           /* dummy return               */
 }
 
