@@ -48,10 +48,6 @@ HANDLE SystemInterpreter::timeSliceTimerThread = 0;
 #define TIMESLICE_STACKSIZE 2048
 #define TIMESLICEMS 10
 
-#ifdef TIMESLICE
-extern int REXXENTRY RexxSetYield(process_id_t procid, thread_id_t threadid);
-#endif
-
 
 #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
 

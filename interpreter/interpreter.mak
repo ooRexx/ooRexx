@@ -148,7 +148,7 @@ OKIOBJS=$(OKIOBJ1) $(OKIOBJ2) $(OKIOBJ3)
 SYSOBJ1=$(OR_OUTDIR)\TimeSupport.$(OBJ)  \
         $(OR_OUTDIR)\FileSystem.$(OBJ)  $(OR_OUTDIR)\ValueFunction.$(OBJ) $(OR_OUTDIR)\UseridFunction.$(OBJ)
 
-SYSOBJ2=$(OR_OUTDIR)\ExternalFunctions.$(OBJ)  $(OR_OUTDIR)\RexxMain.$(OBJ)  $(OR_OUTDIR)\SystemCommands.$(OBJ)   \
+SYSOBJ2=$(OR_OUTDIR)\ExternalFunctions.$(OBJ) $(OR_OUTDIR)\SystemCommands.$(OBJ)   \
         $(OR_OUTDIR)\StreamNative.$(OBJ)   $(OR_OUTDIR)\StreamCommandParser.$(OBJ)    $(OR_OUTDIR)\ProgramMetaData.$(OBJ) \
 	$(OR_OUTDIR)\SysFile.$(OBJ) $(OR_OUTDIR)\SysFileSystem.$(OBJ) $(OR_OUTDIR)\SysLibrary.$(OBJ) $(OR_OUTDIR)\SysActivity.$(OBJ) \
         $(OR_OUTDIR)\SysSemaphore.$(OBJ)

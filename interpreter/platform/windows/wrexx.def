@@ -49,7 +49,6 @@ RexxSetTrace                   @4
 RexxResetTrace                 @5
 ;
 RexxInitialize                 @10
-RexxQuery                      @15
 RexxTerminate                  @16
 ;
 RexxTranslateProgram           @24
@@ -57,10 +56,10 @@ RexxTranslateInstoreProgram    @25
 ;
 ;
 RexxCreateInterpreterImage     @94
-RexxGetCurrentPrecision        @95
 
 RexxGetVersionInformation     @114
 RexxStemSort                  @124
+RexxCreateInterpreter         @125
 
 SECTIONS
    .sdata READ WRITE SHARED

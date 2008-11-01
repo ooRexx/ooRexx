@@ -48,16 +48,11 @@ extern "C" {
 
 int REXXENTRY RexxResolveExit(const char *, REXXPFN *);
 int REXXENTRY RexxResolveRoutine(const char *, REXXPFN *);
-int REXXENTRY RexxQuery();
 
 RexxReturnCode REXXENTRY RexxResolveMacroFunction (const char *, PRXSTRING );
-
 void REXXENTRY RexxCreateInterpreterImage();
 
-size_t REXXENTRY RexxGetCurrentPrecision();
-
 RexxReturnCode REXXENTRY RexxLoadSubcom(const char *, const char *);
-
 RexxReturnCode REXXENTRY RexxResolveSubcom(const char *name, REXXPFN *);
 
 #ifdef __cplusplus

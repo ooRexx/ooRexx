@@ -84,7 +84,6 @@ public:
     static bool poolActivity(RexxActivity *activity);
     static bool haltActivity(thread_id_t thread_id, RexxString * description);
     static void yieldCurrentActivity();
-    static bool yieldActivity(thread_id_t thread_id);
     static void exit(int retcode);
     static void relinquish(RexxActivity *activity);
     static RexxActivity *getRootActivity();

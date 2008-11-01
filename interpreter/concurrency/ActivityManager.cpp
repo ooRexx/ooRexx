@@ -644,25 +644,6 @@ bool ActivityManager::haltActivity(
     return false;                        // this was a failure
 }
 
-bool ActivityManager::yieldActivity(
-     thread_id_t  thread_id)           /* target thread id                  */
-/****************************************************************************/
-/* Function:   Flip on a bit in a target activities top activation          */
-/*             called from rexxsetyield                                     */
-/****************************************************************************/
-{
-    ResourceSection lock;
-    // locate the activity associated with this thread_id.  If not found, return
-    // a failure.
-    RexxActivity *activity = findActivity(thread_id);
-    if (activity != OREF_NULL)
-    {
-        activity->yield();
-        return true;                     /* this actually worked              */
-    }
-    return false;                        // this was a failure
-}
-
 
 bool ActivityManager::setActivityTrace(
      thread_id_t thread_id,            /* target thread id                  */

@@ -84,15 +84,6 @@ int REXXENTRY RexxInitialize ()
     return true;
 }
 
-int REXXENTRY RexxQuery()
-/******************************************************************************/
-/* Function:  Determine if the REXX interpreter is initialized and active     */
-/******************************************************************************/
-{
-    // see if we have an active environment
-    return Interpreter::isActive();
-}
-
 
 /**
  * Create the Rexx saved image during build processing.
@@ -273,7 +264,7 @@ char *REXXENTRY RexxGetVersionInformation()
  */
 RexxReturnCode REXXENTRY RexxHaltThread(thread_id_t threadid)
 {
-    if (RexxQuery())
+    if (Interpreter::isActive())
     {                        /* Are we up?                     */
        if (!ActivityManager::haltActivity(threadid, OREF_NULL))
        {
@@ -308,7 +299,7 @@ RexxReturnCode REXXENTRY RexxSetHalt(process_id_t procid, thread_id_t threadid)
  */
 RexxReturnCode REXXENTRY RexxSetThreadTrace(thread_id_t threadid)
 {
-    if (RexxQuery())
+    if (Interpreter::isActive())
     {
        if (!ActivityManager::setActivityTrace(threadid, true))
        {
@@ -329,7 +320,7 @@ RexxReturnCode REXXENTRY RexxSetThreadTrace(thread_id_t threadid)
  */
 RexxReturnCode REXXENTRY RexxResetThreadTrace(thread_id_t threadid)
 {
-    if (RexxQuery())
+    if (Interpreter::isActive())
     {
        if (!ActivityManager::setActivityTrace(threadid, false))
        {
@@ -366,19 +357,6 @@ RexxReturnCode REXXENTRY RexxSetTrace(process_id_t procid, thread_id_t threadid)
 RexxReturnCode REXXENTRY RexxResetTrace(process_id_t procid, thread_id_t threadid)
 {
     return RexxResetThreadTrace(threadid);
-}
-
-
-/**
- * Retrieve the current digits setting for an external context.
- *
- * @param precision The current precision.
- */
-size_t REXXENTRY RexxGetCurrentPrecision()
-{
-    NativeContextBlock context;
-    // get the digits setting from the current context.
-    return context.self->digits();
 }
 
 
