@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /***************************************************************************/
-/* REXX sockets function support                               rxsock.c    */
+/* REXX sockets function support                                           */
 /*                 sockets utility function package                        */
 /***************************************************************************/
 
@@ -45,11 +45,6 @@
  *------------------------------------------------------------------*/
 #ifdef HAVE_CONFIG_H
 # include "config.h"
-#endif
-#if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
-#define PROG_NAME "rxsock"
-#else
-#define PROG_NAME "RxSock"
 #endif
 
 #define PROG_DESC "REXX function package for tcp/ip sockets"

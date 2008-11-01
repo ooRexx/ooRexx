@@ -72,11 +72,6 @@ extern int errno;
 /*------------------------------------------------------------------
  * program defines
  *------------------------------------------------------------------*/
-#if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
-    #define PROG_NAME "rxmath"
-#else
-    #define PROG_NAME "RxMath"
-#endif
 
 
 #define PROG_DESC "REXX mathematical function package"
@@ -417,7 +412,7 @@ RexxRoutine1(CSTRING, MathLoadFuncs, OPTIONAL_CSTRING, version)
 {
    if (version != NULL)
    {
-      fprintf(stdout, "%s %s - %s\n",PROG_NAME,PROG_VERS,PROG_DESC);
+      fprintf(stdout, "%s %s - %s\n","rxmath",PROG_VERS,PROG_DESC);
       fprintf(stdout, "%s\n",PROG_COPY);
       fprintf(stdout, "%s\n",PROG_ALRR);
       fprintf(stdout, "\n");

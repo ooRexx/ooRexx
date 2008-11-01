@@ -330,6 +330,12 @@ bool RexxString::doubleValue(double &result)
     if (strCompare("nan"))
     {
         result = std::numeric_limits<double>::signaling_NaN();
+        // this will be false if this is really a NaN value. If true,
+        // then fall back and use the quiet version.
+        if (!isnan(result))
+        {
+          result = std::numeric_limits<double>::quiet_NaN();
+        }
         return true;
     }
     if (strCompare("+infinity"))

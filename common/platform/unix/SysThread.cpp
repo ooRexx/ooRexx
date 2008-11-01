@@ -148,6 +148,16 @@ void SysThread::createThread(void)
     /* using Round Robin scheduling instead of FIFO scheduling               */
     pthread_attr_setschedpolicy(&newThreadAttr, SCHED_RR);
 #endif
+#if defined(AIX)
+    /* PTHREAD_EXPLICIT_SCHED ==> use scheduling attributes of the new object */
+    pthread_attr_setinheritsched(&newThreadAttr, PTHREAD_EXPLICIT_SCHED);
+
+    /* Each thread has an initial priority that is dynamically modified by   */
+    /* the scheduler, according to the thread's activity; thread execution   */
+    /* is time-sliced. On other systems, this scheduling policy may be       */
+    /* different.                                                            */
+    pthread_attr_setschedpolicy(&newThreadAttr, SCHED_OTHER);
+#endif
     pthread_attr_setschedparam(&newThreadAttr, &schedparam);
 #endif
 

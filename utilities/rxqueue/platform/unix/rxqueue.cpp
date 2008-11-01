@@ -176,7 +176,7 @@ int main(
 /*********************************************************************/
 
     if ((rc=RexxQueryQueue(quename,/* search for existence of 'quename' */
-                           &entries)))/*ÀŽ> get number of entries in queue*/
+                           &entries)))/* get number of entries in queue*/
     {
         options_error( rc,         /* generate error if API fails        */
                        quename );

@@ -131,7 +131,7 @@ case "$target" in
             CC_WARNINGS="$XLC_WARNINGS"
             CXX_WARNINGS="$XLCXX_WARNINGS"
             LDFLAGS="-Wl,-brtl"
-            ORX_INIT_LDFLAGS="-Wl,-binitfini:_init:_fini"
+            ORX_INIT_LDFLAGS="-Wl,-binitfini:_init:_fini -Wl,-bmaxdata:0x80000000"
             ;;
          *)
 dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
