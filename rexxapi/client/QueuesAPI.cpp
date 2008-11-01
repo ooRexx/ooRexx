@@ -41,6 +41,7 @@
 #include "LocalQueueManager.hpp"
 #include "LocalAPIContext.hpp"
 #include "RexxAPI.h"
+#include "RexxInternalApis.h"
 
 // the generated name pattern is
 #define INTERNALNAME_MINIMUM ((sizeof(void *) * 4) + 3)
@@ -351,9 +352,7 @@ RexxReturnCode RexxEntry RexxPullFromQueue(
 /*********************************************************************/
 RexxReturnCode RexxEntry RexxDeleteSessionQueue()
 {
-    ENTER_REXX_API(QueueManager)
-    {
-        return lam->queueManager.deleteSessionQueue();
-    }
-    EXIT_REXX_API();
+    // this shuts down the entire environment
+    LocalAPIManager::deleteInstance();
+    return RXQUEUE_OK;
 }

@@ -45,6 +45,7 @@
 #include "RexxCore.h"
 #include "ContextApi.hpp"
 #include "InterpreterInstance.hpp"
+#include "Interpreter.hpp"
 
 BEGIN_EXTERN_C()
 
@@ -52,6 +53,9 @@ void RexxEntry Terminate(RexxInstance  *c)
 {
     InstanceApiContext context(c);
     context.instance->terminate();
+    // terminate and clean up the interpreter runtime.  This only works
+    // if there are no active instances
+    Interpreter::terminateInterpreter();
 }
 
 logical_t RexxEntry AttachThread(RexxInstance *c, RexxThreadContext **tc)

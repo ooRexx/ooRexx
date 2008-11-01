@@ -242,7 +242,15 @@ bool SysClientStream::read(void *buf, size_t bufsize, size_t *bytesread)
         errcode = CSERROR_IO_FAILED;
         return false;
     }
-    *bytesread = (size_t)recv(c, buf, (int)bufsize, 0);
+    int actual = recv(c, buf, (int)bufsize, 0);
+    if (actual == -1)
+    {
+        // a -1 return is a bad problem.  0 might be bad, but allow the
+        // caller to handle that one.
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+    *bytesread = (size_t)actual;
     errcode = CSERROR_OK;
     return true;
 }
@@ -265,7 +273,15 @@ bool SysClientStream::write(void *buf, size_t bufsize, size_t *byteswritten)
         errcode = CSERROR_IO_FAILED;
         return false;
     }
-    *byteswritten = (size_t)send(c, buf, (int)bufsize, 0);
+    int actual = send(c, buf, (int)bufsize, 0);
+    if (actual == -1)
+    {
+        // a -1 return is a bad problem.  0 might be bad, but allow the
+        // caller to handle that one.
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+    *byteswritten = (size_t)actual;
     errcode = CSERROR_OK;
     return true;
 }
@@ -499,7 +515,15 @@ bool SysServerConnection::read(void *buf, size_t bufsize, size_t *bytesread)
         errcode = CSERROR_IO_FAILED;
         return false;
     }
-    *bytesread = (size_t)recv(c, buf, (int)bufsize, 0);
+    int actual = recv(c, buf, (int)bufsize, 0);
+    if (actual == -1)
+    {
+        // a -1 return is a bad problem.  0 might be bad, but allow the
+        // caller to handle that one.
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+    *bytesread = (size_t)actual;
     errcode = CSERROR_OK;
     return true;
 }
@@ -522,7 +546,15 @@ bool SysServerConnection::write(void *buf, size_t bufsize, size_t *byteswritten)
         errcode = CSERROR_IO_FAILED;
         return false;
     }
-    *byteswritten = (size_t)send(c, buf, (int)bufsize, 0);
+    int actual = send(c, buf, (int)bufsize, 0);
+    if (actual == -1)
+    {
+        // a -1 return is a bad problem.  0 might be bad, but allow the
+        // caller to handle that one.
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+    *byteswritten = (size_t)actual;
     errcode = CSERROR_OK;
     return true;
 }

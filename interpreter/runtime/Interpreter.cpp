@@ -188,7 +188,7 @@ bool Interpreter::terminateInterpreter()
 {
     {
         ResourceSection lock;   // lock in this section
-        // if already shutdown, then we've got a quick return
+        // if never even started up, then we've got a quick return
         if (!isActive())
         {
             return true;
@@ -201,20 +201,11 @@ bool Interpreter::terminateInterpreter()
         {
             return false;
         }
-    }
 
-    // we need to wait for the activity manager to tell us everything is
-    // ready to go, but without holding the resource lock
-    ActivityManager::waitForTermination();
-    {
-        // no initialized interpreter environment any more.
-        active = false;
-        ResourceSection lock;      // lock in this section
-        SystemInterpreter::terminateInterpreter();
-
-        // now shutdown the memory object
-        memoryObject.shutdown();
-        interpreterInstances = OREF_NULL;
+        // most interpreter resources will be cleanup automatically, but
+        // we need to poke the rxapi daemon and tell it to clean up our session
+        // resources.
+        RexxDeleteSessionQueue();
     }
     return true;
 }

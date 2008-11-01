@@ -119,7 +119,16 @@ void LocalQueueManager::terminateProcess()
     // if we have a session queue
     if (sessionQueue != 0)
     {
-        deleteSessionQueue();    // try to delete this
+        try
+        {
+            deleteSessionQueue();    // try to delete this
+        }
+        catch (ServiceException *)
+        {
+            // just ignore any errors here.
+        }
+        // clear this out.
+        sessionQueue = 0;
     }
                                  // continue the shutdown
     LocalAPISubsystem::terminateProcess();

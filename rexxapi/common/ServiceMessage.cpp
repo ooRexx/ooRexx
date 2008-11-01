@@ -71,7 +71,7 @@ void ServiceMessage::readMessage(SysServerConnection *connection)
     size_t required = sizeof(ServiceMessage);
     while (required > 0)
     {
-        if (!connection->read((void *)this, required, &actual))
+        if (!connection->read((void *)this, required, &actual) || actual == 0)
         {
             throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readMessage() Failure reading service message");
         }
@@ -86,7 +86,7 @@ void ServiceMessage::readMessage(SysServerConnection *connection)
         required = messageDataLength;
         while (required > 0)
         {
-            if (!connection->read(messageData, required, &actual))
+            if (!connection->read(messageData, required, &actual) || actual == 0)
             {
                 releaseResultMemory(messageData);
                 // make sure these are cleared out
@@ -171,7 +171,7 @@ void ServiceMessage::readResult(SysClientStream &pipe)
     size_t required = sizeof(ServiceMessage);
     while (required > 0)
     {
-        if (!pipe.read((void *)this, required, &actual))
+        if (!pipe.read((void *)this, required, &actual) || actual == 0)
         {
             throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readResult() Failure reading service message");
         }
@@ -191,7 +191,7 @@ void ServiceMessage::readResult(SysClientStream &pipe)
         required = messageDataLength;
         while (required > 0)
         {
-            if (!pipe.read(messageData, required, &actual))
+            if (!pipe.read(messageData, required, &actual) || actual == 0)
             {
                 releaseResultMemory(messageData);
                 throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readResult() Failure reading service message");

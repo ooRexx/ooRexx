@@ -37,6 +37,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "SysLocalAPIManager.hpp"
+#include "LocalAPIManager.hpp"
 #include <stdio.h>
 
 
@@ -311,4 +312,3 @@ void SysLocalAPIManager::setActiveSessionQueue(QueueHandle sessionQueue)
     sprintf(envbuffer, "%p", sessionQueue);
     SetEnvironmentVariable("RXQUEUESESSION", (LPTSTR) envbuffer);
 }
-

@@ -35,7 +35,7 @@
 ; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;
 ;----------------------------------------------------------------------------
-LIBRARY   rexx BASE=0x6B000000  ; @HOL for feature 421
+LIBRARY   rexx
 ;
 ;
 ;

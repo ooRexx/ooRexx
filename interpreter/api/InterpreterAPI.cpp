@@ -163,6 +163,10 @@ int REXXENTRY RexxStart(
     arguments.invoke(exits, envname);
     *retcode = arguments.retcode;
 
+    // terminate and clean up the interpreter runtime.  This only works
+    // if there are no active instances
+    Interpreter::terminateInterpreter();
+
     return (int)arguments.rc;          /* return the error code (negated)   */
 }
 
@@ -189,6 +193,10 @@ RexxReturnCode REXXENTRY RexxTranslateProgram(const char *inFile, const char *ou
     // go run this program
     arguments.invoke(exits, NULL);
 
+    // terminate and clean up the interpreter runtime.  This only works
+    // if there are no active instances
+    Interpreter::terminateInterpreter();
+
     return (RexxReturnCode)arguments.rc;       /* return the error code (negated)   */
 }
 
@@ -212,6 +220,9 @@ RexxReturnCode REXXENTRY RexxTranslateInstoreProgram(const char *inFile, CONSTRX
     arguments.image = image;
     // go run this program
     arguments.invoke(NULL, NULL);
+    // terminate and clean up the interpreter runtime.  This only works
+    // if there are no active instances
+    Interpreter::terminateInterpreter();
     return (RexxReturnCode)arguments.rc;       /* return the error code (negated)   */
 }
 
