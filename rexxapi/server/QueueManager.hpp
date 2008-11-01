@@ -167,7 +167,7 @@ public:
         waitSem.create();
         firstItem = NULL;
         lastItem = NULL;
-        queueName = "";
+        queueName = NULL;
         session = 0;
     }
 
