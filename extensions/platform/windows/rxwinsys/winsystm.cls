@@ -626,6 +626,7 @@
    else return .WindowObject~new(hw)
 
 ::method WindowAtPosition
+   use arg x, y
    hW = WSCtrlWindow("ATPOS", x, y)
    if hw~substr(3) = 0 then return .nil
    else return .WindowObject~new(hw)
