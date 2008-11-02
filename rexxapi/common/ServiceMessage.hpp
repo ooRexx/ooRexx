@@ -392,7 +392,9 @@ public:
 
     void readMessage(SysServerConnection *server);
     void writeResult(SysServerConnection *server);
+    bool writeBufferedResult(SysServerConnection *server);
     void writeMessage(SysClientStream &server);
+    bool writeBufferedMessage(SysClientStream &pipe); 
     void readResult(SysClientStream &server);
 
     static void *allocateResultMemory(size_t length);

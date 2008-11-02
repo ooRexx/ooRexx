@@ -110,6 +110,13 @@ void ServiceMessage::readMessage(SysServerConnection *connection)
  */
 void ServiceMessage::writeResult(SysServerConnection *connection)
 {
+    // try to write this using a single send.  On Unix systems, there appears 
+    // to be a puzzling performance difference between using a single send vs. two sends.
+    // This difference can be two orders of magnitude!
+    if (writeBufferedResult(connection))
+    {
+        return; 
+    }
     size_t actual = 0;
     if (!connection->write((void *)this, sizeof(ServiceMessage), &actual) || actual != sizeof(ServiceMessage))
     {
@@ -133,12 +140,61 @@ void ServiceMessage::writeResult(SysServerConnection *connection)
 
 
 /**
+ * Write a server side message result back to the client.
+ *
+ * @param server The server message stream used to receive the original message.
+ */
+bool ServiceMessage::writeBufferedResult(SysServerConnection *connection)
+{
+    // don't do this if there's no attached data.  If we have data, try to 
+    // allocate a buffer and fall back to the double send mechanism as a 
+    // fallback. 
+    if (messageDataLength == 0)
+    {
+        return false; 
+    }
+    size_t bufferLength = sizeof(ServiceMessage) + messageDataLength; 
+    char *buffer = (char *)malloc(bufferLength); 
+    // fall back to the unbuffered version if we can't get a buffer large enough
+    if (buffer == NULL)
+    {
+        return false; 
+    }
+    // copy the message and attached data into a single buffer 
+    memcpy(buffer, (char *)this, sizeof(ServiceMessage)); 
+    memcpy(buffer + sizeof(ServiceMessage), messageData, messageDataLength); 
+
+    size_t actual = 0;
+    if (!connection->write((void *)buffer, bufferLength, &actual) || actual != bufferLength)
+    {
+        free(buffer); 
+        throw new ServiceException(SERVER_FAILURE, "ServiceMessage::writeResult() Failure writing service message result");
+    }
+
+    free(buffer); 
+    // we might be sending a copy of data that's still resident in the connection->  If
+    // we are, then don't delete the message data after doing the send.
+    // free the message data after the send.
+    freeMessageData();
+    return true; 
+}
+
+
+/**
  * Write a message over to the connection->
  *
  * @param pipe   The pipe we've opened to write the message.
  */
 void ServiceMessage::writeMessage(SysClientStream &pipe)
 {
+    // try to write this using a single send.  On Unix systems, there appears 
+    // to be a puzzling performance difference between using a single send vs. two sends.
+    // This difference can be two orders of magnitude!
+    if (writeBufferedMessage(pipe))
+    {
+        return; 
+    }
+
     size_t actual = 0;
     if (!pipe.write((void *)this, sizeof(ServiceMessage), &actual) || actual != sizeof(ServiceMessage))
     {
@@ -157,6 +213,44 @@ void ServiceMessage::writeMessage(SysClientStream &pipe)
     }
     // make sure we free and release any attached data before proceeding
     freeMessageData();
+}
+
+/**
+ * Write a message over to the connection->
+ *
+ * @param pipe   The pipe we've opened to write the message.
+ */
+bool ServiceMessage::writeBufferedMessage(SysClientStream &pipe)
+{
+    // don't do this if there's no attached data.  If we have data, try to 
+    // allocate a buffer and fall back to the double send mechanism as a 
+    // fallback. 
+    if (messageDataLength == 0)
+    {
+        return false; 
+    }
+    size_t bufferLength = sizeof(ServiceMessage) + messageDataLength; 
+    char *buffer = (char *)malloc(bufferLength); 
+    // fall back to the unbuffered version if we can't get a buffer large enough
+    if (buffer == NULL)
+    {
+        return false; 
+    }
+    // copy the message and attached data into a single buffer 
+    memcpy(buffer, (char *)this, sizeof(ServiceMessage)); 
+    memcpy(buffer + sizeof(ServiceMessage), messageData, messageDataLength); 
+
+    size_t actual = 0;
+    if (!pipe.write((void *)buffer, bufferLength, &actual) || actual != bufferLength)
+    {
+        free(buffer); 
+        throw new ServiceException(SERVER_FAILURE, "ServiceMessage::writeResult() Failure writing service message result");
+    }
+
+    free(buffer); 
+    // make sure we free and release any attached data before proceeding
+    freeMessageData();
+    return true; 
 }
 
 
