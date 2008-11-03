@@ -56,6 +56,7 @@ class SysSocketConnection
 public:
     inline SysSocketConnection() : c(-1), errcode(CSERROR_OK), messageBuffer(NULL) { }
     inline SysSocketConnection(SOCKET sock) : c(sock), errcode(CSERROR_OK), messageBuffer(NULL) { }
+    inline ~SysSocketConnection() { if (messageBuffer != NULL) { free(messageBuffer); } }
     CSErrorCodeT getError(void)
     {
         return errcode;
