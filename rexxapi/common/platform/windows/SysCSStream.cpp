@@ -43,14 +43,176 @@
 #include <winsock2.h>
 #include "SysCSStream.hpp"
 
+/**
+ * Read from the connection.
+ *
+ * @param buf       Target buffer for the read operation.
+ * @param bufsize   Size of the target buffer.
+ * @param bytesread Number of bytes actually read.
+ *
+ * @return True on an error, otherwise false
+ */
+bool SysSocketConnection::read(void *buf, size_t bufsize, size_t *bytesread)
+{
+    if (c == -1)
+    {
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+    int actual = recv(c, (char *)buf, (int)bufsize, 0);
+    if (actual == -1)
+    {
+        // a -1 return is a bad problem.  0 might be bad, but allow the
+        // caller to handle that one.
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+    *bytesread = (size_t)actual;
+    errcode = CSERROR_OK;
+    return true;
+}
+
+
+/**
+ * Write a buffer to the connection.
+ *
+ * @param buf     Source buffer for the write operation.
+ * @param bufsize Size of the source buffer.
+ * @param byteswritten
+ *                Number of bytes actually written to the connection.
+ *
+ * @return True on an error, otherwise false
+ */
+bool SysSocketConnection::write(void *buf, size_t bufsize, size_t *byteswritten)
+{
+    if (c == -1)
+    {
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+    int actual = send(c, (char *)buf, (int)bufsize, 0);
+    if (actual == -1)
+    {
+        // a -1 return is a bad problem.  0 might be bad, but allow the
+        // caller to handle that one.
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+    *byteswritten = (size_t)actual;
+    errcode = CSERROR_OK;
+    return true;
+}
+
+
+/**
+ * Write a multi-buffer message to the connection.
+ *
+ * @param buf     Source buffer for the write operation.
+ * @param bufsize Size of the source buffer.
+ * @param byteswritten
+ *                Number of bytes actually written to the connection.
+ *
+ * @return True on an error, otherwise false
+ */
+bool SysSocketConnection::write(void *buf, size_t bufsize, void *buf2, size_t buf2size, size_t *byteswritten)
+{
+    // if the second buffer is of zero size, we can handle without
+    // copying
+    if (buf2size == 0)
+    {
+        return write(buf, bufsize, byteswritten);
+    }
+
+    if (c == -1)
+    {
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+
+    size_t bufferSize = bufsize + buf2size;
+
+    // get a buffer large enough for both buffer
+    char *buffer = getMessageBuffer(bufferSize);
+    // if we can't get a buffer, then try sending this in pieces
+    if (buffer == NULL)
+    {
+        // write the first buffer
+        if (!write(buf, bufsize, byteswritten))
+        {
+            return false;
+        }
+        size_t buf2written = 0;
+        if (!write(buf2, buf2size, &buf2written))
+        {
+            return false;
+        }
+        *byteswritten += buf2written;
+        return true;
+    }
+
+    // copy the message and attached data into a single buffer
+    memcpy(buffer, buf, bufsize);
+    memcpy(buffer + bufsize, buf2, buf2size);
+
+    int actual = send(c, buffer, (int)bufferSize, 0);
+    // we're done with the buffer, regardless of whether this works or fails
+    returnMessageBuffer(buffer);
+    if (actual == -1)
+    {
+        // a -1 return is a bad problem.  0 might be bad, but allow the
+        // caller to handle that one.
+        errcode = CSERROR_IO_FAILED;
+        return false;
+    }
+    *byteswritten = (size_t)actual;
+    errcode = CSERROR_OK;
+    return true;
+}
+
+/**
+ * Get a buffer for sending a buffered message.
+ *
+ * @param size   The required size.
+ *
+ * @return A pointer to a buffer, or NULL if unable to allocate.
+ */
+char *SysSocketConnection::getMessageBuffer(size_t size)
+{
+    // if larger than our cached buffer, return
+    if (size > MAX_CACHED_BUFFER)
+    {
+        return (char *)malloc(size);
+    }
+    // use our cached buffer, allocating it if required.
+    if (messageBuffer == NULL)
+    {
+        messageBuffer = (char *)malloc(MAX_CACHED_BUFFER);
+    }
+    return messageBuffer;
+}
+
+
+/**
+ * Return a message buffer after sending a message.  This will
+ * either cache the buffer, or release it, depending upon
+ * how it was obtained in the first place.
+ *
+ * @param buffer The buffer to release.
+ */
+void SysSocketConnection::returnMessageBuffer(void *buffer)
+{
+    if (buffer != messageBuffer)
+    {
+        free(buffer);
+    }
+}
+
 
 /**
  * Standard constructor.
  */
-SysClientStream::SysClientStream()
+SysClientStream::SysClientStream() : SysSocketConnection()
 {
-    errcode = CSERROR_OK;
-    c = -1;
     domain = AF_INET;
     type = SOCK_STREAM;
     protocol = 0;
@@ -62,10 +224,8 @@ SysClientStream::SysClientStream()
  *
  * @param name   Hostname and port in the form "hostname:port".
  */
-SysClientStream::SysClientStream(const char *name)
+SysClientStream::SysClientStream(const char *name) : SysSocketConnection()
 {
-    errcode = CSERROR_OK;
-    c = -1;
     domain = AF_INET;
     type = SOCK_STREAM;
     protocol = 0;
@@ -79,9 +239,8 @@ SysClientStream::SysClientStream(const char *name)
  * @param host   String name of the host.
  * @param port   Target port number.
  */
-SysClientStream::SysClientStream(const char *host, int port)
+SysClientStream::SysClientStream(const char *host, int port) : SysSocketConnection()
 {
-    c = -1;
     domain = AF_INET;
     type = SOCK_STREAM;
     protocol = 0;
@@ -212,67 +371,6 @@ bool SysClientStream::close()
         return false;
     }
     c = -1;
-    errcode = CSERROR_OK;
-    return true;
-}
-
-
-/**
- * Read from the connection.
- *
- * @param buf       Target buffer for the read operation.
- * @param bufsize   Size of the target buffer.
- * @param bytesread Number of bytes actually read.
- *
- * @return True on an error, otherwise false
- */
-bool SysClientStream::read(void *buf, size_t bufsize, size_t *bytesread)
-{
-    if (c == -1)
-    {
-        errcode = CSERROR_IO_FAILED;
-        return false;
-    }
-    int actual = recv(c, (char *)buf, (int)bufsize, 0);
-    if (actual == -1)
-    {
-        // a -1 return is a bad problem.  0 might be bad, but allow the
-        // caller to handle that one.
-        errcode = CSERROR_IO_FAILED;
-        return false;
-    }
-    *bytesread = (size_t)actual;
-    errcode = CSERROR_OK;
-    return true;
-}
-
-
-/**
- * Write a buffer to the connection.
- *
- * @param buf     Source buffer for the write operation.
- * @param bufsize Size of the source buffer.
- * @param byteswritten
- *                Number of bytes actually written to the connection.
- *
- * @return True on an error, otherwise false
- */
-bool SysClientStream::write(void *buf, size_t bufsize, size_t *byteswritten)
-{
-    if (c == -1)
-    {
-        errcode = CSERROR_IO_FAILED;
-        return false;
-    }
-    int actual = send(c, (char *)buf, (int)bufsize, 0);
-    if (actual == -1)
-    {
-        // a -1 return is a bad problem.  0 might be bad, but allow the
-        // caller to handle that one.
-        errcode = CSERROR_IO_FAILED;
-        return false;
-    }
-    *byteswritten = (size_t)actual;
     errcode = CSERROR_OK;
     return true;
 }
@@ -480,11 +578,9 @@ bool SysServerStream::close()
  * @param s      The parent server connection.
  * @param socket The socket for the connection.
  */
-SysServerConnection::SysServerConnection(SysServerStream *s, SOCKET socket)
+SysServerConnection::SysServerConnection(SysServerStream *s, SOCKET socket) : SysSocketConnection(socket)
 {
     server = s;
-    c = socket;
-    errcode = CSERROR_OK;
 }
 
 /**
@@ -493,67 +589,6 @@ SysServerConnection::SysServerConnection(SysServerStream *s, SOCKET socket)
 SysServerConnection::~SysServerConnection()
 {
     disconnect();
-}
-
-
-/**
- * Read from the connection.
- *
- * @param buf       Target buffer for the read operation.
- * @param bufsize   Size of the target buffer.
- * @param bytesread Number of bytes actually read.
- *
- * @return True on an error, otherwise false
- */
-bool SysServerConnection::read(void *buf, size_t bufsize, size_t *bytesread)
-{
-    if (c == -1)
-    {
-        errcode = CSERROR_IO_FAILED;
-        return false;
-    }
-    int actual = recv(c, (char *)buf, (int)bufsize, 0);
-    if (actual == -1)
-    {
-        // a -1 return is a bad problem.  0 might be bad, but allow the
-        // caller to handle that one.
-        errcode = CSERROR_IO_FAILED;
-        return false;
-    }
-    *bytesread = (size_t)actual;
-    errcode = CSERROR_OK;
-    return true;
-}
-
-
-/**
- * Write a buffer to the connection.
- *
- * @param buf     Source buffer for the write operation.
- * @param bufsize Size of the source buffer.
- * @param byteswritten
- *                Number of bytes actually written to the connection.
- *
- * @return True on an error, otherwise false
- */
-bool SysServerConnection::write(void *buf, size_t bufsize, size_t *byteswritten)
-{
-    if (c == -1)
-    {
-        errcode = CSERROR_IO_FAILED;
-        return false;
-    }
-    int actual = send(c, (char *)buf, (int)bufsize, 0);
-    if (actual == -1)
-    {
-        // a -1 return is a bad problem.  0 might be bad, but allow the
-        // caller to handle that one.
-        errcode = CSERROR_IO_FAILED;
-        return false;
-    }
-    *byteswritten = (size_t)actual;
-    errcode = CSERROR_OK;
-    return true;
 }
 
 

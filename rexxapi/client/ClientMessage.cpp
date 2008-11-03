@@ -77,12 +77,8 @@ void ClientMessage::send()
  */
 void ClientMessage::send(SysClientStream *pipe)
 {
-    // try to write this as a single buffer first 
-    if (!writeBufferedMessage(*pipe)) 
-    {
-        // if we can't get a big enough buffer, fall back to the slow way 
-        writeMessage(*pipe);
-    }
+    // write the message, and wait for a response back
+    writeMessage(*pipe);
     readResult(*pipe);
 }
 

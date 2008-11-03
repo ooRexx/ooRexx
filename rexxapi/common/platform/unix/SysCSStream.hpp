@@ -55,17 +55,38 @@ typedef enum
     CSERROR_UNKNOWN
 } CSErrorCodeT;
 
+class SysSocketConnection
+{
+public:
+    inline SysSocketConnection() : c(-1), errcode(CSERROR_OK), messageBuffer(NULL) { }
+    inline SysSocketConnection(int sock) : c(sock), errcode(CSERROR_OK), messageBuffer(NULL) { }
+    CSErrorCodeT getError(void)
+    {
+        return errcode;
+    };
+    bool read(void *buf, size_t bufsize, size_t *bytesread);
+    bool write(void *buf, size_t bufsize, size_t *byteswritten);
+    bool write(void *buf, size_t bufsize, void*buf2, size_t buf2size, size_t *byteswritten);
+
+protected:
+    enum
+    {
+        // somewhat arbitrary.  Should be large enough for "normal requests"
+        MAX_CACHED_BUFFER = 4096
+    };
+
+    char *getMessageBuffer(size_t size);
+    void returnMessageBuffer(void *);
+
+    int c; // stream socket
+    CSErrorCodeT errcode;  // error status
+    char *messageBuffer;   // a buffer for message sending
+};
+
 
 // This is the Client TCP/IP Stream class
-class SysClientStream
+class SysClientStream : public SysSocketConnection
 {
-protected:
-    CSErrorCodeT errcode;
-    int c;      // client socket
-    int domain; // the socket domain
-    int type; // the socket type
-    int protocol; // the socket protocol
-
 public:
     SysClientStream();
     SysClientStream(const char *name);
@@ -78,8 +99,6 @@ public:
     bool open(const char *);
     bool open(const char *, int);
     bool close();
-    bool read(void *buf, size_t bufsize, size_t *bytesread);
-    bool write(void *buf, size_t bufsize, size_t *byteswritten);
     // the following APIs are usually not used but are here for completeness
     // they should be called prior to calling the Open method
     void setDomain(int newdomain)
@@ -98,6 +117,11 @@ public:
     {
         return errcode == CSERROR_OK;
     }
+
+protected:
+    int domain; // the socket domain
+    int type; // the socket type
+    int protocol; // the socket protocol
 };
 
 class SysServerStream;
@@ -107,21 +131,17 @@ class SysServerStream;
  * These are created any time a server stream object accepts
  * a connection.
  */
-class SysServerConnection
+class SysServerConnection : public SysSocketConnection
 {
 public:
     SysServerConnection(SysServerStream *s, int socket);
     ~SysServerConnection();
 
-    bool read(void *buf, size_t bufsize, size_t *bytesread);
-    bool write(void *buf, size_t bufsize, size_t *byteswritten);
     bool isLocalConnection();
     bool disconnect(void);
 
 protected:
     SysServerStream *server;
-    int    c; // client socket
-    CSErrorCodeT errcode;
 };
 
 // This is the Server TCP/IP Stream class
@@ -171,4 +191,4 @@ public:
         return errcode == CSERROR_OK;
     }
 };
-#endif 
+#endif
