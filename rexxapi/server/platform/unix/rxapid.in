@@ -8,13 +8,21 @@
 # pidfile:     /var/run/rxapi.pid
 
 # Source function library.
-. /etc/init.d/functions
+if [ -e /etc/rc.d/init.d/functions ]; then
+   . /etc/init.d/functions
+else
+   . /etc/rc.status
+fi
 
 prog="rxapi"
 
 start() {
 	echo -n $"Starting $prog: "
-	daemon @prefix@/bin/rxapi
+        if [ -e /etc/rc.d/init.d/functions ]; then
+	   daemon @prefix@/bin/rxapi
+        else
+	   startproc @prefix@/bin/rxapi
+        fi
 	RETVAL=$?
 	echo
 	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/rxapi
