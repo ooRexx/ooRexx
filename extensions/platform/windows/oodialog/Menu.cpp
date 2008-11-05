@@ -1159,7 +1159,7 @@ size_t RexxEntry GetMII(const char *f, size_t argc, CONSTRXSTRING *argv, const c
 
     mii.cbSize = sizeof(MENUITEMINFO);
 
-    if ( strcmp(argv[0].strptr, "STATE") == 0 )  /* Get the state of a menu item. */
+    if ( strcmp(argv[0].strptr, "ISTATE") == 0 )  /* Get the state of a menu item. */
     {
         mii.fMask = MIIM_STATE;
 

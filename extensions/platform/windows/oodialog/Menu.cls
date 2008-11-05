@@ -409,7 +409,7 @@
   itemID = self~resolveItemID(itemID, byPosition)
   if itemID == -1 then return -1
 
-  return GetMII("STATE", self~hMenu, itemID, byPosition)
+  return GetMII("ISTATE", self~hMenu, itemID, byPosition)
 
 ::method getType
   use strict arg itemID, byPosition = .false
