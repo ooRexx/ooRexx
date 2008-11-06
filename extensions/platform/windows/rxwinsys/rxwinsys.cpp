@@ -3753,7 +3753,7 @@ size_t RexxEntry WSCtrlMenu(const char *funcname, size_t argc, CONSTRXSTRING arg
         }
         else
         {
-            RETVAL((flags & MF_SEPARATOR) ? 1 : 0);
+            RETVAL(((flags & MF_POPUP) == 0 && (flags & MF_SEPARATOR) != 0) ? 1 : 0);
         }
     }
 
