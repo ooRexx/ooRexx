@@ -3404,6 +3404,29 @@ size_t RexxEntry WSCtrlWindow(const char *funcname, size_t argc, CONSTRXSTRING a
         }
         return 0;
     }
+    else if (!strcmp(argv[0].strptr,"GETSTYLE"))
+    {
+        CHECKARG(2,2);
+        GET_HANDLE(argv[1].strptr, hW);
+        if (hW)
+        {
+            WINDOWINFO wi;
+
+            wi.cbSize = sizeof(WINDOWINFO);
+            if ( GetWindowInfo(hW, &wi) )
+            {
+                _snprintf(retstr->strptr, RXAUTOBUFLEN, "0x%08x 0x%08x", wi.dwStyle, wi.dwExStyle);
+                retstr->strlength = strlen(retstr->strptr);
+                return 0;
+            }
+            else
+            {
+                _snprintf(retstr->strptr, RXAUTOBUFLEN, "%d", GetLastError());
+                retstr->strlength = strlen(retstr->strptr);
+                return 0;
+            }
+        }
+    }
     else if (!strcmp(argv[0].strptr,"ENABLE"))
     {
         CHECKARG(3,3);
@@ -3697,11 +3720,41 @@ size_t RexxEntry WSCtrlMenu(const char *funcname, size_t argc, CONSTRXSTRING arg
     }
     else if (!strcmp(argv[0].strptr,"STATE"))
     {
-        CHECKARG(2,2);
+        CHECKARG(2,4);
 
         HMENU hMenu;
         GET_HANDLE(argv[1].strptr, hMenu);
-        RETVAL(IsMenu(hMenu));
+
+        if ( argc == 2 )
+        {
+            RETVAL(IsMenu(hMenu));
+        }
+
+        CHECKARG(4,4);
+
+        UINT flags;
+        UINT pos = atoi(argv[3].strptr);
+
+        flags = GetMenuState(hMenu, pos, MF_BYPOSITION);
+
+        if ( flags == 0xffffffff )
+        {
+            // Error, most likely no such position.  Return false.
+            RETVAL(0);
+        }
+
+        if ( argv[2].strptr[0] == 'M' )
+        {
+            RETVAL((flags & MF_POPUP) ? 1 : 0);
+        }
+        else if ( argv[2].strptr[0] == 'C' )
+        {
+            RETVAL((flags & MF_CHECKED) ? 1 : 0);
+        }
+        else
+        {
+            RETVAL((flags & MF_SEPARATOR) ? 1 : 0);
+        }
     }
 
     RETC(1)  /* in this case 0 is an error */

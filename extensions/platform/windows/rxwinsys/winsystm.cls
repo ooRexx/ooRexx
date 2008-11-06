@@ -735,6 +735,9 @@
 ::method State
    return WSCtrlWindow("GETSTATE", self~hwnd)
 
+::method getStyle
+   return WSCtrlWindow("GETSTYLE", self~hwnd)
+
 ::method Restore
    return WSCtrlWindow("SHOW", self~hwnd, "RESTORE")
 
@@ -841,10 +844,9 @@
    use arg message, wParam, lParam
    return WSCtrlSend("MSG", self~hwnd, message, wParam, lParam)
 
--- TODO, document that cmd has to be a hexidecimal number or string in 0x format
 ::method SendCommand
    use arg cmd
-   self~SendMessage("0x111", cmd, 0)
+   self~SendMessage("0x111", cmd~d2x, 0)
 
 ::method SendMenuCommand
    use arg cmd
@@ -1022,6 +1024,22 @@
 
 ::method IsMenu
    return WSCtrlMenu("STATE", self~hwnd)
+
+::method IsSubMenu
+   use strict arg pos
+   return WSCtrlMenu("STATE", self~hwnd, "MENU", pos)
+
+/* This method can not be 100% reliable.  Some applications do not set the check
+ * mark for a menu item until the menu is displayed.  To be confident of the
+ * result, the user should first test how a specific application behaves.
+ */
+::method IsChecked
+   use strict arg pos
+   return WSCtrlMenu("STATE", self~hwnd, "CHECK", pos)
+
+::method IsSeparator
+   use strict arg pos
+   return WSCtrlMenu("STATE", self~hwnd, "SEPARTOR", pos)
 
 ::method IdOf
    use arg pos
