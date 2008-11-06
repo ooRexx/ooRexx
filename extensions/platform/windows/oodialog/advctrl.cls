@@ -80,7 +80,7 @@
      ctrlobj = class~new(self, id, category)
    end
 
-   if ctrlobj~hwnd~substr(3) = 0 then
+   if ctrlobj~hwnd = 0 | ctrlobj~hwnd~substr(3) = 0 then
      return .nil
    else
      return ctrlobj
@@ -440,7 +440,7 @@
 ::method AssignWindow
    use arg hwnd, parent, category
    self~Hwnd = hwnd
-   if hwnd~substr(3) = 0 then return 0
+   if hwnd = 0 | hwnd~substr(3) = 0 then return 0
    parse value Wnd_Desktop("RECT", hwnd) with x y cx cy
    self~SizeX = (cx - x) % self~FactorX
    self~SizeY = (cy - y) % self~FactorY
