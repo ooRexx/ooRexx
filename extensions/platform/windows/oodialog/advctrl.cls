@@ -404,10 +404,10 @@
 
    if obj \= .Nil then do
       obj~Hwnd = '0x00000000'  -- Signal hwnd is not assigned yet.
-      obj~Id = 0
       if Arg() = 0 then do
          obj~init_WindowBase
          obj~oDlg = .nil
+         obj~Id = 0
          return obj
       end
       else do
@@ -416,7 +416,7 @@
          obj~FactorY=Y
       end
 
-      if self~Id = -1 then return .Nil
+      if obj~id = -1 then return .Nil
       if Arg(3,'o') = 1 | category = 0 then do
           obj~hDlg = pDialog~DlgHandle
           obj~AssignWindow(pDialog~GetItem(id))
