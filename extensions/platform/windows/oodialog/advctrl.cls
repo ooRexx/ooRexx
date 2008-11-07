@@ -80,7 +80,7 @@
      ctrlobj = class~new(self, id, category)
    end
 
-   if ctrlobj~hwnd = 0 | ctrlobj~hwnd~substr(3) = 0 then
+   if ctrlobj~hwnd = 0 then
      return .nil
    else
      return ctrlobj
@@ -399,24 +399,29 @@
 
 ::method new class
    use arg pdialog, id, category
-   Forward Class(Super) continue  /* this also calls Init */
+
+   -- Before this returns, the object init() method will have been invoked.  If
+   -- there are args, then init() will have resolved id to a numeric resource
+   -- id.
+   Forward Class(Super) continue
    obj = result
 
    if obj \= .Nil then do
-      obj~Hwnd = '0x00000000'  -- Signal hwnd is not assigned yet.
+      obj~Hwnd = 0  -- Signal hwnd is not assigned yet.
+
       if Arg() = 0 then do
          obj~init_WindowBase
          obj~oDlg = .nil
          obj~Id = 0
          return obj
       end
-      else do
-         parse value GetDialogFactor() with x y
-         obj~FactorX=x
-         obj~FactorY=Y
-      end
 
-      if obj~id = -1 then return .Nil
+      if obj~id = -1 then return .nil
+
+      parse value GetDialogFactor() with x y
+      obj~FactorX=x
+      obj~FactorY=Y
+
       if Arg(3,'o') = 1 | category = 0 then do
           obj~hDlg = pDialog~DlgHandle
           obj~AssignWindow(pDialog~GetItem(id))
@@ -440,7 +445,7 @@
 ::method AssignWindow
    use arg hwnd, parent, category
    self~Hwnd = hwnd
-   if hwnd = 0 | hwnd~substr(3) = 0 then return 0
+   if hwnd = 0 then return 0
    parse value Wnd_Desktop("RECT", hwnd) with x y cx cy
    self~SizeX = (cx - x) % self~FactorX
    self~SizeY = (cy - y) % self~FactorY
@@ -605,20 +610,20 @@
 ::method Modify
    use arg hItem, text = "", image = (-1), selImage = (-1), state = "", children = (-1)
    if arg(1, 'O') then hItem = self~Selected
-   if hitem~substr(3) = 0 then return -1
+   if hitem = 0 then return -1
 
    return HandleTreeCtrl("SET", self~Hwnd, hItem, text, image, state~translate, children, selImage)
 
 ::method ItemInfo
    use arg hItem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    ret = HandleTreeCtrl("GET", self~Hwnd, hItem, "InternalTVItemInfo")
    return InternalTVItemInfo.
 
 ::method MoveItem
    use arg hItem, hNewParent, redraw = 1, extended = ""
-   if arg(1, 'O') | hItem~substr(3) = 0 then return 0
-   if arg(2, 'O') | hNewParent~substr(3) = 0 then return 0
+   if arg(1, 'O') | hItem = 0 then return 0
+   if arg(2, 'O') | hNewParent = 0 then return 0
 
    extended = extended~translate
    if hItem = hNewParent | hNewParent = self~Parent(hItem) | self~IsAncestor(hItem, hNewParent) = 1 then return 0
@@ -626,11 +631,11 @@
    newRoot = self~Insert(hNewParent,,iinfo.!Text, iinfo.!Image, iinfo.!SelectedImage, iinfo.!State, iinfo.!Children)
    if iinfo.!Children = 1 then do
        child = self~Child(hItem)
-       if child~substr(3) \= 0 then self~MoveItem(child, newRoot, 0, "SIBLINGS")
+       if child \= 0 then self~MoveItem(child, newRoot, 0, "SIBLINGS")
    end
    if extended = "SIBLINGS" then do
        sibling = self~next(hItem)
-       do while sibling~substr(3) \= 0
+       do while sibling \= 0
            self~MoveItem(sibling, hNewParent, 0, "NODELETE")
            oldsib = sibling
            sibling = self~next(sibling)
@@ -644,11 +649,11 @@
 
 ::method IsAncestor
    use arg hParent, hItem
-   if arg(1, 'O') | hParent~substr(3) = 0 then return 0
-   if arg(2, 'O') | hItem~substr(3) = 0 then return 0
+   if arg(1, 'O') | hParent = 0 then return 0
+   if arg(2, 'O') | hItem = 0 then return 0
    if hItem = hParent then return 0
    act = self~Parent(hItem)
-   do while act~substr(3) \= 0 & act \= hParent
+   do while act \= 0 & act \= hParent
        act = self~Parent(act)
    end
    if act = hParent then return 1
@@ -666,12 +671,12 @@
 
 ::method Parent
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PARENT")
 
 ::method Child
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "CHILD")
 
 ::method Selected
@@ -685,27 +690,27 @@
 
 ::method Next
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "NEXT")
 
 ::method NextVisible
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "NEXTVISIBLE")
 
 ::method Previous
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PREVIOUS")
 
 ::method PreviousVisible
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("GETHND", self~Hwnd, hitem, "PREVIOUSVISIBLE")
 
 ::method Delete
    use arg hItem
-   if arg(1, 'O') | hItem~substr(3) = 0 | (\ hItem~substr(3)~datatype("W")) then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("DEL",self~hwnd, item)
 
 ::method DeleteAll
@@ -713,27 +718,27 @@
 
 ::method Collapse
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "COLLAPSE")
 
 ::method CollapseAndReset
    use arg hitem
-   if arg(1,'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "COLLAPSE RESET")
 
 ::method Expand
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "EXPAND")
 
 ::method Toggle
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("EXPAND", self~Hwnd, hitem, "TOGGLE")
 
 ::method EnsureVisible
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("ENVIS", self~Hwnd, hitem)
 
 ::method Indent
@@ -746,7 +751,7 @@
 
 ::method Edit
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("EDIT", self~Hwnd, hitem)
 
 ::method EndEdit
@@ -762,12 +767,12 @@
 
 ::method Select
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("SEL", self~Hwnd, hitem, "")
 
 ::method MakeFirstVisible
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("SEL", self~Hwnd, hitem, "FIRSTVIS")
 
 ::method DropHighlight
@@ -782,7 +787,7 @@
 
 ::method SortChildren
    use arg hitem
-   if arg(1, 'O') | hItem~substr(3) = 0 then return -1
+   if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("SORT", self~Hwnd, hitem, 0) /* recursive not yet supported */
 
 ::method SetImages

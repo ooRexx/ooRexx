@@ -117,7 +117,14 @@ void *string2pointer(const char *string)
 
 void pointer2string(char *result, void *pointer)
 {
-    sprintf(result, "0x%p", pointer);
+    if ( pointer == NULL )
+    {
+        sprintf(result, "0");
+    }
+    else
+    {
+        sprintf(result, "0x%p", pointer);
+    }
 }
 
 
@@ -1747,13 +1754,13 @@ size_t RexxEntry HandleDlg(const char *funcname, size_t argc, CONSTRXSTRING *arg
 
         hW = GetDlgItem(hD, atoi(argv[1].strptr));
 
-        if (hW)
+        if (hW == NULL)
         {
-            RETHANDLE(hW);
+            RETC(0);
         }
         else
         {
-            RETC(0);
+            RETHANDLE(hW);
         }
     }
     else if (!strcmp(argv[0].strptr, "STOP"))   /* Stop a dialog */

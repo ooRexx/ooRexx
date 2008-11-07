@@ -753,7 +753,7 @@
    if (cursy > yl) then cursy = yl
 
    hwnd = self~GetItem(id)
-   if hwnd~substr(3) = 0 then return -1
+   if hwnd = 0 then return -1
 
    parse value self~GetWindowRect(hwnd) with r.left r.top r.right r.bottom
    r.right = r.right - r.left
