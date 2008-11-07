@@ -617,18 +617,18 @@
 ::method Find
    parse arg title
    hw = WSCtrlWindow("FIND", title)
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method ForegroundWindow
    hW = WSCtrlWindow("GETFG")
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method WindowAtPosition
    use arg x, y
    hW = WSCtrlWindow("ATPOS", x, y)
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method ConsoleTitle
@@ -780,43 +780,43 @@
 ::method FindChild
    parse arg title
    hw = WSCtrlWindow("FINDCHILD", self~hwnd, title)
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method ChildAtPosition
    use arg x, y
    hw = WSCtrlWindow("ATPOS", x, y, self~hwnd)
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method Next
    hw = WSCtrlWindow("HNDL", self~hwnd, "NEXT")
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method Previous
    hw = WSCtrlWindow("HNDL", self~hwnd, "PREVIOUS")
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method First
    hw = WSCtrlWindow("HNDL", self~hwnd, "FIRST")
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method FirstChild
    hw = WSCtrlWindow("HNDL", self~hwnd, "FIRSTCHILD")
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method Last
    hw = WSCtrlWindow("HNDL", self~hwnd, "LAST")
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method Owner
    hw = WSCtrlWindow("HNDL", self~hwnd, "OWNER")
-   if hw~substr(3) = 0 then return .nil
+   if hw = 0 then return .nil
    else return .WindowObject~new(hw)
 
 ::method EnumerateChildren
@@ -974,21 +974,25 @@
 
 ::method Menu
    hw = WSCtrlMenu("GET", self~hwnd)
-   if hw~substr(3) \= 0 then do
-       obj = .MenuObject~new(hw, self)
-       if obj~IsMenu = 0 then return .Nil
-       else return obj
+   if hw = 0 then do
+       return .nil
    end
-   else return .Nil
+   else
+       obj = .MenuObject~new(hw, self)
+       if obj~IsMenu = 0 then return .nil
+       else return obj
+   do
 
 ::method SystemMenu
    hw = WSCtrlMenu("SYS", self~hwnd)
-   if hw~substr(3) \= 0 then do
+   if hw = 0 then do
+       return .nil
+   end
+   else do
        obj = .MenuObject~new(hw, self)
-       if obj~IsMenu = 0 then return .Nil
+       if obj~IsMenu = 0 then return .nil
        else return obj
    end
-   else return .Nil
 
 ::method IsMenu
    return WSCtrlMenu("STATE", self~hwnd)
@@ -1063,8 +1067,8 @@
    use arg pos
    if Arg(1,'o') = 1 then return .Nil
    hw = WSCtrlMenu("SUB", self~hwnd, pos)
-   if hw~substr(3) \= 0 then return .MenuObject~new(hw, self~MainWnd)
-   else return .Nil
+   if hw = 0 then return .Nil
+   else return .MenuObject~new(hw, self~MainWnd)
 
 ::method FindSubMenu
    use arg text

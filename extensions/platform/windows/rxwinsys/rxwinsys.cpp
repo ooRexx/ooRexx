@@ -141,13 +141,12 @@ LONG HandleArgError(PRXSTRING r, BOOL ToMuch)
 
 
 #define ISHEX(value) \
-   ((value[0] == '0') && (toupper(value[1]) == 'X'))
+   ((strlen(value) > 2) && (value[0] == '0') && (toupper(value[1]) == 'X'))
 
 
 /* Note many existing programs abbreviate HKEY_LOCAL_MACHINE to "LOCAL_MACHINE",
  * or "MACHINE", and many do not.  Many existing programs use the full
  * HKEY_LOCAL_MACHINE.  So the comparison needs to remain strstr.
- *
  */
 #define GET_HKEY(argum, ghk) { \
      ghk = NULL; \
@@ -236,29 +235,30 @@ BOOL string2pointer(
         *pointer = NULL;
         return FALSE;
     }
-    else if ( strlen(string) < 2 )
+
+    if ( ISHEX(string) )
     {
-        return sscanf(string, "%p", pointer) == 1;
+        return (string[1] == 'x' ?
+                sscanf(string, "0x%p", pointer) == 1 : sscanf(string, "0X%p", pointer) == 1);
     }
-    else if ( string[1] == 'x' && string[0] == '0' )
-    {
-        return sscanf(string, "0x%p", pointer) == 1;
-    }
-    else if ( string[1] == 'X' && string[0] == '0' )
-    {
-        return sscanf(string, "0X%p", pointer) == 1;
-    }
-    else
-    {
-        return sscanf(string, "%p", pointer) == 1;
-    }
+
+    return sscanf(string, "%p", pointer) == 1;
 }
 
 
 void pointer2string(PRXSTRING result, void *pointer)
 {
-    sprintf(result->strptr, "0x%p", pointer);
-    result->strlength = strlen(result->strptr);
+    if ( pointer == NULL )
+    {
+        result->strlength = 1;
+        result->strptr[0] = '0';
+        result->strptr[1] = '\0';
+    }
+    else
+    {
+        sprintf(result->strptr, "0x%p", pointer);
+        result->strlength = strlen(result->strptr);
+    }
 }
 
 
