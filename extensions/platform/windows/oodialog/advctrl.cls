@@ -424,11 +424,11 @@
 
       if Arg(3,'o') = 1 | category = 0 then do
           obj~hDlg = pDialog~DlgHandle
-          obj~AssignWindow(pDialog~GetItem(id))
+          obj~AssignWindow(pDialog~GetItem(obj~id))
       end
       else do
           obj~hDlg = pDialog~catalog['handles'][category]
-          obj~AssignWindow(pDialog~GetItem(id, obj~hDlg))
+          obj~AssignWindow(pDialog~GetItem(obj~id, obj~hDlg))
       end
    end
    return obj
@@ -449,7 +449,7 @@
    parse value Wnd_Desktop("RECT", hwnd) with x y cx cy
    self~SizeX = (cx - x) % self~FactorX
    self~SizeY = (cy - y) % self~FactorY
-   if self~Id = 0 then self~Id = self~GetID    /* the id is important for most methods */
+
    if Arg(2,'e') = 1 then do
        self~oDlg = parent
        if Arg(3,'o') = 1 then self~hDlg = self~oDlg~DlgHandle
