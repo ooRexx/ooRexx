@@ -977,11 +977,11 @@
    if hw = 0 then do
        return .nil
    end
-   else
+   else do
        obj = .MenuObject~new(hw, self)
        if obj~IsMenu = 0 then return .nil
        else return obj
-   do
+   end
 
 ::method SystemMenu
    hw = WSCtrlMenu("SYS", self~hwnd)
