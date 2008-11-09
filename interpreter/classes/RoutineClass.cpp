@@ -319,7 +319,7 @@ void RoutineClass::runProgram(
 /****************************************************************************/
 {
     ProtectedObject p(this);           // belt-and-braces to make sure this is protected
-    code->call(activity, this, OREF_NONE, arguments, argCount, OREF_NULL, OREF_NULL, PROGRAMCALL, result);
+    code->call(activity, this, OREF_NONE, arguments, argCount, OREF_COMMAND, OREF_NULL, PROGRAMCALL, result);
 }
 
 
