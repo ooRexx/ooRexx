@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                               RexxActivity     */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Activity Class                                                   */
 /*                                                                            */
@@ -1932,12 +1932,8 @@ bool RexxActivity::callExit(RexxActivation * activation,
             /* prevent recursive error conditions  */
             sysexits[RXSIO].disable();
         }
-        if (function != RXTER)             /* not the termination exit?           */
-        {
-            /* go raise an error                   */
-            reportException(Error_System_service_service, exitName);
-
-        }
+        /* go raise an error                   */
+        reportException(Error_System_service_service, exitName);
     }
     return rc == RXEXIT_HANDLED;         /* Did exit handle task?               */
 }

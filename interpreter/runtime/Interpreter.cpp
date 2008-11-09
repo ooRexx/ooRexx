@@ -417,38 +417,48 @@ void Interpreter::decodeConditionData(RexxDirectory *conditionObj, RexxCondition
 {
     memset(condData, 0, sizeof(RexxCondition));
     condData->code = messageNumber((RexxString *)conditionObj->at(OREF_CODE));
-
-    condData->rc = messageNumber((RexxString *)conditionObj->at(OREF_RC));
+    // just return the major part
+    condData->rc = messageNumber((RexxString *)conditionObj->at(OREF_RC))/1000;
     condData->conditionName = (RexxStringObject)conditionObj->at(OREF_CONDITION);
 
     RexxObject *temp = conditionObj->at(OREF_NAME_MESSAGE);
-    if (temp != TheNilObject)
+    if (temp != OREF_NULL)
     {
         condData->message = (RexxStringObject)temp;
     }
 
     temp = conditionObj->at(OREF_ERRORTEXT);
-    if (temp != TheNilObject)
+    if (temp != OREF_NULL)
     {
         condData->errortext = (RexxStringObject)temp;
     }
 
     temp = conditionObj->at(OREF_DESCRIPTION);
-    if (temp != TheNilObject)
+    if (temp != OREF_NULL)
     {
         condData->description = (RexxStringObject)temp;
     }
 
-    condData->position = ((RexxInteger *)(conditionObj->at(OREF_POSITION)))->wholeNumber();
+    // this could be raised by a termination exit, so there might not be
+    // position information available
+    temp = conditionObj->at(OREF_POSITION);
+    if (temp != OREF_NULL)
+    {
+        condData->position = ((RexxInteger *)temp)->wholeNumber();
+    }
+    else
+    {
+        condData->position = 0;
+    }
 
     temp = conditionObj->at(OREF_PROGRAM);
-    if (temp != TheNilObject)
+    if (temp != OREF_NULL)
     {
         condData->program = (RexxStringObject)temp;
     }
 
     temp = conditionObj->at(OREF_ADDITIONAL);
-    if (temp != TheNilObject)
+    if (temp != OREF_NULL)
     {
         condData->additional = (RexxArrayObject)temp;
     }
