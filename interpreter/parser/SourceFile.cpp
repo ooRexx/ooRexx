@@ -2137,7 +2137,7 @@ void RexxSource::methodDirective()
                     if (!token->isSymbolOrLiteral())
                     {
                         /* report an error                   */
-                        syntaxError(Error_Symbol_or_string_requires, token);
+                        syntaxError(Error_Symbol_or_string_external, token);
                     }
                     externalname = token->value;
                     break;
