@@ -747,81 +747,87 @@ size_t RexxEntry LoadRemoveBitmap(const char *funcname, size_t argc, CONSTRXSTRI
 
 size_t RexxEntry ScrollTheWindow(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
-   HWND w;
-   RECT r, rs;
-   INT x, y;
-   HDC hDC;
-   HBRUSH hbr, oB;
-   HPEN oP, hpen;
-   BOOL err=FALSE;
-   DEF_ADM;
+    HWND w;
+    RECT r, rs;
+    INT x, y;
+    HDC hDC;
+    HBRUSH hbr, oB;
+    HPEN oP, hpen;
+    size_t code = 1;
+    BOOL err=FALSE;
+    DEF_ADM;
 
-   CHECKARG(9);
+    CHECKARG(9);
 
-   GET_ADM;
-   if (!dlgAdm) RETERR
+    GET_ADM;
+    if ( !dlgAdm )
+    {
+        RETERR;
+    }
 
-   w = (HWND)GET_HWND(argv[1]);
+    w = (HWND)GET_HWND(argv[1]);
 
-   x=atoi(argv[2].strptr);
-   y=atoi(argv[3].strptr);
+    x=atoi(argv[2].strptr);
+    y=atoi(argv[3].strptr);
 
-   if (GetWindowRect(w, &r))
-   {
-       hDC = GetDC(w);
-       rs.left = atoi(argv[4].strptr);
-       rs.top = atoi(argv[5].strptr);
-       rs.right = atoi(argv[6].strptr);
-       rs.bottom = atoi(argv[7].strptr);
-       r.right = r.right - r.left;
-       r.bottom = r.bottom - r.top;
-       r.left = 0;
-       r.top = 0;
+    if ( GetWindowRect(w, &r) )
+    {
+        hDC = GetDC(w);
+        rs.left = atoi(argv[4].strptr);
+        rs.top = atoi(argv[5].strptr);
+        rs.right = atoi(argv[6].strptr);
+        rs.bottom = atoi(argv[7].strptr);
+        r.right = r.right - r.left;
+        r.bottom = r.bottom - r.top;
+        r.left = 0;
+        r.top = 0;
 
-       if (!ScrollDC(hDC, x, y, &rs, &r, NULL, NULL)) err = TRUE;
+        if ( ScrollDC(hDC, x, y, &rs, &r, NULL, NULL) )
+        {
+            code = 0;
+        }
 
-       if (IsYes(argv[8].strptr))
-       {
-          /* draw rectangle with background color */
-             if (dlgAdm->Use3DControls)
-          {
-#ifdef __CTL3D
-             if (dlgAdm->BkgBrush) hbr = dlgAdm->BkgBrush; else hbr = Ctl3dCtlColorEx(WM_CTLCOLORBTN, (LONG) hDC, (LONG) w);
-#else
-             if (dlgAdm->BkgBrush) hbr = dlgAdm->BkgBrush;
-#endif
-             hpen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
-          }
-          else
-          {
-             if (dlgAdm->BkgBrush) hbr = dlgAdm->BkgBrush; else hbr = (HBRUSH)GetStockObject(WHITE_BRUSH);
-             hpen = (HPEN)GetStockObject(WHITE_PEN);
-          }
-          oP = (HPEN)SelectObject(hDC, hpen);
-          oB = (HBRUSH)SelectObject(hDC, hbr);
+        if ( IsYes(argv[8].strptr) )
+        {
+           /* draw rectangle with background color */
+           if (dlgAdm->BkgBrush)
+           {
+               hbr = dlgAdm->BkgBrush;
+           }
+           else
+           {
+               hbr = GetSysColorBrush(COLOR_BTNFACE);
+           }
 
-          if (x>0)
-             Rectangle(hDC, rs.left, rs.top, rs.left + x, rs.bottom);
-          else
-          if (x<0)
-             Rectangle(hDC, rs.right+x, rs.top, rs.right, rs.bottom);
+           hpen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
+           oP = (HPEN)SelectObject(hDC, hpen);
+           oB = (HBRUSH)SelectObject(hDC, hbr);
 
-          if (y>0)
-             Rectangle(hDC, rs.left, rs.top, rs.right, rs.top+y);
-          else
-          if (y<0)
-             Rectangle(hDC, rs.left, rs.bottom+y, rs.right, rs.bottom);
+           if ( x > 0 )
+           {
+               Rectangle(hDC, rs.left, rs.top, rs.left + x, rs.bottom);
+           }
+           else if ( x < 0 )
+           {
+               Rectangle(hDC, rs.right+x, rs.top, rs.right, rs.bottom);
+           }
 
-          SelectObject(hDC, oB);
-          SelectObject(hDC, oP);
+           if ( y > 0 )
+           {
+               Rectangle(hDC, rs.left, rs.top, rs.right, rs.top+y);
+           }
+           else if ( y < 0 )
+           {
+               Rectangle(hDC, rs.left, rs.bottom+y, rs.right, rs.bottom);
+           }
 
-          if (dlgAdm->Use3DControls)
-             DeleteObject(hpen);
-       }
-       ReleaseDC(w, hDC);
-       if (err) RETC(1) else RETC(0)
-   }
-   RETC(1)
+           SelectObject(hDC, oB);
+           SelectObject(hDC, oP);
+           DeleteObject(hpen);
+        }
+        ReleaseDC(w, hDC);
+    }
+    RETC(code)
 }
 
 

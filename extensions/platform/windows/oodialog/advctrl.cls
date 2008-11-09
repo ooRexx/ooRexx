@@ -473,6 +473,13 @@
    else
        return SetBackground(self~oDlg~Adm, "COL", self~id, colorbk, colorfg)  /* set both, background and foreground color */
 
+::method SetSysColor
+   use arg colorbk, colorfg
+   if Arg(2,'o') = 1 then
+       return SetBackground(self~oDlg~Adm, "COL", self~id, colorbk, "", "SYS")  /* creates an entry in the dialogs color table */
+   else
+       return SetBackground(self~oDlg~Adm, "COL", self~id, colorbk, colorfg, "SYS")  /* set both, background and foreground color */
+
 ::method AssignFocus
    return SendWinMsg("ANY",self~hDlg, "0x0028", self~hwnd, 1)
 

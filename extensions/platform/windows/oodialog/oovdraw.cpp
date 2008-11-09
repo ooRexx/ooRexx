@@ -556,23 +556,46 @@ size_t RexxEntry SetBackground(const char *funcname, size_t argc, CONSTRXSTRING 
 
        if ( dlgAdm->CT_size < MAX_CT_ENTRIES )
        {
+           int fgColor = -1;
+
+           if ( argc >= 5 && argv[4].strlength > 0 )
+           {
+               fgColor = atoi(argv[4].strptr);
+           }
            id = atol(argv[2].strptr);
+
            SEARCHBRUSH(dlgAdm, i, id, hbrush);
            if (hbrush)
            {
-               DeleteObject(hbrush);
-               dlgAdm->ColorTab[i].ColorBk = atoi(argv[3].strptr);
-               if (argc == 5) dlgAdm->ColorTab[i].ColorFG = atoi(argv[4].strptr); else dlgAdm->ColorTab[i].ColorFG = -1;
-               dlgAdm->ColorTab[i].ColorBrush = (HBRUSH)CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[i].ColorBk));
-               RETC(1)
+               if ( ! dlgAdm->ColorTab[i].isSysBrush )
+               {
+                   DeleteObject(hbrush);
+               }
            }
            else
            {
-               dlgAdm->ColorTab[dlgAdm->CT_size].itemID = id;
-               dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk = atoi(argv[3].strptr);
-               if (argc == 5) dlgAdm->ColorTab[i].ColorFG = atoi(argv[4].strptr); else dlgAdm->ColorTab[i].ColorFG = -1;
-               dlgAdm->ColorTab[dlgAdm->CT_size].ColorBrush = (HBRUSH)CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[dlgAdm->CT_size].ColorBk));
+               i = dlgAdm->CT_size;
+               dlgAdm->ColorTab[i].itemID = id;
                dlgAdm->CT_size++;
+           }
+
+           dlgAdm->ColorTab[i].ColorBk = atoi(argv[3].strptr);
+           dlgAdm->ColorTab[i].ColorFG = fgColor;
+
+           if ( argc > 5 )
+           {
+               dlgAdm->ColorTab[i].ColorBrush = GetSysColorBrush(dlgAdm->ColorTab[i].ColorBk);
+               dlgAdm->ColorTab[i].isSysBrush = true;
+           }
+           else
+           {
+               dlgAdm->ColorTab[i].ColorBrush = CreateSolidBrush(PALETTEINDEX(dlgAdm->ColorTab[i].ColorBk));
+               dlgAdm->ColorTab[i].isSysBrush = false;
+           }
+
+           if ( hbrush )
+           {
+               RETC(1)
            }
        }
        else

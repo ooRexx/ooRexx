@@ -340,6 +340,7 @@ typedef struct {
 } BITMAPTABLEENTRY;
 
 typedef struct {
+   bool isSysBrush;
    ULONG itemID;
    INT ColorBk;
    INT ColorFG;

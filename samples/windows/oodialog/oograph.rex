@@ -83,6 +83,15 @@
    self~AddButtonGroup(self~SizeX-220, self~SizeY - 18,60,12, ,
             "&Bitmap-Viewer 111 BmpView &Draw-Color-Demo 112 OODraw &Cancel 2 CANCEL", 1, "DEFAULT")
 
+::method initDialog
+
+   -- We set the background color of these buttons to the same backgroud color
+   -- as the dialog, so that the buttons blend into the dialog.
+   COLOR_BTNFACE = 15
+   self~setItemSysColor(103, COLOR_BTNFACE)
+   self~setItemSysColor(101, COLOR_BTNFACE)
+   self~setItemSysColor(102, COLOR_BTNFACE)
+
 ::method Run unguarded
    expose m but2size
    bmppos = but2size - 125 / self~FactorY
@@ -92,7 +101,6 @@
 
    ret = play("inst.wav", yes)
    self~ScrollBitmapFromTo(101, self~SizeX * self~FactorX, 5, 5, 5, -12, 0, 1)
-   /*self~ScrollBitmapFromTo(102, -450, bmppos, 30, bmppos, 8, 0, 1)*/
    self~ScrollBitmapFromTo(102, 30, bmppos, 30, 0, 0, -3, 2, 1)
 
    self~ResizeItem(102, self~SizeX-40, self~SizeY-120, "NOREDRAW")

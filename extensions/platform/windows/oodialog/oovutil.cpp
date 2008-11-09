@@ -184,17 +184,10 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 break;
 
              case WM_CTLCOLORDLG:
-                if (addressedTo->BkgBrush) return (LRESULT) addressedTo->BkgBrush;
-#ifdef __CTL3D
-                else {
-                   if (addressedTo->Use3DControls)  {
-                       hbrush = Ctl3dCtlColorEx(uMsg, wParam, lParam);
-                       addressedTo->BkgBrush = hbrush;
-                       return (LRESULT) hbrush;
-                   }
+                if (addressedTo->BkgBrush)
+                {
+                    return (LRESULT) addressedTo->BkgBrush;
                 }
-#endif
-
 
              case WM_CTLCOLORSTATIC:
              case WM_CTLCOLORBTN:
@@ -202,22 +195,34 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
              case WM_CTLCOLORLISTBOX:
              case WM_CTLCOLORMSGBOX:
              case WM_CTLCOLORSCROLLBAR:
-                if (addressedTo->CT_size)   /* Has the dialog item its own user color ?*/
+                if (addressedTo->CT_size)
                 {
+                    // See of the user has set the dialog item with a different
+                    // color.
                     LONG id = GetWindowLong((HWND)lParam, GWL_ID);
                     SEARCHBRUSH(addressedTo, i, id, hbrush);
                     if (hbrush)
                     {
-                        SetBkColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorBk));
-                        if (addressedTo->ColorTab[i].ColorFG != -1) SetTextColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorFG));
+                        if ( addressedTo->ColorTab[i].isSysBrush )
+                        {
+                            SetBkColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorBk));
+                            if ( addressedTo->ColorTab[i].ColorFG != -1 )
+                            {
+                                SetTextColor((HDC)wParam, GetSysColor(addressedTo->ColorTab[i].ColorFG));
+                            }
+                        }
+                        else
+                        {
+                            SetBkColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorBk));
+                            if ( addressedTo->ColorTab[i].ColorFG != -1 )
+                            {
+                                SetTextColor((HDC)wParam, PALETTEINDEX(addressedTo->ColorTab[i].ColorFG));
+                            }
+                        }
                     }
                 }
-#ifdef __CTL3D
-                if (!hbrush && addressedTo->Use3DControls)
-                    hbrush = Ctl3dCtlColorEx(uMsg, wParam, lParam);
-#endif
                 if (hbrush)
-                   return (LRESULT) hbrush;
+                   return (LRESULT)hbrush;
                 else
                    return DefWindowProc(hDlg, uMsg, wParam, lParam);
 

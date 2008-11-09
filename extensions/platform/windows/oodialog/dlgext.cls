@@ -488,14 +488,23 @@
     else return HandleDC_Obj("B", self~Adm, color, brushSpecifier)  /* brushSpecifier must be filename or resource ID */
 
 
+::method SetItemSysColor
+   use arg id, colorbk, colorfg
+   if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
+   if id = -1 then return -1
+   if Arg(3,'o') = 1 then
+       return SetBackground(self~Adm, "COL", id, colorbk, "", "SYS")
+   else
+       return SetBackground(self~Adm, "COL", id, colorbk, colorfg, "SYS")
+
 ::method SetItemColor
    use arg id, colorbk, colorfg
    if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
    if id = -1 then return -1
    if Arg(3,'o') = 1 then
-       return SetBackground(self~Adm, "COL", id, colorbk)  /* creates an entry in the dialogs color table */
+       return SetBackground(self~Adm, "COL", id, colorbk)
    else
-       return SetBackground(self~Adm, "COL", id, colorbk, colorfg)  /* set both, background and foreground color */
+       return SetBackground(self~Adm, "COL", id, colorbk, colorfg)
 
 
    /* This method scrolls 'text' in the button */

@@ -192,18 +192,13 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
                            strstr(opts, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, FF_DONTCARE, argv[3].strptr);
 
         oldF = (HFONT)SelectObject(hDC, hFont);
-        if (dlgAdm && dlgAdm->Use3DControls)
-        {
-            hpen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
-            hbr = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-            SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
-            oP = (HPEN)SelectObject(hDC, hpen);
-            oB = (HBRUSH)SelectObject(hDC, hbr);
-        }
-        else
-        {
-            oP = (HPEN)SelectObject(hDC, GetStockObject(WHITE_PEN));
-        }
+
+        hpen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
+        hbr = GetSysColorBrush(COLOR_BTNFACE);
+
+        SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
+        oP = (HPEN)SelectObject(hDC, hpen);
+        oB = (HBRUSH)SelectObject(hDC, hbr);
 
         if (col > 0) SetTextColor(hDC, PALETTEINDEX(col));
         sl = (int)strlen(text);
@@ -308,13 +303,10 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
         Rectangle(hDC, r.left, r.top, r.right, r.bottom);
         SelectObject(hDC, oldF);
         SelectObject(hDC, oP);
-        if (dlgAdm->Use3DControls)
-        {
-            SelectObject(hDC, oB);
-            DeleteObject(hpen);
-            DeleteObject(hbr);
-        }
+        SelectObject(hDC, oB);
 
+        // Don't delete hbr, its a system cached brush
+        DeleteObject(hpen);
         DeleteObject(hFont);
         ReleaseDC(w, hDC);
         RETC(0);
