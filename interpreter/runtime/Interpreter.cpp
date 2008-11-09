@@ -228,6 +228,9 @@ int Interpreter::createInstance(RexxInstance *&instance, RexxThreadContext *&thr
     InterpreterInstance *newInstance = createInterpreterInstance(options);
     instance = newInstance->getInstanceContext();
     threadContext = newInstance->getRootThreadContext();
+    // we need to ensure we release the kernel lock before returning
+    RexxActivity *activity = newInstance->getRootActivity();
+    activity->releaseAccess();
     return 0;
 }
 

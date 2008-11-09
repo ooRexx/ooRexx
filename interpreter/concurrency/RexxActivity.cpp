@@ -2963,6 +2963,13 @@ void RexxActivity::run(ActivityDispatcher &target)
     memoryObject.runUninits();
     // unwind to the same stack depth as the start, removing all new entries
     unwindToDepth(startDepth);
+    // if a condition occurred, make sure we inject this into the API-level
+    // native activation so the caller can check to see if an error occurred.
+    if (conditionobj != OREF_NULL)
+    {
+        getApiContext()->setConditionInfo(conditionobj);
+        conditionobj = OREF_NULL;
+    }
 }
 
 
