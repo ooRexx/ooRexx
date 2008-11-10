@@ -1551,7 +1551,7 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
                     {
                         sprintf(szBuffer, "IDISPATCH=%p", pDispatch);
                         OLEObjectClass = context->FindClass("OLEOBJECT");
-                        ResultObj = context->SendMessage1(OLEObjectClass, "NEW", context->NewStringFromAsciiz(szBuffer));
+                        ResultObj = context->SendMessage1(OLEObjectClass, "NEW", context->String(szBuffer));
                         pDispatch->Release();
                     }
                 }
@@ -1576,7 +1576,7 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
                 {
                     sprintf(szBuffer, "IDISPATCH=%p", pOleObject);
                     OLEObjectClass = context->FindClass("OLEOBJECT");
-                    ResultObj = context->SendMessage1(OLEObjectClass, "NEW", context->NewStringFromAsciiz(szBuffer));
+                    ResultObj = context->SendMessage1(OLEObjectClass, "NEW", context->String(szBuffer));
                 }
                 else
                 {
@@ -1591,6 +1591,32 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
                 break;
 
             case VT_ERROR:
+                if ( fByRef )
+                {
+                    hResult = *V_ERRORREF(pVariant);
+                }
+                else
+                {
+                    hResult = V_ERROR(pVariant);
+                }
+
+                void *tmpBuf;
+
+                if ( FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+                                   NULL, hResult, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&tmpBuf, 0, NULL) )
+                {
+                    sprintf(szBuffer, "VT_ERROR (0x%08x) <%s>", hResult, tmpBuf);
+                    LocalFree(tmpBuf);
+                }
+                else
+                {
+                    sprintf(szBuffer, "VT_ERROR (0x%08x) <%s>", hResult, "no description");
+                }
+                ResultObj = context->String(szBuffer);
+
+                break;
+
+
             case VT_BLOB:
             case VT_STREAM:
             case VT_STORAGE:
