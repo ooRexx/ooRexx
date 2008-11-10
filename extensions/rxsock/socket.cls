@@ -403,7 +403,7 @@ if retc = -1 then do
    return .nil
    end
 else errno = ''
-return .InetAddress~new(stem.!addr, stem.!port, convert_address_family(stem.!family))
+return .InetAddress~new(stem.!addr, stem.!port, self~convert_address_family(stem.!family))
 
 /*----------------------------------------------------------------------------*/
 /* Method: getSockName                                                        */
@@ -420,7 +420,7 @@ if retc = -1 then do
    return .nil
    end
 else errno = ''
-return .InetAddress~new(stem.!addr, stem.!port, convert_address_family(stem.!family))
+return .InetAddress~new(stem.!addr, stem.!port, self~convert_address_family(stem.!family))
 
 /*----------------------------------------------------------------------------*/
 /* Method: init                                                               */
