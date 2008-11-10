@@ -3363,7 +3363,7 @@ RexxMethod2(int, pbc_stepIt, OSELF, self, OPTIONAL_uint32_t, delta)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    if ( argumentOmitted(1) )
+    if ( argumentOmitted(2) )
     {
         return (int)SendMessage(hwnd, PBM_STEPIT, 0, 0);
     }
