@@ -3493,7 +3493,7 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
         else
         {
             // No handler for this environment
-            result = new_integer(RXSUBCOM_NOTREG);   // just use the not registered return code
+            commandResult = new_integer(RXSUBCOM_NOTREG);   // just use the not registered return code
             // raise the condition when things are done
             condition = RexxActivity::createConditionObject(OREF_FAILURENAME, (RexxObject *)commandResult, commandString, OREF_NULL, OREF_NULL);
         }
