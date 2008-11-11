@@ -2157,11 +2157,11 @@ bool RexxActivity::callFunctionExit(
         /* Pass default result RXSTRING      */
         MAKERXSTRING(exit_parm.rxfnc_retc, retbuffer, DEFRXSTRING);
         /* call the handler                  */
-        bool wasNotHandled = callExit(activation, "RXFNC", RXFNC, RXFNCCAL, (void *)&exit_parm);
+        bool wasHandled = callExit(activation, "RXFNC", RXFNC, RXFNCCAL, (void *)&exit_parm);
 
         SystemInterpreter::releaseResultMemory(argrxarray);
 
-        if (wasNotHandled)
+        if (!wasHandled)
         {
             return true;                     /* this wasn't handled               */
         }

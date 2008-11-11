@@ -110,7 +110,7 @@ RexxSource::RexxSource(RexxString *programname, RexxArray  *source_array)
 {
     this->clearObject();                 /* start completely clean            */
                                          /* fill in the name                  */
-    OrefSet(this, this->programName, programname);
+    setProgramName(programname);
     /* fill in the source array          */
     OrefSet(this, this->sourceArray, source_array);
     /* fill in the source size           */
@@ -131,7 +131,7 @@ RexxSource::RexxSource(RexxString *programname, RexxBuffer *source_buffer)
 {
     this->clearObject();                 /* start completely clean            */
                                          /* fill in the name                  */
-    OrefSet(this, this->programName, programname);
+    setProgramName(programname);
     // we require a bit of protection while doing this
     ProtectedObject p(this);
     // initialize from the buffer data
@@ -152,7 +152,7 @@ RexxSource::RexxSource(RexxString *programname, const char *data, size_t length)
 {
     this->clearObject();                 /* start completely clean            */
                                          /* fill in the name                  */
-    OrefSet(this, this->programName, programname);
+    setProgramName(programname);
     // we require a bit of protection while doing this
     ProtectedObject p(this);
     // initialize from the buffer data
@@ -170,7 +170,7 @@ RexxSource::RexxSource(RexxString *programname)
 {
     this->clearObject();                 /* start completely clean            */
                                          /* fill in the name                  */
-    OrefSet(this, this->programName, programname);
+    setProgramName(programname);
     // we require a bit of protection while doing this
     ProtectedObject p(this);
     // read the file data and initialize.
