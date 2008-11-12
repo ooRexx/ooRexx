@@ -179,6 +179,8 @@ class RexxSource : public RexxInternalObject {
   void        classDirective();
   void        attributeDirective();
   void        constantDirective();
+  void        decodeExternalMethod(RexxString *methodName, RexxString *externalSpec, RexxString *&library, RexxString *&procedure);
+  RexxMethod *createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure);
   void        createMethod(RexxString *name, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
   void        createAttributeGetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);
   void        createAttributeSetterMethod(RexxString *name, RexxVariableBase *retriever, bool classMethod, bool privateMethod, bool protectedMethod, bool guardedMethod);

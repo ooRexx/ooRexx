@@ -2121,15 +2121,9 @@ void RexxSource::methodDirective()
                     /* ::METHOD name EXTERNAL extname    */
                 case SUBDIRECTIVE_EXTERNAL:
                     /* already had an external?          */
-                    if (externalname != OREF_NULL || abstractMethod || Attribute)
+                    if (externalname != OREF_NULL || abstractMethod)
                     {
                         /* duplicates are invalid            */
-                        syntaxError(Error_Invalid_subkeyword_method, token);
-                    }
-                    if (Attribute)           /* ATTRIBUTE already specified ?     */
-                                             /* EXTERNAL and ATTRIBUTE are        */
-                                             /* mutually exclusive                */
-                    {
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
                     token = nextReal();      /* get the next token                */
@@ -2205,8 +2199,8 @@ void RexxSource::methodDirective()
                                              /* duplicates are invalid            */
                         syntaxError(Error_Invalid_subkeyword_method, token);
                     }
-                    /* EXTERNAL already specified ?      */
-                    if (externalname != OREF_NULL || abstractMethod)
+                    // cannot have an abstract attribute
+                    if (abstractMethod)
                     {
                         /* EXTERNAL and ATTRIBUTE are        */
                         /* mutually exclusive                */
@@ -2254,15 +2248,34 @@ void RexxSource::methodDirective()
 
                                        /* Go check the next clause to make  */
         this->checkDirective();        /* sure that no code follows         */
+        // this might be externally defined setters and getters.
+        if (externalname != OREF_NULL)
+        {
+            RexxString *library = OREF_NULL;
+            RexxString *procedure = OREF_NULL;
+            decodeExternalMethod(internalname, externalname, library, procedure);
+            // now create both getter and setting methods from the information.
+            _method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
+            _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+            // add to the compilation
+            addMethod(internalname, _method, Class);
 
-        // now get a variable retriever to get the property
-        RexxVariableBase *retriever = this->getRetriever(name);
+            _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
+            _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+            // add to the compilation
+            addMethod(setterName, _method, Class);
+        }
+        else
+        {
+            // now get a variable retriever to get the property
+            RexxVariableBase *retriever = this->getRetriever(name);
 
-        // create the method pair and quit.
-        createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
-            Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
-        createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
-            Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+            // create the method pair and quit.
+            createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
+                Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+            createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
+                Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+        }
         return;
     }
     // abstract method?
@@ -2291,54 +2304,85 @@ void RexxSource::methodDirective()
     }
     else
     {
-                                /* convert external into words       */
-        RexxArray *_words = this->words(externalname);
-        /* not 'LIBRARY library [entry]' form? */
-        if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
-        {
-            RexxString *library = OREF_NULL;
-            // the default entry point name is the internal name
-            RexxString *entry = internalname;
+        RexxString *library = OREF_NULL;
+        RexxString *procedure = OREF_NULL;
+        decodeExternalMethod(internalname, externalname, library, procedure);
 
-            // full library with entry name version?
-            if (_words->size() == 3)
-            {
-                library = (RexxString *)_words->get(2);
-                entry = (RexxString *)_words->get(3);
-            }
-            else if (_words->size() == 2)
-            {
-                library = (RexxString *)_words->get(2);
-            }
-            else  // wrong number of tokens
-            {
-                                         /* this is an error                  */
-                syntaxError(Error_Translation_bad_external, externalname);
-            }
-
-            /* go check the next clause to make  */
-            this->checkDirective();      /* sure no code follows              */
-                                         /* create a new native method        */
-            RexxNativeCode *nmethod = PackageManager::resolveMethod(library, entry);
-            // raise an exception if this entry point is not found.
-            if (nmethod == OREF_NULL)
-            {
-                 syntaxError(Error_External_name_not_found_method, entry);
-            }
-            // this might return a different object if this has been used already
-            nmethod = (RexxNativeCode *)nmethod->setSourceObject(this);
-            /* turn into a real method object    */
-            _method = new RexxMethod(name, nmethod);
-        }
-        else
-        {
-            /* unknown external type             */
-            syntaxError(Error_Translation_bad_external, externalname);
-        }
+        /* go check the next clause to make  */
+        this->checkDirective();
+        // and make this into a method object.
+        _method = createNativeMethod(name, library, procedure);
     }
     _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
     // add to the compilation
     addMethod(internalname, _method, Class);
+}
+
+/**
+ * Create a native method from a specification.
+ *
+ * @param name      The method name.
+ * @param library   The library containing the method.
+ * @param procedure The name of the procedure within the package.
+ *
+ * @return A method object representing this method.
+ */
+RexxMethod *RexxSource::createNativeMethod(RexxString *name, RexxString *library, RexxString *procedure)
+{
+                                 /* create a new native method        */
+    RexxNativeCode *nmethod = PackageManager::resolveMethod(library, procedure);
+    // raise an exception if this entry point is not found.
+    if (nmethod == OREF_NULL)
+    {
+         syntaxError(Error_External_name_not_found_method, procedure);
+    }
+    // this might return a different object if this has been used already
+    nmethod = (RexxNativeCode *)nmethod->setSourceObject(this);
+    /* turn into a real method object    */
+    return new RexxMethod(name, nmethod);
+}
+
+/**
+ * Decode an external library method specification.
+ *
+ * @param methodName The internal name of the method (uppercased).
+ * @param externalSpec
+ *                   The external specification string.
+ * @param library    The returned library name.
+ * @param procedure  The returned package name.
+ */
+void RexxSource::decodeExternalMethod(RexxString *methodName, RexxString *externalSpec, RexxString *&library, RexxString *&procedure)
+{
+    // this is the default
+    procedure = methodName;
+    library = OREF_NULL;
+
+                            /* convert external into words       */
+    RexxArray *_words = this->words(externalSpec);
+    /* not 'LIBRARY library [entry]' form? */
+    if (((RexxString *)(_words->get(1)))->strCompare(CHAR_LIBRARY))
+    {
+        // full library with entry name version?
+        if (_words->size() == 3)
+        {
+            library = (RexxString *)_words->get(2);
+            procedure = (RexxString *)_words->get(3);
+        }
+        else if (_words->size() == 2)
+        {
+            library = (RexxString *)_words->get(2);
+        }
+        else  // wrong number of tokens
+        {
+                                     /* this is an error                  */
+            syntaxError(Error_Translation_bad_external, externalSpec);
+        }
+    }
+    else
+    {
+        /* unknown external type             */
+        syntaxError(Error_Translation_bad_external, externalSpec);
+    }
 }
 
 #define ATTRIBUTE_BOTH 0
@@ -2367,6 +2411,8 @@ void RexxSource::attributeDirective()
     RexxString *name = token->value; /* get the string name               */
                                      /* and the name form also            */
     RexxString *internalname = this->commonString(name->upper());
+    RexxString *externalname = OREF_NULL;
+
     for (;;)
     {                       /* now loop on the option keywords   */
         token = nextReal();            /* get the next token                */
@@ -2469,6 +2515,22 @@ void RexxSource::attributeDirective()
                     guard = GUARDED_METHOD;  /* flag for later processing         */
                     break;
                     /* ::METHOD name ATTRIBUTE           */
+                case SUBDIRECTIVE_EXTERNAL:
+                    /* already had an external?          */
+                    if (externalname != OREF_NULL)
+                    {
+                        /* duplicates are invalid            */
+                        syntaxError(Error_Invalid_subkeyword_method, token);
+                    }
+                    token = nextReal();      /* get the next token                */
+                                             /* not a string?                     */
+                    if (!token->isSymbolOrLiteral())
+                    {
+                        /* report an error                   */
+                        syntaxError(Error_Symbol_or_string_external, token);
+                    }
+                    externalname = token->value;
+                    break;
 
 
                 default:                   /* invalid keyword                   */
@@ -2496,12 +2558,30 @@ void RexxSource::attributeDirective()
 
             // no code can follow the automatically generated methods
             this->checkDirective();
+            if (externalname != OREF_NULL)
+            {
+                RexxString *library = OREF_NULL;
+                RexxString *procedure = OREF_NULL;
+                decodeExternalMethod(internalname, externalname, library, procedure);
+                // now create both getter and setting methods from the information.
+                RexxMethod *_method = createNativeMethod(internalname, library, procedure->concatToCstring("GET"));
+                _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                // add to the compilation
+                addMethod(internalname, _method, Class);
 
-            // create the method pair and quit.
-            createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
-                Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
-            createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
-                Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                _method = createNativeMethod(setterName, library, procedure->concatToCstring("SET"));
+                _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                // add to the compilation
+                addMethod(setterName, _method, Class);
+            }
+            else
+            {
+                // create the method pair and quit.
+                createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
+                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+            }
             break;
 
         }
@@ -2509,15 +2589,37 @@ void RexxSource::attributeDirective()
         case ATTRIBUTE_GET:       // just the getter method
         {
             checkDuplicateMethod(internalname, Class, Error_Translation_duplicate_attribute);
-            if (hasBody())
+            // external?  resolve the method
+            if (externalname != OREF_NULL)
             {
-                createMethod(internalname, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                // no code can follow external methods
+                this->checkDirective();
+                RexxString *library = OREF_NULL;
+                RexxString *procedure = OREF_NULL;
+                decodeExternalMethod(internalname, externalname, library, procedure);
+                // if there was no procedure explicitly given, create one using the GET/SET convention
+                if (internalname == procedure)
+                {
+                    procedure = procedure->concatToCstring("GET");
+                }
+                // now create both getter and setting methods from the information.
+                RexxMethod *_method = createNativeMethod(internalname, library, procedure);
+                _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                // add to the compilation
+                addMethod(internalname, _method, Class);
             }
-            else
-            {
-                createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+            // either written in ooRexx or is automatically generated.
+            else {
+                if (hasBody())
+                {
+                    createMethod(internalname, Class, Private == PRIVATE_SCOPE,
+                        Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                }
+                else
+                {
+                    createAttributeGetterMethod(internalname, retriever, Class, Private == PRIVATE_SCOPE,
+                        Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                }
             }
             break;
         }
@@ -2527,15 +2629,37 @@ void RexxSource::attributeDirective()
             // now get this as the setter method.
             RexxString *setterName = commonString(internalname->concatWithCstring("="));
             checkDuplicateMethod(setterName, Class, Error_Translation_duplicate_attribute);
-            if (hasBody())        // just the getter method
+            // external?  resolve the method
+            if (externalname != OREF_NULL)
             {
-                createMethod(setterName, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                // no code can follow external methods
+                this->checkDirective();
+                RexxString *library = OREF_NULL;
+                RexxString *procedure = OREF_NULL;
+                decodeExternalMethod(internalname, externalname, library, procedure);
+                // if there was no procedure explicitly given, create one using the GET/SET convention
+                if (internalname == procedure)
+                {
+                    procedure = procedure->concatToCstring("GET");
+                }
+                // now create both getter and setting methods from the information.
+                RexxMethod *_method = createNativeMethod(setterName, library, procedure);
+                _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                // add to the compilation
+                addMethod(setterName, _method, Class);
             }
             else
             {
-                createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
-                    Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                if (hasBody())        // just the getter method
+                {
+                    createMethod(setterName, Class, Private == PRIVATE_SCOPE,
+                        Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                }
+                else
+                {
+                    createAttributeSetterMethod(setterName, retriever, Class, Private == PRIVATE_SCOPE,
+                        Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
+                }
             }
             break;
         }

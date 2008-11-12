@@ -1894,19 +1894,19 @@ RexxObject *resolve_stream(
         }
     }
     /* standard input stream?            */
-    else if (name->strICompare(CHAR_STDIN) || name->strICompare(CHAR_CSTDIN))
+    else if (name->strCaselessCompare(CHAR_STDIN) || name->strCaselessCompare(CHAR_CSTDIN))
     {
         /* get the default output stream     */
         return context->getLocalEnvironment(OREF_INPUT);
     }
     /* standard output stream?           */
-    else if (name->strICompare(CHAR_STDOUT) || name->strICompare(CHAR_CSTDOUT))
+    else if (name->strCaselessCompare(CHAR_STDOUT) || name->strCaselessCompare(CHAR_CSTDOUT))
     {
         /* get the default output stream     */
         return context->getLocalEnvironment(OREF_OUTPUT);
     }
     /* standard error stream?            */
-    else if (name->strICompare(CHAR_STDERR) || name->strICompare(CHAR_CSTDERR))
+    else if (name->strCaselessCompare(CHAR_STDERR) || name->strCaselessCompare(CHAR_CSTDERR))
     {
         /* get the default output stream     */
         return context->getLocalEnvironment(OREF_ERRORNAME);
@@ -1959,7 +1959,7 @@ bool check_queue(RexxString *name)
 {
     if (name != OREF_NULL)               /* non-default name?                 */
     {
-        return name->strICompare("QUEUE:");/* compare against the queue         */
+        return name->strCaselessCompare("QUEUE:");/* compare against the queue         */
     }
     else
     {

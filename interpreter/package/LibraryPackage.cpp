@@ -310,7 +310,7 @@ RexxMethodEntry *LibraryPackage::locateMethodEntry(RexxString *name)
         {
             // is this one a name match?  Make a method, add it to
             // the table, and return.
-            if (name->strICompare(entry->name))
+            if (name->strCaselessCompare(entry->name))
             {
                 return entry;
             }
@@ -341,7 +341,7 @@ RexxRoutineEntry *LibraryPackage::locateRoutineEntry(RexxString *name)
         {
             // is this one a name match?  Make a method, add it to
             // the table, and return.
-            if (name->strICompare(entry->name))
+            if (name->strCaselessCompare(entry->name))
             {
                 return entry;
             }

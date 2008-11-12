@@ -621,7 +621,7 @@ RexxMethod *RexxMethod::newRexx(
                 reportException(Error_Incorrect_method_argType, IntegerThree, "Method/String object");
             }
             // default given? set option to NULL (see code below)
-            if (!((RexxString *)option)->strICompare("PROGRAMSCOPE"))
+            if (!((RexxString *)option)->strCaselessCompare("PROGRAMSCOPE"))
             {
                 reportException(Error_Incorrect_call_list, "NEW", IntegerThree, "\"PROGRAMSCOPE\", Method object", option);
             }

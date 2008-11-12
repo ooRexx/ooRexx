@@ -83,7 +83,7 @@ void RexxInstructionOptions::execute(
         }
 
 #ifdef _DEBUG
-        if (word->strICompare("DUMPMEMORY"))
+        if (word->strCaselessCompare("DUMPMEMORY"))
         {
             memoryObject.dumpEnable = true;
             memoryObject.dump();

@@ -339,7 +339,7 @@ inline char IntToHexDigit(int n)
    inline bool  nonNumeric() {return (this->Attributes&STRING_NONNUMERIC) != 0;};
    inline void  setNonNumeric() { this->Attributes |= STRING_NONNUMERIC;};
    inline bool  strCompare(const char * s) {return this->memCompare((s), strlen(s));};
-   inline bool  strICompare(const char * s) { return (size_t)this->length == strlen(s) && Utilities::strCaselessCompare(s, this->stringData) == 0;}
+   inline bool  strCaselessCompare(const char * s) { return (size_t)this->length == strlen(s) && Utilities::strCaselessCompare(s, this->stringData) == 0;}
    inline bool  memCompare(const char * s, size_t l) { return l == this->length && memcmp(s, this->stringData, l) == 0; }
    inline bool  memCompare(RexxString *other) { return other->length == this->length && memcmp(other->stringData, this->stringData, length) == 0; }
    inline void  memCopy(char * s) { memcpy(s, stringData, length); }
