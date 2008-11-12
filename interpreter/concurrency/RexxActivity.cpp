@@ -2510,8 +2510,8 @@ bool  RexxActivity::callQueueNameExit(
         RXMSQNAM_PARM exit_parm;             /* exit parameters                   */
         char          retbuffer[DEFRXSTRING];/* Default result buffer             */
 
-                                             /* make into RXSTRING form           */
-        inputstring->toRxstring(exit_parm.rxmsq_name);
+        MAKERXSTRING(exit_parm.rxmsq_name, retbuffer, inputstring->getLength());
+        memcpy(exit_parm.rxmsq_name.strptr, inputstring->getStringData(), inputstring->getLength());
         /* call the handler                  */
         if (!callExit(activation, "RXMSQ", RXMSQ, RXMSQNAM, (void *)&exit_parm))
         {
