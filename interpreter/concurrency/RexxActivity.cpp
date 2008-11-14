@@ -1951,22 +1951,8 @@ void RexxActivity::callInitializationExit(
         /* add the variable RXPROGRAMNAME to */
         /* the variable pool, it contains the*/
         /* script name that is currently run */
-
-        //TODO:  Remove this crud and add something to the variable pool
-        RexxString   *varName = new_string("RXPROGRAMNAME");
-        RexxString   *sourceStr = activation->getProgramName();
-        RexxVariableDictionary *vdict = activation->getLocalVariables();
-        RexxVariable *pgmName = vdict->createVariable(varName);
-        pgmName->set(sourceStr);
                                            /* call the handler                  */
         callExit(activation, "RXINI", RXINI, RXINIEXT, NULL);
-
-        /* if variable was not changed, then */
-        /* remove it from the var. pool again*/
-        if (sourceStr == pgmName->getVariableValue())
-        {
-            vdict->remove(varName);
-        }
     }
 }
 
@@ -2589,7 +2575,7 @@ bool  RexxActivity::callTraceTestExit(
 /*             the Test external trace indicator system exit.                 */
 /******************************************************************************/
 {
-    if (isExitEnabled(RXHLT))  // is the exit enabled?
+    if (isExitEnabled(RXTRC))  // is the exit enabled?
     {
         RXTRCTST_PARM exit_parm;             /* exit parameters                   */
                                              /* Clear Trace bit before  call      */
@@ -2635,7 +2621,7 @@ bool RexxActivity::callNovalueExit(
         // the value is returned as an object
         exit_parm.value = NULLOBJECT;      /* no value at the start             */
                                            /* call the handler                  */
-        if (!callExit(activation, "RXNOVAL", RXNOVAL, RXNOVALCALL, (void *)&exit_parm))
+        if (callExit(activation, "RXNOVAL", RXNOVAL, RXNOVALCALL, (void *)&exit_parm))
         {
             value = (RexxObject *)exit_parm.value;
             return false;
@@ -2660,11 +2646,13 @@ bool RexxActivity::callValueExit(
         RXVALCALL_PARM exit_parm;       /* exit parameters                   */
         // the name is passed as an rxstring
         variableName->toRxstring(exit_parm.variable_name);
+        // the selector too
+        selector->toRxstring(exit_parm.selector);
         // the value is returned as an object, and the old value is
         // also passed that way
         exit_parm.value = (RexxObjectPtr)newValue;
                                            /* call the handler                  */
-        if (!callExit(activation, "RXVALUE", RXVALUE, RXVALUECALL, (void *)&exit_parm))
+        if (callExit(activation, "RXVALUE", RXVALUE, RXVALUECALL, (void *)&exit_parm))
         {
             value = (RexxObject *)exit_parm.value;
             return false;

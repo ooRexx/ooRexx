@@ -441,12 +441,13 @@ return position
 ::METHOD open    CLASS   EXTERNAL 'LIBRARY REXX rexx_open_queue'
 
 ::METHOD init
-  use strict arg name = "SESSION"
-  name = name~upper
-  if name \= 'SESSION' then do
-      self~class~open(name)
+  expose named_queue
+  use strict arg name_queue = "SESSION"
+  named_queue = name_queue~upper
+  if named_queue \= 'SESSION' then do
+      self~class~open(named_queue)
   end
-  self~set(name)
+  self~objectname = named_queue        /* and also set as an object name    */
 
 ::METHOD get                           /* get the queue name                */
   expose named_queue                   /* just expose and return            */
