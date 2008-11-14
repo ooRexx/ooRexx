@@ -2640,7 +2640,7 @@ void RexxSource::attributeDirective()
                 // if there was no procedure explicitly given, create one using the GET/SET convention
                 if (internalname == procedure)
                 {
-                    procedure = procedure->concatToCstring("GET");
+                    procedure = procedure->concatToCstring("SET");
                 }
                 // now create both getter and setting methods from the information.
                 RexxMethod *_method = createNativeMethod(setterName, library, procedure);

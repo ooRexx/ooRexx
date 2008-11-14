@@ -1996,7 +1996,7 @@ bool  RexxActivity::callSayExit(
         RXSIOSAY_PARM exit_parm;             /* exit parameters                   */
 
         sayoutput->toRxstring(exit_parm.rxsio_string);
-        callExit(activation, "RXSIO", RXSIO, RXSIOSAY, &exit_parm);
+        return !callExit(activation, "RXSIO", RXSIO, RXSIOSAY, &exit_parm);
     }
     return true;                         /* exit didn't handle                */
 }
@@ -2013,7 +2013,7 @@ bool RexxActivity::callTraceExit(
     {
         RXSIOSAY_PARM exit_parm;             /* exit parameters                   */
         traceoutput->toRxstring(exit_parm.rxsio_string);
-        callExit(activation, "RXSIO", RXSIO, RXSIOTRC, &exit_parm);
+        return !callExit(activation, "RXSIO", RXSIO, RXSIOTRC, &exit_parm);
     }
     return true;                         /* exit didn't handle                */
 }
@@ -2034,7 +2034,7 @@ bool RexxActivity::callTerminalInputExit(
         *retbuffer = '\0';
         /* Pass along default RXSTRING       */
         MAKERXSTRING(exit_parm.rxsiotrd_retc, retbuffer, DEFRXSTRING);
-        if (callExit(activation, "RXSIO", RXSIO, RXSIOTRD, &exit_parm))
+        if (!callExit(activation, "RXSIO", RXSIO, RXSIOTRD, &exit_parm))
         {
             return true;
         }
@@ -2068,7 +2068,7 @@ bool RexxActivity::callDebugInputExit(
         *retbuffer = '\0';
         /* Pass along default RXSTRING       */
         MAKERXSTRING(exit_parm.rxsiotrd_retc, retbuffer, DEFRXSTRING);
-        if (callExit(activation, "RXSIO", RXSIO, RXSIODTR, &exit_parm))
+        if (!callExit(activation, "RXSIO", RXSIO, RXSIODTR, &exit_parm))
         {
             return true;
         }

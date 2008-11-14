@@ -64,24 +64,23 @@ void  RexxInstructionSay::execute(
 /* Function:  Execute a REXX SAY instruction                                  */
 /******************************************************************************/
 {
-    RexxObject *result;                  /* expression result                 */
     RexxString *value;                   /* string version of output value    */
 
     context->traceInstruction(this);     /* trace if necessary                */
     if (this->expression != OREF_NULL) /* have an expression value?         */
     {
         /* get the expression value          */
-        result = this->expression->evaluate(context, stack);
+        RexxObject *result = this->expression->evaluate(context, stack);
         value = REQUEST_STRING(result);    /* get the string version            */
     }
     else
     {
         /* use a NULL string                 */
-        value = (RexxString *)OREF_NULLSTRING;
+        value = OREF_NULLSTRING;
     }
     context->traceResult(value);         /* trace the output value            */
                                          /* write out the line                */
-    ActivityManager::currentActivity->sayOutput(context, value);
+    context->getActivity()->sayOutput(context, value);
     context->pauseInstruction();         /* do debug pause if necessary       */
 }
 

@@ -3391,10 +3391,7 @@ bool RexxActivation::debugPause(RexxInstruction * instr)
         {
             RexxString *response;
             /* read a line from the screen       */
-            do
-            {
-                response = this->activity->traceInput(this);
-            } while (!(this->settings.flags&halt_condition));
+            response = this->activity->traceInput(this);
 
             if (response->getLength() == 0)       /* just a "null" line entered?       */
             {
