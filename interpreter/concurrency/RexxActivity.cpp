@@ -1930,7 +1930,7 @@ bool RexxActivity::callExit(RexxActivation * activation,
         {
             /* disable the I/O exit from here to   */
             /* prevent recursive error conditions  */
-            sysexits[RXSIO].disable();
+            disableExit(RXSIO);
         }
         /* go raise an error                   */
         reportException(Error_System_service_service, exitName);

@@ -325,7 +325,8 @@ typedef enum
  protected:
 
    ExitHandler &getExitHandler(int exitNum) {  return sysexits[exitNum - 1]; }
-   bool isExitEnabled(int exitNum) { return getExitHandler(exitNum).isEnabled(); }
+   inline bool isExitEnabled(int exitNum) { return getExitHandler(exitNum).isEnabled(); }
+   inline void disableExit(int exitNum) { getExitHandler(exitNum).disable(); }
 
 
    InterpreterInstance *instance;      // the interpreter we're running under
