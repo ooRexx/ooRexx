@@ -557,7 +557,7 @@ typedef struct
     void             (RexxEntry *RaiseException1)(RexxThreadContext *, size_t, RexxObjectPtr);
     void             (RexxEntry *RaiseException2)(RexxThreadContext *, size_t, RexxObjectPtr, RexxObjectPtr);
     void             (RexxEntry *RaiseException)(RexxThreadContext *, size_t, RexxArrayObject);
-    void             (RexxEntry *RaiseCondition)(RexxThreadContext *, CSTRING, CSTRING, RexxArrayObject, RexxObjectPtr);
+    void             (RexxEntry *RaiseCondition)(RexxThreadContext *, CSTRING, RexxStringObject, RexxArrayObject, RexxObjectPtr);
     logical_t        (RexxEntry *CheckCondition)(RexxThreadContext *);
     RexxDirectoryObject (RexxEntry *GetConditionInfo)(RexxThreadContext *);
     void             (RexxEntry *DecodeConditionInfo)(RexxThreadContext *, RexxDirectoryObject, RexxCondition *);
@@ -1266,7 +1266,7 @@ struct RexxThreadContext_
     {
         functions->RaiseException(this, n, ao);
     }
-    void RaiseCondition(CSTRING s1, CSTRING s2, RexxArrayObject ao, RexxObjectPtr o)
+    void RaiseCondition(CSTRING s1, RexxStringObject s2, RexxArrayObject ao, RexxObjectPtr o)
     {
         functions->RaiseCondition(this, s1, s2, ao, o);
     }
@@ -1902,7 +1902,7 @@ struct RexxMethodContext_
     {
         threadContext->RaiseException(n, ao);
     }
-    void RaiseCondition(CSTRING s1, CSTRING s2, RexxArrayObject ao, RexxObjectPtr o)
+    void RaiseCondition(CSTRING s1, RexxStringObject s2, RexxArrayObject ao, RexxObjectPtr o)
     {
         threadContext->RaiseCondition(s1, s2, ao, o);
     }
@@ -2595,7 +2595,7 @@ struct RexxCallContext_
     {
         threadContext->RaiseException(n, ao);
     }
-    void RaiseCondition(CSTRING s1, CSTRING s2, RexxArrayObject ao, RexxObjectPtr o)
+    void RaiseCondition(CSTRING s1, RexxStringObject s2, RexxArrayObject ao, RexxObjectPtr o)
     {
         threadContext->RaiseCondition(s1, s2, ao, o);
     }
@@ -3294,7 +3294,7 @@ struct RexxExitContext_
     {
         threadContext->RaiseException(n, ao);
     }
-    void RaiseCondition(CSTRING s1, CSTRING s2, RexxArrayObject ao, RexxObjectPtr o)
+    void RaiseCondition(CSTRING s1, RexxStringObject s2, RexxArrayObject ao, RexxObjectPtr o)
     {
         threadContext->RaiseCondition(s1, s2, ao, o);
     }

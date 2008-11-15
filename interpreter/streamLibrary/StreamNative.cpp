@@ -305,7 +305,7 @@ void StreamInfo::notreadyError(int error_code, RexxObjectPtr result)
     state = StreamError;
     fileInfo.clearErrors();              // clear any errors if the stream is open
     // raise this as a notready condition
-    context->RaiseCondition("NOTREADY", stream_name, context->ArrayOfOne(self), result);
+    context->RaiseCondition("NOTREADY", context->String(stream_name), context->ArrayOfOne(self), result);
     // throw the stream object as an exception to unwind
     throw this;
 }
@@ -359,7 +359,7 @@ void StreamInfo::eof()
     /* place this in an eof state        */
     state = StreamEof;
     /* raise this as a notready condition*/
-    context->RaiseCondition("NOTREADY", stream_name, context->ArrayOfOne(self), defaultResult);
+    context->RaiseCondition("NOTREADY", context->String(stream_name), context->ArrayOfOne(self), defaultResult);
 
     // if a result object was given, the caller's not expecting control back, so
     // throw an exception to unwind.

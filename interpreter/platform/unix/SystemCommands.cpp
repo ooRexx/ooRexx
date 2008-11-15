@@ -340,7 +340,7 @@ bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPt
         if (errCode != 0)
         {
             // non-zero is an error condition
-            context->RaiseCondition("ERROR", cmd, NULL, context->WholeNumberToObject(errCode));
+            context->RaiseCondition("ERROR", context->String(cmd), NULL, context->WholeNumberToObject(errCode));
         }
         else
         {
@@ -456,7 +456,7 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
     if (errCode != 0)
     {
         // non-zero is an error condition
-        context->RaiseCondition("ERROR", cmd, NULL, context->WholeNumberToObject(errCode));
+        context->RaiseCondition("ERROR", context->String(cmd), NULL, context->WholeNumberToObject(errCode));
     }
     else
     {
@@ -520,7 +520,7 @@ bool scan_cmd(const char *parm_cmd, char **argPtr)
 
     /* Finally, put a null pointer in args[] to indicate the end.      */
     argPtr[i] = NULL;
-    return true; 
+    return true;
 }
 
 /******************************************************************************/
@@ -555,7 +555,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     }
     else if (commandLen >= 3)
     {
-        char tmp[16]; 
+        char tmp[16];
         strncpy(tmp, cmd, 3);
         tmp[3] = '\0';
         if (strcmp("cd ",tmp) == 0)
@@ -620,7 +620,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
 #endif
     {
         int pid = fork();
-        int status; 
+        int status;
 
         if (pid != 0)                         /* spawn a child process to run the  */
         {
@@ -682,12 +682,12 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     if (errCode == UNKNOWN_COMMAND)
     {
         // failure condition
-        context->RaiseCondition("FAILURE", cmd, NULL, context->WholeNumberToObject(errCode));
+        context->RaiseCondition("FAILURE", context->String(cmd), NULL, context->WholeNumberToObject(errCode));
     }
     else if (errCode != 0)
     {
         // non-zero is an error condition
-        context->RaiseCondition("ERROR", cmd, NULL, context->WholeNumberToObject(errCode));
+        context->RaiseCondition("ERROR", context->String(cmd), NULL, context->WholeNumberToObject(errCode));
     }
     return context->False();      // zero return code
 }

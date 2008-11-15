@@ -116,7 +116,7 @@ bool sys_process_set(RexxExitContext *context, const char *command, const char *
     }
     else
     {
-        context->RaiseCondition("ERROR", command, NULLOBJECT, context->WholeNumberToObject(GetLastError()));
+        context->RaiseCondition("ERROR", context->String(command), NULLOBJECT, context->WholeNumberToObject(GetLastError()));
     }
     return true;
 }
@@ -149,7 +149,7 @@ bool sys_process_cd(RexxExitContext *context, const char *command, const char * 
     }
     if (rc != 0)
     {
-        context->RaiseCondition("ERROR", command, NULLOBJECT, context->WholeNumberToObject(GetLastError()));
+        context->RaiseCondition("ERROR", context->String(command), NULLOBJECT, context->WholeNumberToObject(GetLastError()));
     }
     else
     {
@@ -248,7 +248,7 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
         else
         {
             rc = GetLastError ();         // bad termination? get error code
-            context->RaiseCondition("FAILURE", command, NULLOBJECT, context->WholeNumberToObject(rc));
+            context->RaiseCondition("FAILURE", context->String(command), NULLOBJECT, context->WholeNumberToObject(rc));
             result = NULLOBJECT;
             return true;
         }
@@ -272,7 +272,7 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
 
     if (rc != 0)
     {
-        context->RaiseCondition("ERROR", command, NULLOBJECT, context->WholeNumberToObject(rc));
+        context->RaiseCondition("ERROR", context->String(command), NULLOBJECT, context->WholeNumberToObject(rc));
         result = NULLOBJECT;
         return true;
     }
@@ -378,7 +378,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
                     int code = _chdrive(toupper( tmp[0] ) - 'A' + 1);
                     if (code != 0)
                     {
-                        context->RaiseCondition("ERROR", context->StringData(command), NULLOBJECT, context->WholeNumberToObject(code));
+                        context->RaiseCondition("ERROR", command, NULLOBJECT, context->WholeNumberToObject(code));
                         return NULLOBJECT;
                     }
                     else
@@ -510,7 +510,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     if (!sysCommandNT(context, cmd, cmdstring_ptr, false, rc))
     {
         // bad termination? get error code
-        context->RaiseCondition("FAILURE", cmd, NULLOBJECT, context->WholeNumberToObject(GetLastError()));
+        context->RaiseCondition("FAILURE", context->String(cmd), NULLOBJECT, context->WholeNumberToObject(GetLastError()));
         return NULLOBJECT;
     }
     SystemInterpreter::exceptionConsole = false;
