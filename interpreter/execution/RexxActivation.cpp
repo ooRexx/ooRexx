@@ -3544,6 +3544,13 @@ void RexxActivation::command(RexxString *address, RexxString *commandString)
         }
     }
 
+    // a handler might not return a value, so default the return code to zero
+    // if nothing is received.
+    if (rc == OREF_NULL)
+    {
+        rc = TheFalseObject;
+    }
+
     // if this was done during a debug pause, we don't update RC
     // and .RS.
     if (!this->debug_pause)
