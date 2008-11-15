@@ -81,10 +81,60 @@ typedef void *POINTER;
 #ifdef __cplusplus
 
 class _RexxObjectPtr {};
+class _RexxStringObject : public _RexxObjectPtr {};
+class _RexxBufferStringObject : public _RexxStringObject {};
+class _RexxArrayObject : public _RexxObjectPtr {};
+class _RexxBufferObject : public _RexxObjectPtr {};
+class _RexxPointerObject : public _RexxObjectPtr {};
+class _RexxMethodObject : public _RexxObjectPtr {};
+class _RexxRoutineObject : public _RexxObjectPtr {};
+class _RexxPackageObject : public _RexxObjectPtr {};
+class _RexxClassObject : public _RexxObjectPtr {};
+class _RexxDirectoryObject : public _RexxObjectPtr {};
+class _RexxSupplierObject : public _RexxObjectPtr {};
+class _RexxStemObject : public _RexxObjectPtr {};
+
 typedef _RexxObjectPtr *RexxObjectPtr;
+typedef _RexxStringObject *RexxStringObject;
+typedef _RexxBufferStringObject *RexxBufferStringObject;
+typedef _RexxArrayObject *RexxArrayObject;
+typedef _RexxBufferObject *RexxBufferObject;
+typedef _RexxPointerObject *RexxPointerObject;
+typedef _RexxMethodObject *RexxMethodObject;
+typedef _RexxRoutineObject *RexxRoutineObject;
+typedef _RexxPackageObject *RexxPackageObject;
+typedef _RexxClassObject *RexxClassObject;
+typedef _RexxDirectoryObject *RexxDirectoryObject;
+typedef _RexxSupplierObject *RexxSupplierObject;
+typedef _RexxStemObject *RexxStemObject;
 #else
 struct _RexxObjectPtr;
+struct _RexxStringObject;
+struct _RexxArrayObject;
+struct _RexxBufferObject;
+struct _RexxPointerObject;
+struct _RexxMethodObject;
+struct _RexxRoutineObject;
+struct _RexxPackageObject;
+struct _RexxClassObject;
+struct _RexxDirectoryObject;
+struct _RexxSupplierObject;
+struct _RexxStemObject;
+
 typedef struct _RexxObjectPtr *RexxObjectPtr;
+typedef struct _RexxStringObject *RexxStringObject;
+typedef struct _RexxStringObject *RexxStringObject;
+typedef struct _RexxBufferStringObject *RexxBufferStringObject;
+typedef struct _RexxArrayObject *RexxArrayObject;
+typedef struct _RexxBufferObject *RexxBufferObject;
+typedef struct _RexxPointerObject *RexxPointerObject;
+typedef struct _RexxMethodObject *RexxMethodObject;
+typedef struct _RexxRoutineObject *RexxRoutineObject;
+typedef struct _RexxPackageObject *RexxPackageObject;
+typedef struct _RexxClassObject *RexxClassObject;
+typedef struct _RexxDirectoryObject *RexxDirectoryObject;
+typedef struct _RexxSupplierObject *RexxSupplierObject;
+typedef struct _RexxStemObject *RexxStemObject;
 #endif
 
 /******************************************************************************/
@@ -531,14 +581,14 @@ typedef struct _RXTRCTST_PARM {        /* tst */
 
 
 typedef  struct _RXVARNOVALUE_PARM {   /* var */
-   CONSTRXSTRING     variable_name;    // the request variable name
+   RexxStringObject  variable_name;    // the request variable name
    RexxObjectPtr     value;            // returned variable value
 }  RXVARNOVALUE_PARM;
 
 
 typedef  struct _RXVALCALL_PARM {      /* val */
-   CONSTRXSTRING     selector;         // the environment selector name
-   CONSTRXSTRING     variable_name;    // the request variable name
+   RexxStringObject  selector;         // the environment selector name
+   RexxStringObject  variable_name;    // the request variable name
    RexxObjectPtr     value;            // returned variable value
 }  RXVALCALL_PARM;
 

@@ -2616,8 +2616,8 @@ bool RexxActivity::callNovalueExit(
     if (isExitEnabled(RXNOVAL))         // is the exit enabled?
     {
         RXVARNOVALUE_PARM exit_parm;       /* exit parameters                   */
-        // the name is passed as an rxstring
-        variableName->toRxstring(exit_parm.variable_name);
+        // the name is passed as a RexxStringObject
+        exit_parm.variable_name = (RexxStringObject)variableName;
         // the value is returned as an object
         exit_parm.value = NULLOBJECT;      /* no value at the start             */
                                            /* call the handler                  */
@@ -2644,10 +2644,9 @@ bool RexxActivity::callValueExit(
     if (isExitEnabled(RXVALUE))         // is the exit enabled?
     {
         RXVALCALL_PARM exit_parm;       /* exit parameters                   */
-        // the name is passed as an rxstring
-        variableName->toRxstring(exit_parm.variable_name);
-        // the selector too
-        selector->toRxstring(exit_parm.selector);
+        // copy the selector and variable parts
+        exit_parm.selector = (RexxStringObject)selector;
+        exit_parm.variable_name = (RexxStringObject)variableName;
         // the value is returned as an object, and the old value is
         // also passed that way
         exit_parm.value = (RexxObjectPtr)newValue;
