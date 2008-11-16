@@ -123,7 +123,6 @@ struct _RexxStemObject;
 
 typedef struct _RexxObjectPtr *RexxObjectPtr;
 typedef struct _RexxStringObject *RexxStringObject;
-typedef struct _RexxStringObject *RexxStringObject;
 typedef struct _RexxBufferStringObject *RexxBufferStringObject;
 typedef struct _RexxArrayObject *RexxArrayObject;
 typedef struct _RexxBufferObject *RexxBufferObject;
