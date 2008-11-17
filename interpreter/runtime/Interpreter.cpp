@@ -231,6 +231,8 @@ int Interpreter::createInstance(RexxInstance *&instance, RexxThreadContext *&thr
     // we need to ensure we release the kernel lock before returning
     RexxActivity *activity = newInstance->getRootActivity();
     activity->releaseAccess();
+    // the activity needs to be in a deactivated state when we return.
+    activity->deactivate();
     return 0;
 }
 
