@@ -73,9 +73,103 @@ void SystemInterpreter::processShutdown()
     Interpreter::processStartup();
 }
 
+#if 0
+void signalHandler(int sig)
+{
+#if defined( HAVE_SIGPROCMASK )
+        sigemptyset( &newmask );
+        sigaddset( &newmask, SIGINT );
+        sigaddset( &newmask, SIGTERM );
+        sigaddset( &newmask, SIGILL );
+        sigaddset( &newmask, SIGSEGV );
+        sigprocmask( SIG_BLOCK, &newmask , &oldmask );
+#elif defined( HAVE_SIGHOLD )
+        sighold(SIGINT);
+        sighold(SIGTERM);
+        sighold(SIGILL);
+        sighold(SIGSEGV);
+#endif
+
+#ifdef ORXAP_DEBUG
+    switch (sig)
+    {
+        case (SIGINT):
+            printf("\n*** Rexx interrupted.\n");
+            break;
+        case (SIGTERM):
+            printf("\n*** Rexx terminated.\n*** Closing Rexx !\n");  /* exit(0); */
+            break;
+        case (SIGSEGV):
+            printf("\n*** Segmentation fault.\n*** Closing Rexx !\n");
+            break;
+        case (SIGFPE):
+            printf("\n*** Floating point error.\n*** Closing Rexx\n");
+            break;
+        case (SIGBUS):
+            printf("\n*** Bus error.\n*** Closing Rexx\n");
+            break;
+        case (SIGPIPE):
+            printf("\n*** Broken pipe.\n*** Closing Rexx\n");
+            break;
+        default:
+            printf("\n*** Error,closing REXX !\n");
+            break;
+    }
+#endif
+
+    // if the signal is a ctrl-C, we perform a halt operation
+    if (sig == SIGINT)
+    {
+        Interpreter::haltAllActivities();
+#if defined( HAVE_SIGPROCMASK )
+        sigprocmask( SIG_SETMASK, &oldmask , NULL );
+#elif defined( HAVE_SIGHOLD )
+        sigrelse(SIGINT);
+        sigrelse(SIGTERM);
+        sigrelse(SIGILL);
+        sigrelse(SIGSEGV);
+#endif
+        return;
+    }
+    else
+    {
+#if defined( HAVE_SIGPROCMASK )
+        sigprocmask( SIG_SETMASK, &oldmask , NULL );
+#elif defined( HAVE_SIGHOLD )
+        sigrelse(SIGINT);
+        sigrelse(SIGTERM);
+        sigrelse(SIGILL);
+        sigrelse(SIGSEGV);
+#endif
+        exit(0);
+    }
+}
+#endif
+
 
 void SystemInterpreter::startInterpreter()
 {
+#if 0
+    /* Set the cleanup handler for unconditional process termination          */
+    struct sigaction new_action;
+    struct sigaction old_action;
+
+    /* Set up the structure to specify the new action                         */
+    new_action.sa_handler = signalHandler;
+    old_action.sa_handler = NULL;
+    sigfillset(&new_action.sa_mask);
+    new_action.sa_flags = SA_RESTART;
+
+/* Termination signals are set by Object REXX whenever the signals were not set */
+/* from outside (calling C-routine). The SIGSEGV signal is not set any more, so */
+/* that we now get a coredump instead of a hang up                              */
+
+    sigaction(SIGINT, NULL, &old_action);
+    if (old_action.sa_handler == NULL)           /* not set by ext. exit handler*/
+    {
+        sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGTERM signal     */
+    }
+#endif
 }
 
 
