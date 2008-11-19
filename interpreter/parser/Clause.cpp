@@ -56,7 +56,6 @@ RexxClause::RexxClause()
 /* Function:  Finish initialization of a REXX clause object                   */
 /******************************************************************************/
 {
-    this->clearObject();                 /* initialize the object             */
                                          /* an array for the tokens           */
     OrefSet(this, this->tokens, new_arrayOfObject(sizeof(RexxToken), INITIAL_SIZE, T_Token));
     this->first = 1;                     /* first token is the start          */

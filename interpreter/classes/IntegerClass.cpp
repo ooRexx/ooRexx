@@ -1168,7 +1168,6 @@ void *RexxInteger::operator new(size_t size)
 /******************************************************************************/
 {
     RexxObject *newObject = new_object(size, T_Integer);        /* get a new object                  */
-    newObject->clearObject();            /* clear the object                  */
     newObject->setHasNoReferences();     /* Tell GC, not to bother with Live  */
     return newObject;                    /* return the new object.            */
 }

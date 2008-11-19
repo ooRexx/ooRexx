@@ -84,7 +84,6 @@ RexxObject *RexxNumberString::##method(RexxObject *operand)\
  */
 RexxNumberString::RexxNumberString(size_t len)
 {
-    this->clearObject();
     this->NumDigits = number_digits();
     this->sign = 1;
     this->length = len;
@@ -103,7 +102,6 @@ RexxNumberString::RexxNumberString(size_t len)
  */
 RexxNumberString::RexxNumberString(size_t len, size_t precision)
 {
-    this->clearObject();
     this->NumDigits = precision;
     this->sign = 1;
     this->length = len;

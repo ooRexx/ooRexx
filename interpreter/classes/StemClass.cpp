@@ -72,7 +72,6 @@ RexxStem::RexxStem(
 /* Function:  Initialize a STEM class item                                    */
 /******************************************************************************/
 {
-    this->clearObject();                 /* start fresh                       */
     if (name == OREF_NULL)               /* no explicit default value?        */
     {
         name = OREF_NULLSTRING;            /* set a null string                 */
