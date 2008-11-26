@@ -1893,6 +1893,7 @@ RexxString *RexxString::newString(const char *string, size_t length)
     /* allocate the new object           */
     RexxString *newObj = (RexxString *)new_object(size2, T_String);
     /* clear the front part              */
+    newObj->clearObject(sizeof(RexxString));
     newObj->setLength(length);           /* save the length                   */
     newObj->hashValue = 0;               // make sure the hash value is zeroed
                                          /* Null terminate, allows faster     */
@@ -1920,6 +1921,8 @@ RexxString *RexxString::rawString(size_t length)
   size_t size2 = sizeof(RexxString) - (sizeof(char) * 3) + length;
                                        /* allocate the new object           */
   RexxString *newObj = (RexxString *)new_object(size2, T_String);
+                                       /* clear the front part              */
+  newObj->clearObject(sizeof(RexxString));
   newObj->setLength(length);           /* save the length                   */
   newObj->hashValue = 0;               // make sure the hash value is zeroed
                                        /* Null terminate, allows faster     */
@@ -1954,6 +1957,8 @@ RexxString *RexxString::newUpperString(const char * string, stringsize_t length)
     size_t size2 = sizeof(RexxString) - (sizeof(char) * 3) + length;
     /* allocate the new object           */
     RexxString *newObj = (RexxString *)new_object(size2, T_String);
+    /* clear the front part              */
+    newObj->clearObject(sizeof(RexxString));
     newObj->length = length;             /* save the length                   */
     newObj->hashValue = 0;               // make sure the hash value is zeroed
                                          /* create a new string               */

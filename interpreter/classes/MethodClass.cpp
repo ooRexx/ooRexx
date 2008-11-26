@@ -156,6 +156,7 @@ RexxArray *BaseExecutable::source()
  */
 RexxMethod::RexxMethod(RexxString *name, RexxSource *_source)
 {
+    this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.
@@ -177,6 +178,7 @@ RexxMethod::RexxMethod(RexxString *name, RexxSource *_source)
  */
 RexxMethod::RexxMethod(RexxString *name, BaseCode *codeObj)
 {
+    this->clearObject();                 /* start out fresh                   */
     OrefSet(this, this->executableName, name);
     OrefSet(this, this->code, codeObj);  /* store the code                    */
 }
@@ -189,6 +191,7 @@ RexxMethod::RexxMethod(RexxString *name, BaseCode *codeObj)
  */
 RexxMethod::RexxMethod(RexxString *name)
 {
+    this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.
@@ -211,6 +214,7 @@ RexxMethod::RexxMethod(RexxString *name)
  */
 RexxMethod::RexxMethod(RexxString *name, RexxBuffer *buf)
 {
+    this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.
@@ -234,6 +238,7 @@ RexxMethod::RexxMethod(RexxString *name, RexxBuffer *buf)
  */
 RexxMethod::RexxMethod(RexxString *name, const char *data, size_t length)
 {
+    this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.
@@ -256,6 +261,7 @@ RexxMethod::RexxMethod(RexxString *name, const char *data, size_t length)
  */
 RexxMethod::RexxMethod(RexxString *name, RexxArray *s)
 {
+    this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.

@@ -80,6 +80,7 @@ PackageClass::PackageClass(RexxSource *s)
 /* Function:  Initialize a method object                                      */
 /******************************************************************************/
 {
+    this->clearObject();                 /* start out fresh                   */
     OrefSet(this, this->source, s);      /* store the code                    */
 }
 

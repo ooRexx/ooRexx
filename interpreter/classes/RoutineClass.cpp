@@ -89,6 +89,7 @@ void RoutineClass::createInstance()
  */
 RoutineClass::RoutineClass(RexxString *name, BaseCode *codeObj)
 {
+    this->clearObject();                 /* start out fresh                   */
     OrefSet(this, this->code, codeObj);  /* store the code                    */
     OrefSet(this, this->executableName, name);
 }
@@ -101,6 +102,7 @@ RoutineClass::RoutineClass(RexxString *name, BaseCode *codeObj)
  */
 RoutineClass::RoutineClass(RexxString *name)
 {
+    this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.
@@ -123,6 +125,7 @@ RoutineClass::RoutineClass(RexxString *name)
  */
 RoutineClass::RoutineClass(RexxString *name, RexxBuffer *s)
 {
+    this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.
@@ -146,6 +149,7 @@ RoutineClass::RoutineClass(RexxString *name, RexxBuffer *s)
  */
 RoutineClass::RoutineClass(RexxString *name, const char *data, size_t length)
 {
+    this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.
@@ -168,6 +172,7 @@ RoutineClass::RoutineClass(RexxString *name, const char *data, size_t length)
  */
 RoutineClass::RoutineClass(RexxString *name, RexxArray *s)
 {
+    this->clearObject();                 /* start out fresh                   */
     // we need to protect this object until the constructor completes.
     // the code generation step will create lots of new objects, giving a
     // pretty high probability that it will be collected.

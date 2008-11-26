@@ -59,6 +59,7 @@ RexxTrigger::RexxTrigger(
 /* Function:  Initialize a parse trigger translator object                    */
 /******************************************************************************/
 {
+    clearObject();
     this->setType(type);                 /* set the type (and hashvalue)      */
     this->variableCount = _variableCount; /* set the number of variables also  */
     OrefSet(this, this->value, _value);   /* save the associated value         */

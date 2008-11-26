@@ -63,6 +63,10 @@ void *InterpreterInstance::operator new(size_t size)
 
 InterpreterInstance::InterpreterInstance()
 {
+    // just make sure all of the fields are cleared in case a GC
+    // gets triggered at the wrong moment.
+    clearObject();
+
     // this needs to be created and set
     terminationSem.create();
     terminationSem.reset();
@@ -425,7 +429,7 @@ void InterpreterInstance::removeInactiveActivities()
         }
         else
         {
-            // have the inactive thread wake up and terminate
+            // have the inactive thread wake up and terminate 
             activity->terminatePoolActivity();
         }
     }

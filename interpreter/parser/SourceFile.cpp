@@ -108,6 +108,7 @@ typedef struct _LINE_DESCRIPTOR {
  */
 RexxSource::RexxSource(RexxString *programname, RexxArray  *source_array)
 {
+    this->clearObject();                 /* start completely clean            */
                                          /* fill in the name                  */
     setProgramName(programname);
     /* fill in the source array          */
@@ -128,6 +129,7 @@ RexxSource::RexxSource(RexxString *programname, RexxArray  *source_array)
  */
 RexxSource::RexxSource(RexxString *programname, RexxBuffer *source_buffer)
 {
+    this->clearObject();                 /* start completely clean            */
                                          /* fill in the name                  */
     setProgramName(programname);
     // we require a bit of protection while doing this
@@ -148,6 +150,7 @@ RexxSource::RexxSource(RexxString *programname, RexxBuffer *source_buffer)
  */
 RexxSource::RexxSource(RexxString *programname, const char *data, size_t length)
 {
+    this->clearObject();                 /* start completely clean            */
                                          /* fill in the name                  */
     setProgramName(programname);
     // we require a bit of protection while doing this
@@ -165,6 +168,7 @@ RexxSource::RexxSource(RexxString *programname, const char *data, size_t length)
  */
 RexxSource::RexxSource(RexxString *programname)
 {
+    this->clearObject();                 /* start completely clean            */
                                          /* fill in the name                  */
     setProgramName(programname);
     // we require a bit of protection while doing this

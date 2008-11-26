@@ -92,6 +92,7 @@ void *RexxListTable::operator new(size_t size, size_t initialSize)
 {
     /* Get new object                    */
     RexxListTable *newTable = (RexxListTable *)new_object(size + sizeof(LISTENTRY) * (initialSize - 1), T_ListTable);
+    newTable->clearObject();
     newTable->size = initialSize;
     return newTable;                     /* return the new list item          */
 }
@@ -109,6 +110,7 @@ void *RexxListTable::operator new(size_t size, size_t initialSize, size_t compan
     /* Get space for two objects         */
     /* Get new object                    */
     RexxList *newList  = (RexxList *)new_object(bytes + companionSize);
+    newList->clearObject();              /* clear the entire lot              */
                                          /* address the list table            */
     RexxListTable *newTable = (RexxListTable *)(((char *)newList) + companionSize);
     /* compute total size of the list    */

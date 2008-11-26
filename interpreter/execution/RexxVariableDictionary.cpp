@@ -68,6 +68,7 @@ RexxObject  *RexxVariableDictionary::copy()
 {
     /* create a new object               */
     RexxVariableDictionary *copyObj = new_variableDictionary(contents->mainSlotsSize());
+    copyObj->clearObject();              /* clear this out                    */
                                          /* copy the behaviour pointer        */
     OrefSet(copyObj, copyObj->behaviour, this->behaviour);
     ProtectedObject p(copyObj);

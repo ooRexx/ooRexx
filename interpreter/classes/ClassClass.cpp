@@ -1414,6 +1414,7 @@ void  *RexxClass::operator new(size_t size,
         /* use the specified size            */
         new_class = (RexxClass *)new_object(size1);
     }
+    new_class->clearObject();            /* clear out the state data          */
                                          // set this value immediately
     new_class->id = new_string(className);
     /* set the class specific behaviour  */

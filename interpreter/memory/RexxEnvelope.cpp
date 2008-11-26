@@ -58,6 +58,7 @@ RexxEnvelope::RexxEnvelope()
 /* Function:  Initialize a REXX envelope object                               */
 /******************************************************************************/
 {
+  this->clearObject();                 /* just clear and                    */
 }
 
 void RexxEnvelope::live(size_t liveMark)

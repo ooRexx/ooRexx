@@ -72,6 +72,7 @@ void *LibraryPackage::operator new(size_t size)
  */
 LibraryPackage::LibraryPackage(RexxString *n)
 {
+    this->clearObject();
     OrefSet(this, libraryName, n);
 }
 
@@ -85,6 +86,7 @@ LibraryPackage::LibraryPackage(RexxString *n)
  */
 LibraryPackage::LibraryPackage(RexxString *n, RexxPackageEntry *p)
 {
+    this->clearObject();
     OrefSet(this, libraryName, n);
     ProtectedObject p2(this);
     // this is an internal package.

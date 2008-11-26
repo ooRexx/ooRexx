@@ -52,6 +52,7 @@ RexxSmartBuffer::RexxSmartBuffer(size_t startSize)
 /* Function:  Initialize a smart buffer object                                */
 /******************************************************************************/
 {
+    this->clearObject();                 /* start out fresh                   */
                                        /* default initial buffersize, 1 page*/
                                        /* for buffer + data.                */
     OrefSet(this, this->buffer, (RexxBuffer *)new_buffer(startSize));

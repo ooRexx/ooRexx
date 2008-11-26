@@ -93,6 +93,7 @@ RexxHashTable *RexxHashTable::newInstance(
     bytes = sizeof(RexxHashTable) + (sizeof(TABENTRY) * (entries - 1));
     /* Get new object                    */
     newHash = (RexxHashTable *)new_object(bytes, T_HashTable);
+    newHash->clearObject();              /* clear things out                  */
     newHash->size = bucketSize;          /* record the size                   */
     newHash->free = entries - 1;         /* and the first free slot           */
     return newHash;                      /* and return it                     */
@@ -130,6 +131,7 @@ RexxTable *RexxHashTable::newInstance(
     companionSize = roundObjectBoundary(companionSize);
     /* Get space for two objects         */
     newObj = (RexxTable *)new_object(bytes + companionSize, type);
+    newObj->clearObject();               /* clear the entire lot              */
                                          /* address the hash table            */
     newHash = (RexxHashTable *)(((char *)newObj) + companionSize);
     /* compute total size of the hash    */

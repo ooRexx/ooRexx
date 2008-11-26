@@ -64,6 +64,7 @@ RexxCompoundVariable::RexxCompoundVariable(
 /* Function:  Complete compound variable initialization                       */
 /******************************************************************************/
 {
+    this->clearObject();                 /* initialize the object             */
     this->tailCount= TailCount;          /* set the count (and hash value)    */
     OrefSet(this, this->stemName, _stemName); /* save the associate value          */
     this->index = stemIndex;             /* set the stem index                */
