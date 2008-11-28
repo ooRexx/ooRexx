@@ -353,76 +353,68 @@ bool startTheService(void)
 /**
  * If rxapi is currently running as a Service process, then stop it.
  *
- * @param timeOut  Time to wait, in miliseconds for a pending stop to clear.
+ * @param hService  Opened handle to the service.  The handle must have been
+ *                  opened with SERVICE_QUERY_STATUS and SERVICE_STOP access
+ *                  rights.
+ *
+ * @param timeOut   Time to wait, in miliseconds for a pending stop to clear.
  *
  * @return  True if the service is stopped, false if not sure that the service
  *          is stopped.
  */
-bool stopTheService(DWORD timeOut)
+bool stopTheService(SC_HANDLE hService, DWORD timeOut)
 {
-    SERVICE_STATUS ss;
-    SC_HANDLE hService = NULL;
+    SERVICE_STATUS_PROCESS ssp;
     DWORD startTicks = GetTickCount();
     DWORD waitTime = timeOut / 20;
     DWORD needed;
     bool success = false;
 
-    SC_HANDLE hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
-    if ( hSCM == NULL )
-    {
-        goto cleanup;
-    }
-
-    hService = OpenService(hSCM, SERVICENAME, SERVICE_QUERY_STATUS | SERVICE_STOP);
-    if ( hService == NULL)
-    {
-        goto cleanup;
-    }
-
     // See if the service is already stopped.
-    if ( ! QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ss, sizeof(SERVICE_STATUS_PROCESS), &needed) )
+    if ( ! QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp, sizeof(SERVICE_STATUS_PROCESS), &needed) )
     {
-        goto cleanup;
+        goto finished;
     }
 
-    if ( ss.dwCurrentState == SERVICE_STOPPED )
+    if ( ssp.dwCurrentState == SERVICE_STOPPED )
     {
         success = true;
-        goto cleanup;
+        goto finished;
     }
 
     // When a service has a stop pending, we'll wait for it.
-    while ( ss.dwCurrentState == SERVICE_STOP_PENDING )
+    while ( ssp.dwCurrentState == SERVICE_STOP_PENDING )
     {
         Sleep(waitTime);
-        if ( ! QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ss, sizeof(SERVICE_STATUS_PROCESS), &needed) )
+        if ( ! QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp, sizeof(SERVICE_STATUS_PROCESS), &needed) )
         {
-            goto cleanup;
+            goto finished;
         }
 
-        if ( ss.dwCurrentState == SERVICE_STOPPED )
+        if ( ssp.dwCurrentState == SERVICE_STOPPED )
         {
             success = true;
-            goto cleanup;
+            goto finished;
         }
 
         if ( GetTickCount() - startTicks > timeOut )
         {
-            goto cleanup;
+            goto finished;
         }
     }
 
     // Send a stop code through the Sevice Control Manager to the service
+    SERVICE_STATUS ss;
     if ( ! ControlService(hService, SERVICE_CONTROL_STOP, &ss) )
     {
-        goto cleanup;
+        goto finished;
     }
 
     // Wait for the service to stop
-    while ( ss.dwCurrentState != SERVICE_STOPPED )
+    while ( ssp.dwCurrentState != SERVICE_STOPPED )
     {
         Sleep(waitTime);
-        if ( ! QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ss, sizeof(SERVICE_STATUS_PROCESS), &needed) )
+        if ( ! QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp, sizeof(SERVICE_STATUS_PROCESS), &needed) )
         {
             break;
         }
@@ -439,15 +431,7 @@ bool stopTheService(DWORD timeOut)
         }
     }
 
-cleanup:
-    if ( hSCM != NULL )
-    {
-        CloseServiceHandle(hSCM);
-    }
-    if ( hService != NULL )
-    {
-        CloseServiceHandle(hService);
-    }
+finished:
     return success;
 }
 
@@ -638,7 +622,7 @@ bool Uninstall()
     SC_HANDLE hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if ( hSCM != NULL )
     {
-        SC_HANDLE hService = OpenService(hSCM, SERVICENAME, DELETE);
+        SC_HANDLE hService = OpenService(hSCM, SERVICENAME, DELETE | SERVICE_QUERY_STATUS | SERVICE_STOP);
         if ( hService != NULL )
         {
             // First stop the service if it is running, which allows the Service
@@ -646,7 +630,7 @@ bool Uninstall()
             // to stop the service we just ignore it.  The database will be
             // cleaned up at the next reboot. (Or sooner if the rxapi process is
             // killed.)
-            stopTheService(1000);
+            stopTheService(hService, 1000);
 
             if ( DeleteService(hService) )
             {
