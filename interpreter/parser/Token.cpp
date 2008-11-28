@@ -57,7 +57,6 @@ RexxToken::RexxToken(
 /* Function:  Complete set up of a TOKEN object                               */
 /******************************************************************************/
 {
-    this->clearObject();                  /* initialize the object             */
     OrefSet(this, this->value, _value);   /* use the provided string value     */
     this->classId = _classId;             /* no assigned token class           */
     this->subclass = _subclass;           /* no specialization yet             */

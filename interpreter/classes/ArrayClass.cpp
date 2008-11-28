@@ -100,7 +100,6 @@ void RexxArray::init(size_t _size, size_t maxSize)
 /* Function:  Initialize an array                                             */
 /******************************************************************************/
 {
-  this->clearObject();                 /* initialize the object             */
   this->arraySize = _size;
   this->maximumSize = maxSize;
   this->lastElement = 0;               // no elements set yet
@@ -2645,7 +2644,6 @@ void *RexxArray::operator new(size_t newSize, size_t size, size_t maxSize, RexxC
     /* Give it array behaviour.          */
     newArray->setBehaviour(arrayClass->getInstanceBehaviour());
 
-    newArray->clearObject();             /* Clear the state data              */
     newArray->arraySize = size;
     newArray->maximumSize = maxSize;
     /* no expansion yet, use ourself     */

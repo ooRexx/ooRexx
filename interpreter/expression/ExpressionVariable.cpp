@@ -57,7 +57,6 @@ RexxParseVariable::RexxParseVariable(
 /* Complete initialization of a variable object                               */
 /******************************************************************************/
 {
-  this->clearObject();                 /* start completely clean            */
                                        /* set the name value                */
   OrefSet(this, this->variableName, variable_name);
   this->index = var_index;             /* save the index                    */

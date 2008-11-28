@@ -64,19 +64,18 @@ RexxInstructionCall::RexxInstructionCall(
 /* Function:  Complete CALL instruction object                                */
 /******************************************************************************/
 {
-    /* set the name                      */
-    OrefSet(this, this->name, (RexxString *)_name);
-    /* and the condition                 */
-    OrefSet(this, this->condition, _condition);
-    instructionFlags = (uint16_t)flags;  /* copy the flags                    */
-    builtinIndex = (uint16_t)builtin_index; /* and the builtin function index    */
-    /* no arguments                      */
-    argumentCount = (uint16_t)argCount;
-    while (argCount > 0)               /* now copy the argument pointers    */
-    {
-        /* in reverse order                  */
-        OrefSet(this, this->arguments[--argCount], argList->pop());
-    }
+                                       /* set the name                      */
+  OrefSet(this, this->name, (RexxString *)_name);
+                                       /* and the condition                 */
+  OrefSet(this, this->condition, _condition);
+  instructionFlags = (uint16_t)flags;  /* copy the flags                    */
+  builtinIndex = (uint16_t)builtin_index; /* and the builtin function index    */
+                                       /* no arguments                      */
+  argumentCount = (uint16_t)argCount;
+  while (argCount > 0) {               /* now copy the argument pointers    */
+                                       /* in reverse order                  */
+    OrefSet(this, this->arguments[--argCount], argList->pop());
+  }
 }
 
 void RexxInstructionCall::live(size_t liveMark)
@@ -84,17 +83,17 @@ void RexxInstructionCall::live(size_t liveMark)
 /* Function:  Normal garbage collection live marking                          */
 /******************************************************************************/
 {
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
-    memory_mark(this->nextInstruction);  /* must be first one marked          */
-    memory_mark(this->name);
-    memory_mark(this->target);
-    memory_mark(this->condition);
-    for (i = 0, count = argumentCount; i < count; i++)
-    {
-        memory_mark(this->arguments[i]);
-    }
+  memory_mark(this->nextInstruction);  /* must be first one marked          */
+  memory_mark(this->name);
+  memory_mark(this->target);
+  memory_mark(this->condition);
+  for (i = 0, count = argumentCount; i < count; i++)
+  {
+      memory_mark(this->arguments[i]);
+  }
 }
 
 void RexxInstructionCall::liveGeneral(int reason)
@@ -102,18 +101,18 @@ void RexxInstructionCall::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
-                                         /* must be first one marked          */
-    memory_mark_general(this->nextInstruction);
-    memory_mark_general(this->name);
-    memory_mark_general(this->target);
-    memory_mark_general(this->condition);
-    for (i = 0, count = argumentCount; i < count; i++)
-    {
-        memory_mark_general(this->arguments[i]);
-    }
+                                       /* must be first one marked          */
+  memory_mark_general(this->nextInstruction);
+  memory_mark_general(this->name);
+  memory_mark_general(this->target);
+  memory_mark_general(this->condition);
+  for (i = 0, count = argumentCount; i < count; i++)
+  {
+      memory_mark_general(this->arguments[i]);
+  }
 }
 
 void RexxInstructionCall::flatten(RexxEnvelope *envelope)
@@ -121,21 +120,19 @@ void RexxInstructionCall::flatten(RexxEnvelope *envelope)
 /* Function:  Flatten an object                                               */
 /******************************************************************************/
 {
-    size_t i;                            /* loop counter                      */
-    size_t count;                        /* argument count                    */
+  size_t i;                            /* loop counter                      */
+  size_t count;                        /* argument count                    */
 
-    setUpFlatten(RexxInstructionCall)
+  setUpFlatten(RexxInstructionCall)
 
-    flatten_reference(newThis->nextInstruction, envelope);
-    flatten_reference(newThis->name, envelope);
-    flatten_reference(newThis->target, envelope);
-    flatten_reference(newThis->condition, envelope);
-    for (i = 0, count = argumentCount; i < count; i++)
-    {
-        flatten_reference(newThis->arguments[i], envelope);
-    }
+  flatten_reference(newThis->nextInstruction, envelope);
+  flatten_reference(newThis->name, envelope);
+  flatten_reference(newThis->target, envelope);
+  flatten_reference(newThis->condition, envelope);
+  for (i = 0, count = argumentCount; i < count; i++)
+    flatten_reference(newThis->arguments[i], envelope);
 
-    cleanUpFlatten
+  cleanUpFlatten
 }
 
 void RexxInstructionCall::resolve(
@@ -144,37 +141,27 @@ void RexxInstructionCall::resolve(
 /* Function:  Resolve a CALL instruction target                               */
 /******************************************************************************/
 {
-    if (this->name == OREF_NULL)         /* not a name target form?           */
-    {
-        return;                            /* just return                       */
+  if (this->name == OREF_NULL)         /* not a name target form?           */
+    return;                            /* just return                       */
+  if (instructionFlags&call_dynamic)   {        // can't resolve now
+      return;                          //
+  }
+  if (!(instructionFlags&call_nointernal)) {    /* internal routines allowed?        */
+    if (labels != OREF_NULL)           /* have a labels table?              */
+                                       /* check the label table             */
+      OrefSet(this, this->target, (RexxInstruction *)labels->at((RexxString *)this->name));
+    instructionFlags |= call_internal;          /* this is an internal call          */
+  }
+  if (this->target == OREF_NULL) {     /* not found yet?                    */
+                                       /* have a builtin function?          */
+    if (builtinIndex != NO_BUILTIN) {
+      instructionFlags |= call_builtin;         /* this is a builtin function        */
+                                       /* cast off the routine name         */
+      OrefSet(this, this->name, OREF_NULL);
     }
-    if (instructionFlags&call_dynamic)        // can't resolve now
-    {
-        return;                          //
-    }
-    if (!(instructionFlags&call_nointernal))    /* internal routines allowed?        */
-    {
-        if (labels != OREF_NULL)           /* have a labels table?              */
-        {
-                                           /* check the label table             */
-            OrefSet(this, this->target, (RexxInstruction *)labels->at((RexxString *)this->name));
-        }
-        instructionFlags |= call_internal;          /* this is an internal call          */
-    }
-    if (this->target == OREF_NULL)     /* not found yet?                    */
-    {
-        /* have a builtin function?          */
-        if (builtinIndex != NO_BUILTIN)
-        {
-            instructionFlags |= call_builtin;         /* this is a builtin function        */
-            /* cast off the routine name         */
-            OrefSet(this, this->name, OREF_NULL);
-        }
-        else
-        {
-            instructionFlags |= call_external;        /* have an external routine          */
-        }
-    }
+    else
+      instructionFlags |= call_external;        /* have an external routine          */
+  }
 }
 
 void RexxInstructionCall::execute(

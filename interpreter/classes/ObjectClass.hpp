@@ -338,8 +338,9 @@ class RexxObject : public RexxInternalObject {
          setBehaviour(b);
          // this has a clean set of flags, except for the live mark
          header.initHeader(size, mark);
-         // make sure the object variables are cleared in case this has to get marked
-         objectVariables = OREF_NULL;
+         // make sure the object is cleared in case this gets marked out of any of
+         // the constructors.
+         clearObject();
      }
 
      inline void initializeNewObject(size_t mark, void *vft, RexxBehaviour *b)
@@ -351,10 +352,10 @@ class RexxObject : public RexxInternalObject {
          setBehaviour(b);
          // this has a clean set of flags, except for the live mark
          header.initHeader(mark);
-         // make sure the object variables are cleared in case this has to get marked
-         objectVariables = OREF_NULL;
+         // make sure the object is cleared in case this gets marked out of any of
+         // the constructors.
+         clearObject();
      }
-
 
      virtual ~RexxObject(){;};
 

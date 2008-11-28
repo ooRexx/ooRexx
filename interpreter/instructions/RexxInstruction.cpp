@@ -53,7 +53,6 @@ RexxInstruction::RexxInstruction(
 /* Function:  Common initialization for instruction objects                   */
 /******************************************************************************/
 {
-  this->clearObject();                 /* start out clean                   */
                                        /* record the instruction type       */
   this->instructionType = type;
   if (clause != OREF_NULL) {           /* have a clause object?             */
