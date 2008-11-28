@@ -3129,7 +3129,11 @@ size_t RexxEntry WSCtrlWindow(const char *funcname, size_t argc, CONSTRXSTRING a
 
     CHECKARG(1,10);
 
-    if (!strcmp(argv[0].strptr,"FIND"))
+    if (!strcmp(argv[0].strptr,"DESK"))
+    {
+        RET_HANDLE(GetDesktopWindow());
+    }
+    else if (!strcmp(argv[0].strptr,"FIND"))
     {
         CHECKARG(2,2);
         hW = FindWindow(NULL, argv[1].strptr);

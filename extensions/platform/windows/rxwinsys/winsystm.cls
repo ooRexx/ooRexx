@@ -614,6 +614,11 @@
 
 ::class 'WindowsManager' public
 
+::method DeskTopWindow
+   hw = WSCtrlWindow("DESK")
+   if hw = 0 then return .nil
+   else return .WindowObject~new(hw)
+
 ::method Find
    parse arg title
    hw = WSCtrlWindow("FIND", title)
