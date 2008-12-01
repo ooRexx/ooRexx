@@ -57,6 +57,21 @@
  *                 the specific language version of Windows.
  */
 
+-- First, give the user a clue as to what is happening.
+msg = "This ooRexx example program demonstrates controlling a" || '0d0a'x || -
+      "Windows application using the winsystm.cls classes." || '0d0a0d0a'x || -
+      "Information will be displayed using message boxes like" || '0d0a'x || -
+      "this one.  Push the ok button in them to continue the" || '0d0a'x || -
+      "demonstration." || '0d0a0d0a'x || -
+      "You will see both the Calculator and Notepad programs" || '0d0a'x || -
+      "appear on you screen.  There are some short pauses" || '0d0a'x || -
+      "between actions.  Be patient during them.  The appli-" || '0d0a'x || -
+      "cations will be closed automatically" || '0d0a0d0a'x || -
+      "In particular watch the Calculator program to see the" || '0d0a'x || -
+      "changes as it is remotely controlled."
+
+j = infoDialog(msg)
+
 -- A simple demonstration of the Windows Manager.  Get an instance of the
 -- WindowsManager class.  Then, display the title and coordinates of the current
 -- foreground window.

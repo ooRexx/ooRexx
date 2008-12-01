@@ -228,12 +228,7 @@ Section "${LONGNAME} Samples" SecDemo
   File "${SRCDIR}\samples\stack.rex"
   File "${SRCDIR}\samples\usecomp.rex"
   File "${SRCDIR}\samples\usepipe.rex"
-  File "${SRCDIR}\samples\windows\rexutils\usewmgr.rex"
-  File "${SRCDIR}\samples\windows\rexutils\deskicon.rex"
-  File "${SRCDIR}\samples\windows\rexutils\desktop.rex"
   File "${SRCDIR}\samples\windows\rexutils\drives.rex"
-  File "${SRCDIR}\samples\windows\rexutils\eventlog.rex"
-  File "${SRCDIR}\samples\windows\rexutils\registry.rex"
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR\samples\ole\adsi
   ; Distribution files...
@@ -276,15 +271,21 @@ Section "${LONGNAME} Samples" SecDemo
 ;;;   File "${SRCDIR}\samples\windows\wsh\*.htm"
 ;;;   File "${SRCDIR}\samples\windows\wsh\*.wsf"
 ;;;   File "${SRCDIR}\samples\windows\wsh\*.wsc"
+  ; Set output path to the installation directory.
+  SetOutPath $INSTDIR\samples\winsystem
+  File "${SRCDIR}\samples\windows\winsystem\*.rex"
+  File "${SRCDIR}\samples\windows\winsystem\*.rc"
+  File "${SRCDIR}\samples\windows\winsystem\*.h"
+  File "${SRCDIR}\samples\windows\winsystem\*.frm"
   ; Create start menu shortcuts
   SetOutPath $INSTDIR\samples
   CreateDirectory "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\RexxCPS.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\rexxcps.rex"' "$INSTDIR\rexx.exe"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Date.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\qdate.rex"' "$INSTDIR\rexx.exe"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Quick Time.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\qtime.rex"' "$INSTDIR\rexx.exe"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Event Log.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\registry.rex"' "$INSTDIR\rexx.exe"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Event Log.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\winsystem\eventlog.rex"' "$INSTDIR\rexx.exe"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Display Drive Info.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\drives.rex"' "$INSTDIR\rexx.exe"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Windows Manager.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\usewmgr.rex"' "$INSTDIR\rexx.exe"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\Windows Manager.lnk" "$INSTDIR\rexxhide.exe" '"$INSTDIR\samples\winsystem\usewmgr.rex"' "$INSTDIR\rexx.exe"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\MS Access.lnk" "$INSTDIR\rexxpaws.exe" '"$INSTDIR\samples\ole\apps\MSAccessDemo.rex"' "$INSTDIR\rexx.exe"
   ;
   ; OOdialog samples
