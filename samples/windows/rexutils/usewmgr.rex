@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,264 +35,376 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/****************************************************************************/
-/* Name       : USEWMGR.REX                                                 */
-/* Type       : Object REXX Script                                          */
-/* Description: Demonstrates the use of the WindowsManager,                 */
-/*              the WindowObject and the WindowsClipboard class             */
-/*                                                                          */
-/* Note: Because of language dependencies this example will not run         */
-/*       correctly on all language versions of Windows.                     */
-/*       But it's easy to adapt.                                            */
-/*                                                                          */
-/****************************************************************************/
 
-/* start the windows calculator */
-"start calc"
+/**
+ *   Name: usewmgr.rex
+ *   Type: Example ooRexx program
+ *
+ *   Description:  Demonstrates the use of the WindowsManager, the WindowObject,
+ *                 and the WindowsClipboard classes.  Has some examples of
+ *                 ooDialog usage.
+ *
+ *                 This example uses some of the public functions provided by
+ *                 the windowsSystem.frm package. That framework contains
+ *                 functions shared with other example programs shipped with
+ *                 ooRexx that use winsystm.cls.
+ *
+ *   Note:         Because of language dependencies this example will not run
+ *                 correctly on all language versions of Windows.  It assumes
+ *                 the window titles are in English.  To run on a different
+ *                 language version, change the window titles for the Calculator
+ *                 and Notepad applications to the correct title for
+ *                 the specific language version of Windows.
+ */
 
-/* get an instance of the WindowsManager class */
+-- A simple demonstration of the Windows Manager.  Get an instance of the
+-- WindowsManager class.  Then, display the title and coordinates of the current
+-- foreground window.
 winMgr = .WindowsManager~new
-if winMgr~initcode \= 0 then exit
 
-/* display title and coordinates of the current foreground window */
 fg = winMgr~ForegroundWindow
-if fg \= .Nil then say "Current foreground window:" fg~Title "at" fg~Coordinates
-
-/* find the Calculator Window */
-call FindCalculator
-
-/* switch to the scientific view */
-calc~ProcessMenuCommand("&View","&Scientific")
-call syssleep 2
-
-/* because the calculator changes it's handle when the view is changed, get the window again */
-call FindCalculator
-
-/* Set a few commands of the calculator */
-divide = 90
-multi  = 91
-plus   = 92
-minus  = 93
-point  = 85
-System = SysVersion()
-/* calculator differs on Windows 95 */
-if countstr("WINDOWS95",System~Translate) \= 0 then do
-  one    = "1"~c2d
-  three  = "3"~c2d
-  five   = "5"~c2d
-  seven  = "7"~c2d
-  equals = 111
-
+if fg \= .nil then do
+  msg = "Current foreground window" || '0d0a0d0a'x || -
+        "  Window title:   " fg~Title || '0d0a'x || -
+        "  Window location:" fg~Coordinates
+  j = infoDialog(msg)
 end
 else do
- 	equals = 112
+  msg = "The WindowsManager object failed to find the foreground window."
+  j = errorDialog(msg)
+end
+
+-- A more involved demonstration using the Windows Calculator application.  The
+-- real work is done in the workWithCalc() routine.
+calcPrg = getPathToSystemExe("calc.exe")
+if calcPrg \== .nil then do
+  ret = workWithCalc(calcPrg)
+end
+else do
+  msg = "Faild to locate a definitive path to the Windows" || '0d0a'x || -
+        "Calculator application.  Going to skip this part" || '0d0a'x || -
+        "of the demonstration."
+  j = errorDialog(msg)
+end
+
+-- An example similar to the Windows Calculator, but using Windows Notepad.
+notepad = getPathToSystemExe("notepad.exe")
+if notepad \== .nil then do
+  ret = workWithNotepad(notepad)
+end
+else do
+  msg = "Faild to locate a definitive path to the Windows" || '0d0a'x || -
+        "Notepad application.  Going to skip this part of" || '0d0a'x || -
+        "the demonstration."
+  j = errorDialog(msg)
+end
+
+return 0
+
+
+/* windowsSystem.frm contains public helper routines and also requires
+ * winsystm.cls and oodplain.cls.  Requiring windowsSystem.frm gives us access
+ * to the class definitions for WindowsManager, WindowsClipboard, and
+ * WindowObject. oodplain.cls has the class definitions for the message dialogs.
+ */
+::requires "windowsSystem.frm"
+
+::routine workWithCalc
+  use strict arg calcPrg
+
+  -- Start the Calculator program.
+  "start" calcPrg
+
+  -- Find the Calculator Window, if we don't find it, then end this portion of
+  -- the demonstration.
+  calc = findTheWindow("Calculator")
+  if calc == .nil then return windowFailure("Calculator")
+
+  -- Make the calculator the top-most window.
+  calc~ToForeground
+  call SysSleep 2
+
+  -- Switch to the scientific view.
+  calc~ProcessMenuCommand("&View","&Scientific")
+  call SysSleep 2
+
+  /* When the view of the Calculator is changed, it gets a new window handle.
+   * Because of this, after each view change, the calculator must be found
+   * again.  This is an oddity of the Calculator application.  Most applications
+   * maintain the same window handle through out their execution.
+   */
+  calc = findTheWindow("Calculator")
+  if calc == .nil then return windowFailure("Calculator")
+  calc~ToForeground
+
+  /* Each button in a dialog has a resource ID.  When the button is pushed or
+   * clicked, the button sends a command (WM_COMMAND) notification to its
+   * parent window.  The command notification contains the resource ID of the
+   * button that was pushed.  This is how the dialog knows what button(s) the
+   * user pushes or clicks.
+   *
+   * We can simulate a user pushing buttons by sending commands to the dialog
+   * using the resource ID of the button we want pushed.  Here we define
+   * variables with the IDs of some of the buttons in the calculator
+   * application.  This makes the code easier to read.  You can verify that
+   * these are the correct ID numbers by using the displayWindowTree.rex program
+   * included with this distribution of ooRexx.
+   */
+
+  divide = 90
+  multi  = 91
+  plus   = 92
+  minus  = 93
+  point  = 85
+  equals = 112
   one    = 125
   three  = 127
   five   = 129
   seven  = 131
-end
 
-/* Create a clipboard object */
-cb = .WindowsClipboard~new
+  /* Create a clipboard object */
+  cb = .WindowsClipboard~new
 
-/* Switch between Scientific and Standard view using the calculator's menu */
-call FindCalculator
-calc~ProcessMenuCommand("&View","S&tandard")
-call syssleep 2
-call FindCalculator
-calc~ProcessMenuCommand("&View","&Scientific")
-call syssleep 2
-call FindCalculator
-calc~Title = "Calculator - Open Object Rexx is in charge!"
+  /* Switch between Scientific and Standard view using the calculator's menu */
+  calc = findTheWindow("Calculator")
+  if calc == .nil then return windowFailure("Calculator")
 
-/* Get a list of all child windows */
-cwins. = calc~EnumerateChildren
+  calc~ProcessMenuCommand("&View","S&tandard")
+  call SysSleep 2
 
-say "The calculator has the following child windows:"
-do i = 1 to cwins.0
-  say "    " cwins.i.!Class cwins.i.!ID "with title" cwins.i.!Title "at" cwins.i.!Coordinates
-  if cwins.i.!Children = 1 then say "            -> children"
-  /* Keep the handle of the "Grads" radio button */
-  --if cwins.i.!Title = "Grads" | cwins.i.!Title = "Gradiends" then do
-   if countstr("Grad",cwins.i.!Title) \= 0 then GradsBtn.Handle = cwins.i.!Handle
-end
+  calc = findTheWindow("Calculator")
+  if calc == .nil then return windowFailure("Calculator")
 
-/* Do a few calculations and retrieve the results via the clipboard */
-calc~SendMenuCommand(seven)
-calc~SendMenuCommand(plus)
-calc~SendMenuCommand(five)
-calc~SendMenuCommand(equals)
+  calc~ProcessMenuCommand("&View","&Scientific")
+  call SysSleep 2
 
-/* Empty clipboard so that we can wait until data is available */
-cb~Empty
+  calc = findTheWindow("Calculator")
+  if calc == .nil then return windowFailure("Calculator")
 
-/* Copy result to clipboard, wait until the data is available from the clipboard */
-/* and us paste to display the result */
-calc~ProcessMenuCommand("&Edit","&Copy")
-do while cb~IsDataAvailable = 0; nop; end
-say "Calculator says: 7+5="cb~Paste
-call syssleep 2
-calc~SendMenuCommand(divide)
-calc~SendMenuCommand(one)
-calc~SendMenuCommand(Point)
-calc~SendMenuCommand(five)
-calc~SendMenuCommand(equals)
-cb~Empty
-calc~ProcessMenuCommand("&Edit","&Copy")
-do while cb~IsDataAvailable = 0; nop; end
-say "Calculator says: 7+5/1.5="cb~Paste
-calc~SendMenuCommand(multi)
-calc~SendMenuCommand(three)
-calc~SendMenuCommand(equals)
-cb~Empty
-calc~ProcessMenuCommand("&Edit","&Copy")
-do while cb~IsDataAvailable = 0; nop; end
-say "Calculator says: 7+5/1.5*3="cb~Paste
-call syssleep 2
-/* Switch to hexadecimal mode */
-calc~PushButton("Hex")
-cb~Empty
-calc~ProcessMenuCommand("&Edit","&Copy")
-do while cb~IsDataAvailable = 0; nop; end
-say "Calculator says: 7+5/1.5="cb~Paste " (HEX)"
-call syssleep 2
+  calc~Title = "Calculator - Open Object Rexx is in charge!"
 
-/* Switch back to decimal mode */
-calc~PushButton("Dec")
+  -- Do a few calculations and retrieve the results via the clipboard
+  calc~sendCommand(seven)
+  calc~sendCommand(plus)
+  calc~sendCommand(five)
+  calc~sendCommand(equals)
 
-/* Copy a number to the clipboard and from there to the calculator */
-/* to demonstrate the easier way to enter numbers */
-cb~Copy("123456789")
-calc~ProcessMenuCommand("&Edit","&Paste")
-call syssleep 2
+  -- Empty clipboard so that we can wait until data is available
+  cb~empty
 
-/* Now simulate a left mouse button click on the "Grads" radio button */
-if GradsBtn.Handle \= 0 then do
-  CalcHandle = calc~Handle
-  calc~AssocWindow(GradsBtn.Handle)
-  calc~SendMouseClick("LEFT","DOWN",2,2)
-   calc~SendMouseClick("LEFT","UP",2,2)
-   calc~AssocWindow(CalcHandle)
-end
+  /* Copy result to clipboard, wait until the data is available from the
+   * clipboard and then use paste to display the result.
+   */
+  calc~processMenuCommand("&Edit", "&Copy")
+  do while cb~IsDataAvailable = 0; nop; end
+  msg = "Calculator says: 7+5="cb~Paste
+  j = infoDialog(msg)
 
-call syssleep 2
+  call SysSleep 2
+  calc~sendCommand(divide)
+  calc~sendCommand(one)
+  calc~sendCommand(Point)
+  calc~sendCommand(five)
+  calc~sendCommand(equals)
+  cb~Empty
 
-calc~SendSysCommand("Close")  /* Quit calculator */
+  calc~processMenuCommand("&Edit", "&Copy")
+  do while cb~IsDataAvailable = 0; nop; end
+  msg = "Calculator says: 7+5/1.5="cb~Paste
+  j = infoDialog(msg)
 
-/* Work with the notepad */
-"start notepad"
-np = .Nil
-i = 1
+  calc~sendCommand(multi)
+  calc~sendCommand(three)
+  calc~sendCommand(equals)
+  cb~Empty
 
-/* Get a WindowObject instance that is associated with Notepad */
-do while np == .Nil & i < 20
-   np = winMgr~Find("Untitled - Notepad")
-   if np = .Nil then call SysSleep 1
-   i = i + 1
-end
-if np = .Nil then do
-    say "Sample terminated: Couldn't find notepad!"
-    winMgr~Deinstall
-end
+  calc~processMenuCommand("&Edit","&Copy")
+  do while cb~IsDataAvailable = 0; nop; end
+  msg = "Calculator says: 7+5/1.5*3="cb~Paste
+  j = infoDialog(msg)
 
-/* Move Notepad to foreground */
-np~ToForeground
-/* the edit window is the first (and perhaps only) child of Notepad */
-npe = np~FirstChild
-npe~SendText("Hallo,")
-/* Sends the virtual keys and some text strings to the window */
-npe~SendKey("RETURN")
-npe~SendText("This is a sample that mainly demonstrates the use of the WindowsManager class.")
-npe~SendKey("RETURN")
-npe~SendKey("RETURN")
-call syssleep 1
-npe~SendText("It also introduces the WindowObject, the MenuObject, and the WindowsClipboard classes.")
-npe~SendKey("RETURN")
-npe~SendKey("RETURN")
-npe~SendKey("RETURN")
-call syssleep 1
-npe~SendText("In 1 second intervals I'm going to minimize, maximize, restore, disable, and reenable Notepad.")
-call syssleep 3
-np~Minimize
-call syssleep 1
-np~Maximize
-call syssleep 1
-np~Restore
-call syssleep 1
+  call SysSleep 2
 
-/* Change the size of the Notepad window */
-np~Resize(650, 280)
+  -- Switch to hexadecimal mode.
+  calc~pushButton("Hex")
+  cb~empty
+  calc~processMenuCommand("&Edit","&Copy")
+  do while cb~isDataAvailable = 0; nop; end
+  msg = "Calculator says: 7+5/1.5="cb~Paste " (HEX)"
+  j = infoDialog(msg)
 
-/* Make the main window (incl. menu) inaccessible */
-np~Disable
-npe~SendKey("RETURN")
-npe~SendText("Select a menu item. It won't be possible.")
-call syssleep 5
-/* Re-enable the main window */
-np~Enable
-npe~SendKey("RETURN")
-npe~SendText("Now the menu is enabled again.")
-call syssleep 1
-npe~SendKey("RETURN")
-npe~SendText("You can do the same with the editor window.")
-/* We disable the edit window so it gets grayed */
-npe~Disable
-call syssleep 4
-npe~Enable
-npe~SendKey("RETURN")
-npe~SendText("Now let's hide the editor window.")
-call syssleep 2
-/* Let's hide the edit window (not the main window) for a moment */
-npe~Hide
-np~Restore
-call syssleep 2
-npe~Restore
-npe~SendKey("RETURN")
-npe~SendKey("RETURN")
-call syssleep 3
-npe~SendKey("RETURN")
-npe~SendKey("RETURN")
-npe~SendText("The show is over. Good bye!")
-call syssleep 2
+  call SysSleep 2
 
-np~SendSysCommand("Close")  /* Close notepad */
+  -- Switch back to decimal mode.
+  calc~pushButton("Dec")
 
-/* Now wait a second for the dialog that asks whether to save the changes */
-call syssleep 1
-fg = winMgr~ForegroundWindow
-if fg \= .Nil then do
-  /* If it is the dialog then decline to save */
-  if fg~Title = "Notepad" then fg~PushButton("&No")
-end
-/* Deinstall the WindowsManager and clean up */
-winMgr~deinstall
+  -- Copy a number to the clipboard and from there to the calculator to
+  -- demonstrate another way to enter numbers.
+  cb~copy("123456789")
+  calc~processMenuCommand("&Edit", "&Paste")
+  call SysSleep 2
 
-exit
+  -- Simulate a left mouse button click on the "Grads" radio button.
+  gradsRB = findDescendent(calc, "Grads")
+  if gradsRB \== .nil then do
+    gradsRB~sendMouseClick("LEFT", "DOWN", 2, 2)
+    gradsRB~sendMouseClick("LEFT", "UP", 2, 2)
+  end
 
-/* Procedure to search for the calculator window                       */
-/* When the view of the calculator is changed, it get's a new handle.  */
-/* So after each view change, the calcualator n+must be seacrhed again */
-/* This is a specialty of the calculator                               */
-FindCalculator: procedure EXPOSE calc winMgr
+  call SysSleep 2
 
-i = 0
-calc = .Nil
-/* Get a WindowObject instance that is associated with the calculator */
-do while calc == .Nil & i < 20  /* wait max. 20 seconds to find it */
-  calc = winMgr~Find("Calculator")
-  if calc = .Nil then call SysSleep 1
-  i = i + 1
-end
-/* Display error message if the calculator window was not found */
-if calc = .Nil then do
-  say "Sample terminated: Couldn't find calculator!"
-  winMgr~Deinstall
-end
-else
-  /* Make the calculator the top-most window */
-  calc~ToForeground
+  -- Close the Calculator application by pressing Close in the system menu.
+  calc~sendSysCommand("Close")
 
-return
+return 0
 
-/* access class definitions */
-::requires "WINSYSTM.CLS"
+::routine workWithNotepad
+  use strict arg notePrg
+
+  -- Start the Notepad program.
+  "start" notePrg
+
+  np = findTheWindow("Untitled - Notepad")
+  if np == .nil then return windowFailure("Notepad")
+
+  -- Move Notepad to foreground.
+  np~toForeground
+
+  -- The edit window is the first (and perhaps only) child window of Notepad.
+  npe = np~firstChild
+
+  -- The sendText() method sets the text of a window.
+  npe~sendText("Hello,")
+
+  -- The sendKey() method sends a key press to a window.  This can be used to
+  -- send virtual key pressess to the window.
+  npe~sendKey("RETURN")
+
+  -- Because we are sending messages to an application running in a separate
+  -- process, on today's fast, multi-threaded, multi-cored, systems, it is
+  -- possible for the messages to arrive in the Notepad application in a
+  -- different order than they are being sent here.  This was probably not
+  -- possible on Windows 3.0 when this example was first developed.
+  --
+  -- To avoid this out of order messaging, we use a helper function from the
+  -- windowsSystem.frm framework.
+  j = sendTextWithPause(npe, "This is a sample that mainly demonstrates the use")
+  j = sendKeyWithPause(npe, "RETURN")
+  j = sendTextWithPause(npe, "of the WindowsManager class.")
+  j = sendKeyWithPause(npe, "RETURN")
+  j = sendKeyWithPause(npe, "RETURN")
+
+  j = sendTextWithPause(npe, "It also introduces the WindowObject, the MenuObject,")
+  j = sendKeyWithPause(npe, "RETURN")
+  j = sendTextWithPause(npe, "and the WindowsClipboard classes.")
+  j = sendKeyWithPause(npe, "RETURN")
+  j = sendKeyWithPause(npe, "RETURN")
+
+  npe~sendText("In 1 second intervals I'm going to minimize, maximize, restore,")
+  j = sendKeyWithPause(npe, "RETURN")
+  npe~sendText("disable, and reenable Notepad.")
+  j = sendKeyWithPause(npe, "RETURN")
+
+  call SysSleep 3
+  np~minimize
+  call SysSleep 1
+  np~maximize
+  call SysSleep 1
+  np~restore
+  call SysSleep 1
+
+  -- Change the size of the Notepad window.
+  np~resize(650, 280)
+
+  -- Make the main window (including the menu) inaccessible.
+  np~disable
+
+  j = sendKeyWithPause(npe, "RETURN")
+  j = sendKeyWithPause(npe, "RETURN")
+  j = sendTextWithPause(npe, "Select a menu item. It won't be possible.")
+  call SysSleep 5
+
+  -- Re-enable the main window.
+  np~enable
+
+  j = sendKeyWithPause(npe, "RETURN")
+  j = sendTextWithPause(npe, "Now the menu is enabled again.")
+  call SysSleep 1
+
+  j = sendKeyWithPause(npe, "RETURN")
+  j = sendTextWithPause(npe, "You can do the same with the editor window.")
+
+  -- We disable the edit window so it gets grayed.
+  npe~disable
+  call SysSleep 4
+
+  npe~enable
+  j = sendKeyWithPause(npe, "RETURN")
+  npe~sendText("Now let's hide the editor window.")
+  call SysSleep 2
+
+  -- Let's hide the edit window (not the main window) for a moment.e */
+  npe~hide
+  np~restore
+  call SysSleep 2
+
+  npe~restore
+  npe~sendKey("RETURN")
+  npe~sendKey("RETURN")
+  call SysSleep 3
+  npe~sendKey("RETURN")
+  npe~sendKey("RETURN")
+  npe~sendText("The show is over. Good bye in 3 seconds!")
+
+  -- Get a WindowsManager object, we'll use it below to cancel the Save dialog.
+  winMgr = .WindowsManager~new
+
+  -- On Vista, the interface to Notepad is slightly changed.
+  if isVistaOrLater() then buttonName = "Do&n't Save"
+  else buttonName = "&No"
+  call SysSleep 2
+
+  -- Close Notepad by pressing the Close menu item in the system menu.
+  np~sendSysCommand("Close")
+
+  -- Wait a second for the dialog that asks whether to save the changes.
+  call SysSleep 1
+  fg = winMgr~foregroundWindow
+  if fg \== .nil, fg~title = "Notepad" then do
+    call SysSleep .1
+
+    -- Get the No or Don't Save button.  Then set the focus to the button and
+    -- send the space key to it.  This simulates a user pushing the button and
+    -- has the effect of closing Notepad automatically.
+    button = findDescendent(fg, buttonName)
+    if button \== .nil then do
+      fg~focusItem(button)
+      button~SendKey("SPACE")
+    end
+    else do
+      msg = 'Could not locate the' buttonName~changestr('&', "") 'button used to ' || '0d0a'x || -
+            'discard the text changes.  findDescendent() failed' || '0d0a0d0a'x || -
+            'You will have to close the Notepad windows manually.'
+      j = errorDialog(msg)
+    end
+  end
+  else do
+    msg = 'Failed to connect with the Save Dialog for Notepad' || '0d0a0d0a'x || -
+          'You may have to close the Notepad windows manually.'
+    j = errorDialog(msg)
+  end
+
+return 0
+
+/** windowFailure()
+ * A simple helper function to put up an error message box.
+ */
+::routine windowFailure
+  use strict arg name
+
+  msg = "Failed to locate the" name "application window." || '0d0a0d0a'x || -
+        "Ending the" name "demonstration prematurely."
+  j = errorDialog(msg)
+
+return .false
+

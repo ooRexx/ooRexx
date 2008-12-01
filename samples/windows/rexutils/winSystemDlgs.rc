@@ -1,0 +1,87 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2008-2008 Rexx Language Association. All rights reserved.    */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+#include "winSystemDlgs.h"
+#include <windows.h>
+#include <commctrl.h>
+
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+IDD_WINDOW_TREE DIALOGEX 0, 0, 289, 330
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_VISIBLE | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+CAPTION "Window Hierarchy"
+FONT 8, "Ms Shell Dlg 2", 400, 0, 1
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 229, 306, 50, 14
+    CONTROL         "", IDC_TREE_WINDOWS, WC_TREEVIEW, WS_TABSTOP | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_INFOTIP | TVS_FULLROWSELECT, 10, 10, 269, 291
+END
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+IDD_MENU_TREE DIALOGEX 0, 0, 289, 330
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_VISIBLE | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+CAPTION "Menu Hierarchy"
+FONT 8, "Ms Shell Dlg 2", 400, 0, 1
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 229, 306, 50, 14
+    CONTROL         "", IDC_TREE_MENUS, WC_TREEVIEW, WS_TABSTOP | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_INFOTIP | TVS_FULLROWSELECT, 10, 10, 269, 291
+END
+
+IDD_USER_PROMPT DIALOG 0, 0, 186, 89
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_FIXEDSYS | WS_VISIBLE | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+CAPTION "Select Top Level Window"
+FONT 8, "Ms Shell Dlg 2"
+BEGIN
+    LTEXT           "Enter the window title of the window whose menu you want to display.  You need to use the full and exact title of the window.", IDC_STATIC, 15, 14, 154, 32
+    GROUPBOX        "", IDC_STATIC, 5, 5, 176, 41
+    EDITTEXT        IDC_EDIT_NAME, 5, 53, 176, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", IDOK, 76, 72, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 131, 72, 50, 14
+END
+
+IDD_WINDOW_LIST DIALOGEX 0, 0, 286, 212
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_VISIBLE | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+CAPTION "Top-level Windows"
+FONT 8, "Ms Shell Dlg 2", 400, 0, 1
+BEGIN
+    CTEXT           "Select a top-level window in the list and push the Show button.  The selected window and its children will be graphically displayed.  Use the Refresh button to re-populate the list.", IDC_STATIC_DESCRIPTION, 10, 10, 266, 35
+    GROUPBOX        "Window List", IDC_STATIC, 10, 50, 266, 133
+    CONTROL         "", IDC_LV_WINDOWS, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_SINGLESEL | LVS_REPORT | LVS_SHOWSELALWAYS, 17, 68, 252, 104
+    DEFPUSHBUTTON   "Refresh", IDC_PB_REFRESH, 10, 188, 50, 14
+    DEFPUSHBUTTON   "Show", IDC_PB_SHOW, 171, 188, 50, 14
+    PUSHBUTTON      "Quit", IDC_PB_QUIT, 226, 188, 50, 14
+END
+
