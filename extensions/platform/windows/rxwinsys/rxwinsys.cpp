@@ -2925,16 +2925,15 @@ RexxMethod5(uint32_t, WSEventLog_readRecords, OPTIONAL_CSTRING, direction, OPTIO
             // Get index to event type string
             GET_TYPE_INDEX(pEvLogRecord->EventType, evTypeIndex);
 
-            // Get time and date converted to local time.  The ifdef is needed
-            // to allow compilation using VC++ 7.0, which doesn't appear to
-            // have __time32_t and 64-bit Windows which doesn't allow
-            // _USE_32BIT_TIME_T
-#ifdef  _WIN64
-            DateTime = _localtime32((const __time32_t *)&pEvLogRecord->TimeWritten);
-#else
-#define _USE_32BIT_TIME_T 1
+            // Get time and date converted to local time.  The TimeWritten field
+            // in the event log record struct is 32 bits but in VC++ 8.0, and
+            // on, time_t is inlined to be 64-bits, and on 64-bit Windows time_t
+            // is 64-bit to begin with.  So, _localtime32() needs to be used.
+            // However, VC++ 7.0 doesn't appear to have __time32_t.
+#if _MSC_VER < 1400
             DateTime = localtime((const time_t *)&pEvLogRecord->TimeWritten);
-#undef _USE_32BIT_TIME_T
+#else
+            DateTime = _localtime32((const __time32_t *)&pEvLogRecord->TimeWritten);
 #endif
             strftime(date, MAX_TIME_DATE,"%x", DateTime);
             strftime(time, MAX_TIME_DATE,"%X", DateTime);
