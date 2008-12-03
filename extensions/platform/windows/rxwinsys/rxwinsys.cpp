@@ -2925,8 +2925,17 @@ RexxMethod5(uint32_t, WSEventLog_readRecords, OPTIONAL_CSTRING, direction, OPTIO
             // Get index to event type string
             GET_TYPE_INDEX(pEvLogRecord->EventType, evTypeIndex);
 
-            // Get time and date converted to local time.
+            // Get time and date converted to local time.  The ifdef is needed
+            // to allow compilation using VC++ 7.0, which doesn't appear to
+            // have __time32_t and 64-bit Windows which doesn't allow
+            // _USE_32BIT_TIME_T
+#ifdef  _WIN64
             DateTime = _localtime32((const __time32_t *)&pEvLogRecord->TimeWritten);
+#else
+#define _USE_32BIT_TIME_T 1
+            DateTime = localtime((const time_t *)&pEvLogRecord->TimeWritten);
+#undef _USE_32BIT_TIME_T
+#endif
             strftime(date, MAX_TIME_DATE,"%x", DateTime);
             strftime(time, MAX_TIME_DATE,"%X", DateTime);
 
