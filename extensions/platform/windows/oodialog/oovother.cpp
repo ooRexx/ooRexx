@@ -3108,18 +3108,24 @@ void wrongWindowStyleException(RexxMethodContext *context, const char *obj, cons
 }
 
 /**
- * Return the number of existing arguments passed to a native API Rexx method,
- * (as opposed to the size of the argument array.)
+ * Return the number of existing arguments used in an ooRexx method invocation
+ * of a native API Rexx method.  In others words, it is intended to not count
+ * the pseudo-arguments like OSELF.
+ *
+ * It may be obvious, or not, that in order for this to work, the order of the
+ * real ooRexx arguements need to be kept sequential in the RexxMethodX function
+ * signatures.
  *
  * @param context  The method context pointer for the native method.
+ * @param start    The starting position, 1-based of the real ooRexx args.
+ * @param end      The ending position, 1-based, of the real ooRexx args
  *
  * @return The count of existing arguments in the argument array.
  */
-size_t rxArgCount(RexxMethodContext * context)
+size_t rxArgCount(RexxMethodContext * context, size_t start, size_t end)
 {
     size_t j = 0;
-    size_t count = context->ArraySize(context->GetArguments());
-    for( size_t i = 1; i <= count; i++ )
+    for( size_t i = start; i <= end; i++ )
     {
         if ( argumentExists(i) )
         {
@@ -3500,7 +3506,7 @@ RexxMethod3(logical_t, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, OPTI
 RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
-    size_t count = rxArgCount(context);
+    size_t count = rxArgCount(context, 2, 4);
     COLORREF rgb;
 
     if ( count == 1 )
@@ -3523,7 +3529,7 @@ RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t
 RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
-    size_t count = rxArgCount(context);
+    size_t count = rxArgCount(context, 2, 4);
     COLORREF rgb;
 
     if ( count == 1 )
@@ -3539,7 +3545,6 @@ RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_
         context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->WholeNumberToObject(3));
         return 0;
     }
-
     return (uint32_t)SendMessage(hwnd, PBM_SETBARCOLOR, 0, rgb);
 }
 
@@ -4363,7 +4368,7 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
 
     BUTTON_IMAGELIST biml;
 
-    if ( argumentExists(4) )
+    if ( argumentExists(5) )
     {
         PRECT pRect = rxGetRect(context, margin, 4);
         if ( pRect == NULL )
@@ -4383,7 +4388,7 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
         biml.margin.bottom = 3;
     }
 
-    biml.uAlign = argumentExists(5) ? align : BUTTON_IMAGELIST_ALIGN_CENTER;
+    biml.uAlign = argumentExists(6) ? align : BUTTON_IMAGELIST_ALIGN_CENTER;
 
     HIMAGELIST himl = ImageList_Create(pSize->cx, pSize->cy, flag, 5, 5);
     if ( himl == NULL )
@@ -4716,7 +4721,7 @@ RexxMethod0(RexxStringObject, dlgutil_version)
 
 RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
-    size_t count = rxArgCount(context);
+    size_t count = rxArgCount(context, 1, 3);
 
     if ( count == 1 )
     {
