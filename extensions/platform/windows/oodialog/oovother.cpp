@@ -3145,10 +3145,10 @@ RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long
     if ( RectClass != NULL )
     {
         RexxArrayObject args = context->NewArray(4);
-        context->ArrayAppend(args, context->WholeNumberToObject(l));
-        context->ArrayAppend(args, context->WholeNumberToObject(t));
-        context->ArrayAppend(args, context->WholeNumberToObject(r));
-        context->ArrayAppend(args, context->WholeNumberToObject(b));
+        context->ArrayAppend(args, context->WholeNumber(l));
+        context->ArrayAppend(args, context->WholeNumber(t));
+        context->ArrayAppend(args, context->WholeNumber(r));
+        context->ArrayAppend(args, context->WholeNumber(b));
 
         rect = context->SendMessage(RectClass, "NEW", args);
     }
@@ -3170,9 +3170,29 @@ RexxObjectPtr rxNewPoint(RexxMethodContext *context, long x, long y)
     RexxClassObject PointClass = context->FindContextClass("POINT");
     if ( PointClass != NULL )
     {
-        point = context->SendMessage2(PointClass, "NEW", context->WholeNumberToObject(x), context->WholeNumberToObject(y));
+        point = context->SendMessage2(PointClass, "NEW", context->WholeNumber(x), context->WholeNumber(y));
     }
     return point;
+}
+
+PSIZE rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos)
+{
+    if ( requiredClass(context, s, "Size", argPos) )
+    {
+        return (PSIZE)context->ObjectToCSelf(s);
+    }
+    return NULL;
+}
+
+RexxObjectPtr rxNewSize(RexxMethodContext *context, long cx, long cy)
+{
+    RexxObjectPtr size = NULL;
+    RexxClassObject SizeClass = context->FindContextClass("SIZE");
+    if ( SizeClass != NULL )
+    {
+        size = context->SendMessage2(SizeClass, "NEW", context->WholeNumber(cx), context->WholeNumber(cy));
+    }
+    return size;
 }
 
 inline bool hasStyle(HWND hwnd, DWORD_PTR style)
@@ -4244,7 +4264,7 @@ RexxMethod1(RexxObjectPtr, bc_getIdealSize, OSELF, self)
     SIZE size;
     if ( Button_GetIdealSize(hwnd, &size) )
     {
-        result = rxNewPoint(context, size.cx, size.cy);
+        result = rxNewSize(context, size.cx, size.cy);
     }
     return (result == NULLOBJECT) ? context->Nil() : result;
 }
@@ -4335,7 +4355,7 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
 
     void *result = NULL;
 
-    PPOINT pSize = rxGetPoint(context, size, 2);
+    PSIZE pSize = rxGetSize(context, size, 2);
     if ( pSize == NULL )
     {
         return result;
@@ -4365,7 +4385,7 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
 
     biml.uAlign = argumentExists(5) ? align : BUTTON_IMAGELIST_ALIGN_CENTER;
 
-    HIMAGELIST himl = ImageList_Create(pSize->x, pSize->y, flag, 5, 5);
+    HIMAGELIST himl = ImageList_Create(pSize->cx, pSize->cy, flag, 5, 5);
     if ( himl == NULL )
     {
         oodSetSysErrCode(context);
@@ -4438,7 +4458,7 @@ RexxMethod2(RexxObjectPtr, point_init, OPTIONAL_int32_t,  x, OPTIONAL_int32_t, y
     POINT *p = (POINT *)context->BufferData(obj);
 
     p->x = argumentExists(1) ? x : 0;
-    p->y = argumentExists(2) ? y : p->x;
+    p->y = argumentExists(2) ? y : 0;
 
     return NULLOBJECT;
 }
@@ -4447,6 +4467,27 @@ RexxMethod1(int32_t, point_x, CSELF, p) { return ((POINT *)p)->x; }
 RexxMethod1(int32_t, point_y, CSELF, p) { return ((POINT *)p)->y; }
 RexxMethod2(RexxObjectPtr, point_setX, CSELF, p, int32_t, x) { ((POINT *)p)->x = x; return NULLOBJECT; }
 RexxMethod2(RexxObjectPtr, point_setY, CSELF, p, int32_t, y) { ((POINT *)p)->y = y; return NULLOBJECT; }
+
+/**
+ * Methods for the ooDialog .Size class.
+ */
+RexxMethod2(RexxObjectPtr, size_init, OPTIONAL_int32_t,  cx, OPTIONAL_int32_t, cy)
+{
+    RexxBufferObject obj = context->NewBuffer(sizeof(SIZE));
+    context->SetObjectVariable("CSELF", obj);
+
+    SIZE *s = (SIZE *)context->BufferData(obj);
+
+    s->cx = argumentExists(1) ? cx : 0;
+    s->cy = argumentExists(2) ? cy : 0;
+
+    return NULLOBJECT;
+}
+
+RexxMethod1(int32_t, size_cx, CSELF, s) { return ((SIZE *)s)->cx; }
+RexxMethod1(int32_t, size_cy, CSELF, s) { return ((SIZE *)s)->cy; }
+RexxMethod2(RexxObjectPtr, size_setCX, CSELF, s, int32_t, cx) { ((SIZE *)s)->cx = cx; return NULLOBJECT; }
+RexxMethod2(RexxObjectPtr, size_setCY, CSELF, s, int32_t, cy) { ((SIZE *)s)->cy = cy; return NULLOBJECT; }
 
 /**
  * Methods for the ooDialog .Rect class.
@@ -4460,9 +4501,9 @@ RexxMethod4(RexxObjectPtr, rect_init, OPTIONAL_int32_t, left, OPTIONAL_int32_t, 
     RECT *r = (RECT *)context->BufferData(obj);
 
     r->left = argumentExists(1) ? left : 0;
-    r->top = argumentExists(2) ? top : r->left;
-    r->right = argumentExists(3) ? right : r->left;
-    r->bottom = argumentExists(4) ? bottom : r->left;
+    r->top = argumentExists(2) ? top : 0;
+    r->right = argumentExists(3) ? right : 0;
+    r->bottom = argumentExists(4) ? bottom : 0;
 
     return NULLOBJECT;
 }

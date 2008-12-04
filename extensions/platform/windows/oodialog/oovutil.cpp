@@ -2197,6 +2197,12 @@ REXX_METHOD_PROTOTYPE(point_setX);
 REXX_METHOD_PROTOTYPE(point_y);
 REXX_METHOD_PROTOTYPE(point_setY);
 
+REXX_METHOD_PROTOTYPE(size_init);
+REXX_METHOD_PROTOTYPE(size_cx);
+REXX_METHOD_PROTOTYPE(size_setCX);
+REXX_METHOD_PROTOTYPE(size_cy);
+REXX_METHOD_PROTOTYPE(size_setCY);
+
 RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_init,            dlgutil_init),
     REXX_METHOD(dlgutil_comctl32Version, dlgutil_comctl32Version),
@@ -2254,6 +2260,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(point_setX,              point_setX),
     REXX_METHOD(point_y,                 point_y),
     REXX_METHOD(point_setY,              point_setY),
+    REXX_METHOD(size_init,               size_init),
+    REXX_METHOD(size_cx,                 size_cx),
+    REXX_METHOD(size_setCX,              size_setCX),
+    REXX_METHOD(size_cy,                 size_cy),
+    REXX_METHOD(size_setCY,              size_setCY),
     REXX_LAST_METHOD()
 };
 

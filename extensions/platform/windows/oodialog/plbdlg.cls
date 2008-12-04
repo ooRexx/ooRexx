@@ -76,6 +76,12 @@
 ::method y external "LIBRARY oodialog point_y"
 ::method 'y=' external "LIBRARY oodialog point_setY"
 
+::class 'Size' public
+::method init external "LIBRARY oodialog size_init"
+::method width external "LIBRARY oodialog size_cx"
+::method 'width=' external "LIBRARY oodialog size_setCX"
+::method height external "LIBRARY oodialog point_y"
+::method 'height=' external "LIBRARY oodialog point_setY"
 
 /******************************************************************************/
 /* The class WindowBase implements methods that are common to all windows,    */
