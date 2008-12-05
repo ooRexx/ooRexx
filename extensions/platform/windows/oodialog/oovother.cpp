@@ -4496,7 +4496,7 @@ RexxMethod2(RexxObjectPtr, point_init, OPTIONAL_int32_t,  x, OPTIONAL_int32_t, y
     POINT *p = (POINT *)context->BufferData(obj);
 
     p->x = argumentExists(1) ? x : 0;
-    p->y = argumentExists(2) ? y : 0;
+    p->y = argumentExists(2) ? y : p->x;
 
     return NULLOBJECT;
 }
@@ -4517,7 +4517,7 @@ RexxMethod2(RexxObjectPtr, size_init, OPTIONAL_int32_t,  cx, OPTIONAL_int32_t, c
     SIZE *s = (SIZE *)context->BufferData(obj);
 
     s->cx = argumentExists(1) ? cx : 0;
-    s->cy = argumentExists(2) ? cy : 0;
+    s->cy = argumentExists(2) ? cy : s->cx;
 
     return NULLOBJECT;
 }
@@ -4539,9 +4539,9 @@ RexxMethod4(RexxObjectPtr, rect_init, OPTIONAL_int32_t, left, OPTIONAL_int32_t, 
     RECT *r = (RECT *)context->BufferData(obj);
 
     r->left = argumentExists(1) ? left : 0;
-    r->top = argumentExists(2) ? top : 0;
-    r->right = argumentExists(3) ? right : 0;
-    r->bottom = argumentExists(4) ? bottom : 0;
+    r->top = argumentExists(2) ? top : r->left;
+    r->right = argumentExists(3) ? right : r->left;
+    r->bottom = argumentExists(4) ? bottom : r->left;
 
     return NULLOBJECT;
 }
