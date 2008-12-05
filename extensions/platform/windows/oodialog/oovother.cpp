@@ -4293,7 +4293,7 @@ RexxMethod1(RexxObjectPtr, bc_getImageList, OSELF, self)
             RexxObjectPtr ptr = (RexxObjectPtr)context->NewPointer(biml.himl);
             if ( ptr != NULLOBJECT )
             {
-                context->DirectoryPut(table, ptr, "himl");
+                context->DirectoryPut(table, ptr, "handle");
             }
 
             RexxObjectPtr rect = rxNewRect(context, biml.margin.left, biml.margin.top,
