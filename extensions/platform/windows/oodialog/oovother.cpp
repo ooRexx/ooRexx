@@ -3108,31 +3108,22 @@ void wrongWindowStyleException(RexxMethodContext *context, const char *obj, cons
 }
 
 /**
- * Return the number of existing arguments used in an ooRexx method invocation
- * of a native API Rexx method.  In others words, it is intended to not count
- * the pseudo-arguments like OSELF.
+ * Return the number of existing arguments in an ooRexx method invocation.  In
+ * others words, it is intended to count neither the omitted args in the ooRexx
+ * method, nor the pseudo-arguments to the native API function, like OSELF,
+ * CSELF, etc..
  *
- * It may be obvious, or not, that in order for this to work, the order of the
- * real ooRexx arguements need to be kept sequential in the RexxMethodX function
- * signatures.
+ * @param context  The method context pointer.
  *
- * @param context  The method context pointer for the native method.
- * @param start    The starting position, 1-based of the real ooRexx args.
- * @param end      The ending position, 1-based, of the real ooRexx args
- *
- * @return The count of existing arguments in the argument array.
+ * @return The count of existing arguments in an ooRexx method invocation.
  */
-size_t rxArgCount(RexxMethodContext * context, size_t start, size_t end)
+size_t rxArgCount(RexxMethodContext * context)
 {
-    size_t j = 0;
-    for( size_t i = start; i <= end; i++ )
-    {
-        if ( argumentExists(i) )
-        {
-            j++;
-        }
-    }
-    return j;
+    RexxObjectPtr items = context->SendMessage0(context->GetArguments(), "ITEMS");
+
+    wholenumber_t count;
+    context->ObjectToWholeNumber(items, &count);
+    return (size_t)count;
 }
 
 PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos)
@@ -3503,10 +3494,31 @@ RexxMethod3(logical_t, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, OPTI
     return 1;
 }
 
+/**
+ *  ProgressBar::backgroundColor()
+ *
+ *  Sets the background color of the progress bar.
+ *
+ *  @param   r      [Required]  This can be either the COLORREF value, if the
+ *                  number of args is exactly one, or the red value of a
+ *                  COLORREF if the args are exactly 3.
+ *
+ *  @param   g      [Optional]  The green value of a COLORREF.  This arg is only
+ *                  optional if arg 1 is a COLORREF.
+ *
+ *  @param   b      [Optional]  The blue value of a COLORREF.  This arg is only
+ *                  optional if arg 1 is a COLORREF.
+ *
+ *  @return  The previous background color, or CLR_DEFAULT if the previous color
+ *           was the defualt.  This is returned as a COLORREF number.
+ *
+ *  The progress bar control only supports this function under Windows Classic
+ *  Theme.
+ */
 RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
-    size_t count = rxArgCount(context, 2, 4);
+    size_t count = rxArgCount(context);
     COLORREF rgb;
 
     if ( count == 1 )
@@ -3526,10 +3538,31 @@ RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t
     return (uint32_t)SendMessage(hwnd, PBM_SETBKCOLOR, 0, rgb);
 }
 
+/**
+ *  ProgressBar::barColor()
+ *
+ *  Sets the bar color of the progress bar.
+ *
+ *  @param   r      [Required]  This can be either the COLORREF value, if the
+ *                  number of args is exactly one, or the red value of a
+ *                  COLORREF if the args are exactly 3.
+ *
+ *  @param   g      [Optional]  The green value of a COLORREF.  This arg is only
+ *                  optional if arg 1 is a COLORREF.
+ *
+ *  @param   b      [Optional]  The blue value of a COLORREF.  This arg is only
+ *                  optional if arg 1 is a COLORREF.
+ *
+ *  @return  The previous bar color, or CLR_DEFAULT if the previous color
+ *           was the defualt.  This is returned as a COLORREF number.
+ *
+ *  The progress bar control only supports this function under Windows Classic
+ *  Theme.
+ */
 RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
-    size_t count = rxArgCount(context, 2, 4);
+    size_t count = rxArgCount(context);
     COLORREF rgb;
 
     if ( count == 1 )
@@ -3551,10 +3584,10 @@ RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_
 /**
  * This function stub is used for testing.
  */
-RexxMethod5(logical_t, pbc_test, OSELF, self, OPTIONAL_int32_t, n1,
-            OPTIONAL_int32_t, n2, OPTIONAL_int32_t, n3, OPTIONAL_int32_t, n4)
+RexxMethod5(size_t, pbc_test, OPTIONAL_int32_t, n1,
+            OPTIONAL_int32_t, n2, OSELF, self, OPTIONAL_int32_t, n3, OPTIONAL_int32_t, n4)
 {
-    return 1;
+    return rxArgCount(context);
 }
 
 /**
@@ -4721,7 +4754,7 @@ RexxMethod0(RexxStringObject, dlgutil_version)
 
 RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
-    size_t count = rxArgCount(context, 1, 3);
+    size_t count = rxArgCount(context);
 
     if ( count == 1 )
     {
