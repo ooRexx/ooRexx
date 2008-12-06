@@ -4114,8 +4114,8 @@ RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
         }
         else
         {
-            free(str);
             wrongArgValueException(context, 1, BC_SETSTYLE_OPTS, token);
+            free(str);
             return NULLOBJECT;
         }
 
