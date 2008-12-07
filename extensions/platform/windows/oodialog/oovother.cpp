@@ -2947,40 +2947,132 @@ size_t RexxEntry HandleDateTimePicker(const char *funcname, size_t argc, CONSTRX
 #define API_FAILED_MSG            "system API %s() failed; COM code 0x%08x"
 #define NO_COMMCTRL_MSG           "failed to initialize %s; OS error code %d"
 
-const char *comctl32VersionName(DWORD id)
+#define COMCTL32_FULL_PART        0
+#define COMCTL32_NUMBER_PART      1
+#define COMCTL32_OS_PART          2
+
+const char *comctl32VersionPart(DWORD id, DWORD type)
 {
-    const char *name;
+    const char *part;
     switch ( id )
     {
         case COMCTL32_4_0 :
-            name = "comctl32.dll version 4.0 (W95 / NT4)";
+            if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "4.0";
+            }
+            else if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "W95 / NT4";
+            }
+            else
+            {
+                part = "comctl32.dll version 4.0 (W95 / NT4)";
+            }
             break;
 
         case COMCTL32_4_7 :
-            name = "comctl32.dll version 4.7 (IE 3.x)";
+            if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "4.7";
+            }
+            else if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "IE 3.x";
+            }
+            else
+            {
+                part = "comctl32.dll version 4.7 (IE 3.x)";
+            }
             break;
 
         case COMCTL32_4_71 :
-            name = "comctl32.dll version 4.71 (IE 4.0)";
+            if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "4.71";
+            }
+            else if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "IE 4.0";
+            }
+            else
+            {
+                part = "comctl32.dll version 4.71 (IE 4.0)";
+            }
             break;
+
         case COMCTL32_4_72 :
-            name = "comctl32.dll version 4.72 (W98 / IE 4.01)";
+            if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "4.72";
+            }
+            else if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "W98 / IE 4.01";
+            }
+            else
+            {
+                part = "comctl32.dll version 4.72 (W98 / IE 4.01)";
+            }
             break;
+
         case COMCTL32_5_8 :
-            name = "comctl32.dll version 5.8 (IE 5)";
+            if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "5.8";
+            }
+            else if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "IE 5";
+            }
+            else
+            {
+                part = "comctl32.dll version 5.8 (IE 5)";
+            }
             break;
+
         case COMCTL32_5_81 :
-            name = "comctl32.dll version 5.81 (W2K / ME)";
+            if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "5.81";
+            }
+            else if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "W2K / ME";
+            }
+            else
+            {
+                part = "comctl32.dll version 5.81 (W2K / ME)";
+            }
             break;
+
         case COMCTL32_6_0 :
-            name = "comctl32.dll version 6.0 (XP)";
+            if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "6.0";
+            }
+            else if ( type == COMCTL32_NUMBER_PART )
+            {
+                part = "XP";
+            }
+            else
+            {
+                part = "comctl32.dll version 6.0 (XP)";
+            }
             break;
+
         default :
-            name = "Unknown";
+            part = "Unknown";
             break;
     }
-    return name;
+    return part;
 }
+
+inline const char *comctl32VersionName(DWORD id)
+{
+    return comctl32VersionPart(id, COMCTL32_FULL_PART);
+}
+
 
 POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
 {
@@ -4383,16 +4475,32 @@ RexxMethod1(RexxObjectPtr, bc_getImageList, OSELF, self)
     return result;
 }
 
-static HIMAGELIST getImageListFromObject(RexxMethodContext *context, RexxObjectPtr imageList, int argPos)
+static HIMAGELIST getImageListFromObject(RexxMethodContext *context, RexxObjectPtr imageList, bool *created, int argPos)
 {
-    /* At this time, it must be a directory object. */
-    if ( ! context->IsDirectory(imageList) )
+    char msg[128];
+    HIMAGELIST himl = NULL;
+
+    *created = false;
+
+    // At this time, only a directory object or a pointer object is supported.
+    if ( context->IsPointer(imageList) )
     {
-        wrongClassException(context, argPos, "Directory");
-        return NULL;
+        himl = (HIMAGELIST)context->PointerValue((RexxPointerObject)imageList);
+        if ( himl == NULL )
+        {
+            _snprintf(msg, sizeof(msg),
+                      "The Pointer object, method argument %d, must not be null", argPos);
+            context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->String(msg));
+            goto failed_himl;
+        }
+        goto good_himl;
     }
 
-    HIMAGELIST himl = NULL;
+    if ( ! context->IsDirectory(imageList) )
+    {
+        wrongArgValueException(context, argPos, "Pointer, Directory", imageList);
+        goto failed_himl;
+    }
 
     // Note that size is both the directory entry name and the class name.
     RexxObjectPtr size = context->DirectoryAt((RexxDirectoryObject)imageList, "SIZE");
@@ -4427,7 +4535,7 @@ static HIMAGELIST getImageListFromObject(RexxMethodContext *context, RexxObjectP
     if ( himl == NULL )
     {
         oodSetSysErrCode(context);
-        goto winapi_failed;
+        goto failed_himl;
     }
 
     HANDLE hBitmap;
@@ -4446,7 +4554,7 @@ static HIMAGELIST getImageListFromObject(RexxMethodContext *context, RexxObjectP
         if ( hBitmap == NULL )
         {
             oodSetSysErrCode(context);
-            goto winapi_failed;
+            goto failed_himl;
         }
 
         // REVISIT ImageList_ADD() returns -1 if the add fails, should we quit,
@@ -4461,20 +4569,22 @@ static HIMAGELIST getImageListFromObject(RexxMethodContext *context, RexxObjectP
         ImageList_Add(himl, (HBITMAP)hBitmap, NULL);
         DeleteObject(hBitmap);
     }
+    *created = true;
+
+good_himl:
     return himl;
 
 bad_directory:
-    char msg[256];
     _snprintf(msg, sizeof(msg),
               "The Directory object, method argument %d, does not have the proper entries", argPos);
     context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->String(msg));
 
-winapi_failed:
+failed_himl:
     if ( himl != NULL )
     {
         ImageList_Destroy(himl);
     }
-    return NULL;
+    return false;
 }
 
 /** ButtonControl::setImageList()
@@ -4482,15 +4592,17 @@ winapi_failed:
  * Sets an image list for the button.
  *
  * @param   imageList  [required]  An object describing the image list. Curently
- *                     this must be a .Directory object with the format
- *                     described below.  A future enhancement is to allow a
- *                     .ImageList, but that class is not yet implemented.
+ *                     this must be a .Pointer object with the handle of a
+ *                     previously created image list, or a .Directory object
+ *                     with the format described below.  A future enhancement is
+ *                     to allow a .ImageList, but that class is not yet
+ *                     implemented.
  *
  * @param   margin     [optional]  A .Rect object containing the margins around
- *                     the image.
+ *                     the image.  The default is no margin on either side.
  *
  * @param   align      [optional]  One of the BUTTON_IMAGELIST_ALIGN_xxx
- *                     constant values.
+ *                     constant values.  The default is center.
  *
  * @return  A .Pointer object containing the handle to the image list used in
  *          the BUTTON_IMAGELIST struct.  This will be a null .Pointer on a
@@ -4529,11 +4641,11 @@ RexxMethod4(POINTER, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_RexxObj
         return NULLOBJECT;
     }
 
+    HWND hwnd = rxGetWindowHandle(context, self);
     oodSetSysErrCode(context, 0);
 
-    HWND hwnd = rxGetWindowHandle(context, self);
-
-    HIMAGELIST himl = getImageListFromObject(context, imageList, 1);
+    bool created = false;
+    HIMAGELIST himl = getImageListFromObject(context, imageList, &created, 1);
     if ( himl == NULL )
     {
         return NULLOBJECT;
@@ -4547,6 +4659,10 @@ RexxMethod4(POINTER, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_RexxObj
         PRECT pRect = rxGetRect(context, margin, 2);
         if ( pRect == NULL )
         {
+            if ( created )
+            {
+                ImageList_Destroy(himl);
+            }
             return NULLOBJECT;
         }
         biml.margin.top = pRect->top;
@@ -4565,7 +4681,10 @@ RexxMethod4(POINTER, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_RexxObj
     else
     {
         oodSetSysErrCode(context);
-        ImageList_Destroy(himl);
+        if ( created )
+        {
+            ImageList_Destroy(himl);
+        }
     }
     return result;
 }
@@ -4643,7 +4762,7 @@ RexxMethod1(int32_t, rect_right, CSELF, pRect) { return ((RECT *)pRect)->right; 
 RexxMethod1(int32_t, rect_bottom, CSELF, pRect) { return ((RECT *)pRect)->bottom; }
 RexxMethod2(RexxObjectPtr, rect_setLeft, CSELF, pRect, int32_t, left) { ((RECT *)pRect)->left = left; return NULLOBJECT; }
 RexxMethod2(RexxObjectPtr, rect_setTop, CSELF, pRect, int32_t, top) { ((RECT *)pRect)->top = top; return NULLOBJECT; }
-RexxMethod2(RexxObjectPtr, rect_setRight, CSELF, pRect, int32_t, right) { ((RECT *)pRect)->right; return NULLOBJECT; }
+RexxMethod2(RexxObjectPtr, rect_setRight, CSELF, pRect, int32_t, right) { ((RECT *)pRect)->right = right; return NULLOBJECT; }
 RexxMethod2(RexxObjectPtr, rect_setBottom, CSELF, pRect, int32_t, bottom) { ((RECT *)pRect)->bottom = bottom; return NULLOBJECT; }
 
 #define COMCTL_ERR_TITLE    "ooDialog - Windows Common Controls Error"
@@ -4834,16 +4953,75 @@ RexxMethod0(logical_t, dlgutil_init)
     return true;
 }
 
-RexxMethod0(RexxStringObject, dlgutil_comctl32Version)
+/** DlgUtil::comCtl32Version()  [Class method]
+ *
+ * Returns the comctl32.dll version that ooDialog is currently using in one of
+ * the 4 formats listed below.
+ *
+ * @param format  [optional] Keyword indicating the format, only the first
+ *                letter is needed, case not significant.  The default is short.
+ *                Incorrect strings are ignored and the default is used.
+ *
+ * The formats are:
+ *   Full:  A complete string including the DLL name, version number and the
+ *          minimum Windows OS name that the DLL is found on.
+ *
+ *   Number:  The version number part of the full string.
+ *   Short:   Same as number.
+ *   OS:      The OS name part of the full string.
+ */
+RexxMethod1(RexxStringObject, dlgutil_comctl32Version, OPTIONAL_CSTRING, format)
 {
-    return context->NewStringFromAsciiz(comctl32VersionName(ComCtl32Version));
+    const char *ver;
+    char f = argumentOmitted(1) ? 'S' : *format;
+
+    switch ( f )
+    {
+        case 'f' :
+        case 'F' :
+            ver = comctl32VersionName(ComCtl32Version);
+            break;
+
+        case 'o' :
+        case 'O' :
+            ver = comctl32VersionPart(ComCtl32Version, COMCTL32_OS_PART);
+            break;
+
+        case 's' :
+        case 'S' :
+        case 'n' :
+        case 'N' :
+        default :
+            ver = comctl32VersionPart(ComCtl32Version, COMCTL32_NUMBER_PART);
+            break;
+    }
+    return context->String(ver);
 }
 
-RexxMethod0(RexxStringObject, dlgutil_version)
+/** DlgUtil::version()  [Class method]
+ *
+ *  Returns the ooDialog version string, either the full string, or just the
+ *  number part of the string.
+ *
+ * @param  format  [optional]  Keyword indicating which format the returned
+ *                 string should be in.  Currently, if the arg is not omitted
+ *                 and the first letter of the keyword is either S or s the
+ *                 short form (number part of the string) is returned.  In all
+ *                 other cases the full string is returned.
+ */
+RexxMethod1(RexxStringObject, dlgutil_version, OPTIONAL_CSTRING, format)
 {
     char buf[64];
-    _snprintf(buf, sizeof(buf), "ooDialog Version %u.%u.%u.%u (an ooRexx Windows Extension)", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
-    return context->NewStringFromAsciiz(buf);
+
+    if ( argumentExists(1) && (*format == 'S' || *format == 's') )
+    {
+        _snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+    }
+    else
+    {
+        _snprintf(buf, sizeof(buf), "ooDialog Version %u.%u.%u.%u (an ooRexx Windows Extension)", ORX_VER, ORX_REL, ORX_MOD, OOREXX_BLD);
+    }
+    return context->String(buf);
 }
 
 RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
