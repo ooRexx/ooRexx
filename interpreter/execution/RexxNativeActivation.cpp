@@ -549,6 +549,11 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
 
                         case REXX_VALUE_POINTER:
                         {
+                            // this must be a pointer object
+                            if (!argument->isInstanceOf(ThePointerClass))
+                            {
+                                reportException(Error_Invalid_argument_noclass, inputIndex + 1, ThePointerClass->getId());
+                            }
                             descriptors[outputIndex].value.value_POINTER = this->pointer(argument);
                             break;
                         }
