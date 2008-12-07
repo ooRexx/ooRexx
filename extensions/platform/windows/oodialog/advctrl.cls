@@ -1710,6 +1710,7 @@
 ::method "style=" external "LIBRARY oodialog gb_setStyle"
 
 ::class 'ButtonControl' subclass DialogControl public
+::method releaseImageList class external "LIBRARY oodialog bc_cls_releaseImageList"
 
 ::constant BUTTON_IMAGELIST_ALIGN_LEFT 0
 ::constant BUTTON_IMAGELIST_ALIGN_RIGHT 1

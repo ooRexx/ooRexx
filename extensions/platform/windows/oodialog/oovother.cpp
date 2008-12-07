@@ -3697,6 +3697,22 @@ BUTTONTYPE getButtonInfo(HWND hwnd, PBUTTONSUBTYPE sub, DWORD *style)
     return type;
 }
 
+/** ButtonControl::releaseImageList()  [class method]
+ *
+ *  Used to destroy an image list.
+ *
+ *  @param  himl  [required]  The image list handle.
+ *
+ */
+RexxMethod1(RexxObjectPtr, bc_cls_releaseImageList, POINTER, himl)
+{
+    if ( himl != NULL )
+    {
+        ImageList_Destroy((HIMAGELIST)himl);
+    }
+    return NULLOBJECT;
+}
+
 RexxMethod4(int, bc_cls_checkInGroup, RexxObjectPtr, dlg, RexxObjectPtr, idFirst,
             RexxObjectPtr, idLast, RexxObjectPtr, idCheck)
 {
@@ -4367,88 +4383,60 @@ RexxMethod1(RexxObjectPtr, bc_getImageList, OSELF, self)
     return result;
 }
 
-/**
- * Sets an image list for the button.
- *
- * @return  The handle to the image list used for BUTTON_IMAGELIST struct.
- *
- * This method sets the ooDialog System error code (.SystemErrorCode).
- *
- * @note  This method is intended to accept either a .ImageList object, or an
- *        array of files names, to use for the button image list.  Since the
- *        .ImageList class has not been added to ooDialog, yet, this code will
- *        need to be revisited.
- */
-RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
-            RexxObjectPtr, size, uint32_t, flag, OPTIONAL_RexxObjectPtr, margin, OPTIONAL_uint8_t, align)
+static HIMAGELIST getImageListFromObject(RexxMethodContext *context, RexxObjectPtr imageList, int argPos)
 {
-    if ( ! requiredComCtl32Version(context, "setImageList", COMCTL32_6_0) )
+    /* At this time, it must be a directory object. */
+    if ( ! context->IsDirectory(imageList) )
     {
+        wrongClassException(context, argPos, "Directory");
         return NULL;
     }
 
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HIMAGELIST himl = NULL;
 
-    oodSetSysErrCode(context, 0);
-
-    void *result = NULL;
-
-    PSIZE pSize = rxGetSize(context, size, 2);
-    if ( pSize == NULL )
+    // Note that size is both the directory entry name and the class name.
+    RexxObjectPtr size = context->DirectoryAt((RexxDirectoryObject)imageList, "SIZE");
+    RexxClassObject rxClass = context->FindContextClass("SIZE");
+    if ( size == NULLOBJECT || ! context->IsInstanceOf(size, rxClass) )
     {
-        return result;
+        goto bad_directory;
+    }
+    PSIZE pSize = (PSIZE)context->ObjectToCSelf(size);
+
+    uint32_t flag;
+    RexxObjectPtr f = context->DirectoryAt((RexxDirectoryObject)imageList, "FLAGS");
+    if ( f == NULLOBJECT || ! context->ObjectToUnsignedInt32(f, &flag) )
+    {
+        goto bad_directory;
     }
 
-    BUTTON_IMAGELIST biml;
-
-    if ( argumentExists(5) )
+    f = context->DirectoryAt((RexxDirectoryObject)imageList, "FILES");
+    if ( f == NULLOBJECT || ! context->IsArray(f) )
     {
-        PRECT pRect = rxGetRect(context, margin, 4);
-        if ( pRect == NULL )
-        {
-            return result;
-        }
-        biml.margin.top = pRect->top;
-        biml.margin.left = pRect->left;
-        biml.margin.right = pRect->right;
-        biml.margin.bottom = pRect->bottom;
-    }
-    else
-    {
-        biml.margin.top = 3;
-        biml.margin.left = 3;
-        biml.margin.right = 3;
-        biml.margin.bottom = 3;
+        goto bad_directory;
     }
 
-    biml.uAlign = argumentExists(6) ? align : BUTTON_IMAGELIST_ALIGN_CENTER;
+    RexxArrayObject files = (RexxArrayObject)f;
+    int count = (int)context->ArraySize(files);
+    if ( count < 1 )
+    {
+        goto bad_directory;
+    }
 
-    HIMAGELIST himl = ImageList_Create(pSize->cx, pSize->cy, flag, 5, 5);
+    himl = ImageList_Create(pSize->cx, pSize->cy, flag, count, count);
     if ( himl == NULL )
     {
         oodSetSysErrCode(context);
-        return result;
-    }
-
-    size_t count = context->ArraySize(files);
-    if ( count != 1 && count != 5 )
-    {
-        context->RaiseException1(
-            Rexx_Error_Incorrect_method_user_defined,
-            context->NewStringFromAsciiz("The bitmap files array must contain exactly 1 or 5 file names"));
-        return NULL;
+        goto winapi_failed;
     }
 
     HANDLE hBitmap;
-    for ( size_t i = 1; i <= count; i++ )
+    for ( int i = 1; i <= count; i++ )
     {
-        RexxObjectPtr f = context->ArrayAt(files, i);
+        f = context->ArrayAt(files, i);
         if ( f == NULLOBJECT || ! context->IsString(f) )
         {
-            context->RaiseException1(
-                Rexx_Error_Incorrect_method_array_nostring,
-                context->WholeNumberToObject(i + 1));
-            return NULL;
+            goto bad_directory;
         }
 
         const char *file = context->ObjectToStringValue(f);
@@ -4458,15 +4446,118 @@ RexxMethod6(POINTER, bc_setImageList, OSELF, self, RexxArrayObject, files,
         if ( hBitmap == NULL )
         {
             oodSetSysErrCode(context);
-            ImageList_Destroy(himl);
-            return NULL;
+            goto winapi_failed;
         }
 
+        // REVISIT ImageList_ADD() returns -1 if the add fails, should we quit,
+        // throw an exception, or just continue?
+        //
+        // One problem is that last error is not set, so oodSetSysErrCode() does
+        // nothing to give the user a clue as to what the problem is. If we just
+        // continue, then the user will not get bitmaps at the right indexes, if
+        // only one or two add fails.  Or get no bitmaps if they all fail. But,
+        // will not have a clue that there was problem.  An execption would at
+        // least let him know where the problem is.
         ImageList_Add(himl, (HBITMAP)hBitmap, NULL);
         DeleteObject(hBitmap);
     }
+    return himl;
 
+bad_directory:
+    char msg[256];
+    _snprintf(msg, sizeof(msg),
+              "The Directory object, method argument %d, does not have the proper entries", argPos);
+    context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->String(msg));
+
+winapi_failed:
+    if ( himl != NULL )
+    {
+        ImageList_Destroy(himl);
+    }
+    return NULL;
+}
+
+/** ButtonControl::setImageList()
+ *
+ * Sets an image list for the button.
+ *
+ * @param   imageList  [required]  An object describing the image list. Curently
+ *                     this must be a .Directory object with the format
+ *                     described below.  A future enhancement is to allow a
+ *                     .ImageList, but that class is not yet implemented.
+ *
+ * @param   margin     [optional]  A .Rect object containing the margins around
+ *                     the image.
+ *
+ * @param   align      [optional]  One of the BUTTON_IMAGELIST_ALIGN_xxx
+ *                     constant values.
+ *
+ * @return  A .Pointer object containing the handle to the image list used in
+ *          the BUTTON_IMAGELIST struct.  This will be a null .Pointer on a
+ *          Win32 API error.
+ *
+ * @remarks This method sets the ooDialog System error code (.SystemErrorCode)
+ *          if the args seem valid but one of the Windows APIs fails.
+ *
+ * @note  This method is intended to accept either a .ImageList object, or the
+ *        current .Directory object. Since the .ImageList class has not been
+ *        added to ooDialog, yet, it currently only accepts the .Directory
+ *        object.
+ *
+ * .Directory object format to create the image list:
+ *   d~files -> an array of file names
+ *     The array must contain index 1 and any item 1 through 6 must be a string.
+ *     The count of files in the array can be any number, but only the first 6
+ *     are used.  For any number of items in the the array must not be sparse.
+ *     Otherwise no restrictions.
+ *
+ *     Note that in the BCM_SETIMAGELIST MSDN doc, the enum PUSHBUTTONSTATES in
+ *     the remarks section perfectly names the ooRexx indexes.
+ *
+ *   d~size -> a .Size object
+ *     The bitmap dimensions.
+ *
+ *   d~flags -> a number  This is the ILC_ flags for ImageList_Create(), the
+ *     user will need to figure out the correct number.  ILC_COLOR24 is 0x18 (24
+ *     decimal for instance.)
+ */
+RexxMethod4(POINTER, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_RexxObjectPtr, margin,
+            OPTIONAL_uint8_t, align, OSELF, self)
+{
+    if ( ! requiredComCtl32Version(context, "setImageList", COMCTL32_6_0) )
+    {
+        return NULLOBJECT;
+    }
+
+    oodSetSysErrCode(context, 0);
+
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    HIMAGELIST himl = getImageListFromObject(context, imageList, 1);
+    if ( himl == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    BUTTON_IMAGELIST biml = {0};
     biml.himl = himl;
+
+    if ( argumentExists(2) )
+    {
+        PRECT pRect = rxGetRect(context, margin, 2);
+        if ( pRect == NULL )
+        {
+            return NULLOBJECT;
+        }
+        biml.margin.top = pRect->top;
+        biml.margin.left = pRect->left;
+        biml.margin.right = pRect->right;
+        biml.margin.bottom = pRect->bottom;
+    }
+
+    biml.uAlign = argumentExists(3) ? align : BUTTON_IMAGELIST_ALIGN_CENTER;
+
+    void *result = NULL;
     if ( Button_SetImageList(hwnd, &biml) )
     {
         result = himl;
@@ -4694,14 +4785,17 @@ bool initCommonControls(RexxMethodContext *context, DWORD classes, CSTRING packa
     return true;
 }
 
-/**
- * This is the .DlgUtil class init() method.  It executes when the .DlgUtil
- * class is constructed, which is done during the processing of the ::requires
- * directive for oodPlain.cls.  This makes it the ideal place for any
- * initialization that must be done prior to ooDialog starting.
+/** DlgUtil::init() [class method]
+ *
+ * The .DlgUtil class init() method.  It executes when the .DlgUtil class is
+ * constructed, which is done during the processing of the ::requires directive
+ * for oodPlain.cls.  This makes it the ideal place for any initialization that
+ * must be done prior to ooDialog starting.
  *
  * Note that an exception raised here effectively terminates ooDialog before any
  * user code is executed.
+ *
+ * The method:
  *
  * 1.) Determines the version of comctl32.dll and initializes the common
  * controls.  The minimum acceptable version of 4.71 is supported on Windows 95
