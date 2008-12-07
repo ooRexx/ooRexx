@@ -1763,7 +1763,7 @@
    use arg xPos, yPos, left, top, right, bottom
    return ScrollTheWindow(self~oDlg~Adm, self~hwnd, xPos, yPos, left, top, right, bottom, "yes")
 
-::method setBitmapSizeX unguarded
+::method getBitmapSizeX unguarded
    return self~oDlg~GetBitmapSizeX(self~ID)
 
 ::method getBitmapSizeY unguarded
