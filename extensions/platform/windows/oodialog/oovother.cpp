@@ -2976,7 +2976,7 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
             {
                 part = "4.7";
             }
-            else if ( type == COMCTL32_NUMBER_PART )
+            else if ( type == COMCTL32_OS_PART )
             {
                 part = "IE 3.x";
             }
@@ -2991,7 +2991,7 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
             {
                 part = "4.71";
             }
-            else if ( type == COMCTL32_NUMBER_PART )
+            else if ( type == COMCTL32_OS_PART )
             {
                 part = "IE 4.0";
             }
@@ -3006,7 +3006,7 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
             {
                 part = "4.72";
             }
-            else if ( type == COMCTL32_NUMBER_PART )
+            else if ( type == COMCTL32_OS_PART )
             {
                 part = "W98 / IE 4.01";
             }
@@ -3021,7 +3021,7 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
             {
                 part = "5.8";
             }
-            else if ( type == COMCTL32_NUMBER_PART )
+            else if ( type == COMCTL32_OS_PART )
             {
                 part = "IE 5";
             }
@@ -3036,7 +3036,7 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
             {
                 part = "5.81";
             }
-            else if ( type == COMCTL32_NUMBER_PART )
+            else if ( type == COMCTL32_OS_PART )
             {
                 part = "W2K / ME";
             }
@@ -3051,7 +3051,7 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
             {
                 part = "6.0";
             }
-            else if ( type == COMCTL32_NUMBER_PART )
+            else if ( type == COMCTL32_OS_PART )
             {
                 part = "XP";
             }
