@@ -37,7 +37,6 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= sysinfo
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
 EXTRA_DIST = *.rex

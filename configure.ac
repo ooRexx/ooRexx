@@ -432,6 +432,7 @@ AC_CONFIG_FILES([
         samples/windows/ole/methinfo/Makefile
         samples/windows/ole/oleinfo/Makefile
         samples/windows/ole/wmi/Makefile
+        samples/windows/ole/wmi/sysinfo/Makefile
         samples/windows/oodialog/Makefile
         samples/windows/oodialog/bmp/Makefile
         samples/windows/oodialog/examples/Makefile
