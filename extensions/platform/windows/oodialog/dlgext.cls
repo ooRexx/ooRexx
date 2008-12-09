@@ -243,7 +243,7 @@
    use arg id, posdata, single, page
    if Arg(3,"o") = 1 then single = 1
    if Arg(4,"o") = 1 then page = 10
-   code = BinaryAnd(posdata, 0x0000FFFF)
+   code = .DlgUtil~loWord(posdata)
    parse value self~GetSBRange(id) with rmin rmax
    pos = self~GetSBPos(id)
    select
@@ -256,9 +256,9 @@
       /* page down */
       when code = 3 then pos = min(rmax,pos + page)
       /* track position */
-      when code = 4 then pos = BinaryAnd(posdata, 0xFFFF0000) % X2D("10000")
+      when code = 4 then pos = .DlgUtil~hiWord(posdata)
       /* tracking */
-      when code = 5 then pos = BinaryAnd(posdata, 0xFFFF0000) % X2D("10000")
+      when code = 5 then pos = .DlgUtil~hiWord(posdata)
       /* top */
       when code = 6 then pos = rmin
       /* bottom */

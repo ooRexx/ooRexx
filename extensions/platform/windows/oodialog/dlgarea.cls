@@ -386,8 +386,8 @@ SEQUENCE STYLE USERMSG
 /* ------------------------------------------------------------------------- */
 expose DlgObjList
   use arg dlg,data
-  dlg~SizeX = binaryand(data, "0x0000FFFF") % dlg~FactorX
-  dlg~SizeY = binaryand(data, "0xFFFF0000") % X2D("FFFF") % dlg~FactorY
+  dlg~SizeX = .DlgUtil~loWord(data) % dlg~FactorX
+  dlg~SizeY = .DlgUtil~hiWord(data) % dlg~FactorY
 
   wFactor   = (dlg~SizeX / self~OriginalWidth ) * Self~CorrectionFactor
   hFactor   = (dlg~SizeY / self~OriginalHeight) * Self~CorrectionFactor

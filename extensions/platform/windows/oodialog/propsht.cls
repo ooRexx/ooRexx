@@ -146,7 +146,7 @@
 ::method PropSheetActivated
    use arg wP, lp
    if Arg() = 0 then code = 0
-   else code = BinaryAnd(wp, "0x0000FFFF")
+   else code = .DlgUtil~loWord(wp)
    if code \= 0 then do
        self~Update
        wnd = .DialogControl~new

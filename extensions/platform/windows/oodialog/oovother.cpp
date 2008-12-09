@@ -4719,7 +4719,7 @@ RexxMethod2(RexxObjectPtr, point_setY, CSELF, p, int32_t, y) { ((POINT *)p)->y =
 /**
  * Methods for the ooDialog .Size class.
  */
-RexxMethod2(RexxObjectPtr, size_init, OPTIONAL_int32_t,  cx, OPTIONAL_int32_t, cy)
+RexxMethod2(RexxObjectPtr, size_init, OPTIONAL_int32_t, cx, OPTIONAL_int32_t, cy)
 {
     RexxBufferObject obj = context->NewBuffer(sizeof(SIZE));
     context->SetObjectVariable("CSELF", obj);
