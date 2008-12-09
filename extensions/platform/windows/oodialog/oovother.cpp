@@ -3380,7 +3380,7 @@ void oodSetSysErrCode(RexxMethodContext *context, DWORD code)
         context->DirectoryPut(local, context->WholeNumberToObject(code), "SYSTEMERRORCODE");
     }
 }
-void oodSetSysErrCode(RexxMethodContext *context)
+inline void oodSetSysErrCode(RexxMethodContext *context)
 {
     oodSetSysErrCode(context, GetLastError());
 }
@@ -5058,9 +5058,16 @@ RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, O
     }
 
     uint32_t red;
-    if (!context->ObjectToUnsignedInt32(r, &red))
+    if ( ! context->ObjectToUnsignedInt32(r, &red) )
     {
         context->RaiseException2(Rexx_Error_Incorrect_method_whole, context->WholeNumberToObject(1), r);
+        return 0;
+    }
+    if ( red > 0xff )
+    {
+        context->RaiseException(Rexx_Error_Invalid_argument_range,
+                                context->ArrayOfFour(context->WholeNumber(1), context->WholeNumber(0),
+                                                     context->WholeNumber(255), r));
         return 0;
     }
 
