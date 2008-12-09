@@ -19,7 +19,11 @@ All Platforms
 Windows
 =======
 
+  * 2023245 - ooDialog needs an utility class
+
   * 2033206 - Update the ooDialog ButtonControl(s)
+
+  * 2033208 - Add some shape classes to ooDialog
 
   * 1797127 - ooDialog - buttonControl~style= is incorrect
 
