@@ -842,7 +842,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
    {
        CHECKARGL(8);
 
-       for ( i = 0; i < 4; i++ )
+       for ( i = 0; i < 5; i++ )
        {
            buffer[i] = atoi(argv[i+2].strptr);
        }
@@ -855,14 +855,14 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
 
        lStyle = WS_CHILD;
 
-       if (buffer[6] == 0) lStyle |= SS_WHITERECT; else
-       if (buffer[6] == 1) lStyle |= SS_GRAYRECT; else
-       if (buffer[6] == 2) lStyle |= SS_BLACKRECT; else
-       if (buffer[6] == 3) lStyle |= SS_WHITEFRAME; else
-       if (buffer[6] == 4) lStyle |= SS_GRAYFRAME; else
-       if (buffer[6] == 5) lStyle  |= SS_BLACKFRAME ; else
-       if (buffer[6] == 6) lStyle  |= SS_ETCHEDFRAME ; else
-       if (buffer[6] == 7) lStyle  |= SS_ETCHEDHORZ ; else
+       if (buffer[4] == 0) lStyle |= SS_WHITERECT; else
+       if (buffer[4] == 1) lStyle |= SS_GRAYRECT; else
+       if (buffer[4] == 2) lStyle |= SS_BLACKRECT; else
+       if (buffer[4] == 3) lStyle |= SS_WHITEFRAME; else
+       if (buffer[4] == 4) lStyle |= SS_GRAYFRAME; else
+       if (buffer[4] == 5) lStyle  |= SS_BLACKFRAME ; else
+       if (buffer[4] == 6) lStyle  |= SS_ETCHEDFRAME ; else
+       if (buffer[4] == 7) lStyle  |= SS_ETCHEDHORZ ; else
        lStyle |= SS_ETCHEDVERT;
 
        if (strstr(argv[7].strptr,"NOTIFY")) lStyle |= SS_NOTIFY;
