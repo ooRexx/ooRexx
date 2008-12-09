@@ -441,7 +441,7 @@
                else self~InternAddRCButton(id, x, y, w, h, name, style, loadOptions)
             end
 
-            when class = '"STATIC"' then do
+            when class = '"STATIC"' | class = WC_STATIC then do
                opts = self~InternGetRCStyle(style, "ST")
                select
                   when style~wordpos("SS_LEFT") > 0 then
