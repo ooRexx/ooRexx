@@ -19,11 +19,8 @@ All Platforms
 Windows
 =======
 
-  * 2023245 - ooDialog needs an utility class
-
-  * 2033206 - Update the ooDialog ButtonControl(s)
-
-  * 2033208 - Add some shape classes to ooDialog
+  Bugs
+  ----
 
   * 1797127 - ooDialog - buttonControl~style= is incorrect
 
@@ -48,6 +45,17 @@ Windows
   * 2005594 - RexxUtil::SysWinSetDefaultPrinter() is incorrect
 
   * 2038754 - OODialog SetMenu Crashes interpreter
+
+  Requests For Enhancement
+  ------------------------
+
+  * 2023245 - ooDialog needs an utility class
+
+  * 2033206 - Update the ooDialog ButtonControl(s)
+
+  * 2033208 - Add some shape classes to ooDialog
+
+  * 2357113 - WindowsManager needs a way to get Desktop window
 
 
 Unix/Linux
