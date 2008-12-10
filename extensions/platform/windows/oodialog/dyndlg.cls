@@ -640,6 +640,7 @@
      when opts~wordpos("BITMAP") > 0 | opts~wordpos("METAFILE") > 0 | opts~wordpos("ICON") > 0 then do
         forward message "AddImage"
      end
+     when opts~wordpos("TEXT" then return self~addText(x, y, cx, cy, text, opts, id)
 
      when opts~wordpos("WHITERECT") > 0 then return self~InternAddStatic(argA, 0)
      when opts~wordpos("GRAYRECT") > 0 then return self~InternAddStatic(argA, 1)
@@ -651,7 +652,11 @@
      when opts~wordpos("HORZ") > 0 then return self~InternAddStatic(argA, 7)
      when opts~wordpos("VERT") > 0 then return self~InternAddStatic(argA, 8)
 
-     otherwise return self~addText(x, y, cx, cy, text, opts, id)
+     otherwise do
+       keywords "TEXT, BITMAP, METAFILE, ICON, WHITERECT, GRAYRECT, BLACKRECT, WHITEFRAME, GRAYFRAME, BLACKFRAME, ETCHED, HORZ, or VERT"
+       msg = "The 'style' argument must contain at least one of the" keywords "keywords."
+       raise syntax 93.900 array (msg)
+     end
    end
    -- End select
 
