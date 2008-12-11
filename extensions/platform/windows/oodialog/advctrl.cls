@@ -306,7 +306,7 @@
    if Arg(2,'o') = 1 then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
    if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
-   self~AktPtr = UsrAddNewCtrl("TREE", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
        self~ConnectTreeControl(symbid, attname)
    end
@@ -319,7 +319,7 @@
    if id < 0 then return id
    if Arg(2,'o') = 1 then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddNewCtrl("LIST", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
        self~ConnectListControl(symbid, attname)
    end
@@ -330,7 +330,7 @@
    id = self~ItemAdd(id)
    if id < 0 then return id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddNewCtrl("PROGRESS", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddNewCtrl("PROGRESS", self~activePtr, id, x, y, cx, cy, opts)
 
 
 ::method AddSliderControl
@@ -340,7 +340,7 @@
    if id < 0 then return id
    if Arg(2,'o') = 1 then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddNewCtrl("SLIDER", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
        self~ConnectSliderControl(symbid, attname)
    end
@@ -353,7 +353,7 @@
    if id < 0 then return id
    if Arg(2,'o') = 1 then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddNewCtrl("TAB", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
    if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then do
        self~ConnectTabControl(symbid, attname)
    end
@@ -366,7 +366,7 @@
    if id < 0 then return id
    if Arg(2, 'O') then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddNewCtrl("DTP", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddNewCtrl("DTP", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
        self~ConnectDateTimePicker(symbid, attname)
    end
@@ -379,7 +379,7 @@
    if id < 0 then return id
    if Arg(2, 'O') then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddNewCtrl("MONTH", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddNewCtrl("MONTH", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
        self~ConnectMonthCalendar(symbid, attname)
    end

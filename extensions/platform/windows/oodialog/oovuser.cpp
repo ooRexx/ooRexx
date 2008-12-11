@@ -627,7 +627,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
    {
        CHECKARG(9);
 
-       /* UsrAddControl("BUT", self~AktPtr, id, x, y, w, h, name, opts) */
+       /* UsrAddControl("BUT", self~activePtr, id, x, y, w, h, name, opts) */
        for ( i = 0; i < 5; i++ )
        {
            buffer[i] = atoi(argv[i+2].strptr);
@@ -669,7 +669,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
    {
        CHECKARGL(8);
 
-       /* UsrAddControl("GB",self~AktPtr, x, y, cx, cy, opts, text, id) */
+       /* UsrAddControl("GB",self~activePtr, x, y, cx, cy, opts, text, id) */
        for ( i = 0; i < 4; i++ )
        {
            buffer[i] = atoi(argv[i+2].strptr);
@@ -699,7 +699,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
    {
        CHECKARG(8);
 
-       /* UsrAddControl("EL", self~AktPtr, id, x, y, cx, cy, opts) */
+       /* UsrAddControl("EL", self~activePtr, id, x, y, cx, cy, opts) */
        for ( i = 0; i < 5; i++ )
        {
            buffer[i] = atoi(argv[i+2].strptr);
@@ -802,7 +802,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
    {
        CHECKARGL(8);
 
-       /* UsrAddControl("TXT", self~AktPtr, x, y, cx, cy, opts, text, id) */
+       /* UsrAddControl("TXT", self~activePtr, x, y, cx, cy, opts, text, id) */
        for ( i = 0; i < 4; i++ )
        {
            buffer[i] = atoi(argv[i+2].strptr);

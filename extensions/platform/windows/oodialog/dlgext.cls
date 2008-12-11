@@ -391,7 +391,7 @@
 
 ::method AddBitmapButton
    use arg id, x, y, cx, cy, text, fnk, bmp, focus, sel, disabl, opts
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
    id = self~CheckId(id)
    if  id = -1 then return
    if Arg(4, 'o') = 1 then cx = 0
@@ -405,7 +405,7 @@
    if focus = "" & sel = "" & opts~wordpos("FRAME") = 0 & opts~wordpos("TAB") = 0 then opts = opts || " NOTAB"
 
    self~DialogItemCount = self~DialogItemCount + 1
-   self~AktPtr = UsrAddControl("BUT", self~AktPtr, id, x, y, cx, cy, text, opts)
+   self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, cx, cy, text, opts)
    self~ConnectBitmapButton(id, fnk~space(0), bmp, focus, sel, disabl, opts)
 
 

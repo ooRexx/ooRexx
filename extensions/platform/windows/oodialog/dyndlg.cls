@@ -47,12 +47,12 @@
 
     /* attributes for internal use */
 ::method BasePtr attribute protected
-::method AktPtr attribute protected
+::method activePtr attribute protected
 ::method DialogItemCount attribute protected
 
 
 ::method DynamicInit private
-   self~AktPtr = 0
+   self~activePtr = 0
    self~DialogItemCount = 0
    if Arg(1,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
    return 0
@@ -84,12 +84,12 @@
                                       options, expected)
    parse var ret base ptr
    self~BasePtr = base
-   self~AktPtr = ptr
+   self~activePtr = ptr
    if ptr = 0 then call HandleDlg("STOP")
    self~SizeX = cx
    self~SizeY = cy
    self~DefineDialog
-   return ptr  /* self~AktPtr could have been set to 0 for a CategoryDialog */
+   return ptr  /* self~activePtr could have been set to 0 for a CategoryDialog */
 
    /* This method will create the dialog and place it in a centered position */
    /* See 'Create' for possible 'options' */
@@ -251,7 +251,7 @@
    if id < 0 then return
    opts = self~InternGetRCStyle(style, "BTN")
    self~DialogItemCount = self~DialogItemCount + 1
-   self~AktPtr = UsrAddControl("BUT", self~AktPtr, id, x, y, w, h, name, opts)
+   self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, w, h, name, opts)
    if lOpts~wordpos("CONNECTBUTTONS") > 0 then
       self~ConnectButton(id, name~space(0)~changestr('&','')~changestr(':',''))
    else self~ConnectButton(id)
@@ -375,7 +375,7 @@
 
 ::method LoadItems protected
    use arg resfile, dialogid, loadOptions
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
 
    file = SysSearchPath("PATH",resfile)
    f = .stream~new(file)
@@ -590,7 +590,7 @@
 
 ::method ItemAdd
    use arg id, staticId
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
    if Arg(2,'o') = 1 then do
        id = self~CheckId(id)
        if id = -1 then return -1
@@ -607,22 +607,22 @@
    /* a message that will be rised if the butten is pushed. */
    /* argument 'options' can be one of: */
 
-::method AddButton
-   use arg id, x, y, cx, cy, text, msgToRise, options
-   id = self~ItemAdd(id)
+::method addButton
+   use arg id, x, y, cx, cy, text = "", msgToRise, options
+   id = self~itemAdd(id)
    if id < 0 then return id
-   options = self~GetDefaultOpts(options)
-   self~AktPtr = UsrAddControl("BUT", self~AktPtr, id, x, y, cx, cy, text, options)
+   options = self~getDefaultOpts(options)
+   self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, cx, cy, text, options)
    if Arg(7,"o") = 0 then
-      self~ConnectButton(id, msgToRise~space(0))
+      self~connectButton(id, msgToRise~space(0))
 
 
-::method AddGroupBox
-   use arg x, y, cx, cy, text, opts, id
+::method addGroupBox
+   use arg x, y, cx, cy, text = "", opts, id
    id = self~ItemAdd(id, \(Arg(7,"o") | id = "ID"))
    if id = -2 then return id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddControl("GB",self~AktPtr, x, y, cx, cy, opts, text, id)
+   self~activePtr = UsrAddControl("GB",self~activePtr, x, y, cx, cy, opts, text, id)
 
 
 ::method addStatic
@@ -662,7 +662,7 @@
    id = self~ItemAdd(id)
    if id < 0 then return id
    options = self~GetDefaultOpts(options)
-   self~AktPtr = UsrAddControl("IMG", self~AktPtr, id, x, y, cx, cy, options)
+   self~activePtr = UsrAddControl("IMG", self~activePtr, id, x, y, cx, cy, options)
 
 ::method AddText
    use arg x, y, cx = 0, cy = 0, text = "", opts = "", id = (-1)
@@ -675,7 +675,7 @@
    id = self~ItemAdd(id, 1)
    if id = -2 then return id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddControl("TXT", self~AktPtr, x, y, cx, cy, opts, text, id)
+   self~activePtr = UsrAddControl("TXT", self~activePtr, x, y, cx, cy, opts, text, id)
    return 0
 
 ::method AddWhiteRect
@@ -710,7 +710,7 @@
    if arga~hasindex(6) = 0 then id = self~ItemAdd(-1, 0); else id = self~ItemAdd(arga[6],1)
    if id = -2 then return id
    opts = self~GetDefaultOpts(arga[5])
-   self~AktPtr = UsrAddControl("FRM", self~AktPtr, arga[1], arga[2], arga[3], arga[4], type, opts, id)
+   self~activePtr = UsrAddControl("FRM", self~activePtr, arga[1], arga[2], arga[3], arga[4], type, opts, id)
    return 0
 
 ::method AddEntryLine
@@ -725,7 +725,7 @@
       cy = cy +4
    end
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddControl("EL", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddControl("EL", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then self~ConnectEntryLine(symbid, fname)
 
 
@@ -743,7 +743,7 @@
    if id < 0 then return id
    if Arg(2,'o') = 1 then fname = "DATA"id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddControl("LB", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddControl("LB", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
       if opts~wordpos("MULTI") > 0 then self~ConnectMultiListBox(symbid, fname)
       else self~ConnectListBox(symbid, fname)
@@ -757,7 +757,7 @@
    if id < 0 then return id
    if Arg(2,'o') = 1 then fname = "DATA"id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddControl("CB", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddControl("CB", self~activePtr, id, x, y, cx, cy, opts)
    if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then self~ConnectComboBox(symbid, fname, opts)
 
 
@@ -775,7 +775,7 @@
       if cy = 0 then cy = icy
    end
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddControl("CH", self~AktPtr, id, x, y, cx, cy, text, opts)
+   self~activePtr = UsrAddControl("CH", self~activePtr, id, x, y, cx, cy, text, opts)
    if self~AutoDetect = 1 then self~ConnectCheckBox(symbid, fname)
 
 
@@ -793,7 +793,7 @@
       if cy=0 then cy=icy
    end
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddControl("RB", self~AktPtr, id, x, y, cx, cy, text, opts)
+   self~activePtr = UsrAddControl("RB", self~activePtr, id, x, y, cx, cy, text, opts)
    if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then self~ConnectRadioButton(symbid, fname)
 
 
@@ -802,7 +802,7 @@
    id = self~ItemAdd(id)
    if id < 0 then return id
    opts = self~GetDefaultOpts(opts)
-   self~AktPtr = UsrAddControl("SB", self~AktPtr, id, x, y, cx, cy, opts)
+   self~activePtr = UsrAddControl("SB", self~activePtr, id, x, y, cx, cy, opts)
 
 
 ::method AddRadioGroup
@@ -818,7 +818,7 @@
 ::method InternAddRBCBGroup
    use arg startid, x, y, cx, inp, opts, idstat, kind
 
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
    if self~CheckID(startid) = -1 then return
    if Arg(4, 'o') = 1 then cx = 0
    parse var inp rb inp
@@ -850,7 +850,7 @@
 
 ::method AddInput
    use arg id, fname, x, y, cx1, cx2, cy, text, opts, idstat
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
    if self~CheckID(id) = -1 then return
    if Arg(2,'o') = 1 then fname = text
    if Arg(5, 'o') = 1 then cx1 = 0
@@ -870,7 +870,7 @@
    use arg startid, x, y, cx1, cx2, inp, opts, idstat
    parse var inp rb inp
 
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
    if self~CheckID(startid) = -1 then return
    if Arg(4, 'o') = 1 then cx1 = 0
    count = 0; ll = 0
@@ -903,7 +903,7 @@
 ::method AddComboInput
    use arg id, attname, x, y, cx1, cx2, clines, text, opts, idstat
 
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
    if self~CheckID(id) = -1 then return
    if Arg(2, 'o') = 1 then attname = text
    if Arg(5, 'o') = 1 then cx1 = 0
@@ -921,7 +921,7 @@
 ::method AddInputStem
    use arg startid, x, y, cx1, cx2, inp., opts, idstat
 
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
    if self~CheckID(startid)= -1 then return
    if Arg(4, 'o') = 1 then cx1 = 0
    count = 0; ll = 0
@@ -962,7 +962,7 @@
 
 ::method InternAddRBCBStem private
    use arg startid, x, y, cxx, inp., max, opts, idstat, fn, fs, kind
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
    if self~CheckID(startid) = -1 then return
    if Arg(4, 'o') = 1 then cxx = 0
    count = 0; ll = 0
@@ -1020,7 +1020,7 @@
    use arg x, y, cx, cy, inp, bottom, opts
    parse var inp bt bid bfnk newinp
 
-   if self~AktPtr = 0 then return -2
+   if self~activePtr = 0 then return -2
    if Arg(6,"o") = 1 then bottom = 0
    if cx = 0 | Arg(3,"o") = 1 then cx = 40
    if cy = 0 | Arg(4,"o") = 1 then cy = 12
@@ -1081,7 +1081,7 @@
      else modal = 0
    end
    self~DlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, 0 /* no autodetection */, 1, icon, modal)
-   self~AktPtr = 0
+   self~activePtr = 0
    if self~DlgHandle = 0 then return 0
    else self~InitDialog
    return self~DlgHandle

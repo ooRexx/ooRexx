@@ -233,7 +233,7 @@
    end
 
    self~DlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, self~AutoDetect, 1, 0, 0)
-   self~AktPtr = 0
+   self~activePtr = 0
    if self~DlgHandle = 0 then return 0
 
    do i = 1 to self~catalog['count']
@@ -244,7 +244,7 @@
       msg = "self~" || self~catalog['names'][i]~space(0)
       interpret(msg)
       ret = UsrCreateDialog(self~Adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~DlgHandle, i)
-      self~AktPtr = 0
+      self~activePtr = 0
       self~catalog['handles'][i] = ret
    end
 
@@ -297,7 +297,7 @@
 
    parse var ret base Ptr
    self~catalog['base'][self~catalog['category']] = base
-   self~AktPtr = Ptr
+   self~activePtr = Ptr
    return Ptr
 
    /* */
