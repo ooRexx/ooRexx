@@ -619,9 +619,9 @@
 
 ::method addGroupBox
    use arg x, y, cx, cy, text = "", opts, id
-   id = self~ItemAdd(id, \(Arg(7,"o") | id = "ID"))
+   id = self~itemAdd(id, \(arg(7,"o") | id = "ID"))
    if id = -2 then return id
-   opts = self~GetDefaultOpts(opts)
+   opts = self~getDefaultOpts(opts)
    self~activePtr = UsrAddControl("GB",self~activePtr, x, y, cx, cy, opts, text, id)
 
 
@@ -637,7 +637,7 @@
    argA[6] = id
 
    select
-     when opts~wordpos("TEXT" then return self~addText(x, y, cx, cy, text, opts, id)
+     when opts~wordpos("TEXT") > 0 then return self~addText(x, y, cx, cy, text, opts, id)
 
      when opts~wordpos("BITMAP") > 0 | opts~wordpos("METAFILE") > 0 | opts~wordpos("ICON") > 0 then do
         forward message "AddImage"
