@@ -65,7 +65,7 @@ BEGIN
             VALUE "FileVersion", OOREXX_VER_STR "\0"
             VALUE "InternalName", "OODIALOG GUI\0"
             VALUE "LegalCopyright", "Copyright © RexxLA " OOREXX_COPY_YEAR ".\0"
-            VALUE "OriginalFilename", "OODIALOG.DLL\0"
+            VALUE "OriginalFilename", "oodialog.dll\0"
             VALUE "ProductName", "Open Object Rexx for Windows\0"
             VALUE "ProductVersion",  OOREXX_VER_STR "\0"
         END

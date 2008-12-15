@@ -68,7 +68,6 @@ extern BOOL IsNT = TRUE;
 extern LONG HandleError(PRXSTRING r, CHAR * text);
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 extern BOOL GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
-extern HICON GetIconForID(DIALOGADMIN *, UINT, UINT, int, int);
 
 /* Shared functions for keyboard hooks and key press subclassing */
 extern LONG setKeyPressData(KEYPRESSDATA *, CONSTRXSTRING, CONSTRXSTRING, const char *);
@@ -83,6 +82,7 @@ static LONG installKBHook(DIALOGADMIN *, HWND, CONSTRXSTRING, CONSTRXSTRING, con
 static LONG setKBHook(DIALOGADMIN *, HWND);
 static void removeKBHook(DIALOGADMIN *);
 static BOOL parseKeyToken(PCHAR, PUINT, PUINT);
+static HICON GetIconForID(DIALOGADMIN *, UINT, UINT, int, int);
 
 
 class LoopThreadArgs
@@ -881,7 +881,7 @@ BOOL GetDialogIcons(DIALOGADMIN *dlgAdm, INT id, UINT iconSrc, PHANDLE phBig, PH
  *
  * @return The handle to the loaded icon on success, or null on failure.
  */
-HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, int cy)
+static HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, int cy)
 {
     HINSTANCE hInst = NULL;
     LPCTSTR   pName = NULL;
@@ -913,17 +913,10 @@ HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, int cy)
         pName = MAKEINTRESOURCE(id);
         loadFlags = LR_SHARED;
     }
-    else if ( iconSrc & ICON_DLL )
+    else
     {
         /* Load the icon from the user's resource DLL. */
         hInst = dlgAdm->TheInstance;
-        pName = MAKEINTRESOURCE(id);
-        loadFlags = LR_SHARED;
-    }
-    else
-    {
-        /* Load one of the System icons. */
-        hInst = NULL;
         pName = MAKEINTRESOURCE(id);
         loadFlags = LR_SHARED;
     }
@@ -1094,68 +1087,6 @@ size_t RexxEntry WinAPI32Func(const char *funcname, size_t argc, CONSTRXSTRING *
             }
             RETVAL(ret)
         }
-    }
-    else if ( argv[0].strptr[0] == 'I'  )   /* work with Icons */
-    {
-        HICON hIcon;
-        UINT  id;
-
-        CHECKARGL(3);
-
-        if ( argv[1].strptr[0] == 'S' )          /* System icon */
-        {
-            id = IDICON_WINLOGO;
-            if ( !strcmp(argv[2].strptr, "APPLICATION") ) id = IDICON_APPLICATION;
-            else if ( !strcmp(argv[2].strptr, "HAND") ) id = IDICON_HAND;
-            else if ( !strcmp(argv[2].strptr, "QUESTION") ) id = IDICON_QUESTION;
-            else if ( !strcmp(argv[2].strptr, "EXCLAMATION") ) id = IDICON_EXCLAMATION;
-            else if ( !strcmp(argv[2].strptr, "ASTERISK") ) id = IDICON_ASTERISK;
-            else if ( !strcmp(argv[2].strptr, "WINLOGO") ) id = IDICON_WINLOGO;
-
-            SetLastError(0);
-            hIcon = GetIconForID(NULL, id, ICON_SYSTEM, 0, 0);
-            if ( ! hIcon )
-                RETVAL(-(INT)GetLastError())
-        }
-        else if ( argv[1].strptr[0] == 'N' )     /* Numeric resource ID */
-        {
-            DIALOGADMIN *dlgAdm = NULL;
-            int cx, cy;
-            UINT flag = ICON_FILE;
-
-            CHECKARGL(7)
-
-            dlgAdm = (DIALOGADMIN *)GET_POINTER(argv[2]);
-            if ( !dlgAdm ) RETVAL(-2)
-
-            id = (UINT)atoi(argv[3].strptr);
-            if ( id < 1 ) RETVAL(-1)
-
-            cx = atoi(argv[4].strptr);
-            cy = atoi(argv[5].strptr);
-            if ( argv[6].strptr[0] == 'D' )
-                flag = ICON_DLL;
-
-            SetLastError(0);
-            hIcon = GetIconForID(dlgAdm, id, flag, cx, cy);
-            if ( ! hIcon )
-                RETVAL(-(INT)GetLastError())
-        }
-        else if ( argv[1].strptr[0] == 'F' )     /* load directly from File */
-        {
-            CHECKARGL(5)
-
-            hIcon = (HICON)LoadImage(NULL, argv[2].strptr, IMAGE_ICON, atoi(argv[3].strptr),
-                              atoi(argv[4].strptr), LR_LOADFROMFILE);
-            if ( ! hIcon )
-                RETVAL(-(INT)GetLastError())
-        }
-        else
-        {
-            RETERR
-        }
-
-        RETHANDLE(hIcon)
     }
 
     RETERR
@@ -2000,6 +1931,16 @@ BOOL REXXENTRY DllMain(
 }
 #endif
 
+/**
+ * This function was documented in the ooDialog doc prior to 4.0.0, so for now
+ * it needs to stay.  Does nothing.
+ */
+size_t RexxEntry InstMMFuncs(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+{
+    // the old function returned 1
+   RETC(1)
+}
+
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetDlgMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDlg);
@@ -2068,6 +2009,7 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(MemMenu);
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
+    REXX_CLASSIC_ROUTINE(InstMMFuncs,          InstMMFuncs),
     REXX_CLASSIC_ROUTINE(GetDlgMsg,            GetDlgMsg),
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
     REXX_CLASSIC_ROUTINE(HandleDlg,            HandleDlg),
@@ -2135,16 +2077,35 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_LAST_ROUTINE()
 };
 
-REXX_METHOD_PROTOTYPE(dlgutil_init);
-REXX_METHOD_PROTOTYPE(dlgutil_comctl32Version);
-REXX_METHOD_PROTOTYPE(dlgutil_version);
-REXX_METHOD_PROTOTYPE(dlgutil_hiWord);
-REXX_METHOD_PROTOTYPE(dlgutil_loWord);
-REXX_METHOD_PROTOTYPE(dlgutil_colorRef);
-REXX_METHOD_PROTOTYPE(dlgutil_getRValue);
-REXX_METHOD_PROTOTYPE(dlgutil_getGValue);
-REXX_METHOD_PROTOTYPE(dlgutil_getBValue);
-REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer);
+REXX_METHOD_PROTOTYPE(dlgutil_init_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_comctl32Version_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_version_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_hiWord_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_loWord_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
+
+REXX_METHOD_PROTOTYPE(ri_init);
+REXX_METHOD_PROTOTYPE(ri_release);
+REXX_METHOD_PROTOTYPE(ri_handle);
+REXX_METHOD_PROTOTYPE(ri_isNull);
+REXX_METHOD_PROTOTYPE(ri_systemErrorCode);
+REXX_METHOD_PROTOTYPE(ri_getImage);
+
+REXX_METHOD_PROTOTYPE(image_init_cls);
+REXX_METHOD_PROTOTYPE(image_saveImage_cls);
+REXX_METHOD_PROTOTYPE(image_removeImage_cls);
+REXX_METHOD_PROTOTYPE(image_id_cls);
+REXX_METHOD_PROTOTYPE(image_getImage_cls);
+REXX_METHOD_PROTOTYPE(image_colorRef_cls);
+REXX_METHOD_PROTOTYPE(image_getRValue_cls);
+REXX_METHOD_PROTOTYPE(image_getGValue_cls);
+REXX_METHOD_PROTOTYPE(image_getBValue_cls);
+REXX_METHOD_PROTOTYPE(image_init);
+REXX_METHOD_PROTOTYPE(image_assignImage);
+REXX_METHOD_PROTOTYPE(image_isNull);
+REXX_METHOD_PROTOTYPE(image_handle);
+REXX_METHOD_PROTOTYPE(image_systemErrorCode);
 
 REXX_METHOD_PROTOTYPE(pbc_stepIt);
 REXX_METHOD_PROTOTYPE(pbc_getPos);
@@ -2157,8 +2118,15 @@ REXX_METHOD_PROTOTYPE(pbc_setBkColor);
 REXX_METHOD_PROTOTYPE(pbc_setBarColor);
 REXX_METHOD_PROTOTYPE(pbc_test);
 
-REXX_METHOD_PROTOTYPE(bc_cls_releaseImageList);
-REXX_METHOD_PROTOTYPE(bc_cls_checkInGroup);
+REXX_METHOD_PROTOTYPE(stc_getText);
+REXX_METHOD_PROTOTYPE(stc_setText);
+REXX_METHOD_PROTOTYPE(stc_getIcon);
+REXX_METHOD_PROTOTYPE(stc_setIcon);
+REXX_METHOD_PROTOTYPE(stc_getImage);
+REXX_METHOD_PROTOTYPE(stc_setImage);
+
+REXX_METHOD_PROTOTYPE(bc_releaseImageList_cls);
+REXX_METHOD_PROTOTYPE(bc_checkInGroup_cls);
 REXX_METHOD_PROTOTYPE(gb_setStyle);
 REXX_METHOD_PROTOTYPE(bc_getState);
 REXX_METHOD_PROTOTYPE(bc_setState);
@@ -2205,16 +2173,36 @@ REXX_METHOD_PROTOTYPE(size_cy);
 REXX_METHOD_PROTOTYPE(size_setCY);
 
 RexxMethodEntry oodialog_methods[] = {
-    REXX_METHOD(dlgutil_init,            dlgutil_init),
-    REXX_METHOD(dlgutil_comctl32Version, dlgutil_comctl32Version),
-    REXX_METHOD(dlgutil_version,         dlgutil_version),
-    REXX_METHOD(dlgutil_hiWord,          dlgutil_hiWord),
-    REXX_METHOD(dlgutil_loWord,          dlgutil_loWord),
-    REXX_METHOD(dlgutil_colorRef,        dlgutil_colorRef),
-    REXX_METHOD(dlgutil_getRValue,       dlgutil_getRValue),
-    REXX_METHOD(dlgutil_getGValue,       dlgutil_getGValue),
-    REXX_METHOD(dlgutil_getBValue,       dlgutil_getBValue),
-    REXX_METHOD(dlgutil_handleToPointer, dlgutil_handleToPointer),
+    REXX_METHOD(dlgutil_init_cls,            dlgutil_init_cls),
+    REXX_METHOD(dlgutil_comctl32Version_cls, dlgutil_comctl32Version_cls),
+    REXX_METHOD(dlgutil_version_cls,         dlgutil_version_cls),
+    REXX_METHOD(dlgutil_hiWord_cls,          dlgutil_hiWord_cls),
+    REXX_METHOD(dlgutil_loWord_cls,          dlgutil_loWord_cls),
+    REXX_METHOD(dlgutil_handleToPointer_cls, dlgutil_handleToPointer_cls),
+    REXX_METHOD(dlgutil_test_cls,            dlgutil_test_cls),
+
+    REXX_METHOD(ri_init,                     ri_init),
+    REXX_METHOD(ri_release,                  ri_release),
+    REXX_METHOD(ri_handle,                   ri_handle),
+    REXX_METHOD(ri_isNull,                   ri_isNull),
+    REXX_METHOD(ri_systemErrorCode,          ri_systemErrorCode),
+    REXX_METHOD(ri_getImage,                 ri_getImage),
+
+    REXX_METHOD(image_init_cls,              image_init_cls),
+    REXX_METHOD(image_saveImage_cls,         image_saveImage_cls),
+    REXX_METHOD(image_removeImage_cls,       image_removeImage_cls),
+    REXX_METHOD(image_id_cls,                image_id_cls),
+    REXX_METHOD(image_getImage_cls,          image_getImage_cls),
+    REXX_METHOD(image_colorRef_cls,          image_colorRef_cls),
+    REXX_METHOD(image_getRValue_cls,         image_getRValue_cls),
+    REXX_METHOD(image_getGValue_cls,         image_getGValue_cls),
+    REXX_METHOD(image_getBValue_cls,         image_getBValue_cls),
+    REXX_METHOD(image_init,                  image_init),
+    REXX_METHOD(image_assignImage,           image_assignImage),
+    REXX_METHOD(image_isNull,                image_isNull),
+    REXX_METHOD(image_systemErrorCode,       image_systemErrorCode),
+    REXX_METHOD(image_handle,                image_handle),
+
     REXX_METHOD(pbc_stepIt,              pbc_stepIt),
     REXX_METHOD(pbc_getPos,              pbc_getPos),
     REXX_METHOD(pbc_setPos,              pbc_setPos),
@@ -2225,8 +2213,16 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbc_setBkColor,          pbc_setBkColor),
     REXX_METHOD(pbc_setBarColor,         pbc_setBarColor),
     REXX_METHOD(pbc_test,                pbc_test),
-    REXX_METHOD(bc_cls_releaseImageList, bc_cls_releaseImageList),
-    REXX_METHOD(bc_cls_checkInGroup,     bc_cls_checkInGroup),
+
+    REXX_METHOD(stc_getText,             stc_getText),
+    REXX_METHOD(stc_setText,             stc_setText),
+    REXX_METHOD(stc_getIcon,             stc_getIcon),
+    REXX_METHOD(stc_setIcon,             stc_setIcon),
+    REXX_METHOD(stc_getImage,            stc_getImage),
+    REXX_METHOD(stc_setImage,            stc_setImage),
+
+    REXX_METHOD(bc_releaseImageList_cls, bc_releaseImageList_cls),
+    REXX_METHOD(bc_checkInGroup_cls,     bc_checkInGroup_cls),
     REXX_METHOD(bc_getState,             bc_getState),
     REXX_METHOD(bc_setState,             bc_setState),
     REXX_METHOD(gb_setStyle,             gb_setStyle),

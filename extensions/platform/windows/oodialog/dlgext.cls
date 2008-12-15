@@ -1108,4 +1108,3 @@
         NUMERIC DIGITS d
     end
 
-

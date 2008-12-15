@@ -66,7 +66,7 @@
 #define WM_USER_HOOK                WM_USER + 0x0608
 #define WM_USER_CONTEXT_MENU        WM_USER + 0x0609
 
-#define VISDLL "OODIALOG.DLL"
+#define OODDLL "oodialog.dll"
 #define DLLVER 2130
 
 #define MSG_TERMINATE "1DLGDELETED1"
@@ -77,18 +77,6 @@ extern LONG HandleError(PRXSTRING r, CHAR * text);
 #define ICON_FILE                 0x00000001
 #define ICON_OODIALOG             0x00000002
 #define ICON_DLL                  0x00000004
-#define ICON_SYSTEM               0x00000008
-
-/* The resource IDs of the System Icons.  The raw numeric numbers are used
- * so that they can be passed into functions that use MAKEINTRESOURCE() on the
- * supplied ID.
- */
-#define IDICON_APPLICATION     32512
-#define IDICON_HAND            32513
-#define IDICON_QUESTION        32514
-#define IDICON_EXCLAMATION     32515
-#define IDICON_ASTERISK        32516
-#define IDICON_WINLOGO         32517
 
 /* Defines for the different possible versions of comctl32.dll up to Windows
  * XP SP2. These DWORD "packed version" numbers are calculated using the

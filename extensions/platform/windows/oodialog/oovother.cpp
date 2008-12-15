@@ -40,6 +40,7 @@
 #define WINVER          0x0501
 
 #define STRICT
+#define OEMRESOURCE
 
 #include <windows.h>
 #include <mmsystem.h>
@@ -50,6 +51,14 @@
 #include <shlwapi.h>
 #include <commctrl.h>
 #include "oovutil.h"
+
+// Map strings representing constant defines to their int values.  For
+// translating things like "IDI_APPLICATION" from the user to the proper API
+// value.
+#include <string>
+#include <map>
+using namespace std;
+typedef map<string, int, less<string> > String2Int;
 
 #define FILENAME_BUFFER_LEN 65535
 
@@ -69,6 +78,9 @@ static ULONG SetStyle(HWND, LONG, PRXSTRING);
 static void freeSubclassData(SUBCLASSDATA *);
 static BOOL removeKeyPressSubclass(SUBCLASSDATA *, HWND, INT);
 
+/**
+ * This classic Rexx external function was documented prior to 4.0.0.
+ */
 size_t RexxEntry PlaySoundFile(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    UINT opts;
@@ -86,7 +98,9 @@ size_t RexxEntry PlaySoundFile(const char *funcname, size_t argc, CONSTRXSTRING 
       RETC(1)
 }
 
-
+/**
+ * This classic Rexx external function was documented prior to 4.0.0.
+ */
 size_t RexxEntry PlaySoundFileInLoop(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    UINT opts;
@@ -101,7 +115,9 @@ size_t RexxEntry PlaySoundFileInLoop(const char *funcname, size_t argc, CONSTRXS
       RETC(1)
 }
 
-
+/**
+ * This classic Rexx external function was documented prior to 4.0.0.
+ */
 size_t RexxEntry StopSoundFile(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    UINT opts;
@@ -191,6 +207,9 @@ BOOL OpenFileDlg( BOOL load, PCHAR szFile, const char *szInitialDir, const char 
 
 #define VALIDARG(argn) (argc >= argn) && argv[argn-1].strptr && argv[argn-1].strptr[0]
 
+/**
+ * This classic Rexx external function was documented prior to 4.0.0.
+ */
 size_t RexxEntry GetFileNameWindow(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
     BOOL    fSuccess;
@@ -280,7 +299,9 @@ size_t RexxEntry PlaySnd(const char *funcname, size_t argc, CONSTRXSTRING *argv,
       RETC(1)
 }
 
-
+/**
+ * This classic Rexx external function was documented prior to 4.0.0.
+ */
 size_t RexxEntry SleepMS(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    CHECKARG(1);
@@ -289,7 +310,9 @@ size_t RexxEntry SleepMS(const char *funcname, size_t argc, CONSTRXSTRING *argv,
    RETC(0)
 }
 
-
+/**
+ * This classic Rexx external function was documented prior to 4.0.0.
+ */
 size_t RexxEntry WinTimer(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
     UINT_PTR timerID;
@@ -1065,16 +1088,13 @@ size_t RexxEntry HandleControlEx(
     /* Determine the control, or other function.  The single first letter is
      * checked.
      */
-    if ( argv[2].strptr[0] == 'E' )      /* Edit control function (or also static) */
+    if ( argv[2].strptr[0] == 'E' )      /* Edit control function */
     {
+        if ( ! checkWindowClass(hCtrl, WC_EDIT) )
+            RETVAL(-1)
+
         if ( strcmp(argv[3].strptr, "TXT") == 0 )       /* Set or get the control's text. */
         {
-            /* The same function is used to set / get the text for an edit
-             * control or for a static control.
-             */
-            if ( ! (checkWindowClass(hCtrl, WC_EDIT) || checkWindowClass(hCtrl, WC_STATIC)) )
-                RETVAL(-1)
-
             if ( argc > 4 )
             {
                 if ( SetWindowText(hCtrl, argv[4].strptr) == 0 )
@@ -1114,12 +1134,7 @@ size_t RexxEntry HandleControlEx(
             }
             return 0;
         }
-
-        /* The remaining functions are for an edit control only */
-        if ( ! checkWindowClass(hCtrl, WC_EDIT) )
-            RETVAL(-1)
-
-        if ( !strcmp(argv[3].strptr, "MSG") ) /* Send an edit message (EM_*) */
+        else if ( !strcmp(argv[3].strptr, "MSG") ) /* Send an edit message (EM_*) */
         {
             CHECKARGL(5);
 
@@ -3098,7 +3113,7 @@ DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
         _snprintf(buf, sizeof(buf), "Could not retrieve the dialog administration block information for %s",
                   context->ObjectToStringValue(name));
 
-        context->RaiseException1(Rexx_Error_Execution_user_defined, context->NewStringFromAsciiz(buf));
+        context->RaiseException1(Rexx_Error_Execution_user_defined, context->String(buf));
     }
     return adm;
 }
@@ -3112,7 +3127,7 @@ inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr self)
 
 void systemServiceException(RexxMethodContext *context, char *msg)
 {
-    context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
+    context->RaiseException1(Rexx_Error_System_service_user_defined, context->String(msg));
 }
 
 void systemServiceException(RexxMethodContext *context, char *msg, const char *sub)
@@ -3143,30 +3158,47 @@ void systemServiceExceptionComCode(RexxMethodContext *context, const char *msg, 
     systemServiceException(context, buffer);
 }
 
-inline void outOfMemoryException(RexxMethodContext *c)
+void outOfMemoryException(RexxMethodContext *c)
 {
     systemServiceException(c, "Failed to allocate memory");
 }
 
-inline void *wrongClassException(RexxMethodContext *c, int pos, const char *n)
+void *wrongClassException(RexxMethodContext *c, int pos, const char *n)
 {
-    c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->WholeNumberToObject(pos), c->NewStringFromAsciiz(n));
+    c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->WholeNumber(pos), c->String(n));
     return NULL;
+}
+
+void nullPointerException(RexxMethodContext *c, int pos)
+{
+    c->RaiseException1(Rexx_Error_Incorrect_method_null, c->WholeNumber(pos));
+}
+
+void wrongRangeException(RexxMethodContext *c, int pos, int min, int max, RexxObjectPtr actual)
+{
+    c->RaiseException(Rexx_Error_Invalid_argument_range,
+                      c->ArrayOfFour(c->WholeNumber(pos), c->WholeNumber(min), c->WholeNumber(max), actual));
+}
+
+void userDefinedMsgException(RexxMethodContext *c, CSTRING msg)
+{
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(msg));
+}
+
+void wrongRangeException(RexxMethodContext *c, int pos, int min, int max, int actual)
+{
+    wrongRangeException(c, pos, min, max, c->WholeNumber(actual));
 }
 
 void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, RexxObjectPtr actual)
 {
-    RexxArrayObject a = c->NewArray(3);
-    c->ArrayAppend(a, c->WholeNumberToObject(pos));
-    c->ArrayAppend(a, c->NewStringFromAsciiz(list));
-    c->ArrayAppend(a, actual);
-
-    c->RaiseException(Rexx_Error_Incorrect_method_list, a);
+    c->RaiseException(Rexx_Error_Incorrect_method_list,
+                      c->ArrayOfThree(c->WholeNumber(pos), c->String(list), actual));
 }
 
 void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, const char *actual)
 {
-    wrongArgValueException(c, pos, list, c->NewStringFromAsciiz(actual));
+    wrongArgValueException(c, pos, list, c->String(actual));
 }
 
 bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum)
@@ -3175,16 +3207,23 @@ bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName,
     {
         char msg[256];
         _snprintf(msg, sizeof(msg), "The %s() method requires %s or later", methodName, comctl32VersionName(minimum));
-        context->RaiseException1(Rexx_Error_System_service_user_defined, context->NewStringFromAsciiz(msg));
+        context->RaiseException1(Rexx_Error_System_service_user_defined, context->String(msg));
         return false;
     }
     return true;
 }
 
+bool isInstanceOf(RexxMethodContext *context, RexxObjectPtr obj, const char *name)
+{
+    RexxClassObject rxClass = context->FindContextClass(name);
+    return (rxClass != NULLOBJECT && context->IsInstanceOf(obj, rxClass)) ? true : false;
+}
+
+
 bool requiredClass(RexxMethodContext *context, RexxObjectPtr obj, const char *name, int argPos)
 {
     RexxClassObject rxClass = context->FindContextClass(name);
-    if ( ! context->IsInstanceOf(obj, rxClass) )
+    if ( ! isInstanceOf(context, obj, name) )
     {
         wrongClassException(context, argPos, name);
         return false;
@@ -3192,11 +3231,11 @@ bool requiredClass(RexxMethodContext *context, RexxObjectPtr obj, const char *na
     return true;
 }
 
-void wrongWindowStyleException(RexxMethodContext *context, const char *obj, const char *style)
+void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char *style)
 {
     char msg[128];
     _snprintf(msg, sizeof(msg), "This %s does not have the %s style", obj, style);
-    context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->NewStringFromAsciiz(msg));
+    userDefinedMsgException(c, msg);
 }
 
 /**
@@ -3283,6 +3322,53 @@ RexxObjectPtr rxNewSize(RexxMethodContext *context, long cx, long cy)
     }
     return size;
 }
+
+RexxObjectPtr rxNewEmptyImage(RexxMethodContext *c)
+{
+    RexxObjectPtr image = NULLOBJECT;
+    RexxClassObject ImageClass = c->FindContextClass("Image");
+    if ( ImageClass == NULL )
+    {
+        c->RaiseException1(Rexx_Error_Execution_noclass, c->String("Image"));
+        return image;
+    }
+
+    image = c->SendMessage0(ImageClass, "NEW");
+    if ( image == NULLOBJECT )
+    {
+        c->RaiseException2(Rexx_Error_No_method_name, c->String("Image"), c->String("new"));
+    }
+    return image;
+}
+
+/**
+ * Instantiates a new .Image object, specifically from an image returned from
+ * LoadImage().
+ *
+ * @param context
+ * @param hImage
+ * @param type
+ * @param size
+ * @param flags
+ * @param fileName  This arg is currently ignored and the empty string is used.
+ *
+ * @return RexxObjectPtr
+ */
+RexxObjectPtr rxNewImage(RexxMethodContext *c, HANDLE hImage, uint8_t type, RexxObjectPtr size,
+                         uint32_t flags, CSTRING fileName)
+{
+    RexxObjectPtr image = rxNewEmptyImage(c);
+
+    if ( image != NULLOBJECT )
+    {
+        RexxArrayObject args = c->ArrayOfFour(c->NewPointer(hImage), c->UnsignedInt32(type), size,
+                                              c->UnsignedInt32(flags));
+        c->ArrayAppend(args, c->String(fileName));
+        c->SendMessage(image, "realInit", args);
+    }
+    return image;
+}
+
 
 inline bool hasStyle(HWND hwnd, DWORD_PTR style)
 {
@@ -3518,7 +3604,7 @@ RexxMethod3(RexxStringObject, pbc_setRange, OSELF, self, OPTIONAL_int32_t, min, 
     DWORD range = (DWORD)SendMessage(hwnd, PBM_SETRANGE32, min, max);
     _snprintf(buf, sizeof(buf), "%d %d", LOWORD(range), HIWORD(range));
 
-    return context->NewStringFromAsciiz(buf);
+    return context->String(buf);
 }
 
 RexxMethod1(RexxStringObject, pbc_getRange, OSELF, self)
@@ -3530,7 +3616,7 @@ RexxMethod1(RexxStringObject, pbc_getRange, OSELF, self)
     SendMessage(hwnd, PBM_GETRANGE, TRUE, (LPARAM)&pbr);
     _snprintf(buf, sizeof(buf), "%d %d", pbr.iLow, pbr.iHigh);
 
-    return context->NewStringFromAsciiz(buf);
+    return context->String(buf);
 }
 
 RexxMethod2(int, pbc_setStep, OSELF, self, OPTIONAL_int32_t, newStep)
@@ -3683,9 +3769,90 @@ RexxMethod5(size_t, pbc_test, OPTIONAL_int32_t, n1,
 }
 
 /**
+ *  Methods for the .StaticControl.
+ */
+#define STATIC_CLASS "StaticControl"
+
+RexxMethod2(uint32_t, stc_setText, CSTRING, text, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    uint32_t rc = 0;
+
+    if ( SetWindowText(hwnd, text) == 0 )
+    {
+        rc = -(LONG)GetLastError();
+    }
+    return rc;
+}
+
+RexxMethod1(RexxStringObject, stc_getText, OSELF, self)
+{
+    RexxStringObject result = NULLOBJECT;
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    ULONG count = (ULONG)GetWindowTextLength(hwnd);
+    if ( count == 0 )
+    {
+        result = context->String("");
+    }
+    else
+    {
+        char *buf = (char *)malloc(count);
+        if ( ! buf )
+        {
+            outOfMemoryException(context);
+        }
+        else
+        {
+            GetWindowText(hwnd, buf, count);
+            result = context->String(buf);
+            free(buf);
+        }
+    }
+    return result;
+}
+
+RexxMethod2(POINTERSTRING, stc_setIcon, POINTERSTRING, hIcon, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    return (void *)SendMessage(hwnd, STM_SETICON, (WPARAM)(HICON)hIcon, 0);
+}
+
+RexxMethod1(POINTERSTRING, stc_getIcon, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    return (void *)SendMessage(hwnd, STM_GETICON, 0, 0);
+}
+
+RexxMethod3(POINTERSTRING, stc_setImage, POINTERSTRING, hImage, uint8_t, type, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    if ( type > 3 )
+    {
+        wrongRangeException(context, 2, 0, 3, type);
+    }
+    //HANDLE myImage = LoadImage(NULL, "Camera.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_LOADMAP3DCOLORS);
+    HANDLE myImage = LoadImage(NULL, MAKEINTRESOURCE(OBM_ZOOM), IMAGE_BITMAP, 0, 0, LR_SHARED);
+
+    //HANDLE tmp = (void *)SendMessage(hwnd, STM_SETIMAGE, (WPARAM)type, (LPARAM)(HANDLE)myImage);
+    HANDLE tmp = (void *)SendMessage(hwnd, STM_SETIMAGE, (WPARAM)type, (LPARAM)(HANDLE)hImage);
+    printf("setImage() hImage=0x%p type=%d myImage=0x%p returned=0x%p\n", hImage, type, myImage, tmp);
+
+    return tmp;
+}
+
+RexxMethod1(POINTERSTRING, stc_getImage, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    return (void *)SendMessage(hwnd, STM_GETICON, 0, 0);
+}
+
+/**
  *  Methods for the ooDialog class: .ButtonControl and its subclasses
  *  .RadioButton and .CheckBox.
  */
+#define BUTTON_CLASS "ButtonControl"
 
 #define BC_SETSTYLE_OPTS "PUSHBOX, DEFPUSHBUTTON, CHECKBOX, AUTOCHECKBOX, 3STATE, AUTO3STATE, "        \
                          "RADIO, AUTORADIO, GROUPBOX, OWNERDRAW, LEFTTEXT, RIGHTBUTTON, NOTLEFTTEXT, " \
@@ -3796,7 +3963,7 @@ BUTTONTYPE getButtonInfo(HWND hwnd, PBUTTONSUBTYPE sub, DWORD *style)
  *  @param  himl  [required]  The image list handle.
  *
  */
-RexxMethod1(RexxObjectPtr, bc_cls_releaseImageList, POINTER, himl)
+RexxMethod1(RexxObjectPtr, bc_releaseImageList_cls, POINTER, himl)
 {
     if ( himl != NULL )
     {
@@ -3805,7 +3972,7 @@ RexxMethod1(RexxObjectPtr, bc_cls_releaseImageList, POINTER, himl)
     return NULLOBJECT;
 }
 
-RexxMethod4(int, bc_cls_checkInGroup, RexxObjectPtr, dlg, RexxObjectPtr, idFirst,
+RexxMethod4(int, bc_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst,
             RexxObjectPtr, idLast, RexxObjectPtr, idCheck)
 {
     int result = 0;
@@ -3940,7 +4107,7 @@ RexxMethod1(RexxStringObject, bc_getState, OSELF, self)
         strcat(buf, "PUSHED");
     }
 
-    return context->NewStringFromAsciiz(buf);
+    return context->String(buf);
 }
 
 /**
@@ -4490,7 +4657,7 @@ static HIMAGELIST getImageListFromObject(RexxMethodContext *context, RexxObjectP
         {
             _snprintf(msg, sizeof(msg),
                       "The Pointer object, method argument %d, must not be null", argPos);
-            context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->String(msg));
+            userDefinedMsgException(context, msg);
             goto failed_himl;
         }
         goto good_himl;
@@ -4575,9 +4742,8 @@ good_himl:
     return himl;
 
 bad_directory:
-    _snprintf(msg, sizeof(msg),
-              "The Directory object, method argument %d, does not have the proper entries", argPos);
-    context->RaiseException1(Rexx_Error_Incorrect_method_user_defined, context->String(msg));
+    _snprintf(msg, sizeof(msg), "The Directory object, method argument %d, does not have the proper entries", argPos);
+    userDefinedMsgException(context, msg);
 
 failed_himl:
     if ( himl != NULL )
@@ -4690,14 +4856,600 @@ RexxMethod4(POINTER, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_RexxObj
 }
 
 /* This method is used as a convenient way to test code. */
-RexxMethod2(int, bc_test, RexxObjectPtr, dlg, RexxObjectPtr, id)
+RexxMethod1(int, bc_test, RexxObjectPtr, obj)
 {
     return 0;
 }
 
 /**
+ * Methods for the .Image class.
+ */
+#define IMAGE_CLASS "Image"
+
+
+typedef struct _OODIMAGE
+{
+    SIZE     size;
+    HANDLE   hImage;
+    LONG     type;
+    DWORD    flags;
+    DWORD    lastError;
+    CSTRING  fileName;   // Not currently used, may change to char[256].
+    bool     canRelease;
+    bool     isValid;
+} OODIMAGE, *POODIMAGE;
+
+void imageInvalidException(RexxMethodContext *c)
+{
+    userDefinedMsgException(c, "The Image object is not valid");
+}
+
+
+/**
+ * Look up the int value of a string.
+ */
+int getConstantValue(String2Int *cMap, const char * str)
+{
+    String2Int::iterator itr;
+    itr = cMap->find(str);
+    if ( itr != cMap->end() )
+    {
+        return itr->second;
+    }
+    return -1;
+}
+
+/**
+ * Initializes the string to int map specific to the .Image class.
+ *
+ * @return String2Int*
+ *
+ * @note  All IDs are included here, except the obsolete ones, and things like
+ *        OBM_OLD*, all of which were for 16-bit Windows.
+ */
+static String2Int *imageInitMap(void)
+{
+    String2Int *cMap = new String2Int;
+
+    cMap->insert(String2Int::value_type("IDI_APPLICATION", 32512));
+    cMap->insert(String2Int::value_type("IDI_HAND",        32513));
+    cMap->insert(String2Int::value_type("IDI_QUESTION",    32514));
+    cMap->insert(String2Int::value_type("IDI_EXCLAMATION", 32515));
+    cMap->insert(String2Int::value_type("IDI_ASTERISK",    32516));
+    cMap->insert(String2Int::value_type("IDI_WINLOGO",     32517));
+
+    cMap->insert(String2Int::value_type("IMAGE_BITMAP",      0));
+    cMap->insert(String2Int::value_type("IMAGE_ICON",        1));
+    cMap->insert(String2Int::value_type("IMAGE_CURSOR",      2));
+    cMap->insert(String2Int::value_type("IMAGE_ENHMETAFILE", 3));
+
+    cMap->insert(String2Int::value_type("OCR_NORMAL",      32512));
+    cMap->insert(String2Int::value_type("OCR_IBEAM",       32513));
+    cMap->insert(String2Int::value_type("OCR_WAIT",        32514));
+    cMap->insert(String2Int::value_type("OCR_CROSS",       32515));
+    cMap->insert(String2Int::value_type("OCR_UP",          32516));
+    cMap->insert(String2Int::value_type("OCR_SIZENWSE",    32642));
+    cMap->insert(String2Int::value_type("OCR_SIZENESW",    32643));
+    cMap->insert(String2Int::value_type("OCR_SIZEWE",      32644));
+    cMap->insert(String2Int::value_type("OCR_SIZENS",      32645));
+    cMap->insert(String2Int::value_type("OCR_SIZEALL",     32646));
+    cMap->insert(String2Int::value_type("OCR_NO",          32648));
+    cMap->insert(String2Int::value_type("OCR_HAND",        32649));
+    cMap->insert(String2Int::value_type("OCR_APPSTARTING", 32650));
+
+    cMap->insert(String2Int::value_type("OBM_CLOSE",    32754));
+    cMap->insert(String2Int::value_type("OBM_UPARROW",  32753));
+    cMap->insert(String2Int::value_type("OBM_DNARROW",  32752));
+    cMap->insert(String2Int::value_type("OBM_RGARROW",  32751));
+    cMap->insert(String2Int::value_type("OBM_LFARROW",  32750));
+    cMap->insert(String2Int::value_type("OBM_REDUCE",   32749));
+    cMap->insert(String2Int::value_type("OBM_ZOOM",     32748));
+    cMap->insert(String2Int::value_type("OBM_RESTORE",  32747));
+    cMap->insert(String2Int::value_type("OBM_REDUCED",  32746));
+    cMap->insert(String2Int::value_type("OBM_ZOOMD",    32745));
+    cMap->insert(String2Int::value_type("OBM_RESTORED", 32744));
+    cMap->insert(String2Int::value_type("OBM_UPARROWD", 32743));
+    cMap->insert(String2Int::value_type("OBM_DNARROWD", 32742));
+    cMap->insert(String2Int::value_type("OBM_RGARROWD", 32741));
+    cMap->insert(String2Int::value_type("OBM_LFARROWD", 32740));
+    cMap->insert(String2Int::value_type("OBM_MNARROW",  32739));
+    cMap->insert(String2Int::value_type("OBM_COMBO",    32738));
+    cMap->insert(String2Int::value_type("OBM_UPARROWI", 32737));
+    cMap->insert(String2Int::value_type("OBM_DNARROWI", 32736));
+    cMap->insert(String2Int::value_type("OBM_RGARROWI", 32735));
+    cMap->insert(String2Int::value_type("OBM_LFARROWI", 32734));
+
+    cMap->insert(String2Int::value_type("OBM_SIZE",        32766));
+    cMap->insert(String2Int::value_type("OBM_BTSIZE",      32761));
+    cMap->insert(String2Int::value_type("OBM_CHECK",       32760));
+    cMap->insert(String2Int::value_type("OBM_CHECKBOXES",  32759));
+    cMap->insert(String2Int::value_type("OBM_BTNCORNERS",  32758));
+
+    cMap->insert(String2Int::value_type("LR_DEFAULTCOLOR",     0x0000));
+    cMap->insert(String2Int::value_type("LR_MONOCHROME",       0x0001));
+    cMap->insert(String2Int::value_type("LR_COLOR",            0x0002));
+    cMap->insert(String2Int::value_type("LR_COPYRETURNORG",    0x0004));
+    cMap->insert(String2Int::value_type("LR_COPYDELETEORG",    0x0008));
+    cMap->insert(String2Int::value_type("LR_LOADFROMFILE",     0x0010));
+    cMap->insert(String2Int::value_type("LR_LOADTRANSPARENT",  0x0020));
+    cMap->insert(String2Int::value_type("LR_DEFAULTSIZE",      0x0040));
+    cMap->insert(String2Int::value_type("LR_VGACOLOR",         0x0080));
+    cMap->insert(String2Int::value_type("LR_LOADMAP3DCOLORS",  0x1000));
+    cMap->insert(String2Int::value_type("LR_CREATEDIBSECTION", 0x2000));
+    cMap->insert(String2Int::value_type("LR_COPYFROMRESOURCE", 0x4000));
+    cMap->insert(String2Int::value_type("LR_SHARED",           0x8000));
+
+
+    //cMap->insert(String2Int::value_type("", ));
+
+    return cMap;
+}
+
+#define PUT_IMAGE_METHOD_CLS "forward MESSAGE \"saveImage\"\n"
+#define DEL_IMAGE_METHOD_CLS "forward MESSAGE \"removeImage\"\n"
+
+#define REAL_INIT_METHOD "forward MESSAGE \"assignImage\"\n"
+
+RexxMethod1(RexxObjectPtr, image_init_cls, OSELF, self)
+{
+    RexxMethodContext *c = context;
+
+    RexxObjectPtr mObj = c->NewMethod("putImage", PUT_IMAGE_METHOD_CLS, strlen(PUT_IMAGE_METHOD_CLS));
+    c->SendMessage(self, "SETMETHOD", c->ArrayOfThree(c->String("putImage"), mObj, c->String("OBJECT")));
+
+    mObj = c->NewMethod("delImage", DEL_IMAGE_METHOD_CLS, strlen(DEL_IMAGE_METHOD_CLS));
+    c->SendMessage(self, "SETMETHOD", c->ArrayOfThree(c->String("delImage"), mObj, c->String("OBJECT")));
+
+    mObj = c->NewMethod("realInit", REAL_INIT_METHOD, strlen(REAL_INIT_METHOD));
+    c->SendMessage(self, "DEFINE", c->ArrayOfTwo(c->String("realInit"), mObj));
+
+    return NULLOBJECT;
+}
+
+RexxMethod1(RexxObjectPtr, image_saveImage_cls, RexxObjectPtr, image)
+{
+    return NULLOBJECT;
+}
+
+RexxMethod1(RexxObjectPtr, image_removeImage_cls, RexxObjectPtr, image)
+{
+    return NULLOBJECT;
+}
+
+RexxMethod1(int, image_id_cls, CSTRING, id)
+{
+    static String2Int *imageConstantsMap = NULL;
+
+    if ( imageConstantsMap == NULL )
+    {
+        imageConstantsMap = imageInitMap();
+    }
+    int idValue = getConstantValue(imageConstantsMap, id);
+    if ( idValue == -1 )
+    {
+        wrongArgValueException(context, 1, "the Image class symbol IDs", id);
+    }
+    return idValue;
+}
+
+
+/** Image::getImage()  [class method]
+ *
+ *  Load a stand alone image from a file or one of the system images.
+ *
+ *
+ * @note  This method is designed to always return an .Image object, or raise an
+ *        exception.  The user would need to test the returned .Image object for
+ *        null to be sure it is good.  I.e.:
+ *
+ *        image = .Image~getImage(...)
+ *        if image~isNull then do
+ *          -- error
+ *        end
+ */
+RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8_t, type,
+            OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags)
+{
+    RexxObjectPtr result = NULLOBJECT;
+    SIZE s = {0};
+
+    oodSetSysErrCode(context, 0);
+
+    bool fromFile = true;
+    LPCTSTR name = NULL;
+
+    if ( context->IsString(id) )
+    {
+        name = context->StringData((RexxStringObject)id);
+    }
+    else
+    {
+        int resourceID;
+
+        if ( ! context->Int32(id, &resourceID) )
+        {
+            wrongArgValueException(context, 1, "either an image file name, or a system image ID", id);
+            goto out;
+        }
+        name = MAKEINTRESOURCE(resourceID);
+        fromFile = false;
+    }
+
+    if ( argumentOmitted(2) )
+    {
+        type = IMAGE_BITMAP;
+    }
+    if ( argumentExists(3) )
+    {
+        SIZE *p = rxGetSize(context, size, 3);
+        if ( p == NULL )
+        {
+            goto out;
+        }
+        s.cx = p->cx;
+        s.cy = p->cy;
+    }
+    else
+    {
+        size = rxNewSize(context, s.cx, s.cy);
+    }
+
+    if ( argumentOmitted(4) )
+    {
+        if ( fromFile )
+        {
+            flags = LR_LOADFROMFILE | LR_VGACOLOR;
+        }
+        else
+        {
+            flags = LR_SHARED | LR_DEFAULTSIZE | LR_VGACOLOR;
+        }
+    }
+    else
+    {
+        if ( fromFile )
+        {
+            // Ensure the user did not use shared and did use load from file.
+            flags = (flags &  ~LR_SHARED) | LR_LOADFROMFILE;
+        }
+        else
+        {
+            // Ensure the user did not use load from file and did use shared.
+            flags = (flags &  ~LR_LOADFROMFILE) | LR_SHARED;
+        }
+    }
+
+    HANDLE hImage = LoadImage(NULL, name, type, s.cx, s.cy, flags);
+    if ( hImage == NULL )
+    {
+        oodSetSysErrCode(context);
+        result = rxNewEmptyImage(context);
+        goto out;
+    }
+
+    result = rxNewImage(context, hImage, type, size, flags, "");
+
+out:
+    return result;
+}
+
+RexxMethod3(uint32_t, image_colorRef_cls, OPTIONAL_RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+{
+    uint32_t red;
+
+    // Note that if arg 2 and 3 are omitted, then g and b will be 0.  Since 0 is
+    // the default, we do not need to check for ommitted args for g and b.
+
+    if ( argumentOmitted(1) )
+    {
+        red = 0;
+    }
+    else if ( context->IsString(r) )
+    {
+        const char * s = context->ObjectToStringValue(r);
+        if ( *s == 'D' || *s == 'd' )
+        {
+            return CLR_DEFAULT;
+        }
+        else if ( *s == 'N' || *s == 'n' )
+        {
+            return CLR_NONE;
+        }
+        else
+        {
+            wrongArgValueException(context, 1, "DEFAULT, NONE", s);
+            return 0;
+        }
+    }
+    else if ( ! context->ObjectToUnsignedInt32(r, &red) || red > 0xff )
+    {
+        wrongRangeException(context, 1, 0, 255, r);
+        return 0;
+    }
+
+    return RGB((uint8_t)red, g, b);
+}
+
+RexxMethod1(uint8_t, image_getRValue_cls, uint32_t, colorRef) { return GetRValue(colorRef); }
+RexxMethod1(uint8_t, image_getGValue_cls, uint32_t, colorRef) { return GetGValue(colorRef); }
+RexxMethod1(uint8_t, image_getBValue_cls, uint32_t, colorRef) { return GetBValue(colorRef); }
+
+
+/** Image::init()
+ *
+ *
+ */
+RexxMethod0(RexxObjectPtr, image_init)
+{
+    RexxBufferObject obj = context->NewBuffer(sizeof(OODIMAGE));
+    context->SetObjectVariable("CSELF", obj);
+
+    POODIMAGE cself = (POODIMAGE)context->BufferData(obj);
+
+    // Set everything to invalid.
+    memset(cself, 0, sizeof(OODIMAGE));
+    cself->type = -1;
+    cself->size.cx = -1;
+    cself->size.cy = -1;
+
+    return NULLOBJECT;
+}
+
+/** Image::assignImage  [private method]
+ *
+ *
+ */
+RexxMethod6(RexxObjectPtr, image_assignImage, POINTER, hImage, uint8_t, type, RexxObjectPtr, size,
+            uint32_t, flags, CSTRING, fileName, CSELF, oi)
+{
+    POODIMAGE pOI = (POODIMAGE)oi;
+
+    if ( hImage == NULL )
+    {
+        nullPointerException(context, 1);
+        goto out;
+    }
+    if ( type > 3 )
+    {
+        wrongRangeException(context, 2, 0, 3, type);
+        goto out;
+    }
+
+    SIZE *s = rxGetSize(context, size, 3);
+    if ( s == NULL )
+    {
+        goto out;
+    }
+
+    pOI->hImage = hImage;
+    pOI->type = type;
+    pOI->size.cx = s->cx;
+    pOI->size.cy = s->cy;
+    pOI->flags = flags;
+    pOI->isValid = true;
+    pOI->canRelease = ! (flags & LR_SHARED);
+
+out:
+    return NULLOBJECT;
+}
+
+RexxMethod1(POINTER, image_handle, CSELF, oi)
+{
+    if ( ! ((POODIMAGE)oi)->isValid )
+    {
+        imageInvalidException(context);
+    }
+    return ((POODIMAGE)oi)->hImage;
+}
+
+RexxMethod1(logical_t, image_isNull, CSELF, oi) { return ( ! ((POODIMAGE)oi)->isValid ); }
+RexxMethod1(uint32_t, image_systemErrorCode, CSELF, oi) { return ((POODIMAGE)oi)->lastError; }
+
+
+/**
+ * Methods for the ooDialog .ResourceImage class.
+ */
+#define RESOURCE_IMAGE_CLASS  "ResourceImage"
+
+
+typedef struct _RESOURCEIMAGE
+{
+    HMODULE  hMod;
+    DWORD    lastError;
+    bool     canRelease;
+    bool     isValid;
+} RESOURCEIMAGE, *PRESOURCEIMAGE;
+
+void riInvalidException(RexxMethodContext *c)
+{
+    userDefinedMsgException(c, "The ResourceImage object is null");
+}
+
+/** ResouceImage::init()
+ *
+ *
+ */
+RexxMethod2(RexxObjectPtr, ri_init, CSTRING, file, OPTIONAL_RexxObjectPtr, dlg)
+{
+    oodSetSysErrCode(context, 0);
+
+    RexxBufferObject cself = context->NewBuffer(sizeof(RESOURCEIMAGE));
+    context->SetObjectVariable("CSELF", cself);
+
+    PRESOURCEIMAGE ri = (PRESOURCEIMAGE)context->BufferData(cself);
+    memset(ri, 0, sizeof(RESOURCEIMAGE));
+
+    if ( argumentOmitted(2) )
+    {
+        ri->hMod = LoadLibraryEx(file, NULL, LOAD_LIBRARY_AS_DATAFILE);
+        if ( ri->hMod == NULL )
+        {
+            ri->lastError = GetLastError();
+            oodSetSysErrCode(context, ri->lastError);
+        }
+        else
+        {
+            ri->canRelease = true;
+            ri->isValid = true;
+        }
+    }
+    else
+    {
+        if ( ! requiredClass(context, dlg, "PlainBaseDialog", 2) )
+        {
+            goto err_out;
+        }
+
+        if ( stricmp(OODDLL, file) == 0 )
+        {
+            ri->hMod = MyInstance;
+            ri->isValid = true;
+        }
+        else
+        {
+            if ( ! requiredClass(context, dlg, "ResDialog", 2) )
+            {
+                goto err_out;
+            }
+
+            DIALOGADMIN *adm = rxGetDlgAdm(context, dlg);
+            if ( adm == NULL )
+            {
+                goto err_out;
+            }
+
+            ri->hMod = adm->TheInstance;
+            ri->isValid = true;
+        }
+    }
+
+    return NULLOBJECT;
+
+err_out:
+
+    // 1812 ERROR_RESOURCE_DATA_NOT_FOUND
+    // The specified image file did not contain a resource section.
+
+    ri->lastError = 1812;
+    oodSetSysErrCode(context, ri->lastError);
+    return NULLOBJECT;
+}
+
+RexxMethod1(uint32_t, ri_release, CSELF, r)
+{
+    uint32_t rc = 0;
+    PRESOURCEIMAGE ri = (PRESOURCEIMAGE)r;
+
+    if ( ri->canRelease )
+    {
+        if ( ! FreeLibrary((HMODULE)ri->hMod) )
+        {
+            rc = GetLastError();
+        }
+    }
+
+    ri->canRelease = false;
+    ri->isValid = false;
+    ri->hMod = NULL;
+    ri->lastError = rc;
+    oodSetSysErrCode(context, ri->lastError);
+
+    return rc;
+}
+
+RexxMethod1(POINTER, ri_handle, CSELF, ri)
+{
+    if ( ! ((PRESOURCEIMAGE)ri)->isValid )
+    {
+        riInvalidException(context);
+    }
+    return ((PRESOURCEIMAGE)ri)->hMod;
+}
+
+RexxMethod1(logical_t, ri_isNull, CSELF, ri) { return ( ! ((PRESOURCEIMAGE)ri)->isValid); }
+RexxMethod1(uint32_t, ri_systemErrorCode, CSELF, ri) { return ((PRESOURCEIMAGE)ri)->lastError; }
+
+/** ResourceImage::getImage()
+ *
+ * Loads an image from this resource binary.
+ *
+ *
+ * @return  An instantiated .Image object, which may be a null Image if an error
+ *          occurred.
+ *
+ * @note  This method is designed to always return an .Image object, or raise an
+ *        exception.  The user would need to test the returned .Image object for
+ *        null to be sure it is good.  I.e.:
+ *
+ *        mod = .ResourceImage~new(...)
+ *        ...
+ *        image = mod~getImage(...)
+ *        if image~isNull then do
+ *          -- error
+ *        end
+ */
+RexxMethod5(RexxObjectPtr, ri_getImage, int, id, OPTIONAL_uint8_t, type,
+            OPTIONAL_RexxObjectPtr, size, OPTIONAL_uint32_t, flags, CSELF, cself)
+{
+    PRESOURCEIMAGE ri = (PRESOURCEIMAGE)cself;
+    RexxObjectPtr result = NULLOBJECT;
+    SIZE s = {0};
+
+    oodSetSysErrCode(context, 0);
+    ri->lastError = 0;
+
+    if ( ! ri->isValid )
+    {
+        riInvalidException(context);
+        goto out;
+    }
+
+    if ( argumentOmitted(2) )
+    {
+        type = IMAGE_BITMAP;
+    }
+
+    if ( argumentExists(3) )
+    {
+        SIZE *p = rxGetSize(context, size, 3);
+        if ( p == NULL )
+        {
+            goto out;
+        }
+        s.cx = p->cx;
+        s.cy = p->cy;
+    }
+    else
+    {
+        size = rxNewSize(context, s.cx, s.cy);
+    }
+
+    if ( argumentOmitted(4) )
+    {
+        flags = LR_SHARED | LR_VGACOLOR;
+    }
+
+    HANDLE hImage = LoadImage(ri->hMod, MAKEINTRESOURCE(id), type, s.cx, s.cy, flags);
+    if ( hImage == NULL )
+    {
+        ri->lastError = GetLastError();
+        oodSetSysErrCode(context, ri->lastError);
+        result = rxNewEmptyImage(context);
+        goto out;
+    }
+
+    result = rxNewImage(context, hImage, type, size, flags, "");
+
+out:
+    return result;
+}
+
+/**
  * Methods for the ooDialog .Point class.
  */
+#define POINT_CLASS  "Point"
+
+
 RexxMethod2(RexxObjectPtr, point_init, OPTIONAL_int32_t,  x, OPTIONAL_int32_t, y)
 {
     RexxBufferObject obj = context->NewBuffer(sizeof(POINT));
@@ -4719,6 +5471,8 @@ RexxMethod2(RexxObjectPtr, point_setY, CSELF, p, int32_t, y) { ((POINT *)p)->y =
 /**
  * Methods for the ooDialog .Size class.
  */
+#define SIZE_CLASE  "Size"
+
 RexxMethod2(RexxObjectPtr, size_init, OPTIONAL_int32_t, cx, OPTIONAL_int32_t, cy)
 {
     RexxBufferObject obj = context->NewBuffer(sizeof(SIZE));
@@ -4740,6 +5494,8 @@ RexxMethod2(RexxObjectPtr, size_setCY, CSELF, s, int32_t, cy) { ((SIZE *)s)->cy 
 /**
  * Methods for the ooDialog .Rect class.
  */
+#define RECT_CLASS  "Rect"
+
 RexxMethod4(RexxObjectPtr, rect_init, OPTIONAL_int32_t, left, OPTIONAL_int32_t, top,
             OPTIONAL_int32_t, right, OPTIONAL_int32_t, bottom)
 {
@@ -4764,6 +5520,11 @@ RexxMethod2(RexxObjectPtr, rect_setLeft, CSELF, pRect, int32_t, left) { ((RECT *
 RexxMethod2(RexxObjectPtr, rect_setTop, CSELF, pRect, int32_t, top) { ((RECT *)pRect)->top = top; return NULLOBJECT; }
 RexxMethod2(RexxObjectPtr, rect_setRight, CSELF, pRect, int32_t, right) { ((RECT *)pRect)->right = right; return NULLOBJECT; }
 RexxMethod2(RexxObjectPtr, rect_setBottom, CSELF, pRect, int32_t, bottom) { ((RECT *)pRect)->bottom = bottom; return NULLOBJECT; }
+
+/**
+ * Methods for the .DlgUtil class.
+ */
+#define DLG_UTIL_CLASS  "DlgUtil"
 
 #define COMCTL_ERR_TITLE    "ooDialog - Windows Common Controls Error"
 #define GENERIC_ERR_TITLE   "ooDialog - Error"
@@ -4922,15 +5683,15 @@ bool initCommonControls(RexxMethodContext *context, DWORD classes, CSTRING packa
  * Windows 98, and Windows 2000.
  *
  * 2.) Initializes a null pointer Pointer object and places it in the .local
- * directory. (.NullPointer)  This allows ooRexx code to test for a null
- * pointer.
+ * directory. (.NullHandle)  This allows ooRexx code to use a null handle for an
+ * argument where appropriate.
  *
  * 3.) Places the SystemErrorCode (.SystemErrorCode) variable in the .local
  * directory.
  *
  * @return .true if comctl32.dll is at least version 4.71, otherwise .false.
  */
-RexxMethod0(logical_t, dlgutil_init)
+RexxMethod0(logical_t, dlgutil_init_cls)
 {
     if ( ! getComCtl32Version(context, &ComCtl32Version, COMCTL32_4_71, "ooDialog", COMCTL_ERR_TITLE) )
     {
@@ -4946,14 +5707,14 @@ RexxMethod0(logical_t, dlgutil_init)
     RexxDirectoryObject local = context->GetLocalEnvironment();
     if ( local != NULLOBJECT )
     {
-        context->DirectoryPut(local, context->NewPointer(NULL), "NULLPOINTER");
+        context->DirectoryPut(local, context->NewPointer(NULL), "NULLHANDLE");
         context->DirectoryPut(local, context->WholeNumberToObject(0), "SYSTEMERRORCODE");
     }
 
     return true;
 }
 
-/** DlgUtil::comCtl32Version()  [Class method]
+/** DlgUtil::comCtl32Version()  [class method]
  *
  * Returns the comctl32.dll version that ooDialog is currently using in one of
  * the 4 formats listed below.
@@ -4970,7 +5731,7 @@ RexxMethod0(logical_t, dlgutil_init)
  *   Short:   Same as number.
  *   OS:      The OS name part of the full string.
  */
-RexxMethod1(RexxStringObject, dlgutil_comctl32Version, OPTIONAL_CSTRING, format)
+RexxMethod1(RexxStringObject, dlgutil_comctl32Version_cls, OPTIONAL_CSTRING, format)
 {
     const char *ver;
     char f = argumentOmitted(1) ? 'S' : *format;
@@ -4998,7 +5759,7 @@ RexxMethod1(RexxStringObject, dlgutil_comctl32Version, OPTIONAL_CSTRING, format)
     return context->String(ver);
 }
 
-/** DlgUtil::version()  [Class method]
+/** DlgUtil::version()  [class method]
  *
  *  Returns the ooDialog version string, either the full string, or just the
  *  number part of the string.
@@ -5009,7 +5770,7 @@ RexxMethod1(RexxStringObject, dlgutil_comctl32Version, OPTIONAL_CSTRING, format)
  *                 short form (number part of the string) is returned.  In all
  *                 other cases the full string is returned.
  */
-RexxMethod1(RexxStringObject, dlgutil_version, OPTIONAL_CSTRING, format)
+RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
 {
     char buf[64];
 
@@ -5024,61 +5785,13 @@ RexxMethod1(RexxStringObject, dlgutil_version, OPTIONAL_CSTRING, format)
     return context->String(buf);
 }
 
-RexxMethod3(uint32_t, dlgutil_colorRef, RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+RexxMethod1(logical_t, dlgutil_test_cls, RexxObjectPtr, obj)
 {
-    size_t count = rxArgCount(context);
-
-    if ( count == 1 )
-    {
-        if (! context->IsString(r) )
-        {
-            wrongClassException(context, 1, "String");
-            return 0;
-        }
-        const char * s = context->ObjectToStringValue(r);
-        if ( *s == 'D' || *s == 'd' )
-        {
-            return CLR_DEFAULT;
-        }
-        else if ( *s == 'N' || *s == 'n' )
-        {
-            return CLR_NONE;
-        }
-        else
-        {
-            wrongArgValueException(context, 1, "DEFAULT, NONE", s);
-            return 0;
-        }
-    }
-
-    if ( count != 3 )
-    {
-        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->WholeNumberToObject(3));
-        return 0;
-    }
-
-    uint32_t red;
-    if ( ! context->ObjectToUnsignedInt32(r, &red) )
-    {
-        context->RaiseException2(Rexx_Error_Incorrect_method_whole, context->WholeNumberToObject(1), r);
-        return 0;
-    }
-    if ( red > 0xff )
-    {
-        context->RaiseException(Rexx_Error_Invalid_argument_range,
-                                context->ArrayOfFour(context->WholeNumber(1), context->WholeNumber(0),
-                                                     context->WholeNumber(255), r));
-        return 0;
-    }
-
-    return RGB((uint8_t)red, g, b);
+    return 0;
 }
 
-RexxMethod1(uint8_t, dlgutil_getRValue, uint32_t, colorRef) { return GetRValue(colorRef); }
-RexxMethod1(uint8_t, dlgutil_getGValue, uint32_t, colorRef) { return GetGValue(colorRef); }
-RexxMethod1(uint8_t, dlgutil_getBValue, uint32_t, colorRef) { return GetBValue(colorRef); }
-RexxMethod1(uint16_t, dlgutil_hiWord, uint32_t, dw) { return HIWORD(dw); }
-RexxMethod1(uint16_t, dlgutil_loWord, uint32_t, dw) { return LOWORD(dw); }
+RexxMethod1(uint16_t, dlgutil_hiWord_cls, uint32_t, dw) { return HIWORD(dw); }
+RexxMethod1(uint16_t, dlgutil_loWord_cls, uint32_t, dw) { return LOWORD(dw); }
 
 /**
  * A temporary utility to convert from a handle that is still being stored in
@@ -5086,8 +5799,8 @@ RexxMethod1(uint16_t, dlgutil_loWord, uint32_t, dw) { return LOWORD(dw); }
  * interface is needed to facilitate testing Windows extensions that have been
  * converted to only use pointer valules.
  */
-RexxMethod1(POINTER, dlgutil_handleToPointer, CSTRING, handle)
+RexxMethod1(POINTER, dlgutil_handleToPointer_cls, POINTERSTRING, handle)
 {
-    return string2pointer(handle);
+    return handle;
 }
 

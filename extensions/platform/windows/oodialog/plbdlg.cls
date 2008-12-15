@@ -47,16 +47,13 @@
 
 
 ::class 'DlgUtil' public
-::method init class external "LIBRARY oodialog dlgutil_init"
-::method version class external "LIBRARY oodialog dlgutil_version"
-::method comctl32Version class external "LIBRARY oodialog dlgutil_comctl32Version"
-::method hiWord class external "LIBRARY oodialog dlgutil_hiWord"
-::method loWord class external "LIBRARY oodialog dlgutil_loWord"
-::method colorRef class external "LIBRARY oodialog dlgutil_colorRef"
-::method getRValue class external "LIBRARY oodialog dlgutil_getRValue"
-::method getGValue class external "LIBRARY oodialog dlgutil_getGValue"
-::method getBValue class external "LIBRARY oodialog dlgutil_getBValue"
-::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer"
+::method init class external "LIBRARY oodialog dlgutil_init_cls"
+::method version class external "LIBRARY oodialog dlgutil_version_cls"
+::method comctl32Version class external "LIBRARY oodialog dlgutil_comctl32Version_cls"
+::method hiWord class external "LIBRARY oodialog dlgutil_hiWord_cls"
+::method loWord class external "LIBRARY oodialog dlgutil_loWord_cls"
+::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
+::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
 ::class 'Rect' public
 ::method init external "LIBRARY oodialog rect_init"

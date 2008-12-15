@@ -182,6 +182,9 @@ size_t RexxEntry GetStdTextSize(const char *funcname, size_t argc, CONSTRXSTRING
 }
 
 
+/**
+ * This classic Rexx external function was documented prior to 4.0.0.
+ */
 size_t RexxEntry GetScreenSize(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    ULONG sx, sy;
@@ -199,12 +202,16 @@ size_t RexxEntry GetScreenSize(const char *funcname, size_t argc, CONSTRXSTRING 
 }
 
 
+/**
+ * This classic Rexx external function was documented prior to 4.0.0.
+ */
 size_t RexxEntry GetSysMetrics(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
     ULONG uVal;
 
-    /* The intent is to extend this function in the future to get multiple, and
-     * perhaps all, values at once.
+    /* The intent was to extend this function in the future to get multiple, and
+     * perhaps all, values at once.  Now the intent is to add the functionnality
+     * to get multiple values at once to .DlgUtil.
      */
     if ( argc == 1 )
     {

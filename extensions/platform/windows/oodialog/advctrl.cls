@@ -1541,19 +1541,13 @@
 
 ::class 'StaticControl' subclass DialogControl public
 
-::method SetIcon
-   use strict arg hIcon
-   return SendWinMsg("ANY", self~hwnd, "0x0170", hIcon, 0) -- 0x0170 == STM_SETICON
+::method getIcon external "LIBRARY oodialog stc_getIcon"
+::method setIcon external "LIBRARY oodialog stc_setIcon"
+::method getImage external "LIBRARY oodialog stc_getImage"
+::method setImage external "LIBRARY oodialog stc_setImage"
+::method getText external "LIBRARY oodialog stc_getText"
+::method setText external "LIBRARY oodialog stc_setText"
 
-::method GetIcon
-   return SendWinMsg("ANY", self~hwnd, "0x0171", "0x0", 0) -- 0x0171 == STM_GETICON
-
-::method SetText
-    use strict arg text
-    return HandleControlEx(self~hDlg, self~id, "E", "TXT", text)
-
-::method GetText
-    return HandleControlEx(self~hDlg, self~id, "E", "TXT")
 
 /****************************************************** Edit Control Class *********************************************************/
 
@@ -1710,7 +1704,7 @@
 ::method "style=" external "LIBRARY oodialog gb_setStyle"
 
 ::class 'ButtonControl' subclass DialogControl public
-::method releaseImageList class external "LIBRARY oodialog bc_cls_releaseImageList"
+::method releaseImageList class external "LIBRARY oodialog bc_releaseImageList_cls"
 
 ::constant BUTTON_IMAGELIST_ALIGN_LEFT 0
 ::constant BUTTON_IMAGELIST_ALIGN_RIGHT 1
@@ -1800,7 +1794,7 @@
 
 
 ::class 'RadioButton' subclass ButtonControl public
-::method checkInGroup class external "LIBRARY oodialog bc_cls_checkInGroup"
+::method checkInGroup class external "LIBRARY oodialog bc_checkInGroup_cls"
 
 ::method checked external "LIBRARY oodialog bc_checked"
 ::method isChecked external "LIBRARY oodialog bc_isChecked"
@@ -2179,3 +2173,5 @@
 ::method setDate
   use strict arg day, month, year = (date('S')~left(4))
   return HandleMonthCalendar(self~hwnd, 'S', 'CUR', day month year)
+
+

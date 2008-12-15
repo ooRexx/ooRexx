@@ -204,23 +204,6 @@
    use arg hBitmap
    return LoadRemoveBitmap(0 /* NULL Adm */, hBitmap, "REMOVE")
 
-::method LoadSysIcon unguarded
-   use strict arg iconName
-   return WinAPI32Func('I', 'S', iconName~translate)
-
-::method LoadIconDirect unguarded
-   use strict arg iconID, cx = 0, cy = 0, src = 'U'
-   if \ iconID~isA(.string) then return -1
-   if \ iconID~datatype("W") then iconID = self~ResolveSymbolicId(iconID)
-   if iconID = -1 then return iconID
-   if src~left(1)~translate == 'D' then src = 'D'
-   else src = 'U'
-   return WinAPI32Func('I', 'N', self~adm, iconID, cx, cy, src)
-
-::method LoadIcon unguarded
-   use strict arg fileName, cx = 0, cy = 0
-   return WinAPI32Func('I', 'F', fileName, cx, cy)
-
 ::method CreateBrush unguarded
     use arg color, brushSpecifier
     if Arg() = 0 then return HandleDC_Obj("B")
@@ -393,14 +376,6 @@
    ret.bottom = b/self~FactorY
    return ret.
 
-    /* create a COLORREF */
-::method RGB   /* currently only color indexes are supported by functions using colors */
-   use arg red, green, blue
-   if Arg(1,'o') = 1 then red = 0
-   if Arg(2,'o') = 1 then green = 0
-   if Arg(3,'o') = 1 then blue = 0
-   return (blue*256*256) + (green*256) + red
-
 /** class: BaseDialog
  * Implements methods that are common to all 3 types of dialogs, ResDialog,
  * RcDialog, and UserDialog.
@@ -420,3 +395,33 @@
    self~bkgBrushBmp = 0   -- no background bitmap
    self~menuBar = .nil
    return 0
+
+
+::class 'ResourceImage' public
+
+::method init external "LIBRARY oodialog ri_init"
+::method release external "LIBRARY oodialog ri_release"
+::method handle external "LIBRARY oodialog ri_handle"
+::method isNull external "LIBRARY oodialog ri_isNull"
+::method systemErrorCode external "LIBRARY oodialog ri_systemErrorCode"
+::method getImage external "LIBRARY oodialog ri_getImage"
+
+
+::class 'Image' public
+
+::method init class external "LIBRARY oodialog image_init_cls"
+::method id class external "LIBRARY oodialog image_id_cls"
+::method getImage class external "LIBRARY oodialog image_getImage_cls"
+::method saveImage class private external "LIBRARY oodialog image_saveImage_cls"
+::method removeImage class private external "LIBRARY oodialog image_removeImage_cls"
+
+::method colorRef class external "LIBRARY oodialog image_colorRef_cls"
+::method getRValue class external "LIBRARY oodialog image_getRValue_cls"
+::method getGValue class external "LIBRARY oodialog image_getGValue_cls"
+::method getBValue class external "LIBRARY oodialog image_getBValue_cls"
+
+::method init external "LIBRARY oodialog image_init"
+::method handle external "LIBRARY oodialog image_handle"
+::method isNull external "LIBRARY oodialog image_isNull"
+::method systemErrorCode external "LIBRARY oodialog image_systemErrorCode"
+::method assignImage private external "LIBRARY oodialog image_assignImage"
