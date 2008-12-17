@@ -578,6 +578,28 @@ RexxMethod * RexxObject::checkPrivate(
         {
             return method;                   /* just return the same method       */
         }
+        // no sender means this is a routine or program context.  Definitely not allowed.
+        if (sender == OREF_NULL)
+        {
+            return OREF_NULL;
+        }
+        // ok, now we check the various scope possibilities
+        RexxClass *scope = method->getScope();
+        // 1) Another instance of the same class that defined the method?
+        if (sender->isInstanceOf(scope) )
+        {
+            return method;       // ok, we'll allow this
+        }
+        // if the sender is a class object, check the class for compatibility with the
+        // method scope
+        if (isOfClassType(Class, sender))
+        {
+            // if this class is part of the compatible hierarchy, this is also permitted
+            if (((RexxClass *)sender)->isCompatibleWith(scope))
+            {
+                return method;
+            }
+        }
     }
     return OREF_NULL;                    /* return a failure indicator        */
 }
