@@ -124,14 +124,14 @@ case "$target" in
 #     ORX_SHARED_LIBRARY_EXT=".a"
       case "$CXX" in
          g++)
-            CC_WARNINGS="-maix32 -mthreads $GCC_WARNINGS"
-            CXX_WARNINGS="-maix32 -mthreads $GCXX_WARNINGS"
+            CC_WARNINGS="-maix32 -pthread $GCC_WARNINGS"
+            CXX_WARNINGS="-maix32 -pthread $GCXX_WARNINGS"
             ;;
          xlC_r)
             CC_WARNINGS="$XLC_WARNINGS"
             CXX_WARNINGS="$XLCXX_WARNINGS"
-            LDFLAGS="-Wl,-brtl"
-            ORX_INIT_LDFLAGS="-Wl,-binitfini:_init:_fini -Wl,-bmaxdata:0x80000000"
+            ORX_LDFLAGS_PACKAGE=""
+            ORX_INIT_LDFLAGS="-Wl,-binitfini:_init:_fini"
             ;;
          *)
 dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")

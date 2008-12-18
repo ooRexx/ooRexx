@@ -691,10 +691,9 @@ librexx_la_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                        -I$(build_messages_dir) \
                        -I$(build_streamlibrary_dir) \
                        -I$(build_interpreter_common_dir) \
-                       -I$(build_interpreter_platform_dir) \
-                       -I$(build_rexxapi_platform_dir)
+                       -I$(build_interpreter_platform_dir)
 
-librexx_la_LDFLAGS = $(VERSION_INFO) -nostartfiles
+librexx_la_LDFLAGS = $(VERSION_INFO) @ORX_LDFLAGS_PACKAGE@
 
 #################### rxapi ##########################
 # Sources for rxapi
@@ -799,8 +798,7 @@ rxqueue_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                     -I$(build_api_dir) \
                     -I$(build_api_platform_dir) \
                     -I$(build_interpreter_platform_dir) \
-                    -I$(build_messages_dir) \
-                    -I$(build_rexxapi_platform_dir)
+                    -I$(build_messages_dir)
 #
 # Extra libraries for rxqueue
 #
@@ -819,8 +817,7 @@ rxsubcom_CXXFLAGS  = $(COMMON_CPPFLAGS) \
                     -I$(build_api_dir) \
                     -I$(build_api_platform_dir) \
                     -I$(build_interpreter_platform_dir) \
-                    -I$(build_messages_dir) \
-                    -I$(build_rexxapi_platform_dir)
+                    -I$(build_messages_dir)
 #
 # Extra libraries for rxsubcom
 #
