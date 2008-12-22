@@ -3533,7 +3533,9 @@ RexxMethod3(RexxObjectPtr,                // Return type
 
             context->SendMessage1(outArray,"APPEND", outObject);
 
-            if (context->IsInstanceOf(arrItem, variantClass))
+            // If the arg was ommitted (arrItem), it can not be an out
+            // parameter, but to be safe, check for NULLOBJECT.
+            if (arrItem != NULLOBJECT && context->IsInstanceOf(arrItem, variantClass))
             {
                 context->SendMessage1(arrItem, "!VARVALUE_=", outObject);
             }
@@ -3555,7 +3557,7 @@ RexxMethod3(RexxObjectPtr,                // Return type
          */
         handleVariantClear(context, &(dp.rgvarg[dp.cArgs-i-1]), arrItem);
 
-        if (context->IsInstanceOf(arrItem, variantClass))
+        if (arrItem != NULLOBJECT && context->IsInstanceOf(arrItem, variantClass))
         {
             context->SendMessage1(arrItem, "!CLEARVARIANT_=", context->True());
             context->SendMessage1(arrItem, "!VARIANTPOINTER_=", context->NewPointer(NULL));
@@ -3664,7 +3666,7 @@ ThreeStateReturn checkForOverride(RexxThreadContext *context, VARIANT *pVariant,
     // needed for instance of tests
     RexxClassObject variantClass = context->FindClass("OLEVARIANT");
 
-    if ( ! context->IsInstanceOf(RxObject, variantClass) )
+    if ( RxObject == NULLOBJECT || ! context->IsInstanceOf(RxObject, variantClass) )
     {
         *pRxObject = RxObject;
         *pDestVt   = DestVt;
@@ -3799,7 +3801,7 @@ BOOL isOutParam(RexxThreadContext *context, RexxObjectPtr param, POLEFUNCINFO pF
     // needed for instance of tests
     RexxClassObject variantClass = context->FindClass("OLEVARIANT");
 
-    if ( context->IsInstanceOf(param, variantClass) )
+    if ( param != NULLOBJECT && context->IsInstanceOf(param, variantClass) )
     {
         RexxObjectPtr tmpRxObj = context->SendMessage0(param, "!_PFLAGS_");
         if ( tmpRxObj != context->Nil() )
@@ -3904,7 +3906,7 @@ __inline BOOL okayToClear(RexxMethodContext *context, RexxObjectPtr RxObject )
     // needed for instance of tests
     RexxClassObject variantClass = context->FindClass("OLEVARIANT");
 
-    if (context->IsInstanceOf(RxObject, variantClass) )
+    if ( RxObject != NULLOBJECT && context->IsInstanceOf(RxObject, variantClass) )
     {
         return (context->SendMessage0(RxObject, "!CLEARVARIANT_") == context->True());
     }
