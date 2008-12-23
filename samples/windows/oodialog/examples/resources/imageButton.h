@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2007 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2008-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -34,32 +34,12 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
 
-  	ReadMe
-
-  1.  ooDialog Example Programs
-  -------------------------------
-
-  This directory contains example ooDialog programs.  They are intended to be
-  relatively short and simple programs that demonstrate how to use some feature
-  of ooDialog.
-
-    - publicRoutines_demo.rex
-
-    ooDialog contains a number of standard dialog and public routines.  The
-    standard dialogs and public routines are designed to be easy to use.  They
-    allow a programmer to added simple graphical elements to a program without
-    any detailed knowledge of the ooDialog framework.  The publicRoutines_demo
-    program demonstrates how to use these public routines.
-
-    - fileNameDialog_demo.rex
-
-    The FileNameDialog public routine allows a programmer to present the user
-    with the standard Windows Open or Save file dialog.  The fileNameDialog_demo
-    program demonstrates how to use this routine.
-
-    - imageButton.rex
-
-    This example program demonstrates some of the new features introduced in
-    ooRexx 4.0.0, including the .Image, .Imagelist classes, and the
-    setImageList() method of the button class.
+#define IDC_ST_STATUS                           1000
+#define IDC_PB_ADD                              1001
+#define IDD_IMAGELIST_BUTTON                    1033
+#define IDC_PB_PUSHME                           1042
+#define IDC_PB_VIEW                             1044
