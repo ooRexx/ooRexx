@@ -445,39 +445,39 @@
                opts = self~InternGetRCStyle(style, "ST")
                select
                   when style~wordpos("SS_LEFT") > 0 then
-                     self~AddText(x, y, w, h, name, opts, id)
+                     self~addText(x, y, w, h, name, opts, id)
                   when style~wordpos("SS_RIGHT") > 0 then
-                     self~AddText(x, y, w, h, name, opts || " RIGHT", id)
+                     self~addText(x, y, w, h, name, opts || " RIGHT", id)
                   when style~wordpos("SS_CENTER") > 0 then
-                     self~AddText(x, y, w, h, name, opts || " CENTER", id)
+                     self~addText(x, y, w, h, name, opts || " CENTER", id)
                   when style~wordpos("SS_SIMPLE") > 0 then
-                     self~AddText(x, y, w, h, name, opts || " SIMPLE", id)
+                     self~addText(x, y, w, h, name, opts || " SIMPLE", id)
                   when style~wordpos("SS_LEFTNOWORDWRAP") > 0 then
-                     self~AddText(x, y, w, h, name, opts || " LEFTNOWRAP", id)
+                     self~addText(x, y, w, h, name, opts || " LEFTNOWRAP", id)
                   when style~wordpos("SS_WHITERECT") > 0 then
-                     self~AddWhiteRect(x, y, w, h, opts, id)
+                     self~addWhiteRect(x, y, w, h, opts, id)
                   when style~wordpos("SS_GRAYRECT") > 0 then
-                     self~AddGrayRect(x, y, w, h, opts, id)
+                     self~addGrayRect(x, y, w, h, opts, id)
                   when style~wordpos("SS_BLACKRECT") > 0 then
-                     self~AddBlackRect(x, y, w, h, opts, id)
+                     self~addBlackRect(x, y, w, h, opts, id)
                   when style~wordpos("SS_WHITEFRAME") > 0 then
-                     self~AddWhiteFRAME(x, y, w, h, opts, id)
+                     self~addWhiteFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_GRAYFRAME") > 0 then
-                     self~AddGrayFRAME(x, y, w, h, opts, id)
+                     self~addGrayFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_BLACKFRAME") > 0 then
-                     self~AddBlackFRAME(x, y, w, h, opts, id)
+                     self~addBlackFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_ETCHEDFRAME") > 0 then
-                     self~AddEtchedFrame(x, y, w, h, opts, id)
+                     self~addEtchedFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_ETCHEDHORZ") > 0 then
-                     self~AddEtchedHorizontalFrame(x, y, w, h, opts, id)
+                     self~addEtchedHorizontalFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_ETCHEDVERT") > 0 then
-                     self~AddEtchedVerticalFrame(x, y, w, h, opts, id)
+                     self~addEtchedVerticalFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_BITMAP") > 0 then
-                     self~AddImage(id, x, y, w, h, "BITMAP " || opts)
+                     self~addImage(id, x, y, w, h, "BITMAP " || opts)
                   when style~wordpos("SS_ENHMETAFILE") > 0 then
-                     self~AddImage(id, x, y, w, h, "METAFILE " || opts)
+                     self~addImage(id, x, y, w, h, "METAFILE " || opts)
                   when style~wordpos("SS_ICON") > 0 then
-                     self~AddImage(id, x, y, w, h, "ICON " || opts)
+                     self~addImage(id, x, y, w, h, "ICON " || opts)
                   otherwise
                       ret = ErrorMessage("Static item ignored due to unknown static style option in:" || -
                                          '0d0a'x || f "("s")")
@@ -545,12 +545,12 @@
                if type = "CTEXT" then opts = opts || " CENTER";
                else if type = "RTEXT" then opts = opts || " RIGHT";
                else if style~wordpos("SS_LEFTNOWORDWRAP") > 0 then opts = opts || " LEFTNOWRAP";
-               self~AddText(x, y, w, h, name, opts, id)
+               self~addText(x, y, w, h, name, opts, id)
             end
 
             when type = "ICON" then do
                opts = self~InternGetRCStyle(style, "ST")
-               self~AddImage(id, x, y, w, h, "ICON " || opts)
+               self~addImage(id, x, y, w, h, "ICON " || opts)
             end
 
             when type = "GROUPBOX" then
@@ -640,7 +640,7 @@
      when opts~wordpos("TEXT") > 0 then return self~addText(x, y, cx, cy, text, opts, id)
 
      when opts~wordpos("BITMAP") > 0 | opts~wordpos("METAFILE") > 0 | opts~wordpos("ICON") > 0 then do
-        forward message "AddImage"
+        forward message "addImage"
      end
 
      when opts~wordpos("WHITERECT") > 0 then return self~InternAddStatic(argA, 0)
@@ -657,14 +657,14 @@
    end
    -- End select
 
-::method AddImage
+::method addImage
    use strict arg id, x, y, cx, cy, options = ""
    id = self~ItemAdd(id)
    if id < 0 then return id
    options = self~GetDefaultOpts(options)
    self~activePtr = UsrAddControl("IMG", self~activePtr, id, x, y, cx, cy, options)
 
-::method AddText
+::method addText
    use arg x, y, cx = 0, cy = 0, text = "", opts = "", id = (-1)
 
    if cx = 0 | cy = 0 then do
@@ -678,31 +678,31 @@
    self~activePtr = UsrAddControl("TXT", self~activePtr, x, y, cx, cy, opts, text, id)
    return 0
 
-::method AddWhiteRect
+::method addWhiteRect
    return self~InternAddStatic(Arg(1,"A"), 0)
 
-::method AddGrayRect
+::method addGrayRect
    return self~InternAddStatic(Arg(1,"A"), 1)
 
-::method AddBlackRect
+::method addBlackRect
    return self~InternAddStatic(Arg(1,"A"), 2)
 
-::method AddWhiteFrame
+::method addWhiteFrame
    return self~InternAddStatic(Arg(1,"A"), 3)
 
-::method AddGrayFrame
+::method addGrayFrame
    return self~InternAddStatic(Arg(1,"A"), 4)
 
-::method AddBlackFrame
+::method addBlackFrame
    return self~InternAddStatic(Arg(1,"A"), 5)
 
-::method AddEtchedFrame
+::method addEtchedFrame
    return self~InternAddStatic(Arg(1,"A"), 6)
 
-::method AddEtchedHorizontalFrame
+::method addEtchedHorizontalFrame
    return self~InternAddStatic(Arg(1,"A"), 7)
 
-::method AddEtchedVerticalFrame
+::method addEtchedVerticalFrame
    return self~InternAddStatic(Arg(1,"A"), 8)
 
 ::method InternAddStatic private
@@ -862,7 +862,7 @@
    end
    if Arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
    opts = self~GetDefaultOpts(opts)
-   self~AddText(x, y+2, cx1, cy, text, opts, idstat)
+   self~addText(x, y+2, cx1, cy, text, opts, idstat)
    self~AddEntryLine(id, fname, x+cx1+1, y, cx2, cy, opts)
 
 
@@ -914,7 +914,7 @@
    if cx1 = 0 then cx1 = stepx + 4
    if Arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
    opts = self~GetDefaultOpts(opts)
-   self~AddText(x, y, cx1, cy, text, opts, idstat)
+   self~addText(x, y, cx1, cy, text, opts, idstat)
    self~AddComboBox(id, attname, x+cx1+2, y, cx2, cy*clines, opts)
 
 

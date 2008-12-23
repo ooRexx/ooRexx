@@ -506,8 +506,8 @@ size_t RexxEntry UsrCreateDialog(const char *funcname, size_t argc, CONSTRXSTRIN
 
                  if ( GetDialogIcons(dlgAdm, atoi(argv[7].strptr), ICON_FILE, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
                  {
-                    dlgAdm->SysMenuIcon = (HICON)SetClassLongPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
-                    dlgAdm->TitleBarIcon = (HICON)SetClassLongPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
+                    dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
+                    dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
                     dlgAdm->DidChangeIcon = TRUE;
 
                     SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
@@ -1275,7 +1275,7 @@ BOOL IsNestedDialogMessage(
                return IsDialogMessage(dlgAdm->TheDlg, lpmsg);
 
             default:
-               hParent = (HWND) GetWindowLongPtr(lpmsg->hwnd, GWLP_HWNDPARENT);
+               hParent = (HWND)getWindowPtr(lpmsg->hwnd, GWLP_HWNDPARENT);
                if (!hParent) return FALSE;
                return IsDialogMessage(hParent, lpmsg);
            }
@@ -1285,7 +1285,7 @@ BOOL IsNestedDialogMessage(
          if (lpmsg->wParam == VK_SHIFT) SHIFTkey = FALSE;
          break;
    }
-   hParent = (HWND) GetWindowLongPtr(lpmsg->hwnd, GWLP_HWNDPARENT);
+   hParent = (HWND)getWindowPtr(lpmsg->hwnd, GWLP_HWNDPARENT);
    if (hParent)
       return IsDialogMessage(hParent, lpmsg);
    else return IsDialogMessage(dlgAdm->TheDlg, lpmsg);

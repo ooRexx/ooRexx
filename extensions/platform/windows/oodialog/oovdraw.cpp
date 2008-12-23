@@ -303,7 +303,7 @@ size_t RexxEntry HandleDC_Obj(const char *funcname, size_t argc, CONSTRXSTRING *
              hBmp = (HBITMAP) LoadDIB(argv[3].strptr);     /* we have a file name */
              lb.lbStyle = BS_DIBPATTERNPT;
              lb.lbColor = DIB_RGB_COLORS;
-             lb.lbHatch = (LONG)hBmp;
+             lb.lbHatch = (ULONG_PTR)hBmp;
              hB = CreateBrushIndirect(&lb);
              LocalFree((void *)hBmp);
           }

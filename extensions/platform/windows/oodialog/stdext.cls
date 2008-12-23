@@ -62,7 +62,7 @@
    if self~InitCode = 0 then self~Popup
 
 ::method DefineDialog
-   self~AddText(10,10,self~dims["sx"]+2,self~dims["sy"], self~msg,, 100)
+   self~addText(10,10,self~dims["sx"]+2,self~dims["sy"], self~msg,, 100)
 
 ::method InitAutoDetection
    self~NoAutoDetection
@@ -143,7 +143,7 @@
 
 ::method DefineDialog
    self~AddProgressBar(101,5,5, self~sizex-10,14)
-   self~AddText(10,25,self~dims["sx"]+2,self~dims["sy"], self~msg,, 100)
+   self~addText(10,25,self~dims["sx"]+2,self~dims["sy"], self~msg,, 100)
 
 
 ::method CalcSize

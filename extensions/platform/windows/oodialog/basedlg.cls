@@ -405,6 +405,7 @@
 ::method isNull external "LIBRARY oodialog ri_isNull"
 ::method systemErrorCode external "LIBRARY oodialog ri_systemErrorCode"
 ::method getImage external "LIBRARY oodialog ri_getImage"
+::method getImages external "LIBRARY oodialog ri_getImages"
 
 
 ::class 'Image' public
@@ -412,8 +413,8 @@
 ::method init class external "LIBRARY oodialog image_init_cls"
 ::method id class external "LIBRARY oodialog image_id_cls"
 ::method getImage class external "LIBRARY oodialog image_getImage_cls"
-::method saveImage class private external "LIBRARY oodialog image_saveImage_cls"
-::method removeImage class private external "LIBRARY oodialog image_removeImage_cls"
+::method fromFiles class external "LIBRARY oodialog image_fromFiles_cls"
+::method fromIDs class external "LIBRARY oodialog image_fromIDs_cls"
 
 ::method colorRef class external "LIBRARY oodialog image_colorRef_cls"
 ::method getRValue class external "LIBRARY oodialog image_getRValue_cls"
@@ -421,7 +422,25 @@
 ::method getBValue class external "LIBRARY oodialog image_getBValue_cls"
 
 ::method init external "LIBRARY oodialog image_init"
+::method release external "LIBRARY oodialog image_release"
 ::method handle external "LIBRARY oodialog image_handle"
 ::method isNull external "LIBRARY oodialog image_isNull"
 ::method systemErrorCode external "LIBRARY oodialog image_systemErrorCode"
 ::method assignImage private external "LIBRARY oodialog image_assignImage"
+
+::class 'ImageList' public
+::method create class external "LIBRARY oodialog il_create_cls"
+
+::method init external "LIBRARY oodialog il_init"
+::method release external "LIBRARY oodialog il_release"
+::method add external "LIBRARY oodialog il_add"
+::method addMasked external "LIBRARY oodialog il_addMasked"
+::method addIcon external "LIBRARY oodialog il_addIcon"
+::method addImages external "LIBRARY oodialog il_addImages"
+::method getCount external "LIBRARY oodialog il_getCount"
+::method getImageSize external "LIBRARY oodialog il_getImageSize"
+::method duplicate external "LIBRARY oodialog il_duplicate"
+::method remove external "LIBRARY oodialog il_remove"
+::method removeAll external "LIBRARY oodialog il_removeAll"
+::method handle external "LIBRARY oodialog il_handle"
+::method isNull external "LIBRARY oodialog il_isNull"

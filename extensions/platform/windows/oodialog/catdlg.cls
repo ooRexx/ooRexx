@@ -260,9 +260,9 @@
    parse value GetStdTextSize("Hg") with . stdty
 
    if self~catstyle~wordpos("TOPLINE") > 0 then
-      self~AddWhiteRect(0, 2, self~SizeX, stdty + (self~caty+2))
+      self~addWhiteRect(0, 2, self~SizeX, stdty + (self~caty+2))
    else if self~catstyle~wordpos("DROPDOWN") > 0 then
-      self~AddWhiteRect(0, 2, self~SizeX, stdty + (self~caty*2)+1)
+      self~addWhiteRect(0, 2, self~SizeX, stdty + (self~caty*2)+1)
 
    lbtext = self~catalog['page']['leftbtntext']
    rbtext = self~catalog['page']['rightbtntext']
@@ -281,7 +281,7 @@
       if self~Wizard = 1 then
          self~AddButtonGroup(5, self~SizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
    end
-   self~AddWhiteFrame(0, self~SizeY - 20, self~SizeX, 1)
+   self~addWhiteFrame(0, self~SizeY - 20, self~SizeX, 1)
 
    /* */
 

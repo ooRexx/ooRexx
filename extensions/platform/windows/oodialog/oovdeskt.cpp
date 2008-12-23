@@ -269,7 +269,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
                HCURSOR oC, hC;
                res = atoi(argv[3].strptr);
                hC = LoadCursor(NULL, MAKEINTRESOURCE(res));
-               oC = (HCURSOR)SetClassLongPtr(hW, GCLP_HCURSOR, (LONG_PTR)hC);
+               oC = (HCURSOR)setClassPtr(hW, GCLP_HCURSOR, (LONG_PTR)hC);
                SetCursor(hC);
                RETHANDLE(oC)
            }
@@ -277,12 +277,12 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
            {
                HCURSOR hC = (HCURSOR)GET_HANDLE(argv[3]);
                if (hC) {
-                   SetClassLongPtr(hW, GCLP_HCURSOR, (LONG_PTR)hC);
+                   setClassPtr(hW, GCLP_HCURSOR, (LONG_PTR)hC);
                    RETHANDLE(SetCursor(hC))
                }
                else
                {
-                   SetClassLongPtr(hW, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
+                   setClassPtr(hW, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
                    RETHANDLE(SetCursor(LoadCursor(NULL, IDC_ARROW)))
                }
            }
@@ -356,7 +356,7 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
 
        if (strstr(argv[2].strptr, "REDRAW"))
        {
-           if (RedrawWindow(w, NULL, NULL, RDW_ERASE | RDW_ALLCHILDREN))
+           if (RedrawWindow(w, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN))
                RETC(0) else RETC(1)
        }
        else

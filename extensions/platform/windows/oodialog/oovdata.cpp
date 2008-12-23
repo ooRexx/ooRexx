@@ -894,7 +894,7 @@ BOOL DataAutodetection(DIALOGADMIN * aDlg)
     parent = aDlg->TheDlg;
     current = parent;
     next = GetTopWindow(current);
-    while ((next) && ((HWND)GetWindowLongPtr(next, GWLP_HWNDPARENT) == parent))
+    while ((next) && ((HWND)getWindowPtr(next, GWLP_HWNDPARENT) == parent))
     {
        current = next;
 

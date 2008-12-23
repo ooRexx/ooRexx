@@ -59,7 +59,7 @@
 
 ::method DefineDialog
    expose message sx sy
-   self~AddText(10,10,sx+2,sy, message)
+   self~addText(10,10,sx+2,sy, message)
 
 ::method InitAutoDetection
    self~NoAutoDetection
@@ -97,7 +97,7 @@
 ::method DefineDialog
    expose message size dlgy
    if size = 0 then size = self~sx
-   self~AddText(10,10, self~sx+2, self~sy, message)
+   self~addText(10,10, self~sx+2, self~sy, message)
    self~AddLine(10, self~sy+4+10, size)
    self~AddButtonGroup(self~sx-80, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
@@ -160,7 +160,7 @@
 
 ::method DefineDialog
    expose message sx sy len dlgx dlgy entries. maxlen
-   self~AddText(10,10, sx+2, sy, message)
+   self~addText(10,10, sx+2, sy, message)
    self~AddInputStem(101, 10, sy+4+10, maxlen+4, len, entries.)
    self~AddButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
@@ -217,7 +217,7 @@
 
 ::method DefineDialog
    expose message sx sy lenx leny dlgx dlgy
-   self~AddText(10,10, sx+2, sy, message)
+   self~addText(10,10, sx+2, sy, message)
    self~AddListBox(101, "DATA", 10, sy+4+10, lenx, leny+4)
    self~AddButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
@@ -266,7 +266,7 @@
 
 
 ::method DefineDialog
-   self~AddText(10,10, self~sx+2, self~sy, self~message)
+   self~addText(10,10, self~sx+2, self~sy, self~message)
    self~AddListBox(101, "DATA", 10, self~sy+4+10, self~lenx, self~leny+4, "MULTI VSCROLL TABULATORS")
    self~AddButtonGroup(self~dlgx-100, self~dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
@@ -287,7 +287,7 @@
 
 ::method DefineDialog
    expose message sx sy len dlgx dlgy entries. placex max
-   self~AddText(10,10, sx+2, sy, message)
+   self~addText(10,10, sx+2, sy, message)
    self~AddCheckBoxStem(101, placex, sy+4+10, len, entries., max)
    self~AddButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
@@ -338,7 +338,7 @@
 
 ::method DefineDialog
    expose message sx sy len dlgx dlgy entries. placex max
-   self~AddText(10,10, sx+2, sy, message)
+   self~addText(10,10, sx+2, sy, message)
    self~AddRadioStem(101, placex, sy+4+10, len, entries., max)
    self~AddButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 

@@ -52,6 +52,8 @@
 ::method comctl32Version class external "LIBRARY oodialog dlgutil_comctl32Version_cls"
 ::method hiWord class external "LIBRARY oodialog dlgutil_hiWord_cls"
 ::method loWord class external "LIBRARY oodialog dlgutil_loWord_cls"
+::method and class external "LIBRARY oodialog dlgutil_and_cls"
+::method or class external "LIBRARY oodialog dlgutil_or_cls"
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 

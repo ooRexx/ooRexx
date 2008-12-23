@@ -45,6 +45,7 @@
 
 ::class 'AdvancedControls' Mixinclass Object public
 
+::method putControl private unguarded external "LIBRARY oodialog advCtrl_putControl_pvt"
 
 ::method GetControl unguarded private
    use arg id, category, type
@@ -80,25 +81,31 @@
      ctrlobj = class~new(self, id, category)
    end
 
-   if ctrlobj~hwnd = 0 then
+   if ctrlobj \== .nil, ctrlobj~hwnd = 0 then
      return .nil
    else
      return ctrlobj
 
+::method getStaticControl unguarded external "LIBRARY oodialog advCtrl_getStaticControl"
+/*
 ::method GetStaticControl unguarded
    arr = Arg(1,"A")
    arr[3] = "ST"
    forward message "GetControl" Arguments (arr)
+*/
 
 ::method GetEditControl unguarded
    arr = Arg(1,"A")
    arr[3] = "EL"
    forward message "GetControl" Arguments (arr)
 
+::method getButtonControl unguarded external "LIBRARY oodialog advCtrl_getButtonControl"
+/*
 ::method GetButtonControl unguarded
    arr = Arg(1,"A")
    arr[3] = "BUT"
    forward message "GetControl" Arguments (arr)
+*/
 
 ::method GetRadioControl unguarded
    arr = Arg(1,"A")
@@ -135,13 +142,16 @@
    arr[3] = "TC"
    forward message "GetControl" Arguments (arr)
 
+::method getListControl unguarded external "LIBRARY oodialog advCtrl_getListControl"
+/*
 ::method GetListControl unguarded
    arr = Arg(1,"A")
    arr[3] = "LC"
    forward message "GetControl" Arguments (arr) continue
    listControl = result
-   listControl~lastItem = listControl~items - 1
+   if listControl \== .nil then listControl~lastItem = listControl~items - 1
    return listControl
+*/
 
 ::method GetProgressBar unguarded
    arr = Arg(1,"A")
@@ -1183,6 +1193,7 @@
    if Arg(2,'o') = 1 then partial = 0
    return HandleListCtrl("M", "ENVIS", self~Hwnd, item, partial)
 
+-- This method is deprecated, use setImageList()
 ::method SetSmallImages
    use arg bmp, cx, cy
    if Arg(1,'o') = 1 then return -1
@@ -1190,6 +1201,7 @@
    if Arg(3,'o') = 1 then cy = 0
    return HandleListCtrl("I", "SETIMG",self~Hwnd, bmp, cx, cy, "SMALL")
 
+-- This method is deprecated, use setImageList()
 ::method SetImages
    use arg bmp, cx, cy
    if Arg(1,'o') = 1 then return -1
@@ -1197,11 +1209,16 @@
    if Arg(3,'o') = 1 then cy = 0
    return HandleListCtrl("I", "SETIMG",self~Hwnd, bmp, cx, cy, "")
 
+-- This method is deprecated, use setImageList()
 ::method RemoveSmallImages
    return HandleListCtrl("I", "UNSETIMG", self~Hwnd, "SMALL")
 
+-- This method is deprecated, use setImageList()
 ::method RemoveImages
    return HandleListCtrl("I", "UNSETIMG", self~Hwnd, "")
+
+::method setImageList external "LIBRARY oodialog lv_setImageList"
+::method getImageList external "LIBRARY oodialog lv_getImageList"
 
 ::method Find
    use arg txt, startItem, wrap
@@ -1704,27 +1721,19 @@
 ::method "style=" external "LIBRARY oodialog gb_setStyle"
 
 ::class 'ButtonControl' subclass DialogControl public
-::method releaseImageList class external "LIBRARY oodialog bc_releaseImageList_cls"
-
-::constant BUTTON_IMAGELIST_ALIGN_LEFT 0
-::constant BUTTON_IMAGELIST_ALIGN_RIGHT 1
-::constant BUTTON_IMAGELIST_ALIGN_TOP 2
-::constant BUTTON_IMAGELIST_ALIGN_BOTTOM 3
-::constant BUTTON_IMAGELIST_ALIGN_CENTER 4
 
 ::method state external "LIBRARY oodialog bc_getState"
 ::method "state=" external "LIBRARY oodialog bc_setState"
 ::method "style=" external "LIBRARY oodialog bc_setStyle"
+
+::method push external "LIBRARY oodialog bc_click"
+::method click external "LIBRARY oodialog bc_click"
 
 ::method getIdealSize external "LIBRARY oodialog bc_getIdealSize"
 ::method getTextMargin external "LIBRARY oodialog bc_getTextMargin"
 ::method setTextMargin external "LIBRARY oodialog bc_setTextMargin"
 ::method setImageList external "LIBRARY oodialog bc_setImageList"
 ::method getImageList external "LIBRARY oodialog bc_getImageList"
-
-::method push external "LIBRARY oodialog bc_click"
-::method click external "LIBRARY oodialog bc_click"
-
 ::method getImage external "LIBRARY oodialog bc_getImage"
 ::method setImage external "LIBRARY oodialog bc_setImage"
 
@@ -1794,20 +1803,20 @@
 
 
 ::class 'RadioButton' subclass ButtonControl public
-::method checkInGroup class external "LIBRARY oodialog bc_checkInGroup_cls"
+::method checkInGroup class external "LIBRARY oodialog rb_checkInGroup_cls"
 
-::method checked external "LIBRARY oodialog bc_checked"
-::method isChecked external "LIBRARY oodialog bc_isChecked"
-::method check external "LIBRARY oodialog bc_check"
-::method uncheck external "LIBRARY oodialog bc_uncheck"
+::method checked external "LIBRARY oodialog rb_checked"
+::method isChecked external "LIBRARY oodialog rb_isChecked"
+::method check external "LIBRARY oodialog rb_check"
+::method uncheck external "LIBRARY oodialog rb_uncheck"
 
 /* This method is DEPRECATED radio buttons can not be set to indeterminate. */
-::method indeterminate external "LIBRARY oodialog bc_check"
+::method indeterminate external "LIBRARY oodialog rb_check"
 
 ::class 'CheckBox' subclass RadioButton public
 
-::method indeterminate external "LIBRARY oodialog bc_indeterminate"
-::method isIndeterminate external "LIBRARY oodialog bc_isIndeterminate"
+::method indeterminate external "LIBRARY oodialog ckbx_indeterminate"
+::method isIndeterminate external "LIBRARY oodialog ckbx_isIndeterminate"
 
 /**************** List Box Class **********************************************/
 

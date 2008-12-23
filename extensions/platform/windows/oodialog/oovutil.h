@@ -297,6 +297,54 @@ inline void safeDeleteObject(HANDLE h)
 }
 
 
+inline LONG_PTR setWindowPtr(HWND hwnd, int index, LONG_PTR newPtr)
+{
+#ifndef __REXX64__
+#pragma warning(disable:4244)
+#endif
+    return SetWindowLongPtr(hwnd, index, newPtr);
+#ifndef __REXX64__
+#pragma warning(default:4244)
+#endif
+}
+
+inline LONG_PTR getWindowPtr(HWND hwnd, int index)
+{
+    return GetWindowLongPtr(hwnd, index);
+}
+
+inline LONG_PTR setClassPtr(HWND hwnd, int index, LONG_PTR newPtr)
+{
+#ifndef __REXX64__
+#pragma warning(disable:4244)
+#endif
+    return SetClassLongPtr(hwnd, index, newPtr);
+#ifndef __REXX64__
+#pragma warning(default:4244)
+#endif
+}
+
+inline LONG_PTR getClassPtr(HWND hwnd, int index)
+{
+    return GetClassLongPtr(hwnd, index);
+}
+
+typedef enum {oodHex, oodHeX, oodNotHex} oodNumberStr_t;
+
+inline bool isHex(CSTRING c)
+{
+    return strlen(c) > 1 && *c == '0' && toupper(c[1]) == 'X';
+}
+
+inline oodNumberStr_t hexType(CSTRING c)
+{
+    if ( isHex(c) )
+    {
+        return (c[1] == 'x' ? oodHex : oodHeX);
+    }
+    return oodNotHex;
+}
+
 /* structures to manage the dialogs */
 typedef struct {
    ULONG msg;

@@ -481,10 +481,10 @@ INT DelDialog(DIALOGADMIN * aDlg)
      */
     if ( aDlg->DidChangeIcon )
     {
-        hIconBig = (HICON)SetClassLongPtr(aDlg->TheDlg, GCLP_HICON, (LONG_PTR)aDlg->SysMenuIcon);
+        hIconBig = (HICON)setClassPtr(aDlg->TheDlg, GCLP_HICON, (LONG_PTR)aDlg->SysMenuIcon);
         if ( aDlg->TitleBarIcon )
         {
-            hIconSmall = (HICON)SetClassLongPtr(aDlg->TheDlg, GCLP_HICONSM, (LONG_PTR)aDlg->TitleBarIcon);
+            hIconSmall = (HICON)setClassPtr(aDlg->TheDlg, GCLP_HICONSM, (LONG_PTR)aDlg->TitleBarIcon);
         }
 
         if ( ! aDlg->SharedIcon )
@@ -492,7 +492,7 @@ INT DelDialog(DIALOGADMIN * aDlg)
             DestroyIcon(hIconBig);
             if ( ! hIconSmall )
             {
-                hIconSmall = (HICON)GetClassLongPtr(aDlg->TheDlg, GCLP_HICONSM);
+                hIconSmall = (HICON)getClassPtr(aDlg->TheDlg, GCLP_HICONSM);
             }
         }
         else
@@ -753,8 +753,8 @@ size_t RexxEntry StartDialog(const char *funcname, size_t argc, CONSTRXSTRING *a
 
             if ( GetDialogIcons(dlgAdm, atoi(argv[5].strptr), ICON_DLL, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
             {
-                dlgAdm->SysMenuIcon = (HICON)SetClassLongPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
-                dlgAdm->TitleBarIcon = (HICON)SetClassLongPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
+                dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
+                dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
                 dlgAdm->DidChangeIcon = TRUE;
 
                 SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
@@ -1810,13 +1810,13 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
        {
            itoa(dlgAdm->BmpTab[i].buttonID, data, (dlgAdm->BmpTab[i].Loaded ? 16: 10));
            if (!SetRexxStem(buffer, i+1, "ID", data))  { RETERR; }
-           itoa((LONG)dlgAdm->BmpTab[i].bitmapID, data, (dlgAdm->BmpTab[i].Loaded ? 16: 10));
+           pointer2string(data, (void *)dlgAdm->BmpTab[i].bitmapID);
            if (!SetRexxStem(buffer, i+1, "Normal", data))  { RETERR; }
-           itoa((LONG)dlgAdm->BmpTab[i].bmpFocusID, data, (dlgAdm->BmpTab[i].Loaded ? 16: 10));
+           pointer2string(data, (void *)dlgAdm->BmpTab[i].bmpFocusID);
            if (!SetRexxStem(buffer, i+1, "Focused", data))  { RETERR; }
-           itoa((LONG)dlgAdm->BmpTab[i].bmpSelectID, data, (dlgAdm->BmpTab[i].Loaded ? 16: 10));
+           pointer2string(data, (void *)dlgAdm->BmpTab[i].bmpSelectID);
            if (!SetRexxStem(buffer, i+1, "Selected", data))  { RETERR; }
-           itoa((LONG)dlgAdm->BmpTab[i].bmpDisableID, data, (dlgAdm->BmpTab[i].Loaded ? 16: 10));
+           pointer2string(data, (void *)dlgAdm->BmpTab[i].bmpDisableID);
            if (!SetRexxStem(buffer, i+1, "Disabled", data))  { RETERR; }
        }
        itoa(dlgAdm->MT_size, data, 10);
@@ -1824,8 +1824,9 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
        sprintf(buffer, "%s.%s", argv[0].strptr, "MsgTab");
        for (i=0; i<dlgAdm->MT_size; i++)
        {
-           pointer2string(data, (void *)dlgAdm->MsgTab[i].msg);
+           ultoa(dlgAdm->MsgTab[i].msg, data, 16);
            if (!SetRexxStem(buffer, i+1, "msg", data))  { RETERR; }
+           // TODO the wParam and lParam types are wrong for Win64.
            pointer2string(data, (void *)dlgAdm->MsgTab[i].wParam);
            if (!SetRexxStem(buffer, i+1, "param1", data))  { RETERR; }
            pointer2string(data, (void *)dlgAdm->MsgTab[i].lParam);
@@ -2082,6 +2083,8 @@ REXX_METHOD_PROTOTYPE(dlgutil_comctl32Version_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_version_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_hiWord_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_loWord_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
@@ -2091,21 +2094,47 @@ REXX_METHOD_PROTOTYPE(ri_handle);
 REXX_METHOD_PROTOTYPE(ri_isNull);
 REXX_METHOD_PROTOTYPE(ri_systemErrorCode);
 REXX_METHOD_PROTOTYPE(ri_getImage);
+REXX_METHOD_PROTOTYPE(ri_getImages);
 
 REXX_METHOD_PROTOTYPE(image_init_cls);
-REXX_METHOD_PROTOTYPE(image_saveImage_cls);
-REXX_METHOD_PROTOTYPE(image_removeImage_cls);
 REXX_METHOD_PROTOTYPE(image_id_cls);
 REXX_METHOD_PROTOTYPE(image_getImage_cls);
+REXX_METHOD_PROTOTYPE(image_fromFiles_cls);
+REXX_METHOD_PROTOTYPE(image_fromIDs_cls);
 REXX_METHOD_PROTOTYPE(image_colorRef_cls);
 REXX_METHOD_PROTOTYPE(image_getRValue_cls);
 REXX_METHOD_PROTOTYPE(image_getGValue_cls);
 REXX_METHOD_PROTOTYPE(image_getBValue_cls);
 REXX_METHOD_PROTOTYPE(image_init);
 REXX_METHOD_PROTOTYPE(image_assignImage);
+REXX_METHOD_PROTOTYPE(image_release);
 REXX_METHOD_PROTOTYPE(image_isNull);
 REXX_METHOD_PROTOTYPE(image_handle);
 REXX_METHOD_PROTOTYPE(image_systemErrorCode);
+
+REXX_METHOD_PROTOTYPE(il_create_cls);
+REXX_METHOD_PROTOTYPE(il_init);
+REXX_METHOD_PROTOTYPE(il_release);
+REXX_METHOD_PROTOTYPE(il_add);
+REXX_METHOD_PROTOTYPE(il_addMasked);
+REXX_METHOD_PROTOTYPE(il_addIcon);
+REXX_METHOD_PROTOTYPE(il_addImages);
+REXX_METHOD_PROTOTYPE(il_addImages);
+REXX_METHOD_PROTOTYPE(il_getCount);
+REXX_METHOD_PROTOTYPE(il_getImageSize);
+REXX_METHOD_PROTOTYPE(il_duplicate);
+REXX_METHOD_PROTOTYPE(il_remove);
+REXX_METHOD_PROTOTYPE(il_removeAll);
+REXX_METHOD_PROTOTYPE(il_isNull);
+REXX_METHOD_PROTOTYPE(il_handle);
+
+REXX_METHOD_PROTOTYPE(lv_setImageList);
+REXX_METHOD_PROTOTYPE(lv_getImageList);
+
+REXX_METHOD_PROTOTYPE(advCtrl_getButtonControl);
+REXX_METHOD_PROTOTYPE(advCtrl_getStaticControl);
+REXX_METHOD_PROTOTYPE(advCtrl_getListControl);
+REXX_METHOD_PROTOTYPE(advCtrl_putControl_pvt);
 
 REXX_METHOD_PROTOTYPE(pbc_stepIt);
 REXX_METHOD_PROTOTYPE(pbc_getPos);
@@ -2125,26 +2154,25 @@ REXX_METHOD_PROTOTYPE(stc_setIcon);
 REXX_METHOD_PROTOTYPE(stc_getImage);
 REXX_METHOD_PROTOTYPE(stc_setImage);
 
-REXX_METHOD_PROTOTYPE(bc_releaseImageList_cls);
-REXX_METHOD_PROTOTYPE(bc_checkInGroup_cls);
 REXX_METHOD_PROTOTYPE(gb_setStyle);
 REXX_METHOD_PROTOTYPE(bc_getState);
 REXX_METHOD_PROTOTYPE(bc_setState);
 REXX_METHOD_PROTOTYPE(bc_setStyle);
-REXX_METHOD_PROTOTYPE(bc_isChecked);
 REXX_METHOD_PROTOTYPE(bc_click);
-REXX_METHOD_PROTOTYPE(bc_getImage);
-REXX_METHOD_PROTOTYPE(bc_setImage);
-REXX_METHOD_PROTOTYPE(bc_checked);
-REXX_METHOD_PROTOTYPE(bc_isIndeterminate);
-REXX_METHOD_PROTOTYPE(bc_indeterminate);
-REXX_METHOD_PROTOTYPE(bc_check);
-REXX_METHOD_PROTOTYPE(bc_uncheck);
 REXX_METHOD_PROTOTYPE(bc_getIdealSize);
 REXX_METHOD_PROTOTYPE(bc_getTextMargin);
 REXX_METHOD_PROTOTYPE(bc_setTextMargin);
+REXX_METHOD_PROTOTYPE(bc_getImage);
+REXX_METHOD_PROTOTYPE(bc_setImage);
 REXX_METHOD_PROTOTYPE(bc_setImageList);
 REXX_METHOD_PROTOTYPE(bc_getImageList);
+REXX_METHOD_PROTOTYPE(rb_checkInGroup_cls);
+REXX_METHOD_PROTOTYPE(rb_isChecked);
+REXX_METHOD_PROTOTYPE(rb_checked);
+REXX_METHOD_PROTOTYPE(rb_check);
+REXX_METHOD_PROTOTYPE(rb_uncheck);
+REXX_METHOD_PROTOTYPE(ckbx_isIndeterminate);
+REXX_METHOD_PROTOTYPE(ckbx_indeterminate);
 REXX_METHOD_PROTOTYPE(bc_test);
 
 REXX_METHOD_PROTOTYPE(menu_test);
@@ -2177,6 +2205,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_comctl32Version_cls, dlgutil_comctl32Version_cls),
     REXX_METHOD(dlgutil_version_cls,         dlgutil_version_cls),
     REXX_METHOD(dlgutil_hiWord_cls,          dlgutil_hiWord_cls),
+    REXX_METHOD(dlgutil_and_cls,             dlgutil_and_cls),
+    REXX_METHOD(dlgutil_or_cls,              dlgutil_or_cls),
     REXX_METHOD(dlgutil_loWord_cls,          dlgutil_loWord_cls),
     REXX_METHOD(dlgutil_handleToPointer_cls, dlgutil_handleToPointer_cls),
     REXX_METHOD(dlgutil_test_cls,            dlgutil_test_cls),
@@ -2187,21 +2217,46 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(ri_isNull,                   ri_isNull),
     REXX_METHOD(ri_systemErrorCode,          ri_systemErrorCode),
     REXX_METHOD(ri_getImage,                 ri_getImage),
+    REXX_METHOD(ri_getImages,                ri_getImages),
 
     REXX_METHOD(image_init_cls,              image_init_cls),
-    REXX_METHOD(image_saveImage_cls,         image_saveImage_cls),
-    REXX_METHOD(image_removeImage_cls,       image_removeImage_cls),
     REXX_METHOD(image_id_cls,                image_id_cls),
     REXX_METHOD(image_getImage_cls,          image_getImage_cls),
+    REXX_METHOD(image_fromFiles_cls,         image_fromFiles_cls),
+    REXX_METHOD(image_fromIDs_cls,           image_fromIDs_cls),
     REXX_METHOD(image_colorRef_cls,          image_colorRef_cls),
     REXX_METHOD(image_getRValue_cls,         image_getRValue_cls),
     REXX_METHOD(image_getGValue_cls,         image_getGValue_cls),
     REXX_METHOD(image_getBValue_cls,         image_getBValue_cls),
     REXX_METHOD(image_init,                  image_init),
     REXX_METHOD(image_assignImage,           image_assignImage),
+    REXX_METHOD(image_release,               image_release),
     REXX_METHOD(image_isNull,                image_isNull),
     REXX_METHOD(image_systemErrorCode,       image_systemErrorCode),
     REXX_METHOD(image_handle,                image_handle),
+
+    REXX_METHOD(il_create_cls,               il_create_cls),
+    REXX_METHOD(il_init,                     il_init),
+    REXX_METHOD(il_release,                  il_release),
+    REXX_METHOD(il_add,                      il_add),
+    REXX_METHOD(il_addMasked,                il_addMasked),
+    REXX_METHOD(il_addIcon,                  il_addIcon),
+    REXX_METHOD(il_addImages,                il_addImages),
+    REXX_METHOD(il_getCount,                 il_getCount),
+    REXX_METHOD(il_getImageSize,             il_getImageSize),
+    REXX_METHOD(il_duplicate,                il_duplicate),
+    REXX_METHOD(il_removeAll,                il_removeAll),
+    REXX_METHOD(il_remove,                   il_remove),
+    REXX_METHOD(il_isNull,                   il_isNull),
+    REXX_METHOD(il_handle,                   il_handle),
+
+    REXX_METHOD(lv_setImageList,          lv_setImageList),
+    REXX_METHOD(lv_getImageList,          lv_getImageList),
+
+    REXX_METHOD(advCtrl_getButtonControl, advCtrl_getButtonControl),
+    REXX_METHOD(advCtrl_getStaticControl, advCtrl_getStaticControl),
+    REXX_METHOD(advCtrl_getListControl,   advCtrl_getListControl),
+    REXX_METHOD(advCtrl_putControl_pvt,   advCtrl_putControl_pvt),
 
     REXX_METHOD(pbc_stepIt,              pbc_stepIt),
     REXX_METHOD(pbc_getPos,              pbc_getPos),
@@ -2221,29 +2276,30 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(stc_getImage,            stc_getImage),
     REXX_METHOD(stc_setImage,            stc_setImage),
 
-    REXX_METHOD(bc_releaseImageList_cls, bc_releaseImageList_cls),
-    REXX_METHOD(bc_checkInGroup_cls,     bc_checkInGroup_cls),
     REXX_METHOD(bc_getState,             bc_getState),
     REXX_METHOD(bc_setState,             bc_setState),
-    REXX_METHOD(gb_setStyle,             gb_setStyle),
     REXX_METHOD(bc_setStyle,             bc_setStyle),
     REXX_METHOD(bc_click,                bc_click),
-    REXX_METHOD(bc_getImage,             bc_getImage),
-    REXX_METHOD(bc_setImage,             bc_setImage),
-    REXX_METHOD(bc_isChecked,            bc_isChecked),
-    REXX_METHOD(bc_checked,              bc_checked),
-    REXX_METHOD(bc_isIndeterminate,      bc_isIndeterminate),
-    REXX_METHOD(bc_indeterminate,        bc_indeterminate),
-    REXX_METHOD(bc_check,                bc_check),
-    REXX_METHOD(bc_uncheck,              bc_uncheck),
     REXX_METHOD(bc_getIdealSize,         bc_getIdealSize),
     REXX_METHOD(bc_getTextMargin,        bc_getTextMargin),
     REXX_METHOD(bc_setTextMargin,        bc_setTextMargin),
+    REXX_METHOD(bc_getImage,             bc_getImage),
+    REXX_METHOD(bc_setImage,             bc_setImage),
     REXX_METHOD(bc_setImageList,         bc_setImageList),
     REXX_METHOD(bc_getImageList,         bc_getImageList),
+    REXX_METHOD(rb_checkInGroup_cls,     rb_checkInGroup_cls),
+    REXX_METHOD(rb_isChecked,            rb_isChecked),
+    REXX_METHOD(rb_checked,              rb_checked),
+    REXX_METHOD(rb_check,                rb_check),
+    REXX_METHOD(rb_uncheck,              rb_uncheck),
+    REXX_METHOD(ckbx_isIndeterminate,    ckbx_isIndeterminate),
+    REXX_METHOD(ckbx_indeterminate,      ckbx_indeterminate),
+    REXX_METHOD(gb_setStyle,             gb_setStyle),
     REXX_METHOD(bc_test,                 bc_test),
+
     REXX_METHOD(menu_test,               menu_test),
     REXX_METHOD(menu_connectAllItems,    menu_connectAllItems),
+
     REXX_METHOD(rect_init,               rect_init),
     REXX_METHOD(rect_left,               rect_left),
     REXX_METHOD(rect_top,                rect_top),
