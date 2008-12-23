@@ -1,11 +1,11 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2006 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2006-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -308,7 +308,7 @@ exit -1
 /*  for example:                                                             */
 /*  List = self~GetListControl([id])                                         */
 /*  if List \= .Nil then do                                                  */
-/*    list~SetSmallImages(["image.bmp",[x],[y])                              */
+/*    list~setImageList(imageList, .Image~id(LVSIL_SMALL))                   */
 /*    list~AddStyle("[Style1 style2...]")                                    */
 /*    list~InsertColumn(0,"[Title]",[width],[style])                         */
 /*    list~InsertColumn(1,"[Title]",[width],[style])                         */

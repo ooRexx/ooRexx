@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -118,7 +118,23 @@
    lc~InsertColumn(2,"Year high", 50)
    lc~InsertColumn(3,"Year low", 50)
    lc~InsertColumn(4,"Description", 120)
-   lc~SetSmallImages("bmp\psdemolv.bmp", 16, 16)   /* Set the images for the items */
+
+   -- Set the images for the items in the list-view.  The list-view control was
+   -- created without the SHAREIMAGES styles, so it take care of releasing the
+   -- image list when the program ends.
+   image = .Image~getImage("bmp\psdemolv.bmp")
+   imageList = .ImageList~create(.Size~new(16, 16), .Image~id(ILC_COLOR8), 4, 0)
+   if \image~isNull,  \imageList~isNull then do
+      imageList~add(image)
+      lc~setImageList(imageList, .Image~id(LVSIL_SMALL))
+
+      -- The image list makes a copy of the bitmap, so we can release it now to
+      -- free up some (small) amount of system resources.  This is not
+      -- necessary, the OS will release the resource automatically when the
+      -- program ends.
+      image~release
+   end
+
    /* fill the report with random data */
    do ch = "A"~c2d to "Z"~c2d
        q = Random(200)

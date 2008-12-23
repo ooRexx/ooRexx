@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -134,7 +134,7 @@ callFailed:
   return InitRet
 
 ::method InitDialog
-  self~GetListControl(104)~SetSmallImages("icons.bmp",16,12)
+  self~GetListControl(104)~setImageList(self~getImages, .Image~id(LVSIL_SMALL))
   cb = self~GetComboBox(100)
   default = .array~of("InternetExplorer.Application","Excel.Application","Freelance.Application",,
                       "Notes.NotesSession","Lotus123.Workbook","Outlook.Application",,
@@ -478,6 +478,16 @@ callFailed:
     end
 
   end
+
+::method getImages private
+  image = .Image~getImage("icons.bmp")
+  imageList = .ImageList~create(.Size~new(16, 12), .Image~id(ILC_COLOR4), 6, 0)
+  if \image~isNull,  \imageList~isNull then do
+      imageList~add(image)
+      image~release
+      return imageList
+  end
+  return .nil
 
 ::method LastError ATTRIBUTE
 

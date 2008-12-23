@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -127,6 +127,8 @@ return
   ID_Ic   = 103 /* icon view       */
   ID_SIc  = 104 /* small icon view */
 
+  self~createImageLists
+
 ::method CategoryPage
   forward class (super) continue /* call parent constructor */
   self~AddButton(201,160,185,60,12,"Add")
@@ -162,12 +164,12 @@ return
 
 /* initialize report list control on second category page */
 ::method InitReport
-  expose ID_Rep
+  expose ID_Rep smallIcons
+
   curList = self~GetListControl(ID_Rep)
-  curList~SetSmallImages("bmp\oodlist1.bmp",16,12)
   if curList \= .Nil then
   do /* connect bitmap and insert colums */
-    curList~SetSmallImages("bmp\oodlist1.bmp",16,12)
+    curList~setImageList(smallIcons, .Image~id(LVSIL_SMALL))
     curList~InsertColumn(0,"Last Name",50)
     curList~InsertColumn(1,"First Name",50)
     curList~InsertColumn(2,"Street",50)
@@ -179,21 +181,21 @@ return
 
 /* initialize icon list control on third category page */
 ::method InitIcon
-  expose ID_Ic
+  expose ID_Ic normalIcons
   curList = self~GetListControl(ID_Ic)
   if curList \= .Nil then
   do
     self~ConnectListNotify(ID_Ic,"BEGINDRAG","DefListDragHandler")
-    curList~SetImages("bmp\oodlist2.bmp",32,32)
+    curList~setImageList(normalIcons, .Image~id(LVSIL_NORMAL))
   end
   else
     return
 
 /* initialize small icon list control on second category page */
 ::method InitSmallIcon
-  expose ID_SIc
+  expose ID_SIc smallIcons
   curList = self~GetListControl(ID_SIc)
-  curList~SetSmallImages("bmp\oodlist1.bmp",16,12)
+  curList~setImageList(smallIcons, .Image~id(LVSIL_SMALL))
   self~ConnectListNotify(ID_SIc,"BEGINDRAG","DefListDragHandler") /* connect default drag handler */
 
 
@@ -279,6 +281,34 @@ return
       curlist~Insert(,,Item.LastName"," Item.FirstName, iSex)
   end
 
+/* Create the small and large icon image lists.  This will be used in the
+ * report, small icon, and icon views.  The small icon image list will be used
+ * in both the report and the small icon views.
+ */
+::method createImageLists private
+  expose smallIcons normalIcons
+
+  small = .Image~getImage("bmp\oodlist1.bmp")
+  tmpIL = .ImageList~create(.Size~new(16, 12), .Image~id(ILC_COLOR4), 4, 0)
+  if \small~isNull,  \tmpIL~isNull then do
+      tmpIL~add(small)
+      small~release
+      smallIcons = tmpIL
+  end
+  else do
+    smallIcons = .nil
+  end
+
+  normal = .Image~getImage("bmp\oodlist2.bmp")
+  tmpIL = .ImageList~create(.Size~new(32, 32), .Image~id(ILC_COLOR4), 4, 0)
+  if \normal~isNull,  \tmpIL~isNull then do
+      tmpIL~add(normal)
+      normal~release
+      normalIcons = tmpIL
+  end
+  else do
+    normalIcons = .nil
+  end
 
 /* The Address input dialog, invoked when the Add button is selected */
 ::class AdrDialogClass subclass UserDialog inherit AdvancedControls
