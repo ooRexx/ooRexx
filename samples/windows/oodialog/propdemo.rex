@@ -151,13 +151,22 @@
    self~ConnectTreeNotify(100,"BeginDrag","DefTreeDragHandler")   /* support drag and drop (default behaviour) */
    tc = self~GetTreeControl(100)  /* category specifier is not required in InitXXX methods */
    if tc == .Nil then return
-   tc~SetImages("bmp\psdemotv.bmp",32,32)   /* set images for the items */
+
+   /* set images for the items */
+   image = .Image~getImage("bmp\psdemotv.bmp")
+   imageList = .ImageList~create(.Size~new(32, 32), .Image~id(ILC_COLOR8), 10, 0)
+   if \image~isNull,  \imageList~isNull then do
+      imageList~add(image)
+      tc~setImageList(imageList, .Image~id(TVSIL_NORMAL))
+      image~release
+   end
+
    /* add the tree */
    tc~Add("Toys",1)       /* this is a root (first argument specified) */
    tc~Add(,"Indoor")      /* this is a subitem (leading arguments omitted) */
-   tc~Add(,,"Boys")
-   tc~Add(,,,"Cowboys")
-   tc~Add(,,,"Cars",8)
+   tc~Add(,,"Boys")       -- the last numeric argument in some of the items is
+   tc~Add(,,,"Cowboys")   -- the index for the icon in the image list.  Those
+   tc~Add(,,,"Cars",8)    -- items without a number will not display an icon.
    tc~Add(,,,"Starwars",9)
    tc~Add(,,"Girls")
    tc~Add(,,,"Barby")
@@ -177,8 +186,8 @@
    tc~Add(,,,"Bucket")
    tc~Add(,,,"Sandbox")
    tc~Add(,,"Technical")
-   tc~Add(,,,"Trains")
-   tc~Add(,,,"Remote controlled")
+   tc~Add(,,,"Trains",7)
+   tc~Add(,,,"Remote controlled",8)
    tc~Add("Office Articles",2)
    tc~Add(,"Tools")
    tc~Add(,"Books")

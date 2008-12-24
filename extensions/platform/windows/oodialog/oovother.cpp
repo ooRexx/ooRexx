@@ -3916,6 +3916,11 @@ RexxMethod2(RexxObjectPtr, advCtrl_getListControl, ARGLIST, args, OSELF, self)
     return advGetControl(context, args, self, "LC");
 }
 
+RexxMethod2(RexxObjectPtr, advCtrl_getTreeControl, ARGLIST, args, OSELF, self)
+{
+    return advGetControl(context, args, self, "TC");
+}
+
 RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF, self)
 {
     rxPutInBag(context, control, ADVCTRLCONTROLBAG_ATTRIBUTE);
@@ -4159,42 +4164,152 @@ RexxMethod5(size_t, pbc_test, OPTIONAL_int32_t, n1,
     return rxArgCount(context);
 }
 
+/**
+ * Sets an object variable value and returns the existing value.  With the
+ * caveat that if the object variable did not have a value set, .nil is
+ * returned.
+ *
+ * @param c        The method context we are operating in.
+ * @param varName  The object variable's name.
+ * @param val      The value to set.
+ *
+ * @return The previous value of the object variable, if it was set, otherwise
+ *         .nil.
+ */
+RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val)
+{
+    RexxObjectPtr result = c->GetObjectVariable(varName);
+    if ( result == NULLOBJECT )
+    {
+        result = c->Nil();
+    }
+    c->SetObjectVariable(varName, val);
+
+    return result;
+}
+
 
 /**
- *  Methods for the .ListControl.
+ *  Methods for the .TreeControl class.
+ */
+#define TREECONTROL_CLASS         "TreeControl"
+
+#define TVSTATE_ATTRIBUTE         "TV!STATEIMAGELIST"
+#define TVNORMAL_ATTRIBUTE        "TV!NORMALIMAGELIST"
+
+CSTRING tvGetAttributeName(uint8_t type)
+{
+    switch ( type )
+    {
+        case TVSIL_STATE :
+            return TVSTATE_ATTRIBUTE;
+        case TVSIL_NORMAL :
+        default :
+            return TVNORMAL_ATTRIBUTE;
+    }
+}
+
+/** TreeControl::setImageList()
+ *
+ *  Sets or removes one of a tree-view's image lists.
+ *
+ *  @param imageList  An .ImageList object that references the image list to be
+ *                    set, or .nil. If .nil, an existing image list, if any, is
+ *                    removed.
+ *
+ *  @param type       [optional] One of the tree-view image list types and
+ *                    specifies which image list we are concerned with, normal,
+ *                    or state. The default is normal.
+ *
+ *  @return           Returns the exsiting .ImageList object if there is one, or
+ *                    .nil if there is not an existing object.
+ *
+ */
+RexxMethod3(RexxObjectPtr, tv_setImageList, RexxObjectPtr, imageList, OPTIONAL_uint8_t, type, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    HIMAGELIST himl = NULL;
+
+    if ( imageList != context->Nil() )
+    {
+        // imageList is not .nil, so it has to be a .ImageList, or error.
+        himl = rxGetImageList(context, imageList, 1);
+        if ( himl == NULL )
+        {
+            goto err_out;
+        }
+    }
+
+    if ( argumentOmitted(2) )
+    {
+        type = TVSIL_NORMAL;
+    }
+    else if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
+    {
+        invalidTypeException(context, 2, "TVSIL_XXX flag");
+        goto err_out;
+    }
+
+    TreeView_SetImageList(hwnd, himl, type);
+    return rxSetObjVar(context, tvGetAttributeName(type), imageList);
+
+err_out:
+    return NULLOBJECT;
+}
+
+/** TreeControl::getImageList()
+ *
+ *  Gets the tree-view's specifed image list.
+ *
+ *  @param  type [optional] Identifies which image list to get, normal, or
+ *               state. Normal is the default.
+ *
+ *  @return  The image list, if it exists, otherwise .nil.
+ */
+RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
+{
+    if ( argumentOmitted(1) )
+    {
+        type = TVSIL_NORMAL;
+    }
+    else if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
+    {
+        invalidTypeException(context, 2, "TVSIL_XXX flag");
+        return NULLOBJECT;
+    }
+
+    RexxObjectPtr result = context->GetObjectVariable(tvGetAttributeName(type));
+    if ( result == NULLOBJECT )
+    {
+        result = context->Nil();
+    }
+    return result;
+}
+
+
+
+/**
+ *  Methods for the .ListControl class.
  */
 #define LISTCONTROL_CLASS         "ListControl"
 
-#define STATE_ATTRIBUTE           "!STATEIMAGELIST"
-#define SMALL_ATTRIBUTE           "!SMALLIMAGELIST"
-#define NORMAL_ATTRIBUTE          "!NORMALIMAGELIST"
+#define LVSTATE_ATTRIBUTE         "LV!STATEIMAGELIST"
+#define LVSMALL_ATTRIBUTE         "LV!SMALLIMAGELIST"
+#define LVNORMAL_ATTRIBUTE        "LV!NORMALIMAGELIST"
 
 CSTRING lvGetAttributeName(uint8_t type)
 {
     switch ( type )
     {
         case LVSIL_STATE :
-            return STATE_ATTRIBUTE;
+            return LVSTATE_ATTRIBUTE;
         case LVSIL_SMALL :
-            return SMALL_ATTRIBUTE;
+            return LVSMALL_ATTRIBUTE;
         case LVSIL_NORMAL :
         default :
-            return NORMAL_ATTRIBUTE;
+            return LVNORMAL_ATTRIBUTE;
     }
-
-}
-RexxObjectPtr lvSetImages(RexxMethodContext *c, RexxObjectPtr imageList, uint8_t type, OSELF self)
-{
-    CSTRING varName = lvGetAttributeName(type);
-
-    RexxObjectPtr result = c->GetObjectVariable(varName);
-    if ( result == NULLOBJECT )
-    {
-        result = c->Nil();
-    }
-    c->SetObjectVariable(varName, imageList);
-
-    return result;
 }
 
 /** ListControl::setImageList()
@@ -4216,8 +4331,6 @@ RexxMethod3(RexxObjectPtr, lv_setImageList, RexxObjectPtr, imageList, OPTIONAL_u
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    // If imageList is .nil, then a NULL himl will remove the current image
-    // list, if any.
     HIMAGELIST himl = NULL;
 
     if ( imageList != context->Nil() )
@@ -4240,11 +4353,8 @@ RexxMethod3(RexxObjectPtr, lv_setImageList, RexxObjectPtr, imageList, OPTIONAL_u
         goto err_out;
     }
 
-    // We ignore the return from ListView_SetImageList() and instead return what
-    // this ListControl object has at its image list attribute.
     ListView_SetImageList(hwnd, himl, type);
-
-    return lvSetImages(context, imageList, type, self);
+    return rxSetObjVar(context, lvGetAttributeName(type), imageList);
 
 err_out:
     return NULLOBJECT;
@@ -4255,7 +4365,7 @@ err_out:
  *  Gets the list-view's specifed image list.
  *
  *  @param  type [optional] Identifies which image list to get.  Normal, small,
- *          or state. Normalis the default.
+ *          or state. Normal is the default.
  *
  *  @return  The image list, if it exists, otherwise .nil.
  */
@@ -4267,7 +4377,7 @@ RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
     }
     else if ( type > LVSIL_STATE )
     {
-        wrongRangeException(context, 2, LVSIL_NORMAL, LVSIL_STATE, type);
+        wrongRangeException(context, 1, LVSIL_NORMAL, LVSIL_STATE, type);
         return NULLOBJECT;
     }
 
@@ -4278,7 +4388,6 @@ RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
     }
     return result;
 }
-
 
 
 /**
@@ -6213,6 +6322,9 @@ static String2Int *imageInitMap(void)
     cMap->insert(String2Int::value_type("LVSIL_NORMAL", 0));
     cMap->insert(String2Int::value_type("LVSIL_SMALL", 1));
     cMap->insert(String2Int::value_type("LVSIL_STATE", 2));
+
+    cMap->insert(String2Int::value_type("TVSIL_NORMAL", 0));
+    cMap->insert(String2Int::value_type("TVSIL_STATE", 2));
 
     //cMap->insert(String2Int::value_type("", ));
 

@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -148,7 +148,13 @@ CleanUp:
     end
 
     /* Set image list for Tree control IDC_TREE */
-    curTree~SetImages(bmpFile,16,12)
+    image = .Image~getImage(bmpFile)
+    imageList = .ImageList~create(.Size~new(16, 12), .Image~id(ILC_COLOR8), 5, 2)
+    if \image~isNull,  \imageList~isNull then do
+       imageList~add(image)
+       curTree~setImageList(imageList, .Image~id(TVSIL_NORMAL))
+       image~release
+    end
 
     /* Read the file containig the tree input data and build the tree */
     do while lines(treeFile)

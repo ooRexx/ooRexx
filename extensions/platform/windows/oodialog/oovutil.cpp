@@ -2131,9 +2131,13 @@ REXX_METHOD_PROTOTYPE(il_handle);
 REXX_METHOD_PROTOTYPE(lv_setImageList);
 REXX_METHOD_PROTOTYPE(lv_getImageList);
 
-REXX_METHOD_PROTOTYPE(advCtrl_getButtonControl);
+REXX_METHOD_PROTOTYPE(tv_setImageList);
+REXX_METHOD_PROTOTYPE(tv_getImageList);
+
 REXX_METHOD_PROTOTYPE(advCtrl_getStaticControl);
+REXX_METHOD_PROTOTYPE(advCtrl_getButtonControl);
 REXX_METHOD_PROTOTYPE(advCtrl_getListControl);
+REXX_METHOD_PROTOTYPE(advCtrl_getTreeControl);
 REXX_METHOD_PROTOTYPE(advCtrl_putControl_pvt);
 
 REXX_METHOD_PROTOTYPE(pbc_stepIt);
@@ -2253,9 +2257,13 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_setImageList,          lv_setImageList),
     REXX_METHOD(lv_getImageList,          lv_getImageList),
 
-    REXX_METHOD(advCtrl_getButtonControl, advCtrl_getButtonControl),
+    REXX_METHOD(tv_setImageList,          tv_setImageList),
+    REXX_METHOD(tv_getImageList,          tv_getImageList),
+
     REXX_METHOD(advCtrl_getStaticControl, advCtrl_getStaticControl),
+    REXX_METHOD(advCtrl_getButtonControl, advCtrl_getButtonControl),
     REXX_METHOD(advCtrl_getListControl,   advCtrl_getListControl),
+    REXX_METHOD(advCtrl_getTreeControl,   advCtrl_getTreeControl),
     REXX_METHOD(advCtrl_putControl_pvt,   advCtrl_putControl_pvt),
 
     REXX_METHOD(pbc_stepIt,              pbc_stepIt),

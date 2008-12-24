@@ -87,25 +87,15 @@
      return ctrlobj
 
 ::method getStaticControl unguarded external "LIBRARY oodialog advCtrl_getStaticControl"
-/*
-::method GetStaticControl unguarded
-   arr = Arg(1,"A")
-   arr[3] = "ST"
-   forward message "GetControl" Arguments (arr)
-*/
+::method getButtonControl unguarded external "LIBRARY oodialog advCtrl_getButtonControl"
+::method getTreeControl unguarded external "LIBRARY oodialog advCtrl_getTreeControl"
+::method getListControl unguarded external "LIBRARY oodialog advCtrl_getListControl"
 
 ::method GetEditControl unguarded
    arr = Arg(1,"A")
    arr[3] = "EL"
    forward message "GetControl" Arguments (arr)
 
-::method getButtonControl unguarded external "LIBRARY oodialog advCtrl_getButtonControl"
-/*
-::method GetButtonControl unguarded
-   arr = Arg(1,"A")
-   arr[3] = "BUT"
-   forward message "GetControl" Arguments (arr)
-*/
 
 ::method GetRadioControl unguarded
    arr = Arg(1,"A")
@@ -136,22 +126,6 @@
    arr = Arg(1,"A")
    arr[3] = "SB"
    forward message "GetControl" Arguments (arr)
-
-::method GetTreeControl unguarded
-   arr = Arg(1,"A")
-   arr[3] = "TC"
-   forward message "GetControl" Arguments (arr)
-
-::method getListControl unguarded external "LIBRARY oodialog advCtrl_getListControl"
-/*
-::method GetListControl unguarded
-   arr = Arg(1,"A")
-   arr[3] = "LC"
-   forward message "GetControl" Arguments (arr) continue
-   listControl = result
-   if listControl \== .nil then listControl~lastItem = listControl~items - 1
-   return listControl
-*/
 
 ::method GetProgressBar unguarded
    arr = Arg(1,"A")
@@ -807,6 +781,8 @@
    if arg(1, 'O') | hItem = 0 then return -1
    return HandleTreeCtrl("SORT", self~Hwnd, hitem, 0) /* recursive not yet supported */
 
+
+-- This method is deprecated, use setImageList()
 ::method SetImages
    use arg bmp, cx, cy
    if arg(1, 'O') then return -1
@@ -814,8 +790,12 @@
    if arg(3, 'O') then cy = 0
    return HandleTreeCtrl("SETIMG",self~Hwnd, bmp, cx, cy)
 
+-- This method is deprecated, use setImageList()
 ::method RemoveImages
    return HandleTreeCtrl("UNSETIMG", self~Hwnd)
+
+::method setImageList external "LIBRARY oodialog tv_setImageList"
+::method getImageList external "LIBRARY oodialog tv_getImageList"
 
 ::method HitTest
    use arg x, y
