@@ -5520,6 +5520,47 @@ RexxObjectPtr rxNewImageList(RexxMethodContext *c, HIMAGELIST himl)
     return imageList;
 }
 
+/** ImageList::init()
+ *
+ *
+ *  @note  As far as I can see, all of the ImageList_xxx functions do not blow
+ *         up if an invalid handle is used, even if it is null.  We could just
+ *         set CSELF to the pointer value unconditionally and not have to worry
+ *         about an interpreter crash.  The ooRexx programmer would just have a
+ *         .ImageList object that didn't work.
+ *
+ *         A valid image list can be released and then becomes invalid (isNull
+ *         returns true.)  Since this is the same behavior as .ResourceImage and
+ *         .Image objects, both of which allow a null object to be instantiated
+ *         (isNull returns true,) we allow a null ImageList to be created.
+ *
+ *         However, if p is not null, we test that p is actually a valid
+ *         ImageList and raise an exception if it is not. All image lists have a
+ *         size, if ImageListGetIconSize() fails, then p is not an image list
+ *         handle.
+ */
+RexxMethod1(RexxObjectPtr, il_init, POINTER, p)
+{
+    if ( p == NULL )
+    {
+        context->SetObjectVariable("CSELF", context->NewPointer(NULL));
+        goto out;
+    }
+    HIMAGELIST himl = (HIMAGELIST)p;
+
+    // Test that the pointer is really a valid handle to an image list.
+    int cx = 2, cy = 2;
+    if ( ! ImageList_GetIconSize(himl, &cx, &cy) )
+    {
+        invalidTypeException(context, 1, "ImageList handle");
+        goto out;
+    }
+    context->SetObjectVariable("CSELF", context->NewPointer(himl));
+
+out:
+    return NULLOBJECT;
+}
+
 RexxMethod4(RexxObjectPtr, il_create_cls, OPTIONAL_RexxObjectPtr, size,  OPTIONAL_uint32_t, flags,
             OPTIONAL_int32_t, count, OPTIONAL_int32_t, grow)
 {
@@ -5569,47 +5610,6 @@ RexxMethod4(RexxObjectPtr, il_create_cls, OPTIONAL_RexxObjectPtr, size,  OPTIONA
 
 out:
     return result;
-}
-
-/** ImageList::init()
- *
- *
- *  @note  As far as I can see, all of the ImageList_xxx functions do not blow
- *         up if an invalid handle is used, even if it is null.  We could just
- *         set CSELF to the pointer value unconditionally and not have to worry
- *         about an interpreter crash.  The ooRexx programmer would just have a
- *         .ImageList object that didn't work.
- *
- *         A valid image list can be released and then becomes invalid (isNull
- *         returns true.)  Since this is the same behavior as .ResourceImage and
- *         .Image objects, both of which allow a null object to be instantiated
- *         (isNull returns true,) we allow a null ImageList to be created.
- *
- *         However, if p is not null, we test that p is actually a valid
- *         ImageList and raise an exception if it is not. All image lists have a
- *         size, if ImageListGetIconSize() fails, then p is not an image list
- *         handle.
- */
-RexxMethod1(RexxObjectPtr, il_init, POINTER, p)
-{
-    if ( p == NULL )
-    {
-        context->SetObjectVariable("CSELF", context->NewPointer(NULL));
-        goto out;
-    }
-    HIMAGELIST himl = (HIMAGELIST)p;
-
-    // Test that the pointer is really a valid handle to an image list.
-    int cx = 2, cy = 2;
-    if ( ! ImageList_GetIconSize(himl, &cx, &cy) )
-    {
-        invalidTypeException(context, 1, "ImageList handle");
-        goto out;
-    }
-    context->SetObjectVariable("CSELF", context->NewPointer(himl));
-
-out:
-    return NULLOBJECT;
 }
 
 RexxMethod3(int, il_add, RexxObjectPtr, image, OPTIONAL_RexxObjectPtr, optMask, CSELF, il)
@@ -6721,40 +6721,6 @@ err_out:
     return NULLOBJECT;
 }
 
-RexxMethod1(uint32_t, ri_release, CSELF, r)
-{
-    uint32_t rc = 0;
-    PRESOURCEIMAGE ri = (PRESOURCEIMAGE)r;
-
-    if ( ri->canRelease )
-    {
-        if ( ! FreeLibrary((HMODULE)ri->hMod) )
-        {
-            rc = GetLastError();
-        }
-    }
-
-    ri->canRelease = false;
-    ri->isValid = false;
-    ri->hMod = NULL;
-    ri->lastError = rc;
-    oodSetSysErrCode(context, ri->lastError);
-
-    return rc;
-}
-
-RexxMethod1(POINTER, ri_handle, CSELF, ri)
-{
-    if ( ! ((PRESOURCEIMAGE)ri)->isValid )
-    {
-        nullObjectException(context, RESOURCEIMAGECLASS);
-    }
-    return ((PRESOURCEIMAGE)ri)->hMod;
-}
-
-RexxMethod1(logical_t, ri_isNull, CSELF, ri) { return ( ! ((PRESOURCEIMAGE)ri)->isValid); }
-RexxMethod1(uint32_t, ri_systemErrorCode, CSELF, ri) { return ((PRESOURCEIMAGE)ri)->lastError; }
-
 /** ResourceImage::getImage()
  *
  * Loads an image from this resource binary.
@@ -6837,6 +6803,40 @@ RexxMethod5(RexxObjectPtr, ri_getImages, RexxArrayObject, ids, OPTIONAL_uint8_t,
 out:
     return result;
 }
+
+RexxMethod1(uint32_t, ri_release, CSELF, r)
+{
+    uint32_t rc = 0;
+    PRESOURCEIMAGE ri = (PRESOURCEIMAGE)r;
+
+    if ( ri->canRelease )
+    {
+        if ( ! FreeLibrary((HMODULE)ri->hMod) )
+        {
+            rc = GetLastError();
+        }
+    }
+
+    ri->canRelease = false;
+    ri->isValid = false;
+    ri->hMod = NULL;
+    ri->lastError = rc;
+    oodSetSysErrCode(context, ri->lastError);
+
+    return rc;
+}
+
+RexxMethod1(POINTER, ri_handle, CSELF, ri)
+{
+    if ( ! ((PRESOURCEIMAGE)ri)->isValid )
+    {
+        nullObjectException(context, RESOURCEIMAGECLASS);
+    }
+    return ((PRESOURCEIMAGE)ri)->hMod;
+}
+
+RexxMethod1(logical_t, ri_isNull, CSELF, ri) { return ( ! ((PRESOURCEIMAGE)ri)->isValid); }
+RexxMethod1(uint32_t, ri_systemErrorCode, CSELF, ri) { return ((PRESOURCEIMAGE)ri)->lastError; }
 
 
 /**
