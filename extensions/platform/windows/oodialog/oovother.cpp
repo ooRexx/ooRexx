@@ -82,11 +82,6 @@ static BOOL removeKeyPressSubclass(SUBCLASSDATA *, HWND, INT);
 /* Enum for the type of a dialog control. Types to be added as needed. */
 typedef enum {oodcStatic, oodcButton, oodcEdit, oodcProgressBar,} oodControl_t;
 
-/* General purpose helper functions */
-RexxObjectPtr rxGetBagObjVar(RexxMethodContext *, CSTRING);
-RexxObjectPtr rxPutInBag(RexxMethodContext *, RexxObjectPtr, CSTRING);
-RexxObjectPtr rxRemoveFromBag(RexxMethodContext *, RexxObjectPtr, CSTRING);
-
 
 /**
  * Defines and structs for the DlgUtil class.
@@ -3523,79 +3518,27 @@ inline bool hasStyle(HWND hwnd, DWORD_PTR style)
 }
 
 /**
- * Gets a .Bag object from an object variable.  If the object variable does yet
- * exist, it is first added to the object.
+ * Sets an object variable value and returns the existing value.  With the
+ * caveat that if the object variable did not have a value set, .nil is
+ * returned.
  *
- * @param c        The method context we are executing under.
- * @param varName  The name of the object variable.
+ * @param c        The method context we are operating in.
+ * @param varName  The object variable's name.
+ * @param val      The value to set.
  *
- * @return  The .Bag object, or the NULLOBJECT if something goes wrong.
+ * @return The previous value of the object variable, if it was set, otherwise
+ *         .nil.
  */
-RexxObjectPtr rxGetBagObjVar(RexxMethodContext *c, CSTRING varName)
+RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val)
 {
-    // This should never fail, do we need an exception if it does?  FIXME TODO
+    RexxObjectPtr result = c->GetObjectVariable(varName);
+    if ( result == NULLOBJECT )
+    {
+        result = c->Nil();
+    }
+    c->SetObjectVariable(varName, val);
 
-    RexxObjectPtr bag = c->GetObjectVariable(varName);
-    if ( bag == NULLOBJECT )
-    {
-        RexxObjectPtr theBagClass = c->FindClass("BAG");
-        if ( theBagClass != NULLOBJECT )
-        {
-            bag = c->SendMessage0(theBagClass, "NEW");
-            c->SetObjectVariable(varName, bag);
-        }
-    }
-    return bag;
-}
-
-/**
- * Put an object into a bag, where the bag is an object variable of some object
- * instance.  If the bag object variable does not yet exist, it is created.
- *
- * @param c        The method context of the object we are executing in.
- * @param obj      The object to put in the bag.
- * @param varName  The object variable name of the bag.
- *
- * @return NULLOBJECT, always
- *
- * @note   This helper function is used by both the Image and ImageList classes.
- */
-RexxObjectPtr rxPutInBag(RexxMethodContext *c, RexxObjectPtr obj, CSTRING varName)
-{
-    RexxObjectPtr bag = rxGetBagObjVar(c, varName);
-    if ( bag != NULLOBJECT )
-    {
-        c->SendMessage2(bag, "PUT", obj, obj);
-    }
-    return NULLOBJECT;
-}
-
-/**
- * Remove an object from a bag, where the bag is an object variable of some
- * object instance.  If the bag object variable does not yet exist, it is
- * created.
- *
- * @param c        The method context of the object we are executing in.
- * @param obj      The object to remove from the bag.
- * @param varName  The object variable name of the bag.
- *
- * @return The removed object, which can be .nil if there is no such item in the
- *         bag.  (Which includes the scenario where the bag was created.)
- *
- */
-RexxObjectPtr rxRemoveFromBag(RexxMethodContext *c, RexxObjectPtr obj, CSTRING varName)
-{
-    RexxObjectPtr item = NULLOBJECT;
-    RexxObjectPtr bag = rxGetBagObjVar(c, varName);
-    if ( bag != NULLOBJECT )
-    {
-        item = c->SendMessage1(bag, "REMOVE", obj);
-    }
-    if ( item == NULLOBJECT )
-    {
-        item = c->Nil();
-    }
-    return item;
+    return result;
 }
 
 /**
@@ -3921,9 +3864,31 @@ RexxMethod2(RexxObjectPtr, advCtrl_getTreeControl, ARGLIST, args, OSELF, self)
     return advGetControl(context, args, self, "TC");
 }
 
+RexxMethod2(RexxObjectPtr, advCtrl_getTabControl, ARGLIST, args, OSELF, self)
+{
+    return advGetControl(context, args, self, "TAB");
+}
+
 RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF, self)
 {
-    rxPutInBag(context, control, ADVCTRLCONTROLBAG_ATTRIBUTE);
+    // This should never fail, do we need an exception if it does?
+
+    RexxObjectPtr bag = context->GetObjectVariable(ADVCTRLCONTROLBAG_ATTRIBUTE);
+    if ( bag == NULLOBJECT )
+    {
+        RexxObjectPtr theBagClass = context->FindClass("BAG");
+        if ( theBagClass != NULLOBJECT )
+        {
+            bag = context->SendMessage0(theBagClass, "NEW");
+            context->SetObjectVariable(ADVCTRLCONTROLBAG_ATTRIBUTE, bag);
+        }
+    }
+
+    if ( bag != NULLOBJECT )
+    {
+        context->SendMessage2(bag, "PUT", control, control);
+    }
+
     return context->Nil();
 }
 
@@ -4164,27 +4129,105 @@ RexxMethod5(size_t, pbc_test, OPTIONAL_int32_t, n1,
     return rxArgCount(context);
 }
 
+
+
 /**
- * Sets an object variable value and returns the existing value.  With the
- * caveat that if the object variable did not have a value set, .nil is
- * returned.
- *
- * @param c        The method context we are operating in.
- * @param varName  The object variable's name.
- * @param val      The value to set.
- *
- * @return The previous value of the object variable, if it was set, otherwise
- *         .nil.
+ *  Methods for the .ListControl class.
  */
-RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val)
+#define LISTCONTROL_CLASS         "ListControl"
+
+#define LVSTATE_ATTRIBUTE         "LV!STATEIMAGELIST"
+#define LVSMALL_ATTRIBUTE         "LV!SMALLIMAGELIST"
+#define LVNORMAL_ATTRIBUTE        "LV!NORMALIMAGELIST"
+
+CSTRING lvGetAttributeName(uint8_t type)
 {
-    RexxObjectPtr result = c->GetObjectVariable(varName);
+    switch ( type )
+    {
+        case LVSIL_STATE :
+            return LVSTATE_ATTRIBUTE;
+        case LVSIL_SMALL :
+            return LVSMALL_ATTRIBUTE;
+        case LVSIL_NORMAL :
+        default :
+            return LVNORMAL_ATTRIBUTE;
+    }
+}
+
+/** ListControl::setImageList()
+ *
+ *  Sets or removes one of a list-view's image lists.
+ *
+ *  @param imageList  An .ImageList object that references the image list to be
+ *                    set, or .nil. If .nil, an existing image list, if any is
+ *                    removed.
+ *
+ *  @param type       One of the list-view image list types and specifies which
+ *                    image list we are concerned with, normal, small or state.
+ *
+ *  @return           Returns the exsiting .ImageList object if there is one, or
+ *                    .nil if there is not an existing object.
+ *
+ */
+RexxMethod3(RexxObjectPtr, lv_setImageList, RexxObjectPtr, imageList, OPTIONAL_uint8_t, type, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    HIMAGELIST himl = NULL;
+
+    if ( imageList != context->Nil() )
+    {
+        // imageList is not .nil, so it has to be a .ImageList, or error.
+        himl = rxGetImageList(context, imageList, 1);
+        if ( himl == NULL )
+        {
+            goto err_out;
+        }
+    }
+
+    if ( argumentOmitted(2) )
+    {
+        type = LVSIL_NORMAL;
+    }
+    else if ( type > LVSIL_STATE )
+    {
+        wrongRangeException(context, 2, LVSIL_NORMAL, LVSIL_STATE, type);
+        goto err_out;
+    }
+
+    ListView_SetImageList(hwnd, himl, type);
+    return rxSetObjVar(context, lvGetAttributeName(type), imageList);
+
+err_out:
+    return NULLOBJECT;
+}
+
+/** ListControl::getImageList()
+ *
+ *  Gets the list-view's specifed image list.
+ *
+ *  @param  type [optional] Identifies which image list to get.  Normal, small,
+ *          or state. Normal is the default.
+ *
+ *  @return  The image list, if it exists, otherwise .nil.
+ */
+RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
+{
+    if ( argumentOmitted(1) )
+    {
+        type = LVSIL_NORMAL;
+    }
+    else if ( type > LVSIL_STATE )
+    {
+        wrongRangeException(context, 1, LVSIL_NORMAL, LVSIL_STATE, type);
+        return NULLOBJECT;
+    }
+
+    RexxObjectPtr result = context->GetObjectVariable(lvGetAttributeName(type));
     if ( result == NULLOBJECT )
     {
-        result = c->Nil();
+        result = context->Nil();
     }
-    c->SetObjectVariable(varName, val);
-
     return result;
 }
 
@@ -4288,54 +4331,30 @@ RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
 }
 
 
-
 /**
- *  Methods for the .ListControl class.
+ *  Methods for the .TabControl class.
  */
-#define LISTCONTROL_CLASS         "ListControl"
+#define TABCONTROL_CLASS          "TabControl"
 
-#define LVSTATE_ATTRIBUTE         "LV!STATEIMAGELIST"
-#define LVSMALL_ATTRIBUTE         "LV!SMALLIMAGELIST"
-#define LVNORMAL_ATTRIBUTE        "LV!NORMALIMAGELIST"
+#define TABIMAGELIST_ATTRIBUTE    "TAB!IMAGELIST"
 
-CSTRING lvGetAttributeName(uint8_t type)
-{
-    switch ( type )
-    {
-        case LVSIL_STATE :
-            return LVSTATE_ATTRIBUTE;
-        case LVSIL_SMALL :
-            return LVSMALL_ATTRIBUTE;
-        case LVSIL_NORMAL :
-        default :
-            return LVNORMAL_ATTRIBUTE;
-    }
-}
-
-/** ListControl::setImageList()
+/** TabControl::setImageList()
  *
- *  Sets or removes one of a list-view's image lists.
+ *  Sets or removes the image list for a Tab control.
  *
  *  @param imageList  An .ImageList object that references the image list to be
- *                    set, or .nil. If .nil, an existing image list, if any is
+ *                    set, or .nil. If .nil, an existing image list, if any, is
  *                    removed.
  *
- *  @param type       One of the list-view image list types and specifies which
- *                    image list we are concerned with, normal, small or state.
- *
- *  @return           Returns the exsiting .ImageList object if there is one, or
- *                    .nil if there is not an existing object.
- *
+ *  @return           Returns the exsiting .ImageList object, or .nil if there
+ *                    is not an existing object.
  */
-RexxMethod3(RexxObjectPtr, lv_setImageList, RexxObjectPtr, imageList, OPTIONAL_uint8_t, type, OSELF, self)
+RexxMethod2(RexxObjectPtr, tab_setImageList, RexxObjectPtr, imageList, OSELF, self)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-
     HIMAGELIST himl = NULL;
 
     if ( imageList != context->Nil() )
     {
-        // imageList is not .nil, so it has to be a .ImageList, or error.
         himl = rxGetImageList(context, imageList, 1);
         if ( himl == NULL )
         {
@@ -4343,50 +4362,24 @@ RexxMethod3(RexxObjectPtr, lv_setImageList, RexxObjectPtr, imageList, OPTIONAL_u
         }
     }
 
-    if ( argumentOmitted(2) )
-    {
-        type = LVSIL_NORMAL;
-    }
-    else if ( type > LVSIL_STATE )
-    {
-        wrongRangeException(context, 2, LVSIL_NORMAL, LVSIL_STATE, type);
-        goto err_out;
-    }
-
-    ListView_SetImageList(hwnd, himl, type);
-    return rxSetObjVar(context, lvGetAttributeName(type), imageList);
+    HWND hwnd = rxGetWindowHandle(context, self);
+    TabCtrl_SetImageList(hwnd, himl);
+    return rxSetObjVar(context, TABIMAGELIST_ATTRIBUTE, imageList);
 
 err_out:
     return NULLOBJECT;
 }
 
-/** ListControl::getImageList()
+/** TabControl::getImageList()
  *
- *  Gets the list-view's specifed image list.
- *
- *  @param  type [optional] Identifies which image list to get.  Normal, small,
- *          or state. Normal is the default.
+ *  Gets the Tab control's image list.
  *
  *  @return  The image list, if it exists, otherwise .nil.
  */
-RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
+RexxMethod1(RexxObjectPtr, tab_getImageList, OSELF, self)
 {
-    if ( argumentOmitted(1) )
-    {
-        type = LVSIL_NORMAL;
-    }
-    else if ( type > LVSIL_STATE )
-    {
-        wrongRangeException(context, 1, LVSIL_NORMAL, LVSIL_STATE, type);
-        return NULLOBJECT;
-    }
-
-    RexxObjectPtr result = context->GetObjectVariable(lvGetAttributeName(type));
-    if ( result == NULLOBJECT )
-    {
-        result = context->Nil();
-    }
-    return result;
+    RexxObjectPtr result = context->GetObjectVariable(TABIMAGELIST_ATTRIBUTE);
+    return (result == NULLOBJECT) ? context->Nil() : result;
 }
 
 

@@ -86,16 +86,17 @@
    else
      return ctrlobj
 
+
 ::method getStaticControl unguarded external "LIBRARY oodialog advCtrl_getStaticControl"
 ::method getButtonControl unguarded external "LIBRARY oodialog advCtrl_getButtonControl"
 ::method getTreeControl unguarded external "LIBRARY oodialog advCtrl_getTreeControl"
 ::method getListControl unguarded external "LIBRARY oodialog advCtrl_getListControl"
+::method getTabControl unguarded external "LIBRARY oodialog advCtrl_getTabControl"
 
 ::method GetEditControl unguarded
    arr = Arg(1,"A")
    arr[3] = "EL"
    forward message "GetControl" Arguments (arr)
-
 
 ::method GetRadioControl unguarded
    arr = Arg(1,"A")
@@ -135,11 +136,6 @@
 ::method GetSliderControl unguarded
    arr = Arg(1,"A")
    arr[3] = "SC"
-   forward message "GetControl" Arguments (arr)
-
-::method GetTabControl unguarded
-   arr = Arg(1,"A")
-   arr[3] = "TAB"
    forward message "GetControl" Arguments (arr)
 
 ::method GetMonthCalendar unguarded
@@ -1502,6 +1498,7 @@
 ::method Focused
    return HandleOtherNewCtrls("TAB","FOCUS",self~Hwnd, "G")
 
+-- This method is deprecated, use setImageList()
 ::method SetImages
    use arg bmp, cx, cy
    if Arg(1,'o') = 1 then return -1
@@ -1509,8 +1506,12 @@
    if Arg(3,'o') = 1 then cy = 0
    return HandleOtherNewCtrls("TAB","SETIMG",self~Hwnd, bmp, cx, cy)
 
+-- This method is deprecated, use setImageList()
 ::method RemoveImages
    return HandleOtherNewCtrls("TAB","UNSETIMG",self~Hwnd)
+
+::method setImageList external "LIBRARY oodialog tab_setImageList"
+::method getImageList external "LIBRARY oodialog tab_getImageList"
 
 ::method SetPadding
    parse arg cx, cy
