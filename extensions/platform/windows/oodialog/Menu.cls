@@ -780,7 +780,7 @@
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::class 'MenuTemplate' public mixinclass ResourceUtils
 
-::method memInit
+::method memInit private
   expose basePtr currentPtr memHandle isFinal
   use strict arg count, helpID
 
