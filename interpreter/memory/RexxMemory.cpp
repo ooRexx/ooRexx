@@ -485,46 +485,6 @@ void RexxMemory::collectAndUninit(bool clearStack)
 }
 
 
-void  RexxMemory::forceUninits()
-/******************************************************************************/
-/* FUNCTION: we will run the UNINIT method of all objects in the UNINIT       */
-/*  table for our process.  Even if the object is "dead", this is because the */
-/*  process is going away an its our last chance.  Instead of removing the    */
-/*  objects as we go, we run the entire table and then reset table.           */
-/*                                                                            */
-/******************************************************************************/
-{
-    /* if we're already processing this, don't try to do this */
-    /* recursively. */
-    if (processingUninits)
-    {
-        return;
-    }
-
-    /* turn on the recursion flag, and also zero out the count of */
-    /* pending uninits to run */
-    processingUninits = true;
-
-    RexxObject *zombieObj;
-
-                                       /* for all objects in the table    */
-    for (HashLink iterTable = uninitTable->first();
-         (zombieObj = uninitTable->index(iterTable)) != OREF_NULL;
-         iterTable = uninitTable->next(iterTable))
-    {
-        try
-        {
-            zombieObj->uninit();           /* run the UNINIT method           */
-        }
-        catch (RexxActivation *) { }
-        catch (ActivityException) { }
-    }                                  /* now go check next object in tabl*/
-
-    /* make sure we remove the recursion protection */
-    processingUninits = false;
-}
-
-
 void  RexxMemory::runUninits()
 /******************************************************************************/
 /* Function:  Run any UNINIT methods for this activity                        */
