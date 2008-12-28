@@ -212,6 +212,17 @@ bool Interpreter::terminateInterpreter()
 
 
 /**
+ * Quick test if we're down to just a single interpreter instance.
+ *
+ * @return true if we're down to a single interpreter instance.
+ */
+bool Interpreter::lastInstance()
+{
+    return interpreterInstances->items() == 1;
+}
+
+
+/**
  * Create a new instance and return the instance context pointers
  * and thread context pointer for the instance.
  *

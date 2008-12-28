@@ -473,8 +473,13 @@ void RexxMemory::checkUninit()
  * attempt to ensure that all objects with uninit methods get
  * a chance to clean up prior to termination.
  */
-void RexxMemory::collectAndUninit()
+void RexxMemory::collectAndUninit(bool clearStack)
 {
+    // clear the save stack if we're working with a single instance
+    if (clearStack)
+    {
+        clearSaveStack();
+    }
     collect();
     runUninits();
 }

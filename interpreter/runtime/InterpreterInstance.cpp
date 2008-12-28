@@ -481,7 +481,7 @@ bool InterpreterInstance::terminate()
     globalReferences->empty();
     // before we update of the data structures, make sure we process any
     // pending uninit activity.
-    memoryObject.collectAndUninit();
+    memoryObject.collectAndUninit(Interpreter::lastInstance());
 
     // do system specific termination of an instance
     sysInstance.terminate();

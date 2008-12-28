@@ -90,6 +90,7 @@ public:
     static void startInterpreter(InterpreterStartupMode mode);
     static inline bool isTerminated() { return !active; }
     static inline bool isActive() { return active; }
+    static bool lastInstance();
     static InterpreterInstance *createInterpreterInstance(RexxOption *options);
     static inline InterpreterInstance *createInterpreterInstance() { return createInterpreterInstance(NULL); }
     static bool terminateInterpreterInstance(InterpreterInstance *instance);
