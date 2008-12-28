@@ -6292,6 +6292,10 @@ static String2Int *imageInitMap(void)
     cMap->insert(String2Int::value_type("LR_COPYFROMRESOURCE", 0x4000));
     cMap->insert(String2Int::value_type("LR_SHARED",           0x8000));
 
+    cMap->insert(String2Int::value_type("CLR_NONE", 0xFFFFFFFF));
+    cMap->insert(String2Int::value_type("CLR_DEFAULT", 0xFF000000));
+
+
     // ImageList_Create flags
     cMap->insert(String2Int::value_type("ILC_MASK", 0x0001));
     cMap->insert(String2Int::value_type("ILC_COLOR", 0x0000));
@@ -6479,41 +6483,25 @@ out:
     return result;
 }
 
-RexxMethod3(uint32_t, image_colorRef_cls, OPTIONAL_RexxObjectPtr, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+/** Image::colorRef()  [class]
+ *
+ *  Returns a COLORREF composed from the specified RGB valuses.
+ *
+ *  @param r  The red component
+ *  @param g  The green component
+ *  @param b  The blue component
+ *
+ *  @return The COLORREF.
+ *
+ *  @note  For CLR_DEFAULT and CLR_NONE, use .Image~id().
+ *
+ *  @note  For any omitted arg, the value of the arg will be 0.  Since 0 is the
+ *         default value for all of the args, we do not need to check for
+ *         ommitted args.
+ */
+RexxMethod3(uint32_t, image_colorRef_cls, OPTIONAL_uint8_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
-    uint32_t red;
-
-    // Note that if arg 2 and 3 are omitted, then g and b will be 0.  Since 0 is
-    // the default, we do not need to check for ommitted args for g and b.
-
-    if ( argumentOmitted(1) )
-    {
-        red = 0;
-    }
-    else if ( context->IsString(r) )
-    {
-        const char * s = context->ObjectToStringValue(r);
-        if ( *s == 'D' || *s == 'd' )
-        {
-            return CLR_DEFAULT;
-        }
-        else if ( *s == 'N' || *s == 'n' )
-        {
-            return CLR_NONE;
-        }
-        else
-        {
-            wrongArgValueException(context, 1, "DEFAULT, NONE", s);
-            return 0;
-        }
-    }
-    else if ( ! context->ObjectToUnsignedInt32(r, &red) || red > 0xff )
-    {
-        wrongRangeException(context, 1, 0, 255, r);
-        return 0;
-    }
-
-    return RGB((uint8_t)red, g, b);
+    return RGB(r, g, b);
 }
 
 RexxMethod1(uint8_t, image_getRValue_cls, uint32_t, colorRef) { return GetRValue(colorRef); }
