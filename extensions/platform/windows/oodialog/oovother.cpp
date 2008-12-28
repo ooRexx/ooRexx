@@ -138,17 +138,12 @@ RexxObjectPtr rxNewImageList(RexxMethodContext *, HIMAGELIST);
 
 #define IMAGECLASS                 ".Image"
 
-// This is a generic helper function, but it is currently only used by .Image objects.
-void rxDefineMethod(RexxMethodContext *, RexxObjectPtr, CSTRING name, CSTRING);
 
 // Helper functions.
-RexxObjectPtr rxNewImageFromControl(RexxMethodContext *, HWND, HANDLE, uint8_t, oodControl_t);
 CSTRING getImageTypeName(uint8_t);
+RexxObjectPtr rxNewImageFromControl(RexxMethodContext *, HWND, HANDLE, uint8_t, oodControl_t);
 RexxObjectPtr rxNewEmptyImage(RexxMethodContext *);
-RexxObjectPtr rxNewImage(RexxMethodContext *, HANDLE, uint8_t, RexxObjectPtr, uint32_t, bool, CSTRING);
-
-#define REALINIT_MTH_DEF           "forward MESSAGE \"assignImage\"\n"
-#define REALINIT_PUB_NAME          "laerTini"
+RexxObjectPtr rxNewValidImage(RexxMethodContext *, HANDLE, uint8_t, PSIZE, uint32_t, bool);
 
 #define IMAGE_TYPE_LIST            "Bitmap, Icon, Cursor, Enhanced Metafile"
 
@@ -191,6 +186,7 @@ typedef struct _RESOURCEIMAGE
  * Defines and structs for the .ProgressBar class.
  */
 #define PROGRESSBARCLASS  ".ProgressBar"
+
 
 /**
  * This classic Rexx external function was documented prior to 4.0.0.
@@ -5478,21 +5474,6 @@ RexxMethod1(int, bc_test, RexxObjectPtr, obj)
 #define IMAGELIST_CLASS "ImageList"
 
 
-/**
- * Add a new instance method to a class using the define() method of the .Class
- * class.  (This is a class method so self must be a class object pointer.)
- *
- * @param c     The method context that self is executing in.
- * @param self  The self object.
- * @param name  The name of the new method.
- * @param def   The method definition.
- */
-void rxDefineMethod(RexxMethodContext *c, RexxObjectPtr self, CSTRING name, CSTRING def)
-{
-    RexxObjectPtr mObj = c->NewMethod(name, def, strlen(def));
-    c->SendMessage(self, "DEFINE", c->ArrayOfTwo(c->String(name), mObj));
-}
-
 HIMAGELIST rxGetImageList(RexxMethodContext *context, RexxObjectPtr il, int argPos)
 {
     HIMAGELIST himl = NULL;
@@ -5893,81 +5874,6 @@ RexxMethod1(logical_t, il_isNull, CSELF, il) { return ( il == NULL);  }
  */
 #define IMAGE_CLASS "Image"
 
-/**
- * Creates an .Image object from an image handle retrieved from a dialog
- * control.
- *
- * If the image had been set from ooDialog code, the .Image object would be
- * known.  Therefore, this an image assigned to the control, loaded from a
- * resource DLL.  The assumption then is, that the OS loaded the image as
- * LR_SHARED.  (Is this true?)
- *
- * We need to create an .Image object. If the image type is not passed in,
- * (type=-1,) we can deduce the type (possibly) from the control style, but not
- * the size or all the flags.  However, we do use the LR_SHARED flag based on
- * the above assumption.
- *
- * When the process that loaded the image ends, the OS will clean up the image
- * resource (MSDN.)  Using LR_SHARED will prevent the user from releasing an
- * image that shouldn't be.
- *
- * @param c
- * @param hwnd
- * @param hImage
- *
- * @return RexxObjectPtr
- */
-RexxObjectPtr rxNewImageFromControl(RexxMethodContext *c, HWND hwnd, HANDLE hImage, uint8_t type,
-                                    oodControl_t ctrl)
-{
-    LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
-
-    // If the caller did not know the type, try to deduce it.
-    if ( type == -1 )
-    {
-        switch ( ctrl )
-        {
-            case oodcStatic :
-                // If it is a cursor image, the control type is SS_ICON.
-                switch ( style & SS_TYPEMASK )
-                {
-                    case SS_BITMAP :
-                        type = IMAGE_BITMAP;
-                        break;
-                    case SS_ENHMETAFILE :
-                        type = IMAGE_ENHMETAFILE;
-                        break;
-                    case SS_ICON :
-                    default :
-                        type = IMAGE_ICON;
-                        break;
-                }
-                break;
-
-            case oodcButton :
-
-                switch ( style & BS_IMAGEMASK )
-                {
-                    case BS_BITMAP :
-                        type = IMAGE_BITMAP;
-                        break;
-                    case BS_ICON :
-                    default :
-                        type = IMAGE_ICON;
-                        break;
-                }
-                break;
-
-            default :
-                // Shouldn't happen
-                type = IMAGE_BITMAP;
-                break;
-
-        }
-    }
-    return rxNewImage(c, hImage, type, rxNewSize(c, 0, 0), LR_SHARED, false, "");
-}
-
 CSTRING getImageTypeName(uint8_t type)
 {
     switch ( type )
@@ -6031,49 +5937,140 @@ POODIMAGE rxGetImageBitmap(RexxMethodContext *c, RexxObjectPtr o, int pos)
     return oi;
 }
 
-RexxObjectPtr rxNewEmptyImage(RexxMethodContext *c)
+RexxObjectPtr rxNewImageObject(RexxMethodContext *c, RexxBufferObject bufferObj)
 {
     RexxObjectPtr image = NULLOBJECT;
 
     RexxClassObject ImageClass = rxGetContextClass(c, "Image");
     if ( ImageClass != NULL )
     {
-        image = c->SendMessage0(ImageClass, "NEW");
+        image = c->SendMessage1(ImageClass, "NEW", bufferObj);
     }
     return image;
 }
 
+RexxObjectPtr rxNewEmptyImage(RexxMethodContext *c)
+{
+    RexxBufferObject bufferObj = c->NewBuffer(sizeof(OODIMAGE));
+    POODIMAGE cself = (POODIMAGE)c->BufferData(bufferObj);
+
+    // Set everything to invalid.
+    memset(cself, 0, sizeof(OODIMAGE));
+    cself->type = -1;
+    cself->size.cx = -1;
+    cself->size.cy = -1;
+
+    return rxNewImageObject(c, bufferObj);
+}
+
 /**
- * Instantiates a new .Image object, specifically from an image returned from
- * LoadImage().
+ * Creates an .Image object from an image handle retrieved from a dialog
+ * control.
+ *
+ * If the image had been set from ooDialog code, the .Image object would be
+ * known.  Therefore, this an image assigned to the control, loaded from a
+ * resource DLL.  The assumption then is, that the OS loaded the image as
+ * LR_SHARED.  (Is this true?)
+ *
+ * We need to create an .Image object. If the image type is not passed in,
+ * (type=-1,) we can deduce the type (possibly) from the control style, but not
+ * the size or all the flags.  However, we do use the LR_SHARED flag based on
+ * the above assumption.
+ *
+ * When the process that loaded the image ends, the OS will clean up the image
+ * resource (MSDN.)  Using LR_SHARED will prevent the user from releasing an
+ * image that shouldn't be.
+ *
+ * @param c       Method context we are operating in.
+ * @param hwnd    Window handle of the dialog control.
+ * @param hImage  Handle to the image.
+ * @param type    Image type.
+ * @param ctrl    Type of dialog control.
+ *
+ * @return   A new .Image object.
+ */
+RexxObjectPtr rxNewImageFromControl(RexxMethodContext *c, HWND hwnd, HANDLE hImage, uint8_t type,
+                                    oodControl_t ctrl)
+{
+    SIZE s = {0};
+
+    // If the caller did not know the type, try to deduce it.
+    if ( type == -1 )
+    {
+        LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
+        switch ( ctrl )
+        {
+            case oodcStatic :
+                // If it is a cursor image, the control type is SS_ICON.
+                switch ( style & SS_TYPEMASK )
+                {
+                    case SS_BITMAP :
+                        type = IMAGE_BITMAP;
+                        break;
+                    case SS_ENHMETAFILE :
+                        type = IMAGE_ENHMETAFILE;
+                        break;
+                    case SS_ICON :
+                    default :
+                        type = IMAGE_ICON;
+                        break;
+                }
+                break;
+
+            case oodcButton :
+                switch ( style & BS_IMAGEMASK )
+                {
+                    case BS_BITMAP :
+                        type = IMAGE_BITMAP;
+                        break;
+                    case BS_ICON :
+                    default :
+                        type = IMAGE_ICON;
+                        break;
+                }
+                break;
+
+            default :
+                // Shouldn't happen
+                type = IMAGE_BITMAP;
+                break;
+
+        }
+    }
+    return rxNewValidImage(c, hImage, type, &s, LR_SHARED, false);
+}
+
+/**
+ * Instantiates a new, non-null, .Image object.
  *
  * @param context
  * @param hImage
  * @param type
- * @param size
+ * @param s
  * @param flags
+ * @param src       True, ooDialog created using LoadImage(). False created from
+ *                  a handle (so type, size, flags may not be correct.)
  *
- * @param src  True, ooDialog created using LoadImage(). False created from a
- *             handle (so type, size, flags may not be correct.)
- *
- * @param fileName  This arg is currently ignored and the empty string is used.
- *
- * @return RexxObjectPtr
+ * @return  A new .Image object.
  */
-RexxObjectPtr rxNewImage(RexxMethodContext *c, HANDLE hImage, uint8_t type, RexxObjectPtr size,
-                         uint32_t flags, bool src, CSTRING fileName)
+RexxObjectPtr rxNewValidImage(RexxMethodContext *c, HANDLE hImage, uint8_t type, PSIZE s, uint32_t flags, bool src)
 {
-    RexxObjectPtr image = rxNewEmptyImage(c);
+    RexxBufferObject bufferObj = c->NewBuffer(sizeof(OODIMAGE));
+    POODIMAGE cself = (POODIMAGE)c->BufferData(bufferObj);
 
-    if ( image != NULLOBJECT )
-    {
-        RexxArrayObject args = c->ArrayOfFour(c->NewPointer(hImage), c->UnsignedInt32(type), size,
-                                              c->UnsignedInt32(flags));
-        c->ArrayAppend(args, c->Logical(src));
-        c->ArrayAppend(args, c->String(fileName));
-        c->SendMessage(image, REALINIT_PUB_NAME, args);
-    }
-    return image;
+    cself->hImage = hImage;
+    cself->type = type;
+    cself->size.cx = s->cx;
+    cself->size.cy = s->cy;
+    cself->flags = flags;
+    cself->isValid = true;
+    cself->srcOOD = src;
+    cself->canRelease = ! (flags & LR_SHARED);
+    cself->typeName = getImageTypeName(type);
+    cself->lastError = 0;
+    cself->fileName = "";
+
+    return rxNewImageObject(c, bufferObj);
 }
 
 /**
@@ -6099,7 +6096,7 @@ void rxReleaseAllImages(RexxMethodContext *c, RexxArrayObject a, size_t last)
 }
 
 RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject ids, HINSTANCE hImage,
-                                        uint8_t type, SIZE s, RexxObjectPtr size, uint32_t flags)
+                                        uint8_t type, PSIZE s, uint32_t flags)
 {
     int resourceID;
     size_t count = c->ArraySize(ids);
@@ -6120,7 +6117,7 @@ RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject id
             goto out;
         }
 
-        HANDLE hImage = LoadImage(NULL, MAKEINTRESOURCE(resourceID), type, s.cx, s.cy, flags);
+        HANDLE hImage = LoadImage(NULL, MAKEINTRESOURCE(resourceID), type, s->cx, s->cy, flags);
         if ( hImage == NULL )
         {
             // Set the system error code and leave this slot in the array blank.
@@ -6131,7 +6128,7 @@ RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject id
             // Theoretically, image could come back null, but this seems very
             // unlikely.  Still, we'll check for it.  If it is null, an
             // exception has already been raised.
-            RexxObjectPtr image = rxNewImage(c, hImage, type, size, flags, true, "");
+            RexxObjectPtr image = rxNewValidImage(c, hImage, type, s, flags, true);
             if ( image == NULLOBJECT )
             {
                 if ( (flags & LR_SHARED) == 0 )
@@ -6148,7 +6145,7 @@ out:
     return result;
 }
 
-bool getStandardImageArgs(RexxMethodContext *context, uint8_t *type, uint8_t defType, RexxObjectPtr *size,
+bool getStandardImageArgs(RexxMethodContext *context, uint8_t *type, uint8_t defType, RexxObjectPtr size,
                           SIZE *defSize, uint32_t *flags, uint32_t defFlags)
 {
     oodSetSysErrCode(context, 0);
@@ -6157,19 +6154,16 @@ bool getStandardImageArgs(RexxMethodContext *context, uint8_t *type, uint8_t def
     {
         *type = defType;
     }
+
     if ( argumentExists(3) )
     {
-        SIZE *p = rxGetSize(context, *size, 3);
+        SIZE *p = rxGetSize(context, size, 3);
         if ( p == NULL )
         {
             return false;
         }
         defSize->cx = p->cx;
         defSize->cy = p->cy;
-    }
-    else
-    {
-        *size = rxNewSize(context, defSize->cx, defSize->cy);
     }
 
     if ( argumentOmitted(4) )
@@ -6328,12 +6322,6 @@ static String2Int *imageInitMap(void)
     return cMap;
 }
 
-RexxMethod1(RexxObjectPtr, image_init_cls, OSELF, self)
-{
-    rxDefineMethod(context, self, REALINIT_PUB_NAME, REALINIT_MTH_DEF);
-    return NULLOBJECT;
-}
-
 RexxMethod1(int, image_id_cls, CSTRING, id)
 {
     static String2Int *imageConstantsMap = NULL;
@@ -6391,7 +6379,7 @@ RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8
         fromFile = false;
     }
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, &size, &s, &flags,
+    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, size, &s, &flags,
                                 fromFile ? LR_LOADFROMFILE : LR_SHARED | LR_DEFAULTSIZE) )
     {
         goto out;
@@ -6405,7 +6393,7 @@ RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8
         goto out;
     }
 
-    result = rxNewImage(context, hImage, type, size, flags, true, "");
+    result = rxNewValidImage(context, hImage, type, &s, flags, true);
 
 out:
     return result;
@@ -6419,7 +6407,7 @@ RexxMethod4(RexxObjectPtr, image_fromFiles_cls, RexxArrayObject, files, OPTIONAL
     RexxArrayObject result = NULLOBJECT;
     SIZE s = {0};
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, &size, &s, &flags, LR_LOADFROMFILE) )
+    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, size, &s, &flags, LR_LOADFROMFILE) )
     {
         goto out;
     }
@@ -6450,7 +6438,7 @@ RexxMethod4(RexxObjectPtr, image_fromFiles_cls, RexxArrayObject, files, OPTIONAL
             // Theoretically, image could come back null, but this seems very
             // unlikely.  Still, we'll check for it.  If it is null, an
             // exception has already been raised.
-            RexxObjectPtr image = rxNewImage(context, hImage, type, size, flags, true, "");
+            RexxObjectPtr image = rxNewValidImage(context, hImage, type, &s, flags, true);
             if ( image == NULLOBJECT )
             {
                 rxReleaseAllImages(c, result, i - 1);
@@ -6472,12 +6460,12 @@ RexxMethod4(RexxObjectPtr, image_fromIDs_cls, RexxArrayObject, ids, OPTIONAL_uin
     RexxArrayObject result = NULLOBJECT;
     SIZE s = {0};
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_ICON, &size, &s, &flags, LR_SHARED | LR_DEFAULTSIZE) )
+    if ( ! getStandardImageArgs(context, &type, IMAGE_ICON, size, &s, &flags, LR_SHARED | LR_DEFAULTSIZE) )
     {
         goto out;
     }
 
-    result = rxImagesFromArrayOfInts(context, ids, NULL, type, s, size, flags);
+    result = rxImagesFromArrayOfInts(context, ids, NULL, type, &s, flags);
 
 out:
     return result;
@@ -6513,54 +6501,12 @@ RexxMethod1(uint8_t, image_getBValue_cls, uint32_t, colorRef) { return GetBValue
  *
  *
  */
-RexxMethod0(RexxObjectPtr, image_init)
+RexxMethod1(RexxObjectPtr, image_init, RexxObjectPtr, cselfObj)
 {
-    RexxBufferObject obj = context->NewBuffer(sizeof(OODIMAGE));
-    context->SetObjectVariable("CSELF", obj);
-
-    POODIMAGE cself = (POODIMAGE)context->BufferData(obj);
-
-    // Set everything to invalid.
-    memset(cself, 0, sizeof(OODIMAGE));
-    cself->type = -1;
-    cself->size.cx = -1;
-    cself->size.cy = -1;
-
-    return NULLOBJECT;
-}
-
-/** Image::assignImage  [private method]
- *
- *
- *  @note  This is a private method, callable only from within the C++ code.  As
- *         such, it is expected that the arguments are valid, hImage not null,
- *         type correct, etc.
- */
-RexxMethod7(RexxObjectPtr, image_assignImage, POINTER, hImage, uint8_t, type, RexxObjectPtr, size,
-            uint32_t, flags, logical_t, src, CSTRING, fileName, CSELF, oi)
-{
-    POODIMAGE pOI = (POODIMAGE)oi;
-
-    SIZE *s = rxGetSize(context, size, 3);
-    if ( s == NULL )
+    if ( requiredClass(context, cselfObj, "Buffer", 1) )
     {
-        // This should not ever be null, but if it is, rxGetSize() has raised an
-        // exception.
-        goto out;
+        context->SetObjectVariable("CSELF", cselfObj);
     }
-
-    pOI->hImage = hImage;
-    pOI->type = type;
-    pOI->size.cx = s->cx;
-    pOI->size.cy = s->cy;
-    pOI->flags = flags;
-    pOI->isValid = true;
-    pOI->srcOOD = src ? true : false;
-    pOI->canRelease = ! (flags & LR_SHARED);
-
-    pOI->typeName = getImageTypeName(type);
-
-out:
     return NULLOBJECT;
 }
 
@@ -6743,7 +6689,7 @@ RexxMethod5(RexxObjectPtr, ri_getImage, int, id, OPTIONAL_uint8_t, type,
     }
     ri->lastError = 0;
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, &size, &s, &flags, LR_SHARED) )
+    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, size, &s, &flags, LR_SHARED) )
     {
         goto out;
     }
@@ -6757,7 +6703,7 @@ RexxMethod5(RexxObjectPtr, ri_getImage, int, id, OPTIONAL_uint8_t, type,
         goto out;
     }
 
-    result = rxNewImage(context, hImage, type, size, flags, true, "");
+    result = rxNewValidImage(context, hImage, type, &s, flags, true);
 
 out:
     return result;
@@ -6777,12 +6723,12 @@ RexxMethod5(RexxObjectPtr, ri_getImages, RexxArrayObject, ids, OPTIONAL_uint8_t,
     }
     ri->lastError = 0;
 
-    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, &size, &s, &flags, LR_SHARED) )
+    if ( ! getStandardImageArgs(context, &type, IMAGE_BITMAP, size, &s, &flags, LR_SHARED) )
     {
         goto out;
     }
 
-    result = rxImagesFromArrayOfInts(context, ids, ri->hMod, type, s, size, flags);
+    result = rxImagesFromArrayOfInts(context, ids, ri->hMod, type, &s, flags);
     if ( result == NULLOBJECT )
     {
         ri->lastError = oodGetSysErrCode(context);

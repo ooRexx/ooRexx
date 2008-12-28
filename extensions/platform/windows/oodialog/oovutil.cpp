@@ -2096,7 +2096,6 @@ REXX_METHOD_PROTOTYPE(ri_systemErrorCode);
 REXX_METHOD_PROTOTYPE(ri_getImage);
 REXX_METHOD_PROTOTYPE(ri_getImages);
 
-REXX_METHOD_PROTOTYPE(image_init_cls);
 REXX_METHOD_PROTOTYPE(image_id_cls);
 REXX_METHOD_PROTOTYPE(image_getImage_cls);
 REXX_METHOD_PROTOTYPE(image_fromFiles_cls);
@@ -2106,7 +2105,6 @@ REXX_METHOD_PROTOTYPE(image_getRValue_cls);
 REXX_METHOD_PROTOTYPE(image_getGValue_cls);
 REXX_METHOD_PROTOTYPE(image_getBValue_cls);
 REXX_METHOD_PROTOTYPE(image_init);
-REXX_METHOD_PROTOTYPE(image_assignImage);
 REXX_METHOD_PROTOTYPE(image_release);
 REXX_METHOD_PROTOTYPE(image_isNull);
 REXX_METHOD_PROTOTYPE(image_handle);
@@ -2227,7 +2225,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(ri_getImage,                 ri_getImage),
     REXX_METHOD(ri_getImages,                ri_getImages),
 
-    REXX_METHOD(image_init_cls,              image_init_cls),
     REXX_METHOD(image_id_cls,                image_id_cls),
     REXX_METHOD(image_getImage_cls,          image_getImage_cls),
     REXX_METHOD(image_fromFiles_cls,         image_fromFiles_cls),
@@ -2237,7 +2234,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(image_getGValue_cls,         image_getGValue_cls),
     REXX_METHOD(image_getBValue_cls,         image_getBValue_cls),
     REXX_METHOD(image_init,                  image_init),
-    REXX_METHOD(image_assignImage,           image_assignImage),
     REXX_METHOD(image_release,               image_release),
     REXX_METHOD(image_isNull,                image_isNull),
     REXX_METHOD(image_systemErrorCode,       image_systemErrorCode),

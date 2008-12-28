@@ -410,7 +410,6 @@
 
 ::class 'Image' public
 
-::method init class external "LIBRARY oodialog image_init_cls"
 ::method id class external "LIBRARY oodialog image_id_cls"
 ::method getImage class external "LIBRARY oodialog image_getImage_cls"
 ::method fromFiles class external "LIBRARY oodialog image_fromFiles_cls"
@@ -426,7 +425,6 @@
 ::method handle external "LIBRARY oodialog image_handle"
 ::method isNull external "LIBRARY oodialog image_isNull"
 ::method systemErrorCode external "LIBRARY oodialog image_systemErrorCode"
-::method assignImage private external "LIBRARY oodialog image_assignImage"
 
 ::class 'ImageList' public
 ::method create class external "LIBRARY oodialog il_create_cls"
