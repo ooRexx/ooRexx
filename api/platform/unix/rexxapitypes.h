@@ -48,7 +48,7 @@
 #include <limits.h>
 #include <pthread.h>
 
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 || defined(__64BIT__)
 #define __REXX64__
 #else
 #undef __REXX64__

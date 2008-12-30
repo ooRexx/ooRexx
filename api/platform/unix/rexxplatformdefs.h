@@ -42,5 +42,11 @@
 #define AIX                           /* Default definition for AIX          */
 #endif
 
+/* This define is needed for 64-bit compiles on at least AIX. */
+
+#ifndef __INT64_C
+#define __INT64_C(c)  c##LL
+#endif
+
 #endif /* REXXPLATFORMDEFS_INCLUDED */
 
