@@ -236,30 +236,27 @@ char *REXXENTRY RexxGetVersionInformation()
 {
     char ver[100];
     sprintf( ver, " %d.%d.%d", ORX_VER, ORX_REL, ORX_MOD );
-    char vbuf0[] = "Open Object Rexx Version";
+    char header[] = "Open Object Rexx Version";
   #ifdef _DEBUG
-    char vbuf1[] = " - Internal Test Version\nBuild date: ";
+    char build[] = " - Internal Test Version\nBuild date: ";
   #else
-    char vbuf1[] = "\nBuild date: ";
+    char build[] = "\nBuild date: ";
   #endif
-    char vbuf2[] = "\nCopyright (c) IBM Corporation 1995, 2004.\nCopyright (c) RexxLA 2005-2008.\nAll Rights Reserved.";
-    char vbuf3[] = "\nThis program and the accompanying materials";
-    char vbuf4[] = "\nare made available under the terms of the Common Public License v1.0";
-    char vbuf5[] = "\nwhich accompanies this distribution.";
-    char vbuf6[] = "\nhttp://www.oorexx.org/license.html";
-    size_t s0 = strlen(vbuf0);
-    size_t s1 = strlen(vbuf1);
-    size_t s2 = strlen(vbuf2);
-    size_t s3 = strlen(vbuf3);
-    size_t s4 = strlen(vbuf4);
-    size_t s5 = strlen(vbuf5);
-    size_t s6 = strlen(vbuf6);
-    size_t sd = strlen(__DATE__);
-    size_t sv = strlen(ver);
-    char *ptr = (char *)SystemInterpreter::allocateResultMemory(sv+s0+s1+s2+s3+s4+s5+s6+sd+1);
-    if (ptr)
+  #ifdef __REXX64__
+    char mode[] = "\nAddressing Mode: 64";
+  #else
+    char mode[] = "\nAddressing Mode: 32";
+  #endif
+    char copy1[] = "\n\nCopyright (c) IBM Corporation 1995, 2004.\nCopyright (c) RexxLA 2005-2009.\nAll Rights Reserved.";
+    char copy2[] = "\nThis program and the accompanying materials";
+    char copy3[] = "\nare made available under the terms of the Common Public License v1.0";
+    char copy4[] = "\nwhich accompanies this distribution.";
+    char copy5[] = "\nhttp://www.oorexx.org/license.html";
+    char *ptr = (char *)SystemInterpreter::allocateResultMemory(strlen(header) + strlen(ver) + strlen(build) + strlen(__DATE__) +
+        strlen(mode) + strlen(copy1) + strlen(copy2) + strlen(copy3) + strlen(copy4) + strlen(copy5) + 1);
+    if (ptr != NULL)
     {
-        sprintf(ptr, "%s%s%s%s%s%s%s%s%s", vbuf0, ver, vbuf1, __DATE__, vbuf2, vbuf3, vbuf4, vbuf5, vbuf6);
+        sprintf(ptr, "%s%s%s%s%s%s%s%s%s%s", header, ver, build, __DATE__, mode, copy1, copy2, copy3, copy4, copy5);
     }
     return ptr;
 }
