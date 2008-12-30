@@ -45,7 +45,7 @@
 /* This define is needed for 64-bit compiles on at least AIX. */
 
 #ifndef __INT64_C
-#define __INT64_C(c)  c##LL
+#define __INT64_C(c)  c##L
 #endif
 
 #endif /* REXXPLATFORMDEFS_INCLUDED */
