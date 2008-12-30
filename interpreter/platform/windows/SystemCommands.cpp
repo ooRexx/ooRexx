@@ -299,7 +299,7 @@ bool sysCommandNT(RexxExitContext *context, const char *command, const char *cmd
 
     if (rc != 0)
     {
-        context->RaiseCondition("ERROR", context->String(command), NULLOBJECT, context->WholeNumberToObject(rc));
+        context->RaiseCondition("ERROR", context->String(command), NULLOBJECT, context->Int32ToObject(rc));
         result = NULLOBJECT;
         return true;
     }
