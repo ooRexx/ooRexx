@@ -5909,11 +5909,12 @@ POODIMAGE rxGetOodImage(RexxMethodContext *context, RexxObjectPtr o, int argPos)
  * Extracts a valid oodImage pointer from a RexxObjectPtr, ensuring that the
  * image is either an icon or a cursor.  (Cursors are icons.)
  *
- * @param c
- * @param o
- * @param pos
+ * @param c    The method context we are executing in.
+ * @param o    The, assumed, .Image object.
+ * @param pos  The argument position in the invocation from ooRexx.  Used for
+ *             exception messages.
  *
- * @return POODIMAGE
+ * @return A pointer to an OODIMAGE struct on success, othewise NULL.
  */
 POODIMAGE rxGetImageIcon(RexxMethodContext *c, RexxObjectPtr o, int pos)
 {
