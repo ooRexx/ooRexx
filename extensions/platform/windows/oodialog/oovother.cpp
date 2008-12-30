@@ -142,7 +142,7 @@ RexxObjectPtr rxNewImageList(RexxMethodContext *, HIMAGELIST);
 // Helper functions.
 CSTRING getImageTypeName(uint8_t);
 RexxObjectPtr rxNewImageFromControl(RexxMethodContext *, HWND, HANDLE, uint8_t, oodControl_t);
-RexxObjectPtr rxNewEmptyImage(RexxMethodContext *);
+RexxObjectPtr rxNewEmptyImage(RexxMethodContext *, DWORD);
 RexxObjectPtr rxNewValidImage(RexxMethodContext *, HANDLE, uint8_t, PSIZE, uint32_t, bool);
 
 #define IMAGE_TYPE_LIST            "Bitmap, Icon, Cursor, Enhanced Metafile"
@@ -5949,7 +5949,7 @@ RexxObjectPtr rxNewImageObject(RexxMethodContext *c, RexxBufferObject bufferObj)
     return image;
 }
 
-RexxObjectPtr rxNewEmptyImage(RexxMethodContext *c)
+RexxObjectPtr rxNewEmptyImage(RexxMethodContext *c, DWORD rc)
 {
     RexxBufferObject bufferObj = c->NewBuffer(sizeof(OODIMAGE));
     POODIMAGE cself = (POODIMAGE)c->BufferData(bufferObj);
@@ -5959,6 +5959,7 @@ RexxObjectPtr rxNewEmptyImage(RexxMethodContext *c)
     cself->type = -1;
     cself->size.cx = -1;
     cself->size.cy = -1;
+    cself->lastError = rc;
 
     return rxNewImageObject(c, bufferObj);
 }
@@ -6387,8 +6388,9 @@ RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8
     HANDLE hImage = LoadImage(NULL, name, type, s.cx, s.cy, flags);
     if ( hImage == NULL )
     {
-        oodSetSysErrCode(context);
-        result = rxNewEmptyImage(context);
+        DWORD rc = GetLastError();
+        oodSetSysErrCode(context, rc);
+        result = rxNewEmptyImage(context, rc);
         goto out;
     }
 
@@ -6698,7 +6700,7 @@ RexxMethod5(RexxObjectPtr, ri_getImage, int, id, OPTIONAL_uint8_t, type,
     {
         ri->lastError = GetLastError();
         oodSetSysErrCode(context, ri->lastError);
-        result = rxNewEmptyImage(context);
+        result = rxNewEmptyImage(context, ri->lastError);
         goto out;
     }
 
