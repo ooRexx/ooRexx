@@ -5830,7 +5830,7 @@ RexxMethod2(logical_t, il_remove, int, index, CSELF, il)
     HIMAGELIST himl = (HIMAGELIST)il;
     if ( himl != NULL )
     {
-        return ImageList_RemoveAll(himl);
+        return ImageList_Remove(himl, index);
     }
     nullObjectException(context, IMAGELISTCLASS);
     return NULL;
