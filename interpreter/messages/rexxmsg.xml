@@ -426,7 +426,7 @@ Say NOT EQUALS
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_character</SymbolicName>
     <Text>Invalid character in program</Text>
-    <Explanation><para>A character was found outside a literal (quoted) string that is not a blank or one of the valid alphanumeric and special characters.</para></Explanation>
+    <Explanation><para>A character was found outside a literal (quoted) string that is not a whitespace character or one of the valid alphanumeric and special characters.</para></Explanation>
     <Subcodes>
       <SubMessage>
         <Code>13</Code>
@@ -513,7 +513,7 @@ Say NOT EQUALS
     <Severity>Warning</Severity>
     <SymbolicName>Error_Invalid_hex</SymbolicName>
     <Text>Invalid hexadecimal or binary string</Text>
-    <Explanation><para>Hexadecimal strings must not have leading or trailing blanks and blanks can only be embedded at byte boundaries.  Only the digits 0-9 and the letters a-f and A-F are allowed.  The following are valid hexadecimal strings: </para>
+    <Explanation><para>Hexadecimal strings must not have leading or trailing whitespace characters and whitespace can only be embedded at byte boundaries.  Only the digits 0-9 and the letters a-f and A-F are allowed.  The following are valid hexadecimal strings: </para>
     <programlisting>
     <![CDATA[
         '13'x
@@ -521,7 +521,7 @@ Say NOT EQUALS
         '1de8'x
     ]]>
     </programlisting>
-    <para>Binary strings can have blanks only at the boundaries of groups of four binary digits.  Only the digits 0 and 1 are allowed.  These are valid binary strings: </para>
+    <para>Binary strings can have whitespace only at the boundaries of groups of four binary digits.  Only the digits 0 and 1 are allowed.  These are valid binary strings: </para>
     <programlisting>
     <![CDATA[
         '1011'b
@@ -539,7 +539,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_hex_hexblank</SymbolicName>
-        <Text>Incorrect location of blank in position <Sub position="1" name="position"/> in hexadecimal string</Text>
+        <Text>Incorrect location of whitespace character in position <Sub position="1" name="position"/> in hexadecimal string</Text>
       </SubMessage>
       <SubMessage>
         <Code>15</Code>
@@ -548,7 +548,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_hex_binblank</SymbolicName>
-        <Text>Incorrect location of blank in position <Sub position="1" name="position"/> in binary string</Text>
+        <Text>Incorrect location of whitespace character in position <Sub position="1" name="position"/> in binary string</Text>
       </SubMessage>
       <SubMessage>
         <Code>15</Code>
@@ -557,7 +557,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_hex_invhex</SymbolicName>
-        <Text>Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; found <q><Sub position="1" name="character"/></q></Text>
+        <Text>Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; found <q><Sub position="1" name="character"/></q></Text>
       </SubMessage>
       <SubMessage>
         <Code>15</Code>
@@ -566,7 +566,7 @@ Say NOT EQUALS
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_hex_invbin</SymbolicName>
-        <Text>Only 0, 1, and blank are valid in a binary string; found <q><Sub position="1" name="character"/></q></Text>
+        <Text>Only 0, 1, and whitespace characters are valid in a binary string; found <q><Sub position="1" name="character"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>
@@ -4029,7 +4029,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_hexblank</SymbolicName>
-        <Text>Incorrect location of blank in position <Sub position="1" name="position"/> in hexadecimal string</Text>
+        <Text>Incorrect location of whitespace character in position <Sub position="1" name="position"/> in hexadecimal string</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4038,7 +4038,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_binblank</SymbolicName>
-        <Text>Incorrect location of blank in position <Sub position="1" name="position"/> in binary string</Text>
+        <Text>Incorrect location of whitespace character in position <Sub position="1" name="position"/> in binary string</Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4047,7 +4047,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_invhex</SymbolicName>
-        <Text>Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; character found <q><Sub position="1" name="character"/></q></Text>
+        <Text>Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; character found <q><Sub position="1" name="character"/></q></Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>
@@ -4056,7 +4056,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Incorrect_method_invbin</SymbolicName>
-        <Text>Only 0, 1, and blank are valid in a binary string; character found <q><Sub position="1" name="character"/></q></Text>
+        <Text>Only 0, 1, and whitespace characters are valid in a binary string; character found <q><Sub position="1" name="character"/></q></Text>
       </SubMessage>
       <SubMessage>
         <Code>93</Code>

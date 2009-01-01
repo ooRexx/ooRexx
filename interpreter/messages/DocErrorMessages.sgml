@@ -326,7 +326,7 @@ Say NOT EQUALS
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>A character was found outside a literal (quoted) string that is not a blank or one of the valid alphanumeric and special characters.</para>
+<para>A character was found outside a literal (quoted) string that is not a whitespace character or one of the valid alphanumeric and special characters.</para>
 <para>The associated subcodes are: </para>
 <variablelist>
 <varlistentry>
@@ -390,7 +390,7 @@ Say NOT EQUALS
 <para>
 <emphasis role="bold">Explanation:</emphasis>
 </para>
-<para>Hexadecimal strings must not have leading or trailing blanks and blanks can only be embedded at byte boundaries.  Only the digits 0-9 and the letters a-f and A-F are allowed.  The following are valid hexadecimal strings: </para>
+<para>Hexadecimal strings must not have leading or trailing whitespace characters and whitespace can only be embedded at byte boundaries.  Only the digits 0-9 and the letters a-f and A-F are allowed.  The following are valid hexadecimal strings: </para>
 <programlisting>
     
         '13'x
@@ -398,7 +398,7 @@ Say NOT EQUALS
         '1de8'x
     
     </programlisting>
-<para>Binary strings can have blanks only at the boundaries of groups of four binary digits.  Only the digits 0 and 1 are allowed.  These are valid binary strings: </para>
+<para>Binary strings can have whitespace only at the boundaries of groups of four binary digits.  Only the digits 0 and 1 are allowed.  These are valid binary strings: </para>
 <programlisting>
     
         '1011'b
@@ -412,25 +412,25 @@ Say NOT EQUALS
 <varlistentry>
 <term>001</term>
 <listitem>
-<para>Incorrect location of blank in position <emphasis>position</emphasis> in hexadecimal string</para>
+<para>Incorrect location of whitespace character in position <emphasis>position</emphasis> in hexadecimal string</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>002</term>
 <listitem>
-<para>Incorrect location of blank in position <emphasis>position</emphasis> in binary string</para>
+<para>Incorrect location of whitespace character in position <emphasis>position</emphasis> in binary string</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>003</term>
 <listitem>
-<para>Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; found "<emphasis>character</emphasis>"</para>
+<para>Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; found "<emphasis>character</emphasis>"</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>004</term>
 <listitem>
-<para>Only 0, 1, and blank are valid in a binary string; found "<emphasis>character</emphasis>"</para>
+<para>Only 0, 1, and whitespace characters are valid in a binary string; found "<emphasis>character</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -2942,25 +2942,25 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>931</term>
 <listitem>
-<para>Incorrect location of blank in position <emphasis>position</emphasis> in hexadecimal string</para>
+<para>Incorrect location of whitespace character in position <emphasis>position</emphasis> in hexadecimal string</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>932</term>
 <listitem>
-<para>Incorrect location of blank in position <emphasis>position</emphasis> in binary string</para>
+<para>Incorrect location of whitespace character in position <emphasis>position</emphasis> in binary string</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>933</term>
 <listitem>
-<para>Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; character found "<emphasis>character</emphasis>"</para>
+<para>Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; character found "<emphasis>character</emphasis>"</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>934</term>
 <listitem>
-<para>Only 0, 1, and blank are valid in a binary string; character found "<emphasis>character</emphasis>"</para>
+<para>Only 0, 1, and whitespace characters are valid in a binary string; character found "<emphasis>character</emphasis>"</para>
 </listitem>
 </varlistentry>
 <varlistentry>
