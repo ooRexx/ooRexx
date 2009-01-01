@@ -40,62 +40,74 @@ orx_current=@ORX_SUBST_CURRENT@
 orx_revision=@ORX_SUBST_REVISION@
 orx_age=@ORX_SUBST_AGE@
 
-# the order of these looks wrong, but that is how it comes out!
-orx_libversion=${orx_current}.${orx_age}.${orx_revision}
 # We only need to create the links if we are installed in /opt/ooRexx
 if [ -d /opt/ooRexx ]; then
-   ln -sf /opt/ooRexx/bin/rexx                             /usr/bin/rexx
-   ln -sf /opt/ooRexx/bin/rexxc                            /usr/bin/rexxc
-   ln -sf /opt/ooRexx/bin/rxqueue                          /usr/bin/rxqueue
-   ln -sf /opt/ooRexx/bin/rxsubcom                         /usr/bin/rxsubcom
-   ln -sf /opt/ooRexx/bin/rxdelipc                         /usr/bin/rxdelipc
-   ln -sf /opt/ooRexx/bin/rexx.img                         /usr/bin/rexx.img
-   ln -sf /opt/ooRexx/bin/rexx.cat                         /usr/bin/rexx.cat
-   ln -sf /opt/ooRexx/bin/rxregexp.cls                     /usr/bin/rxregexp.cls
-   ln -sf /opt/ooRexx/bin/rxftp.cls                        /usr/bin/rxftp.cls
-   ln -sf /opt/ooRexx/bin/socket.cls                       /usr/bin/socket.cls
-   ln -sf /opt/ooRexx/bin/oorexx-config                    /usr/bin/oorexx-config
-
-   ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so.${orx_libversion}
-   ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so.${orx_current}
-   ln -sf /opt/ooRexx/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so
-   ln -sf /opt/ooRexx/lib/ooRexx/librexx.la                /usr/lib/librexx.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so.${orx_libversion}
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so.${orx_current}
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.la             /usr/lib/librexxapi.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.so.${orx_libversion}   /usr/lib/librxsock.so.${orx_libversion}
-   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.so.${orx_libversion}   /usr/lib/librxsock.so.${orx_current}
-   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.so.${orx_libversion}   /usr/lib/librxsock.so
-   ln -sf /opt/ooRexx/lib/ooRexx/librxsock.la              /usr/lib/librxsock.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.so.${orx_libversion}   /usr/lib/librxmath.so.${orx_libversion}
-   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.so.${orx_libversion}   /usr/lib/librxmath.so.${orx_current}
-   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.so.${orx_libversion}   /usr/lib/librxmath.so
-   ln -sf /opt/ooRexx/lib/ooRexx/librxmath.la              /usr/lib/librxmath.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.so.${orx_libversion} /usr/lib/librxregexp.so.${orx_libversion}
-   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.so.${orx_libversion} /usr/lib/librxregexp.so.${orx_current}
-   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.so.${orx_libversion} /usr/lib/librxregexp.so
-   ln -sf /opt/ooRexx/lib/ooRexx/librxregexp.la            /usr/lib/librxregexp.la
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.${orx_libversion} /usr/lib/librexxutil.so.${orx_libversion}
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.${orx_libversion} /usr/lib/librexxutil.so.${orx_current}
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.so.${orx_libversion} /usr/lib/librexxutil.so
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxutil.la            /usr/lib/librexxutil.la
-
-   ln -sf /opt/ooRexx/include/rexx.h                       /usr/include/rexx.h
-   ln -sf /opt/ooRexx/include/rexxapidefs.h                /usr/include/rexxapidefs.h
-   ln -sf /opt/ooRexx/include/rexxapitypes.h               /usr/include/rexxapitypes.h
-   ln -sf /opt/ooRexx/include/rexxplatformapis.h           /usr/include/rexxplatformapis.h
-   ln -sf /opt/ooRexx/include/rexxplatformdefs.h           /usr/include/rexxplatformdefs.h
-   ln -sf /opt/ooRexx/share/man/man1/rexx.1                /usr/share/man/man1/rexx.1
-   ln -sf /opt/ooRexx/share/man/man1/rexxc.1               /usr/share/man/man1/rexxc.1
-   ln -sf /opt/ooRexx/share/man/man1/rxsubcom.1            /usr/share/man/man1/rxsubcom.1
-   ln -sf /opt/ooRexx/share/man/man1/rxqueue.1             /usr/share/man/man1/rxqueue.1
-   ln -sf /opt/ooRexx/share/man/man1/rxdelipc.1            /usr/share/man/man1/rxdelipc.1
-   ln -sf /opt/ooRexx/include/rexx.h                       /usr/include/rexx.h
-   ln -sf /opt/ooRexx/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
-
-   # allow backwards compatibility to Object REXX 2.x
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so.2
+   ln -sf %{_prefix}/bin/rexx                             /usr/bin/rexx
+   ln -sf %{_prefix}/bin/rexxc                            /usr/bin/rexxc
+   ln -sf %{_prefix}/bin/rxapi                            /usr/bin/rxapi
+   ln -sf %{_prefix}/bin/rxqueue                          /usr/bin/rxqueue
+   ln -sf %{_prefix}/bin/rxsubcom                         /usr/bin/rxsubcom
+   ln -sf %{_prefix}/bin/rexx.img                         /usr/bin/rexx.img
+   ln -sf %{_prefix}/bin/rexx.cat                         /usr/bin/rexx.cat
+   ln -sf %{_prefix}/bin/rxregexp.cls                     /usr/bin/rxregexp.cls
+   ln -sf %{_prefix}/bin/rxftp.cls                        /usr/bin/rxftp.cls
+   ln -sf %{_prefix}/bin/socket.cls                       /usr/bin/socket.cls
+   ln -sf %{_prefix}/bin/oorexx-config                    /usr/bin/oorexx-config
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so
+   ln -sf %{_prefix}/lib/ooRexx/librexx.la                       /usr/lib/librexx.la
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.la                    /usr/lib/librexxapi.la
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.la                     /usr/lib/librxsock.la
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.la                     /usr/lib/librxmath.la
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.la                   /usr/lib/librxregexp.la
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.%{orx_libversion}
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.%{orx_current}
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.la                   /usr/lib/librexxutil.la
+   ln -sf %{_prefix}/include/rexx.h                       /usr/include/rexx.h
+   ln -sf %{_prefix}/include/rexxapidefs.h                /usr/include/rexxapidefs.h
+   ln -sf %{_prefix}/include/rexxapitypes.h               /usr/include/rexxapitypes.h
+   ln -sf %{_prefix}/include/rexxplatformapis.h           /usr/include/rexxplatformapis.h
+   ln -sf %{_prefix}/include/rexxplatformdefs.h           /usr/include/rexxplatformdefs.h
+   ln -sf %{_prefix}/include/oorexxapi.h                  /usr/include/oorexxapi.h
+   ln -sf %{_prefix}/include/oorexxerrors.h               /usr/include/oorexxerrors.h
+   ln -sf %{_prefix}/share/man/man1/oorexx-config.1       /usr/share/man/man1/oorexx-config.1
+   ln -sf %{_prefix}/share/man/man1/rexx.1                /usr/share/man/man1/rexx.1
+   ln -sf %{_prefix}/share/man/man1/rexxc.1               /usr/share/man/man1/rexxc.1
+   ln -sf %{_prefix}/share/man/man1/rxsubcom.1            /usr/share/man/man1/rxsubcom.1
+   ln -sf %{_prefix}/share/man/man1/rxqueue.1             /usr/share/man/man1/rxqueue.1
+   ln -sf %{_prefix}/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
+# allow backwards compatibility to Object REXX 2.x
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.2
 fi
-ldconfig
+
+# Not sure which directory structure debian uses, but hopefully it matches one or the other.
+if [ -d /etc/rc.d/init.d ]; then
+   # Red Hat
+   cp %{_prefix}/bin/rxapid          /etc/rc.d/init.d
+   ln -sf /etc/rc.d/init.d/rxapid    /etc/rc.d/rc3.d/S89rxapid
+   ln -sf /etc/rc.d/init.d/rxapid    /etc/rc.d/rc5.d/S89rxapid
+   ldconfig
+   /etc/rc.d/init.d/rxapid start
+else
+   # Suse
+   cp %{_prefix}/bin/rxapid          /etc/rc.d
+   ln -sf /etc/rc.d/rxapid           /etc/rc.d/rc3.d/S89rxapid
+   ln -sf /etc/rc.d/rxapid           /etc/rc.d/rc5.d/S89rxapid
+   ldconfig
+   /etc/rc.d/rxapid start
+fi
 
