@@ -42,10 +42,12 @@
 #define AIX                           /* Default definition for AIX          */
 #endif
 
-/* This define is needed for 64-bit compiles on at least AIX. */
-
+/* AIX, maybe others, don't define __INT64_C. */
 #ifndef __INT64_C
+#ifdef __REXX64__
 #define __INT64_C(c)  c##L
+#else
+#define __INT64_C(c)  c##LL
 #endif
 
 #endif /* REXXPLATFORMDEFS_INCLUDED */
