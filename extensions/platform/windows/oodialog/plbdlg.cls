@@ -295,6 +295,14 @@
   end
   return -1
 
+::method resolveIconID private
+  use strict arg icon
+
+  if \ icon~Datatype('W') then icon = self~ResolveSymbolicId(icon)
+  if icon = -1 then icon = 0
+  else if icon >= 1, icon <= 4 then icon += 10
+  return icon
+
 ::method resolveResourceID unguarded
   use strict arg id
   if id~datatype("W"), id > -1 then return id
@@ -392,11 +400,11 @@
    self~ConstDir["IDC_STATIC"] = -1
 
    -- ooDialog supplied resources, defined in oodResources.h
-   self~ConstDir["IDI_DLG_OODIALOG"] = 1
-   self~ConstDir["IDI_DLG_APPICON"] = 2
-   self~ConstDir["IDI_DLG_APPICON2"] = 3
-   self~ConstDir["IDI_DLG_OOREXX"] = 4
-   self~ConstDir["IDI_DLG_DEFAULT"] = 2
+   self~ConstDir["IDI_DLG_OODIALOG"] = 11
+   self~ConstDir["IDI_DLG_APPICON"] = 12
+   self~ConstDir["IDI_DLG_APPICON2"] = 13
+   self~ConstDir["IDI_DLG_OOREXX"] = 14
+   self~ConstDir["IDI_DLG_DEFAULT"] = 12
 
    if arg(4, 'E') then
      self~ParseIncludeFile(includeFile)
@@ -432,9 +440,8 @@
 
 ::method Execute unguarded
    expose DlgData.
-   use arg sh, icon, sleeptime, nomodal
-   if \ icon~Datatype('N') then icon = self~ResolveSymbolicId(icon)
-   if icon = -1 then icon = 0
+   use arg sh, icon = 0, sleeptime, nomodal
+   icon = self~resolveIconId(icon)
    if sleeptime~Datatype('N') = 0 then sleeptime = 0   /* default is no sleep for execute */
    if Arg(4, 'o') = 1 then nomodal = 0
    if self~startit(icon, nomodal) \= 0 then

@@ -49,7 +49,7 @@
    /* dispatch of messages      */
 
 ::method ExecuteAsync unguarded
-   use arg sleeptime, sh, icon, nomodal
+   use arg sleeptime, sh, icon = 0, nomodal
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
    if Arg(2,'o') = 1 then sh = "DEFAULT"
    if Arg(4,'o') = 1 then nomodal = 0
@@ -101,7 +101,7 @@
 
    /* Run a nonmodal dialog */
 ::method Popup
-   use arg sh, sleeptime, icon
+   use arg sh, sleeptime, icon = 0
    if Arg(1,'o') = 1 then sh = "DEFAULT"
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
    /* start Execute and return to caller */
@@ -109,7 +109,7 @@
 
 
 ::method PopupAsChild
-   use arg parent, sh, sleeptime, icon
+   use arg parent, sh, sleeptime, icon = 0
 
    if Arg(1,'o') = 1 | parent = 0 then do
        call ErrorMessage "No parent dialog specified!"

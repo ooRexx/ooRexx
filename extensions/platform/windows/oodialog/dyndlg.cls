@@ -1073,9 +1073,7 @@
    use arg icon = 0, modal = 0
    if self~BasePtr = 0 then return 0
 
-   if \ icon~DataType("W") then icon = self~ResolveSymbolicId(icon)
-   if icon < 0 then icon = 0
-
+   icon = self~resolveIconID(icon)
    if modal <> 0 & modal <> 1 then do
      if modal~translate = "NOTMODAL" then modal = 1
      else modal = 0

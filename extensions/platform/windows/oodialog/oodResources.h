@@ -40,10 +40,11 @@
  * IDs here, it would be nice to sync up the PlainBaseDialog.
  */
 
-#define IDI_DLG_OODIALOG    1
-#define IDI_DLG_APPICON     2
-#define IDI_DLG_APPICON2    3
-#define IDI_DLG_OOREXX      4
+#define IDI_DLG_OODIALOG    11
+#define IDI_DLG_APPICON     12
+#define IDI_DLG_APPICON2    13
+#define IDI_DLG_OOREXX      14
 
 #define IDI_DLG_DEFAULT     IDI_DLG_APPICON2
+#define IDI_DLG_MIN_ID      IDI_DLG_OODIALOG
 #define IDI_DLG_MAX_ID      IDI_DLG_OOREXX

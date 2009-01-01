@@ -815,7 +815,7 @@ BOOL GetDialogIcons(DIALOGADMIN *dlgAdm, INT id, UINT iconSrc, PHANDLE phBig, PH
     }
 
     /* If one of the reserved IDs, iconSrc has to be ooDialog. */
-    if ( id <= IDI_DLG_MAX_ID )
+    if ( id >= IDI_DLG_MIN_ID && id <= IDI_DLG_MAX_ID )
     {
         iconSrc = ICON_OODIALOG;
     }

@@ -64,8 +64,7 @@
    expose library resource dlgData.
    use arg icon = 0, modal = 0
 
-   if \ icon~datatype("W") then icon = self~resolveSymbolicId(icon)
-   if icon < 0 then icon = 0
+   icon = self~resolveIconID(icon)
 
    if modal <> 0 & modal <> 1 then do
      if modal~translate = "NOTMODAL" then modal = 1
