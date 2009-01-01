@@ -95,7 +95,7 @@ if [ -d /opt/ooRexx ]; then
    ln -sf /opt/ooRexx/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
 
    # allow backwards compatibility to Object REXX 2.x
-   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.3.0.3  /usr/lib/librexxapi.so.2
+   ln -sf /opt/ooRexx/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so.2
 fi
 ldconfig
 
