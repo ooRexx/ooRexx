@@ -6097,7 +6097,7 @@ void rxReleaseAllImages(RexxMethodContext *c, RexxArrayObject a, size_t last)
     }
 }
 
-RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject ids, HINSTANCE hImage,
+RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject ids, HINSTANCE hModule,
                                         uint8_t type, PSIZE s, uint32_t flags)
 {
     int resourceID;
@@ -6119,7 +6119,7 @@ RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject id
             goto out;
         }
 
-        HANDLE hImage = LoadImage(NULL, MAKEINTRESOURCE(resourceID), type, s->cx, s->cy, flags);
+        HANDLE hImage = LoadImage(hModule, MAKEINTRESOURCE(resourceID), type, s->cx, s->cy, flags);
         if ( hImage == NULL )
         {
             // Set the system error code and leave this slot in the array blank.
