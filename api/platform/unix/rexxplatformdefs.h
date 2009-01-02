@@ -49,6 +49,7 @@
 #else
 #define __INT64_C(c)  c##LL
 #endif
+#endif
 
 #endif /* REXXPLATFORMDEFS_INCLUDED */
 
