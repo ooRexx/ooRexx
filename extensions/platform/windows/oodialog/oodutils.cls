@@ -103,7 +103,7 @@
 
 ::routine systemMetrics public
    use strict arg index
-   return GetSysMetrics(index)
+   return .DlgUtil~getSystemMetrics(index)
 
 
 /*-------------------------------- shortcut routines ---------------------------------*/

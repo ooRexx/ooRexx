@@ -202,36 +202,6 @@ size_t RexxEntry GetScreenSize(const char *funcname, size_t argc, CONSTRXSTRING 
 }
 
 
-/**
- * This classic Rexx external function was documented prior to 4.0.0.
- */
-size_t RexxEntry GetSysMetrics(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    ULONG uVal;
-
-    /* The intent was to extend this function in the future to get multiple, and
-     * perhaps all, values at once.  Now the intent is to add the functionnality
-     * to get multiple values at once to .DlgUtil.
-     */
-    if ( argc == 1 )
-    {
-        INT index = atoi(argv[0].strptr);
-        if ( index < 1 ) RETVAL(-1)
-
-        /* GetSystemMetrics returns 0 on error, however it also returns 0 as a
-         * valid value for some indexes.
-         */
-        uVal = GetSystemMetrics(index);
-
-        sprintf(retstr->strptr, "%d", uVal);
-        retstr->strlength = strlen(retstr->strptr);
-        return 0;
-    }
-
-    RETERR
-}
-
-
 void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
                 const char * dlgClass, const char * title, const char * fontname, INT fontsize, ULONG lStyle)
 {

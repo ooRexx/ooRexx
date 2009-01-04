@@ -2035,7 +2035,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(SetLBTabStops,        SetLBTabStops),
     REXX_CLASSIC_ROUTINE(BinaryAnd,            BinaryAnd),
     REXX_CLASSIC_ROUTINE(GetScreenSize,        GetScreenSize),
-    REXX_CLASSIC_ROUTINE(GetSysMetrics,        GetSysMetrics),
     REXX_CLASSIC_ROUTINE(GetDialogFactor,      GetDialogFactor),
     REXX_CLASSIC_ROUTINE(SleepMS,              SleepMS),
     REXX_CLASSIC_ROUTINE(PlaySoundFile,        PlaySoundFile),
@@ -2085,6 +2084,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_hiWord_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_loWord_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
@@ -2207,15 +2207,16 @@ REXX_METHOD_PROTOTYPE(size_cy);
 REXX_METHOD_PROTOTYPE(size_setCY);
 
 RexxMethodEntry oodialog_methods[] = {
-    REXX_METHOD(dlgutil_init_cls,            dlgutil_init_cls),
-    REXX_METHOD(dlgutil_comctl32Version_cls, dlgutil_comctl32Version_cls),
-    REXX_METHOD(dlgutil_version_cls,         dlgutil_version_cls),
-    REXX_METHOD(dlgutil_hiWord_cls,          dlgutil_hiWord_cls),
-    REXX_METHOD(dlgutil_and_cls,             dlgutil_and_cls),
-    REXX_METHOD(dlgutil_or_cls,              dlgutil_or_cls),
-    REXX_METHOD(dlgutil_loWord_cls,          dlgutil_loWord_cls),
-    REXX_METHOD(dlgutil_handleToPointer_cls, dlgutil_handleToPointer_cls),
-    REXX_METHOD(dlgutil_test_cls,            dlgutil_test_cls),
+    REXX_METHOD(dlgutil_init_cls,             dlgutil_init_cls),
+    REXX_METHOD(dlgutil_comctl32Version_cls,  dlgutil_comctl32Version_cls),
+    REXX_METHOD(dlgutil_version_cls,          dlgutil_version_cls),
+    REXX_METHOD(dlgutil_hiWord_cls,           dlgutil_hiWord_cls),
+    REXX_METHOD(dlgutil_and_cls,              dlgutil_and_cls),
+    REXX_METHOD(dlgutil_or_cls,               dlgutil_or_cls),
+    REXX_METHOD(dlgutil_loWord_cls,           dlgutil_loWord_cls),
+    REXX_METHOD(dlgutil_handleToPointer_cls,  dlgutil_handleToPointer_cls),
+    REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
+    REXX_METHOD(dlgutil_test_cls,             dlgutil_test_cls),
 
     REXX_METHOD(ri_init,                     ri_init),
     REXX_METHOD(ri_release,                  ri_release),

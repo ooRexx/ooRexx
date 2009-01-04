@@ -7156,6 +7156,29 @@ RexxMethod1(uint64_t, dlgutil_or_cls, ARGLIST, args)
     return result;
 }
 
+/** DlgUtil::getSystemMetrics()  [class method]
+ *
+ *  Returns the system metric for the give index.
+ *
+ *  @param index  The index of the system metric to look up.
+ *
+ *  @note There was a classic Rexx external function documented prior to 4.0.0
+ *        with the function name of GetSysMetrics.  That function is now marked
+ *        deprecated in the docs and the places where it was used are mapped to
+ *        this .DlgUtil method.
+ *
+ *        The intent was to extend this function in the future to get multiple,
+ *        and perhaps all, values at once.  This method could be enhanced to do
+ *        that.
+ *
+ *        MSDN documents that GetLastError does not provide extended error
+ *        information.
+ */
+RexxMethod1(uint32_t, dlgutil_getSystemMetrics_cls, int32_t, index)
+{
+    return GetSystemMetrics(index);
+}
+
 /**
  * A temporary utility to convert from a handle that is still being stored in
  * ooDialog in string form ("0xFFFFAAAA") to its actual pointer value.  The

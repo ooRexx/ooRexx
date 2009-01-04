@@ -54,8 +54,15 @@
 ::method loWord class external "LIBRARY oodialog dlgutil_loWord_cls"
 ::method and class external "LIBRARY oodialog dlgutil_and_cls"
 ::method or class external "LIBRARY oodialog dlgutil_or_cls"
+::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
+
+-- Needed to maintain backward compatibilty with 3.2.0.  The external function GetSysMetrics()
+-- was foolishly documented.
+::routine GetSysMetrics public
+  use strict arg index
+  return .DlgUtil~getSystemMetrics(index)
 
 ::class 'Rect' public
 ::method init external "LIBRARY oodialog rect_init"
@@ -187,9 +194,10 @@
     if Arg(4,'o') = 1 then hwnd = self~hwnd
     return GetStdTextSize(text, fontname, fontsize, hwnd)
 
+/* This method is deprecated.  Use .DlgUtil directly */
 ::method GetSystemMetrics unguarded
    use strict arg index
-   return GetSysMetrics(index)
+   return .DlgUtil~getSystemMetrics(ind)
 
 
 ::class 'ResourceUtils' public mixinclass object
