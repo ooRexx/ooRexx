@@ -213,8 +213,6 @@ void RegistrationData::removeSessionReference(SessionCookie *s)
             if (current->next == s)
             {
                 current->next = s->next;
-                // delete the cookie
-                delete s;
                 break;
             }
             current = current->next;
