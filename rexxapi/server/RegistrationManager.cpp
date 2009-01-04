@@ -189,6 +189,7 @@ SessionCookie *RegistrationData::findSessionReference(SessionID s)
         {
             return cookie;
         }
+        cookie = cookie->next;
     }
     return NULL;
 }
@@ -216,6 +217,7 @@ void RegistrationData::removeSessionReference(SessionCookie *s)
                 delete s;
                 break;
             }
+            current = current->next;
         }
     }
     delete s;
