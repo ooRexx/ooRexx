@@ -663,6 +663,7 @@
    if id < 0 then return id
    options = self~GetDefaultOpts(options)
    self~activePtr = UsrAddControl("IMG", self~activePtr, id, x, y, cx, cy, options)
+   return 0
 
 ::method addText
    use arg x, y, cx = 0, cy = 0, text = "", opts = "", id = (-1)
