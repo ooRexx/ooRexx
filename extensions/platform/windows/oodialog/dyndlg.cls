@@ -700,10 +700,10 @@
 ::method addEtchedFrame
    return self~InternAddStatic(Arg(1,"A"), 6)
 
-::method addEtchedHorizontalFrame
+::method addEtchedHorizontal
    return self~InternAddStatic(Arg(1,"A"), 7)
 
-::method addEtchedVerticalFrame
+::method addEtchedVertical
    return self~InternAddStatic(Arg(1,"A"), 8)
 
 ::method InternAddStatic private
