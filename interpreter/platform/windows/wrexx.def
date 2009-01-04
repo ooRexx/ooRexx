@@ -57,6 +57,8 @@ RexxTranslateInstoreProgram    @25
 ;
 RexxCreateInterpreterImage     @94
 
+RexxWaitForTermination        @108
+RexxDidRexxTerminate          @109
 RexxGetVersionInformation     @114
 RexxStemSort                  @124
 RexxCreateInterpreter         @125

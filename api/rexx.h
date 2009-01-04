@@ -272,6 +272,16 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXSTART)(size_t, PCONSTRXSTRING, const c
                                         PRXSTRING);
 #define REXXSTART RexxStart
 
+// the following APIs are deprecated, and are included only for binary compatibility.
+// These are nops if called.
+void REXXENTRY RexxWaitForTermination(void);
+typedef void (REXXENTRY *PFNREXXWAITFORTERMINATION)(void);
+#define REXXWAITFORTERMINATION RexxWaitForTermination
+
+RexxReturnCode REXXENTRY RexxDidRexxTerminate(void);
+typedef RexxReturnCode (REXXENTRY *PFNREXXDIDREXXTERMINATE)(void);
+#define REXXDIDREXXTERMINATE RexxDidRexxTerminate
+
 
 RexxReturnCode REXXENTRY RexxTranslateProgram(
     const char *,                       // input program name

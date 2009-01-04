@@ -418,3 +418,29 @@ RexxReturnCode RexxEntry RexxStemSort(const char *stemname, int order, int type,
     // the variable pool interface handles its own try/catches.
     return context.self->stemSort(stemname, order, type, start, end, firstcol, lastcol);
 }
+
+/**
+ * Wait for Rexx termination.  This is a nop in 4.0 since
+ * the APIs do the proper thing with respect to threading
+ * termination.  This is maintained solely for binary
+ * compatibility.
+ *
+ * @return
+ */
+void RexxEntry RexxWaitForTermination()
+{
+}
+
+
+/**
+ * Test if the interpreter environment has terminated.  This is
+ * a nop in 4.0 since the APIs do the proper thing with respect
+ * to threading termination.  This is maintained solely for
+ * binary compatibility.
+ *
+ * @return always returns true
+ */
+RexxReturnCode RexxEntry RexxDidRexxTerminate()
+{
+    return true;
+}
