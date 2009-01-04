@@ -828,6 +828,9 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        else if (strstr(argv[6].strptr,"LEFTNOWRAP")) lStyle |= SS_LEFTNOWORDWRAP;
        else lStyle |= SS_LEFT;
 
+       // Used to center text vertically.
+       if (strstr(argv[7].strptr,"CENTERIMAGE")) lStyle |= SS_CENTERIMAGE;
+
        if (strstr(argv[6].strptr,"NOTIFY")) lStyle |= SS_NOTIFY;
        if (strstr(argv[6].strptr,"SUNKEN")) lStyle |= SS_SUNKEN;
        if (strstr(argv[6].strptr,"EDITCONTROL")) lStyle |= SS_EDITCONTROL;
