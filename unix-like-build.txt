@@ -4,12 +4,12 @@
 Please read ALL of these notes before building ooRexx!
 
 The process of building ooRexx is slightly different if building from a
-release source file achieve or from a svn checkout.  When building from a svn
-checkout, the bootstrap script will need to be executed first.  Some details
-on this are further down in this file under the "Notes for developers"
-section.  If building from svn, check that section first before proceeding
-with the next "Build and Install" section.  In addition, at the end of the
-file are some notes on packaging ooRexx.
+release source file achieve or from a svn checkout.  When building from a
+svn checkout, the bootstrap script will need to be executed first.  Some
+details on this are further down in this file under the "Notes for
+developers" section.  If building from svn, check that section first before
+proceeding with the next "Build and Install" section.  In addition, at the
+end of the file are some notes on packaging ooRexx.
 
 Build and Install
 =================
@@ -32,7 +32,6 @@ This will create the following objects:
  rxapi           the ooRexx API daemon
  rxqueue         interface from command line to Rexx queue
  rxsubcom        enables subcommand environments to be manipulated
- rxdelipc        utility to remove IPC objects
  librexx.so      shared library containing majority of interpreter
  librexxapi.so   shared library containing API functionality
  librxmath.so    maths extension library
@@ -61,21 +60,21 @@ Under SGI seems to be LD_LIBRARYN32_PATH.
 Platform Specific Notes
 ======================
 
-This version of ooRexx is NOT safe for 64-bit compilation!
+This version of ooRexx should compile as either a 32-bit or a 64-bit binary.
 
 Linux:
 -----
-ooRexx should build on all 32-bit Linux platforms.
+ooRexx should build on all 32-bit and 64-bit Linux platforms.
 
 AIX:
 ---
-ooRexx can only be built on AIX 5L/6.1 using IBM's XL C/C++ V9 or 
-V10.1 compiler. You will need the Jannuary 2009 PTF (or later) for 
+ooRexx can only be built on AIX 5L/6.1 using IBM's XL C/C++ V9 or
+V10.1 compiler. You will need the Jannuary 2009 PTF (or later) for
 both compilers.
 
 32 bit build
 
-Before running the configure script, set the following environment 
+Before running the configure script, set the following environment
 variables:
 
 % export CC=xlc_r
@@ -87,7 +86,7 @@ variables:
 
 64 bit build
 
-Before running the configure script, set the following environment 
+Before running the configure script, set the following environment
 variables:
 
 % export CC=xlc_r
@@ -98,21 +97,20 @@ variables:
 % ./configure --disable-static
 % make
 
-As long as you do not move the binaries it is not necessary to add the 
-directory containing the libraries to the LIBPATH. If you want to swhich 
-between 32 bit and 64 bit ooRexx then make sure that you kill the rxapi 
+As long as you do not move the binaries it is not necessary to add the
+directory containing the libraries to the LIBPATH. If you want to swhich
+between 32 bit and 64 bit ooRexx then make sure that you kill the rxapi
 daemon before the switch.
 
-The rxapi daemon needs to be started as user root. This could be none 
+The rxapi daemon needs to be started as user root. This could be none
 via /etc/inittab:
 
 rxapi:2:once:/opt/ooRexx/bin/rxapi >/dev/console 2>&1
 
 DEC/HP Alpha:
 ------------
-ooRexx currently cannot be built on this platform.  ooRexx assumes pointers
-and longs are 32bit, and as the Alpha has never had a 32bit mode, it is not
-possible to force pointers and longs to 32 bits.
+ooRexx currently has not been built on this platform. This is due to lack
+of resources for the development team.
 
 AMD Opteron:
 -----------
@@ -206,7 +204,8 @@ should work on any Linux distribution where the rpm build tools work.
 % make rpm
 
 This will create a 'rpm' subdirectory off the root of the source tree.  The
-finished rpm file will be located in a subdirectory off of the rpm directory.
+finished rpm file will be located in a subdirectory off of the rpm
+directory.
 
 Debian and related dpkg-based systems
 -------------------------------------
