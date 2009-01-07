@@ -29,6 +29,7 @@ This will create the following objects:
 
  rexx            the ooRexx interpreter
  rexxc           the ooRexx "compiler"; it is really a tokenizer
+ rxapi           the ooRexx API daemon
  rxqueue         interface from command line to Rexx queue
  rxsubcom        enables subcommand environments to be manipulated
  rxdelipc        utility to remove IPC objects
@@ -50,7 +51,9 @@ root access on the machine on which you are building ooRexx.
 
 On most platforms, it is necessary to include the directory where shared
 libraries (including *.so) reside, to the LD_LIBRARY_PATH
-environment variable.  Under AIX this environment variable is LIBPATH.
+environment variable.
+
+Under AIX this environment variable is LIBPATH (no modification needed).
 Under HP-UX this environment variable is SHLIB_PATH.
 Under SGI seems to be LD_LIBRARYN32_PATH.
 
@@ -66,12 +69,44 @@ ooRexx should build on all 32-bit Linux platforms.
 
 AIX:
 ---
-ooRexx can only be built on AIX using IBM's VAC compiler.
-Before running the configure script, set the following
-environment variables:
+ooRexx can only be built on AIX 5L/6.1 using IBM's XL C/C++ V9 or 
+V10.1 compiler. You will need the Jannuary 2009 PTF (or later) for 
+both compilers.
+
+32 bit build
+
+Before running the configure script, set the following environment 
+variables:
+
 % export CC=xlc_r
 % export CXX=xlC_r
-% export LDFLAGS=-Wl,-brtl
+% export LDFLAGS="-Wl,-brtl -Wl,-bmaxdata:0x80000000"
+
+% ./configure --disable-static
+% make
+
+64 bit build
+
+Before running the configure script, set the following environment 
+variables:
+
+% export CC=xlc_r
+% export CXX=xlC_r
+% export LDFLAGS="-Wl,-brtl"
+% export OBJECT_MODE=64
+
+% ./configure --disable-static
+% make
+
+As long as you do not move the binaries it is not necessary to add the 
+directory containing the libraries to the LIBPATH. If you want to swhich 
+between 32 bit and 64 bit ooRexx then make sure that you kill the rxapi 
+daemon before the switch.
+
+The rxapi daemon needs to be started as user root. This could be none 
+via /etc/inittab:
+
+rxapi:2:once:/opt/ooRexx/bin/rxapi >/dev/console 2>&1
 
 DEC/HP Alpha:
 ------------
