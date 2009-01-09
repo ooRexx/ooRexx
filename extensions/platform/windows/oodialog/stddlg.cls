@@ -68,7 +68,7 @@
    expose message title sleeping earlyReply sx sy
    parse value GetStdTextSize(message) with sx sy
    parse value GetScreenSize() with scrx scry .
-   self~create(trunc((scrx-sx) /2),trunc((scry - sy - 20) /2), sx+20, sy + 20, title,"NOMENU",,,1 )
+   self~create(trunc((scrx-sx) /2),trunc((scry - sy - 20) /2), sx+20, sy + 20, title,"NOMENU", , , , 1)
    self~startit
    self~show("SHOWTOP")
    if sleeping >= 0 then
