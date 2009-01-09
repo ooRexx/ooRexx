@@ -3911,11 +3911,11 @@ RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF
  *
  * @return  For both cases the previous position is returned.
  */
-RexxMethod2(int, pbc_stepIt, OSELF, self, OPTIONAL_uint32_t, delta)
+RexxMethod2(int, pbc_stepIt, OPTIONAL_uint32_t, delta, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    if ( argumentOmitted(2) )
+    if ( argumentOmitted(1) )
     {
         return (int)SendMessage(hwnd, PBM_STEPIT, 0, 0);
     }
@@ -3932,7 +3932,7 @@ RexxMethod2(int, pbc_stepIt, OSELF, self, OPTIONAL_uint32_t, delta)
  *
  * @return The the old progress bar position.
  */
-RexxMethod2(int, pbc_setPos, OSELF, self, int32_t, newPos)
+RexxMethod2(int, pbc_setPos, int32_t, newPos, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
     return (int)SendMessage(hwnd, PBM_SETPOS, newPos, 0);
@@ -3944,7 +3944,7 @@ RexxMethod1(int, pbc_getPos, OSELF, self)
     return (int)SendMessage(hwnd, PBM_GETPOS, 0, 0);
 }
 
-RexxMethod3(RexxStringObject, pbc_setRange, OSELF, self, OPTIONAL_int32_t, min, OPTIONAL_int32_t, max)
+RexxMethod3(RexxStringObject, pbc_setRange, OPTIONAL_int32_t, min, OPTIONAL_int32_t, max, OSELF, self)
 {
     TCHAR buf[64];
     HWND hwnd = rxGetWindowHandle(context, self);
@@ -3976,7 +3976,7 @@ RexxMethod1(RexxStringObject, pbc_getRange, OSELF, self)
     return context->String(buf);
 }
 
-RexxMethod2(int, pbc_setStep, OSELF, self, OPTIONAL_int32_t, newStep)
+RexxMethod2(int, pbc_setStep, OPTIONAL_int32_t, newStep, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
@@ -4000,7 +4000,7 @@ RexxMethod2(int, pbc_setStep, OSELF, self, OPTIONAL_int32_t, newStep)
  *
  *  Requires XP Common Controls version 6.0 or greater.
  */
-RexxMethod3(logical_t, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, OPTIONAL_uint32_t, pause)
+RexxMethod3(logical_t, pbc_setMarquee, OPTIONAL_logical_t, on, OPTIONAL_uint32_t, pause, OSELF, self)
 {
     if ( ! requiredComCtl32Version(context, "setMarquee", COMCTL32_6_0) )
     {
@@ -4050,7 +4050,7 @@ RexxMethod3(logical_t, pbc_setMarquee, OSELF, self, OPTIONAL_logical_t, on, OPTI
  *  The progress bar control only supports this function under Windows Classic
  *  Theme.
  */
-RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+RexxMethod4(uint32_t, pbc_setBkColor, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
     size_t count = rxArgCount(context);
@@ -4094,7 +4094,7 @@ RexxMethod4(uint32_t, pbc_setBkColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t
  *  The progress bar control only supports this function under Windows Classic
  *  Theme.
  */
-RexxMethod4(uint32_t, pbc_setBarColor, OSELF, self, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+RexxMethod4(uint32_t, pbc_setBarColor, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
     size_t count = rxArgCount(context);
