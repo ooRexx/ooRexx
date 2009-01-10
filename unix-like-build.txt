@@ -56,7 +56,7 @@ Under AIX this environment variable is LIBPATH (no modification needed).
 Under HP-UX this environment variable is SHLIB_PATH.
 Under SGI seems to be LD_LIBRARYN32_PATH.
 
-Is is not possible to install the 32-bit and 64-bit version on the same
+It is not possible to install the 32-bit and 64-bit version on the same
 machine.
 
 Platform Specific Notes
