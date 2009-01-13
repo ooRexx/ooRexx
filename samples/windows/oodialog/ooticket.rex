@@ -157,12 +157,15 @@
    self~AddText(10,self~SizeY - 65,0,0,"Please select the day you like most")
    self~AddRadioGroup(31, 5, 5,0, "&Monday &Tuesday &Wednesday T&hursday &Friday &Saturday S&unday")
    self~AddBlackFrame(1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
-   self~addImage(145, 73, 5, 125, 100, "BITMAP SIZEIMAGE CENTERIMAGE")
+   self~addImage(145, 73, 10, 125, 100, "BITMAP SIZEIMAGE CENTERIMAGE")
    daynames = .array~of('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
 
 ::method InitDays
-  image = .Image~getImage("bmp\movie.bmp", .Image~id(IMAGE_BITMAP))
-  self~getStaticControl(145)~setImage(image)
+  staticImage = self~getStaticControl(145)
+  parse value staticImage~getRect with x y x2 y2
+  size = .Size~new(x2 - x, y2 - y)
+  image = .Image~getImage('bmp\movie.bmp', .Image~id(IMAGE_BITMAP), size)
+  staticImage~setImage(image)
 
 ::method Ticket                                      /* page 4 */
    self~loaditems("rc\ticket.rc")
