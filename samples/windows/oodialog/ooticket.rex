@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -118,11 +118,11 @@
 
 /*-------------------------------- requires -----------------------------------*/
 
-::requires "oodialog.cls"
+::requires "oodWin32.cls"
 
 /*-------------------------------- Ticket Dialog ------------------------------*/
 
-::class TicketDialog subclass CategoryDialog
+::class 'TicketDialog' subclass CategoryDialog inherit AdvancedControls
 
 ::method InitDialog
    self~InitDialog:super
@@ -150,15 +150,19 @@
    cinema.6 = "&Broadway Cinema San Francisco"
    self~AddCheckBoxStem(51, 25, 10, 0, cinema., 6)
    self~AddText(10,self~SizeY - 65,0,0,"Make your choice of one or more cinemas you prefer")
-   self~AddBlackRect(1, self~SizeY -68, self~SizeX-3-self~catalog['page']['x'], 14)
+   self~AddBlackFrame(1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
 
 ::method Days                                        /* page 3 */
    expose daynames
    self~AddText(10,self~SizeY - 65,0,0,"Please select the day you like most")
    self~AddRadioGroup(31, 5, 5,0, "&Monday &Tuesday &Wednesday T&hursday &Friday &Saturday S&unday")
-   self~AddBlackRect(1, self~SizeY -68, self~SizeX -3-self~catalog['page']['x'], 14)
-   self~AddBitmapButton(145, 73, 10, 125, 100, ,,"bmp\movie.bmp")
+   self~AddBlackFrame(1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
+   self~addImage(145, 73, 5, 125, 100, "BITMAP SIZEIMAGE CENTERIMAGE")
    daynames = .array~of('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+
+::method InitDays
+  image = .Image~getImage("bmp\movie.bmp", .Image~id(IMAGE_BITMAP))
+  self~getStaticControl(145)~setImage(image)
 
 ::method Ticket                                      /* page 4 */
    self~loaditems("rc\ticket.rc")
