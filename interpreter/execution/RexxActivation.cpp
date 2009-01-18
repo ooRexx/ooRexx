@@ -2316,9 +2316,19 @@ RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, R
     /* get the arguments array           */
     RexxObject **_arguments = _stack->arguments(_argcount);
 
+    // Step 1:  Check the global functions directory
+    // this is actually considered part of the built-in functions, but these are
+    // written in ooRexx.
+    RoutineClass *routine = (RoutineClass *)TheFunctionsDirectory->get(target);
+    if (routine != OREF_NULL)        /* not found yet?                    */
+    {
+        // call and return the result
+        routine->call(this->activity, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
+        return(RexxObject *)resultObj;
+    }
 
-    // Step 1:  Check for a ::ROUTINE definition in the local context
-    RoutineClass *routine = this->settings.parent_code->findRoutine(target);
+    // Step 2:  Check for a ::ROUTINE definition in the local context
+    routine = this->settings.parent_code->findRoutine(target);
     if (routine != OREF_NULL)
     {
         // call and return the result
@@ -2337,22 +2347,13 @@ RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, R
         return(RexxObject *)resultObj;
     }
 
-    // Step 3:  Check the global functions directory
-    routine = (RoutineClass *)TheFunctionsDirectory->get(target);
-    if (routine != OREF_NULL)        /* not found yet?                    */
-    {
-        // call and return the result
-        routine->call(this->activity, target, _arguments, _argcount, calltype, OREF_NULL, EXTERNALCALL, resultObj);
-        return(RexxObject *)resultObj;
-    }
-
-    // Step 4:  Perform all platform-specific searches
+    // Step 3:  Perform all platform-specific searches
     if (SystemInterpreter::invokeExternalFunction(this, this->activity, target, _arguments, _argcount, calltype, resultObj))
     {
         return(RexxObject *)resultObj;
     }
 
-    // Step 5:  Check scripting exit, which is after most of the checks
+    // Step 4:  Check scripting exit, which is after most of the checks
     if (!activity->callScriptingExit(this, target, calltype, resultObj, _arguments, _argcount))
     {
         return(RexxObject *)resultObj;

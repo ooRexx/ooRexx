@@ -172,7 +172,7 @@ typedef struct _CONSTRXSTRING {        /* const rxstr                */
 typedef RXSTRING      *PRXSTRING;      /* pointer to a RXSTRING      */
 typedef CONSTRXSTRING *PCONSTRXSTRING; /* pointer to a RXSTRING      */
 
-/***    Structure for system exit block (RXSYSEXIT) 32-bit */
+/***    Structure for system exit block (RXSYSEXIT) */
 
 typedef struct _RXSYSEXIT {            /* syse */
    const char *sysexit_name;           /* subcom enviro for sysexit  */
