@@ -937,6 +937,7 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_OVERLAY                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::overlay), 4);
   defineKernelMethod(CHAR_REPLACEAT                    ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::replaceAt), 4);
   defineKernelMethod(CHAR_DELETE                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::mydelete), 2);
+  defineKernelMethod(CHAR_DELSTR                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::mydelete), 2);
   defineKernelMethod(CHAR_SUBSTR                       ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::substr), 3);
   defineKernelMethod(CHAR_POS                          ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::posRexx), 3);
   defineKernelMethod(CHAR_LASTPOS                      ,TheMutableBufferBehaviour, CPPM(RexxMutableBuffer::lastPos), 3);
