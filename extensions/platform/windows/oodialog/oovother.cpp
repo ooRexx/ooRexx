@@ -4396,7 +4396,7 @@ RexxMethod2(uint32_t, stc_setText, CSTRING, text, OSELF, self)
 
     if ( SetWindowText(hwnd, text) == 0 )
     {
-        rc = -(LONG)GetLastError();
+        rc = GetLastError();
     }
     return rc;
 }
@@ -4424,7 +4424,11 @@ RexxMethod1(RexxStringObject, stc_getText, OSELF, self)
         }
         else
         {
-            GetWindowText(hwnd, buf, count);
+            *buf = '\0';
+            if ( GetWindowText(hwnd, buf, count) == 0 )
+            {
+                oodSetSysErrCode(context);
+            }
             result = context->String(buf);
             free(buf);
         }
