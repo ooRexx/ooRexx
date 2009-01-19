@@ -2616,15 +2616,15 @@ struct RexxCallContext_
         threadContext->ClearCondition();
     }
 
-    RexxObjectPtr NilObject()
+    RexxObjectPtr Nil()
     {
         return threadContext->Nil();
     }
-    RexxObjectPtr TrueObject()
+    RexxObjectPtr True()
     {
         return threadContext->True();
     }
-    RexxObjectPtr FalseObject()
+    RexxObjectPtr False()
     {
         return threadContext->False();
     }
