@@ -469,9 +469,9 @@
                   when style~wordpos("SS_ETCHEDFRAME") > 0 then
                      self~addEtchedFrame(x, y, w, h, opts, id)
                   when style~wordpos("SS_ETCHEDHORZ") > 0 then
-                     self~addEtchedHorizontalFrame(x, y, w, h, opts, id)
+                     self~addEtchedHorizontal(x, y, w, h, opts, id)
                   when style~wordpos("SS_ETCHEDVERT") > 0 then
-                     self~addEtchedVerticalFrame(x, y, w, h, opts, id)
+                     self~addEtchedVertical(x, y, w, h, opts, id)
                   when style~wordpos("SS_BITMAP") > 0 then
                      self~addImage(id, x, y, w, h, "BITMAP " || opts)
                   when style~wordpos("SS_ENHMETAFILE") > 0 then
