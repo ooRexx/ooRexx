@@ -45,6 +45,8 @@
 
 ::class 'ResDialog' subclass BaseDialog public
 
+::method setFontAttrib private external "LIBRARY oodialog resdlg_setFontAttrib_pvt"
+
 ::method init
    expose library resource dlgData.
    use arg library, resource, dlgData., includeFile
@@ -73,6 +75,7 @@
 
    self~dlgHandle = StartDialog(self~adm, library, resource, self~autoDetect, 1, icon, modal)
    if self~dlgHandle \= 0 then do
+      self~setFontAttrib
       /* if autodetection is on, create the data attributes */
       if self~autoDetect = 1 then do
          id = 1; i=0

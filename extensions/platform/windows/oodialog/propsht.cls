@@ -73,7 +73,7 @@
 
    self~catalog['category'] = 0
 
-   parse value GetStdTextSize("Hg") with . stdty
+   size = self~getTextSizeDlg("Hg")
 
    self~catalog['page']['x'] = self~catx
    self~catalog['page']['y'] = self~caty
@@ -92,7 +92,7 @@
    do i = 1 to self~catalog['count']
       self~DialogItemCount = 0
       self~catalog['category'] = i
-      self~CreateCategoryDialog(p['x']+2, p['y']+(stdty*2), p['w']-10, p['h']-(stdty*3),p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
+      self~CreateCategoryDialog(p['x']+2, p['y']+(size~height*2), p['w']-10, p['h']-(size~height*3),p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
       msg = "self~" || self~catalog['names'][i]~space(0)
       interpret(msg)
       ret = UsrCreateDialog(self~Adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~DlgHandle, i)

@@ -66,9 +66,11 @@
 
 ::method execute
    expose message title sleeping earlyReply sx sy
-   parse value GetStdTextSize(message) with sx sy
-   parse value GetScreenSize() with scrx scry .
-   self~create(trunc((scrx-sx) /2),trunc((scry - sy - 20) /2), sx+20, sy + 20, title,"NOMENU", , , , 1)
+
+   s = self~getTextSizeDlg(message)
+   sx = s~width
+   sy = s~height
+   self~createCenter(sx+20, sy + 20, title,"NOMENU", , , , 1)
    self~startit
    self~show("SHOWTOP")
    if sleeping >= 0 then
@@ -109,15 +111,15 @@
 ::method execute
    expose message title datas. dlgy size
 
-   parse value GetStdTextSize(message) with sx sy
-   parse value GetScreenSize() with scrx scry .
-   self~sx = max(sx,100,size)
-   self~sy = sy
+   s = self~getTextSizeDlg(message)
+   self~sx = max(s~width,100,size)
+   self~sy = s~height
 
    dlgy = (self~sy+4)*2+36
    dlgx = self~sx + 20
    if dlgx < 110 then dlgx = 110
-   self~create(trunc((scrx-self~sx) /2),trunc((scry - dlgy) /2), dlgx, dlgy, title,,,,,4)
+
+   self~createCenter(dlgx, dlgy, title,,,,,4)
    self~execute:super("SHOWTOP")
    if self~InitCode = 1 then return datas.101
    else return ""
@@ -167,14 +169,15 @@
 ::method execute
    expose message title sx sy datas. dlgx dlgy len entries. maxlen
 
-   parse value GetStdTextSize(message) with sx sy
-   parse value GetScreenSize() with scrx scry .
+   s = self~getTextSizeDlg(message)
+   sx = s~width
+   sy = s~height
    ll = 0; count = 0
 
    do while var("entries."count+1) = 1
       count = count + 1
-      parse value GetStdTextSize(entries.count) with leng .
-      if leng > ll then ll = leng
+      s = self~getTextSizeDlg(entries.count)
+      if s~width > ll then ll = s~width
    end
 
    if len = 0 then len = max(sx - ll, 50)
@@ -185,7 +188,7 @@
    else dlgx = (len + ll + 24)
    if dlgx < 110 then dlgx = 110
 
-   self~create(trunc((scrx-dlgx) /2),trunc((scry - dlgy) /2), dlgx, dlgy, title,,,,, count*2+5)
+   self~createCenter(dlgx, dlgy, title,,,,, count*2+5)
    self~execute:super("SHOWTOP")
    return self~InitCode
 
@@ -210,9 +213,9 @@
    if Arg(5,"o") = 1 then leny = 0
    if Arg(6,"o") = 0 then datas.101 = predev; else datas.101 = ""
    self~init:super(datas.)
-   parse value GetStdTextSize(message) with sx sy
-   self~sx = sx
-   self~sy = sy
+   s = self~getTextSizeDlg(message)
+   self~sx = s.width
+   self~sy = s.height
    self~message = message
 
 ::method DefineDialog
@@ -234,13 +237,15 @@
 ::method execute
    expose message title sx sy datas. input. count lenx leny dlgx dlgy
 
-   parse value GetScreenSize() with scrx scry .
+   s = self~getTextSizeDlg(message)
+   sx = s~width
+   sy = s~height
 
    ll = 0; count = 0
    do while var("input."count+1) = 1
       count = count + 1
-      parse value GetStdTextSize(input.count) with leng .
-      if leng > ll then ll = leng
+      s = self~getTextSizeDlg(input.count)
+      if s~width > ll then ll = s~width
    end
 
    if self~lenx = 0 then self~lenx = max(self~sx,ll+5)
@@ -254,7 +259,7 @@
    if self~sx >= self~lenx then self~dlgx = self~sx + 20; else self~dlgx = self~lenx + 20
    if self~dlgx < 110 then self~dlgx = 110
 
-   self~create(trunc((scrx-self~dlgx) /2),trunc((scry - self~dlgy) /2), self~dlgx, self~dlgy, title,,,,, 4)
+   self~createCenter(self~dlgx, self~dlgy, title,,,,, 4)
    self~execute:super("SHOWTOP")
 
    if self~InitCode = 1 then return datas.101
@@ -294,13 +299,14 @@
 ::method Execute
    expose message title sx sy datas. dlgx dlgy len entries. placex max
 
-   parse value GetStdTextSize(message) with sx sy
-   parse value GetScreenSize() with scrx scry .
+   s = self~getTextSizeDlg(message)
+   sx = s~width
+   sy = s~height
    ll = 0; count = 0
    do while var("entries."count+1) = 1
       count = count + 1
-      parse value GetStdTextSize(entries.count) with leng .
-      if leng > ll then ll = leng
+      s = self~getTextSizeDlg(entries.count)
+      if s.width > ll then ll = s~width
    end
 
    if max = 0 then max = count
@@ -317,7 +323,7 @@
    else dlgx = (ll + 20) * columns + 24
    if dlgx < 110 then dlgx = 110
 
-   self~create(trunc((scrx-dlgx) /2),trunc((scry - dlgy) /2), dlgx, dlgy, title,,,,, count+5)
+   self~createCenter(dlgx, dlgy, title,,,,, count+5)
    self~execute:super("SHOWTOP")
    return self~InitCode
 
@@ -345,13 +351,14 @@
 ::method Execute
    expose message title sx sy datas. dlgx dlgy len entries. placex prev max
 
-   parse value GetStdTextSize(message) with sx sy
-   parse value GetScreenSize() with scrx scry .
+   s = self~getTextSizeDlg(message)
+   sx = s~width
+   sy = s~height
    ll = 0; count = 0
    do while var("entries."count+1) = 1
       count = count + 1
-      parse value GetStdTextSize(entries.count) with leng .
-      if leng > ll then ll = leng
+      s = self~getTextSizeDlg(entries.count)
+      if s~width > ll then ll = s~width
    end
 
    if max = 0 then max = count
@@ -374,7 +381,7 @@
    pr = (100+prev)
    datas.pr = 1
 
-   self~create(trunc((scrx-dlgx) /2),trunc((scry - dlgy) /2), dlgx, dlgy, title,,,,, count+5)
+   self~createCenter(dlgx, dlgy, title,,,,, count+5)
    self~execute:super("SHOWTOP")
    if self~InitCode = 1 then
    do

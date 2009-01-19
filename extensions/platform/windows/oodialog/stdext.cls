@@ -68,10 +68,10 @@
    self~NoAutoDetection
 
 ::method CalcSize
-   parse value GetStdTextSize(self~msg) with sx sy
+   size = self~getTextSizeDlg(self~msg)
    parse value GetScreenSize() with scrx scry .
-   self~dims["sx"] = sx
-   self~dims["sy"] = sy
+   self~dims["sx"] = size~width
+   self~dims["sy"] = size~height
    if self~XExt = 0 then do
        self~dims["cx"] = self~dims["sx"]+20
        self~dims["cy"]= self~dims["sy"]*2.2+20

@@ -169,16 +169,17 @@
 
    if self~catalog['page']['h'] = .Nil then self~catalog['page']['h'] = self~SizeY - 40
 
-   parse value GetStdTextSize("Hg") with . stdty
+   size = self~getTextSizeDlg("Hg")
+   textHeight = size~height
 
    if self~catcx = 0 & n = 0 then  /* dropdown or none */
    do
       do i = 1 to self~catalog['count']
          if self~catalog['page']['font'] <> "" then
-              ret = GetStdTextSize(catnames.i,self~catalog['page']['font'],self~catalog['page']['fsize'])
-         else ret = GetStdTextSize(catnames.i)
-         parse var ret len .
-         self~catcx = max(self~catcx,len)
+              size = self~getTextSizeDlg(catnames.i,self~catalog['page']['font'],self~catalog['page']['fsize'])
+         else
+              size = self~getTextSizeDlg(catnames.i)
+         self~catcx = max(self~catcx,size~width)
       end
       if n = 0 then self~catcx = self~catcx + 20
    end
@@ -186,9 +187,9 @@
    if n > 0 | m > 0 then do  /* topline or dropdown */
       if self~catalog['page']['x'] = .Nil then self~catalog['page']['x'] = 1
       if m > 0 then do
-        if self~catalog['page']['y'] = .Nil then self~catalog['page']['y'] = self~caty*2+stdty+4
+        if self~catalog['page']['y'] = .Nil then self~catalog['page']['y'] = self~caty*2+textHeight+4
       end
-      else if self~catalog['page']['y'] = .Nil then self~catalog['page']['y'] = self~caty+stdty+5
+      else if self~catalog['page']['y'] = .Nil then self~catalog['page']['y'] = self~caty+textHeight+5
 
       if self~catalog['page']['w'] = .Nil then self~catalog['page']['w'] = self~SizeX - 2
    end
@@ -212,12 +213,12 @@
           if self~catalog['count'] < self~catmax then self~catmax = self~catalog['count']
       if self~catmax < self~catalog['count'] then
            if self~catlabel='' then
-                self~AddComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(stdty+4),,
+                self~AddComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),,
                                  self~catstyle~delword(m, 1) || " CAT VSCROLL")
            else self~AddComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
                                    self~catlabel, self~catstyle~delword(m, 1) || " CAT VSCROLL")
       else if self~catlabel='' then
-                self~AddComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(stdty+4),,
+                self~AddComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),,
                                  self~catstyle~delword(m, 1) || " CAT")
            else self~AddComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
                                    self~catlabel, self~catstyle~delword(m, 1) || " CAT")
@@ -257,12 +258,13 @@
 
 ::method CategoryPage protected
 
-   parse value GetStdTextSize("Hg") with . stdty
+   size = self~getTextSizeDlg("Hg")
+   textHeight = size~height
 
    if self~catstyle~wordpos("TOPLINE") > 0 then
-      self~addWhiteRect(0, 2, self~SizeX, stdty + (self~caty+2))
+      self~addBlackFrame(0, 2, self~SizeX, textHeight + (self~caty+2))
    else if self~catstyle~wordpos("DROPDOWN") > 0 then
-      self~addWhiteRect(0, 2, self~SizeX, stdty + (self~caty*2)+1)
+      self~addBlackFrame(0, 2, self~SizeX, textHeight + (self~caty*2)+1)
 
    lbtext = self~catalog['page']['leftbtntext']
    rbtext = self~catalog['page']['rightbtntext']
@@ -281,17 +283,19 @@
       if self~Wizard = 1 then
          self~AddButtonGroup(5, self~SizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
    end
-   self~addWhiteFrame(0, self~SizeY - 20, self~SizeX, 1)
+   self~addBlackFrame(0, self~SizeY - 20, self~SizeX, 1)
 
    /* */
 
 ::method CreateCategoryDialog protected
-   use arg x, y, cx, cy, fontName, fontSize, options, expected
+   use arg x, y, cx, cy, fontName, fontSize, options = "", expected = 200
 
-   if Arg(8,"o") = 1 | expected = 0 then expected = 200
-   if Arg(5,"o") = 1 | fontName = "" then fontName = "System"
-   if Arg(6,"o") = 1 | fontSize = 0 then fontSize = 8
+   if expected > 1 then expected = 200
    options = options~translate
+
+   if arg(8, "O") | fontName == "" then fontName = self~fontName
+   if arg(9, "O") | fontSize = 0 then fontSize = self~fontSize
+
    ret = UsrDefineDialog(x, y, cx, cy, "", "", fontName, fontSize,,
                                                    options, expected)
 

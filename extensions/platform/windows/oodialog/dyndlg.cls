@@ -72,14 +72,19 @@
          "THICKFRAME"  -  create a dialog with a thick frame */
 
 ::method Create
-   use arg x, y, cx, cy, title, options, dlgClass, fontName, fontSize, expected
+   use arg x, y, cx, cy, title, options = "", dlgClass, fontName, fontSize, expected = 200
 
-   /* need to check for uppercase name because of method forwarding */
-   if Arg(6,"o") = 1 then options = ""; else options = options~translate
-   if Arg(10,"o") = 1 | expected = 0 then expected = 200
-   if Arg(7,"o") = 1 | dlgClass = 0 then dlgClass = ""
-   if Arg(8,"o") = 1 then fontName = "System"
-   if Arg(9,"o") = 1 then fontSize = 8
+   -- options must be all upper case
+   options = options~translate
+
+   if arg(7,"O") | dlgClass = 0 then dlgClass = ""
+
+   if arg(8, "O") then fontName = self~fontName
+   else self~fontName = fontName
+
+   if arg(9, "O") then fontSize = self~fontSize
+   else self~fontSize = fontSize
+
    ret = UsrDefineDialog(x, y, cx, cy, dlgclass, title, fontName, fontSize,,
                                       options, expected)
    parse var ret base ptr
@@ -669,9 +674,9 @@
    use arg x, y, cx = 0, cy = 0, text = "", opts = "", id = (-1)
 
    if cx = 0 | cy = 0 then do
-      parse value GetStdTextSize(text) with icx icy
-      if cx = 0 then cx = icx+2
-      if cy = 0 then cy = icy
+      size = self~getTextSizeDlg(text)
+      if cx = 0 then cx = size~width + 2
+      if cy = 0 then cy = size~height
    end
    id = self~ItemAdd(id, 1)
    if id = -2 then return id
@@ -722,8 +727,8 @@
    if Arg(2,'o') = 1 then fname = "DATA"id
    if Arg(6,'o') = 1 then cy = 0
    if cy = 0 then do
-      parse value GetStdTextSize("Tg") with . cy
-      cy = cy +4
+      size = self~getTextSizeDlg("Tg")
+      cy = size~height + 4
    end
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("EL", self~activePtr, id, x, y, cx, cy, opts)
@@ -771,9 +776,9 @@
    if Arg(5, 'o') = 1 then cx = 0
    if Arg(6, 'o') = 1 then cy = 0
    if cx = 0 | cy = 0 then do
-      parse value GetStdTextSize(text) with icx icy
-      if cx = 0 then cx = icx + 12
-      if cy = 0 then cy = icy
+      size = self~getTextSizeDlg(text)
+      if cx = 0 then cx = size~width + 12
+      if cy = 0 then cy = size~height
    end
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("CH", self~activePtr, id, x, y, cx, cy, text, opts)
@@ -789,9 +794,9 @@
    if Arg(5, 'o') = 1 then cx = 0
    if Arg(6, 'o') = 1 then cy = 0
    if cx = 0 | cy = 0 then do
-      parse value GetStdTextSize(text) with icx icy
-      if cx=0 then cx=icx + 12
-      if cy=0 then cy=icy
+      size =self~getTextSizeDlg(text)
+      if cx=0 then cx=size~width + 12
+      if cy=0 then cy=size~height
    end
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("RB", self~activePtr, id, x, y, cx, cy, text, opts)
@@ -823,7 +828,9 @@
    if self~CheckID(startid) = -1 then return
    if Arg(4, 'o') = 1 then cx = 0
    parse var inp rb inp
-   parse value GetStdTextSize(rb) with len stepy
+   size = self~getTextSizeDlg(rb)
+   len = size~width
+   stepy = size~height
    lastlen = len; oldy = stepy; stepy = trunc(stepy * 1.5)
    opts = self~GetDefaultOpts(opts)
    nob = opts~wordpos("NOBORDER")
@@ -837,16 +844,22 @@
       if kind = "R" then do
           if i = 0 then self~AddRadioButton(startid+i,, x+4, my, len+12, stepy, rb, newopts || " GROUP")
           else self~AddRadioButton(startid + i,, x+4, my, len+12, stepy, rb, newopts)
-      end; else self~AddCheckBox(startid + i,, x+4, my, len+12, stepy, rb, newopts)
+      end
+      else do
+          self~AddCheckBox(startid + i,, x+4, my, len+12, stepy, rb, newopts)
+      end
       my = my + stepy; i = i + 1
       parse var inp rb inp
       if cx = 0 then do
-         parse value GetStdTextSize(rb) with len .
+         s = self~getTextSizeDlg(rb)
+         len = s~width
          if len > lastlen then lastlen = len
       end
    end
    if cx \= 0 then LastLen = cx-20
-   if nob = 0 then self~AddGroupBox(x,y,lastlen+20,my-y+trunc(oldy / 2),"", newopts, idstat)
+   size = .Size~new(lastlen+20, my-y+trunc(oldy / 2))
+   if nob = 0 then self~AddGroupBox(x,y,size~width,size~height,"", newopts, idstat)
+   return size
 
 
 ::method AddInput
@@ -857,9 +870,9 @@
    if Arg(5, 'o') = 1 then cx1 = 0
    if Arg(7, 'o') = 1 then cy = 0
    if cy = 0 | cx1 = 0 then do
-      parse value GetStdTextSize(text) with stepx icy
-      if cy = 0 then cy = icy + 4
-      if cx1 = 0 then cx1 = stepx + 4
+      size = self~getTextSizeDlg(text)
+      if cy = 0 then cy = size~height + 4
+      if cx1 = 0 then cx1 = size~width + 4
    end
    if Arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
    opts = self~GetDefaultOpts(opts)
@@ -879,8 +892,8 @@
       count = count + 1
       data.count = rb
       if cx1 = 0 then do
-         parse value GetStdTextSize(rb) with len .
-         if len > ll then ll = len
+         size = self~getTextSizeDlg(rb)
+         if size~width > ll then ll = size~width
       end
       parse var inp rb inp
    end
@@ -888,7 +901,8 @@
    if Arg(8,'o') = 1 then idstat = self~GetStaticID(idstat)
    is = idstat
 
-   parse value GetStdTextSize("Tg") with stepx stepy
+   s = self~getTextSizeDlg("Tg")
+   stepy = s~height
    opts = self~GetDefaultOpts(opts)
    nob = opts~wordpos("NOBORDER")
    if nob = 0 then my = y + trunc(stepy * 1.25); else my = y
@@ -910,9 +924,9 @@
    if Arg(5, 'o') = 1 then cx1 = 0
    if Arg(7, 'o') = 1 then clines = 5
 
-   parse value GetStdTextSize(text) with stepx cy
-   cy = cy + 4
-   if cx1 = 0 then cx1 = stepx + 4
+   s = self~getTextSizeDlg(text)
+   cy = s~height + 4
+   if cx1 = 0 then cx1 = s~width + 4
    if Arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
    opts = self~GetDefaultOpts(opts)
    self~addText(x, y, cx1, cy, text, opts, idstat)
@@ -929,15 +943,16 @@
    do while var("inp."count+1) = 1
       count = count + 1
       if cx1 = 0 then do
-         parse value GetStdTextSize(inp.count) with len .
-         if len > ll then ll = len
+         s = self~getTextSizeDlg(inp.count)
+         if s~width > ll then ll = s~width
       end
    end
    if cx1 = 0 then cx1 = ll+4
 
    if idstat = "IDSTAT" then idstat = self~GetStaticID(idstat)
    is = idstat
-   parse value GetStdTextSize("Tg") with stepx stepy
+   s = self~getTextSizeDlg("Tg")
+   stepy = s~height
 
    opts = self~GetDefaultOpts(opts)
    nob = opts~wordpos("NOBORDER")
@@ -963,6 +978,9 @@
 
 ::method InternAddRBCBStem private
    use arg startid, x, y, cxx, inp., max, opts, idstat, fn, fs, kind
+   -- Note that font name and font size (fn, fs) are no longer used.  They are
+   -- here for backwards compatibility.
+
    if self~activePtr = 0 then return -2
    if self~CheckID(startid) = -1 then return
    if Arg(4, 'o') = 1 then cxx = 0
@@ -970,17 +988,16 @@
    do while var("inp."count+1) = 1
       count = count + 1
       if cxx = 0 then do
-         if Arg(9,'o') = 1 then ret = GetStdTextSize(inp.count)
-         else ret = GetStdTextSize(inp.count, fn, fs)
-         parse var ret len .
-         if len > ll then ll = len
+         s = self~getTextSizeDlg(inp.count)
+         if s~width > ll then ll = s~width
       end
    end
    if var("max") = 0 | max = 0 then max = count
    if cxx = 0 & max \= 1 then cx = ll+20; else cx = cxx
    if Arg(8, 'o') = 1 then idstat = self~GetStaticID(idstat)
-   if Arg(9,'o') = 1 then ret = GetStdTextSize("Tg"); else ret = GetStdTextSize("Tg", fn, fs)
-   parse var ret stepx oldy
+   s = self~getTextSizeDlg("Tg")
+   stepx = s~width
+   oldy = s~height
    mx = 0; highy = 0
    opts = self~GetDefaultOpts(opts)
    nob = opts~wordpos("NOBORDER")
@@ -1001,10 +1018,8 @@
          mx = mx + cx
       end
       if max=1 & cxx=0 then do
-         if Arg(9,'o') = 1 then ret = GetStdTextSize(inp.i)
-         else ret = GetStdTextSize(inp.i, fn, fs)
-         parse var ret cx .
-         cx = cx + 24
+         s = self~getTextSizeDlg(inp.i)
+         cx = s~width + 24
       end
       if kind = "R" then
       do

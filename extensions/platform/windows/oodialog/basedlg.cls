@@ -261,22 +261,10 @@
    if Arg(1,'o') = 1 then color = 1
    return DrawGetSet("COL", dc, color)
 
-
-   /* This method returns the text size from a device context */
-::method GetStdTextSize unguarded
-    use arg dc, text
-    if Arg(1,'o') = 1 then do
-      parse value GetStdTextSize(text) with width height
-      width = width * self~FactorX
-      height = height * self~FactorY
-      return width height
-    end
-    else return HandleFont( "SIZE", dc, text )
-
+::method getTextSizeScreen  external "LIBRARY oodialog winex_getTextSizeScreen"
 
    /* This method will create a pen in the given color and style */
    /* It returns a handle to a pen object */
-
 ::method CreatePen unguarded
    use arg width, style, color
    if Arg(1, "o") = 1 then width = 1

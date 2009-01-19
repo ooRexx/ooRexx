@@ -446,6 +446,13 @@
    use arg msg, wP, lP
    return SendWinMsg("PTR", Self~hDlg, Self~Id, msg, wP, lP)
 
+/* This method is deprecated. Use getTextSizeDlg() instead. */
+::method getTextSize unguarded
+  forward message "getTextSizeDlg" continue
+  return result~width result~height
+
+::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
+
 ::method SetColor
    use arg colorbk, colorfg
    if Arg(2,'o') = 1 then

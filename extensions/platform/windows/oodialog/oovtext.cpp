@@ -318,41 +318,27 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
 
 size_t RexxEntry HandleFont(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
-   CHECKARGL(3);
+    CHECKARG(5);
 
-   if (!strcmp(argv[0].strptr, "CREATE"))
-   {
-       HFONT hFont;
-       INT weight;
-       CHECKARG(5);
+    if ( !strcmp(argv[0].strptr, "CREATE") )
+    {
+        HFONT hFont;
+        INT weight;
 
-       GETWEIGHT(argv[3].strptr, weight)
+        GETWEIGHT(argv[3].strptr, weight)
 
-       hFont = CreateFont(atoi(argv[2].strptr), atoi(argv[4].strptr), 0, 0, weight, strstr(argv[3].strptr, "ITALIC") != NULL, strstr(argv[3].strptr, "UNDERLINE") != NULL,
-                   strstr(argv[3].strptr, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, argv[1].strptr);
+        hFont = CreateFont(atoi(argv[2].strptr), atoi(argv[4].strptr), 0, 0, weight,
+                           strstr(argv[3].strptr, "ITALIC") != NULL,
+                           strstr(argv[3].strptr, "UNDERLINE") != NULL,
+                           strstr(argv[3].strptr, "STRIKEOUT") != NULL,
+                           DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
+                           DEFAULT_QUALITY, FF_DONTCARE, argv[1].strptr);
 
-       if (hFont)
-       {
-           RETHANDLE(hFont);
-       }
-       RETC(0);
-   }
-   else if (!strcmp(argv[0].strptr, "SIZE"))
-   {
-       HDC hDC;
-       SIZE s;
-
-       hDC = (HDC)GET_HANDLE(argv[1]);
-       if (hDC)
-       {
-         if (GetTextExtentPoint32(hDC, argv[2].strptr, (int)argv[2].strlength, &s))
-         {
-             sprintf(retstr->strptr, "%ld %ld", s.cx, s.cy);
-             retstr->strlength = strlen(retstr->strptr);
-             return 0;
-         }
-       }
-       RETC(0);
-   }
-   RETC(1);
+        if ( hFont )
+        {
+            RETHANDLE(hFont);
+        }
+        RETC(0);
+    }
+    RETC(1);
 }

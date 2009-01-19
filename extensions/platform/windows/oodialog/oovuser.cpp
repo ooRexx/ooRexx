@@ -111,79 +111,10 @@ int nCopyAnsiToWideChar (LPWORD lpWCStr, const char *lpAnsiIn)
 }
 
 
-
-
-size_t RexxEntry GetStdTextSize(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   HDC hDC;
-   SIZE s;
-   ULONG bux;
-   ULONG buy;
-   const char *fn;
-   INT fsb;
-   HFONT hFont=NULL, hSystemFont, oldF;
-   HWND hW = NULL;
-
-   CHECKARGL(1);
-
-   if ((argc == 1) && topDlg) hW = topDlg->TheDlg;
-   if (argc >1) fn = argv[1].strptr; else fn = "System";
-   if (argc >2) fsb = atoi(argv[2].strptr); else fsb = 8;
-   if (argc >3) hW = GET_HWND(argv[3]);
-
-   if (hW)
-      hDC = GetDC(hW);
-   else
-      hDC = CreateDC("Display", NULL, NULL, NULL);
-   if (hDC)
-   {
-      hSystemFont = (HFONT)GetStockObject(SYSTEM_FONT);
-
-      if (hW)
-         hFont = (HFONT)SendMessage(hW, WM_GETFONT, 0, 0);
-
-      if (hW && !hFont)
-         hFont = hSystemFont;
-      else
-      {
-         /* we have no dialog, this is the cas if standard dialogs are called  */
-         /* directly from a REXX script */
-         /* so if we have a system font, use it ! If not, use an estimated one */
-         if (hSystemFont)
-            hFont = hSystemFont;
-         else
-            hFont = CreateFont(fsb, fsb, 0, 0, FW_NORMAL,FALSE, FALSE, FALSE, ANSI_CHARSET,
-            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, fn);
-      }
-
-      if (hFont && (hFont != hSystemFont)) oldF = (HFONT)SelectObject(hDC, hFont);
-
-      GetTextExtentPoint32(hDC, argv[0].strptr, (int)argv[0].strlength, &s);
-
-      buy = GetDialogBaseUnits();
-      bux = LOWORD(buy);
-      buy = HIWORD(buy);
-      sprintf(retstr->strptr, "%d %d", (s.cx * 4) / bux, (s.cy * 8) / buy);
-      retstr->strlength = strlen(retstr->strptr);
-
-      if (hFont && (hFont != hSystemFont))
-      {
-         SelectObject(hDC, oldF);
-         DeleteObject(hFont);
-      }
-
-      if (hW)
-         ReleaseDC(hW, hDC);
-      else
-         DeleteDC(hDC);
-      return 0;
-   }
-   RETC(0)
-}
-
-
 /**
- * This classic Rexx external function was documented prior to 4.0.0.
+ * This classic Rexx external function was documented prior to 4.0.0.  The
+ * dialog unit part of it has always been broken.  It is only correct if the
+ * dialog uses the 8 pt System font, which most modern dialogs do not.
  */
 size_t RexxEntry GetScreenSize(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {

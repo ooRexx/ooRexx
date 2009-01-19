@@ -79,6 +79,9 @@ static ULONG SetStyle(HWND, LONG, PRXSTRING);
 static void freeSubclassData(SUBCLASSDATA *);
 static BOOL removeKeyPressSubclass(SUBCLASSDATA *, HWND, INT);
 
+bool screenToDlgUnit(HWND hwnd, POINT *point);
+void screenToDlgUnit(HDC hdc, POINT *point);
+
 /* Enum for the type of a dialog control. Types to be added as needed. */
 typedef enum {oodcStatic, oodcButton, oodcEdit, oodcProgressBar,} oodControl_t;
 
@@ -3079,7 +3082,8 @@ bool rxStr2Number(RexxMethodContext *, CSTRING, uint64_t *, int);
 
 #define NO_HMODULE_MSG            "failed to obtain %s module handle; OS error code %d"
 #define NO_PROC_MSG               "failed to get procedeure adddress for %s(); OS error code %d"
-#define API_FAILED_MSG            "system API %s() failed; COM code 0x%08x"
+#define API_FAILED_MSG            "system API %s() failed; OS error code %d"
+#define COM_API_FAILED_MSG        "system API %s() failed; COM code 0x%08x"
 #define NO_COMMCTRL_MSG           "failed to initialize %s; OS error code %d"
 
 #define COMCTL32_FULL_PART        0
@@ -3218,6 +3222,17 @@ POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CST
         value = context->ObjectToStringValue(rxString);
     }
     return string2pointer(value);
+}
+
+CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
+{
+    CSTRING value = NULL;
+    RexxObjectPtr rxString = context->SendMessage0(obj, name);
+    if ( rxString != NULLOBJECT )
+    {
+        value = context->ObjectToStringValue(rxString);
+    }
+    return value;
 }
 
 DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
@@ -3504,15 +3519,6 @@ RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy)
     return size;
 }
 
-inline bool hasStyle(HWND hwnd, DWORD_PTR style)
-{
-    if ( (GetWindowLongPtr(hwnd, GWL_STYLE) & style) || (GetWindowLongPtr(hwnd, GWL_EXSTYLE) & style) )
-    {
-        return true;
-    }
-    return false;
-}
-
 /**
  * Sets an object variable value and returns the existing value.  With the
  * caveat that if the object variable did not have a value set, .nil is
@@ -3535,6 +3541,102 @@ RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr v
     c->SetObjectVariable(varName, val);
 
     return result;
+}
+
+inline bool hasStyle(HWND hwnd, DWORD_PTR style)
+{
+    if ( (GetWindowLongPtr(hwnd, GWL_STYLE) & style) || (GetWindowLongPtr(hwnd, GWL_EXSTYLE) & style) )
+    {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Correctly converts from a device coordinate (pixel) to a dialog unit
+ * coordinate, for any dialog.
+ *
+ * MapDialogRect() correctly converts from dialog units to pixels for any
+ * dialog.  But, there is no conversion the other way, from pixels to dialog
+ * units.
+ *
+ * MSDN gives these formulas to convert from pixel to dialog unit:
+ *
+ * templateunitX = MulDiv(pixelX, 4, baseUnitX);
+ * templateunitY = MulDiv(pixelY, 8, baseUnitY);
+ *
+ * Now, you just need to get the correct dialog base unit.
+ *
+ * GetDialogBaseUnits() always assumes the font is the system font.  If the
+ * dialog uses any other font, the base units returned will be incorrect.
+ *
+ * MSDN, again, has two methods for calculating the correct base units for any
+ * font.  This way is the simplest, but it requires the window handle to the
+ * dialog.
+ *
+ * Rect rect( 0, 0, 4, 8 );
+ * MapDialogRect( &rc );
+ * int baseUnitY = rc.bottom;
+ * int baseUnitX = rc.right;
+ *
+ * @param hwnd   Window handle of the dialog.  If this is not a dialog window
+ *               handle, this method will fail.
+ *
+ * @param point  Pointer to a POINT struct.  Not that a SIZE struct and a POINT
+ *               struct are binary equivalents.  They both have two fields, each
+ *               of which is a long.  Only the field names differ, cx and cy for
+ *               a SIZE and x and y for a POINT.  Therefore you can cast a
+ *               SIZE pointer to a POINT pointer.
+ *
+ * @return true on success, false otherwise.
+ *
+ * Dialog class: #32770
+ */
+bool screenToDlgUnit(HWND hwnd, POINT *point)
+{
+    RECT r = {0, 0, 4, 8};
+
+    if ( MapDialogRect(hwnd, &r) )
+    {
+        point->x = MulDiv(point->x, 4, r.right);
+        point->y = MulDiv(point->y, 8, r.bottom);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Given a device context with the correct font already selected into it,
+ * correctly converts from a device coordinate (pixel) to a dialog unit
+ * coordinate.  The correct font means, the font actually used by the dialog.
+ *
+ * See screenToDlgUnit(HWND, POINT *) for a discussion of this
+ * conversion.
+ *
+ * @param hdc    Handle to a device context with the dialog's font selected into
+ *               it.
+ *
+ * @param point  Pointer to a POINT struct.  Not that a SIZE struct and a POINT
+ *               struct are binary equivalents.  They both have two fields, each
+ *               of which is a long.  Only the field names differ, cx and cy for
+ *               a SIZE and x and y for a POINT.  Therefore you can cast a
+ *               SIZE pointer to a POINT pointer.
+ *
+ * @return true on success, false otherwise.
+ *
+ */
+void screenToDlgUnit(HDC hdc, POINT *point)
+{
+    TEXTMETRIC tm;
+    SIZE size;
+    GetTextMetrics(hdc, &tm);
+    int baseUnitY = tm.tmHeight;
+
+    GetTextExtentPoint32(hdc, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", 52, &size);
+    int baseUnitX = (size.cx / 26 + 1) / 2;
+
+    point->x = MulDiv(point->x, 4, baseUnitX);
+    point->y = MulDiv(point->y, 8, baseUnitY);
 }
 
 /**
@@ -3757,6 +3859,526 @@ RexxObjectPtr oodGetImageAttribute(RexxMethodContext *c, OSELF self, CSTRING var
         c->SetObjectVariable(varName, result);
     }
     return result;
+}
+
+/**
+ * Uses GetTextExtentPoint32() to get the size needed for a string using the
+ * specified font and device context.
+ *
+ * @param font   The font being used for the string.
+ * @param hdc    The device context to use.
+ * @param text   The string.
+ * @param size   Pointer to a SIZE struct used to return the size.
+ *
+ * @return True if  GetTextExtentPoint32() succeeds, otherwise false.
+ *
+ * @note   GetTextExtentPoint32() sets last error and SelectObject() does not.
+ *         Therefore if this function fails, GetLastError() will return the
+ *         correct error code for the failed GetTextExtentPoint32().
+ */
+bool getTextExtent(HFONT font, HDC hdc, CSTRING text, SIZE *size)
+{
+    bool success = true;
+    HFONT hOldFont = (HFONT)SelectObject(hdc, font);
+
+    if ( GetTextExtentPoint32(hdc, text, (int)strlen(text), size) == 0 )
+    {
+        success = false;
+    }
+    SelectObject(hdc, hOldFont);
+    return success;
+}
+
+HFONT createFontFromName(HDC hdc, CSTRING name, uint32_t size)
+{
+    LOGFONT lf={0};
+
+    strcpy(lf.lfFaceName, name);
+    lf.lfHeight = -MulDiv(size, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    return CreateFontIndirect(&lf);
+}
+
+bool textSizeIndirect(RexxMethodContext *context, CSTRING text, CSTRING fontName, uint32_t fontSize,
+                      SIZE *size, HWND hwnd)
+{
+    bool success = true;
+
+    // If hwnd is null, GetDC() returns a device context for the whole screen,
+    // and that suites our purpose here.
+    HDC hdc = GetDC(hwnd);
+    if ( hdc == NULL )
+    {
+        systemServiceExceptionCode(context, API_FAILED_MSG, "GetDC");
+        return false;
+    }
+
+    HFONT font = createFontFromName(hdc, fontName, fontSize);
+    if ( font == NULL )
+    {
+        systemServiceExceptionCode(context, API_FAILED_MSG, "CreateFontIndirect");
+        ReleaseDC(hwnd, hdc);
+        return false;
+    }
+
+    if ( ! getTextExtent(font, hdc, text, size) )
+    {
+        systemServiceExceptionCode(context, API_FAILED_MSG, "GetTextExtentPoint32");
+        success = false;
+    }
+
+    DeleteObject(font);
+    if ( ReleaseDC(hwnd, hdc) == 0 )
+    {
+        printf("RelaseDC() failed\n");
+    }
+
+    return success;
+}
+
+bool textSizeFromWindow(RexxMethodContext *context, CSTRING text, SIZE *size, HWND hwnd)
+{
+    HDC hdc = GetDC(hwnd);
+    if ( hdc == NULL )
+    {
+        systemServiceExceptionCode(context, API_FAILED_MSG, "GetDC");
+        return false;
+    }
+
+    // Dialogs and controls need to have been issued a WM_SETFONT or else they
+    // return null here.  If null, they are using the stock system font.
+    HFONT font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+    if ( font == NULL )
+    {
+        font = (HFONT)GetStockObject(SYSTEM_FONT);
+    }
+
+    bool success = true;
+    if ( ! getTextExtent(font, hdc, text, size) )
+    {
+        systemServiceExceptionCode(context, API_FAILED_MSG, "GetTextExtentPoint32");
+        success = false;
+    }
+
+    ReleaseDC(hwnd, hdc);
+    return success;
+}
+
+RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING fontName, uint32_t fontSize,
+                          HWND hwndFontSrc, RexxObjectPtr dlgObj)
+{
+    // hwndDlg can be null if this is happening before the real dialog is created.
+    HWND hwndDlg = rxGetWindowHandle(context, dlgObj);
+
+    // We may not have a window handle, but using null is okay.
+    HWND hwndForDC = (hwndFontSrc != NULL ? hwndFontSrc : hwndDlg);
+
+    SIZE textSize = {0};
+
+    if ( fontName != NULL )
+    {
+        if ( ! textSizeIndirect(context, text, fontName, fontSize, &textSize, hwndForDC) )
+        {
+            goto error_out;
+        }
+    }
+    else if ( hwndFontSrc != NULL )
+    {
+        if ( ! textSizeFromWindow(context, text, &textSize, hwndFontSrc) )
+        {
+            goto error_out;
+        }
+    }
+
+    // Even if we use a font other than the dialog font to calculate the text
+    // size, we always have to get the dialog font and select it into a HDC to
+    // correctly calculate the dialog units.
+    HDC hdc = GetDC(hwndForDC);
+    if ( hdc == NULL )
+    {
+        systemServiceExceptionCode(context, API_FAILED_MSG, "GetDC");
+        goto error_out;
+    }
+
+    HFONT dlgFont = NULL;
+    bool createdFont = false;
+
+    if ( hwndDlg == NULL )
+    {
+        fontSize = 0;
+        fontName = rxGetStringAttribute(context, dlgObj, "FONTNAME");
+
+        RexxObjectPtr rxSize = context->SendMessage0(dlgObj, "FONTSIZE");
+        if ( rxSize != NULLOBJECT )
+        {
+            context->ObjectToUnsignedInt32(rxSize, &fontSize);
+        }
+
+        if ( fontName != NULL && fontSize != 0 )
+        {
+            dlgFont = createFontFromName(hdc, fontName, fontSize);
+            if ( dlgFont != NULL )
+            {
+                createdFont = true;
+            }
+        }
+    }
+    else
+    {
+        dlgFont = (HFONT)SendMessage(hwndDlg, WM_GETFONT, 0, 0);
+    }
+
+    // If dlgFont is null, then, (almost for sure,) the dialog will be using the
+    // default system font.  The exception to this is if the user calls the
+    // getTextSizeDlg() method before the create() method, and then defines a
+    // custom font in create().  The docs tell the user not to do that, but
+    // there is nothing to do about it if they do.
+    if ( dlgFont == NULL )
+    {
+        dlgFont = (HFONT)GetStockObject(SYSTEM_FONT);
+    }
+
+    HFONT hOldFont = (HFONT)SelectObject(hdc, dlgFont);
+    if ( textSize.cx == 0 )
+    {
+        GetTextExtentPoint32(hdc, text, (int)strlen(text), &textSize);
+    }
+
+    screenToDlgUnit(hdc, (POINT *)&textSize);
+
+    SelectObject(hdc, hOldFont);
+    ReleaseDC(hwndForDC, hdc);
+
+    if ( createdFont )
+    {
+        DeleteObject(dlgFont);
+    }
+
+    return rxNewSize(context, textSize.cx, textSize.cy);
+
+error_out:
+    return NULLOBJECT;
+}
+
+
+/**
+ *  Methods for the .PlainBaseDialog class.
+ */
+#define PLAINBASEDIALOG_CLASS  "PlainBaseDialog"
+
+#define DEFAULT_FONTNAME       "MS Shell Dlg"
+#define DEFAULT_FONTSIZE       8
+
+RexxMethod0(RexxObjectPtr, pbdlg_init_cls)
+{
+    context->SetObjectVariable("FONTNAME", context->String(DEFAULT_FONTNAME));
+    context->SetObjectVariable("FONTSIZE", context->WholeNumber(DEFAULT_FONTSIZE));
+    return NULLOBJECT;
+}
+
+RexxMethod2(RexxObjectPtr, pbdlg_setDefaultFont_cls, CSTRING, fontName, uint32_t, fontSize)
+{
+    context->SetObjectVariable("FONTNAME", context->String(fontName));
+    context->SetObjectVariable("FONTSIZE", context->WholeNumber(fontSize));
+    return NULLOBJECT;
+}
+
+RexxMethod0(RexxObjectPtr, pbdlg_getFontName_cls)
+{
+    return context->GetObjectVariable("FONTNAME");
+}
+RexxMethod0(RexxObjectPtr, pbdlg_getFontSize_cls)
+{
+    return context->GetObjectVariable("FONTSIZE");
+}
+
+/** PlainBaseDialog::getTextSizeDlg()
+ *
+ *  Gets the size (width and height) in dialog units for any given string, for
+ *  the font specified.
+ *
+ *  @param  text         The string whose size is needed.
+ *
+ *  @param  fontName     Optional. If specified, use this font to calculate the
+ *                       size.
+ *
+ *  @param  fontSize     Optional. If specified, use this font size with
+ *                       fontName to calculate the size.  The default if omitted
+ *                       is 8.  This arg is ignored if fontName is omitted.
+ *
+ *  @param  hwndFontSrc  Optional. Use this window's font to calculate the size.
+ *                       This arg is always ignored if fontName is specified.
+ *
+ */
+RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING, fontName,
+            OPTIONAL_uint32_t, fontSize, OPTIONAL_POINTERSTRING, hwndFontSrc, OSELF, self)
+{
+    HWND hwndSrc = NULL;
+    if ( argumentExists(2) )
+    {
+        if ( argumentOmitted(3) )
+        {
+            fontSize = DEFAULT_FONTSIZE;
+        }
+    }
+    else if ( argumentExists(4) )
+    {
+        if ( hwndFontSrc == NULL )
+        {
+            nullObjectException(context, "window handle", 4);
+            goto error_out;
+        }
+        hwndSrc = (HWND)hwndFontSrc;
+    }
+    return getTextSize(context, text, fontName, fontSize, hwndSrc, self);
+
+error_out:
+    return NULLOBJECT;
+}
+
+
+/**
+ *  Methods for the .ResDialog class.
+ */
+#define RESDIALOG_CLASS        "ResDialog"
+
+
+RexxMethod1(RexxObjectPtr, resdlg_setFontAttrib_pvt, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    HFONT font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+    if ( font == NULL )
+    {
+        font = (HFONT)GetStockObject(SYSTEM_FONT);
+    }
+
+    HDC hdc = GetDC(hwnd);
+    if ( hdc )
+    {
+        HFONT oldFont = (HFONT)SelectObject(hdc, font);
+
+        char fontName[64];
+        TEXTMETRIC tm;
+
+        GetTextMetrics(hdc, &tm);
+        GetTextFace(hdc, sizeof(fontName), fontName);
+
+        long fontSize = MulDiv((tm.tmHeight - tm.tmInternalLeading), 72, GetDeviceCaps(hdc, LOGPIXELSY));
+
+        context->SendMessage1(self, "FONTNAME=", context->String(fontName));
+        context->SendMessage1(self, "FONTSIZE=", context->WholeNumber(fontSize));
+
+        SelectObject(hdc, oldFont);
+        ReleaseDC(hwnd, hdc);
+    }
+    return NULLOBJECT;
+}
+
+
+/**
+ *  Methods for the .WindowExtensions class.
+ */
+#define WINDOWEXTENSIONS_CLASS        "WindowExtensions"
+
+
+/** WindowExtensions::getTextSizeScreen()
+ *
+ *  Gets the size, width and height, in pixels, needed to display a string in a
+ *  specific font.
+ *
+ *  @param text      The text to calculate the size of.  If this is the only
+ *                   argument then the font of this object is used for the
+ *                   calculation.
+ *
+ *  @param type      Optional.  If the text arg is not the only argument, then
+ *                   type is required.  It signals what fontSrc is.  The allowed
+ *                   types are:
+ *
+ *                   Indirect -> fontSrc is a font name and fontSize is the size
+ *                   of the font.  The calculation is done indirectly by
+ *                   temporarily obtaining a logical font.
+ *
+ *                   DC -> fontSrc is a handle to a device context.  The correct
+ *                   font for the calculation must already be selected into this
+ *                   device context.  fontSize is ignored.
+ *
+ *                   Font -> fontSrc is a handle to a font.  fontSize is
+ *                   ignored.
+ *
+ *                   Only the first letter of type is needed and case is not
+ *                   significant.
+ *
+ *  @param fontSrc   Optional.  An object to use for calculating the size of
+ *                   text.  The type argument determines how this object is
+ *                   interpreted.
+ *
+ *  @param fontSize  Optional.  The size of the font.  This argument is always
+ *                   ignored unless the type argument is Indirect.  If type is
+ *                   Indirect and this argument is omitted then the defualt font
+ *                   size is used.  (Currently the default size is 8.)
+ *
+ *  @return  A .Size object containg the width and height for the text in
+ *           pixels.
+ */
+RexxMethod5(RexxObjectPtr, winex_getTextSizeScreen, CSTRING, text, OPTIONAL_CSTRING, type,
+            OPTIONAL_CSTRING, fontSrc, OPTIONAL_uint32_t, fontSize, OSELF, self)
+{
+    SIZE size = {0};
+
+    HWND hwnd = rxGetWindowHandle(context, self);
+    if ( hwnd == NULL )
+    {
+        nullObjectException(context, "window handle");
+        goto error_out;
+    }
+
+    if ( rxArgCount(context) == 1 )
+    {
+        if ( ! textSizeFromWindow(context, text, &size, hwnd) )
+        {
+            goto error_out;
+        }
+    }
+    else if ( argumentOmitted(2) )
+    {
+        context->RaiseException1(Rexx_Error_Incorrect_method_noarg, context->WholeNumber(2));
+        goto error_out;
+    }
+    else
+    {
+        if ( argumentOmitted(3) )
+        {
+            context->RaiseException1(Rexx_Error_Incorrect_method_noarg, context->WholeNumber(3));
+            goto error_out;
+        }
+
+        char m = toupper(*type);
+        if ( m == 'I' )
+        {
+            if ( argumentOmitted(4) )
+            {
+                fontSize = DEFAULT_FONTSIZE;
+            }
+            if ( ! textSizeIndirect(context, text, fontSrc, fontSize, &size, hwnd) )
+            {
+                goto error_out;
+            }
+        }
+        else if ( m == 'D' )
+        {
+            HDC hdc = (HDC)string2pointer(fontSrc);
+            if ( hdc == NULL )
+            {
+                invalidTypeException(context, 3, "handle to a device context");
+            }
+            GetTextExtentPoint32(hdc, text, (int)strlen(text), &size);
+        }
+        else if ( m == 'F' )
+        {
+            HFONT hFont = (HFONT)string2pointer(fontSrc);
+            if ( hFont == NULL )
+            {
+                invalidTypeException(context, 3, "handle to a font");
+            }
+
+            HDC hdc = GetDC(hwnd);
+            if ( hdc == NULL )
+            {
+                systemServiceExceptionCode(context, API_FAILED_MSG, "GetDC");
+                goto error_out;
+            }
+
+            bool success = true;
+            if ( ! getTextExtent(hFont, hdc, text, &size) )
+            {
+                systemServiceExceptionCode(context, API_FAILED_MSG, "GetTextExtentPoint32");
+                success = false;
+            }
+
+            ReleaseDC(hwnd, hdc);
+            if ( ! success )
+            {
+                goto error_out;
+            }
+        }
+        else
+        {
+            context->RaiseException2(Rexx_Error_Incorrect_method_option, context->String("I, D, F"),
+                                     context->String(type));
+            goto error_out;
+        }
+    }
+
+    return rxNewSize(context, size.cx, size.cy);
+
+error_out:
+    return NULLOBJECT;
+}
+
+
+/**
+ *  Methods for the .DialogControl class.
+ */
+#define DIALOGCONTROL_CLASS        "DialogControl"
+
+
+/** DialogControl::getTextSizeDlg()
+ *
+ *  Gets the size (width and height) in dialog units for any given string for
+ *  the font specified.
+ *
+ *  @param  text         The string whose size is needed.
+ *
+ *  @param  fontName     Optional. If specified, use this font to calculate the
+ *                       size.
+ *
+ *  @param  fontSize     Optional. If specified, use this font size with
+ *                       fontName to calculate the size.  The default if omitted
+ *                       is 8.  This arg is ignored if fontName is omitted.
+ *
+ *  @param  hwndFontSrc  Optional. Use this window's font to calculate the size.
+ *                       This arg is always ignored if fontName is specified.
+ *
+ */
+RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING, fontName,
+            OPTIONAL_uint32_t, fontSize, OPTIONAL_POINTERSTRING, hwndFontSrc, OSELF, self)
+{
+    HWND hwndSrc = NULL;
+    if ( argumentExists(2) )
+    {
+        if ( argumentOmitted(3) )
+        {
+            fontSize = DEFAULT_FONTSIZE;
+        }
+    }
+    else if ( argumentExists(4) )
+    {
+        if ( hwndFontSrc == NULL )
+        {
+            nullObjectException(context, "window handle", 4);
+            goto error_out;
+        }
+        hwndSrc = (HWND)hwndFontSrc;
+    }
+
+    RexxObjectPtr dlgObj = context->SendMessage0(self, "ODLG");
+    if ( dlgObj == NULLOBJECT )
+    {
+        // The interpreter kernel will have raised a syntax exception in this
+        // case.  But, the ooDialog framework traps the exception and puts up a
+        // message box saying ODLG is not a method of xx control.  I think that
+        // will be confusing to the users, since they have no idea about this
+        // call to oDlg. So, raise a more specific exception.
+        context->RaiseException1(Rexx_Error_Interpretation_user_defined,
+                                 context->String("Inconsistency: this .DialogControl object does not have "
+                                                 "the oDlg (owner dialog) attribute"));
+        goto error_out;
+    }
+
+    return getTextSize(context, text, fontName, fontSize, hwndSrc, dlgObj);
+
+error_out:
+    return NULLOBJECT;
 }
 
 
@@ -5464,8 +6086,6 @@ RexxMethod1(int, ckbx_indeterminate, OSELF, self)
     return 0;
 }
 
-
-
 /* This method is used as a convenient way to test code. */
 RexxMethod1(int, bc_test, RexxObjectPtr, obj)
 {
@@ -6349,10 +6969,12 @@ RexxMethod1(int, image_id_cls, CSTRING, id)
  *
  *  Load a stand alone image from a file or one of the system images.
  *
+ *  @param   id  Either the numeric resource id of a system image, or the file
+ *               name of a stand-alone image file.
  *
- * @note  This method is designed to always return an .Image object, or raise an
- *        exception.  The user would need to test the returned .Image object for
- *        null to be sure it is good.  I.e.:
+ *  @note  This method is designed to always return an .Image object, or raise
+ *         an exception.  The user would need to test the returned .Image object
+ *         for null to be sure it is good.  I.e.:
  *
  *        image = .Image~getImage(...)
  *        if image~isNull then do
@@ -6916,7 +7538,7 @@ bool getComCtl32Version(RexxMethodContext *context, DWORD *pDllVersion, DWORD mi
             }
             else
             {
-                systemServiceExceptionComCode(context, API_FAILED_MSG, DLLGETVERSION_FUNCTION, hr);
+                systemServiceExceptionComCode(context, COM_API_FAILED_MSG, DLLGETVERSION_FUNCTION, hr);
             }
         }
         else

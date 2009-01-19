@@ -187,13 +187,6 @@
 ::method GetID unguarded
    return Wnd_Desktop("ID", self~hwnd)
 
-::method GetTextSize unguarded
-    use arg text, fontname, fontsize, hwnd
-    if Arg(2,'o') = 1 then fontname = ""
-    if Arg(3,'o') = 1 then fontsize = ""
-    if Arg(4,'o') = 1 then hwnd = self~hwnd
-    return GetStdTextSize(text, fontname, fontsize, hwnd)
-
 /* This method is deprecated.  Use .DlgUtil directly */
 ::method GetSystemMetrics unguarded
    use strict arg index
@@ -345,6 +338,12 @@
 
 ::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils
 
+::method init class external "LIBRARY oodialog pbdlg_init_cls"
+::method setDefaultFont class external "LIBRARY oodialog pbdlg_setDefaultFont_cls"
+::method getFontName class external "LIBRARY oodialog pbdlg_getFontName_cls"
+::method getFontSize class external "LIBRARY oodialog pbdlg_getFontSize_cls"
+
+
 ::method Adm attribute protected   /* external adminstration buffer */
 ::method AutoDetect attribute      /* Automatic data field detection on/off */
 ::method DataConnection attribute protected /* store connections between ids and class attributes */
@@ -356,6 +355,11 @@
 ::method Finished attribute
 ::method ParentDlg attribute protected
 
+::attribute fontName get
+::attribute fontName set private
+
+::attribute fontSize get
+::attribute fontSize set private
 
   /* A queue containing the methods that will be started concurrently before */
   /* execution of the dialog */
@@ -413,6 +417,9 @@
    self~ConstDir["IDI_DLG_APPICON2"] = 13
    self~ConstDir["IDI_DLG_OOREXX"] = 14
    self~ConstDir["IDI_DLG_DEFAULT"] = 12
+
+   self~fontName = .PlainBaseDialog~getFontName
+   self~fontSize = .PlainBaseDialog~getFontSize
 
    if arg(4, 'E') then
      self~ParseIncludeFile(includeFile)
@@ -1279,6 +1286,12 @@
 
 ::method TabToPrevious unguarded
    return Wnd_Desktop("SETFOC", self~DlgHandle, 1, "P")
+
+::method getTextSize unguarded
+  forward message "getTextSizeDlg" continue
+  return result~width result~height
+
+::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
 
 
  -- 2 methods to set / remove the WS_TABSTOP / WS_GROUP styles for any control.
