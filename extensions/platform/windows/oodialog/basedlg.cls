@@ -71,10 +71,8 @@
    end
    return WndShow_Pos("S",self~hwnd, disptype)
 
-::method SetFont unguarded
-   use arg hFont, bRedraw     /* WM_SETFONT */
-   if Arg(2, 'o') = 1 then bRedraw = 1
-   return SendWinMsg("ANY",self~hwnd, "0x0030", hFont, bRedraw)
+::method setFont unguarded external "LIBRARY oodialog winex_setFont"
+::method getFont unguarded external "LIBRARY oodialog winex_getFont"
 
 ::method GetRect unguarded
    return WindowRect("GET", self~Hwnd)

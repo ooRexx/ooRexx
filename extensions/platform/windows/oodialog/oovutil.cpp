@@ -2093,8 +2093,9 @@ REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 
 REXX_METHOD_PROTOTYPE(resdlg_setFontAttrib_pvt);
 
-
 REXX_METHOD_PROTOTYPE(winex_getTextSizeScreen);
+REXX_METHOD_PROTOTYPE(winex_getFont);
+REXX_METHOD_PROTOTYPE(winex_setFont);
 
 REXX_METHOD_PROTOTYPE(ri_init);
 REXX_METHOD_PROTOTYPE(ri_release);
@@ -2237,6 +2238,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(resdlg_setFontAttrib_pvt,     resdlg_setFontAttrib_pvt),
 
     REXX_METHOD(winex_getTextSizeScreen,      winex_getTextSizeScreen),
+    REXX_METHOD(winex_getFont,                winex_getFont),
+    REXX_METHOD(winex_setFont,                winex_setFont),
 
     REXX_METHOD(ri_init,                     ri_init),
     REXX_METHOD(ri_release,                  ri_release),

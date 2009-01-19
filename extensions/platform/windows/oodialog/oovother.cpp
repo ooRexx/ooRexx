@@ -1527,14 +1527,6 @@ size_t RexxEntry HandleControlEx(
             RETVAL(-2)  /* Subclass procedure is not installed. */
         }
     }
-    else if ( argv[2].strptr[0] == 'F' )    /* Font */
-    {
-        if ( strcmp(argv[3].strptr, "GET" ) == 0)
-        {
-            RETHANDLE(SendMessage(hCtrl, WM_GETFONT, 0, 0));
-        }
-        else RETERR
-    }
     RETERR
 }
 
@@ -4313,6 +4305,65 @@ RexxMethod5(RexxObjectPtr, winex_getTextSizeScreen, CSTRING, text, OPTIONAL_CSTR
 
 error_out:
     return NULLOBJECT;
+}
+
+/** WindowExtensions::getFont()
+ *
+ *  Returns the font in use for the dialog or dialog control.
+ *
+ *  @note  If the window returns NULL for the font, then it has not been set
+ *         through a WM_SETFONT message.  In this case it is using the stock
+ *         system font. Rather than return 0, we return the stock system font to
+ *         the ooDialog programmer.
+ *
+ */
+RexxMethod1(POINTERSTRING, winex_getFont, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    if ( hwnd == NULL )
+    {
+        nullObjectException(context, "window handle");
+        goto error_out;
+    }
+
+    HFONT hFont = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+    if ( hFont == NULL )
+    {
+        hFont = (HFONT)GetStockObject(SYSTEM_FONT);
+    }
+    return hFont;
+
+error_out:
+    return NULLOBJECT;
+}
+
+/** WindowExtensions::setFont()
+ *
+ *  Sets the font used for text in a dialog or dialog control.
+ *
+ *  @param font  Handle to the new font.
+ *
+ *  @param redraw  Optional. If true, the window will redraw itself. (According
+ *                 to MSDN.) The defualt if this argument is omitted is true.
+ *
+ *  @return 0, always. The WM_SETFONT message does not return a value.
+ */
+RexxMethod3(int, winex_setFont, POINTERSTRING, font, OPTIONAL_logical_t, redraw, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    if ( hwnd == NULL )
+    {
+        nullObjectException(context, "window handle");
+    }
+    else
+    {
+        if ( argumentOmitted(2) )
+        {
+            redraw = TRUE;
+        }
+        SendMessage(hwnd, WM_SETFONT, (WPARAM)font, redraw);
+    }
+    return 0;
 }
 
 
