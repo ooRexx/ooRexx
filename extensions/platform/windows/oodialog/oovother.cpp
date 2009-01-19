@@ -4409,6 +4409,7 @@ RexxMethod1(RexxStringObject, stc_getText, OSELF, self)
 {
     RexxStringObject result = NULLOBJECT;
     HWND hwnd = rxGetWindowHandle(context, self);
+    oodSetSysErrCode(context, 0);
 
     ULONG count = (ULONG)GetWindowTextLength(hwnd);
     if ( count == 0 )
