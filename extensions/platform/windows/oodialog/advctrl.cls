@@ -1736,7 +1736,7 @@
    use arg x, y
    return self~oDlg~DisplaceBitmap(self~ID, x, y)
 
-::method detBmpDisplacement unguarded
+::method getBmpDisplacement unguarded
    return self~oDlg~GetBmpDisplacement(self~ID)
 
 ::method scrollText unguarded
