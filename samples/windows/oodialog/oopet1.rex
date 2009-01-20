@@ -84,7 +84,6 @@
    self~ConnectBitmapButton(2008, "IDHORSE",     208 ,,   ,,"FRAME")
    correct = .array~of("rhinoceros","tiger","elephant","moose","goat","chihuahua","seal", "horse")
    beenhelped = 0
-   self~BackgroundBitmap(888)
 
 ::method Validate
    expose correct beenhelped
