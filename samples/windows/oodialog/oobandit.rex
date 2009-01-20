@@ -73,7 +73,7 @@
    maxcycle = 200; initpot = 1000; equal = 0; misses = 0
    self~init:super()
    self~InitCode = self~createcenter(255,140,"Jack Slot Machine -",
-                                     "Stop for 3 of the same kind")
+                                     "Stop for 3 of the same kind", , , "System", 8)
 
 ::method DefineDialog
    expose bmp. speedx jackx jacky
@@ -86,9 +86,9 @@
    bmp.6 = self~LoadBitmap("bmp\moose.bmp")
    bmp.7 = self~LoadBitmap("bmp\rhinoce.bmp")
    bmp.8 = self~LoadBitmap("bmp\goat.bmp")
-   self~addBlackRect(10,5,235,20,"BORDER") /* jackpot line */
-   self~addBlackRect(107,7,41,16,"BORDER")
-   self~addBlackRect(108,8,39,14,"BORDER")
+   self~addBlackFrame(10,5,235,20,"BORDER") /* jackpot line */
+   self~addBlackFrame(107,7,41,16,"BORDER")
+   self~addBlackFrame(108,8,39,14,"BORDER")
    self~addText(40,10,60,10,"Jackpot  $$$")
    self~addEntryLine(1200,,110,9,35,11)
    self~addText(175,10,60,10,"$$$  Jackpot")
