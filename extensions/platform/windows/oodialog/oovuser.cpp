@@ -551,6 +551,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
 
        if (strstr(argv[8].strptr,"OWNER")) lStyle |= BS_OWNERDRAW;
        if (strstr(argv[8].strptr,"LEFTTEXT")) lStyle |= BS_LEFTTEXT;
+       if (strstr(argv[8].strptr,"RIGHTBUTTON")) lStyle |= BS_RIGHTBUTTON;
        if (strstr(argv[8].strptr,"BITMAP")) lStyle |= BS_BITMAP;
        if (strstr(argv[8].strptr,"ICON")) lStyle |= BS_ICON;
        if (strstr(argv[8].strptr,"LEFT")) lStyle |= BS_LEFT;
