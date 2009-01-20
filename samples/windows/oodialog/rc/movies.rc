@@ -38,6 +38,10 @@
 /* OODialog\Samples\rc\movies.rc       Let's go to the movies         */
 /*--------------------------------------------------------------------*/
 
+#define IDD_FONT_PICKER                         101
+#define IDC_COMBO_SIZE                          1004
+#define IDC_COMBO_NAME                          1005
+
 30 DIALOG 4, 12, 196, 143
 STYLE WS_CHILD | WS_VISIBLE | WS_BORDER
 FONT 8, "System"
@@ -47,9 +51,23 @@ FONT 8, "System"
  CONTROL "Star", 33, "EDIT", WS_BORDER | WS_GROUP | WS_TABSTOP, 109, 53, 84, 12
  CONTROL "Director", 34, "EDIT", WS_BORDER | WS_GROUP | WS_TABSTOP, 109, 83, 84, 12
  CONTROL "with", 35, "COMBOBOX", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP, 109, 113, 84, 33
- GROUPBOX "The movies comin'", -1, 3, 9, 99, 118, BS_GROUPBOX
+ GROUPBOX "The upcoming movies", -1, 3, 9, 99, 118, BS_GROUPBOX
  LTEXT "Produced by:", -1, 109, 10, 60, 8
  LTEXT "Starring:", -1, 109, 40, 60, 8
  LTEXT "Director:", -1, 109, 70, 83, 8
  LTEXT "with:", -1, 109, 100, 60, 8
 }
+
+IDD_FONT_PICKER DIALOG 0, 0, 208, 95
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_VISIBLE | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+CAPTION "Font Selection"
+FONT 8, "Ms Shell Dlg 2"
+BEGIN
+    GROUPBOX        "Select a font for the upcoming example program", IDC_STATIC, 7, 7, 194, 62
+    CTEXT           "Font Name:", IDC_STATIC, 13, 20, 80, 8
+    CTEXT           "Font Size:", IDC_STATIC, 116, 20, 80, 8
+    COMBOBOX        IDC_COMBO_NAME, 13, 33, 80, 40, WS_TABSTOP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT
+    COMBOBOX        IDC_COMBO_SIZE, 116, 33, 80, 40, WS_TABSTOP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS
+    DEFPUSHBUTTON   "OK", IDOK, 96, 74, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 151, 74, 50, 14
+END

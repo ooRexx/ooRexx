@@ -46,6 +46,9 @@
  mydir = me~left(me~lastpos('\')-1)              /* where is code     */
  mydir = directory(mydir)                        /* current is "my"   */
 
+ -- Let the user select a font for the program.
+ oldFont = setFont()
+
  dlg = .TimedMessage~new("The upcoming dialog demonstrates the use of categorized pages", ,
                          "Categorized Dialog", 2000)
  dlg~execute
@@ -65,6 +68,7 @@
     call ErrorMessage "Selection error!";
     dlg~deinstall
     ret = directory(curdir)
+    ret = restoreFont(oldFont)
     return
  end
 
@@ -102,6 +106,7 @@
     do
       dlg~deinstall
       ret = directory(curdir)
+      ret = restoreFont(oldFont)
       return
     end
  end
@@ -114,6 +119,7 @@
  dlg~execute("SHOWTOP")
  dlg~deinstall
  ret = directory(curdir)
+ ret = restoreFont(oldFont)
  return
 
 /*-------------------------------- requires -----------------------------------*/
@@ -170,7 +176,29 @@
 ::method Ticket                                      /* page 4 */
    self~loaditems("rc\ticket.rc")
    self~connectList(41,"FilmClick")
-   self~connectBitmapButton(45, 'printTicket', "bmp\ticket.bmp",,,,"FRAME USEPAL STRETCH")
+
+   if .DlgUtil~comCtl32Version < 6 then do
+      self~addBitmapButton(45, 13, 87, 102, 40, "Get the Ticket", 'printTicket', -
+                           "bmp\ticket.bmp",,,, "FRAME USEPAL STRETCH GROUP")
+   end
+   else do
+      self~addButton(45, 13, 87, 102, 40, "", 'printTicket', "GROUP")
+   end
+
+::method InitTicket
+   if .DlgUtil~comCtl32Version  < 6 then return
+
+   bmpButton = self~getButtonControl(45)
+   parse value bmpButton~getRect with x y x2 y2
+
+   size = .Size~new(x2 - x - 10, y2 - y - 10)
+   image = .Image~getImage('bmp\ticket.bmp', .Image~id(IMAGE_BITMAP), size)
+   imageList = .ImageList~create(size, .Image~id(ILC_COLOR8), 1, 0)
+   imageList~add(image)
+
+   align = .Image~id(BUTTON_IMAGELIST_ALIGN_CENTER)
+   margin = .Rect~new(5)
+   bmpButton~setImageList(imageList, margin, align)
 
 ::method SetFilmData
    expose sel. films
@@ -291,3 +319,57 @@
                            selectedFilm '-at-' selectedCinema~substr(2), 3000)
 
 
+::routine setFont
+
+  oldFont = .directory~new
+  oldFont~name = .PlainBaseDialog~getFontName
+  oldFont~size = .PlainBaseDialog~getFontSize
+
+  dlg = .FontPicker~new("rc\movies.rc", IDD_FONT_PICKER, , , , 6)
+  if dlg~initCode == 0 then do
+     dlg~execute("SHOWTOP", IDI_DLG_OOREXX)
+     dlg~deinstall
+  end
+
+  return oldFont
+
+::routine restoreFont
+  use strict arg oldFont
+  .PlainBaseDialog~setDefaultFont(oldFont~name, oldFont~size)
+  return oldFont
+
+::class 'FontPicker' subclass RcDialog inherit AdvancedControls MessageExtensions
+
+::method initAutoDetection
+   self~noAutoDetection
+
+::method initDialog
+  expose nameCB sizeCB
+
+  nameCB = self~getComboBox(IDC_COMBO_NAME)
+  sizeCB = self~getComboBox(IDC_COMBO_SIZE)
+
+  names = .array~of("Default", "Tahoma", "Courier", "MS Sans Serif")
+  sizes = .array~of("Default", '8 point', '10 point', '12 point', '16 point')
+
+  do name over names
+     nameCB~add(name)
+  end
+  nameCB~select("Default")
+
+  do size over sizes
+     sizeCB~add(size)
+  end
+  sizeCB~select("Default")
+
+::method ok
+  expose nameCB sizeCB
+
+  fontName = nameCB~selected
+  if fontName == "Default" then fontName = .PlainBaseDialog~getFontName
+
+  fontSize = sizeCB~selected~word(1)
+  if fontSize == "Default" then fontSize = .PlainBaseDialog~getFontSize
+
+  .PlainBaseDialog~setDefaultFont(fontName, fontSize)
+  return self~ok:super
