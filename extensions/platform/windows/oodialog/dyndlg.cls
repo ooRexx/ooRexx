@@ -618,8 +618,8 @@
    if id < 0 then return id
    options = self~getDefaultOpts(options)
    self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, cx, cy, text, options)
-   if Arg(7,"o") = 0 then
-      self~connectButton(id, msgToRise~space(0))
+   if Arg(7,"o") = 0 then return self~connectButton(id, msgToRise~space(0))
+   else return 0
 
 
 ::method addGroupBox
@@ -628,6 +628,7 @@
    if id = -2 then return id
    opts = self~getDefaultOpts(opts)
    self~activePtr = UsrAddControl("GB",self~activePtr, x, y, cx, cy, opts, text, id)
+   return 0
 
 
 ::method addStatic
@@ -732,7 +733,8 @@
    end
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("EL", self~activePtr, id, x, y, cx, cy, opts)
-   if self~AutoDetect = 1 then self~ConnectEntryLine(symbid, fname)
+   if self~AutoDetect = 1 then return self~ConnectEntryLine(symbid, fname)
+   else return 0
 
 
 ::method AddPasswordLine
@@ -751,9 +753,10 @@
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("LB", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
-      if opts~wordpos("MULTI") > 0 then self~ConnectMultiListBox(symbid, fname)
-      else self~ConnectListBox(symbid, fname)
+      if opts~wordpos("MULTI") > 0 then ret = self~ConnectMultiListBox(symbid, fname)
+      else ret = self~ConnectListBox(symbid, fname)
    end
+   return ret
 
 
 ::method AddComboBox
@@ -764,7 +767,8 @@
    if Arg(2,'o') = 1 then fname = "DATA"id
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("CB", self~activePtr, id, x, y, cx, cy, opts)
-   if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then self~ConnectComboBox(symbid, fname, opts)
+   if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then return self~ConnectComboBox(symbid, fname, opts)
+   else return 0
 
 
 ::method AddCheckBox
@@ -782,7 +786,8 @@
    end
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("CH", self~activePtr, id, x, y, cx, cy, text, opts)
-   if self~AutoDetect = 1 then self~ConnectCheckBox(symbid, fname)
+   if self~AutoDetect = 1 then return self~ConnectCheckBox(symbid, fname)
+   else return 0
 
 
 ::method AddRadioButton
@@ -800,7 +805,8 @@
    end
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("RB", self~activePtr, id, x, y, cx, cy, text, opts)
-   if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then self~ConnectRadioButton(symbid, fname)
+   if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then return self~ConnectRadioButton(symbid, fname)
+   else return 0
 
 
 ::method AddScrollBar
@@ -809,6 +815,7 @@
    if id < 0 then return id
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("SB", self~activePtr, id, x, y, cx, cy, opts)
+   return 0
 
 
 ::method AddRadioGroup
@@ -876,8 +883,9 @@
    end
    if Arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
    opts = self~GetDefaultOpts(opts)
-   self~addText(x, y+2, cx1, cy, text, opts, idstat)
-   self~AddEntryLine(id, fname, x+cx1+1, y, cx2, cy, opts)
+   ret = self~addText(x, y+2, cx1, cy, text, opts, idstat)
+   if ret == 0 then ret = self~AddEntryLine(id, fname, x+cx1+1, y, cx2, cy, opts)
+   return ret
 
 
 ::method AddInputGroup
@@ -912,7 +920,8 @@
       if is \= -1 then is = is + 1
       my = my + trunc(stepy * 2.25)
    end
-   if nob = 0 then self~AddGroupBox(x,y,cx1+cx2,my-y,"", newopts, is)
+   if nob = 0 then return self~AddGroupBox(x,y,cx1+cx2,my-y,"", newopts, is)
+   else return 0
 
 
 ::method AddComboInput
@@ -929,8 +938,9 @@
    if cx1 = 0 then cx1 = s~width + 4
    if Arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
    opts = self~GetDefaultOpts(opts)
-   self~addText(x, y, cx1, cy, text, opts, idstat)
-   self~AddComboBox(id, attname, x+cx1+2, y, cx2, cy*clines, opts)
+   ret = self~addText(x, y, cx1, cy, text, opts, idstat)
+   if ret == 0 then return self~AddComboBox(id, attname, x+cx1+2, y, cx2, cy*clines, opts)
+   else return 0
 
 
 ::method AddInputStem
@@ -963,7 +973,8 @@
       if is \= -1 then is = is + 2
       my = my + trunc(stepy * 2.25)
    end
-   if nob = 0 then self~AddGroupBox(x,y,cx1+cx2,my-y,"", newopts, is)
+   if nob = 0 then return self~AddGroupBox(x,y,cx1+cx2,my-y,"", newopts, is)
+   else return 0
 
 
 ::method AddCheckBoxStem
@@ -1029,7 +1040,8 @@
       my = my + stepy
    end
    if highy = 0 then highy = my
-   if nob = 0 then self~AddGroupBox(x,y,mx+cx, highy-y+(stepy % 2),"", newopts, idstat)
+   if nob = 0 then return self~AddGroupBox(x,y,mx+cx, highy-y+(stepy % 2),"", newopts, idstat)
+   else return 0
 
 
 ::method AddButtonGroup
@@ -1053,27 +1065,29 @@
       inp = newinp
       parse var inp bt bid bfnk newinp
    end
-
+   return 0
 
 
 ::method AddOkCancelRightBottom
-   self~AddButtonGroup(self~SizeX-95, self~SizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
+   return self~AddButtonGroup(self~SizeX-95, self~SizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
 
 ::method AddOkCancelLeftBottom
-   self~AddButtonGroup(5, self~SizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
+   return self~AddButtonGroup(5, self~SizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
 
 ::method AddOkCancelRightTop
-   self~AddButtonGroup(self~SizeX-45, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
+   return self~AddButtonGroup(self~SizeX-45, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
 
 ::method AddOkCancelLeftTop
-   self~AddButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
+   return self~AddButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
 
 ::method AddIcon
    use arg id, fileName
 
    id = self~CheckId(id~strip~translate)
+   if id < 0 then return id
+
    fileName = fileName~strip~strip('B', '"')
-   if id <> -1 then ret = UsrAddResource(self~Adm, "ICO", id, fileName)
+   return UsrAddResource(self~Adm, "ICO", id, fileName)
 
 ::method GetDefaultOpts protected
    use arg opts
