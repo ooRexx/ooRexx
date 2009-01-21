@@ -288,9 +288,9 @@
    if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
    self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
-       self~ConnectTreeControl(symbid, attname)
+       return self~ConnectTreeControl(symbid, attname)
    end
-
+   return 0
 
 ::method AddListControl
    use arg id, attname, x, y, cx, cy, opts
@@ -301,8 +301,9 @@
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
-       self~ConnectListControl(symbid, attname)
+       return self~ConnectListControl(symbid, attname)
    end
+   return 0
 
 ::method AddProgressBar
    use arg id, x, y, cx, cy, opts
@@ -311,7 +312,7 @@
    if id < 0 then return id
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("PROGRESS", self~activePtr, id, x, y, cx, cy, opts)
-
+   return 0
 
 ::method AddSliderControl
    use arg id, attname, x, y, cx, cy, opts
@@ -322,9 +323,9 @@
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
-       self~ConnectSliderControl(symbid, attname)
+       return self~ConnectSliderControl(symbid, attname)
    end
-
+   return 0
 
 ::method AddTabControl
    use arg id, attname, x, y, cx, cy, opts
@@ -335,9 +336,9 @@
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
    if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then do
-       self~ConnectTabControl(symbid, attname)
+       return self~ConnectTabControl(symbid, attname)
    end
-
+   return 0
 
 ::method AddDateTimePicker
    use arg id, attname, x, y, cx, cy, opts
@@ -348,9 +349,9 @@
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("DTP", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
-       self~ConnectDateTimePicker(symbid, attname)
+       return self~ConnectDateTimePicker(symbid, attname)
    end
-
+   return 0
 
 ::method AddMonthCalendar
    use arg id, attname, x, y, cx, cy, opts
@@ -361,9 +362,9 @@
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("MONTH", self~activePtr, id, x, y, cx, cy, opts)
    if self~AutoDetect = 1 then do
-       self~ConnectMonthCalendar(symbid, attname)
+       return self~ConnectMonthCalendar(symbid, attname)
    end
-
+   return 0
 
 
 /***************************************************************************************************************/
