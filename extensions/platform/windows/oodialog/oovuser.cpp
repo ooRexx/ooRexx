@@ -550,12 +550,8 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[8].strptr,"DEFAULT")) lStyle |= BS_DEFPUSHBUTTON; else lStyle |= BS_PUSHBUTTON;
 
        if (strstr(argv[8].strptr,"OWNER")) lStyle |= BS_OWNERDRAW;
-       if (strstr(argv[8].strptr,"LEFTTEXT")) lStyle |= BS_LEFTTEXT;
-       if (strstr(argv[8].strptr,"RIGHTBUTTON")) lStyle |= BS_RIGHTBUTTON;
        if (strstr(argv[8].strptr,"BITMAP")) lStyle |= BS_BITMAP;
        if (strstr(argv[8].strptr,"ICON")) lStyle |= BS_ICON;
-       if (strstr(argv[8].strptr,"LEFT")) lStyle |= BS_LEFT;
-       if (strstr(argv[8].strptr,"RIGHT")) lStyle |= BS_RIGHT;
        if (strstr(argv[8].strptr,"HCENTER")) lStyle |= BS_CENTER;
        if (strstr(argv[8].strptr,"TOP")) lStyle |= BS_TOP;
        if (strstr(argv[8].strptr,"BOTTOM")) lStyle |= BS_BOTTOM;
@@ -564,6 +560,36 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[8].strptr,"MULTILINE")) lStyle |= BS_MULTILINE;
        if (strstr(argv[8].strptr,"NOTIFY")) lStyle |= BS_NOTIFY;
        if (strstr(argv[8].strptr,"FLAT")) lStyle |= BS_FLAT;
+
+       const char *pLonger = strstr(argv[8].strptr,"LEFTTEXT");
+       const char *pShorter = strstr(argv[8].strptr,"LEFT");
+       if ( pLonger )
+       {
+           lStyle |= BS_LEFTTEXT;
+           if ( pShorter != NULL && pShorter != pLonger )
+           {
+               lStyle |= BS_LEFT;
+           }
+       }
+       else if ( pShorter )
+       {
+           lStyle |= BS_LEFT;
+       }
+
+       pLonger = strstr(argv[8].strptr,"RIGHTBUTTON");
+       pShorter = strstr(argv[8].strptr,"RIGHT");
+       if ( pLonger )
+       {
+           lStyle |= BS_RIGHTBUTTON;
+           if ( pShorter != NULL && pShorter != pLonger )
+           {
+               lStyle |= BS_RIGHT;
+           }
+       }
+       else if ( pShorter )
+       {
+           lStyle |= BS_RIGHT;
+       }
 
        if (!strstr(argv[8].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
        if (strstr(argv[8].strptr,"GROUP")) lStyle |= WS_GROUP;
