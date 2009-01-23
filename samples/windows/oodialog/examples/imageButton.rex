@@ -264,9 +264,9 @@ return 0
   say '  height:' bestSize~height
   say
 
-  -- Not reset the button lable and set the size to the ideal.
+  -- Now reset the button label and set the size to the ideal size.
   pbView~setTitle("View Pictures")
-  pbView~resize(bestSize~width / self~factorX, bestSize~height / self~factorY)
+  pbView~setRect(0, 0, bestSize~width, bestSize~height, "NOMOVE")
 
   -- Example only of the getImageList() method.  A .Directory object is
   -- returned.
@@ -318,7 +318,7 @@ return 0
   pbAdd~setTitle("DEATH if you touch me")
   s = pbAdd~getIdealSize
   pbAdd~setTitle("Add Pictures")
-  pbAdd~resize(s~width / self~factorX, s~height / self~factorY)
+  pbAdd~setRect(0, 0, s~width, s~height, "NOMOVE")
 
   -- Again, just for an example of the getImageList() method.
   d = pbAdd~getImageList
