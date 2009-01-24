@@ -538,8 +538,7 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
         if ( n[2] == LB_SETCURSEL )
         {
           // at first check if it is an multiple selection lb
-          LONG style;
-          style = GetWindowLongPtr(GetDlgItem( hWnd, n[1] ), GWL_STYLE);
+          LONG style = GetWindowLong(GetDlgItem( hWnd, n[1] ), GWL_STYLE);
 
           if ( style & LBS_MULTIPLESEL )
             if ( argv[5].strptr[0] == 'D' )

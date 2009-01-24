@@ -3535,9 +3535,9 @@ RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr v
     return result;
 }
 
-inline bool hasStyle(HWND hwnd, DWORD_PTR style)
+inline bool hasStyle(HWND hwnd, LONG style)
 {
-    if ( (GetWindowLongPtr(hwnd, GWL_STYLE) & style) || (GetWindowLongPtr(hwnd, GWL_EXSTYLE) & style) )
+    if ( (GetWindowLong(hwnd, GWL_STYLE) & style) || (GetWindowLong(hwnd, GWL_EXSTYLE) & style) )
     {
         return true;
     }
@@ -5237,7 +5237,7 @@ BUTTONTYPE getButtonInfo(HWND hwnd, PBUTTONSUBTYPE sub, DWORD *style)
         return type;
     }
 
-    DWORD _style = (DWORD)GetWindowLongPtr(hwnd, GWL_STYLE);
+    LONG _style = GetWindowLong(hwnd, GWL_STYLE);
     BUTTONSUBTYPE _sub;
 
     switch ( _style & BS_TYPEMASK )
@@ -5433,7 +5433,7 @@ RexxMethod2(int, gb_setStyle, OSELF, self, CSTRING, opts)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
-    DWORD style = (DWORD)GetWindowLongPtr(hwnd, GWL_STYLE);
+    LONG style = GetWindowLong(hwnd, GWL_STYLE);
 
     if ( stricmp(opts, "RIGHT") == 0 )
     {
@@ -5468,7 +5468,7 @@ RexxMethod2(int, gb_setStyle, OSELF, self, CSTRING, opts)
     r.bottom = (halfHeight >= MIN_HALFHEIGHT_GB ? r.top + halfHeight : r.bottom);
 
     // Change the group box style, force the dialog to repaint.
-    SetWindowLongPtr(hwnd, GWL_STYLE, style);
+    SetWindowLong(hwnd, GWL_STYLE, style);
     SendMessage(hwnd, BM_SETSTYLE, (WPARAM)style, (LPARAM)TRUE);
 
     InvalidateRect(hDlg, &r, TRUE);
@@ -5610,7 +5610,7 @@ RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
 
     type = getButtonInfo(hwnd, &sub, &style);
     oldStyle = style;
-    oldTypeStyle = ((DWORD)GetWindowLongPtr(hwnd, GWL_STYLE) & BS_TYPEMASK);
+    oldTypeStyle = ((DWORD)GetWindowLong(hwnd, GWL_STYLE) & BS_TYPEMASK);
     typeStyle = oldTypeStyle;
 
     char *token;
@@ -5787,7 +5787,7 @@ RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
 
     if ( style != (oldStyle | oldTypeStyle) )
     {
-        SetWindowLongPtr(hwnd, GWL_STYLE, style);
+        SetWindowLong(hwnd, GWL_STYLE, style);
         SendMessage(hwnd, BM_SETSTYLE, (WPARAM)style, (LPARAM)TRUE);
 
         RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
@@ -6675,7 +6675,7 @@ RexxObjectPtr rxNewImageFromControl(RexxMethodContext *c, HWND hwnd, HANDLE hIma
     // If the caller did not know the type, try to deduce it.
     if ( type == -1 )
     {
-        LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
+        LONG style = GetWindowLong(hwnd, GWL_STYLE);
         switch ( ctrl )
         {
             case oodcStatic :
