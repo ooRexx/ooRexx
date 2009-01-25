@@ -223,12 +223,12 @@ typedef struct _RexxMethodEntry
     END_EXTERN_C()
 
 
-typedef RexxReturnCode (RexxEntry *RexxPackageLoader)(RexxThreadContext *);
-typedef RexxReturnCode (RexxEntry *RexxPackageUnloader)(RexxThreadContext *);
+typedef void (RexxEntry *RexxPackageLoader)(RexxThreadContext *);
+typedef void (RexxEntry *RexxPackageUnloader)(RexxThreadContext *);
 
 typedef struct _RexxPackageEntry
 {
-    int size;                      // size of the structure...help compatibility
+    int size;                      // size of the structure...helps compatibility
     int apiVersion;                // version this was compiled with
     int requiredVersion;           // minimum required interpreter version (0 means any)
     const char *packageName;       // package identifier
