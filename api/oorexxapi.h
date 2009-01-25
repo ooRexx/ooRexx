@@ -187,7 +187,7 @@ typedef struct _RexxRoutineEntry
 #define REXX_CLASSIC_ROUTINE(n, e) REXX_ROUTINE(ROUTINE_CLASSIC_STYLE, n, e)
 #define REXX_LAST_ROUTINE()        { 0, 0, NULL, (void *)NULL, 0, 0 }
 
-#define REXX_CLASSIC_ROUTINE_PROTOTYPE(name) size_t RexxEntry name(const char *, size_t, CONSTRXSTRING *, const char *, RXSTRING *);
+#define REXX_CLASSIC_ROUTINE_PROTOTYPE(name) size_t RexxEntry name(const char *, size_t, CONSTRXSTRING *, const char *, RXSTRING *)
 
 typedef struct _RexxMethodEntry
 {
