@@ -6083,37 +6083,60 @@ RexxMethod4(int, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst
 
 RexxMethod1(logical_t, rb_checked, OSELF, self)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    return (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_CHECKED ? 1 : 0);
+    return (SendMessage(rxGetWindowHandle(context, self), BM_GETCHECK, 0, 0) == BST_CHECKED ? 1 : 0);
 }
 
-RexxMethod1(CSTRING, rb_isChecked, OSELF, self)
+CSTRING getIsChecked(HWND hwnd)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    char * state = "UNCHECKED";
+    char * state = "UNKNOWN";
+    BUTTONTYPE type = getButtonInfo(hwnd, NULL, NULL);
 
-    switch ( SendMessage(hwnd, BM_GETCHECK, 0, 0) )
+    if ( type == check || type == radio )
     {
-        case BST_CHECKED :
-            state = "CHECKED";
-            break;
-        case BST_INDETERMINATE :
-            state = "INDETERMINATE";
+        switch ( SendMessage(hwnd, BM_GETCHECK, 0, 0) )
+        {
+            case BST_CHECKED :
+                state = "CHECKED";
+                break;
+            case BST_UNCHECKED :
+                state = "UNCHECKED";
+                break;
+            case BST_INDETERMINATE :
+                state = getButtonInfo(hwnd, NULL, NULL) == check ? "INDETERMINATE" : "UNKNOWN";
+                break;
+            default :
+                break;
+        }
     }
     return state;
-}
 
+}
+RexxMethod1(CSTRING, rb_getCheckState, OSELF, self)
+{
+    return getIsChecked(rxGetWindowHandle(context, self));
+}
 RexxMethod1(int, rb_check, OSELF, self)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    SendMessage(hwnd, BM_SETCHECK, BST_CHECKED, 0);
+    SendMessage(rxGetWindowHandle(context, self), BM_SETCHECK, BST_CHECKED, 0);
     return 0;
 }
 
 RexxMethod1(int, rb_uncheck, OSELF, self)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    SendMessage(hwnd, BM_SETCHECK, BST_UNCHECKED, 0);
+    SendMessage(rxGetWindowHandle(context, self), BM_SETCHECK, BST_UNCHECKED, 0);
+    return 0;
+}
+
+/* DEPRECATED */
+RexxMethod1(CSTRING, rb_isChecked, OSELF, self)
+{
+    return getIsChecked(rxGetWindowHandle(context, self));
+}
+
+/* DEPRECATED */
+RexxMethod1(int, rb_indeterminate, OSELF, self)
+{
+    SendMessage(rxGetWindowHandle(context, self), BM_SETCHECK, BST_INDETERMINATE, 0);
     return 0;
 }
 
@@ -6127,7 +6150,7 @@ RexxMethod1(logical_t, ckbx_isIndeterminate, OSELF, self)
     return 0;
 }
 
-RexxMethod1(int, ckbx_indeterminate, OSELF, self)
+RexxMethod1(int, ckbx_setIndeterminate, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
     if ( getButtonInfo(hwnd, NULL, NULL) == check  )
@@ -6136,6 +6159,7 @@ RexxMethod1(int, ckbx_indeterminate, OSELF, self)
     }
     return 0;
 }
+
 
 /* This method is used as a convenient way to test code. */
 RexxMethod1(int, bc_test, RexxObjectPtr, obj)

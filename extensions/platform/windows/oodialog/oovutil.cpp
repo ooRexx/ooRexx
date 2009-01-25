@@ -2184,12 +2184,14 @@ REXX_METHOD_PROTOTYPE(bc_setImage);
 REXX_METHOD_PROTOTYPE(bc_setImageList);
 REXX_METHOD_PROTOTYPE(bc_getImageList);
 REXX_METHOD_PROTOTYPE(rb_checkInGroup_cls);
-REXX_METHOD_PROTOTYPE(rb_isChecked);
+REXX_METHOD_PROTOTYPE(rb_getCheckState);
 REXX_METHOD_PROTOTYPE(rb_checked);
 REXX_METHOD_PROTOTYPE(rb_check);
 REXX_METHOD_PROTOTYPE(rb_uncheck);
+REXX_METHOD_PROTOTYPE(rb_isChecked);
+REXX_METHOD_PROTOTYPE(rb_indeterminate);
 REXX_METHOD_PROTOTYPE(ckbx_isIndeterminate);
-REXX_METHOD_PROTOTYPE(ckbx_indeterminate);
+REXX_METHOD_PROTOTYPE(ckbx_setIndeterminate);
 REXX_METHOD_PROTOTYPE(bc_test);
 
 REXX_METHOD_PROTOTYPE(menu_test);
@@ -2326,12 +2328,14 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_setImageList,         bc_setImageList),
     REXX_METHOD(bc_getImageList,         bc_getImageList),
     REXX_METHOD(rb_checkInGroup_cls,     rb_checkInGroup_cls),
-    REXX_METHOD(rb_isChecked,            rb_isChecked),
     REXX_METHOD(rb_checked,              rb_checked),
     REXX_METHOD(rb_check,                rb_check),
     REXX_METHOD(rb_uncheck,              rb_uncheck),
+    REXX_METHOD(rb_getCheckState,        rb_getCheckState),
+    REXX_METHOD(rb_isChecked,            rb_isChecked),
+    REXX_METHOD(rb_indeterminate,        rb_indeterminate),
     REXX_METHOD(ckbx_isIndeterminate,    ckbx_isIndeterminate),
-    REXX_METHOD(ckbx_indeterminate,      ckbx_indeterminate),
+    REXX_METHOD(ckbx_setIndeterminate,   ckbx_setIndeterminate),
     REXX_METHOD(gb_setStyle,             gb_setStyle),
     REXX_METHOD(bc_test,                 bc_test),
 

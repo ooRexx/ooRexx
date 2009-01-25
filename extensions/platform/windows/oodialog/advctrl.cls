@@ -1792,16 +1792,19 @@
 ::method checkInGroup class external "LIBRARY oodialog rb_checkInGroup_cls"
 
 ::method checked external "LIBRARY oodialog rb_checked"
-::method isChecked external "LIBRARY oodialog rb_isChecked"
 ::method check external "LIBRARY oodialog rb_check"
 ::method uncheck external "LIBRARY oodialog rb_uncheck"
+::method getCheckState external "LIBRARY oodialog rb_getCheckState"
 
-/* This method is DEPRECATED radio buttons can not be set to indeterminate. */
-::method indeterminate external "LIBRARY oodialog rb_check"
+-- DEPRECATED
+::method isChecked external "LIBRARY oodialog rb_isChecked"
+
+-- DEPRECATED
+::method indeterminate external "LIBRARY oodialog rb_indeterminate"
 
 ::class 'CheckBox' subclass RadioButton public
 
-::method indeterminate external "LIBRARY oodialog ckbx_indeterminate"
+::method setIndeterminate external "LIBRARY oodialog ckbx_setIndeterminate"
 ::method isIndeterminate external "LIBRARY oodialog ckbx_isIndeterminate"
 
 /**************** List Box Class **********************************************/
