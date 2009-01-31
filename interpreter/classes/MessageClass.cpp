@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                           MessageClass.c       */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Message Class                                                    */
 /*                                                                            */
@@ -67,36 +67,28 @@ void RexxMessage::createInstance()
 }
 
 
-RexxMessage::RexxMessage(
-    RexxObject *_target,                /* message target                    */
-    RexxObject *_message,               /* message to issue                  */
-    RexxArray  *_args)                  /* array of message arguments        */
-/******************************************************************************/
-/* Function:  Initialize a message object                                     */
-/******************************************************************************/
+/**
+ * Create a new message object.
+ *
+ * @param _target The receiver object.
+ * @param messageName
+ *                The invoked message name.
+ * @param scope   The starting scope (can be OREF_NULL).
+ * @param _args   An array of arguments to the message.
+ */
+RexxMessage::RexxMessage(RexxObject *_target, RexxString *messageName, RexxObject *scope, RexxArray *_args)
 {
                                          /* defult target is target specified */
     OrefSet(this, this->receiver, _target);
     OrefSet(this, this->target, _target); /* Target specified on new           */
     /* Args to be sent wuth tmessage     */
     OrefSet(this, this->args, _args);
+    OrefSet(this, this->message, messageName);
+    OrefSet(this, this->startscope, scope);
+
     /* initialize a list of message to be*/
     /* once we have a result.            */
     OrefSet(this, this->interestedParties, new RexxList);
-
-    if (isOfClass(Array, _message))          /* is message specified as an array? */
-    {
-        OrefSet(this, this->message, ((RexxString *)((RexxArray *)_message)->get(1))->upper());
-        /* starting lookup scope is ourself. */
-        OrefSet(this, this->startscope, (RexxClass *)((RexxArray *)_message)->get(2));
-    }
-    else                                 /* not an array as message.          */
-    {
-        /* Message to be sent.               */
-        OrefSet(this, this->message, ((RexxString *)_message)->upper());
-        /* starting lookup scope is ourself. */
-        OrefSet(this, this->startscope, (RexxClass *)TheNilObject);
-    }
 }
 
 void RexxMessage::live(size_t liveMark)
@@ -273,9 +265,12 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
         OrefSet(this, this->receiver, _receiver);
     }
     /* validate startscope               */
-    if (!this->receiver->behaviour->checkScope(this->startscope))
+    if (startscope != OREF_NULL)
     {
-        reportException(Error_Incorrect_method_array_noclass, IntegerTwo);
+        if (!this->receiver->behaviour->checkScope(this->startscope))
+        {
+            reportException(Error_Incorrect_method_array_noclass, IntegerTwo);
+        }
     }
     /*  this is a primitive object?      */
     /* tell the activation/nativeact, we */
@@ -288,7 +283,7 @@ RexxObject *RexxMessage::send(RexxObject *_receiver)
     ProtectedObject p(myActivity);
     /*  call message_send to do the send */
     /* and assign our result.            */
-    if (this->startscope != TheNilObject)/* have a starting scope?            */
+    if (this->startscope != OREF_NULL)/* have a starting scope?            */
     {
         /* send it with an override          */
         this->receiver->messageSend(this->message, (RexxObject **)this->args->data(), this->args->size(), this->startscope, p);
@@ -508,7 +503,6 @@ RexxObject *RexxMessage::newRexx(
 /* Function:  Rexx level new routine                                          */
 /******************************************************************************/
 {
-    RexxObject *sender;                  /* sending object                    */
     RexxArray  *argPtr = NULL;           // the arguments used with the message.
 
     size_t num_args = argCount;          /* get number of args passed         */
@@ -519,68 +513,12 @@ RexxObject *RexxMessage::newRexx(
         reportException(Error_Incorrect_method_minarg,  IntegerTwo);
     }
     RexxObject *_target   = msgArgs[0];              /* Get the receiver object           */
-    if (_target == OREF_NULL)            /* no receiver?                      */
-    {
-        /* this is an error                  */
-        reportException(Error_Incorrect_method_noarg, IntegerOne);
-    }
+    requiredArgument(_target, ARG_ONE);
     RexxObject *_message  = msgArgs[1];              /* get the message .                 */
-
-    /* see if this is an array item      */
-    RexxArray *msgNameArray = REQUEST_ARRAY(_message);
-    if (msgNameArray != TheNilObject)    /* is message specified as an array? */
-    {
-        if (msgNameArray->getDimension() != 1 || msgNameArray->size() != 2)
-        {
-            /* raise an error                    */
-            reportException(Error_Incorrect_method_message);
-        }
-        /* Was message name omitted?         */
-        RexxObject *msgName = msgNameArray->get(1);
-        if (msgName == OREF_NULL)
-        {
-            /* Yes, this is an error, report it. */
-            reportException(Error_Incorrect_method_noarg, IntegerOne);
-        }
-
-        RexxString *msgNameStr = (RexxString *)msgName->makeString();
-        if (msgNameStr == TheNilObject)    /* got back .nil?                    */
-        {
-            /* raise an error                    */
-            reportException(Error_Incorrect_method_array_nostring, IntegerOne);
-        }
-        /* Was starting scope omitted ?      */
-        if (OREF_NULL == msgNameArray->get(2))
-        {
-            /* Yes, this is an error, report it. */
-            reportException(Error_Incorrect_method_noarg, IntegerTwo);
-        }
-        /* get the top activation            */
-        RexxActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
-        /* have an activation?               */
-        if (activation != OREF_NULL)
-        {
-            /* get the receiving object          */
-            sender = activation->getReceiver();
-            if (sender != target)            /* not the same receiver?            */
-            {
-                /* this is an error                  */
-                reportException(Error_Execution_super);
-            }
-        }
-        else
-        {
-            /* this is an error                  */
-            reportException(Error_Execution_super);
-        }
-        _message = msgNameArray;           /* Message to be sent.               */
-    }
-    else                                 /* not an array as message.          */
-    {
-        /* force to a string value           */
-        _message = stringArgument(_message, ARG_TWO);
-        /* Message to be sent.               */
-    }
+    RexxString *messageName;
+    RexxObject *_startScope;
+    // decode the message argument into name and scope
+    RexxObject::decodeMessageName(_target, _message, messageName, _startScope);
 
     /* are there arguments to be sent    */
     /*with the message?                  */
@@ -651,7 +589,7 @@ RexxObject *RexxMessage::newRexx(
     }
     /* all args are parcelled out, go    */
     /*create the new message object...   */
-    RexxMessage *newMessage = new RexxMessage(_target, _message, argPtr);
+    RexxMessage *newMessage = new RexxMessage(_target, messageName, _startScope, argPtr);
     /* actually a subclassed item?       */
     if (((RexxClass *)this)->isPrimitive())
     {

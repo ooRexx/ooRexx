@@ -239,7 +239,7 @@ bool RexxObject::isInstanceOf(RexxClass *other)
  */
 RexxObject *RexxObject::isInstanceOfRexx(RexxClass *other)
 {
-    required_arg(other, ONE);
+    requiredArgument(other, ARG_ONE);
     return isInstanceOf(other) ? TheTrueObject : TheFalseObject;
 }
 
@@ -392,7 +392,7 @@ RexxObject * RexxObject::strictEqual(
 /* Function:  Process the default "==" strict comparison operator             */
 /******************************************************************************/
 {
-    required_arg(other, ONE);            /* must have the other argument      */
+    requiredArgument(other, ARG_ONE);            /* must have the other argument      */
                                        /* this is direct object equality    */
     return (RexxObject *)((this == other)? TheTrueObject: TheFalseObject);
 }
@@ -403,7 +403,7 @@ RexxObject * RexxObject::equal(RexxObject * other)
 /*            two objects are the same object                                 */
 /******************************************************************************/
 {
-  required_arg(other, ONE);            /* must have the other argument      */
+  requiredArgument(other, ARG_ONE);            /* must have the other argument      */
                                        /* this is direct object equality    */
   return (RexxObject *)((this == other)? TheTrueObject: TheFalseObject);
 }
@@ -413,7 +413,7 @@ RexxObject *RexxObject::strictNotEqual(RexxObject *other)
 /* Function:  Return the strict inequality of two objects                     */
 /******************************************************************************/
 {
-   required_arg(other, ONE);           /* first argument is required        */
+   requiredArgument(other, ARG_ONE);           /* first argument is required        */
    return this != other ? TheTrueObject : TheFalseObject;
 }
 
@@ -422,7 +422,7 @@ RexxObject *RexxObject::notEqual(RexxObject *other)
 /* Function:  Return the inequality of two objects                            */
 /******************************************************************************/
 {
-   required_arg(other, ONE);           /* first argument is required        */
+   requiredArgument(other, ARG_ONE);           /* first argument is required        */
    return this != other ? TheTrueObject : TheFalseObject;
 }
 
@@ -1484,7 +1484,7 @@ RexxObject  *RexxObject::objectNameEquals(RexxObject *name)
 {
     RexxObject *scope;                   /* scope of the object               */
 
-    required_arg(name, ONE);             /* must have a name                  */
+    requiredArgument(name, ARG_ONE);             /* must have a name                  */
     scope = lastMethod()->getScope();    /* get the method's scope            */
                                          /* get this as a string              */
     name = (RexxObject *)stringArgument(name, ARG_ONE);
@@ -1635,18 +1635,107 @@ RexxObject  *RexxObject::requestRexx(
     }
 }
 
-RexxMessage *RexxObject::start(
-    RexxObject **arguments,            /* message arguments                 */
-    size_t       argCount)             /* the number of arguments           */
-/******************************************************************************/
-/* Function:  Spin a message off on a seperate activity                       */
-/******************************************************************************/
-{
-    RexxMessage *newMessage;             /* new message object                */
-                                         /* message to be sent to receiver.   */
-    RexxArray   *messageArray = OREF_NULL;
-    RexxString  *newMsgName;             /* msgname to be sent                */
 
+/**
+ * Do a dynamic invocation of an object method.
+ *
+ * @param message   The target message.  This can be either a string message
+ *                  name or a string/scope pair to do a qualified invocation.
+ * @param arguments An array of arguments to used with the message invocation.
+ *
+ * @return The method result.
+ */
+RexxObject *RexxObject::sendWith(RexxObject *message, RexxArray *arguments)
+{
+    RexxString *messageName;
+    RexxObject *startScope;
+    // decode and validate the message input
+    decodeMessageName(this, message, messageName, startScope);
+    arguments = arrayArgument(arguments, ARG_TWO);
+
+    ProtectedObject r;
+    if (startScope == OREF_NULL)
+    {
+        this->messageSend(messageName, arguments->data(), arguments->size(), r);
+    }
+    else
+    {
+        this->messageSend(messageName, arguments->data(), arguments->size(), startScope, r);
+    }
+    return (RexxObject *)r;
+}
+
+
+/**
+ * Do a dynamic invocation of an object method.
+ *
+ * @param arguments The variable arguments passed to the method.  The first
+ *                  argument is a required message target, which can be either
+ *                  a string method name or an array containing a name/scope
+ *                  pair.  The remainder of the arguments are the message
+ *                  arguments.
+ * @param argCount
+ *
+ * @return The method result.
+ */
+RexxObject *RexxObject::send(RexxObject **arguments, size_t argCount)
+{
+    if (argCount < 1 )                   /* no arguments?                     */
+    {
+        missingArgument(ARG_ONE);         /* Yes, this is an error.            */
+    }
+
+    RexxString *messageName;
+    RexxObject *startScope;
+    // decode and validate the message input
+    decodeMessageName(this, arguments[0], messageName, startScope);
+
+    ProtectedObject r;
+    if (startScope == OREF_NULL)
+    {
+        this->messageSend(messageName, arguments + 1, argCount - 1, r);
+    }
+    else
+    {
+        this->messageSend(messageName, arguments + 1, argCount - 1, startScope, r);
+    }
+    return (RexxObject *)r;
+}
+
+
+/**
+ * Perform a start() using arguments provided in an
+ * array wrapper.
+ *
+ * @param message   The target message.  This can be either a string, or an
+ *                  array containing a string/scope coupling.
+ * @param arguments The message arguments.
+ *
+ * @return The message object.
+ */
+RexxMessage *RexxObject::startWith(RexxObject *message, RexxArray *arguments)
+{
+    // the message is required
+    requiredArgument(message, ARG_ONE);
+    // this is required and must be an array
+    arguments = arrayArgument(arguments, ARG_TWO);
+    // the rest is handled by code common to startWith();
+    return startCommon(message, arguments->data(), arguments->size());
+}
+
+
+/**
+ * Run a message send in another thread.
+ *
+ * @param arguments The list of arguments.  This is an open-ended argument
+ *                  list.  The first argument is the message, the remaining
+ *                  arguments are the message arguments.
+ * @param argCount  The number of arguments we were invoked with.
+ *
+ * @return The count of arguments.
+ */
+RexxMessage *RexxObject::start(RexxObject **arguments, size_t argCount)
+{
     if (argCount < 1 )                   /* no arguments?                     */
     {
         missingArgument(ARG_ONE);         /* Yes, this is an error.            */
@@ -1654,63 +1743,78 @@ RexxMessage *RexxObject::start(
     /* Get the message name.             */
     RexxObject *message = arguments[0];  /* get the message .                 */
                                          /* Did we receive a message name     */
-    if (message == OREF_NULL)
-    {
-        missingArgument(ARG_ONE);         /* Yes, this is an error.            */
-    }
+    requiredArgument(message, ARG_ONE);
+    // the rest is handled by code common to startWith();
+    return startCommon(message, arguments + 1, argCount - 1);
+}
+
+
+/**
+ * A common method to process either a start() or a
+ * startWith() method call.
+ *
+ * @param message   The message name (which might be an array form)
+ * @param arguments The array of arguments.
+ * @param argCount  The number of passed arguments.
+ *
+ * @return The message object spun off to process this message.
+ */
+RexxMessage *RexxObject::startCommon(RexxObject *message, RexxObject **arguments, size_t argCount)
+{
+    RexxString *messageName;
+    RexxObject *startScope;
+    // decode and validate the message input
+    decodeMessageName(this, message, messageName, startScope);
+
+    /* Create the new message object.    */
+    RexxMessage *newMessage = new RexxMessage(this, messageName, startScope, new (argCount, arguments) RexxArray);
+    ProtectedObject p(newMessage);
+    newMessage->start(OREF_NULL);        /* Tell the message object to start  */
+    return newMessage;                   /* return the new message object     */
+}
+
+
+/**
+ * A static method that can be used to decode the
+ * various message argument varieties used with start(),
+ * startWith(), and the Message class new.
+ *
+ * @param message    The input message.  This can be a message name or an
+ *                   array containing a message name/startscope pairing.
+ * @param messageName
+ * @param startScope
+ */
+void RexxObject::decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxObject *&startScope)
+{
+    // clear the starting scope
+    startScope = OREF_NULL;
 
     /* if 1st arg is a string, we can do */
     /* this quickly                      */
     if (!isOfClass(String, message))
     {
-        /* is this an array?                 */
-        if (isOfClass(Array, message))
-        {
-            messageArray = (RexxArray*) message;
-        }
-        else
-        {
-            RexxClass *theClass = message->classObject();
-            RexxArray *classes = theClass->getClassSuperClasses();
-            size_t i = classes->items();
-            for (; i != 0; i--)
-            {
-                if (classes->get(i) == TheStringClass)
-                {
-                    break;
-                }
-            }
-            if (i == 0)                      /* not subclassed from string?       */
-            {
-                /* see if this is an array item      */
-                messageArray = REQUEST_ARRAY(message);
-            }
-        }
-    }
-    if (messageArray != OREF_NULL)       /* is message specified as an array? */
-    {
-        /* didn't get two arguments?         */
+        // this must be an array
+        RexxArray *messageArray = arrayArgument(message, ARG_ONE);
+
+        // must be single dimension with two arguments
         if (messageArray->getDimension() != 1 || messageArray->size() != 2)
         {
             /* raise an error                    */
             reportException(Error_Incorrect_method_message);
         }
-        /* get the message as a string       */
-        newMsgName = stringArgument(messageArray->get(1), ARG_ONE);
-        /* Was starting scope omitted ?      */
-        if (OREF_NULL == messageArray->get(2))
-        {
-            /* Yes, this is an error, report it. */
-            reportException(Error_Incorrect_method_noarg, IntegerTwo);
-        }
-        /* get the top activation            */
+        // get the message as a string in uppercase.
+        messageName = stringArgument(messageArray->get(1), ARG_ONE)->upper();
+        startScope = messageArray->get(2);
+        requiredArgument(startScope, ARG_TWO);
+
+        // validate the message creator now
         RexxActivationBase *activation = ActivityManager::currentActivity->getTopStackFrame();
         /* have an activation?               */
         if (activation != OREF_NULL)
         {
             /* get the receiving object          */
             RexxObject *sender = activation->getReceiver();
-            if (sender != this)              /* not the same receiver?            */
+            if (sender != target)            /* not the same receiver?            */
             {
                 /* this is an error                  */
                 reportException(Error_Execution_super);
@@ -1725,14 +1829,10 @@ RexxMessage *RexxObject::start(
     else                                 /* not an array as message.          */
     {
         /* force to a string value           */
-        message = stringArgument(message, ARG_ONE);
+        messageName = stringArgument(message, ARG_ONE)->upper();
     }
-    /* Create the new message object.    */
-    newMessage = new RexxMessage(this, message, new (argCount - 1, arguments + 1) RexxArray);
-    ProtectedObject p(newMessage);
-    newMessage->start(OREF_NULL);        /* Tell the message object to start  */
-    return newMessage;                   /* return the new message object     */
 }
+
 
 RexxString  *RexxObject::oref()
 /****************************************************************************/
@@ -1770,7 +1870,7 @@ RexxObject  *RexxObject::run(
 
     /* get the method object             */
     RexxMethod *methobj = (RexxMethod *)arguments[0];
-    required_arg(methobj, ONE);          /* make sure we have a method        */
+    requiredArgument(methobj, ARG_ONE);          /* make sure we have a method        */
     if (!isOfClass(Method, methobj))         /* this a method object?             */
     {
         /* create a method object            */

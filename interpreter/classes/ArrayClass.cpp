@@ -266,7 +266,7 @@ RexxObject *RexxArray::isEmpty()
  */
 RexxObject  *RexxArray::appendRexx(RexxObject *value)
 {
-    required_arg(value, ONE);
+    requiredArgument(value, ARG_ONE);
 
     // this is not intended for multi-dimensional arrays since they can't expand
     if (this->dimensions != OREF_NULL && this->dimensions->size() != 1)
@@ -886,7 +886,7 @@ RexxObject *RexxArray::sectionRexx(
     RexxArray *rref;
 
 
-    required_arg(_start, ONE);           /* need a start position             */
+    requiredArgument(_start, ARG_ONE);   /* need a start position             */
                                          /* Start specified - check it out    */
     nstart = _start->requiredPositive(ARG_ONE);
     if (_end == OREF_NULL)                /* If no end position specified,     */
@@ -1627,7 +1627,7 @@ RexxObject* RexxArray::indexToArray(size_t idx)
 RexxObject *RexxArray::index(RexxObject *target)
 {
     // we require the index to be there.
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
     // see if we have this item.  If not, then
     // we return .nil.
     size_t _index = findSingleIndexItem(target);
@@ -1651,7 +1651,7 @@ RexxObject *RexxArray::index(RexxObject *target)
 RexxObject *RexxArray::removeItem(RexxObject *target)
 {
     // we require the index to be there.
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
     // see if we have this item.  If not, then
     // we return .nil.
     size_t _index = findSingleIndexItem(target);
@@ -1678,7 +1678,7 @@ RexxObject *RexxArray::hasItem(RexxObject *target)
 {
     // this is pretty simple.  One argument, required, and just search to see
     // if we have it.
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
     return findSingleIndexItem(target) == 0 ? TheFalseObject : TheTrueObject;
 }
 
@@ -2467,7 +2467,7 @@ RexxArray *RexxArray::sortRexx()
  */
 RexxArray *RexxArray::sortWithRexx(RexxObject *comparator)
 {
-    required_arg(comparator, ONE);
+    requiredArgument(comparator, ARG_ONE);
 
     size_t count = items();
     if (count <= 1)         // if the count is zero, sorting is easy!
@@ -2531,7 +2531,7 @@ RexxArray *RexxArray::stableSortRexx()
  */
 RexxArray *RexxArray::stableSortWithRexx(RexxObject *comparator)
 {
-    required_arg(comparator, ONE);
+    requiredArgument(comparator, ARG_ONE);
 
     size_t count = items();
     if (count <= 1)         // if the count is zero, sorting is easy!

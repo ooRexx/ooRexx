@@ -414,6 +414,11 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *unsetMethod(RexxString *);
      RexxObject  *requestRexx(RexxString *);
      RexxMessage *start(RexxObject **, size_t);
+     RexxMessage *startWith(RexxObject *, RexxArray *);
+     RexxObject  *send(RexxObject **, size_t);
+     RexxObject  *sendWith(RexxObject *, RexxArray *);
+     RexxMessage *startCommon(RexxObject *message, RexxObject **arguments, size_t argCount);
+     static void decodeMessageName(RexxObject *target, RexxObject *message, RexxString *&messageName, RexxObject *&startScope);
      RexxString  *oref();
      RexxObject  *pmdict();
      RexxObject  *run(RexxObject **, size_t);

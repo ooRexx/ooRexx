@@ -191,7 +191,7 @@ RexxObject *RexxStem::unknown(
 {
     /* validate the name                 */
     msgname = stringArgument(msgname, ARG_ONE);
-    required_arg(arguments, TWO);        /* need an argument array            */
+    requiredArgument(arguments, ARG_TWO);        /* need an argument array            */
                                          /* get this as an array              */
     arguments = (RexxArray  *)REQUEST_ARRAY(arguments);
     if (arguments == TheNilObject)       /* didn't convert?                   */

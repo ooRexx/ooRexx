@@ -396,7 +396,7 @@ RexxString *RexxString::copies(RexxInteger *_copies)
     size_t   Len;                        /* copy string length                */
     char    *Temp;                       /* copy location                     */
 
-    required_arg(_copies, ONE);           /* the count is required             */
+    requiredArgument(_copies, ARG_ONE);           /* the count is required             */
     /* get the copies count              */
     Count = _copies->requiredNonNegative(ARG_ONE);
     Len = this->getLength();                  /* get argument length               */

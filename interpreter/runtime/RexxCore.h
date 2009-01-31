@@ -217,9 +217,6 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
                                        /* find an environment symbol        */
 #define env_find(s) (TheEnvironment->entry(s))
 
-                                       /* verify argument presence          */
-#define required_arg(arg, position) if (arg == OREF_NULL) missingArgument(ARG_##position)
-
 /******************************************************************************/
 /* Thread constants                                                           */
 /******************************************************************************/
@@ -278,6 +275,17 @@ inline bool isMethod(RexxObject *o) { return isOfClass(Method, o); }
 inline RexxString *REQUEST_STRING(RexxObject *object)
 {
   return (isOfClass(String, object) ? (RexxString *)object : (object)->requestString());
+}
+
+
+// The next routine checks for required arguments and raises a missing argument
+// error for the given position.
+inline void requiredArgument(RexxObject *object, size_t position)
+{
+    if (object == OREF_NULL)             /* missing argument?                 */
+    {
+        missingArgument(position);        /* raise an error                    */
+    }
 }
 
 

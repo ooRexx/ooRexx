@@ -591,7 +591,7 @@ RexxMethod *RexxMethod::newRexx(
     RexxClass::processNewArgs(init_args, argCount, &init_args, &initCount, 2, (RexxObject **)&pgmname, (RexxObject **)&_source);
     /* get the method name as a string   */
     RexxString *nameString = stringArgument(pgmname, ARG_ONE);
-    required_arg(_source, TWO);          /* make sure we have the second too  */
+    requiredArgument(_source, ARG_TWO);          /* make sure we have the second too  */
 
     RexxSource *sourceContext = OREF_NULL;
     // retrieve extra parameter if exists

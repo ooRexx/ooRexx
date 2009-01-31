@@ -71,7 +71,7 @@ void RexxPointer::createInstance()
  */
 RexxObject *RexxPointer::equal(RexxObject *other)
 {
-    required_arg(other, ONE);            /* must have the other argument      */
+    requiredArgument(other, ARG_ONE);            /* must have the other argument      */
 
     if (!isOfClass(Pointer, other))
     {
@@ -91,7 +91,7 @@ RexxObject *RexxPointer::equal(RexxObject *other)
  */
 RexxObject *RexxPointer::notEqual(RexxObject *other)
 {
-    required_arg(other, ONE);            /* must have the other argument      */
+    requiredArgument(other, ARG_ONE);            /* must have the other argument      */
 
     if (!isOfClass(Pointer, other))
     {

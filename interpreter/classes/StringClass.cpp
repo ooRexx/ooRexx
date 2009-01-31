@@ -478,7 +478,7 @@ bool RexxString::isEqual(
     size_t  otherLen;                    /* length of the other string        */
     RexxString *other;                   /* converted string object           */
 
-    required_arg(otherObj, ONE);         /* this is required.                 */
+    requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
     if (!this->isBaseClass())            /* not a primitive?                  */
     {
         /* do the full lookup compare        */
@@ -505,7 +505,7 @@ bool RexxString::primitiveIsEqual(
     size_t  otherLen;                    /* length of the other string        */
     RexxString *other;                   /* converted string object           */
 
-    required_arg(otherObj, ONE);         /* this is required.                 */
+    requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
     if (otherObj == TheNilObject)        // strings never compare equal to the NIL object
     {
         return false;
@@ -532,7 +532,7 @@ bool RexxString::primitiveIsEqual(
 bool RexxString::primitiveCaselessIsEqual(RexxObject *otherObj)
 {
     // we have one required string object
-    required_arg(otherObj, ONE);
+    requiredArgument(otherObj, ARG_ONE);
     RexxString *other = REQUEST_STRING(otherObj);
     stringsize_t otherLen = other->getLength();
     // can't compare equal if different lengths
@@ -598,7 +598,7 @@ wholenumber_t RexxString::comp(RexxObject *other)
                                          /* will call, we must make sure a    */
                                          /* call to NumberString succeeds or  */
                                          /* we will get into a loop.          */
-    required_arg(other, ONE);            /* make sure we have a real argument */
+    requiredArgument(other, ARG_ONE);            /* make sure we have a real argument */
                                          /* try and convert both numbers      */
     if (((firstNum = this->fastNumberString()) != OREF_NULL) && ((secondNum = other->numberString()) != OREF_NULL ))
     {
@@ -693,7 +693,7 @@ wholenumber_t RexxString::strictComp(RexxObject *otherObj)
     wholenumber_t result;                /* compare result                    */
     RexxString *other;                   /* converted string value            */
 
-    required_arg(otherObj, ONE);         /* this is required.                 */
+    requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
     other = REQUEST_STRING(otherObj);    /* force into string form            */
     otherLen = other->getLength();       /* get length of second string.      */
     otherData = other->getStringData();  /* get pointer to start of data.     */
@@ -1116,7 +1116,7 @@ RexxString *RexxString::concatRexx(RexxObject *otherObj)
     RexxString *other;
     char *data;                          /* character pointer                 */
 
-    required_arg(otherObj, ONE);         /* this is required.                 */
+    requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
                                          /* ensure a string value             */
     other = (RexxString *)REQUEST_STRING(otherObj);
 
@@ -1200,7 +1200,7 @@ RexxString *RexxString::concatBlank(RexxObject *otherObj)
     RexxString *other;                   /* result string                     */
     char *data;                          /* character pointer                 */
 
-    required_arg(otherObj, ONE);         /* this is required.                 */
+    requiredArgument(otherObj, ARG_ONE);         /* this is required.                 */
                                          /* ensure a string value             */
     other = (RexxString *)REQUEST_STRING(otherObj);
 
@@ -1679,7 +1679,7 @@ RexxObject *RexxString::andOp(RexxObject *other)
 {
     RexxObject *otherTruth;              /* truth value of the other object   */
 
-    required_arg(other, ONE);            /* make sure the argument is there   */
+    requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                          /* validate the boolean              */
     otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
     /* perform the operation             */
@@ -1693,7 +1693,7 @@ RexxObject *RexxString::orOp(RexxObject *other)
 {
     RexxObject *otherTruth;              /* truth value of the other object   */
 
-    required_arg(other, ONE);            /* make sure the argument is there   */
+    requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                          /* validate the boolean              */
     otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
     /* perform the operation             */
@@ -1705,7 +1705,7 @@ RexxObject *RexxString::xorOp(RexxObject *other)
 /* Function:  Logical XOR of a string with another logical value              */
 /******************************************************************************/
 {
-    required_arg(other, ONE);            /* make sure the argument is there   */
+    requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                          /* get as a boolean                  */
     bool truth = other->truthValue(Error_Logical_value_method);
     /* first one false?                  */

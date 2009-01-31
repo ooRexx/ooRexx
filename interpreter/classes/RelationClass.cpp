@@ -131,7 +131,7 @@ RexxObject *RexxRelation::removeItemRexx(
 {
     RexxObject *item;                    /* removed item                      */
 
-    required_arg(_value, ONE);            /* make sure we have a value         */
+    requiredArgument(_value, ARG_ONE);            /* make sure we have a value         */
 
     // standard remove form?
     if (_index == OREF_NULL)
@@ -156,7 +156,7 @@ RexxObject *RexxRelation::hasItem(
 /* Function:  Remove an item from a relation using an index                   */
 /******************************************************************************/
 {
-    required_arg(_value, ONE);            /* make sure we have a value         */
+    requiredArgument(_value, ARG_ONE);            /* make sure we have a value         */
     if (_index == OREF_NULL)              // just an item search
     {
         return this->contents->hasItem(_value);
@@ -173,7 +173,7 @@ RexxObject *RexxRelation::allIndex(
 /* Function:  return all indices with the same value                          */
 /******************************************************************************/
 {
-    required_arg(_value, ONE);           /* make sure we have a value         */
+    requiredArgument(_value, ARG_ONE);           /* make sure we have a value         */
                                          /* just get from the hash table      */
     return this->contents->allIndex(_value);
 }
@@ -184,7 +184,7 @@ RexxObject *RexxRelation::allAt(
 /* Function:  return all values with the same index                           */
 /******************************************************************************/
 {
-    required_arg(_index, ONE);           /* make sure we have an index        */
+    requiredArgument(_index, ARG_ONE);           /* make sure we have an index        */
                                        /* just get from the hash table      */
     return this->contents->allIndex(_index);
 }
@@ -199,8 +199,8 @@ RexxObject *RexxRelation::put(
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-    required_arg(_value, ONE);            /* make sure we have an value        */
-    required_arg(_index, TWO);            /* make sure we have an index        */
+    requiredArgument(_value, ARG_ONE);            /* make sure we have an value        */
+    requiredArgument(_index, ARG_TWO);            /* make sure we have an index        */
     /* try to place in existing hashtab  */
     RexxHashTable *newHash = this->contents->add(_value, _index);
     if (newHash != OREF_NULL)            /* have a reallocation occur?        */

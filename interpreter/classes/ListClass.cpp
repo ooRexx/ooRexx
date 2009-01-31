@@ -294,7 +294,7 @@ RexxObject *RexxList::put(
 {
     /* locate this entry                 */
     LISTENTRY *element = this->getEntry(_index, (RexxObject *)IntegerTwo);
-    required_arg(_value, ONE);           /* must have a value also            */
+    requiredArgument(_value, ARG_ONE);           /* must have a value also            */
     if (element == NULL)                 /* not a valid index?                */
     {
         /* raise an error                    */
@@ -521,7 +521,7 @@ RexxObject *RexxList::insertRexx(
 /* Function:  Publicly accessible version of the list insert function.        */
 /******************************************************************************/
 {
-    required_arg(_value, ONE);           /* must have a value to insert       */
+    requiredArgument(_value, ARG_ONE);           /* must have a value to insert       */
                                          /* go do the real insert             */
     return this->insert(_value, _index);
 }
@@ -536,7 +536,7 @@ RexxObject *RexxList::insertRexx(
  */
 RexxObject *RexxList::append(RexxObject *_value)
 {
-    required_arg(_value, ONE);
+    requiredArgument(_value, ARG_ONE);
     // this is just an insertion operation with an ommitted index.
     return insert(_value, OREF_NULL);
 }
@@ -963,7 +963,7 @@ RexxArray *RexxList::allIndexes(void)
 RexxObject *RexxList::index(RexxObject *target)
 {
     // we require the index to be there.
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
 
     // ok, now run the list looking for the target item
     size_t nextEntry = this->first;
@@ -993,7 +993,7 @@ RexxObject *RexxList::index(RexxObject *target)
 RexxObject *RexxList::hasItem(RexxObject *target)
 {
     // we require the index to be there.
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
 
     // ok, now run the list looking for the target item
     size_t nextEntry = this->first;
@@ -1022,7 +1022,7 @@ RexxObject *RexxList::hasItem(RexxObject *target)
 RexxObject *RexxList::removeItem(RexxObject *target)
 {
     // we require the index to be there.
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
 
     // ok, now run the list looking for the target item
     size_t nextEntry = this->first;

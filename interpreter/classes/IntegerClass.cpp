@@ -460,7 +460,7 @@ RexxString *RexxInteger::concatBlank(
 /* Function:  Concatenate an object to an integer                             */
 /******************************************************************************/
 {
-  required_arg(other, ONE);            /* this is required                  */
+  requiredArgument(other, ARG_ONE);            /* this is required                  */
   other = REQUEST_STRING(other);       /* ensure a string value             */
                                        /* do the concatenate                */
   return this->stringValue()->concatWith(other, ' ');
@@ -472,7 +472,7 @@ RexxString *RexxInteger::concat(
 /* Function:  Concatenate an object to an integer                             */
 /******************************************************************************/
 {
-  required_arg(other, ONE);            /* this is required                  */
+  requiredArgument(other, ARG_ONE);            /* this is required                  */
   other = REQUEST_STRING(other);       /* ensure a string value             */
                                        /* do the concatenate                */
   return this->stringValue()->concat(other);
@@ -540,7 +540,7 @@ RexxObject *RexxInteger::multiply(
   if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer math    */
     return integer_forward(this, multiply, other);
-  required_arg(other, ONE);            /* make sure the argument is there   */
+  requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                        /* is the other an integer and will  */
                                        /* the result be in a good range?    */
   if (isOfClass(Integer, other) && Numerics::abs(this->value) <= 99999 && Numerics::abs(other->value) <= 9999)
@@ -572,7 +572,7 @@ RexxObject *RexxInteger::integerDivide(
   if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer arith   */
     return integer_forward(this, integerDivide, other);
-  required_arg(other, ONE);            /* make sure this is really there    */
+  requiredArgument(other, ARG_ONE);            /* make sure this is really there    */
 
   if (isOfClass(Integer, other)) {         /* is right object an integer?       */
                                        /* is right number 0?                */
@@ -599,7 +599,7 @@ RexxObject *RexxInteger::remainder(
   if (number_digits() != Numerics::DEFAULT_DIGITS )
                                        /* nope, we can't do integer arith   */
     return integer_forward(this, remainder, other);
-  required_arg(other, ONE);            /* make sure this is really there    */
+  requiredArgument(other, ARG_ONE);            /* make sure this is really there    */
 
   if (isOfClass(Integer, other)) {         /* is right object an integer?       */
                                        /* is right number 0?                */
@@ -656,7 +656,7 @@ wholenumber_t RexxInteger::strictComp(
 /*             return >0 if this is greater than other                        */
 /******************************************************************************/
 {
-  required_arg(other, ONE);            /* make sure this is really there    */
+  requiredArgument(other, ARG_ONE);            /* make sure this is really there    */
   if (isOfClass(Integer, other))           /* string compare is simple          */
                                        /* just return their difference      */
     return this->value - ((RexxInteger *)other)->value;
@@ -676,7 +676,7 @@ wholenumber_t RexxInteger::strictComp(
  */
 wholenumber_t RexxInteger::comp(RexxObject *other)
 {
-    required_arg(other, ONE);            /* make sure this is really there    */
+    requiredArgument(other, ARG_ONE);            /* make sure this is really there    */
                                          /* able to compare here?             */
     if (this->isSameType(other) && number_digits() == Numerics::DEFAULT_DIGITS)
     {
@@ -843,7 +843,7 @@ RexxObject *RexxInteger::andOp(
 {
   RexxObject *otherTruth;              /* truth value of the other object   */
 
-  required_arg(other, ONE);            /* make sure the argument is there   */
+  requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                        /* validate the boolean              */
   otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
                                        /* perform the operation             */
@@ -858,7 +858,7 @@ RexxObject *RexxInteger::orOp(
 {
   RexxObject *otherTruth;              /* truth value of the other object   */
 
-  required_arg(other, ONE);            /* make sure the argument is there   */
+  requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                        /* validate the boolean              */
   otherTruth = other->truthValue(Error_Logical_value_method) ? TheTrueObject : TheFalseObject;
                                        /* perform the operation             */
@@ -871,7 +871,7 @@ RexxObject *RexxInteger::xorOp(
 /* Function:  Logically XOR two objects together                              */
 /******************************************************************************/
 {
-  required_arg(other, ONE);            /* make sure the argument is there   */
+  requiredArgument(other, ARG_ONE);            /* make sure the argument is there   */
                                        /* get as a boolean                  */
   bool truth = other->truthValue(Error_Logical_value_method);
                                        /* first one false?                  */

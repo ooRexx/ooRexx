@@ -167,7 +167,7 @@ RexxObject *RexxHashTableCollection::mergeItem(RexxObject *_value, RexxObject *_
  */
 RexxObject *RexxHashTableCollection::removeRexx(RexxObject *_index)
 {
-    required_arg(_index, ONE);            /* make sure we have an index        */
+    requiredArgument(_index, ARG_ONE);            /* make sure we have an index        */
 
     RexxObject *removedItem = this->remove(_index);   /* remove the item                   */
     if (removedItem == OREF_NULL)        /* If nothing found, give back .nil  */
@@ -201,7 +201,7 @@ RexxObject *RexxHashTableCollection::allAt(
 /*  Returned:  Array of all values with the same index                        */
 /******************************************************************************/
 {
-    required_arg(_index, ONE);            /* make sure we have an index        */
+    requiredArgument(_index, ARG_ONE);            /* make sure we have an index        */
                                        /* do the get                        */
     return this->contents->getAll(_index);
 }
@@ -218,7 +218,7 @@ RexxObject *RexxHashTableCollection::allAt(
  */
 RexxObject *RexxHashTableCollection::getRexx(RexxObject *_index)
 {
-    required_arg(_index, ONE);            /* make sure we have an index        */
+    requiredArgument(_index, ARG_ONE);            /* make sure we have an index        */
     RexxObject *object = this->get(_index);           /* get the item                      */
     if (object == OREF_NULL)             /* If nothing found, give back .nil  */
     {
@@ -257,8 +257,8 @@ RexxObject *RexxHashTableCollection::get(RexxObject *key)
  */
 RexxObject *RexxHashTableCollection::putRexx(RexxObject *_value, RexxObject *_index)
 {
-    required_arg(_value, ONE);            /* make sure we have an value        */
-    required_arg(_index, TWO);            /* make sure we have an index        */
+    requiredArgument(_value, ARG_ONE);            /* make sure we have an value        */
+    requiredArgument(_index, ARG_TWO);            /* make sure we have an index        */
     /* try to place in existing hashtab  */
     return this->put(_value, _index);
 }
@@ -297,8 +297,8 @@ RexxObject *RexxHashTableCollection::addRexx(
 /*  Returned:  Nothing                                                        */
 /******************************************************************************/
 {
-    required_arg(_value, ONE);            /* make sure we have an value        */
-    required_arg(_index, TWO);            /* make sure we have an index        */
+    requiredArgument(_value, ARG_ONE);            /* make sure we have an value        */
+    requiredArgument(_index, ARG_TWO);            /* make sure we have an index        */
     return add(_value, _index);
 }
 
@@ -368,7 +368,7 @@ RexxObject *RexxHashTableCollection::copyValues(
  */
 RexxObject *RexxHashTableCollection::hasIndexRexx(RexxObject *_index)
 {
-    required_arg(_index, ONE);           /* make sure we have an index        */
+    requiredArgument(_index, ARG_ONE);           /* make sure we have an index        */
                                          /* try to get the item               */
     RexxObject *_value = this->get(_index);
     /* tell caller if we succeeded       */
@@ -388,7 +388,7 @@ RexxObject *RexxHashTableCollection::hasIndexRexx(RexxObject *_index)
 RexxObject *RexxHashTableCollection::indexRexx(RexxObject *target)
 {
     // required argument
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
     // retrieve this from the hash table
     RexxObject *result = this->getIndex(target);
     // not found, return .nil
@@ -426,7 +426,7 @@ RexxObject *RexxHashTableCollection::getIndex(RexxObject *target)
 RexxObject *RexxHashTableCollection::removeItemRexx(RexxObject *target)
 {
     // required argument
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
     // the actual target class may use different semantics for this.
     return this->removeItem(target);
 }
@@ -455,7 +455,7 @@ RexxObject *RexxHashTableCollection::removeItem(RexxObject *target)
  */
 RexxObject *RexxHashTableCollection::hasItemRexx(RexxObject *target)
 {
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
     return this->hasItem(target);
 }
 

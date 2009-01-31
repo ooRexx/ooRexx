@@ -321,6 +321,9 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_OBJECTNAMEEQUALS       ,TheObjectBehaviour, CPPM(RexxObject::objectNameEquals), 1);
   defineKernelMethod(CHAR_REQUEST                ,TheObjectBehaviour, CPPM(RexxObject::requestRexx), 1);
   defineKernelMethod(CHAR_START                  ,TheObjectBehaviour, CPPM(RexxObject::start), A_COUNT);
+  defineKernelMethod("STARTWITH"                 ,TheObjectBehaviour, CPPM(RexxObject::startWith), 2);
+  defineKernelMethod("SEND"                      ,TheObjectBehaviour, CPPM(RexxObject::send), A_COUNT);
+  defineKernelMethod("SENDWITH"                  ,TheObjectBehaviour, CPPM(RexxObject::sendWith), 2);
   defineKernelMethod(CHAR_STRING                 ,TheObjectBehaviour, CPPM(RexxObject::stringRexx), 0);
   defineKernelMethod(CHAR_ISINSTANCEOF           ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);
   defineKernelMethod(CHAR_ISA                    ,TheObjectBehaviour, CPPM(RexxObject::isInstanceOfRexx), 1);

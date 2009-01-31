@@ -217,8 +217,8 @@ void *RexxSupplier::operator new(size_t size)
  */
 RexxObject *RexxSupplier::initRexx(RexxArray *_values, RexxArray *_indexes)
 {
-    required_arg(_values, ONE);           // both values are required
-    required_arg(_indexes, TWO);
+    requiredArgument(_values, ARG_ONE);           // both values are required
+    requiredArgument(_indexes, ARG_TWO);
 
     // now verify both values
     RexxArray *new_values = REQUEST_ARRAY(_values);

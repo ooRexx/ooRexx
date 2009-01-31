@@ -97,8 +97,8 @@ RexxObject *RexxTable::stringAdd(
 /* Function:  Add an object to a table using a string index.                  */
 /******************************************************************************/
 {
-    required_arg(_value, ONE);            /* make sure we have an value        */
-    required_arg(_index, TWO);            /* make sure we have an index        */
+    requiredArgument(_value, ARG_ONE);            /* make sure we have an value        */
+    requiredArgument(_index, ARG_TWO);            /* make sure we have an index        */
     /* try to place in existing hashtab  */
     RexxHashTable *newHash = this->contents->stringAdd(_value, _index);
     if (newHash != OREF_NULL)            /* have a reallocation occur?        */
@@ -116,8 +116,8 @@ RexxObject *RexxTable::stringPut(
 /* Function:  Put an object into the table using a string index               */
 /******************************************************************************/
 {
-    required_arg(_value, ONE);            /* make sure we have an value        */
-    required_arg(_index, TWO);            /* make sure we have an index        */
+    requiredArgument(_value, ARG_ONE);            /* make sure we have an value        */
+    requiredArgument(_index, ARG_TWO);            /* make sure we have an index        */
     /* try to place in existing hashtab  */
     RexxHashTable *newHash = this->contents->stringPut(_value, _index);
     if (newHash  != OREF_NULL)           /* have a reallocation occur?        */

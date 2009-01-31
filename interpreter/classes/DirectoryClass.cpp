@@ -463,7 +463,7 @@ RexxObject *RexxDirectory::unknown(
 {
     /* validate the name                 */
     RexxString *message_value = stringArgument(msgname, ARG_ONE);
-    required_arg(arguments, TWO);        /* need an argument array            */
+    requiredArgument(arguments, ARG_TWO);        /* need an argument array            */
                                          /* get the length                    */
     stringsize_t message_length = message_value->getLength();
     /* assignment form of access?        */
@@ -708,7 +708,7 @@ RexxObject *RexxDirectory::isEmpty()
 RexxObject *RexxDirectory::indexRexx(RexxObject *target)
 {
     // required argument
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
     // retrieve this from the hash table
     RexxObject *result = this->contents->getIndex(target);
     // not found, return .nil
@@ -748,7 +748,7 @@ RexxObject *RexxDirectory::indexRexx(RexxObject *target)
  */
 RexxObject *RexxDirectory::hasItem(RexxObject *target)
 {
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
     // the lookup is more complicated, so just delegate to the index lookup code.
     return indexRexx(target) != TheNilObject ? TheTrueObject : TheFalseObject;
 }
@@ -763,7 +763,7 @@ RexxObject *RexxDirectory::hasItem(RexxObject *target)
  */
 RexxObject *RexxDirectory::removeItem(RexxObject *target)
 {
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
     // the lookup is more complicated, so just delegate to the index lookup code.
     RexxObject *i = indexRexx(target);
     // just use the retrieved index to remove.

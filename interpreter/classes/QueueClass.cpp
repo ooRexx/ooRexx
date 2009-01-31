@@ -82,7 +82,7 @@ RexxObject *RexxQueue::pushRexx(RexxObject *item)
 /******************************************************************************/
 {
 
-  required_arg(item, ONE);             /* make sure we have an argument     */
+  requiredArgument(item, ARG_ONE);             /* make sure we have an argument     */
   this->push(item);                    /* push onto the queue               */
   return OREF_NULL;                    /* return nothing                    */
 }
@@ -99,7 +99,7 @@ RexxObject *RexxQueue::pushRexx(RexxObject *item)
 RexxObject *RexxQueue::append(RexxObject *item)
 {
 
-  required_arg(item, ONE);             /* make sure we have an argument     */
+  requiredArgument(item, ARG_ONE);             /* make sure we have an argument     */
   this->queue(item);                   /* push onto the queue               */
   // the insertion index is the position.
   return new_integer(this->count);
@@ -111,7 +111,7 @@ RexxObject *RexxQueue::queueRexx(RexxObject *item)
 /* Function:  Push an item onto the queue                                     */
 /******************************************************************************/
 {
-  required_arg(item, ONE);             /* make sure we have an argument     */
+  requiredArgument(item, ARG_ONE);             /* make sure we have an argument     */
                                        /* add to the end of the queue       */
   this->queue(item);
   return OREF_NULL;                    /* return nothing                    */
@@ -166,7 +166,7 @@ RexxObject *RexxQueue::put(
 /* Function:  Replace the value of an item already in the queue.              */
 /******************************************************************************/
 {
-    required_arg(_value, ONE);           /* must have a value also            */
+    requiredArgument(_value, ARG_ONE);           /* must have a value also            */
                                          /* locate this entry                 */
     LISTENTRY *list_index = this->locateEntry(_index, IntegerTwo);
     if (list_index == NULL)              /* not a valid index?                */
@@ -214,7 +214,7 @@ RexxObject *RexxQueue::insert(RexxObject *_value, RexxObject *_index)
     LISTENTRY *new_element;              /* new insertion element             */
     size_t     new_index;                /* index of new inserted item        */
 
-    required_arg(_value, ONE);           /* must have a value to insert       */
+    requiredArgument(_value, ARG_ONE);           /* must have a value to insert       */
 
                                          /* make sure we have room to insert  */
     new_index = this->getFree();
@@ -369,7 +369,7 @@ RexxArray *RexxQueue::allIndexes()
 RexxObject *RexxQueue::index(RexxObject *target)
 {
     // we require the index to be there.
-    required_arg(target, ONE);
+    requiredArgument(target, ARG_ONE);
 
     // ok, now run the list looking for the target item
     size_t nextEntry = this->first;

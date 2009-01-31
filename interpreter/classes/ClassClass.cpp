@@ -200,7 +200,7 @@ RexxObject *RexxClass::equal(
 /* Function:  Compare two classes                                             */
 /******************************************************************************/
 {
-    required_arg(other, ONE);            /* must have the other argument      */
+    requiredArgument(other, ARG_ONE);            /* must have the other argument      */
                                          /* this is direct object equality    */
 
                                          /* comparing string/int/numstr to    */
@@ -222,7 +222,7 @@ RexxObject *RexxClass::notEqual(
 /* Function:  Compare two classes                                             */
 /******************************************************************************/
 {
-    required_arg(other, ONE);            /* must have the other argument      */
+    requiredArgument(other, ARG_ONE);            /* must have the other argument      */
                                          /* this is direct object equality    */
 
                                          /* comparing string/int/numstr to    */
@@ -984,7 +984,7 @@ RexxObject *RexxClass::inherit(
         /* report as a nomethod condition    */
         reportNomethod(lastMessageName(), this);
     }
-    required_arg(mixin_class, ONE);      /* make sure it was passed in        */
+    requiredArgument(mixin_class, ARG_ONE);      /* make sure it was passed in        */
 
                                          /* check the mixin class is really a */
                                          /* good class for this               */
@@ -1087,7 +1087,7 @@ RexxObject *RexxClass::uninherit(
         /* report as a nomethod condition    */
         reportNomethod(lastMessageName(), this);
     }
-    required_arg(mixin_class, ONE);      /* make sure it was passed in        */
+    requiredArgument(mixin_class, ARG_ONE);      /* make sure it was passed in        */
 
                                          /* check that the mixin class is a   */
                                          /* superclass of the receiver class  */
@@ -1154,7 +1154,7 @@ RexxObject *RexxClass::enhanced(
     /* get the value of the arg          */
     RexxTable *enhanced_instance_mdict = (RexxTable *)args[0];
     /* make sure it was a real value     */
-    required_arg(enhanced_instance_mdict, ONE);
+    requiredArgument(enhanced_instance_mdict, ARG_ONE);
     /* subclass the reciever class       */
     RexxClass *dummy_subclass = this->subclass(new_string("Enhanced Subclass"), OREF_NULL, OREF_NULL);
     ProtectedObject p(dummy_subclass);
@@ -1378,7 +1378,7 @@ bool RexxClass::isCompatibleWith(RexxClass *other)
  */
 RexxObject *RexxClass::isSubclassOf(RexxClass *other)
 {
-    required_arg(other, ONE);            // must have the other argument
+    requiredArgument(other, ARG_ONE);            // must have the other argument
     return isCompatibleWith(other) ? TheTrueObject : TheFalseObject;
 }
 
