@@ -381,16 +381,16 @@ $ Error_Incomplete_do_otherwise
 224 OTHERWISE on line &1 requires matching END
 
 $ Error_Invalid_hex_hexblank
-225 Incorrect location of blank in position &1 in hexadecimal string
+225 Incorrect location of whitespace character in position &1 in hexadecimal string
 
 $ Error_Invalid_hex_binblank
-226 Incorrect location of blank in position &1 in binary string
+226 Incorrect location of whitespace character in position &1 in binary string
 
 $ Error_Invalid_hex_invhex
-227 Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; found "&1"
+227 Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; found "&1"
 
 $ Error_Invalid_hex_invbin
-228 Only 0, 1, and blank are valid in a binary string; found "&1"
+228 Only 0, 1, and whitespace characters are valid in a binary string; found "&1"
 
 $ Error_Label_not_found_name
 229 Label "&1" not found
@@ -1071,16 +1071,16 @@ $ Error_Incorrect_method_d2c
 457 D2C value must be a valid whole number; found "&1"
 
 $ Error_Incorrect_method_hexblank
-458 Incorrect location of blank in position &1 in hexadecimal string
+458 Incorrect location of whitespace character in position &1 in hexadecimal string
 
 $ Error_Incorrect_method_binblank
-459 Incorrect location of blank in position &1 in binary string
+459 Incorrect location of whitespace character in position &1 in binary string
 
 $ Error_Incorrect_method_invhex
-460 Only 0-9, a-f, A-F, and blank are valid in a hexadecimal string; character found "&1"
+460 Only 0-9, a-f, A-F, and whitespace characters are valid in a hexadecimal string; character found "&1"
 
 $ Error_Incorrect_method_invbin
-461 Only 0, 1, and blank are valid in a binary string; character found "&1"
+461 Only 0, 1, and whitespace characters are valid in a binary string; character found "&1"
 
 $ Error_Incorrect_method_x2dbig
 462 X2D result is not a valid whole number with NUMERIC DIGITS &1
