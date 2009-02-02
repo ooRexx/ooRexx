@@ -926,36 +926,9 @@
    if width~datatype("N") = 1 then width = width * self~FactorX
    return HandleListCtrl("C","SETWIDTH", self~Hwnd, nr, width~translate)
 
-::method GetColumnCount
-  return HandleListCtrlEx(self~hwnd, "G", "COLCOUNT")
-
-::method GetColumnOrder
-
-   retStr = HandleListCtrlEx(self~hwnd, "M", "ORDER")
-   if retStr~datatype('W') then return retStr
-
-   retArray = .array~new
-   do i = 1 to retStr~words
-     retArray~append(retStr~word(i))
-   end
-   return retArray
-
-::method SetColumnOrder
-   use strict arg order
-   if \ order~isInstanceOf(.array) then return -3
-
-   count = order~items
-   if count < 2 then return 0
-
-   argStr = " "
-   do i = 1 to count
-     nr = order[i]
-     if \ nr~datatype('W') then return -3
-     if \ (nr >= 0 & nr < count) then return -3
-     argStr = argStr || nr || ' '
-   end
-
-   return HandleListCtrlEx(self~hwnd, "M", 'ORDER', argStr)
+::method getColumnCount external "LIBRARY oodialog lv_getColumnCount"
+::method getColumnOrder external "LIBRARY oodialog lv_getColumnOrder"
+::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
 
 ::method StringWidth
    use arg text
@@ -1174,7 +1147,7 @@
    if Arg(2,'o') = 1 then partial = 0
    return HandleListCtrl("M", "ENVIS", self~Hwnd, item, partial)
 
--- This method is deprecated, use setImageList()
+-- DEPRECATED
 ::method SetSmallImages
    use arg bmp, cx, cy
    if Arg(1,'o') = 1 then return -1
@@ -1182,7 +1155,7 @@
    if Arg(3,'o') = 1 then cy = 0
    return HandleListCtrl("I", "SETIMG",self~Hwnd, bmp, cx, cy, "SMALL")
 
--- This method is deprecated, use setImageList()
+-- DEPRECATED
 ::method SetImages
    use arg bmp, cx, cy
    if Arg(1,'o') = 1 then return -1
@@ -1190,11 +1163,11 @@
    if Arg(3,'o') = 1 then cy = 0
    return HandleListCtrl("I", "SETIMG",self~Hwnd, bmp, cx, cy, "")
 
--- This method is deprecated, use setImageList()
+-- DEPRECATED
 ::method RemoveSmallImages
    return HandleListCtrl("I", "UNSETIMG", self~Hwnd, "SMALL")
 
--- This method is deprecated, use setImageList()
+-- DEPRECATED
 ::method RemoveImages
    return HandleListCtrl("I", "UNSETIMG", self~Hwnd, "")
 

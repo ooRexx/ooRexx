@@ -2145,6 +2145,9 @@ REXX_METHOD_PROTOTYPE(advCtrl_putControl_pvt);
 
 REXX_METHOD_PROTOTYPE(lv_setImageList);
 REXX_METHOD_PROTOTYPE(lv_getImageList);
+REXX_METHOD_PROTOTYPE(lv_getColumnCount);
+REXX_METHOD_PROTOTYPE(lv_getColumnOrder);
+REXX_METHOD_PROTOTYPE(lv_setColumnOrder);
 
 REXX_METHOD_PROTOTYPE(tv_setImageList);
 REXX_METHOD_PROTOTYPE(tv_getImageList);
@@ -2290,6 +2293,9 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(lv_setImageList,          lv_setImageList),
     REXX_METHOD(lv_getImageList,          lv_getImageList),
+    REXX_METHOD(lv_getColumnCount,        lv_getColumnCount),
+    REXX_METHOD(lv_getColumnOrder,        lv_getColumnOrder),
+    REXX_METHOD(lv_setColumnOrder,        lv_setColumnOrder),
 
     REXX_METHOD(tv_setImageList,          tv_setImageList),
     REXX_METHOD(tv_getImageList,          tv_getImageList),

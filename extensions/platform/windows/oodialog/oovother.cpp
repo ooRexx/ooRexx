@@ -1530,39 +1530,6 @@ size_t RexxEntry HandleControlEx(
     RETERR
 }
 
-
-static inline int getLVColumnCount(HWND hList)
-{
-    return Header_GetItemCount(ListView_GetHeader(hList));
-}
-
-/**
- * What is a reasonable number of columns in a list-view?  Seems silly to
- * restrict the user, someone will always want 2 more.  On the other hand, is
- * someone going to have 1,000 columns?  10,000 columns?
- *
- * @param  count  The number of colums
- *
- * @return The size of a space separated ascii string of numbers big enough to
- *         hold count numbers.
- */
-static inline size_t getColumnOrderStrlen(int count)
-{
-    if ( count < 100 )
-    {
-        return 3 * count;
-    }
-    else if ( count < 1000 )
-    {
-        return (3 * 99) + (4 * (count - 99));
-    }
-    else if ( count < 10000 )
-    {
-        return (3 * 99) + (4 * 900) + (5 * (count - 999));
-    }
-    return 0;
-}
-
 /**
  * Extended List-View control functionality.  Implements capabilities not
  * present in the original ooDialog ListControl.  In general, this will be
@@ -1703,114 +1670,6 @@ size_t RexxEntry HandleListCtrlEx(const char *funcname, size_t argc, CONSTRXSTRI
              */
             RETVAL(1);  // Return 1 (failed) until this is implemented.
         }
-        else if ( strcmp(argv[2].strptr, "ORDER") == 0 )  /* Set, get column Order */
-        {
-            int count;
-            int *order, *pOrder;
-            int i = 0;
-            int retVal = 1;
-
-            count = getLVColumnCount(hList);
-            if ( count < 2 )
-            {
-                /* The return is 0 or 1 columns, or -1 for an error. */
-                RETVAL(count == -1 ? -2 : count)
-            }
-
-            order = (int *)malloc(count * sizeof(int));
-            if ( order == NULL )
-            {
-                RETVAL(-(LONG)GetLastError())
-            }
-            pOrder = order;
-
-            if ( argc == 3 )
-            {
-                char buf[4];
-
-                size_t l = getColumnOrderStrlen(count);
-                if ( l == 0 )
-                {
-                    retVal = -2;
-                }
-                else
-                {
-                    if ( l > RXAUTOBUFLEN )
-                    {
-                        PVOID p = GlobalAlloc(GMEM_FIXED, count);
-                        if ( ! p )
-                        {
-                            free(order);
-                            RETVAL(-(LONG)GetLastError())
-                        }
-
-                        retstr->strptr = (PCHAR)p;
-                    }
-
-                    if ( ListView_GetColumnOrderArray(hList, count, order) == 0 )
-                    {
-                        retVal = -2;
-                    }
-                    else
-                    {
-                        retstr->strptr[0] = '\0';
-                        for ( i = 0; i < count; i++, pOrder++ )
-                        {
-                            strcat(retstr->strptr, ltoa(*pOrder, buf, 10));
-                            strcat(retstr->strptr, " ");
-                        }
-                        retstr->strlength = strlen(retstr->strptr);
-                    }
-                }
-            }
-            else if ( argc == 4 )
-            {
-                char *token;
-                char *str = _strdup(argv[3].strptr);
-
-                token = strtok(str, " ");
-                while( token != NULL && i++ < count )
-                {
-                    *pOrder++ = atoi(token);
-                    token = strtok(NULL, " ");
-                }
-                free(str);
-
-                retVal = ListView_SetColumnOrderArray(hList, count, order) == 0 ? -2 : 0;
-
-                // If we don't redraw the list view and it is already displayed
-                // on the screen, it will look mangled.
-                if ( retVal == 0 )
-                {
-                    RedrawWindow(hList, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
-                }
-            }
-            else
-            {
-                retVal = -3;     /* Error with argument. */
-            }
-
-            free(order);
-            if ( retVal != 1 )
-            {
-                RETVAL(retVal)
-            }
-            else
-            {
-                /* The return string is already set, just return 0. */
-                return 0;
-            }
-        }
-        else RETERR;
-    }
-    /* G - Get something function */
-    else if ( argv[1].strptr[0] == 'G' )
-    {
-        if ( !strcmp(argv[2].strptr, "COLCOUNT") )  /* Get List-view column count. */
-        {
-            RETVAL(getLVColumnCount(hList));
-        }
-        else RETERR;
     }
     RETERR;
 }
@@ -3293,6 +3152,13 @@ void userDefinedMsgException(RexxMethodContext *c, CSTRING msg)
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(msg));
 }
 
+void userDefinedMsgException(RexxMethodContext *c, int pos, CSTRING msg)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "Method argument %d %s", pos, msg);
+    userDefinedMsgException(c, buffer);
+}
+
 void *wrongClassException(RexxMethodContext *c, int pos, const char *n)
 {
     c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->WholeNumber(pos), c->String(n));
@@ -3317,6 +3183,13 @@ void wrongObjInArrayException(RexxMethodContext *c, int argPos, size_t index, CS
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), "Method argument %d is an array and index %d is not a %s", argPos, index, obj);
+    userDefinedMsgException(c, buffer);
+}
+
+void wrongObjInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index, CSTRING obj)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "Method argument %d is a directory and index %s is not a %s", argPos, index, obj);
     userDefinedMsgException(c, buffer);
 }
 
@@ -4809,7 +4682,12 @@ RexxMethod5(size_t, pbc_test, OPTIONAL_int32_t, n1,
 #define LVSMALL_ATTRIBUTE         "LV!SMALLIMAGELIST"
 #define LVNORMAL_ATTRIBUTE        "LV!NORMALIMAGELIST"
 
-CSTRING lvGetAttributeName(uint8_t type)
+static inline int getLVColumnCount(HWND hList)
+{
+    return Header_GetItemCount(ListView_GetHeader(hList));
+}
+
+static inline CSTRING lvGetAttributeName(uint8_t type)
 {
     switch ( type )
     {
@@ -4900,6 +4778,109 @@ RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
     return result;
 }
 
+RexxMethod1(int, lv_getColumnCount, OSELF, self)
+{
+    return getLVColumnCount(rxGetWindowHandle(context, self));
+}
+
+RexxMethod1(RexxObjectPtr, lv_getColumnOrder, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    int count = getLVColumnCount(hwnd);
+    if ( count == -1 )
+    {
+        return context->Nil();
+    }
+
+    RexxArrayObject order = context->NewArray(count);
+    RexxObjectPtr result = order;
+
+    // the empty array covers the case when count == 0
+
+    if ( count == 1 )
+    {
+        context->ArrayPut(order, context->Int32(0), 1);
+    }
+    else if ( count > 1 )
+    {
+        int *pOrder = (int *)malloc(count * sizeof(int));
+        if ( pOrder == NULL )
+        {
+            outOfMemoryException(context);
+        }
+        else
+        {
+            if ( ListView_GetColumnOrderArray(hwnd, count, pOrder) == 0 )
+            {
+                result = context->Nil();
+            }
+            else
+            {
+                for ( int i = 0; i < count; i++)
+                {
+                    context->ArrayPut(order, context->Int32(pOrder[i]), i + 1);
+                }
+            }
+            free(pOrder);
+        }
+    }
+    return result;
+}
+
+RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    size_t    items   = context->ArrayItems(order);
+    int       count   = getLVColumnCount(hwnd);
+    int      *pOrder  = NULL;
+    logical_t success = FALSE;
+
+    if ( count != -1 )
+    {
+        if ( count != items )
+        {
+            userDefinedMsgException(context, "the number of items in the order array does not match the number of columns");
+            goto done;
+        }
+
+        int *pOrder = (int *)malloc(items * sizeof(int));
+        if ( pOrder != NULL )
+        {
+            RexxObjectPtr item;
+            int column;
+
+            for ( int i = 0; i < items; i++)
+            {
+                item = context->ArrayAt(order, i + 1);
+                if ( item == NULLOBJECT || ! context->ObjectToInt32(item, &column) )
+                {
+                    wrongObjInArrayException(context, 1, i + 1, "valid column number");
+                    goto done;
+                }
+                pOrder[i] = column;
+                printf("Item: %d value:%d\n", i, column);
+            }
+
+            if ( ListView_SetColumnOrderArray(hwnd, count, pOrder) )
+            {
+                // If we don't redraw the list view and it is already displayed
+                // on the screen, it will look mangled.
+                RedrawWindow(hwnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
+                success = TRUE;
+            }
+        }
+        else
+        {
+            outOfMemoryException(context);
+        }
+    }
+
+done:
+    safeFree(pOrder);
+    return success;
+}
 
 /**
  *  Methods for the .TreeControl class.
@@ -5942,8 +5923,9 @@ out:
  * @exception  A syntax error is raised for wrong comctl version.
  *
  * @note  The only way to have an image list is for it have been put there by
- *        setImageList().  That method stores the .ImageList object in the
- *        window word.  That stored object is the object returned.
+ *        setImageList().  That method stores the .ImageList object as an
+ *        attribute of the ButtonControl ojbect.  That stored object is the
+ *        object returned.
  */
 RexxMethod1(RexxObjectPtr, bc_getImageList, OSELF, self)
 {
@@ -7891,4 +7873,3 @@ RexxMethod1(POINTER, dlgutil_handleToPointer_cls, POINTERSTRING, handle)
 {
     return handle;
 }
-
