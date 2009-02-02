@@ -4851,7 +4851,7 @@ RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, OSELF, self)
             RexxObjectPtr item;
             int column;
 
-            for ( int i = 0; i < items; i++)
+            for ( size_t i = 0; i < items; i++)
             {
                 item = context->ArrayAt(order, i + 1);
                 if ( item == NULLOBJECT || ! context->ObjectToInt32(item, &column) )
