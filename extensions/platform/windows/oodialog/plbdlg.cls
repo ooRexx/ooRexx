@@ -190,7 +190,7 @@
 /* This method is deprecated.  Use .DlgUtil directly */
 ::method GetSystemMetrics unguarded
    use strict arg index
-   return .DlgUtil~getSystemMetrics(ind)
+   return .DlgUtil~getSystemMetrics(index)
 
 
 ::class 'ResourceUtils' public mixinclass object
