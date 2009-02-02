@@ -1826,7 +1826,6 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
        {
            ultoa(dlgAdm->MsgTab[i].msg, data, 16);
            if (!SetRexxStem(buffer, i+1, "msg", data))  { RETERR; }
-           // TODO the wParam and lParam types are wrong for Win64.
            pointer2string(data, (void *)dlgAdm->MsgTab[i].wParam);
            if (!SetRexxStem(buffer, i+1, "param1", data))  { RETERR; }
            pointer2string(data, (void *)dlgAdm->MsgTab[i].lParam);

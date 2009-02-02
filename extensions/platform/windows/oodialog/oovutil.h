@@ -347,11 +347,11 @@ inline oodNumberStr_t hexType(CSTRING c)
 
 /* structures to manage the dialogs */
 typedef struct {
+   WPARAM wParam;
+   LPARAM lParam;
    ULONG msg;
    ULONG filterM;
-   ULONG wParam;
    ULONG filterP;
-   ULONG lParam;
    ULONG filterL;
    ULONG tag;
    PCHAR rexxProgram;
