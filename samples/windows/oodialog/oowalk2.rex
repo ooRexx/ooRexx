@@ -71,7 +71,7 @@
    self~ConnectBitmapButton(100, '', 0);
 
 ::method Run
-                         /* bitmaps have ID2 201-208 in oowalker.dll */
+                         /* bitmaps have IDs 201-208 in oowalker.dll */
 
    sb = .walkbutton~new(100, 201,208, 10, 2, 70, 120, 60, 10, 10, self)
 

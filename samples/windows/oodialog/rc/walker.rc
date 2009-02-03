@@ -57,3 +57,11 @@ FONT 8, "MS Sans Serif"
  GROUPBOX "Move sequence", -1, 1, 6, 345, 40, BS_GROUPBOX | WS_CHILD | WS_VISIBLE
 }
 
+201 BITMAP "..\\bmp\\wlkfig1.bmp"
+202 BITMAP "..\\bmp\\wlkfig2.bmp"
+203 BITMAP "..\\bmp\\wlkfig3.bmp"
+204 BITMAP "..\\bmp\\wlkfig4.bmp"
+205 BITMAP "..\\bmp\\wlkfig5.bmp"
+206 BITMAP "..\\bmp\\wlkfig6.bmp"
+207 BITMAP "..\\bmp\\wlkfig7.bmp"
+208 BITMAP "..\\bmp\\wlkfig8.bmp"
