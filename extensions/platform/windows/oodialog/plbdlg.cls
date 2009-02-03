@@ -187,8 +187,11 @@
 ::method GetID unguarded
    return Wnd_Desktop("ID", self~hwnd)
 
-/* This method is deprecated.  Use .DlgUtil directly */
-::method GetSystemMetrics unguarded
+::method getStyleRaw unguarded external "LIBRARY oodialog wb_getStyleRaw"
+::method getExStyleRaw unguarded external "LIBRARY oodialog wb_getExStyleRaw"
+
+-- DEPRECATED
+::method getSystemMetrics unguarded
    use strict arg index
    return .DlgUtil~getSystemMetrics(index)
 
@@ -1308,13 +1311,6 @@
    if id == -1 then return -1
    if \ wantGroup~datatype('O')then return -3
    return HandleControlEx(self~DlgHandle, id, "X", "GROUP", wantGroup)
-
- -- Get the window style for any control (the GWL_STYLE long value)
-::method GetControlStyleRaw unguarded
-   use strict arg id
-   if \ id~datatype("W") then id = self~ResolveSymbolicId(id)
-   if id == -1 then return -1
-   return HandleControlEx(self~DlgHandle, id, "X", "GET")
 
 ::method Center unguarded
    use arg showOptions

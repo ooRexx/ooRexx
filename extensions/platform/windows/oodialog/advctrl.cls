@@ -494,9 +494,6 @@
    if \ wantGroup~datatype('O')then return -3
    return HandleControlEx(self~hDlg, self~id, "X", "GROUP", wantGroup)
 
-::method GetStyleRaw     -- Get the control's current GWL_STYLE style
-   return HandleControlEx(self~hDlg, self~id, "X", "GET")
-
 ::method Clear
    parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
    return WindowRect("CLR", self~oDlg~Adm, self~Hwnd,r.1,r.2,r.3,r.4)

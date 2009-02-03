@@ -1338,14 +1338,7 @@ size_t RexxEntry HandleControlEx(
 
         CHECKARGL(4);
 
-        if ( !strcmp(argv[3].strptr, "GET") )         /* Get the window style */
-        {
-            /* Return the window style as an unsigned long for any dialog control. */
-            ultoa((ULONG)lStyle, retstr->strptr, 10);
-            retstr->strlength = strlen(retstr->strptr);
-            return 0;
-        }
-         else if ( !strcmp(argv[3].strptr, "TAB") )   /* Set or remove tab stop  style */
+        if ( !strcmp(argv[3].strptr, "TAB") )   /* Set or remove tab stop  style */
         {
             CHECKARGL(5);
             if ( argv[4].strptr[0] == '1' )
@@ -3922,6 +3915,22 @@ RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING font
 
 error_out:
     return NULLOBJECT;
+}
+
+
+/**
+ *  Methods for the .WindowBase mixin class.
+ */
+#define WINDOWBASE_CLASS       "WindowBase"
+
+RexxMethod1(uint32_t, wb_getStyleRaw, OSELF, self)
+{
+    return GetWindowLong(rxGetWindowHandle(context, self), GWL_STYLE);
+}
+
+RexxMethod1(uint32_t, wb_getExStyleRaw, OSELF, self)
+{
+    return GetWindowLong(rxGetWindowHandle(context, self), GWL_EXSTYLE);
 }
 
 

@@ -2084,6 +2084,9 @@ REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
+REXX_METHOD_PROTOTYPE(wb_getStyleRaw);
+REXX_METHOD_PROTOTYPE(wb_getExStyleRaw);
+
 REXX_METHOD_PROTOTYPE(pbdlg_init_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_setDefaultFont_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontName_cls);
@@ -2232,6 +2235,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_handleToPointer_cls,  dlgutil_handleToPointer_cls),
     REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_test_cls,             dlgutil_test_cls),
+
+    REXX_METHOD(wb_getStyleRaw,               wb_getStyleRaw),
+    REXX_METHOD(wb_getExStyleRaw,             wb_getExStyleRaw),
 
     REXX_METHOD(pbdlg_init_cls,               pbdlg_init_cls),
     REXX_METHOD(pbdlg_setDefaultFont_cls,     pbdlg_setDefaultFont_cls),
