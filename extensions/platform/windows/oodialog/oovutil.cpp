@@ -2301,9 +2301,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_getColumnCount,        lv_getColumnCount),
     REXX_METHOD(lv_getColumnOrder,        lv_getColumnOrder),
     REXX_METHOD(lv_setColumnOrder,        lv_setColumnOrder),
-    REXX_METHOD(lv_insertColumnEx,        lv_insertColumnEx),
-    REXX_METHOD(lv_columnWidthEx,         lv_columnWidthEx),
-    REXX_METHOD(lv_stringWidthEx,         lv_stringWidthEx),
 
     REXX_METHOD(tv_setImageList,          tv_setImageList),
     REXX_METHOD(tv_getImageList,          tv_getImageList),
