@@ -4466,7 +4466,7 @@ RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF
  *
  * @return  For both cases the previous position is returned.
  */
-RexxMethod2(int, pbc_stepIt, OPTIONAL_uint32_t, delta, OSELF, self)
+RexxMethod2(int, pbc_stepIt, OPTIONAL_int32_t, delta, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
 
@@ -4489,16 +4489,37 @@ RexxMethod2(int, pbc_stepIt, OPTIONAL_uint32_t, delta, OSELF, self)
  */
 RexxMethod2(int, pbc_setPos, int32_t, newPos, OSELF, self)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    return (int)SendMessage(hwnd, PBM_SETPOS, newPos, 0);
+    return (int)SendMessage(rxGetWindowHandle(context, self), PBM_SETPOS, newPos, 0);
 }
 
 RexxMethod1(int, pbc_getPos, OSELF, self)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    return (int)SendMessage(hwnd, PBM_GETPOS, 0, 0);
+    return (int)SendMessage(rxGetWindowHandle(context, self), PBM_GETPOS, 0, 0);
 }
 
+/** ProgressBar::setRange()
+ *
+ *  Sets the range for the progress bar using the full 32-bit numbers for the
+ *  range.
+ *
+ *  @param min   Optional.  The low end of the range.  0 is the default.
+ *  @param max   Optional.  The high end of the range.  100 is the default.
+ *
+ *  @return  The previous range in the form of a string with word(1) being the
+ *           low end of the previous range and word(2) being the previous high
+ *           end of the range.
+ *
+ *  @note    The returned range is not necessarily correct if the previous range
+ *           has been set using the full 32-bit numbers now allowed by the
+ *           progress bar control.  The returned numbers are restricted to
+ *           0xFFFF.
+ *
+ *           The range is returned as a string because that was the way it was
+ *           previously documented.
+ *
+ *           Use the getRange() method to get the correct range.
+ *
+ */
 RexxMethod3(RexxStringObject, pbc_setRange, OPTIONAL_int32_t, min, OPTIONAL_int32_t, max, OSELF, self)
 {
     TCHAR buf[64];
@@ -4519,27 +4540,25 @@ RexxMethod3(RexxStringObject, pbc_setRange, OPTIONAL_int32_t, min, OPTIONAL_int3
     return context->String(buf);
 }
 
-RexxMethod1(RexxStringObject, pbc_getRange, OSELF, self)
+RexxMethod1(RexxObjectPtr, pbc_getRange, OSELF, self)
 {
-    TCHAR buf[64];
-    HWND hwnd = rxGetWindowHandle(context, self);
     PBRANGE pbr;
+    SendMessage(rxGetWindowHandle(context, self), PBM_GETRANGE, TRUE, (LPARAM)&pbr);
 
-    SendMessage(hwnd, PBM_GETRANGE, TRUE, (LPARAM)&pbr);
-    _snprintf(buf, sizeof(buf), "%d %d", pbr.iLow, pbr.iHigh);
+    RexxDirectoryObject d = context->NewDirectory();
+    context->DirectoryPut(d, context->Int32(pbr.iLow), "MIN");
+    context->DirectoryPut(d, context->Int32(pbr.iHigh), "MAX");
 
-    return context->String(buf);
+    return d;
 }
 
 RexxMethod2(int, pbc_setStep, OPTIONAL_int32_t, newStep, OSELF, self)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-
     if ( argumentOmitted(1) )
     {
         newStep = 10;
     }
-    return (int)SendMessage(hwnd, PBM_SETSTEP, newStep, 0);
+    return (int)SendMessage(rxGetWindowHandle(context, self), PBM_SETSTEP, newStep, 0);
 }
 
 /**
@@ -4589,15 +4608,7 @@ RexxMethod3(logical_t, pbc_setMarquee, OPTIONAL_logical_t, on, OPTIONAL_uint32_t
  *
  *  Sets the background color of the progress bar.
  *
- *  @param   r      [Required]  This can be either the COLORREF value, if the
- *                  number of args is exactly one, or the red value of a
- *                  COLORREF if the args are exactly 3.
- *
- *  @param   g      [Optional]  The green value of a COLORREF.  This arg is only
- *                  optional if arg 1 is a COLORREF.
- *
- *  @param   b      [Optional]  The blue value of a COLORREF.  This arg is only
- *                  optional if arg 1 is a COLORREF.
+ *  @param   colorRef  [Required]  A COLOREF, the new background color.
  *
  *  @return  The previous background color, or CLR_DEFAULT if the previous color
  *           was the defualt.  This is returned as a COLORREF number.
@@ -4605,27 +4616,9 @@ RexxMethod3(logical_t, pbc_setMarquee, OPTIONAL_logical_t, on, OPTIONAL_uint32_t
  *  The progress bar control only supports this function under Windows Classic
  *  Theme.
  */
-RexxMethod4(uint32_t, pbc_setBkColor, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b, OSELF, self)
+RexxMethod2(uint32_t, pbc_setBkColor, uint32_t, colorRef, OSELF, self)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    size_t count = rxArgCount(context);
-    COLORREF rgb;
-
-    if ( count == 1 )
-    {
-        rgb = r;
-    }
-    else if ( count == 3 )
-    {
-        rgb = RGB((uint8_t)r, g, b);
-    }
-    else
-    {
-        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->WholeNumberToObject(3));
-        return 0;
-    }
-
-    return (uint32_t)SendMessage(hwnd, PBM_SETBKCOLOR, 0, rgb);
+    return (uint32_t)SendMessage(rxGetWindowHandle(context, self), PBM_SETBKCOLOR, 0, colorRef);
 }
 
 /**
@@ -4633,15 +4626,7 @@ RexxMethod4(uint32_t, pbc_setBkColor, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL
  *
  *  Sets the bar color of the progress bar.
  *
- *  @param   r      [Required]  This can be either the COLORREF value, if the
- *                  number of args is exactly one, or the red value of a
- *                  COLORREF if the args are exactly 3.
- *
- *  @param   g      [Optional]  The green value of a COLORREF.  This arg is only
- *                  optional if arg 1 is a COLORREF.
- *
- *  @param   b      [Optional]  The blue value of a COLORREF.  This arg is only
- *                  optional if arg 1 is a COLORREF.
+ *  @param   colorRef  [Required]  A COLOREF, the new bar color.
  *
  *  @return  The previous bar color, or CLR_DEFAULT if the previous color
  *           was the defualt.  This is returned as a COLORREF number.
@@ -4649,37 +4634,10 @@ RexxMethod4(uint32_t, pbc_setBkColor, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL
  *  The progress bar control only supports this function under Windows Classic
  *  Theme.
  */
-RexxMethod4(uint32_t, pbc_setBarColor, uint32_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b, OSELF, self)
+RexxMethod2(uint32_t, pbc_setBarColor, uint32_t, colorRef, OSELF, self)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    size_t count = rxArgCount(context);
-    COLORREF rgb;
-
-    if ( count == 1 )
-    {
-        rgb = r;
-    }
-    else if ( count == 3 )
-    {
-        rgb = RGB((uint8_t)r, g, b);
-    }
-    else
-    {
-        context->RaiseException1(Rexx_Error_Incorrect_method_minarg, context->WholeNumberToObject(3));
-        return 0;
-    }
-    return (uint32_t)SendMessage(hwnd, PBM_SETBARCOLOR, 0, rgb);
+    return (uint32_t)SendMessage(rxGetWindowHandle(context, self), PBM_SETBARCOLOR, 0, colorRef);
 }
-
-/**
- * This function stub is used for testing.
- */
-RexxMethod5(size_t, pbc_test, OPTIONAL_int32_t, n1,
-            OPTIONAL_int32_t, n2, OSELF, self, OPTIONAL_int32_t, n3, OPTIONAL_int32_t, n4)
-{
-    return rxArgCount(context);
-}
-
 
 
 /**

@@ -2167,7 +2167,6 @@ REXX_METHOD_PROTOTYPE(pbc_setStep);
 REXX_METHOD_PROTOTYPE(pbc_setMarquee);
 REXX_METHOD_PROTOTYPE(pbc_setBkColor);
 REXX_METHOD_PROTOTYPE(pbc_setBarColor);
-REXX_METHOD_PROTOTYPE(pbc_test);
 
 REXX_METHOD_PROTOTYPE(stc_getText);
 REXX_METHOD_PROTOTYPE(stc_setText);
@@ -2302,6 +2301,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_getColumnCount,        lv_getColumnCount),
     REXX_METHOD(lv_getColumnOrder,        lv_getColumnOrder),
     REXX_METHOD(lv_setColumnOrder,        lv_setColumnOrder),
+    REXX_METHOD(lv_insertColumnEx,        lv_insertColumnEx),
+    REXX_METHOD(lv_columnWidthEx,         lv_columnWidthEx),
+    REXX_METHOD(lv_stringWidthEx,         lv_stringWidthEx),
 
     REXX_METHOD(tv_setImageList,          tv_setImageList),
     REXX_METHOD(tv_getImageList,          tv_getImageList),
@@ -2318,7 +2320,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbc_setMarquee,          pbc_setMarquee),
     REXX_METHOD(pbc_setBkColor,          pbc_setBkColor),
     REXX_METHOD(pbc_setBarColor,         pbc_setBarColor),
-    REXX_METHOD(pbc_test,                pbc_test),
 
     REXX_METHOD(stc_getText,             stc_getText),
     REXX_METHOD(stc_setText,             stc_setText),

@@ -1280,9 +1280,6 @@
 ::method barColor external "LIBRARY oodialog pbc_setBarColor"
 ::method backgroundColor external "LIBRARY oodialog pbc_setBkColor"
 
--- For internal testing only
-::method test external "LIBRARY oodialog pbc_test"
-
 
 /******************** Track Bar Class *********************************************************/
 
