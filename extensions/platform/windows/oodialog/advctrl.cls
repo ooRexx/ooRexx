@@ -447,7 +447,7 @@
    use arg msg, wP, lP
    return SendWinMsg("PTR", Self~hDlg, Self~Id, msg, wP, lP)
 
-/* This method is deprecated. Use getTextSizeDlg() instead. */
+-- DEPRECATED
 ::method getTextSize unguarded
   forward message "getTextSizeDlg" continue
   return result~width result~height

@@ -6978,10 +6978,6 @@ static String2Int *imageInitMap(void)
     cMap->insert(String2Int::value_type("LR_COPYFROMRESOURCE", 0x4000));
     cMap->insert(String2Int::value_type("LR_SHARED",           0x8000));
 
-    cMap->insert(String2Int::value_type("CLR_NONE", 0xFFFFFFFF));
-    cMap->insert(String2Int::value_type("CLR_DEFAULT", 0xFF000000));
-
-
     // ImageList_Create flags
     cMap->insert(String2Int::value_type("ILC_MASK", 0x0001));
     cMap->insert(String2Int::value_type("ILC_COLOR", 0x0000));
@@ -7014,7 +7010,7 @@ static String2Int *imageInitMap(void)
     return cMap;
 }
 
-RexxMethod1(int, image_id_cls, CSTRING, id)
+RexxMethod1(uint32_t, image_id_cls, CSTRING, id)
 {
     static String2Int *imageConstantsMap = NULL;
 
@@ -7027,7 +7023,7 @@ RexxMethod1(int, image_id_cls, CSTRING, id)
     {
         wrongArgValueException(context, 1, "the Image class symbol IDs", id);
     }
-    return idValue;
+    return (uint32_t)idValue;
 }
 
 
@@ -7170,21 +7166,51 @@ out:
  *
  *  Returns a COLORREF composed from the specified RGB valuses.
  *
- *  @param r  The red component
+ *  @param r  The red component, or special case CLR_DEFAULT / CLR_NONE.
  *  @param g  The green component
  *  @param b  The blue component
  *
  *  @return The COLORREF.
  *
- *  @note  For CLR_DEFAULT and CLR_NONE, use .Image~id().
- *
  *  @note  For any omitted arg, the value of the arg will be 0.  Since 0 is the
- *         default value for all of the args, we do not need to check for
+ *         default value for the g and b args, we do not need to check for
  *         ommitted args.
  */
-RexxMethod3(uint32_t, image_colorRef_cls, OPTIONAL_uint8_t, r, OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
+RexxMethod3(uint32_t, image_colorRef_cls, OPTIONAL_RexxObjectPtr, rVal,
+            OPTIONAL_uint8_t, g, OPTIONAL_uint8_t, b)
 {
+    uint8_t r = 0;
+    if ( argumentExists(1) )
+    {
+        CSTRING tmp = context->ObjectToStringValue(rVal);
+        if ( *tmp && toupper(*tmp) == 'C' )
+        {
+            if ( stricmp(tmp, "CLR_DEFAULT") == 0 )
+            {
+                return CLR_DEFAULT;
+            }
+            else if ( stricmp(tmp, "CLR_NONE") == 0 )
+            {
+                return CLR_NONE;
+            }
+            else
+            {
+                goto error_out;
+            }
+        }
+
+        uint32_t tmpR;
+        if ( ! context->ObjectToUnsignedInt32(rVal, &tmpR) || tmpR > 255 )
+        {
+            goto error_out;
+        }
+        r = (uint8_t)tmpR;
+    }
     return RGB(r, g, b);
+
+error_out:
+    wrongArgValueException(context, 1, "CLR_DEFAULT, CLR_NONE, or a number from 0 through 255", rVal);
+    return 0;
 }
 
 RexxMethod1(uint8_t, image_getRValue_cls, uint32_t, colorRef) { return GetRValue(colorRef); }
