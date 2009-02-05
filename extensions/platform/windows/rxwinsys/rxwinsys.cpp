@@ -3879,6 +3879,16 @@ VOID Little2BigEndian(BYTE *pbInt, INT iSize)
     }
 }
 
+/**
+ * Prior to 4.0.0, this function was documented as a work around to use the
+ * WindowObject class when no WindowManager object had been instantiated.  So
+ * for now it needs to stay. Does nothing.
+ */
+size_t RexxEntry InstWinSysFuncs(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+{
+   RETC(0)
+}
+
 
 // now build the actual entry lists
 RexxRoutineEntry rxwinsys_functions[] =
@@ -3891,6 +3901,7 @@ RexxRoutineEntry rxwinsys_functions[] =
     REXX_CLASSIC_ROUTINE(WSCtrlSend,       WSCtrlSend),
     REXX_CLASSIC_ROUTINE(WSCtrlMenu,       WSCtrlMenu),
     REXX_CLASSIC_ROUTINE(WSClipboard,      WSClipboard),
+    REXX_CLASSIC_ROUTINE(InstWinFuncs,     InstWinSysFuncs),
     REXX_LAST_ROUTINE()
 };
 
