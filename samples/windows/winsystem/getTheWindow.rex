@@ -91,6 +91,7 @@ if wnd <> .nil then do
   say '  Title:   ' wnd~title
   say '  Class:   ' wnd~wClass
   say '  Position:' wnd~coordinates
+  say '  Styles:  ' wnd~getStyle
 end
 else do
   say 'Could not find your window'
@@ -129,6 +130,7 @@ if windows~items > 0 then do wnd over windows
   say '  Title:   ' wnd~title
   say '  Class:   ' wnd~wClass
   say '  Position:' wnd~coordinates
+  say '  Styles:  ' wnd~getStyle
   say
 end
 else do
