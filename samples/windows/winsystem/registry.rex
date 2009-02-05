@@ -63,7 +63,6 @@ if winsys = "WindowsNT" then do
 end
 
 r = .WindowsRegistry~new   /* create a new registry object */
-if r~InitCode \= 0 then exit /* leave if init failed */
 
 /* r~Current_Key always refers to the most recently opened or created key
    and is used if the keyhandle argument is omitted. r~Current_Key is initially
