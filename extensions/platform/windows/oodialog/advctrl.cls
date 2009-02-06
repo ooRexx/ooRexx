@@ -780,7 +780,7 @@
    return HandleTreeCtrl("SORT", self~Hwnd, hitem, 0) /* recursive not yet supported */
 
 
--- This method is deprecated, use setImageList()
+-- DEPRECATED
 ::method SetImages
    use arg bmp, cx, cy
    if arg(1, 'O') then return -1
@@ -788,7 +788,7 @@
    if arg(3, 'O') then cy = 0
    return HandleTreeCtrl("SETIMG",self~Hwnd, bmp, cx, cy)
 
--- This method is deprecated, use setImageList()
+-- DEPRECATED
 ::method RemoveImages
    return HandleTreeCtrl("UNSETIMG", self~Hwnd)
 
@@ -1470,7 +1470,7 @@
 ::method Focused
    return HandleOtherNewCtrls("TAB","FOCUS",self~Hwnd, "G")
 
--- This method is deprecated, use setImageList()
+-- DEPRECATED
 ::method SetImages
    use arg bmp, cx, cy
    if Arg(1,'o') = 1 then return -1
@@ -1478,7 +1478,7 @@
    if Arg(3,'o') = 1 then cy = 0
    return HandleOtherNewCtrls("TAB","SETIMG",self~Hwnd, bmp, cx, cy)
 
--- This method is deprecated, use setImageList()
+-- DEPRECATED
 ::method RemoveImages
    return HandleOtherNewCtrls("TAB","UNSETIMG",self~Hwnd)
 
@@ -2075,68 +2075,4 @@
    end
    self~SetPos(pos)
    return pos
-
-
-::class 'DateTimePicker' subclass DialogControl public
-
-
-::method getDateTime  -- Get the currently selected date and time
-  return HandleDateTimePicker(self~hwnd, 'G', 'SYS')
-
-::method setDateTime
-  use strict arg hr = (time('N')~left(2)), min = (time('N')~substr(4, 5)),         -
-                 sec = (time('N')~substr(7,8)), ms = 0, dy = (date('S')~right(2)), -
-                 mn = (date('S')~substr(5, 6)), yr = (date('S')~left(4))
-
-  return HandleDateTimePicker(self~hwnd, 'S', 'SYS', hr':'min':'sec'.'ms dy mn yr)
-
-::method clear
-  return HandleDateTimePicker(self~hwnd, 'S', 'SYS')
-
-::class 'MonthCalendar' subclass DialogControl public
-
-::method init
-  expose n2Day n2Month
-
-  forward class (super) continue
-
-  n2Day = .array~of('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday',    -
-                    'Friday', 'Saturday')
-
-  n2Month = .array~of('January', 'February', 'March', 'April', 'May', 'June',  -
-                      'July', 'August', 'September', 'October', 'November',    -
-                      'December')
-
-::method getDate  -- Get the currently selected date
-  expose n2Day n2Month
-  use arg format = 'COMPLETE'
-
-  ans = HandleMonthCalendar(self~hwnd, 'G', 'CUR')
-
-  select
-    when ans == 1 then ans = -1
-    when format~caselessCompare('RAW') == 0 then nop
-
-    when format~caselessCompare('NORMAL') == 0 then do
-      ans = ans~word(1) n2Month[ans~word(2)]~left(3) ans~word(3)
-    end
-
-    when format~caselessCompare('COMPLETE') == 0 then do
-      ans = n2Day[ans~word(4) + 1] || ',' n2Month[ans~word(2)] ans~word(1) || ',' ans~word(3)
-    end
-
-    otherwise ans = -1
-  end
-  -- End select
-
-  return ans
-
-::method usesUnicode
-  return HandleMonthCalendar(self~hwnd, 'G', "UNI")
-
-
-::method setDate
-  use strict arg day, month, year = (date('S')~left(4))
-  return HandleMonthCalendar(self~hwnd, 'S', 'CUR', day month year)
-
 
