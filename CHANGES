@@ -1,11 +1,26 @@
             Fixes in Open Object Rexx 4.0.0
 
 The following is the list of fixes and enhancements added to ooRexx since the
-3.2.0 release. This is only a partial list and is known not to be complete.
+3.2.0 release.
 
 
 All Platforms
 =============
+
+  Bugs
+  ----
+
+  * 1811384 - 3.2.0 streamsupplier leaves stream open
+
+  * 1603254 - SUBCLASSES method does not work correclty
+
+  * 1816838 - String makearray class uses improper string test
+
+  * 1817044 - Relation items() method performance problem
+
+  * 1834618 - Using Security Manager causes seg fault
+
+  * 1837034 - Performance problems in stream arrayin method
 
   * 1856576 - bug with multiple time('r') calls on same instruction.
 
@@ -13,7 +28,150 @@ All Platforms
 
   * 1858730 - empty method does not empty after append
 
-  * 2012128 - RxFTP sample fails with error 93.914
+  * 1866822 - mutable buffer core dump
+
+  * 1876731 - Bug in Delete Instance Method of RexxQueue Class
+
+  * 1881558 - Not all unints are getting run
+
+  * 1887504 - Trace output from the parse command is sometimes misordered
+
+  * 1928224 - Array~Dimension(1) Returns wrong value
+
+  * 1970589 - value('88p8p') == '.8P8P'
+
+  * 1997863 - hang in threaded rexx program
+
+  * 2016732 - ~lines() failure in 4.0
+
+  * 2074349 - Multiple interpreter instances mix up .local & .environment
+
+  * 2121999 - package~addPublicRoutine(...) bombs
+
+  * 2144661 - minor issues with socket class
+
+  * 2149775 - RexxCreateQueue API Error
+
+  * 2150063 - RexxPullFromQueue Not Terminating String
+
+  * 2152197 - RexxvariablePool Returns RXSHV_NOAVL
+
+  * 2153363 - RexxVariablePool and Bad Variable Names
+
+  * 2153460 - RexxVariablePool No Generating Expected RXSHV_MEMFL Error
+
+  * 2155301 - RexxVariablePool Issues Wrong Error
+
+  * 2155550 - RexxVariablePool RXSHV_NEXTV Problem
+
+  * 2157967 - RxFuncAdd and Other Problems
+
+  * 2163868 - RexxAddMacro Bug
+
+  * 2194862 - 4.0.0.3609 sample ktquard.rex hangs
+
+  * 2469796 - uninit method not called when interpreter terminates
+
+  Requests For Enhancement
+  ------------------------
+
+  * 1098930 - Add a o-o native language API.
+
+  * 1105841 - RFE4IBM: add some sort of CLASSPATH for Object Rexx
+
+  * 1105889 - RFE4IBM: improve charin() performance by...
+
+  * 1111907 - Add concept of constants to class definitions
+
+  * 1144953 - ooRexx multiple inheritance among metaclasses not working
+
+  * 1490541 - stem output for SysDumpVariables
+
+  * 1503291 - Add QUALIFY BIF
+
+  * 1628466 - CircularQueue pushUnique method
+
+  * 1666636 - Add source of caller to function search order.
+
+  * 1711169 - Add a identity table to collection classes.
+
+  * 1739607 - Please add string (Last-)Pos length parameter
+
+  * 1775165 - ooRexxUnit should have regular release versions
+
+  * 1810883 - Add mixin class for ordered comparisons.
+
+  * 1871145 - Add UTC to DATE() time() functions
+
+  * 1887986 - Add a Routine class to ooRexx
+
+  * 1887996 - Expose program source as Rexx method.
+
+  * 1952525 - Support ISO-8859-1 NOT character
+
+  * 2007159 - Add ReplaceAt method to string class
+
+  * 2036765 - Add a clear method to the RexxQueue class.
+
+  * 2036766 - Add a makearray method to RexxQueue class.
+
+  * 2050437 - Expand the access rules for PRIVATE methods.
+
+  * 2053293 - Add ReplaceAt to the mutablebuffer class
+
+  * 2053719 - Add countStr and caselessCountStr to mutable buffer.
+
+  * 2053721 - add changeStr and caselessChangeStr to mutable buffer class.
+
+  * 2053961 - Add caseless pos and lastpos to mutablebuffer
+
+  * 2054519 - Add upper and lower to mutablebuffer
+
+  * 2054543 - Add a start and range argument to translate
+
+  * 2054544 - Add translate method to mutablebuffer
+
+  * 2057799 - Add Match and caselessMatch to mutablebuffer
+
+  * 2057804 - add matchChar and caselessMatchChar to mutable buffer
+
+  * 2057806 - add verify to mutablebuffer
+
+  * 2058009 - add subword to mutablebuffer
+
+  * 2058010 - add wordpos to mutablebuffer
+
+  * 2058012 - add wordindex to mutablebuffer
+
+  * 2058015 - Add verification length to verify()
+
+  * 2058018 - add wordlength() to mutablebuffer
+
+  * 2058022 - add word() to mutablebuffer
+
+  * 2058023 - add words() to mutable buffer
+
+  * 2058055 - Add delword to mutablebuffer
+
+  * 2086854 - Add a toDirectory() method to stem
+
+  * 2118312 - Add "exists" method to the .rexxqueue class
+
+  * 2126990 - Add a means to dynamically load an external library.
+
+  * 2126996 - Allow dynamic creation of external methods and routines.
+
+  * 2151677 - Add RS and LINE to .RexxContext
+
+  * 2152278 - Add additional function exit variant.
+
+  * 2175763 - Add location option to filespec.
+
+  * 2184443 - Upgrade random algorithm to 64-bit
+
+  * 2552719 - Add a SEND method to object class.
+
+  * 2552722 - Add startWith() method to object class.
 
 
 Windows
@@ -21,6 +179,12 @@ Windows
 
   Bugs
   ----
+
+  * 1116850 - Win32 STDOUT unable to be piped to another program
+
+  * 1151161 - Unable to process very huge file (> 2GB)
+
+  * 1196781 - Redrawing problem
 
   * 1797127 - ooDialog - buttonControl~style= is incorrect
 
@@ -30,24 +194,78 @@ Windows
 
   * 1832030 - OLEObject out parameters retrieved via OLEVariant wrong
 
+  * 1835170 - Problem with interpret NOVALUE
+
   * 1835980 - OLEObject can not create an empty SafeArray
 
   * 1836679 - OLEObject handling of DISP_E_EXCEPTION can crash interpreter
 
   * 1836829 - OLEObject - memory leak in DISP_E_EXCEPTION handling
 
+  * 1853738 - Parsing into attributes crashes interpreter
+
+  * 1856645 - Address instruction does not check for address name length
+
+  * 1870470 - External functions not found with r2193
+
+  * 1881555 - Stack overflow in trunk rev 2320
+
+  * 1899828 - linein('queue:') == .nil
+
   * 1914628 - InsertColumn with CENTER doesn't center first column title
 
   * 1914890 - ColumnInfo returns incorrect alignment
+
+  * 1919081 - Crash in rexx dll when calling RexxStart
+
+  * 1980196 - Interactive label trace doesn't work
 
   * 1992434 - ooDialog wrong parsing of NOT WS_GROUP in .rc file
 
   * 2005594 - RexxUtil::SysWinSetDefaultPrinter() is incorrect
 
+  * 2037626 - OODialog 4.0.0 not populating attributes
+
   * 2038754 - OODialog SetMenu Crashes interpreter
+
+  * 2119211 - Crash in Vista on connectKeyPress()
+
+  * 2159619 - RexxQuerySubcom Causes Seg fault
+
+  * 2216839 - WindowsManager::WindowAtPosition is broke
+
+  * 2248663 - Error reading Excel sheet with #! type error
+
+  * 2455302 - ooDialog redraw() and redrawWindow() methods fail
+
+  * 2455436 - Windows/SystemCommands.cpp: 'CD "path" not supported
+
+  * 2457131 - Windows : exception in orexxole.dll when omitting parameters
+
+  * 2500089 - Windows propdemo.rex list-view control to big
+
+  * 2503214 - Windows ooticket.rex sample has some minor bugs
+
+  * 2516335 - ooDialog - getTextSize broken
+
+  * 2516354 - Standard dialogs in ooDialog use archaic Windows font
+
+  * 2524036 - ooDialog - addXXX methods inconsistent
 
   Requests For Enhancement
   ------------------------
+
+  * 1706099 - Register Drop Handler
+
+  * 1744942 - ooDialog - display error message on LoadBitmap
+
+  * 2017577 - Update the ooDialog Progress Bar control
+
+  * 2017642 - ooDialog needs a method to get existing font
+
+  * 2020213 - Add ability to set / get column order to List-view control
+
+  * 2022005 - Update the ooDialog Static control
 
   * 2023245 - ooDialog needs an utility class
 
@@ -55,15 +273,56 @@ Windows
 
   * 2033208 - Add some shape classes to ooDialog
 
+  * 2056754 - Improve OLEObject's handling of COM events
+
   * 2357113 - WindowsManager needs a way to get Desktop window
 
+  * 2369193 - Update and add some winsystm.cls sample programs
+
+  * 2570098 - It would be useful for the WindowsObject to return the style
+
+  * 2569649 - Windows MenuObject needs a way to query menu item states
 
 Unix/Linux
 ==========
 
+  Bugs
+  ----
+
+  * 1391047 - SysWaitEventSem consumes huge memory and got rc=95 error
+
+  * 1825892 - stdint.h not available on older compilers
+
   * 1828516 - Older svnversion needs an arg
 
+  * 1838420 - rxmath - on Linux matherr() is not linked in
+
+  * 1839488 - Seg fault with queues and empty lines (Linux)
+
+  * 1867224 - The BIF rxqueue returns a zero-length string
+
+  * 1908020 - RXTRACE environment symbol crashes interpreter
+
   * 1941155 - rexx manpage error on Ubuntu w/ 7.04 package
+
+  Patches
+  -------
+
+  * 1809305 - Debian build dependencies
+
+  * 1826922 - Compile fails on linux svn rev 1193
+
+  * 2160847 - ServiceException.hpp fix missing include, conversion warning
+
+  * 2491985 - updated build instructions for AIX
+
+  * 2493960 - Update for unix-like-build.txt (AIX)
+
+
+z/OS
+====
+
+  * 2017028 - z/OS EBCDIC patch
 
 
 Documentation
@@ -71,6 +330,126 @@ Documentation
 
   * 1639620 - Sysini requires dir part of path
 
+  * 1761497 - ooDialog doc - add ... methods not documented correctly
+
+  * 1818323 - typos in Rev 985 of RexxRef
+
+  * 1824147 - caseless examples wrong
+
+  * 1824829 - Error in standarddialog.sgml Example
+
+  * 1826924 - rexxref Wrong method description
+
+  * 1827428 - man pages category wrong
+
+  * 1827815 - Patch for collclasses.sgml
+
+  * 1832925 - 5.3.6.23. put examples need fixing
+
+  * 1836432 - RexxRef makeArray Example
+
+  * 1837371 - RexxRef 3.2.0 List class MakeString
+
+  * 1842489 - 11.2.5 wrong method
+
+  * 1842528 - 2.29 missing verb
+
+  * 1849336 - String class methods don't alter the original string
+
+  * 1849339 - 5.1.3.47 makeArray doesn't say what example produces
+
+  * 1849726 - instanceMethods needs clarifying
+
   * 1855089 - FILENAMEDIALOG returns 0 if cancel.
 
+  * 1855881 - FILENAMEDIALOG changes directory
 
+  * 1860899 - Add documentation for WeakReference class
+
+  * 1860900 - Add documentation for ::CONSTANT keyword.
+
+  * 1860904 - Add documentation for Pointer class.
+
+  * 1860905 - Add documentation for Buffer class.
+
+  * 1880666 - RexxRef: 8.1 List of RexxUtil Funcs is missing RxXxx Funcs
+
+  * 1905153 - SysGetMessage( 0 )
+
+  * 1908292 - The WindowsEventLog Class
+
+  * 1914663 - aBaseDialog~GetSelf typos, etc.
+
+  * 1945447 - RexxRef 3.1 attribute set example
+
+  * 1951499 - RexRef 5.4.1.41 weekday typo
+
+  * 2011440 - SysFileTree info incomplete/error
+
+  * 2012128 - RxFTP sample fails with error 93.914
+
+  * 2065659 - error in example for directory BIF
+
+  * 2100048 - Relation class hasItem needs to indicate index is optional
+
+  * 2100051 - Cleanup information about white space usage
+
+  * 2132357 - Document package~loadLibrary
+
+  * 2132358 - Document routine loadExternalRoutine
+
+  * 2132359 - Document method loadExternalMethod
+
+  * 2132361 - Document stem toDirectory()
+
+  * 2132364 - Document verification length for verify
+
+  * 2132370 - Document length and range arguments of translate
+
+  * 2132378 - Docs for replaceAt method
+
+  * 2134097 - Document expanded external function search order
+
+  * 2134101 - Add docs for the Orderable mixin class.
+
+  * 2134111 - Docs for .constant and .RexxContstant
+
+  * 2134170 - WeakReference class
+
+  * 2139078 - Document 0xAC as an alternate not char
+
+  * 2141326 - Document time zone additions to .DateTime
+
+  * 2142883 - Document RexxQueue exists and open
+
+  * 2151611 - Update windows-build.txt
+
+  * 2164149 - "system error codes" need pointers to look up
+
+  * 2164645 - Array Next Method Problem
+
+  * 2165039 - Bag Union Method Problem
+
+  * 2176624 - Add documentation for qualify() BIF
+
+  * 2178822 - 1.11.2.4. Logical Operator description
+
+  * 2196795 - RexRef RxFuncAdd parms need description
+
+  * 2353987 - Relation Allindexes text wrong
+
+  * 2455439 - About changes to the process environment
+
+  * 2485564 - Add RexxPullFromQueue API
+
+  * 2485565 - Document RexxOpenQueue API
+
+  * 2485567 - Document RexxQueueExists
+
+  * 2485571 - Document RexxClearQueue
+
+  * 2505667 - Document new PRIVATE method rules.
+
+  * 2515776 - Document new behaviour of RxFuncAdd
+
+  * 2517194 - Cleanup parameter types in docs to match header file.
