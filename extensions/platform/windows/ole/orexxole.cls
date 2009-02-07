@@ -163,8 +163,8 @@ syntax:
   errDescription = "!VARIANTPOINTER_ must be set to a valid pointer value."
   if arg(1, 'O') then
     raise syntax 93.903 array(1) description (errDescription)
-  if \ pointer~isA(.string) then
-    raise syntax 93.948 array("pointer", ".string") description (errDescription)
+  if \ pointer~isA(.Pointer) then
+    raise syntax 93.948 array(1, ".Pointer") description (errDescription)
 
   !_VARIANT_PTR_ = pointer
   return
