@@ -291,6 +291,8 @@ Unix/Linux
 
   * 1391047 - SysWaitEventSem consumes huge memory and got rc=95 error
 
+  * 1727269  SysTempFileName generates memory error
+
   * 1825892 - stdint.h not available on older compilers
 
   * 1828516 - Older svnversion needs an arg
