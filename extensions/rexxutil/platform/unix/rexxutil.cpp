@@ -2940,7 +2940,7 @@ size_t RexxEntry SysTempFileName(const char *name, size_t numargs, CONSTRXSTRING
   else
     filler = '?';
                                        /* get the file id            */
-  dir = (char*) malloc(args[0].strlength);
+  dir = (char*) malloc(args[0].strlength+1);
   if (dir == NULL){                    /* if something went wrong    */
     BUILDRXSTRING(retstr, ERROR_NOMEM);
     return VALID_ROUTINE;
