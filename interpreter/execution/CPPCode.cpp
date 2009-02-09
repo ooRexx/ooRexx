@@ -252,7 +252,7 @@ void AttributeGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxOb
 void *AttributeSetterCode::operator new(size_t size)
 {
     // just allocate ane return
-    return new_object(size, T_AttributeGetterCode);
+    return new_object(size, T_AttributeSetterCode);
 }
 
 
