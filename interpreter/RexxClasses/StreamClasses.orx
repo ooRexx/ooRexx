@@ -188,23 +188,19 @@ notready:
 ::METHOD uninit       EXTERNAL 'LIBRARY REXX stream_close'
 
 ::METHOD  arrayout                     /* write out lines as an array       */
-  use strict arg array, type=.nil      /* access the array                  */
+  use strict arg array, type='LINES'   /* access the array                  */
 
   /* the count must be defined in case a SYNTAX or NOTREADY                 */
   /* condition is raised                                                    */
   count = 0                            /* set initial counter               */
   signal on notready                   /* the notready handler              */
 
-  if arg(2,'E') then do                /* have a second argument?           */
-    if abbrev('LINES', type) then      /* line type operation?              */
-      lineout = 1                      /* set the line flag                 */
-    else if abbrev('CHARS', type) then /* character operation?              */
-      lineout = 0                      /* not a line operation              */
-    else
-      raise syntax 93                  /* raise an error                    */
-  end
+  if abbrev('LINES', type) then      /* line type operation?              */
+    lineout = 1                      /* set the line flag                 */
+  else if abbrev('CHARS', type) then /* character operation?              */
+    lineout = 0                      /* not a line operation              */
   else
-    lineout = 1                        /* set the default lookup            */
+    raise syntax 93                  /* raise an error                    */
 
   count = 0                            /* set initial counter               */
   do item over array                   /* loop over the array               */

@@ -59,6 +59,7 @@
 #include "BufferClass.hpp"
 #include "RexxInternalApis.h"
 #include "RoutineClass.hpp"
+#include "PackageClass.hpp"
 #include "Interpreter.hpp"
 #include "RexxCode.hpp"
 #include "PackageManager.hpp"
@@ -606,18 +607,22 @@ RexxMethod *RexxMethod::newRexx(
         {
             sourceContext = ((RoutineClass *)option)->getSourceObject();
         }
+        else if (isOfClass(Package, option))
+        {
+            sourceContext = ((PackageClass *)option)->getSourceObject();
+        }
         else
         {
             // this must be a string (or convertable) and have a specific value
             option = option->requestString();
             if (option == TheNilObject)
             {
-                reportException(Error_Incorrect_method_argType, IntegerThree, "Method/String object");
+                reportException(Error_Incorrect_method_argType, IntegerThree, "Method, Routine, Package, or String object");
             }
             // default given? set option to NULL (see code below)
             if (!((RexxString *)option)->strCaselessCompare("PROGRAMSCOPE"))
             {
-                reportException(Error_Incorrect_call_list, "NEW", IntegerThree, "\"PROGRAMSCOPE\", Method object", option);
+                reportException(Error_Incorrect_call_list, "NEW", IntegerThree, "\"PROGRAMSCOPE\", Method, Routine, Package object", option);
             }
         }
     }

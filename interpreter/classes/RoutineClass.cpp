@@ -53,6 +53,7 @@
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
 #include "MethodClass.hpp"
+#include "PackageClass.hpp"
 #include "SourceFile.hpp"
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
@@ -461,6 +462,7 @@ RoutineClass *RoutineClass::newRoutineObject(RexxString *pgmname, RexxObject *so
             }
         }
     }
+
     // create the routine
     RoutineClass *result = new RoutineClass(pgmname, newSourceArray);
     ProtectedObject p(result);
@@ -578,19 +580,13 @@ RoutineClass *RoutineClass::newRexx(
         {
             sourceContext = ((RoutineClass *)option)->getSourceObject();
         }
+        else if (isOfClass(Package, option))
+        {
+            sourceContext = ((PackageClass *)option)->getSourceObject();
+        }
         else
         {
-            // this must be a string (or convertable) and have a specific value
-            option = option->requestString();
-            if (option == TheNilObject)
-            {
-                reportException(Error_Incorrect_method_argType, IntegerThree, "Method/String object");
-            }
-            // default given? set option to NULL (see code below)
-            if (!((RexxString *)option)->strCaselessCompare("PROGRAMSCOPE"))
-            {
-                reportException(Error_Incorrect_call_list, "NEW", IntegerThree, "\"PROGRAMSCOPE\", Method object", option);
-            }
+            reportException(Error_Incorrect_method_argType, IntegerThree, "Method, Routine, or Package object");
         }
     }
 

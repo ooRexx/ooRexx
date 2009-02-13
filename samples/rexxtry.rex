@@ -216,16 +216,14 @@ syntax:
       trace = 'Off'
     end
     otherwise                                  /* Some other syntax error.  */
+      condition = condition('o')
                                                /* Show the error msg text.  */
-         say '  Oooops ! ... try again.     'errortext(rc)
-
-      parse version . rxlevel .
-      if rxlevel > 4.00 then do                /* get the secondary message */
-        secondary = condition('o')~message
-        if .nil <> secondary then              /* get a real one?           */
-                                               /* display it also           */
-          say '                              'secondary
-      end
+      say '  Oooops ! ... try again.     'condition~errortext
+      secondary = condition('o')~message
+      if .nil <> secondary then              /* get a real one?           */
+                                             /* display it also           */
+        say '                              'secondary
+      rc = condition~code                    /* use the full error code */
   end
   call border                                  /* Go write the border.      */
   if argrx <> '' & queued() = 0 then           /* One-liner not finished    */
