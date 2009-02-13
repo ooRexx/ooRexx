@@ -173,6 +173,7 @@ All Platforms
 
   * 2552722 - Add startWith() method to object class.
 
+  * 2597124  Windows specfic classes don't belong in rexxref
 
 Windows
 =======
@@ -251,6 +252,8 @@ Windows
   * 2516354 - Standard dialogs in ooDialog use archaic Windows font
 
   * 2524036 - ooDialog - addXXX methods inconsistent
+
+  * 2597092  oowalk2.rex sample for ooDialog is broken
 
   Requests For Enhancement
   ------------------------
