@@ -211,13 +211,14 @@ REM - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if not exist doc\nul md doc
 
 SET MISSING_DOC=0
-if not exist doc\readme.pdf   SET MISSING_DOC=1
-if not exist doc\rexxpg.pdf   SET MISSING_DOC=1
-if not exist doc\rexxref.pdf  SET MISSING_DOC=1
-if not exist doc\rxmath.pdf   SET MISSING_DOC=1
-if not exist doc\rxsock.pdf   SET MISSING_DOC=1
-if not exist doc\rxftp.pdf    SET MISSING_DOC=1
-if not exist doc\oodialog.pdf SET MISSING_DOC=1
+if not exist doc\readme.pdf        SET MISSING_DOC=1
+if not exist doc\rexxpg.pdf        SET MISSING_DOC=1
+if not exist doc\rexxref.pdf       SET MISSING_DOC=1
+if not exist doc\rxmath.pdf        SET MISSING_DOC=1
+if not exist doc\rxsock.pdf        SET MISSING_DOC=1
+if not exist doc\rxftp.pdf         SET MISSING_DOC=1
+if not exist doc\oodialog.pdf      SET MISSING_DOC=1
+if not exist doc\winextensions.pdf SET MISSING_DOC=1
 
 if %MISSING_DOC% EQU 0 goto DOC_CHECK_DONE
 
@@ -292,6 +293,14 @@ if not exist doc\oodialog.pdf (
   )
 )
 copy %DOC_LOCATION%\oodialog.pdf doc 1>nul 2>&1
+
+if not exist doc\winextensions.pdf (
+  if not exist %DOC_LOCATION%\winextensions.pdf (
+    if %USELOGFILE% EQU 1 (echo winextensions.pdf is missing >>%OR_ERRLOG%) else (echo winextensions.pdf is missing)
+    goto NO_DOC_ERR
+  )
+)
+copy %DOC_LOCATION%\winextensions.pdf doc 1>nul 2>&1
 
 GOTO DOC_CHECK_DONE
 

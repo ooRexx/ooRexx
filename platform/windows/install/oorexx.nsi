@@ -460,6 +460,7 @@ Section "${LONGNAME} Documentation" SecDoc
   File "${SRCDIR}\doc\rxsock.pdf"
   File "${SRCDIR}\doc\rxftp.pdf"
   File "${SRCDIR}\doc\oodialog.pdf"
+  File "${SRCDIR}\doc\winextensions.pdf"
   ; Create start menu shortcuts
   CreateDirectory "$SMPROGRAMS\${LONGNAME}\Documentation"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Reference.lnk" "$INSTDIR\doc\rexxref.pdf" "" "$INSTDIR\doc\rexxref.pdf" 0
@@ -467,7 +468,8 @@ Section "${LONGNAME} Documentation" SecDoc
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Mathematical Functions Reference.lnk" "$INSTDIR\doc\rxmath.pdf" "" "$INSTDIR\doc\rxmath.pdf" 0
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx TCP-IP Sockets Functions Reference.lnk" "$INSTDIR\doc\rxsock.pdf" "" "$INSTDIR\doc\rxsock.pdf" 0
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx rxFTP Class Reference.lnk" "$INSTDIR\doc\rxftp.pdf" "" "$INSTDIR\doc\rxftp.pdf" 0
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx OODIalog Method Reference.lnk" "$INSTDIR\doc\oodialog.pdf" "" "$INSTDIR\doc\oodialog.pdf" 0
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx ooDIalog Method Reference.lnk" "$INSTDIR\doc\oodialog.pdf" "" "$INSTDIR\doc\oodialog.pdf" 0
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Windows Extensions Reference.lnk" "$INSTDIR\doc\winextensions.pdf" "" "$INSTDIR\doc\winextensions.pdf" 0
 SectionEnd
 
 
