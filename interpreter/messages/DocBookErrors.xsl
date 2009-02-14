@@ -130,7 +130,7 @@
 </xsl:template>
 
 <xsl:template match="Sub">
-<emphasis><xsl:value-of select="@name"/></emphasis>
+<emphasis role="italic"><xsl:value-of select="@name"/></emphasis>
 </xsl:template>
 
 <xsl:template match="Explanation">
