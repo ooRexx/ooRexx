@@ -41,6 +41,7 @@
 #include "ActivityManager.hpp"
 #include "ProtectedObject.hpp"
 #include "Interpreter.hpp"
+#include "RexxVariableDictionary.hpp"
 
 
 /**
@@ -238,7 +239,19 @@ void AttributeGetterCode::run(RexxActivity *activity, RexxMethod *method, RexxOb
     {
         reportException(Error_Incorrect_method_maxarg, (wholenumber_t)0);
     }
-    result = attribute->getValue(receiver->getObjectVariables(method->getScope()));
+    // this is simplier if the method is not guarded
+    if (!method->isGuarded())
+    {
+        result = attribute->getValue(receiver->getObjectVariables(method->getScope()));
+    }
+    else {
+        // get the variable pool and get the guard lock
+        RexxVariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
+        objectVariables->reserve(activity);
+        result = attribute->getValue(objectVariables);
+        // and ensure we release this afterwards
+        objectVariables->release(activity);
+    }
 }
 
 
@@ -281,8 +294,21 @@ void AttributeSetterCode::run(RexxActivity *activity, RexxMethod *method, RexxOb
     {
         missingArgument(1);
     }
-    // go set the attribue
-    attribute->set(receiver->getObjectVariables(method->getScope()), argPtr[0]);
+    // this is simplier if the method is not guarded
+    if (!method->isGuarded())
+    {
+        // go set the attribue
+        attribute->set(receiver->getObjectVariables(method->getScope()), argPtr[0]);
+    }
+    else {
+        // get the variable pool and get the guard lock
+        RexxVariableDictionary *objectVariables = receiver->getObjectVariables(method->getScope());
+        objectVariables->reserve(activity);
+        // go set the attribue
+        attribute->set(objectVariables, argPtr[0]);
+        // and ensure we release this afterwards
+        objectVariables->release(activity);
+    }
 }
 
 

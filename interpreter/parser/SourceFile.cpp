@@ -2830,13 +2830,16 @@ void RexxSource::createAttributeSetterMethod(RexxString *name, RexxVariableBase 
 void RexxSource::createConstantGetterMethod(RexxString *name, RexxObject *value)
 {
     ConstantGetterCode *code = new ConstantGetterCode(value);
+    // add this as an unguarded method
+    RexxMethod *method = new RexxMethod(name, code);
+    method->setUnguarded();
     if (active_class == OREF_NULL)
     {
-        addMethod(name, new RexxMethod(name, code), false);
+        addMethod(name, method, false);
     }
     else
     {
-        active_class->addConstantMethod(name, new RexxMethod(name, code));
+        active_class->addConstantMethod(name, method);
     }
 }
 
