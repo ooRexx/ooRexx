@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -49,7 +49,7 @@
 
 #define PROG_DESC "REXX function package for tcp/ip sockets"
 #define PROG_COPY "(c) Copyright International Business Machines Corporation 1993, 2004"
-#define PROG_COPY1 "(c) Copyright Rexx Language Association 2005-2006"
+#define PROG_COPY1 "(c) Copyright Rexx Language Association 2005-2009"
 #define PROG_ALRRa "All Rights Reserved."
 #define PROG_ALRRb "This program and the accompanying materials"
 #define PROG_ALRRc "are made available under the terms of the Common Public License v1.0"

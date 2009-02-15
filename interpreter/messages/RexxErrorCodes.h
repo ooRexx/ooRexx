@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -53,7 +53,7 @@
 
 /* error subcodes and message numbers                                         */
 /*      message identifier ----------------------------------- message number */
-   
+
 #define Error_Program_unreadable                           3000
 #define Error_Program_unreadable_name                      3001
 #define Error_Program_unreadable_user_defined              3900
