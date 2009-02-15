@@ -2795,7 +2795,7 @@ RexxMethod0(uint32_t, WSEventLog_minimumReadGet)
     return getMinimumReadBufferSize(context) / 1024;
 }
 
-/**  WindowsEventLog::read()
+/**  WindowsEventLog::readRecords()
  *
  * Reads records from an event log.  If no args are given then all records from
  * the default system (the local machine) and the default source (the
@@ -2871,7 +2871,7 @@ RexxMethod5(uint32_t, WSEventLog_readRecords, OPTIONAL_CSTRING, direction, OPTIO
     struct tm * DateTime;                // converted from elapsed seconds
     char * pchStrBuf = NULL;             // temp buffer for event string
     char * pchUser = NULL;               // user name for event
-    DWORD  countRecords = 0;             //number of event log records processed
+    DWORD  countRecords = 0;             // number of event log records processed
 
     // We'll try to allocate a buffer big enough to hold all the records, but
     // not bigger than our max.  Same idea for a minimum, we'll make sure the
