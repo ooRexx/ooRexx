@@ -202,6 +202,9 @@ LONG HandleArgError(PRXSTRING r, BOOL ToMuch)
       case EVENTLOG_INFORMATION_TYPE: \
          index=2;                     \
          break;                       \
+      case EVENTLOG_SUCCESS:          \
+         index=2;                     \
+         break;                       \
       case EVENTLOG_AUDIT_SUCCESS:    \
          index=3;                     \
          break;                       \
@@ -209,7 +212,7 @@ LONG HandleArgError(PRXSTRING r, BOOL ToMuch)
          index=4;                     \
          break;                       \
       default:                        \
-        index=4;                      \
+        index=5;                      \
     }                                 \
 }
 
@@ -2854,7 +2857,7 @@ RexxMethod5(uint32_t, WSEventLog_readRecords, OPTIONAL_CSTRING, direction, OPTIO
     }
 
     // Array to convert the event type into its string representation.
-    char   evType[5][12]={"Error","Warning","Information","Success","Failure"};
+    char   evType[6][12]={"Error","Warning","Information","Success","Failure","Unknown"};
     int    evTypeIndex;
 
     PEVENTLOGRECORD pEvLogRecord;        // pointer to one event record
