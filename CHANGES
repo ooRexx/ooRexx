@@ -255,6 +255,8 @@ Windows
 
   * 2597092  oowalk2.rex sample for ooDialog is broken
 
+  * 2603760  WindowsEventLog read() uses incorrect event type
+
   Requests For Enhancement
   ------------------------
 
