@@ -322,7 +322,7 @@ if ok then do
   if ret == 0 then
     say "Record" source "successfully written"
   else
-    say "Error writing record" sourec "rc:" ret
+    say "Error writing record" source "rc:" ret
 
   -- The default type for writing a record is 'Error' This might look a little
   -- scary to a user, so we will use Information for the type.
