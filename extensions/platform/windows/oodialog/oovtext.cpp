@@ -36,6 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 #include <windows.h>
+#include <shlwapi.h>
 #include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>
@@ -52,17 +53,20 @@ HANDLE TimerEvent = NULL;
 ULONG TimerCount = 0;
 ULONG_PTR Timer = 0;
 
-#define GETWEIGHT(opts, weight) \
-      if (strstr(opts, "THIN")) weight = FW_THIN; else \
-      if (strstr(opts, "EXTRALIGHT")) weight = FW_EXTRALIGHT; else \
-      if (strstr(opts, "LIGHT")) weight = FW_LIGHT; else \
-      if (strstr(opts, "MEDIUM")) weight = FW_MEDIUM; else \
-      if (strstr(opts, "SEMIBOLD")) weight = FW_SEMIBOLD; else \
-      if (strstr(opts, "EXTRABOLD")) weight = FW_EXTRABOLD; else \
-      if (strstr(opts, "BOLD")) weight = FW_BOLD; else \
-      if (strstr(opts, "HEAVY")) weight = FW_HEAVY; else \
-      weight = FW_NORMAL;
+int getWeight(CSTRING opts)
+{
+    int weight = FW_NORMAL;
 
+    if (StrStrI(opts, "THIN")) weight = FW_THIN; else
+    if (StrStrI(opts, "EXTRALIGHT")) weight = FW_EXTRALIGHT; else
+    if (StrStrI(opts, "LIGHT")) weight = FW_LIGHT; else
+    if (StrStrI(opts, "MEDIUM")) weight = FW_MEDIUM; else
+    if (StrStrI(opts, "SEMIBOLD")) weight = FW_SEMIBOLD; else
+    if (StrStrI(opts, "EXTRABOLD")) weight = FW_EXTRABOLD; else
+    if (StrStrI(opts, "BOLD")) weight = FW_BOLD; else
+    if (StrStrI(opts, "HEAVY")) weight = FW_HEAVY;
+    return weight;
+}
 
 
 void DrawFontToDC(HDC hDC, INT x, INT y, const char * text, INT size, const char * opts, const char * fontn, INT fgColor, INT bkColor)
@@ -71,7 +75,7 @@ void DrawFontToDC(HDC hDC, INT x, INT y, const char * text, INT size, const char
    INT weight, oldMode=0;
    COLORREF oldFg, oldBk;
 
-   GETWEIGHT(opts, weight)
+   weight = getWeight(opts);
 
    hFont = CreateFont(size, size, 0, 0, weight, strstr(opts, "ITALIC") != 0, strstr(opts, "UNDERLINE") != 0,
                strstr(opts, "STRIKEOUT") != 0, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, fontn);
@@ -186,7 +190,7 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
     {
         GetWindowRect(w, &r);
 
-        GETWEIGHT(opts, weight)
+        weight = getWeight(opts);
 
         hFont = CreateFont(size, size, 0, 0, weight, strstr(opts, "ITALIC") != NULL, strstr(opts, "UNDERLINE") != NULL,
                            strstr(opts, "STRIKEOUT") != NULL, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, FF_DONTCARE, argv[3].strptr);
@@ -314,31 +318,3 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
     RETC(1);
 }
 
-
-
-size_t RexxEntry HandleFont(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    CHECKARG(5);
-
-    if ( !strcmp(argv[0].strptr, "CREATE") )
-    {
-        HFONT hFont;
-        INT weight;
-
-        GETWEIGHT(argv[3].strptr, weight)
-
-        hFont = CreateFont(atoi(argv[2].strptr), atoi(argv[4].strptr), 0, 0, weight,
-                           strstr(argv[3].strptr, "ITALIC") != NULL,
-                           strstr(argv[3].strptr, "UNDERLINE") != NULL,
-                           strstr(argv[3].strptr, "STRIKEOUT") != NULL,
-                           DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
-                           DEFAULT_QUALITY, FF_DONTCARE, argv[1].strptr);
-
-        if ( hFont )
-        {
-            RETHANDLE(hFont);
-        }
-        RETC(0);
-    }
-    RETC(1);
-}

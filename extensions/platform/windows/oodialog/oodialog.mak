@@ -75,6 +75,7 @@ $(OR_OUTDIR)\oodialog.dll:     $(SOURCEF)
     WINMM.LIB \
     COMDLG32.LIB \
     COMCTL32.LIB \
+    shlwapi.lib \
     -def:$(OR_OODIALOGSRC)\oovutil.def \
     -out:$(OR_OUTDIR)\$(@B).dll
 

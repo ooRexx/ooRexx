@@ -170,13 +170,10 @@
 ::method Cursor_Wait unguarded
    return Wnd_Desktop("CURSOR", self~hwnd, "S", 32514)
 
-::method CreateFont unguarded
-   use arg fontName, fontSize, fontStyle, fontWidth
-   if Arg(1, "o") = 1 then fontName = "System"
-   if Arg(2, "o") = 1 then fontSize = 10
-   if Arg(3, "o") = 1 then fontStyle = ""
-   if Arg(4, "o") = 1 then fontWidth = fontSize
-   return HandleFont("CREATE", fontName, fontSize, fontStyle, fontWidth)
+-- CreateFont() has always been broken, maintained for program compatibility.
+-- CreateFontEx() is a correct implementation.
+::method CreateFont unguarded external "LIBRARY oodialog winex_createFont"
+::method createFontEx unguarded external "LIBRARY oodialog winex_createFontEx"
 
    /* Deletes a font */
 ::method DeleteFont unguarded

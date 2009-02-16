@@ -1988,7 +1988,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleOtherNewCtrls);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleMonthCalendar);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDateTimePicker);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WinTimer);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleFont);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DumpAdmin);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddControl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrCreateDialog);
@@ -2054,7 +2053,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(HandleMonthCalendar,  HandleMonthCalendar),
     REXX_CLASSIC_ROUTINE(HandleDateTimePicker, HandleDateTimePicker),
     REXX_CLASSIC_ROUTINE(WinTimer,             WinTimer),
-    REXX_CLASSIC_ROUTINE(HandleFont,           HandleFont),
     REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),
     REXX_CLASSIC_ROUTINE(UsrAddControl,        UsrAddControl),
     REXX_CLASSIC_ROUTINE(UsrCreateDialog,      UsrCreateDialog),
@@ -2098,6 +2096,8 @@ REXX_METHOD_PROTOTYPE(resdlg_setFontAttrib_pvt);
 REXX_METHOD_PROTOTYPE(winex_getTextSizeScreen);
 REXX_METHOD_PROTOTYPE(winex_getFont);
 REXX_METHOD_PROTOTYPE(winex_setFont);
+REXX_METHOD_PROTOTYPE(winex_createFontEx);
+REXX_METHOD_PROTOTYPE(winex_createFont);
 
 REXX_METHOD_PROTOTYPE(ri_init);
 REXX_METHOD_PROTOTYPE(ri_release);
@@ -2249,6 +2249,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(winex_getTextSizeScreen,      winex_getTextSizeScreen),
     REXX_METHOD(winex_getFont,                winex_getFont),
     REXX_METHOD(winex_setFont,                winex_setFont),
+    REXX_METHOD(winex_createFontEx,           winex_createFontEx),
+    REXX_METHOD(winex_createFont,             winex_createFont),
 
     REXX_METHOD(ri_init,                     ri_init),
     REXX_METHOD(ri_release,                  ri_release),

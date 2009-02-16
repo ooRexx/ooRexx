@@ -4248,6 +4248,230 @@ RexxMethod3(int, winex_setFont, POINTERSTRING, font, OPTIONAL_logical_t, redraw,
     return 0;
 }
 
+bool rxLogicalFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
+                            BOOL *logical, int argPos)
+{
+    logical_t value;
+    RexxObjectPtr obj = context->DirectoryAt(d, index);
+    if ( obj != NULLOBJECT )
+    {
+        if ( ! context->Logical(obj, &value) )
+        {
+            wrongObjInDirectoryException(context, argPos, index, "logical");
+            return false;
+        }
+        *logical = (BOOL)value;
+    }
+    return true;
+}
+
+bool rxNumberFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
+                           DWORD *number, int argPos)
+{
+    DWORD value;
+    RexxObjectPtr obj = context->DirectoryAt(d, index);
+    if ( obj != NULLOBJECT )
+    {
+        if ( ! context->UnsignedInt32(obj, (uint32_t*)&value) )
+        {
+            wrongObjInDirectoryException(context, argPos, index, "number");
+            return false;
+        }
+        *number = value;
+    }
+    return true;
+}
+
+extern int getWeight(CSTRING opts);
+
+/** WindowExtensions::createFont()
+ *
+ *  Creates a logical font with the specified characteristics.
+ *
+ *  This implementation is broken.  It is the original ooDialog implementation.
+ *  It incorrectly maps the point size to the font height and it defaults the
+ *  average character width to the point size.
+ *
+ *  It is maintained "as is" for program compatibility.
+ *
+ *  @param fontName  Optional.  The typeface name.  The default is System.
+ *
+ *  @param fSize     Optional.  The point size of the font.  The default is 10.
+ *
+ *  @param fontStyle Optional.  A string containing 0 or more of the style
+ *                              keywords separated by blanks. The default is a
+ *                              normal font style.
+ *
+ *  @param fWidth    Optional.  The average character width.  The default is the
+ *                              point size.
+ *
+ *  @note  The most broken thing with this implementation is defaulting the
+ *         average character width to the point size.  Using a 0 for fWidth
+ *         rather than omitting the argument will fix this.  0 causes the font
+ *         mapper to pick the best font that matches the height.
+ *
+ */
+RexxMethod4(POINTERSTRING, winex_createFont, OPTIONAL_CSTRING, fontName, OPTIONAL_CSTRING, fSize,
+            OPTIONAL_CSTRING, fontStyle, OPTIONAL_CSTRING, fWidth)
+{
+    if ( argumentOmitted(1) )
+    {
+        fontName = "System";
+    }
+
+    int fontSize = 10;
+    if ( argumentExists(2) )
+    {
+        fontSize = atoi(fSize);
+    }
+
+    int fontWidth = fontSize;
+    if ( argumentExists(4) )
+    {
+        fontWidth = atoi(fWidth);
+    }
+
+    int weight = FW_NORMAL;
+    BOOL italic = FALSE;
+    BOOL underline = FALSE;
+    BOOL strikeout = FALSE;
+
+    if ( argumentExists(3) )
+    {
+        italic = StrStrI(fontStyle, "ITALIC") != NULL;
+        underline = StrStrI(fontStyle, "UNDERLINE") != NULL;
+        strikeout = StrStrI(fontStyle, "STRIKEOUT") != NULL;
+        weight = getWeight(fontStyle);
+    }
+
+    HFONT hFont = CreateFont(fontSize, fontWidth, 0, 0, weight, italic, underline, strikeout,
+                             DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
+                             DEFAULT_QUALITY, FF_DONTCARE, fontName);
+    return hFont;
+}
+
+/** WindowExtensions::createFontEx()
+ *
+ *  Creates a logical font with the specified characteristics.
+ *
+ *  This is a correct implementation of createFont() and should be used as a
+ *  replacement for that method.  In addition it extends createFont() by giving
+ *  the ooRexx progammer access to all of the options of the CreateFont API.
+ *
+ *  @param fontName  Required.  The typeface name.
+ *
+ *  @param fontSize  Optional.  The point size of the font, the default is 8.
+ *
+ *  @param args      Optional.  A .Directory object whose indexes can contain
+ *                              over-rides for the default values of all other
+ *                              arguments to CreateFont.
+ *
+ *  @return  Handle to the logical font.  On error, a null handle is returned
+ *           and the ooDialog System error code (.SystemErrorCode) is set.
+ *
+ *  @note    All the 'other' arguments to CreateFont() have a default value. If
+ *           the args Directory object has no index for a value, the default is
+ *           used.  If the Directory object does have the index, then the value
+ *           of the index is used for that arg.
+ */
+RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, fontSize,
+            OPTIONAL_RexxObjectPtr, args, OSELF, self)
+{
+    int   width = 0;                              // average character width
+    int   escapement = 0;                         // angle of escapement
+    int   orientation = 0;                        // base-line orientation angle
+    int   weight = FW_NORMAL;                     // font weight
+    BOOL  italic = FALSE;                         // italic attribute option
+    BOOL  underline = FALSE;                      // underline attribute option
+    BOOL  strikeOut = FALSE;                      // strikeout attribute option
+    DWORD charSet = DEFAULT_CHARSET;              // character set identifier
+    DWORD outputPrecision = OUT_TT_PRECIS;        // output precision
+    DWORD clipPrecision = CLIP_DEFAULT_PRECIS;    // clipping precision
+    DWORD quality = DEFAULT_QUALITY;              // output quality
+    DWORD pitchAndFamily = FF_DONTCARE;           // pitch and family
+
+    oodSetSysErrCode(context, 0);
+
+    if ( argumentOmitted(2) )
+    {
+        fontSize = 8;
+    }
+
+    HDC hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
+    int height = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    DeleteDC(hdc);
+
+    if ( argumentExists(3) )
+    {
+        if ( ! context->IsDirectory(args) )
+        {
+            wrongClassException(context, 3, "Directory");
+            goto error_out;
+        }
+        RexxDirectoryObject d = (RexxDirectoryObject)args;
+
+        if ( ! rxNumberFromDirectory(context, d, "WIDTH", (DWORD *)&width, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "ESCAPEMENT", (DWORD *)&escapement, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "ORIENTATION", (DWORD *)&orientation, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "WEIGHT", (DWORD *)&weight, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxLogicalFromDirectory(context, d, "ITALIC", &italic, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxLogicalFromDirectory(context, d, "UNDERLINE", &underline, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxLogicalFromDirectory(context, d, "STRIKEOUT", &strikeOut, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "CHARSET", &charSet, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "OUTPUTPRECISION", &outputPrecision, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "CLIPPRECISION", &clipPrecision, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "QUALITY", &quality, 3) )
+        {
+            goto error_out;
+        }
+        if ( ! rxNumberFromDirectory(context, d, "PITCHANDFAMILY", &pitchAndFamily, 3) )
+        {
+            goto error_out;
+        }
+    }
+
+    HFONT font = CreateFont(height, width, escapement, orientation, weight, italic, underline, strikeOut,
+                            charSet, outputPrecision, clipPrecision, quality, pitchAndFamily, fontName);
+
+    if ( font == NULL )
+    {
+        oodSetSysErrCode(context);
+    }
+    return font;
+
+error_out:
+  return NULLOBJECT;
+}
 
 /**
  *  Methods for the .DialogControl class.
