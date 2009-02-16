@@ -257,6 +257,8 @@ Windows
 
   * 2603760  WindowsEventLog read() uses incorrect event type
 
+  * 2607013  ooDialog - the createFont() method is broken
+
   Requests For Enhancement
   ------------------------
 
