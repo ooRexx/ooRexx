@@ -640,7 +640,7 @@ if retc = -1 then do
    return .nil
    end
 else errno = ''
-return xxx
+return retc
 
 /*----------------------------------------------------------------------------*/
 /* Method: string                                                             */
