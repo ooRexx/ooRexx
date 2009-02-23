@@ -264,6 +264,8 @@ Windows
 
   * 1706099 - Register Drop Handler
 
+  * 1722389  UnInstaller deletes unrelated files
+
   * 1744942 - ooDialog - display error message on LoadBitmap
 
   * 2017577 - Update the ooDialog Progress Bar control

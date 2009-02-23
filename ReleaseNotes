@@ -75,6 +75,18 @@ samples\winsystem\winSystemDlgs.h
 samples\winsystem\winSystemDlgs.rc
 samples\winsystem\writeWithNotepad.rex
 
+Windows Installation
+--------------------
+
+The Windows installation program has be enhanced so that it will only
+remove files installed by the ooRexx package.  Files added to the
+installation directory by the user will no longer be deleted when ooRexx
+is uninstalled.  This behavior will be in effect for the uninstallation of
+ooRexx 4.0.0 and future versions of ooRexx, there is no change in the
+3.2.0 uninstallation.  When a 3.2.0, or earlier, version of ooRexx is
+uninstalled, all files in the installation directory are deleted.
+
+
 Windows Scripting Host
 ----------------------
 
