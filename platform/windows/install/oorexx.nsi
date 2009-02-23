@@ -145,9 +145,11 @@ Section "${LONGNAME} Core (required)" SecMain
   SetOutPath $INSTDIR\doc
   File "${SRCDIR}\doc\readme.pdf"
   File /oname=CHANGES.txt "${SRCDIR}\CHANGES"
+  File /oname=ReleaseNotes.txt "${SRCDIR}\ReleaseNotes"
   CreateDirectory "$SMPROGRAMS\${LONGNAME}\Documentation"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx README.lnk" "$INSTDIR\doc\readme.pdf" "" "$INSTDIR\doc\readme.pdf" 0
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx CHANGES.lnk" "$INSTDIR\doc\CHANGES.txt" "" "$INSTDIR\doc\CHANGES.txt" 0
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx ReleaseNotes.lnk" "$INSTDIR\doc\ReleaseNotes.txt" "" "$INSTDIR\doc\ReleaseNotes.txt" 0
 
 ;;;;  Comment out orxscrpt stuff temporarily
   ; Set output path to the installation directory just in case

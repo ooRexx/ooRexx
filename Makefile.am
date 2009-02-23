@@ -360,6 +360,7 @@ unixMiscFiles = $(interpreter_unix_dir)/*.cat \
                 $(build_os_platform_dir)/oorexx-config
 commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(top_srcdir)/CHANGES \
+                  $(top_srcdir)/ReleaseNotes \
                   $(top_srcdir)/CONTRIBUTORS \
                   $(top_srcdir)/NOTICE \
                   $(top_srcdir)/oorexx.ver \

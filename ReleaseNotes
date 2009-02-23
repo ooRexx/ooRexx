@@ -1,0 +1,204 @@
+                             Open Object Rexx
+
+                              Release Notes
+                              Version 4.0.0
+
+  Copyright 2005, 2009 Rexx Language Association.  All rights reserved.
+                            February 23, 2009
+
+
+Changes in ooRexx 4.0.0
+=======================
+
+New platforms:
+--------------
+
+Linux 64-bit
+AIX 64-bit
+Windows 64-bit
+
+All platforms
+-------------
+
+Although not directly visible to the ooRexx programer, much of the code in
+the interpreter core has been rewritten.  This enhances the interpreter in
+several ways, not the least of which is the ability to compile the
+interpreter in 64-bit addressing mode.  In addition, the rewritten
+interpreter is now more maintainable and extensible.
+
+A new, improved, set of application programming interfaces (APIs) have
+been added.  The programmers guide has been updated accordingly.  Although
+these utilize C++ they are extremely easy to use.  All of the external
+function libraries have been upgraded to use these new APIs.
+
+REXX_PATH (new in 4.0) is an additional path you can set that is used for
+Rexx program searches.
+
+Several new utility classes have been added including a sockets class,
+Mime classes, and SMTP classes.
+
+New samples are included in the distribution:
+---------------------------------------------
+
+samples/scclient.rex
+samples/scserver.rex
+samples/sfclient.rex
+samples/sfserver.rex
+
+Unix platform
+-------------
+
+Rxapi now runs as a system wide daemon.  The use of shared memory has been
+eliminated.  Rxapi now uses a socket interface for communication.
+
+Windows platform
+----------------
+
+Improvements to ooDialog and OLEObject.
+
+The documentation of the Windows specific classes has been moved out of
+rexxref to the new document winextensions.pdf.
+
+New samples are included in the distribution:
+---------------------------------------------
+
+samples\oodialog\examples\imageButton.rex
+samples\winsystem\displayAnyMenu.rex
+samples\winsystem\displayWindowTree.rex
+samples\winsystem\getTheWindow.rex
+samples\winsystem\menuCalc.rex
+samples\winsystem\menuNotepad.rex
+samples\winsystem\quickCalc.rex
+samples\winsystem\quickShowAllMenus.rex
+samples\winsystem\windowsSystem.frm
+samples\winsystem\winSystemDlgs.h
+samples\winsystem\winSystemDlgs.rc
+samples\winsystem\writeWithNotepad.rex
+
+Windows Scripting Host
+----------------------
+
+The Windows Scripting Host support in ooRexx 4.0.0 has been temporarily
+disabled.  This was done after soliciting input from users.  Temporarily
+disabling WSH allows the release of 4.0.0 to be months sooner than it
+would have been otherwise.  The consensus of users was that they would
+prefer an early release without WSH than a later release with WSH.  The
+intent is to deliver WSH as soon as possible in a follow-on minor release.
+
+Some possible differences in program behavior
+---------------------------------------------
+
+Due to a bug in prior releases of ooRexx and Object Rexx, a negative
+return code from a Rexx program could be transformed to a positive return
+code to the operating system.  This bug is now fixed.
+
+Some returns from the rxMath package were not consistent.  As an example,
+on Windows, NaN (Not a Number) was returned as the string "ERROR" while on
+Linux the string "nan" was returned.  This was fixed so that the string
+"nan" is returned on all platforms.
+
+On all platforms, +infinity and -infinity are now returned as strings
+"+infinity" and "-infinity".
+
+Miscellaneous Enhancements
+--------------------------
+
+A method that is declared PRIVATE has been enhanced to allow its
+invocation from any of the following situations:
+
+1) From within a method owned by the same class as the target (i.e., the
+method is invoked using SELF.)  This is the same as ooRexx-3.2 and before.
+
+2) The caller is an instance of the same class that defined the target
+method (the method's scope).  This allows an instance of a class to invoke
+a private method of another instance of the same class.
+
+3) The caller is a class object that is compatible with the scope of the
+method.  This allows class objects to also access private methods of its
+own instances.  Useful for specialized class methods that create instances
+(such as the "fromXxxxxx" methods on DateTime).
+
+EXTERNAL is allowed on ::ATTRIBUTE directives.
+
+Negative numeric values are allowed on ::CONSTANT items.
+
+Builtin functions
+-----------------
+
+FILESPEC has new options : Location, Extension.
+
+LASTPOS has a new parameter : length.
+
+POS has a new parameter : length.
+
+QUALIFY is new builtin function.
+
+TIME has a new option : Offset.
+
+TRANSLATE has new parameters : pos, length.
+
+Class library
+-------------
+
+New classes :
+-------------
+
+Buffer, IdentityTable, Orderable, Package, Pointer, RexxContext, Routine,
+WeakReference.
+
+New methods on Object:
+----------------------
+
+send, sendwith, startWith.
+
+New methods on DateTime:
+------------------------
+
+offset, setTimeStamp (private), toTimeZone, utcDate, utcIsoDate.
+
+New methods on Stream:
+----------------------
+
+line_arrayIn (private).
+
+New methods on Method:
+---------------------
+
+package.
+
+New methods on MutableBuffer:
+-----------------------------
+
+caselessChangeStr, caselessCountStr, caselessLastPos, caselessMatch,
+caselessMatchChar, caselessPos, caselessWordPos, changeStr, countStr,
+delStr, delWord, lower, makeArray, match, matchChar, replaceAt, subWord,
+translate, upper, verify, word, wordIndex, wordLength, wordPos, words.
+
+New methods on OLEObject:
+-------------------------
+
+addEventMethod, connectEvents, disconnectEvents, isConnectable,
+isConnected, removeEventHandler, removeEventMethod.
+
+New methods on RexxQueue:
+------------------------
+
+empty, makeArray.
+
+New methods on Stem:
+--------------------
+
+toDirectory.
+
+New methods on String:
+---------------------
+
+replaceAt.
+
+Incubator
+---------
+
+A beta version of RexxGTK is available.  This is a portable GUI class for
+building ooRexx GUI programs.  It runs on any *nix system where GTK is
+available and on Windows with the proper GTK DLLs in place.
+
