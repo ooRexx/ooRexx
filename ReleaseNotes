@@ -104,6 +104,10 @@ Due to a bug in prior releases of ooRexx and Object Rexx, a negative
 return code from a Rexx program could be transformed to a positive return
 code to the operating system.  This bug is now fixed.
 
+Due to a bug in prior releases, methods created with ::METHOD ATTRIBUTE
+or ::ATTRIBUTE did not properly recognize the GUARDED status of methods.
+All attribute methods behaved like they were UNGUARDED.
+
 Some returns from the rxMath package were not consistent.  As an example,
 on Windows, NaN (Not a Number) was returned as the string "ERROR" while on
 Linux the string "nan" was returned.  This was fixed so that the string
@@ -130,9 +134,11 @@ method.  This allows class objects to also access private methods of its
 own instances.  Useful for specialized class methods that create instances
 (such as the "fromXxxxxx" methods on DateTime).
 
-EXTERNAL is allowed on ::ATTRIBUTE directives.
+EXTERNAL is allowed on ::ATTRIBUTE and ::METHOD directives.
+EXTERNAL is allowed on ::ROUTINE ::METHOD directives.
+LIBRARY allowed on ::REQUIRES to load external libraries
 
-Negative numeric values are allowed on ::CONSTANT items.
+A new ::CONSTANT directive.
 
 Builtin functions
 -----------------
@@ -168,10 +174,8 @@ New methods on DateTime:
 
 offset, setTimeStamp (private), toTimeZone, utcDate, utcIsoDate.
 
-New methods on Stream:
-----------------------
-
-line_arrayIn (private).
+DateTime also supports a timezone offset on class methods that create
+new DataTime instances.
 
 New methods on Method:
 ---------------------
@@ -195,7 +199,7 @@ isConnected, removeEventHandler, removeEventMethod.
 New methods on RexxQueue:
 ------------------------
 
-empty, makeArray.
+empty, makeArray, exists, open.
 
 New methods on Stem:
 --------------------
