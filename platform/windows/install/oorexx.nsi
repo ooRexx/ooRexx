@@ -577,7 +577,8 @@ Function .onInit
     ExecWait '$R1 _?=$R2'
     IfErrors no_remove_uninstaller
     IfFileExists "$INSTDIR\${KEYFILE}" no_remove_uninstaller
-      RMDir /r "$R2"
+      Delete "$R2\${UNINSTALLER}"
+      RMDir "$R2"
     no_remove_uninstaller:
     BringToFront
 
