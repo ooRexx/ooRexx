@@ -134,18 +134,24 @@ SET NODOTS=%MAJOR_NUM%%MINOR_NUM%%LVL_NUM%_%BLD_NUM%
 SET DOTVER=/DVERSION=%MAJOR_NUM%.%MINOR_NUM%.%LVL_NUM%.%BLD_NUM%
 SET NODOTVER=/DNODOTVER=%NODOTS%
 SET SRCDIR=/DSRCDIR=%SRC_DRV%%SRC_DIR%
+if %CPU% == X86 (
+  SET CPUNAME=x86
+) else (
+  SET CPUNAME=x64
+)
+SET CPUDEF=/DCPU=%CPUNAME%
 
 REM  If not making the debug version skip to packaging the release version
 IF %PACKAGE_DBG% == 0 GOTO PACKAGE_RELEASE
 
 SET BINDIR=/DBINDIR=%SRC_DRV%%SRC_DIR%\Win32Dbg
 cd platform\windows\install
-makensis %DOTVER% %NODOTVER% %SRCDIR% %BINDIR% oorexx.nsi
+makensis %DOTVER% %NODOTVER% %SRCDIR% %BINDIR% %CPUDEF% oorexx.nsi
 
 REM  Rename the deug package so it is not overwritten if the release package
 REM  is created.
-ren ooRexx%NODOTS%.exe ooRexx%NODOTS%-debug.exe
-move ooRexx%NODOTS%-debug.exe ..\..\..\
+ren ooRexx%NODOTS%-%CPUNAME%.exe ooRexx%NODOTS%-%CPUNAME%-debug.exe
+move ooRexx%NODOTS%-%CPUNAME%-debug.exe ..\..\..\
 cd ..\..\..\
 
 REM  If not making the release version skip to environment variables clean up.
@@ -154,8 +160,8 @@ IF %PACKAGE_REL% == 0 GOTO ENV_VARS_CLEANUP
 :PACKAGE_RELEASE
 SET BINDIR=/DBINDIR=%SRC_DRV%%SRC_DIR%\Win32Rel
 cd platform\windows\install
-makensis %DOTVER% %NODOTVER% %SRCDIR% %BINDIR% oorexx.nsi
-move ooRexx%NODOTS%.exe ..\..\..\
+makensis %DOTVER% %NODOTVER% %SRCDIR% %BINDIR% %CPUDEF% oorexx.nsi
+move ooRexx%NODOTS%-%CPUNAME%.exe ..\..\..\
 cd ..\..\..\
 
 :ENV_VARS_CLEANUP
@@ -171,6 +177,8 @@ SET DOTVER=
 SET NODOTVER=
 SET SRCDIR=
 SET BINDIR=
+SET CPUNAME=
+SET CPUDEF=
 SET MISSING_DOC=
 SET SVN_REV=
 SET USELOGFILE=

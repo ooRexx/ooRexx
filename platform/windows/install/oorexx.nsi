@@ -4,9 +4,9 @@
 ; Requires: ${NSISDIR}\Plugins\KillProcDll.dll - http://nsis.sourceforge.net/KillProcDLL_plug-in
 ; Requires: ${NSISDIR}\Plugins\services.dll    - http://nsis.sourceforge.net/File:Services.zip
 ; Run as:
-;  makensis /DVERSION=x.x /DNODOTVER=xx /DSRCDIR=xxx /DBINDIR=xxx oorexx.nsi
+;  makensis /DVERSION=x.x /DNODOTVER=xx /DSRCDIR=xxx /DBINDIR=xxx /DCPU=xxx oorexx.nsi
 ;  eg
-;  makensis /DVERSION=3.1.2 /DNODOTVER=312 /DSRCDIR=d:\oorexx\oorexx /DBINDIR=d:\oorexx\oorexx\win32rel oorexx.nsi
+;  makensis /DVERSION=4.0.0 /DNODOTVER=400 /DSRCDIR=d:\oorexx\oorexx /DBINDIR=d:\oorexx\oorexx\win32rel /DCPU=x64 oorexx.nsi
 ; Note:
 ;  oorexx.nsi MUST be in the current directory!
 
@@ -88,7 +88,7 @@ SectionEnd
 ;Configuration
 
   ;General
-  OutFile "${SHORTNAME}${NODOTVER}.exe"
+  OutFile "${SHORTNAME}${NODOTVER}-${CPU}.exe"
   ShowInstdetails show
   SetOverwrite on
   SetPluginUnload alwaysoff
@@ -557,6 +557,10 @@ Function .onInit
 ;  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "oorexx_fa.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "oorexx_ss.ini"
 ;  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "oorexx_mt.ini"
+
+  StrCmp ${CPU} "x64" 0 +2
+    strcpy $INSTDIR "$PROGRAMFILES64\${SHORTNAME}"
+
   ;
   ; Uninstall previous version if present
   ;
