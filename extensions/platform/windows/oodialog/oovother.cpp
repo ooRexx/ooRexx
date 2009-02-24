@@ -461,49 +461,78 @@ size_t RexxEntry WinTimer(const char *funcname, size_t argc, CONSTRXSTRING *argv
 
 HIMAGELIST CreateImageList(INT start, HWND h, CONSTRXSTRING *argv, size_t argc)
 {
-   HBITMAP hBmp = NULL;
-   HIMAGELIST iL;
-   INT cx,cy, nr;
-   BITMAP bmpInfo;
+    HBITMAP hBmp = NULL;
+    HIMAGELIST iL;
+    INT cx,cy, nr;
+    BITMAP bmpInfo;
+    HDC dc;
+    bool callerOwnsHandle = false;
 
-   if (atol(argv[start].strptr) > 0)
-       hBmp = (HBITMAP)GET_HANDLE(argv[start]);
-   else {
-       LPBITMAPINFO lpBit = LoadDIB(argv[start].strptr);
-       if (lpBit)
-       {
-           HDC dc;
+    // See if the user passed in the handle to an already loaded bitmap.
+    hBmp = (HBITMAP)GET_HANDLE(argv[start]);
 
-           dc = GetDC(h);
-           hBmp = CreateDIBitmap(dc,    // handle to device context
-                (BITMAPINFOHEADER*)lpBit,
-                CBM_INIT,
-                DIB_PBITS(lpBit),        // bits
-                DIB_PBI(lpBit),          // BITMAPINFO
-                DIB_RGB_COLORS);
-           ReleaseDC(h, dc);
-           LocalFree((void *)lpBit);
-       }
-   }
-   if (!hBmp) return NULL;
+    if ( hBmp != NULL )
+    {
+        // This tests if the bitmap has is already converted to a compatible
+        // bitmap (DDB.)  If GetObject() returns 0, it is still device
+        // independent (DIB) and needs to be converted.
+        if ( GetObject(hBmp, sizeof(BITMAP), &bmpInfo) == 0 )
+        {
+            dc = GetDC(h);
+            hBmp = CreateDIBitmap(dc, (BITMAPINFOHEADER*)hBmp, CBM_INIT, DIB_PBITS(hBmp),
+                                  DIB_PBI(hBmp), DIB_RGB_COLORS);
+            ReleaseDC(h, dc);
+        }
+        else
+        {
+            // The caller owns this handle and we should not release it.
+            callerOwnsHandle = true;
+        }
+    }
+    else
+    {
+        // Not a handle, assume it is a file name and try to load the bitmap
+        LPBITMAPINFO lpBit = LoadDIB(argv[start].strptr);
+        if ( lpBit )
+        {
+            // Okay, convert the DIB to a DDB.
+            dc = GetDC(h);
+            hBmp = CreateDIBitmap(dc, (BITMAPINFOHEADER*)lpBit, CBM_INIT, DIB_PBITS(lpBit),
+                                  DIB_PBI(lpBit), DIB_RGB_COLORS);
+            ReleaseDC(h, dc);
+            LocalFree((void *)lpBit);
+        }
+    }
 
-   cx = atoi(argv[start+1].strptr);
-   cy = atoi(argv[start+2].strptr);
+    if ( ! hBmp )
+    {
+        return NULL;
+    }
 
-   GetObject(hBmp, sizeof(BITMAP), &bmpInfo);
+    cx = atoi(argv[start+1].strptr);
+    cy = atoi(argv[start+2].strptr);
 
-   if (!cx) cx = bmpInfo.bmHeight;  /* height is correct! */
-   if (!cy) cy = bmpInfo.bmHeight;
-   nr = bmpInfo.bmWidth / cx;
+    GetObject(hBmp, sizeof(BITMAP), &bmpInfo);
 
-   iL = ImageList_Create( cx, cy, ILC_COLOR8, nr, 0);
+    // The height is correct in the structure, the width is the sum of the
+    // widths of all the bitmaps, so it is not necessarily correct.
+    if ( !cx ) cx = bmpInfo.bmHeight;
+    if ( !cy ) cy = bmpInfo.bmHeight;
+    nr = bmpInfo.bmWidth / cx;
 
-   if (ImageList_Add(iL, hBmp, NULL) == -1) {
-       ImageList_Destroy( iL);
-       return NULL;
-   }
-   DeleteObject(hBmp);
-   return iL;
+    iL = ImageList_Create(cx, cy, ILC_COLOR8, nr, 0);
+
+    if ( ImageList_Add(iL, hBmp, NULL) == -1 )
+    {
+        ImageList_Destroy(iL);
+        return NULL;
+    }
+
+    if ( ! callerOwnsHandle )
+    {
+        DeleteObject(hBmp);
+    }
+    return iL;
 }
 
 /**
