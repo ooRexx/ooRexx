@@ -3179,10 +3179,12 @@ void wrongObjInArrayException(RexxMethodContext *c, int argPos, size_t index, CS
     userDefinedMsgException(c, buffer);
 }
 
-void wrongObjInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index, CSTRING obj)
+void wrongObjInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual)
 {
     TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "Method argument %d is a directory and index %s is not a %s", argPos, index, obj);
+    _snprintf(buffer, sizeof(buffer),
+              "Index, %s, of method argument %d must be %s; found \"%s\"",
+              index, argPos, needed, c->ObjectToStringValue(actual));
     userDefinedMsgException(c, buffer);
 }
 
@@ -4257,7 +4259,7 @@ bool rxLogicalFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, C
     {
         if ( ! context->Logical(obj, &value) )
         {
-            wrongObjInDirectoryException(context, argPos, index, "logical");
+            wrongObjInDirectoryException(context, argPos, index, "a logical", obj);
             return false;
         }
         *logical = (BOOL)value;
@@ -4274,7 +4276,7 @@ bool rxNumberFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CS
     {
         if ( ! context->UnsignedInt32(obj, (uint32_t*)&value) )
         {
-            wrongObjInDirectoryException(context, argPos, index, "number");
+            wrongObjInDirectoryException(context, argPos, index, "a positive whole number", obj);
             return false;
         }
         *number = value;
