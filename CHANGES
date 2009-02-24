@@ -259,6 +259,8 @@ Windows
 
   * 2607013  ooDialog - the createFont() method is broken
 
+  * 2632125  ooDialog - setImages, etc. fails using bitmap handle
+
   Requests For Enhancement
   ------------------------
 
