@@ -100,6 +100,12 @@ intent is to deliver WSH as soon as possible in a follow-on minor release.
 Some possible differences in program behavior
 ---------------------------------------------
 
+Files loaded by ::requires are loaded by a global package manager, and
+a given file will only be loaded once in a process.  This means multiple
+programs referring to a ::requires file will be accessing a single set of
+created classes and routines rather than each ending up with a unique
+set.
+
 Due to a bug in prior releases of ooRexx and Object Rexx, a negative
 return code from a Rexx program could be transformed to a positive return
 code to the operating system.  This bug is now fixed.
