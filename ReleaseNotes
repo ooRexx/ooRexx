@@ -108,6 +108,10 @@ Due to a bug in prior releases, methods created with ::METHOD ATTRIBUTE
 or ::ATTRIBUTE did not properly recognize the GUARDED status of methods.
 All attribute methods behaved like they were UNGUARDED.
 
+The RxFuncAdd now checks that a registered function can be resolved at
+registration time and will return a failure if it cannot.  This is how
+many believed it worked originally.
+
 Some returns from the rxMath package were not consistent.  As an example,
 on Windows, NaN (Not a Number) was returned as the string "ERROR" while on
 Linux the string "nan" was returned.  This was fixed so that the string
