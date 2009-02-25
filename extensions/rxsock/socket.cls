@@ -39,13 +39,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-
-/* initialization */
-if rxfuncquery('SockDropFuncs') then do
-   call rxfuncadd 'SockLoadFuncs', 'rxsock', 'SockLoadFuncs'
-   call SockLoadFuncs 'bypasscopyright'
-   end
-
+::requires "rxsock" LIBRARY    -- need the rxsock library available to function
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
