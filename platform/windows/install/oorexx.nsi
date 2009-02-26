@@ -558,7 +558,7 @@ Function .onInit
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "oorexx_ss.ini"
 ;  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "oorexx_mt.ini"
 
-  StrCmp ${CPU} "x64" 0 +2
+  StrCmp ${CPU} "x86_64" 0 +2
     strcpy $INSTDIR "$PROGRAMFILES64\${SHORTNAME}"
 
   ;
