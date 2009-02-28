@@ -597,3 +597,47 @@ RexxObject *PackageClass::loadLibrary(RexxString *name)
     LibraryPackage *package = PackageManager::loadLibrary(name);
     return package == NULL ? TheFalseObject : TheTrueObject;
 }
+
+
+/**
+ * Return the package-defined digits setting
+ *
+ * @return The digits setting defined for this package.
+ */
+RexxObject *PackageClass::digits()
+{
+    return new_integer(source->getDigits());
+}
+
+
+/**
+ * Return the package-defined default fuzz setting.
+ *
+ * @return The package defined fuzz setting.
+ */
+RexxObject *PackageClass::fuzz()
+{
+    return new_integer(source->getFuzz());
+}
+
+
+/**
+ * Return the package-defined default form setting.
+ *
+ * @return The default form setting.
+ */
+RexxObject *PackageClass::form()
+{
+    return source->getForm() == Numerics::FORM_SCIENTIFIC ? OREF_SCIENTIFIC : OREF_ENGINEERING;
+}
+
+
+/**
+ * Return the package-defined default trace setting.
+ *
+ * @return The string-formatted trace setting.
+ */
+RexxObject *PackageClass::trace()
+{
+    return source->getTrace();
+}

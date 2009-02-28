@@ -46,30 +46,23 @@
 
 #include "RexxInstruction.hpp"
 
-#define trace_debug_on      DEBUG_ON   /* want debug                        */
-#define trace_debug_off     DEBUG_OFF  /* turn off debug                    */
-                                       /* don't touch the debug state       */
-#define trace_debug_ignore  DEBUG_IGNORE
-                                       /* toggle the debug setting          */
-#define trace_debug_toggle  DEBUG_TOGGLE
-#define trace_debug_mask    (DEBUG_ON | DEBUG_OFF | DEBUG_IGNORE | DEBUG_TOGGLE)
-#define trace_notrace       0x80       /* trace disabled for skipped pauses */
-
 class RexxInstructionTrace : public RexxInstruction {
- public:
-  inline void *operator new(size_t size, void *ptr) {return ptr;}
-  inline void  operator delete(void *) { }
-  inline void  operator delete(void *, void *) { }
+public:
+    inline void *operator new(size_t size, void *ptr) {return ptr;}
+    inline void  operator delete(void *) { }
+    inline void  operator delete(void *, void *) { }
 
-  RexxInstructionTrace(RexxObject *, size_t, size_t, wholenumber_t);
-  inline RexxInstructionTrace(RESTORETYPE restoreType) { ; };
-  void live(size_t);
-  void liveGeneral(int reason);
-  void flatten(RexxEnvelope*);
-  void execute(RexxActivation *, RexxExpressionStack *);
+    RexxInstructionTrace(RexxObject *, size_t, size_t, wholenumber_t);
+    inline RexxInstructionTrace(RESTORETYPE restoreType) { ; };
+    void live(size_t);
+    void liveGeneral(int reason);
+    void flatten(RexxEnvelope*);
+    void execute(RexxActivation *, RexxExpressionStack *);
 
-  RexxObject *expression;              /* trace value expression            */
-  wholenumber_t debugskip;             /* clauses to skip                   */
-  size_t      traceSetting;            // new trace setting
+protected:
+    RexxObject *expression;              /* trace value expression            */
+    wholenumber_t debugskip;             /* clauses to skip                   */
+    size_t      traceSetting;            // new trace setting
+    size_t      traceFlags;              // optimized trace flags when statically defined
 };
 #endif

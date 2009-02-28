@@ -679,6 +679,10 @@ CPPM(PackageClass::addClass),
 CPPM(PackageClass::addPublicClass),
 CPPM(PackageClass::getName),
 CPPM(PackageClass::loadLibrary),
+CPPM(PackageClass::digits),
+CPPM(PackageClass::form),
+CPPM(PackageClass::fuzz),
+CPPM(PackageClass::trace),
 
 CPPM(PackageClass::newRexx),
 

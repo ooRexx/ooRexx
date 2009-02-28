@@ -862,6 +862,33 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Symbol_or_string_constant_value</SymbolicName>
         <Text>String or symbol expected as ::CONSTANT value</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>917</Subcode>
+        <MessageNumber>713</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_digits_value</SymbolicName>
+        <Text>String or symbol expected as DIGITS value</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>918</Subcode>
+        <MessageNumber>714</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_fuzz_value</SymbolicName>
+        <Text>String or symbol expected as FUZZ value</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>19</Code>
+        <Subcode>919</Subcode>
+        <MessageNumber>715</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Symbol_or_string_trace_value</SymbolicName>
+        <Text>String or symbol expected as TRACE value</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>
@@ -1550,6 +1577,15 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_subkeyword_select</SymbolicName>
         <Text>SELECT must be followed by the keyword LABEL; found <q><Sub position="1" name="word"/></q></Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>25</Code>
+        <Subcode>924</Subcode>
+        <MessageNumber>712</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_subkeyword_options</SymbolicName>
+        <Text>Unknown keyword on ::OPTIONS directive; found <q><Sub position="1" name="word"/></q></Text>
       </SubMessage>
     </Subcodes>
   </Message>

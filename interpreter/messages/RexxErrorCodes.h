@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -53,7 +53,7 @@
 
 /* error subcodes and message numbers                                         */
 /*      message identifier ----------------------------------- message number */
-
+   
 #define Error_Program_unreadable                           3000
 #define Error_Program_unreadable_name                      3001
 #define Error_Program_unreadable_user_defined              3900
@@ -137,6 +137,9 @@
 #define Error_Symbol_or_string_attribute                   19914
 #define Error_Symbol_or_string_constant                    19915
 #define Error_Symbol_or_string_constant_value              19916
+#define Error_Symbol_or_string_digits_value                19917
+#define Error_Symbol_or_string_fuzz_value                  19918
+#define Error_Symbol_or_string_trace_value                 19919
 #define Error_Symbol_expected                              20000
 #define Error_Symbol_expected_user_defined                 20900
 #define Error_Symbol_expected_drop                         20901
@@ -211,6 +214,7 @@
 #define Error_Invalid_subkeyword_forward_class             25921
 #define Error_Invalid_subkeyword_message                   25922
 #define Error_Invalid_subkeyword_select                    25923
+#define Error_Invalid_subkeyword_options                   25924
 #define Error_Invalid_whole_number                         26000
 #define Error_Invalid_whole_number_power                   26008
 #define Error_Invalid_whole_number_repeat                  26002

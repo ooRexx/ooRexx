@@ -57,12 +57,13 @@
 /*********************************************************************/
 
 KeywordEntry RexxSource::directives[] = {              /* language directive table          */
-   KeywordEntry(CHAR_ATTRIBUTE,   DIRECTIVE_ATTRIBUTE),
-   KeywordEntry(CHAR_CLASS,       DIRECTIVE_CLASS),
-   KeywordEntry(CHAR_CONSTANT,    DIRECTIVE_CONSTANT),
-   KeywordEntry(CHAR_METHOD,      DIRECTIVE_METHOD),
-   KeywordEntry(CHAR_REQUIRES,    DIRECTIVE_REQUIRES),
-   KeywordEntry(CHAR_ROUTINE,     DIRECTIVE_ROUTINE),
+    KeywordEntry(CHAR_ATTRIBUTE,   DIRECTIVE_ATTRIBUTE),
+    KeywordEntry(CHAR_CLASS,       DIRECTIVE_CLASS),
+    KeywordEntry(CHAR_CONSTANT,    DIRECTIVE_CONSTANT),
+    KeywordEntry(CHAR_METHOD,      DIRECTIVE_METHOD),
+    KeywordEntry(CHAR_OPTIONS,     DIRECTIVE_OPTIONS),
+    KeywordEntry(CHAR_REQUIRES,    DIRECTIVE_REQUIRES),
+    KeywordEntry(CHAR_ROUTINE,     DIRECTIVE_ROUTINE),
 };
 
 /*********************************************************************/
@@ -371,23 +372,27 @@ KeywordEntry RexxSource::parseOptions[] = {            /* parse option table    
 /*********************************************************************/
 
 KeywordEntry RexxSource::subDirectives[] = {           /* language directive subkeywords    */
-   KeywordEntry(CHAR_ABSTRACT,    SUBDIRECTIVE_ABSTRACT),
-   KeywordEntry(CHAR_ATTRIBUTE,   SUBDIRECTIVE_ATTRIBUTE),
-   KeywordEntry(CHAR_CLASS,       SUBDIRECTIVE_CLASS),
-   KeywordEntry(CHAR_EXTERNAL,    SUBDIRECTIVE_EXTERNAL),
-   KeywordEntry(CHAR_GET,         SUBDIRECTIVE_GET),
-   KeywordEntry(CHAR_GUARDED,     SUBDIRECTIVE_GUARDED),
-   KeywordEntry(CHAR_INHERIT,     SUBDIRECTIVE_INHERIT),
-   KeywordEntry(CHAR_LIBRARY,     SUBDIRECTIVE_LIBRARY),
-   KeywordEntry(CHAR_METACLASS,   SUBDIRECTIVE_METACLASS),
-   KeywordEntry(CHAR_MIXINCLASS,  SUBDIRECTIVE_MIXINCLASS),
-   KeywordEntry(CHAR_PRIVATE,     SUBDIRECTIVE_PRIVATE),
-   KeywordEntry(CHAR_PROTECTED,   SUBDIRECTIVE_PROTECTED),
-   KeywordEntry(CHAR_PUBLIC,      SUBDIRECTIVE_PUBLIC),
-   KeywordEntry(CHAR_SET,         SUBDIRECTIVE_SET),
-   KeywordEntry(CHAR_SUBCLASS,    SUBDIRECTIVE_SUBCLASS),
-   KeywordEntry(CHAR_UNGUARDED,   SUBDIRECTIVE_UNGUARDED),
-   KeywordEntry(CHAR_UNPROTECTED, SUBDIRECTIVE_UNPROTECTED),
+    KeywordEntry(CHAR_ABSTRACT,    SUBDIRECTIVE_ABSTRACT),
+    KeywordEntry(CHAR_ATTRIBUTE,   SUBDIRECTIVE_ATTRIBUTE),
+    KeywordEntry(CHAR_CLASS,       SUBDIRECTIVE_CLASS),
+    KeywordEntry(CHAR_DIGITS,      SUBDIRECTIVE_DIGITS),
+    KeywordEntry(CHAR_EXTERNAL,    SUBDIRECTIVE_EXTERNAL),
+    KeywordEntry(CHAR_FORM,        SUBDIRECTIVE_FORM),
+    KeywordEntry(CHAR_FUZZ,        SUBDIRECTIVE_FUZZ),
+    KeywordEntry(CHAR_GET,         SUBDIRECTIVE_GET),
+    KeywordEntry(CHAR_GUARDED,     SUBDIRECTIVE_GUARDED),
+    KeywordEntry(CHAR_INHERIT,     SUBDIRECTIVE_INHERIT),
+    KeywordEntry(CHAR_LIBRARY,     SUBDIRECTIVE_LIBRARY),
+    KeywordEntry(CHAR_METACLASS,   SUBDIRECTIVE_METACLASS),
+    KeywordEntry(CHAR_MIXINCLASS,  SUBDIRECTIVE_MIXINCLASS),
+    KeywordEntry(CHAR_PRIVATE,     SUBDIRECTIVE_PRIVATE),
+    KeywordEntry(CHAR_PROTECTED,   SUBDIRECTIVE_PROTECTED),
+    KeywordEntry(CHAR_PUBLIC,      SUBDIRECTIVE_PUBLIC),
+    KeywordEntry(CHAR_SET,         SUBDIRECTIVE_SET),
+    KeywordEntry(CHAR_SUBCLASS,    SUBDIRECTIVE_SUBCLASS),
+    KeywordEntry(CHAR_TRACE,       SUBDIRECTIVE_TRACE),
+    KeywordEntry(CHAR_UNGUARDED,   SUBDIRECTIVE_UNGUARDED),
+    KeywordEntry(CHAR_UNPROTECTED, SUBDIRECTIVE_UNPROTECTED),
 };
 
 /**

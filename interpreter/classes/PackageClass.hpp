@@ -86,6 +86,10 @@ public:
     RexxObject    *addClass(RexxString *name, RexxClass *clazz);
     RexxObject    *addPublicClass(RexxString *name, RexxClass *clazz);
     RexxObject    *loadLibrary(RexxString *name);
+    RexxObject    *digits();
+    RexxObject    *fuzz();
+    RexxObject    *form();
+    RexxObject    *trace();
 
     PackageClass  *newRexx(RexxObject **init_args, size_t argCount);
 

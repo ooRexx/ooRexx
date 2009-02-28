@@ -252,6 +252,7 @@
 #define DIRECTIVE_ROUTINE   2404
 #define DIRECTIVE_ATTRIBUTE 2405
 #define DIRECTIVE_CONSTANT  2406
+#define DIRECTIVE_OPTIONS   2407
 
 /* directive sub-keywords */
 #define SUBDIRECTIVE_PUBLIC      2501
@@ -271,6 +272,10 @@
 #define SUBDIRECTIVE_GET         2515
 #define SUBDIRECTIVE_SET         2516
 #define SUBDIRECTIVE_LIBRARY     2517
+#define SUBDIRECTIVE_DIGITS      2518
+#define SUBDIRECTIVE_FORM        2519
+#define SUBDIRECTIVE_FUZZ        2520
+#define SUBDIRECTIVE_TRACE       2521
 
 
 /* condition keywords */

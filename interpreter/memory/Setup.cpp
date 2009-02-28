@@ -612,6 +612,10 @@ void RexxMemory::createImage()
   defineKernelMethod(CHAR_ADDPUBLICCLASS      ,ThePackageBehaviour, CPPM(PackageClass::addPublicClass), 2);
   defineKernelMethod(CHAR_NAME                ,ThePackageBehaviour, CPPM(PackageClass::getName), 0);
   defineKernelMethod("LOADLIBRARY"            ,ThePackageBehaviour, CPPM(PackageClass::loadLibrary), 1);
+  defineKernelMethod("DIGITS"                 ,ThePackageBehaviour, CPPM(PackageClass::digits), 0);
+  defineKernelMethod("FORM"                   ,ThePackageBehaviour, CPPM(PackageClass::form), 0);
+  defineKernelMethod("FUZZ"                   ,ThePackageBehaviour, CPPM(PackageClass::fuzz), 0);
+  defineKernelMethod("TRACE"                  ,ThePackageBehaviour, CPPM(PackageClass::trace), 0);
                                        /* set the scope of the methods to   */
                                        /* this classes oref                 */
   ThePackageBehaviour->setMethodDictionaryScope(ThePackageClass);

@@ -614,6 +614,10 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Unsupported_copy_method    "COPY method is not supported for object &1"
    Error_Execution_context_not_active    "Target RexxContext is no longer active"
    Error_Execution_library_version    "Library ""&1"" is not compatible with current interpreter version."
+   Error_Invalid_subkeyword_options    "Unknown keyword on ::OPTIONS directive; found ""&1"""
+   Error_Symbol_or_string_digits_value    "String or symbol expected as DIGITS value"
+   Error_Symbol_or_string_fuzz_value    "String or symbol expected as FUZZ value"
+   Error_Symbol_or_string_trace_value    "String or symbol expected as TRACE value"
    
 END
 

@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -614,6 +614,10 @@
 #define Error_Unsupported_copy_method_msg                            709
 #define Error_Execution_context_not_active_msg                       710
 #define Error_Execution_library_version_msg                          711
+#define Error_Invalid_subkeyword_options_msg                         712
+#define Error_Symbol_or_string_digits_value_msg                      713
+#define Error_Symbol_or_string_fuzz_value_msg                        714
+#define Error_Symbol_or_string_trace_value_msg                       715
 
 
 #endif

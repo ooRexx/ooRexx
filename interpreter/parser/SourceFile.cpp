@@ -97,7 +97,6 @@ typedef struct _LINE_DESCRIPTOR {
 #define line_delimiters "\r\n"         /* stream file line end characters   */
 #define ctrl_z 0x1a                    // the end of file marker
 
-
 /**
  * Create a source object with source provided from an array.
  *
@@ -1687,6 +1686,13 @@ RexxCode *RexxSource::translate(
 /* Function:  Translate a source object into a method object                  */
 /******************************************************************************/
 {
+    // set up the package global defaults
+    digits = Numerics::DEFAULT_DIGITS;
+    form = Numerics::DEFAULT_FORM;
+    fuzz = Numerics::DEFAULT_FUZZ;
+    traceSetting = DEFAULT_TRACE_SETTING;
+    traceFlags = RexxActivation::default_trace_flags;
+
     /* go translate the lead block       */
     RexxCode *newMethod = this->translateBlock(_labels);
     // we save this in case we need to explicitly run this at install time
@@ -2312,6 +2318,129 @@ void RexxSource::methodDirective()
     _method->setAttributes(Private == PRIVATE_SCOPE, Protected == PROTECTED_METHOD, guard != UNGUARDED_METHOD);
     // add to the compilation
     addMethod(internalname, _method, Class);
+}
+
+
+
+/**
+ * Process a ::OPTIONS directive in a source file.
+ */
+void RexxSource::optionsDirective()
+{
+    // all options are of a keyword/value pattern
+    for (;;)
+    {
+        RexxToken *token = nextReal(); /* get the next token                */
+                                       /* reached the end?                  */
+        if (token->isEndOfClause())
+        {
+            break;                       /* get out of here                   */
+        }
+                                         /* not a symbol token?               */
+        else if (!token->isSymbol())
+        {
+            /* report an error                   */
+            syntaxError(Error_Invalid_subkeyword_options, token);
+        }
+        else
+        {                         /* have some sort of option keyword  */
+                                  /* process each sub keyword          */
+            switch (this->subDirective(token))
+            {
+                // ::OPTIONS DIGITS nnnn
+                case SUBDIRECTIVE_DIGITS:
+                {
+                    token = nextReal();      /* get the next token                */
+                                             /* not a string?                     */
+                    if (!token->isSymbolOrLiteral())
+                    {
+                        /* report an error                   */
+                        syntaxError(Error_Symbol_or_string_digits_value, token);
+                    }
+                    RexxString *value = token->value;          /* get the string value              */
+
+                    if (!value->requestUnsignedNumber(digits, number_digits()) || digits < 1)
+                    {
+                        /* report an exception               */
+                        syntaxError(Error_Invalid_whole_number_digits, value);
+                    }
+                    break;
+                }
+                // ::OPTIONS FORM ENGINEERING/SCIENTIFIC
+                case SUBDIRECTIVE_FORM:
+                    token = nextReal();      /* get the next token                */
+                                             /* not a string?                     */
+                    if (!token->isSymbol())
+                    {
+                        /* report an error                   */
+                        syntaxError(Error_Invalid_subkeyword_form, token);
+                    }
+                    /* resolve the subkeyword            */
+                    /* and process                       */
+                    switch (this->subKeyword(token))
+                    {
+
+                        case SUBKEY_SCIENTIFIC:        /* NUMERIC FORM SCIENTIFIC           */
+                            form = Numerics::FORM_SCIENTIFIC;
+                            break;
+
+                        case SUBKEY_ENGINEERING:     /* NUMERIC FORM ENGINEERING          */
+                            form = Numerics::FORM_ENGINEERING;
+                            break;
+
+                        default:                     /* invalid subkeyword                */
+                            /* raise an error                    */
+                            syntaxError(Error_Invalid_subkeyword_form, token);
+                            break;
+
+                    }
+                    break;
+                // ::OPTIONS FUZZ nnnn
+                case SUBDIRECTIVE_FUZZ:
+                {
+                    token = nextReal();      /* get the next token                */
+                                             /* not a string?                     */
+                    if (!token->isSymbolOrLiteral())
+                    {
+                        /* report an error                   */
+                        syntaxError(Error_Symbol_or_string_fuzz_value, token);
+                    }
+                    RexxString *value = token->value;          /* get the string value              */
+
+                    if (!value->requestUnsignedNumber(fuzz, number_digits()) || fuzz < 1)
+                    {
+                        /* report an exception               */
+                        syntaxError(Error_Invalid_whole_number_fuzz, value);
+                    }
+                    break;
+                }
+                // ::OPTIONS TRACE setting
+                case SUBDIRECTIVE_TRACE:
+                {
+                    token = nextReal();      /* get the next token                */
+                                             /* not a string?                     */
+                    if (!token->isSymbolOrLiteral())
+                    {
+                        /* report an error                   */
+                        syntaxError(Error_Symbol_or_string_trace_value, token);
+                    }
+                    RexxString *value = token->value;          /* get the string value              */
+                    char badOption = 0;
+                                                 /* process the setting               */
+                    if (!parseTraceSetting(value, traceSetting, traceFlags, badOption))
+                    {
+                        syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
+                    }
+                    break;
+                }
+
+                default:                   /* invalid keyword                   */
+                    /* this is an error                  */
+                    syntaxError(Error_Invalid_subkeyword_options, token);
+                    break;
+            }
+        }
+    }
 }
 
 /**
@@ -3148,6 +3277,10 @@ void RexxSource::directive()
 
         case DIRECTIVE_CONSTANT:           /* ::CONSTANT directive              */
             constantDirective();
+            break;
+
+        case DIRECTIVE_OPTIONS:            /* ::OPTIONS directive               */
+            optionsDirective();
             break;
 
         default:                           /* unknown directive                 */
@@ -5405,33 +5538,33 @@ RexxInstruction *RexxSource::sourceNewObject(
   return (RexxInstruction *)newObject; /* return the new object             */
 }
 
-void RexxSource::parseTraceSetting(
-    RexxString *value,                 /* string with trace setting         */
-    size_t     *setting,               /* new trace setting                 */
-    size_t     *debug )                /* new debug mode setting            */
-/******************************************************************************/
-/* Function:  Process a trace setting                                         */
-/******************************************************************************/
+/**
+ * Parse a trace setting value into a decoded setting
+ * and the RexxActivation debug flag set to allow
+ * new trace settings to be processed more quickly.
+ *
+ * @param value      The string source of the trace setting.
+ * @param newSetting The returned setting in binary form.
+ * @param debugFlags The debug flag representation of the trace setting.
+ */
+bool RexxSource::parseTraceSetting(RexxString *value, size_t &newSetting, size_t &debugFlags, char &badOption)
 {
-    size_t   length;                     /* length of value string            */
-    size_t   _position;                  /* position within the string        */
+    size_t setting = TRACE_IGNORE;       /* don't change trace setting yet    */
+    size_t debug = DEBUG_IGNORE;         /* and the default debug change      */
 
-    *setting = TRACE_IGNORE;             /* don't change trace setting yet    */
-    *debug = DEBUG_IGNORE;               /* and the default debug change      */
-
-    length = value->getLength();              /* get the string length             */
+    size_t length = value->getLength();  /* get the string length             */
     /* null string?                      */
     if (length == 0)
     {
-        *setting = TRACE_NORMAL;           /* use default trace setting         */
-        *debug = DEBUG_OFF;                /* turn off debug mode               */
+        setting = TRACE_NORMAL;           /* use default trace setting         */
+        debug = DEBUG_OFF;                /* turn off debug mode               */
     }
     else
     {
         /* start at the beginning            */
         /* while more length to process      */
         /* step one each character           */
-        for (_position = 0; _position < length; _position++)
+        for (size_t _position = 0; _position < length; _position++)
         {
 
             /* process the next character        */
@@ -5440,76 +5573,105 @@ void RexxSource::parseTraceSetting(
 
                 case '?':                      /* debug toggle character            */
                     /* already toggling?                 */
-                    if (*debug == (size_t)DEBUG_TOGGLE)
+                    if (debug == DEBUG_TOGGLE)
                     {
-                        *debug = DEBUG_IGNORE;     /* this is back to no change at all  */
+                        debug = DEBUG_IGNORE;     /* this is back to no change at all  */
                     }
                     else
                     {
-                        *debug = DEBUG_TOGGLE;     /* need to toggle the debug mode     */
+                        debug = DEBUG_TOGGLE;     /* need to toggle the debug mode     */
                     }
                     continue;                    /* go loop again                     */
 
                 case 'a':                      /* TRACE ALL                         */
                 case 'A':
-                    *setting = TRACE_ALL;
+                    setting = TRACE_ALL;
                     break;
 
                 case 'c':                      /* TRACE COMMANDS                    */
                 case 'C':
-                    *setting = TRACE_COMMANDS;
+                    setting = TRACE_COMMANDS;
                     break;
 
                 case 'l':                      /* TRACE LABELS                      */
                 case 'L':
-                    *setting = TRACE_LABELS;
+                    setting = TRACE_LABELS;
                     break;
 
                 case 'e':                      /* TRACE ERRORS                      */
                 case 'E':
-                    *setting = TRACE_ERRORS;
+                    setting = TRACE_ERRORS;
                     break;
 
                 case 'f':                      /* TRACE FAILURES                    */
                 case 'F':
-                    *setting = TRACE_FAILURES;
+                    setting = TRACE_FAILURES;
                     break;
 
                 case 'n':                      /* TRACE NORMAL                      */
                 case 'N':
-                    *setting = TRACE_NORMAL;
+                    setting = TRACE_NORMAL;
                     break;
 
                 case 'o':                      /* TRACE OFF                         */
                 case 'O':
-                    *setting = TRACE_OFF;
+                    setting = TRACE_OFF;
                     break;
 
                 case 'r':                      /* TRACE RESULTS                     */
                 case 'R':
-                    *setting = TRACE_RESULTS;
+                    setting = TRACE_RESULTS;
                     break;
 
                 case 'i':                      /* TRACE INTERMEDIATES               */
                 case 'I':
-                    *setting = TRACE_INTERMEDIATES;
+                    setting = TRACE_INTERMEDIATES;
                     break;
 
                 default:                       /* unknown trace setting             */
-                    /* call report_error1 instead of report_exception1 to  */
-                    /* include line number and source information          */
-                    if (this->clause)           /* call different error routines      */
-                    {
-                        syntaxError(Error_Invalid_trace_trace, value->extract(_position, 1));
-                    }
-                    else
-                    {
-                        reportException(Error_Invalid_trace_trace, value->extract(_position, 1));
-                    }
+                    // each context handles it's own error reporting, so give back the
+                    // information needed for the message.
+                    badOption = value->getChar(_position);
+                    return false;
                     break;
             }
             break;                           /* non-prefix char found             */
         }
+    }
+    // return the merged setting
+    newSetting = setting | debug;
+    // create the activation-specific flags
+    debugFlags = RexxActivation::processTraceSetting(newSetting);
+    return true;
+}
+
+
+/**
+ * Format an encoded trace setting back into human readable form.
+ *
+ * @param setting The source setting.
+ *
+ * @return The string representation of the trace setting.
+ */
+RexxString * RexxSource::formatTraceSetting(size_t source)
+{
+    char         setting[3];             /* returned trace setting            */
+    setting[0] = '\0';                   /* start with a null string          */
+                                         /* debug mode?                       */
+    if (source & DEBUG_ON)
+    {
+        setting[0] = '?';                  /* add the question mark             */
+                                           /* add current trace option          */
+        setting[1] = (char)source&TRACE_SETTING_MASK;
+        /* create a string form              */
+        return new_string(setting, 2);
+    }
+    else                                 /* no debug prefix                   */
+    {
+        /* add current trace option          */
+        setting[0] = (char)source&TRACE_SETTING_MASK;
+        /* create a string form              */
+        return new_string(setting, 1);
     }
 }
 

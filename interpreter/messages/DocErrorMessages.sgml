@@ -640,6 +640,24 @@ special character (such as a parenthesis).
 <para>String or symbol expected as ::CONSTANT value</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>917</term>
+<listitem>
+<para>String or symbol expected as DIGITS value</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>918</term>
+<listitem>
+<para>String or symbol expected as FUZZ value</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>919</term>
+<listitem>
+<para>String or symbol expected as TRACE value</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR20">
@@ -1125,6 +1143,12 @@ special character (such as a parenthesis).
 <term>923</term>
 <listitem>
 <para>SELECT must be followed by the keyword LABEL; found "<emphasis role="italic">word</emphasis>"</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>924</term>
+<listitem>
+<para>Unknown keyword on ::OPTIONS directive; found "<emphasis role="italic">word</emphasis>"</para>
 </listitem>
 </varlistentry>
 </variablelist>

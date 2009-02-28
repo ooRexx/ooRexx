@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -140,6 +140,9 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Symbol_or_string_attribute)
       MINOR(Error_Symbol_or_string_constant)
       MINOR(Error_Symbol_or_string_constant_value)
+      MINOR(Error_Symbol_or_string_digits_value)
+      MINOR(Error_Symbol_or_string_fuzz_value)
+      MINOR(Error_Symbol_or_string_trace_value)
   MAJOR(Error_Symbol_expected)
       MINOR(Error_Symbol_expected_user_defined)
       MINOR(Error_Symbol_expected_drop)
@@ -214,6 +217,7 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Invalid_subkeyword_forward_class)
       MINOR(Error_Invalid_subkeyword_message)
       MINOR(Error_Invalid_subkeyword_select)
+      MINOR(Error_Invalid_subkeyword_options)
   MAJOR(Error_Invalid_whole_number)
       MINOR(Error_Invalid_whole_number_power)
       MINOR(Error_Invalid_whole_number_repeat)
