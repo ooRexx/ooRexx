@@ -459,82 +459,6 @@ size_t RexxEntry WinTimer(const char *funcname, size_t argc, CONSTRXSTRING *argv
 }
 
 
-HIMAGELIST CreateImageList(INT start, HWND h, CONSTRXSTRING *argv, size_t argc)
-{
-    HBITMAP hBmp = NULL;
-    HIMAGELIST iL;
-    INT cx,cy, nr;
-    BITMAP bmpInfo;
-    HDC dc;
-    bool callerOwnsHandle = false;
-
-    // See if the user passed in the handle to an already loaded bitmap.
-    hBmp = (HBITMAP)GET_HANDLE(argv[start]);
-
-    if ( hBmp != NULL )
-    {
-        // This tests if the bitmap has is already converted to a compatible
-        // bitmap (DDB.)  If GetObject() returns 0, it is still device
-        // independent (DIB) and needs to be converted.
-        if ( GetObject(hBmp, sizeof(BITMAP), &bmpInfo) == 0 )
-        {
-            dc = GetDC(h);
-            hBmp = CreateDIBitmap(dc, (BITMAPINFOHEADER*)hBmp, CBM_INIT, DIB_PBITS(hBmp),
-                                  DIB_PBI(hBmp), DIB_RGB_COLORS);
-            ReleaseDC(h, dc);
-        }
-        else
-        {
-            // The caller owns this handle and we should not release it.
-            callerOwnsHandle = true;
-        }
-    }
-    else
-    {
-        // Not a handle, assume it is a file name and try to load the bitmap
-        LPBITMAPINFO lpBit = LoadDIB(argv[start].strptr);
-        if ( lpBit )
-        {
-            // Okay, convert the DIB to a DDB.
-            dc = GetDC(h);
-            hBmp = CreateDIBitmap(dc, (BITMAPINFOHEADER*)lpBit, CBM_INIT, DIB_PBITS(lpBit),
-                                  DIB_PBI(lpBit), DIB_RGB_COLORS);
-            ReleaseDC(h, dc);
-            LocalFree((void *)lpBit);
-        }
-    }
-
-    if ( ! hBmp )
-    {
-        return NULL;
-    }
-
-    cx = atoi(argv[start+1].strptr);
-    cy = atoi(argv[start+2].strptr);
-
-    GetObject(hBmp, sizeof(BITMAP), &bmpInfo);
-
-    // The height is correct in the structure, the width is the sum of the
-    // widths of all the bitmaps, so it is not necessarily correct.
-    if ( !cx ) cx = bmpInfo.bmHeight;
-    if ( !cy ) cy = bmpInfo.bmHeight;
-    nr = bmpInfo.bmWidth / cx;
-
-    iL = ImageList_Create(cx, cy, ILC_COLOR8, nr, 0);
-
-    if ( ImageList_Add(iL, hBmp, NULL) == -1 )
-    {
-        ImageList_Destroy(iL);
-        return NULL;
-    }
-
-    if ( ! callerOwnsHandle )
-    {
-        DeleteObject(hBmp);
-    }
-    return iL;
-}
-
 /**
  * This is the window procedure used to subclass the edit control for both the
  * ListControl and TreeControl objects.  It would be nice to convert this to use
@@ -899,28 +823,6 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
 
        HTREEITEM hItem = (HTREEITEM)GET_HANDLE(argv[2]);
        RETC(!TreeView_SortChildren(h, (HTREEITEM)hItem, IsYes(argv[3].strptr)))
-   }
-   else
-   if (!strcmp(argv[0].strptr, "SETIMG"))
-   {
-       HIMAGELIST iL;
-
-       CHECKARG(5);
-       iL = CreateImageList(2, h, argv, argc);
-
-       if (iL) RETHANDLE(TreeView_SetImageList(h, iL, TVSIL_NORMAL))
-       else RETC(0)
-   }
-   else
-   if (!strcmp(argv[0].strptr, "UNSETIMG"))
-   {
-       HIMAGELIST iL;
-
-       iL = TreeView_GetImageList(h, TVSIL_NORMAL);
-       if (!iL) RETC(1)
-       TreeView_SetImageList(h, 0, TVSIL_NORMAL);
-
-       RETC(!ImageList_Destroy( iL))
    }
    else
    if (!strcmp(argv[0].strptr, "SUBCL_EDIT"))
@@ -1863,37 +1765,6 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
            RETVAL(ListView_GetNextItem(h, startItem, flag))
        }
        else
-       if (!strcmp(argv[1].strptr, "SETIMG"))
-       {
-           HIMAGELIST iL;
-           WORD ilt;
-
-           CHECKARG(7);
-           iL = CreateImageList(3, h, argv, argc);
-
-           if (!strcmp(argv[6].strptr,"SMALL")) ilt = LVSIL_SMALL;
-           else ilt = LVSIL_NORMAL;
-
-           if (iL) RETHANDLE(ListView_SetImageList(h, iL, ilt))
-           else RETC(0)
-       }
-       else
-       if (!strcmp(argv[1].strptr, "UNSETIMG"))
-       {
-           HIMAGELIST iL;
-           WORD ilt;
-
-           CHECKARG(4);
-           if (!strcmp(argv[3].strptr,"SMALL")) ilt = LVSIL_SMALL;
-           else ilt = LVSIL_NORMAL;
-
-           iL = ListView_GetImageList(h, ilt);
-           if (!iL) RETC(1)
-           ListView_SetImageList(h, 0, ilt);
-
-           RETC(!ImageList_Destroy( iL))
-       }
-       else
        if (!strcmp(argv[1].strptr, "FIND"))
        {
            LONG startItem;
@@ -2480,25 +2351,6 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
        else if (!strcmp(argv[1].strptr, "ROWCNT"))
        {
            RETVAL(TabCtrl_GetRowCount(h))
-       }
-       else if (!strcmp(argv[1].strptr, "SETIMG"))
-       {
-           HIMAGELIST iL;
-
-           CHECKARG(6);
-           iL = CreateImageList(3, h, argv, argc);
-           if (iL) RETHANDLE(TabCtrl_SetImageList(h, iL))
-           else RETC(0)
-       }
-       else if (!strcmp(argv[1].strptr, "UNSETIMG"))
-       {
-           HIMAGELIST iL;
-
-           iL = TabCtrl_GetImageList(h);
-           if (!iL) RETC(1)
-           TabCtrl_SetImageList(h, NULL);
-
-           RETC(!ImageList_Destroy( iL))
        }
        else if (!strcmp(argv[1].strptr, "PADDING"))
        {
@@ -4923,42 +4775,227 @@ static inline CSTRING lvGetAttributeName(uint8_t type)
     }
 }
 
+/**
+ * Creates a Windows ImageList and the corresponding ooDialog .ImageList object
+ * from a single bitmap.
+ *
+ * The Windows ImageList supports adding any number of images from a single
+ * bitmap.  The individual images are assumed to be side-by-side in the bitmap.
+ * The number of images is determined by the width of a single image.
+ *
+ * At this time, this function is used to allow the ooDialog programmer to
+ * assign an image list to a dialog control by just passing in a bitmap, rather
+ * than first creating an .ImageList object.  This is much less flexible, but
+ * allows the programmer to write fewer lines of code.  In addition, it mimics
+ * the behavior of pre-4.0 code allowing that code to be removed.
+ *
+ * @param c       The method context we are operating in.
+ * @param himl    [in / out] The created handle of the ImageList is returned.
+ * @param ilSrc   The bitmap.
+ * @param width   [optional]  The width of a single image.  When omitted, the
+ *                height of the actual bitmap is used for the width.
+ * @param height  [optional]  The height of a single image.  If omitted the
+ *                height of the actual bitmap is used.
+ * @param hwnd    The window handle of the control.  Used to create a device
+ *                context if needed.
+ *
+ * @return An instantiated .ImageList object on success, or NULLOBJECT on
+ *         failure.
+ *
+ * @note These objects are accepted for the image list source (ilSrc): .Image
+ *       object, a bitmap file name, a bitmap handle.  A bitmap handle can be
+ *       either a pointer string, or a .Pointer object.  The bitmap handle is
+ *       needed to provide backward compatibility, but its use is discouraged.
+ *
+ * @note This function needs to support the original ooDialog design where
+ *       bitmaps were loaded as DIBs.  If the image list source is a handle,
+ *       GetObject() is used to test if the bitmap is a compatible bitmap (DDB.)
+ *       If GetObject() returns 0, it is still a device independent (DIB) and
+ *       needs to be converted to a device dependent bitmap.
+ */
+RexxObjectPtr rxILFromBMP(RexxMethodContext *c, HIMAGELIST *himl, RexxObjectPtr ilSrc,
+                          int width, int height, HWND hwnd)
+{
+    HBITMAP hDDB = NULL;
+    RexxObjectPtr imageList = NULLOBJECT;
+    bool canRelease = false;
+    BITMAP bmpInfo;
+
+    if ( c->IsOfType(ilSrc, "Image") )
+    {
+        POODIMAGE oi = rxGetImageBitmap(c, ilSrc, 1);
+        if ( oi == NULLOBJECT )
+        {
+            goto done_out;
+        }
+        hDDB = (HBITMAP)oi->hImage;
+    }
+    else if ( c->IsString(ilSrc) || c->IsPointer(ilSrc) )
+    {
+        CSTRING bitmap = c->ObjectToStringValue(ilSrc);
+
+        // See if the user passed in the handle to an already loaded bitmap.
+        hDDB = (HBITMAP)GET_HANDLE(bitmap);
+        if ( hDDB != NULL )
+        {
+            //
+            if ( GetObject(hDDB, sizeof(BITMAP), &bmpInfo) == 0 )
+            {
+                HDC dc = GetDC(hwnd);
+                hDDB = CreateDIBitmap(dc, (BITMAPINFOHEADER*)hDDB, CBM_INIT, DIB_PBITS(hDDB),
+                                      DIB_PBI(hDDB), DIB_RGB_COLORS);
+                if ( hDDB == NULL )
+                {
+                    oodSetSysErrCode(c);
+                    ReleaseDC(hwnd, dc);
+                    goto done_out;
+                }
+                ReleaseDC(hwnd, dc);
+                canRelease = true;
+            }
+        }
+        else
+        {
+            hDDB = (HBITMAP)LoadImage(NULL, bitmap, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+            if ( hDDB == NULL )
+            {
+                oodSetSysErrCode(c);
+                goto done_out;
+            }
+            canRelease = true;
+        }
+    }
+    else
+    {
+        wrongArgValueException(c, 1, "ImageList, Image, bitmap file name, bitmap handle", ilSrc);
+        goto done_out;
+    }
+
+    if ( GetObject(hDDB, sizeof(BITMAP), &bmpInfo) == sizeof(BITMAP) )
+    {
+        if ( width == 0 )
+        {
+            width = bmpInfo.bmHeight;
+        }
+        if ( height == 0 )
+        {
+            height = bmpInfo.bmHeight;
+        }
+        int count = bmpInfo.bmWidth / width;
+
+        HIMAGELIST il = ImageList_Create(width, height, ILC_COLOR8, count, 0);
+        if ( il != NULL )
+        {
+            if ( ImageList_Add(il, hDDB, NULL) == -1 )
+            {
+                ImageList_Destroy(il);
+                goto done_out;
+            }
+
+            imageList = rxNewImageList(c, il);
+            *himl = il;
+        }
+    }
+
+done_out:
+    if ( hDDB && canRelease )
+    {
+        DeleteObject(hDDB);
+    }
+    return imageList;
+}
+
+
 /** ListControl::setImageList()
  *
  *  Sets or removes one of a list-view's image lists.
  *
- *  @param imageList  An .ImageList object that references the image list to be
- *                    set, or .nil. If .nil, an existing image list, if any is
- *                    removed.
+ *  @param ilSrc  The image list source. Either an .ImageList object that
+ *                references the image list to be set, or a single bitmap from
+ *                which the image list is constructed, or .nil.  If ilSRC is
+ *                .nil, an existing image list, if any is removed.
  *
- *  @param type       One of the list-view image list types and specifies which
- *                    image list we are concerned with, normal, small or state.
+ *  @param width  [optional]  This arg serves two purposes.  If ilSrc is .nil or
+ *                an .ImageList object, this arg indentifies which of the
+ *                list-views image lists is being set, normal, small, or state.
+ *                The default is LVSI_NORMAL.
  *
- *  @return           Returns the exsiting .ImageList object if there is one, or
- *                    .nil if there is not an existing object.
+ *                If ilSrc is a bitmap, then this arg is the width of a single
+ *                image.  The default is the height of the actual bitmap.
+ *
+ *  @param height [optional]  This arg is only used if ilSrc is a bitmap, in which case it
+ *                is the height of the bitmap.  The default is the height of the
+ *                actual bitmap
+ *
+ *  @return       Returns the exsiting .ImageList object if there is one, or
+ *                .nil if there is not an existing object.
+ *
+ *  @note  When the ilSrc is a single bitmap, an image list is created from the
+ *         bitmap.  This method is not as flexible as if the programmer created
+ *         the image list herself.  The bitmap must be a number of images, all
+ *         the same size, side-by-side in the bitmap.  The width of a single
+ *         image determines the number of images.  The image list is created
+ *         using the ILC_COLOR8 flag, only.  No mask can be used.  No room is
+ *         reserved for adding more images to the image list, etc..
+ *
+ *         The image list can only be assigned to the small or normal image
+ *         list.  There is no way to use the image list for the state image
+ *         list.  Whether the image list is assigned as the small or normal
+ *         image list is determined by a guess, based on the size of the images.
  *
  */
-RexxMethod3(RexxObjectPtr, lv_setImageList, RexxObjectPtr, imageList, OPTIONAL_uint8_t, type, OSELF, self)
+RexxMethod4(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
+            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
+    oodSetSysErrCode(context, 0);
 
     HIMAGELIST himl = NULL;
+    RexxObjectPtr imageList = NULL;
+    int type = LVSIL_NORMAL;
 
-    if ( imageList != context->Nil() )
+    if ( ilSrc == context->Nil() )
     {
-        // imageList is not .nil, so it has to be a .ImageList, or error.
+        imageList = ilSrc;
+        if ( argumentExists(2) )
+        {
+            type = width;
+        }
+    }
+    else if ( context->IsOfType(ilSrc, "ImageList") )
+    {
+        imageList = ilSrc;
         himl = rxGetImageList(context, imageList, 1);
         if ( himl == NULL )
         {
             goto err_out;
         }
+
+        if ( argumentExists(2) )
+        {
+            type = width;
+        }
+    }
+    else
+    {
+        imageList = rxILFromBMP(context, &himl, ilSrc, width, height, hwnd);
+        if ( imageList == NULLOBJECT )
+        {
+            goto err_out;
+        }
+
+        // Get the actual width and height from the image list.
+        ImageList_GetIconSize(himl, &width, &height);
+
+        // Guess if this is for the small icons.  If the actuall icon size is
+        // too much bigger than the system size for small icons, the icon will
+        // be clipped in the view, or will not be used at all.  Assume the
+        // programmer does not intend to do this.  Arbitrarily say that 'too
+        // much' is 5 pixels. Note we don't do state images here.
+        type = (width <= (GetSystemMetrics(SM_CXSMICON) + 5)) ? LVSIL_SMALL : LVSIL_NORMAL;
     }
 
-    if ( argumentOmitted(2) )
-    {
-        type = LVSIL_NORMAL;
-    }
-    else if ( type > LVSIL_STATE )
+    if ( type > LVSIL_STATE )
     {
         wrongRangeException(context, 2, LVSIL_NORMAL, LVSIL_STATE, type);
         goto err_out;
@@ -5128,39 +5165,78 @@ CSTRING tvGetAttributeName(uint8_t type)
  *
  *  Sets or removes one of a tree-view's image lists.
  *
- *  @param imageList  An .ImageList object that references the image list to be
- *                    set, or .nil. If .nil, an existing image list, if any, is
- *                    removed.
+ *  @param ilSrc  The image list source. Either an .ImageList object that
+ *                references the image list to be set, or a single bitmap from
+ *                which the image list is constructed, or .nil.  If ilSRC is
+ *                .nil, an existing image list, if any is removed.
  *
- *  @param type       [optional] One of the tree-view image list types and
- *                    specifies which image list we are concerned with, normal,
- *                    or state. The default is normal.
+ *  @param width  [optional]  This arg serves two purposes.  If ilSrc is .nil or
+ *                an .ImageList object, this arg indentifies which of the
+ *                tree-views image lists is being set, normal, or state. The
+ *                default is TVSI_NORMAL.
  *
- *  @return           Returns the exsiting .ImageList object if there is one, or
- *                    .nil if there is not an existing object.
+ *                If ilSrc is a bitmap, then this arg is the width of a single
+ *                image.  The default is the height of the actual bitmap.
  *
+ *  @param height [optional]  This arg is only used if ilSrc is a bitmap, in which case it
+ *                is the height of the bitmap.  The default is the height of the
+ *                actual bitmap
+ *
+ *  @return       Returns the exsiting .ImageList object if there is one, or
+ *                .nil if there is not an existing object.
+ *
+ *  @note  When the ilSrc is a single bitmap, an image list is created from the
+ *         bitmap.  This method is not as flexible as if the programmer created
+ *         the image list herself.  The bitmap must be a number of images, all
+ *         the same size, side-by-side in the bitmap.  The width of a single
+ *         image determines the number of images.  The image list is created
+ *         using the ILC_COLOR8 flag, only.  No mask can be used.  No room is
+ *         reserved for adding more images to the image list, etc..
+ *
+ *         The image list can only be assigned to the normal image list.  There
+ *         is no way to use the image list for the state image list.
  */
-RexxMethod3(RexxObjectPtr, tv_setImageList, RexxObjectPtr, imageList, OPTIONAL_uint8_t, type, OSELF, self)
+RexxMethod4(RexxObjectPtr, tv_setImageList, RexxObjectPtr, ilSrc,
+            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
+    oodSetSysErrCode(context, 0);
 
     HIMAGELIST himl = NULL;
+    int type = TVSIL_NORMAL;
+    RexxObjectPtr imageList = NULLOBJECT;
 
-    if ( imageList != context->Nil() )
+    if ( ilSrc == context->Nil() )
     {
-        // imageList is not .nil, so it has to be a .ImageList, or error.
+        imageList = ilSrc;
+        if ( argumentExists(2) )
+        {
+            type = width;
+        }
+    }
+    else if ( context->IsOfType(ilSrc, "ImageList") )
+    {
+        imageList = ilSrc;
         himl = rxGetImageList(context, imageList, 1);
         if ( himl == NULL )
         {
             goto err_out;
         }
+        if ( argumentExists(2) )
+        {
+            type = width;
+        }
+    }
+    else
+    {
+        imageList = rxILFromBMP(context, &himl, ilSrc, width, height, hwnd);
+        if ( imageList == NULLOBJECT )
+        {
+            goto err_out;
+        }
     }
 
-    if ( argumentOmitted(2) )
-    {
-        type = TVSIL_NORMAL;
-    }
-    else if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
+    if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
     {
         invalidTypeException(context, 2, "TVSIL_XXX flag");
         goto err_out;
@@ -5214,27 +5290,61 @@ RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
  *
  *  Sets or removes the image list for a Tab control.
  *
- *  @param imageList  An .ImageList object that references the image list to be
- *                    set, or .nil. If .nil, an existing image list, if any, is
- *                    removed.
+ *  @param ilSrc  The image list source. Either an .ImageList object that
+ *                references the image list to be set, or a single bitmap from
+ *                which the image list is constructed, or .nil.  If ilSRC is
+ *                .nil, an existing image list, if any is removed.
  *
- *  @return           Returns the exsiting .ImageList object, or .nil if there
- *                    is not an existing object.
+ *  @param width  [optional]  This arg is only used if ilSrc is a single bitmap.
+ *                Then this arg is the width of a single image.  The default is
+ *                the height of the actual bitmap.
+ *
+ *  @param height [optional]  This arg is only used if ilSrc is a bitmap, in
+ *                which case it is the height of the bitmap.  The default is the
+ *                height of the actual bitmap
+ *
+ *  @return       Returns the exsiting .ImageList object if there is one, or
+ *                .nil if there is not an existing object.
+ *
+ *  @note  When the ilSrc is a single bitmap, an image list is created from the
+ *         bitmap.  This method is not as flexible as if the programmer created
+ *         the image list herself.  The bitmap must be a number of images, all
+ *         the same size, side-by-side in the bitmap.  The width of a single
+ *         image determines the number of images.  The image list is created
+ *         using the ILC_COLOR8 flag, only.  No mask can be used.  No room is
+ *         reserved for adding more images to the image list, etc..
  */
-RexxMethod2(RexxObjectPtr, tab_setImageList, RexxObjectPtr, imageList, OSELF, self)
+RexxMethod4(RexxObjectPtr, tab_setImageList, RexxObjectPtr, ilSrc,
+            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OSELF, self)
 {
-    HIMAGELIST himl = NULL;
+    HWND hwnd = rxGetWindowHandle(context, self);
+    oodSetSysErrCode(context, 0);
 
-    if ( imageList != context->Nil() )
+    HIMAGELIST himl = NULL;
+    RexxObjectPtr imageList = NULLOBJECT;
+
+    if ( ilSrc == context->Nil() )
     {
+        imageList = ilSrc;
+    }
+    else if ( context->IsOfType(ilSrc, "ImageList") )
+    {
+        imageList = ilSrc;
         himl = rxGetImageList(context, imageList, 1);
         if ( himl == NULL )
         {
             goto err_out;
         }
     }
+    else
+    {
+        imageList = rxILFromBMP(context, &himl, ilSrc, width, height, hwnd);
+        if ( imageList == NULLOBJECT )
+        {
+            goto err_out;
+        }
+    }
 
-    HWND hwnd = rxGetWindowHandle(context, self);
     TabCtrl_SetImageList(hwnd, himl);
     return rxSetObjVar(context, TABIMAGELIST_ATTRIBUTE, imageList);
 

@@ -781,16 +781,11 @@
 
 
 -- DEPRECATED
-::method SetImages
-   use arg bmp, cx, cy
-   if arg(1, 'O') then return -1
-   if arg(2, 'O') then cx = 0
-   if arg(3, 'O') then cy = 0
-   return HandleTreeCtrl("SETIMG",self~Hwnd, bmp, cx, cy)
+::method setImages external "LIBRARY oodialog tv_setImageList"
 
 -- DEPRECATED
-::method RemoveImages
-   return HandleTreeCtrl("UNSETIMG", self~Hwnd)
+::method removeImages
+   return self~setImageList(.nil, 0)
 
 ::method setImageList external "LIBRARY oodialog tv_setImageList"
 ::method getImageList external "LIBRARY oodialog tv_getImageList"
@@ -1145,28 +1140,18 @@
    return HandleListCtrl("M", "ENVIS", self~Hwnd, item, partial)
 
 -- DEPRECATED
-::method SetSmallImages
-   use arg bmp, cx, cy
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then cx = 0
-   if Arg(3,'o') = 1 then cy = 0
-   return HandleListCtrl("I", "SETIMG",self~Hwnd, bmp, cx, cy, "SMALL")
+::method setSmallImages external "LIBRARY oodialog lv_setImageList"
 
 -- DEPRECATED
-::method SetImages
-   use arg bmp, cx, cy
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then cx = 0
-   if Arg(3,'o') = 1 then cy = 0
-   return HandleListCtrl("I", "SETIMG",self~Hwnd, bmp, cx, cy, "")
+::method setImages external "LIBRARY oodialog lv_setImageList"
 
 -- DEPRECATED
 ::method RemoveSmallImages
-   return HandleListCtrl("I", "UNSETIMG", self~Hwnd, "SMALL")
+   return self~removeImageList(.nil, 1)
 
 -- DEPRECATED
 ::method RemoveImages
-   return HandleListCtrl("I", "UNSETIMG", self~Hwnd, "")
+   return self~removeImageList(.nil, 0)
 
 ::method setImageList external "LIBRARY oodialog lv_setImageList"
 ::method getImageList external "LIBRARY oodialog lv_getImageList"
@@ -1471,16 +1456,11 @@
    return HandleOtherNewCtrls("TAB","FOCUS",self~Hwnd, "G")
 
 -- DEPRECATED
-::method SetImages
-   use arg bmp, cx, cy
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then cx = 0
-   if Arg(3,'o') = 1 then cy = 0
-   return HandleOtherNewCtrls("TAB","SETIMG",self~Hwnd, bmp, cx, cy)
+::method setImages external "LIBRARY oodialog tab_setImageList"
 
 -- DEPRECATED
 ::method RemoveImages
-   return HandleOtherNewCtrls("TAB","UNSETIMG",self~Hwnd)
+   return self~setImageList(.nil)
 
 ::method setImageList external "LIBRARY oodialog tab_setImageList"
 ::method getImageList external "LIBRARY oodialog tab_getImageList"
