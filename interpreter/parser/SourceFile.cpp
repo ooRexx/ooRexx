@@ -2364,6 +2364,12 @@ void RexxSource::optionsDirective()
                         /* report an exception               */
                         syntaxError(Error_Invalid_whole_number_digits, value);
                     }
+                    /* problem with the fuzz setting?    */
+                    if (digits <= fuzz)
+                    {
+                        /* this is an error                  */
+                        reportException(Error_Expression_result_digits, digits, fuzz);
+                    }
                     break;
                 }
                 // ::OPTIONS FORM ENGINEERING/SCIENTIFIC
@@ -2407,10 +2413,16 @@ void RexxSource::optionsDirective()
                     }
                     RexxString *value = token->value;          /* get the string value              */
 
-                    if (!value->requestUnsignedNumber(fuzz, number_digits()) || fuzz < 1)
+                    if (!value->requestUnsignedNumber(fuzz, number_digits()))
                     {
                         /* report an exception               */
                         syntaxError(Error_Invalid_whole_number_fuzz, value);
+                    }
+                    /* problem with the digits setting?  */
+                    if (fuzz >= digits)
+                    {
+                        /* and issue the error               */
+                        reportException(Error_Expression_result_digits, digits, fuzz);
                     }
                     break;
                 }

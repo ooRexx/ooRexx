@@ -50,6 +50,7 @@
 #define numeric_digits      0x02
 #define numeric_fuzz        0x04
 #define numeric_form        0x08
+#define numeric_form_default 0x10      // using default engineering form
 
 #define numeric_type_mask   0x0e
 

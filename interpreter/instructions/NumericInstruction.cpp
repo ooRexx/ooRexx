@@ -93,7 +93,7 @@ void RexxInstructionNumeric::execute(
             if (this->expression == OREF_NULL)
             {
                 /* just set it to the default        */
-                context->setDigits(Numerics::DEFAULT_DIGITS);
+                context->setDigits();
             }
             else                           /* need to evaluate an expression    */
             {
@@ -120,7 +120,7 @@ void RexxInstructionNumeric::execute(
             /* resetting to default fuzz?        */
             if (this->expression == OREF_NULL)
             {
-                context->setFuzz(Numerics::DEFAULT_FUZZ);/* just set it to the default        */
+                context->setFuzz();        /* just set it to the default        */
             }
             else                           /* need to evaluate an expression    */
             {
@@ -147,8 +147,17 @@ void RexxInstructionNumeric::execute(
             /* non-VALUE form?                   */
             if (this->expression == OREF_NULL)
             {
-                /* just set it to the default        */
-                context->setForm(instructionFlags&numeric_engineering ? Numerics::FORM_ENGINEERING : Numerics::FORM_SCIENTIFIC);
+                // if default form, set that
+                if (instructionFlags&numeric_form_default)
+                {
+                    context->setForm();
+                }
+                else
+                {
+
+                    // set it to what was specified.
+                    context->setForm(instructionFlags&numeric_engineering ? Numerics::FORM_ENGINEERING : Numerics::FORM_SCIENTIFIC);
+                }
             }
             else                           /* need to evaluate an expression    */
             {

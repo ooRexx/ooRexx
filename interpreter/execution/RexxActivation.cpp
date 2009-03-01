@@ -1745,8 +1745,15 @@ bool RexxActivation::form()
     return this->settings.numericSettings.form;
 }
 
-void RexxActivation::setDigits(
-                              size_t digitsVal)                    /* new digits setting                */
+/**
+ * Set the digits setting to the package-defined default
+ */
+void RexxActivation::setDigits()
+{
+    setDigits(sourceObject->getDigits());
+}
+
+void RexxActivation::setDigits(size_t digitsVal)
 /******************************************************************************/
 /* Function:  Set a new digits setting                                        */
 /******************************************************************************/
@@ -1754,9 +1761,17 @@ void RexxActivation::setDigits(
     this->settings.numericSettings.digits = digitsVal;
 }
 
+/**
+ * Set the fuzz setting to the package-defined default
+ */
+void RexxActivation::setFuzz()
+{
+    setFuzz(sourceObject->getFuzz());
+}
 
-void RexxActivation::setFuzz(
-                            size_t fuzzVal)                      /* set a new FUZZ setting            */
+
+
+void RexxActivation::setFuzz(size_t fuzzVal)
 /******************************************************************************/
 /* Function:  Set a new FUZZ setting                                          */
 /******************************************************************************/
@@ -1764,9 +1779,17 @@ void RexxActivation::setFuzz(
     this->settings.numericSettings.fuzz = fuzzVal;
 }
 
+/**
+ * Set the form setting to the package-defined default
+ */
+void RexxActivation::setForm()
+{
+    setForm(sourceObject->getForm());
+}
 
-void RexxActivation::setForm(
-                            bool formVal)                        /* the new FORM setting              */
+
+
+void RexxActivation::setForm(bool formVal)
 /******************************************************************************/
 /* Function:  Set the new current NUMERIC FORM setting                        */
 /******************************************************************************/

@@ -1310,6 +1310,8 @@ RexxInstruction *RexxSource::numericNew()
             token = nextReal();              /* get the next token                */
             if (token->isEndOfClause()) /* just NUMERIC FORM?                */
             {
+                // reset to the default for this package
+                _flags |= numeric_form_default;
                 break;                         /* we're all finished                */
             }
                                                /* have the keyword form?            */

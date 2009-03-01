@@ -1201,13 +1201,13 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>005</term>
 <listitem>
-<para>NUMERIC DIGITS value must be a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>DIGITS value must be a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>006</term>
 <listitem>
-<para>NUMERIC FUZZ value must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
+<para>FUZZ value must be zero or a positive whole number; found "<emphasis role="italic">value</emphasis>"</para>
 </listitem>
 </varlistentry>
 <varlistentry>

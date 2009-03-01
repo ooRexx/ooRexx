@@ -1651,7 +1651,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_whole_number_digits</SymbolicName>
-        <Text>NUMERIC DIGITS value must be a positive whole number; found <q><Sub position="1" name="value"/></q></Text>
+        <Text>DIGITS value must be a positive whole number; found <q><Sub position="1" name="value"/></q></Text>
       </SubMessage>
       <SubMessage>
         <Code>26</Code>
@@ -1660,7 +1660,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_whole_number_fuzz</SymbolicName>
-        <Text>NUMERIC FUZZ value must be zero or a positive whole number; found <q><Sub position="1" name="value"/></q></Text>
+        <Text>FUZZ value must be zero or a positive whole number; found <q><Sub position="1" name="value"/></q></Text>
       </SubMessage>
       <SubMessage>
         <Code>26</Code>

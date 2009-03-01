@@ -176,6 +176,9 @@ class ActivationSettings
    void              setDigits(size_t);
    void              setFuzz(size_t);
    void              setForm(bool);
+   void              setDigits();
+   void              setFuzz();
+   void              setForm();
    bool              trap(RexxString *, RexxDirectory *);
    void              setObjNotify(RexxMessage *);
    void              termination();
