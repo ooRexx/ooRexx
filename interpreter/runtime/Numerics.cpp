@@ -52,8 +52,6 @@
 #ifdef __REXX64__
 const wholenumber_t Numerics::MAX_WHOLENUMBER = __INT64_C(999999999999999999);
 const wholenumber_t Numerics::MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
-const wholenumber_t Numerics::MAX_EXPONENT = __INT64_C(999999999999999999);
-const wholenumber_t Numerics::MIN_EXPONENT = __INT64_C(-999999999999999999);
     // the digits setting used internally for function/method arguments to allow
     // for the full range
 const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)20);
@@ -99,6 +97,7 @@ const wholenumber_t Numerics::validMaxWhole[] = {10,
                                            100000000,
                                            1000000000};
 #endif
+
 const wholenumber_t Numerics::MAX_EXPONENT = 999999999;
 const wholenumber_t Numerics::MIN_EXPONENT = -999999999;
 // this is the matching component to a whole number
