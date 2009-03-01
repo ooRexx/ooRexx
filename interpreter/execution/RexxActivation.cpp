@@ -83,6 +83,7 @@
 static ActivationSettings activationSettingsTemplate;
 // constants use for different activation settings
 
+const size_t RexxActivation::trace_off           = 0x00000000; /* trace nothing                     */
 const size_t RexxActivation::trace_debug         = 0x00000001; /* interactive trace mode flag       */
 const size_t RexxActivation::trace_all           = 0x00000002; /* trace all instructions            */
 const size_t RexxActivation::trace_results       = 0x00000004; /* trace all results                 */
@@ -95,6 +96,11 @@ const size_t RexxActivation::trace_suppress      = 0x00000100; /* tracing is sup
 const size_t RexxActivation::trace_flags         = 0x000001fe; /* all tracing flags (EXCEPT debug)  */
                                                  // the default trace setting
 const size_t RexxActivation::default_trace_flags = trace_failures;
+
+// now the flag sets for different settings
+const size_t RexxActivation::trace_all_flags = (trace_all | trace_labels | trace_commands);
+const size_t RexxActivation::trace_results_flags = (trace_all | trace_labels | trace_results | trace_commands);
+const size_t RexxActivation::trace_intermediates_flags = (trace_all | trace_labels | trace_results | trace_commands | trace_intermediates);
 
 const size_t RexxActivation::single_step         = 0x00000800; /* we are single stepping execution  */
 const size_t RexxActivation::single_step_nested  = 0x00001000; /* this is a nested stepping         */
@@ -840,7 +846,7 @@ size_t RexxActivation::processTraceSetting(size_t traceSetting)
             break;
 
         case RexxSource::TRACE_OFF:                    /* TRACE OFF                         */
-            flags = 0;                       // turn of all trace options, including debug flags
+            flags = trace_off;               // turn of all trace options, including debug flags
             break;
 
         case RexxSource::TRACE_IGNORE:                 /* don't change trace setting        */
@@ -3340,7 +3346,7 @@ void RexxActivation::processClauseBoundary()
         this->settings.flags &= ~set_trace_on;
         this->setExternalTraceOn();        /* and save the current state        */
                                            /* turn on tracing                   */
-        this->setTrace(TRACE_RESULTS, DEBUG_ON);
+        this->setTrace(TRACE_RESULTS | DEBUG_ON, trace_results_flags | trace_debug);
     }
     /* need to turn off tracing?         */
     if (this->settings.flags&set_trace_off)
@@ -3349,7 +3355,7 @@ void RexxActivation::processClauseBoundary()
         this->settings.flags &= ~set_trace_off;
         this->setExternalTraceOff();       /* and save the current state        */
                                            /* turn on tracing                   */
-        this->setTrace(TRACE_OFF, DEBUG_OFF);
+        this->setTrace(TRACE_OFF | DEBUG_OFF, trace_off);
     }
     /* no clause exits and all conditions*/
     /* have been processed?              */
@@ -3397,7 +3403,7 @@ void RexxActivation::externalTraceOn()
                                        /* turn on clause boundary checking  */
   this->settings.flags |= clause_boundary;
                                        /* turn on tracing                   */
-  this->setTrace(TRACE_RESULTS, DEBUG_ON);
+  this->setTrace(TRACE_RESULTS | DEBUG_ON, trace_results_flags | trace_debug);
 }
 
 void RexxActivation::externalTraceOff()

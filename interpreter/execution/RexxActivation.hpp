@@ -617,6 +617,7 @@ class ActivationSettings
 
    // constants
 
+   static const size_t trace_off;           /* no tracing                        */
    static const size_t trace_debug;         /* interactive trace mode flag       */
    static const size_t trace_all;           /* trace all instructions            */
    static const size_t trace_results;       /* trace all results                 */
@@ -628,6 +629,9 @@ class ActivationSettings
    static const size_t trace_suppress;      /* tracing is suppressed during skips*/
    static const size_t trace_flags;         /* all tracing flags (EXCEPT debug)  */
    static const size_t default_trace_flags;
+   static const size_t trace_all_flags;     // flag set for trace all
+   static const size_t trace_results_flags; // flag set for trace results
+   static const size_t trace_intermediates_flags; // flag set for trace intermediates
 
    static const size_t single_step;         /* we are single stepping execution  */
    static const size_t single_step_nested;  /* this is a nested stepping         */
