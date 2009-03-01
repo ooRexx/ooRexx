@@ -372,7 +372,7 @@ RexxMutableBuffer *RexxMutableBuffer::overlay(RexxObject *str, RexxObject *pos, 
     }
 
     // now overlay the string data
-    data->copyData(begin, string->getStringData(), replaceLength);
+    data->copyData(begin, string->getStringData(), Numerics::minVal(replaceLength, string->getLength()));
     // do we need additional padding?
     if (replaceLength > string->getLength())
     {

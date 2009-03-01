@@ -63,6 +63,7 @@ RexxInstructionTrace::RexxInstructionTrace(RexxObject *_expression, size_t trace
    OrefSet(this, this->expression, _expression);
    this->debugskip = debug_skip;       /* copy the skip value               */
    traceSetting = trace;               /* and the trace setting             */
+   traceFlags = flags;
 }
 
 void RexxInstructionTrace::live(size_t liveMark)
