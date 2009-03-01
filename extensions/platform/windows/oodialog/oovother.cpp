@@ -4838,7 +4838,6 @@ RexxObjectPtr rxILFromBMP(RexxMethodContext *c, HIMAGELIST *himl, RexxObjectPtr 
         hDDB = (HBITMAP)GET_HANDLE(bitmap);
         if ( hDDB != NULL )
         {
-            //
             if ( GetObject(hDDB, sizeof(BITMAP), &bmpInfo) == 0 )
             {
                 HDC dc = GetDC(hwnd);
