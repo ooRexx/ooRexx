@@ -76,8 +76,8 @@ class RexxNativeActivation : public RexxActivationBase
   void run(CallbackDispatcher &dispatcher);
   RexxVariableDictionary *methodVariables();
   bool   isInteger(RexxObject *);
-  wholenumber_t wholeNumberValue(RexxObject *o, size_t position, wholenumber_t maxValue, wholenumber_t minValue);
-  stringsize_t unsignedNumberValue(RexxObject *o, size_t position, stringsize_t maxValue);
+  wholenumber_t signedIntegerValue(RexxObject *o, size_t position, wholenumber_t maxValue, wholenumber_t minValue);
+  stringsize_t unsignedIntegerValue(RexxObject *o, size_t position, stringsize_t maxValue);
   int64_t int64Value(RexxObject *o, size_t position);
   uint64_t unsignedInt64Value(RexxObject *o, size_t position);
   const char *cstring(RexxObject *);

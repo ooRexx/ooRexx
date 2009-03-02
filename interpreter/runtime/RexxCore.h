@@ -432,7 +432,7 @@ inline void classArgument(RexxObject *object, RexxClass *clazz, const char *name
 inline RexxArray * REQUEST_ARRAY(RexxObject *obj) { return ((obj)->requestArray()); }
 
 /* The next macro is specifically for REQUESTing an INTEGER,                  */
-inline RexxInteger * REQUEST_INTEGER(RexxObject *obj) { return ((obj)->requestInteger(Numerics::DEFAULT_DIGITS));}
+inline RexxInteger * REQUEST_INTEGER(RexxObject *obj) { return ((obj)->requestInteger(Numerics::ARGUMENT_DIGITS));}
 
 /******************************************************************************/
 /* Typed method invocation macros                                             */

@@ -64,9 +64,11 @@ public:
     static const wholenumber_t MAX_EXPONENT;
     static const wholenumber_t MIN_EXPONENT;
     static const size_t DEFAULT_DIGITS;
+    // a digits setting for full range integer conversion
+    static const size_t ARGUMENT_DIGITS;
     // the digits setting used internally for function/method arguments to allow
     // for the full range
-    static const size_t ARGUMENT_DIGITS;
+    static const size_t SIZE_DIGITS;
     static const size_t  MAX_STRINGSIZE;
 
     // max numeric digits value for explicit 64-bit conversions
@@ -89,6 +91,8 @@ public:
 
     static bool objectToWholeNumber(RexxObject *o, wholenumber_t &result, wholenumber_t max, wholenumber_t min);
     static bool objectToStringSize(RexxObject *o, stringsize_t &result, stringsize_t max);
+    static bool objectToSignedInteger(RexxObject *o, ssize_t &result, ssize_t max, ssize_t min);
+    static bool objectToUnsignedInteger(RexxObject *o, size_t &result, size_t max);
     static bool objectToInt64(RexxObject *o, int64_t &result);
     static bool objectToUnsignedInt64(RexxObject *o, uint64_t &result);
     static bool objectToUintptr(RexxObject *source, uintptr_t &result);

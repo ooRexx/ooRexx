@@ -731,11 +731,11 @@ logical_t RexxEntry ObjectToInt32(RexxThreadContext *c, RexxObjectPtr o, int32_t
     ApiContext context(c);
     try
     {
-        wholenumber_t temp;
+        ssize_t temp;
         // this uses the entire value range
         // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms,
         // so we'll make things relative to SIZE_MAX.
-        if (Numerics::objectToWholeNumber((RexxObject *)o, temp, INT32_MAX, INT32_MIN))
+        if (Numerics::objectToSignedInteger((RexxObject *)o, temp, INT32_MAX, INT32_MIN))
         {
             *n = (int32_t)temp;
             return true;
@@ -754,9 +754,9 @@ logical_t RexxEntry ObjectToUnsignedInt32(RexxThreadContext * c, RexxObjectPtr o
     ApiContext context(c);
     try
     {
-        stringsize_t temp;
+        size_t temp;
         // this uses the entire value range
-        if (Numerics::objectToStringSize((RexxObject *)o, temp, UINT32_MAX))
+        if (Numerics::objectToUnsignedInteger((RexxObject *)o, temp, UINT32_MAX))
         {
             *n = (uint32_t)temp;
             return true;

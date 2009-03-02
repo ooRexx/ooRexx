@@ -54,7 +54,9 @@ const wholenumber_t Numerics::MAX_WHOLENUMBER = __INT64_C(999999999999999999);
 const wholenumber_t Numerics::MIN_WHOLENUMBER = __INT64_C(-999999999999999999);
     // the digits setting used internally for function/method arguments to allow
     // for the full range
-const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)20);
+const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)18);
+// this is the digits setting for full size binary settings
+const size_t Numerics::SIZE_DIGITS  = ((size_t)20);
 
 
 /* Array for valid whole number at various digits settings */
@@ -82,7 +84,9 @@ const wholenumber_t Numerics::MAX_WHOLENUMBER = 999999999;
 const wholenumber_t Numerics::MIN_WHOLENUMBER = -999999999;
     // the digits setting used internally for function/method arguments to allow
     // for the full binary value range
-const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)10);
+const size_t Numerics::ARGUMENT_DIGITS  = ((size_t)9);
+// this is the digits setting for full size binary settings
+const size_t Numerics::SIZE_DIGITS  = ((size_t)10);
 
 
 /* Array for valid whole number at various digits settings */
@@ -251,6 +255,49 @@ bool Numerics::objectToWholeNumber(RexxObject *source, wholenumber_t &result, wh
     }
 }
 
+/**
+ * Convert an object into a signed integer value.
+ *
+ * @param source   The source object.
+ * @param result   The returned converted value.
+ * @param maxValue The maximum range value for the target.
+ * @param minValue The minimum range value for this number.
+ *
+ * @return true if the number converted properly, false for any
+ *         conversion errors.
+ */
+bool Numerics::objectToSignedInteger(RexxObject *source, ssize_t &result, ssize_t maxValue, ssize_t minValue)
+{
+    // is this an integer value (very common)
+    if (isInteger(source))
+    {
+        result = ((RexxInteger *)source)->wholeNumber();
+        return result <= maxValue && result >= minValue ? true : false;
+    }
+    else
+    {
+        // get this as a numberstring (which it might already be)
+        RexxNumberString *nString = source->numberString();
+        // not convertible to number string?  get out now
+        if (nString == OREF_NULL)
+        {
+            return false;
+        }
+        int64_t temp;
+
+        // if not valid or outside of the minimum range, reject this too
+        if (nString->int64Value(&temp, SIZE_DIGITS))
+        {
+            if (temp <= maxValue && temp >= minValue)
+            {
+                result = (wholenumber_t)temp;
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 
 /**
  * Convert an object into an unsigned number value.
@@ -289,6 +336,55 @@ bool Numerics::objectToStringSize(RexxObject *source, stringsize_t &result, stri
 
         // if not valid or outside of the minimum range, reject this too
         if (nString->unsignedInt64Value(&temp, ARGUMENT_DIGITS))
+        {
+            if ( temp <= maxValue )
+            {
+                result = (stringsize_t)temp;
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+
+/**
+ * Convert an object into an unsigned number value.
+ *
+ * @param source   The source object.
+ * @param result   The returned converted value.
+ * @param maxValue The maximum range value for the target.
+ *
+ * @return true if the number converted properly, false for any
+ *         conversion errors.
+ */
+bool Numerics::objectToUnsignedInteger(RexxObject *source, size_t &result, size_t maxValue)
+{
+    // is this an integer value (very common)
+    if (isInteger(source))
+    {
+        // reject any signed values.
+        if (((RexxInteger *)source)->wholeNumber() < 0)
+        {
+            return false;
+        }
+
+        result = ((RexxInteger *)source)->stringSize();
+        return result <= maxValue ? true : false;
+    }
+    else
+    {
+        // get this as a numberstring (which it might already be)
+        RexxNumberString *nString = source->numberString();
+        // not convertible to number string?  get out now
+        if (nString == OREF_NULL)
+        {
+            return false;
+        }
+        uint64_t temp;
+
+        // if not valid or outside of the minimum range, reject this too
+        if (nString->unsignedInt64Value(&temp, SIZE_DIGITS))
         {
             if ( temp <= maxValue )
             {
@@ -395,7 +491,7 @@ bool Numerics::objectToUintptr(RexxObject *source, uintptr_t &result)
 {
     stringsize_t temp;
     // if it didn't convert for the range, give a failure back
-    if (!Numerics::objectToStringSize(source, temp, UINTPTR_MAX))
+    if (!Numerics::objectToUnsignedInteger(source, temp, UINTPTR_MAX))
     {
         return false;
     }
@@ -418,7 +514,7 @@ bool Numerics::objectToIntptr(RexxObject *source, intptr_t &result)
 {
     wholenumber_t temp;
     // if it didn't convert for the range, give a failure back
-    if (!Numerics::objectToWholeNumber(source, temp, INTPTR_MAX, INTPTR_MIN))
+    if (!Numerics::objectToSignedInteger(source, temp, INTPTR_MAX, INTPTR_MIN))
     {
         return false;
     }

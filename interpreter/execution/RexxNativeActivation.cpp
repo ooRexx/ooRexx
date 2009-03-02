@@ -337,25 +337,25 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                         case REXX_VALUE_int:            /* integer value                     */
                         {
                             // convert and copy                  */
-                            descriptors[outputIndex].value.value_int = (int)wholeNumberValue(argument, inputIndex, INT_MAX, INT_MIN);
+                            descriptors[outputIndex].value.value_int = (int)signedIntegerValue(argument, inputIndex, INT_MAX, INT_MIN);
                             break;
                         }
 
                         case REXX_VALUE_int8_t:            /* 8-bit integer value               */
                         {
-                            descriptors[outputIndex].value.value_int8_t = (int8_t)wholeNumberValue(argument, inputIndex, INT8_MAX, INT8_MIN);
+                            descriptors[outputIndex].value.value_int8_t = (int8_t)signedIntegerValue(argument, inputIndex, INT8_MAX, INT8_MIN);
                             break;
                         }
 
                         case REXX_VALUE_int16_t:            /* integer value                     */
                         {
-                            descriptors[outputIndex].value.value_int16_t = (int16_t)wholeNumberValue(argument, inputIndex, INT16_MAX, INT16_MIN);
+                            descriptors[outputIndex].value.value_int16_t = (int16_t)signedIntegerValue(argument, inputIndex, INT16_MAX, INT16_MIN);
                             break;
                         }
 
                         case REXX_VALUE_int32_t:            /* integer value                     */
                         {
-                            descriptors[outputIndex].value.value_int32_t = (int32_t)wholeNumberValue(argument, inputIndex, INT32_MAX, INT32_MIN);
+                            descriptors[outputIndex].value.value_int32_t = (int32_t)signedIntegerValue(argument, inputIndex, INT32_MAX, INT32_MIN);
                             break;
                         }
 
@@ -367,31 +367,31 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
 
                         case REXX_VALUE_ssize_t:            /* integer value                     */
                         {
-                            descriptors[outputIndex].value.value_ssize_t = (ssize_t)wholeNumberValue(argument, inputIndex, SSIZE_MAX, -SSIZE_MAX - 1);
+                            descriptors[outputIndex].value.value_ssize_t = (ssize_t)signedIntegerValue(argument, inputIndex, SSIZE_MAX, -SSIZE_MAX - 1);
                             break;
                         }
 
                         case REXX_VALUE_intptr_t:         /* integer value                     */
                         {
-                            descriptors[outputIndex].value.value_intptr_t = (intptr_t)wholeNumberValue(argument, inputIndex, INTPTR_MAX, INTPTR_MIN);
+                            descriptors[outputIndex].value.value_intptr_t = (intptr_t)signedIntegerValue(argument, inputIndex, INTPTR_MAX, INTPTR_MIN);
                             break;
                         }
 
                         case REXX_VALUE_uint8_t:            /* 8-bit integer value               */
                         {
-                            descriptors[outputIndex].value.value_uint8_t = (uint8_t)unsignedNumberValue(argument, inputIndex, UINT8_MAX);
+                            descriptors[outputIndex].value.value_uint8_t = (uint8_t)unsignedIntegerValue(argument, inputIndex, UINT8_MAX);
                             break;
                         }
 
                         case REXX_VALUE_uint16_t:            /* integer value                     */
                         {
-                            descriptors[outputIndex].value.value_uint16_t = (uint16_t)unsignedNumberValue(argument, inputIndex, UINT16_MAX);
+                            descriptors[outputIndex].value.value_uint16_t = (uint16_t)unsignedIntegerValue(argument, inputIndex, UINT16_MAX);
                             break;
                         }
 
                         case REXX_VALUE_uint32_t:            /* integer value                     */
                         {
-                            descriptors[outputIndex].value.value_uint32_t = (uint32_t)unsignedNumberValue(argument, inputIndex, UINT32_MAX);
+                            descriptors[outputIndex].value.value_uint32_t = (uint32_t)unsignedIntegerValue(argument, inputIndex, UINT32_MAX);
                             break;
                         }
 
@@ -403,13 +403,13 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
 
                         case REXX_VALUE_size_t:            /* integer value                     */
                         {
-                            descriptors[outputIndex].value.value_size_t = (size_t)unsignedNumberValue(argument, inputIndex, SIZE_MAX);
+                            descriptors[outputIndex].value.value_size_t = (size_t)unsignedIntegerValue(argument, inputIndex, SIZE_MAX);
                             break;
                         }
 
                         case REXX_VALUE_uintptr_t:         /* integer value                     */
                         {
-                            descriptors[outputIndex].value.value_uintptr_t = (uintptr_t)unsignedNumberValue(argument, inputIndex, UINTPTR_MAX);
+                            descriptors[outputIndex].value.value_uintptr_t = (uintptr_t)unsignedIntegerValue(argument, inputIndex, UINTPTR_MAX);
                             break;
                         }
 
@@ -422,14 +422,14 @@ void RexxNativeActivation::processArguments(size_t _argcount, RexxObject **_argl
                         // The Rexx whole number one is checked against the human digits limit
                         case REXX_VALUE_wholenumber_t:  /* number value                      */
                         {
-                            descriptors[outputIndex].value.value_wholenumber_t = (wholenumber_t)wholeNumberValue(argument, inputIndex, Numerics::MAX_WHOLENUMBER, Numerics::MIN_WHOLENUMBER);
+                            descriptors[outputIndex].value.value_wholenumber_t = (wholenumber_t)signedIntegerValue(argument, inputIndex, Numerics::MAX_WHOLENUMBER, Numerics::MIN_WHOLENUMBER);
                             break;
                         }
 
                         // an unsigned string number value
                         case REXX_VALUE_stringsize_t:
                         {
-                            descriptors[outputIndex].value.value_stringsize_t = (stringsize_t)unsignedNumberValue(argument, inputIndex, Numerics::MAX_STRINGSIZE);
+                            descriptors[outputIndex].value.value_stringsize_t = (stringsize_t)unsignedIntegerValue(argument, inputIndex, Numerics::MAX_STRINGSIZE);
                             break;
                         }
 
@@ -852,45 +852,45 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
         }
         case REXX_VALUE_int:            /* integer value                     */
         {
-            wholenumber_t temp = 0;
+            ssize_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToWholeNumber(o, temp, INT_MAX, INT_MIN);
+            bool success = Numerics::objectToSignedInteger(o, temp, INT_MAX, INT_MIN);
             value->value.value_int = (int)temp;
             return success;
         }
 
         case REXX_VALUE_int8_t:            /* 8-bit integer value               */
         {
-            wholenumber_t temp = 0;
+            ssize_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToWholeNumber(o, temp, INT8_MAX, INT8_MIN);
+            bool success = Numerics::objectToSignedInteger(o, temp, INT8_MAX, INT8_MIN);
             value->value.value_int8_t = (int8_t)temp;
             return success;
         }
 
         case REXX_VALUE_int16_t:            /* integer value                     */
         {
-            wholenumber_t temp = 0;
+            ssize_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToWholeNumber(o, temp, INT16_MAX, INT16_MIN);
+            bool success = Numerics::objectToSignedInteger(o, temp, INT16_MAX, INT16_MIN);
             value->value.value_int16_t = (int16_t)temp;
             return success;
         }
 
         case REXX_VALUE_int32_t:            /* integer value                     */
         {
-            wholenumber_t temp = 0;
+            ssize_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToWholeNumber(o, temp, INT32_MAX, INT32_MIN);
+            bool success = Numerics::objectToSignedInteger(o, temp, INT32_MAX, INT32_MIN);
             value->value.value_int32_t = (int32_t)temp;
             return success;
         }
 
         case REXX_VALUE_intptr_t:           /* integer value                     */
         {
-            wholenumber_t temp = 0;
+            intptr_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToWholeNumber(o, temp, INTPTR_MAX, INTPTR_MIN);
+            bool success = Numerics::objectToIntptr(o, temp);
             value->value.value_intptr_t = (intptr_t)temp;
             return success;
         }
@@ -906,36 +906,36 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
 
         case REXX_VALUE_uint8_t:            /* 8-bit integer value               */
         {
-            stringsize_t temp = 0;
+            size_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToStringSize(o, temp, UINT8_MAX);
+            bool success = Numerics::objectToUnsignedInteger(o, temp, UINT8_MAX);
             value->value.value_uint8_t = (uint8_t)temp;
             return success;
         }
 
         case REXX_VALUE_uint16_t:            /* integer value                     */
         {
-            stringsize_t temp = 0;
+            size_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToStringSize(o, temp, UINT16_MAX);
+            bool success = Numerics::objectToUnsignedInteger(o, temp, UINT16_MAX);
             value->value.value_uint16_t = (uint16_t)temp;
             return success;
         }
 
         case REXX_VALUE_uint32_t:            /* integer value                     */
         {
-            stringsize_t temp = 0;
+            size_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToStringSize(o, temp, UINT32_MAX);
+            bool success = Numerics::objectToUnsignedInteger(o, temp, UINT32_MAX);
             value->value.value_uint32_t = (uint32_t)temp;
             return success;
         }
 
         case REXX_VALUE_uintptr_t:         /* integer value                     */
         {
-            stringsize_t temp = 0;
+            uintptr_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToStringSize(o, temp, UINTPTR_MAX);
+            bool success = Numerics::objectToUintptr(o, temp);
             value->value.value_uintptr_t = (uintptr_t)temp;
             return success;
         }
@@ -951,9 +951,9 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
 
         case REXX_VALUE_size_t:            /* integer value                     */
         {
-            stringsize_t temp = 0;
+            size_t temp = 0;
             // convert and copy                  */
-            bool success = Numerics::objectToStringSize(o, temp, SIZE_MAX);
+            bool success = Numerics::objectToUnsignedInteger(o, temp, SIZE_MAX);
             value->value.value_size_t = (size_t)temp;
             return success;
         }
@@ -977,11 +977,11 @@ bool RexxNativeActivation::objectToValue(RexxObject *o, ValueDescriptor *value)
         // The Rexx whole number one is checked against the human digits limit
         case REXX_VALUE_ssize_t:  /* ssize_t value                     */
         {
-            wholenumber_t temp = 0;
+            ssize_t temp = 0;
             // convert and copy                  */
             // NB:  SSIZE_MIN appears to be defined as 0 for some bizarre reason on some platforms,
             // so we'll make things relative to SIZE_MAX.
-            bool success = Numerics::objectToWholeNumber(o, temp, SSIZE_MAX, (-SSIZE_MAX) - 1);
+            bool success = Numerics::objectToSignedInteger(o, temp, SSIZE_MAX, (-SSIZE_MAX) - 1);
             value->value.value_wholenumber_t = (wholenumber_t)temp;
             return success;
         }
@@ -1724,12 +1724,12 @@ bool RexxNativeActivation::isInteger(
  *
  * @return The converted number.
  */
-wholenumber_t RexxNativeActivation::wholeNumberValue(RexxObject *o, size_t position, wholenumber_t maxValue, wholenumber_t minValue)
+wholenumber_t RexxNativeActivation::signedIntegerValue(RexxObject *o, size_t position, wholenumber_t maxValue, wholenumber_t minValue)
 {
-    wholenumber_t temp;
+    ssize_t temp;
 
     // convert using the whole value range
-    if (!Numerics::objectToWholeNumber(o, temp, maxValue, minValue))
+    if (!Numerics::objectToSignedInteger(o, temp, maxValue, minValue))
     {
         reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), Numerics::wholenumberToObject(minValue), Numerics::wholenumberToObject(maxValue), o));
     }
@@ -1739,7 +1739,7 @@ wholenumber_t RexxNativeActivation::wholeNumberValue(RexxObject *o, size_t posit
 
 
 /**
- * Convert a value to a stringsize value.
+ * Convert a value to a size_t value.
  *
  * @param o        The object to convert.
  * @param position The argument position.
@@ -1747,12 +1747,12 @@ wholenumber_t RexxNativeActivation::wholeNumberValue(RexxObject *o, size_t posit
  *
  * @return The converted number.
  */
-stringsize_t RexxNativeActivation::unsignedNumberValue(RexxObject *o, size_t position, stringsize_t maxValue)
+size_t RexxNativeActivation::unsignedIntegerValue(RexxObject *o, size_t position, stringsize_t maxValue)
 {
-    stringsize_t temp;
+    size_t temp;
 
     // convert using the whole value range
-    if (!Numerics::objectToStringSize(o, temp, maxValue))
+    if (!Numerics::objectToUnsignedInteger(o, temp, maxValue))
     {
         reportException(Error_Invalid_argument_range, new_array(new_integer(position + 1), IntegerZero, Numerics::stringsizeToObject(maxValue), o));
     }
