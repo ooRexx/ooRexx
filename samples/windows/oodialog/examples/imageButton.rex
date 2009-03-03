@@ -134,9 +134,7 @@ return 0
   -- list if we are on an older version of Windows.
   if .DlgUtil~comCtl32Version < 6 then return self~oldSetButtons
 
-  -- Note that the button style needs to be bitmap for bitmap buttons and icon
-  -- if the images were icons.
-  pbView~style = "MULTILINE BOTTOM BITMAP"
+  pbView~style = "MULTILINE BOTTOM"
 
   -- In the following code, there are a lot of if tests.  You can change any of
   -- the if tests to its converse to get an idea of the dialog behavior when
