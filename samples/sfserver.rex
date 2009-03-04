@@ -48,12 +48,6 @@
 ::method init
     expose socket shutdown
 
-/*  load socket function package if it's not already loaded  */
-    if rxfuncquery('SockDropFuncs') then do
-        call rxfuncadd 'SockLoadFuncs', 'rxsock', 'SockLoadFuncs'
-        call SockLoadFuncs 'bypasscopyright'
-    end
-
 /*  create a socket  */
     socket = socksocket('AF_INET', 'SOCK_STREAM', '0')
 
@@ -129,3 +123,5 @@
         /*  echo that data back to the client  */
         call socksend socket, 'Echo:' data
     end
+
+::requires 'rxsock' LIBRARY

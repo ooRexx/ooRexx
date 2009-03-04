@@ -40,12 +40,6 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-/*  load socket function package if it's not already loaded  */
-    if rxfuncquery('SockDropFuncs') then do
-        call rxfuncadd 'SockLoadFuncs', 'rxsock', 'SockLoadFuncs'
-        call SockLoadFuncs 'bypasscopyright'
-    end
-
 /*  create a socket  */
     socket = socksocket('AF_INET', 'SOCK_STREAM', 'IPPROTO_TCP')
 
@@ -85,3 +79,5 @@
 /*  close the socket connection  */
     if sockclose(socket) < 0 then
         say 'SockClose Failed'
+
+::requires 'rxsock' LIBRARY
