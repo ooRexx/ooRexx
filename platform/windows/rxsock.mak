@@ -38,9 +38,9 @@
 #------------------------
 # RXSOCK.MAK make file
 #------------------------
-all: $(OR_OUTDIR)\rxsock.dll
+all: $(OR_OUTDIR)\rxsock.dll $(OR_OUTDIR)\socket.cls
     @ECHO .
-    @ECHO All done rxsock.dll
+    @ECHO All done rxsock.dll and socket.cls
     @ECHO .
 
 !include "$(OR_LIBSRC)\ORXWIN32.MAK"
@@ -84,4 +84,13 @@ $(OBJS):  $(SOURCE_DIR)\$(@B).cpp
     @ECHO .
     @ECHO Compiling $(@B).cpp
     $(OR_CC) $(cflags_common) $(cflags_dll) /Fo$(OR_OUTDIR)\$(@B).obj $(OR_ORYXINCL) -I$(SOURCE_DIR)\ $(SOURCE_DIR)\$(@B).cpp
+
+#
+# Copy socket.cls to the build directory so the test suite can be run directly
+# from that location without doing an install.
+#
+$(OR_OUTDIR)\socket.cls : $(SOURCE_DIR)\socket.cls
+    @ECHO .
+    @ECHO Copying $(SOURCEDIR)\socket.cls
+    copy $(SOURCE_DIR)\socket.cls $(OR_OUTDIR)
 

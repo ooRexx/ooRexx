@@ -168,6 +168,7 @@ Section "${LONGNAME} Core (required)" SecMain
   ${File} "${BINDIR}\" "orexxole.dll"
   ; CLASS files...
   ${File} "${BINDIR}\" "winsystm.cls"
+  ${File} "${BINDIR}\" "socket.cls"
   ${File} "${BINDIR}\" "rxregexp.cls"
   ${File} "${BINDIR}\" "rxftp.cls"
   ${File} "${BINDIR}\" "orexxole.cls"
