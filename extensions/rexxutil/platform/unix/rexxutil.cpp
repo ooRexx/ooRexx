@@ -5068,59 +5068,42 @@ size_t RexxEntry SysUtilVersion(const char *name, size_t numargs, CONSTRXSTRING 
   return VALID_ROUTINE;
 }
 
+
 /*************************************************************************
-* Function:  SysIsFile                                                *
+* Function:  SysIsFile                                                   *
 *                                                                        *
-* Syntax:    call SysIsFile file                                      *
+* Syntax:    call SysIsFile file                                         *
 *                                                                        *
 * Params:    file - file to check existance of.                          *
 *                                                                        *
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-size_t RexxEntry SysIsFile(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(logical_t, SysIsFile, CSTRING, filename)
 {
-  struct stat finfo;                   /* return buf for the finfo   */
+    struct stat finfo;                   /* return buf for the finfo   */
 
-  if (numargs != 1)                    /* we need one argument       */
-    return INVALID_ROUTINE;            /* raise an error             */
-
-  stat(args[0].strptr, &finfo);        /* read the info about it     */
-
-  if(S_ISREG(finfo.st_mode) ||         /* if it is a file            */
-     S_ISBLK(finfo.st_mode)) {         /* file                       */
-    RETVAL(1)                          /* True - Is a File           */
-  }
-  else {
-    RETVAL(0)                          /* False - Is something else  */
-  }
+    int rc = stat(filename, &finfo);     /* read the info about it     */
+    // check the flag settings for a regular file
+    return rc == 0 && (S_ISREG(finfo->st_mode) || S_ISBLK(finfo->st_mode));
 }
 
 /*************************************************************************
-* Function:  SysIsFileDirectory                                                 *
+* Function:  SysIsFileDirectory                                          *
 *                                                                        *
-* Syntax:    call SysIsFileDirectory dir                                        *
+* Syntax:    call SysIsFileDirectory dir                                 *
 *                                                                        *
 * Params:    dir - dir to check existance of.                            *
 *                                                                        *
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-size_t RexxEntry SysIsFileDirectory(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(logical_t, SysIsFileDirectory, CSTRING, filename)
 {
-    struct stat finfo;                 /* return buf for the finfo   */
+    struct stat finfo;                   /* return buf for the finfo   */
 
-    if (numargs != 1)                  /* we need one argument       */
-      return INVALID_ROUTINE;          /* raise an error             */
-
-    stat(args[0].strptr, &finfo);      /* read the info about it     */
-
-    if(S_ISDIR(finfo.st_mode)) {       /* is a subdir?               */
-      RETVAL(1)                        /* True - Is a File           */
-    }
-    else {
-      RETVAL(0)                        /* False - Is something else  */
-    }
+    int rc = stat(filename, &finfo);     /* read the info about it     */
+    return rc == 0 && S_ISDIR(finfo->st_mode);
 }
 
 /*************************************************************************
@@ -5133,21 +5116,12 @@ size_t RexxEntry SysIsFileDirectory(const char *name, size_t numargs, CONSTRXSTR
 * Return:    Logical.                                                    *
 *************************************************************************/
 
-size_t RexxEntry SysIsFileLink(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(logical_t, SysIsFileLink, CSTRING, filename)
 {
-    struct stat finfo;                 /* return buf for the finfo   */
+    struct stat finfo;                   /* return buf for the finfo   */
 
-    if (numargs != 1)                  /* we need one argument       */
-      return INVALID_ROUTINE;          /* raise an error             */
-
-    lstat(args[0].strptr, &finfo);     /* read the info about it     */
-
-    if(S_ISLNK(finfo.st_mode)) {       /* or a symbolic link         */
-      RETVAL(1)                        /* True - Is a File           */
-    }
-    else {
-      RETVAL(0)                        /* False - Is something else  */
-    }
+    int rc = lstat(args[0].strptr, &finfo);       /* read the info about it     */
+    return rc == 0 && S_ISLNK(finfo->st_mode);
 }
 
 
@@ -5218,9 +5192,10 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysQueryProcess,        SysQueryProcess),
     REXX_CLASSIC_ROUTINE(SysGetErrortext,        SysGetErrortext),
     REXX_CLASSIC_ROUTINE(SysUtilVersion,         SysUtilVersion),
-    REXX_CLASSIC_ROUTINE(SysIsFile,              SysIsFile),
-    REXX_CLASSIC_ROUTINE(SysIsFileDirectory,     SysIsFileDirectory),
-    REXX_CLASSIC_ROUTINE(SysIsFileLink,          SysIsFileLink),
+    REXX_TYPED_ROUTINE(SysIsFile,                SysIsFile),
+    REXX_TYPED_ROUTINE(SysIsFileDirectory,       SysIsFileDirectory),
+    REXX_TYPED_ROUTINE(SysIsFileLink,            SysIsFileLink),
+    REXX_TYPED_ROUTINE(SysFileExists,            SysFileExists),
     REXX_LAST_ROUTINE()
 };
 
