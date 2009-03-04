@@ -5085,7 +5085,7 @@ RexxRoutine1(logical_t, SysIsFile, CSTRING, filename)
 
     int rc = stat(filename, &finfo);     /* read the info about it     */
     // check the flag settings for a regular file
-    return rc == 0 && (S_ISREG(finfo->st_mode) || S_ISBLK(finfo->st_mode));
+    return rc == 0 && (S_ISREG(finfo.st_mode) || S_ISBLK(finfo.st_mode));
 }
 
 /*************************************************************************
@@ -5103,7 +5103,7 @@ RexxRoutine1(logical_t, SysIsFileDirectory, CSTRING, filename)
     struct stat finfo;                   /* return buf for the finfo   */
 
     int rc = stat(filename, &finfo);     /* read the info about it     */
-    return rc == 0 && S_ISDIR(finfo->st_mode);
+    return rc == 0 && S_ISDIR(finfo.st_mode);
 }
 
 /*************************************************************************
@@ -5121,7 +5121,7 @@ RexxRoutine1(logical_t, SysIsFileLink, CSTRING, filename)
     struct stat finfo;                   /* return buf for the finfo   */
 
     int rc = lstat(args[0].strptr, &finfo);       /* read the info about it     */
-    return rc == 0 && S_ISLNK(finfo->st_mode);
+    return rc == 0 && S_ISLNK(finfo.st_mode);
 }
 
 /*************************************************************************
