@@ -5124,6 +5124,23 @@ RexxRoutine1(logical_t, SysIsFileLink, CSTRING, filename)
     return rc == 0 && S_ISLNK(finfo->st_mode);
 }
 
+/*************************************************************************
+* Function:  SysFileExists                                               *
+*                                                                        *
+* Syntax:    call SysFileExists                                          *
+*                                                                        *
+* Params:    dir - file or dir to check existance of                     *
+*                                                                        *
+* Return:    Logical.                                                    *
+*************************************************************************/
+
+RexxRoutine1(logical_t, SysFileExists, CSTRING, filename)
+{
+    struct stat finfo;                   /* return buf for the finfo   */
+
+    return stat(filename, &finfo) == 0; /* read the info about it     */
+}
+
 
 #ifdef XX__cplusplus
 }
