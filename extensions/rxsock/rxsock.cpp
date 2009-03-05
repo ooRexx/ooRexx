@@ -343,6 +343,8 @@ int rxs2int(PCONSTRXSTRING  pRxStr, int *rc)
 {
     int   n;
 
+    *rc = 0;  /* default return code (an error occured) */
+
     /*---------------------------------------------------------------
      * check for errors
      *---------------------------------------------------------------*/
@@ -356,6 +358,7 @@ int rxs2int(PCONSTRXSTRING  pRxStr, int *rc)
      * convert
      *---------------------------------------------------------------*/
     n   = atoi(pRxStr->strptr);
+    *rc = n;  /* set the real return code */
     return n;
 }
 
