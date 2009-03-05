@@ -42,5 +42,5 @@ DIST_SUBDIRS            = api ole oodialog rexutils winsystem wsh
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
-EXTRA_DIST = *.rex *.txt
+EXTRA_DIST = *.rex
 

@@ -42,3 +42,5 @@ DIST_SUBDIRS            = callrxnt callrxwn rexxexit wpipe
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 
+EXTRA_DIST = *.txt
+

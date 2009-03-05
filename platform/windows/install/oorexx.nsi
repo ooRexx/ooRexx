@@ -446,69 +446,82 @@ Section "${LONGNAME} Development Kit" SecDev
   ${File} "${SRCDIR}\api\platform\windows\" "rexxapitypes.h"
   ${File} "${SRCDIR}\api\platform\windows\" "rexxplatformapis.h"
   ${File} "${SRCDIR}\api\platform\windows\" "rexxplatformdefs.h"
-  ${File} "${SRCDIR}\samples\windows\" "readme.txt"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\api\callrxnt
+  ;
+  ; API samples
+  ;
+  ${SetOutPath} $INSTDIR\samples\api
+  ${File} "${SRCDIR}\samples\windows\api\" "readme.txt"
+  ; Set output path to the installation directory for callrxnt.
+  ${SetOutPath} $INSTDIR\samples\api\callrxnt
   ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "*.fnc"
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "*.c"
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "*.ico"
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "*.mak"
-  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "*.exe"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\api\callrxwn
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "backward.fnc"
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.c"
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.ico"
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.mak"
+  ${File} "${SRCDIR}\samples\windows\api\callrxnt\" "callrxnt.exe"
+  ; Set output path to the installation directory for callrxwn.
+  ${SetOutPath} $INSTDIR\samples\api\callrxwn
   ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "*.fnc"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "*.c"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "*.h"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "*.ico"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "*.mak"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "*.exe"
-  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "*.rc"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\api\rexxexit
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "backward.fnc"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.c"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.h"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.ico"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.mak"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.exe"
+  ${File} "${SRCDIR}\samples\windows\api\callrxwn\" "callrxwn.rc"
+  ; Set output path to the installation directory for rexxexit.
+  ${SetOutPath} $INSTDIR\samples\api\rexxexit
   ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "*.c"
-  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "*.ico"
-  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "*.mak"
-  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "*.exe"
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.c"
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.ico"
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.mak"
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.exe"
   ${File} "${SRCDIR}\samples\" "rexxtry.rex"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\api\wpipe
+  ; Set output path to the installation directory the wpipe examples.
+  ${SetOutPath} $INSTDIR\samples\api\wpipe
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\api\wpipe\" "readme.txt"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\api\wpipe\wpipe1
+  ; Set output path to the installation directory for wpipe 1.
+  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe1
   ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "*.c"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "*.def"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "*.rex"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "*.mak"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "*.dll"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\api\wpipe\wpipe2
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.c"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.def"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "apitest1.rex"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.mak"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe1\" "rexxapi1.dll"
+  ; Set output path to the installation directory for wpipe 2.
+  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe2
   ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "*.c"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "*.def"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "*.rex"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "*.mak"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "*.dll"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\api\wpipe\wpipe3
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.c"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.def"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "apitest2.rex"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.mak"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe2\" "rexxapi2.dll"
+  ; Set output path to the installation directory for wpipe 3.
+  ${SetOutPath} $INSTDIR\samples\api\wpipe\wpipe3
   ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "*.c"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "*.def"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "*.rex"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "*.mak"
-  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "*.dll"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.c"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.def"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "apitest3.rex"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.mak"
+  ${File} "${SRCDIR}\samples\windows\api\wpipe\wpipe3\" "rexxapi3.dll"
+  ;
   ; Create start menu shortcuts
-  SetOutPath $INSTDIR\api
+  ;
+  ; All three of these examples have files that the executable needs to locate
+  ; in the same directory. The short cut menu item has to have the 'Start in:'
+  ; field set to the directory of the executable. The 'SetOutPath' command is
+  ; what controls that.
+  ;
   ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Console.lnk" "$INSTDIR\api\callrxnt\callrxnt.exe" "" "$INSTDIR\api\callrxnt\callrxnt.ico"
+  SetOutPath $INSTDIR\samples\api\callrxnt
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Console.lnk" "$INSTDIR\samples\api\callrxnt\callrxnt.exe" "" "$INSTDIR\samples\api\callrxnt\callrxnt.ico"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Console.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Window.lnk" "$INSTDIR\api\callrxwn\callrxwn.exe" "" "$INSTDIR\api\callrxwn\callrxwn.ico"
+  SetOutPath $INSTDIR\samples\api\callrxwn
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Window.lnk" "$INSTDIR\samples\api\callrxwn\callrxwn.exe" "" "$INSTDIR\samples\api\callrxwn\callrxwn.ico"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Window.lnk"
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk" "$INSTDIR\api\rexxexit\rexxexit.exe" "rexxtry.rex" "$INSTDIR\api\rexxexit\rexxexit.ico"
+  SetOutPath $INSTDIR\samples\api\rexxexit
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk" "$INSTDIR\samples\api\rexxexit\rexxexit.exe" "rexxtry.rex" "$INSTDIR\samples\api\rexxexit\rexxexit.ico"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk"
 SectionEnd
 
