@@ -5120,7 +5120,7 @@ RexxRoutine1(logical_t, SysIsFileLink, CSTRING, filename)
 {
     struct stat finfo;                   /* return buf for the finfo   */
 
-    int rc = lstat(args[0].strptr, &finfo);       /* read the info about it     */
+    int rc = lstat(filename, &finfo);       /* read the info about it     */
     return rc == 0 && S_ISLNK(finfo.st_mode);
 }
 
