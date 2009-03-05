@@ -104,7 +104,7 @@ directory containing the libraries to the LIBPATH. If you want to swhich
 between 32 bit and 64 bit ooRexx then make sure that you kill the rxapi
 daemon before the switch.
 
-The rxapi daemon needs to be started as user root. This could be none
+The rxapi daemon needs to be started as user root. This could be done
 via /etc/inittab:
 
 rxapi:2:once:/opt/ooRexx/bin/rxapi >/dev/console 2>&1
@@ -121,16 +121,6 @@ DEC/HP Alpha:
 ------------
 ooRexx currently has not been built on this platform. This is due to lack
 of resources for the development team.
-
-AMD Opteron:
------------
-
-This is also a 64bit architecture, but it is possible to build and run
-ooRexx as a 32bit process.  Before running configure set the following:
-% export CC="gcc -m32"
-% export CXX="g++ -m32"
-The configure script will then use the -m32 switch to force pointers and
-longs to 32bit.
 
 *BSD Platforms:
 --------------
