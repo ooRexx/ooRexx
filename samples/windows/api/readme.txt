@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,22 +35,31 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-OObject REXX API samples
+Open Object Rexx API samples
 
-Three API samples are currently included in the OBJREXX\API directory.
-Each sample is installed into a separate directory.
-Make files, which are compatible with nmake, are included in each sample directory
-so that you can rebuild the samples.
-In order to use the make files to build the samples, you must set up the environment
-variables INCLUDE and LIB.
+This is the read me for the three API samples, callrxwn, callrxnt, and
+rexxexit.  Each sample is installed in its own directory. The wpipe samples
+have their own read me file in the wpipe directory.
+
+The following notes on compiling the samples also apply to the wpipe samples.
+
+Make files, which are compatible with nmake, are included in each sample
+directory so that you can rebuild the samples.  In order to use the make files
+to build the samples, you must set up the environment variables INCLUDE and
+LIB.
 
 Compilation:
-The environment variable INCLUDE must contain the path to REXX.H as well as the compiler
-include path. This header file is included in the \OBJREXX\API directory.
+------------
+The environment variable INCLUDE must contain the path to rexx.h as well as
+the regular compiler include paths.  The rexx.h file is located in the top
+level api\ directory of the ooRexx installation.
 
 Linking:
-The environment variable LIB must contain the path to REXX.LIB and REXXAPI.LIB as well
-as the compiler library path. These library files are included in the \OBJREXX\API directory.
+--------
+The environment variable LIB must contain the path to rexx.lib and rexxapi.lib
+as well as the regular compiler library paths.  These library files are
+included in the same location as rexx.h, that is, in the top level api\
+directory of the ooRexx installation.
 
 Samples:
 --------
@@ -73,9 +82,17 @@ callrxnt   - Console mode application
            - Console mode applications calling Object REXX do not
              require input and output exit handlers.
 
-rexxexit   - Console mode application that runs on Windows NT only.
+rexxexit   - Console mode application
 
            - Provides a sample call to the REXX interpreter, passing
              in arguments from the command line. A REXX input and
-             output exit handler is also demonstrated. This is the
-             source code for rexxc.exe.
+             output exit handler is also demonstrated.
+
+           - An example input file, testRexxExit is provided.  Using that file
+             an invocation of rexxexit.exe would look like:
+
+             rexxexit testRexxExit "18 9"
+
+             The two numbers need to be in quotes because rexxexit no more
+             than two arguments, the input file name and a single argument for
+             the input file.

@@ -476,7 +476,7 @@ Section "${LONGNAME} Development Kit" SecDev
   ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.ico"
   ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.mak"
   ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "rexxexit.exe"
-  ${File} "${SRCDIR}\samples\" "rexxtry.rex"
+  ${File} "${SRCDIR}\samples\windows\api\rexxexit\" "testRexxExit"
   ; Set output path to the installation directory the wpipe examples.
   ${SetOutPath} $INSTDIR\samples\api\wpipe
   ; Distribution files...
@@ -521,7 +521,7 @@ Section "${LONGNAME} Development Kit" SecDev
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Window.lnk" "$INSTDIR\samples\api\callrxwn\callrxwn.exe" "" "$INSTDIR\samples\api\callrxwn\callrxwn.ico"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx in a Window.lnk"
   SetOutPath $INSTDIR\samples\api\rexxexit
-  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk" "$INSTDIR\samples\api\rexxexit\rexxexit.exe" "rexxtry.rex" "$INSTDIR\samples\api\rexxexit\rexxexit.ico"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk" "$INSTDIR\samples\api\rexxexit\rexxexit.exe" 'testRexxExit "189 8"' "$INSTDIR\samples\api\rexxexit\rexxexit.ico"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\${SHORTNAME} Samples\API\Call ooRexx with Exits.lnk"
 SectionEnd
 

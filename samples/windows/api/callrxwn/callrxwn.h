@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -39,7 +39,7 @@
 /* function prototypes.  Window procedures first.                    */
 LRESULT CALLBACK MainDlgProc(HWND hwnd, WORD msg, WPARAM wParam, LPARAM lParam);
 int CallRexx(HWND hwnd);
-LONG REXXENTRY RexxIOExit( LONG ExitNumber, LONG Subfunction, PEXIT ParmBlock);
+int REXXENTRY RexxIOExit(int ExitNumber, int Subfunction, PEXIT ParmBlock);
 
 /* global for Window Handle */
 HWND gHwnd;
@@ -47,6 +47,8 @@ HWND gHwnd;
 /*                          */
 CHAR     chTxtBuffer[128];          /* text buffer for formatting */
 
-/* the control ID from the dialog box. */
-#define DID_LISTBOX     0x006B
+/* IDs for the dialog box. */
+#define IDI_APP_ICON                  1
+#define IDD_CALLREXX_DLG            100
+#define IDC_LISTBOX                 200
 

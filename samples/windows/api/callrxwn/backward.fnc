@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -51,7 +51,7 @@ Parse Arg Data                         /* get argument string        */
 OutString = ''                         /* initialize output to empty */
 Count = Words(Data)                    /* find number of words       */
 Do i = Count To 1 By -1                /* for each word in string    */
-   OutString = OutString Word(Data,i)  /*   add word to output string*/
+   OutString = OutString Word(Data,i)  /* add word to output string  */
    End /* end do */
 Return Strip(OutString)                /* return reversed string,    */
                                        /* removing any blanks on the */

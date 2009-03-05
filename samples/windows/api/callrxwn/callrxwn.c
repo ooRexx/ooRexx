@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -80,7 +80,7 @@ int ret;
     UNREFERENCED_PARAMETER( lpCmdLine );
     UNREFERENCED_PARAMETER( nCmdShow);
                                        // create a dialog box for REXX STDIO
-    ret = DialogBox (hInstance, "callrexxDlg", NULL, (DLGPROC)MainDlgProc);
+    ret = (int)DialogBox (hInstance, MAKEINTRESOURCE(IDD_CALLREXX_DLG), NULL, (DLGPROC)MainDlgProc);
     return ret;
 }
 
@@ -148,25 +148,30 @@ int CallRexx(HWND hwnd)
 {
 
    RXSYSEXIT exitlist[9];              /* Exit list array            */
-   RXSTRING arg;                       /* argument string for REXX   */
+   CONSTRXSTRING arg;                  /* argument string for REXX   */
    RXSTRING rexxretval;                /* return value from REXX     */
 
    CHAR    *str = "These words will be swapped"; /* text to swap     */
 
-   RexxReturnCode   rc;                        /* return code from REXX      */
+   RexxReturnCode   rc;                /* return code from REXX      */
    SHORT    rexxrc = 0;                /* return code from function  */
    CHAR     *chTextOut[]={
             "This program will call the REXX interpreter to reverse  ",
             "    the order of the words in a string. The interpreter ",
             "    is invoked with an initial environment name of 'FNC'",
-            "    and a file name of 'BACKWARD.FNC'"
+            "    and a file name of 'BACKWARD.FNC'"                   ,
+            ""                                                        ,
+            "Below is the result of invoking the interpreter:"        ,
+            ""                                                        ,
+            "The example is finished, close the"                      ,
+            "dialog when convenient."                                 ,
+            ""
             };
    SHORT sIndex;                       /* index into output text     */
 
                                        /* put info text on dialog    */
-   for (sIndex=0; sIndex < 4; sIndex++) {
-         SendDlgItemMessage (hwnd, DID_LISTBOX, LB_ADDSTRING, 0,
-                             (LONG)chTextOut[sIndex] );
+   for (sIndex=0; sIndex < 7; sIndex++) {
+         SendDlgItemMessage (hwnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)chTextOut[sIndex] );
    }
 
    /* By setting the strlength of the output RXSTRING to zero, we    */
@@ -178,7 +183,7 @@ int CallRexx(HWND hwnd)
 
                                        /* register exit handler      */
    rc = RexxRegisterExitExe("RexxIOExit",
-        &RexxIOExit,                   /* located at this address    */
+        (REXXPFN)&RexxIOExit,          /* located at this address    */
         NULL);
 
                                        /* set up for RXSIO exit      */
@@ -186,9 +191,7 @@ int CallRexx(HWND hwnd)
    exitlist[0].sysexit_code = RXSIO;
    exitlist[1].sysexit_code = RXENDLST;
 
-   /* Here we call the interpreter.  We don't really need to use     */
-   /* all the casts in this call; they just help illustrate          */
-   /* the data types used.                                           */
+   /* Here we call the interpreter.                                  */
    rc=RexxStart(1,               /* number of arguments        */
                 &arg,            /* array of arguments         */
                 "BACKWARD.FNC",  /* name of REXX file          */
@@ -200,17 +203,21 @@ int CallRexx(HWND hwnd)
                 &rexxretval);    /* Rexx program output        */
 
                                        /* send rc info to dialog box */
-   wsprintf (chTxtBuffer," %s    %d", "Interpreter Return Code: ", rc);
-   SendDlgItemMessage (hwnd, DID_LISTBOX, LB_ADDSTRING, 0, (LONG)chTxtBuffer);
+   wsprintf (chTxtBuffer," %s %d",   "Interpreter Return Code:", rc);
+   SendDlgItemMessage (hwnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)chTxtBuffer);
 
-   wsprintf (chTxtBuffer," %s    %d", "Function Return Code: ", (int) rexxrc);
-   SendDlgItemMessage (hwnd, DID_LISTBOX, LB_ADDSTRING, 0, (LONG)chTxtBuffer);
+   wsprintf (chTxtBuffer," %s %d",   "Function Return Code:   ", (int) rexxrc);
+   SendDlgItemMessage (hwnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)chTxtBuffer);
 
-   wsprintf (chTxtBuffer," %s   '%s' ", "Original String: ", arg.strptr);
-   SendDlgItemMessage (hwnd, DID_LISTBOX, LB_ADDSTRING, 0, (LONG)chTxtBuffer);
+   wsprintf (chTxtBuffer," %s '%s'", "Original String:        ", arg.strptr);
+   SendDlgItemMessage (hwnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)chTxtBuffer);
 
-   wsprintf (chTxtBuffer," %s   '%s' ", "Backwards String: ", rexxretval.strptr);
-   SendDlgItemMessage (hwnd, DID_LISTBOX, LB_ADDSTRING, 0, (LONG)chTxtBuffer);
+   wsprintf (chTxtBuffer," %s '%s'", "Backwards String:       ", rexxretval.strptr);
+   SendDlgItemMessage (hwnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)chTxtBuffer);
+
+   for (sIndex=6; sIndex < 10; sIndex++) {
+         SendDlgItemMessage (hwnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)chTextOut[sIndex] );
+   }
 
    RexxFreeMemory(rexxretval.strptr);  /* Release storage            */
                                        /* given to us by REXX.       */
@@ -226,9 +233,9 @@ int CallRexx(HWND hwnd)
 *  Description:    This is our REXX Standard input and output handler
 *
 \*********************************************************************/
-LONG REXXENTRY RexxIOExit(
-     LONG ExitNumber,                  /* code defining exit function*/
-     LONG Subfunction,                 /* code defining exit subfunc */
+int REXXENTRY RexxIOExit(
+     int ExitNumber,                   /* code defining exit function*/
+     int Subfunction,                  /* code defining exit subfunc */
      PEXIT parmblock)                  /* func dependent control bloc*/
 {
    RXSIOSAY_PARM *sparm ;
@@ -238,15 +245,13 @@ LONG REXXENTRY RexxIOExit(
    case RXSIOSAY:                      /* write line to standard     */
                                        /* output stream for SAY instr*/
       sparm = ( RXSIOSAY_PARM * )parmblock ;
-      SendDlgItemMessage (gHwnd, DID_LISTBOX, LB_ADDSTRING, 0,
-                          (LONG)sparm->rxsio_string.strptr);
+      SendDlgItemMessage (gHwnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)sparm->rxsio_string.strptr);
       break;
    case RXSIOTRC:                      /* write line to standard     */
                                        /* error stream for trace or  */
                                        /* error messages             */
       tparm = ( RXSIOTRC_PARM * )parmblock ;
-      SendDlgItemMessage (gHwnd, DID_LISTBOX, LB_ADDSTRING, 0,
-                          (LONG)tparm->rxsio_string.strptr);
+      SendDlgItemMessage (gHwnd, IDC_LISTBOX, LB_ADDSTRING, 0, (LPARAM)tparm->rxsio_string.strptr);
       break;
    case RXSIOTRD:                      /* read line from standard    */
                                        /* input stream (PULL)        */

@@ -1,12 +1,12 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
 #/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-#/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
 #/* distribution. A copy is also available at the following address:           */
-#/* http://www.oorexx.org/license.html                          */
+#/* http://www.oorexx.org/license.html                                         */
 #/*                                                                            */
 #/* Redistribution and use in source and binary forms, with or                 */
 #/* without modification, are permitted provided that the following            */
@@ -35,12 +35,12 @@
 #/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
-# NMAKE-compatible MAKE file to build REXX sample program callrxwn.exe,
-# using Microsoft Visual C++ 6.0 compiler and linker
-# This example is a Windows mode application which runs on WindowsNT or Windows 98
+# NMAKE-compatible MAKE file to build REXX sample program callrxwn.exe.
+# This example is a Windows mode (GUI) application.
 #
 # Notes:
-#  - Make sure the path to rexx.lib and rexxapi.lib is in your LIB environment variable
+#  - Make sure the path to rexx.lib and rexxapi.lib is in your LIB environment
+#    variable
 #  - Make sure the path to rexx.h is in your INCLUDE environment variable
 #  - Uses /D_CRT_SECURE_NO_DEPRECATE to eliminate deprecation warnings under
 #    MS Visual Studio 2005
@@ -61,9 +61,9 @@ callrxwn.exe:     callrxwn.obj callrxwn.res
 callrxwn.obj:     callrxwn.c
     @ECHO Compiling $(@B).c
      cl callrxwn.c \
-     /nologo /D:_X86_ /DWIN32 /D_CRT_SECURE_NO_DEPRECATE /W3 -c -G3
+     /nologo /D:_X86_ /DWIN32 /D_CRT_SECURE_NO_DEPRECATE /W3 -c
 
 
-callrxwn.res: callrxwn.rc callrxwn.h resource.h
+callrxwn.res: callrxwn.rc callrxwn.h
     @ECHO ResourceCompiling $(@B).res
         rc /DWIN32 -r -fo callrxwn.res callrxwn.rc

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -126,8 +126,8 @@ int __cdecl main(int argc, char *argv[])
         RexxFreeMemory(rxretbuf.strptr);
     }
     RexxDeregisterExit("MY_IOC",NULL);     // remove the exit in exe exit list
-    // return interpeter or
-    return rc ? rc : rexxrc;                    // rexx program return cd
+    // return interpeter or rexx program return code
+    return rc ? rc : rexxrc;
 }
 
 
