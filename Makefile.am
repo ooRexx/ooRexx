@@ -1038,7 +1038,7 @@ deb:
 	cp $(build_os_platform_dir)/debian/postinst  ${top_srcdir}/debian
 	cp $(build_os_platform_dir)/debian/postrm    ${top_srcdir}/debian
 	cp $(build_os_platform_dir)/debian/prerm     ${top_srcdir}/debian
-	cp $(tbuild_os_platform_dir)/debian/rules     ${top_srcdir}/debian
+	cp $(build_os_platform_dir)/debian/rules     ${top_srcdir}/debian
 # Make the binaries
 	make all
 # Install into the debian package directory
