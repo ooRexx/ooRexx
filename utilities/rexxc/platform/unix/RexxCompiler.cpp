@@ -151,10 +151,7 @@ int main (int argc, char **argv)
     {
         ptr = RexxGetVersionInformation();
         printf(ptr);
-        if (ptr)
-        {
-            free(ptr);
-        }
+        RexxFreeMemory(ptr);
     }
     /* Check validity of arguments       */
     if (argc < 2 || argc > 4 ||          /* # args exceeding bounds           */

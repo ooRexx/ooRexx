@@ -5348,7 +5348,7 @@ size_t RexxEntry SysStemDelete(const char *name, size_t numargs, CONSTRXSTRING a
           fOk = false;
 
         /* free memory allocated by REXX */
-        GlobalFree(shvb.shvvalue.strptr);
+        RexxFreeMemory(shvb.shvvalue.strptr);
       }
       else
         fOk = false;
@@ -5503,7 +5503,7 @@ size_t RexxEntry SysStemInsert(const char *name, size_t numargs, CONSTRXSTRING a
           fOk = false;
 
         /* free memory allocated by REXX */
-        GlobalFree(shvb.shvvalue.strptr);
+        RexxFreeMemory(shvb.shvvalue.strptr);
       }
       else
         fOk = false;
@@ -5743,7 +5743,7 @@ size_t RexxEntry SysStemCopy(const char *name, size_t numargs, CONSTRXSTRING arg
           fOk = false;
 
         /* free memory allocated by REXX */
-        GlobalFree(shvb.shvvalue.strptr);
+        RexxFreeMemory(shvb.shvvalue.strptr);
       }
       else
         fOk = false;
@@ -5805,7 +5805,7 @@ size_t RexxEntry SysStemCopy(const char *name, size_t numargs, CONSTRXSTRING arg
           fOk = false;
 
         /* free memory allocated by REXX */
-        GlobalFree(shvb.shvvalue.strptr);
+        RexxFreeMemory(shvb.shvvalue.strptr);
       }
       else
         fOk = false;
@@ -6340,9 +6340,12 @@ size_t RexxEntry SysToUniCode(const char *name, size_t numargs, CONSTRXSTRING ar
      RETVAL(GetLastError())    // return error from function call
   }
 
-  if (!SetRexxUIStem(stemName, "!TEXT", lpwstr, ulDataLen))
+  if (!SetRexxUIStem(stemName, "!TEXT", lpwstr, ulDataLen)) {
+    GlobalFree(lpwstr);        // free allocated string
     return INVALID_ROUTINE;
+  }
 
+  GlobalFree(lpwstr);        // free allocated string
   BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* set default result         */
   return VALID_ROUTINE;                /* no error on call           */
 
@@ -6639,7 +6642,8 @@ RexxRoutine2(int, SysFileMove, CSTRING, fromFile, CSTRING, toFile)
 RexxRoutine1(logical_t, SysIsFile, CSTRING, file)
 {
     DWORD dwAttrs = GetFileAttributes(file);
-    return(dwAttrs == 0xffffffff) || (dwAttrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT));
+    // not a file if either of these is one
+    return (dwAttrs != 0xffffffff) && ((dwAttrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) == 0);
 }
 
 /*************************************************************************

@@ -111,7 +111,7 @@ int main (int argc, char **argv)
         case 'v': case 'V':            /* display version string            */
           ptr = RexxGetVersionInformation();
           fprintf(stderr, ptr);
-          if (ptr) free(ptr);
+          RexxFreeMemory(ptr);
           break;
 
         default:                       /* ignore other switches             */

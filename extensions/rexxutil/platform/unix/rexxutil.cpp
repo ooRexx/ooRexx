@@ -4374,7 +4374,7 @@ size_t RexxEntry SysStemDelete(const char *name, size_t numargs, CONSTRXSTRING a
           fOk = false;
 
         /* free memory allocated by REXX */
-        free(shvb.shvvalue.strptr);
+        RexxFreeMemory(shvb.shvvalue.strptr);
       }
       else
         fOk = false;
@@ -4529,7 +4529,7 @@ size_t RexxEntry SysStemInsert(const char *name, size_t numargs, CONSTRXSTRING a
           fOk = false;
 
         /* free memory allocated by REXX */
-        free(shvb.shvvalue.strptr);
+        RexxFreeMemory(shvb.shvvalue.strptr);
       }
       else
         fOk = false;
@@ -4769,7 +4769,7 @@ size_t RexxEntry SysStemCopy(const char *name, size_t numargs, CONSTRXSTRING arg
           fOk = false;
 
         /* free memory allocated by REXX */
-        free(shvb.shvvalue.strptr);
+        RexxFreeMemory(shvb.shvvalue.strptr);
       }
       else
         fOk = false;
@@ -4831,7 +4831,7 @@ size_t RexxEntry SysStemCopy(const char *name, size_t numargs, CONSTRXSTRING arg
           fOk = false;
 
         /* free memory allocated by REXX */
-        free(shvb.shvvalue.strptr);
+        RexxFreeMemory(shvb.shvvalue.strptr);
       }
       else
         fOk = false;

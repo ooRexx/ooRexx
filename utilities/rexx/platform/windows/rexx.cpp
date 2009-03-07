@@ -122,7 +122,7 @@ int __cdecl main(int argc, char *argv[])
                 char *ptr = RexxGetVersionInformation();
                 if (ptr) {
                     printf(ptr, "Interpreter");
-                    GlobalFree(ptr);
+                    RexxFreeMemory(ptr);
                 }
             }
             return 0;
@@ -196,7 +196,10 @@ int __cdecl main(int argc, char *argv[])
                    &rxretbuf );   /* Rexx program output   */
     }
                          /* rexx procedure executed*/
-    if ((rc==0) && rxretbuf.strptr) GlobalFree(rxretbuf.strptr);        /* Release storage only if*/
+    if ((rc==0) && rxretbuf.strptr)
+    {
+        RexxFreeMemory(rxretbuf.strptr);        /* Release storage only if*/
+    }
     freeArguments(NULL, &arguments);
 
   }

@@ -87,7 +87,7 @@ int SysCall main(int argc, char **argv)
       if (ptr) {
           printf(ptr, "Tokenizer");
           printf("\n");
-          GlobalFree(ptr);
+          RexxFreeMemory(ptr);
       }
   }
 

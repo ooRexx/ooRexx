@@ -571,8 +571,7 @@ size_t RexxEntry WSRegistryValue(const char *funcname, size_t argc, CONSTRXSTRIN
                 // return string buffer, we need to allocate a bigger buffer.
                 if ( cbData + sizeof("RESOURCEDESC, ") > STR_BUFFER )
                 {
-                    GlobalFree(retstr->strptr);
-                    retstr->strptr = (char *)GlobalAlloc(GMEM_FIXED, cbData + sizeof("RESOURCEDESC, "));
+                    retstr->strptr = (char *)RexxAllocateMemory(cbData + sizeof("RESOURCEDESC, "));
                     if ( retstr->strptr == NULL )
                     {
                         RETERR;

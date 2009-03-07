@@ -190,8 +190,8 @@ LONG REXXENTRY Api_Read_All_Variables_From_REXX_VP(
    else
        printf("Name of the variable from the Variable Pool: %s, Empty\n", prxshv->shvname.strptr);
    i++;
-   GlobalFree(prxshv->shvname.strptr);  /* free pointers allocated by REXX */
-   GlobalFree(prxshv->shvvalue.strptr); /* free pointers allocated by REXX */
+   RexxFreeMemory((void *)prxshv->shvname.strptr);  /* free pointers allocated by REXX */
+   RexxFreeMemory(prxshv->shvvalue.strptr); /* free pointers allocated by REXX */
 
    while (!prxshv->shvret)
    {
@@ -223,8 +223,8 @@ LONG REXXENTRY Api_Read_All_Variables_From_REXX_VP(
               printf("Name of the variable from the Variable Pool: %s, Value: %s \n", prxshv->shvname.strptr, prxshv->shvvalue.strptr);
           else
               printf("Name of the variable from the Variable Pool: %s, Empty\n", prxshv->shvname.strptr);
-          GlobalFree(prxshv->shvname.strptr);  /* free pointers allocated by REXX */
-          GlobalFree(prxshv->shvvalue.strptr); /* free pointers allocated by REXX */
+          RexxFreeMemory((void *)prxshv->shvname.strptr);  /* free pointers allocated by REXX */
+          RexxFreeMemory(prxshv->shvvalue.strptr); /* free pointers allocated by REXX */
       }
    }
   return VALID_ROUTINE;
@@ -255,9 +255,10 @@ LONG REXXENTRY Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
    RexxReturnCode rc;
    char array[20], value[10];
    char pch[64], *result;
+   char *varName;
 
    int chars;
-   int i, j, k = 0;
+   int j, k = 0;
 
    if (numargs != 1 )                    /* validate arg count         */
     return INVALID_ROUTINE;
@@ -306,8 +307,9 @@ LONG REXXENTRY Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
       strcat(array, value);
       temp->shvnext = NULL;
       temp->shvname.strlength = strlen(array);
-      temp->shvname.strptr = malloc(strlen(array)+1);
-      strcpy(temp->shvname.strptr, array);
+      varName = malloc(strlen(array)+1);
+      strcpy(varName, array);
+      temp->shvname.strptr = varName;
       temp->shvvalue.strptr = NULL; /* let rexx allocate it for me */
       temp->shvcode = RXSHV_SYFET;
    }
@@ -324,7 +326,7 @@ LONG REXXENTRY Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
       }
       else if (rc != RXSHV_LVAR)
       {
-         printf("ERROR: shvret is %x hex after var nr. %d\n",rc,i);
+         printf("ERROR: shvret is %x hex after var nr. %d\n",rc,k);
          return INVALID_ROUTINE;
       }
    }
@@ -332,13 +334,13 @@ LONG REXXENTRY Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP(
    for (k = 1;k <= j; k++)
    {
       printf("Name of the Stem-variable from the Variable Pool: %s, Value: %s \n", temp->shvname.strptr,temp->shvvalue.strptr);
-      free(temp->shvname.strptr);   /* allocated by us and therefore freed with free */
-      GlobalFree(temp->shvvalue.strptr);  /* allocated by REXX and therefore freed by GlobalFree */
+      free((void *)temp->shvname.strptr);   /* allocated by us and therefore freed with free */
+      RexxFreeMemory(temp->shvvalue.strptr);  /* allocated by REXX and therefore freed by RexxFreeMemory */
       interim = temp;
       temp = temp->shvnext;  /* process next in list */
       free(interim);         /* free current node */
    }
-   GlobalFree(prxshv->shvvalue.strptr);  /* allocated by REXX and freed by GlobalFree */
+   RexxFreeMemory(prxshv->shvvalue.strptr);  /* allocated by REXX and freed by RexxFreeMemory */
 
    return VALID_ROUTINE;
 }
