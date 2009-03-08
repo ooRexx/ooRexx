@@ -1,7 +1,7 @@
 #!/bin/sh
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
-#/* Copyright (c) 2007 Rexx Language Association. All rights reserved.         */
+#/* Copyright (c) 2007-2009 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -71,16 +71,23 @@ rm -f /usr/include/oorexxerrors.h
 rm -f /usr/bin/rexxtry.rex
 rm -rf /usr/share/ooRexx
 
-# Hopefully one of these directory structures matches debian.
 if [ -d /etc/rc.d/init.d ]; then
    # Red Hat
    /etc/rc.d/init.d/rxapid stop
    rm /etc/rc.d/rc3.d/S89rxapid
    rm /etc/rc.d/rc5.d/S89rxapid
    rm /etc/rc.d/init.d/rxapid
+elif [ -d /etc/init.d ]; then
+   # Debian
+   if [ -e /etc/init.d/rxapid ]; then
+      /etc/init.d/rxapid stop
+   fi
+   rm -f /etc/init.d/rc3.d/S89rxapid
+   rm -f /etc/init.d/rc5.d/S89rxapid
+   rm -f /etc/init.d/rxapid
 else
-   # Suse
-   /etc/rc.d//rxapid stop
+   # This does work for SuSE, but I think the Debian above would also work
+   /etc/rc.d/rxapid stop
    rm /etc/rc.d/rc3.d/S89rxapid
    rm /etc/rc.d/rc5.d/S89rxapid
    rm /etc/rc.d/rxapid

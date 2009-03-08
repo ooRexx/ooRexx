@@ -7,11 +7,19 @@
 # processname: rxapi
 # pidfile:     /var/run/rxapi.pid
 
-# Source function library.
+# Work around for Debian-based systems, maybe there is a better way...
+is_debian_like=0
+
+# Source function library.  If none of these work, then we haven't installed
+# on this platform yet and the installer will need to figure out what will
+# work.
 if [ -e /etc/rc.d/init.d/functions ]; then
    . /etc/init.d/functions
-else
+elif [ -e /etc/rc.status ]; then
    . /etc/rc.status
+elif [ -e /lib/lsb/init-functions ]; then
+   . /lib/lsb/init-functions
+   is_debian_like=1
 fi
 
 prog="rxapi"
@@ -20,21 +28,35 @@ start() {
 	echo -n $"Starting $prog: "
         if [ -e /etc/rc.d/init.d/functions ]; then
 	   daemon @prefix@/bin/rxapi
+        elif [ -e /lib/lsb/init-functions ]; then
+	   start_daemon @prefix@/bin/rxapi
         else
 	   startproc @prefix@/bin/rxapi
         fi
 	RETVAL=$?
 	echo
-	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/rxapi
+	if [ $is_debian_like -eq 0 ]; then
+	    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/rxapi
+	else
+	    [ $RETVAL -eq 0 ] && touch /var/lock/rxapi
+	fi
 	return $RETVAL
 }
 
 stop() {
 	echo -n $"Stopping $prog: "
-	killproc rxapi
+	if [ $is_debian_like -eq 0 ]; then
+	    killproc rxapi
+	else
+	    killproc -p /var/run/ooRexx.pid rxapi
+	fi
 	RETVAL=$?
 	echo
-	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/rxapi
+	if [ $is_debian_like -eq 0 ]; then
+	    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/rxapi
+	else
+	    [ $RETVAL -eq 0 ] && rm -f /var/lock/rxapi
+	fi
 	return $RETVAL
 }
 
