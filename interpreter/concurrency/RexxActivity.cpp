@@ -81,7 +81,7 @@ const size_t ACT_STACK_SIZE = 20;
  */
 void RexxActivity::runThread()
 {
-    bool firstDispatch = true;           // somethings only occur on subsequent requests
+    bool firstDispatch = true;           // some things only occur on subsequent requests
                                          /* establish the stack base pointer  */
     this->stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
 
@@ -105,7 +105,7 @@ void RexxActivity::runThread()
             {
                 this->activate();                // make sure this is marked as active
             }
-            firstDispatch = true;                // we need to activate every time after this
+            firstDispatch = false;               // we need to activate every time after this
             activityLevel = getActivationLevel();
 
             // if we have a dispatch message set, send it the send message to kick everything off
