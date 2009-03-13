@@ -149,7 +149,7 @@ int main(int argc, char **argv)
     printf("CALLREXX2 - RESULT-LENGTH:           %d\n", rexxretval.strlength);
     printf("CALLREXX2 - RESULT-Value:            %s\n", rexxretval.strptr);
 
-    if (rexxretval.strptr != null)
+    if (rexxretval.strptr != NULL)
     {
         RexxFreeMemory(rexxretval.strptr);
     }
