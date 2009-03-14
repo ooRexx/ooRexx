@@ -4904,7 +4904,6 @@ done_out:
     return imageList;
 }
 
-
 /** ListControl::setImageList()
  *
  *  Sets or removes one of a list-view's image lists.
@@ -4922,9 +4921,13 @@ done_out:
  *                If ilSrc is a bitmap, then this arg is the width of a single
  *                image.  The default is the height of the actual bitmap.
  *
- *  @param height [optional]  This arg is only used if ilSrc is a bitmap, in which case it
- *                is the height of the bitmap.  The default is the height of the
- *                actual bitmap
+ *  @param height [optional]  This arg is only used if ilSrc is a bitmap, in
+ *                which case it is the height of the bitmap.  The default is the
+ *                height of the actual bitmap
+ *
+ *  @param ilType [optional]  Only used if ilSrc is a bitmap.  In that case it
+ *                indentifies which of the list-views image lists is being set,
+ *                normal, small, or state. The default is LVSI_NORMAL.
  *
  *  @return       Returns the exsiting .ImageList object if there is one, or
  *                .nil if there is not an existing object.
@@ -4936,15 +4939,9 @@ done_out:
  *         image determines the number of images.  The image list is created
  *         using the ILC_COLOR8 flag, only.  No mask can be used.  No room is
  *         reserved for adding more images to the image list, etc..
- *
- *         The image list can only be assigned to the small or normal image
- *         list.  There is no way to use the image list for the state image
- *         list.  Whether the image list is assigned as the small or normal
- *         image list is determined by a guess, based on the size of the images.
- *
  */
-RexxMethod4(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
-            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OSELF, self)
+RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
+            OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OPTIONAL_int32_t, ilType, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
     oodSetSysErrCode(context, 0);
@@ -4983,20 +4980,15 @@ RexxMethod4(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
             goto err_out;
         }
 
-        // Get the actual width and height from the image list.
-        ImageList_GetIconSize(himl, &width, &height);
-
-        // Guess if this is for the small icons.  If the actuall icon size is
-        // too much bigger than the system size for small icons, the icon will
-        // be clipped in the view, or will not be used at all.  Assume the
-        // programmer does not intend to do this.  Arbitrarily say that 'too
-        // much' is 5 pixels. Note we don't do state images here.
-        type = (width <= (GetSystemMetrics(SM_CXSMICON) + 5)) ? LVSIL_SMALL : LVSIL_NORMAL;
+        if ( argumentExists(4) )
+        {
+            type = ilType;
+        }
     }
 
     if ( type > LVSIL_STATE )
     {
-        wrongRangeException(context, 2, LVSIL_NORMAL, LVSIL_STATE, type);
+        wrongRangeException(context, argumentExists(4) ? 4 : 2, LVSIL_NORMAL, LVSIL_STATE, type);
         goto err_out;
     }
 

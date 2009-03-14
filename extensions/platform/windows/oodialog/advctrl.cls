@@ -1140,7 +1140,10 @@
    return HandleListCtrl("M", "ENVIS", self~Hwnd, item, partial)
 
 -- DEPRECATED
-::method setSmallImages external "LIBRARY oodialog lv_setImageList"
+::method setSmallImages
+   newArgs = arg(1, 'A')
+   newArgs[4] = 1
+   forward message 'setImageList' arguments (newArgs)
 
 -- DEPRECATED
 ::method setImages external "LIBRARY oodialog lv_setImageList"
