@@ -288,6 +288,8 @@ Windows
 
   * 2056754 - Improve OLEObject's handling of COM events
 
+  * 2192102 - Update current examples for Vista
+
   * 2357113 - WindowsManager needs a way to get Desktop window
 
   * 2369193 - Update and add some winsystm.cls sample programs
