@@ -173,7 +173,9 @@ All Platforms
 
   * 2552722 - Add startWith() method to object class.
 
-  * 2597124  Windows specfic classes don't belong in rexxref
+  * 2597124 - Windows specfic classes don't belong in rexxref
+
+  * 2663450 - RexxUtil generic existance check API
 
 Windows
 =======
