@@ -1778,10 +1778,9 @@ bool RexxActivity::halt(RexxString *d)
     if (activation != NULL)
     {
         // please make it stop :-)
-        activation->halt(d);
-        return true;
+        return activation->halt(d);
     }
-    return false;
+    return true;
 }
 
 

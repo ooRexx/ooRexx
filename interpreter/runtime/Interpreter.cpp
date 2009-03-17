@@ -317,9 +317,10 @@ bool Interpreter::terminateInterpreterInstance(InterpreterInstance *instance)
 /**
  * Tell the interpreter to have all of the instances halt its activities.
  */
-void Interpreter::haltAllActivities()
+bool Interpreter::haltAllActivities()
 {
     ResourceSection lock;
+    bool result = true;
 
     for (size_t listIndex = interpreterInstances->firstIndex() ;
          listIndex != LIST_END;
@@ -329,8 +330,9 @@ void Interpreter::haltAllActivities()
                                          /*process                            */
         InterpreterInstance *instance = (InterpreterInstance *)interpreterInstances->getValue(listIndex);
         // halt every thing
-        instance->haltAllActivities();
+        result = result && instance->haltAllActivities();
     }
+    return result;
 }
 
 

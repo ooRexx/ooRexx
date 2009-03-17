@@ -141,17 +141,13 @@ bool SystemInterpreter::processSignal(DWORD dwCtrlType)
         GenerateConsoleCtrlEvent(CTRL_C_EVENT, exceptionHostProcessId);
         TerminateProcess(exceptionHostProcess, -1);
     }
-
+    // if this is a ctrl_C, try to halt all of the activities.  If we hit this
+    // in a situation where we still have one pending, then we'll allow the system
+    // to kill the process.
     if (dwCtrlType == CTRL_C_EVENT)
     {
-        signalCount++;
-        if (signalCount > 1)
-        {
-            return false;    /* send signal to system */
-        }
+        return Interpreter::haltAllActivities();
     }
-
-    Interpreter::haltAllActivities();
     return true;      /* ignore signal */
 }
 

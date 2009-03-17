@@ -3367,20 +3367,33 @@ void RexxActivation::processClauseBoundary()
 }
 
 
-void RexxActivation::halt(             /* turn on a HALT condition          */
-   RexxString * description )          /* HALT condition description        */
-/******************************************************************************/
-/* Function:  Flip on the HALT condition bit and store the HALT condition     */
-/*            descriptive string (which may be OREF_NULL)                     */
-/******************************************************************************/
+/**
+ * Halt the activation
+ *
+ * @param description
+ *               The description for the halt condition (if any).
+ *
+ * @return true if this halt was recognized, false if there is a
+ *         previous halt condition still to be processed.
+ */
+bool RexxActivation::halt(RexxString *description )
 {
-                                       /* store the description             */
-  this->settings.halt_description = description;
-                                       /* turn on the HALT flag             */
-  this->settings.flags |= halt_condition;
-                                       /* turn on clause boundary checking  */
-  this->settings.flags |= clause_boundary;
-
+    // if there's no halt condition pending, set this
+    if ((settings.flags&halt_condition) == 0)
+    {
+                                             /* store the description             */
+        this->settings.halt_description = description;
+                                             /* turn on the HALT flag             */
+        this->settings.flags |= halt_condition;
+                                             /* turn on clause boundary checking  */
+        this->settings.flags |= clause_boundary;
+        return true;
+    }
+    else
+    {
+        // we're not in a good position to process this
+        return false;
+    }
 }
 
 void RexxActivation::yield()

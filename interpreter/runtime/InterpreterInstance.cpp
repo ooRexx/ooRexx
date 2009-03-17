@@ -530,8 +530,9 @@ void InterpreterInstance::removeGlobalReference(RexxObject *o)
 /**
  * Raise a halt condition on all running activities.
  */
-void InterpreterInstance::haltAllActivities()
+bool InterpreterInstance::haltAllActivities()
 {
+    bool result = true;
     for (size_t listIndex = allActivities->firstIndex() ;
          listIndex != LIST_END;
          listIndex = allActivities->nextIndex(listIndex) )
@@ -542,9 +543,10 @@ void InterpreterInstance::haltAllActivities()
         // only halt the active ones
         if (activity->isActive())
         {
-            activity->halt(OREF_NULL);
+            result = result && activity->halt(OREF_NULL);
         }
     }
+    return result;
 }
 
 

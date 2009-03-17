@@ -130,7 +130,7 @@ public:
     static wholenumber_t messageNumber(RexxString *);
     static inline void setTimeSliceElapsed() { timeSliceElapsed = true; }
     static inline void clearTimeSliceElapsed() { timeSliceElapsed = false; }
-    static void haltAllActivities();
+    static bool haltAllActivities();
     static void decodeConditionData(RexxDirectory *conditionObj, RexxCondition *condData);
     static RexxClass *findClass(RexxString *className);
     static RexxString *getCurrentQueue();

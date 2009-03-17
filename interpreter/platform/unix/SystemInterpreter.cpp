@@ -73,7 +73,6 @@ void SystemInterpreter::processShutdown()
     Interpreter::processStartup();
 }
 
-#if 0
 void signalHandler(int sig)
 {
 #if defined( HAVE_SIGPROCMASK )
@@ -144,12 +143,10 @@ void signalHandler(int sig)
         exit(0);
     }
 }
-#endif
 
 
 void SystemInterpreter::startInterpreter()
 {
-#if 0
     /* Set the cleanup handler for unconditional process termination          */
     struct sigaction new_action;
     struct sigaction old_action;
@@ -169,7 +166,6 @@ void SystemInterpreter::startInterpreter()
     {
         sigaction(SIGINT, &new_action, NULL);  /* exitClear on SIGTERM signal     */
     }
-#endif
 }
 
 

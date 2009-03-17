@@ -287,7 +287,7 @@ class ActivationSettings
    void              debugInterpret(RexxString *);
    bool              debugPause(RexxInstruction * instr=OREF_NULL);
    void              processClauseBoundary();
-   void              halt(RexxString *);
+   bool              halt(RexxString *);
    void              externalTraceOn();
    void              externalTraceOff();
    void              yield();
