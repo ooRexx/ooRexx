@@ -451,6 +451,32 @@ RexxString *StringUtil::subchar(const char *stringData, size_t stringLength, Rex
     return new_string(stringData + position, 1);
 }
 
+/**
+ * Search for a separator within a string segment.
+ *
+ * @param start     The start position for the scan.
+ * @param end       The last possible position for a scan (taking the length
+ *                  of the separator into account).
+ * @param sepData   The separator data
+ * @param sepLength the length of the separator.
+ *
+ * @return The next match position, or null for no match.
+ */
+const char *StringUtil::locateSeparator(const char *start, const char *end, const char *sepData, size_t sepLength)
+{
+    /* search for separator character    */
+    while (start < end)
+    {
+        if (memcmp(start, sepData, sepLength) == 0)
+        {
+            return start;
+        }
+        start++;
+    }
+    // not found
+    return NULL;
+}
+
 
 /**
  * Carve the string buffer up into an array of string values.
@@ -496,17 +522,19 @@ RexxArray *StringUtil::makearray(const char *start, size_t length, RexxString *s
 
     RexxQueue *strings = new_queue();    /* save each string in a queue       */
     ProtectedObject p2(strings);         /* which we need to protect */
+    // this is the end of the string
+    const char *stringEnd = start + length;
 
-    // set our end marker
+    // this is where we stop scanning
     const char *end = start + length - sepSize + 1;
 
     while (start < end)
     {
-        const char *tmp = start;
-        /* search for separator character    */
-        while (tmp < end && memcmp(tmp, sepData, sepSize) != 0)
+        // search for the next separator, if not found, we're done
+        const char *tmp = locateSeparator(start, end, sepData, sepSize);
+        if (tmp == NULL)
         {
-            tmp++;
+            break;
         }
         size_t stringLen = tmp - start;
         // if checking for either linend possibility, reduce the length if we had
@@ -518,6 +546,12 @@ RexxArray *StringUtil::makearray(const char *start, size_t length, RexxString *s
         strings->queue(new_string(start, stringLen));
         // step to the next scan position
         start = tmp + sepSize;
+    }
+    // we might have a tail piece here
+    if (start < stringEnd)
+    {
+        size_t stringLen = stringEnd - start;
+        strings->queue(new_string(start, stringLen));
     }
     // now convert this to an array
     return strings->makeArray();
