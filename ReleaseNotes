@@ -227,6 +227,9 @@ New methods on String:
 
 replaceAt.
 
+Also, the makearray() method of string allows for delimiters longer than
+a single character.
+
 Incubator
 ---------
 
