@@ -65,6 +65,7 @@ public:
     {
         activity = contextToActivity(c);
         context = activity->getApiContext();
+        context->enableConditionTraps();
         // go acquire the kernel lock and take care of nesting
         activity->enterCurrentThread();
     }
@@ -81,6 +82,7 @@ public:
     {
         activity = contextToActivity(c);
         context = activity->getApiContext();
+        context->enableConditionTraps();
         // this does not acquire the lock
     }
 
@@ -93,6 +95,7 @@ public:
     {
         activity = contextToActivity(c);
         context = contextToActivation(c);
+        context->enableConditionTraps();
         // go acquire the kernel lock and take care of nesting
         activity->enterCurrentThread();
     }
@@ -106,6 +109,7 @@ public:
     {
         activity = contextToActivity(c);
         context = contextToActivation(c);
+        context->enableConditionTraps();
         // go acquire the kernel lock and take care of nesting
         activity->enterCurrentThread();
     }
@@ -119,6 +123,7 @@ public:
     {
         activity = contextToActivity(c);
         context = contextToActivation(c);
+        context->enableConditionTraps();
         // go acquire the kernel lock and take care of nesting
         activity->enterCurrentThread();
     }
@@ -129,6 +134,7 @@ public:
      */
     inline ~ApiContext()
     {
+        context->disableConditionTraps();
         activity->exitCurrentThread();
     }
 
