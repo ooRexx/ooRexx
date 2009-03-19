@@ -45,7 +45,7 @@
 # -------------------------------------------------------------------------
 # CHM moved target definition to top
 all : ORXHEADERS $(OR_OUTDIR)\rexx.dll  \
-      COPYORXFILES
+      COPYORXFILES COPYAPIFILES
     @ECHO ...
     @ECHO All done ....
 
@@ -191,6 +191,12 @@ ORXFILES=$(OR_OUTDIR)\CoreClasses.orx  $(OR_OUTDIR)\StreamClasses.orx \
 ORXHEADERS=$(OR_APISRC)\oorexxerrors.h $(INTERPRETER_MESSAGES)\RexxErrorCodes.h $(INTERPRETER_MESSAGES)\RexxMessageNumbers.h $(INTERPRETER_MESSAGES)\RexxMessageTable.h $(INTERPRETER_RUNTIME)\RexxCore.h \
     $(BEHAVIOUR)\PrimitiveBehaviourNames.h $(BEHAVIOUR)\ClassTypeCodes.h
 
+# All the files needed to compile and link an external program using the native
+# API are copied to one directory to make building an external program easier.
+APIFILES = $(OR_OUTDIR_API)\oorexxapi.h $(OR_OUTDIR_API)\oorexxerrors.h $(OR_OUTDIR_API)\rexx.h \
+           $(OR_OUTDIR_API)\rexxapidefs.h $(OR_OUTDIR_API)\rexxapitypes.h $(OR_OUTDIR_API)\rexxplatformapis.h \
+           $(OR_OUTDIR_API)\rexxplatformdefs.h $(OR_OUTDIR_API)\rexx.lib $(OR_OUTDIR_API)\rexxapi.lib
+
 
 #
 # *** rexx.LIB  : Creates .lib import library
@@ -322,6 +328,12 @@ $(OR_OUTDIR)\verinfo.res: $(INT_PLATFORM)\verinfo.rc
 # *** Copy ORX files to target dir...
 #
 COPYORXFILES: $(ORXFILES)
+
+#
+#
+# *** Copy API files to target dir...
+#
+COPYAPIFILES: $(APIFILES)
 
 #
 #
@@ -526,3 +538,30 @@ ORXHEADERS: $(ORXHEADERS)
     $(OR_CC) $(cflags_common) $(cflags_dll)  /Fo$(@) $(OR_ORYXINCL) $(Tp)$(**)
 
 
+# Copy any out-of-date API files to a single directory.
+$(OR_OUTDIR_API)\rexx.lib : $(OR_OUTDIR)\rexx.lib
+    @copy $? $(OR_OUTDIR_API) 1>nul 2>&1
+
+$(OR_OUTDIR_API)\rexxapi.lib : $(OR_OUTDIR)\rexxapi.lib
+    @copy $? $(OR_OUTDIR_API) 1>nul 2>&1
+
+$(OR_OUTDIR_API)\oorexxapi.h : $(OR_APISRC)\oorexxapi.h
+    @copy $? $(OR_OUTDIR_API) 1>nul 2>&1
+
+$(OR_OUTDIR_API)\oorexxerrors.h : $(OR_APISRC)\oorexxerrors.h
+    @copy $? $(OR_OUTDIR_API) 1>nul 2>&1
+
+$(OR_OUTDIR_API)\rexx.h : $(OR_APISRC)\rexx.h
+    @copy $? $(OR_OUTDIR_API) 1>nul 2>&1
+
+$(OR_OUTDIR_API)\rexxapidefs.h : $(OR_APISRC)\rexxapidefs.h
+    @copy $? $(OR_OUTDIR_API) 1>nul 2>&1
+
+$(OR_OUTDIR_API)\rexxapitypes.h : $(OR_APIWINSRC)\rexxapitypes.h
+    @copy $? $(OR_OUTDIR_API) 1>nul 2>&1
+
+$(OR_OUTDIR_API)\rexxplatformapis.h : $(OR_APIWINSRC)\rexxplatformapis.h
+    @copy $? $(OR_OUTDIR_API) 1>nul 2>&1
+
+$(OR_OUTDIR_API)\rexxplatformdefs.h : $(OR_APIWINSRC)\rexxplatformdefs.h
+    @copy $? $(OR_OUTDIR_API) 1>nul 2>&1
