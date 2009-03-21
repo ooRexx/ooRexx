@@ -442,7 +442,6 @@ RoutineClass *PackageManager::createRegisteredRoutine(RexxString *function)
 }
 
 
-
 /**
  * Load an internal package into our list.  This does not
  * load a library, but links package routines ones already
@@ -458,6 +457,29 @@ void PackageManager::loadInternalPackage(RexxString *name, RexxPackageEntry *p)
     // have we already loaded this package?
     packages->put((RexxObject *)package, name);
 }
+
+
+/**
+ * Register an in-process library package.
+ *
+ * @param name   The name to register under.
+ * @param p      The package table information.
+ *
+ * @return true if this was successfully registered, false if a package
+ *         is already registered under the name.
+ */
+bool PackageManager::registerPackage(RexxString *name, RexxPackageEntry *p)
+{
+    // don't replace any already loaded packages
+    if (packages->at(name) != OREF_NULL)
+    {
+        return false;
+    }
+    // handle like an internal package
+    loadInternalPackage(name, p);
+    return true;
+}
+
 
 
 /**

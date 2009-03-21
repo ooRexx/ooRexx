@@ -693,6 +693,15 @@ bool InterpreterInstance::processOptions(RexxOption *options)
             // this must load ok in order for this to work
             PackageManager::getLibrary(libraryName);
         }
+        // a package to load at startup
+        else if (strcmp(options->optionName, REGISTER_LIBRARY) == 0)
+        {
+            RexxLibraryPackage *package = (RexxLibraryPackage *)options->option.value.value_POINTER;
+            RexxString *libraryName = new_string(package->registeredName);
+
+            // this must load ok in order for this to work
+            PackageManager::registerPackage(libraryName, package->table);
+        }
         else
         {
             // unknown option

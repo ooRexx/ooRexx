@@ -316,6 +316,40 @@ RexxPackageObject RexxEntry LoadPackageFromData(RexxThreadContext *c, CSTRING n,
 }
 
 
+logical_t RexxEntry LoadLibraryPackage(RexxThreadContext *c, CSTRING n)
+{
+    ApiContext context(c);
+    try
+    {
+        RexxString *name = new_string(n);
+
+        // convert the name to a string instance, and check the environments.
+        return PackageManager::loadLibrary(name) != OREF_NULL;
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
+
+logical_t RexxEntry RegisterLibrary(RexxThreadContext *c, CSTRING n, RexxPackageEntry *e)
+{
+    ApiContext context(c);
+    try
+    {
+        RexxString *name = new_string(n);
+
+        // convert the name to a string instance, and check the environments.
+        return PackageManager::registerPackage(name, e);
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
+
 RexxClassObject RexxEntry FindClass(RexxThreadContext *c, CSTRING n)
 {
     ApiContext context(c);
@@ -1776,6 +1810,8 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     HasMethod,
     LoadPackage,
     LoadPackageFromData,
+    LoadLibraryPackage,
+    RegisterLibrary,
     FindClass,
     FindClassFromPackage,
     GetPackageRoutines,

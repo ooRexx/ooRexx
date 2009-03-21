@@ -368,23 +368,31 @@ typedef struct
 // The set of command environments to use.  These are direct call addresses using the
 // object-oriented calling convetion.
 #define DIRECT_ENVIRONMENTS         "DirectEnvironments"
+// register a library for an in-process package
+#define REGISTER_LIBRARY            "RegisterLibrary"
+
 
 /* This typedef simplifies coding of an Exit handler.                */
 typedef RexxObjectPtr REXXENTRY RexxContextCommandHandler(RexxExitContext *, RexxStringObject, RexxStringObject);
 
 
-typedef struct _RexxContextEnvironment
+typedef struct
 {
    RexxContextCommandHandler *handler;    // the environment handler
    const char *name;                      // the handler name
 }  RexxContextEnvironment;
 
-
-typedef struct _RexxRegisteredEnvironment
+typedef struct
 {
    const char *registeredName;            // the environment handler
    const char *name;                      // the handler name
 }  RexxRegisteredEnvironment;
+
+typedef struct
+{
+   const char *registeredName;            // the package name (case sensitive)
+   RexxPackageEntry *table;               // the package table associated with the package
+}  RexxLibraryPackage;
 
 typedef struct
 {
@@ -393,9 +401,9 @@ typedef struct
 } RexxOption;
 
 
-typedef struct _RexxCondition {
-  wholenumber_t code;                   // full condition code
-  wholenumber_t rc;                     // return code value
+typedef struct {
+  wholenumber_t code;                // full condition code
+  wholenumber_t rc;                  // return code value
   size_t           position;         // line number position
   RexxStringObject conditionName;    // name of the condition
   RexxStringObject message;          // fully filled in message
@@ -448,6 +456,8 @@ typedef struct
 
     RexxPackageObject (RexxEntry *LoadPackage)(RexxThreadContext *, CSTRING d);
     RexxPackageObject (RexxEntry *LoadPackageFromData)(RexxThreadContext *, CSTRING n, CSTRING d, size_t l);
+    logical_t         (RexxEntry *LoadLibrary)(RexxThreadContext *, CSTRING n);
+    logical_t         (RexxEntry *RegisterLibrary)(RexxThreadContext *, CSTRING n, RexxPackageEntry *);
     RexxClassObject  (RexxEntry *FindClass)(RexxThreadContext *, CSTRING);
     RexxClassObject  (RexxEntry *FindPackageClass)(RexxThreadContext *, RexxPackageObject, CSTRING);
     RexxDirectoryObject (RexxEntry *GetPackageRoutines)(RexxThreadContext *, RexxPackageObject);
@@ -811,6 +821,14 @@ struct RexxThreadContext_
     RexxPackageObject LoadPackageFromData(CSTRING n, CSTRING d, size_t l)
     {
         return functions->LoadPackageFromData(this, n, d, l);
+    }
+    logical_t LoadLibrary(CSTRING n)
+    {
+        return functions->LoadLibrary(this, n);
+    }
+    logical_t RegisterLibrary(CSTRING n, RexxPackageEntry *e)
+    {
+        return functions->RegisterLibrary(this, n, e);
     }
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {
@@ -1444,6 +1462,14 @@ struct RexxMethodContext_
     RexxPackageObject LoadPackageFromData(CSTRING n, CSTRING d, size_t l)
     {
         return threadContext->LoadPackageFromData(n, d, l);
+    }
+    logical_t LoadLibrary(CSTRING n)
+    {
+        return threadContext->LoadLibrary(n);
+    }
+    logical_t RegisterLibrary(CSTRING n, RexxPackageEntry *e)
+    {
+        return threadContext->RegisterLibrary(n, e);
     }
 
     POINTER ObjectToCSelf(RexxObjectPtr o)
@@ -2138,6 +2164,14 @@ struct RexxCallContext_
     RexxPackageObject LoadPackageFromData(CSTRING n, CSTRING d, size_t l)
     {
         return threadContext->LoadPackageFromData(n, d, l);
+    }
+    logical_t LoadLibrary(CSTRING n)
+    {
+        return threadContext->LoadLibrary(n);
+    }
+    logical_t RegisterLibrary(CSTRING n, RexxPackageEntry *e)
+    {
+        return threadContext->RegisterLibrary(n, e);
     }
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {
@@ -2837,6 +2871,14 @@ struct RexxExitContext_
     RexxPackageObject LoadPackageFromData(CSTRING n, CSTRING d, size_t l)
     {
         return threadContext->LoadPackageFromData(n, d, l);
+    }
+    logical_t LoadLibrary(CSTRING n)
+    {
+        return threadContext->LoadLibrary(n);
+    }
+    logical_t RegisterLibrary(CSTRING n, RexxPackageEntry *e)
+    {
+        return threadContext->RegisterLibrary(n, e);
     }
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {

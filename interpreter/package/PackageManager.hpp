@@ -82,6 +82,7 @@ public:
     static PREGISTEREDROUTINE resolveRegisteredRoutineEntry(RexxString *package, RexxString *name);
     static void        addPackageRoutine(RexxString *name, RoutineClass *func);
     static void        loadInternalPackage(RexxString *name, RexxPackageEntry *p);
+    static bool        registerPackage(RexxString *name, RexxPackageEntry *p);
     static RexxObject *addRegisteredRoutine(RexxString *name, RexxString *module, RexxString *proc);
     static RexxObject *dropRegisteredRoutine(RexxString *name);
     static RexxObject *queryRegisteredRoutine(RexxString *name);
