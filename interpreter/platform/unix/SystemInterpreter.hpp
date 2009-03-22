@@ -51,6 +51,14 @@
 
 #include "RexxCore.h"
 
+#if defined( HAVE_SIGNAL_H )
+# include <signal.h>
+#endif
+
+#if defined( HAVE_SYS_SIGNAL_H )
+# include <sys/signal.h>
+#endif
+
 
 class InterpreterInstance;
 class RexxActivation;
@@ -95,6 +103,11 @@ public:
     static void setupProgram(RexxActivation *activation);
     static void loadImage(char **imageBuffer, size_t *imageSize);
     static RexxBuffer *readProgram(const char *file_name);
+
+protected:
+    static sigset_t oldmask;       // masks used for setting signal handlers
+    static sigset_t newmask;
+
 };
 
 #endif

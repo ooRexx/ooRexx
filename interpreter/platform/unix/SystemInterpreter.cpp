@@ -50,13 +50,8 @@
 #include "SystemInterpreter.hpp"
 #include "Interpreter.hpp"
 
-#if defined( HAVE_SIGNAL_H )
-# include <signal.h>
-#endif
-
-#if defined( HAVE_SYS_SIGNAL_H )
-# include <sys/signal.h>
-#endif
+sigset_t SystemInterpreter::oldmask = 0;
+sigset_t SystemInterpreter::newmask = 0;
 
 class InterpreterInstance;
 
@@ -75,19 +70,6 @@ void SystemInterpreter::processShutdown()
 
 void signalHandler(int sig)
 {
-#if defined( HAVE_SIGPROCMASK )
-        sigemptyset( &newmask );
-        sigaddset( &newmask, SIGINT );
-        sigaddset( &newmask, SIGTERM );
-        sigaddset( &newmask, SIGILL );
-        sigaddset( &newmask, SIGSEGV );
-        sigprocmask( SIG_BLOCK, &newmask , &oldmask );
-#elif defined( HAVE_SIGHOLD )
-        sighold(SIGINT);
-        sighold(SIGTERM);
-        sighold(SIGILL);
-        sighold(SIGSEGV);
-#endif
 
 #ifdef ORXAP_DEBUG
     switch (sig)
@@ -147,6 +129,20 @@ void signalHandler(int sig)
 
 void SystemInterpreter::startInterpreter()
 {
+#if defined( HAVE_SIGPROCMASK )
+    sigemptyset( &newmask );
+    sigaddset( &newmask, SIGINT );
+    sigaddset( &newmask, SIGTERM );
+    sigaddset( &newmask, SIGILL );
+    sigaddset( &newmask, SIGSEGV );
+    sigprocmask( SIG_BLOCK, &newmask , &oldmask );
+#elif defined( HAVE_SIGHOLD )
+    sighold(SIGINT);
+    sighold(SIGTERM);
+    sighold(SIGILL);
+    sighold(SIGSEGV);
+#endif
+
     /* Set the cleanup handler for unconditional process termination          */
     struct sigaction new_action;
     struct sigaction old_action;
@@ -171,6 +167,15 @@ void SystemInterpreter::startInterpreter()
 
 void SystemInterpreter::terminateInterpreter()
 {
+// clean up the signal handler
+#if defined( HAVE_SIGPROCMASK )
+    sigprocmask( SIG_SETMASK, &oldmask , NULL );
+#elif defined( HAVE_SIGHOLD )
+    sigrelse(SIGINT);
+    sigrelse(SIGTERM);
+    sigrelse(SIGILL);
+    sigrelse(SIGSEGV);
+#endif
 }
 
 
