@@ -76,14 +76,14 @@ void RexxMessage::createInstance()
  * @param scope   The starting scope (can be OREF_NULL).
  * @param _args   An array of arguments to the message.
  */
-RexxMessage::RexxMessage(RexxObject *_target, RexxString *messageName, RexxObject *scope, RexxArray *_args)
+RexxMessage::RexxMessage(RexxObject *_target, RexxString *msgName, RexxObject *scope, RexxArray *_args)
 {
                                          /* defult target is target specified */
     OrefSet(this, this->receiver, _target);
     OrefSet(this, this->target, _target); /* Target specified on new           */
     /* Args to be sent wuth tmessage     */
     OrefSet(this, this->args, _args);
-    OrefSet(this, this->message, messageName);
+    OrefSet(this, this->message, msgName);
     OrefSet(this, this->startscope, scope);
 
     /* initialize a list of message to be*/
@@ -515,10 +515,10 @@ RexxObject *RexxMessage::newRexx(
     RexxObject *_target   = msgArgs[0];              /* Get the receiver object           */
     requiredArgument(_target, ARG_ONE);
     RexxObject *_message  = msgArgs[1];              /* get the message .                 */
-    RexxString *messageName;
+    RexxString *msgName;
     RexxObject *_startScope;
     // decode the message argument into name and scope
-    RexxObject::decodeMessageName(_target, _message, messageName, _startScope);
+    RexxObject::decodeMessageName(_target, _message, msgName, _startScope);
 
     /* are there arguments to be sent    */
     /*with the message?                  */
@@ -589,7 +589,7 @@ RexxObject *RexxMessage::newRexx(
     }
     /* all args are parcelled out, go    */
     /*create the new message object...   */
-    RexxMessage *newMessage = new RexxMessage(_target, messageName, _startScope, argPtr);
+    RexxMessage *newMessage = new RexxMessage(_target, msgName, _startScope, argPtr);
     /* actually a subclassed item?       */
     if (((RexxClass *)this)->isPrimitive())
     {

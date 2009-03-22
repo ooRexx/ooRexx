@@ -2248,7 +2248,7 @@ RexxInstruction *RexxSource::traceNew()
 {
     size_t setting = TRACE_NORMAL;              /* set default trace mode            */
     wholenumber_t debug_skip = 0;               /* no skipping                       */
-    size_t traceFlags = 0;                      /* no translated flags               */
+    size_t trcFlags = 0;                        /* no translated flags               */
     RexxObject *_expression = OREF_NULL;        /* not expression form               */
     RexxToken *token = nextReal();              /* get the next token                */
 
@@ -2283,7 +2283,7 @@ RexxInstruction *RexxSource::traceNew()
                     debug_skip = 0;              /* belt and braces                   */
                     char badOption = 0;
                                                  /* process the setting               */
-                    if (!parseTraceSetting(value, setting, traceFlags, badOption))
+                    if (!parseTraceSetting(value, setting, trcFlags, badOption))
                     {
                         syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                     }
@@ -2308,7 +2308,7 @@ RexxInstruction *RexxSource::traceNew()
                 debug_skip = 0;                /* belt and braces                   */
                 char badOption = 0;
                                              /* process the setting               */
-                if (!parseTraceSetting(value, setting, traceFlags, badOption))
+                if (!parseTraceSetting(value, setting, trcFlags, badOption))
                 {
                     syntaxError(Error_Invalid_trace_trace, new_string(&badOption, 1));
                 }
@@ -2357,7 +2357,7 @@ RexxInstruction *RexxSource::traceNew()
     /* create a new translator object    */
     RexxInstruction *newObject = new_instruction(TRACE, Trace);
     /* now complete this                 */
-    new ((void *)newObject) RexxInstructionTrace(_expression, setting, traceFlags, debug_skip);
+    new ((void *)newObject) RexxInstructionTrace(_expression, setting, trcFlags, debug_skip);
     return newObject; /* done, return this                 */
 }
 

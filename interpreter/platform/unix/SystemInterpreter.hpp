@@ -104,7 +104,6 @@ public:
     static void loadImage(char **imageBuffer, size_t *imageSize);
     static RexxBuffer *readProgram(const char *file_name);
 
-protected:
     static sigset_t oldmask;       // masks used for setting signal handlers
     static sigset_t newmask;
 

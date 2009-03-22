@@ -630,10 +630,10 @@ $ Error_Invalid_whole_number_parse
 307 Positional pattern of PARSE template must be a whole number; found "&1"
 
 $ Error_Invalid_whole_number_digits
-308 NUMERIC DIGITS value must be a positive whole number; found "&1"
+308 DIGITS value must be a positive whole number; found "&1"
 
 $ Error_Invalid_whole_number_fuzz
-309 NUMERIC FUZZ value must be zero or a positive whole number; found "&1"
+309 FUZZ value must be zero or a positive whole number; found "&1"
 
 $ Error_Invalid_whole_number_trace
 310 Number used in TRACE setting must be a whole number; found "&1"
@@ -1732,6 +1732,18 @@ $ Error_Execution_context_not_active
 
 $ Error_Execution_library_version
 711 Library "&1" is not compatible with current interpreter version.
+
+$ Error_Invalid_subkeyword_options
+712 Unknown keyword on ::OPTIONS directive; found "&1"
+
+$ Error_Symbol_or_string_digits_value
+713 String or symbol expected as DIGITS value
+
+$ Error_Symbol_or_string_fuzz_value
+714 String or symbol expected as FUZZ value
+
+$ Error_Symbol_or_string_trace_value
+715 String or symbol expected as TRACE value
 
 
 $ * -------------------------------------------------------------------------- */

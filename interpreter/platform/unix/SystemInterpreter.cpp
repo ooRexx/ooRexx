@@ -50,8 +50,8 @@
 #include "SystemInterpreter.hpp"
 #include "Interpreter.hpp"
 
-sigset_t SystemInterpreter::oldmask = 0;
-sigset_t SystemInterpreter::newmask = 0;
+sigset_t SystemInterpreter::oldmask;
+sigset_t SystemInterpreter::newmask;
 
 class InterpreterInstance;
 
@@ -103,7 +103,7 @@ void signalHandler(int sig)
     {
         Interpreter::haltAllActivities();
 #if defined( HAVE_SIGPROCMASK )
-        sigprocmask( SIG_SETMASK, &oldmask , NULL );
+        sigprocmask( SIG_SETMASK, &SystemInterpreter::oldmask , NULL );
 #elif defined( HAVE_SIGHOLD )
         sigrelse(SIGINT);
         sigrelse(SIGTERM);
@@ -115,7 +115,7 @@ void signalHandler(int sig)
     else
     {
 #if defined( HAVE_SIGPROCMASK )
-        sigprocmask( SIG_SETMASK, &oldmask , NULL );
+        sigprocmask( SIG_SETMASK, &SystemInterpreter::oldmask , NULL );
 #elif defined( HAVE_SIGHOLD )
         sigrelse(SIGINT);
         sigrelse(SIGTERM);
