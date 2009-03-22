@@ -87,6 +87,7 @@ protected:
     LocalAPIManager *localManager;  // our local manager instance
     QueueHandle    sessionQueue;    // our resolved session queue
     SessionID      sessionID;       // the working session id
+    static boolean createdSessionQueue;   // remember if we created the session queue
 };
 
 #endif

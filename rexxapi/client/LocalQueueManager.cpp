@@ -46,6 +46,8 @@
 #include <stdio.h>
 #include <ctype.h>
 
+// make sure we remember what we do for this process.
+boolean LocalQueueManager::createdSessionQueue = false;
 
 /**
  * Initialize the local queue manager.
@@ -148,7 +150,7 @@ QueueHandle LocalQueueManager::initializeSessionQueue(SessionID session)
     // inherit from our parent session
     QueueHandle mysessionQueue;
     // we could be inheriting the session queue from a caller process...check first.
-    if (SysLocalAPIManager::getActiveSessionQueue(mysessionQueue))
+    if (!createdSessionQueue && SysLocalAPIManager::getActiveSessionQueue(mysessionQueue))
     {
         // make sure we update the nest count
         // this might end up creating a new queue instance
@@ -158,6 +160,9 @@ QueueHandle LocalQueueManager::initializeSessionQueue(SessionID session)
     {
         // create a new session queue
         mysessionQueue = createSessionQueue(session);
+        // remember that we created this initially.  We'll need to create
+        // the queue each time one is needed for this session.
+        createdSessionQueue = true;
     }
     SysLocalAPIManager::setActiveSessionQueue(mysessionQueue);
     return mysessionQueue;
