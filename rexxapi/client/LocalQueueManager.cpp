@@ -47,7 +47,7 @@
 #include <ctype.h>
 
 // make sure we remember what we do for this process.
-boolean LocalQueueManager::createdSessionQueue = false;
+bool LocalQueueManager::createdSessionQueue = false;
 
 /**
  * Initialize the local queue manager.
