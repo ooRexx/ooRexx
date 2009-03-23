@@ -175,8 +175,8 @@ class RexxNativeActivation : public RexxActivationBase
   inline void enableConditionTrap() { trapConditions = true; }
 
   void forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, RexxArray *args, ProtectedObject &result);
-  void enableConditionTraps() { trapErrors = true; trapConditions = true; }
-  void disableConditionTraps() { trapErrors = false; trapConditions = false; }
+  void enableConditionTraps() { trapErrors = true; }
+  void disableConditionTraps() { trapErrors = false; }
 
 protected:
 
