@@ -659,8 +659,22 @@ void RexxActivation::processTraps()
                 /* initialize the RC variable        */
                 this->setLocalVariable(OREF_RC, VARIABLE_RC, rc);
             }
-            /* call the condition handler        */
-            ((RexxInstructionCallBase *)trapHandler->get(1))->trap(this, conditionObj);
+            // it's possible that the condition can raise an error because of a
+            // missing label, so we need to catch any conditions that might be thrown
+            try
+            {
+                /* call the condition handler        */
+                ((RexxInstructionCallBase *)trapHandler->get(1))->trap(this, conditionObj);
+            }
+            catch (RexxActivation *t)
+            {
+                // if we're not the target of this throw, we've already been unwound
+                // keep throwing this until it reaches the target activation.
+                if (t != this )
+                {
+                    throw;
+                }
+            }
         }
     }
 }
