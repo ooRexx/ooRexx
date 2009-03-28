@@ -48,6 +48,9 @@
 #include "SysSemaphore.hpp"
 #include "IdentityTableClass.hpp"
 
+// this can be enabled to switch on memory profiling info
+//#define MEMPROFILE
+
 #ifdef __REXX64__
 // The minimum allocation unit for an object.
 // 16 is needed for 64-bit to maintain some required alignments

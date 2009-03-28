@@ -54,10 +54,10 @@
 
 #ifdef __REXX64__
 // default size for a segment allocation, we go larger on 64-bit
-#define SegmentSize (65536*2)
+#define SegmentSize (256*1024*2)
 #else
 /* default size for a segment allocation */
-#define SegmentSize 65536
+#define SegmentSize (256*1024)
 #endif
 /* Minimum size segment we'll allow */
 #define MinimumSegmentSize (SegmentSize/2)
@@ -82,7 +82,7 @@
 /* Our threshold for deciding we're thrashing the garbage */
 /* collector.  We'll always just extend memory if we're below this */
 /* request threshold. */
-#define MemoryThrashingThreshold 15
+#define MemoryThrashingThreshold 8
 
 /* map an object length to an allocation deadpool.  NOTE:  this */
 /* assumes the length has already been rounded to ObjectGrain! */

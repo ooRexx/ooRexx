@@ -82,7 +82,7 @@ RexxMemory memoryObject;
 
 #define LiveStackSize  16370         /* live stack size                   */
 
-#define SaveStackSize 20             /* newly created objects to save */
+#define SaveStackSize 10             /* newly created objects to save */
 #define SaveStackAllocSize 500       /* pre-allocation for save stack  */
 
 #define MaxImageSize 1400000         /* maximum startup image size */
@@ -742,17 +742,14 @@ MemorySegment *RexxMemory::newLargeSegment(size_t requestedBytes, size_t minByte
 {
     MemorySegment *segment;
 
-#ifdef MEMPROFILE
-    printf("Allocating large new segment of %d bytes\n", requestedBytes);
-#endif
     /* first make sure we've got enough space for the control */
     /* information, and round this to a proper boundary */
-    requestedBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
+    size_t allocationBytes = roundSegmentBoundary(requestedBytes + MemorySegmentOverhead);
 #ifdef MEMPROFILE
-    printf("Allocating large boundary new segment of %d bytes\n", requestedBytes);
+    printf("Allocating large boundary new segment of %d bytes for request of %d\n", allocationBytes, requestedBytes);
 #endif
     /*Get a new segment                  */
-    segment = currentPool->newLargeSegment(requestedBytes);
+    segment = currentPool->newLargeSegment(allocationBytes);
     /* Did we get a segment              */
     if (segment == NULL)
     {

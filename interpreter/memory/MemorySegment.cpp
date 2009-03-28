@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                            RexxMemorysegment.c */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Memory segment management                                        */
 /*                                                                            */
@@ -1551,7 +1551,7 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
     /* check our largest block.  If we can allocate something of */
     /* this length, we don't combine empties now.  Deferring this */
     /* makes it easier for use to give segments back. */
-    MemorySegment *largestEmpty = largestEmptySegment();
+    MemorySegment *largestEmpty = largestActiveSegment();
     if (largestEmpty->size() > allocationLength)
     {
         return;
@@ -1580,7 +1580,7 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
     /* Check our largest block again.  If combining the empty */
     /* segments created a new large block, we're finished.  If not, */
     /* then we've got a hard job ahead of us */
-    largestEmpty = largestEmptySegment();
+    largestEmpty = largestActiveSegment();
     if (largestEmpty->size() > allocationLength)
     {
         return;
@@ -1632,15 +1632,6 @@ void MemorySegmentSet::mergeSegments(size_t allocationLength)
                     tailSegment = nextSeg;
                 }
             }
-#if 0
-            /* now that we've done all of that, we need to see it */
-            /* the effort has been worth it.  If we can't reclaim */
-            /* at least the amount required, we should take a pass */
-            /* on this segment.  We will, however, keep looking. */
-//          if (deadLength < allocationLength) {
-//              continue;
-//          }
-#endif
             /* start by removing the last block from the deadchain. */
             lastBlock->remove();
             /* if there is an intervening empty segment, merge this */
