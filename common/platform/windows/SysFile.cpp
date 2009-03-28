@@ -510,7 +510,8 @@ bool SysFile::putChar(char ch)
 
 bool SysFile::ungetc(char ch)
 {
-    ungetchar = (unsigned char)ch;
+    // make sure there's no sign extension
+    ungetchar = ((int)ch) & 0xff;
     return true;
 }
 

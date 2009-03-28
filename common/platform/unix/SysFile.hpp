@@ -157,7 +157,7 @@ protected:
     bool   writeBuffered;   // false == read, true == write
     bool   append;          // opened in append mode
     int64_t filePointer;    // current file pointer location
-    char   ungetchar;       // a pushed back character value
+    int    ungetchar;       // a pushed back character value
     bool   fileeof;         // have we reached eof?
 };
 
