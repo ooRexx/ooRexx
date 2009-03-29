@@ -803,7 +803,7 @@ RexxString *RexxString::translate(
         }
         else
         {
-            Position = (size_t)ch;            /* position is the character value   */
+            Position = ((size_t)ch) & 0xFF;     /* position is the character value   */
         }
         if (Position != (size_t)(-1))
         {     /* found in the table?               */

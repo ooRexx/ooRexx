@@ -1087,7 +1087,7 @@ RexxMutableBuffer *RexxMutableBuffer::translate(RexxString *tableo, RexxString *
         }
         else
         {
-            position = (size_t)ch;            /* position is the character value   */
+            position = ((size_t)ch) & 0xff;     /* position is the character value   */
         }
         if (position != (size_t)(-1))
         {     /* found in the table?               */
