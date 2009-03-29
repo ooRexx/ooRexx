@@ -74,14 +74,15 @@
 #define REXX_VALUE_int16_t                21
 #define REXX_VALUE_int32_t                22
 #define REXX_VALUE_int64_t                23
-#define REXX_VALUE__int64_t               23
+#define REXX_VALUE___int64_t               23
 #define REXX_VALUE_uint8_t                24
 #define REXX_VALUE_uint16_t               25
 #define REXX_VALUE_uint32_t               26
 #define REXX_VALUE_uint64_t               27
-#define REXX_VALUE__uint64_t              27
+#define REXX_VALUE___uint64_t              27
 #define REXX_VALUE_intptr_t               28
 #define REXX_VALUE_uintptr_t              29
+#define REXX_VALUE___uintptr_t              29
 #define REXX_VALUE_logical_t              30
 #define REXX_VALUE_RexxArrayObject        31
 #define REXX_VALUE_RexxStemObject         32
@@ -277,12 +278,15 @@ typedef struct
         int16_t               value_int16_t;
         int32_t               value_int32_t;
         int64_t               value_int64_t;
+        int64_t               value___int64_t;
         uint8_t               value_uint8_t;
         uint16_t              value_uint16_t;
         uint32_t              value_uint32_t;
         uint64_t              value_uint64_t;
+        uint64_t              value___uint64_t;
         intptr_t              value_intptr_t;
         uintptr_t             value_uintptr_t;
+        uintptr_t             value___uintptr_t;
         size_t                value_size_t;
         ssize_t               value_ssize_t;
         RexxArrayObject       value_RexxArrayObject;
@@ -3423,16 +3427,17 @@ RexxReturnCode RexxEntry RexxCreateInterpreter(RexxInstance **, RexxThreadContex
 #define ARGUMENT_TYPE_int16_t               int16_t
 #define ARGUMENT_TYPE_int32_t               int32_t
 #define ARGUMENT_TYPE_int64_t               int64_t
-#define ARGUMENT_TYPE__int64_t              int64_t
+#define ARGUMENT_TYPE___int64_t              int64_t
 #define ARGUMENT_TYPE_uint8_t               uint8_t
 #define ARGUMENT_TYPE_uint16_t              uint16_t
 #define ARGUMENT_TYPE_uint32_t              uint32_t
 #define ARGUMENT_TYPE_uint64_t              uint64_t
-#define ARGUMENT_TYPE__uint64_t             uint64_t
+#define ARGUMENT_TYPE___uint64_t             uint64_t
 #define ARGUMENT_TYPE_size_t                size_t
 #define ARGUMENT_TYPE_ssize_t               ssize_t
 #define ARGUMENT_TYPE_intptr_t              intptr_t
 #define ARGUMENT_TYPE_uintptr_t             uintptr_t
+#define ARGUMENT_TYPE___uintptr_t             uintptr_t
 #define ARGUMENT_TYPE_logical_t             logical_t
 #define ARGUMENT_TYPE_RexxArrayObject       RexxArrayObject
 #define ARGUMENT_TYPE_RexxStemObject        RexxStemObject
