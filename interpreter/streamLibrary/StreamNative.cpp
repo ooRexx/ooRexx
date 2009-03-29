@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  stream.c      */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Stream processing (stream oriented file systems)                           */
 /*                                                                            */
@@ -1048,6 +1048,32 @@ void StreamInfo::setPosition(int64_t position, int64_t &newPosition)
     // is a 1-based character number.  We need to convert this into
     // a zero-based one before moving.
     if (!fileInfo.seek(position - 1, SEEK_SET, newPosition))
+    {
+        // Failed, raise a not ready condition.
+        checkEof();
+    }
+    // convert the target position back to 1-based.
+    newPosition++;
+}
+
+/**
+ * Move the stream position, with error checking.
+ *
+ * @param position The target position.
+ * @param newPosition
+ *                 The updated final position of the move.
+ */
+void StreamInfo::setPosition(int64_t offset, int style, int64_t &newPosition)
+{
+    // if doing absolute positioning, then we need to fudge the offset
+    if (style == SEEK_SET)
+    {
+        offset--;
+    }
+    // Seek to the target position, if possible.  The request position
+    // is a 1-based character number.  We need to convert this into
+    // a zero-based one before moving.
+    if (!fileInfo.seek(offset, style, newPosition))
     {
         // Failed, raise a not ready condition.
         checkEof();
@@ -2569,7 +2595,7 @@ int64_t StreamInfo::streamPosition(const char *options)
         if (position_flags & operation_read)
         {
             // make sure the file pointer is positioned appropriately.
-            setPosition(charReadPosition, charReadPosition);
+            setPosition(offset, style, charReadPosition);
 
             // record the one-based position, and if moving both, update the
             // write position too.
