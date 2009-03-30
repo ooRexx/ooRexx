@@ -2949,10 +2949,6 @@ void RexxActivation::traceValue(       /* trace an intermediate value       */
     }
                                            /* get the string version            */
     RexxString *stringvalue = value->stringValue();
-    if (this->settings.traceindent < 0)  /* indentation go negative somehow?  */
-    {
-        this->settings.traceindent = 0;    /* reset to zero                     */
-    }
                                            /* get a string large enough to      */
     size_t outlength = stringvalue->getLength() + TRACE_OVERHEAD + this->settings.traceindent * INDENT_SPACING;
     RexxString *buffer = raw_string(outlength);      /* get an output string              */
@@ -2994,12 +2990,6 @@ void RexxActivation::traceTaggedValue(int prefix, const char *tagPrefix, bool qu
 
     // get the string value from the traced object.
     RexxString *stringVal = value->stringValue();
-    // protect against negative indent values (belt and braces)
-    if (this->settings.traceindent < 0)
-    {
-
-        this->settings.traceindent = 0;
-    }
 
     // now calculate the length of the traced string
     stringsize_t outLength = tag->getLength() + stringVal->getLength();
@@ -3090,12 +3080,6 @@ void RexxActivation::traceOperatorValue(int prefix, const char *tag, RexxObject 
 
     // get the string value from the traced object.
     RexxString *stringVal = value->stringValue();
-    // protect against negative indent values (belt and braces)
-    if (this->settings.traceindent < 0)
-    {
-
-        this->settings.traceindent = 0;
-    }
 
     // now calculate the length of the traced string
     stringsize_t outLength = strlen(tag) + stringVal->getLength();
@@ -3188,13 +3172,6 @@ void RexxActivation::traceCompoundValue(int prefix, RexxString *stemName, RexxOb
 
     // get the string value from the traced object.
     RexxString *stringVal = value->stringValue();
-    // protect against negative indent values (belt and braces)
-    if (this->settings.traceindent < 0)
-    {
-
-        this->settings.traceindent = 0;
-    }
-
 
     // now calculate the length of the traced string
     stringsize_t outLength = stemName->getLength() + stringVal->getLength();
@@ -3295,10 +3272,6 @@ RexxString * RexxActivation::formatTrace(
     }
     // get the instruction location
     SourceLocation location = instruction->getLocation();
-    if (this->settings.traceindent < 0)  /* indentation go negative somehow?  */
-    {
-        this->settings.traceindent = 0;    /* reset to zero                     */
-    }
                                            /* extract the source string         */
                                            /* (formatted for tracing)           */
     if (this->settings.traceindent < MAX_TRACEBACK_INDENT)

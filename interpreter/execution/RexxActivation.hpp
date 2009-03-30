@@ -332,7 +332,7 @@ class ActivationSettings
    inline bool              hasActiveBlocks() { return blockNest != 0; }
    inline bool              inMethod()  {return this->activation_context == METHODCALL; }
    inline void              indent() {this->settings.traceindent++; };
-   inline void              unindent() {this->settings.traceindent--; };
+   inline void              unindent() {if (this->settings.traceindent > 0) this->settings.traceindent--; };
    inline void              setIndent(size_t v) {this->settings.traceindent=(v); };
    inline size_t            getIndent() {return this->settings.traceindent;};
    inline bool              tracingIntermediates() {return this->settings.intermediate_trace;};
