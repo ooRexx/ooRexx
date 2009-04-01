@@ -2009,14 +2009,14 @@ RexxString *RexxString::newString(double number, stringsize_t precision)
     {
         char buffer[64];
         // format as a string
-        gcvt(number, (int)precision, buffer);
+        sprintf(buffer, "%.*g", (int)precision, number);
         size_t len = strlen(buffer);
         // if the last character is a decimal, we remove that
         if (buffer[len - 1] == '.')
         {
             len--;
         }
-        return new_string(buffer);
+        return new_string(buffer, len);
     }
 }
 
