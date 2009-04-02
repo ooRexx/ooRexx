@@ -26,9 +26,6 @@ several ways, not the least of which is the ability to compile the
 interpreter in 64-bit addressing mode.  In addition, the rewritten
 interpreter is now more maintainable and extensible.
 
-For 64-bit mode systems, the default numeric digits setting is 18 rather than
-9, and strings larger than 999,999,999 bytes can be created and manipulated.
-
 A new, improved, set of application programming interfaces (APIs) have
 been added.  The programmers guide has been updated accordingly.  Although
 these utilize C++ they are extremely easy to use.  All of the external
