@@ -50,6 +50,7 @@
 
 class RexxDirectory;
 class CommandHandler;
+class PackageClass;
 
 class InterpreterInstance : public RexxInternalObject
 {
@@ -112,6 +113,12 @@ public:
     void addCommandHandler(const char *name, const char *registeredName);
     void addCommandHandler(const char *name, REXXPFN entryPoint);
     CommandHandler *resolveCommandHandler(RexxString *name);
+    PackageClass *getRequiresFile(RexxString *name);
+    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, const char *data, size_t length);
+    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxArray *source);
+    PackageClass *loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *fullName);
+    void          runRequires(RexxActivity *activity, RexxString *name, RoutineClass *code);
+    void          addRequiresFile(RexxString *shortName, RexxString *fullName, PackageClass *package);
 
 protected:
 
@@ -131,6 +138,7 @@ protected:
     void                *applicationData;    // application specific data
     RexxDirectory       *localEnvironment;   // the current local environment
     RexxDirectory       *commandHandlers;    // our list of command environment handlers
+    RexxDirectory       *requiresFiles;      // our list of requires files used by this instance
 
     bool terminating;                // shutdown indicator
     bool terminated;                 // last thread cleared indicator

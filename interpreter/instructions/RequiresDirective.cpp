@@ -120,5 +120,5 @@ void *RequiresDirective::operator new(size_t size)
  */
 void RequiresDirective::install(RexxActivation *context)
 {
-    context->loadRequired(name, this);
+    context->loadRequires(name, this);
 }

@@ -5916,24 +5916,26 @@ RexxObject *RexxSource::parseLogical(RexxToken *_first, int terminators)
  * @param instruction
  *               The directive instruction being processed.
  */
-PackageClass *RexxSource::loadRequired(RexxString *target)
+PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *target)
 {
+    // we need the instance this is associated with
+    InterpreterInstance *instance = activity->getInstance();
+
     // get a fully resolved name for this....we might locate this under either name, but the
     // fully resolved name is generated from this source file context.
-    RexxString *fullName = resolveProgramName(ActivityManager::currentActivity, target);
+    RexxString *fullName = resolveProgramName(activity, target);
 
-    ProtectedObject p;
-    PackageClass *requiresFile = PackageManager::loadRequires(ActivityManager::currentActivity, target, fullName, p);
+    // if we've already loaded this in this instance, just return it.
+    PackageClass *package = instance->loadRequires(activity, target, fullName);
 
-    if (requiresFile == OREF_NULL)             /* couldn't create this?             */
+    if (package == OREF_NULL)             /* couldn't create this?             */
     {
         /* report an error                   */
         reportException(Error_Routine_not_found_requires, target);
     }
     // add this to the source context
-    addPackage(requiresFile);
-
-    return requiresFile;
+    addPackage(package);
+    return package;
 }
 
 
@@ -5942,19 +5944,22 @@ PackageClass *RexxSource::loadRequired(RexxString *target)
  *
  * @param target The name of the ::REQUIRES
  */
-PackageClass *RexxSource::loadRequired(RexxString *target, RexxArray *s)
+PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *target, RexxArray *s)
 {
-    ProtectedObject p;
-    PackageClass *requiresFile = PackageManager::loadRequires(ActivityManager::currentActivity, target, s, p);
+    // we need the instance this is associated with
+    InterpreterInstance *instance = activity->getInstance();
 
-    if (requiresFile == OREF_NULL)             /* couldn't create this?             */
+    // if we've already loaded this in this instance, just return it.
+    PackageClass *package = instance->loadRequires(activity, target, s);
+
+    if (package == OREF_NULL)             /* couldn't create this?             */
     {
         /* report an error                   */
         reportException(Error_Routine_not_found_requires, target);
     }
     // add this to the source context
-    addPackage(requiresFile);
-    return requiresFile;
+    addPackage(package);
+    return package;
 }
 
 
@@ -5973,7 +5978,8 @@ void RexxSource::addPackage(PackageClass *p)
     {
         loadedPackages = new_list();
     }
-    else {
+    else
+    {
         // we only add a given package item once.
         if (loadedPackages->hasItem(p) == TheTrueObject)
         {

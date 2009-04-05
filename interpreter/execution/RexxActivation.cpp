@@ -2594,13 +2594,13 @@ RexxObject *RexxActivation::resolveDotVariable(RexxString *name)
  * @param instruction
  *               The directive instruction being processed.
  */
-PackageClass *RexxActivation::loadRequired(RexxString *target, RexxInstruction *instruction)
+PackageClass *RexxActivation::loadRequires(RexxString *target, RexxInstruction *instruction)
 {
     // this will cause the correct location to be used for error reporting
     this->current = instruction;
 
     // the loading/merging is done by the source object
-    return getSourceObject()->loadRequired(target);
+    return getSourceObject()->loadRequires(activity, target);
 }
 
 

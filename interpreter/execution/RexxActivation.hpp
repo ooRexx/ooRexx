@@ -294,7 +294,7 @@ class ActivationSettings
    void              propagateExit(RexxObject *);
    void              setDefaultAddress(RexxString *);
    bool              internalMethod();
-   PackageClass    * loadRequired(RexxString *, RexxInstruction *);
+   PackageClass    * loadRequires(RexxString *, RexxInstruction *);
    void              loadLibrary(RexxString *target, RexxInstruction *instruction);
    RexxObject      * rexxVariable(RexxString *);
    void              pushEnvironment(RexxObject *);

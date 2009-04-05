@@ -363,12 +363,12 @@ PackageClass *PackageClass::loadPackage(RexxString *name, RexxArray *s)
     // if no source provided, this comes from a file
     if (s == OREF_NULL)
     {
-        return source->loadRequired(name);
+        return source->loadRequires(ActivityManager::currentActivity, name);
     }
     else
     {
         s = arrayArgument(s, "source");
-        return source->loadRequired(name, s);
+        return source->loadRequires(ActivityManager::currentActivity, name, s);
     }
 }
 
@@ -547,6 +547,8 @@ PackageClass *PackageClass::newRexx(
     RexxObject *pgmname;                 /* method name                       */
     RexxObject *_source;                  /* Array or string object            */
     size_t initCount = 0;                /* count of arguments we pass along  */
+    RexxActivity *activity = ActivityManager::currentActivity;
+    InterpreterInstance *instance = activity->getInstance();
 
                                          /* break up the arguments            */
 
@@ -554,19 +556,20 @@ PackageClass *PackageClass::newRexx(
 
     PackageClass *package = OREF_NULL;
 
-    ProtectedObject p;
-
     /* get the package name as a string   */
     RexxString *nameString = stringArgument(pgmname, "name");
     if (_source == OREF_NULL)
     {
-        RexxString *resolvedName = ActivityManager::currentActivity->getInstance()->resolveProgramName(nameString, OREF_NULL, OREF_NULL);
-        package = PackageManager::loadRequires(ActivityManager::currentActivity, nameString, resolvedName, p);
+        // if no directly provided source, resolve the name in the global context and have the instance
+        // load the file.
+        RexxString *resolvedName = instance->resolveProgramName(nameString, OREF_NULL, OREF_NULL);
+        package = instance->loadRequires(activity, nameString, resolvedName);
     }
     else
     {
+        // add this to the instance context
         RexxArray *sourceArray = arrayArgument(_source, "source");
-        package = PackageManager::loadRequires(ActivityManager::currentActivity, nameString, sourceArray, p);
+        package = instance->loadRequires(activity, nameString, sourceArray);
     }
 
     /* Give new object its behaviour     */

@@ -48,6 +48,8 @@
 #include "PackageManager.hpp"
 #include "DirectoryClass.hpp"
 #include "CommandHandler.hpp"
+#include "PackageClass.hpp"
+#include "WeakReferenceClass.hpp"
 
 /**
  * Create a new Package object instance.
@@ -89,6 +91,7 @@ void InterpreterInstance::live(size_t liveMark)
     memory_mark(securityManager);
     memory_mark(localEnvironment);
     memory_mark(commandHandlers);
+    memory_mark(requiresFiles);
 }
 
 
@@ -106,6 +109,7 @@ void InterpreterInstance::liveGeneral(int reason)
     memory_mark_general(securityManager);
     memory_mark_general(localEnvironment);
     memory_mark_general(commandHandlers);
+    memory_mark_general(requiresFiles);
 }
 
 
@@ -123,6 +127,7 @@ void InterpreterInstance::initialize(RexxActivity *activity, RexxOption *options
     rootActivity = activity;
     allActivities = new_list();
     searchExtensions = new_list();     // this will be filled in during options processing
+    requiresFiles = new_directory();   // our list of loaded requires packages
     // this gets added to the entire active list.
     allActivities->append((RexxObject *)activity);
     globalReferences = new_identity_table();
@@ -796,6 +801,203 @@ CommandHandler *InterpreterInstance::resolveCommandHandler(RexxString *name)
         commandHandlers->put((RexxObject *)handler, upperName);
     }
     return handler;
+}
+
+
+/**
+ * Retrieve a requires file that might be loaded for this
+ * instance.
+ *
+ * @param name   The name used for the requires file.
+ *
+ * @return The loaded requires file, or OREF_NULL if this instance
+ *         has not used the file yet.
+ */
+PackageClass *InterpreterInstance::getRequiresFile(RexxString *name)
+{
+    WeakReference *ref = (WeakReference *)requiresFiles->get(name);
+    if (ref != OREF_NULL)
+    {
+        PackageClass *resolved = (PackageClass *)ref->get();
+        if (resolved != OREF_NULL)
+        {
+            return resolved;
+        }
+        // this was garbage collected, remove it from the table
+        requiresFiles->remove(name);
+    }
+    return OREF_NULL;
+}
+
+
+/**
+ * Add a package to our cache, using weak references.
+ *
+ * @param shortName The shortName (always provided).
+ * @param fullName  A second, fully resolved alias name.
+ * @param package   The package to add
+ */
+void InterpreterInstance::addRequiresFile(RexxString *shortName, RexxString *fullName, PackageClass *package)
+{
+    WeakReference *ref = new WeakReference(package);
+    requiresFiles->put(ref, shortName);
+    if (fullName != OREF_NULL)
+    {
+        requiresFiles->put(ref, fullName);
+    }
+}
+
+
+/**
+ * Do the initial run of a ::REQUIRES file.
+ *
+ * @param activity The current activity.
+ * @param name     The name of the requires file.
+ * @param code     The routine instance to run.
+ */
+void InterpreterInstance::runRequires(RexxActivity *activity, RexxString *name, RoutineClass *code)
+{
+    ProtectedObject dummy;
+
+    // make sure we reference the circular reference stack
+    activity->addRunningRequires(name);
+    code->call(activity, name, NULL, 0, dummy);
+                                         /* No longer installing routine.     */
+    activity->removeRunningRequires(name);
+}
+
+
+/**
+ * Load a ::requires file into this interpreter instance.
+ *
+ * @param activity  The current activity we're loading on.,
+ * @param shortName The original short name of this package.
+ * @param fullName  An expanded fully resolved file name.
+ *
+ * @return The loaded package class, if located.
+ */
+PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, RexxString *fullName)
+{
+
+    // if we've already loaded this in this instance, just return it.
+    PackageClass *package = getRequiresFile(shortName);
+    if (package != OREF_NULL)
+    {
+        return package;
+    }
+
+    // if there is a fully resolved full name, check this next
+    if (fullName != OREF_NULL)
+    {
+        // if we've already loaded this in this instance, just return it.
+        package = getRequiresFile(fullName);
+        if (package != OREF_NULL)
+        {
+            // add this to the cache using the short name, since they resolve to the same
+            addRequiresFile(shortName, OREF_NULL, package);
+            return package;
+        }
+    }
+
+    // add the package manager to load this
+    ProtectedObject p;
+    RoutineClass *requiresFile = PackageManager::loadRequires(activity, shortName, fullName, p);
+
+    if (requiresFile == OREF_NULL)             /* couldn't create this?             */
+    {
+        /* report an error                   */
+        reportException(Error_Routine_not_found_requires, shortName);
+    }
+
+    package = requiresFile->getPackage();
+    // add this to the instance cache too, under both the long
+    // name and the fullName (if it was resolved)
+    addRequiresFile(shortName, fullName, package);
+    // for any requires file loaded to this instance, we run the prolog within the instance.
+    runRequires(activity, shortName, requiresFile);
+
+    return package;
+}
+
+
+/**
+ * Load a ::requires file into this interpreter instance.
+ *
+ * @param activity  The current activity we're loading on.,
+ * @param shortName The original short name of this package.
+ * @param fullName  An expanded fully resolved file name.
+ *
+ * @return The loaded package class, if located.
+ */
+PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, RexxArray *source)
+{
+    // if we've already loaded this in this instance, just return it.
+    PackageClass *package = getRequiresFile(shortName);
+    if (package != OREF_NULL)
+    {
+        return package;
+    }
+
+    // add the package manager to load this
+    ProtectedObject p;
+    RoutineClass *requiresFile = PackageManager::loadRequires(activity, shortName, source, p);
+
+    if (requiresFile == OREF_NULL)             /* couldn't create this?             */
+    {
+        /* report an error                   */
+        reportException(Error_Routine_not_found_requires, shortName);
+    }
+
+    package = requiresFile->getPackage();
+    // add this to the instance cache too, under both the long
+    // name and the fullName (if it was resolved)
+    addRequiresFile(shortName, OREF_NULL, package);
+
+    // for any requires file loaded to this instance, we run the prolog within the instance.
+    runRequires(activity, shortName, requiresFile);
+
+    return package;
+}
+
+
+/**
+ * Load a ::requires file into this interpreter instance.
+ *
+ * @param activity  The current activity we're loading on.,
+ * @param shortName The original short name of this package.
+ * @param data      The source file data.
+ * @param length    The length of the source data.
+ *
+ * @return The loaded package class, if located.
+ */
+PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, const char *data, size_t length)
+{
+    // if we've already loaded this in this instance, just return it.
+    PackageClass *package = getRequiresFile(shortName);
+    if (package != OREF_NULL)
+    {
+        return package;
+    }
+
+    // add the package manager to load this
+    ProtectedObject p;
+    RoutineClass *requiresFile = PackageManager::loadRequires(activity, shortName, data, length, p);
+
+    if (requiresFile == OREF_NULL)             /* couldn't create this?             */
+    {
+        /* report an error                   */
+        reportException(Error_Routine_not_found_requires, shortName);
+    }
+
+    package = requiresFile->getPackage();
+    // add this to the instance cache too, under both the long
+    // name and the fullName (if it was resolved)
+    addRequiresFile(shortName, OREF_NULL, package);
+
+    // for any requires file loaded to this instance, we run the prolog within the instance.
+    runRequires(activity, shortName, requiresFile);
+
+    return package;
 }
 
 

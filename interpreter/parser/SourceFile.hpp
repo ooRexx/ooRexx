@@ -187,8 +187,8 @@ class RexxSource : public RexxInternalObject {
     RexxObject *toss(RexxObject *);
     void        cleanup();
     void        mergeRequired(RexxSource *);
-    PackageClass *loadRequired(RexxString *target);
-    PackageClass *loadRequired(RexxString *target, RexxArray *s);
+    PackageClass *loadRequires(RexxActivity *activity, RexxString *target);
+    PackageClass *loadRequires(RexxActivity *activity, RexxString *target, RexxArray *s);
     void        addPackage(PackageClass *package);
     PackageClass *getPackage();
     void        inheritSourceContext(RexxSource *source);
