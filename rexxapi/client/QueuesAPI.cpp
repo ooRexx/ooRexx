@@ -356,3 +356,20 @@ RexxReturnCode RexxEntry RexxDeleteSessionQueue()
     LocalAPIManager::deleteInstance();
     return RXQUEUE_OK;
 }
+
+
+/**
+ * Initialize the API subsystem at process startup.
+ *
+ * @return Always returns 0;
+ */
+RexxReturnCode RexxEntry RexxCreateSessionQueue()
+{
+    // this will initialize the API subsystem
+    ENTER_REXX_API(QueueManager)
+    {
+        return 0;
+    }
+    EXIT_REXX_API();
+
+}

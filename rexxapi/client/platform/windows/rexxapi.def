@@ -75,3 +75,4 @@ EXPORTS
      RexxAllocateMemory
      RexxFreeMemory
      RexxDeleteSessionQueue
+     RexxCreateSessionQueue

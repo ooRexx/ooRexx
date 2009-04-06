@@ -102,6 +102,7 @@ void Interpreter::processStartup()
     createLocks();
     ActivityManager::createLocks();
     RexxMemory::createLocks();
+    // make sure we have a session queue created for this process
 }
 
 void Interpreter::processShutdown()
@@ -133,6 +134,7 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
         // initialize the memory manager , and restore the
         // memory image
         memoryObject.initialize(mode == RUN_MODE);
+        RexxCreateSessionQueue();
         // create our instances list
         interpreterInstances = new_list();
         // if we have a local server created already, don't recurse.

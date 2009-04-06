@@ -54,6 +54,7 @@ void REXXENTRY RexxCreateInterpreterImage();
 
 RexxReturnCode REXXENTRY RexxLoadSubcom(const char *, const char *);
 RexxReturnCode REXXENTRY RexxResolveSubcom(const char *name, REXXPFN *);
+RexxReturnCode RexxEntry RexxCreateSessionQueue();
 RexxReturnCode RexxEntry RexxDeleteSessionQueue();
 
 #ifdef __cplusplus
