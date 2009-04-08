@@ -43,7 +43,7 @@ Once you have ooRexx compiled, it can then be installed.  By default, the
 ooRexx executables will be installed into /opt/ooRexx/bin and the libraries
 and external function packages (*.so) will be installed into
 /opt/ooRexx/lib/ooRexx.  The base path "/opt" can be changed by adding the
---prefix=path (where path is the base path) to the configure command.  eg.
+--prefix=path (where path is the base path) to the configure command.  E.g.,.
 to install ooRexx into your home directory: $HOME/bin and $HOME/lib/ooRexx,
 configure --prefix=$HOME ...  This is particularly useful if you do not have
 root access on the machine on which you are building ooRexx.
@@ -70,9 +70,36 @@ ooRexx should build on all 32-bit and 64-bit Linux platforms.
 
 AIX:
 ---
-ooRexx can only be built on AIX 5L/6.1 using IBM's XL C/C++ V9 or
-V10.1 compiler. You will need the Jannuary 2009 PTF (or later) for
-V9 and the February 2009 PTF (or later) for V10.1.
+Currently, the development team is having trouble building on AIX with the
+gcc compiler. Contributions to the project in the form of patches that allow
+ooRexx to be built using gcc on AIX would be most appreciated.
+
+ooRexx can successfully be built on AIX 5L/6.1 using the following IBM
+compilers:
+
+* IBM's XL C/C++ V8 compiler with April 2009 PTF
+* IBM's XL C/C++ V9 compiler with January 2009 PTF
+* IBM's XL C/C++ V10.1 compiler with February 2009 PTF
+
+You can get the necessary PTFs here:
+
+URL: http://ftp.software.ibm.com/aix/products/ccpp/ptfs
+URL: ftp://ftp.software.ibm.com/aix/products/ccpp/ptfs
+
+XL C/C++ V8:
+
+  vacpp.80.aix51.apr2009.ptf.tar.Z
+  vacpp.80.aix52-53TL5.apr2009.ptf.tar.Z
+  vacpp.80.aix53TL6-61.apr2009.ptf.tar.Z
+
+XL C/C++ V9:
+
+  vacpp.90.aix52-53TL5.jan2009.ptf.tar.Z
+  vacpp.90.aix53TL6-61.jan2009.ptf.tar.Z
+
+XL C/C++ V10.1:
+
+  vacpp.101.aix53TL6-61.feb2009.ptf.tar.Z
 
 32 bit build
 
@@ -100,7 +127,7 @@ variables:
 % make
 
 As long as you do not move the binaries it is not necessary to add the
-directory containing the libraries to the LIBPATH. If you want to swhich
+directory containing the libraries to the LIBPATH. If you want to switch
 between 32 bit and 64 bit ooRexx then make sure that you kill the rxapi
 daemon before the switch.
 
@@ -219,7 +246,6 @@ directory of the source tree to conform to the naming convention.
 The root directory must be named:  oorexx-<versionNumber>  For example, when
 building the 4.0.0 version of ooRexx the root directory of the source tree
 must be named:  oorexx-4.0.0
-For the 4.0.0 version the name must be: oorexx-4.0.0
 
 After naming the root directory of the source tree correctly, build ooRexx
 as described above, then execute the deb make target.  I.e.:
