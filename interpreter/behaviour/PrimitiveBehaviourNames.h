@@ -48,7 +48,7 @@
 #ifndef PrimitiveBehaviourNames_Included
 #define PrimitiveBehaviourNames_Included
 
-
+    
 #define TheObjectBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Object])
 #define TheObjectClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_ObjectClass])
 #define TheClassBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Class])

@@ -102,7 +102,7 @@ typedef enum
     T_IdentityTableClass = 45,
 
     T_Last_Exported_Class = 45,
-
+    
     T_First_Internal_Class = 46,
 
     T_NilObject = 46,
@@ -175,7 +175,7 @@ typedef enum
     T_ParseTrigger = 113,
 
     T_Last_Internal_Class = 113,
-
+    
     T_First_Transient_Class = 114,
 
     T_Memory = 114,
@@ -196,7 +196,7 @@ typedef enum
     T_Last_Transient_Class = 127,
     T_Last_Primitive_Class = 127,
     T_Last_Class_Type = 127,
-
+    
 } ClassTypeCode;
 
 /* -------------------------------------------------------------------------- */
