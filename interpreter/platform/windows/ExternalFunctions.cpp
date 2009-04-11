@@ -53,6 +53,8 @@
 #include <process.h>
 #include <direct.h>
 
+#define _WIN32_WINNT    0x0500
+
 #include "RexxCore.h"                         /* global REXX definitions        */
 #include "StringClass.hpp"
 #include "ArrayClass.hpp"
@@ -297,6 +299,98 @@ void SystemInterpreter::restoreEnvironment(void *CurrentEnv)
 {
 }
 
+
+/**
+ * Helper function for sysMessageBox().  Parses the other message box style
+ * argument and adds the styles specified.
+ *
+ * @param other  The 'additional message box styles' argument to RxMessageBox().
+ *               This can be more than one style keyword, separated by spaces.
+ *
+ * @param style  Pointer to the MessageBox style flags collected so far. On
+ *               return this will be augmented with the additional styles.
+ *
+ * @return True on no error, false if the user passed an unrecognizable keyword
+ *         and a condition should be raised.
+ *
+ * @note   Assumes other is not NULL.
+ */
+static bool addMBStyle(CSTRING other, ULONG *style)
+{
+    char *token;
+    char *str = strdup(other);
+    if ( ! str )
+    {
+        return false;
+    }
+
+    ULONG extraFlag[] =
+    {
+        // Default button category.  MB_DEFBUTTON1 is the default
+        MB_DEFBUTTON2,
+        MB_DEFBUTTON3,
+        MB_DEFBUTTON4,
+        // Modal category.  MB_APPLMODAL is the default.
+        MB_SYSTEMMODAL,
+        MB_TASKMODAL,
+        // Miscellaneous catetgory.  There is no default here.  MB_SETFOREGROUND
+        // is already set.  MB_SERVICE_NOTIFICATION_NT3X makes no sense since NT
+        // is not supported
+        MB_DEFAULT_DESKTOP_ONLY,
+        MB_RIGHT,
+        MB_RTLREADING,
+        MB_TOPMOST,
+        MB_SERVICE_NOTIFICATION
+    };
+
+    const char *extra[] =
+    {
+        // Default button category.
+        "DEFBUTTON2",
+        "DEFBUTTON3",
+        "DEFBUTTON4",
+        // Modal category.
+        "SYSTEMMODAL",
+        "TASKMODAL",
+        // Miscellaneous catetgory.
+        "DEFAULTDESKTOP",
+        "RIGHT",
+        "RTLREADING",
+        "TOPMOST",
+        "SERVICENOTIFICATION"
+    };
+
+    ULONG extraStyle = 0;
+    int i;
+    int count = sizeof(extra) / sizeof(const char *);
+
+    token = strtok(str, " ");
+    while ( token != NULL )
+    {
+        for ( i = 0; i < count; i += 1 )
+        {
+            if ( !stricmp(token, extra[i]) )
+            {
+                extraStyle |= extraFlag[i];
+                break;
+            }
+        }
+
+        if ( i == count )
+        {
+            // User sent a bad keyword.
+            free(str);
+            return false;
+        }
+
+        token = strtok(NULL, " ");
+    }
+
+    *style = *style | extraStyle;
+    free(str);
+    return true;
+}
+
 /*********************************************************************/
 /*                                                                   */
 /*   Subroutine Name:   RxMessageBox                                 */
@@ -311,107 +405,132 @@ void SystemInterpreter::restoreEnvironment(void *CurrentEnv)
 /*                      Title  = The message box title.              */
 /*                      Button = The message box button style.       */
 /*                      Icon   = The message box icon style.         */
+/*                      Other  = Additional message box styles.      */
 /*                                                                   */
 /*********************************************************************/
-RexxRoutine4(int, sysMessageBox, CSTRING, text, OPTIONAL_CSTRING, title, OPTIONAL_CSTRING, button, OPTIONAL_CSTRING, icon)
+RexxRoutine5(int, sysMessageBox, CSTRING, text, OPTIONAL_CSTRING, title,
+             OPTIONAL_CSTRING, button, OPTIONAL_CSTRING, icon, OPTIONAL_CSTRING, other)
 {
-  ULONG       style;                   /* window style flags         */
-  int         maxCnt;                  /* Max loop count             */
-  int         index;                   /* table index                */
+    ULONG       style;                   /* window style flags         */
+    int         maxCnt;                  /* Max loop count             */
+    int         index;                   /* table index                */
 
-  PSZ    Button_Styles[] =             /* message box button styles  */
-    {"OK",
-     "OKCANCEL",
-     "RETRYCANCEL",
-     "ABORTRETRYIGNORE",
-     "YESNO",
-     "YESNOCANCEL"};
+    PSZ Button_Styles[] =                /* message box button styles  */
+    {
+        "ABORTRETRYIGNORE",
+        "CANCELTRYCONTINUE",
+        "HELP",
+        "OK",
+        "OKCANCEL",
+        "RETRYCANCEL",
+        "YESNO",
+        "YESNOCANCEL"
+    };
 
-   ULONG  Button_Flags[] =                /* message box button styles  */
-       {MB_OK,
+    ULONG Button_Flags[] =               /* message box button styles  */
+    {
+        MB_ABORTRETRYIGNORE,
+        MB_CANCELTRYCONTINUE,
+        MB_HELP,
+        MB_OK,
         MB_OKCANCEL,
         MB_RETRYCANCEL,
-        MB_ABORTRETRYIGNORE,
         MB_YESNO,
-        MB_YESNOCANCEL};
+        MB_YESNOCANCEL
+    };
 
-   PSZ    Icon_Styles[] =                 /* message box icon styles    */
-       {"HAND",
-        "QUESTION",
+    PSZ Icon_Styles[] =                  /* message box icon styles    */
+    {
         "EXCLAMATION",
-        "ASTERISK",
-        "INFORMATION",
         "WARNING",
+        "INFORMATION",
+        "ASTERISK",
+        "QUESTION",
+        "STOP",
         "ERROR",
+        "HAND",
         "QUERY",
-        "NONE",
-        "STOP"};
+        "NONE"
+    };
 
-   ULONG  Icon_Flags[] =                  /* message box icon styles    */
-       {MB_ICONHAND,
-        MB_ICONQUESTION,
+    ULONG Icon_Flags[] =                 /* message box icon styles    */
+    {
         MB_ICONEXCLAMATION,
-        MB_ICONASTERISK,
-        MB_ICONINFORMATION,
         MB_ICONWARNING,
-        MB_ICONERROR,
+        MB_ICONINFORMATION,
+        MB_ICONASTERISK,
         MB_ICONQUESTION,
-        0,
-        MB_ICONSTOP};
+        MB_ICONSTOP,
+        MB_ICONERROR,
+        MB_ICONHAND,
+        MB_ICONQUESTION,
+        0
+    };
 
-                                       /* set initial style flags    */
-  style = MB_SETFOREGROUND;            /* make this foreground       */
+    // Always try to make the message box the foreground.
+    style = MB_SETFOREGROUND;
 
-  if (button == NULL)
-  {
-      style |= MB_OK;                  /* set default button style?  */
-  }
-  else {                               /* check various button styles*/
-                                       /* get the number of styles   */
-                                       /* search style table         */
-    maxCnt = sizeof(Button_Styles) / sizeof(PSZ);
-
-    for (index = 0; index < maxCnt; index++) {
-                                       /* find a match?               */
-      if (!stricmp(button, Button_Styles[index])) {
-        style += Button_Flags[index];  /* add to the style            */
-        break;
-      }
-    }
-    if (index == maxCnt)               /* if not found raise error          */
+    if ( button == NULL )
     {
-        context->InvalidRoutine();
-        return 0;
+        // The default is an OK message box.
+        style |= MB_OK;
     }
-  }
-
-  if (icon == NULL)
-  {
-      style |= MB_OK;    /* set default icon style?           */
-  }
-  else {                               /* check various button styles*/
-    maxCnt = sizeof(Icon_Styles)/sizeof(PSZ);
-                                       /* search style table                */
-    for (index = 0; index < maxCnt; index++) {
-                                       /* find a match?                     */
-      if (!stricmp(icon,Icon_Styles[index])) {
-        style |= Icon_Flags[index];    /* add to the style                  */
-        break;
-      }
-    }
-    if (index == maxCnt)               /* if not found raise error          */
+    else
     {
-        context->InvalidRoutine();
-        return 0;
+        // Get the number of styles and search the button style table.
+        maxCnt = sizeof(Button_Styles) / sizeof(PSZ);
+        for ( index = 0; index < maxCnt; index++ )
+        {
+            if ( !stricmp(button, Button_Styles[index]) )
+            {
+                // Found a match.  Only 1 button style can be used, so break.
+                style += Button_Flags[index];
+                break;
+            }
+        }
+        if ( index == maxCnt )
+        {
+            // User specified an invalid button style word.
+            context->InvalidRoutine();
+            return 0;
+        }
     }
-  }
 
-  return MessageBox(NULL,                //hWndOwner
-                  text,                // Text
-                  title,               // Title
-                  style);              // Styles
+    if ( icon != NULL )
+    {
+        // There is no default icon.  The user can also explicitly specify no
+        // icon by using the NONE keyword.
+        maxCnt = sizeof(Icon_Styles)/sizeof(PSZ);
+        for ( index = 0; index < maxCnt; index += 1 )
+        {
+            if ( !stricmp(icon,Icon_Styles[index]) )
+            {
+                // Found a match.  Only 1 icon stle can be used, so break.
+                style |= Icon_Flags[index];
+                break;
+            }
+        }
+        if ( index == maxCnt )
+        {
+            // User specified an invalid icon style word.
+            context->InvalidRoutine();
+            return 0;
+        }
+
+    }
+
+    if ( other != NULL )
+    {
+        if ( ! addMBStyle(other, &style) )
+        {
+            // User specified an invalid key word for one of the extra styles.
+            context->InvalidRoutine();
+            return 0;
+        }
+    }
+
+    return MessageBox(NULL, text, title, style);
 }
-
 
 
 /**
