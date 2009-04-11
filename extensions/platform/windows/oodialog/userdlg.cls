@@ -71,7 +71,8 @@
    return ret
 
 /******************************************************************************/
-/* Menu/Action bar methods.                                                   */
+/* Menu/Action bar.  These methods are deprecated, instead, use the Menu      */
+/* classes directly.                                                          */
 
 ::method SetMenu
     menuBar = self~menuBar

@@ -896,9 +896,12 @@
 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
-  The menu methods in this block are purposively not documented.  Do NOT use
-  them in your code. The WILL be removed from ooDialog in the future.
+  These menu bar methods are needed to provide backward compatibility for the
+  deprecated menu methods.  The ooDialog programmer is *strongly* discouraged
+  from using them.  If the deprecated methods are removed, these will be removed
+  with them.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 ::attribute menuBar get
 ::attribute menuBar set private
 
@@ -915,8 +918,11 @@
   menu = self~menuBar
   self~menuBar = .nil
   return menu
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
+  The following menu bar methods are deprecated, instead, use the Menu classes
+  directly.
+\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 ::method enableMenuItem unguarded
     use strict arg id
@@ -953,6 +959,9 @@
     if self~menuBar == .nil then return -2
     return self~menuBar~getState(id)
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
+  End deprecated menu bar methods.
+\* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /******************************************************************************/
 /* New extensions */

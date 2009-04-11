@@ -102,6 +102,7 @@
    if self~bkgBitmap \= 0 then self~removeBitmap(self~bkgBitmap)
    return ret
 
+-- This method is deprecated, instead use the Menu classes directly.
 ::method setMenu
   use strict arg id
   menuBar = .BinaryMenuBar~new(self, id, self, 0, .true)

@@ -43,12 +43,9 @@
  */
 
 
-/** PLEASE NOTE:
- *
- * The classes and methods in this file are purposively NOT DOCUMENTED.  Do NOT
- * use these classes or methods because the classes, methods, and / or arugments
- * WILL CHANGE in the next release of ooRexx. If you do use these classes in
- * your own code, you do so at you own risk.
+/** NOTES:
+ * If problems with resource ID return -1
+ * If problems with dialog or hMenu return -2
  *
  */
 
