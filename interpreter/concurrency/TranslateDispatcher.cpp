@@ -40,6 +40,7 @@
 #include "TranslateDispatcher.hpp"
 #include "RoutineClass.hpp"
 #include "ProtectedObject.hpp"
+#include "RexxNativeActivation.hpp"
 
 
 /**
@@ -105,6 +106,8 @@ void TranslateDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
     // use the base error handling and set our return code to the negated error code.
     ActivityDispatcher::handleError(rc, c);
     rc = -r;
+    // process the error to display the error message.
+    activity->error(activation);
 }
 
 
