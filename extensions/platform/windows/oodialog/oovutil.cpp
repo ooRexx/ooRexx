@@ -127,7 +127,6 @@ void pointer2string(char *result, void *pointer)
     }
 }
 
-
 LONG HandleError(PRXSTRING r, CHAR * text)
 {
       HWND hW = NULL;
@@ -1985,8 +1984,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleControlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleOtherNewCtrls);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleMonthCalendar);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDateTimePicker);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WinTimer);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DumpAdmin);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddControl);
@@ -2050,8 +2047,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(HandleListCtrlEx,     HandleListCtrlEx),
     REXX_CLASSIC_ROUTINE(HandleControlEx,      HandleControlEx),
     REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
-    REXX_CLASSIC_ROUTINE(HandleMonthCalendar,  HandleMonthCalendar),
-    REXX_CLASSIC_ROUTINE(HandleDateTimePicker, HandleDateTimePicker),
     REXX_CLASSIC_ROUTINE(WinTimer,             WinTimer),
     REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),
     REXX_CLASSIC_ROUTINE(UsrAddControl,        UsrAddControl),
@@ -2157,6 +2152,14 @@ REXX_METHOD_PROTOTYPE(tv_getImageList);
 
 REXX_METHOD_PROTOTYPE(tab_setImageList);
 REXX_METHOD_PROTOTYPE(tab_getImageList);
+
+REXX_METHOD_PROTOTYPE(get_dtp_dateTime);
+REXX_METHOD_PROTOTYPE(set_dtp_dateTime);
+
+REXX_METHOD_PROTOTYPE(get_mc_date);
+REXX_METHOD_PROTOTYPE(set_mc_date);
+REXX_METHOD_PROTOTYPE(get_mc_usesUnicode);
+REXX_METHOD_PROTOTYPE(set_mc_usesUnicode);
 
 REXX_METHOD_PROTOTYPE(pbc_stepIt);
 REXX_METHOD_PROTOTYPE(pbc_getPos);
@@ -2309,6 +2312,14 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(tab_setImageList,         tab_setImageList),
     REXX_METHOD(tab_getImageList,         tab_getImageList),
+
+    REXX_METHOD(get_dtp_dateTime,         get_dtp_dateTime),
+    REXX_METHOD(set_dtp_dateTime,         set_dtp_dateTime),
+
+    REXX_METHOD(get_mc_date,              get_mc_date),
+    REXX_METHOD(set_mc_date,              set_mc_date),
+    REXX_METHOD(get_mc_usesUnicode,       get_mc_usesUnicode),
+    REXX_METHOD(set_mc_usesUnicode,       set_mc_usesUnicode),
 
     REXX_METHOD(pbc_stepIt,              pbc_stepIt),
     REXX_METHOD(pbc_getPos,              pbc_getPos),

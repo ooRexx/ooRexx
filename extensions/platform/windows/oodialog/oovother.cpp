@@ -2407,395 +2407,6 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
    RETC(0)
 }
 
-static int dateTimeOperation(HWND hCtrl, char *buffer, size_t length, size_t type)
-{
-    SYSTEMTIME sysTime = {0};
-    int ret = 1;
-
-    switch ( type )
-    {
-        case DTO_GETDTP :
-            switch ( DateTime_GetSystemtime(hCtrl, &sysTime) )
-            {
-                case GDT_VALID:
-                    _snprintf(buffer, length,
-                              "%hu:%02hu:%02hu.%hu %hu %hu %hu %hu",
-                              sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds,
-                              sysTime.wDay, sysTime.wMonth, sysTime.wYear, sysTime.wDayOfWeek);
-
-                    ret = (int)strlen(buffer);
-                    break;
-
-                case GDT_NONE:
-                    buffer[0] = '0';
-                    buffer[1] = '\0';
-                    break;
-
-                case GDT_ERROR:
-                default :
-                    /* Failed */
-                    buffer[0] = '1';
-                    buffer[1] = '\0';
-                    break;
-            }
-            break;
-
-        case DTO_SETDTP :
-        {
-            int hr, min, sec, ms, dy, mn, yr;
-            ret = sscanf(buffer, "%hu:%02hu:%02hu.%hu %hu %hu %hu", &hr, &min, &sec, &ms, &dy, &mn, &yr);
-
-            if ( ret == 8 )
-            {
-                sysTime.wHour = hr;
-                sysTime.wMinute = min;
-                sysTime.wSecond = sec;
-                sysTime.wMilliseconds = ms;
-                sysTime.wDay = dy;
-                sysTime.wMonth = mn;
-                sysTime.wYear = yr;
-
-                if ( DateTime_SetSystemtime(hCtrl, GDT_VALID, &sysTime) == 0 )
-                {
-                    /* Failed */
-                    ret = 1;
-                }
-                else
-                {
-                    /* Good */
-                    ret = 0;
-                }
-            }
-            else
-            {
-                ret = -3;
-            }
-        } break;
-
-        case DTO_GETMONTH :
-            if ( MonthCal_GetCurSel(hCtrl, &sysTime) == 0 )
-            {
-                /* Failed */
-                buffer[0] = '1';
-                buffer[1] = '\0';
-            }
-            else
-            {
-                _snprintf(buffer, length, "%hu %hu %hu %hu", sysTime.wDay,
-                          sysTime.wMonth, sysTime.wYear, sysTime.wDayOfWeek);
-                ret = (int)strlen(buffer);
-            }
-            break;
-
-        case DTO_SETMONTH :
-        {
-            int dy, mn, yr;
-            ret = sscanf(buffer, "%hu %hu %hu", &dy, &mn, &yr);
-            if ( ret == 3 )
-            {
-                sysTime.wDay = dy;
-                sysTime.wMonth = mn;
-                sysTime.wYear = yr;
-                if ( MonthCal_SetCurSel(hCtrl, &sysTime) == 0 )
-                {
-                    /* Failed */
-                    ret = 1;
-                }
-                else
-                {
-                    /* Good */
-                    ret = 0;
-                }
-            }
-            else
-            {
-                ret = -3;
-            }
-        } break;
-
-        default :
-            /* Shouldn't happen, just set an error code. */
-            buffer[0] = '1';
-            buffer[1] = '\0';
-            break;
-    }
-    return ret;
-}
-
-/**
- * Implements the interface to the Month Calendar control.
- *
- * The parameters sent from ooRexx as an array of RXString:
- *
- * argv[0]  Window handle of the month calendar control.
- *
- * argv[1]  Major designator:  G for get, etc..  Only the first letter of
- *          the string is tested and it must be capitalized.
- *
- * argv[2]  Minor designator:  COL for get color, etc..  The whole capitalized
- *          substring is used.
- *
- * argv[3]  Dependent on function.
- *
- * Return to ooRexx, in general:
- *  < -5 a negated system error code
- *    -5 not implemented yet
- *    -4 unsupported ComCtl32 Version
- *    -3 problem with an argument
- *    -2 operation not supported by this month calendar control
- *    -1 problem with the month calendar control id or handle
- *     0 the Windows API call succeeds
- *     1 the Windows API call failed
- *  >  1 dependent on the function, usually a returned value not a return code
- */
-size_t RexxEntry HandleMonthCalendar(const char *funcname, size_t argc, CONSTRXSTRING *argv,
-                                     const char *qname, RXSTRING *retstr)
-{
-    HWND       hwnd;
-    SYSTEMTIME sysTime = {0};
-
-    /* Minimum of 2 args. */
-    CHECKARGL(2);
-
-    hwnd = GET_HWND(argv[0]);
-    if ( hwnd == 0 || ! IsWindow(hwnd) )
-    {
-        RETVAL(-1);
-    }
-
-    /* G - 'get' something function */
-    if ( argv[1].strptr[0] == 'G' )
-    {
-        if ( strcmp(argv[2].strptr, "COL") == 0 )          /* GetColor()  */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "CUR") == 0 )     /* GetCurSel()  */
-        {
-            retstr->strlength = dateTimeOperation(hwnd, retstr->strptr, RXAUTOBUFLEN, DTO_GETMONTH);
-            return 0;
-        }
-        else if ( strcmp(argv[2].strptr, "FIR") == 0 )     /* GetFirstDayOfWeek() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MSEL") == 0 )    /* GetMaxSelCount() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MTOD") == 0 )     /* GetMaxTodayWidth() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MIN") == 0 )     /* GetMinReqRect () */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MDEL") == 0 )     /* GetMonthDelta() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MRAN") == 0 )     /* GetMonthRange() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "RAN") == 0 )     /* GetRange() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "SEL") == 0 )     /* GetSelRange() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "TOD") == 0 )     /* GetToday() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "UNI") == 0 )     /* GetUnicodeFormat() */
-        {
-            RETC(MonthCal_GetUnicodeFormat(hwnd) ? 1 : 0)
-        }
-        else RETERR;
-    }
-    else if ( argv[1].strptr[0] == 'S' )
-    {
-        if ( strcmp(argv[2].strptr, "COL") == 0 )          /* SetColor()  */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "CUR") == 0 )     /* SetCurSel()  */
-        {
-            CHECKARG(4)
-
-            /* buffer length is not used for the 'SET' operations. */
-            RETVAL(dateTimeOperation(hwnd, (char *)argv[3].strptr, 0, DTO_SETMONTH));
-        }
-        else if ( strcmp(argv[2].strptr, "FIR") == 0 )     /* SetFirstDayOfWeek() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MSEL") == 0 )    /* SetMaxSelCount() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MTOD") == 0 )    /* SetMaxTodayWidth() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MIN") == 0 )     /* SetMinReqRect () */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MDEL") == 0 )    /* SetMonthDelta() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "MRAN") == 0 )    /* SetMonthRange() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "RAN") == 0 )     /* SetRange() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "SEL") == 0 )     /* SetSelRange() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "TOD") == 0 )     /* SetToday() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "UNI") == 0 )     /* SetUnicodeFormat() */
-        {
-            RETC(0)
-        }
-        else RETERR;
-    }
-    else if ( argv[1].strptr[0] == 'H' )               /* HitTest() */
-    {
-        RETC(0)
-    }
-
-    RETERR;
-}
-
-
-/**
- * Implements the interface to the Date and Time Picker control.
- *
- * The parameters sent from ooRexx as an array of RXString:
- *
- * argv[0]  Window handle of the date and time picker control.
- *
- * argv[1]  Major designator:  G for get, etc..  Only the first letter of
- *          the string is tested and it must be capitalized.
- *
- * argv[2]  Minor designator:  STYLE for (extended) list style, etc..  The whole
- *          capitalized word is used.
- *
- * argv[3]  Dependent on function.
- *
- * Return to ooRexx, in general:
- *  < -5 a negated system error code
- *    -5 not implemented yet
- *    -4 unsupported ComCtl32 Version
- *    -3 problem with an argument
- *    -2 operation not supported by this month calendar control
- *    -1 problem with the month calendar control id or handle
- *     0 the Windows API call succeeds
- *     1 the Windows API call failed
- *  >  1 dependent on the function, usually a returned value not a return code
- */
-size_t RexxEntry HandleDateTimePicker(const char *funcname, size_t argc, CONSTRXSTRING *argv,
-                                      const char *qname, RXSTRING *retstr)
-{
-    HWND       hwnd;
-    SYSTEMTIME sysTime = {0};
-
-    /* Minimum of 3 args. */
-    CHECKARGL(3);
-
-    hwnd = GET_HWND(argv[0]);
-    if ( hwnd == 0 || ! IsWindow(hwnd) )
-    {
-        RETVAL(-1);
-    }
-
-    /* G - 'get' something function */
-    if ( argv[1].strptr[0] == 'G' )
-    {
-        if ( strcmp(argv[2].strptr, "CAL")== 0  )          /* GetMonthCal()  */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "COL")== 0  )     /* GetMonthCalColor()  */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "FON")== 0  )     /* GetMonthCalFont() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "RAN")== 0  )    /* GetRange() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "SYS")== 0  )    /* GetSystemtime() */
-        {
-            retstr->strlength = dateTimeOperation(hwnd, retstr->strptr, RXAUTOBUFLEN, DTO_GETDTP);
-            return 0;
-        }
-        else
-        {
-            RETERR;
-        }
-    }
-    else if ( argv[1].strptr[0] == 'S' )
-    {
-        if ( strcmp(argv[2].strptr, "FOR") == 0 )          /* SetFormat()  */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "COL") == 0 )     /* SetMonthCalColor()  */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "FON") == 0 )     /* SetMonthCalFont() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "RAN") == 0 )    /* SetRange() */
-        {
-            RETC(0)
-        }
-        else if ( strcmp(argv[2].strptr, "SYS") == 0 )    /* SetSystemtime() */
-        {
-            if ( argc < 4 )
-            {
-                /* Set the DTP control to "no date" and clear its check box. */
-                if ( DateTime_SetSystemtime(hwnd, GDT_NONE, &sysTime) == 0 )
-                {
-                    /* Failed */
-                    RETC(1)
-                }
-                RETC(0)
-            }
-            else
-            {
-                CHECKARGL(4);
-
-                /* Buffer length is not used for the 'SET' operations. */
-                RETVAL(dateTimeOperation(hwnd, (char *)argv[3].strptr, 0, DTO_SETDTP));
-            }
-        }
-        else RETERR;
-    }
-
-    RETERR;
-}
-
-
 /* These inline (and non-inline) convenience functions will be moved so that
  * they are accessible by all of ooDialog at some point.  Right now they are
  * just used by native method functions in this source file.
@@ -2810,6 +2421,9 @@ bool rxStr2Number(RexxMethodContext *, CSTRING, uint64_t *, int);
 #define API_FAILED_MSG            "system API %s() failed; OS error code %d"
 #define COM_API_FAILED_MSG        "system API %s() failed; COM code 0x%08x"
 #define NO_COMMCTRL_MSG           "failed to initialize %s; OS error code %d"
+#define NO_MEMORY_MSG             "failed to allocate memory"
+#define FUNC_WINCTRL_FAILED_MSG   "the '%s'() function of the Windows '%s' control failed"
+#define MSG_WINCTRL_FAILED_MSG    "the '%s' message of the Windows '%s' control failed"
 
 #define COMCTL32_FULL_PART        0
 #define COMCTL32_NUMBER_PART      1
@@ -3016,9 +2630,16 @@ void systemServiceExceptionComCode(RexxMethodContext *context, const char *msg, 
     systemServiceException(context, buffer);
 }
 
+void controlFailedException(RexxMethodContext *c, const char *msg, const char *func, const char *control)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), msg, func, control);
+    systemServiceException(c, buffer);
+}
+
 void outOfMemoryException(RexxMethodContext *c)
 {
-    systemServiceException(c, "Failed to allocate memory");
+    systemServiceException(c, NO_MEMORY_MSG);
 }
 
 void userDefinedMsgException(RexxMethodContext *c, CSTRING msg)
@@ -4548,6 +4169,285 @@ RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF
     }
 
     return context->Nil();
+}
+
+
+/**
+ * Methods for the DateTimePicker class.
+ */
+#define DATETIMEPICKER_CLASS     "DateTimePicker"
+#define DATETIMEPICKER_WINNAME   "Date and Time Picker"
+
+// This is used for MonthCalendar also
+#define SYSTEMTIME_MIN_YEAR    1601
+
+enum DateTimePart {dtFull, dtTime, dtDate, dtNow};
+
+static wholenumber_t getDateTimePart(RexxMethodContext *c, RexxObjectPtr dateTime, const char *part)
+{
+    wholenumber_t num;
+
+    RexxObjectPtr rxNum = c->SendMessage0(dateTime, part);
+    if ( rxNum == NULLOBJECT || ! c->WholeNumber(rxNum, &num) )
+    {
+        TCHAR buffer[128];
+        _snprintf(buffer, sizeof(buffer), "The DateTime object failed to produce a valid %s", part);
+        userDefinedMsgException(c, buffer);
+        num = -1;
+    }
+    return num;
+}
+
+/**
+ * Converts a DateTime object to a SYSTEMTIME structure.  The fields of the
+ * struct are filled in with the corresponding values of the DateTime object.
+ *
+ * @param c         The method context we are operating in.
+ * @param dateTime  An ooRexx DateTime object.
+ * @param sysTime   [in/out] The SYSTEMTIME struct to fill in.
+ * @param part      Specifies which fields of the SYSTEMTIME struct fill in.
+ *                  Unspecified fields are left alone.
+ *
+ * @return True if no errors, false if a condition is raised.
+ *
+ * @note  Assumes the dateTime object is not null and is actually a DateTime
+ *        object.
+ *
+ * @note The year part of the DateTime object must be in range for a SYSTEMTIME.
+ *       The lower range for SYSTEMTIME is 1601. The upper range of a DateTime
+ *       object is 9999 and of a SYSTEMTIME 30827, so we only check the lower
+ *       range.  An exception is raised if out of range.
+ */
+static bool dt2sysTime(RexxMethodContext *c, RexxObjectPtr dateTime, SYSTEMTIME *sysTime, DateTimePart part)
+{
+    if ( part == dtNow )
+    {
+        GetLocalTime(sysTime);
+    }
+    else
+    {
+        // format: yyyy-dd-mmThh:mm:ss.uuuuuu.
+        RexxObjectPtr dt = c->SendMessage0(dateTime, "ISODATE");
+        const char *isoDate = c->CString(dt);
+
+        SYSTEMTIME st = {0};
+        sscanf(isoDate, "%4hu-%2hu-%2huT%2hu:%2hu:%2hu.%3hu", &st.wYear, &st.wMonth, &st.wDay,
+               &st.wHour, &st.wMinute, &st.wSecond, &st.wMilliseconds);
+
+        if ( st.wYear < SYSTEMTIME_MIN_YEAR )
+        {
+            userDefinedMsgException(c, "The DateTime object can not represent a year prior to 1601");
+            goto failed_out;
+        }
+
+        switch ( part )
+        {
+            case dtTime :
+                sysTime->wHour = st.wHour;
+                sysTime->wMinute = st.wMinute;
+                sysTime->wSecond = st.wSecond;
+                sysTime->wMilliseconds = st.wMilliseconds;
+                break;
+
+            case dtDate :
+                sysTime->wYear = st.wYear;
+                sysTime->wMonth = st.wMonth;
+                sysTime->wDay = st.wDay;
+                break;
+
+            case dtFull :
+                sysTime->wYear = st.wYear;
+                sysTime->wMonth = st.wMonth;
+                sysTime->wDay = st.wDay;
+                sysTime->wHour = st.wHour;
+                sysTime->wMinute = st.wMinute;
+                sysTime->wSecond = st.wSecond;
+                sysTime->wMilliseconds = st.wMilliseconds;
+                break;
+        }
+    }
+    return true;
+
+failed_out:
+    return false;
+}
+
+/**
+ * Creates a DateTime object that represents the time set in a SYSTEMTIME
+ * struct.
+ *
+ * @param c
+ * @param sysTime
+ * @param dateTime  [in/out]
+ */
+static void sysTime2dt(RexxMethodContext *c, SYSTEMTIME *sysTime, RexxObjectPtr *dateTime, DateTimePart part)
+{
+    RexxClassObject dtClass = c->FindClass("DATETIME");
+
+    if ( part == dtNow )
+    {
+        *dateTime = c->SendMessage0(dtClass, "NEW");
+    }
+    else
+    {
+        char buf[64];
+        switch ( part )
+        {
+            case dtDate :
+                _snprintf(buf, sizeof(buf), "%hu%02hu%02hu", sysTime->wYear, sysTime->wMonth, sysTime->wDay);
+                *dateTime = c->SendMessage1(dtClass, "FROMSTANDARDDATE", c->String(buf));
+                break;
+
+            case dtTime :
+                _snprintf(buf, sizeof(buf), "%02hu:%02hu:%02hu.%03hu000",
+                          sysTime->wHour, sysTime->wMinute, sysTime->wSecond, sysTime->wMilliseconds);
+                *dateTime = c->SendMessage1(dtClass, "FROMLONGTIME", c->String(buf));
+                break;
+
+            case dtFull :
+                _snprintf(buf, sizeof(buf), "%hu-%02hu-%02huT%02hu:%02hu:%02hu.%03hu000",
+                          sysTime->wYear, sysTime->wMonth, sysTime->wDay,
+                          sysTime->wHour, sysTime->wMinute, sysTime->wSecond, sysTime->wMilliseconds);
+                *dateTime = c->SendMessage1(dtClass, "FROMISODATE", c->String(buf));
+                break;
+        }
+    }
+}
+
+/** DateTimePicker::dateTime  (attribute)
+ *
+ *  Retrieves the current selected system time of the date time picker and
+ *  returns it as a DateTime object.
+ *
+ *  If the date time picker has the DTS_SHOWNONE style, it can also be set to
+ *  "no date" when the user has unchecked the check box.  If the control is in
+ *  this state, the .NullHandle object is returned to the user.
+ *
+ *  @returns  A DateTime object representing the current selected system time of
+ *            the control, or the .NullHandle object if the control is in the
+ *            'no date' state.
+ */
+RexxMethod1(RexxObjectPtr, get_dtp_dateTime, OSELF, self)
+{
+    RexxMethodContext *c = context;
+    SYSTEMTIME sysTime = {0};
+    RexxObjectPtr dateTime = NULLOBJECT;
+
+    switch ( DateTime_GetSystemtime(rxGetWindowHandle(context, self), &sysTime) )
+    {
+        case GDT_VALID:
+            sysTime2dt(context, &sysTime, &dateTime, dtFull);
+            break;
+
+        case GDT_NONE:
+            // This is valid.  It means the DTP is using the DTS_SHOWNONE  style
+            // and that the user has the check box is not checked.  We return a
+            // null pointer object.
+            dateTime = c->NewPointer(NULL);
+            break;
+
+        case GDT_ERROR:
+        default :
+            // Some error with the DTP, raise an exception.
+            controlFailedException(context, FUNC_WINCTRL_FAILED_MSG, "DateTime_GetSystemtime", DATETIMEPICKER_WINNAME);
+            break;
+    }
+    return dateTime;
+}
+
+/** DateTimePicker::dateTime=  (attribute)
+ *
+ *  Sets the system time for the date time picker to the time represented by the
+ *  DateTime object.  If, and only if, the date time picker has the DTS_SHOWNONE
+ *  style, it can also be set to "no date."  The Rexx user can set this state by
+ *  passing in the .NullHandle object.
+ *
+ *  @param dateTime  The date and time to set the control to.
+ *
+ *  @return   This is an attribute, there is no return.
+ *
+ *  @note  The minimum year a date time picker can be set to is 1601.  If the
+ *         DateTime object represents a year prior to 1601, an exception is
+ *         raised.
+ *
+ */
+RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, OSELF, self)
+{
+    RexxMethodContext *c = context;
+    SYSTEMTIME sysTime = {0};
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    if ( c->IsOfType(dateTime, "POINTER") )
+    {
+        DateTime_SetSystemtime(hwnd, GDT_NONE, &sysTime);
+    }
+    else
+    {
+        if ( requiredClass(context, dateTime, "DATETIME", 1) )
+        {
+            if ( dt2sysTime(c, dateTime, &sysTime, dtFull) )
+            {
+                if ( DateTime_SetSystemtime(hwnd, GDT_VALID, &sysTime) == 0 )
+                {
+                    controlFailedException(context, FUNC_WINCTRL_FAILED_MSG, "DateTime_SetSystemtime", DATETIMEPICKER_WINNAME);
+                }
+            }
+        }
+    }
+    return NULLOBJECT;
+}
+
+
+/**
+ * Methods for the MonthCalendar class.
+ */
+#define MONTHCALENDAR_CLASS    "MonthCalendar"
+#define MONTHCALENDAR_WINNAME  "Month Calendar"
+
+RexxMethod1(RexxObjectPtr, get_mc_date, OSELF, self)
+{
+    RexxMethodContext *c = context;
+    SYSTEMTIME sysTime = {0};
+    RexxObjectPtr dateTime = NULLOBJECT;
+
+    if ( MonthCal_GetCurSel(rxGetWindowHandle(context, self), &sysTime) == 0 )
+    {
+        controlFailedException(context, FUNC_WINCTRL_FAILED_MSG, "MonthCal_GetCurSel", MONTHCALENDAR_WINNAME);
+    }
+    else
+    {
+        sysTime2dt(context, &sysTime, &dateTime, dtDate);
+    }
+    return dateTime;
+}
+
+RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, OSELF, self)
+{
+    RexxMethodContext *c = context;
+    SYSTEMTIME sysTime = {0};
+
+    if ( requiredClass(context, dateTime, "DATETIME", 1) )
+    {
+        if ( dt2sysTime(context, dateTime, &sysTime, dtDate) )
+        {
+            if ( MonthCal_SetCurSel(rxGetWindowHandle(context, self), &sysTime) == 0 )
+            {
+                controlFailedException(context, FUNC_WINCTRL_FAILED_MSG, "MonthCal_SetCurSel", MONTHCALENDAR_WINNAME);
+            }
+        }
+    }
+    return NULLOBJECT;
+}
+
+RexxMethod1(logical_t, get_mc_usesUnicode, OSELF, self)
+{
+    return MonthCal_GetUnicodeFormat(rxGetWindowHandle(context, self)) ? 1 : 0;
+}
+
+RexxMethod2(RexxObjectPtr, set_mc_usesUnicode, logical_t, useUnicode, OSELF, self)
+{
+    MonthCal_SetUnicodeFormat(rxGetWindowHandle(context, self), useUnicode);
+    return NULLOBJECT;
 }
 
 
@@ -8054,7 +7954,8 @@ RexxMethod0(logical_t, dlgutil_init_cls)
         return false;
     }
 
-    if ( ! initCommonControls(context, ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES, "ooDialog", COMCTL_ERR_TITLE) )
+    if ( ! initCommonControls(context, ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES | ICC_DATE_CLASSES,
+                              "ooDialog", COMCTL_ERR_TITLE) )
     {
         ComCtl32Version = 0;
         return false;
