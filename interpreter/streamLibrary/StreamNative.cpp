@@ -718,14 +718,16 @@ void StreamInfo::implicitOpen(int type)
     resolveStreamName();
 
     // first try for read/write and open file without create if specified
+    // If this is an implicit open, try to open for shared readwrite, otherwise
+    // we'll break the stream BIFs with nested calls.
     read_write = true;
     if (type == operation_nocreate)
     {
-        open(O_RDWR | RX_O_BINARY, IREAD_IWRITE, RX_SH_DENYRW);
+        open(O_RDWR | RX_O_BINARY, IREAD_IWRITE, RX_SH_DENYNO);
     }
     else
     {
-        open(RDWR_CREAT | RX_O_BINARY, IREAD_IWRITE, RX_SH_DENYRW);
+        open(RDWR_CREAT | RX_O_BINARY, IREAD_IWRITE, RX_SH_DENYNO);
     }
 
     // if there was an open error and we have the info to try again - doit
@@ -738,12 +740,12 @@ void StreamInfo::implicitOpen(int type)
         {
             // In Windows, all files are readable. Therefore S_IWRITE is
             // equivalent to S_IREAD | S_IWRITE.
-            open(O_WRONLY | RX_O_BINARY, IREAD_IWRITE, RX_SH_DENYRW);
+            open(O_WRONLY | RX_O_BINARY, IREAD_IWRITE, RX_SH_DENYNO);
             write_only = true;
         }
         else
         {
-            open(O_RDONLY | RX_O_BINARY, S_IREAD, RX_SH_DENYRW);
+            open(O_RDONLY | RX_O_BINARY, S_IREAD, RX_SH_DENYNO);
             read_only = true;
         }
 
@@ -761,6 +763,10 @@ void StreamInfo::implicitOpen(int type)
             return;
         }
     }
+
+    // do not buffer implicitly opened streams, since
+    // ones opened by the stream bifs don't expect the buffering
+    fileInfo.setBuffering(false, 0);
 
     // persistent writeable stream?
     if (!fileInfo.isTransient() && !read_only)
