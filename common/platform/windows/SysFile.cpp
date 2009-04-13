@@ -362,24 +362,28 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
     }
     else
     {
-        int blockRead = _read(fileHandle, buf, (unsigned int)len);
-        if (blockRead <= 0)
+        while (len > 0)
         {
-            // not get anything?
-            if (_eof(fileHandle))
+            int blockRead = _read(fileHandle, buf, (unsigned int)len);
+            if (blockRead <= 0)
             {
-                // could have had an ungetchar
-                return bytesRead > 0 ? true : false;
+                // not get anything?
+                if (_eof(fileHandle))
+                {
+                    // could have had an ungetchar
+                    return bytesRead > 0 ? true : false;
+                }
+                else
+                {
+                    // had an error, so raise it
+                    errInfo = errno;
+                    return false;
+                }
             }
-            else
-            {
-                // had an error, so raise it
-                errInfo = errno;
-                return false;
-            }
+            // update the length
+            len -= blockRead;
+            bytesRead += blockRead;
         }
-        // update the length
-        len += blockRead;
     }
     return true;
 }
