@@ -152,7 +152,7 @@ public:
     const char *streamExists();
     int64_t queryHandle();
     const char *getStreamType();
-    int64_t getStreamSize();
+    RexxObjectPtr getStreamSize();
     const char *getTimeStamp();
     const char *getState();
     RexxStringObject getDescription();
