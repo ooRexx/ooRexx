@@ -56,6 +56,8 @@ Syntax:
 
 ::METHOD init EXTERNAL "LIBRARY OREXXOLE OLEObject_Init"
 ::METHOD uninit EXTERNAL "LIBRARY OREXXOLE OLEObject_Uninit"
+::METHOD addRef private EXTERNAL "LIBRARY OREXXOLE OLEObject_addRef_pvt"
+::METHOD hasOLEMethod private EXTERNAL "LIBRARY OREXXOLE OLEObject_hasOLEMethod_pvt"
 ::METHOD unknown EXTERNAL "LIBRARY OREXXOLE OLEObject_Unknown"
 ::METHOD request EXTERNAL "LIBRARY OREXXOLE OLEObject_Request"
 ::METHOD getConstant EXTERNAL "LIBRARY OREXXOLE OLEObject_GetConst"
@@ -69,6 +71,33 @@ Syntax:
 ::METHOD removeEventHandler EXTERNAL "LIBRARY OREXXOLE OLEObject_removeEventHandler"
 --::METHOD GETKNOWNMETHODS CLASS EXTERNAL "LIBRARY OREXXOLE OLEObject_GetKnownMethods_Class"
 ::METHOD GETOBJECT CLASS EXTERNAL "LIBRARY OREXXOLE OLEObject_GetObject_Class"
+
+::method send
+  if self~hasOLEMethod("SEND") then
+    forward message("UNKNOWN") ARRAY("SEND", arg(1, 'A'))
+  else
+    forward class (super)
+
+::method sendWith
+  if self~hasOLEMethod("SENDWITH") then
+    forward message("UNKNOWN") ARRAY("SENDWITH", arg(1, 'A'))
+  else
+    forward class (super)
+
+::method copy
+  if self~hasOLEMethod("COPY") then do
+    forward message("UNKNOWN") ARRAY("COPY", arg(1, 'A'))
+  end
+  else do
+    forward class (super) continue
+    oleObj = result
+    if oleObj~isInstanceOf(.oleObject) then do
+      -- We have a copy of an OLEObject, including a copy of its dispatch pointer.
+      -- The dispatch pointer needs to have its reference count increased by 1.
+      oleObj~addRef
+    end
+    return oleObj
+  end
 
 ::METHOD "!OLEOBJECT" ATTRIBUTE
 

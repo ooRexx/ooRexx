@@ -117,6 +117,7 @@ void disconnectEventHandler(RexxMethodContext *);
 void getClsIDFromString(const char *, CLSID *);
 bool maybeCreateEventHandler(RexxMethodContext *, OLEObjectEvent **, IConnectionPointContainer **, RexxObjectPtr);
 bool isConnectableObject(IDispatch *);
+static BOOL getIDByName(const char *, IDispatch *, IDispatchEx *, MEMBERID *);
 
 int (__stdcall *creationCallback)(CLSID, IUnknown*) = NULL;
 void setCreationCallback(int (__stdcall *f)(CLSID, IUnknown*))
@@ -1094,7 +1095,6 @@ BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *p
                    ITypeInfo *pTypeInfo, POLECLASSINFO pClsInfo, unsigned short wFlags,
                    PPOLEFUNCINFO ppFuncInfo, MEMBERID *pMemId, size_t expectedArgCount )
 {
-    HRESULT         hResult;
     BOOL            fFound = FALSE;
     POLEFUNCINFO    pFuncInfo = NULL;
     POLEFUNCINFO    pFuncCache = NULL;
@@ -1177,42 +1177,58 @@ BOOL fFindFunction(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *p
         }
         else
         {
-            /* try to find function description with GetIDsOfNames */
-            LPOLESTR   lpUniBuffer;
-            hResult = E_FAIL;
-
-            lpUniBuffer = lpAnsiToUnicode(pszFunction, strlen(pszFunction) + 1);
-            if (lpUniBuffer)
-            {
-                if (pDispatchEx)
-                {
-                    //                 IDispatchEx::GetDispID expects a "real" BSTR
-                    //                 not the one MS documented as a simple OLECHAR* !
-                    size_t len = wcslen(lpUniBuffer)+1;
-                    LPOLESTR realBSTR = (LPOLESTR) ORexxOleAlloc(4+2*len);
-                    memcpy(realBSTR+2,lpUniBuffer,2*len);
-                    *((int*) realBSTR) = (int)len-1;
-                    hResult = pDispatchEx->GetDispID(realBSTR+2, fdexNameCaseInsensitive, pMemId);
-                    ORexxOleFree(realBSTR);
-                }
-                if (FAILED(hResult)) // If IDispatchEx call fails, try pDispatch
-                {
-                    if (pDispatch)
-                    {
-                        hResult = pDispatch->GetIDsOfNames(IID_NULL, &lpUniBuffer, 1,
-                                                           LOCALE_USER_DEFAULT, pMemId);
-                    }
-                }
-
-                if (hResult == S_OK)
-                    fFound = TRUE;
-
-                ORexxOleFree(lpUniBuffer);
-            }
+            // Try to get the dispatch ID by name.
+            fFound = getIDByName(pszFunction, pDispatch, pDispatchEx, pMemId);
         }
     }
 
     return fFound;
+}
+
+/**
+ * Try to get the dispatch id for a function / methd by name.
+ *
+ * @param pszFunction  Function / method name
+ * @param pDispatch    Pointer to IDispatch, may not be null.
+ * @param pDispatchEx  Pointer to IDispatchEx, can be null, often is null.
+ * @param pMemId       [in/out] returned dispatch id, if found.
+ *
+ * @return True if the dispatch ID was obtained, otherwise false.
+ */
+static BOOL getIDByName(const char *pszFunction, IDispatch *pDispatch, IDispatchEx *pDispatchEx, MEMBERID *pMemId)
+{
+    LPOLESTR unicodeName;
+    HRESULT  hResult = E_FAIL;
+    BOOL     gotID = FALSE;
+
+    unicodeName = lpAnsiToUnicode(pszFunction, strlen(pszFunction) + 1);
+    if ( unicodeName )
+    {
+        if ( pDispatchEx )
+        {
+            BSTR bstrName = SysAllocString(unicodeName);
+            if ( bstrName )
+            {
+                hResult = pDispatchEx->GetDispID(bstrName, fdexNameCaseInsensitive, pMemId);
+                SysFreeString(bstrName);
+            }
+        }
+        if ( FAILED(hResult) ) // If IDispatchEx call fails, try pDispatch
+        {
+            if ( pDispatch )
+            {
+                hResult = pDispatch->GetIDsOfNames(IID_NULL, &unicodeName, 1, LOCALE_USER_DEFAULT, pMemId);
+            }
+        }
+
+        if ( hResult == S_OK )
+        {
+            gotID = TRUE;
+        }
+
+        ORexxOleFree(unicodeName);
+    }
+    return gotID;
 }
 
 
@@ -3208,6 +3224,72 @@ void dereferenceVariant(VARIANT *obj)
     obj->vt ^= VT_BYREF;
 }
 
+/** OLEObject::addRef()  [private]
+ *
+ *  Increases the reference count on the IDispatch pointer by 1.  This method is
+ *  used by the class internally, if and only if, an object copy of the
+ *  oleObject has been made through the .Object~copy() method.
+ *
+ */
+RexxMethod0(RexxObjectPtr, OLEObject_addRef_pvt)
+{
+    IDispatch *pDispatch = NULL;
+
+    if ( getDispatchPtr(context, &pDispatch) )
+    {
+        pDispatch->AddRef();
+    }
+    return NULLOBJECT;
+}
+
+/** OLEObject::hasOLEMethod()  [private]
+ *
+ *  Does a quick check to see if the COM object has a method with the specified
+ *  name.  This is used internally by the class to check if one of the .Object
+ *  method names, such as "send," is a method name of the COM object.
+ *
+ *  If the COM object does have the method name, the messsage if forwarded
+ *  directly to the unknown() method.  If not, the message is forwarded to the
+ *  super class.
+ *
+ *  @param  methodName  The name to check.
+ *
+ *  @return  True if the COM object does have the method name, false if it does
+ *           not appear to have the method.
+ *
+ *  @note  Currently this is a private method, but it might be useful as a
+ *         public method.  Many COM objects do not have a TYPELIB, making
+ *         getKnownMethods() useless.  For those COM objects, this method could
+ *         provide a way for the Rexx programmer to check if a method invocation
+ *         had a chance of succeeding or not.
+ *
+ */
+RexxMethod1(logical_t, OLEObject_hasOLEMethod_pvt, CSTRING, methodName)
+{
+    IDispatch    *pDispatch = NULL;
+    IDispatchEx  *pDispatchEx = NULL;
+    MEMBERID      MemId;
+
+    if ( ! fInitialized )
+    {
+        OLEInit();
+    }
+
+    if ( ! getDispatchPtr(context, &pDispatch) )
+    {
+        return NULLOBJECT;
+    }
+
+    pDispatch->QueryInterface(IID_IDispatchEx, (LPVOID*)&pDispatchEx);
+
+    logical_t hasMethod = getIDByName(methodName, pDispatch, pDispatchEx, &MemId);
+    if ( pDispatchEx )
+    {
+        pDispatchEx->Release();
+    }
+    return hasMethod;
+}
+
 //******************************************************************************
 // Method:  OLEObject_Unknown
 //
@@ -3244,11 +3326,7 @@ void dereferenceVariant(VARIANT *obj)
 //     to facilitate future usage of the OLE interface in scripting engines.
 //
 //******************************************************************************
-RexxMethod3(RexxObjectPtr,                // Return type
-            OLEObject_Unknown,         // Object_method name
-            OSELF, self,               // Pointer to self
-            CSTRING, msgName,             // Name of OLE method being called
-            RexxArrayObject, msgArgs)     // Array containing OLE method parameters
+RexxMethod3(RexxObjectPtr, OLEObject_Unknown, OSELF, self, CSTRING, msgName, RexxArrayObject, msgArgs)
 {
     HRESULT         hResult;
     CHAR            szBuffer[2048];
@@ -3381,7 +3459,7 @@ RexxMethod3(RexxObjectPtr,                // Return type
     // This memory is no longer needed.
     ORexxOleFree(pszFunction);
 
-    if (!fFound)
+    if ( ! fFound )
     {
         context->RaiseException2(Rexx_Error_No_method_name, self, context->NewStringFromAsciiz(msgName));
         goto clean_up_exit;
@@ -5783,25 +5861,27 @@ REXX_METHOD_PROTOTYPE(OLEVariant_Init)
 
 // now build the actual entry list
 RexxMethodEntry oleobject_methods[] = {
-    REXX_METHOD( OLEObject_Init        , OLEObject_Init     ),
-    REXX_METHOD( OLEObject_Uninit      , OLEObject_Uninit   ),
-    REXX_METHOD( OLEObject_Unknown     , OLEObject_Unknown  ),
-    REXX_METHOD( OLEObject_Request     , OLEObject_Request  ),
-    REXX_METHOD( OLEObject_GetVar      , OLEObject_GetVar   ),
-    REXX_METHOD( OLEObject_GetConst    , OLEObject_GetConst ),
-    REXX_METHOD( OLEObject_GetKnownMethods  , OLEObject_GetKnownMethods ),
-    REXX_METHOD( OLEObject_GetKnownMethods_Class  , OLEObject_GetKnownMethods_Class ),
-    REXX_METHOD( OLEObject_GetKnownEvents  , OLEObject_GetKnownEvents ),
-    REXX_METHOD( OLEObject_GetObject_Class , OLEObject_GetObject_Class ),
-    REXX_METHOD( OLEObject_isConnected         , OLEObject_isConnected        ),
-    REXX_METHOD( OLEObject_isConnectable       , OLEObject_isConnectable      ),
-    REXX_METHOD( OLEObject_connectEvents       , OLEObject_connectEvents      ),
-    REXX_METHOD( OLEObject_disconnectEvents    , OLEObject_disconnectEvents   ),
-    REXX_METHOD( OLEObject_removeEventHandler  , OLEObject_removeEventHandler ),
-    REXX_METHOD( OLEVariant_ParamFlagsEquals, OLEVariant_ParamFlagsEquals ),
-    REXX_METHOD( OLEVariant_VarTypeEquals, OLEVariant_VarTypeEquals ),
-    REXX_METHOD( OLEVariant_VarValueEquals, OLEVariant_VarValueEquals ),
-    REXX_METHOD( OLEVariant_Init, OLEVariant_Init ),
+    REXX_METHOD(OLEObject_Init,                  OLEObject_Init),
+    REXX_METHOD(OLEObject_Uninit,                OLEObject_Uninit),
+    REXX_METHOD(OLEObject_addRef_pvt,            OLEObject_addRef_pvt),
+    REXX_METHOD(OLEObject_hasOLEMethod_pvt,      OLEObject_hasOLEMethod_pvt),
+    REXX_METHOD(OLEObject_Unknown,               OLEObject_Unknown),
+    REXX_METHOD(OLEObject_Request,               OLEObject_Request),
+    REXX_METHOD(OLEObject_GetVar,                OLEObject_GetVar),
+    REXX_METHOD(OLEObject_GetConst,              OLEObject_GetConst),
+    REXX_METHOD(OLEObject_GetKnownMethods,       OLEObject_GetKnownMethods),
+    REXX_METHOD(OLEObject_GetKnownMethods_Class, OLEObject_GetKnownMethods_Class),
+    REXX_METHOD(OLEObject_GetKnownEvents,        OLEObject_GetKnownEvents),
+    REXX_METHOD(OLEObject_GetObject_Class,       OLEObject_GetObject_Class),
+    REXX_METHOD(OLEObject_isConnected,           OLEObject_isConnected),
+    REXX_METHOD(OLEObject_isConnectable,         OLEObject_isConnectable),
+    REXX_METHOD(OLEObject_connectEvents,         OLEObject_connectEvents),
+    REXX_METHOD(OLEObject_disconnectEvents,      OLEObject_disconnectEvents),
+    REXX_METHOD(OLEObject_removeEventHandler,    OLEObject_removeEventHandler),
+    REXX_METHOD(OLEVariant_ParamFlagsEquals,     OLEVariant_ParamFlagsEquals),
+    REXX_METHOD(OLEVariant_VarTypeEquals,        OLEVariant_VarTypeEquals),
+    REXX_METHOD(OLEVariant_VarValueEquals,       OLEVariant_VarValueEquals),
+    REXX_METHOD(OLEVariant_Init,                 OLEVariant_Init),
     REXX_LAST_METHOD()
 };
 
