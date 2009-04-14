@@ -1085,6 +1085,7 @@ void SysFile::setStdIn()
     ungetchar = -1;              // -1 indicates no char
     getStreamTypeInfo();
     setBuffering(false, 0);
+    readable = true;             // force this to readable
 }
 
 /**
@@ -1099,6 +1100,7 @@ void SysFile::setStdOut()
     ungetchar = -1;              // -1 indicates no char
     getStreamTypeInfo();
     setBuffering(false, 0);
+    writeable = true;             // force this to writeable
 }
 
 /**
@@ -1113,6 +1115,7 @@ void SysFile::setStdErr()
     ungetchar = -1;              // -1 indicates no char
     getStreamTypeInfo();
     setBuffering(false, 0);
+    writeable = true;             // force this to writeable
 }
 
 
