@@ -1465,14 +1465,18 @@ size_t StreamInfo::charout(RexxStringObject data, bool _setPosition, int64_t pos
     {
         setCharWritePosition(position);
     }
-    // now write everything out
-    size_t bytesWritten;
-    writeBuffer(stringData, length, bytesWritten);
-    // unable to write for some reason?
-    if (bytesWritten != length)
+    // only write if this is not a null string
+    if (length > 0)
     {
-        defaultResult = context->WholeNumberToObject(length - bytesWritten);
-        notreadyError();
+        // now write everything out
+        size_t bytesWritten;
+        writeBuffer(stringData, length, bytesWritten);
+        // unable to write for some reason?
+        if (bytesWritten != length)
+        {
+            defaultResult = context->WholeNumberToObject(length - bytesWritten);
+            notreadyError();
+        }
     }
     // reset any line positioning information.
     resetLinePositions();
