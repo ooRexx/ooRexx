@@ -3207,91 +3207,101 @@ size_t RexxEntry SysTextScreenSize(const char *name, size_t numargs, CONSTRXSTRI
 size_t RexxEntry RxWinExec(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
-  int         CmdShow;                 /* show window style flags    */
-  int         index;                   /* table index                */
-  ULONG       pid;                     /* PID or error return code   */
-  size_t      length;                  /* length of option           */
-  STARTUPINFO si;
-  PROCESS_INFORMATION procInfo;
+    int         CmdShow;                 /* show window style flags    */
+    int         index;                   /* table index                */
+    ULONG       pid;                     /* PID or error return code   */
+    size_t      length;                  /* length of option           */
+    STARTUPINFO si;
+    PROCESS_INFORMATION procInfo;
 
-
-PSZ    show_styles[] =                 /* show window types          */
-    {"SHOWNORMAL",
-     "SHOWNOACTIVATE",
-     "SHOWMINNOACTIVE",
-     "SHOWMINIMIZED",
-     "SHOWMAXIMIZED",
-     "HIDE",
-     "MINIMIZE"
-     };
-
-ULONG  show_flags[] =                  /* show window styles        */
-    {SW_SHOWNORMAL,
-     SW_SHOWNOACTIVATE,
-     SW_SHOWMINNOACTIVE,
-     SW_SHOWMINIMIZED,
-     SW_SHOWMAXIMIZED,
-     SW_HIDE,
-     SW_MINIMIZE
+    // Show window types.
+    PSZ    show_styles[] =
+    {
+        "SHOWNORMAL",
+        "SHOWNOACTIVATE",
+        "SHOWMINNOACTIVE",
+        "SHOWMINIMIZED",
+        "SHOWMAXIMIZED",
+        "HIDE",
+        "MINIMIZE"
     };
 
-  BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* pass back result           */
+    // Show window styles.
+    ULONG  show_flags[] =
+    {
+        SW_SHOWNORMAL,
+        SW_SHOWNOACTIVATE,
+        SW_SHOWMINNOACTIVE,
+        SW_SHOWMINIMIZED,
+        SW_SHOWMAXIMIZED,
+        SW_HIDE,
+        SW_MINIMIZE
+    };
 
+    BUILDRXSTRING(retstr, NO_UTIL_ERROR);  /* pass back result           */
 
-  if (numargs < 1 ||
-      numargs > 2 ||                   /* should be 1 or two args    */
-      !RXVALIDSTRING(args[0]) ||
-      !RXVALIDSTRING(args[1]) ||
-      args[0].strlength > MAX_PATH)
-    return INVALID_ROUTINE;            /* Invalid call to routine    */
+    // Should be 1 or 2 args.
+    if ( numargs < 1 || numargs > 2 || !RXVALIDSTRING(args[0]) ||
+         (numargs == 2 && !RXVALIDSTRING(args[1])) ||args[0].strlength > MAX_PATH )
+    {
+        return INVALID_ROUTINE;
+    }
 
-  CmdShow=0;                           /* initialize show flags      */
-                                       /* validate arguments         */
-  if (numargs < 2 ||                   /* no show window style?      */
-      args[1].strptr == NULL)
-    CmdShow += SW_SHOWNORMAL;          /* set default show style     */
-  else {                               /* check various show styles  */
-    length = args[1].strlength;        /* get length of option       */
-                                       /* search style table         */
-    for (index = 0;
-         index < sizeof(show_styles)/sizeof(PSZ);
-         index++) {
-                                       /* find a match?              */
-      if (length == strlen(show_styles[index]) &&
-          !memicmp(args[1].strptr, show_styles[index], length)) {
-        CmdShow += show_flags[index];  /* add to the style           */
-        break;
-      }
-    }/* for */
-                                       /* not found?                 */
-    if (index == sizeof(show_styles)/sizeof(PSZ))
-      return INVALID_ROUTINE;          /* raise an error             */
-  }/* else */
+    // Show type can be one and only one of the SW_XXX constants.
+    if ( numargs < 2 || args[1].strptr == NULL )
+    {
+        CmdShow = SW_SHOWNORMAL;
+    }
+    else
+    {
+        // Get length of option and search the style table.
+        length = args[1].strlength;
+        for ( index = 0; index < sizeof(show_styles)/sizeof(PSZ); index++ )
+        {
+            if ( length == strlen(show_styles[index]) && memicmp(args[1].strptr, show_styles[index], length) == 0 )
+            {
+                CmdShow = show_flags[index];
+                break;
+            }
+        }
 
-  ZeroMemory(&procInfo, sizeof(procInfo));
-  ZeroMemory(&si, sizeof(si));
-  si.cb = sizeof(si);
-  si.dwFlags = STARTF_USESHOWWINDOW;
-  si.wShowWindow = (WORD)CmdShow;
+        if ( index == sizeof(show_styles)/sizeof(PSZ) )
+        {
+            // User sent an argument, but not the right one.
+            return INVALID_ROUTINE;
+        }
+    }
 
-  if ( CreateProcess(NULL, (LPSTR)args[0].strptr, NULL, NULL, FALSE, 0, NULL,
-                     NULL, &si, &procInfo ) ) {
-    pid = procInfo.dwProcessId;
-  }
-  else {
-    pid = GetLastError();
-    if ( pid > 31 )                    /* maintain compatibility to  */
-      pid = (ULONG)-((int)pid);        /* versions < ooRexx 3.1.2    */
-  }
-                                       /* return value as string     */
-  sprintf(retstr->strptr, "%d", pid);
-  retstr->strlength = strlen(retstr->strptr);
+    ZeroMemory(&procInfo, sizeof(procInfo));
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = (WORD)CmdShow;
 
-  /* Close process / thread handles as they are not used / needed.   */
-  CloseHandle(procInfo.hProcess);
-  CloseHandle(procInfo.hThread);
+    if ( CreateProcess(NULL, (LPSTR)args[0].strptr, NULL, NULL, FALSE, 0, NULL,
+                       NULL, &si, &procInfo ) )
+    {
+        pid = procInfo.dwProcessId;
+    }
+    else
+    {
+        pid = GetLastError();
+        if ( pid > 31 )
+        {
+            // Maintain compatibility to versions < ooRexx 3.1.2
+            pid = (ULONG)-((int)pid);
+        }
+    }
 
-  return VALID_ROUTINE;                /* good completion            */
+    // Return value as string.
+    sprintf(retstr->strptr, "%d", pid);
+    retstr->strlength = strlen(retstr->strptr);
+
+    // Close process / thread handles as they are not used / needed.
+    CloseHandle(procInfo.hProcess);
+    CloseHandle(procInfo.hThread);
+
+    return VALID_ROUTINE;
 }
 
 
