@@ -3851,7 +3851,8 @@ special character (such as a parenthesis).
 </section>
 <section id="rexxcup">
 <title>RexxC Utility Program</title>
-<para>RexxC issues the following errors:</para>
+<para>When RexxC encounters a syntax error in a Rexx program while tokenizing or syntax checking it, RexxC
+returns the negated ooRexx error code. In addition, RexxC issues the following errors:</para>
 <section id="ERR127">
 <title>Error 127 - The REXXC command parameters are incorrect.</title>
 <para>

@@ -89,7 +89,8 @@
 </section>
 
 <section id="rexxcup"><title>RexxC Utility Program</title>
-<para>RexxC issues the following errors:</para>
+<para>When RexxC encounters a syntax error in a Rexx program while tokenizing or syntax checking it, RexxC
+returns the negated ooRexx error code. In addition, RexxC issues the following errors:</para>
 
 <xsl:for-each select="Message/Subcodes/SubMessage[Component = 'REXXC']">
 <xsl:sort select="MessageNumber" data-type="number"/>
