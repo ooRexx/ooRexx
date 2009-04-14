@@ -1857,100 +1857,6 @@ BUILTIN(TRACE)
     return result;                       /* return old trace setting          */
 }
 
-
-/* resolve a stream name             */
-RexxObject *resolve_stream(
-    RexxString          *name,           /* name of the stream                */
-    RexxActivation      *context,        /* current activation context        */
-    RexxExpressionStack *stack,          /* current expression stack          */
-    bool                 input,          /* input or an output stream         */
-    RexxString          **fullName,      /* qualified name of stream          */
-    bool                *added)          /* not found -> true                 */
-/******************************************************************************/
-/* Function:  Convert a stream name into a stream object                      */
-/******************************************************************************/
-{
-    if (added != NULL)
-    {
-        *added = false;           /* when caller requires stream table entry then initialize */
-    }
-    RexxDirectory *streamTable = context->getStreams(); /* get the current stream set        */
-    if (fullName)                        /* fullName requested?               */
-    {
-        *fullName = name;                  /* initialize to name                */
-    }
-    /* if length of name is 0, then it's the same as omitted */
-    if (name == OREF_NULL || name->getLength() == 0)   /* no name?                 */
-    {
-        if (input)                         /* input operation?                  */
-        {
-            /* get the default output stream     */
-            return context->getLocalEnvironment(OREF_INPUT);
-        }
-        else
-        {
-            /* get the default output stream     */
-            return context->getLocalEnvironment(OREF_OUTPUT);
-        }
-    }
-    /* standard input stream?            */
-    else if (name->strCaselessCompare(CHAR_STDIN) || name->strCaselessCompare(CHAR_CSTDIN))
-    {
-        /* get the default output stream     */
-        return context->getLocalEnvironment(OREF_INPUT);
-    }
-    /* standard output stream?           */
-    else if (name->strCaselessCompare(CHAR_STDOUT) || name->strCaselessCompare(CHAR_CSTDOUT))
-    {
-        /* get the default output stream     */
-        return context->getLocalEnvironment(OREF_OUTPUT);
-    }
-    /* standard error stream?            */
-    else if (name->strCaselessCompare(CHAR_STDERR) || name->strCaselessCompare(CHAR_CSTDERR))
-    {
-        /* get the default output stream     */
-        return context->getLocalEnvironment(OREF_ERRORNAME);
-    }
-    else
-    {
-        /* go get the qualified name         */
-        RexxString *qualifiedName = SystemInterpreter::qualifyFileSystemName(name);
-        if (fullName)                      /* fullName requested?               */
-        {
-            *fullName = qualifiedName;       /* provide qualified name            */
-        }
-        stack->push(qualifiedName);        /* Protect from GC.                  */
-        /* Note: stream name is pushed to the stack to be protected from GC;    */
-        /* e.g. it is used by the caller to remove stream from stream table.    */
-        /* The stack will be reset after the function was executed and the      */
-        /* protection is released                                               */
-        /* see if we've already opened this  */
-        RexxObject *stream = streamTable->at(qualifiedName);
-        if (stream == OREF_NULL)           /* not open                          */
-        {
-            SecurityManager *manager = context->getEffectiveSecurityManager();
-            stream = manager->checkStreamAccess(qualifiedName);
-            if (stream != OREF_NULL)
-            {
-                streamTable->put(stream, qualifiedName);
-                return stream;               /* return the stream object          */
-            }
-            /* get the stream class              */
-            RexxObject *streamClass = TheEnvironment->at(OREF_STREAM);
-            /* create a new stream object        */
-            stream = streamClass->sendMessage(OREF_NEW, name);
-
-            if (added)                       /* open the stream?   begin          */
-            {
-                /* add to the streams table          */
-                streamTable->put(stream, qualifiedName);
-                *added = true;                 /* mark it as added to stream table  */
-            }
-        }
-        return stream;                       /* return the stream object          */
-    }
-}
-
 /* check to see if stream is to queue*/
 bool check_queue(RexxString *name)
 /******************************************************************************/
@@ -1999,7 +1905,7 @@ BUILTIN(LINEIN)
     {
         bool added = false;
         /* get a stream for this name        */
-        RexxObject *stream = resolve_stream(name, context, stack, true, NULL, &added);
+        RexxObject *stream = context->resolveStream(name, stack, true, NULL, &added);
         switch (argcount)
         {                /* process according to argcount     */
             case 0:                          /* no name                           */
@@ -2040,7 +1946,7 @@ BUILTIN(CHARIN)
 
     /* get a stream for this name        */
     bool added = false;
-    RexxObject *stream = resolve_stream(name, context, stack, true, NULL, &added);
+    RexxObject *stream = context->resolveStream(name, stack, true, NULL, &added);
     switch (argcount)
     {                  /* process according to argcount     */
         case 0:                            /* no name                           */
@@ -2096,7 +2002,7 @@ BUILTIN(LINEOUT)
         bool added;
         RexxString *fullName;
         /* get a stream for this name        */
-        RexxObject *stream = resolve_stream(name, context, stack, false, &fullName, &added);
+        RexxObject *stream = context->resolveStream(name, stack, false, &fullName, &added);
         switch (argcount)
         {                /* process according to argcount     */
             case 0:                          /* no name                           */
@@ -2137,7 +2043,7 @@ BUILTIN(CHAROUT)
 
     bool added;
     /* get a stream for this name        */
-    RexxObject *stream = resolve_stream(name, context, stack, false, NULL, &added);
+    RexxObject *stream = context->resolveStream(name, stack, false, NULL, &added);
     switch (argcount)
     {                  /* process according to argcount     */
         case 0:                            /* no name                           */
@@ -2177,7 +2083,7 @@ BUILTIN(LINES)
     {
         bool added;
         /* get a stream for this name        */
-        RexxObject *stream = resolve_stream(name, context, stack, true, NULL, &added);
+        RexxObject *stream = context->resolveStream(name, stack, true, NULL, &added);
 
         if (option != OREF_NULL)
         {
@@ -2231,7 +2137,7 @@ BUILTIN(CHARS)
     }
     /* get a stream for this name        */
     bool added;
-    RexxObject *stream = resolve_stream(name, context, stack, true, NULL, &added);
+    RexxObject *stream = context->resolveStream(name, stack, true, NULL, &added);
     return stream->sendMessage(OREF_CHARS);
 }
 
@@ -2282,7 +2188,7 @@ BUILTIN(STREAM)
                                /* raise an error                    */
                     reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
                 }
-                RexxObject *stream = resolve_stream(name, context, stack, true, NULL, NULL);
+                RexxObject *stream = context->resolveStream(name, stack, true, NULL, NULL);
                 /* get the stream state              */
                 return stream->sendMessage(OREF_STATE);
                 break;
@@ -2295,7 +2201,7 @@ BUILTIN(STREAM)
                                /* raise an error                    */
                     reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
                 }
-                RexxObject *stream = resolve_stream(name, context, stack, true, NULL, NULL);
+                RexxObject *stream = context->resolveStream(name, stack, true, NULL, NULL);
                 /* get the stream description        */
                 return stream->sendMessage(OREF_DESCRIPTION);
                 break;
@@ -2322,7 +2228,7 @@ BUILTIN(STREAM)
                 {
                     RexxString *fullName;
                     bool added;
-                    RexxObject *stream = resolve_stream(name, context, stack, true, &fullName, &added);
+                    RexxObject *stream = context->resolveStream(name, stack, true, &fullName, &added);
                     RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
                     /* if open failed, remove the stream object from stream table again */
                     if (!result->strCompare("READY:"))
@@ -2335,14 +2241,14 @@ BUILTIN(STREAM)
                 {
                     RexxString *fullName;
                     bool added;
-                    RexxObject *stream = resolve_stream(name, context, stack, true, &fullName, &added);
+                    RexxObject *stream = context->resolveStream(name, stack, true, &fullName, &added);
                     RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
                     context->getStreams()->remove(fullName);
                     return result;
                 }
                 else
                 {
-                    RexxObject *stream = resolve_stream(name, context, stack, true, NULL, NULL);
+                    RexxObject *stream = context->resolveStream(name, stack, true, NULL, NULL);
                     return stream->sendMessage(OREF_COMMAND, command);
                 }
                 break;

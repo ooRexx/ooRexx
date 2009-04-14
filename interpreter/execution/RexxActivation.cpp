@@ -1609,6 +1609,101 @@ RexxVariableDictionary * RexxActivation::getObjectVariables()
     return this->settings.object_variables;
 }
 
+
+/**
+ * Resolve a stream name for a BIF call.
+ *
+ * @param name     The name of the stream.
+ * @param stack    The expression stack.
+ * @param input    The input/output flag.
+ * @param fullName The returned full name of the stream.
+ * @param added    A flag indicating we added this.
+ *
+ * @return The backing stream object for the name.
+ */
+RexxObject *RexxActivation::resolveStream(RexxString *name, RexxExpressionStack *stack, bool input, RexxString **fullName, bool *added)
+{
+    if (added != NULL)
+    {
+        *added = false;           /* when caller requires stream table entry then initialize */
+    }
+    RexxDirectory *streamTable = getStreams(); /* get the current stream set        */
+    if (fullName)                        /* fullName requested?               */
+    {
+        *fullName = name;                  /* initialize to name                */
+    }
+    /* if length of name is 0, then it's the same as omitted */
+    if (name == OREF_NULL || name->getLength() == 0)   /* no name?                 */
+    {
+        if (input)                         /* input operation?                  */
+        {
+            /* get the default output stream     */
+            return getLocalEnvironment(OREF_INPUT);
+        }
+        else
+        {
+            /* get the default output stream     */
+            return getLocalEnvironment(OREF_OUTPUT);
+        }
+    }
+    /* standard input stream?            */
+    else if (name->strCaselessCompare(CHAR_STDIN) || name->strCaselessCompare(CHAR_CSTDIN))
+    {
+        /* get the default output stream     */
+        return getLocalEnvironment(OREF_INPUT);
+    }
+    /* standard output stream?           */
+    else if (name->strCaselessCompare(CHAR_STDOUT) || name->strCaselessCompare(CHAR_CSTDOUT))
+    {
+        /* get the default output stream     */
+        return getLocalEnvironment(OREF_OUTPUT);
+    }
+    /* standard error stream?            */
+    else if (name->strCaselessCompare(CHAR_STDERR) || name->strCaselessCompare(CHAR_CSTDERR))
+    {
+        /* get the default output stream     */
+        return getLocalEnvironment(OREF_ERRORNAME);
+    }
+    else
+    {
+        /* go get the qualified name         */
+        RexxString *qualifiedName = SystemInterpreter::qualifyFileSystemName(name);
+        if (fullName)                      /* fullName requested?               */
+        {
+            *fullName = qualifiedName;       /* provide qualified name            */
+        }
+        stack->push(qualifiedName);        /* Protect from GC.                  */
+        /* Note: stream name is pushed to the stack to be protected from GC;    */
+        /* e.g. it is used by the caller to remove stream from stream table.    */
+        /* The stack will be reset after the function was executed and the      */
+        /* protection is released                                               */
+        /* see if we've already opened this  */
+        RexxObject *stream = streamTable->at(qualifiedName);
+        if (stream == OREF_NULL)           /* not open                          */
+        {
+            SecurityManager *manager = getEffectiveSecurityManager();
+            stream = manager->checkStreamAccess(qualifiedName);
+            if (stream != OREF_NULL)
+            {
+                streamTable->put(stream, qualifiedName);
+                return stream;               /* return the stream object          */
+            }
+            /* get the stream class              */
+            RexxObject *streamClass = TheEnvironment->at(OREF_STREAM);
+            /* create a new stream object        */
+            stream = streamClass->sendMessage(OREF_NEW, name);
+
+            if (added)                       /* open the stream?   begin          */
+            {
+                /* add to the streams table          */
+                streamTable->put(stream, qualifiedName);
+                *added = true;                 /* mark it as added to stream table  */
+            }
+        }
+        return stream;                       /* return the stream object          */
+    }
+}
+
 RexxDirectory *RexxActivation::getStreams()
 /******************************************************************************/
 /* Function:  Return the associated object variables stream table             */
@@ -1618,16 +1713,27 @@ RexxDirectory *RexxActivation::getStreams()
     if (this->settings.streams == OREF_NULL)
     {
         /* first entry into here?            */
-        if (this->isTopLevelCall())
+        if (this->isProgramOrMethod())
         {
             /* always use a new directory        */
             this->settings.streams = new_directory();
         }
         else
         {
-            /* alway's use caller's for internal */
-            /* call, external call or interpret  */
-            this->settings.streams = this->parent->getStreams();
+            // get the caller frame.  If it is not a Rexx one, then
+            // we use a fresh stream table
+            RexxActivationBase *callerFrame = getPreviousStackFrame();
+            if (callerFrame == OREF_NULL || !callerFrame->isRexxContext())
+            {
+                this->settings.streams = new_directory();
+            }
+            else
+            {
+
+                /* alway's use caller's for internal */
+                /* call, external call or interpret  */
+                this->settings.streams = ((RexxActivation *)callerFrame)->getStreams();
+            }
         }
     }
     return this->settings.streams;       /* return the stream table           */
