@@ -60,6 +60,5 @@ say left("ADsPath:",10," ") myComputer~adspath
 say left("Parent:",10," ") myComputer~parent
 say left("Schema:",10," ") myComputer~schema
 
-exit
+return 0
 
-::requires "OREXXOLE.CLS"

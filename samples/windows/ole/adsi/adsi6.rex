@@ -71,6 +71,4 @@ do i over mySchemaClass~OptionalProperties
   say "   " i
 end
 
-exit
-
-::requires "OREXXOLE.CLS"
+return 0

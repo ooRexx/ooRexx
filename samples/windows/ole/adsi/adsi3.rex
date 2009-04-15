@@ -50,6 +50,4 @@ do member over container~members
   say member~unknown("class",.nil) ":" member~name "[" member~description "]"
 end
 
-exit
-
-::requires "OREXXOLE.CLS"
+return 0

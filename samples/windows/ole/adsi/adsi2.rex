@@ -74,6 +74,4 @@ if answer = "Y" then do
   say "updated the full name for" UserID
 end
 
-exit
-
-::requires "OREXXOLE.CLS"
+return 0

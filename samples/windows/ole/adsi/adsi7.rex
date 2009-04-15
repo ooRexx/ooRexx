@@ -78,6 +78,4 @@ end
 
 say "done"
 
-exit
-
-::requires "OREXXOLE.CLS"
+return 0

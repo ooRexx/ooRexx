@@ -54,6 +54,4 @@ do namespace over myADS
   end
 end
 
-exit
-
-::requires "OREXXOLE.CLS"
+return 0

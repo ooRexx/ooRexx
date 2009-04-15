@@ -55,6 +55,4 @@ do item over computerObject
   say item~unknown("class",.nil) ":" item~name
 end
 
-exit
-
-::requires "OREXXOLE.CLS"
+return 0

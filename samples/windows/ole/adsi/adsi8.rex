@@ -57,6 +57,4 @@ computer~Delete("group", "REXX-TestGroup")
 
 say "done"
 
-exit
-
-::requires "OREXXOLE.CLS"
+return 0
