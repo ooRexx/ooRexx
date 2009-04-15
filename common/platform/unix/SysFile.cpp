@@ -87,7 +87,7 @@ SysFile::SysFile()
     bufferedInput = 0;
     append = true;
     filePointer = 0;
-    ungetchar = 0;
+    ungetchar = -1;
     writeBuffered = false;     // no pending write operations
 }
 
@@ -1023,7 +1023,7 @@ bool SysFile::getTimeStamp(const char *name, char *&time)
     if (stat(name, &fileInfo) == 0)
     {
         // regular file?  return the defined size
-        if ((fileInfo.st_mode & S_IFREG) != 0)
+        if ((fileInfo.st_mode & (S_IFREG | S_IFDIR)) != 0)
         {
             time = ctime(&fileInfo.st_mtime);
         }

@@ -1254,7 +1254,7 @@ RexxStringObject StreamInfo::readVariableLine()
         if (fileInfo.atEof() && !fileInfo.hasBufferedInput())
         {
             lineReadIncrement();
-            return context->NewString(bufferAddress, currentLength + bytesRead);
+            return context->NewString(buffer, currentLength + bytesRead);
         }
         currentLength += bytesRead;
         buffer = extendBuffer(bufferSize);
