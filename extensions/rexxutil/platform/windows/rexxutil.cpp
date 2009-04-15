@@ -2550,7 +2550,7 @@ size_t RexxEntry SysIni(const char *name, size_t numargs, CONSTRXSTRING args[], 
                 }
             }
 
-            while (Val[x] != '\0');
+            while (returnVal[x] != '\0');
         }
 
         else
