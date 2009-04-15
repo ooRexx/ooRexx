@@ -4,8 +4,17 @@
                               Version 4.0.0
 
   Copyright 2005, 2009 Rexx Language Association.  All rights reserved.
-                            February 23, 2009
+                            April 15, 2009
 
+Installation and Configuration
+==============================
+
+Prior to Installation:
+----------------------
+
+For installation help and other relevant notes, prior to installation,
+please read the "0ReadMe.pdf" PDF file which is placed with the
+downloadable files for this release on SourceForge.
 
 Changes in ooRexx 4.0.0
 =======================
@@ -17,8 +26,8 @@ Linux 64-bit
 AIX 64-bit
 Windows 64-bit
 
-All platforms
--------------
+All platforms:
+--------------
 
 Although not directly visible to the ooRexx programer, much of the code in
 the interpreter core has been rewritten.  This enhances the interpreter in
@@ -45,14 +54,14 @@ samples/scserver.rex
 samples/sfclient.rex
 samples/sfserver.rex
 
-Unix platform
--------------
+Unix platform:
+--------------
 
 Rxapi now runs as a system wide daemon.  The use of shared memory has been
 eliminated.  Rxapi now uses a socket interface for communication.
 
-Windows platform
-----------------
+Windows platform:
+-----------------
 
 Improvements to ooDialog and OLEObject.
 
@@ -75,8 +84,8 @@ samples\winsystem\winSystemDlgs.h
 samples\winsystem\winSystemDlgs.rc
 samples\winsystem\writeWithNotepad.rex
 
-Windows Installation
---------------------
+Windows Installation:
+---------------------
 
 The Windows installation program has be enhanced so that it will only
 remove files installed by the ooRexx package.  Files added to the
@@ -87,8 +96,8 @@ ooRexx 4.0.0 and future versions of ooRexx, there is no change in the
 uninstalled, all files in the installation directory are deleted.
 
 
-Windows Scripting Host
-----------------------
+Windows Scripting Host:
+-----------------------
 
 The Windows Scripting Host support in ooRexx 4.0.0 has been temporarily
 disabled.  This was done after soliciting input from users.  Temporarily
@@ -97,8 +106,8 @@ would have been otherwise.  The consensus of users was that they would
 prefer an early release without WSH than a later release with WSH.  The
 intent is to deliver WSH as soon as possible in a follow-on minor release.
 
-Some possible differences in program behavior
----------------------------------------------
+Some possible differences in program behavior:
+----------------------------------------------
 
 Files loaded by ::requires are loaded by a global package manager, and
 a given file will only be loaded once in a process.  This means multiple
@@ -126,8 +135,8 @@ Linux the string "nan" was returned.  This was fixed so that the string
 On all platforms, +infinity and -infinity are now returned as strings
 "+infinity" and "-infinity".
 
-Miscellaneous Enhancements
---------------------------
+Miscellaneous Enhancements:
+---------------------------
 
 A method that is declared PRIVATE has been enhanced to allow its
 invocation from any of the following situations:
@@ -153,8 +162,8 @@ A new ::CONSTANT directive.
 The stream class supports files larger than 4Gb (on both
 32-bit and 64-bit platforms).
 
-Builtin functions
------------------
+Builtin functions:
+------------------
 
 FILESPEC has new options : Location, Extension.
 
@@ -168,11 +177,11 @@ TIME has a new option : Offset.
 
 TRANSLATE has new parameters : pos, length.
 
-Class library
--------------
+Class library:
+--------------
 
-New classes :
--------------
+New classes:
+------------
 
 Buffer, IdentityTable, Orderable, Package, Pointer, RexxContext, Routine,
 WeakReference.
@@ -227,8 +236,8 @@ replaceAt.
 Also, the makearray() method of string allows for delimiters longer than
 a single character.
 
-Incubator
----------
+Incubator:
+----------
 
 A beta version of RexxGTK is available.  This is a portable GUI class for
 building ooRexx GUI programs.  It runs on any *nix system where GTK is
