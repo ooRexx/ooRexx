@@ -309,7 +309,10 @@ size_t RexxEntry WSRegistryKey(const char *funcname, size_t argc, CONSTRXSTRING 
             RET_HANDLE(hk);      // return the predefined handle
         }
 
-        if ((argc < 4) || strcmp(argv[3].strptr,"ALL"))
+        // Docs say, have always said, that the access arg can be more than one
+        // keyword. So, even if "ALL" makes the other keywords unnecessary, we
+        // can't rely on it being the only word in the string.
+        if ((argc < 4) || strstr(argv[3].strptr,"ALL") != 0)
         {
             access = KEY_ALL_ACCESS;
         }
