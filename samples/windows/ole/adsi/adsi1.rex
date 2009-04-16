@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -49,11 +49,7 @@ myComputer = .OLEObject~GetObject("WinNT://"||ComputerName||",computer")
 say "Standard properties of this computer:"
 say left("Name:",10," ") myComputer~name
 
-/* in this case, using myComputer~class would invoke the standard REXX */
-/* method "Class", therefore the OLE objects' "class" method has to be */
-/* called explicitly using the "Unknown" method (see documentation for */
-/* details on this mechanism).                                         */
-say left("Class:",10," ") myComputer~unknown("class",.nil)
+say left("Class:",10," ") myComputer~class
 
 say left("GUID:",10," ") myComputer~guid
 say left("ADsPath:",10," ") myComputer~adspath

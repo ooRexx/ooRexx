@@ -1,12 +1,12 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -50,9 +50,7 @@ computerObject~Filter = .array~of("Group","Service")
 
 /* show only objects of type Group and Service: */
 do item over computerObject
-  /* avoid calling the CLASS method of the REXX object by using the */
-  /* "unknown" mechanism (this calls the CLASS method of "item").   */
-  say item~unknown("class",.nil) ":" item~name
+  say item~class ":" item~name
 end
 
 return 0
