@@ -632,6 +632,9 @@ void PackageManager::unload()
 bool PackageManager::callNativeRoutine(RexxActivity *activity, RexxString *name,
     RexxObject **arguments, size_t argcount, ProtectedObject &result)
 {
+    // all of our tables use uppercase names...make this a case-insensitive lookup
+    name = name->upper();
+
     // package functions come first
     RoutineClass *function = (RoutineClass *)packageRoutines->at(name);
     if (function != OREF_NULL)
