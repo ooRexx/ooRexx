@@ -99,6 +99,12 @@ Syntax:
     return oleObj
   end
 
+::method class
+  if self~hasOLEMethod("CLASS") then
+    forward message("UNKNOWN") ARRAY("CLASS", arg(1, 'A'))
+  else
+    forward class (super)
+
 ::METHOD "!OLEOBJECT" ATTRIBUTE
 
 ::METHOD addEventMethod
