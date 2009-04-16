@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*/
-/* Copyright (c) 2006-2007 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2006-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -37,10 +37,29 @@
 /*
    purpose: Demonstrate how one can interact with Jet (MS Access) databases using ActiveX/OLE
    needs:   MS Access resp. the JetEngine installed
+
+   notes:   This sample can only run on a 32-bit ooRexx.  The Jet Engine can not
+            read Office 2007 database file formats.  Therefore, we check if
+            Access is 2007, and if so, force the database to be created in
+            Access 2003 format.   Look at the createDataBaseFile() routine for
+            how this is done.
+
+            This sample uses some public routines from the oleUtils framework.
+              getAddressingMode()
+              createOleObject()
+
 */
 
-dbFileName=directory()"\ooRexxDemo.mdb"   -- define database file nam
-call createDataBaseFile dbFileName        -- create database file, if necessary
+-- This first function just checks to be sure the sample can execute on the
+-- current system. Look at the function code at the end of the file for the
+-- details. The function returns the oleObject, access application object, on
+-- success and .nil if this sample can not run on the current system.
+accessApplication = checkSystem()
+if accessApplication == .nil then return
+
+
+dbFileName=directory()"\ooRexxDemo.mdb"                -- define database file name
+call createDataBaseFile dbFileName, accessApplication  -- create database file, if necessary
 
 conn=.oleobject~new("ADODB.Connection")   -- create an ADO conncection to the database
 conn~provider="Microsoft.Jet.OLEDB.4.0"   -- tell the connection what driver to use
@@ -58,15 +77,31 @@ conn~close                       -- close connection to the database
 
 call compressAndRepair dbFileName
 
+::requires 'oleUtils.frm'
 
 ::routine createDataBaseFile
-  parse arg dbFileName
+  use strict arg dbFileName, appAccess
 
   if stream(dbFileName, "c", "query exists")="" then  -- database file does not exist
   do
-     appAccess = .OLEObject~new("Access.Application") -- create an instance
-     appAccess~NewCurrentDatabase(dbFileName)         -- create the database file
-     appAccess~quit                                   -- quit the application
+     -- We have to know if this is Access 2007 or not. The Jet Engine can not
+     -- read the Access 2007 default file format.  So, if this is Access 2007,
+     -- we force the database to be created Access 2002-2003 format.
+
+     -- create the database file
+     if appAccess~version >= 12 then do
+        formatConstant = appAccess~getConstant('acNewDatabaseFormatAccess2002')
+        appAccess~NewCurrentDatabase(dbFileName, formatConstant)
+
+        -- With Access 2007, we have to explicitly close the database, or the
+        -- Jet Engine can not open it.  Prior to Access 2007, this step is not
+        -- needed.
+        appAccess~closeCurrentDatabase
+     end
+     else do
+        -- Prior to Access 2007, the NewCurrentDatabase only takes 1 argument.
+        appAccess~NewCurrentDatabase(dbFileName)
+     end
      say "created database file" pp(dbFileName)
   end
   else
@@ -74,6 +109,11 @@ call compressAndRepair dbFileName
 
   say center(" end of createDataBaseFile ", 70, "-")
   say
+
+  -- This is the last place in this example where the Access application object
+  -- is needed. So we close it now.  All the work is actually done by the Jet
+  -- Engine.
+  appAccess~quit
 
 
 ::routine dropTable
@@ -232,4 +272,33 @@ any:
 ::routine pp
    return "[" || arg(1) || "]"
 
+::routine checkSystem
+
+   mode = getAddressingMode()
+   if mode == 64 then do
+      say
+      say 'You are running a 64-bit compiled ooRexx'
+      say
+      say 'This sample relies on the Microsoft Jet Database Engine.'
+      say 'There is no 64-bit version of Jet, therefore a 64-bit'
+      say 'compiled ooRexx can not run this sample.  This sample'
+      say 'may be upgraded in the future to work with Access 2007'
+      say 'and its Microsoft Access Engine (ACE Engine).  ACE is'
+      say 'is also 32-bit only at this time. It is not clear at'
+      say 'the current time whether ACE will be ported to 64-bit.'
+      say
+      say 'Sorry, this sample is 32-bit only.'
+
+      return .nil
+   end
+
+   -- We have to have Access, exit gracefully if not.
+   accessApplication = createOleObject("Access.Application", .true)
+   if accessApplication == .nil then do
+      say
+      say 'This example requires Microsoft Access, which does not seem'
+      say 'to be installed.  Quitting.'
+   end
+
+   return accessApplication
 
