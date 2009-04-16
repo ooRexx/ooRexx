@@ -305,7 +305,7 @@ static void options_error(int type,      /* Error type.                */
     /* and return an error code when we exit.                         */
     /******************************************************************/
 
-    printf("REX%d: %s", MsgNumber, DataArea);
+    printf("REX%d: %s\n", MsgNumber, DataArea);
     FreeLibrary(hDll);
 
     exit(type);
