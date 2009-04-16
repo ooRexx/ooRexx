@@ -434,7 +434,7 @@ void QueueTable::add(DataQueue *queue)
 void ServerQueueManager::addToSessionQueue(ServiceMessage &message)
 {
     // We can go directly to the referenced queue.
-    DataQueue *queue = (DataQueue *)message.parameter3;
+    DataQueue *queue = getSessionQueue((SessionID)message.parameter3);
     queue->add(message);
 }
 
@@ -469,7 +469,7 @@ void ServerQueueManager::addToNamedQueue(ServiceMessage &message)
 // parameter3 -- session queue handle
 void ServerQueueManager::pullFromSessionQueue(ServiceMessage &message)
 {
-    DataQueue *queue = (DataQueue *)message.parameter3;
+    DataQueue *queue = getSessionQueue((SessionID)message.parameter3);
     queue->pull(this, message);
 }
 
@@ -496,13 +496,28 @@ void ServerQueueManager::pullFromNamedQueue(ServiceMessage &message)
     }
 }
 
+// locate a session queue from session id.  This will create it, if necessary
+//
+// parameter1 -- caller's session id (replaced by queue handle on return);
+DataQueue *ServerQueueManager::getSessionQueue(SessionID session)
+{
+    DataQueue *queue = sessionQueues.locate(session);
+    // not previously created?
+    if (queue == NULL)
+    {
+        // this is easy, just create a new queue and add it to the table
+        queue = new DataQueue(session);
+        sessionQueues.add(queue);
+    }
+    return queue;
+}
+
 // Create a session queue.  The message arguments have the
 // following meanings:
 //
 // parameter1 -- caller's session id (replaced by queue handle on return);
-void ServerQueueManager::createSessionQueue(ServiceMessage &message)
+void ServerQueueManager::createSessionQueue(SessionID session)
 {
-    SessionID session = (SessionID)message.parameter1;
     DataQueue *queue = sessionQueues.locate(session);
     // not previously created?
     if (queue == NULL)
@@ -517,10 +532,19 @@ void ServerQueueManager::createSessionQueue(ServiceMessage &message)
         // we have nested usage of the session queues,
         // so we need to bump the nesting counter.
         queue->addReference();
-
     }
-    // return this as a handle
-    message.parameter1 = (uintptr_t)queue;
+}
+
+// Create a session queue.  The message arguments have the
+// following meanings:
+//
+// parameter1 -- caller's session id (replaced by queue handle on return);
+void ServerQueueManager::createSessionQueue(ServiceMessage &message)
+{
+    SessionID session = (SessionID)message.parameter1;
+    createSessionQueue(session);
+    // the session id is used as the handle
+    message.parameter1 = (uintptr_t)session;
     message.setResult(QUEUE_CREATED);
 }
 
@@ -639,19 +663,12 @@ void ServerQueueManager::queryNamedQueue(ServiceMessage &message)
 // parameter1 -- session queue handle
 void ServerQueueManager::nestSessionQueue(ServiceMessage &message)
 {
-    DataQueue *queue = (DataQueue *)message.parameter2;
-    if (queue != NULL)
-    {
-        queue->addReference();
-        // update the queue value
-        message.parameter1 = (uintptr_t)queue;
-        message.setResult(QUEUE_OK);
-    }
-    else
-    {
-        // process this as a create operation
-        createSessionQueue(message);
-    }
+    SessionID session = (SessionID)message.parameter2;
+    // this will create one associated with the session or force it to be
+    // nested if it doesn't exist
+    createSessionQueue(session);
+    message.parameter1 = (uintptr_t)session;
+    message.setResult(QUEUE_OK);
 }
 
 
@@ -661,27 +678,19 @@ void ServerQueueManager::nestSessionQueue(ServiceMessage &message)
 // parameter1 -- session queue handle
 void ServerQueueManager::deleteSessionQueue(ServiceMessage &message)
 {
-    DataQueue *queue = (DataQueue *)message.parameter1;
+    SessionID session = (SessionID)message.parameter1;
+    DataQueue *queue = getSessionQueue(session);
     message.setResult(QUEUE_DELETED);
-    // not previously created?
-    if (queue == NULL)
+    // do we have clients waiting for pull data?
+    if (queue->hasWaiters())
     {
-        message.setResult(QUEUE_DOES_NOT_EXIST);
+        message.setResult(QUEUE_IN_USE);
     }
-    // name collision...we need to update
-    else
+    // still have references?
+    else if (queue->removeReference() == 0)
     {
-        // do we have clients waiting for pull data?
-        if (queue->hasWaiters())
-        {
-            message.setResult(QUEUE_IN_USE);
-        }
-        // still have references?
-        else if (queue->removeReference() == 0)
-        {
-            sessionQueues.remove(queue); // remove from table and
-            delete queue;                // delete this
-        }
+        sessionQueues.remove(queue); // remove from table and
+        delete queue;                // delete this
     }
 }
 
@@ -739,7 +748,8 @@ void ServerQueueManager::deleteNamedQueue(ServiceMessage &message)
 // parameter1 -- handle of the session queue (updated to queue count on return)
 void ServerQueueManager::getSessionQueueCount(ServiceMessage &message)
 {
-    DataQueue *queue = (DataQueue *)message.parameter1;
+    SessionID session = (SessionID)message.parameter1;
+    DataQueue *queue = getSessionQueue(session);
     // session queues are automatically created, so we always have
     // an item count
     message.parameter1 = queue->getItemCount();
@@ -775,7 +785,8 @@ void ServerQueueManager::getNamedQueueCount(ServiceMessage &message)
 // parameter1 -- handle of the session queue (updated to queue count on return)
 void ServerQueueManager::clearSessionQueue(ServiceMessage &message)
 {
-    DataQueue *queue = (DataQueue *)message.parameter1;
+    SessionID session = (SessionID)message.parameter1;
+    DataQueue *queue = getSessionQueue(session);
     // session queues are automatically created, so we always have
     // an item count
     queue->clear();

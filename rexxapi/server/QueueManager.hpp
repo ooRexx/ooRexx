@@ -255,6 +255,8 @@ public:
     void pullFromSessionQueue(ServiceMessage &message);
     void pullFromNamedQueue(ServiceMessage &message);
     void createSessionQueue(ServiceMessage &message);
+    DataQueue *getSessionQueue(SessionID session);
+    void createSessionQueue(SessionID session);
     void createUniqueQueue(ServiceMessage &message);
     void createNamedQueue(ServiceMessage &message);
     void openNamedQueue(ServiceMessage &message);
