@@ -126,15 +126,15 @@ void SystemInterpreter::setupProgram(RexxActivation *activation)
 /* Function:  Do system specific program setup                                */
 /******************************************************************************/
 {
-    TCHAR RxTraceBuf[8];
+    TCHAR rxTraceBuf[8];
 
     /* scan current environment,         */
-    if (GetEnvironmentVariable("RXTRACE", RxTraceBuf, 8))
+    if (GetEnvironmentVariable("RXTRACE", rxTraceBuf, 8))
     {
-        if (!stricmp(RxTraceBuf, "ON"))    /* request to turn on?               */
+        if (!Utilities::strCaselessCompare(rxTraceBuf, "ON"))    /* request to turn on?               */
         {
                                            /* turn on tracing                   */
-            activation->setTrace(TRACE_RESULTS, DEBUG_ON);
+            activation->enableExternalTrace();
         }
     }
 }

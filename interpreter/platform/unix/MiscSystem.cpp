@@ -146,18 +146,16 @@ void SystemInterpreter::setupProgram(RexxActivation *activation)
 /* Function:  Do system specific program setup                                */
 /******************************************************************************/
 {
-#ifdef RXTRACE_SUPPORT
-    char     *RxTraceBuf = NULL;
-
     /* scan current environment,         */
-    RxTraceBuf = getenv("RXTRACE");
-    if (RxTraceBuf)
+    const char *rxTraceBuf = getenv("RXTRACE");
+    if (rxTraceBuf != NULL)
     {
-        if (!Utilities::strCaselessCompare(RxTraceBuf, "ON"))    /* request to turn on?               */
+        if (!Utilities::strCaselessCompare(rxTraceBuf, "ON"))    /* request to turn on?               */
+        {
                                            /* turn on tracing                   */
-            activation->setTrace(TRACE_RESULTS, DEBUG_ON);
+            activation->enableExternalTrace();
+        }
     }
-#endif
 }
 
 RexxString * SystemInterpreter::getSourceString(RexxString * callType, RexxString * programName )

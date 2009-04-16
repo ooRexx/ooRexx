@@ -404,6 +404,7 @@ class ActivationSettings
    inline bool              isExternalTraceOn() { return (this->settings.flags&trace_on) != 0; }
    inline void              setExternalTraceOn() { this->settings.flags |= trace_on; }
    inline void              setExternalTraceOff() { this->settings.flags &= ~trace_on; }
+          void              enableExternalTrace();
 
    inline bool              isElapsedTimerReset() { return (this->settings.flags&elapsed_reset) != 0; }
    inline void              setElapsedTimerInvalid() { this->settings.flags |= elapsed_reset; }

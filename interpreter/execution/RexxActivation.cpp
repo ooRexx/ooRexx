@@ -3461,6 +3461,16 @@ void RexxActivation::processClauseBoundary()
 
 
 /**
+ * Turn on external trace at program startup (e.g, because
+ * RXTRACE is set)
+ */
+void RexxActivation::enableExternalTrace()
+{
+    this->setTrace(TRACE_RESULTS | DEBUG_ON, trace_results_flags | trace_debug);
+}
+
+
+/**
  * Halt the activation
  *
  * @param description
