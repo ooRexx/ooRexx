@@ -2614,7 +2614,7 @@ int64_t StreamInfo::streamPosition(const char *options)
         else
         {
             // make sure the file pointer is positioned appropriately.
-            setPosition(charWritePosition, charWritePosition);
+            setPosition(offset, style, charWritePosition);
 
             // We don't need to handle the
             // read position here, since the case above catches both.
