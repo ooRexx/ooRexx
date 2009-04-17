@@ -364,7 +364,7 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
     {
         while (len > 0)
         {
-            int blockRead = _read(fileHandle, buf, (unsigned int)len);
+            int blockRead = _read(fileHandle, buf + bytesRead, (unsigned int)len);
             if (blockRead <= 0)
             {
                 // not get anything?
