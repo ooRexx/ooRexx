@@ -409,6 +409,13 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
        LONG ibuffer[5], opts;
        register int i;
 
+       // Docs for setWindowRect() have said: returns 0 if repositioning was
+       // successful, returns 1 if failed.
+       if ( w == NULL || ! IsWindow(w) )
+       {
+           RETC(1)
+       }
+
        CHECKARGL(6);
 
        for (i=0;i<5;i++)
