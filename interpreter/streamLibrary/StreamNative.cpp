@@ -1235,6 +1235,8 @@ RexxStringObject StreamInfo::readVariableLine()
         {
             checkEof();
         }
+        // update the size of the line now
+        currentLength += bytesRead;
 
         // Check for new line character first.  If we are at eof and the last
         // line ended in a new line, we don't want the \n in the returned
@@ -1243,20 +1245,19 @@ RexxStringObject StreamInfo::readVariableLine()
         // If we have a new line character in the last position, we have
         // a line.  The gets() function has translated crlf sequences into
         // single lf characters.
-        if (buffer[bytesRead - 1] == '\n')
+        if (buffer[currentLength - 1] == '\n')
         {
             lineReadIncrement();
-            return context->NewString(buffer, currentLength + bytesRead - 1);
+            return context->NewString(buffer, currentLength - 1);
         }
 
         // No new line but we hit end of file reading this?  This will be the
         // entire line then.
-        if (fileInfo.atEof() && !fileInfo.hasBufferedInput())
+        if (fileInfo.atEof())
         {
             lineReadIncrement();
-            return context->NewString(buffer, currentLength + bytesRead);
+            return context->NewString(buffer, currentLength);
         }
-        currentLength += bytesRead;
         buffer = extendBuffer(bufferSize);
     }
 }
@@ -1302,7 +1303,7 @@ void StreamInfo::appendVariableLine(RexxArrayObject result)
 
         // No new line but we hit end of file reading this?  This will be the
         // entire line then.
-        if (fileInfo.atEof() && !fileInfo.hasBufferedInput())
+        if (fileInfo.atEof())
         {
             lineReadIncrement();
             context->ArrayAppendString(result, buffer, currentLength + bytesRead);

@@ -127,7 +127,7 @@ public:
     inline bool error() { return errInfo != 0; }
     inline int  errorInfo() { return errInfo; }
     inline void clearErrors() { errInfo = 0; }
-    inline bool atEof() { return eof(fileHandle) == 1; }
+    inline bool atEof() { return !hasBufferedInput() && eof(fileHandle) == 1; }
     inline bool hasBufferedInput() { return buffered && (bufferedInput > bufferPosition); }
     inline int  getHandle() { return fileHandle; }
 
