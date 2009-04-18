@@ -1381,7 +1381,7 @@ RexxObjectPtr SafeArray2RexxArray(RexxThreadContext *context, VARIANT *pVariant)
         VariantClear(&sVariant);
         // as of 3.2.0, Array PUT messages allow a multi-dimensional index to be specified
         // as an array of indices.
-        context->SendMessage2(argArray, "PUT", RxItem, argArray);
+        context->SendMessage2(ResultObj, "PUT", RxItem, argArray);
 
         /* increment indices vector (to access safearray elements) */
         fCarryBit=TRUE;
