@@ -2146,6 +2146,10 @@ REXX_METHOD_PROTOTYPE(lv_getImageList);
 REXX_METHOD_PROTOTYPE(lv_getColumnCount);
 REXX_METHOD_PROTOTYPE(lv_getColumnOrder);
 REXX_METHOD_PROTOTYPE(lv_setColumnOrder);
+REXX_METHOD_PROTOTYPE(lv_insertColumnEx);    // TODO review method name
+REXX_METHOD_PROTOTYPE(lv_columnWidthEx);     // TODO review method name
+REXX_METHOD_PROTOTYPE(lv_stringWidthEx);     // TODO review method name
+REXX_METHOD_PROTOTYPE(lv_addRowEx);          // TODO review method name
 
 REXX_METHOD_PROTOTYPE(tv_setImageList);
 REXX_METHOD_PROTOTYPE(tv_getImageList);
@@ -2306,6 +2310,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_getColumnCount,        lv_getColumnCount),
     REXX_METHOD(lv_getColumnOrder,        lv_getColumnOrder),
     REXX_METHOD(lv_setColumnOrder,        lv_setColumnOrder),
+    REXX_METHOD(lv_insertColumnEx,        lv_insertColumnEx),     // TODO review method name
+    REXX_METHOD(lv_columnWidthEx,         lv_columnWidthEx),      // TODO review method name
+    REXX_METHOD(lv_stringWidthEx,         lv_stringWidthEx),      // TODO review method name
+    REXX_METHOD(lv_addRowEx,         	  lv_addRowEx),           // TODO review method name
 
     REXX_METHOD(tv_setImageList,          tv_setImageList),
     REXX_METHOD(tv_getImageList,          tv_getImageList),

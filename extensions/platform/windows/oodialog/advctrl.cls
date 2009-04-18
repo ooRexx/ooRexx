@@ -875,6 +875,7 @@
    if \ item~datatype('W') then raise syntax 93.905 array(1, item)
    return (HandleListCtrlEx(self~Hwnd, "M", "CHK", item) == 1)
 
+::method insertColumnEx external "LIBRARY oodialog lv_insertColumnEx"  -- TODO review method name
 ::method InsertColumn
    use arg nr, text, width, fmt
    if arg(1,'O') then nr = 0
@@ -906,6 +907,8 @@
    return InternalLVColInfo.
 
 
+::method stringWidthEx external "LIBRARY oodialog lv_stringWidthEx"  -- TODO review method name
+::method columnWidthEx external "LIBRARY oodialog lv_columnWidthEx"  -- TODO review method name
 ::method ColumnWidth
    use arg nr
    if Arg(1,'o') = 1 then return -1
@@ -994,6 +997,7 @@
    end
    return item
 
+::method addRowEx external "LIBRARY oodialog lv_addRowEx"  -- TODO review method name
 
 ::method Delete
    use arg item

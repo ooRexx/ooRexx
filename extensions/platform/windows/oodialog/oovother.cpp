@@ -2690,6 +2690,15 @@ void wrongObjInDirectoryException(RexxMethodContext *c, int argPos, CSTRING inde
     userDefinedMsgException(c, buffer);
 }
 
+void missingIndexInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer),
+              "Index, %s, of method argument %d is required",
+              index, argPos);
+    userDefinedMsgException(c, buffer);
+}
+
 void emptyArrayException(RexxMethodContext *c, int argPos)
 {
     TCHAR buffer[256];
@@ -3786,6 +3795,23 @@ bool rxNumberFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CS
     return true;
 }
 
+bool rxIntFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
+                        int *number, int argPos)
+{
+    int value;
+    RexxObjectPtr obj = context->DirectoryAt(d, index);
+    if ( obj != NULLOBJECT )
+    {
+        if ( ! context->Int32(obj, &value) )
+        {
+            wrongObjInDirectoryException(context, argPos, index, "an integer", obj);
+            return false;
+        }
+        *number = value;
+    }
+    return true;
+}
+
 extern int getWeight(CSTRING opts);
 
 /** WindowExtensions::createFont()
@@ -4183,21 +4209,6 @@ RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF
 
 enum DateTimePart {dtFull, dtTime, dtDate, dtNow};
 
-static wholenumber_t getDateTimePart(RexxMethodContext *c, RexxObjectPtr dateTime, const char *part)
-{
-    wholenumber_t num;
-
-    RexxObjectPtr rxNum = c->SendMessage0(dateTime, part);
-    if ( rxNum == NULLOBJECT || ! c->WholeNumber(rxNum, &num) )
-    {
-        TCHAR buffer[128];
-        _snprintf(buffer, sizeof(buffer), "The DateTime object failed to produce a valid %s", part);
-        userDefinedMsgException(c, buffer);
-        num = -1;
-    }
-    return num;
-}
-
 /**
  * Converts a DateTime object to a SYSTEMTIME structure.  The fields of the
  * struct are filled in with the corresponding values of the DateTime object.
@@ -4229,6 +4240,10 @@ static bool dt2sysTime(RexxMethodContext *c, RexxObjectPtr dateTime, SYSTEMTIME 
         // format: yyyy-dd-mmThh:mm:ss.uuuuuu.
         RexxObjectPtr dt = c->SendMessage0(dateTime, "ISODATE");
         const char *isoDate = c->CString(dt);
+
+        sscanf(isoDate, "%4hu-%2hu-%2huT%2hu:%2hu:%2hu.%3hu", &(*sysTime).wYear, &(*sysTime).wMonth, &(*sysTime).wDay,
+               &(*sysTime).wHour, &(*sysTime).wMinute, &(*sysTime).wSecond, &(*sysTime).wMilliseconds);
+        printf("year=%hu milliseconds=%hu\n", sysTime->wYear, sysTime->wMilliseconds);
 
         SYSTEMTIME st = {0};
         sscanf(isoDate, "%4hu-%2hu-%2huT%2hu:%2hu:%2hu.%3hu", &st.wYear, &st.wMonth, &st.wDay,
@@ -5031,6 +5046,171 @@ done:
     safeFree(pOrder);
     return success;
 }
+
+// TODO review method name
+RexxMethod5(int, lv_insertColumnEx, OPTIONAL_uint16_t, column, CSTRING, text, uint16_t, width,
+            OPTIONAL_CSTRING, fmt, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    LVCOLUMN lvi = {0};
+    int retVal = 0;
+    char szText[256];
+
+    lvi.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT | LVCF_WIDTH;
+
+    // If omitted, column is 0, which is also the default.
+    lvi.iSubItem = column;
+
+    lvi.cchTextMax = (int)strlen(text);
+    if ( lvi.cchTextMax > (sizeof(szText) - 1) )
+    {
+        userDefinedMsgException(context, 2, "the column title must be less than 256 characters");
+        return 0;
+    }
+    strcpy(szText, text);
+    lvi.pszText = szText;
+    lvi.cx = width;
+
+    lvi.fmt = LVCFMT_LEFT;
+    if ( argumentExists(4) )
+    {
+        char f = toupper(*fmt);
+        if ( f == 'C' )
+        {
+            lvi.fmt = LVCFMT_CENTER;
+        }
+        else if ( f == 'R' )
+        {
+            lvi.fmt = LVCFMT_RIGHT;
+        }
+    }
+
+    retVal = ListView_InsertColumn(hwnd, lvi.iSubItem, &lvi);
+    if ( retVal != -1 && lvi.fmt != LVCFMT_LEFT && lvi.iSubItem == 0 )
+    {
+        /* According to the MSDN docs: "If a column is added to a
+         * list-view control with index 0 (the leftmost column) and with
+         * LVCFMT_RIGHT or LVCFMT_CENTER specified, the text is not
+         * right-aligned or centered." This is the suggested work around.
+         */
+        lvi.iSubItem = 1;
+        ListView_InsertColumn(hwnd, lvi.iSubItem, &lvi);
+        ListView_DeleteColumn(hwnd, 0);
+    }
+    return retVal;
+}
+
+// TODO review method name
+RexxMethod2(int, lv_columnWidthEx, uint16_t, column, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    return ListView_GetColumnWidth(hwnd, column);
+}
+
+// TODO review method name
+RexxMethod2(int, lv_stringWidthEx, CSTRING, text, OSELF, self)
+{
+    HWND hwnd = rxGetWindowHandle(context, self);
+    return ListView_GetStringWidth(hwnd, text);
+}
+
+// TODO review method name
+RexxMethod5(int, lv_addRowEx, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL_int, imageIndex,
+            OPTIONAL_RexxObjectPtr, subItems, OSELF, self)
+{
+    //RexxMethodContext *context;
+    HWND hwnd = rxGetWindowHandle(context, self);
+
+    if ( argumentOmitted(2) )
+    {
+        RexxObjectPtr last = context->SendMessage0(self, "LASTITEM");
+        if ( last != NULLOBJECT )
+        {
+            context->Int32(last, &itemIndex);
+            itemIndex++;
+        }
+        else
+        {
+            itemIndex = 0;
+        }
+    }
+
+    if ( argumentOmitted(3) )
+    {
+        imageIndex = -1;
+    }
+
+    LV_ITEM lvi;
+    lvi.mask = LVIF_TEXT;
+
+    lvi.iItem = itemIndex;
+    lvi.iSubItem = 0;
+    lvi.pszText = (LPSTR)text;
+
+    if ( imageIndex > -1 )
+    {
+        lvi.iImage = imageIndex;
+        lvi.mask |= LVIF_IMAGE;
+    }
+
+    itemIndex = ListView_InsertItem(hwnd, &lvi);
+
+    if ( itemIndex == -1 )
+    {
+        goto done_out;
+    }
+    context->SendMessage1(self, "LASTITEM=", context->Int32(itemIndex));
+
+    if ( argumentOmitted(4) )
+    {
+        goto done_out;
+    }
+    if ( ! context->IsArray(subItems) )
+    {
+        wrongClassException(context, 4, "Array");
+        goto done_out;
+    }
+
+    size_t count = context->ArrayItems((RexxArrayObject)subItems);
+    for ( size_t i = 1; i <= count; i++)
+    {
+        RexxDirectoryObject subItem = (RexxDirectoryObject)context->ArrayAt((RexxArrayObject)subItems, i);
+        if ( subItem == NULLOBJECT || ! context->IsDirectory(subItem) )
+        {
+            wrongObjInArrayException(context, 4, i, "Directory");
+            goto done_out;
+        }
+
+        RexxObjectPtr subItemText = context->DirectoryAt(subItem, "TEXT");
+        if ( subItemText == NULLOBJECT )
+        {
+            missingIndexInDirectoryException(context, 4, "TEXT");
+            goto done_out;
+        }
+        imageIndex = -1;
+        if ( ! rxIntFromDirectory(context, subItem, "ICON", &imageIndex, 4) )
+        {
+            goto done_out;
+        }
+
+        lvi.mask = LVIF_TEXT;
+        lvi.iSubItem = (int)i;
+        lvi.pszText = (LPSTR)context->ObjectToStringValue(subItemText);
+
+        if ( imageIndex > -1 )
+        {
+            lvi.iImage = imageIndex;
+            lvi.mask |= LVIF_IMAGE;
+        }
+
+        ListView_SetItem(hwnd, &lvi);
+    }
+
+done_out:
+    return itemIndex;
+}
+
 
 /**
  *  Methods for the .TreeControl class.
