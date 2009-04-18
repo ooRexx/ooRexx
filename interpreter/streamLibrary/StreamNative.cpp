@@ -2219,8 +2219,8 @@ const char *StreamInfo::streamOpen(const char *options)
     {
         // No options, set the defaults.
         read_write = true;
-        append = true;
-        oflag |= RDWR_CREAT | O_APPEND;
+        append = false;
+        oflag |= RDWR_CREAT;
         pmode |= IREAD_IWRITE;
 
         // TODO: note that the docs say the default shared mode is SHARED.  But,
@@ -2572,7 +2572,9 @@ int64_t StreamInfo::streamPosition(const char *options)
     {
         if (append)    /* opened append?                    */
         {
-            return 0;                       /* cause a notready condition        */
+
+            notreadyError(0);             // cause a notready condition
+            return 0;
         }
     }
                                           /* if moving the read position -     */
