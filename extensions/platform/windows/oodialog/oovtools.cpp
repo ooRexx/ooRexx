@@ -55,6 +55,43 @@ BOOL DialogInAdminTable(DIALOGADMIN * Dlg)
     return(i < StoredDialogs);
 }
 
+/**
+ * Validates and converts an ASCII-Z string from string form to a pointer value.
+ *
+ * @param string  String to convert.
+ */
+void *string2pointer(const char *string)
+{
+    void *pointer = 0;
+    sscanf(string, "0x%p", &pointer);
+    return pointer;
+}
+
+void pointer2string(char *result, void *pointer)
+{
+    if ( pointer == NULL )
+    {
+        sprintf(result, "0");
+    }
+    else
+    {
+        sprintf(result, "0x%p", pointer);
+    }
+}
+
+
+LONG HandleError(PRXSTRING r, CHAR * text)
+{
+      HWND hW = NULL;
+      if ((topDlg) && (topDlg->TheDlg)) hW = topDlg->TheDlg;
+      MessageBox(hW,text,"Error",MB_OK | MB_ICONHAND);
+      r->strlength = 2;
+      r->strptr[0] = '4';
+      r->strptr[1] = '0';
+      r->strptr[2] = '\0';
+      return 40;
+}
+
 void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src)
 {
    register UINT i;

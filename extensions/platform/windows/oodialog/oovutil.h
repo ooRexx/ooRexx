@@ -80,7 +80,6 @@
 
 #define MSG_TERMINATE "1DLGDELETED1"
 
-extern LONG HandleError(PRXSTRING r, CHAR * text);
 
 /* Flags for the get icon functions.  Indicates the source of the icon. */
 #define ICON_FILE                 0x00000001
@@ -261,11 +260,6 @@ extern DWORD ComCtl32Version;
        while ((i<StoredDialogs) && (DialogTab[i]->TheDlg != hDlg) && (DialogTab[i]->AktChild != hDlg)) i++; \
        if (i<StoredDialogs) addressedTo = DialogTab[i]; else addressedTo = NULL;   } \
 
-void *string2pointer(const char *string);
-inline void *string2pointer(CONSTRXSTRING *string) { return string2pointer(string->strptr); }
-inline void *string2pointer(CONSTRXSTRING &string) { return string2pointer(string.strptr); }
-void pointer2string(char *, void *pointer);
-inline void pointer2string(PRXSTRING result, void *pointer) { pointer2string(result->strptr, pointer); result->strlength = strlen(result->strptr); }
 
 #define DEF_ADM     DIALOGADMIN * dlgAdm = NULL
 #define GET_ADM     dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0])
@@ -524,9 +518,18 @@ extern DIALOGADMIN * topDlg;
 extern INT StoredDialogs;
 extern CRITICAL_SECTION crit_sec;
 
+
 // These utility functions are defined in oovtools.cpp
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
 extern void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
 extern void rxdatacpy(CHAR * tar, RXSTRING &src);
 extern bool IsYes(const char *s);
+extern void *string2pointer(const char *string);
+extern void pointer2string(char *, void *pointer);
+extern LONG HandleError(PRXSTRING r, CHAR * text);
+
+
+inline void *string2pointer(CONSTRXSTRING *string) { return string2pointer(string->strptr); }
+inline void *string2pointer(CONSTRXSTRING &string) { return string2pointer(string.strptr); }
+inline void pointer2string(PRXSTRING result, void *pointer) { pointer2string(result->strptr, pointer); result->strlength = strlen(result->strptr); }
 
