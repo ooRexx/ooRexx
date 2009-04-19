@@ -55,7 +55,6 @@
   if d~InitCode > 0 then exit
   d~Execute("SHOWTOP")
   d~deinstall
-  ret = SysDropFuncs()          /* make sure RXAPI can be deinstalled */
   ret = directory(curdir)
   return
 
