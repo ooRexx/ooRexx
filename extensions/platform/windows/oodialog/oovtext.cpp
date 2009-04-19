@@ -46,7 +46,6 @@
 #endif
 #include "oovutil.h"
 
-extern WPARAM InterruptScroll = 0;
 extern HWND ScrollingButton = NULL;
 extern HWND RedrawScrollingButton = NULL;
 HANDLE TimerEvent = NULL;
@@ -176,7 +175,7 @@ size_t RexxEntry ScrollText(const char *funcname, size_t argc, CONSTRXSTRING *ar
 
     if (!dlgAdm) RETERR
 
-        text = argv[2].strptr;
+    text = argv[2].strptr;
     size = atoi(argv[4].strptr);
     opts = argv[5].strptr;
     disply = atoi(argv[6].strptr);

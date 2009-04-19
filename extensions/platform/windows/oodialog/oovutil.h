@@ -512,47 +512,16 @@ typedef struct
 } DIALOGADMIN;
 
 
+// These global variables are defined in oovutil.cpp
+extern HINSTANCE MyInstance;
+extern DIALOGADMIN * DialogTab[];
+extern DIALOGADMIN * topDlg;
+extern INT StoredDialogs;
+extern CRITICAL_SECTION crit_sec;
 
-#ifdef EXTERNALFUNCS
-typedef LONG REXXENTRY GETITEMDATAEXTERNALFN (HANDLE, ULONG, UINT, PCHAR, ULONG);
-typedef LONG REXXENTRY SETITEMDATAEXTERNALFN (DIALOGADMIN *, HANDLE, ULONG, UINT, const char *);
-typedef LONG REXXENTRY GETSTEMDATAEXTERNALFN (HANDLE, ULONG, ULONG, PCHAR, ULONG);
-typedef LONG REXXENTRY SETSTEMDATAEXTERNALFN (DIALOGADMIN *, HANDLE, ULONG, ULONG, const char *);
-#endif
-
-#ifdef CREATEDLL
-/* tools */
+// These utility functions are defined in oovtools.cpp
+extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
 extern void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
 extern void rxdatacpy(CHAR * tar, RXSTRING &src);
 extern bool IsYes(const char *s);
 
-/* global variables */
-#ifndef NOGLOBALVARIABLES
-extern _declspec(dllexport) HINSTANCE MyInstance;
-extern _declspec(dllexport) DIALOGADMIN * DialogTab[MAXDIALOGS];
-extern _declspec(dllexport) DIALOGADMIN * topDlg;
-extern _declspec(dllexport) INT StoredDialogs;
-extern _declspec(dllexport) BOOL ReleaseMain;
-#ifdef EXTERNALFUNCS
-extern _declspec(dllexport) GETITEMDATAEXTERNALFN * GetItemDataExternal = NULL;
-extern _declspec(dllexport) SETITEMDATAEXTERNALFN * SetItemDataExternal = NULL;
-extern _declspec(dllexport) GETSTEMDATAEXTERNALFN * GetStemDataExternal = NULL;
-extern _declspec(dllexport) SETSTEMDATAEXTERNALFN * SetStemDataExternal = NULL;
-#endif
-
-#endif
-
-#else
-extern _declspec(dllimport) HINSTANCE MyInstance;
-extern _declspec(dllimport) DIALOGADMIN * DialogTab[MAXDIALOGS];
-extern _declspec(dllimport) DIALOGADMIN * topDlg;
-extern _declspec(dllimport) INT StoredDialogs;
-extern _declspec(dllimport) BOOL ReleaseMain;
-#ifdef EXTERNALFUNCS
-extern _declspec(dllimport) GETITEMDATAEXTERNALFN * GetItemDataExternal;
-extern _declspec(dllimport) SETITEMDATAEXTERNALFN * SetItemDataExternal;
-extern _declspec(dllimport) GETSTEMDATAEXTERNALFN * GetStemDataExternal;
-extern _declspec(dllimport) SETSTEMDATAEXTERNALFN * SetStemDataExternal;
-#endif
-
-#endif

@@ -44,27 +44,23 @@
 #include "oorexxapi.h"
 #include <stdio.h>
 #include <dlgs.h>
-/* set the noglob... so global variables wont be defined twice */
-#define NOGLOBALVARIABLES 1
 #include "oovutil.h"
-#undef NOGLOBALVARIABLES
 #include "oodResources.h"
 
-extern HINSTANCE MyInstance = NULL;
+HINSTANCE MyInstance = NULL;
+DIALOGADMIN * DialogTab[MAXDIALOGS] = {NULL};
+DIALOGADMIN * topDlg = {NULL};
+INT StoredDialogs = 0;
+CRITICAL_SECTION crit_sec = {0};
 
-extern DIALOGADMIN * DialogTab[MAXDIALOGS] = {NULL};
-extern DIALOGADMIN * topDlg = {NULL};
-extern INT StoredDialogs = 0;
-extern CRITICAL_SECTION crit_sec = {0};
-extern WPARAM InterruptScroll;
 
+extern INT DelDialog(DIALOGADMIN * aDlg);
 extern BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
 extern BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam, BOOL MsgEnabled);
 extern BOOL DrawBackgroundBmp(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam);
 extern BOOL DataAutodetection(DIALOGADMIN * aDlg);
 extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr);
-extern BOOL IsNT = TRUE;
 extern LONG HandleError(PRXSTRING r, CHAR * text);
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 extern BOOL GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
@@ -77,7 +73,6 @@ extern UINT seekKeyPressMethod(KEYPRESSDATA *, const char *);
 extern void removeKeyPressMethod(KEYPRESSDATA *, UINT);
 
 /* Local functions */
-INT DelDialog(DIALOGADMIN * aDlg);
 static LONG installKBHook(DIALOGADMIN *, HWND, CONSTRXSTRING, CONSTRXSTRING, const char *);
 static LONG setKBHook(DIALOGADMIN *, HWND);
 static void removeKBHook(DIALOGADMIN *);
@@ -139,14 +134,6 @@ LONG HandleError(PRXSTRING r, CHAR * text)
       return 40;
 }
 
-
-BOOL DialogInAdminTable(DIALOGADMIN * Dlg)
-{
-    register INT i;
-    for (i = 0; i < StoredDialogs; i++)
-        if (DialogTab[i] == Dlg) break;
-    return (i < StoredDialogs);
-}
 
 /* dialog procedure
    handles the search for user defined messages and bitmap buttons
@@ -1904,26 +1891,19 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
 extern "C" {
 #endif
 
-BOOL REXXENTRY DllMain(
-    HINSTANCE  hinstDLL,    // handle of DLL module
-    DWORD  fdwReason,    // reason for calling function
-    LPVOID  lpvReserved     // reserved
-   )
+BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-   OSVERSIONINFO version_info={0}; /* for optimization so that GetVersionEx */
-
-   if (fdwReason == DLL_PROCESS_ATTACH) {
-      MyInstance = hinstDLL;
-      version_info.dwOSVersionInfoSize = sizeof(version_info);  // if not set --> violation error
-      GetVersionEx(&version_info);
-      if (version_info.dwPlatformId == VER_PLATFORM_WIN32_NT) IsNT = TRUE; else IsNT = FALSE;
-      InitializeCriticalSection(&crit_sec);
-   }  else if (fdwReason == DLL_PROCESS_DETACH)
-   {
-       MyInstance = NULL;
-       DeleteCriticalSection(&crit_sec);
-   }
-   return(TRUE);
+    if ( fdwReason == DLL_PROCESS_ATTACH )
+    {
+        MyInstance = hinstDLL;
+        InitializeCriticalSection(&crit_sec);
+    }
+    else if ( fdwReason == DLL_PROCESS_DETACH )
+    {
+        MyInstance = NULL;
+        DeleteCriticalSection(&crit_sec);
+    }
+    return(TRUE);
 }
 
 #ifdef __cplusplus

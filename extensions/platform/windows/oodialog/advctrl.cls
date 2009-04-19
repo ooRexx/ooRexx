@@ -345,11 +345,11 @@
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
-   if arg(2, 'O') then attributeName = "DATA"id
+   if attributeName = "" then attributeName = "DATA"id
    opts = self~getDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("DTP", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
-       return self~connectDateTimePicker(symbid, attributeName)
+      return self~connectDateTimePicker(symbid, attributeName)
    end
    return 0
 
@@ -358,11 +358,11 @@
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
-   if arg(2, 'O') then attributeName = "DATA"id
+   if attributeName = "" then attributeName = "DATA"id
    opts = self~getDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("MONTH", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect
-       return self~connectMonthCalendar(symbid, attributeName)
+   if self~autoDetect then do
+      return self~connectMonthCalendar(symbid, attributeName)
    end
    return 0
 

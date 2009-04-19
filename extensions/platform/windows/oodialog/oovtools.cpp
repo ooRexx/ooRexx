@@ -43,6 +43,19 @@
 #include "oovutil.h"
 
 
+BOOL DialogInAdminTable(DIALOGADMIN * Dlg)
+{
+    register INT i;
+    for ( i = 0; i < StoredDialogs; i++ )
+    {
+        if ( DialogTab[i] == Dlg )
+        {
+           break;
+        }
+    }
+    return(i < StoredDialogs);
+}
+
 void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src)
 {
    register UINT i;

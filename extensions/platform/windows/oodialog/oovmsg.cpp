@@ -50,11 +50,6 @@
 #include "oovutil.h"
 #include <commctrl.h>
 
-
-extern CRITICAL_SECTION crit_sec;  /* defined in OOVUTIL.C */
-extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
-
-
 BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr)
 {
    if (strlen(Qptr) + strlen(msg) + 1 < MAXLENQUEUE)

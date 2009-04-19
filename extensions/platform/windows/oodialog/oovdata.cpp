@@ -45,7 +45,6 @@
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
-#define EXTERNALFUNCS
 #include "oovutil.h"
 
 
@@ -474,8 +473,8 @@ size_t RexxEntry GetItemData(const char *funcname, size_t argc, CONSTRXSTRING *a
          if (!GetMonthCalendarData(hW, data, id)) data[0] = '\0';
          break;
 
-      default: if (GetItemDataExternal) (*GetItemDataExternal)(hW, id, k, data, DATA_BUFFER-1);
-               else data[0] = '\0';
+      default:
+         data[0] = '\0';
    }
 
    size_t len = strlen(data);
@@ -601,14 +600,7 @@ size_t RexxEntry SetItemData(const char *funcname, size_t argc, CONSTRXSTRING *a
             RETC(!SetMonthCalendarData(hW, data, id))
 
         default:
-            if (SetItemDataExternal)
-            {
-                return(*SetItemDataExternal)(dlgAdm, hW, id, k, data);
-            }
-            else
-            {
-                RETC(1);
-            }
+            RETC(1);
     }
 }
 
@@ -701,10 +693,6 @@ size_t RexxEntry SetStemData(const char *funcname, size_t argc, CONSTRXSTRING *a
             {
                SetTabCtrlData(hW, data, dlgAdm->DataTab[j].id);
             }
-            else if (SetStemDataExternal)
-            {
-                (*SetStemDataExternal)(dlgAdm, hW, dlgAdm->DataTab[j].id, dlgAdm->DataTab[j].typ, data);
-            }
           }
    }
    RETC(0);
@@ -778,8 +766,9 @@ size_t RexxEntry GetStemData(const char *funcname, size_t argc, CONSTRXSTRING *a
         {
             if (!GetTabCtrlData(hW, data, dlgAdm->DataTab[j].id)) data[0] = '\0';
         } else
-        if (GetStemDataExternal)
-            if (!(*GetStemDataExternal)(hW, dlgAdm->DataTab[j].id, dlgAdm->DataTab[j].typ, data, (DATA_BUFFER-1))) data[0] = '\0';
+        {
+            data[0] = '\0';
+        }
 
 
         sprintf(sname,"%s.%d",name,dlgAdm->DataTab[j].id);

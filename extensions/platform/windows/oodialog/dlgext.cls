@@ -390,7 +390,7 @@
    /* The given bitmap will be shown instead of a push button */
 
 ::method AddBitmapButton
-   use arg id, x, y, cx = 0, cy = 0, text = "", fnk = "", bmp, focus = "", sel = "", disabl, opts
+   use arg id, x, y, cx = 0, cy = 0, text = "", fnk = "", bmp, focus = "", sel = "", disabl = "", opts
    if self~activePtr = 0 then return -2
    id = self~CheckId(id)
    if  id = -1 then return
@@ -414,7 +414,7 @@
    /* possible options are: (see ConnectBitmapButton) */
 
 ::method ChangeBitmapButton unguarded
-   use arg id, bmpNormal, bmpFocused = "", bmpSelected = "", bmpDisabled + "", styleOptions = ""
+   use arg id, bmpNormal, bmpFocused = "", bmpSelected = "", bmpDisabled = "", styleOptions = ""
    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
    if id = -1 then return -1
    styleOptions = styleOptions~translate
@@ -614,7 +614,7 @@
    /*    "HEAVY"                 */
 
 ::method WriteToWindow unguarded
-   use arg hwnd, xPos, yPos, text, fontName = "System", fontSize = 10, fontStyle = "", fgColor = -1, bkColor = -1
+   use arg hwnd, xPos, yPos, text, fontName = "System", fontSize = 10, fontStyle = "", fgColor = (-1), bkColor = (-1)
    fontStyle = fontStyle~translate
    return WriteText(hwnd, xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor)  /* more than 6 arguments means use font */
 

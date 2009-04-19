@@ -54,7 +54,6 @@ extern BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, ULONG, ULONG, ULONG, ULON
 extern BOOL DrawButton(DIALOGADMIN *,INT id);
 extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern HWND ScrollingButton;
-extern BOOL IsNT;
 extern HWND RedrawScrollingButton;
 
 
@@ -269,38 +268,32 @@ BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lPara
                MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+2, &lp);
                LineTo(dis->hDC, dis->rcItem.right-2, dis->rcItem.top+2);
                MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.bottom-2, &lp);
-               if (IsNT)
-                  LineTo(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+1);
-               else
-                  LineTo(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+2);
+               LineTo(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+1);
+
                SelectObject(dis->hDC, oP);
                DeleteObject(nP);
             }
             else
             {
                /* white line */
-                nP = CreatePen(PS_SOLID, 2, RGB(240,240,240));
+               nP = CreatePen(PS_SOLID, 2, RGB(240,240,240));
                oP = (HPEN)SelectObject(dis->hDC, nP);
                MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+2, &lp);
                LineTo(dis->hDC, dis->rcItem.right-2, dis->rcItem.top+2);
                MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.bottom-2, &lp);
-               if (IsNT)
-                  LineTo(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+1);
-               else
-                  LineTo(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+2);
+               LineTo(dis->hDC, dis->rcItem.left+2, dis->rcItem.top+1);
+
                SelectObject(dis->hDC, oP);
                DeleteObject(nP);
 
                /* grey line */
                nP = CreatePen(PS_SOLID, 2, RGB(120,120,120));
                oP = (HPEN)SelectObject(dis->hDC, nP);
-               if (IsNT)
-                     MoveToEx(dis->hDC, dis->rcItem.right-2, dis->rcItem.top+2, &lp);
-               else
-                     MoveToEx(dis->hDC, dis->rcItem.right-2, dis->rcItem.top+4, &lp);
+               MoveToEx(dis->hDC, dis->rcItem.right-2, dis->rcItem.top+2, &lp);
                LineTo(dis->hDC, dis->rcItem.right-2, dis->rcItem.bottom-2);
                MoveToEx(dis->hDC, dis->rcItem.left+2, dis->rcItem.bottom-2, &lp);
                LineTo(dis->hDC, dis->rcItem.right-2, dis->rcItem.bottom-2);
+
                SelectObject(dis->hDC, oP);
                DeleteObject(nP);
             }
