@@ -39,15 +39,10 @@
 /**
  * Open Object REXX OODialog - ooDialog Messaging function
  */
-#define NTDDI_VERSION   NTDDI_WINXPSP2
-#define _WIN32_WINNT    0x0501
-#define WINVER          0x0501
+#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
 
-#include <windows.h>
-#include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>
-#include "oovutil.h"
 #include <commctrl.h>
 
 BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr)
@@ -446,7 +441,7 @@ size_t RexxEntry AddUserMessage(const char *funcname, size_t argc, CONSTRXSTRING
 
    for (i=1;i<NARG;i++)
    {
-      if (ISHEX(argv[i].strptr))
+      if (isHex(argv[i].strptr))
          n[i-1] = strtoul(argv[i].strptr,'\0',16);
       else
          n[i-1] = (ULONG)atol(argv[i].strptr);
@@ -454,7 +449,7 @@ size_t RexxEntry AddUserMessage(const char *funcname, size_t argc, CONSTRXSTRING
 
    if ( argc == 9 )
    {
-      if ( ISHEX(argv[8].strptr) )
+      if ( isHex(argv[8].strptr) )
          n[NARG-1] = strtoul(argv[8].strptr,'\0',16);
       else
          n[NARG-1] = (ULONG)atol(argv[8].strptr);
@@ -482,7 +477,7 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
 
         for (i=1; i<5; i++)
         {
-           if (ISHEX(argv[i+1].strptr))
+           if (isHex(argv[i+1].strptr))
                n[i] = strtol(argv[i+1].strptr,'\0',16);
            else
                n[i] = atol(argv[i+1].strptr);
@@ -503,12 +498,12 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
 
         for (i=0; i<4; i++)
         {
-           if (ISHEX(argv[i+1].strptr))
+           if (isHex(argv[i+1].strptr))
                n[i] = strtol(argv[i+1].strptr,'\0',16);
            else
                n[i] = atol(argv[i+1].strptr);
         }
-        if (ISHEX(argv[5].strptr)) lP = (LPARAM) strtol(argv[5].strptr,'\0',16);
+        if (isHex(argv[5].strptr)) lP = (LPARAM) strtol(argv[5].strptr,'\0',16);
         else if (argv[5].strptr[0] == 'T') lP = (LPARAM) &argv[5].strptr[1];
         else if (argv[5].strptr[0] == 'L')  /* e.g. used to set tab stops for edit control */
         {

@@ -35,12 +35,11 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include <windows.h>
-#include <rexx.h>
+#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
+
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
-#include "oovutil.h"
 #include <limits.h>
 
 

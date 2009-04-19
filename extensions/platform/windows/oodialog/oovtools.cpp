@@ -35,12 +35,11 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include <windows.h>
-#include <rexx.h>
+#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
+
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
-#include "oovutil.h"
 
 
 BOOL DialogInAdminTable(DIALOGADMIN * Dlg)
@@ -149,31 +148,6 @@ size_t RexxEntry YesNoMessage(const char *funcname, size_t argc, CONSTRXSTRING *
       retstr->strptr[0] = '1';
    else
       retstr->strptr[0] = '0';
-   return 0;
-}
-
-/**
- * This classic Rexx external function was NOT documented prior to 4.0.0.  But,
- * it was used in some of the sample code in the doc.
- */
-size_t RexxEntry BinaryAnd(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   ULONG n, m;
-
-   CHECKARG(2);
-
-   if (ISHEX(argv[0].strptr))
-       n = strtoul(argv[0].strptr,'\0',16);
-   else
-       n = strtoul(argv[0].strptr,'\0',10);
-
-   if (ISHEX(argv[1].strptr))
-       m = strtoul(argv[1].strptr,'\0',16);
-   else
-       m = strtoul(argv[1].strptr,'\0',10);
-
-   sprintf(retstr->strptr, "%u", n & m);
-   retstr->strlength = strlen(retstr->strptr);
    return 0;
 }
 

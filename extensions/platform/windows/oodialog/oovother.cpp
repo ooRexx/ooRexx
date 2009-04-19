@@ -35,23 +35,15 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#define NTDDI_VERSION   NTDDI_WINXPSP2
-#define _WIN32_WINNT    0x0501
-#define WINVER          0x0501
+#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
 
-#define STRICT
-#define OEMRESOURCE
-
-#include <windows.h>
 #include <mmsystem.h>
-#include "oorexxapi.h"
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
 #include <errno.h>
 #include <shlwapi.h>
 #include <commctrl.h>
-#include "oovutil.h"
 
 // Map strings representing constant defines to their int values.  For
 // translating things like "IDI_APPLICATION" from the user to the proper API

@@ -35,19 +35,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
 
-#define NTDDI_VERSION   NTDDI_WINXPSP2
-#define _WIN32_WINNT    0x0501
-#define WINVER          0x0501
-
-#include <windows.h>
-#include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
-#include "oovutil.h"
 #include "oodResources.h"
 #include <commctrl.h>
 

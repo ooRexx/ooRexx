@@ -35,14 +35,12 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include <windows.h>
-#include <rexx.h>
+#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
 #include <stdio.h>
 #include <dlgs.h>
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
-#include "oovutil.h"
 
 
 extern LPBITMAPINFO LoadDIB(const char *szFile);

@@ -39,6 +39,15 @@
 /* Object REXX OODialog                                             oovutil.h */
 /*                                                                            */
 /******************************************************************************/
+#define NTDDI_VERSION   NTDDI_WINXPSP2
+#define _WIN32_WINNT    0x0501
+#define WINVER          0x0501
+
+#define STRICT
+#define OEMRESOURCE
+
+#include <windows.h>
+#include "oorexxapi.h"
 
 #define MAXREXXNAME 128
 #define MAXLENQUEUE 2056
@@ -215,10 +224,6 @@ extern DWORD ComCtl32Version;
           if (ndx < addr->CT_size) brush = addr->ColorTab[ndx].ColorBrush; \
       } \
    }
-
-
-#define ISHEX(value) \
-   ((value[0] == '0') && (toupper(value[1]) == 'X'))
 
 
 //

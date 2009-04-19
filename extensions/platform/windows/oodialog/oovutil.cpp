@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                          */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,16 +35,12 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#define _WIN32_WINNT    0x0501
-#define WINVER          0x0501
+#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
 
-#include <windows.h>
 #include <mmsystem.h>
 #include <commctrl.h>
-#include "oorexxapi.h"
 #include <stdio.h>
 #include <dlgs.h>
-#include "oovutil.h"
 #include "oodResources.h"
 
 HINSTANCE MyInstance = NULL;
@@ -1910,15 +1906,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 }
 #endif
 
-/**
- * This function was documented in the ooDialog doc prior to 4.0.0, so for now
- * it needs to stay.  Does nothing.
- */
-size_t RexxEntry InstMMFuncs(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    // the old function returned 1
-   RETC(1)
-}
 
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetDlgMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
@@ -1941,7 +1928,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(FindTheWindow);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(StartDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WindowRect);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SetLBTabStops);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(BinaryAnd);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetScreenSize);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetSysMetrics);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetDialogFactor);
@@ -1983,7 +1969,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(MemMenu);
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
-    REXX_CLASSIC_ROUTINE(InstMMFuncs,          InstMMFuncs),
     REXX_CLASSIC_ROUTINE(GetDlgMsg,            GetDlgMsg),
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
     REXX_CLASSIC_ROUTINE(HandleDlg,            HandleDlg),
@@ -2005,7 +1990,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(StartDialog,          StartDialog),
     REXX_CLASSIC_ROUTINE(WindowRect,           WindowRect),
     REXX_CLASSIC_ROUTINE(SetLBTabStops,        SetLBTabStops),
-    REXX_CLASSIC_ROUTINE(BinaryAnd,            BinaryAnd),
     REXX_CLASSIC_ROUTINE(GetScreenSize,        GetScreenSize),
     REXX_CLASSIC_ROUTINE(GetDialogFactor,      GetDialogFactor),
     REXX_CLASSIC_ROUTINE(SleepMS,              SleepMS),

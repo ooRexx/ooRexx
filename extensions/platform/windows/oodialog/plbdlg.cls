@@ -58,12 +58,6 @@
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
--- Needed to maintain backward compatibilty with 3.2.0.  The external function GetSysMetrics()
--- was foolishly documented.
-::routine GetSysMetrics public
-  use strict arg index
-  return .DlgUtil~getSystemMetrics(index)
-
 ::class 'Rect' public
 ::method init external "LIBRARY oodialog rect_init"
 ::method left external "LIBRARY oodialog rect_left"

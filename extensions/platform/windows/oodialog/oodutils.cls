@@ -105,9 +105,24 @@
    use strict arg index
    return .DlgUtil~getSystemMetrics(index)
 
+/** The following routines are needed to maintain backward compatibilty with
+ *  pre-4.0.0, because a classic Rexx external function with the same name was
+ *  documented.
+ */
+::routine GetSysMetrics public
+  use strict arg index
+  return .DlgUtil~getSystemMetrics(index)
 
-/*-------------------------------- shortcut routines ---------------------------------*/
+::routine InstMMFuncs public
+  return 1
 
+::routine BinaryAnd public
+  use strict arg n1, n2
+  return .DlgUtil~and(n1, n2)
+
+/* ----- End compatibility routines. -----------------------------------------*/
+
+/*-------------------------- shortcut routines -------------------------------*/
 
 ::routine TimedMessage public
    use arg msg, title, duration, earlyReply = .false

@@ -35,17 +35,14 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
 
-
-#include <windows.h>
-#include <rexx.h>
 #include <stdio.h>
 #include <dlgs.h>
 #include <commctrl.h>
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
-#include "oovutil.h"
 
 
 /* I do most of the radio button handling myself now so I know it works */
