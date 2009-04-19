@@ -35,7 +35,8 @@
 #/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 #/*                                                                            */
 #/*----------------------------------------------------------------------------*/
-# NMAKE-compatible MAKE file for FNTEST*
+
+# NMAKE-compatible MAKE file for ooDialog
 all:  $(OR_OUTDIR)\oodialog.dll
 
 !include "$(OR_LIBSRC)\ORXWIN32.MAK"
@@ -46,7 +47,7 @@ OR_LIB=$(OR_OUTDIR)
 SOURCEF= $(OR_OUTDIR)\oovutil.obj $(OR_OUTDIR)\oovdata.obj $(OR_OUTDIR)\oovtext.obj $(OR_OUTDIR)\oovtools.obj \
          $(OR_OUTDIR)\oovmsg.obj $(OR_OUTDIR)\oovscrll.obj $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovdraw.obj \
          $(OR_OUTDIR)\oovuser.obj $(OR_OUTDIR)\oovbmp.obj $(OR_OUTDIR)\oovother.obj $(OR_OUTDIR)\menu.obj \
-         $(OR_OUTDIR)\oodialog.res
+         $(OR_OUTDIR)\oodPackageEntry.obj $(OR_OUTDIR)\oodialog.res
 
 .c{$(OR_OUTDIR)}.obj:
     $(C) $(OPTIONS)  /DINCL_32  -c $(@B).c /Fo$(OR_OUTDIR)\$(@B).obj
@@ -85,3 +86,5 @@ $(OR_OUTDIR)\oodialog.res: $(OR_OODIALOGSRC)\oodialog.rc
     @ECHO .
     @ECHO ResourceCompiling $(@B).res
         $(rc) $(rcflags_common) /i $(OR_OODIALOGSRC) /i $(OR_WINKERNELSRC) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_OODIALOGSRC)\$(@B).rc
+
+$(SOURCEF) : oovutil.h
