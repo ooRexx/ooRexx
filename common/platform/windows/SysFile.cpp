@@ -98,8 +98,8 @@ bool SysFile::open(const char *name, int openFlags, int openMode, int shareMode)
     mode = openMode;
     share = shareMode;
 
-    // we must open this with the NOINHERIT flag added
-    fileHandle = _sopen(name, openFlags|RX_O_NOINHERIT, shareMode, openMode);
+    // we must open this with the NOINHERIT and BINARY flags added
+    fileHandle = _sopen(name, openFlags|_O_NOINHERIT|_O_BINARY, shareMode, openMode);
     if ( fileHandle == -1 )
     {
         errInfo = errno;

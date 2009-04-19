@@ -60,12 +60,6 @@
 #define RX_O_EXCL         _O_EXCL
 #define RX_O_TRUNC        _O_TRUNC
 #define RX_O_APPEND       _O_APPEND
-#define RX_O_TEXT         _O_TEXT
-#define RX_O_BINARY       _O_BINARY
-#define RX_O_RAW          _O_RAW
-#define RX_O_TEMPORARY    _O_TEMPORARY
-#define RX_O_NOINHERIT    _O_NOINHERIT
-#define RX_O_SEQUENTIAL   _O_SEQUENTIAL
 // openMode flags
 #define RX_SH_DENYWR      _SH_DENYWR
 #define RX_SH_DENYRD      _SH_DENYRD

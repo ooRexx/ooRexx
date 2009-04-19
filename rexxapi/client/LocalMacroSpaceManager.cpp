@@ -88,7 +88,7 @@ size_t MacroSpaceFile::openForLoading()
 
     // open the file
     fileInst = new SysFile();
-    opened = fileInst->open(fileName, RX_O_BINARY | RX_O_RDONLY, 0, RX_SH_DENYRW);
+    opened = fileInst->open(fileName, RX_O_RDONLY, 0, RX_SH_DENYRW);
     if (opened == false)
     {
         throw new ServiceException(FILE_CREATION_ERROR, "Unable to open macrospace file");
@@ -197,7 +197,7 @@ void MacroSpaceFile::create(size_t count)
     bool opened;
     // create the file
     fileInst = new SysFile;
-    opened = fileInst->open(fileName, RX_O_CREAT | RX_O_BINARY | RX_O_TRUNC | RX_O_WRONLY, RX_S_IREAD | RX_S_IWRITE, RX_SH_DENYRW);
+    opened = fileInst->open(fileName, RX_O_CREAT | RX_O_TRUNC | RX_O_WRONLY, RX_S_IREAD | RX_S_IWRITE, RX_SH_DENYRW);
 
     if (opened == false)
     {
@@ -587,7 +587,7 @@ void LocalMacroSpaceManager::translateRexxProgram(const char *sourceFile, Manage
     bool opened;
 
     SysFile *fileInst = new SysFile;
-    opened = fileInst->open(sourceFile, RX_O_BINARY | RX_O_RDONLY, 0, RX_SH_DENYWR);
+    opened = fileInst->open(sourceFile, RX_O_RDONLY, 0, RX_SH_DENYWR);
     if (opened == false)
     {
         throw new ServiceException(MACRO_SOURCE_NOT_FOUND, "Unable to open macrospace source file");
