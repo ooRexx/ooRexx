@@ -283,9 +283,9 @@ any:
       say 'There is no 64-bit version of Jet, therefore a 64-bit'
       say 'compiled ooRexx can not run this sample.  This sample'
       say 'may be upgraded in the future to work with Access 2007'
-      say 'and its Microsoft Access Engine (ACE Engine).  ACE is'
-      say 'is also 32-bit only at this time. It is not clear at'
-      say 'the current time whether ACE will be ported to 64-bit.'
+      say 'and its Microsoft Access Engine (ACE).  ACE is also'
+      say '32-bit. It is not clear at the current time whether ACE'
+      say 'will be ported to 64-bit.'
       say
       say 'Sorry, this sample is 32-bit only.'
 

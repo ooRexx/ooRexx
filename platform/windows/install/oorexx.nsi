@@ -177,10 +177,13 @@ Section "${LONGNAME} Core (required)" SecMain
   ${File} "${BINDIR}\" "oodplain.cls"
   ${CreateDirectory} "$SMPROGRAMS\${LONGNAME}"
   ; rexxtry is technically a sample, but it is heavily used, so add it to
-  ; the executables.
+  ; the executables.  The same thing for the GUI version.
   ${File} "${SRCDIR}\samples\" "rexxtry.rex"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Try Rexx.lnk" "$INSTDIR\rexx.exe" '"$INSTDIR\rexxtry.rex"' "$INSTDIR\rexx.exe"
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Try Rexx.lnk"
+  ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\" "ooRexxTry.rex"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Try Rexx (GUI).lnk" "$INSTDIR\rexx.exe" '"$INSTDIR\ooRexxTry.rex"' "$INSTDIR\rexx.exe"
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Try Rexx (GUI).lnk"
   ; Other files...
   ${File} "${SRCDIR}\platform\windows\" "rexx.ico"
   ${File} "${SRCDIR}\" "CPLv1.0.txt"
@@ -291,8 +294,23 @@ Section "${LONGNAME} Samples" SecDemo
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole\apps
   ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\ole\apps\" "*.rex"
-  ${File} "${SRCDIR}\samples\windows\ole\apps\" "*.mwp"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "MSAccessDemo.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "oleUtils.frm"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp01.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp02.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp03.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp04.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp05.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp06.mwp"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp06.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp07.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp08.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp09.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp10.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp11.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp12.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp13.rex"
+  ${File} "${SRCDIR}\samples\windows\ole\apps\" "samp14.rex"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole\methinfo
   ; Distribution files...
@@ -362,6 +380,11 @@ Section "${LONGNAME} Samples" SecDemo
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\bmp\" "*.bmp"
   ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\oodialog\examples
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.rex"
+  ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.txt"
+  ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\rc
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\rc\" "*.rc"
@@ -375,11 +398,6 @@ Section "${LONGNAME} Samples" SecDemo
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\wav\" "*.wav"
   ${File} "${SRCDIR}\samples\windows\oodialog\wav\" "*.txt"
-  ; Set output path to the installation directory.
-  ${SetOutPath} $INSTDIR\samples\oodialog\examples
-  ; Distribution files...
-  ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.rex"
-  ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.txt"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\examples\resources
   ; Distribution files...
@@ -539,6 +557,7 @@ Section "${LONGNAME} Documentation" SecDoc
   ${File} "${SRCDIR}\doc\" "rxftp.pdf"
   ${File} "${SRCDIR}\doc\" "oodialog.pdf"
   ${File} "${SRCDIR}\doc\" "winextensions.pdf"
+  ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\" "ooRexxTry.pdf"
   ; Create start menu shortcuts
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Reference.lnk" "$INSTDIR\doc\rexxref.pdf" "" "$INSTDIR\doc\rexxref.pdf" 0
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Reference.lnk"
@@ -554,6 +573,8 @@ Section "${LONGNAME} Documentation" SecDoc
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx ooDIalog Method Reference.lnk"
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Windows Extensions Reference.lnk" "$INSTDIR\doc\winextensions.pdf" "" "$INSTDIR\doc\winextensions.pdf" 0
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Windows Extensions Reference.lnk"
+  CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexxTry Reference.lnk" "$INSTDIR\doc\ooRexxTry.pdf" "" "$INSTDIR\doc\ooRexxTry.pdf" 0
+  ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexxTry Reference.lnk"
 SectionEnd
 
 

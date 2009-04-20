@@ -84,6 +84,14 @@ samples\winsystem\winSystemDlgs.h
 samples\winsystem\winSystemDlgs.rc
 samples\winsystem\writeWithNotepad.rex
 
+The ooRexxTry program has been moved out of the incubator into the Windows
+distribution.  It is a GUI version of rexxtry and is installed along side
+of rexxtry in the installation directory.  (Which means it is in the path
+and can be started from the command line.) It is also placed in the Open
+Object Rexx folder on the Start Menu, next to rexxtry.  A PDF
+documentation file is installed in the doc directory, and a short cut link
+to it is in documentation folder on the Start Menu.
+
 Windows Installation:
 ---------------------
 
