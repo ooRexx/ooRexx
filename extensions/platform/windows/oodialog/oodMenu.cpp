@@ -40,15 +40,13 @@
 #include <dlgs.h>
 #include <malloc.h>
 #include <limits.h>
+#include "APICommon.h"
 
 LPWORD lpwAlign(LPWORD lpIn);
 BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, ULONG, ULONG, ULONG, ULONG, CSTRING, ULONG);
 
-/* TODO FIXME need to start putting this stuff in a common module. */
+/* TODO FIXME need these to go into oodCommon.cpp. */
 char *strdupupr_nospace(const char *str);
-void systemServiceException(RexxMethodContext *context, char *msg);
-bool requiredClass(RexxMethodContext *, RexxObjectPtr, const char *, int);
-POINTER rxGetPointerAttribute(RexxMethodContext *, RexxObjectPtr, CSTRING);
 DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
 /**

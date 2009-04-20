@@ -169,7 +169,7 @@ return
   curList = self~GetListControl(ID_Rep)
   if curList \= .Nil then
   do /* connect bitmap and insert colums */
-    curList~setImageList(smallIcons, .Image~id(LVSIL_SMALL))
+    curList~setImageList(smallIcons, .Image~toID(LVSIL_SMALL))
     curList~InsertColumn(0,"Last Name",50)
     curList~InsertColumn(1,"First Name",50)
     curList~InsertColumn(2,"Street",50)
@@ -186,7 +186,7 @@ return
   if curList \= .Nil then
   do
     self~ConnectListNotify(ID_Ic,"BEGINDRAG","DefListDragHandler")
-    curList~setImageList(normalIcons, .Image~id(LVSIL_NORMAL))
+    curList~setImageList(normalIcons, .Image~toID(LVSIL_NORMAL))
   end
   else
     return
@@ -195,7 +195,7 @@ return
 ::method InitSmallIcon
   expose ID_SIc smallIcons
   curList = self~GetListControl(ID_SIc)
-  curList~setImageList(smallIcons, .Image~id(LVSIL_SMALL))
+  curList~setImageList(smallIcons, .Image~toID(LVSIL_SMALL))
   self~ConnectListNotify(ID_SIc,"BEGINDRAG","DefListDragHandler") /* connect default drag handler */
 
 
@@ -289,7 +289,7 @@ return
   expose smallIcons normalIcons
 
   small = .Image~getImage("bmp\oodlist1.bmp")
-  tmpIL = .ImageList~create(.Size~new(16, 12), .Image~id(ILC_COLOR4), 4, 0)
+  tmpIL = .ImageList~create(.Size~new(16, 12), .Image~toID(ILC_COLOR4), 4, 0)
   if \small~isNull,  \tmpIL~isNull then do
       tmpIL~add(small)
       small~release
@@ -300,7 +300,7 @@ return
   end
 
   normal = .Image~getImage("bmp\oodlist2.bmp")
-  tmpIL = .ImageList~create(.Size~new(32, 32), .Image~id(ILC_COLOR4), 4, 0)
+  tmpIL = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR4), 4, 0)
   if \normal~isNull,  \tmpIL~isNull then do
       tmpIL~add(normal)
       normal~release

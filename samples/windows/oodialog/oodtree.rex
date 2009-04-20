@@ -149,10 +149,10 @@ CleanUp:
 
     /* Set image list for Tree control IDC_TREE */
     image = .Image~getImage(bmpFile)
-    imageList = .ImageList~create(.Size~new(16, 12), .Image~id(ILC_COLOR8), 5, 2)
+    imageList = .ImageList~create(.Size~new(16, 12), .Image~toID(ILC_COLOR8), 5, 2)
     if \image~isNull,  \imageList~isNull then do
        imageList~add(image)
-       curTree~setImageList(imageList, .Image~id(TVSIL_NORMAL))
+       curTree~setImageList(imageList, .Image~toID(TVSIL_NORMAL))
        image~release
     end
 

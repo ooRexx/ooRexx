@@ -158,7 +158,7 @@ return 0
   -- of the bitamp files in Explorer to see these values.
 
   -- We set the flags to create a 24 bit color, masked image list.
-  flags = .DlgUtil~or(.Image~id(ILC_COLOR24), .Image~id(ILC_MASK))
+  flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))
 
   -- Create an empty .ImageList object:
   imageList = .ImageList~create(.Size~new(61, 46), flags, 10, 10);
@@ -238,7 +238,7 @@ return 0
 
   -- Set up the alignment and margin around the image on the 'View Pictures'
   -- button.  Then set the image list in the button control
-  align = .Image~id(BUTTON_IMAGELIST_ALIGN_LEFT)
+  align = .Image~toID(BUTTON_IMAGELIST_ALIGN_LEFT)
   margin = .Rect~new(1)
 
   pbView~setImageList(imageList, margin, align)
@@ -287,7 +287,7 @@ return 0
 
   -- For the Add Pictures button, use the same image list created for the View
   -- Pictures button.  We just change the margins and the alignment.
-  align = .Image~id(BUTTON_IMAGELIST_ALIGN_CENTER)
+  align = .Image~toID(BUTTON_IMAGELIST_ALIGN_CENTER)
   margin~left = 10
   margin~right = 10
   margin~top = 30
@@ -515,10 +515,10 @@ return .true
   use strict arg alignment
 
   select
-    when alignment == .Image~id("BUTTON_IMAGELIST_ALIGN_LEFT") then return 'Left'
-    when alignment == .Image~id("BUTTON_IMAGELIST_ALIGN_RIGHT") then return 'Right'
-    when alignment == .Image~id("BUTTON_IMAGELIST_ALIGN_TOP") then return 'Top'
-    when alignment == .Image~id("BUTTON_IMAGELIST_ALIGN_BOTTOM") then return 'Bottom'
-    when alignment == .Image~id("BUTTON_IMAGELIST_ALIGN_CENTER") then return 'Center'
+    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_LEFT") then return 'Left'
+    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_RIGHT") then return 'Right'
+    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_TOP") then return 'Top'
+    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_BOTTOM") then return 'Bottom'
+    when alignment == .Image~toID("BUTTON_IMAGELIST_ALIGN_CENTER") then return 'Center'
     otherwise return 'Error'
   end

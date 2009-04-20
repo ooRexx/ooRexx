@@ -126,10 +126,10 @@
    -- created without the SHAREIMAGES styles, so it take care of releasing the
    -- image list when the program ends.
    image = .Image~getImage("bmp\psdemolv.bmp")
-   imageList = .ImageList~create(.Size~new(16, 16), .Image~id(ILC_COLOR8), 4, 0)
+   imageList = .ImageList~create(.Size~new(16, 16), .Image~toID(ILC_COLOR8), 4, 0)
    if \image~isNull,  \imageList~isNull then do
       imageList~add(image)
-      lc~setImageList(imageList, .Image~id(LVSIL_SMALL))
+      lc~setImageList(imageList, .Image~toID(LVSIL_SMALL))
 
       -- The image list makes a copy of the bitmap, so we can release it now to
       -- free up some (small) amount of system resources.  This is not
@@ -157,10 +157,10 @@
 
    /* set images for the items */
    image = .Image~getImage("bmp\psdemotv.bmp")
-   imageList = .ImageList~create(.Size~new(32, 32), .Image~id(ILC_COLOR8), 10, 0)
+   imageList = .ImageList~create(.Size~new(32, 32), .Image~toID(ILC_COLOR8), 10, 0)
    if \image~isNull,  \imageList~isNull then do
       imageList~add(image)
-      tc~setImageList(imageList, .Image~id(TVSIL_NORMAL))
+      tc~setImageList(imageList, .Image~toID(TVSIL_NORMAL))
       image~release
    end
 
@@ -298,7 +298,8 @@
    image = .Image~getImage("bmp\psdemoTab.bmp")
 
    -- Create our image list, as a masked image list.
-   imageList = .ImageList~create(.Size~new(16, 16), .DlgUtil~or(.Image~id(ILC_COLOR24), .Image~id(ILC_MASK)), 10, 0)
+   flags = .DlgUtil~or(.Image~toID(ILC_COLOR24), .Image~toID(ILC_MASK))
+   imageList = .ImageList~create(.Size~new(16, 16), flags, 10, 0)
    if \image~isNull,  \imageList~isNull then do
       -- The bitmap is added and the image list deduces the number of images
       -- from the width of the bitmap.  For each image, the image list creates a

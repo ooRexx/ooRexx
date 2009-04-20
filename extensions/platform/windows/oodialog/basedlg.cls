@@ -393,7 +393,7 @@
 
 ::class 'Image' public
 
-::method id class external "LIBRARY oodialog image_id_cls"
+::method toID class external "LIBRARY oodialog image_toID_cls"
 ::method getImage class external "LIBRARY oodialog image_getImage_cls"
 ::method fromFiles class external "LIBRARY oodialog image_fromFiles_cls"
 ::method fromIDs class external "LIBRARY oodialog image_fromIDs_cls"

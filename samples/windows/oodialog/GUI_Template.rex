@@ -308,7 +308,7 @@ exit -1
 /*  for example:                                                             */
 /*  List = self~GetListControl([id])                                         */
 /*  if List \= .Nil then do                                                  */
-/*    list~setImageList(imageList, .Image~id(LVSIL_SMALL))                   */
+/*    list~setImageList(imageList, .Image~toID(LVSIL_SMALL))                 */
 /*    list~AddStyle("[Style1 style2...]")                                    */
 /*    list~InsertColumn(0,"[Title]",[width],[style])                         */
 /*    list~InsertColumn(1,"[Title]",[width],[style])                         */

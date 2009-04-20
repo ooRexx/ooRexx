@@ -44,6 +44,7 @@
 #include <errno.h>
 #include <shlwapi.h>
 #include <commctrl.h>
+#include "APICommon.h"
 
 // Map strings representing constant defines to their int values.  For
 // translating things like "IDI_APPLICATION" from the user to the proper API
@@ -2399,24 +2400,8 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
    RETC(0)
 }
 
-/* These inline (and non-inline) convenience functions will be moved so that
- * they are accessible by all of ooDialog at some point.  Right now they are
- * just used by native method functions in this source file.
- */
-
-bool rxStr2Number(RexxMethodContext *, CSTRING, uint64_t *, int);
-
 #define OOD_ID_EXCEPTION -9
-
-#define NO_HMODULE_MSG            "failed to obtain %s module handle; OS error code %d"
-#define NO_PROC_MSG               "failed to get procedeure adddress for %s(); OS error code %d"
-#define API_FAILED_MSG            "system API %s() failed; OS error code %d"
-#define COM_API_FAILED_MSG        "system API %s() failed; COM code 0x%08x"
 #define NO_COMMCTRL_MSG           "failed to initialize %s; OS error code %d"
-#define NO_MEMORY_MSG             "failed to allocate memory"
-#define FUNC_WINCTRL_FAILED_MSG   "the '%s'() function of the Windows '%s' control failed"
-#define MSG_WINCTRL_FAILED_MSG    "the '%s' message of the Windows '%s' control failed"
-
 #define COMCTL32_FULL_PART        0
 #define COMCTL32_NUMBER_PART      1
 #define COMCTL32_OS_PART          2
@@ -2544,28 +2529,6 @@ inline const char *comctl32VersionName(DWORD id)
 }
 
 
-POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
-{
-    CSTRING value = "";
-    RexxObjectPtr rxString = context->SendMessage0(obj, name);
-    if ( rxString != NULLOBJECT )
-    {
-        value = context->ObjectToStringValue(rxString);
-    }
-    return string2pointer(value);
-}
-
-CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
-{
-    CSTRING value = NULL;
-    RexxObjectPtr rxString = context->SendMessage0(obj, name);
-    if ( rxString != NULLOBJECT )
-    {
-        value = context->ObjectToStringValue(rxString);
-    }
-    return value;
-}
-
 DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
 {
     DIALOGADMIN *adm = (DIALOGADMIN *)rxGetPointerAttribute(context, dlg, "ADM");
@@ -2589,159 +2552,11 @@ inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr self)
     return (HWND)rxGetPointerAttribute(context, self, "HWND");
 }
 
-void systemServiceException(RexxMethodContext *context, char *msg)
-{
-    context->RaiseException1(Rexx_Error_System_service_user_defined, context->String(msg));
-}
-
-void systemServiceException(RexxMethodContext *context, char *msg, const char *sub)
-{
-    if ( sub != NULL )
-    {
-        TCHAR buffer[128];
-        _snprintf(buffer, sizeof(buffer), msg, sub);
-        systemServiceException(context, buffer);
-    }
-    else
-    {
-        systemServiceException(context, msg);
-    }
-}
-
-void systemServiceExceptionCode(RexxMethodContext *context, const char *msg, const char *arg1)
-{
-    TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), msg, arg1, GetLastError());
-    systemServiceException(context, buffer);
-}
-
-void systemServiceExceptionComCode(RexxMethodContext *context, const char *msg, const char *arg1, HRESULT hr)
-{
-    TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), msg, arg1, hr);
-    systemServiceException(context, buffer);
-}
-
 void controlFailedException(RexxMethodContext *c, const char *msg, const char *func, const char *control)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), msg, func, control);
     systemServiceException(c, buffer);
-}
-
-void outOfMemoryException(RexxMethodContext *c)
-{
-    systemServiceException(c, NO_MEMORY_MSG);
-}
-
-void userDefinedMsgException(RexxMethodContext *c, CSTRING msg)
-{
-    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(msg));
-}
-
-void userDefinedMsgException(RexxMethodContext *c, int pos, CSTRING msg)
-{
-    TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "Method argument %d %s", pos, msg);
-    userDefinedMsgException(c, buffer);
-}
-
-void *wrongClassException(RexxMethodContext *c, int pos, const char *n)
-{
-    c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->WholeNumber(pos), c->String(n));
-    return NULL;
-}
-
-void invalidTypeException(RexxMethodContext *c, int pos, const char *type)
-{
-    TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "Method argument %d is not a valid %s", pos, type);
-    userDefinedMsgException(c, buffer);
-}
-
-void invalidImageException(RexxMethodContext *c, int pos, CSTRING type, CSTRING actual)
-{
-    TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "Method argument %d must be a %s image; found %s", pos, type, actual);
-    userDefinedMsgException(c, buffer);
-}
-
-void wrongObjInArrayException(RexxMethodContext *c, int argPos, size_t index, CSTRING obj)
-{
-    TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "Method argument %d is an array and index %d is not a %s", argPos, index, obj);
-    userDefinedMsgException(c, buffer);
-}
-
-void wrongObjInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual)
-{
-    TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer),
-              "Index, %s, of method argument %d must be %s; found \"%s\"",
-              index, argPos, needed, c->ObjectToStringValue(actual));
-    userDefinedMsgException(c, buffer);
-}
-
-void missingIndexInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index)
-{
-    TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer),
-              "Index, %s, of method argument %d is required",
-              index, argPos);
-    userDefinedMsgException(c, buffer);
-}
-
-void emptyArrayException(RexxMethodContext *c, int argPos)
-{
-    TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "Method argument %d must be a non-empty array", argPos);
-    userDefinedMsgException(c, buffer);
-}
-
-void nullObjectException(RexxMethodContext *c, CSTRING name, int pos)
-{
-    TCHAR buffer[256];
-    if ( pos == 0 )
-    {
-        _snprintf(buffer, sizeof(buffer), "The %s object must not be null", name);
-    }
-    else
-    {
-        _snprintf(buffer, sizeof(buffer), "Method argument %d, the %s object, must not be null", pos, name);
-    }
-    userDefinedMsgException(c, buffer);
-}
-
-void nullObjectException(RexxMethodContext *c, CSTRING name)
-{
-    nullObjectException(c, name, 0);
-}
-
-void nullPointerException(RexxMethodContext *c, int pos)
-{
-    c->RaiseException1(Rexx_Error_Incorrect_method_null, c->WholeNumber(pos));
-}
-
-void wrongRangeException(RexxMethodContext *c, int pos, int min, int max, RexxObjectPtr actual)
-{
-    c->RaiseException(Rexx_Error_Invalid_argument_range,
-                      c->ArrayOfFour(c->WholeNumber(pos), c->WholeNumber(min), c->WholeNumber(max), actual));
-}
-
-void wrongRangeException(RexxMethodContext *c, int pos, int min, int max, int actual)
-{
-    wrongRangeException(c, pos, min, max, c->WholeNumber(actual));
-}
-
-void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, RexxObjectPtr actual)
-{
-    c->RaiseException(Rexx_Error_Incorrect_method_list,
-                      c->ArrayOfThree(c->WholeNumber(pos), c->String(list), actual));
-}
-
-void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, const char *actual)
-{
-    wrongArgValueException(c, pos, list, c->String(actual));
 }
 
 void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char *style)
@@ -2761,58 +2576,6 @@ bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName,
         return false;
     }
     return true;
-}
-
-bool requiredClass(RexxMethodContext *c, RexxObjectPtr obj, const char *name, int pos)
-{
-    if ( obj == NULLOBJECT || ! c->IsOfType(obj, name) )
-    {
-        wrongClassException(c, pos, name);
-        return false;
-    }
-    return true;
-}
-
-/**
- * Return the number of existing arguments in an ooRexx method invocation.  In
- * others words, it is intended to count neither the omitted args in the ooRexx
- * method, nor the pseudo-arguments to the native API function, like OSELF,
- * CSELF, etc..
- *
- * @param context  The method context pointer.
- *
- * @return The count of existing arguments in an ooRexx method invocation.
- */
-size_t rxArgCount(RexxMethodContext * context)
-{
-    RexxObjectPtr items = context->SendMessage0(context->GetArguments(), "ITEMS");
-
-    wholenumber_t count;
-    context->ObjectToWholeNumber(items, &count);
-    return (size_t)count;
-}
-
-bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos)
-{
-    char *end;
-    *number = _strtoui64(str, &end, 0);
-    if ( (end - str != strlen(str)) || errno == EINVAL || *number == _UI64_MAX )
-    {
-        invalidTypeException(c, pos, "number");
-        return false;
-    }
-    return true;
-
-}
-
-RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name)
-{
-    RexxClassObject theClass = c->FindContextClass(name);
-    if ( theClass == NULL )
-    {
-        c->RaiseException1(Rexx_Error_Execution_noclass, c->String(name));
-    }
-    return theClass;
 }
 
 PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos)
@@ -2880,30 +2643,6 @@ RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy)
         size = c->SendMessage2(SizeClass, "NEW", c->WholeNumber(cx), c->WholeNumber(cy));
     }
     return size;
-}
-
-/**
- * Sets an object variable value and returns the existing value.  With the
- * caveat that if the object variable did not have a value set, .nil is
- * returned.
- *
- * @param c        The method context we are operating in.
- * @param varName  The object variable's name.
- * @param val      The value to set.
- *
- * @return The previous value of the object variable, if it was set, otherwise
- *         .nil.
- */
-RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val)
-{
-    RexxObjectPtr result = c->GetObjectVariable(varName);
-    if ( result == NULLOBJECT )
-    {
-        result = c->Nil();
-    }
-    c->SetObjectVariable(varName, val);
-
-    return result;
 }
 
 inline bool hasStyle(HWND hwnd, LONG style)
@@ -7396,7 +7135,7 @@ static String2Int *imageInitMap(void)
     return cMap;
 }
 
-RexxMethod1(uint32_t, image_id_cls, CSTRING, id)
+RexxMethod1(uint32_t, image_toID_cls, CSTRING, symbol)
 {
     static String2Int *imageConstantsMap = NULL;
 
@@ -7404,10 +7143,10 @@ RexxMethod1(uint32_t, image_id_cls, CSTRING, id)
     {
         imageConstantsMap = imageInitMap();
     }
-    int idValue = getConstantValue(imageConstantsMap, id);
+    int idValue = getConstantValue(imageConstantsMap, symbol);
     if ( idValue == -1 )
     {
-        wrongArgValueException(context, 1, "the Image class symbol IDs", id);
+        wrongArgValueException(context, 1, "the Image class symbol IDs", symbol);
     }
     return (uint32_t)idValue;
 }

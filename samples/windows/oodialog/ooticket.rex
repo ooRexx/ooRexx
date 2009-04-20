@@ -170,7 +170,7 @@
   staticImage = self~getStaticControl(145)
   parse value staticImage~getRect with x y x2 y2
   size = .Size~new(x2 - x, y2 - y)
-  image = .Image~getImage('bmp\movie.bmp', .Image~id(IMAGE_BITMAP), size)
+  image = .Image~getImage('bmp\movie.bmp', .Image~toID(IMAGE_BITMAP), size)
   staticImage~setImage(image)
 
 ::method Ticket                                      /* page 4 */
@@ -192,11 +192,11 @@
    parse value bmpButton~getRect with x y x2 y2
 
    size = .Size~new(x2 - x - 10, y2 - y - 10)
-   image = .Image~getImage('bmp\ticket.bmp', .Image~id(IMAGE_BITMAP), size)
-   imageList = .ImageList~create(size, .Image~id(ILC_COLOR8), 1, 0)
+   image = .Image~getImage('bmp\ticket.bmp', .Image~toID(IMAGE_BITMAP), size)
+   imageList = .ImageList~create(size, .Image~toID(ILC_COLOR8), 1, 0)
    imageList~add(image)
 
-   align = .Image~id(BUTTON_IMAGELIST_ALIGN_CENTER)
+   align = .Image~toID(BUTTON_IMAGELIST_ALIGN_CENTER)
    margin = .Rect~new(5)
    bmpButton~setImageList(imageList, margin, align)
 
