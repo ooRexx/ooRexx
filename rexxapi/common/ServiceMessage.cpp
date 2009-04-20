@@ -69,13 +69,15 @@ void ServiceMessage::readMessage(SysServerConnection *connection)
 {
     size_t actual = 0;
     size_t required = sizeof(ServiceMessage);
+    size_t offset = 0;
     while (required > 0)
     {
-        if (!connection->read((void *)this, required, &actual) || actual == 0)
+        if (!connection->read(((char *)this) + offset, required, &actual) || actual == 0)
         {
             throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readMessage() Failure reading service message");
         }
         required -= actual;
+        offset += actual;
     }
 
     // does this message have extra data associated with it?
@@ -84,9 +86,10 @@ void ServiceMessage::readMessage(SysServerConnection *connection)
         // allocate a data buffer for the extra information and read it in.
         messageData = allocateResultMemory(messageDataLength);
         required = messageDataLength;
+        offset = 0;
         while (required > 0)
         {
-            if (!connection->read(messageData, required, &actual) || actual == 0)
+            if (!connection->read(((char *)messageData) + offset, required, &actual) || actual == 0)
             {
                 releaseResultMemory(messageData);
                 // make sure these are cleared out
@@ -96,6 +99,7 @@ void ServiceMessage::readMessage(SysServerConnection *connection)
             }
             // add in the count
             required -= actual;
+            offset += actual;
         }
         // this is a releasable value
         retainMessageData = false;
@@ -152,13 +156,15 @@ void ServiceMessage::readResult(SysClientStream &pipe)
 {
     size_t actual = 0;
     size_t required = sizeof(ServiceMessage);
+    size_t offset = 0;
     while (required > 0)
     {
-        if (!pipe.read((void *)this, required, &actual) || actual == 0)
+        if (!pipe.read(((char *)this) + offset, required, &actual) || actual == 0)
         {
             throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readResult() Failure reading service message");
         }
         required -= actual;
+        offset += actual;
     }
 
     // handle any errors that the server side might have raised.
@@ -172,15 +178,17 @@ void ServiceMessage::readResult(SysClientStream &pipe)
         messageData = allocateResultMemory(messageDataLength + 1);
         ((char *)messageData)[messageDataLength] = '\0';
         required = messageDataLength;
+        offset = 0;
         while (required > 0)
         {
-            if (!pipe.read(messageData, required, &actual) || actual == 0)
+            if (!pipe.read(((char *)messageData) + offset, required, &actual) || actual == 0)
             {
                 releaseResultMemory(messageData);
                 throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readResult() Failure reading service message");
             }
             // remove the amount read
             required -= actual;
+            offset += actual;
         }
     }
     else
