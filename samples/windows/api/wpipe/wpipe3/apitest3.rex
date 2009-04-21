@@ -58,7 +58,7 @@ RESULT = 0
 
 call Api_Read_All_Variables_From_REXX_VP
 
-call Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP("x.0")
+call Api_Read_All_Elements_Of_A_Specific_Stem_From_REXX_VP "x.0"
 
 call ApiDeregFunc
 

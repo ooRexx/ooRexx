@@ -125,7 +125,7 @@
 ::method Validate
    tst = self~GetValue(1001)
    if tst <> "" then do
-      call Play("wav\take.wav")
+      call Play "wav\take.wav"
       return 1
       end
    else do

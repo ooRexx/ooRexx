@@ -75,7 +75,7 @@
 /*  connect to the server (if it hasn't already shutdown)  */
     if sockconnect(socket, 'host.!') < 0 then
     /*  close the socket connection  */
-        call sockclose(socket)
+        call sockclose socket
 
 
 ::method listen

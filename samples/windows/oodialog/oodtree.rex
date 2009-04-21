@@ -67,7 +67,7 @@ exit   /* leave program */
 
 /* ---- signal handler to destroy dialog if error condition was raised  ----*/
 CleanUp:
-   call ErrorMessage "Error" rc "occurred at line" sigl":" errortext(rc),
+   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
                      || "a"x || condition("o")~message
    if MyDialog~IsDialogActive then MyDialog~StopIt
 
@@ -134,17 +134,17 @@ CleanUp:
     /* check the file existence and display an error messge */
     if stream(bmpFile, "C", "QUERY EXISTS") = "" then
     do
-      call InfoMessage("Data file " bmpFile " does not exist")
+      call infoDialog "Data file " bmpFile " does not exist"
     end
 
     if stream(treeFile, "C", "QUERY EXISTS") = "" then
     do
-      call InfoMessage("Data file " treefile " does not exist !")
+      call infoDialog "Data file " treefile " does not exist !"
     end
 
     if stream(itemFile, "C", "QUERY EXISTS") = "" then
     do
-      call InfoMessage("Data file " itemFile " does not exist")
+      call infoDialog "Data file " itemFile " does not exist"
     end
 
     /* Set image list for Tree control IDC_TREE */
@@ -271,7 +271,7 @@ CleanUp:
   /*expand the selected item and all its childs */
   curTree = self~GetTreeControl("IDC_TREE")
   if curTree~Selected = 0 then
-    call InfoMessage("No item selected !")
+    call infoDialog "No item selected !"
   else do
     curTree~Expand(curTree~Selected)
     nextItem = curTree~Child(curTree~Selected)
@@ -287,7 +287,7 @@ CleanUp:
   /*collapse the selected item and all its childs */
   curTree = self~GetTreeControl("IDC_TREE")
   if curTree~Selected = 0 then
-    call InfoMessage("No item selected !")
+    call infoDialog "No item selected !"
   else do
     nextItem = curTree~Child(curTree~Selected)
     do while nextItem \= 0
@@ -309,12 +309,12 @@ CleanUp:
   else
     children = ""
 
-  call InfoDialog( 'The selected item "'itemInfo.!Text'" has' children 'children. The index for the icon is "'itemInfo.!Image'"',
-                   ', the index for the selected icon is "'itemInfo.!SelectedImage'". The states are "'itemInfo.!State'".')
+  call InfoDialog 'The selected item "'itemInfo.!Text'" has' children 'children. The index for the icon is "'itemInfo.!Image'"',
+                   ', the index for the selected icon is "'itemInfo.!SelectedImage'". The states are "'itemInfo.!State'".'
 
 /* Method Help is connected to item 9 */
 ::method Help
-  call InfoMessage("No help available.")
+  call infoDialog "No help available."
   self~Help:super
 
 

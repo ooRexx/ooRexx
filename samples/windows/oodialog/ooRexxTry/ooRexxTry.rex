@@ -64,7 +64,7 @@ See documentation for version control
     code = .oort_dialog~new()                   -- Create the dialog
     if code~initCode \= 0 then
         do
-            call errorDialog('Error creating code dialog. initCode:' code~initCode)
+            call errorDialog 'Error creating code dialog. initCode:' code~initCode
             exit
         end
     code~Execute('ShowTop')                     -- Execute the dialog
@@ -86,7 +86,7 @@ exit
     expose u
     u = .dlgAreaU~new(self)
     if .nil \= u~lastError then
-        call errorDialog(u~lastError)
+        call errorDialog u~lastError
 
 ---------- Arguments title & dialog area
     at = .dlgArea~new(0,0,u~w,10)
@@ -633,7 +633,7 @@ return self~ok:super
     help = .help_dialog~new()
     if help~initCode \= 0 then
         do
-            call errorDialog('Error creating help dialog. initCode:' help~initCode)
+            call errorDialog 'Error creating help dialog. initCode:' help~initCode
             exit
         end
     help~Execute('ShowTop')
@@ -653,7 +653,7 @@ return self~ok:super
     settings = .settings_dialog~new()
     if settings~initCode \= 0 then
         do
-            call errorDialog('Error creating help dialog. initCode:' settings~initCode)
+            call errorDialog 'Error creating help dialog. initCode:' settings~initCode
             exit
         end
     settings~Execute('ShowTop')
@@ -843,7 +843,7 @@ return 0
     expose h
     h = .dlgAreaU~new(self)
     if .nil \= h~lastError then
-        call errorDialog(h~lastError)
+        call errorDialog h~lastError
     vt = .dlgArea~new(h~x,0,h~w,10)
     self~addText(vt~x,vt~y,vt~w,vt~h,'Version','CENTER',20)
     vd = .dlgArea~new(h~x,vt~y + vt~h,h~w,10)
@@ -883,7 +883,7 @@ return 0
     expose h
     h = .dlgAreaU~new(self)
     if .nil \= h~lastError then
-        call errorDialog(h~lastError)
+        call errorDialog h~lastError
     vt = .dlgArea~new(h~x,0,h~w,10)
     self~addText(vt~x,vt~y,vt~w,vt~h,'Font Name','CENTER',20)
     vd = .dlgArea~new(h~x,vt~y + vt~h,h~w,10)

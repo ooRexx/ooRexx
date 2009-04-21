@@ -103,8 +103,8 @@ CleanUp:
     self~GetData
     if self~Male = 1 then title = "Mr."; else title = "Ms."
     if self~Married = 1 then addition = " (married) "; else addition = ""
-    call InfoMessage(title self~Name addition || "A"x || "City:" self~City || "A"x ||,
-                     "Profession:" self~Profession)
+    call InfoMessage title self~Name addition || "A"x || "City:" self~City || "A"x ||,
+                     "Profession:" self~Profession
 
 ::method Add
     self~Employees[self~Emp_count] = .directory~new

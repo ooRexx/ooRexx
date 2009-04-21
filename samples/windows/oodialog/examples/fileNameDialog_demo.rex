@@ -57,7 +57,7 @@ When....:   August 13, 2007
 -- Remind the user of what FileNameDialog actually does
     msg = 'REMEMBER, FileNameDialog does NOT actually open or save your specified file,'||.endOfLine||-
           'it simply provides a dialog that will return the file path and name!'
-    call infoDialog(msg)
+    call infoDialog msg
 
 -- Provide a menu of different examples - use the built in SingleSelection dialog
     preselect = 1
@@ -97,9 +97,9 @@ Option1:
 
     a_file = FileNameDialog(selfile,parent,filemask,loadorsave,title,defExtension,multiSelect,sepChar)
     if a_file = 0 then
-        call errorDialog('You Did Not Select A File')
+        call errorDialog 'You Did Not Select A File'
     else
-        call infoDialog('You Selected' a_file)
+        call infoDialog 'You Selected' a_file
 return
 ----------------------------------------------------------------------------------------------------------------
 Option2:
@@ -114,9 +114,9 @@ Option2:
 
     a_file = FileNameDialog(selfile,parent,filemask,loadorsave,title,defExtension,multiSelect,sepChar)
     if a_file = 0 then
-        call errorDialog('You Did Not Select A File')
+        call errorDialog 'You Did Not Select A File'
     else
-        call infoDialog('You Selected' a_file)
+        call infoDialog 'You Selected' a_file
 return
 ----------------------------------------------------------------------------------------------------------------
 Option3:
@@ -131,9 +131,9 @@ Option3:
     sepChar       = ''                      -- don't need this in this example - just a place holder
     a_file = FileNameDialog(selfile,parent,filemask,loadorsave,title,defExtension,multiSelect,sepChar)
     if a_file = 0 then
-        call errorDialog('You Did Not Select A File')
+        call errorDialog 'You Did Not Select A File'
     else
-        call infoDialog('You Selected' a_file)
+        call infoDialog 'You Selected' a_file
 return
 ----------------------------------------------------------------------------------------------------------------
 Option4:
@@ -149,9 +149,9 @@ Option4:
     sepChar       = ''                      -- don't need this in this example - just a place holder
     a_file = FileNameDialog(selfile,parent,filemask,loadorsave,title,defExtension,multiSelect,sepChar)
     if a_file = 0 then
-        call errorDialog('You Did Not Select A File')
+        call errorDialog 'You Did Not Select A File'
     else
-        call infoDialog('You Selected' a_file)
+        call infoDialog 'You Selected' a_file
 return
 ----------------------------------------------------------------------------------------------------------------
 Option5:
@@ -165,7 +165,7 @@ Option5:
     sepChar       = '^'                     -- Define the charact to separate the multiple files
     a_file = FileNameDialog(selfile,parent,filemask,loadorsave,title,defExtension,multiSelect,sepChar)
     if a_file = 0 then
-        call errorDialog('You Did Not Select A File')
+        call errorDialog 'You Did Not Select A File'
     else
         do
             msg = 'You Selected'.endOfLine
@@ -173,7 +173,7 @@ Option5:
                 parse var a_file file_a'^'a_file
                 msg = msg||file_a||.endOfLine
             end
-            call infoDialog(msg)
+            call infoDialog msg
         end
 return
 ----------------------------------------------------------------------------------------------------------------
@@ -188,9 +188,9 @@ Option6:
     sepChar       = ''                      -- don't need this in this example - just a place holder
     a_file = FileNameDialog(selfile,parent,filemask,loadorsave,title,defExtension,multiSelect,sepChar)
     if a_file = 0 then
-        call errorDialog('You Did Not Provide A Save Name')
+        call errorDialog 'You Did Not Provide A Save Name'
     else
-        call infoDialog('You File Will Be Saved As' a_file)
+        call infoDialog 'You File Will Be Saved As' a_file
 return
 ----------------------------------------------------------------------------------------------------------------
 Option7:
@@ -204,9 +204,9 @@ Option7:
     sepChar       = ''                      -- don't need this in this example - just a place holder
     a_file = FileNameDialog(selfile,parent,filemask,loadorsave,title,defExtension,multiSelect,sepChar)
     if a_file = 0 then
-        call errorDialog('You Did Not Provide A Save Name')
+        call errorDialog 'You Did Not Provide A Save Name'
     else
-        call infoDialog('You File Will Be Saved As' a_file)
+        call infoDialog 'You File Will Be Saved As' a_file
 return
 ----------------------------------------------------------------------------------------------------------------
 ::requires 'oodplain.cls'

@@ -206,10 +206,10 @@ return
   curList = self~GetListControl(ID_Rep)
   curList~SetColumnWidth(column,curList~ColumnWidth(column)+10)
   info. = curlist~ColumnInfo(column)
-  call InfoDialog("Column Title : " info.!Text"d"x,
+  call InfoDialog "Column Title : " info.!Text"d"x,
                   "Column Number : " info.!Column"d"x,
                   "Column Width : " info.!Width"d"x,
-                  "Allignment : " info.!Align )
+                  "Allignment : " info.!Align
 
 /* an item was double clicked (activated in Windows terms.) */
 ::method OnActivate
@@ -344,7 +344,7 @@ return
     return 1
   else
   do
-    call InfoMessage("Last Name must be Specified !")
+    call infoDialog "Last Name must be Specified !"
     return 0
   end
 

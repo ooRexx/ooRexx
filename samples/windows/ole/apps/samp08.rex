@@ -121,7 +121,7 @@ pull
 ActiveWindow~ActivePane~View~Zoom~Percentage = "100"
 
 /* wait a little bit */
-call syssleep(2)
+call syssleep 2
 
 /* close print preview */
 ActiveDocument~ClosePrintPreview

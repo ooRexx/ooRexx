@@ -119,7 +119,7 @@
       do j = 1 to self~speed/sleep
 	 if self~Finished = 0 then do
             self~HandleMessages
-            call SleepMS(sleep)
+            call msSleep sleep
          end
       end
       self~HandleMessages
@@ -175,7 +175,7 @@
          money = max(0,money - 500)
          self~setEntryLine(1200,right(money,9))
       end
-      call sleepMS(1000)
+      call msSleep 1000
       return self~cancel
    end
    misses = misses + 1
@@ -193,7 +193,7 @@
    return 0
 
 ::method cancel
-   call Play("byebye.wav")
+   call Play "byebye.wav"
    do i = 1 to 8
       self~RemoveBitmap(bmp.i)
    end

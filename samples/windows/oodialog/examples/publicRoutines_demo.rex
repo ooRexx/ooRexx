@@ -102,7 +102,7 @@ Option1:
     fileName = path||'samples\oodialog\wav\gotcha.wav'
     wstream = .stream~new(filename)
     if wstream~query('exists') = '' then
-        call errorDialog('The expected audio file' filename 'does not exist')
+        call errorDialog'The expected audio file' filename 'does not exist'
     else
         do
             msg = "When you close this message box, a *.wav file will"||.endOfLine||-
@@ -118,7 +118,7 @@ Option2:
     fileName = path||'samples\oodialog\wav\gotcha.wav'
     wstream = .stream~new(filename)
     if wstream~query('exists') = '' then
-        call errorDialog('The expected audio file' filename 'does not exist')
+        call errorDialog 'The expected audio file' filename 'does not exist'
     else
         do
             msg = "When you close this message box, a *.wav file will"||.endOfLine||-
@@ -134,7 +134,7 @@ Option3:
     fileName = path||'samples\oodialog\wav\gotcha.wav'
     wstream = .stream~new(filename)
     if wstream~query('exists') = '' then
-        call errorDialog('The expected audio file' filename 'does not exist')
+        call errorDialog 'The expected audio file' filename 'does not exist'
     else
         do
             msg = "When you close this message box, a *.wav file will"||.endOfLine||-
@@ -171,18 +171,18 @@ return
 Option8:
     rv = AskDialog('Do you like this demonstration? (Yes button is pre-selected)')
     if rv = 1 then
-        call InfoDialog('You selected "Yes" - glad you like it')
+        call InfoDialog 'You selected "Yes" - glad you like it'
     else
-        call InfoDialog('You selected "No" - mind sharing what you think would improve the demonstration?')
+        call InfoDialog 'You selected "No" - mind sharing what you think would improve the demonstration?'
 
 return
 ----------------------------------------------------------------------------------------------------------------
 Option9:
     rv = AskDialog('Do you like this demonstration? (No button is pre-selected)','n')
     if rv = 1 then
-        call InfoDialog('You selected "Yes" - glad you like it')
+        call InfoDialog 'You selected "Yes" - glad you like it'
     else
-        call InfoDialog('You selected "No" - you must be hard to please')
+        call InfoDialog 'You selected "No" - you must be hard to please'
 
 return
 ----------------------------------------------------------------------------------------------------------------
@@ -227,7 +227,7 @@ Option11:
             -- the OS to create and start up the underlying dialog.  The example
             -- sleeps a short time to give the OS time to get the dialog going.
             aWindow~start("Execute")
-            call SysSleep(.01)
+            call SysSleep .01
 
             hWnd = FindWindow(.helperDlgTitle)
             if hWnd = 0 then
@@ -246,7 +246,7 @@ Option11:
         end
     else
         do
-            call ErrorDialog('Sorry, the dialog creation failed')
+            call ErrorDialog 'Sorry, the dialog creation failed'
         end
 return
 ----------------------------------------------------------------------------------------------------------------
@@ -276,19 +276,19 @@ Option15:
             drop tdlg
         end
     else
-        call errorDialog('There Is Not unTimed Message To Stop')
+        call errorDialog 'There Is Not unTimed Message To Stop'
 return
 ----------------------------------------------------------------------------------------------------------------
 Option16:
 -- Total time will be the duration of the MSSleep - The TimeMessage will last only half the total duration
---    call time('r')
+--    call time 'r'
     start_timeT = time('t')
     msg = 'Processing Occurring - Please Wait - Processing Will Take Longer Than This Message'
     ret = timedMessage(msg,'A TimedMessage Early Reply', 5000, .true)
     ret = MSSleep(10000)
     end_timeT = time('t')
-    call infoDialog('Start TimeT..:' start_timeT '- End TimeT..:' end_timeT '- Duration..:' end_TimeT - start_TimeT 'Seconds')
---    call infoDialog('Total Elasped Time..:' time('e')~trunc 'Seconds')
+    call infoDialog 'Start TimeT..:' start_timeT '- End TimeT..:' end_timeT '- Duration..:' end_TimeT - start_TimeT 'Seconds'
+--    call infoDialog 'Total Elasped Time..:' time('e')~trunc 'Seconds'
 return
 ----------------------------------------------------------------------------------------------------------------
 

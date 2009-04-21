@@ -100,7 +100,7 @@
    self~writetobutton(100,80*x,80*y,"White rectangles","Arial",12,"BOLD")
    do i=1 by 1 until self~finished
       self~handleMessages
-      call sleepms(500)
+      call msSleep 500
    end
 
 ::method OK                                              /* Interrupt button */
@@ -116,7 +116,7 @@
       if i//2 = 1 then self~TransparentText(dc)
                   else self~OpaqueText(dc)
       self~WriteDirect(dc,30*x,25*i*y,"Good bye !")
-      call sleepms(500)
+      call msSleep 500
    end
    self~fontToDC(dc,oldfont)
    self~deletefont(tmpFont)
@@ -124,7 +124,7 @@
    self~deleteobject(mybrush)
    self~deleteobject(mypen)
    self~FreeButtonDC(100,dc)
-   call sleepms(1000)
+   call msSleep 1000
    return self~finished
 
 ::method enableButtons                                   /* enable demo buttons */
@@ -182,7 +182,7 @@
       self~deleteobject(brush)
    end
    self~writetobutton(100,25*x,15*y,"Colored brush rectangles","Arial",12,"BOLD")
-   call sleepms(2000)
+   call msSleep 2000
    change = 3
   DORECTANGLES:
    self~HandleMessages
@@ -218,7 +218,7 @@
            then self~writedirect(dc,15*x,183*y,"Random rectangles of thickness" thick)
            else self~writedirect(dc,15*x,183*y,"Random unicolor rectangles")
       if self~finished=0 then do
-         call sleepms(2000)
+         call msSleep 2000
          self~HandleMessages
       end
    end
@@ -244,7 +244,7 @@
       self~deleteobject(pen)
    end
    self~writetobutton(100,35*x,24*y,"Colored pen rectangles","Arial",12,"BOLD")
-   call sleepms(2000)
+   call msSleep 2000
    self~HandleMessages
    styles = .array~of('solid','dash','dot','dashdot','dashdotdot','null')
    do k = 1 by 1 while self~finished = 0
@@ -265,7 +265,7 @@
       end
       self~writetobutton(100,25*x,24*y,"Solid and dotted rectangles","Arial",12,"BOLD")
       if self~finished=0 then do
-         call sleepms(2000)
+         call msSleep 2000
          self~HandleMessages
       end
    end
@@ -283,7 +283,7 @@
    end
    change = 2
    self~writetobutton(100,20*x,20*y,"Drawing colored pixels","Arial",14,"BOLD")
-   call sleepms(1000)
+   call msSleep 1000
    do kpix =  kpix to size until self~finished
       px = mx + kpix
       do py = my-kpix+2 to my+kpix while self~finished=0
@@ -324,7 +324,7 @@
    self~writetobutton(100,20*x,6*y,"Drawing colored lines","Arial",14,"BOLD")
    px = 100 * x
    py = px
-   call sleepms(1000)
+   call msSleep 1000
    maxthick = 140
    do linthick=linthick by 1 to maxthick until self~finished
      self~writetobutton(100,20*x,185*y,"Lines are" linthick "thick","System",10)
@@ -360,7 +360,7 @@
    op = self~objecttodc(dc,mypen)
    ob = self~objecttodc(dc,mybrush)
    self~writetobutton(100,20*x,5*y,"Drawing random lines","Arial",14,"BOLD")
-   call sleepms(1000)
+   call msSleep 1000
    do ranthick=ranthick by 1 until self~finished
      self~rectangle(dc,15*x,15*y,185*x,185*y,'FILL')
      pxx = 30*x; pyy = 30*y
@@ -392,7 +392,7 @@
        self~deleteobject(pen)
      end
      if self~finished=0 then do
-        call sleepms(2000)
+        call msSleep 2000
         self~HandleMessages
      end
    end
@@ -461,7 +461,7 @@
       px = i*5+5; py = i*3+7
       self~drawellipse(i,3,px,py,200-px,200-py)
    end
-   call sleepms(2000)
+   call msSleep 2000
    self~HandleMessages
    if self~finished then signal restore
    self~rectangle(dc,10*x,10*y,190*x,190*y,'FILL')
@@ -471,7 +471,7 @@
       self~drawellipse(random(1,18),random(1,4),px,py,200-px,200-py)
       self~drawellipse(random(1,18),random(1,4),py,px,200-py,200-px)
    end
-   call sleepms(2000)
+   call msSleep 2000
    change = 4
   DOELLIPSES:
    self~HandleMessages
@@ -563,7 +563,7 @@
             if ret>0 then self~writetobutton(100,50*x,100*y,"Not working on Windows 95","System",10)
          end
       if self~finished = 0 then do
-         call sleepms(2000)
+         call msSleep 2000
          self~HandleMessages
       end
    end

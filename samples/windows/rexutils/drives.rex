@@ -56,8 +56,8 @@ Drives. = ""                        -- initialize Drives stem               --
 call CheckInput                     -- check input                          --
                                                                             --
 call InfoParsing                    -- get and parse the drive data         --
-call InfoDisplay("BOX")             -- display data with box characters     --
---call InfoDisplay("LINE")          -- display data without box characters  --
+call InfoDisplay "BOX"              -- display data with box characters     --
+--call InfoDisplay "LINE"           -- display data without box characters  --
 
 exit
 

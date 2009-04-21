@@ -96,7 +96,7 @@
       end
    end
    if wrongstr = '' then do
-      if beenhelped=0 then call Play("clap.wav")
+      if beenhelped=0 then call Play "clap.wav"
       call Play "yourgood.wav","YES"
       if beenhelped=1 then
            ret = TimedMessage("You got them all right.... with my help ","E N D",2000)
@@ -143,7 +143,7 @@
 ::method help
    expose correct beenhelped
    beenhelped = 1
-   call Play("help.wav")
+   call Play "help.wav"
    self~GetDataStem(A.)
    do i = 1001 to 1008
       A.i = correct[i-1000]

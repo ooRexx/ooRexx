@@ -306,7 +306,7 @@
    if arg() = 1 then do
         curcake = -1
         self~audio('cakewhere')
-        call sleepms(2000)
+        call msSleep 2000
    end
    curcake = (curcake+1)//11
    i = curcake + 1
@@ -358,7 +358,7 @@
       use arg ds
       dlg~setphil(num, 'sleep')
       if num=1 & ds>=20 then dlg~audio('sleep')
-      if ds > 0 then call sleepms(ds*100)
+      if ds > 0 then call msSleep ds*100
 
 ::method eat                                      /* philosoph eats   */
       expose num dlg
@@ -369,14 +369,14 @@
       if ds > 0 then do
          if num=1 & ds>=20 then dlg~audio('eat')
          do i = 1 to ds/5 while dlg~finished=0   /* - eat,check stop */
-            call sleepms(300)
+            call msSleep 300
             if random(1,50)=11 then
                  dlg~~audio('ouch')~setphil(num, 'ouch')
             else dlg~setphil(num, 'eat2')
-            call sleepms(200)
+            call msSleep 200
             dlg~setphil(num, 'eat')
          end
-         call sleepms(ds//10 * 100)
+         call msSleep ds//10 * 100
       end
       dlg~setpiece(num, 'blank')
 

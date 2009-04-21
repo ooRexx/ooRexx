@@ -84,7 +84,7 @@
    imageList~release
 
    /* wait until progress bar threads are finished */
-   if threadstarted > 0 then call sleepms 500
+   if threadstarted > 0 then call msSleep 500
    self~deinstall:super
 
 
@@ -141,7 +141,7 @@
    /* fill the report with random data */
    do ch = "A"~c2d to "Z"~c2d
        q = Random(200)
-       call sleepms(1)
+       call msSleep 1
        yh = Random(400)
        yh = max(yh, q)
        yl = Random(100)
@@ -425,7 +425,7 @@
           pb~Step
           if (iterations*step = 100) then lab~Title = i*step "%"
           else lab~Title = i*step
-          call sleepms tsleep
+          call msSleep tsleep
           if self~Finished \= 0 then return
           if self~IsDialogActive = 0 then return
       end
@@ -472,4 +472,4 @@
    /* called when a column header of the report is clicked */
 ::method OnColumnClick
    use arg id, column
-   call InfoMessage "Column" column+1 "was clicked in control" id
+   call infoDialog "Column" column+1 "was clicked in control" id

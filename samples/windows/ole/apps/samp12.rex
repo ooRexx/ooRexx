@@ -55,7 +55,7 @@ myIE~navigate("http://www.ibm.com/")
 /* the !active attribute of the REXX object to false  */
 myIE~!active = .true
 do while myIE~!active = .true
-  call syssleep(2)
+  call syssleep 2
 end
 
 exit

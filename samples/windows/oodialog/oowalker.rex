@@ -166,5 +166,5 @@
       self~parentdlg~writetoButton(100,xdanger-50,ydanger,"Got-cha","Arial",28,"BOLD")
       ret = play('gotcha.wav')
       self~stop
-      call sleepms(1000)
+      call msSleep 1000
    end

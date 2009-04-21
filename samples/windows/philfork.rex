@@ -46,8 +46,6 @@
 
 /*---------------------- main logic ----------------------------------*/
 
-   call RxFuncAdd 'SysSleep', 'RexxUtil', 'SysSleep'
-
    arg parms
    if parms = '' then parms = '8 6 any 2'         /* default values   */
    parse var parms psleep peat pside prepeats

@@ -119,7 +119,7 @@ end
 if Interface = "CONSOLE" then do
   /* Test, if rexxhide was set. In this case, show Message Box */
   if was = "rexxhide.exe" then do
-     call ErrorMessage("Ftype is curently set to rexxhide.exe. You must use the OODIALOG interface.")
+     call ErrorMessage "Ftype is curently set to rexxhide.exe. You must use the OODIALOG interface."
      exit
   end
   /* The next lines use an plain text interface */

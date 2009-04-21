@@ -87,7 +87,7 @@ do while input \= "Q"
     if number < 0 | number > j then say "Illegal service number specified!"
     else do
       rc = serviceArray[number]~StartService
-      call SysSleep(1)
+      call SysSleep 1
       /* get updated object */
       serviceArray[number] = .OLEObject~GetObject(serviceArray[number]~Path_~displayname)
       select
@@ -124,7 +124,7 @@ do while input \= "Q"
     if number < 0 | number > j then say "Illegal service number specified!"
     else do
       rc = serviceArray[number]~StopService
-      call SysSleep(1)
+      call SysSleep 1
       /* get updated object */
       serviceArray[number] = .OLEObject~GetObject(serviceArray[number]~Path_~displayname)
       if rc = 0 then say "The request was accepted."
@@ -136,7 +136,7 @@ do while input \= "Q"
     if number < 0 | number > j then say "Illegal service number specified!"
     else do
       rc = serviceArray[number]~PauseService
-      call SysSleep(1)
+      call SysSleep 1
       /* get updated object */
       serviceArray[number] = .OLEObject~GetObject(serviceArray[number]~Path_~displayname)
       if rc = 0 then say "The request was accepted."
@@ -148,7 +148,7 @@ do while input \= "Q"
     if number < 0 | number > j then say "Illegal service number specified!"
     else do
       rc = serviceArray[number]~ResumeService
-      call SysSleep(1)
+      call SysSleep 1
       /* get updated object */
       serviceArray[number] = .OLEObject~GetObject(serviceArray[number]~Path_~displayname)
       if rc = 0 then say "The request was accepted."
