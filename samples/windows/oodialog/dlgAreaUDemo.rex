@@ -60,7 +60,7 @@ exit
 expose u
 
 u=.dlgAreaU~new(self)                                         /* whole dlg   */
-if u~lastError \= .nil then call errormessage u~lastError
+if u~lastError \= .nil then call errorDialog u~lastError
 
 u~NoResize~put(13)
 e=.dlgArea~new(u~x       ,u~y       ,u~w('70%'),u~h('90%'))   /* edit   area */

@@ -120,7 +120,7 @@ exit
 /*                                                                           */
 /* All error information available is written to STDOUT (usually the console)*/
 /* As this may not be present (running a GUI with REXXHIDE) a OODialog       */
-/* errormessage popup is also presented                                      */
+/* errorDialog popup is also presented                                      */
 /* ========================================================================= */
 any:
 
@@ -150,7 +150,7 @@ any:
   Say "****************** End of error diagnostics ***************"
                          /* in case there is no console - show error message */
 
-  call errormessage 'Error' errObj~rc errObj~errortext '0a'x ,
+  call errorDialog 'Error' errObj~rc errObj~errortext '0a'x ,
                     'occurred on line' errObj~_sigl_ 'of' ,
                      errObj~program '0a'x ,
                      errObj~Message '0a'x
@@ -378,8 +378,8 @@ valid=1
 /*
   valid=0
   select
-     when [error_condition] then call errormessage [error_condition_message]
-     when [error_condition] then call errormessage [error_condition_message]
+     when [error_condition] then call errorDialog [error_condition_message]
+     when [error_condition] then call errorDialog [error_condition_message]
      otherwise
         valid=1
   end /* select */

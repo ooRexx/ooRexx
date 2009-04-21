@@ -64,7 +64,7 @@
  a.1010 = 1
 
  dlg = .mydialog~new(A.)
- if dlg~initcode > 0 then call ErrorMessage "Couldn't load the Video dialog"
+ if dlg~initcode > 0 then call errorDialog "Couldn't load the Video dialog"
  else if dlg~execute("SHOWTOP") = 1 then
  do
     o=.stream~new(logfile)
@@ -129,17 +129,17 @@
       return 1
       end
    else do
-          ret = ErrorMessage("The number can't be blank (use cancel)!")
+          ret = errorDialog("The number can't be blank (use cancel)!")
           return 0
         end
 
 ::method CANCEL
    ret = Play("wav\cancel.wav", yes)
-   self~finished = YesNoMessage("Do you really want to cancel")
+   self~finished = askDialog("Do you really want to cancel")
    return self~finished
 
 ::method Search
-   ret = ErrorMessage("Entry not found in database")
+   ret = errorDialog("Entry not found in database")
    return 1
 
 

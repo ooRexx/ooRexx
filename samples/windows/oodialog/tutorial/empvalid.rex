@@ -69,13 +69,13 @@ dlg~deinstall
     self~GetData
     if self~Male = 1 then title = "Mr."; else title = "Ms."
     if self~Married = 1 then addition = " (married) "; else addition = ""
-    call InfoMessage title self~Name addition || "A"x || "City:" self~City || "A"x ||,
+    call infoDialog title self~Name addition || "A"x || "City:" self~City || "A"x ||,
                      "Profession:" self~Profession
 
 ::method Validate
     if self~GetValue(21)~strip = "" then
     do
-        call InfoMessage "An unnamed employee is not accepted!"
+        call infoDialog "An unnamed employee is not accepted!"
         return 0       /* dialog annot be closed */
     end; else
         return 1       /* dialog can be closed */

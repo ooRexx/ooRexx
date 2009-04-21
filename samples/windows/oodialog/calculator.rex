@@ -68,7 +68,7 @@ exit   /* leave program */
 
 /* error handling: Display the cause of the error and restart the programm */
 any:
-	call ErrorMessage "Error" rc "occurred at line" sigl":" errortext(rc) "a"x condition("o")~message
+	call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc) "a"x condition("o")~message
 	if CalcDlg~IsDialogActive then
 	  CalcDlg~StopIt
 	signal reStart
@@ -161,12 +161,12 @@ any:
 
 ::method setLine
   /* Set the argument as new text-line. If this is ERROR raise an */
-	/* errormessage with additional information.                    */
+	/* errorDialog with additional information.                    */
 
 	expose tl
 	use arg line, merror
 	if line~left(5) = 'ERROR' then
-		call ErrorMessage "RxCalc returned an error:" merror
+		call errorDialog "RxCalc returned an error:" merror
 	tl~Title= line
 
 ::method justZero

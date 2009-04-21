@@ -69,7 +69,7 @@
 
 ::method CalcSize
    size = self~getTextSizeDlg(self~msg)
-   parse value GetScreenSize() with scrx scry .
+   parse value screenSize() with scrx scry .
    self~dims["sx"] = size~width
    self~dims["sy"] = size~height
    if self~XExt = 0 then do
@@ -149,7 +149,7 @@
 ::method CalcSize
    self~CalcSize:super
    self~dims["cy"] = self~dims["cy"]+10  /* 15 more for the progress bar */
-   parse value GetScreenSize() with scrx scry .
+   parse value screenSize() with scrx scry .
    self~dims["x"] = trunc((scrx-self~dims["cx"]) /2)
    self~dims["y"] = trunc((scry - self~dims["cy"] - 20) /2)
 

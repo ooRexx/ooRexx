@@ -74,7 +74,7 @@
 
 ::method EndAsyncExecution unguarded
    do while self~finished = 0
-      call sleepms 20
+      call msSleep 20
    end
    if self~InitCode = 1 then do
       if (self~UseStem = 1) then self~GetDataStem(self~DlgData)
@@ -95,7 +95,7 @@
       end
       else do
           if msg \= "" then interpret("self~"msg)
-          else call sleepms sleeptime /* to yield cpu */
+          else call msSleep sleeptime /* to yield cpu */
       end
    end
 
@@ -112,7 +112,7 @@
    use arg parent, sh, sleeptime, icon = 0
 
    if Arg(1,'o') = 1 | parent = 0 then do
-       call ErrorMessage "No parent dialog specified!"
+       call errorDialog "No parent dialog specified!"
        return -1
    end
    if Arg(2,'o') = 1 then sh = "DEFAULT"

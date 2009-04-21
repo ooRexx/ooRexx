@@ -185,7 +185,7 @@
               self~movepos(sprite.movex, sprite.movey)
            if self~ParentDlg~finished = 1 then return 1
            self~ParentDlg~ChangeBitmapButton(sprite.buttonid, actsprite,,,,opts)
-           if (sprite.delay \= 0) then ret = sleepms(sprite.delay)
+           if (sprite.delay \= 0) then ret = msSleep(sprite.delay)
         end
      end
      else do
@@ -196,7 +196,7 @@
 
            if self~ParentDlg~finished = 1 then return 1
            self~ParentDlg~ChangeBitmapButton(sprite.buttonid, actsprite,,,,opts)
-           if (sprite.delay \= 0) then ret = sleepms(sprite.delay)
+           if (sprite.delay \= 0) then ret = msSleep(sprite.delay)
         end
      end
 

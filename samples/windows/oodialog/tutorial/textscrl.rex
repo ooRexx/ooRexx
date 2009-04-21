@@ -53,7 +53,7 @@ exit
 
 /* ------- signal handler to destroy dialog if condition trap happens  -----*/
 CleanUp:
-   call ErrorMessage "Error" rc "occurred at line" sigl":" errortext(rc),
+   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
                      || "a"x || condition("o")~message
    if dlg~IsDialogActive then dlg~StopIt
 

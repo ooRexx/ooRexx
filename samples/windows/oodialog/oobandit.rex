@@ -181,14 +181,14 @@
    misses = misses + 1
    ret = Play("nope.wav", "yes")
    if ((x=y) | (y=z) | (x=z)) then do
-        ret = InfoMessage("2 equal, not bad, try again... jackpot reduced 25%")
+        ret = infoDialog("2 equal, not bad, try again... jackpot reduced 25%")
         initpot = trunc(initpot * .75)
         end
    else do
-        ret = InfoMessage("Not a chance, try again... jackpot is halfed!")
+        ret = infoDialog("Not a chance, try again... jackpot is halfed!")
         initpot = trunc(initpot / 2)
    end
-   if initpot=1 then ret = InfoMessage("One more chance to hit the jackpot....")
+   if initpot=1 then ret = infoDialog("One more chance to hit the jackpot....")
    self~checkspeed
    return 0
 

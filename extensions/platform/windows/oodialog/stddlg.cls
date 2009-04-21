@@ -76,7 +76,7 @@
    if sleeping >= 0 then
    do
       if earlyReply then reply
-      ret = sleepms(sleeping)
+      ret = msSleep(sleeping)
       self~stopit
    end
 

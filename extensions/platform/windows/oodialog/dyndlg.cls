@@ -484,7 +484,7 @@
                   when style~wordpos("SS_ICON") > 0 then
                      self~addImage(id, x, y, w, h, "ICON " || opts)
                   otherwise
-                      ret = ErrorMessage("Static item ignored due to unknown static style option in:" || -
+                      ret = errorDialog("Static item ignored due to unknown static style option in:" || -
                                          '0d0a'x || f "("s")")
                end
             end

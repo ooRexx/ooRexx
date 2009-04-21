@@ -185,7 +185,7 @@
       dlg~myexecute(parms.)                      /* philosopher animation */
       dlg~EndAsyncExecution
    end
-   else call ErrorMessage "Couldn't execute Philosophers Forks Dialog"
+   else call errorDialog "Couldn't execute Philosophers Forks Dialog"
    dlg~deinstall
 
 ::method Cancel

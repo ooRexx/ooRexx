@@ -64,7 +64,7 @@ r = .WindowsRegistry~new
 
 /* leave if init failed */
 if r~InitCode \= 0 then do
-  call ErrorMessage 'Error open the registry. Program aborted.'
+  call errorDialog 'Error open the registry. Program aborted.'
   exit
 end
 
@@ -99,7 +99,7 @@ if r~ListValues(,vals.) = 0 then do
   /* verify, which is the current entry, TRANSLATE it to UPPER CASE */
   if vals.1.data~TRANSLATE~LASTPOS('REXX.EXE') = 0 then do
     if vals.1.data~TRANSLATE~LASTPOS('REXXHIDE.EXE') = 0 then do
-      call ErrorMessage 'ftyperex is not prepared to work with this setting:' vals.1.data
+      call errorDialog 'ftyperex is not prepared to work with this setting:' vals.1.data
     end
     else do /* remember the current entry */
       was = "rexxhide.exe"
@@ -110,7 +110,7 @@ if r~ListValues(,vals.) = 0 then do
   end
 end
 else do
-  call ErrorMessage 'Error reading the registry. Program aborted.'
+  call errorDialog 'Error reading the registry. Program aborted.'
   exit
 end
 
@@ -119,7 +119,7 @@ end
 if Interface = "CONSOLE" then do
   /* Test, if rexxhide was set. In this case, show Message Box */
   if was = "rexxhide.exe" then do
-     call ErrorMessage "Ftype is curently set to rexxhide.exe. You must use the OODIALOG interface."
+     call errorDialog "Ftype is curently set to rexxhide.exe. You must use the OODIALOG interface."
      exit
   end
   /* The next lines use an plain text interface */

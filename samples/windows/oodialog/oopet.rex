@@ -105,7 +105,7 @@
       end
    else do
       call Play "nope.wav"
-      ret = ErrorMessage("The following answer(s) is/are incorrect: "wrongstr)
+      ret = errorDialog("The following answer(s) is/are incorrect: "wrongstr)
       return 0
    end
 
@@ -138,7 +138,7 @@
 
 ::method IDHORSE
    ret = Play("HORSE.WAV","YES")
-   ret = InfoMessage("My son won the Kentucky Derby")
+   ret = infoDialog("My son won the Kentucky Derby")
 
 ::method help
    expose correct beenhelped

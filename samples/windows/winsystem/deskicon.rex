@@ -52,7 +52,7 @@ pm = .WindowsProgramManager~new
  */
 rc = pm~AddDesktopIcon("My Notepad 1","%SystemRoot%\system32\notepad.exe",,,"%HOMEDRIVE%%HOMEPATH%",,,"n")
 
-if rc then call ErrorMessage "Error.  Could not create the 'My Notepad 1' shortcut."
+if rc then call errorDialog "Error.  Could not create the 'My Notepad 1' shortcut."
 
 /* Create a shortcut to run REXXTRY, use the REXX.ICO icon, working diretory is
  * %TEMP%, th argument is REXXTRY, the shortcut key is CTRL+ALT+T. The shortcut
@@ -70,7 +70,7 @@ if version >= 6 then do
         "shortcut will always succeed.)"|| '0d0a0d0a'x || -
         "Create an 'All Users' shortcut?"
 
-  isYes = YesNoMessage(msg)
+  isYes = askDialog(msg)
   if isYes then location = "COMMON"
   else location = "PERSONAL"
 end
@@ -80,16 +80,16 @@ end
 
 rc = pm~AddDesktopIcon("RexxTry","rexx.exe","rexx.ico",0,"%TEMP%",location,"rexxtry","T","MAXIMIZED")
 
-if rc then call ErrorMessage "Error.  Could not create the 'RexxTry' shortcut."
+if rc then call errorDialog "Error.  Could not create the 'RexxTry' shortcut."
 
 /* Create a shortcut to NOTEPAD editor, with the working diretory as c:\temp.
  * The shortcut will be a personal shortcut for the current user.
  */
 rc = pm~AddDesktopIcon("My Notepad 2","notepad.exe", , ,VALUE( 'TEMP',, 'ENVIRONMENT' ) || '\',"PERSONAL", , ,"MAXIMIZED")
 
-if rc then call ErrorMessage "Error.  Could not create the 'My Notepad 2' shortcut."
+if rc then call errorDialog "Error.  Could not create the 'My Notepad 2' shortcut."
 
 return 0
 
 ::requires "winsystm.cls"
-::requires "oodplain.cls"  -- For ErrorMessage() / YesNoMessage()
+::requires "oodplain.cls"  -- For errorDialog() / askDialog()

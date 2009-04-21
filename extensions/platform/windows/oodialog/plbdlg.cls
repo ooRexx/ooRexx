@@ -101,7 +101,7 @@
 
 ::method Unknown unguarded
    use arg msgname
-   call ErrorMessage msgname || " is not a method of " || self
+   call errorDialog msgname || " is not a method of " || self
 
 ::method init_WindowBase
    use arg hwnd
@@ -246,7 +246,7 @@
    if (f~lines = 0) then do
       f~close
       self~ProcessingLoad = 0
-      ret = ErrorMessage("Error reading resource file!" f)
+      ret = errorDialog("Error reading resource file!" f)
       return 1
    end
    return 0
@@ -255,7 +255,7 @@
    use arg f, s
    f~close
    self~ProcessingLoad = 0
-   ret = ErrorMessage("Error reading resource file:" f "("s")")
+   ret = errorDialog("Error reading resource file:" f "("s")")
 
 ::method CheckId
   use strict arg id
@@ -270,7 +270,7 @@
 
 ::method idError private
   use strict arg id
-  j = ErrorMessage("Adding dialog resource:" id "undefined" || '0d0a'x || -
+  j = errorDialog("Adding dialog resource:" id "undefined" || '0d0a'x || -
                    "non-numeric identification number.")
   return -1
 
@@ -1210,7 +1210,7 @@
    end
    else do
       if msg \= "" then interpret("self~"msg)
-      else if sleeptime \= 0 then call SleepMs sleeptime
+      else if sleeptime \= 0 then call msSleep sleeptime
    end
 
    /* This method will clear all pending dialog messages */
@@ -1310,7 +1310,7 @@
    use arg showOptions
    if Arg(1,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    parse value self~GetSize with dcx dcy
-   s = GetScreenSize()
+   s = screenSize()
    parse var s dummy dummy sx sy
    return WndShow_Pos("P",self~DlgHandle, (sx - dcx * self~FactorX) %2, (sy - dcy * self~FactorY) %2, 0, 0,,
                            "NOSIZE "||showOptions)

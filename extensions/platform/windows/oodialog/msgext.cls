@@ -397,7 +397,7 @@
              oldy = newy
              if sx \= 0 | sy \= 0 then do
                 lc~Scroll(sx, sy)
-                call sleepms 30
+                call msSleep 30
              end
         end
       end
@@ -475,11 +475,11 @@
           fvItem = tc~FirstVisible
           if (y<top) & (fvItem \= tc~Root) then do
               tc~MakeFirstVisible(tc~PreviousVisible(fvItem))
-              if top-y < 200 then call sleepms 200-(top-y)
+              if top-y < 200 then call msSleep 200-(top-y)
           end
           else if (y>bottom) & (tc~NextVisible(fvItem) \= 0) then do
               tc~MakeFirstVisible(tc~NextVisible(fvItem))
-              if y-bottom < 200 then call sleepms 200-(y-bottom)
+              if y-bottom < 200 then call msSleep 200-(y-bottom)
           end
 
       end

@@ -207,11 +207,11 @@ return
 ----------------------------------------------------------------------------------------------------------------
 Option11:
 
-    call InfoMessage 'This program will open a dialog window in the'||.endOfLine||-
-                     'upper left corner of your screen named:'||.endOfLine||.endOfLine||-
-                     '"'.helperDlgTitle'"'||.endOfLine||.endOfLine||-
-                     'and will return its handle.  After finding the window, the'||.endOfLine||-
-                     'handle value will be added to the dialog window title.'
+    call infoDialog 'This program will open a dialog window in the'||.endOfLine||-
+                    'upper left corner of your screen named:'||.endOfLine||.endOfLine||-
+                    '"'.helperDlgTitle'"'||.endOfLine||.endOfLine||-
+                    'and will return its handle.  After finding the window, the'||.endOfLine||-
+                    'handle value will be added to the dialog window title.'
 
     -- The public routine FindWindow locates a window by its title.  Since this
     -- example should run for anyone, and there is no way of guaranteeing what

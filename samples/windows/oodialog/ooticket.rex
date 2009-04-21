@@ -65,7 +65,7 @@
  s = dlg~execute
 
  if (s = 0) then do
-    call ErrorMessage "Selection error!";
+    call errorDialog "Selection error!";
     dlg~deinstall
     ret = directory(curdir)
     ret = restoreFont(oldFont)

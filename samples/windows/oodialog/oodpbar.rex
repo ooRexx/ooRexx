@@ -62,7 +62,7 @@ exit   /* leave program */
 
 /* ---- signal handler to destroy dialog if error condition was raised  ----*/
 CleanUp:
-   call ErrorMessage "Error" rc "occurred at line" sigl":" errortext(rc),
+   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
                      || "a"x || condition("o")~message
    if MyDialog~IsDialogActive then MyDialog~StopIt
 

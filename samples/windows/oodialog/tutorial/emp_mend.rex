@@ -54,7 +54,7 @@ exit
 
 /* ------- signal handler to destroy dialog if condition trap happens  -----*/
 CleanUp:
-   call ErrorMessage "Error" rc "occurred at line" sigl":" errortext(rc),
+   call errorDialog "Error" rc "occurred at line" sigl":" errortext(rc),
                      || "a"x || condition("o")~message
    if dlg~IsDialogActive then dlg~StopIt
 
@@ -125,7 +125,7 @@ CleanUp:
     self~GetData
     if self~Male = 1 then title = "Mr."; else title = "Ms."
     if self~Married = 1 then addition = " (married) "; else addition = ""
-    call InfoMessage title self~Name addition || "A"x || "City:" self~City || "A"x ||,
+    call infoDialog title self~Name addition || "A"x || "City:" self~City || "A"x ||,
                      "Profession:" self~Profession
 
 ::method Add
@@ -190,7 +190,7 @@ CleanUp:
    end
 
 ::method About
-   call InfoMessage "This sample demonstrates OODialog menus."
+   call infoDialog "This sample demonstrates OODialog menus."
 
 
 ::class EmployeeListClass subclass UserDialog

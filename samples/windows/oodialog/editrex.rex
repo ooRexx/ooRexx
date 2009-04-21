@@ -64,7 +64,7 @@ r = .WindowsRegistry~new
 
 /* leave if init failed */
 if r~InitCode \= 0 then do
-  call ErrorMessage 'Error open the registry. Program aborted.'
+  call errorDialog 'Error open the registry. Program aborted.'
   exit
 end
 
@@ -73,7 +73,7 @@ r~Current_Key = CLASSES_ROOT
 
 /* Open the Key with Options QUERY and WRITE */
 if r~open(,"REXXScript\Shell\Edit\Command","QUERY WRITE") == 0 then do
-  call ErrorMessage 'Error opening the registry key with write access.' || '0d0a0d0a'x || -
+  call errorDialog 'Error opening the registry key with write access.' || '0d0a0d0a'x || -
                     'If you are on Vista you must run this program with' || '0d0a'x || -
                     'elevated privileges to see it work.'
   exit
@@ -100,7 +100,7 @@ if r~ListValues(,vals.) = 0 then do
   program = vals.1.data~word(1)~TRANSLATE
 end
 else do
-  call ErrorMessage 'Error reading the registry. Program aborted.'
+  call errorDialog 'Error reading the registry. Program aborted.'
   exit
 end
 

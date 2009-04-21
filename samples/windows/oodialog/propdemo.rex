@@ -463,7 +463,7 @@
    lc = self~GetListControl(100,1)
    if lc == .Nil then return
    si = lc~Focused
-   order = YesNoMessage("You have selected" lc~ItemText(si)". Do you want to order 50 stocks at" lc~ItemText(si,1) "? ")
+   order = askDialog("You have selected" lc~ItemText(si)". Do you want to order 50 stocks at" lc~ItemText(si,1) "? ")
    lc~Deselect(si)
    lc~Focus(si+1)
    lc~Select(si+1)

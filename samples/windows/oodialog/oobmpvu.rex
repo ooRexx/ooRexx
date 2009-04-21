@@ -85,7 +85,7 @@
    self~GetData
    if self~Filename = "..." then
    do
-      self~Filename = GetFileNameWindow("*.*", self~DlgHandle)
+      self~Filename = fileNameDialog("*.*", self~DlgHandle)
       if self~Filename \= "0" then
       do
          self~ComboDrop(101)
