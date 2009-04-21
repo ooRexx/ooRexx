@@ -74,7 +74,7 @@
 
 ::method EndAsyncExecution unguarded
    do while self~finished = 0
-      call sleepms(20)
+      call sleepms 20
    end
    if self~InitCode = 1 then do
       if (self~UseStem = 1) then self~GetDataStem(self~DlgData)
@@ -95,7 +95,7 @@
       end
       else do
           if msg \= "" then interpret("self~"msg)
-          else call sleepms(sleeptime) /* to yield cpu */
+          else call sleepms sleeptime /* to yield cpu */
       end
    end
 
@@ -1062,7 +1062,7 @@
     else do
         say "Dump of administration state"
         say "============================"
-        call DumpAdmin("ADMDUMP")
+        call DumpAdmin "ADMDUMP"
         d = Digits()
         NUMERIC DIGITS 15
         do i = 1 to admdump.0

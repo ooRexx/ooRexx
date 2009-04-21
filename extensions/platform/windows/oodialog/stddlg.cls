@@ -142,7 +142,7 @@
    self~GetDataStem(datas.)
    if datas.101~DataType('W') = 0 then
    do
-      call InfoMessage("You did not enter numerical data")
+      call infoDialog "You did not enter numerical data"
       return 0
    end
    else return 1

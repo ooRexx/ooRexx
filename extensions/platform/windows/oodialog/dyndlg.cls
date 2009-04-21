@@ -90,7 +90,7 @@
    parse var ret base ptr
    self~BasePtr = base
    self~activePtr = ptr
-   if ptr = 0 then call HandleDlg("STOP")
+   if ptr = 0 then call HandleDlg "STOP"
    self~SizeX = cx
    self~SizeY = cy
    self~DefineDialog
@@ -129,7 +129,7 @@
 ::method Load
    forward message "LoadFrame" continue
    hnd = result
-   if hnd \= 0 then forward message "LoadItems" continue; else call HandleDlg("STOP")
+   if hnd \= 0 then forward message "LoadItems" continue; else call HandleDlg "STOP"
    return (hnd=0)
 
 
