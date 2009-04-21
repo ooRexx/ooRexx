@@ -700,7 +700,7 @@
 ::method Delete
    use arg hItem
    if arg(1, 'O') | hItem = 0 then return -1
-   return HandleTreeCtrl("DEL",self~hwnd, item)
+   return HandleTreeCtrl("DEL",self~hwnd, hItem)
 
 ::method DeleteAll
    return HandleTreeCtrl("DEL", self~Hwnd,"ROOT")
