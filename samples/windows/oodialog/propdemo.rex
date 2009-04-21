@@ -325,17 +325,18 @@
    end
 
 
-   /* refresh labels that display slider position when associated slider was moved */
-::method OnEndTrack
+-- Update the static contol that shows the position for a slider when the
+-- user is done moving it.
+::method onEndTrack
    use arg code, hSlider
-   /* hSlider is a handle to the slider window that was moved */
-   sl = .SliderControl~new              /* create generic slider object */
-   sl~AssignWindow(hSlider, self, 4)    /* associate slider handle with generic object */
-   pos = sl~Pos
-   label = self~GetStaticControl(sl~id+100,4)
-   if label \= .Nil then label~Title=pos
 
+   -- hSlider is the handle to the slider that was moved.  Get its resource ID
+   -- and get a SliderControl object using that ID.
+   id = self~getControlID(hSlider)
+   sl = self~getSliderControl(id, 4)
 
+   label = self~getStaticControl(id + 100, 4)
+   label~setText(sl~pos)
 
    /* Force the owner-drawn button to be redrawn with the selected color */
 ::method OnTabSelChange
