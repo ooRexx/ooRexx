@@ -92,6 +92,7 @@ SectionEnd
   ShowInstdetails show
   SetOverwrite on
   SetPluginUnload alwaysoff
+  RequestExecutionLevel admin
 
   ;Folder-select dialog
   InstallDir "$PROGRAMFILES\${SHORTNAME}"
