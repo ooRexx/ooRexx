@@ -104,6 +104,10 @@ RexxMethod0(RexxObjectPtr, rexx_linein_queue)
 
    buf.strptr = NULL;                  /* ask for a returned buffer         */
    buf.strlength = 0;
+
+   // since we don't know how long we'll be waiting here, turn off the
+   // guard so we don't lock up other threads.
+   context->SetGuardOff();
                                        /* pull a line                       */
    rc = RexxPullFromQueue(context->ObjectToStringValue(queue_name), &buf, NULL, RXQUEUE_WAIT);
 

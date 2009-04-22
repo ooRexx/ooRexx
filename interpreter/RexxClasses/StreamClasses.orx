@@ -445,7 +445,7 @@ return position
   end
   self~objectname = named_queue        /* and also set as an object name    */
 
-::METHOD get                           /* get the queue name                */
+::METHOD get unguarded                 /* get the queue name                */
   expose named_queue                   /* just expose and return            */
   return named_queue
 
