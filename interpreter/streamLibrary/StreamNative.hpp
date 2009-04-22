@@ -150,7 +150,7 @@ public:
     int64_t setLinePositions();
     const char *getQualifiedName();
     const char *streamExists();
-    int64_t queryHandle();
+    RexxObjectPtr queryHandle();
     const char *getStreamType();
     RexxObjectPtr getStreamSize();
     const char *getTimeStamp();

@@ -3259,21 +3259,22 @@ RexxMethod1(CSTRING, query_exists, CSELF, streamPtr)
  *
  * @return The binary handle for the stream.
  */
-int64_t StreamInfo::queryHandle()
+RexxObjectPtr StreamInfo::queryHandle()
 {
     if (!isopen)       /* unopened stream?                  */
     {
-        return 0;
+        return context->NullString();
     }
-    return (int64_t)fileInfo.getHandle();
+    return context->Uintptr((uintptr_t)fileInfo.getHandle());
 }
 
 /********************************************************************************************/
 /* query_handle                                                                             */
 /********************************************************************************************/
-RexxMethod1(uint64_t, query_handle, CSELF, streamPtr)
+RexxMethod1(RexxObjectPtr, query_handle, CSELF, streamPtr)
 {
     StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    stream_info->setContext(context, context->NullString());
     return stream_info->queryHandle();
 }
 
