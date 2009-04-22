@@ -3577,7 +3577,6 @@ int64_t StreamInfo::countStreamLines(int64_t currentLinePosition, int64_t curren
     }
 
     // update the position and also set the pseudo line count, since we know this now.
-    count = count + currentLinePosition - 1;
-    stream_line_size = count;
+    stream_line_size = count + currentLinePosition - 1;
     return count;
 }

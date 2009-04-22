@@ -723,7 +723,6 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
     char *buffer = (char *)malloc(LINE_POSITIONING_BUFFER);
     if (buffer == NULL)
     {
-        free(buffer);
         errInfo = ENOMEM;
         return false;
     }
@@ -732,17 +731,27 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
     {
         int readLength = LINE_POSITIONING_BUFFER;
 
-        // got a failure
+        // This is likely due to hitting the end-of-file.  We'll just
+        // return our current count and indicate this worked.
         if (!setPosition(startPosition, startPosition))
         {
             free(buffer);
-            return false;
+            // set the return position and get outta here
+            endPosition = startPosition;
+            return true;
         }
 
         size_t bytesRead;
         if (!read(buffer, readLength, bytesRead))
         {
             free(buffer);
+            // if we've hit an eof condition, this is the end
+            if (atEof())
+            {
+                // set the return position and get outta here
+                endPosition = startPosition;
+                return true;
+            }
             // read error,
             return false;
         }
