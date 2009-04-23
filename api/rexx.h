@@ -282,6 +282,10 @@ RexxReturnCode REXXENTRY RexxDidRexxTerminate(void);
 typedef RexxReturnCode (REXXENTRY *PFNREXXDIDREXXTERMINATE)(void);
 #define REXXDIDREXXTERMINATE RexxDidRexxTerminate
 
+RexxReturnCode REXXENTRY RexxShutdownAPI(void);
+typedef RexxReturnCode (REXXENTRY *PFNREXXSHUTDOWNAPI)(void);
+#define REXXSHUTDOWNAPI RexxShutdownAPI
+
 
 RexxReturnCode REXXENTRY RexxTranslateProgram(
     const char *,                       // input program name

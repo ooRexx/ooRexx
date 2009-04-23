@@ -579,3 +579,15 @@ RexxReturnCode REXXENTRY RexxFreeMemory(void *ptr)
 }
 
 
+/**
+ * Shutdown the API subsystem.  This is a nop in 4.0.  This is
+ * maintained solely for binary compatibility.
+ *
+ * @return always returns true
+ */
+RexxReturnCode REXXENTRY RexxShutdownAPI()
+{
+    return true;
+}
+
+
