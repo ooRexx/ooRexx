@@ -652,17 +652,28 @@ FunctionEnd
 
 Function CheckForRxAPI
   ;
-  ; Determines if rxapi.exe is running
+  ; Determines if rxapi.exe is running.  On Vista, FindProcDll does not work.
+  ; Rather than fix FindProcDll, (easy to do, but I'm not sure of its license,)
+  ; we first check if it is running as a service.  If so, we stop it.
+  ;
   StrCmp $rxapichk 1 NotRunning
   StrCpy $rxapichk 1
+  services::IsServiceRunning 'RXAPI'
+  Pop $R0
+  StrCmp $R0 'Yes' ServiceIsRunning
+  ; Try FindProcDLL
   FindProcDLL::FindProc "rxapi.exe"
-  DetailPrint "rc from FindProcDll $R0"
   StrCmp $R0 0 NotRunning
   ;
   ; rxapi.exe is running, we need to stop it
+  ServiceIsRunning:
   MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST "The Open Object Rexx memory manager (RXAPI) is currently active.$\nSelect OK to stop it (possible loss of data) and continue.$\nSelect CANCEL to continue with the installation without stopping the memory manager." /SD IDOK IDCANCEL NotRunning
   ;
-  ; Stop rxapi.exe
+  ; Stop rxapi.exe.  Send the service stop command first.  If it is not a
+  ; service, we don't care, just try kill.
+  Services::SendServiceCommand 'stop' 'RXAPI'
+  Pop $R0
+  StrCmp $R0 'Ok' NotRunning
   KillProcDLL::KillProc "rxapi.exe"
   DetailPrint "rc from KillProcDll $R0"
 
@@ -902,19 +913,29 @@ FunctionEnd
 
 Function un.CheckForRxAPI
   ;
-  ; Determines if rxapi.exe is running
+  ; Determines if rxapi.exe is running.  On Vista, FindProcDll does not work.
+  ; Rather than fix FindProcDll, (easy to do, but I'm not sure of its license,)
+  ; we first check if it is running as a service.  If so, we stop it.
+  ;
   StrCmp $rxapichk 1 NotRunning
   StrCpy $rxapichk 1
+  services::IsServiceRunning 'RXAPI'
+  Pop $R0
+  StrCmp $R0 'Yes' ServiceIsRunning
+  ; Try FindProcDLL
   FindProcDLL::FindProc "rxapi.exe"
-  DetailPrint "rc from FindProcDll $R0"
   StrCmp $R0 0 NotRunning
   ;
   ; rxapi.exe is running, we need to stop it
+  ServiceIsRunning:
   MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST "The Open Object Rexx memory manager (RXAPI) is currently active.$\nSelect OK to stop it (possible loss of data) and continue.$\nSelect CANCEL to continue with the uninstall without stopping the service." /SD IDOK IDCANCEL NotRunning
   ;
-  ; Stop rxapi.exe
+  ; Stop rxapi.exe.  Send the service stop command first.  If it is not a
+  ; service, we don't care, just try kill.
+  Services::SendServiceCommand 'stop' 'RXAPI'
+  Pop $R0
+  StrCmp $R0 'Ok' NotRunning
   KillProcDLL::KillProc "rxapi.exe"
-  DetailPrint "rc from KillProcDll $R0"
 
   NotRunning:
 FunctionEnd
