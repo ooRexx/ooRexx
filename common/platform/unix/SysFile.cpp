@@ -1147,6 +1147,7 @@ bool SysFile::hasData()
     {
         return false;
     }
+
     // tty devices require special handling
     if (isTTY)
     {
@@ -1159,5 +1160,7 @@ bool SysFile::hasData()
         return (result > 0) ? true : false;
     }
 
-    return fileeof;
+    // we might have something buffered, but also check the
+    // actual stream.
+    return atEof();
 }

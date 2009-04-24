@@ -1134,5 +1134,7 @@ bool SysFile::hasData()
         return (_kbhit() != 0) ? 1 : 0;
     }
 
-    return eof(fileHandle) == 0;
+    // we might have something buffered, but also check the
+    // actual stream.
+    return atEof();
 }
