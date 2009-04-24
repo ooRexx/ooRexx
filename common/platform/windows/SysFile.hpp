@@ -123,7 +123,7 @@ public:
     inline void clearErrors() { errInfo = 0; }
     inline bool atEof() { return !hasBufferedInput() && eof(fileHandle) == 1; }
     inline bool hasBufferedInput() { return buffered && (bufferedInput > bufferPosition); }
-    inline int  getHandle() { return fileHandle; }
+    inline uintptr_t getHandle() { return (uintptr_t)fileHandle; }
 
 protected:
     void   getStreamTypeInfo();

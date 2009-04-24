@@ -3265,7 +3265,7 @@ RexxObjectPtr StreamInfo::queryHandle()
     {
         return context->NullString();
     }
-    return context->Uintptr((uintptr_t)fileInfo.getHandle());
+    return context->Uintptr(fileInfo.getHandle());
 }
 
 /********************************************************************************************/
