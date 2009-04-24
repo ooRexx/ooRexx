@@ -202,6 +202,10 @@ void SysFile::setBuffering(bool buffering, size_t length)
             buffer = NULL;
         }
     }
+    // reset all of the buffering controls to the defaults
+    bufferPosition = 0;
+    bufferedInput = 0;
+    writeBuffered = false;
 }
 
 

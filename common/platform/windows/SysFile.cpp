@@ -192,6 +192,10 @@ void SysFile::setBuffering(bool buffering, size_t length)
             buffer = NULL;
         }
     }
+    // reset all of the buffering controls to the defaults
+    bufferPosition = 0;
+    bufferedInput = 0;
+    writeBuffered = false;
 }
 
 
@@ -229,6 +233,8 @@ bool SysFile::close()
     {
         if (::close(fileHandle) == EOF)
         {
+            // we've got an error, but this needs to be cleared
+            fileHandle = -1;
             errInfo = errno;
             return false;
         }
