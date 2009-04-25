@@ -54,6 +54,7 @@
 #include "DirectoryClass.hpp"
 #include "ProtectedObject.hpp"
 #include "RexxInternalApis.h"
+#include "PackageManager.hpp"
 
 
 // global resource lock
@@ -202,6 +203,16 @@ bool Interpreter::terminateInterpreter()
         if (interpreterInstances->items() != 0)
         {
             return false;
+        }
+
+        {
+            // this may seem funny, but we need to create an instance
+            // so shut down so that the package manager can unload
+            // the libraries (it needs to pass a RexxThreadContext
+            // pointer out to package unloaders, if they are defined)
+            InstanceBlock instance;
+
+            PackageManager::unload();
         }
 
         // most interpreter resources will be cleanup automatically, but
