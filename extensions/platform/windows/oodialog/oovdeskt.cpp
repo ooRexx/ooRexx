@@ -40,21 +40,8 @@
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
+#include "oodCommon.h"
 
-
-size_t RexxEntry FindTheWindow(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   HWND hW;
-
-   CHECKARG(1);
-
-   hW = FindWindow(NULL, argv[0].strptr);
-   if (hW)
-   {
-       RETHANDLE(hW);
-   }
-   RETC(0)  /* in this case 0 is an error */
-}
 
 /**
  * Gets the window handle of the dialog control that has the focus.  The call to

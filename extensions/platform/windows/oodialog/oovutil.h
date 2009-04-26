@@ -130,15 +130,6 @@ extern DWORD ComCtl32Version;
 #define TAG_SELECTCHANGED         0x00000400
 #define TAG_FOCUSCHANGED          0x00000800
 
-/**
- * Date Time Operation type IDs for get / set system time.  These are operations
- * used for the DateTimePicker and MonthCalendar controls.
- */
-#define DTO_SETDTP                0x01
-#define DTO_GETDTP                0x02
-#define DTO_SETMONTH              0x03
-#define DTO_GETMONTH              0x04
-
 /* macros to check the number of arguments */
 #define CHECKARG(argexpct) { \
    if (argc != argexpct) \
@@ -264,37 +255,6 @@ extern DWORD ComCtl32Version;
 #define DEF_ADM     DIALOGADMIN * dlgAdm = NULL
 #define GET_ADM     dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0])
 
-#define GET_HANDLE(p) string2pointer(p)
-#define GET_HWND(p)   ((HWND)string2pointer(p))
-#define GET_POINTER(p) string2pointer(p)
-
-
-inline void safeLocalFree(void *p)
-{
-    if (p != NULL)
-    {
-        LocalFree(p);
-    }
-}
-
-
-inline void safeFree(void *p)
-{
-    if (p != NULL)
-    {
-        free(p);
-    }
-}
-
-
-inline void safeDeleteObject(HANDLE h)
-{
-    if (h != NULL)
-    {
-        DeleteObject(h);
-    }
-}
-
 
 inline LONG_PTR setWindowPtr(HWND hwnd, int index, LONG_PTR newPtr)
 {
@@ -326,22 +286,6 @@ inline LONG_PTR setClassPtr(HWND hwnd, int index, LONG_PTR newPtr)
 inline LONG_PTR getClassPtr(HWND hwnd, int index)
 {
     return GetClassLongPtr(hwnd, index);
-}
-
-typedef enum {oodHex, oodHeX, oodNotHex} oodNumberStr_t;
-
-inline bool isHex(CSTRING c)
-{
-    return strlen(c) > 1 && *c == '0' && toupper(c[1]) == 'X';
-}
-
-inline oodNumberStr_t hexType(CSTRING c)
-{
-    if ( isHex(c) )
-    {
-        return (c[1] == 'x' ? oodHex : oodHeX);
-    }
-    return oodNotHex;
 }
 
 /* structures to manage the dialogs */
@@ -473,7 +417,6 @@ typedef struct {
     KEYPRESSDATA *pKeyPressData;
 } SUBCLASSDATA;
 
-
 typedef struct
 {
    void * previous;
@@ -517,19 +460,4 @@ extern DIALOGADMIN * DialogTab[];
 extern DIALOGADMIN * topDlg;
 extern INT StoredDialogs;
 extern CRITICAL_SECTION crit_sec;
-
-
-// These utility functions are defined in oovtools.cpp
-extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
-extern void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
-extern void rxdatacpy(CHAR * tar, RXSTRING &src);
-extern bool IsYes(const char *s);
-extern void *string2pointer(const char *string);
-extern void pointer2string(char *, void *pointer);
-extern LONG HandleError(PRXSTRING r, CHAR * text);
-
-
-inline void *string2pointer(CONSTRXSTRING *string) { return string2pointer(string->strptr); }
-inline void *string2pointer(CONSTRXSTRING &string) { return string2pointer(string.strptr); }
-inline void pointer2string(PRXSTRING result, void *pointer) { pointer2string(result->strptr, pointer); result->strlength = strlen(result->strptr); }
 

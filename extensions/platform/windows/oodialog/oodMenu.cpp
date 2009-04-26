@@ -41,13 +41,10 @@
 #include <malloc.h>
 #include <limits.h>
 #include "APICommon.h"
+#include "oodCommon.h"
 
 LPWORD lpwAlign(LPWORD lpIn);
 BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, ULONG, ULONG, ULONG, ULONG, CSTRING, ULONG);
-
-/* TODO FIXME need these to go into oodCommon.cpp. */
-char *strdupupr_nospace(const char *str);
-DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
 /**
  * Convenience function to return a menu handle to ooRexx.

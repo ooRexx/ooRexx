@@ -41,6 +41,7 @@
 #include <dlgs.h>
 #include <malloc.h>
 #include <limits.h>
+#include "oodCommon.h"
 
 
 size_t RexxEntry HandleScrollBar(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)

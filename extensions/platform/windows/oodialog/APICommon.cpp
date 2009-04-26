@@ -197,18 +197,6 @@ void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, con
     wrongArgValueException(c, pos, list, c->String(actual));
 }
 
-
-POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
-{
-    CSTRING value = "";
-    RexxObjectPtr rxString = context->SendMessage0(obj, name);
-    if ( rxString != NULLOBJECT )
-    {
-        value = context->ObjectToStringValue(rxString);
-    }
-    return string2pointer(value);
-}
-
 CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
 {
     CSTRING value = NULL;

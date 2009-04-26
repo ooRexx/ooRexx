@@ -41,7 +41,8 @@
 #include <commctrl.h>
 #include <stdio.h>
 #include <dlgs.h>
-#include "oodResources.h"
+#include "oodCommon.h"
+#include "oodSymbols.h"
 
 extern INT DelDialog(DIALOGADMIN * aDlg);
 extern BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);

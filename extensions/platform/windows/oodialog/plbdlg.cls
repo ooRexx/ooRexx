@@ -408,7 +408,7 @@
    -- Common in Microsoft compatible resource script files
    self~ConstDir["IDC_STATIC"] = -1
 
-   -- ooDialog supplied resources, defined in oodResources.h
+   -- ooDialog supplied resources, defined in oodSymbols.h
    self~ConstDir["IDI_DLG_OODIALOG"] = 11
    self~ConstDir["IDI_DLG_APPICON"] = 12
    self~ConstDir["IDI_DLG_APPICON2"] = 13

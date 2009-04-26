@@ -45,6 +45,7 @@
 #include <shlwapi.h>
 #include <commctrl.h>
 #include "APICommon.h"
+#include "oodCommon.h"
 
 // Map strings representing constant defines to their int values.  For
 // translating things like "IDI_APPLICATION" from the user to the proper API
@@ -2528,24 +2529,6 @@ inline const char *comctl32VersionName(DWORD id)
     return comctl32VersionPart(id, COMCTL32_FULL_PART);
 }
 
-
-DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
-{
-    DIALOGADMIN *adm = (DIALOGADMIN *)rxGetPointerAttribute(context, dlg, "ADM");
-    if ( adm == NULL )
-    {
-         // Want this message: Could not retrieve the "value" information for "object"
-         // similar to old 98.921
-
-        TCHAR buf[128];
-        RexxObjectPtr name = context->SendMessage0(dlg, "OBJECTNAME");
-        _snprintf(buf, sizeof(buf), "Could not retrieve the dialog administration block information for %s",
-                  context->ObjectToStringValue(name));
-
-        context->RaiseException1(Rexx_Error_Execution_user_defined, context->String(buf));
-    }
-    return adm;
-}
 
 inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr self)
 {

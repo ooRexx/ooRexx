@@ -35,11 +35,20 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+
+/**
+ * oodCommon.cpp
+ *
+ * Contains convenience / helper functions used throughout the ooDialog modules.
+ */
+
 #include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
+#include "APICommon.h"
+#include "oodCommon.h"
 
 
 BOOL DialogInAdminTable(DIALOGADMIN * Dlg)
@@ -113,78 +122,42 @@ bool IsYes(const char * s)
    return ((s[0]=='j') || (s[0]=='J') || (s[0]=='y') || (s[0]=='Y') || atoi(s));
 }
 
-/* Slightly stricter than IsYes and not currently exported. */
+/* Slightly stricter than IsYes. TODO remove this when YesNoMessage() is
+   fixed. */
 bool IsNo(const char * s)
 {
    return ( s && (*s == 'N' || *s == 'n') );
 }
 
-/**
- * This classic Rexx external function was documented prior to 4.0.0.
- */
-size_t RexxEntry InfoMessage(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
 {
-   HWND hW;
+    DIALOGADMIN *adm = (DIALOGADMIN *)rxGetPointerAttribute(context, dlg, "ADM");
+    if ( adm == NULL )
+    {
+         // Want this message: Could not retrieve the "value" information for "object"
+         // similar to old 98.921
 
-   CHECKARG(1);
+        TCHAR buf[128];
+        RexxObjectPtr name = context->SendMessage0(dlg, "OBJECTNAME");
+        _snprintf(buf, sizeof(buf), "Could not retrieve the dialog administration block information for %s",
+                  context->ObjectToStringValue(name));
 
-   if ((topDlg) && (topDlg->OnTheTop)) hW = topDlg->TheDlg; else hW = NULL;
-   MessageBox(hW,argv[0].strptr,"Information", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND | MB_TASKMODAL);
-   RETC(0)
+        context->RaiseException1(Rexx_Error_Execution_user_defined, context->String(buf));
+    }
+    return adm;
 }
 
 
-/**
- * This classic Rexx external function was documented prior to 4.0.0.
- */
-size_t RexxEntry ErrorMessage(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+// TODO move to APICommon when ooDialog is converted to use .Pointer instead of
+// pointer strings.
+POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
 {
-   HWND hW;
-
-   CHECKARG(1);
-
-   if ((topDlg) && (topDlg->OnTheTop)) hW = topDlg->TheDlg; else hW = NULL;
-   MessageBox(hW,argv[0].strptr,"Error", MB_OK | MB_ICONHAND | MB_SETFOREGROUND | MB_TASKMODAL);
-   RETC(0)
-}
-
-/**
- * This classic Rexx external function was documented prior to 4.0.0.
- */
-size_t RexxEntry YesNoMessage(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   HWND hW;
-   UINT uType = MB_YESNO | MB_ICONQUESTION | MB_SETFOREGROUND | MB_TASKMODAL;
-
-   CHECKARGLH(1, 2);
-
-   if ( argc == 2 )
-   {
-      if ( IsNo(argv[1].strptr) )
-         uType |= MB_DEFBUTTON2;
-      else if ( ! IsYes(argv[1].strptr) )
-      {
-         PSZ  pszMsg;
-         CHAR szText[] = "YesNoMessage argument 2 must be one of [Yes, No]; "
-                         "found \"%s\"";
-
-         pszMsg = (PSZ)LocalAlloc(LPTR, sizeof(szText) + 1 + argv[1].strlength);
-         if ( ! pszMsg )
-            RETERR;
-         sprintf(pszMsg, szText, argv[1].strptr);
-         HandleError(retstr, pszMsg);
-         LocalFree(pszMsg);
-         return 40;
-      }
-   }
-
-   retstr->strlength = 1;
-   if ((topDlg) && (topDlg->OnTheTop)) hW = topDlg->TheDlg; else hW = NULL;
-
-   if (MessageBox(hW,argv[0].strptr,"Question", uType) == IDYES)
-      retstr->strptr[0] = '1';
-   else
-      retstr->strptr[0] = '0';
-   return 0;
+    CSTRING value = "";
+    RexxObjectPtr rxString = context->SendMessage0(obj, name);
+    if ( rxString != NULLOBJECT )
+    {
+        value = context->ObjectToStringValue(rxString);
+    }
+    return string2pointer(value);
 }
 

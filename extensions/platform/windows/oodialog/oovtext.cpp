@@ -44,6 +44,7 @@
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
+#include "oodCommon.h"
 
 extern HWND ScrollingButton = NULL;
 extern HWND RedrawScrollingButton = NULL;

@@ -43,6 +43,7 @@
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
+#include "oodCommon.h"
 
 
 /* I do most of the radio button handling myself now so I know it works */

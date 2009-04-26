@@ -42,6 +42,7 @@
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
+#include "oodCommon.h"
 
 
 extern LPBITMAPINFO LoadDIB(const char *szFile);

@@ -39,11 +39,12 @@
 
 #include <stdio.h>
 #include <dlgs.h>
+#include <commctrl.h>
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
-#include "oodResources.h"
-#include <commctrl.h>
+#include "oodCommon.h"
+#include "oodSymbols.h"
 
 extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 extern BOOL InstallNecessaryStuff(DIALOGADMIN * dlgAdm, CONSTRXSTRING ar[], size_t argc);

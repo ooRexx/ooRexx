@@ -36,10 +36,9 @@
 /*                                                                            */;
 /*----------------------------------------------------------------------------*/;
 
-/* This file xxxx;
- * ;
- * ;
- */
+#ifndef APICommon_Included
+#define APICommon_Included
+
 
 #define NO_HMODULE_MSG            "failed to obtain %s module handle; OS error code %d"
 #define NO_PROC_MSG               "failed to get procedeure adddress for %s(); OS error code %d"
@@ -71,7 +70,6 @@ extern void wrongRangeException(RexxMethodContext *c, int pos, int min, int max,
 extern void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, RexxObjectPtr actual);
 extern void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, const char *actual);
 
-extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);;
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);;
 extern bool requiredClass(RexxMethodContext *c, RexxObjectPtr obj, const char *name, int pos);
 extern size_t rxArgCount(RexxMethodContext * context);
@@ -79,3 +77,4 @@ extern bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, in
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
 
+#endif

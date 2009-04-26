@@ -44,6 +44,13 @@
 #include <stdio.h>
 #include <dlgs.h>
 #include <commctrl.h>
+#include "oodCommon.h"
+
+
+inline bool isHex(CSTRING c)
+{
+    return strlen(c) > 1 && *c == '0' && toupper(c[1]) == 'X';
+}
 
 BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr)
 {

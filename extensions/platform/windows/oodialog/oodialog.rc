@@ -36,7 +36,7 @@
 //                                                                            */
 //----------------------------------------------------------------------------*/
 
-#include <oodResources.h>
+#include <oodSymbols.h>
 
 IDI_DLG_OODIALOG    ICON   "oodialog.ico"
 IDI_DLG_APPICON     ICON   "AppIcon.ico"

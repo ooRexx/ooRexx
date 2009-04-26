@@ -74,8 +74,8 @@
            raise syntax 40.904 array('AskDialog', '2', '[Yes, No]', arg(2))
        end
    end
-   if arg(2,'o') then return askDialog(info)
-   else return askDialog(info, defaultButton)
+   if arg(2,'o') then return YesNoDialog(info)
+   else return YesNoDialog(info, defaultButton)
 
 
 ::routine fileNameDialog public
