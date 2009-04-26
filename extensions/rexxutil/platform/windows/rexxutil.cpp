@@ -437,6 +437,7 @@ bool MyOpenFile(
     return true;                       /* and quit                   */
   }
   if (dwSize <= MAX_READ) {            /* less than a single buffer  */
+    DWORD bytesRead;
                                        /* allocate buffer for file   */
     if (!(filedata->buffer = (char *)GlobalAlloc(GMEM_ZEROINIT |
                                          GMEM_FIXED, dwSize))) {
@@ -446,14 +447,15 @@ bool MyOpenFile(
     filedata->size = dwSize;           /* save file size             */
     filedata->residual = 0;            /* no left over information   */
                                        /* read the file in           */
-    if (!ReadFile(filedata->handle, filedata->buffer, dwSize,
-                (LPDWORD)&filedata->data, NULL)) {
+    if (!ReadFile(filedata->handle, filedata->buffer, dwSize, &bytesRead, NULL)) {
       GlobalFree(filedata->buffer);    /* free the buffer            */
       CloseHandle(filedata->handle);   /* close the file             */
       return true;
     }
 
-    filedata->scan = filedata->buffer; /* set position to beginning  */
+    // Set scan to beginning of buffer, and data to number of bytes we have.
+    filedata->scan = filedata->buffer;
+    filedata->data = bytesRead;
   }
   else {                               /* need to read partial       */
                                        /* allocate buffer for read   */
@@ -488,44 +490,52 @@ void CloseFile(
   GlobalFree(filedata->buffer);        /* free the buffer            */
 }
 
-/********************************************************************
-* Function:  ReadNextBuffer(filedata)                               *
-*                                                                   *
-* Purpose:   Reads the next buffer of data.                         *
-*                                                                   *
-* RC:        0       buffer was read                                *
-*            1     - error occurred reading buffer                  *
-*********************************************************************/
-bool ReadNextBuffer(
-   GetFileData  *filedata )            /* global file information    */
+/**
+ * Reads the next buffer of data.
+ *
+ * @param filedata  Global file information.
+ *
+ * @return  0, buffer was read.  1, an error occurred reading buffer.
+ */
+bool ReadNextBuffer(GetFileData *filedata)
 {
-  size_t    size;                      /* size to read               */
+    size_t size;
+    DWORD  bytesRead;
 
-                                       /* get size of this read      */
-  size = min(MAX_READ, filedata->residual);
+    /* get size of this read      */
+    size = min(MAX_READ, filedata->residual);
 
-                                       /* read the file in           */
-  if (!ReadFile(filedata->handle, filedata->buffer, (DWORD)size,
-                (LPDWORD)&filedata->data, NULL))
-      return 1;
+    /* read the file in           */
+    if ( !ReadFile(filedata->handle, filedata->buffer, (DWORD)size, &bytesRead, NULL) )
+    {
+        return 1;
+    }
+    filedata->data = bytesRead;
 
-  if (filedata->data != size)          /* not get all of it?         */
-    filedata->residual = 0;            /* no residual                */
-  else                                 /* residual is remainder      */
-    filedata->residual = filedata->residual - size;
+    if ( filedata->data != size )
+    {
+        // Read less than requested, no residual.
+        filedata->residual = 0;            /* no residual                */
+    }
+    else
+    {
+        // Residual is remainder.
+        filedata->residual = filedata->residual - size;
+    }
 
-  /* don't check for EOF but read to real end of file     */
-  //                                     /* look for a EOF mark        */
-  //endptr = memchr(filedata->buffer, CH_EOF, filedata->data);
-  //
-  //if (endptr) {                        /* found an EOF mark          */
-  //                                     /* set new length             */
-  //  filedata->data = (ULONG)(endptr - filedata->buffer);
-  //  filedata->residual = 0;            /* no residual                */
-  //}
+    /* don't check for EOF but read to real end of file     */
+    //                                     /* look for a EOF mark        */
+    //endptr = memchr(filedata->buffer, CH_EOF, filedata->data);
+    //
+    //if (endptr) {                        /* found an EOF mark          */
+    //                                     /* set new length             */
+    //  filedata->data = (ULONG)(endptr - filedata->buffer);
+    //  filedata->residual = 0;            /* no residual                */
+    //}
 
-  filedata->scan = filedata->buffer;   /* set position to beginning  */
-  return 0;
+    // Set position to beginning.
+    filedata->scan = filedata->buffer;
+    return 0;
 }
 
 /********************************************************************
