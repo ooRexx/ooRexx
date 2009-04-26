@@ -1002,7 +1002,7 @@ bool SysFile::getSize(const char *name, int64_t &size)
  */
 bool SysFile::getTimeStamp(char *&time)
 {
-    *time = '\0';     // default return value
+    time = "";     // default return value
     // are we open?
     if (fileHandle >= 0)
     {
@@ -1030,7 +1030,7 @@ bool SysFile::getTimeStamp(char *&time)
  */
 bool SysFile::getTimeStamp(const char *name, char *&time)
 {
-    *time = '\0';     // default return value
+    time = "";     // default return value
     // the handle is not active, use the name
     struct stat fileInfo;
     if (stat(name, &fileInfo) == 0)
