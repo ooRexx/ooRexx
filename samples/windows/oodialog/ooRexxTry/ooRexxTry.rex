@@ -67,6 +67,10 @@ See documentation for version control
             call errorDialog 'Error creating code dialog. initCode:' code~initCode
             exit
         end
+    "echo"
+    "echo This console will receive the output of your system commands."
+    "echo Try 'dir' for example."
+    "echo"
     code~Execute('ShowTop')                     -- Execute the dialog
     code~DeInstall                              -- Finished, so deInstall
 exit
@@ -869,7 +873,31 @@ return 0
     d_title~setColor(5,10)
 
 ::method Help
-    'ooRexxTry.pdf'
+    -- The help doc is supposed to be in the 'doc' subdirectory, but we will also check the
+    -- current directory, then the Rexx home directory.
+    if SysFileExists('doc\ooRexxTry.pdf') then do
+        helpDoc = 'doc\ooRexxTry.pdf'
+    end
+    else if SysFileExists('ooRexxTry.pdf') then do
+        helpDoc = 'ooRexxTry.pdf'
+    end
+    else if SysfileExists(value("REXX_HOME",,"ENVIRONMENT")||"\doc\ooRexxTry.pdf") then do
+        helpDoc = value("REXX_HOME",,"ENVIRONMENT")||"\doc\ooRexxTry.pdf"
+    end
+    else do
+        msg = "The ooRexxTry.pdf help documentation could not be located."                     || .endOfLine -
+              || .endOfLine || -
+              "Tried:"                                                                         || .endOfLine -
+              "  doc subdirectory:  "||directory()||"\doc\ooRexxTry.pdf"                       || .endOfLine -
+              "  current directory: "||directory()||"\ooRexxTry.pdf"                           || .endOfLine -
+              "  Rexx home:         "||value("REXX_HOME",,"ENVIRONMENT")||"\doc\ooRexxTry.pdf" || .endOfLine -
+              || .endOfLine || -
+              "Sorry, no help is available"
+        call errorDialog msg
+        return
+    end
+    'start "ooRexxTry Online Documentation"' '"'||helpDoc||'"'
+
 
 ::class settings_dialog subclass userdialog inherit AdvancedControls MessageExtensions
 ::method Init

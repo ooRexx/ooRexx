@@ -38,7 +38,7 @@
 .NOTPARALLEL:
 
 SUBDIRS			= bmp examples ooRexxTry rc res tutorial wav
-DIST_SUBDIRS            = bmp examples rc res tutorial wav
+DIST_SUBDIRS 	= bmp examples ooRexxTry rc res tutorial wav
 
 MAINTAINERCLEANFILES 	= Makefile.in *~
 

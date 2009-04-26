@@ -385,6 +385,12 @@ Section "${LONGNAME} Samples" SecDemo
   ; Distribution files...
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\examples\" "*.txt"
+  ${SetOutPath} $INSTDIR\samples\oodialog\ooRexxTry
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\" "ooRexxTry.rex"
+  ${SetOutPath} $INSTDIR\samples\oodialog\ooRexxTry\doc
+  ; Distribution files...
+  ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\doc\" "ooRexxTry.pdf"
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\oodialog\rc
   ; Distribution files...
@@ -558,7 +564,7 @@ Section "${LONGNAME} Documentation" SecDoc
   ${File} "${SRCDIR}\doc\" "rxftp.pdf"
   ${File} "${SRCDIR}\doc\" "oodialog.pdf"
   ${File} "${SRCDIR}\doc\" "winextensions.pdf"
-  ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\" "ooRexxTry.pdf"
+  ${File} "${SRCDIR}\samples\windows\oodialog\ooRexxTry\doc\" "ooRexxTry.pdf"
   ; Create start menu shortcuts
   CreateShortCut "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Reference.lnk" "$INSTDIR\doc\rexxref.pdf" "" "$INSTDIR\doc\rexxref.pdf" 0
   ${AddItem} "$SMPROGRAMS\${LONGNAME}\Documentation\ooRexx Reference.lnk"
