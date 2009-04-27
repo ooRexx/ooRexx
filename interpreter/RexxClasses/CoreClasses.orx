@@ -403,7 +403,7 @@ nomethod:
  /* initialize a server */
   expose input output error
  /* set system objects in the local environment */
-  input = .stream~new('STDIN')~~command('open nobuffer')
+  input = .stream~new('STDIN')~~command('open')
   output = .stream~new('STDOUT')~~command('open nobuffer')
   error = .stream~new('STDERR')~~command('open nobuffer')
   self~initinstance

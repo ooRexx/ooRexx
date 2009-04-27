@@ -325,7 +325,6 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
             bufferedInput = 0;
         }
 
-
         while (len > 0)
         {
             // have we exhausted the buffer data?
@@ -1083,7 +1082,8 @@ void SysFile::setStdIn()
     _setmode(fileHandle, _O_BINARY);
     ungetchar = -1;            // -1 indicates no char
     getStreamTypeInfo();
-    setBuffering(false, 0);
+    // NB:  On Windows, we get a strange overlay when reading one character at a time from
+    // stdin, so allow this to work buffered.
     readable = true;             // force this to readable
 }
 

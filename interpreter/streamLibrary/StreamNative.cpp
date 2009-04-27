@@ -511,9 +511,8 @@ const char *StreamInfo::openStd(const char *options)
    // and also record the transient nature of this
    transient = fileInfo.isTransient();
 
-   // don't buffer if this is a transient stream or we've explicitly requested no buffering.
-   // in either case, make sure the initial buffer has been allocated.
-   if (transient || nobuffer)
+   // don't buffer if we've explicitly requested no buffering.
+   if (nobuffer)
    {
        // we do not buffer buffer file
        fileInfo.setBuffering(false, 0);
