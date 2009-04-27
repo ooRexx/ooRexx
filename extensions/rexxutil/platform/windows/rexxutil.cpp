@@ -1735,7 +1735,7 @@ size_t RexxEntry SysDriveMap(const char *name, size_t numargs, CONSTRXSTRING arg
 
   CHAR     tmpstr[MAX];                /* Single drive entries built */
                                        /* here                       */
-  CHAR     DeviceName[3];              /* Device name or drive letter*/
+  CHAR     DeviceName[4];              /* Device name or drive letter*/
                                        /* string                     */
   DWORD    DriveMap;                   /* Drive map                  */
   ULONG    Ordinal;                    /* Ordinal of entry in name   */
