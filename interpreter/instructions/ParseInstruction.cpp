@@ -149,9 +149,10 @@ void RexxInstructionParse::execute(
                 value = OREF_NULLSTRING;       /* must have been "parse value with" */
             }
             stack->push(value);              /* add the value to the stack        */
-            context->traceResult(value);     /* trace if necessary                */
             break;
     }
+    // if tracing results or intermediates, show the string being parsed.
+    context->traceResult(value);     /* trace if necessary                */
     /* create the parse target           */
     target.init(value, argList, argCount, instructionFlags&parse_translate, multiple, context, stack);
 

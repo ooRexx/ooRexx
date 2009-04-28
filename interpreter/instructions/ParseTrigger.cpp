@@ -186,6 +186,12 @@ void RexxTrigger::parse(
                   /* set the value                     */
                 // NOTE:  The different variable tpes handle their own assignment tracing
                 variable->assign(context, stack, _value);
+                // if only tracing results and not intermediates, then we need to
+                // trace this value explicitly.
+                if (!context->tracingIntermediates())
+                {
+                    context->traceResult(_value);   /* trace if necessary                */
+                }
             }
             else                             /* dummy variable, just trace it     */
             {
