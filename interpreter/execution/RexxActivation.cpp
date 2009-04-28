@@ -2317,16 +2317,18 @@ void RexxActivation::debugInterpret(   /* interpret interactive debug input */
                                              /* run the internal routine on the   */
                                              /* new activation                    */
         newActivation->run(OREF_NULL, OREF_NULL, arglist, argcount, OREF_NULL, r);
+        // turn this off when done executing
+        this->debug_pause = false;
     }
     catch (RexxActivation *t)
     {
+        // turn this off unconditionally for any errors
         // if we're not the target of this throw, we've already been unwound
         // keep throwing this until it reaches the target activation.
         if (t != this )
         {
             throw;
         }
-        this->debug_pause = false;         /* no longer in debug                */
     }
 }
 
