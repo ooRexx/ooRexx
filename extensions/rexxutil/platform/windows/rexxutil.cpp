@@ -5171,7 +5171,6 @@ RexxReturnCode REXXENTRY RexxStemSort(const char *stemname, int order, int type,
 *************************************************************************/
 
 size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-
 {
     CHAR          stemName[255];
     size_t        first = 1;
@@ -5181,86 +5180,101 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
     INT           sortType = SORT_CASESENSITIVE;
     INT           sortOrder = SORT_ASCENDING;
 
-    if ( (numargs < 1) || (numargs > 7) || /* validate arguments     */
-        !RXVALIDSTRING(args[0]))
-      return INVALID_ROUTINE;
+    // validate arguments
+    if ( (numargs < 1) || (numargs > 7) || !RXVALIDSTRING(args[0]) )
+    {
+        return INVALID_ROUTINE;
+    }
 
-    /* remember stem name */
+    // remember stem name
     memset(stemName, 0, sizeof(stemName));
     strcpy(stemName, args[0].strptr);
-    if (stemName[args[0].strlength-1] != '.')
-      stemName[args[0].strlength] = '.';
-
-    /* check other parameters */
-    if ((numargs >= 2) && RXVALIDSTRING(args[1])) /* sort order      */
+    if ( stemName[args[0].strlength-1] != '.' )
     {
-      switch (args[1].strptr[0])
-      {
-        case 'A':
-        case 'a':
-          sortOrder = SORT_ASCENDING;
-          break;
-        case 'D':
-        case 'd':
-          sortOrder = SORT_DECENDING;
-          break;
-        default:
-          return INVALID_ROUTINE;
-      } /* endswitch */
-    } /* endif */
+        stemName[args[0].strlength] = '.';
+    }
 
-    if ((numargs >= 3) && RXVALIDSTRING(args[2])) /* sort type */
+    // check other parameters.  sort order
+    if ( (numargs >= 2) && RXVALIDSTRING(args[1]) )
     {
-      switch (args[2].strptr[0])
-      {
-        case 'C':
-        case 'c':
-          sortType = SORT_CASESENSITIVE;
-          break;
-        case 'I':
-        case 'i':
-          sortType = SORT_CASEIGNORE;
-          break;
-        default:
-          return INVALID_ROUTINE;
-      } /* endswitch */
-    } /* endif */
-
-    if ((numargs >= 4) && RXVALIDSTRING(args[3])) /* first element to sort */
+        switch ( args[1].strptr[0] )
+        {
+            case 'A':
+            case 'a':
+                sortOrder = SORT_ASCENDING;
+                break;
+            case 'D':
+            case 'd':
+                sortOrder = SORT_DECENDING;
+                break;
+            default:
+                return INVALID_ROUTINE;
+        }
+    }
+    // sort type
+    if ( (numargs >= 3) && RXVALIDSTRING(args[2]) )
     {
-      if (sscanf(args[3].strptr, "%Iu", &first) != 1)
-        return INVALID_ROUTINE;
-      if (first == 0)
-        return INVALID_ROUTINE;
-    } /* endif */
-
-    if ((numargs >= 5) && RXVALIDSTRING(args[4])) /* last element to sort */
+        switch ( args[2].strptr[0] )
+        {
+            case 'C':
+            case 'c':
+                sortType = SORT_CASESENSITIVE;
+                break;
+            case 'I':
+            case 'i':
+                sortType = SORT_CASEIGNORE;
+                break;
+            default:
+                return INVALID_ROUTINE;
+        }
+    }
+    // first element to sort
+    if ( (numargs >= 4) && RXVALIDSTRING(args[3]) )
     {
-      if (sscanf(args[4].strptr, "%Iu", &last) != 1)
-        return INVALID_ROUTINE;
-      if (last < first)
-        return INVALID_ROUTINE;
-    } /* endif */
-
-    if ((numargs >= 6) && RXVALIDSTRING(args[5])) /* first column to sort */
+        if ( sscanf(args[3].strptr, "%Iu", &first) != 1 )
+        {
+            return INVALID_ROUTINE;
+        }
+        if ( first == 0 )
+        {
+            return INVALID_ROUTINE;
+        }
+    }
+    // last element to sort
+    if ( (numargs >= 5) && RXVALIDSTRING(args[4]) )
     {
-      if (sscanf(args[5].strptr, "%Iu", &firstCol) != 1)
-        return INVALID_ROUTINE;
-      firstCol--;
-    } /* endif */
-
-    if ((numargs == 7) && RXVALIDSTRING(args[6])) /* last column to sort */
+        if ( sscanf(args[4].strptr, "%Iu", &last) != 1 )
+            return INVALID_ROUTINE;
+        if ( last < first )
+            return INVALID_ROUTINE;
+    }
+    // first column to sort
+    if ( (numargs >= 6) && RXVALIDSTRING(args[5]) )
     {
-      if (sscanf(args[6].strptr, "%Iu", &lastCol) != 1)
-        return INVALID_ROUTINE;
-      lastCol--;
-      if (lastCol < firstCol)
-        return INVALID_ROUTINE;
+        if ( sscanf(args[5].strptr, "%Iu", &firstCol) != 1 )
+        {
+            return INVALID_ROUTINE;
+        }
+        firstCol--;
+    }
+    // last column to sort
+    if ( (numargs == 7) && RXVALIDSTRING(args[6]) )
+    {
+        if ( sscanf(args[6].strptr, "%Iu", &lastCol) != 1 )
+        {
+            return INVALID_ROUTINE;
+        }
+        lastCol--;
+        if ( lastCol < firstCol )
+        {
+            return INVALID_ROUTINE;
+        }
 
-    } /* endif */
+    }
 
-    /* the sorting is done in the interpreter */
-    if (!RexxStemSort(stemName, sortOrder, sortType, first, last, firstCol, lastCol)) {
+    // the sorting is done in the interpreter
+    if ( !RexxStemSort(stemName, sortOrder, sortType, first, last, firstCol, lastCol) )
+    {
         sprintf(retstr->strptr, "-1");
         retstr->strlength = 2;
         return INVALID_ROUTINE;
