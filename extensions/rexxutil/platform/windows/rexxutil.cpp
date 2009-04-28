@@ -2866,32 +2866,36 @@ size_t RexxEntry SysRmDir(const char *name, size_t numargs, CONSTRXSTRING args[]
 
 size_t RexxEntry SysSearchPath(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  char     szFullPath[_MAX_PATH];      /* returned file name         */
-  char     szCurDir[MAX_ENVVAR + _MAX_PATH]; /* current directory    */
-  char     szEnvStr[MAX_ENVVAR];
+    char     szFullPath[_MAX_PATH];      /* returned file name         */
+    char     szCurDir[MAX_ENVVAR + _MAX_PATH]; /* current directory    */
+    char     szEnvStr[MAX_ENVVAR];
 
-  LPTSTR pszOnlyFileName;              /* parm for searchpath        */
-  LPTSTR lpPath;                       /* ptr to search path+        */
-  UINT   errorMode;
+    LPTSTR pszOnlyFileName;              /* parm for searchpath        */
+    LPTSTR lpPath;                       /* ptr to search path+        */
+    UINT   errorMode;
 
-                                       /* validate arguments         */
-  if (numargs < 2 || numargs > 3 ||
-      !RXVALIDSTRING(args[0]) ||
-      !RXVALIDSTRING(args[1]))
-    return INVALID_ROUTINE;
+    /* validate arguments         */
+    if (numargs < 2 || numargs > 3 ||
+        !RXVALIDSTRING(args[0]) ||
+        !RXVALIDSTRING(args[1]))
+    {
+        return INVALID_ROUTINE;
+    }
 
 
-                                       /* search current directory   */
-  GetCurrentDirectory(_MAX_PATH, szCurDir);
-  lpPath=strcat(szCurDir,";");         /*  and specified path        */
+    /* search current directory   */
+    GetCurrentDirectory(_MAX_PATH, szCurDir);
+    lpPath=strcat(szCurDir,";");         /*  and specified path        */
 
-  if (GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR))
-     lpPath=strcat(szCurDir,szEnvStr); /* szEnvStr instead of lpEnv  */
+    if (GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR))
+    {
+        lpPath=strcat(szCurDir,szEnvStr); /* szEnvStr instead of lpEnv  */
+    }
 
     if (numargs == 3)
     {                  /* process options            */
         char opt = toupper(args[2].strptr[0]);
-        if (opt = 'N')
+        if (opt == 'N')
         {
             GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR);
             lpPath = szEnvStr;
@@ -2902,21 +2906,23 @@ size_t RexxEntry SysSearchPath(const char *name, size_t numargs, CONSTRXSTRING a
             return INVALID_ROUTINE;          /* Invalid option             */
         }
     }
-                                       /* use DosSearchPath          */
+    /* use DosSearchPath          */
 
-  errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-  if (0 == SearchPath(
-         (LPCTSTR)lpPath,              /* path srch, NULL will+      */
-         (LPCTSTR)args[1].strptr,      /* address if filename        */
-         NULL,                         /* filename contains .ext     */
-         _MAX_PATH,                    /* size of fullname buffer    */
-         szFullPath,                   /* where to put results       */
-         &pszOnlyFileName))
-      szFullPath[0]='\0';              /* set to NULL if failure     */
+    errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    if (0 == SearchPath(
+                       (LPCTSTR)lpPath,              /* path srch, NULL will+      */
+                       (LPCTSTR)args[1].strptr,      /* address if filename        */
+                       NULL,                         /* filename contains .ext     */
+                       _MAX_PATH,                    /* size of fullname buffer    */
+                       szFullPath,                   /* where to put results       */
+                       &pszOnlyFileName))
+    {
+        szFullPath[0]='\0';              /* set to NULL if failure     */
+    }
 
-  BUILDRXSTRING(retstr, szFullPath);   /* pass back result           */
-  SetErrorMode(errorMode);
-  return VALID_ROUTINE;
+    BUILDRXSTRING(retstr, szFullPath);   /* pass back result           */
+    SetErrorMode(errorMode);
+    return VALID_ROUTINE;
 }
 
 
