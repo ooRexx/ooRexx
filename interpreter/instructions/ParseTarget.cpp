@@ -118,6 +118,8 @@ void RexxTarget::next(
     // reset the stack to the entry top, and push this value on to protect it.
     this->stack->setTop(this->stackTop);
     this->stack->push(string);
+    // if tracing results or intermediates, show the string being parsed.
+    context->traceResult(string);
     this->start = 0;                     /* start at the beginning            */
     this->pattern_end = 0;               /* no pattern done yet               */
     this->pattern_start = 0;             /* save the pattern start            */
