@@ -3025,7 +3025,7 @@ int64_t StreamInfo::getLineWritePosition()
         if (lineWritePosition == 0)
         {
             // update the position based on the current character position
-            lineWritePosition = queryLinePosition(charWritePosition);
+            lineWritePosition = queryLinePosition(charWritePosition) + 1;
         }
         // synch up the character positioning
         lineWriteCharPosition = charWritePosition;
