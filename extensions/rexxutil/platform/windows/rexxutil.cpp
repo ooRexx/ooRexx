@@ -5175,9 +5175,9 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
 {
     CHAR          stemName[255];
     size_t        first = 1;
-    size_t        last = ULONG_MAX;
+    size_t        last = SIZE_MAX;
     size_t        firstCol = 0;
-    size_t        lastCol = ULONG_MAX;
+    size_t        lastCol = SIZE_MAX;
     INT           sortType = SORT_CASESENSITIVE;
     INT           sortOrder = SORT_ASCENDING;
 
@@ -5228,7 +5228,7 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
 
     if ((numargs >= 4) && RXVALIDSTRING(args[3])) /* first element to sort */
     {
-      if (sscanf(args[3].strptr, "%ld", &first) != 1)
+      if (sscanf(args[3].strptr, "%Iu", &first) != 1)
         return INVALID_ROUTINE;
       if (first == 0)
         return INVALID_ROUTINE;
@@ -5236,7 +5236,7 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
 
     if ((numargs >= 5) && RXVALIDSTRING(args[4])) /* last element to sort */
     {
-      if (sscanf(args[4].strptr, "%ld", &last) != 1)
+      if (sscanf(args[4].strptr, "%Iu", &last) != 1)
         return INVALID_ROUTINE;
       if (last < first)
         return INVALID_ROUTINE;
@@ -5244,14 +5244,14 @@ size_t RexxEntry SysStemSort(const char *name, size_t numargs, CONSTRXSTRING arg
 
     if ((numargs >= 6) && RXVALIDSTRING(args[5])) /* first column to sort */
     {
-      if (sscanf(args[5].strptr, "%ld", &firstCol) != 1)
+      if (sscanf(args[5].strptr, "%Iu", &firstCol) != 1)
         return INVALID_ROUTINE;
       firstCol--;
     } /* endif */
 
     if ((numargs == 7) && RXVALIDSTRING(args[6])) /* last column to sort */
     {
-      if (sscanf(args[6].strptr, "%ld", &lastCol) != 1)
+      if (sscanf(args[6].strptr, "%Iu", &lastCol) != 1)
         return INVALID_ROUTINE;
       lastCol--;
       if (lastCol < firstCol)
