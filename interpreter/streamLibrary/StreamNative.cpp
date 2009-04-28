@@ -934,13 +934,18 @@ void StreamInfo::writeBuffer(const char *data, size_t length, size_t &bytesWritt
     {
         notreadyError();
     }
-    // make sure the current write position is updated after the write.
-    if (!fileInfo.getPosition(charWritePosition))
+    // we can't update or query the position for a transient stream, so
+    // we have to assume this was written correctly.
+    if (!transient)
     {
-        notreadyError();
+        // make sure the current write position is updated after the write.
+        if (!fileInfo.getPosition(charWritePosition))
+        {
+            notreadyError();
+        }
+        // make sure we keep this origin 1
+        charWritePosition++;
     }
-    // make sure we keep this origin 1
-    charWritePosition++;
 }
 
 /**
