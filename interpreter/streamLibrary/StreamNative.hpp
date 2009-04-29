@@ -176,6 +176,7 @@ protected:
    int64_t lineWriteCharPosition;     // current line write position
    int64_t stream_line_size;          // emulated stream size (lines)
    StreamState state;                 // current stream state
+   int errorInfo;                     // error information about the last notready condition
    size_t  binaryRecordLength;        // binary file record length
 
    char *bufferAddress;                // current read buffer

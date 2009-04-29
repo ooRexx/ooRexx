@@ -303,6 +303,7 @@ void StreamInfo::notreadyError(int error_code, RexxObjectPtr result)
         result = defaultResult;
     }
     state = StreamError;
+    errorInfo = error_code;
     fileInfo.clearErrors();              // clear any errors if the stream is open
     // raise this as a notready condition
     context->RaiseCondition("NOTREADY", context->String(stream_name), context->ArrayOfOne(self), result);
@@ -843,6 +844,14 @@ void StreamInfo::writeSetup()
     {
         implicitOpen(operation_write);
     }
+
+    // opened read only?  we can't do this
+    // handle as a not ready condition
+    if (read_only)
+    {
+        notreadyError(EACCES);
+    }
+
     /* do the open                       */
     /* reset to a ready state            */
     state = StreamReady;
@@ -3454,8 +3463,6 @@ RexxStringObject StreamInfo::getDescription()
         {
             const char *errorString = NULL;
 
-            int errorInfo = fileInfo.errorInfo();
-
             if (errorInfo != 0)
             {
                 errorString = strerror(errorInfo);
@@ -3478,13 +3485,11 @@ RexxStringObject StreamInfo::getDescription()
         case StreamError:                  /* had a stream error                */
         {
             const char *errorString = NULL;
-            int errorInfo = fileInfo.errorInfo();
 
             if (errorInfo != 0)
             {
                 errorString = strerror(errorInfo);
             }
-
             if (errorString != NULL)
             {
                                                  /* format the result string          */
