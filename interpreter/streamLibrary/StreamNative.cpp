@@ -2253,17 +2253,17 @@ const char *StreamInfo::streamOpen(const char *options)
         raiseException(Rexx_Error_Incorrect_method);
     }
 
-    // If read/write/both/append not specified, the default is BOTH APPEND.
+    // If read/write/both/append not specified, the default is BOTH, with the initial
+    // positioning at the end
     // (According to the current doc.)
     if (!(oflag & (O_WRONLY | RDWR_CREAT )) && !read_only)
     {
         oflag |= O_RDWR | RDWR_CREAT;    /* set this up for read/write mode   */
         pmode = IREAD_IWRITE;            /* save the pmode info               */
         read_write = true;
-
-        if (!(oflag & (O_TRUNC | O_APPEND)))
+        // remember the append status
+        if ((oflag & O_APPEND) != 0)
         {
-            oflag |= O_APPEND;
             append = true;
         }
     }
