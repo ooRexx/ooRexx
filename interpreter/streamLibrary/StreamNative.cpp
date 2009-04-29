@@ -1552,9 +1552,7 @@ RexxStringObject StreamInfo::linein(bool _setPosition, int64_t position, size_t 
     {
         // we need to adjust for any charin operations that might have
         // occurred within this record
-        size_t read_length = binaryRecordLength -
-         ((charReadPosition % (int64_t)binaryRecordLength) == 0 ? 0 :
-         (size_t)(charReadPosition % (int64_t)binaryRecordLength) - 1);
+        size_t read_length = binaryRecordLength - (size_t)((charReadPosition % (int64_t)binaryRecordLength) - 1);
         // a buffer string allows us to read the data into an actual string object
         // without having to first read it into a separate buffer.  Since charin()
         // is frequently used to read in entire files at one shot, this can be a
@@ -1564,7 +1562,7 @@ RexxStringObject StreamInfo::linein(bool _setPosition, int64_t position, size_t 
 
         // do the actual read
         size_t bytesRead;
-        readBuffer(buffer, count, bytesRead);
+        readBuffer(buffer, read_length, bytesRead);
 
         // now convert our buffered string into a real string object and return it.
         return context->FinishBufferString(temp, bytesRead);
