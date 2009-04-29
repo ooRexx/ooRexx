@@ -93,7 +93,7 @@ const size_t RexxActivation::trace_labels        = 0x00000020; /* trace all labe
 const size_t RexxActivation::trace_errors        = 0x00000040; /* trace all command errors          */
 const size_t RexxActivation::trace_failures      = 0x00000080; /* trace all command failures        */
 const size_t RexxActivation::trace_suppress      = 0x00000100; /* tracing is suppressed during skips*/
-const size_t RexxActivation::trace_flags         = 0x000001fe; /* all tracing flags (EXCEPT debug)  */
+const size_t RexxActivation::trace_flags         = 0x000001ff; /* all tracing flags                 */
                                                  // the default trace setting
 const size_t RexxActivation::default_trace_flags = trace_failures;
 
@@ -756,16 +756,46 @@ void RexxActivation::setTrace(size_t traceOption, size_t traceFlags)
     // current settings
     if ((traceOption&RexxSource::DEBUG_TOGGLE) != 0)
     {
+        // if nothing else was specified, this was a pure toggle
+        // operation, which maintains the existing settings
+        if (traceFlags == 0)
+        {
+            // pick up the existing flags
+            traceFlags = settings.flags&trace_flags;
+            traceOption = settings.traceOption;
+        }
+
         /* switch to the opposite setting    */
         /* already on?                       */
-        if (this->settings.flags & trace_debug)
+        if ((this->settings.flags&trace_debug) != 0)
         {
             /* switch the setting off            */
             traceFlags &= ~trace_debug;
+            traceOption &= ~RexxSource::DEBUG_ON;
+            // flipping out of debug mode.  Reissue the debug prompt when
+            // turned back on again
+            this->settings.flags &= ~debug_prompt_issued;
         }
         else
         {
             // switch the setting on in both the flags and the setting
+            traceFlags |= trace_debug;
+            traceOption |= RexxSource::DEBUG_ON;
+        }
+    }
+    // are we in debug mode already?  A trace setting with no "?" maintains the
+    // debug setting, unless it is Trace Off
+    else if ((settings.flags&trace_debug) != 0)
+    {
+        if (traceFlags == 0)
+        {
+            // flipping out of debug mode.  Reissue the debug prompt when
+            // turned back on again
+            this->settings.flags &= ~debug_prompt_issued;
+        }
+        else
+        {
+            // add debug mode into the new settings if on
             traceFlags |= trace_debug;
             traceOption |= RexxSource::DEBUG_ON;
         }
@@ -3636,7 +3666,7 @@ void RexxActivation::traceClause(      /* trace a REXX instruction          */
     if (line != OREF_NULL)               /* have a source line?               */
     {
         /* newly into debug mode?            */
-        if ((this->settings.flags&trace_debug && !(this->settings.flags&debug_prompt_issued)))
+        if ((this->settings.flags&trace_debug && !(this->settings.flags&source_traced)))
         {
             this->traceSourceString();       /* trace the source string           */
         }
