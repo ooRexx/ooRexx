@@ -1311,8 +1311,7 @@
    if Arg(1,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    parse value self~GetSize with dcx dcy
    s = screenSize()
-   parse var s dummy dummy sx sy
-   return WndShow_Pos("P",self~DlgHandle, (sx - dcx * self~FactorX) %2, (sy - dcy * self~FactorY) %2, 0, 0,,
+   return WndShow_Pos("P",self~DlgHandle, (s[3] - dcx * self~FactorX) %2, (s[4] - dcy * self~FactorY) %2, 0, 0,,
                            "NOSIZE "||showOptions)
 
 

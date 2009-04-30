@@ -69,7 +69,7 @@
 
 ::method CalcSize
    size = self~getTextSizeDlg(self~msg)
-   parse value screenSize() with scrx scry .
+   scrSize = screenSize()
    self~dims["sx"] = size~width
    self~dims["sy"] = size~height
    if self~XExt = 0 then do
@@ -87,8 +87,8 @@
        if lines >1 then self~dims["cy"] = self~dims["sy"]+20
        else self~dims["cy"] = self~dims["sy"]*2.2+20
    end
-   self~dims["x"] = trunc((scrx-self~dims["cx"]) /2)
-   self~dims["y"] = trunc((scry - self~dims["cy"] - 20) /2)
+   self~dims["x"] = trunc((scrSize[1]-self~dims["cx"]) /2)
+   self~dims["y"] = trunc((scrSize[2] - self~dims["cy"] - 20) /2)
 
 ::method Popup
    self~CalcSize
@@ -149,9 +149,9 @@
 ::method CalcSize
    self~CalcSize:super
    self~dims["cy"] = self~dims["cy"]+10  /* 15 more for the progress bar */
-   parse value screenSize() with scrx scry .
-   self~dims["x"] = trunc((scrx-self~dims["cx"]) /2)
-   self~dims["y"] = trunc((scry - self~dims["cy"] - 20) /2)
+   scrSize = screenSize()
+   self~dims["x"] = trunc((scrSize[1]-self~dims["cx"]) /2)
+   self~dims["y"] = trunc((scrSize[2] - self~dims["cy"] - 20) /2)
 
 ::method "Progress="
    use arg newpos
