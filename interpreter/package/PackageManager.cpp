@@ -57,6 +57,12 @@
 #include "RexxActivation.hpp"
 #include "PackageClass.hpp"
 
+// this first set is the inital image set, which we preserve the references
+// to in order to reset the package loads when the Rexx environment shuts down
+RexxDirectory *PackageManager::imagePackages = OREF_NULL;
+RexxDirectory *PackageManager::imagePackageRoutines = OREF_NULL;
+RexxDirectory *PackageManager::imageRegisteredRoutines = OREF_NULL;
+RexxDirectory *PackageManager::imageLoadedRequires = OREF_NULL;
 
 RexxDirectory *PackageManager::packages = OREF_NULL;        // our loaded packages
 RexxDirectory *PackageManager::packageRoutines = OREF_NULL;     // table of functions loaded from packages
@@ -74,7 +80,7 @@ void PackageManager::initialize()
     loadedRequires = new_directory();
     // load the internal library first
     loadInternalPackage(OREF_REXX, rexxPackage);
-    loadLibrary(OREF_REXXUTIL);               // load the rexxutil package automatically
+    loadLibrary(OREF_REXXUTIL); // load the rexxutil package automatically
 }
 
 
@@ -106,10 +112,10 @@ void PackageManager::restore(RexxArray *imageArray)
 {
     // The memory manager is not initialized yet, so we just store the references
     // at this point.  A little later, we'll replace these with copies.
-    packages = (RexxDirectory *)imageArray->get(IMAGE_PACKAGES);
-    packageRoutines = (RexxDirectory *)imageArray->get(IMAGE_PACKAGE_ROUTINES);
-    registeredRoutines = (RexxDirectory *)imageArray->get(IMAGE_REGISTERED_ROUTINES);
-    loadedRequires = (RexxDirectory *)imageArray->get(IMAGE_REQUIRES);
+    imagePackages = (RexxDirectory *)imageArray->get(IMAGE_PACKAGES);
+    imagePackageRoutines = (RexxDirectory *)imageArray->get(IMAGE_PACKAGE_ROUTINES);
+    imageRegisteredRoutines = (RexxDirectory *)imageArray->get(IMAGE_REGISTERED_ROUTINES);
+    imageLoadedRequires = (RexxDirectory *)imageArray->get(IMAGE_REQUIRES);
 }
 
 
@@ -118,11 +124,12 @@ void PackageManager::restore(RexxArray *imageArray)
  */
 void PackageManager::restore()
 {
-    // we use copies of these directories to avoid old-to-new image problems.
-    packages = (RexxDirectory *)packages->copy();
-    packageRoutines = (RexxDirectory *)packageRoutines->copy();
-    registeredRoutines = (RexxDirectory *)registeredRoutines->copy();
-    loadedRequires = (RexxDirectory *)loadedRequires->copy();
+    // we use copies of the image directories to avoid old-to-new image problems.
+    // this also allows us to restore the environment after interpreter shutdown
+    packages = (RexxDirectory *)imagePackages->copy();
+    packageRoutines = (RexxDirectory *)imagePackageRoutines->copy();
+    registeredRoutines = (RexxDirectory *)imageRegisteredRoutines->copy();
+    loadedRequires = (RexxDirectory *)imageLoadedRequires->copy();
 
     for (HashLink i = packages->first(); packages->available(i); i = packages->next(i))
     {
@@ -132,6 +139,7 @@ void PackageManager::restore()
         if (!package->isInternal())
         {
             package->reload();
+            package->makeInternal();   // make this part of the persistent set now
         }
         else
         {
@@ -613,6 +621,13 @@ void PackageManager::unload()
             package->unload();
         }
     }
+
+    // now roll back to a copy of the image versions of these directories so we only
+    // have the orignal image set once again
+    packages = (RexxDirectory *)imagePackages->copy();
+    packageRoutines = (RexxDirectory *)imagePackageRoutines->copy();
+    registeredRoutines = (RexxDirectory *)imageRegisteredRoutines->copy();
+    loadedRequires = (RexxDirectory *)imageLoadedRequires->copy();
 }
 
 

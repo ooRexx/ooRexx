@@ -84,6 +84,7 @@ public:
     void   reload(RexxPackageEntry *pack);
     inline bool isLoaded() { return loaded; }
     inline bool isInternal() { return internal; }
+    inline void makeInternal() { internal = true; }
 
 protected:
 

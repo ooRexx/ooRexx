@@ -108,6 +108,11 @@ protected:
         IMAGE_ARRAY_SIZE = IMAGE_REQUIRES
     };
 
+    static RexxDirectory *imagePackages;        // our loaded packages
+    static RexxDirectory *imagePackageRoutines; // table of functions loaded from packages
+    static RexxDirectory *imageRegisteredRoutines;  // table of functions resolved by older registration mechanisms
+    static RexxDirectory *imageLoadedRequires;      // table of previously loaded requires files
+
 
     static RexxDirectory *packages;        // our loaded packages
     static RexxDirectory *packageRoutines; // table of functions loaded from packages
