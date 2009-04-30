@@ -287,10 +287,10 @@ size_t StringUtil::lastPos(const char *stringData, size_t haystackLen, RexxStrin
         // get the start position for the search.
         haystackLen = Numerics::minVal(_start, haystackLen);
         range = Numerics::minVal(range, haystackLen);
-        // adjust the starting point
+        // adjust the starting point by pretending this is smaller than the original string
         const char *startPoint = stringData + haystackLen - range;
                                          /* do the search                     */
-        const char *matchLocation = lastPos(needle->getStringData(), needleLen, startPoint, haystackLen);
+        const char *matchLocation = lastPos(needle->getStringData(), needleLen, startPoint, range);
         if (matchLocation == NULL)
         {
             return 0;
