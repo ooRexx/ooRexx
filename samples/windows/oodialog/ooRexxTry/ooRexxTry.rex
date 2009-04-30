@@ -67,10 +67,10 @@ See documentation for version control
             call errorDialog 'Error creating code dialog. initCode:' code~initCode
             exit
         end
-    "echo"
-    "echo This console will receive the output of your system commands."
-    "echo Try 'dir' for example."
-    "echo"
+    say
+    say "This console will receive the output of your system commands."
+    say "Try 'dir' for example."
+    say
     code~Execute('ShowTop')                     -- Execute the dialog
     code~DeInstall                              -- Finished, so deInstall
 exit
