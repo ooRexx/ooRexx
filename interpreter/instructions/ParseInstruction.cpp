@@ -151,8 +151,6 @@ void RexxInstructionParse::execute(
             stack->push(value);              /* add the value to the stack        */
             break;
     }
-    // if tracing results or intermediates, show the string being parsed.
-    context->traceResult(value);     /* trace if necessary                */
     /* create the parse target           */
     target.init(value, argList, argCount, instructionFlags&parse_translate, multiple, context, stack);
 
