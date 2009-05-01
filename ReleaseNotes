@@ -4,7 +4,7 @@
                               Version 4.0.0
 
   Copyright 2005, 2009 Rexx Language Association.  All rights reserved.
-                            April 15, 2009
+                            May 1, 2009
 
 Installation and Configuration
 ==============================
@@ -15,6 +15,37 @@ Prior to Installation:
 For installation help and other relevant notes, prior to installation,
 please read the "0ReadMe.pdf" PDF file which is placed with the
 downloadable files for this release on SourceForge.
+
+A Note on Linux packages:
+-------------------------
+
+The generically named rpm packages should install on any modern
+distribution that uses RPM as a package manager.  Likewise, the
+generically named deb packages will install on any modern debian-based
+systems.
+
+For instance, ooRexx-4.0.0-4567.x86_64.rpm, will install on 64-bit Fedora
+Core 9, Fedora Core 10, Open SuSE 11.1, etc..
+
+In the same manner, ooRexx-4.0.0-4567.i386.deb will install on 32-bit
+Ubuntu 7.04, Kubuntu 8.10, Debian 5.0, etc..
+
+When it is known that the generic package has problems on a distribution,
+the ooRexx team may build an additional package for that specific
+distribution.  In which case, the installation package will have the
+targeted distribution in its file name.
+
+I.e., on OpenSuSE prior to version 11, there is a problem.  A specific
+package is built for OpenSuSE prior to version 11.  The 32-bit package
+name looks like:
+
+ooRexx-4.0.0-4567.i386.suse102.rpm
+
+Please use the generically named rpm and deb packages.  If there is a
+problem on your distribution, report it by opening up a Tracker bug.
+Depending on resources, the ooRexx team may be able to build a specific
+package for that distribution.
+
 
 Changes in ooRexx 4.0.0
 =======================
