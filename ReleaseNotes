@@ -12,6 +12,11 @@ Installation and Configuration
 Prior to Installation:
 ----------------------
 
+Important:  An "upgrade" type of installation is neither tested nor
+supported on any platform.  Please completely uninstall a prior version of
+ooRexx before installing a new version.  Installing over the top of an
+existing installation is likely to produce unpredictable results.
+
 For installation help and other relevant notes, prior to installation,
 please read the "0ReadMe.pdf" PDF file which is placed with the
 downloadable files for this release on SourceForge.
