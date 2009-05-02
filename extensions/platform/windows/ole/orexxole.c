@@ -1659,6 +1659,87 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
 }
 
 /**
+ *  Converts the specified Rexx object to VT_BOOL, or raises an exception if the
+ *  Rexx object is not strictly .true or .false.  This function should only be
+ *  called when it is known that VT_BOOL is the only correct type for the
+ *  variant.
+ *
+ *  When we know the COM method requires a bool, (DestVt == VT_BOOL,) but the
+ *  user did not specify true or false for the argument, an exception is raised.
+ *  In the past, converting to VARIANT_FALSE or VARIANT_TRUE when the usere did
+ *  not specify .true or .false, has lead to hard to diagnose failures. Better
+ *  to raise an exception and get the user to fix her code.
+ *
+ * @param context   The thread context we are operating under.
+ * @param RxObject  The ooRexx object to be converted.
+ * @param pVariant  The returned variant, VT_TRUE or VT_FALSE.
+ * @param byRef     Whether the variant is by reference or not.
+ *
+ * @return  True, conversion successful, or false an exception was raised.
+ */
+bool rexx2vt_bool(RexxThreadContext *context, RexxObjectPtr RxObject, VARIANT *pVariant, bool byRef)
+{
+    VARIANT_BOOL targetValue;
+
+    if ( RxObject == context->True() )
+    {
+        targetValue = VARIANT_TRUE;
+    }
+    else if ( RxObject == context->False() )
+    {
+        targetValue = VARIANT_FALSE;
+    }
+    else
+    {
+        wholenumber_t intval;
+
+        if ( context->ObjectToWholeNumber(RxObject, &intval) )
+        {
+            if (intval == 0)
+            {
+                targetValue = VARIANT_FALSE;
+            }
+            else if (intval == 1)
+            {
+                    targetValue = VARIANT_TRUE;
+            }
+            else
+            {
+                goto notTrueOrFalse;
+            }
+        }
+        else
+        {
+            goto notTrueOrFalse;
+        }
+    }
+
+    if ( byRef )
+    {
+        V_VT(pVariant) = VT_BOOL|VT_BYREF;
+        *V_BOOLREF(pVariant) = targetValue;
+    }
+    else
+    {
+        V_VT(pVariant) = VT_BOOL;
+        V_BOOL(pVariant) = targetValue;
+    }
+    return true;
+
+notTrueOrFalse:
+    char buf[128];
+    _snprintf(buf, sizeof(buf),
+              "Cannot convert REXX object \"%s\" to VT_BOOL: The REXX object is not .true or .false.",
+              context->ObjectToStringValue(RxObject));
+
+    V_VT(pVariant) = VT_ERROR;
+    V_ERROR(pVariant) = DISP_E_PARAMNOTFOUND;
+    context->RaiseException1(Rexx_Error_OLE_Error_user_defined, context->String(buf));
+
+    return false;
+}
+
+/**
   * Convert an ooRexx object to a Variant.
   *
   * Notes:
@@ -1672,7 +1753,7 @@ RexxObjectPtr Variant2Rexx(RexxThreadContext *context, VARIANT *pVariant)
   */
 bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *pVariant, VARTYPE _DestVt, size_t iArgPos)
 {
-    BOOL          fByRef = FALSE;
+    bool          fByRef = false;
     VARIANT       sVariant;
     HRESULT       hResult;
     RexxObjectPtr RxObject;
@@ -1691,7 +1772,7 @@ bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
     if (DestVt & VT_BYREF)
     {
         DestVt ^= VT_BYREF;
-        fByRef = TRUE;
+        fByRef = true;
     }
 
     /* arguments are filled in from the end of the array */
@@ -1788,44 +1869,7 @@ bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
 
     if ( DestVt == VT_BOOL )
     {
-        VARIANT_BOOL targetValue;
-
-        if (RxObject == context->True())
-        {
-            targetValue = VARIANT_TRUE;
-        }
-        else if (RxObject == context->False())
-        {
-            targetValue = VARIANT_FALSE;
-        }
-        else
-        {
-            wholenumber_t intval;
-
-            if (context->ObjectToWholeNumber(RxObject, &intval))
-            {
-                if (intval == 0)
-                {
-                    targetValue = VARIANT_FALSE;
-                }
-                else
-                {
-                    targetValue = VARIANT_TRUE;
-                }
-            }
-        }
-
-        if (fByRef)
-        {
-            V_VT(pVariant) = VT_BOOL|VT_BYREF;
-            *V_BOOLREF(pVariant) = targetValue;
-        }
-        else
-        {
-            V_VT(pVariant) = VT_BOOL;
-            V_BOOL(pVariant) = targetValue;
-        }
-        return true;
+        return rexx2vt_bool(context, RxObject, pVariant, fByRef);
     }
 
     LPOLESTR  lpUniBuffer = NULL;
@@ -1897,15 +1941,14 @@ bool Rexx2Variant(RexxThreadContext *context, RexxObjectPtr _RxObject, VARIANT *
         }
 
         ORexxOleFree( lpUniBuffer);
+        return true;
     }
-    else
-    {
-        V_VT(pVariant) = VT_ERROR;
-        V_ERROR(pVariant) = DISP_E_PARAMNOTFOUND;
-        context->RaiseException1(Rexx_Error_Rexx2Variant, RxObject);
-        return false;
-    }
-    return true;
+
+    // Nothing worked, raise an exception.
+    V_VT(pVariant) = VT_ERROR;
+    V_ERROR(pVariant) = DISP_E_PARAMNOTFOUND;
+    context->RaiseException1(Rexx_Error_Rexx2Variant, RxObject);
+    return false;
 }
 
 
