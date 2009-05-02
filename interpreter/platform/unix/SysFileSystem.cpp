@@ -261,12 +261,12 @@ bool SysFileSystem::fileExists(const char * fname)
     rc = stat(fname, &filestat);
     if (rc == 0)
     {
-        if (!S_ISREG(filestat.st_mode))
+        if (S_ISREG(filestat.st_mode))
         {
-            return false;
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
 
