@@ -306,7 +306,8 @@ void StreamInfo::notreadyError(int error_code, RexxObjectPtr result)
     errorInfo = error_code;
     fileInfo.clearErrors();              // clear any errors if the stream is open
     // raise this as a notready condition
-    context->RaiseCondition("NOTREADY", context->String(stream_name), context->ArrayOfOne(self), result);
+    // NOTE:  The additional information only needs to
+    context->RaiseCondition("NOTREADY", context->String(stream_name), self, result);
     // throw the stream object as an exception to unwind
     throw this;
 }

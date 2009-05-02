@@ -1719,13 +1719,13 @@ void RexxEntry APIRaiseException(RexxThreadContext *c, size_t n, RexxArrayObject
     }
 }
 
-void RexxEntry RaiseCondition(RexxThreadContext *c, CSTRING name, RexxStringObject desc, RexxArrayObject add, RexxObjectPtr result)
+void RexxEntry RaiseCondition(RexxThreadContext *c, CSTRING name, RexxStringObject desc, RexxObjectPtr add, RexxObjectPtr result)
 {
     ApiContext context(c);
     try
     {
         context.context->enableConditionTrap();
-        context.activity->raiseCondition(new_upper_string(name), OREF_NULL, (RexxString *)desc, (RexxArray *)add, (RexxObject *)result);
+        context.activity->raiseCondition(new_upper_string(name), OREF_NULL, (RexxString *)desc, (RexxObject *)add, (RexxObject *)result);
     }
     catch (RexxNativeActivation *)
     {
