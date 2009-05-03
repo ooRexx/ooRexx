@@ -1060,6 +1060,12 @@ void StreamInfo::writeFixedLine(const char *data, size_t length)
  */
 void StreamInfo::setPosition(int64_t position, int64_t &newPosition)
 {
+    // if not open yet, open now, but don't create this if doesn't
+    // already exist.
+    if (!isopen)
+    {
+        implicitOpen(operation_nocreate);
+    }
     // Seek to the target position, if possible.  The request position
     // is a 1-based character number.  We need to convert this into
     // a zero-based one before moving.
@@ -2578,6 +2584,14 @@ int64_t StreamInfo::streamPosition(const char *options)
             }
         }
     }
+
+    // if not open yet, open now, but don't create this if doesn't
+    // already exist.
+    if (!isopen)
+    {
+        implicitOpen(operation_nocreate);
+    }
+
     /* if the write stream is being      */
     /* repositioned                      */
     if (position_flags & operation_write)
