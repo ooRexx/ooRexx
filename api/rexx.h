@@ -282,9 +282,9 @@ RexxReturnCode REXXENTRY RexxDidRexxTerminate(void);
 typedef RexxReturnCode (REXXENTRY *PFNREXXDIDREXXTERMINATE)(void);
 #define REXXDIDREXXTERMINATE RexxDidRexxTerminate
 
-RexxReturnCode REXXENTRY RexxShutdownAPI(void);
+RexxReturnCode REXXENTRY RexxShutDownAPI(void);
 typedef RexxReturnCode (REXXENTRY *PFNREXXSHUTDOWNAPI)(void);
-#define REXXSHUTDOWNAPI RexxShutdownAPI
+#define REXXSHUTDOWNAPI RexxShutDownAPI
 
 
 RexxReturnCode REXXENTRY RexxTranslateProgram(

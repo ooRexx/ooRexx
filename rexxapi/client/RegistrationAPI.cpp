@@ -585,7 +585,7 @@ RexxReturnCode REXXENTRY RexxFreeMemory(void *ptr)
  *
  * @return always returns true
  */
-RexxReturnCode REXXENTRY RexxShutdownAPI()
+RexxReturnCode REXXENTRY RexxShutDownAPI()
 {
     return true;
 }

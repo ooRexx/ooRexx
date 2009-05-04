@@ -76,4 +76,4 @@ EXPORTS
      RexxFreeMemory
      RexxDeleteSessionQueue
      RexxCreateSessionQueue
-     RexxShutdownAPI
+     RexxShutDownAPI
