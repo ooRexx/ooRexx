@@ -764,6 +764,10 @@ void StreamInfo::implicitOpen(int type)
             return;
         }
     }
+    // ready to go...positioning the stream will attempt an implicit open
+    // if this is not on, so flip it now before doing the remainder of the
+    // operations.
+    isopen = true;
 
     // persistent writeable stream?
     if (!fileInfo.isTransient() && !read_only)
@@ -799,8 +803,6 @@ void StreamInfo::implicitOpen(int type)
         lineWritePosition = 0;
         lineWriteCharPosition = 0;
     }
-    // ready to go
-    isopen = true;
     state = StreamReady;
 
     // go process the stream type
@@ -2336,6 +2338,8 @@ const char *StreamInfo::streamOpen(const char *options)
     {
         fileInfo.setBuffering(false, 0);
     }
+    // positioning the stream will test if this is open or not, so mark it open now
+    isopen = true;
 
 /********************************************************************************************/
 /*          if it is a persistant stream put the write character pointer at the end         */
@@ -2375,7 +2379,6 @@ const char *StreamInfo::streamOpen(const char *options)
         lineWritePosition = 0;
         lineWriteCharPosition = 0;
     }
-    isopen = true;     /* this is now open                  */
     /* this is now ready                 */
     state = StreamReady;
     /* go process the stream type        */
