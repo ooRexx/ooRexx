@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                           RexxHashTable.c      */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Hash Table Class                                                 */
 /*                                                                            */
@@ -791,18 +791,22 @@ RexxArray  *RexxHashTable::getAll(
     size_t count = countAll(_index);
     HashLink position = hashIndex(_index);         /* calculate the hash slot           */
     RexxArray *result = new_array(count);           /* get proper size result array      */
-    size_t i = 1;                               /* start at the first element        */
-    position = hashIndex(_index);         /* calculate the hash slot           */
-    do
-    {                                 /* while more items in chain         */
-                                      /* if got a match                    */
-        if (EQUAL_VALUE(_index, this->entries[position].index))
-        {
-            /* copy the value into our array     */
-            result->put(this->entries[position].value,i++);
-        }
-        /* step to the next link             */
-    } while ((position = this->entries[position].next) != NO_MORE);
+    // only copy if we have something to copy
+    if (count > 0)
+    {
+        size_t i = 1;                               /* start at the first element        */
+        position = hashIndex(_index);         /* calculate the hash slot           */
+        do
+        {                                 /* while more items in chain         */
+                                          /* if got a match                    */
+            if (EQUAL_VALUE(_index, this->entries[position].index))
+            {
+                /* copy the value into our array     */
+                result->put(this->entries[position].value,i++);
+            }
+            /* step to the next link             */
+        } while ((position = this->entries[position].next) != NO_MORE);
+    }
     return result;                       /* return the result array           */
 }
 
