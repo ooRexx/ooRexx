@@ -617,23 +617,3 @@ size_t RexxEntry GetDlgMsg(const char *funcname, size_t argc, CONSTRXSTRING *arg
    return 0;
 }
 
-
-size_t RexxEntry SetLBTabStops(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   ULONG i;
-   INT tabs[20];
-
-   CHECKARGL(3);
-
-   HWND hWnd = GET_HWND(argv[0]);
-
-   for (i=0; (i<argc-2) && (i < 20) ; i++)
-   {
-      tabs[i] = atoi(argv[i+2].strptr);
-   }
-
-   i = (ULONG)SendDlgItemMessage(hWnd, atoi(argv[1].strptr), LB_SETTABSTOPS, (WPARAM)(argc-2), (LPARAM)tabs);
-   RETC(!i)
-}
-
-

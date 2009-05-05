@@ -1005,23 +1005,11 @@
    self~DeleteListEntry(id, index)
    return self~InsertListEntry(id, index, dataString)
 
-   /* Sets tabulators for a list box. First arg is the list box' id */
-
-::method SetListTabulators unguarded
-   if arg() < 2 then return -1
-   id = arg(1)
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
-   if id = -1 then return -1
-   cs = self~DlgHandle", "id
-   do i=2 to arg()
-      cs = cs", "arg(i)
-   end
-   interpret("call SetLBTabStops "cs)
-
+-- Sets the tab stops for a ListBox.
+::method SetListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
 
    /* Adds all filenames in the directory 'drvPath' to the list box */
    /* argument 'fileAttributes' can be none, one or more of (seperated by blanks): */
-
 ::method ListAddDirectory unguarded
    use arg id, drvPath, fileAttributes
    READWRITE  = 0

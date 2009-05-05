@@ -39,6 +39,22 @@
 #ifndef oodCommon_Included
 #define oodCommon_Included
 
+
+#define OOD_ID_EXCEPTION -9
+
+// Enum for the type of an ooDialog class.  Types to be added as needed.
+typedef enum
+{
+    oodPlainBaseDialog, oodCategoryDialog, oodStaticControl, oodButtonControl, oodEditControl,
+    oodListBox,         oodProgressBar,    oodUnknown
+} oodClass_t;
+
+// Enum for the type of Windows dialog control.
+typedef enum
+{
+    winStatic, winButton, winEdit, winProgressBar
+} oodControl_t;
+
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
 extern void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
 extern void rxdatacpy(CHAR * tar, RXSTRING &src);
@@ -50,9 +66,15 @@ extern LONG HandleError(PRXSTRING r, CHAR * text);
 extern char *strdupupr_nospace(const char *str);
 extern DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
+extern void ooDialogInternalException(RexxMethodContext *);
+extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
+extern int oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern bool oodSafeResolveID(int *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+
+
 // TODO move to APICommon when ooDialog is converted to use .Pointer instead of
 // pointer strings.
-extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);;
+extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 
 #define GET_HANDLE(p) string2pointer(p)
 #define GET_HWND(p)   ((HWND)string2pointer(p))

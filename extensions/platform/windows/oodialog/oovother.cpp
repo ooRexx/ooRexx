@@ -76,9 +76,6 @@ static BOOL removeKeyPressSubclass(SUBCLASSDATA *, HWND, INT);
 bool screenToDlgUnit(HWND hwnd, POINT *point);
 void screenToDlgUnit(HDC hdc, POINT *point);
 
-/* Enum for the type of a dialog control. Types to be added as needed. */
-typedef enum {oodcStatic, oodcButton, oodcEdit, oodcProgressBar,} oodControl_t;
-
 
 /**
  * Defines and structs for the DlgUtil class.
@@ -2401,7 +2398,6 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
    RETC(0)
 }
 
-#define OOD_ID_EXCEPTION -9
 #define NO_COMMCTRL_MSG           "failed to initialize %s; OS error code %d"
 #define COMCTL32_FULL_PART        0
 #define COMCTL32_NUMBER_PART      1
@@ -2831,73 +2827,6 @@ void oodSetSysErrCode(RexxMethodContext *context, DWORD code)
 inline void oodSetSysErrCode(RexxMethodContext *context)
 {
     oodSetSysErrCode(context, GetLastError());
-}
-
-/**
- * Resolves a resource ID used in a native API method call to its numeric value.
- * The resource ID may be numeric or symbolic.  An exception is raised if the ID
- * can not be resolved.
- *
- * @param context    Method context for the method call.
- * @param dlg        ooDialog dialog object. <Assumed>
- * @param id         Resource ID.
- * @param argPosDlg  Arg position of the assumed dialog object.  Used for raised
- *                   exceptions.
- * @param argPosID   Arg position of the ID, used for raised exceptions.
- *
- * @return int       The resolved numeric ID, or OOD_ID_EXCEPTION
- *
- * Note:  This function raises an execption if the ID does not resolve.
- * Therefore, it should not be used for existing ooDialog methods that used to
- * return -1 when the ID was not resolved.  Will need to see what strategy can
- * be implemented going forward.
- */
-int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObjectPtr id,
-                         int argPosDlg, int argPosID)
-{
-    if ( ! requiredClass(context, dlg, "ResourceUtils", argPosDlg) )
-    {
-        return OOD_ID_EXCEPTION;
-    }
-
-    int result = -1;
-    char *symbol = NULL;
-
-    if ( ! context->ObjectToInt32(id, &result) )
-    {
-        RexxDirectoryObject constDir = (RexxDirectoryObject)context->SendMessage0(dlg, "CONSTDIR");
-        if ( constDir != NULLOBJECT )
-        {
-            /* The original ooDialog code uses:
-             *   self~ConstDir[id~space(0)~translate]
-             * Why they allowed a space in a symbolic ID, I don't understand.
-             * But, I guess we need to preserve that.
-             */
-
-            symbol = strdupupr_nospace(context->ObjectToStringValue(id));
-            if ( symbol == NULL )
-            {
-                outOfMemoryException(context);
-                return OOD_ID_EXCEPTION;
-            }
-
-            RexxObjectPtr item = context->DirectoryAt(constDir, symbol);
-            if ( item != NULLOBJECT )
-            {
-                 context->ObjectToInt32(item, &result);
-            }
-        }
-    }
-
-    safeFree(symbol);
-
-    if ( result < 1 )
-    {
-        wrongArgValueException(context, argPosID, "a valid numeric ID or a valid symbloic ID" , id);
-        return OOD_ID_EXCEPTION;
-    }
-
-    return result;
 }
 
 RexxObjectPtr oodSetImageAttribute(RexxMethodContext *c, CSTRING varName, RexxObjectPtr image, HWND hwnd,
@@ -3814,14 +3743,9 @@ RexxObjectPtr advGetControl(RexxMethodContext *c, ARGLIST args, OSELF self, CSTR
         goto out;
     }
 
-    // Using 0 for the dialog arg position is okay for now.
-    int id = oodResolveSymbolicID(c, self, rxID, 0, 1);
-    if ( id == OOD_ID_EXCEPTION )
+    int id;
+    if ( ! oodSafeResolveID(&id, c, self, rxID, 0, 1) )
     {
-        // We clear the condition because all the AdvancedControls::getXXCtrl()
-        // methods prior to 4.0.0 would return a .nil object for this error.  It
-        // would be better to raise an exception, but ...
-        c->ClearCondition();
         goto out;
     }
     else
@@ -5235,7 +5159,7 @@ RexxMethod2(RexxObjectPtr, stc_setIcon, RexxObjectPtr, icon, OSELF, self)
     HWND hwnd = rxGetWindowHandle(context, self);
     HICON hIcon = (HICON)SendMessage(hwnd, STM_SETICON, (WPARAM)hNewIcon, 0);
 
-    result = oodSetImageAttribute(context, STATICIMAGE_ATTRIBUTE, icon, hwnd, hIcon, IMAGE_ICON, oodcStatic);
+    result = oodSetImageAttribute(context, STATICIMAGE_ATTRIBUTE, icon, hwnd, hIcon, IMAGE_ICON, winStatic);
 out:
     return result;
 }
@@ -5248,7 +5172,7 @@ out:
  */
 RexxMethod1(RexxObjectPtr, stc_getIcon, OSELF, self)
 {
-    return oodGetImageAttribute(context, self, STATICIMAGE_ATTRIBUTE, STM_GETICON, 0, IMAGE_ICON, oodcStatic);
+    return oodGetImageAttribute(context, self, STATICIMAGE_ATTRIBUTE, STM_GETICON, 0, IMAGE_ICON, winStatic);
 }
 
 /** StaticControl::setImage()
@@ -5281,7 +5205,7 @@ RexxMethod2(RexxObjectPtr, stc_setImage, RexxObjectPtr, rxNewImage, OSELF, self)
     HWND hwnd = rxGetWindowHandle(context, self);
     HANDLE oldHandle = (HANDLE)SendMessage(hwnd, STM_SETIMAGE, (WPARAM)type, (LPARAM)hImage);
 
-    result = oodSetImageAttribute(context, STATICIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, oodcStatic);
+    result = oodSetImageAttribute(context, STATICIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, winStatic);
 out:
     return result;
 }
@@ -5306,7 +5230,7 @@ RexxMethod2(RexxObjectPtr, stc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
         wrongArgValueException(context, 1, IMAGE_TYPE_LIST, getImageTypeName(type));
         return NULLOBJECT;
     }
-    return oodGetImageAttribute(context, self, STATICIMAGE_ATTRIBUTE, STM_GETIMAGE, type, -1, oodcStatic);
+    return oodGetImageAttribute(context, self, STATICIMAGE_ATTRIBUTE, STM_GETIMAGE, type, -1, winStatic);
 }
 
 /**
@@ -5976,7 +5900,7 @@ RexxMethod2(RexxObjectPtr, bc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
     }
     WPARAM wParam = (type == IMAGE_BITMAP) ? IMAGE_BITMAP : IMAGE_ICON;
 
-    return oodGetImageAttribute(context, self, BUTTONIMAGE_ATTRIBUTE, BM_GETIMAGE, wParam, type, oodcButton);
+    return oodGetImageAttribute(context, self, BUTTONIMAGE_ATTRIBUTE, BM_GETIMAGE, wParam, type, winButton);
 }
 
 /** ButtonControl::setImage()
@@ -6017,7 +5941,7 @@ RexxMethod2(RexxObjectPtr, bc_setImage, RexxObjectPtr, rxNewImage, OSELF, self)
     HWND hwnd = rxGetWindowHandle(context, self);
     HANDLE oldHandle = (HANDLE)SendMessage(hwnd, BM_SETIMAGE, (WPARAM)type, (LPARAM)hImage);
 
-    result = oodSetImageAttribute(context, BUTTONIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, oodcButton);
+    result = oodSetImageAttribute(context, BUTTONIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, winButton);
 
 out:
     return result;
@@ -6801,7 +6725,7 @@ RexxObjectPtr rxNewImageFromControl(RexxMethodContext *c, HWND hwnd, HANDLE hIma
         LONG style = GetWindowLong(hwnd, GWL_STYLE);
         switch ( ctrl )
         {
-            case oodcStatic :
+            case winStatic :
                 // If it is a cursor image, the control type is SS_ICON.
                 switch ( style & SS_TYPEMASK )
                 {
@@ -6818,7 +6742,7 @@ RexxObjectPtr rxNewImageFromControl(RexxMethodContext *c, HWND hwnd, HANDLE hIma
                 }
                 break;
 
-            case oodcButton :
+            case winButton :
                 switch ( style & BS_IMAGEMASK )
                 {
                     case BS_BITMAP :
@@ -8017,3 +7941,163 @@ RexxMethod1(POINTER, dlgutil_handleToPointer_cls, POINTERSTRING, handle)
 {
     return handle;
 }
+
+
+/** ListBox::setTabulators()
+ *  PlainBaseDialog::setListTabulators()
+ *  CategoryDialog::setCategoryListTabulators()
+ *
+ *  Sets the tab stop positions in a list-box.
+ *
+ *  This is generic implementation used bye several different classes.  The
+ *  resourceID and categoryId arguments are not always present.
+ *
+ *  @param resourceID  The resource ID (may be symbolic) of the list-box.
+ *
+ *  @param tabstop     The tab stop position.  This argument may repeat any
+ *                     number of times.  Each argument is the next succesive tab
+ *                     stop.  See the notes below for a fuller explanation.
+ *
+ *  @param categoryID  For a CategoryDialog, the catalog page that contains the
+ *                     ListBox.
+ *
+ *  @return 0 on success, -1 for an invalid resource ID, and 1 for an API
+ *          failure.
+ *
+ *  @note  The tab stop units are dialog template units. The tab stops must be
+ *         listed in ascending order. You can't place a tab stop behind a
+ *         previous tab stop.
+ *
+ *         If no tab stop is specified, than that signals the list-box to place
+ *         tab stops equidistant at the default of 2 dialog units.  If 1 tab
+ *         stop is specified, then equidistant tab stops are placed at the
+ *         distance specified.  Othewise, a tab stop is placed at each position
+ *         specified.
+ */
+RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
+{
+    RexxMethodContext *c = context;
+    HWND hControl = NULL;
+    int  rc = -1;
+    uint32_t *tabs = NULL;
+    oodClass_t objects[] = {oodCategoryDialog, oodPlainBaseDialog, oodListBox};
+
+    size_t count = c->ArrayItems((RexxArrayObject) args);
+    size_t tabStart = 1;
+
+    // Determine which object has invoked this method and parse the argument
+    // list.  The object class determines how to get the handle to the listbox,
+    // the count of tab stops, and at which arg position the tab stops start.
+    switch ( oodClass(context, self, objects, sizeof(objects) / sizeof(oodClass_t))  )
+    {
+        case oodListBox :
+            hControl = rxGetWindowHandle(context, self);
+            break;
+
+        case oodPlainBaseDialog :
+        {
+            if ( count < 1 )
+            {
+                c->RaiseException1(Rexx_Error_Incorrect_method_noarg, context->WholeNumber(1));
+                goto done_out;
+            }
+
+            int id;
+            RexxObjectPtr resourceID = c->ArrayAt(args, 1);
+            if ( ! oodSafeResolveID(&id, context, self, resourceID, 0, 1) )
+            {
+                goto done_out;
+            }
+
+            HWND hwnd = rxGetWindowHandle(context, self);
+            hControl = GetDlgItem(hwnd, id);
+            tabStart = 2;
+            count--;
+
+        } break;
+
+        case oodCategoryDialog :
+        {
+            if ( count < 2 )
+            {
+                c->RaiseException1(Rexx_Error_Incorrect_method_noarg, context->WholeNumber(count == 1 ? 2 : 1));
+                goto done_out;
+            }
+
+            int id;
+            RexxObjectPtr resourceID = c->ArrayAt(args, 1);
+            if ( ! oodSafeResolveID(&id, context, self, resourceID, 0, 1) )
+            {
+                goto done_out;
+            }
+
+            // CatagoryDialogs have this basic construct to hold the dialog
+            // handles for each page:
+            //  catalogDialog~catalog['handles'][categoryID] == hwndDialog
+
+            RexxDirectoryObject catalog = (RexxDirectoryObject)context->SendMessage0(self, "CATALOG");
+            if ( catalog == NULLOBJECT )
+            {
+                ooDialogInternalException(context);
+                goto done_out;
+            }
+
+            RexxArrayObject handles = (RexxArrayObject)c->DirectoryAt(catalog, "handles");
+            if ( handles == NULLOBJECT || ! c->IsArray(handles) )
+            {
+                ooDialogInternalException(context);
+                goto done_out;
+            }
+            RexxObjectPtr categoryID = c->ArrayAt(args, count);
+            RexxObjectPtr rxHwnd = c->SendMessage1(handles, "AT", categoryID);
+            if ( c->CheckCondition() )
+            {
+                goto done_out;
+            }
+
+            // From here on out, we might get NULL for window handles.  We just
+            // ignore that and let LB_SETTABSTOPS fail;
+            HWND hwnd = (HWND)string2pointer(c->ObjectToStringValue(rxHwnd));
+
+            hControl = GetDlgItem(hwnd, id);
+            tabStart = 2;
+            count -= 2;
+
+        } break;
+
+        default :
+            ooDialogInternalException(context);
+            goto done_out;
+            break;
+    }
+
+    if ( count > 0 )
+    {
+        tabs = (uint32_t *)malloc(sizeof(uint32_t *) * count);
+        if ( tabs == NULL )
+        {
+            outOfMemoryException(context);
+            goto done_out;
+        }
+
+        uint32_t *p = tabs;
+        for ( int i = 0; i < count; i++, p++, tabStart++ )
+        {
+            RexxObjectPtr tab = c->ArrayAt(args, tabStart);
+            if ( tab == NULLOBJECT || ! c->ObjectToUnsignedInt32(tab, p) )
+            {
+                c->RaiseException2(Rexx_Error_Incorrect_method_nonnegative, c->WholeNumber(tabStart), tab);
+                goto done_out;
+            }
+        }
+    }
+
+    // LB_SETTABSTOPS returns true on success, otherwise false.  Reverse the
+    // return so that 0 is returned for success and 1 for failure.
+    rc = (SendMessage(hControl, LB_SETTABSTOPS, (WPARAM)count, (LPARAM)tabs) == 0);
+
+done_out:
+    safeFree(tabs);
+    return rc;
+}
+

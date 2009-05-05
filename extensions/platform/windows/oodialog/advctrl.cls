@@ -1865,13 +1865,7 @@
    self~Delete(index)
    return self~Insert(index, dataString)
 
-::method SetTabulators
-   cs = self~hDlg", "self~id
-   do i=1 to arg()
-      cs = cs", "arg(i)
-   end
-   interpret("call SetLBTabStops "cs)
-
+::method SetTabulators external "LIBRARY oodialog generic_setListTabulators"
 
 ::method AddDirectory
    use arg drvPath, fileAttributes

@@ -600,16 +600,7 @@
    self~DeleteCategoryListEntry(id, item, category)
    return self~InsertCategoryListEntry(id, item, data, category)
 
-::method SetCategoryListTabulators unguarded
-   if arg() < 3 then return 1
-   id = arg(1)
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
-   if id = -1 then return -1
-   cs = self~catalog['handles'][arg(arg())]", "id
-   do i=2 to arg()-1
-      cs = cs", "arg(i)
-   end
-   interpret("call SetLBTabStops "cs)
+::method SetCategoryListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
 
 
 ::method CategoryListAddDirectory unguarded

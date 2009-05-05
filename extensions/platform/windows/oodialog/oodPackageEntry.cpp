@@ -97,7 +97,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(YesNoMessage);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(FindTheWindow);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(StartDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WindowRect);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(SetLBTabStops);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetScreenSize);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetSysMetrics);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetDialogFactor);
@@ -159,7 +158,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(FindTheWindow,        FindTheWindow),
     REXX_CLASSIC_ROUTINE(StartDialog,          StartDialog),
     REXX_CLASSIC_ROUTINE(WindowRect,           WindowRect),
-    REXX_CLASSIC_ROUTINE(SetLBTabStops,        SetLBTabStops),
     REXX_CLASSIC_ROUTINE(GetScreenSize,        GetScreenSize),
     REXX_CLASSIC_ROUTINE(GetDialogFactor,      GetDialogFactor),
     REXX_CLASSIC_ROUTINE(SleepMS,              SleepMS),
@@ -210,6 +208,8 @@ REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
+
+REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
 REXX_METHOD_PROTOTYPE(wb_getStyleRaw);
 REXX_METHOD_PROTOTYPE(wb_getExStyleRaw);
@@ -375,6 +375,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_handleToPointer_cls,  dlgutil_handleToPointer_cls),
     REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_test_cls,             dlgutil_test_cls),
+
+    REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
 
     REXX_METHOD(wb_getStyleRaw,               wb_getStyleRaw),
     REXX_METHOD(wb_getExStyleRaw,             wb_getExStyleRaw),
