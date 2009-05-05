@@ -137,16 +137,16 @@ void InterpreterInstance::initialize(RexxActivity *activity, RexxOption *options
     defaultEnvironment = SystemInterpreter::getDefaultAddressName();
     // our list of command handlers (must be done before options are processed)
     commandHandlers = new_directory();
-    processOptions(options);
-    // do system specific initialization
-    sysInstance.initialize(this, options);
-    // register the system command handlers for this platform.
-    sysInstance.registerCommandHandlers(this);
 
     // associate the thread with this instance
     activity->setupAttachedActivity(this);
     // create a local environment
     localEnvironment = new_directory();
+    processOptions(options);
+    // do system specific initialization
+    sysInstance.initialize(this, options);
+    // register the system command handlers for this platform.
+    sysInstance.registerCommandHandlers(this);
     // now do the local initialization;
     Interpreter::initLocal();
 }
