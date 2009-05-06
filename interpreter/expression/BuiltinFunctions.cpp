@@ -2246,6 +2246,17 @@ BUILTIN(STREAM)
                     context->getStreams()->remove(fullName);
                     return result;
                 }
+                // these are real operations that might cause an implicit open
+                else if (command_upper->wordPos(new_string("SEEK"), OREF_NULL)->getValue() > 0 ||
+                    command_upper->wordPos(new_string("POSITON"), OREF_NULL)->getValue() > 0)
+                {
+                    RexxString *fullName;
+                    bool added;
+                    RexxObject *stream = context->resolveStream(name, stack, true, &fullName, &added);
+                    // this is a real operation, so just leave alone
+                    RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
+                    return result;
+                }
                 else
                 {
                     RexxObject *stream = context->resolveStream(name, stack, true, NULL, NULL);
