@@ -432,7 +432,7 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
                 return false;
             }
             /* get space for the buf      */
-            dir_buf = (char *)malloc(strlen(home_dir)+strlen(st)+1);
+            dir_buf = (char *)malloc(strlen(home_dir)+strlen(st)+2);
             if (!dir_buf)
             {
                 return false;
@@ -445,7 +445,7 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
             /* get home directory path    */
             home_dir = getenv("HOME");     /* from the environment       */
                                            /* get space for the buf      */
-            dir_buf = (char *)malloc(strlen(home_dir)+1);
+            dir_buf = (char *)malloc(strlen(home_dir)+2);
             if (!dir_buf)
             {
                 return false;
@@ -466,7 +466,7 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
                 return false;
             }
                                            /* get space for the buf      */
-            dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+1);
+            dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+2);
             if (!dir_buf)
             {
                 return false;
@@ -487,7 +487,7 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
             }
             slash++;                       /* step over the slash        */
                                            /* get space for the buf      */
-            dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+strlen(slash)+1);
+            dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+strlen(slash)+2);
             if (!dir_buf)
             {
                 return false;
