@@ -357,6 +357,33 @@ bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPt
 }
 
 
+/* Returns a copy of s without quotes. Escaped characters are kept unchanged */
+char *unquote(const char *s)
+{
+    if (s == NULL) return NULL;
+    size_t size = strlen(s) + 1;
+    char *unquoted = (char*)malloc(sizeof(char)*size);
+    if (unquoted == NULL) return NULL;
+    char *u = unquoted;
+    char c;
+    bool escape = false;
+    do
+    {
+        c = *s;
+        if (escape)
+        {
+            *u++ = *s;
+            escape = false;
+        }
+        else if (c == '\\') escape = true;
+        else if (c != '"') *u++ = *s;
+        s++;
+    } 
+    while (c != '\0');
+    return unquoted;
+}
+
+
 /* Handle "cd XXX" command in same process */
 bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc)
 {
@@ -366,7 +393,7 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
     const char *slash;                      /* ptr to '/'                 */
     struct passwd *ppwd;
 
-    st = &cmd[3];
+    st = &cmd[2];
     while ((*st) && (*st == ' '))
     {
         st++;
@@ -422,6 +449,7 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
         {
             /* rest of string is username */
             ppwd = getpwnam(st);           /* get info about the user    */
+            if (ppwd == NULL || ppwd->pw_dir == NULL) return false;
                                            /* get space for the buf      */
             dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+1);
             if (!dir_buf)
@@ -438,6 +466,7 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
             username[slash - st] = '\0';
 
             ppwd = getpwnam(username);     /* get info about the user    */
+            if (ppwd == NULL || ppwd->pw_dir == NULL) return false;
             slash++;                       /* step over the slash        */
                                            /* get space for the buf      */
             dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+strlen(slash)+1);
@@ -449,9 +478,16 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
             sprintf(dir_buf, "%s/%s", ppwd->pw_dir, slash);
         }
     }
+    else
+    {
+        dir_buf = strdup(st);
+    }
 
-    int errCode = chdir(dir_buf);
-
+    char *unquoted = unquote(dir_buf);
+    if (unquoted == NULL) return false;
+    int errCode = chdir(unquoted);
+    free(unquoted);
+    
     free(dir_buf);
     if (errCode != 0)
     {
@@ -543,6 +579,35 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
 
     RexxObjectPtr rc = NULLOBJECT;
 
+    /* check for redirection symbols, ignore them when enclosed in double quotes.
+       escaped quotes are ignored. */
+    bool noDirectInvoc = false;
+    bool inQuotes = false;
+    bool escape = false;
+    size_t i;
+    for (i = 0; i<strlen(cmd); i++)
+    {
+        if (escape) escape = false;
+        else if (cmd[i] == '\\') escape = true;
+        else if (cmd[i] == '"')
+        {
+            inQuotes = !inQuotes;
+        }
+        else
+        {
+            /* if we're in the unquoted part and the current character is one of */
+            /* the redirection characters or the & for multiple commands then we */
+            /* will no longer try to invoke the command directly                 */
+            if (!inQuotes && (strchr("<>|&", cmd[i]) != NULL))
+            {
+                noDirectInvoc = true;
+                break;
+            }
+        }
+    }
+
+    if (!noDirectInvoc)
+    {
     /* execute 'cd' in the same process */
     size_t commandLen = strlen(cmd);
 
@@ -592,6 +657,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
                 return rc;
             }
         }
+    }
     }
 
 

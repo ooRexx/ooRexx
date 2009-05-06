@@ -123,18 +123,18 @@ void RexxInstructionEndIf::execute(
 /* Function:  Execute a REXX ENDIF instruction                              */
 /****************************************************************************/
 {
-    context->unindent();                 /* unindent the context              */
-    context->unindent();                 /* unindent for the total            */
                                          /* this the end of a WHEN block?     */
     if (this->instructionType == KEYWORD_ENDWHEN)
     {
-        context->removeBlock();            /* remove item from block stack      */
-        context->unindent();               /* unindent for the SELECT           */
+        // remove the select block and reset the indent
+        context->terminateBlock();
                                            /* set the restart point             */
         context->setNext((this->else_end)->nextInstruction);
     }
     if (this->else_end != OREF_NULL)     /* have to jump around an else?      */
     {
+        context->unindent();                 /* unindent the context              */
+        context->unindent();                 /* unindent for the total            */
                                          /* set the restart point             */
         context->setNext((this->else_end)->nextInstruction);
     }

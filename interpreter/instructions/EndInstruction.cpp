@@ -125,11 +125,10 @@ void RexxInstructionEnd::execute(
             break;
 
             // for labeled BLOCK types, we need to remove the active marker.
+        case OTHERWISE_BLOCK:
         case LABELED_OTHERWISE_BLOCK:
         case LABELED_DO_BLOCK:
-            doBlock = context->topBlock();
-
-            context->setIndent(doBlock->getIndent());
+            context->terminateBlock();
             break;
 
         default:                           /* all others                        */

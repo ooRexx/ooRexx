@@ -327,6 +327,7 @@ class ActivationSettings
    inline void              popBlock() { RexxDoBlock *temp; temp = this->dostack; this->dostack = temp->getPrevious(); temp->setHasNoReferences(); }
    inline RexxDoBlock     * topBlock() { return this->dostack; }
    inline void              terminateBlock(size_t _indent) { this->popBlock(); this->blockNest--; this->settings.traceindent = _indent; }
+   inline void              terminateBlock() { this->settings.traceindent = this->dostack->getIndent(); this->popBlock(); this->blockNest--; }
    inline void              newDo(RexxDoBlock *block) { this->pushBlock(block); this->blockNest++; this->settings.traceindent++;}
    inline void              removeBlock() { this->blockNest--; };
    inline void              addBlock()    { this->blockNest++; };

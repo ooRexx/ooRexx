@@ -168,31 +168,15 @@ void RexxInstructionSelect::execute(
     RexxDoBlock *doblock = OREF_NULL;
 
     context->traceInstruction(this);     /* trace if necessary                */
-    if (getLabel() != OREF_NULL)
-    {
-                                           /* create an active DO block         */
-        doblock = new RexxDoBlock (this, context->getIndent());
-        context->newDo(doblock);           /* set the new block                 */
-    }
-    else
-    {
-        context->indent();                   /* indent on tracing                 */
-        context->addBlock();               /* step the nesting level            */
-    }
+                                       /* create an active DO block         */
+    doblock = new RexxDoBlock (this, context->getIndent());
+    context->newDo(doblock);           /* set the new block                 */
                                        /* do debug pause if necessary       */
 
                                        /* have to re-execute?               */
     if (context->conditionalPauseInstruction())
     {
-        if (doblock != OREF_NULL)
-        {
-            this->terminate(context, doblock); /* cause termination cleanup         */
-        }
-        else
-        {
-            context->removeBlock();        /* cause termination cleanup         */
-            context->unindent();               /* step back trace indentation       */
-        }
+        this->terminate(context, doblock); /* cause termination cleanup         */
     }
 }
 
