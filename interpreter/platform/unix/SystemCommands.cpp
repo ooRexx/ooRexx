@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -360,26 +360,38 @@ bool sys_process_export(RexxExitContext *context, const char * cmd, RexxObjectPt
 /* Returns a copy of s without quotes. Escaped characters are kept unchanged */
 char *unquote(const char *s)
 {
-    if (s == NULL) return NULL;
+    if ( s == NULL )
+    {
+        return NULL;
+    }
     size_t size = strlen(s) + 1;
     char *unquoted = (char*)malloc(sizeof(char)*size);
-    if (unquoted == NULL) return NULL;
+    if ( unquoted == NULL )
+    {
+        return NULL;
+    }
     char *u = unquoted;
     char c;
     bool escape = false;
     do
     {
         c = *s;
-        if (escape)
+        if ( escape )
         {
             *u++ = *s;
             escape = false;
         }
-        else if (c == '\\') escape = true;
-        else if (c != '"') *u++ = *s;
+        else if ( c == '\\' )
+        {
+            escape = true;
+        }
+        else if ( c != '"' )
+        {
+            *u++ = *s;
+        }
         s++;
-    } 
-    while (c != '\0');
+    }
+    while ( c != '\0' );
     return unquoted;
 }
 
@@ -449,7 +461,10 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
         {
             /* rest of string is username */
             ppwd = getpwnam(st);           /* get info about the user    */
-            if (ppwd == NULL || ppwd->pw_dir == NULL) return false;
+            if (ppwd == NULL || ppwd->pw_dir == NULL)
+            {
+                return false;
+            }
                                            /* get space for the buf      */
             dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+1);
             if (!dir_buf)
@@ -466,7 +481,10 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
             username[slash - st] = '\0';
 
             ppwd = getpwnam(username);     /* get info about the user    */
-            if (ppwd == NULL || ppwd->pw_dir == NULL) return false;
+            if (ppwd == NULL || ppwd->pw_dir == NULL)
+            {
+                return false;
+            }
             slash++;                       /* step over the slash        */
                                            /* get space for the buf      */
             dir_buf = (char *)malloc(strlen(ppwd->pw_dir)+strlen(slash)+1);
@@ -484,10 +502,13 @@ bool sys_process_cd(RexxExitContext *context, const char * cmd, RexxObjectPtr rc
     }
 
     char *unquoted = unquote(dir_buf);
-    if (unquoted == NULL) return false;
+    if (unquoted == NULL)
+    {
+        return false;
+    }
     int errCode = chdir(unquoted);
     free(unquoted);
-    
+
     free(dir_buf);
     if (errCode != 0)
     {
@@ -587,8 +608,14 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
     size_t i;
     for (i = 0; i<strlen(cmd); i++)
     {
-        if (escape) escape = false;
-        else if (cmd[i] == '\\') escape = true;
+        if (escape)
+        {
+            escape = false;
+        }
+        else if (cmd[i] == '\\')
+        {
+            escape = true;
+        }
         else if (cmd[i] == '"')
         {
             inQuotes = !inQuotes;
@@ -608,56 +635,56 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
 
     if (!noDirectInvoc)
     {
-    /* execute 'cd' in the same process */
-    size_t commandLen = strlen(cmd);
+        /* execute 'cd' in the same process */
+        size_t commandLen = strlen(cmd);
 
-    if (strcmp(cmd, "cd") == 0)
-    {
-        if (sys_process_cd(context, cmd, rc))
-        {
-            return rc;
-        }
-    }
-    else if (commandLen >= 3)
-    {
-        char tmp[16];
-        strncpy(tmp, cmd, 3);
-        tmp[3] = '\0';
-        if (strcmp("cd ",tmp) == 0)
+        if (strcmp(cmd, "cd") == 0)
         {
             if (sys_process_cd(context, cmd, rc))
             {
                 return rc;
             }
         }
-        strncpy(tmp, cmd, 4);
-        tmp[4] = '\0';
-        if (strcmp("set ",tmp) == 0)
+        else if (commandLen >= 3)
         {
-            if (sys_process_export(context, cmd, rc, SET_FLAG)) /*unset works fine for me*/
+            char tmp[16];
+            strncpy(tmp, cmd, 3);
+            tmp[3] = '\0';
+            if (strcmp("cd ",tmp) == 0)
             {
-                return rc;
+                if (sys_process_cd(context, cmd, rc))
+                {
+                    return rc;
+                }
+            }
+            strncpy(tmp, cmd, 4);
+            tmp[4] = '\0';
+            if (strcmp("set ",tmp) == 0)
+            {
+                if (sys_process_export(context, cmd, rc, SET_FLAG)) /*unset works fine for me*/
+                {
+                    return rc;
+                }
+            }
+            strncpy(tmp, cmd, 6);
+            tmp[6] = '\0';
+            if (Utilities::strCaselessCompare("unset ", tmp) == 0)
+            {
+                if (sys_process_export(context, cmd, rc, UNSET_FLAG))
+                {
+                    return rc;
+                }
+            }
+            strncpy(tmp, cmd, 7);
+            tmp[7] = '\0';
+            if (Utilities::strCaselessCompare("export ", tmp) == 0)
+            {
+                if (sys_process_export(context, cmd, rc, EXPORT_FLAG))
+                {
+                    return rc;
+                }
             }
         }
-        strncpy(tmp, cmd, 6);
-        tmp[6] = '\0';
-        if (Utilities::strCaselessCompare("unset ", tmp) == 0)
-        {
-            if (sys_process_export(context, cmd, rc, UNSET_FLAG))
-            {
-                return rc;
-            }
-        }
-        strncpy(tmp, cmd, 7);
-        tmp[7] = '\0';
-        if (Utilities::strCaselessCompare("export ", tmp) == 0)
-        {
-            if (sys_process_export(context, cmd, rc, EXPORT_FLAG))
-            {
-                return rc;
-            }
-        }
-    }
     }
 
 
