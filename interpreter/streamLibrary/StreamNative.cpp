@@ -2010,6 +2010,13 @@ const char *StreamInfo::streamClose()
 RexxMethod1(CSTRING, stream_close, CSELF, streamPtr)
 {
     StreamInfo *stream_info = (StreamInfo *)streamPtr;
+    // we might be getting called from the uninit method after a creation
+    // error, so only close if we have the stream info
+    if (stream_info == NULL)
+    {
+        return 0;
+    }
+
     stream_info->setContext(context, context->NullString());
 
     try
