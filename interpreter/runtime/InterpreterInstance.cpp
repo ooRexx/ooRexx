@@ -143,6 +143,9 @@ void InterpreterInstance::initialize(RexxActivity *activity, RexxOption *options
     // create a local environment
     localEnvironment = new_directory();
     processOptions(options);
+    // when handled originally, we didn't have the exits setup
+    // do this now.
+    activity->setupExits();
     // do system specific initialization
     sysInstance.initialize(this, options);
     // register the system command handlers for this platform.

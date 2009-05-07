@@ -261,6 +261,7 @@ typedef enum
    SecurityManager *getEffectiveSecurityManager();
    SecurityManager *getInstanceSecurityManager();
    void inheritSettings(RexxActivity *parent);
+   void setupExits();
    void enterCurrentThread();
    void exitCurrentThread();
    void run(ActivityDispatcher &target);

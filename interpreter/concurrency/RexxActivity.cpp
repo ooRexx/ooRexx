@@ -1578,10 +1578,22 @@ void RexxActivity::addToInstance(InterpreterInstance *interpreter)
     threadContext.threadContext.functions = &threadContextFunctions;
     threadContext.owningActivity = this;
 
+    // go copy the exit definitions
+    setupExits();
+}
+
+
+/**
+ * Process for copying the exit definitions from the
+ * hosting instance.
+ */
+void RexxActivity::setupExits()
+{
+
     // copy all of the system exits
     for (int i = 0; i < LAST_EXIT; i++)
     {
-        sysexits[i] = interpreter->getExitHandler(i + 1);
+        sysexits[i] = instance->getExitHandler(i + 1);
     }
     // set the appropriate exit interlocks
     queryTrcHlt();
