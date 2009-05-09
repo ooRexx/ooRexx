@@ -79,8 +79,7 @@ function libraries have been upgraded to use these new APIs.
 REXX_PATH (new in 4.0) is an additional path you can set that is used for
 Rexx program searches.
 
-Several new utility classes have been added including a sockets class,
-Mime classes, and SMTP classes.
+A new utility class, a socket class, has been added.
 
 New samples are included in the distribution:
 ---------------------------------------------
