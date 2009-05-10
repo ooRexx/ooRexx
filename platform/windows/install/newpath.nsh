@@ -90,7 +90,12 @@ Function AddToPath
     StrCpy $0 "$1;$0"
     StrCmp $R7 "true" AddToPath_AllUsers_doit
     ; Writing registry for current user.  It's okay here to write back only what we are adding.
-    ; The original value for the user specific PATH could have been blank.
+    ; The original value for the user specific PATH could have been blank.  In this case it is
+    ; possible, maybe even likely, that an uneccesary ';' is tacked onto the front of the string.
+    ; If so, remove it.
+    StrCpy $2 $0 1     # copy first char string to write to $2
+    StrCmp $2 ";" 0 +2 # if first char == ';' then
+    StrCpy $0 $0 "" 1  # remove first char from string
     WriteRegExpandStr HKCU "Environment" "$R8" $0
     DetailPrint "$4 added to $R8 for Current User"
     Goto AddToPath_UserCont_doit
