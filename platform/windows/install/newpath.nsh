@@ -19,7 +19,7 @@ Function AddToPath
   Push $2
   Push $3
 
-  StrCpy $4 "$0" ;save install directory in $4
+  StrCpy $4 "$0" ; save path part to be added in $4
   ; don't add if the new item already exists in the registry value
   StrCmp $R7 "true" ReadPath_AllUsers
   ReadRegStr $1 HKCU "Environment" "$R8"
@@ -73,33 +73,31 @@ Function AddToPath
 
   ; A very few users have reported that their path setting was erased and
   ; replaced by only the ooRexx install directory.  This could happen if there
-  ; is an error reading the current path from the registry.  If we detect this
-  ; problem we do not change the PATH (or PATHEXT.)
+  ; is an error reading the current system path from the registry.  If we detect
+  ; this problem we do not change the PATH (or PATHEXT.)
   AddToPath_NT:
     StrCmp $R7 "true" AddToPath_AllUsers
-    ReadRegStr $1 HKCU "Environment" "$R8"
-    StrCmp $1 "" 0 AddToPath_UserCont               ; if the value is blank, try again, if not continue
-    ReadRegStr $1 HKCU "Environment" "$R8"
-    StrCmp $1 "" AddToPath_Abort AddToPath_UserCont ; if still blank, abort, if not continue
-
+    ReadRegStr $1 HKCU "Environment" "$R8"          ; The current user's path, it could be blank
+    Goto AddToPath_UserCont
   AddToPath_AllUsers:
     ReadRegStr $1 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "$R8"
-    StrCmp $1 "" 0 AddToPath_UserCont               ; if the value is blank, try again, if not continue
-    ReadRegStr $1 HKCU "Environment" "$R8"
-    StrCmp $1 "" AddToPath_Abort 0                  ; if still blank, abort, if not continue
+    StrCmp $1 "" 0 AddToPath_UserCont               ; if the value is blank, there is some problem, then
+    ReadRegStr $1 HKCU "Environment" "$R8"          ; use the current user specific path
   AddToPath_UserCont:
     StrCpy $2 $1 1 -1  # copy last char from path value to $2
     StrCmp $2 ";" 0 +2 # if last char == ';' then
     StrCpy $1 $1 -1    # remove last char from path value
-    StrCmp $1 "" AddToPath_Abort ; final check, never ever write back an empty string to the PATH / PATHEXT
     StrCpy $0 "$1;$0"
     StrCmp $R7 "true" AddToPath_AllUsers_doit
-    ; writing registry for current user
+    ; Writing registry for current user.  It's okay here to write back only what we are adding.
+    ; The original value for the user specific PATH could have been blank.
     WriteRegExpandStr HKCU "Environment" "$R8" $0
     DetailPrint "$4 added to $R8 for Current User"
     Goto AddToPath_UserCont_doit
   AddToPath_AllUsers_doit:
-    ; writing registry for all users
+    ; Writing registry for all users. This is the system-wide PATH (or PATHEXT.)  If what we are writing
+    ; is only what we started out to add - something is wrong, we need to abort.
+    StrCmp $0 ";$4" AddToPath_Abort
     WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "$R8" $0
     DetailPrint "$4 added to $R8 for All Users"
   AddToPath_UserCont_doit:
