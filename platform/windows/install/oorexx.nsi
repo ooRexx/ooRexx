@@ -245,7 +245,6 @@ Section "${LONGNAME} Core (required)" SecMain
   Push 1
   Push ".REX"
   Call DoFileAssociation
-  Call DoFileAssociationDetails
 
   ; read the result of the custom rxapi page if an administrator
   StrCmp $IsAdminUser "false" NotAdmin
@@ -704,24 +703,9 @@ Function DoFileAssociation
   Strcmp $R1 "" exitfa
   ; do the association
   DetailPrint "Registering $R1 extension to run with ooRexx"
+  ClearErrors
   WriteRegStr HKCR $R1 "" "REXXScript"
-  ;
-  ; Append $R1 to .PATHEXT for NT-based systems, for Administrators only
-  ;
-  Call IsNT
-  Pop $1
-  StrCmp $1 0 exitfa
-  StrCmp $IsAdminUser "false" exitfa
-  Push $R1
-  Push $IsAdminUser ; should only be "true" at this point
-  Push "PATHEXT"
-  Call AddToPath
-  exitfa:
-  Return
-FunctionEnd
-
-Function DoFileAssociationDetails
-  ; do the association details
+  IfErrors trycurrentuser               ; Failed to write to the registy, try the user customizable area.
   WriteRegStr HKCR "REXXScript" "" "ooRexx Rexx Program"
   WriteRegStr HKCR "REXXScript\shell" "" "open"
   WriteRegStr HKCR "REXXScript\DefaultIcon" "" "$INSTDIR\rexx.exe,0"
@@ -730,7 +714,38 @@ Function DoFileAssociationDetails
   WriteRegStr HKCR "REXXScript\shell\edit" "" "Edit"
   WriteRegStr HKCR "REXXScript\shell\edit\command" "" 'notepad.exe "%1"'
   WriteRegStr HKCR "REXXScript\shellex\DropHandler" "" "{60254CA5-953B-11CF-8C96-00AA00B8708C}"
+  ;
+  ; Append $R1 to .PATHEXT for NT-based systems, for Administrators only
+  ;
+  Call IsNT
+  Pop $1
+  StrCmp $1 0 notifyshell
+  StrCmp $IsAdminUser "false" notifyshell
+  Push $R1
+  Push $IsAdminUser ; should only be "true" at this point
+  Push "PATHEXT"
+  Call AddToPath
+  Goto notifyshell
+  ;
+  trycurrentuser:     All users can write to this location to set up custom file
+  ;                   associations.  Any association in this area over-rides the
+  ;                   system wide file association, for this user.  If there is
+  ;                   an error, there is nothing to do about and it is just ignored.
+  ;
+  WriteRegStr HKCU "SOFTWARE\Classes\$R1" "" "REXXScript"
+  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript" "" "ooRexx Rexx Program"
+  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell" "" "open"
+  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\DefaultIcon" "" "$INSTDIR\rexx.exe,0"
+  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell\open" "" "Run"
+  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell\open\command" "" '"$INSTDIR\rexx.exe" "%1" %*'
+  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell\edit" "" "Edit"
+  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shell\edit\command" "" 'notepad.exe "%1"'
+  WriteRegStr HKCU "SOFTWARE\Classes\REXXScript\shellex\DropHandler" "" "{60254CA5-953B-11CF-8C96-00AA00B8708C}"
+  ;
+  notifyshell:
+  ;
   System::Call 'Shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_IDLIST}, i 0, i 0)'
+  exitfa:
   Return
 FunctionEnd
 
@@ -765,6 +780,11 @@ SectionEnd
 
 ;========================================================================
 ;Uninstaller Section
+;
+; Not this:  If the install was done by a non-admin user, the .rex file association may have been written
+;            to the HKEY_CURRENT_USER\SOFTWARE\Classes area.  You would think that we need to check for
+;            that and specifically delete those keys.  However, testing shows that the current code always
+;            removes those keys.  Tested on a number of machines with a number of different users.
 
 Section "Uninstall"
 
