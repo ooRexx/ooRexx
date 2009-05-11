@@ -910,8 +910,9 @@ bool SysFile::seek(int64_t offset, int direction, int64_t &position)
 
 bool SysFile::getPosition(int64_t &position)
 {
-    // we need special processing if buffered
-    if (buffered)
+    // we need special processing if we have anything in the
+    // buffer right now
+    if (buffered && !(writeBuffered && bufferPosition == 0))
     {
         // just return the current buffer position
         position = filePointer - bufferedInput + bufferPosition;
