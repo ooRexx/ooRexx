@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-/* Copyright (c) 2005-2006 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -44,26 +44,27 @@
       To help you exploring programming in Open Object Rexx, the following
       sample programs are provided (with source code).
 
-        - ccreply.rex    concurrent program using REPLY
-        - complex.rex    complex number class
-        - factor.rex     factorial program
-        - greply.rex     concurrent program using WAIT and NOWAIT
-        - guess.rex      a guessing game
-        - ktguard.rex    concurrent program using START and GUARD
-        - month.rex      displays days of the month of January
-        - pipe.rex       a pipeline implementation
-        - qdate.rex      date query program
-        - qtime.rex      time query program
-        - semcls.rex     semaphore class
-        - stack.rex      program that uses a stack class
-        - usecomp.rex    program that uses complex number class: complex.rex
-        - usepipe.rex    program that uses pipeline implementation: pip.rex
-        - makestring.rex program that uses makestring method
-        - properties.rex an example of the Properties class
-        - scserver.rex   simple socket server that uses the socket class
-        - scclient.rex   simple socket client that uses the socket class
-        - sfserver.rex   simple socket server that uses the socket function package
-        - sfclient.rex   simple socket client that uses the socket function package
+        - ccreply.rex     concurrent program using REPLY
+        - complex.rex     complex number class
+        - factor.rex      factorial program
+        - greply.rex      concurrent program using WAIT and NOWAIT
+        - guess.rex       a guessing game
+        - ktguard.rex     concurrent program using START and GUARD
+        - makestring.rex  program that uses makestring method
+        - month.rex       displays days of the month of January
+        - philfork.rex    a console version of the Philosophers' Forks
+        - pipe.rex        a pipeline implementation
+        - properties.rex  an example of the Properties class
+        - qdate.rex       date query program
+        - qtime.rex       time query program
+        - scserver.rex    simple socket server that uses the socket class
+        - scclient.rex    simple socket client that uses the socket class
+        - semcls.rex      semaphore class
+        - stack.rex       program that uses a stack class
+        - sfserver.rex    simple socket server that uses the socket function package
+        - sfclient.rex    simple socket client that uses the socket function package
+        - usecomp.rex     program that uses complex number class: complex.rex
+        - usepipe.rex     program that uses pipeline implementation: pip.rex
 
       These programs are executable without any change on all supported
       platforms.

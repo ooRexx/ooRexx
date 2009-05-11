@@ -272,7 +272,7 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\" "ktguard.rex"
   ${File} "${SRCDIR}\samples\" "makestring.rex"
   ${File} "${SRCDIR}\samples\" "month.rex"
-  ${File} "${SRCDIR}\samples\windows\" "philfork.rex"
+  ${File} "${SRCDIR}\samples\" "philfork.rex"
   ${File} "${SRCDIR}\samples\" "pipe.rex"
   ${File} "${SRCDIR}\samples\" "properties.rex"
   ${File} "${SRCDIR}\samples\" "qdate.rex"
@@ -286,6 +286,12 @@ Section "${LONGNAME} Samples" SecDemo
   ${File} "${SRCDIR}\samples\" "usecomp.rex"
   ${File} "${SRCDIR}\samples\" "usepipe.rex"
   ${File} "${SRCDIR}\samples\windows\rexutils\" "drives.rex"
+  ; Set output path to the installation directory.
+  ${SetOutPath} $INSTDIR\samples\misc
+  ${File} "${SRCDIR}\samples\windows\misc\" "fileDrop.empty"
+  ${File} "${SRCDIR}\samples\windows\misc\" "fileDrop.input"
+  ${File} "${SRCDIR}\samples\windows\misc\" "fileDrop.readMe"
+  ${File} "${SRCDIR}\samples\windows\misc\" "fileDrop.rex"
   ${CreateDirectory} $INSTDIR\samples\ole
   ; Set output path to the installation directory.
   ${SetOutPath} $INSTDIR\samples\ole\adsi

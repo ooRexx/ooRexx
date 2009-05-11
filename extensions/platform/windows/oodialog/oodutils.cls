@@ -90,7 +90,7 @@
 
 
 ::routine findWindow public
-   use arg info
+   use strict arg info
    return FindTheWindow(info)
 
 ::routine msSleep public

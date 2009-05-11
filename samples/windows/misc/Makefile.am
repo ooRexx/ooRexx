@@ -37,8 +37,7 @@
 
 .NOTPARALLEL:
 
-SUBDIRS			= api misc ole oodialog rexutils winsystem wsh
-DIST_SUBDIRS            = api misc ole oodialog rexutils winsystem wsh
-
 MAINTAINERCLEANFILES 	= Makefile.in *~
+
+EXTRA_DIST = *.rex fileDrop*
 

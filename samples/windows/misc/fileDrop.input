@@ -1,0 +1,14 @@
+/* Don't move or moditfy the third line.          */
+/* The record processor searches for this marker. */
+----data input file----
+
+This is
+just
+a fake
+file
+to
+simulate processing a data input
+file.
+It
+has no
+meaning.

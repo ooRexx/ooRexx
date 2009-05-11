@@ -427,6 +427,7 @@ AC_CONFIG_FILES([
         samples/windows/api/wpipe/wpipe1/Makefile
         samples/windows/api/wpipe/wpipe2/Makefile
         samples/windows/api/wpipe/wpipe3/Makefile
+        samples/windows/misc/Makefile
         samples/windows/ole/Makefile
         samples/windows/ole/adsi/Makefile
         samples/windows/ole/apps/Makefile

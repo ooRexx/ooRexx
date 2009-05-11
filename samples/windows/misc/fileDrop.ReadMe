@@ -1,0 +1,18 @@
+                                fileDrop.rex
+
+The fileDrop.rex program demonstrates how Rexx programs with the .rex
+extensions act as Drop Handlers.  During the installation process on
+Windows, files with the extension of .rex are registered with the operating
+system as 'drop handlers.'
+
+In Windows explorer, the user can drag and drop any file over the icon for
+any Rexx program (one with the .rex extension.) The icon drawn for the drag
+operation will change over the Rexx program to one indicating that the Rexx
+program accepts dropping.  If the user drops the file on the Rexx program,
+the operating system executes the Rexx program and provides the full path
+name for the file as the argument to the program.
+
+In Windows Explorer, drag any file over fileDrop.rex and drop it.  The
+program demonstrates 'handling' the dropped file.  The file: fileDrop.input
+is used to simulate a data input file.  When dropped on fileDrop.rex, the
+program will process the data and produce a result.
