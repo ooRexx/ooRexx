@@ -727,7 +727,8 @@ Function DoFileAssociation
   Call AddToPath
   Goto notifyshell
   ;
-  trycurrentuser:     All users can write to this location to set up custom file
+  trycurrentuser:
+  ;                   All users can write to this location to set up custom file
   ;                   associations.  Any association in this area over-rides the
   ;                   system wide file association, for this user.  If there is
   ;                   an error, there is nothing to do about and it is just ignored.
