@@ -258,7 +258,7 @@ bool SysFile::flush()
         if (writeBuffered && bufferPosition > 0)
         {
             // write this out...but if it fails, we need to bail
-            int written = _write(fileHandle, buffer, (unsigned int)bufferPosition);
+            int written = writeData(buffer, (size_t)bufferPosition);
             // did we have an error?
             if (written <= 0)
             {
@@ -395,6 +395,45 @@ bool SysFile::read(char *buf, size_t len, size_t &bytesRead)
 
 
 /**
+ * Wrapper around _write to handle block size issues with
+ * device streams.
+ *
+ * @param data   The data to write.
+ * @param length The data length.
+ *
+ * @return The number of bytes written
+ */
+int SysFile::writeData(const char *data, size_t length)
+{
+    // normal files seem to handle large writes ok, but for devices, we
+    // need to write this in blocks
+    if (!device || length < BLOCK_THRESHOLD)
+    {
+        return _write(fileHandle, data, (unsigned int)length);
+    }
+    else
+    {
+        // rats, need to write this out in segments
+        int bytesWritten = 0;
+        while (length > 0)
+        {
+            size_t segmentSize = length > BLOCK_THRESHOLD ? BLOCK_THRESHOLD : length;
+            int justWritten = _write(fileHandle, data, (unsigned int)segmentSize);
+            // write error?  Return whatever we've written
+            if (justWritten <= 0)
+            {
+                return bytesWritten;
+            }
+            length -= justWritten;
+            bytesWritten += justWritten;
+            data += justWritten;
+        }
+        return bytesWritten;
+    }
+}
+
+
+/**
  * write data to the stream
  *
  * @param data   The data buffer to write.
@@ -434,7 +473,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
             // flush an existing data from the buffer
             flush();
             // write this out directly
-            int written = _write(fileHandle, data, (unsigned int)len);
+            int written = writeData(data, len);
             // oh, oh...got a problem
             if (written <= 0)
             {
@@ -484,7 +523,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
                 }
             }
             // write the data
-            int written = _write(fileHandle, data, (unsigned int)len);
+            int written = writeData(data, len);
             if (written <= 0)
             {
                 // return error status if there was a problem
@@ -497,7 +536,7 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
         else
         {
             // write the data
-            int written = _write(fileHandle, data, (unsigned int)len);
+            int written = writeData(data, len);
             if (written <= 0)
             {
                 // return error status if there was a problem

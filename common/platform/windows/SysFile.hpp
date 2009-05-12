@@ -69,6 +69,8 @@
 #define RX_S_IWRITE       _S_IWRITE
 #define RX_S_IREAD        _S_IREAD
 
+#define BLOCK_THRESHOLD  (32*1024)
+
 
 class SysFile
 {
@@ -127,6 +129,7 @@ public:
 
 protected:
     void   getStreamTypeInfo();
+    int    writeData(const char *data, size_t length);
 
     int    fileHandle;      // separate file handle
     int    errInfo;         // last error info
