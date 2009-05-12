@@ -195,9 +195,10 @@ notready:
   count = 0                            /* set initial counter               */
   signal on notready                   /* the notready handler              */
 
-  if abbrev('LINES', type) then      /* line type operation?              */
+  type = type~left(1)~upper
+  if type == 'L' then                /* line type operation?              */
     lineout = 1                      /* set the line flag                 */
-  else if abbrev('CHARS', type) then /* character operation?              */
+  else if type == 'C' then           /* character operation?              */
     lineout = 0                      /* not a line operation              */
   else
     raise syntax 93                  /* raise an error                    */
@@ -222,10 +223,10 @@ notready:                              /* standard notready handler         */
   use strict arg type='LINES'
   signal on notready                   /* the notready handler              */
 
-  type = type~upper
-  if abbrev('LINES', type) then        /* line type operation?              */
+  type = type~left(1)~upper
+  if type == 'L' then                  /* line type operation?              */
       linein = 1                       /* set the line flag                 */
-  else if abbrev('CHARS', type) then   /* character operation?              */
+  else if type == 'C' then             /* character operation?              */
       linein = 0                       /* not a line operation              */
   else
       raise syntax 93                  /* raise an error                    */
