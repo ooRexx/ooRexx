@@ -3099,3 +3099,16 @@ CommandHandler *RexxActivity::resolveCommandHandler(RexxString *name)
 {
     return instance->resolveCommandHandler(name);
 }
+
+
+/**
+ * Validate that an API call is occuring on the correct thread.
+ */
+void RexxActivity::validateThread()
+{
+    if (!currentThread.validateThread())
+    {
+        reportException(Error_Execution_invalid_thread);
+    }
+
+}

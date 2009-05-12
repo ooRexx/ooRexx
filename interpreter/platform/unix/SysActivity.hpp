@@ -80,6 +80,7 @@ public:
     void useCurrentThread();
     char *getStackBase(size_t stackSize);
     void setPriority(int p);
+    bool validateThread();
     inline thread_id_t getThreadID() { return (thread_id_t)threadId; }
 
     static thread_id_t queryThreadID();

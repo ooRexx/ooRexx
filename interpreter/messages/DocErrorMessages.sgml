@@ -3451,6 +3451,12 @@ special character (such as a parenthesis).
 <para>Library "<emphasis role="italic">name</emphasis>" is not compatible with current interpreter version.</para>
 </listitem>
 </varlistentry>
+<varlistentry>
+<term>983</term>
+<listitem>
+<para>Execution thread does not match API thread context.</para>
+</listitem>
+</varlistentry>
 </variablelist>
 </section>
 <section id="ERR99">

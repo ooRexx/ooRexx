@@ -618,6 +618,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Symbol_or_string_digits_value    "String or symbol expected as DIGITS value"
    Error_Symbol_or_string_fuzz_value    "String or symbol expected as FUZZ value"
    Error_Symbol_or_string_trace_value    "String or symbol expected as TRACE value"
+   Error_Execution_invalid_thread    "Execution thread does not match API thread context."
    
 END
 

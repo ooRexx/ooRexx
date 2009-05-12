@@ -257,6 +257,7 @@ typedef enum
    inline void setNestedActivity(RexxActivity *a) { nestedActivity = a; }
    inline RexxActivity *getNestedActivity() { return nestedActivity; }
    inline bool isAttached() { return attached; }
+          void validateThread();
 
    SecurityManager *getEffectiveSecurityManager();
    SecurityManager *getInstanceSecurityManager();

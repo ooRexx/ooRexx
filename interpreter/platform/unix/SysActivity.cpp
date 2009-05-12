@@ -131,6 +131,19 @@ thread_id_t SysActivity::queryThreadID()
 
 
 /**
+ * Check if this activity is getting used on the correct
+ * thread.
+ *
+ * @return true if the current thread is the same as the one
+ *         the activity was created for.
+ */
+bool SysActivity::validateThread()
+{
+    return threadId == pthread_self();
+}
+
+
+/**
  * Initialize the descriptor for manipulating the current
  * active thread.
  */

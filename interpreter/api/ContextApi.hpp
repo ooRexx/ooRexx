@@ -68,6 +68,9 @@ public:
         context->enableConditionTraps();
         // go acquire the kernel lock and take care of nesting
         activity->enterCurrentThread();
+        // we need to validate the thread call context to ensure this
+        // is the correct thread
+        activity->validateThread();
     }
 
 
@@ -83,7 +86,6 @@ public:
         activity = contextToActivity(c);
         context = activity->getApiContext();
         context->enableConditionTraps();
-        // this does not acquire the lock
     }
 
     /**
@@ -98,6 +100,9 @@ public:
         context->enableConditionTraps();
         // go acquire the kernel lock and take care of nesting
         activity->enterCurrentThread();
+        // we need to validate the thread call context to ensure this
+        // is the correct thread
+        activity->validateThread();
     }
 
     /**
@@ -112,6 +117,9 @@ public:
         context->enableConditionTraps();
         // go acquire the kernel lock and take care of nesting
         activity->enterCurrentThread();
+        // we need to validate the thread call context to ensure this
+        // is the correct thread
+        activity->validateThread();
     }
 
     /**
@@ -126,6 +134,9 @@ public:
         context->enableConditionTraps();
         // go acquire the kernel lock and take care of nesting
         activity->enterCurrentThread();
+        // we need to validate the thread call context to ensure this
+        // is the correct thread
+        activity->validateThread();
     }
 
     /**

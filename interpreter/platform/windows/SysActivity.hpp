@@ -60,6 +60,7 @@ public:
     void create(RexxActivity *activity, size_t stackSize);
     void close();
     void useCurrentThread();
+    bool validateThread();
     char *getStackBase(size_t stackSize);
     inline thread_id_t getThreadID() { return threadId; }
 

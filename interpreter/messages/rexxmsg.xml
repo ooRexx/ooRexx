@@ -4757,6 +4757,15 @@ special character (such as a parenthesis).
         <SymbolicName>Error_Execution_library_version</SymbolicName>
         <Text>Library <q><Sub position="1" name="name"/></q> is not compatible with current interpreter version.</Text>
       </SubMessage>
+      <SubMessage>
+        <Code>98</Code>
+        <Subcode>983</Subcode>
+        <MessageNumber>716</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Execution_invalid_thread</SymbolicName>
+        <Text>Execution thread does not match API thread context.</Text>
+      </SubMessage>
     </Subcodes>
   </Message>
   <Message>

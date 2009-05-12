@@ -618,6 +618,7 @@
 #define Error_Symbol_or_string_digits_value_msg                      713
 #define Error_Symbol_or_string_fuzz_value_msg                        714
 #define Error_Symbol_or_string_trace_value_msg                       715
+#define Error_Execution_invalid_thread_msg                           716
 
 
 #endif
