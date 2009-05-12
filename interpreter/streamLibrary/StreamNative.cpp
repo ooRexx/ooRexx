@@ -3153,8 +3153,9 @@ int64_t StreamInfo::seekToVariableLine(int64_t offset, int64_t &current_line, in
     {
         return current_line;
     }
-    // not possible to reach there by going forward?
-    if (current_line > offset)
+    // not possible to reach there by going forward or we don't have
+    // valid line positioning information?
+    if (current_line > offset || current_line <= 0)
     {
         // then read forward from the beginning
         current_line = 1;
