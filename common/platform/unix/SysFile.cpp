@@ -244,6 +244,7 @@ bool SysFile::close()
     {
         if (::close(fileHandle) == EOF)
         {
+            fileHandle = -1;
             errInfo = errno;
             return false;
         }
@@ -754,16 +755,16 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
         // return our current count and indicate this worked.
         if (!setPosition(startPosition, startPosition))
         {
-            free(buffer);
+            free(mybuffer);
             // set the return position and get outta here
             endPosition = startPosition;
             return true;
         }
 
         size_t bytesRead;
-        if (!read(buffer, readLength, bytesRead))
+        if (!read(mybuffer, readLength, bytesRead))
         {
-            free(buffer);
+            free(mybuffer);
             // if we've hit an eof condition, this is the end
             if (atEof())
             {
@@ -777,7 +778,7 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
         // have we hit the eof?
         if (bytesRead == 0)
         {
-            free(buffer);
+            free(mybuffer);
             // set the return position and get outta here
             endPosition = startPosition;
             return true;
@@ -789,7 +790,7 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
         {
             // we're only interested in \n character, since this will
             // mark the transition point between lines.
-            if (buffer[offset] == '\n')
+            if (mybuffer[offset] == '\n')
             {
                 // reduce the line count by one.
                 lineCount--;
@@ -798,7 +799,7 @@ bool SysFile::seekForwardLines(int64_t startPosition, int64_t &lineCount, int64_
                 {
                     // set the return position and get outta here
                     endPosition = startPosition + offset + 1;
-                    free(buffer);
+                    free(mybuffer);
                     return true;
                 }
             }
