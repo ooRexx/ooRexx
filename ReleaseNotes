@@ -63,7 +63,7 @@ AIX 64-bit
 Windows 64-bit
 
 All platforms:
---------------
+==============
 
 Although not directly visible to the ooRexx programer, much of the code in
 the interpreter core has been rewritten.  This enhances the interpreter in
@@ -90,13 +90,13 @@ samples/sfclient.rex
 samples/sfserver.rex
 
 Unix platform:
---------------
+==============
 
 Rxapi now runs as a system wide daemon.  The use of shared memory has been
 eliminated.  Rxapi now uses a socket interface for communication.
 
 Windows platform:
------------------
+=================
 
 Improvements to ooDialog and OLEObject.
 
@@ -128,7 +128,7 @@ documentation file is installed in the doc directory, and a short cut link
 to it is in documentation folder on the Start Menu.
 
 Windows Installation:
----------------------
+=====================
 
 The Windows installation program has be enhanced so that it will only
 remove files installed by the ooRexx package.  Files added to the
@@ -148,8 +148,61 @@ extension as drop handlers.  When a file is dropped on the icon for a Rexx
 program, the Windows Shell passes the complete file name path as the
 argument to the program.
 
+Windows ooDialog:
+=================
+
+Documentation
+-------------
+
+Restructuring of the ooDialog reference has started.  Some areas have been
+reviewed for accuracy and corrected / clarified where needed.  Anyone
+using ooDialog is urged to at least read chapter 2, section 4 (2.4) which
+attempts to provide some information on the future direction of ooDialog.
+
+New classes:
+------------
+
+DlgUtil, Point, Rect, Size, Image, ImageList, and ResourceImage.
+
+Enhanced classes:
+-----------------
+
+The following existing classes have been reviewed for correct behavior and
+enhanced to provide all the functionality of the underlying Windows
+control, as of Windows XP.  In essence this entails allowing the control
+to be created with all of the control styles, providing a way to send all
+of the messages the control accepts, providing a way to receive all of the
+event notifications that the control sends.
+
+* ButtonControl and subclasses.
+* StaticControl
+* ProgressBar
+
+The above classes all have new methods.
+
+Other New methods:
+------------------
+
+(Please use the index in the ooDialog reference to see what classes these
+methods belong to.)
+
+setItemSysColor()
+getFont(), createFontEx()
+getTextSizeScreen()
+getExStyleRaw()
+setDefaultFont(), getFontName(), getFontSize()  <- Class methods.
+fontName(), fontSize()                          <- Attributes.
+getTextSizeDlg()
+addStatic(), addImage(), addEtchedFrame(), addEtchedHorizontal(),
+  addEtchedVertical()
+getGroupBox()
+setSysColor()
+setImageList(), getImageList()                  <- For several classes.
+getColumnCount(), getColumnOrder(), setColumnOrder()
+connectStaticNotify()
+
 Windows Scripting Host:
------------------------
+=======================
 
 The Windows Scripting Host support in ooRexx 4.0.0 has been temporarily
 disabled.  This was done after soliciting input from users.  Temporarily
@@ -159,7 +212,7 @@ prefer an early release without WSH than a later release with WSH.  The
 intent is to deliver WSH as soon as possible in a follow-on minor release.
 
 Some possible differences in program behavior:
-----------------------------------------------
+==============================================
 
 Files loaded by ::requires are loaded by a global package manager, and
 a given file will only be loaded once in a process.  This means multiple
@@ -188,7 +241,7 @@ On all platforms, +infinity and -infinity are now returned as strings
 "+infinity" and "-infinity".
 
 Miscellaneous Enhancements:
----------------------------
+===========================
 
 A method that is declared PRIVATE has been enhanced to allow its
 invocation from any of the following situations:
@@ -215,7 +268,7 @@ The stream class supports files larger than 4Gb (on both
 32-bit and 64-bit platforms).
 
 Builtin functions:
-------------------
+==================
 
 FILESPEC has new options : Location, Extension.
 
@@ -230,7 +283,7 @@ TIME has a new option : Offset.
 TRANSLATE has new parameters : pos, length.
 
 Class library:
---------------
+==============
 
 New classes:
 ------------
@@ -289,7 +342,7 @@ Also, the makearray() method of string allows for delimiters longer than
 a single character.
 
 Incubator:
-----------
+==========
 
 A beta version of RexxGTK is available.  This is a portable GUI class for
 building ooRexx GUI programs.  It runs on any *nix system where GTK is
