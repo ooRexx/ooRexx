@@ -2121,6 +2121,8 @@ const char *StreamInfo::streamOpen(const char *options)
         ParseAction  OpenActionread[] = {
             ParseAction(MEB, read_write),
             ParseAction(MEB, write_only),
+            ParseAction(MEB, append),
+            ParseAction(ME, oflag, O_TRUNC),
             ParseAction(SetBool, read_only, true),
             ParseAction(BitOr, oflag, O_RDONLY),
             ParseAction(BitOr, pmode, S_IREAD),
@@ -2151,6 +2153,7 @@ const char *StreamInfo::streamOpen(const char *options)
             ParseAction()
         };
         ParseAction OpenActionreplace[] = {
+            ParseAction(MEB, read_only),
             ParseAction(ME, oflag, O_APPEND),
             ParseAction(BitOr, oflag, O_TRUNC),
             ParseAction()
