@@ -254,6 +254,8 @@ RexxActivation::RexxActivation(RexxActivity *_activity, RexxActivation *_parent,
     this->setHasReferences();
     /* inherit parents settings          */
     _parent->putSettings(this->settings);
+    // step the trace indentation level for this internal nesting
+    settings.traceindent++;
     // the random seed is copied from the calling activity, this led
     // to reproducable random sequences even though no specific seed was given!
     // see feat. 900 for example program.
@@ -272,8 +274,17 @@ RexxActivation::RexxActivation(RexxActivity *_activity, RexxActivation *_parent,
     settings.local_variables.setNested();
     // get the executable from the parent.
     this->executable = _parent->getExecutable();
-                                         // save the source object reference also
-    this->sourceObject = executable->getSourceObject();
+    // for internal calls, this is the same source object as the parent
+    if (activation_context != INTERPRET)
+    {
+                                             // save the source object reference also
+        this->sourceObject = executable->getSourceObject();
+    }
+    else
+    {
+        // use the source object for the interpret so error tracebacks are correct.
+        this->sourceObject = code->getSourceObject();
+    }
 }
 
 
