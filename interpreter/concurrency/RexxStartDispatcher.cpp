@@ -209,11 +209,17 @@ void CallRoutineDispatcher::run()
 void CallProgramDispatcher::run()
 {
     RexxString *name = new_string(program);
-
-    // get a routine from the file source first
-    RoutineClass *routine = new RoutineClass(name);
-
-    ProtectedObject p(routine);
+    /* go resolve the name               */
+    name = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
+    if (name == OREF_NULL)                /* not found?                        */
+    {
+        /* got an error here                 */
+        reportException(Error_Program_unreadable_notfound, name);
+    }
+    ProtectedObject p(name);
+    // create a routine from this file
+    RoutineClass *routine = RoutineClass::fromFile(name);
+    p = routine;
 
     if (arguments != OREF_NULL)
     {
