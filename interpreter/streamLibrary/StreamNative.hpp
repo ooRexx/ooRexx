@@ -97,6 +97,7 @@ public:
     void  raiseException(int err);
     void  raiseException(int err, RexxObjectPtr sub1);
     void  raiseException(int err, RexxObjectPtr sub1, RexxObjectPtr sub2);
+    void  eof(RexxObjectPtr);
     void  eof();
     void  checkEof();
     void  checkStreamType();

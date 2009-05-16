@@ -351,17 +351,27 @@ void StreamInfo::raiseException(int err, RexxObjectPtr sub1, RexxObjectPtr sub2)
     throw err;
 }
 
+
+/**
+ * Process an EOF condition for a stream.
+ */
+void StreamInfo::eof()
+{
+    eof(defaultResult);
+}
+
+
 /**
  * Process an EOF condition for a stream.
  *
  * @param result  A result object returned with the NotReady condition.
  */
-void StreamInfo::eof()
+void StreamInfo::eof(RexxObjectPtr result)
 {
     /* place this in an eof state        */
     state = StreamEof;
     /* raise this as a notready condition*/
-    context->RaiseCondition("NOTREADY", context->String(stream_name), context->ArrayOfOne(self), defaultResult);
+    context->RaiseCondition("NOTREADY", context->String(stream_name), context->ArrayOfOne(self), result);
 
     // if a result object was given, the caller's not expecting control back, so
     // throw an exception to unwind.
@@ -1413,7 +1423,14 @@ RexxStringObject StreamInfo::charin(bool _setPosition, int64_t position, size_t 
     resetLinePositions();
 
     // now convert our buffered string into a real string object and return it.
-    return context->FinishBufferString(result, bytesRead);
+    RexxStringObject res = context->FinishBufferString(result, bytesRead);
+    // if we didn't get the requested amount, return what we got but raise a
+    // notready condition
+    if (bytesRead < read_length)
+    {
+        eof(res);
+    }
+    return res;
 }
 
 /********************************************************************************************/
