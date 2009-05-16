@@ -57,6 +57,7 @@ if [ -d /opt/ooRexx ]; then
    ln -sf ${orx_prefix}/bin/rxregexp.cls                     /usr/bin/rxregexp.cls
    ln -sf ${orx_prefix}/bin/rxftp.cls                        /usr/bin/rxftp.cls
    ln -sf ${orx_prefix}/bin/socket.cls                       /usr/bin/socket.cls
+   ln -sf ${orx_prefix}/bin/streamsocket.cls                 /usr/bin/streamsocket.cls
    ln -sf ${orx_prefix}/bin/oorexx-config                    /usr/bin/oorexx-config
    ln -sf ${orx_prefix}/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so.${orx_libversion}
    ln -sf ${orx_prefix}/lib/ooRexx/librexx.so.${orx_libversion}     /usr/lib/librexx.so.${orx_current}

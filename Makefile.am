@@ -366,6 +366,7 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(top_srcdir)/oorexx.ver \
                   $(build_extensions_rxftp_dir)/rxftp.cls \
                   $(build_extensions_rxsock_dir)/socket.cls \
+                  $(build_extensions_rxsock_dir)/streamsocket.cls \
                   $(build_extensions_rxregexp_dir)/*.cls \
                   $(build_messages_dir)/*.xsl \
                   $(build_messages_dir)/*.sgml \
@@ -948,6 +949,7 @@ ooTest:
 	cp $(build_extensions_dir)/rxregexp/rxregexp.cls ./
 	cp $(build_extensions_dir)/rxftp/rxftp.cls ./
 	cp $(build_extensions_dir)/rxsock/socket.cls ./
+	cp $(build_extensions_dir)/rxsock/streamsocket.cls ./
 
 #
 # distribution files
@@ -1000,6 +1002,7 @@ install-exec-local:
 	$(install_sh_SCRIPT) $(build_extensions_rxregexp_dir)/rxregexp.cls $(DESTDIR)$(prefix)/bin/rxregexp.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxftp_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/socket.cls $(DESTDIR)$(prefix)/bin/socket.cls
+	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/streamsocket.cls $(DESTDIR)$(prefix)/bin/streamsocket.cls
 	if test "$(ORX_SYS_STR)" != "AIX"; then \
 		$(install_sh_SCRIPT) $(rexxapi_server_unix_dir)/rxapid $(DESTDIR)$(prefix)/bin/rxapid; \
 	fi

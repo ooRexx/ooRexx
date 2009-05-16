@@ -121,6 +121,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_prefix}/bin/rxregexp.cls
 %{_prefix}/bin/rxftp.cls
 %{_prefix}/bin/socket.cls
+%{_prefix}/bin/streamsocket.cls
 %{_prefix}/bin/oorexx-config
 %{_prefix}/lib/ooRexx/librexx.so
 %{_prefix}/lib/ooRexx/librexx.so.%{orx_current}
@@ -188,6 +189,7 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/bin/rxregexp.cls                     /usr/bin/rxregexp.cls
    ln -sf %{_prefix}/bin/rxftp.cls                        /usr/bin/rxftp.cls
    ln -sf %{_prefix}/bin/socket.cls                       /usr/bin/socket.cls
+   ln -sf %{_prefix}/bin/streamsocket.cls                 /usr/bin/streamsocket.cls
    ln -sf %{_prefix}/bin/oorexx-config                    /usr/bin/oorexx-config
    ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.%{orx_libversion}
    ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.%{orx_current}
@@ -257,6 +259,7 @@ rm -f /usr/bin/rexx.cat
 rm -f /usr/bin/rxregexp.cls
 rm -f /usr/bin/rxftp.cls
 rm -f /usr/bin/socket.cls
+rm -f /usr/bin/streamsocket.cls
 rm -f /usr/bin/oorexx-config
 rm -f /usr/lib/librexx.so
 rm -f /usr/lib/librexx.%{orx_libversion}
