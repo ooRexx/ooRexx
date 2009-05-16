@@ -38,9 +38,9 @@
 #------------------------
 # RXSOCK.MAK make file
 #------------------------
-all: $(OR_OUTDIR)\rxsock.dll $(OR_OUTDIR)\socket.cls
+all: $(OR_OUTDIR)\rxsock.dll $(OR_OUTDIR)\socket.cls $(OR_OUTDIR)\streamsocket.cls
     @ECHO .
-    @ECHO All done rxsock.dll and socket.cls
+    @ECHO All done rxsock.dll, socket.cls and streamsocket.cls
     @ECHO .
 
 !include "$(OR_LIBSRC)\ORXWIN32.MAK"
@@ -93,4 +93,13 @@ $(OR_OUTDIR)\socket.cls : $(SOURCE_DIR)\socket.cls
     @ECHO .
     @ECHO Copying $(SOURCEDIR)\socket.cls
     copy $(SOURCE_DIR)\socket.cls $(OR_OUTDIR)
+
+#
+# Copy streamsocket.cls to the build directory so the test suite can be run directly
+# from that location without doing an install.
+#
+$(OR_OUTDIR)\streamsocket.cls : $(SOURCE_DIR)\streamsocket.cls
+    @ECHO .
+    @ECHO Copying $(SOURCEDIR)\streamsocket.cls
+    copy $(SOURCE_DIR)\streamsocket.cls $(OR_OUTDIR)
 
