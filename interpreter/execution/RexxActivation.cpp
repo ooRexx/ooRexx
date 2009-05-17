@@ -2731,7 +2731,17 @@ RexxClass *RexxActivation::findClass(RexxString *name)
  */
 RexxObject *RexxActivation::resolveDotVariable(RexxString *name)
 {
-    return getSourceObject()->findClass(name);
+    // if not an interpret, then resolve directly.
+    if (activation_context != INTERPRET)
+    {
+        return getSourceObject()->findClass(name);
+    }
+    else
+    {
+        // otherwise, send this up the call chain and resolve in the
+        // original source context
+        parent->resolveDotVariable(name);
+    }
 }
 
 
