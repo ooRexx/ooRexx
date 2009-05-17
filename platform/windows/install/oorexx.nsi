@@ -170,6 +170,9 @@ Section "${LONGNAME} Core (required)" SecMain
   ; CLASS files...
   ${File} "${BINDIR}\" "winsystm.cls"
   ${File} "${BINDIR}\" "socket.cls"
+  ${File} "${BINDIR}\" "streamsocket.cls"
+  ${File} "${BINDIR}\" "mime.cls"
+  ${File} "${BINDIR}\" "smtp.cls"
   ${File} "${BINDIR}\" "rxregexp.cls"
   ${File} "${BINDIR}\" "rxftp.cls"
   ${File} "${BINDIR}\" "orexxole.cls"

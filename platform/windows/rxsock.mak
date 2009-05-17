@@ -38,9 +38,9 @@
 #------------------------
 # RXSOCK.MAK make file
 #------------------------
-all: $(OR_OUTDIR)\rxsock.dll $(OR_OUTDIR)\socket.cls $(OR_OUTDIR)\streamsocket.cls
+all: $(OR_OUTDIR)\rxsock.dll $(OR_OUTDIR)\socket.cls $(OR_OUTDIR)\streamsocket.cls $(OR_OUTDIR)\mime.cls $(OR_OUTDIR)\smtp.cls
     @ECHO .
-    @ECHO All done rxsock.dll, socket.cls and streamsocket.cls
+    @ECHO All done rxsock.dll, socket.cls, streamsocket.cls, mime.cls and smtp.cls
     @ECHO .
 
 !include "$(OR_LIBSRC)\ORXWIN32.MAK"
@@ -102,4 +102,22 @@ $(OR_OUTDIR)\streamsocket.cls : $(SOURCE_DIR)\streamsocket.cls
     @ECHO .
     @ECHO Copying $(SOURCEDIR)\streamsocket.cls
     copy $(SOURCE_DIR)\streamsocket.cls $(OR_OUTDIR)
+
+#
+# Copy mime.cls to the build directory so the test suite can be run directly
+# from that location without doing an install.
+#
+$(OR_OUTDIR)\mime.cls : $(SOURCE_DIR)\mime.cls
+    @ECHO .
+    @ECHO Copying $(SOURCEDIR)\mime.cls
+    copy $(SOURCE_DIR)\mime.cls $(OR_OUTDIR)
+
+#
+# Copy smtp.cls to the build directory so the test suite can be run directly
+# from that location without doing an install.
+#
+$(OR_OUTDIR)\smtp.cls : $(SOURCE_DIR)\smtp.cls
+    @ECHO .
+    @ECHO Copying $(SOURCEDIR)\smtp.cls
+    copy $(SOURCE_DIR)\smtp.cls $(OR_OUTDIR)
 

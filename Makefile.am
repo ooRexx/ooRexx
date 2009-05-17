@@ -367,6 +367,8 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(build_extensions_rxftp_dir)/rxftp.cls \
                   $(build_extensions_rxsock_dir)/socket.cls \
                   $(build_extensions_rxsock_dir)/streamsocket.cls \
+                  $(build_extensions_rxsock_dir)/mime.cls \
+                  $(build_extensions_rxsock_dir)/smtp.cls \
                   $(build_extensions_rxregexp_dir)/*.cls \
                   $(build_messages_dir)/*.xsl \
                   $(build_messages_dir)/*.sgml \
@@ -1003,6 +1005,8 @@ install-exec-local:
 	$(install_sh_SCRIPT) $(build_extensions_rxftp_dir)/rxftp.cls $(DESTDIR)$(prefix)/bin/rxftp.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/socket.cls $(DESTDIR)$(prefix)/bin/socket.cls
 	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/streamsocket.cls $(DESTDIR)$(prefix)/bin/streamsocket.cls
+	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/mime.cls $(DESTDIR)$(prefix)/bin/mime.cls
+	$(install_sh_SCRIPT) $(build_extensions_rxsock_dir)/smtp.cls $(DESTDIR)$(prefix)/bin/smtp.cls
 	if test "$(ORX_SYS_STR)" != "AIX"; then \
 		$(install_sh_SCRIPT) $(rexxapi_server_unix_dir)/rxapid $(DESTDIR)$(prefix)/bin/rxapid; \
 	fi
