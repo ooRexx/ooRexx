@@ -4244,21 +4244,44 @@ size_t RexxEntry SysShutDownSystem(const char *name, size_t numargs, CONSTRXSTRI
     size_t forceClose = false;
     size_t reboot = false;
 
-    if (numargs>5)                       /* arguments specified?       */
-        return INVALID_ROUTINE;            /* raise the error            */
+    // More than 5 args is invalid.
+    if ( numargs>5 )
+    {
+        return INVALID_ROUTINE;
+    }
 
-    if ((numargs>=1) && (strlen(args[0].strptr) > 0)) machine = args[0].strptr;
-    if ((numargs>=2) && (strlen(args[1].strptr) > 0)) message = args[1].strptr;
-    if (numargs>=3) if (!string2ulong(args[2].strptr, &timeout))
-            return INVALID_ROUTINE;            /* raise error if bad         */
-    if (numargs>=4) if (!string2ulong(args[3].strptr, &forceClose))
-            return INVALID_ROUTINE;            /* raise error if bad         */
-    if (numargs>=5) if (!string2ulong(args[4].strptr, &reboot))
-            return INVALID_ROUTINE;            /* raise error if bad         */
+    if ( numargs >= 1 && RXVALIDSTRING(args[0]) )
+    {
+        machine = args[0].strptr;
+    }
+    if ( numargs >= 2 && RXVALIDSTRING(args[1]) )
+    {
+        message = args[1].strptr;
+    }
+    if ( numargs >= 3 && RXVALIDSTRING(args[2]) )
+    {
+         if ( !string2ulong(args[2].strptr, &timeout) )
+         {
+            return INVALID_ROUTINE;
+         }
+    }
+    if ( numargs >= 4 && RXVALIDSTRING(args[3]) )
+    {
+        if ( !string2ulong(args[3].strptr, &forceClose) )
+        {
+            return INVALID_ROUTINE;
+        }
+    }
+    if ( numargs >= 5 && RXVALIDSTRING(args[4]) )
+    {
+        if ( !string2ulong(args[4].strptr, &reboot) )
+        {
+            return INVALID_ROUTINE;
+        }
+    }
 
-/* Display the shutdown dialog box and start the time-out countdown. */
-
-    if (!InitiateSystemShutdown(const_cast<LPSTR>(machine), const_cast<LPSTR>(message), (DWORD)timeout, (BOOL)forceClose, (BOOL)reboot))
+    /* Display the shutdown dialog box and start the time-out countdown. */
+    if ( !InitiateSystemShutdown(const_cast<LPSTR>(machine), const_cast<LPSTR>(message), (DWORD)timeout, (BOOL)forceClose, (BOOL)reboot) )
     {
         RETVAL(GetLastError())
     }
