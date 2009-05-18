@@ -276,7 +276,7 @@ void options_error( int   type,        /* Error type.                */
             break;
 
         case RXQUEUE_NOEMEM:
-            MsgNumber = Error_RXQUE_nomem;
+            MsgNumber = Error_RXQUE_nomem_msg;
             break;
 
         case RXQUEUE_SIZE:
