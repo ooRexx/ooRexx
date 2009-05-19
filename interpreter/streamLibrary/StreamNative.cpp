@@ -371,7 +371,7 @@ void StreamInfo::eof(RexxObjectPtr result)
     /* place this in an eof state        */
     state = StreamEof;
     /* raise this as a notready condition*/
-    context->RaiseCondition("NOTREADY", context->String(stream_name), context->ArrayOfOne(self), result);
+    context->RaiseCondition("NOTREADY", context->String(stream_name), self, result);
 
     // if a result object was given, the caller's not expecting control back, so
     // throw an exception to unwind.
