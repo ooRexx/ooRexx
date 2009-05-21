@@ -396,6 +396,12 @@ typedef size_t REXXENTRY RexxRoutineHandler(const char *,
                                   const char *,
                                   PRXSTRING);
 
+typedef size_t REXXENTRY RexxFunctionHandler(const char *,
+                                  size_t,
+                                  PCONSTRXSTRING,
+                                  const char *,
+                                  PRXSTRING);
+
 /***    RexxRegisterFunctionDll - Register a function in the AFT */
 
 RexxReturnCode REXXENTRY RexxRegisterFunctionDll (
