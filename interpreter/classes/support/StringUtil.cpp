@@ -1480,7 +1480,7 @@ RexxInteger *StringUtil::verify(const char *data, size_t stringLen, RexxString  
             }
             else
             {
-                while (stringLen-- != 0)
+                while (stringRange-- != 0)
                 {            /* while input left                  */
                     char ch = *current++;          /* get next char                     */
                                                    /* get reference string              */
