@@ -1212,6 +1212,10 @@ RexxObjectPtr RexxEntry ArrayAt(RexxThreadContext *c, RexxArrayObject a, size_t 
     ApiContext context(c);
     try
     {
+        if (i == 0)
+        {
+            reportException(Error_Incorrect_method_positive, 1);
+        }
         return (RexxObjectPtr)context.ret(((RexxArray *)a)->getApi(i));
     }
     catch (RexxNativeActivation *)
@@ -1226,6 +1230,10 @@ void RexxEntry ArrayPut(RexxThreadContext *c, RexxArrayObject a, RexxObjectPtr o
     ApiContext context(c);
     try
     {
+        if (i == 0)
+        {
+            reportException(Error_Incorrect_method_positive, 2);
+        }
         ((RexxArray *)a)->putApi((RexxObject *)o, i);
     }
     catch (RexxNativeActivation *)
