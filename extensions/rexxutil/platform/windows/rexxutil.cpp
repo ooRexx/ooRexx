@@ -2867,11 +2867,11 @@ size_t RexxEntry SysRmDir(const char *name, size_t numargs, CONSTRXSTRING args[]
 size_t RexxEntry SysSearchPath(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
     char     szFullPath[_MAX_PATH];      /* returned file name         */
-    char     szCurDir[MAX_ENVVAR + _MAX_PATH]; /* current directory    */
-    char     szEnvStr[MAX_ENVVAR];
+    char     szCurDir[_MAX_PATH];        /* current directory          */
+    char     *szEnvStr = NULL;
 
     LPTSTR pszOnlyFileName;              /* parm for searchpath        */
-    LPTSTR lpPath;                       /* ptr to search path+        */
+    LPTSTR lpPath = NULL;                /* ptr to search path+        */
     UINT   errorMode;
 
     /* validate arguments         */
@@ -2882,46 +2882,90 @@ size_t RexxEntry SysSearchPath(const char *name, size_t numargs, CONSTRXSTRING a
         return INVALID_ROUTINE;
     }
 
-
-    /* search current directory   */
-    GetCurrentDirectory(_MAX_PATH, szCurDir);
-    lpPath=strcat(szCurDir,";");         /*  and specified path        */
-
-    if (GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR))
-    {
-        lpPath=strcat(szCurDir,szEnvStr); /* szEnvStr instead of lpEnv  */
-    }
-
+    char opt = 'C'; // this is the default
     if (numargs == 3)
     {                  /* process options            */
-        char opt = toupper(args[2].strptr[0]);
-        if (opt == 'N')
-        {
-            GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR);
-            lpPath = szEnvStr;
-        }
-        // this is the default
-        else if (opt != 'C')
+        opt = toupper(args[2].strptr[0]);
+        if (opt != 'C' && opt != 'N')
         {
             return INVALID_ROUTINE;          /* Invalid option             */
         }
     }
+
+    szEnvStr = (LPTSTR) malloc(sizeof(char) * MAX_ENVVAR);
+    if (szEnvStr != NULL)
+    {
+        DWORD charCount = GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR);
+        if (charCount == 0) 
+        {
+            *szEnvStr = '\0';
+        }
+        else if (charCount > MAX_ENVVAR)
+        {
+            szEnvStr = (LPTSTR) realloc(szEnvStr, sizeof(char) * charCount);   
+            if (szEnvStr != NULL) 
+            {
+                DWORD charCount2 = GetEnvironmentVariable(args[0].strptr, szEnvStr, charCount);
+                if (charCount2 == 0 || charCount2 > charCount) 
+                {
+                    *szEnvStr = '\0';
+                }
+            }
+        }
+    }
+
+    if (opt == 'N')
+    {
+        lpPath = (szEnvStr == NULL) ? NULL : strdup(szEnvStr);
+    }
+    else if (opt == 'C')
+    {
+        /* search current directory   */
+        DWORD charCount = GetCurrentDirectory(_MAX_PATH, szCurDir);
+        if (charCount == 0 || charCount > _MAX_PATH) 
+        {
+            szCurDir[0] = '\0';
+        }
+
+        if (szEnvStr != NULL)
+        {
+            lpPath = (LPTSTR) malloc(sizeof(char) * (strlen(szCurDir) + 1 + strlen(szEnvStr) + 1));
+            if (lpPath != NULL) 
+            {
+                strcpy(lpPath, szCurDir);
+                strcat(lpPath, ";");
+                strcat(lpPath, szEnvStr);
+            }
+        }
+        else
+        {
+            lpPath = strdup(szCurDir);
+        }
+    }
+
     /* use DosSearchPath          */
 
-    errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-    if (0 == SearchPath(
-                       (LPCTSTR)lpPath,              /* path srch, NULL will+      */
-                       (LPCTSTR)args[1].strptr,      /* address if filename        */
-                       NULL,                         /* filename contains .ext     */
-                       _MAX_PATH,                    /* size of fullname buffer    */
-                       szFullPath,                   /* where to put results       */
-                       &pszOnlyFileName))
+    DWORD charCount = 0;
+    if (lpPath != NULL)
+    {
+        errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+        charCount = SearchPath(
+                           (LPCTSTR)lpPath,              /* path srch, NULL will+      */
+                           (LPCTSTR)args[1].strptr,      /* address if filename        */
+                           NULL,                         /* filename contains .ext     */
+                           _MAX_PATH,                    /* size of fullname buffer    */
+                           szFullPath,                   /* where to put results       */
+                           &pszOnlyFileName);
+        SetErrorMode(errorMode);
+    }
+    if (charCount == 0 || charCount > _MAX_PATH)
     {
         szFullPath[0]='\0';              /* set to NULL if failure     */
     }
 
     BUILDRXSTRING(retstr, szFullPath);   /* pass back result           */
-    SetErrorMode(errorMode);
+    free(szEnvStr);
+    free(lpPath);
     return VALID_ROUTINE;
 }
 
@@ -3223,101 +3267,90 @@ size_t RexxEntry SysTextScreenSize(const char *name, size_t numargs, CONSTRXSTRI
 size_t RexxEntry RxWinExec(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
-    int         CmdShow;                 /* show window style flags    */
-    int         index;                   /* table index                */
-    ULONG       pid;                     /* PID or error return code   */
-    size_t      length;                  /* length of option           */
-    STARTUPINFO si;
-    PROCESS_INFORMATION procInfo;
+  int         CmdShow;                 /* show window style flags    */
+  int         index;                   /* table index                */
+  ULONG       pid;                     /* PID or error return code   */
+  size_t      length;                  /* length of option           */
+  STARTUPINFO si;
+  PROCESS_INFORMATION procInfo;
 
-    // Show window types.
-    PSZ    show_styles[] =
-    {
-        "SHOWNORMAL",
-        "SHOWNOACTIVATE",
-        "SHOWMINNOACTIVE",
-        "SHOWMINIMIZED",
-        "SHOWMAXIMIZED",
-        "HIDE",
-        "MINIMIZE"
+
+PSZ    show_styles[] =                 /* show window types          */
+    {"SHOWNORMAL",
+     "SHOWNOACTIVATE",
+     "SHOWMINNOACTIVE",
+     "SHOWMINIMIZED",
+     "SHOWMAXIMIZED",
+     "HIDE",
+     "MINIMIZE"
+     };
+
+ULONG  show_flags[] =                  /* show window styles        */
+    {SW_SHOWNORMAL,
+     SW_SHOWNOACTIVATE,
+     SW_SHOWMINNOACTIVE,
+     SW_SHOWMINIMIZED,
+     SW_SHOWMAXIMIZED,
+     SW_HIDE,
+     SW_MINIMIZE
     };
 
-    // Show window styles.
-    ULONG  show_flags[] =
-    {
-        SW_SHOWNORMAL,
-        SW_SHOWNOACTIVATE,
-        SW_SHOWMINNOACTIVE,
-        SW_SHOWMINIMIZED,
-        SW_SHOWMAXIMIZED,
-        SW_HIDE,
-        SW_MINIMIZE
-    };
+  BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* pass back result           */
 
-    BUILDRXSTRING(retstr, NO_UTIL_ERROR);  /* pass back result           */
+  // Should be 1 or 2 args.
+  if ( numargs < 1 || numargs > 2 || !RXVALIDSTRING(args[0]) ||
+       (numargs == 2 && !RXVALIDSTRING(args[1])) ||args[0].strlength > MAX_PATH )
+  {
+        return INVALID_ROUTINE;            /* Invalid call to routine    */
+  }
 
-    // Should be 1 or 2 args.
-    if ( numargs < 1 || numargs > 2 || !RXVALIDSTRING(args[0]) ||
-         (numargs == 2 && !RXVALIDSTRING(args[1])) ||args[0].strlength > MAX_PATH )
-    {
-        return INVALID_ROUTINE;
-    }
+  CmdShow=0;                           /* initialize show flags      */
+                                       /* validate arguments         */
+  if (numargs < 2 ||                   /* no show window style?      */
+      args[1].strptr == NULL)
+    CmdShow += SW_SHOWNORMAL;          /* set default show style     */
+  else {                               /* check various show styles  */
+    length = args[1].strlength;        /* get length of option       */
+                                       /* search style table         */
+    for (index = 0;
+         index < sizeof(show_styles)/sizeof(PSZ);
+         index++) {
+                                       /* find a match?              */
+      if (length == strlen(show_styles[index]) &&
+          !memicmp(args[1].strptr, show_styles[index], length)) {
+        CmdShow += show_flags[index];  /* add to the style           */
+        break;
+      }
+    }/* for */
+                                       /* not found?                 */
+    if (index == sizeof(show_styles)/sizeof(PSZ))
+      return INVALID_ROUTINE;          /* raise an error             */
+  }/* else */
 
-    // Show type can be one and only one of the SW_XXX constants.
-    if ( numargs < 2 || args[1].strptr == NULL )
-    {
-        CmdShow = SW_SHOWNORMAL;
-    }
-    else
-    {
-        // Get length of option and search the style table.
-        length = args[1].strlength;
-        for ( index = 0; index < sizeof(show_styles)/sizeof(PSZ); index++ )
-        {
-            if ( length == strlen(show_styles[index]) && memicmp(args[1].strptr, show_styles[index], length) == 0 )
-            {
-                CmdShow = show_flags[index];
-                break;
-            }
-        }
+  ZeroMemory(&procInfo, sizeof(procInfo));
+  ZeroMemory(&si, sizeof(si));
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_USESHOWWINDOW;
+  si.wShowWindow = (WORD)CmdShow;
 
-        if ( index == sizeof(show_styles)/sizeof(PSZ) )
-        {
-            // User sent an argument, but not the right one.
-            return INVALID_ROUTINE;
-        }
-    }
+  if ( CreateProcess(NULL, (LPSTR)args[0].strptr, NULL, NULL, FALSE, 0, NULL,
+                     NULL, &si, &procInfo ) ) {
+    pid = procInfo.dwProcessId;
+  }
+  else {
+    pid = GetLastError();
+    if ( pid > 31 )                    /* maintain compatibility to  */
+      pid = (ULONG)-((int)pid);        /* versions < ooRexx 3.1.2    */
+  }
+                                       /* return value as string     */
+  sprintf(retstr->strptr, "%d", pid);
+  retstr->strlength = strlen(retstr->strptr);
 
-    ZeroMemory(&procInfo, sizeof(procInfo));
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    si.dwFlags = STARTF_USESHOWWINDOW;
-    si.wShowWindow = (WORD)CmdShow;
+  /* Close process / thread handles as they are not used / needed.   */
+  CloseHandle(procInfo.hProcess);
+  CloseHandle(procInfo.hThread);
 
-    if ( CreateProcess(NULL, (LPSTR)args[0].strptr, NULL, NULL, FALSE, 0, NULL,
-                       NULL, &si, &procInfo ) )
-    {
-        pid = procInfo.dwProcessId;
-    }
-    else
-    {
-        pid = GetLastError();
-        if ( pid > 31 )
-        {
-            // Maintain compatibility to versions < ooRexx 3.1.2
-            pid = (ULONG)-((int)pid);
-        }
-    }
-
-    // Return value as string.
-    sprintf(retstr->strptr, "%d", pid);
-    retstr->strlength = strlen(retstr->strptr);
-
-    // Close process / thread handles as they are not used / needed.
-    CloseHandle(procInfo.hProcess);
-    CloseHandle(procInfo.hThread);
-
-    return VALID_ROUTINE;
+  return VALID_ROUTINE;                /* good completion            */
 }
 
 
