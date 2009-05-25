@@ -54,9 +54,7 @@
 
 
 #define MAX_LIBRARY_NAME_LENGTH 250
-//TODO:  Add conditional compilation for Apple OSX
-#define SYSTEM_LIBRARY_EXTENSION "so"
-#define LIBARY_NAME_BUFFER_LENGTH (MAX_LIBRARY_NAME_LENGTH + sizeof("/usr/lib/lib.") + sizeof(SYSTEM_LIBRARY_EXTENSION))
+#define LIBARY_NAME_BUFFER_LENGTH (MAX_LIBRARY_NAME_LENGTH + sizeof("/usr/lib/lib") + sizeof(ORX_SHARED_LIBRARY_EXT))
 
 SysLibrary::SysLibrary()
 {
@@ -87,13 +85,13 @@ bool SysLibrary::load(
         return false;
     }
 
-    sprintf(nameBuffer, "lib%s.%s", name, SYSTEM_LIBRARY_EXTENSION);
+    sprintf(nameBuffer, "lib%s%s", name, ORX_SHARED_LIBRARY_EXT);
     // try loading directly
     libraryHandle = dlopen(nameBuffer, RTLD_LAZY);
     // if not found, then try from /usr/lib
     if (libraryHandle == NULL)
     {
-        sprintf(nameBuffer, "/usr/lib/lib%s.%s", name, SYSTEM_LIBRARY_EXTENSION);
+        sprintf(nameBuffer, "/usr/lib/lib%s%s", name, ORX_SHARED_LIBRARY_EXT);
         libraryHandle = dlopen(nameBuffer, RTLD_LAZY);
         // still can't find it?
         if (libraryHandle == NULL)
