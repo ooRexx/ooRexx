@@ -615,11 +615,7 @@ void PackageManager::unload()
     {
         // get the next package
         LibraryPackage *package = (LibraryPackage *)packages->value(i);
-        // not one of the internal packages, so reload.
-        if (!package->isInternal())
-        {
-            package->unload();
-        }
+        package->unload();
     }
 
     // now roll back to a copy of the image versions of these directories so we only

@@ -153,12 +153,6 @@ bool LibraryPackage::load()
  */
 void LibraryPackage::unload()
 {
-    // the internal packages don't get unloaded
-    if (!loaded)
-    {
-        return;
-    }
-
     // call an unloader, if we have one.
     if (package->unloader != NULL)
     {
@@ -167,7 +161,11 @@ void LibraryPackage::unload()
 
         ActivityManager::currentActivity->run(dispatcher);
     }
-    lib.unload();
+    // the internal packages don't get unloaded
+    if (loaded)
+    {
+        lib.unload();
+    }
 }
 
 
