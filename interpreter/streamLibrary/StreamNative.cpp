@@ -2579,6 +2579,9 @@ int64_t StreamInfo::streamPosition(const char *options)
     {
         raiseException(Rexx_Error_Incorrect_method_noarg, context->NewStringFromAsciiz("SEEK"), context->NewStringFromAsciiz("offset"));
     }
+    // clear any error state...the positioning operation might clear other
+    // status, such as EOF conditions
+    state = StreamReady;
     /* if read or write was not specified*/
     /* check the open flags for read and */
     /* set read. check for write and set */
