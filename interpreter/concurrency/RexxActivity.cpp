@@ -2927,9 +2927,9 @@ void RexxActivity::run(ActivityDispatcher &target)
                                          /* make sure we have the stack base  */
     this->stackBase = currentThread.getStackBase(TOTAL_STACK_SIZE);
     this->generateRandomNumberSeed();    /* get a fresh random seed           */
+    startDepth = stackFrameDepth;        /* Remember activation stack depth   */
                                          /* Push marker onto stack so we know */
     this->createNewActivationStack();    /* what level we entered.            */
-    startDepth = stackFrameDepth;        /* Remember activation stack depth   */
 
     // save the actitivation level in case there's an error unwind for an unhandled
     // exception;

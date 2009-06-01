@@ -2184,6 +2184,8 @@ bool RexxActivation::trap(             /* trap a condition                  */
         /* and the corresponding trap info   */
         this->handler_queue->addLast(traphandler);
         this->pending_count++;             /* bump pending condition count      */
+        // clear this from the activity if we're trapping this here
+        activity->clearCurrentCondition();
                                            /* is this a signal instruction      */
                                            /* no the non-returnable PROPAGATE?  */
         if (handler->isType(KEYWORD_SIGNAL))

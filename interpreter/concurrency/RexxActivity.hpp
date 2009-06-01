@@ -311,6 +311,7 @@ typedef enum
    }
 
    inline RexxDirectory *getCurrentCondition() { return conditionobj; }
+   inline void           clearCurrentCondition() { conditionobj = OREF_NULL; }
    void setExitHandler(int exitNum, REXXPFN e) { getExitHandler(exitNum).setEntryPoint(e); }
    void setExitHandler(int exitNum, const char *e) { getExitHandler(exitNum).resolve(e); }
    void setExitHandler(RXSYSEXIT &e) { getExitHandler(e.sysexit_code).resolve(e.sysexit_name); }
