@@ -161,8 +161,9 @@ void LibraryPackage::unload()
 
         ActivityManager::currentActivity->run(dispatcher);
     }
-    // the internal packages don't get unloaded
-    if (loaded)
+    // the internal packages don't get unloaded because
+    // we'll be reusing the definition
+    if (loaded && !internal)
     {
         lib.unload();
     }
