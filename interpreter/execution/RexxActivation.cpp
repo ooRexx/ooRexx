@@ -1617,11 +1617,20 @@ void RexxActivation::raise(
         /* do we have a sender that is       */
         /* trapping this condition?          */
         /* do we have a sender?              */
+        bool trapped = false;
         if (_sender != OREF_NULL)
         {
             /* "tickle them" with this           */
-            _sender->trap(condition, conditionobj);
+            trapped = _sender->trap(condition, conditionobj);
         }
+
+        /* is this an untrapped halt condition?  Need to transform into a SYNTAX error */
+        if (!trapped && condition->strCompare(CHAR_HALT))
+        {
+                                               /* raise as a syntax error           */
+            reportException(Error_Program_interrupted_condition, OREF_HALT);
+        }
+
         this->returnFrom(resultObj);       /* process the return part           */
         throw this;                        /* unwind and process the termination*/
     }
@@ -3485,7 +3494,12 @@ void RexxActivation::processClauseBoundary()
         /* turn off the halt flag            */
         this->settings.flags &= ~halt_condition;
         /* yes, raise the flag               */
-        reportHalt(this->settings.halt_description);
+                                             /* process as common condition       */
+        if (!activity->raiseCondition(OREF_HALT, OREF_NULL, settings.halt_description, OREF_NULL, OREF_NULL))
+        {
+                                               /* raise as a syntax error           */
+            reportException(Error_Program_interrupted_condition, OREF_HALT);
+        }
     }
     /* need to turn on tracing?          */
     if (this->settings.flags&set_trace_on)

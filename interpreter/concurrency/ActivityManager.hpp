@@ -253,17 +253,6 @@ inline void reportNomethod(RexxString *message, RexxObject *receiver)
 }
 
 
-inline void reportHalt(RexxString *description)
-{
-                                       /* process as common condition       */
-  if (!ActivityManager::currentActivity->raiseCondition(OREF_HALT, OREF_NULL, description, OREF_NULL, OREF_NULL))
-  {
-                                         /* raise as a syntax error           */
-      reportException(Error_Program_interrupted_condition, OREF_HALT);
-  }
-}
-
-
 inline void missingArgument(size_t argumentPosition)
 {
                                        /* just raise the error              */
