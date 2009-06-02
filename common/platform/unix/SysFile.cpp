@@ -1154,12 +1154,12 @@ bool SysFile::hasData()
     if (isTTY)
     {
         FD_ZERO(&rset);
-        FD_SET(fileno(stdin), &rset);
+        FD_SET(fileHandle, &rset);
         tv.tv_sec = 0;
         tv.tv_usec = 0;
 
-        int result = select(fileno(stdin), &rset, NULL, NULL, &tv);
-        return (result > 0) ? true : false;
+        int result = select(fileHandle + 1, &rset, NULL, NULL, &tv);
+        return FD_ISSET(fileHandle, &rset); 
     }
 
     // we might have something buffered, but also check the
