@@ -43,7 +43,7 @@ Once you have ooRexx compiled, it can then be installed.  By default, the
 ooRexx executables will be installed into /opt/ooRexx/bin and the libraries
 and external function packages (*.so) will be installed into
 /opt/ooRexx/lib/ooRexx.  The base path "/opt" can be changed by adding the
---prefix=path (where path is the base path) to the configure command.  E.g.,.
+--prefix=path (where path is the base path) to the configure command.  E.g.,
 to install ooRexx into your home directory: $HOME/bin and $HOME/lib/ooRexx,
 configure --prefix=$HOME ...  This is particularly useful if you do not have
 root access on the machine on which you are building ooRexx.
@@ -136,8 +136,7 @@ via /etc/inittab:
 
 rxapi:2:once:/opt/ooRexx/bin/rxapi >/dev/console 2>&1
 
-If you want to bootstrap ooRexx on AIX 6.1 you will need the following
-tools:
+If you want to bootstrap ooRexx on AIX you will need the following tools:
 
 - libtool 1.5.26
 - autoconf 2.63
