@@ -372,7 +372,7 @@ size_t StringUtil::caselessLastPos(const char *stringData, size_t haystackLen, R
         // adjust the starting point
         const char *startPoint = stringData + haystackLen - range;
                                          /* do the search                     */
-        const char *matchLocation = caselessLastPos(needle->getStringData(), needleLen, startPoint, haystackLen);
+        const char *matchLocation = caselessLastPos(needle->getStringData(), needleLen, startPoint, range);
         if (matchLocation == NULL)
         {
             return 0;
