@@ -2965,11 +2965,12 @@ void RexxActivity::run(ActivityDispatcher &target)
     unwindToDepth(startDepth);
     // if a condition occurred, make sure we inject this into the API-level
     // native activation so the caller can check to see if an error occurred.
-    if (conditionobj != OREF_NULL)
+    if (target.conditionData != OREF_NULL)
     {
-        getApiContext()->setConditionInfo(conditionobj);
-        conditionobj = OREF_NULL;
+        getApiContext()->setConditionInfo(target.conditionData);
     }
+    // make sure we clear this from the activity
+    clearCurrentCondition();
 }
 
 

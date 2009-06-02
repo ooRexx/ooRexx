@@ -60,12 +60,12 @@ public:
     inline void setContext(RexxActivity *act, RexxNativeActivation *a) { activity = act; activation = a; }
 
     wholenumber_t  rc;                 // error return code
+    RexxDirectory *conditionData;      // any condition data posted due to an activity error
 
 protected:
 
     RexxActivity *activity;            // the activity we're running on
     RexxNativeActivation *activation;  // the native activation we're running under
-    RexxDirectory *conditionData;      // any condition data posted due to an activity error
 };
 
 

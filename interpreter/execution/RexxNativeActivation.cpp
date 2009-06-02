@@ -1530,10 +1530,6 @@ void RexxNativeActivation::run(ActivityDispatcher &dispatcher)
     {
         // we run this under a callback trap so that the exceptions get processed.
         dispatcher.run();
-        // make sure we clear any outstanding trapped conditions for this
-        // activity before we clear.  If an untrapped condition occurrect, this
-        // will return to one of the catch positions
-        activity->clearCurrentCondition();
     }
     catch (ActivityException)
     {
