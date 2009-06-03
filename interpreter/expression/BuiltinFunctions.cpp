@@ -1905,7 +1905,7 @@ BUILTIN(LINEIN)
     {
         bool added = false;
         /* get a stream for this name        */
-        RexxObject *stream = context->resolveStream(name, stack, true, NULL, &added);
+        RexxObject *stream = context->resolveStream(name, true, NULL, &added);
         switch (argcount)
         {                /* process according to argcount     */
             case 0:                          /* no name                           */
@@ -1946,7 +1946,7 @@ BUILTIN(CHARIN)
 
     /* get a stream for this name        */
     bool added = false;
-    RexxObject *stream = context->resolveStream(name, stack, true, NULL, &added);
+    RexxObject *stream = context->resolveStream(name, true, NULL, &added);
     switch (argcount)
     {                  /* process according to argcount     */
         case 0:                            /* no name                           */
@@ -2002,7 +2002,7 @@ BUILTIN(LINEOUT)
         bool added;
         RexxString *fullName;
         /* get a stream for this name        */
-        RexxObject *stream = context->resolveStream(name, stack, false, &fullName, &added);
+        RexxObject *stream = context->resolveStream(name, false, &fullName, &added);
         switch (argcount)
         {                /* process according to argcount     */
             case 0:                          /* no name                           */
@@ -2043,7 +2043,7 @@ BUILTIN(CHAROUT)
 
     bool added;
     /* get a stream for this name        */
-    RexxObject *stream = context->resolveStream(name, stack, false, NULL, &added);
+    RexxObject *stream = context->resolveStream(name, false, NULL, &added);
     switch (argcount)
     {                  /* process according to argcount     */
         case 0:                            /* no name                           */
@@ -2083,7 +2083,7 @@ BUILTIN(LINES)
     {
         bool added;
         /* get a stream for this name        */
-        RexxObject *stream = context->resolveStream(name, stack, true, NULL, &added);
+        RexxObject *stream = context->resolveStream(name, true, NULL, &added);
 
         if (option != OREF_NULL)
         {
@@ -2137,7 +2137,7 @@ BUILTIN(CHARS)
     }
     /* get a stream for this name        */
     bool added;
-    RexxObject *stream = context->resolveStream(name, stack, true, NULL, &added);
+    RexxObject *stream = context->resolveStream(name, true, NULL, &added);
     return stream->sendMessage(OREF_CHARS);
 }
 
@@ -2188,7 +2188,7 @@ BUILTIN(STREAM)
                                /* raise an error                    */
                     reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
                 }
-                RexxObject *stream = context->resolveStream(name, stack, true, NULL, NULL);
+                RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
                 /* get the stream state              */
                 return stream->sendMessage(OREF_STATE);
                 break;
@@ -2201,7 +2201,7 @@ BUILTIN(STREAM)
                                /* raise an error                    */
                     reportException(Error_Incorrect_call_maxarg, OREF_STREAM, IntegerTwo);
                 }
-                RexxObject *stream = context->resolveStream(name, stack, true, NULL, NULL);
+                RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
                 /* get the stream description        */
                 return stream->sendMessage(OREF_DESCRIPTION);
                 break;
@@ -2228,7 +2228,7 @@ BUILTIN(STREAM)
                 {
                     RexxString *fullName;
                     bool added;
-                    RexxObject *stream = context->resolveStream(name, stack, true, &fullName, &added);
+                    RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
                     RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
                     /* if open failed, remove the stream object from stream table again */
                     if (!result->strCompare("READY:"))
@@ -2241,7 +2241,7 @@ BUILTIN(STREAM)
                 {
                     RexxString *fullName;
                     bool added;
-                    RexxObject *stream = context->resolveStream(name, stack, true, &fullName, &added);
+                    RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
                     RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
                     context->getStreams()->remove(fullName);
                     return result;
@@ -2252,14 +2252,14 @@ BUILTIN(STREAM)
                 {
                     RexxString *fullName;
                     bool added;
-                    RexxObject *stream = context->resolveStream(name, stack, true, &fullName, &added);
+                    RexxObject *stream = context->resolveStream(name, true, &fullName, &added);
                     // this is a real operation, so just leave alone
                     RexxString *result = (RexxString *)stream->sendMessage(OREF_COMMAND, command);
                     return result;
                 }
                 else
                 {
-                    RexxObject *stream = context->resolveStream(name, stack, true, NULL, NULL);
+                    RexxObject *stream = context->resolveStream(name, true, NULL, NULL);
                     return stream->sendMessage(OREF_COMMAND, command);
                 }
                 break;

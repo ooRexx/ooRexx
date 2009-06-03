@@ -47,7 +47,7 @@ class RexxNativeActivation;
 class ActivityDispatcher
 {
 public:
-    inline ActivityDispatcher() : rc(0), activity(OREF_NULL), activation(OREF_NULL), conditionData(OREF_NULL) { ; }
+    inline ActivityDispatcher() : rc(0), conditionData(OREF_NULL), activity(OREF_NULL), activation(OREF_NULL) { ; }
     virtual ~ActivityDispatcher() { ; }
 
     virtual void run();

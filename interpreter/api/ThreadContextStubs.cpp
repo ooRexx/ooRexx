@@ -327,7 +327,7 @@ logical_t RexxEntry LoadLibraryPackage(RexxThreadContext *c, CSTRING n)
     catch (RexxNativeActivation *)
     {
     }
-    return NULLOBJECT;
+    return false;
 }
 
 
@@ -344,7 +344,7 @@ logical_t RexxEntry RegisterLibrary(RexxThreadContext *c, CSTRING n, RexxPackage
     catch (RexxNativeActivation *)
     {
     }
-    return NULLOBJECT;
+    return false;
 }
 
 

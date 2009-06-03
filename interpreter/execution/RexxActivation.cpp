@@ -1671,7 +1671,7 @@ RexxVariableDictionary * RexxActivation::getObjectVariables()
  *
  * @return The backing stream object for the name.
  */
-RexxObject *RexxActivation::resolveStream(RexxString *name, RexxExpressionStack *stack, bool input, RexxString **fullName, bool *added)
+RexxObject *RexxActivation::resolveStream(RexxString *name, bool input, RexxString **fullName, bool *added)
 {
     if (added != NULL)
     {
@@ -1722,7 +1722,8 @@ RexxObject *RexxActivation::resolveStream(RexxString *name, RexxExpressionStack 
         {
             *fullName = qualifiedName;       /* provide qualified name            */
         }
-        stack->push(qualifiedName);        /* Protect from GC.                  */
+        // protect from GC
+        ProtectedObject p(qualifiedName);
         /* Note: stream name is pushed to the stack to be protected from GC;    */
         /* e.g. it is used by the caller to remove stream from stream table.    */
         /* The stack will be reset after the function was executed and the      */
@@ -2751,7 +2752,7 @@ RexxObject *RexxActivation::resolveDotVariable(RexxString *name)
     {
         // otherwise, send this up the call chain and resolve in the
         // original source context
-        parent->resolveDotVariable(name);
+        return parent->resolveDotVariable(name);
     }
 }
 

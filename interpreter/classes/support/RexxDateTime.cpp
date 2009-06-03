@@ -75,19 +75,19 @@ const char *RexxDateTime::monthNames[] =
 
 
 // the day in year starting point for each of the months (non-leap year)
-wholenumber_t RexxDateTime::monthStarts[] =
+int RexxDateTime::monthStarts[] =
 {
      0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365
 };
 
 // the day in year starting point for each of the months in a leap year.
-wholenumber_t RexxDateTime::leapMonthStarts[] =
+int RexxDateTime::leapMonthStarts[] =
 {
      0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366
 };
 
 // the number of days in each of the months
-wholenumber_t RexxDateTime::monthdays[] =
+int RexxDateTime::monthdays[] =
 {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
@@ -141,9 +141,9 @@ RexxDateTime::RexxDateTime(wholenumber_t basedate, bool dummy)
 RexxDateTime::RexxDateTime(wholenumber_t y, wholenumber_t m, wholenumber_t d)
 {
     clear();
-    year = y;
-    month = m;
-    day = d;
+    year = (int)y;
+    month = (int)m;
+    day = (int)d;
 }
 
 
@@ -161,13 +161,14 @@ RexxDateTime::RexxDateTime(wholenumber_t y, wholenumber_t m, wholenumber_t d)
  */
 RexxDateTime::RexxDateTime(wholenumber_t y, wholenumber_t m, wholenumber_t d, wholenumber_t h, wholenumber_t i, wholenumber_t s, wholenumber_t u)
 {
-    year = y;
-    month = m;
-    day = d;
-    hours = h;
-    minutes = i;
-    seconds = s;
-    microseconds = u;
+    year = (int)y;
+    month = (int)m;
+    day = (int)d;
+    hours = (int)h;
+    minutes = (int)i;
+    seconds = (int)s;
+    microseconds = (int)u;
+    valid = false;
 }
 
 
@@ -257,8 +258,10 @@ int64_t RexxDateTime::getUnixTime()
  *
  * @param basedays The basedays value (must be a positive integer).
  */
-bool RexxDateTime::setBaseDate(wholenumber_t basedays)
+bool RexxDateTime::setBaseDate(wholenumber_t base)
 {
+    int basedays = base;
+
     // make sure this is in range.
     if (basedays < 0 || basedays > maxBaseTime.getBaseDate())
     {
@@ -325,7 +328,7 @@ bool RexxDateTime::setBaseDate(wholenumber_t basedays)
     }
 
     // ok, the year day will differ depending on whether this is a leap year, or not.
-    wholenumber_t *monthTable = LeapYear(year) ? leapMonthStarts : monthStarts;
+    int *monthTable = LeapYear(year) ? leapMonthStarts : monthStarts;
 
     // now find the relevant month and calculate the month/day fields
     for (int i = 0; ; i++)
@@ -365,14 +368,14 @@ bool RexxDateTime::setBaseTime(int64_t basetime)
     setBaseDate((wholenumber_t)basedays);
 
     // extract out the microseconds bit
-    microseconds = (wholenumber_t)(basetime % MICROSECONDS);
+    microseconds = (int)(basetime % MICROSECONDS);
     // and then down to a seconds field
     basetime = basetime / MICROSECONDS;
     // now pull out the other time fields
-    hours = (wholenumber_t)(basetime / SECONDS_IN_HOUR);
+    hours = (int)(basetime / SECONDS_IN_HOUR);
     basetime = basetime % SECONDS_IN_HOUR;
-    minutes = (wholenumber_t)(basetime / SECONDS_IN_MINUTE);
-    seconds = (wholenumber_t)(basetime % SECONDS_IN_MINUTE);
+    minutes = (int)(basetime / SECONDS_IN_MINUTE);
+    seconds = (int)(basetime % SECONDS_IN_MINUTE);
 
     return true;
 }
@@ -404,10 +407,10 @@ void RexxDateTime::setTimeInSeconds(wholenumber_t basetime)
     // clear everything
     clear();
     // extract the field information
-    hours = basetime / SECONDS_IN_HOUR;
-    basetime = basetime % SECONDS_IN_HOUR;
-    minutes = basetime / SECONDS_IN_MINUTE;
-    seconds = basetime % SECONDS_IN_MINUTE;
+    hours = (int)(basetime / SECONDS_IN_HOUR);
+    basetime = (int)(basetime % SECONDS_IN_HOUR);
+    minutes = (int)(basetime / SECONDS_IN_MINUTE);
+    seconds = (int)(basetime % SECONDS_IN_MINUTE);
 }
 
 /**
@@ -423,6 +426,7 @@ void RexxDateTime::clear()
     minutes = 0;
     seconds = 0;
     microseconds = 0;
+    valid = false;
 }
 
 /**
@@ -434,7 +438,7 @@ void RexxDateTime::clear()
 void RexxDateTime::setDate(wholenumber_t newYear, wholenumber_t newDay)
 {
     // set the year, then use that to calculate the month and day information
-    year = newYear;
+    year = (int)newYear;
     setDay(newDay);
 }
 
@@ -450,17 +454,17 @@ void RexxDateTime::setDate(wholenumber_t newYear, wholenumber_t newDay)
 void RexxDateTime::setDay(wholenumber_t basedays)
 {
     // ok, the year day will differ depending on whether this is a leap year, or not.
-    wholenumber_t *monthTable = LeapYear(year) ? leapMonthStarts : monthStarts;
+    int *monthTable = LeapYear(year) ? leapMonthStarts : monthStarts;
 
     // now find the relevant month and calculate the month/day fields
     for (int i = 0; ; i++)
     {
         // have we reached the month yet?
-        if (monthTable[i] >= basedays)
+        if (monthTable[i] >= (int)basedays)
         {
             month = i;               // the index is the month number
                                      // and adjust for the days
-            day = basedays - monthTable[i - 1];
+            day = (int)basedays - monthTable[i - 1];
             break;                   /* finished                          */
         }
     }
@@ -659,7 +663,7 @@ bool RexxDateTime::setHours(wholenumber_t h)
     {
         return false;
     }
-    hours = h;
+    hours = (int)h;
     minutes = 0;
     seconds = 0;
     microseconds = 0;
@@ -684,10 +688,10 @@ bool RexxDateTime::setSeconds(wholenumber_t s)
    }
 
    // now break down into component parts
-   hours = s / SECONDS_IN_HOUR;
-   s = s % SECONDS_IN_HOUR;
-   minutes = s / SECONDS_IN_MINUTE;
-   seconds = s % SECONDS_IN_MINUTE;
+   hours = (int)s / SECONDS_IN_HOUR;
+   s = (int)s % SECONDS_IN_HOUR;
+   minutes = (int)s / SECONDS_IN_MINUTE;
+   seconds = (int)s % SECONDS_IN_MINUTE;
    microseconds = 0;
    return true;
 }
@@ -711,8 +715,8 @@ bool RexxDateTime::setMinutes(wholenumber_t m)
     }
 
     // now break down into component parts
-    hours = m / MINUTES_IN_HOUR;
-    minutes = m % MINUTES_IN_HOUR;
+    hours = (int)m / MINUTES_IN_HOUR;
+    minutes = (int)m % MINUTES_IN_HOUR;
     seconds = 0;
     microseconds = 0;
     return true;
@@ -1075,7 +1079,7 @@ bool  RexxDateTime::parseDateTimeFormat(const char *date, const char *format, co
  *
  * @return true if the field is valid, false for any parsing error.
  */
-bool RexxDateTime::getNumber(const char *input, wholenumber_t length, wholenumber_t *target)
+bool RexxDateTime::getNumber(const char *input, wholenumber_t length, int *target)
 {
     wholenumber_t value = 0;                  // the default
     // process the specified number of digits
@@ -1112,7 +1116,7 @@ bool RexxDateTime::getNumber(const char *input, wholenumber_t length, wholenumbe
  * @return true if the number is valid, false for any parsing/validation
  *         errors.
  */
-bool RexxDateTime::getNumber(const char *input, wholenumber_t length, wholenumber_t *target, wholenumber_t max)
+bool RexxDateTime::getNumber(const char *input, wholenumber_t length, int *target, int max)
 {
     // if this scans correctly, validate the range
     if (getNumber(input, length, target))
@@ -1169,7 +1173,7 @@ void RexxDateTime::formatUnixTime(char *buffer)
 void RexxDateTime::formatDays(char *buffer)
 {
     // format this into the buffer as a number
-    sprintf(buffer, "%u", getYearDay());
+    sprintf(buffer, "%d", (int)getYearDay());
 }
 
 
@@ -1212,7 +1216,7 @@ void RexxDateTime::formatNormalDate(char *buffer, const char *sep)
 {
     // make sure we have a valid delimiter
     sep = sep == NULL ? " " : sep;
-    sprintf(buffer, "%u%s%3.3s%s%4.4u", day, sep, monthNames[month-1], sep, year);
+    sprintf(buffer, "%d%s%3.3s%s%4.4d", day, sep, monthNames[month-1], sep, year);
 }
 
 
@@ -1294,7 +1298,7 @@ void RexxDateTime::formatCivilTime(char *buffer)
     {
         adjustedHours -= 12;
     }
-    sprintf(buffer,"%u:%2.2u%s", adjustedHours, minutes, hours >= 12 ? POSTMERIDIAN : ANTEMERIDIAN);
+    sprintf(buffer,"%d:%2.2d%s", adjustedHours, minutes, hours >= 12 ? POSTMERIDIAN : ANTEMERIDIAN);
 }
 
 
@@ -1305,7 +1309,7 @@ void RexxDateTime::formatCivilTime(char *buffer)
  */
 void RexxDateTime::formatHours(char *buffer)
 {
-    sprintf(buffer, "%u", hours);       // just format the hours
+    sprintf(buffer, "%d", hours);       // just format the hours
 }
 
 
@@ -1316,7 +1320,7 @@ void RexxDateTime::formatHours(char *buffer)
  */
 void RexxDateTime::formatLongTime(char *buffer)
 {
-    sprintf(buffer, "%2.2u:%2.2u:%2.2u.%6.6u", hours, minutes, seconds, microseconds);
+    sprintf(buffer, "%2.2d:%2.2d:%2.2d.%6.6d", hours, minutes, seconds, microseconds);
 }
 
 
@@ -1327,7 +1331,7 @@ void RexxDateTime::formatLongTime(char *buffer)
  */
 void RexxDateTime::formatMinutes(char *buffer)
 {
-    sprintf(buffer,"%u", hours * MINUTES_IN_HOUR + minutes);
+    sprintf(buffer,"%d", hours * MINUTES_IN_HOUR + minutes);
 }
 
 
@@ -1338,7 +1342,7 @@ void RexxDateTime::formatMinutes(char *buffer)
  */
 void RexxDateTime::formatNormalTime(char *buffer)
 {
-    sprintf(buffer, "%2.2u:%2.2u:%2.2u", hours, minutes, seconds);
+    sprintf(buffer, "%2.2d:%2.2d:%2.2d", hours, minutes, seconds);
 }
 
 
@@ -1349,7 +1353,7 @@ void RexxDateTime::formatNormalTime(char *buffer)
  */
 void RexxDateTime::formatSeconds(char *buffer)
 {
-    sprintf(buffer, "%u", (hours * MINUTES_IN_HOUR + minutes) * SECONDS_IN_MINUTE + seconds);
+    sprintf(buffer, "%d", (hours * MINUTES_IN_HOUR + minutes) * SECONDS_IN_MINUTE + seconds);
 }
 
 

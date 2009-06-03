@@ -170,28 +170,27 @@ public:
     inline void setTimeZoneOffset(int64_t o) { timeZoneOffset = o; }
     inline int64_t getTimeZoneOffset() { return timeZoneOffset; }
 
-
-    wholenumber_t   year;                // current year
-    wholenumber_t   month;               // month of the year
-    wholenumber_t   day;                 // day of the month
-    wholenumber_t   hours;               // hour of the day (24-hour)
-    wholenumber_t   minutes;             // minute of the hour
-    wholenumber_t   seconds;             // second of the minute
-    wholenumber_t   microseconds;        // microseconds
-    wholenumber_t   valid;               // valid time stamp marker
+    boolean         valid;
+    int             year;                // current year
+    int             month;               // month of the year
+    int             day;                 // day of the month
+    int             hours;               // hour of the day (24-hour)
+    int             minutes;             // minute of the hour
+    int             seconds;             // second of the minute
+    int             microseconds;        // microseconds
     int64_t         timeZoneOffset;      // offset from UTC for this time stamp
 
 protected:
 
     bool parseDateTimeFormat(const char *date, const char *format, const char *sep, wholenumber_t currentYear);
-    bool getNumber(const char *input, wholenumber_t length, wholenumber_t *target);
-    bool getNumber(const char *input, wholenumber_t length, wholenumber_t *target, wholenumber_t max);
+    bool getNumber(const char *input, wholenumber_t length, int *target);
+    bool getNumber(const char *input, wholenumber_t length, int *target, int max);
 
-    static const char *dayNames[];      // table of day names for date formatting
-    static const char *monthNames[];    // table of month names for date formatting
-    static wholenumber_t   monthStarts[];         // table of first day of month values for non-leap years
-    static wholenumber_t   leapMonthStarts[];     // table of first day of month values for leap years
-    static wholenumber_t   monthdays[];           // month number of days mapping table
+    static const char  *dayNames[];      // table of day names for date formatting
+    static const char  *monthNames[];    // table of month names for date formatting
+    static int          monthStarts[];         // table of first day of month values for non-leap years
+    static int          leapMonthStarts[];     // table of first day of month values for leap years
+    static int          monthdays[];           // month number of days mapping table
     static RexxDateTime unixBaseTime;   // a base time used for Date('T')/Time('T') calculations.
     static RexxDateTime maxBaseTime;    // the largest possible date we can handle.
 

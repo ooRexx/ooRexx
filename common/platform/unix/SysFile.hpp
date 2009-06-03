@@ -146,7 +146,7 @@ protected:
     bool   isTTY;           // a keyboard based stream.
     char  *buffer;          // our read/write buffer.
     size_t bufferSize;      // the size of the buffer
-    int64_t bufferPosition; // current read/write position in buffer
+    size_t bufferPosition; // current read/write position in buffer
     size_t bufferedInput;   // amount of data in the buffer
     bool   writeBuffered;   // false == read, true == write
     bool   append;          // opened in append mode

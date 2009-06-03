@@ -5926,16 +5926,16 @@ PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *targe
     RexxString *fullName = resolveProgramName(activity, target);
 
     // if we've already loaded this in this instance, just return it.
-    PackageClass *package = instance->loadRequires(activity, target, fullName);
+    PackageClass *packageInstance = instance->loadRequires(activity, target, fullName);
 
-    if (package == OREF_NULL)             /* couldn't create this?             */
+    if (packageInstance == OREF_NULL)       /* couldn't create this?             */
     {
         /* report an error                   */
         reportException(Error_Routine_not_found_requires, target);
     }
     // add this to the source context
-    addPackage(package);
-    return package;
+    addPackage(packageInstance);
+    return packageInstance;
 }
 
 
@@ -5950,16 +5950,16 @@ PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *targe
     InterpreterInstance *instance = activity->getInstance();
 
     // if we've already loaded this in this instance, just return it.
-    PackageClass *package = instance->loadRequires(activity, target, s);
+    PackageClass *packageInstance = instance->loadRequires(activity, target, s);
 
-    if (package == OREF_NULL)             /* couldn't create this?             */
+    if (packageInstance == OREF_NULL)             /* couldn't create this?             */
     {
         /* report an error                   */
         reportException(Error_Routine_not_found_requires, target);
     }
     // add this to the source context
-    addPackage(package);
-    return package;
+    addPackage(packageInstance);
+    return packageInstance;
 }
 
 

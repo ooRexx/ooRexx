@@ -310,7 +310,7 @@ class ActivationSettings
    void              pushControl(RexxObject *);
    void              closeStreams();
    void              checkTrapTable();
-   RexxObject       *resolveStream(RexxString *name, RexxExpressionStack *stack, bool input, RexxString **fullName, bool *added);
+   RexxObject       *resolveStream(RexxString *name, bool input, RexxString **fullName, bool *added);
    RexxDirectory   * getStreams();
    RexxObject  *novalueHandler(RexxString *);
    RexxVariableBase *retriever(RexxString *);
