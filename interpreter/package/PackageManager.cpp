@@ -464,6 +464,10 @@ void PackageManager::loadInternalPackage(RexxString *name, RexxPackageEntry *p)
     LibraryPackage *package = new LibraryPackage(name, p);
     // have we already loaded this package?
     packages->put((RexxObject *)package, name);
+    // now process the package loading after we add this to the table.
+    // This avoids a multi-threaded race condition resulting from the fact
+    // we release the global resource lock when we call out to the package loader.
+    package->loadPackage();
 }
 
 

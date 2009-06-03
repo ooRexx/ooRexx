@@ -87,9 +87,10 @@ LibraryPackage::LibraryPackage(RexxString *n, RexxPackageEntry *p)
 {
     OrefSet(this, libraryName, n);
     ProtectedObject p2(this);
+    // store the registered package entry
+    package = p;
     // this is an internal package.
     internal = true;
-    loadPackage(p);
 }
 
 /**
@@ -135,14 +136,14 @@ void LibraryPackage::liveGeneral(int reason)
 bool LibraryPackage::load()
 {
     // try to load the package table.
-    RexxPackageEntry *table = getPackageTable();
+    package = getPackageTable();
     // if this is NULL, return false to the manager
-    if (table == NULL)
+    if (package == NULL)
     {
         return false;
     }
     // call the loader to get the package tables and set them up.
-    loadPackage(table);
+    loadPackage();
     return true;
 }
 
@@ -214,10 +215,8 @@ RexxPackageEntry *LibraryPackage::getPackageTable()
  *
  * @param p       The package table entry.
  */
-void LibraryPackage::loadPackage(RexxPackageEntry *p)
+void LibraryPackage::loadPackage()
 {
-    package = p;       //NB:  this is NOT an object, so OrefSet is not needed.
-
     // verify that this library is compatible
     if (package->requiredVersion != 0 && package->requiredVersion < REXX_CURRENT_INTERPRETER_VERSION)
     {
@@ -227,10 +226,10 @@ void LibraryPackage::loadPackage(RexxPackageEntry *p)
     loadRoutines(package->routines);
 
     // call a loader, if we have one.
-    if (p->loader != NULL)
+    if (package->loader != NULL)
     {
         // go run the dispatcher call
-        LibraryLoaderDispatcher dispatcher(p->loader);
+        LibraryLoaderDispatcher dispatcher(package->loader);
 
         ActivityManager::currentActivity->run(dispatcher);
     }

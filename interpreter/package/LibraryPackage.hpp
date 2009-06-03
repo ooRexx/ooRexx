@@ -71,7 +71,7 @@ public:
     bool   load();
     void   unload();
     RexxPackageEntry *getPackageTable();
-    void   loadPackage(RexxPackageEntry *p);
+    void   loadPackage();
     void   loadRoutines(RexxRoutineEntry *table);
     RexxMethodEntry *locateMethodEntry(RexxString *name);
     RexxRoutineEntry *locateRoutineEntry(RexxString *name);
