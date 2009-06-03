@@ -3409,7 +3409,7 @@ RexxObjectPtr StreamInfo::getStreamSize()
  */
 const char *StreamInfo::getTimeStamp()
 {
-    char *time;
+    const char *time;
     // if we're open, return the current fstat() information,
     // otherwise, we do this without a handle
     if (isopen)

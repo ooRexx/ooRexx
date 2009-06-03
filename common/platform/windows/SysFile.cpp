@@ -1026,7 +1026,7 @@ bool SysFile::getSize(const char *name, int64_t &size)
  *
  * @return True if the size was retrievable, false otherwise.
  */
-bool SysFile::getTimeStamp(char *&time)
+bool SysFile::getTimeStamp(const char *&time)
 {
     time = "";     // default return value
     // are we open?
@@ -1054,7 +1054,7 @@ bool SysFile::getTimeStamp(char *&time)
  *
  * @return True if the size was retrievable, false otherwise.
  */
-bool SysFile::getTimeStamp(const char *name, char *&time)
+bool SysFile::getTimeStamp(const char *name, const char *&time)
 {
     time = "";     // default return value
     // the handle is not active, use the name

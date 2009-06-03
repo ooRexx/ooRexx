@@ -1002,7 +1002,7 @@ bool SysFile::getSize(const char *name, int64_t &size)
  *
  * @return True if the size was retrievable, false otherwise.
  */
-bool SysFile::getTimeStamp(char *&time)
+bool SysFile::getTimeStamp(const char *&time)
 {
     time = "";     // default return value
     // are we open?
@@ -1030,7 +1030,7 @@ bool SysFile::getTimeStamp(char *&time)
  *
  * @return True if the size was retrievable, false otherwise.
  */
-bool SysFile::getTimeStamp(const char *name, char *&time)
+bool SysFile::getTimeStamp(const char *name, const char *&time)
 {
     time = "";     // default return value
     // the handle is not active, use the name
@@ -1159,7 +1159,7 @@ bool SysFile::hasData()
         tv.tv_usec = 0;
 
         int result = select(fileHandle + 1, &rset, NULL, NULL, &tv);
-        return FD_ISSET(fileHandle, &rset); 
+        return FD_ISSET(fileHandle, &rset);
     }
 
     // we might have something buffered, but also check the

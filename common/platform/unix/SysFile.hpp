@@ -107,8 +107,8 @@ public:
     bool getPosition(int64_t &position);
     bool getSize(int64_t &size);
     bool getSize(const char *name, int64_t &size);
-    bool getTimeStamp(char *&time);
-    bool getTimeStamp(const char *name, char *&time);
+    bool getTimeStamp(const char *&time);
+    bool getTimeStamp(const char *name, const char *&time);
     bool putLine(const char *buffer, size_t len, size_t &bytesWritten);
     bool hasData();
     bool countLines(int64_t &count);
