@@ -1158,7 +1158,7 @@ bool SysFile::hasData()
         tv.tv_sec = 0;
         tv.tv_usec = 0;
 
-        int result = select(fileHandle + 1, &rset, NULL, NULL, &tv);
+        select(fileHandle + 1, &rset, NULL, NULL, &tv);
         return FD_ISSET(fileHandle, &rset);
     }
 
