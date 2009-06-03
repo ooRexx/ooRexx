@@ -2473,7 +2473,7 @@ void RexxInternalObject::printObject()
 /* Function:  give a formatted print of object information.                   */
 /******************************************************************************/
 {
-    printf("Object at %p, of type %d\n", this, this->getObjectTypeNumber());
+    printf("Object at %p, of type %d\n", this, (int)this->getObjectTypeNumber());
 }
 
 /**
