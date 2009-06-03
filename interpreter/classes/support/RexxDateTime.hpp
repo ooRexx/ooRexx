@@ -170,7 +170,7 @@ public:
     inline void setTimeZoneOffset(int64_t o) { timeZoneOffset = o; }
     inline int64_t getTimeZoneOffset() { return timeZoneOffset; }
 
-    boolean         valid;
+    bool            valid;
     int             year;                // current year
     int             month;               // month of the year
     int             day;                 // day of the month
