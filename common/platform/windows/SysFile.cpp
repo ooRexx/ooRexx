@@ -895,7 +895,7 @@ bool SysFile::seek(int64_t offset, int direction, int64_t &position)
                 int64_t fileSize;
                 if (getSize(fileSize))
                 {
-                    return setPosition(fileSize + offset, position);
+                    return setPosition(fileSize - offset, position);
                 }
                 return false;
 
