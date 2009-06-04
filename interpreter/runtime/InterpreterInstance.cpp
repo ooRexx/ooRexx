@@ -540,6 +540,9 @@ void InterpreterInstance::removeGlobalReference(RexxObject *o)
  */
 bool InterpreterInstance::haltAllActivities()
 {
+    // make sure we lock this, since it is possible the table can get updated
+    // as a result of setting these flags
+    ResourceSection lock;
     bool result = true;
     for (size_t listIndex = allActivities->firstIndex() ;
          listIndex != LIST_END;
@@ -563,6 +566,9 @@ bool InterpreterInstance::haltAllActivities()
  */
 void InterpreterInstance::traceAllActivities(bool on)
 {
+    // make sure we lock this, since it is possible the table can get updated
+    // as a result of setting these flags
+    ResourceSection lock;
     for (size_t listIndex = allActivities->firstIndex() ;
          listIndex != LIST_END;
          listIndex = allActivities->nextIndex(listIndex) )
