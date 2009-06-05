@@ -49,6 +49,9 @@
 #include "APIServer.hpp"
 #include "stdio.h"
 
+// TEST: add signal handler for SIGTERM
+#define USE_SIGTERM_TEST
+
 // For testing purposes comment out the following line to force RXAPI to
 // run as a foreground process.
 #define RUN_AS_DAEMON
@@ -86,6 +89,24 @@ void Run (bool asService)
     }
     apiServer.terminateServer();     // shut everything down
 }
+
+#ifdef USE_SIGTERM_TEST
+/*==========================================================================*
+ *  Function: Stop
+ *
+ *  Purpose:
+ *
+ *  handles the stop request.
+ *
+ *
+ *==========================================================================*/
+void Stop(int signo)
+{
+    apiServer.terminateServer();     // shut everything down
+
+    exit(1);
+}
+#endif
 
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
@@ -166,7 +187,12 @@ int main(int argc, char *argv[])
     char pid_buf[256];
     int pfile, len;
     pid_t pid = 0;
-
+#if defined(AIX)
+    struct stat st;
+#endif
+#ifdef USE_SIGTERM_TEST
+    struct sigaction sa;
+#endif
     // Get the command line args
     if (argc > 1) {
         printf("Error: Invalid command line option(s).\n");
@@ -204,14 +230,64 @@ int main(int argc, char *argv[])
     close(pfile);
 
     // make ourselves a daemon
-    if (morph2daemon() == false) {
-        return -1;
+    // - if this is AIX we check if the rxapi daemon was sarted via SRC 
+    //   - if the daemon was started via SRC we do not morph - the SRC handles this
+    //
+    // - add to AIX SRC without auto restart:
+    //   mkssys -s rxapi -p /opt/ooRexx/bin/rxapi -i /dev/null -e /dev/console \
+    //          -o /dev/console -u 0 -S -n 15 -f 9 -O -Q
+    //
+    // - add to AIX SRC with auto restart:
+    //   mkssys -s rxapi -p /opt/ooRexx/bin/rxapi -i /dev/null -e /dev/console \
+    //          -o /dev/console -u 0 -S -n 15 -f 9 -R -Q
+#if defined(AIX)
+    if (fstat(0, &st) <0) {
+        if (morph2daemon() == false) {
+            return -1;
+        }
+    } else {
+        if ((st.st_mode & S_IFMT) == S_IFCHR) {
+            if (isatty(0)) {
+                if (morph2daemon() == false) {
+                    return -1;
+                }
+            }
+        } else {
+            if (morph2daemon() == false) {
+                return -1;
+            }
+        }
     }
+#else
+        if (morph2daemon() == false) {
+            return -1;
+        }
+#endif
 
     // run the server
+#if defined(AIX)
+    if (run_as_daemon == false) {
+        printf("Starting request processing loop.\n");
+    } else {
+        (void) setsid();
+    }
+#else
     if (run_as_daemon == false) {
         printf("Starting request processing loop.\n");
     }
+#endif
+
+#ifdef USE_SIGTERM_TEST
+    // handle kill -15
+    (void) sigemptyset(&sa.sa_mask);
+    (void) sigaddset(&sa.sa_mask, SIGTERM);
+    sa.sa_flags = SA_RESTART;
+    sa.sa_handler = Stop;
+    if (sigaction(SIGTERM, &sa, NULL) == -1) {
+        exit(1);
+    }
+#endif
+
     Run(false);
 
     return 0;
