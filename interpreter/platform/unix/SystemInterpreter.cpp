@@ -102,26 +102,10 @@ void signalHandler(int sig)
     if (sig == SIGINT)
     {
         Interpreter::haltAllActivities();
-#if defined( HAVE_SIGPROCMASK )
-        sigprocmask( SIG_SETMASK, &SystemInterpreter::oldmask , NULL );
-#elif defined( HAVE_SIGHOLD )
-        sigrelse(SIGINT);
-        sigrelse(SIGTERM);
-        sigrelse(SIGILL);
-        sigrelse(SIGSEGV);
-#endif
         return;
     }
     else
     {
-#if defined( HAVE_SIGPROCMASK )
-        sigprocmask( SIG_SETMASK, &SystemInterpreter::oldmask , NULL );
-#elif defined( HAVE_SIGHOLD )
-        sigrelse(SIGINT);
-        sigrelse(SIGTERM);
-        sigrelse(SIGILL);
-        sigrelse(SIGSEGV);
-#endif
         exit(0);
     }
 }
@@ -129,19 +113,6 @@ void signalHandler(int sig)
 
 void SystemInterpreter::startInterpreter()
 {
-#if defined( HAVE_SIGPROCMASK )
-    sigemptyset( &newmask );
-    sigaddset( &newmask, SIGINT );
-    sigaddset( &newmask, SIGTERM );
-    sigaddset( &newmask, SIGILL );
-    sigaddset( &newmask, SIGSEGV );
-    sigprocmask( SIG_BLOCK, &newmask , &oldmask );
-#elif defined( HAVE_SIGHOLD )
-    sighold(SIGINT);
-    sighold(SIGTERM);
-    sighold(SIGILL);
-    sighold(SIGSEGV);
-#endif
 
     /* Set the cleanup handler for unconditional process termination          */
     struct sigaction new_action;
@@ -168,14 +139,6 @@ void SystemInterpreter::startInterpreter()
 void SystemInterpreter::terminateInterpreter()
 {
 // clean up the signal handler
-#if defined( HAVE_SIGPROCMASK )
-    sigprocmask( SIG_SETMASK, &oldmask , NULL );
-#elif defined( HAVE_SIGHOLD )
-    sigrelse(SIGINT);
-    sigrelse(SIGTERM);
-    sigrelse(SIGILL);
-    sigrelse(SIGSEGV);
-#endif
 }
 
 
