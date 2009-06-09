@@ -3402,7 +3402,11 @@ struct RexxExitContext_
 #endif
 };
 
+BEGIN_EXTERN_C()
+
 RexxReturnCode RexxEntry RexxCreateInterpreter(RexxInstance **, RexxThreadContext **, RexxOption *);
+
+END_EXTERN_C()
 
 #define ARGUMENT_TYPE_ARGLIST    RexxArrayObject
 #define ARGUMENT_TYPE_NAME       CSTRING
