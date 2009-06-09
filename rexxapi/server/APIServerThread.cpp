@@ -54,4 +54,5 @@ void APIServerThread::dispatch()
 {
     // just dispatch this back to the api server for handling
     server->processMessages(connection);
+    server->sessionTerminated(this);
 }

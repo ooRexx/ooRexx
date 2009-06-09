@@ -55,6 +55,8 @@ DWORD WINAPI call_thread_function(void * arguments)
 void SysThread::createThread()
 {
     _threadHandle = CreateThread(NULL, THREAD_STACK_SIZE, call_thread_function, this, 0, &_threadID);
+    // we created this one
+    attached = false;
 }
 
 void SysThread::dispatch()
@@ -68,6 +70,7 @@ void SysThread::attachThread()
     // initialize the thread basics
     _threadID = GetCurrentThreadId();
     _threadHandle = GetCurrentThread();
+    attached = true;           // we don't own this one (and don't terminate it)
 }
 
 void SysThread::setPriority(ThreadPriority priority)
@@ -115,7 +118,11 @@ void SysThread::terminate()
 /* Function:  Do any platform specific thread termination                     */
 /******************************************************************************/
 {
-    CloseHandle(_threadHandle);     // close the thread handle
+    if (!attached && _threadHandle != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(_threadHandle);     // close the thread handle
+        _threadHandle = INVALID_HANDLE_VALUE;
+    }
 }
 
 

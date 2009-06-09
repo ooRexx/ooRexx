@@ -44,8 +44,10 @@
 #include "RegistrationManager.hpp"
 #include "QueueManager.hpp"
 #include "SysSemaphore.hpp"
+#include <list>
 
 class APIServerInstance;
+class APIServerThread;
 
 class APIServer
 {
@@ -64,6 +66,8 @@ public:
     void releaseLock();
     APIServerInstance *getInstance(ServiceMessage &m);
     void dispatch(ServiceMessage &message);
+    void sessionTerminated(APIServerThread *thread);
+    void cleanupTerminatedSessions();
 
 protected:
 
@@ -71,6 +75,7 @@ protected:
     SysServerStream server;           // our server message pipeline
     bool serverActive;                // the server is running
     APIServerInstance *instances;     // our chain of active instances
+    std::list<APIServerThread *> terminatedThreads; // connection pool
 };
 
 

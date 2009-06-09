@@ -69,7 +69,7 @@ public:
         THREAD_STACK_SIZE = 1024*512
     };
 
-    SysThread() {;}
+    SysThread() : attached(false), _threadHandle(INVALID_HANDLE_VALUE), _threadID(-1) {;}
     virtual ~SysThread() {;}
 
     SysThread(thread_id_t threadID)
@@ -94,6 +94,7 @@ public:
 protected:
     void createThread();
 
+    bool           attached;        // indicates whether this was a created thread or attached
     HANDLE        _threadHandle;    // thread handle
     DWORD         _threadID;        // thread identifier
 };

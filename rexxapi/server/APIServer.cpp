@@ -86,6 +86,10 @@ void APIServer::listenForConnections()
     {
         // get a new connection.
         SysServerConnection *connection = server.connect();
+        // we might have some terminated threads waiting
+        // for final resource cleanup...this is a good place to
+        // check for this.
+        cleanupTerminatedSessions();
         // we have some sort of resource problem...force termination and shutdown.
         if (connection == NULL)
         {
@@ -94,6 +98,41 @@ void APIServer::listenForConnections()
         // create a new thread to service this client connection
         APIServerThread *thread = new APIServerThread(this, connection);
         thread->start();
+    }
+}
+
+/**
+ * Handle a session termination event.
+ *
+ * @param thread
+ */
+void APIServer::sessionTerminated(APIServerThread *thread)
+{
+    // we need to hold the lock while handling this
+    ServerLock(this);
+    // add to the queue for cleanup on the next opportunity
+    terminatedThreads.push_back(thread);
+}
+
+
+
+/**
+ * Cleanup the resources devoted to threads that have
+ * terminated.
+ */
+void APIServer::cleanupTerminatedSessions()
+{
+    // we need to hold the lock while handling this
+    ServerLock(this);
+
+    // clean up the connection pools
+    while (!terminatedThreads.empty())
+    {
+        APIServerThread *thread = terminatedThreads.front();
+        terminatedThreads.pop_front();
+        // shut down the resources for this thread and release the memory
+        thread->terminate();
+        delete thread;
     }
 }
 

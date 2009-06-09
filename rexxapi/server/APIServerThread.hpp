@@ -47,6 +47,7 @@ class APIServerThread : public SysThread
 
 public:
     inline APIServerThread(APIServer *s, SysServerConnection *c) : SysThread(), server(s), connection(c) { }
+    inline ~APIServerThread() { terminate(); }
 
     void start();
     virtual void dispatch();

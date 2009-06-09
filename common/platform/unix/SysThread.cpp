@@ -55,6 +55,7 @@ void SysThread::attachThread()
 {
     // initialize the thread basics
     _threadID = pthread_self();
+    attached = true;      // we didn't create this one
 }
 
 
@@ -86,7 +87,11 @@ char *SysThread::getStackBase()
 
 void SysThread::terminate()
 {
-    pthread_detach(_threadID);
+    if (!attached && _threadID \= 0)
+    {
+        pthread_detach(_threadID);
+        _threadID = 0;
+    }
 }
 
 
@@ -171,6 +176,7 @@ void SysThread::createThread(void)
         _threadID = 0;
     }
     pthread_attr_destroy(&newThreadAttr);
+    attached = false;           // we own this thread
     return;
 }
 
