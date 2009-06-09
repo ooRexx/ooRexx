@@ -46,6 +46,8 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#include <stdio.h>
+#include <termios.h>
 #include "RexxCore.h"
 #include "SystemInterpreter.hpp"
 #include "Interpreter.hpp"
@@ -70,6 +72,7 @@ void SystemInterpreter::processShutdown()
 
 void signalHandler(int sig)
 {
+
 #ifdef ORXAP_DEBUG
     switch (sig)
     {
@@ -137,7 +140,13 @@ void SystemInterpreter::startInterpreter()
 
 void SystemInterpreter::terminateInterpreter()
 {
-// clean up the signal handler
+// revert stdin and stdout back to their original states
+    termios term;
+    tcgetattr(0, &term);
+    term.c_lflag ^= ICANON;
+    tcsetattr(0, TCSANOW, &term);
+    setvbuf(stdin, (char *)NULL, _IOLBF, 0);
+    setvbuf(stdout, (char *)NULL, _IOLBF, 0);
 }
 
 
