@@ -214,6 +214,8 @@ bool Interpreter::terminateInterpreter()
 
             PackageManager::unload();
         }
+        // perform system-specific cleanup
+        SystemInterpreter::terminateInterpreter();
 
         // most interpreter resources will be cleanup automatically, but
         // we need to poke the rxapi daemon and tell it to clean up our session
