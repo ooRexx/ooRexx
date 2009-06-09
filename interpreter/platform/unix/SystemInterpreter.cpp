@@ -70,6 +70,7 @@ void SystemInterpreter::processShutdown()
 
 void signalHandler(int sig)
 {
+#ifdef ORXAP_DEBUG
     switch (sig)
     {
         case (SIGINT):
@@ -94,6 +95,7 @@ void signalHandler(int sig)
             printf("\n*** Error,closing REXX !\n");
             break;
     }
+#endif
 
     // if the signal is a ctrl-C, we perform a halt operation
     if (sig == SIGINT)
