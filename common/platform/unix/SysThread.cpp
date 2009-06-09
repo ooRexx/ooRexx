@@ -87,7 +87,7 @@ char *SysThread::getStackBase()
 
 void SysThread::terminate()
 {
-    if (!attached && _threadID \= 0)
+    if (!attached && _threadID != 0)
     {
         pthread_detach(_threadID);
         _threadID = 0;
