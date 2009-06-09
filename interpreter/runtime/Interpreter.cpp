@@ -128,9 +128,6 @@ void Interpreter::startInterpreter(InterpreterStartupMode mode)
     // has everything been shutdown?
     if (!isActive())
     {
-        // TODO:  Make sure these are necessary in shared code
-        setbuf(stdout, NULL);              // turn off buffering for the output streams
-        setbuf(stderr, NULL);
         SystemInterpreter::startInterpreter();   // perform system specific initialization
         // initialize the memory manager , and restore the
         // memory image

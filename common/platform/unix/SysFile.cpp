@@ -53,6 +53,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <termios.h>
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
@@ -1032,7 +1033,7 @@ bool SysFile::getTimeStamp(const char *&time)
  */
 bool SysFile::getTimeStamp(const char *name, const char *&time)
 {
-    time = "";     // default return value
+    time = "";         // default return value
     // the handle is not active, use the name
     struct stat fileInfo;
     if (stat(name, &fileInfo) == 0)
@@ -1101,6 +1102,13 @@ void SysFile::setStdIn()
     getStreamTypeInfo();
     setBuffering(false, 0);
     readable = true;             // force this to readable
+
+    // STDIN is buffered by default so make it unbuffered
+    termios term;
+    tcgetattr(fileHandle, &term);
+    term.c_lflag &= ~ICANON;
+    tcsetattr(fileHandle, TCSANOW, &term);
+    setbuf(stdin, NULL);
 }
 
 /**
@@ -1116,6 +1124,9 @@ void SysFile::setStdOut()
     getStreamTypeInfo();
     setBuffering(false, 0);
     writeable = true;             // force this to writeable
+
+    // STDOUT is buffered by default so make it unbuffered
+    setbuf(stdout, NULL);
 }
 
 /**
@@ -1131,6 +1142,8 @@ void SysFile::setStdErr()
     getStreamTypeInfo();
     setBuffering(false, 0);
     writeable = true;             // force this to writeable
+
+    // STDERR is not buffered by default so no need to do anything
 }
 
 
@@ -1141,8 +1154,8 @@ void SysFile::setStdErr()
  */
 bool SysFile::hasData()
 {
-    fd_set rset;
-    struct timeval tv;
+//    fd_set rset;
+//    struct timeval tv;
 
     // not available for reads?  Can't have data
     if (!readable)
@@ -1153,13 +1166,22 @@ bool SysFile::hasData()
     // tty devices require special handling
     if (isTTY)
     {
-        FD_ZERO(&rset);
-        FD_SET(fileHandle, &rset);
-        tv.tv_sec = 0;
-        tv.tv_usec = 0;
-
-        select(fileHandle + 1, &rset, NULL, NULL, &tv);
-        return FD_ISSET(fileHandle, &rset);
+//      FD_ZERO(&rset);
+//      FD_SET(fileHandle, &rset);
+//      tv.tv_sec = 0;
+//      tv.tv_usec = 0;
+//
+//      select(fileHandle + 1, &rset, NULL, NULL, &tv);
+//      return FD_ISSET(fileHandle, &rset);
+        int bytesWaiting;
+        ioctl(fileHandle, FIONREAD, &bytesWaiting);
+        if (bytesWaiting)
+        {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     // we might have something buffered, but also check the
