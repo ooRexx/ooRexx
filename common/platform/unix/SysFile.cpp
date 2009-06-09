@@ -1103,11 +1103,11 @@ void SysFile::setStdIn()
     setBuffering(false, 0);
     readable = true;             // force this to readable
 
-    // STDIN is buffered by default so make it unbuffered
     termios term;
     tcgetattr(fileHandle, &term);
     term.c_lflag &= ~ICANON;
     tcsetattr(fileHandle, TCSANOW, &term);
+    // STDIN is buffered by default so make it unbuffered
     setbuf(stdin, NULL);
 }
 
@@ -1154,9 +1154,6 @@ void SysFile::setStdErr()
  */
 bool SysFile::hasData()
 {
-//    fd_set rset;
-//    struct timeval tv;
-
     // not available for reads?  Can't have data
     if (!readable)
     {
@@ -1166,13 +1163,6 @@ bool SysFile::hasData()
     // tty devices require special handling
     if (isTTY)
     {
-//      FD_ZERO(&rset);
-//      FD_SET(fileHandle, &rset);
-//      tv.tv_sec = 0;
-//      tv.tv_usec = 0;
-//
-//      select(fileHandle + 1, &rset, NULL, NULL, &tv);
-//      return FD_ISSET(fileHandle, &rset);
         int bytesWaiting;
         ioctl(fileHandle, FIONREAD, &bytesWaiting);
         if (bytesWaiting)

@@ -41,7 +41,7 @@
 /*                                                                            */
 /******************************************************************************/
 #ifndef Included_InterpreterInstance_hpp
-#define Included_Interpreterinstance_hpp
+#define Included_InterpreterInstance_hpp
 
 #include "RexxCore.h"
 #include "ExitHandler.hpp"

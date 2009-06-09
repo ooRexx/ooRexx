@@ -1139,6 +1139,8 @@ void SysFile::setStdOut()
     getStreamTypeInfo();
     setBuffering(false, 0);
     writeable = true;             // force this to writeable
+    // make this unbuffered
+    setbuf(stdout, NULL);
 }
 
 /**
@@ -1153,6 +1155,8 @@ void SysFile::setStdErr()
     getStreamTypeInfo();
     setBuffering(false, 0);
     writeable = true;             // force this to writeable
+    // make this unbuffered
+    setbuf(stderr, NULL);
 }
 
 
