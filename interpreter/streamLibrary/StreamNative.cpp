@@ -767,7 +767,7 @@ void StreamInfo::implicitOpen(int type)
             if (defaultResult == NULLOBJECT)
             {
                 char work[30];
-                sprintf(work, "ERROR:%d", errno);
+                sprintf(work, "ERROR:%d", fileInfo.errorInfo());
                 defaultResult = context->NewStringFromAsciiz(work);
             }
             notreadyError();
@@ -2312,9 +2312,9 @@ const char *StreamInfo::streamOpen(const char *options)
             char work[32];
 
             /* format the error return           */
-            sprintf(work, "ERROR:%d", errno);
+            sprintf(work, "ERROR:%d", ENOENT);
             /* go raise a notready condition     */
-            notreadyError(errno, context->NewStringFromAsciiz(work));
+            notreadyError(ENOENT, context->NewStringFromAsciiz(work));
         }
         /* and clear all of the write        */
         /* information                       */
