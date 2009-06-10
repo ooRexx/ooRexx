@@ -1319,6 +1319,9 @@ void StreamInfo::appendVariableLine(RexxArrayObject result)
             checkEof();
         }
 
+        // update the size of the line now
+        currentLength += bytesRead;
+
         // Check for new line character first.  If we are at eof and the last
         // line ended in a new line, we don't want the \n in the returned
         // string.
@@ -1326,10 +1329,10 @@ void StreamInfo::appendVariableLine(RexxArrayObject result)
         // If we have a new line character in the last position, we have
         // a line.  The gets() function has translated crlf sequences into
         // single lf characters.
-        if (buffer[bytesRead - 1] == '\n')
+        if (buffer[currentLength - 1] == '\n')
         {
             lineReadIncrement();
-            context->ArrayAppendString(result, buffer, currentLength + bytesRead - 1);
+            context->ArrayAppendString(result, buffer, currentLength + 1);
             return;
         }
 
@@ -1338,9 +1341,8 @@ void StreamInfo::appendVariableLine(RexxArrayObject result)
         if (fileInfo.atEof())
         {
             lineReadIncrement();
-            context->ArrayAppendString(result, buffer, currentLength + bytesRead);
+            context->ArrayAppendString(result, buffer, currentLength);
         }
-        currentLength += bytesRead;
         buffer = extendBuffer(bufferSize);
     }
 }
