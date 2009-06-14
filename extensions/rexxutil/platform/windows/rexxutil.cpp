@@ -2896,17 +2896,17 @@ size_t RexxEntry SysSearchPath(const char *name, size_t numargs, CONSTRXSTRING a
     if (szEnvStr != NULL)
     {
         DWORD charCount = GetEnvironmentVariable(args[0].strptr, szEnvStr, MAX_ENVVAR);
-        if (charCount == 0) 
+        if (charCount == 0)
         {
             *szEnvStr = '\0';
         }
         else if (charCount > MAX_ENVVAR)
         {
-            szEnvStr = (LPTSTR) realloc(szEnvStr, sizeof(char) * charCount);   
-            if (szEnvStr != NULL) 
+            szEnvStr = (LPTSTR) realloc(szEnvStr, sizeof(char) * charCount);
+            if (szEnvStr != NULL)
             {
                 DWORD charCount2 = GetEnvironmentVariable(args[0].strptr, szEnvStr, charCount);
-                if (charCount2 == 0 || charCount2 > charCount) 
+                if (charCount2 == 0 || charCount2 > charCount)
                 {
                     *szEnvStr = '\0';
                 }
@@ -2922,7 +2922,7 @@ size_t RexxEntry SysSearchPath(const char *name, size_t numargs, CONSTRXSTRING a
     {
         /* search current directory   */
         DWORD charCount = GetCurrentDirectory(_MAX_PATH, szCurDir);
-        if (charCount == 0 || charCount > _MAX_PATH) 
+        if (charCount == 0 || charCount > _MAX_PATH)
         {
             szCurDir[0] = '\0';
         }
@@ -2930,7 +2930,7 @@ size_t RexxEntry SysSearchPath(const char *name, size_t numargs, CONSTRXSTRING a
         if (szEnvStr != NULL)
         {
             lpPath = (LPTSTR) malloc(sizeof(char) * (strlen(szCurDir) + 1 + strlen(szEnvStr) + 1));
-            if (lpPath != NULL) 
+            if (lpPath != NULL)
             {
                 strcpy(lpPath, szCurDir);
                 strcat(lpPath, ";");
@@ -3267,90 +3267,101 @@ size_t RexxEntry SysTextScreenSize(const char *name, size_t numargs, CONSTRXSTRI
 size_t RexxEntry RxWinExec(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
 
-  int         CmdShow;                 /* show window style flags    */
-  int         index;                   /* table index                */
-  ULONG       pid;                     /* PID or error return code   */
-  size_t      length;                  /* length of option           */
-  STARTUPINFO si;
-  PROCESS_INFORMATION procInfo;
+    int         CmdShow;                 /* show window style flags    */
+    int         index;                   /* table index                */
+    ULONG       pid;                     /* PID or error return code   */
+    size_t      length;                  /* length of option           */
+    STARTUPINFO si;
+    PROCESS_INFORMATION procInfo;
 
-
-PSZ    show_styles[] =                 /* show window types          */
-    {"SHOWNORMAL",
-     "SHOWNOACTIVATE",
-     "SHOWMINNOACTIVE",
-     "SHOWMINIMIZED",
-     "SHOWMAXIMIZED",
-     "HIDE",
-     "MINIMIZE"
-     };
-
-ULONG  show_flags[] =                  /* show window styles        */
-    {SW_SHOWNORMAL,
-     SW_SHOWNOACTIVATE,
-     SW_SHOWMINNOACTIVE,
-     SW_SHOWMINIMIZED,
-     SW_SHOWMAXIMIZED,
-     SW_HIDE,
-     SW_MINIMIZE
+    // Show window types.
+    PSZ    show_styles[] =
+    {
+        "SHOWNORMAL",
+        "SHOWNOACTIVATE",
+        "SHOWMINNOACTIVE",
+        "SHOWMINIMIZED",
+        "SHOWMAXIMIZED",
+        "HIDE",
+        "MINIMIZE"
     };
 
-  BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* pass back result           */
+    // Show window styles.
+    ULONG  show_flags[] =
+    {
+        SW_SHOWNORMAL,
+        SW_SHOWNOACTIVATE,
+        SW_SHOWMINNOACTIVE,
+        SW_SHOWMINIMIZED,
+        SW_SHOWMAXIMIZED,
+        SW_HIDE,
+        SW_MINIMIZE
+    };
 
-  // Should be 1 or 2 args.
-  if ( numargs < 1 || numargs > 2 || !RXVALIDSTRING(args[0]) ||
-       (numargs == 2 && !RXVALIDSTRING(args[1])) ||args[0].strlength > MAX_PATH )
-  {
-        return INVALID_ROUTINE;            /* Invalid call to routine    */
-  }
+    BUILDRXSTRING(retstr, NO_UTIL_ERROR);  /* pass back result           */
 
-  CmdShow=0;                           /* initialize show flags      */
-                                       /* validate arguments         */
-  if (numargs < 2 ||                   /* no show window style?      */
-      args[1].strptr == NULL)
-    CmdShow += SW_SHOWNORMAL;          /* set default show style     */
-  else {                               /* check various show styles  */
-    length = args[1].strlength;        /* get length of option       */
-                                       /* search style table         */
-    for (index = 0;
-         index < sizeof(show_styles)/sizeof(PSZ);
-         index++) {
-                                       /* find a match?              */
-      if (length == strlen(show_styles[index]) &&
-          !memicmp(args[1].strptr, show_styles[index], length)) {
-        CmdShow += show_flags[index];  /* add to the style           */
-        break;
-      }
-    }/* for */
-                                       /* not found?                 */
-    if (index == sizeof(show_styles)/sizeof(PSZ))
-      return INVALID_ROUTINE;          /* raise an error             */
-  }/* else */
+    // Should be 1 or 2 args.
+    if ( numargs < 1 || numargs > 2 || !RXVALIDSTRING(args[0]) ||
+         (numargs == 2 && !RXVALIDSTRING(args[1])) ||args[0].strlength > MAX_PATH )
+    {
+        return INVALID_ROUTINE;
+    }
 
-  ZeroMemory(&procInfo, sizeof(procInfo));
-  ZeroMemory(&si, sizeof(si));
-  si.cb = sizeof(si);
-  si.dwFlags = STARTF_USESHOWWINDOW;
-  si.wShowWindow = (WORD)CmdShow;
+    // Show type can be one and only one of the SW_XXX constants.
+    if ( numargs < 2 || args[1].strptr == NULL )
+    {
+        CmdShow = SW_SHOWNORMAL;
+    }
+    else
+    {
+        // Get length of option and search the style table.
+        length = args[1].strlength;
+        for ( index = 0; index < sizeof(show_styles)/sizeof(PSZ); index++ )
+        {
+            if ( length == strlen(show_styles[index]) && memicmp(args[1].strptr, show_styles[index], length) == 0 )
+            {
+                CmdShow = show_flags[index];
+                break;
+            }
+        }
 
-  if ( CreateProcess(NULL, (LPSTR)args[0].strptr, NULL, NULL, FALSE, 0, NULL,
-                     NULL, &si, &procInfo ) ) {
-    pid = procInfo.dwProcessId;
-  }
-  else {
-    pid = GetLastError();
-    if ( pid > 31 )                    /* maintain compatibility to  */
-      pid = (ULONG)-((int)pid);        /* versions < ooRexx 3.1.2    */
-  }
-                                       /* return value as string     */
-  sprintf(retstr->strptr, "%d", pid);
-  retstr->strlength = strlen(retstr->strptr);
+        if ( index == sizeof(show_styles)/sizeof(PSZ) )
+        {
+            // User sent an argument, but not the right one.
+            return INVALID_ROUTINE;
+        }
+    }
 
-  /* Close process / thread handles as they are not used / needed.   */
-  CloseHandle(procInfo.hProcess);
-  CloseHandle(procInfo.hThread);
+    ZeroMemory(&procInfo, sizeof(procInfo));
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = (WORD)CmdShow;
 
-  return VALID_ROUTINE;                /* good completion            */
+    if ( CreateProcess(NULL, (LPSTR)args[0].strptr, NULL, NULL, FALSE, 0, NULL,
+                       NULL, &si, &procInfo ) )
+    {
+        pid = procInfo.dwProcessId;
+    }
+    else
+    {
+        pid = GetLastError();
+        if ( pid > 31 )
+        {
+            // Maintain compatibility to versions < ooRexx 3.1.2
+            pid = (ULONG)-((int)pid);
+        }
+    }
+
+    // Return value as string.
+    sprintf(retstr->strptr, "%d", pid);
+    retstr->strlength = strlen(retstr->strptr);
+
+    // Close process / thread handles as they are not used / needed.
+    CloseHandle(procInfo.hProcess);
+    CloseHandle(procInfo.hThread);
+
+    return VALID_ROUTINE;
 }
 
 
