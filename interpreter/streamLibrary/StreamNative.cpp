@@ -1332,7 +1332,7 @@ void StreamInfo::appendVariableLine(RexxArrayObject result)
         if (buffer[currentLength - 1] == '\n')
         {
             lineReadIncrement();
-            context->ArrayAppendString(result, buffer, currentLength + 1);
+            context->ArrayAppendString(result, buffer, currentLength - 1);
             return;
         }
 
