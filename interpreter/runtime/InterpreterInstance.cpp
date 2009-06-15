@@ -237,12 +237,12 @@ bool InterpreterInstance::detachThread(RexxActivity *activity)
         return false;
     }
 
-    // if we reused the activity because of a nested callback attach, then
-    // we just decrement the nesting count and return without cleaning up
-    // any resources.
-    activity->returnAttach();
     if (activity->isNestedAttach())
     {
+        // if we reused the activity because of a nested callback attach, then
+        // we just decrement the nesting count and return without cleaning up
+        // any resources.
+        activity->returnAttach();
         return true;
     }
 

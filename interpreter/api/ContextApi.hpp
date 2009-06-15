@@ -63,6 +63,8 @@ public:
      */
     inline ApiContext(RexxThreadContext *c)
     {
+        // we need to cleanup on exit
+        releaseLock = true;
         activity = contextToActivity(c);
         context = activity->getApiContext();
         context->enableConditionTraps();
@@ -83,6 +85,9 @@ public:
      */
     inline ApiContext(RexxThreadContext *c, bool blocking)
     {
+
+        // we need to cleanup on exit
+        releaseLock = blocking;
         activity = contextToActivity(c);
         context = activity->getApiContext();
         context->enableConditionTraps();
@@ -95,6 +100,8 @@ public:
      */
     inline ApiContext(RexxCallContext *c)
     {
+        // we need to cleanup on exit
+        releaseLock = true;
         activity = contextToActivity(c);
         context = contextToActivation(c);
         context->enableConditionTraps();
@@ -112,6 +119,8 @@ public:
      */
     inline ApiContext(RexxExitContext *c)
     {
+        // we need to cleanup on exit
+        releaseLock = true;
         activity = contextToActivity(c);
         context = contextToActivation(c);
         context->enableConditionTraps();
@@ -129,6 +138,8 @@ public:
      */
     inline ApiContext(RexxMethodContext *c)
     {
+        // we need to cleanup on exit
+        releaseLock = true;
         activity = contextToActivity(c);
         context = contextToActivation(c);
         context->enableConditionTraps();
@@ -145,8 +156,13 @@ public:
      */
     inline ~ApiContext()
     {
-        context->disableConditionTraps();
-        activity->exitCurrentThread();
+        // we only do this sort of cleanup if we really entered on the
+        // activity
+        if (releaseLock)
+        {
+            context->disableConditionTraps();
+            activity->exitCurrentThread();
+        }
     }
 
     inline RexxObjectPtr ret(RexxObject *o)
@@ -163,6 +179,11 @@ public:
      * The top-level API context.
      */
     RexxNativeActivation *context;
+
+    /**
+     * Indicates whether we need to release the lock on return.
+     */
+    boolean releaseLock;
 };
 
 
