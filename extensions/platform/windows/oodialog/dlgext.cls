@@ -878,26 +878,39 @@
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   These menu bar methods are needed to provide backward compatibility for the
-  deprecated menu methods.  The ooDialog programmer is *strongly* discouraged
-  from using them.  If the deprecated methods are removed, these will be removed
-  with them.
+  deprecated menu methods.  The Rexx programmer is *strongly* discouraged from
+  using them.  If the deprecated methods are removed, these will be removed with
+  them.
+
+  In addition, it is highly likely that the results will be unpredictable.
+
+  To obtain the menuBar attached to the dialog, use the getMenuBar() method.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-::attribute menuBar get
-::attribute menuBar set private
+::attribute menuBar private
+::attribute isLinked private
 
 ::method linkMenu
   use strict arg menu
 
-  if \ menu~isA(.MenuBar) then return -1
+  signal on syntax
+
+  if \ menu~isA(.MenuBar) then raise syntax 93.948 array(1, "MenuBar")
 
   oldMenu = self~menuBar
   self~menuBar = menu
+  self~isLinked = .true
   return oldMenu
+
+syntax:
+  c = condition('O')
+  if c~traceBack~isA(.List) then c~traceBack~empty
+  raise propagate
 
 ::method unlinkMenu
   menu = self~menuBar
   self~menuBar = .nil
+  self~isLinked = .false
   return menu
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
@@ -907,38 +920,101 @@
 
 ::method enableMenuItem unguarded
     use strict arg id
-    if self~menuBar == .nil then return -2
+
+    signal on syntax
+
+    if self~menuBar == .nil then raise syntax 93.900 array("there is no MenuBar attached to this dialog")
+    if self~menuBar~isA(.UserMenuBar), \self~menuBar~isComplete then raise syntax 93.900 array("the UserMenuBar is not complete")
     return self~menuBar~enable(id)
+
+syntax:
+  c = condition('O')
+  if c~traceBack~isA(.List) then c~traceBack~empty
+  raise propagate
 
 ::method disableMenuItem unguarded
     use strict arg id
-    if self~menuBar == .nil then return -2
+
+    signal on syntax
+
+    if self~menuBar == .nil then raise syntax 93.900 array("There is no MenuBar attached to this dialog")
+    if self~menuBar~isA(.UserMenuBar), \self~menuBar~isComplete then raise syntax 93.900 array("the UserMenuBar is not complete")
     return self~menuBar~disable(id)
+
+syntax:
+  c = condition('O')
+  if c~traceBack~isA(.List) then c~traceBack~empty
+  raise propagate
 
 ::method checkMenuItem unguarded
     use strict arg id
-    if self~menuBar == .nil then return -2
+
+    signal on syntax
+
+    if self~menuBar == .nil then raise syntax 93.900 array("There is no MenuBar attached to this dialog")
+    if self~menuBar~isA(.UserMenuBar), \self~menuBar~isComplete then raise syntax 93.900 array("the UserMenuBar is not complete")
     return self~menuBar~check(id)
+
+syntax:
+  c = condition('O')
+  if c~traceBack~isA(.List) then c~traceBack~empty
+  raise propagate
 
 ::method uncheckMenuItem unguarded
     use strict arg id
-    if self~menuBar == .nil then return -2
+
+    signal on syntax
+
+    if self~menuBar == .nil then raise syntax 93.900 array("There is no MenuBar attached to this dialog")
+    if self~menuBar~isA(.UserMenuBar), \self~menuBar~isComplete then raise syntax 93.900 array("the UserMenuBar is not complete")
     return self~menuBar~uncheck(id)
+
+syntax:
+  c = condition('O')
+  if c~traceBack~isA(.List) then c~traceBack~empty
+  raise propagate
 
 ::method grayMenuItem unguarded
     use strict arg id
-    if self~menuBar == .nil then return -2
+
+    signal on syntax
+
+    if self~menuBar == .nil then raise syntax 93.900 array("There is no MenuBar attached to this dialog")
+    if self~menuBar~isA(.UserMenuBar), \self~menuBar~isComplete then raise syntax 93.900 array("the UserMenuBar is not complete")
     return self~menuBar~gray(id)
+
+syntax:
+  c = condition('O')
+  if c~traceBack~isA(.List) then c~traceBack~empty
+  raise propagate
 
 ::method setMenuItemRadio unguarded
     use strict arg idstart, idend, idset
-    if self~menuBar == .nil then return -2
-    return self~menuBar~checkRadio(idstart, idend, idset)
+
+    signal on syntax
+
+    if self~menuBar == .nil then raise syntax 93.900 array("There is no MenuBar attached to this dialog")
+    if self~menuBar~isA(.UserMenuBar), \self~menuBar~isComplete then raise syntax 93.900 array("the UserMenuBar is not complete")
+    return self~menuBar~checkRadioItem(idstart, idend, idset)
+
+syntax:
+  c = condition('O')
+  if c~traceBack~isA(.List) then c~traceBack~empty
+  raise propagate
 
 ::method getMenuItemState unguarded
     use strict arg id
-    if self~menuBar == .nil then return -2
-    return self~menuBar~getState(id)
+
+    signal on syntax
+
+    if self~menuBar == .nil then raise syntax 93.900 array("There is no MenuBar attached to this dialog")
+    if self~menuBar~isA(.UserMenuBar), \self~menuBar~isComplete then raise syntax 93.900 array("the UserMenuBar is not complete")
+    return self~menuBar~getItemState(id)
+
+syntax:
+  c = condition('O')
+  if c~traceBack~isA(.List) then c~traceBack~empty
+  raise propagate
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   End deprecated menu bar methods.

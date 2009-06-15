@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,13 +35,54 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/*                                                                            */
-/* Public routines                                                            */
-/*                                                                            */
-/******************************************************************************/
+
+/* Windows Dialog Interface for Open Object Rexx (ooRexx)
+ *
+ * Utility Classes and Public Routines
+ *
+ * Contains basic utility classes, including .DlgUtil and all public routines
+ * provided in the ooDialog framework.
+ */
+
+::class 'DlgUtil' public
+::method init class external "LIBRARY oodialog dlgutil_init_cls"
+::method version class external "LIBRARY oodialog dlgutil_version_cls"
+::method comctl32Version class external "LIBRARY oodialog dlgutil_comctl32Version_cls"
+::method hiWord class external "LIBRARY oodialog dlgutil_hiWord_cls"
+::method loWord class external "LIBRARY oodialog dlgutil_loWord_cls"
+::method and class external "LIBRARY oodialog dlgutil_and_cls"
+::method or class external "LIBRARY oodialog dlgutil_or_cls"
+::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
+::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
+::method test class external "LIBRARY oodialog dlgutil_test_cls"
+
+::class 'Rect' public
+::method init external "LIBRARY oodialog rect_init"
+::method left external "LIBRARY oodialog rect_left"
+::method 'left=' external "LIBRARY oodialog rect_setLeft"
+::method top external "LIBRARY oodialog rect_top"
+::method 'top=' external "LIBRARY oodialog rect_setTop"
+::method right external "LIBRARY oodialog rect_right"
+::method 'right=' external "LIBRARY oodialog rect_setRight"
+::method bottom external "LIBRARY oodialog rect_bottom"
+::method 'bottom=' external "LIBRARY oodialog rect_setBottom"
+
+::class 'Point' public
+::method init external "LIBRARY oodialog point_init"
+::method x external "LIBRARY oodialog point_x"
+::method 'x=' external "LIBRARY oodialog point_setX"
+::method y external "LIBRARY oodialog point_y"
+::method 'y=' external "LIBRARY oodialog point_setY"
+
+::class 'Size' public
+::method init external "LIBRARY oodialog size_init"
+::method width external "LIBRARY oodialog size_cx"
+::method 'width=' external "LIBRARY oodialog size_setCX"
+::method height external "LIBRARY oodialog point_y"
+::method 'height=' external "LIBRARY oodialog point_setY"
+
+
+/* - - - - - - - - - - - - - Public routines - - - - - - - - - - - - - - - - -*/
 
 /* Routine play() will search for a sound file in the PATH and play it */
 ::routine play public

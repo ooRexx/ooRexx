@@ -77,11 +77,22 @@
 ::method SetMenu
     menuBar = self~menuBar
 
-    if menuBar == .nil then return -2
+    .local~systemErrorCode = 0
+    if menuBar == .nil then do
+      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
+      return .false
+    end
 
     if menuBar~isA(.UserMenuBar) then do
-      ret = menuBar~complete
-      if ret < 0 then return ret
+      if \ menuBar~complete then do
+        self~menuBar = .nil
+        return .false
+      end
+    end
+
+    if \ menuBar~isA(.UserMenuBar), \ menuBar~isA(.ScriptMenuBar) then do
+      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
+      return .false
     end
 
     return menuBar~attachTo(self)
@@ -89,34 +100,51 @@
 ::method CreateMenu
     use strict arg count = 100
 
-    menuBar = .UserMenuBar~new(self, count)
-    if menuBar~initCode <> 0 then return menuBar~initCode
-
+    -- menuBar is either good, or a condition was raised.
+    menuBar = .UserMenuBar~new(-1, self, 0, count)
     self~menuBar = menuBar
-    return 0;
+    return .true;
 
 ::method AddPopupMenu
     use strict arg name, opt = ""
-    if self~menuBar == .nil then return -2
-    return self~menuBar~addPopup(name, , opt)
+
+    .local~systemErrorCode = 0
+    if self~menuBar == .nil then do
+      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
+      return .false
+    end
+
+    return self~menuBar~addPopup(0, name, opt, 0)
 
 ::method AddMenuItem
     use strict arg name, id, opt = "", msgToRaise = .nil
-    if self~menuBar == .nil then return -2
-    return self~menuBar~addItem(name, id, opt, msgToRaise)
+
+    .local~systemErrorCode = 0
+    if self~menuBar == .nil then do
+      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
+      return .false
+    end
+
+    if arg(4, 'O') then return self~menuBar~addItem(id, name, opt)
+    else return self~menuBar~addItem(id, name, opt, msgToRaise)
 
 ::method AddMenuSeparator
-    if self~menuBar == .nil then return -2
-    return self~menuBar~addSeparator
+
+    .local~systemErrorCode = 0
+    if self~menuBar == .nil then do
+      .local~systemErrorCode = 1 -- ERROR_INVALID_FUNCTION (1) -> Incorrect function.
+      return .false
+    end
+
+    return self~menuBar~addSeparator(0)
 
 ::method LoadMenu protected
-  use strict arg resfile, menuid = .nil, loadopts = "", count = 50
+  use strict arg resfile, menuid, loadopts = "", count = 50
 
   connect = .false
   if loadopts~caselessWordPos("CONNECTITEMS") <> 0 then connect = .true
 
+  -- menuBar is either good, or a condition was raised.
   menuBar = .ScriptMenuBar~new(resFile, menuid, self, 0, count, connect)
-  if menuBar~initCode <> 0 then return menuBar~initCode
-
   self~menuBar = menuBar
   return 0

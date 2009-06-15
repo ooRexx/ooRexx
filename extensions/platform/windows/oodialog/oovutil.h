@@ -115,6 +115,12 @@ extern DWORD ComCtl32Version;
 #define TAG_HELP                  0x00000100
 #define TAG_CONTEXTMENU           0x00000200
 #define TAG_MENUCOMMAND           0x00000400
+#define TAG_SYSMENUCOMMAND        0x00000800
+#define TAG_MENUMESSAGE           0x00001000
+
+// Reply TRUE in dialog procedure, not FALSE.  Reply FALSE passes message on to
+// the system for processing.  TRUE indicates the message was handled.
+#define TAG_MSGHANDLED            0x01000000
 
 #define TAG_BUTTON                0x00000004
 #define TAG_TREEVIEW              0x00000006
@@ -124,11 +130,21 @@ extern DWORD ComCtl32Version;
 
 #define TAG_CTRLMASK              0x000000FF
 #define TAG_FLAGMASK              0x00FFFF00
+#define TAG_EXTRAMASK             0xFF000000
 
 #define TAG_STATECHANGED          0x00000100
 #define TAG_CHECKBOXCHANGED       0x00000200
 #define TAG_SELECTCHANGED         0x00000400
 #define TAG_FOCUSCHANGED          0x00000800
+
+// Describes how a message searched for in the message table should be handled
+// by RexxDlgProc() after the search.
+typedef enum
+{
+    NotMatched    = 0,    // Message not matched.
+    ReplyFalse    = 1,    // Message matched and handled return FALSE to the system
+    ReplyTrue     = 2,    // Message matched and handled return TRUE to the system
+} MsgReplyType;
 
 /* macros to check the number of arguments */
 #define CHECKARG(argexpct) { \
@@ -337,6 +353,7 @@ typedef struct {
     UINT        flags;
     POINT       point;
     LPTPMPARAMS lptpm;
+    DWORD       dwErr;
 } TRACKPOP, *PTRACKPOP;
 
 /* Stuff for key press subclassing and keyboard hooks */
@@ -454,10 +471,18 @@ typedef struct
 } DIALOGADMIN;
 
 
-// These global variables are defined in oovutil.cpp
+// All global variables are defined in oodPackageEntry.cpp
 extern HINSTANCE MyInstance;
 extern DIALOGADMIN * DialogTab[];
 extern DIALOGADMIN * topDlg;
 extern INT StoredDialogs;
 extern CRITICAL_SECTION crit_sec;
 
+extern RexxObjectPtr TheTrueObj;
+extern RexxObjectPtr TheFalseObj;
+extern RexxObjectPtr TheNilObj;
+extern RexxObjectPtr TheZeroObj;
+extern RexxObjectPtr TheOneObj;
+extern RexxObjectPtr TheNegativeOneObj;
+extern RexxDirectoryObject TheDotLocalObj;
+extern RexxPointerObject TheNullPtrObj;

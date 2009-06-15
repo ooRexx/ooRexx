@@ -377,8 +377,16 @@
    self~bkgBitmap = 0     -- no background bitmap
    self~bkgBrushBmp = 0   -- no background bitmap
    self~menuBar = .nil
+   self~isLinked = .false
    return 0
 
+-- TODO needs doc
+::method getMenuBar
+  return self~menuBar
+
+-- TODO needs doc
+::method hasMenuBar
+  return self~menuBar \== .nil & self~isLinked
 
 ::class 'ResourceImage' public
 

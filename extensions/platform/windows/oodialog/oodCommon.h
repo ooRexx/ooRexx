@@ -40,7 +40,13 @@
 #define oodCommon_Included
 
 
-#define OOD_ID_EXCEPTION -9
+
+#define OOD_ID_EXCEPTION 0xFFFFFFF7   // -9
+
+// MFS_ENABLED, MFS_UNCHECKED, and MFS_UNHILITE are all 0, so we define our own
+// values for UNCHECKED and UNHILITE to differentiate.
+#define OOD_MFS_UNCHECKED 0x80000000
+#define OOD_MFS_UNHILITE  0x40000000
 
 // Enum for the type of an ooDialog class.  Types to be added as needed.
 typedef enum
@@ -62,15 +68,25 @@ extern bool IsYes(const char *s);
 extern bool IsNo(const char * s);
 extern void *string2pointer(const char *string);
 extern void pointer2string(char *, void *pointer);
+extern RexxStringObject pointer2string(RexxMethodContext *, void *);
 extern LONG HandleError(PRXSTRING r, CHAR * text);
+extern char *strdupupr(const char *str);
 extern char *strdupupr_nospace(const char *str);
+extern char *strdup_2methodName(const char *str);
 extern DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
-extern void ooDialogInternalException(RexxMethodContext *);
-extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
-extern int oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
-extern bool oodSafeResolveID(int *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern LPWORD lpwAlign(LPWORD lpIn);
+extern BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, ULONG, ULONG, ULONG, ULONG, CSTRING, ULONG);
 
+extern void ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
+extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
+extern uint32_t oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern bool oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern DWORD oodGetSysErrCode(RexxMethodContext *);
+extern void oodSetSysErrCode(RexxMethodContext *, DWORD);
+extern void oodResetSysErrCode(RexxMethodContext *context);
+extern PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos);
+extern PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos);
 
 // TODO move to APICommon when ooDialog is converted to use .Pointer instead of
 // pointer strings.
@@ -82,6 +98,8 @@ extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr o
 
 inline void *string2pointer(CONSTRXSTRING *string) { return string2pointer(string->strptr); }
 inline void *string2pointer(CONSTRXSTRING &string) { return string2pointer(string.strptr); }
+
+// TODO check whether these functions are really inlined.
 
 inline void pointer2string(PRXSTRING result, void *pointer)
 {
@@ -111,6 +129,16 @@ inline void safeDeleteObject(HANDLE h)
     {
         DeleteObject(h);
     }
+}
+
+inline void oodSetSysErrCode(RexxMethodContext *context)
+{
+    oodSetSysErrCode(context, GetLastError());
+}
+
+inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr windowObject)
+{
+    return (HWND)rxGetPointerAttribute(context, windowObject, "HWND");
 }
 
 #endif

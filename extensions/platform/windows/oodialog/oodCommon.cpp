@@ -50,11 +50,30 @@
 #include "APICommon.h"
 #include "oodCommon.h"
 
-
-void ooDialogInternalException(RexxMethodContext *c)
+/**
+ * 49.900
+ * 49 -> A severe error was detected in the language processor or execution
+ *       process during internal self-consistency checks.
+ *
+ * 900 -> User message
+ *
+ * Call like this:
+ *
+ * ooDialogInternalException(c, __FUNCTION__, __LINE__, __DATE__, __FILE__);
+ *
+ * @param c
+ * @param function
+ * @param line
+ * @param date
+ * @param file
+ */
+void ooDialogInternalException(RexxMethodContext *c, char *function, int line, char *date, char *file)
 {
-    c->RaiseException1(Rexx_Error_Interpretation_user_defined,
-                       c->String("Interpretation error: ooDialog's internal state is inconsistent"));
+    TCHAR buf[512];
+    _snprintf(buf, sizeof(buf), "Interpretation error: ooDialog's internal state is inconsistent  "
+                                "Function: %s line: %d compiled date: %s  File: %s", function, line, date, file);
+
+    c->RaiseException1(Rexx_Error_Interpretation_user_defined, c->String(buf));
 }
 
 /**
@@ -81,7 +100,7 @@ oodClass_t oodClass(RexxMethodContext *c, RexxObjectPtr obj, oodClass_t *types, 
 {
     if ( obj != NULLOBJECT )
     {
-        for ( int i = 0; i < count; count++, types++)
+        for ( size_t i = 0; i < count; count++, types++)
         {
             switch ( *types )
             {
@@ -118,38 +137,85 @@ oodClass_t oodClass(RexxMethodContext *c, RexxObjectPtr obj, oodClass_t *types, 
 }
 
 /**
+ * Checks if a Rexx object is either -1 or IDC_STATIC.
+ *
+ * @param c   The method context we are operating under.
+ * @param id  The object to check
+ *
+ * @return True if the object is -1 or IDC_STATIC, otherwise false.
+ */
+static bool isStaticID(RexxMethodContext *c, RexxObjectPtr id)
+{
+    int tmp;
+    if ( c->ObjectToInt32(id, &tmp) )
+    {
+        if ( tmp == -1 )
+        {
+            return true;
+        }
+    }
+    else
+    {
+        if ( stricmp(c->ObjectToStringValue(id), "IDC_STATIC") == 0 )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Resolves a resource ID used in a native API method call to its numeric value.
  * The resource ID may be numeric or symbolic.  An exception is raised if the ID
  * can not be resolved.
  *
  * @param context    Method context for the method call.
- * @param dlg        ooDialog dialog object. <Assumed>
+ * @param oodObj     ooDialog object that has inherited .ResourceUtils.
+ *                   <Assumed>
  * @param id         Resource ID.
- * @param argPosDlg  Arg position of the assumed dialog object.  Used for raised
- *                   exceptions.
+ * @param argPosObj  Arg position of the assumed ooDialog object.  Used for
+ *                   raised exceptions.
  * @param argPosID   Arg position of the ID, used for raised exceptions.
  *
- * @return int       The resolved numeric ID, or OOD_ID_EXCEPTION
+ * @return The resolved numeric ID or -1 cast as an uint32_t on success,
+ *         OOD_ID_EXCEPTION on error.
  *
- * @note  New methods / functions added to ooDialog will raise an exception if
- *        the resource ID can not be resolved.  But, older existing ooDialog
- *        methods always returned -1, and that behavior is currently being
- *        preserved.  Use oodSafeResolveID() for those cases.
+ * @remarks  When the oodObj argument is known to be a .ResourceUtils, then use
+ *           -1 for the argPosObj argument.  In this case the required class
+ *           check can be / is skipped.
+ *
+ *           This function special cases -1 or IDC_STATIC.  When id is -1 or
+ *           IDC_STATIC then the return will be: (uint32_t)-1.  Otherwise, id
+ *           has to be a non-zero number or a symbol that resolves to a non-zero
+ *           number.  This is slightly different than how things work on the
+ *           Rexx side where the user could put anything into constDir.
+ *
+ *           New methods / functions added to ooDialog will raise an exception
+ *           if the resource ID can not be resolved.  But, older existing
+ *           ooDialog methods always returned -1, and that behavior is currently
+ *           being preserved.  Use oodSafeResolveID() for those cases.
  */
-int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObjectPtr id,
-                         int argPosDlg, int argPosID)
+uint32_t oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr oodObj, RexxObjectPtr id,
+                              int argPosObj, int argPosID)
 {
-    if ( ! requiredClass(context, dlg, "ResourceUtils", argPosDlg) )
+    uint32_t result = OOD_ID_EXCEPTION;
+
+    if ( argPosObj != -1 && ! requiredClass(context, oodObj, "ResourceUtils", argPosObj) )
     {
-        return OOD_ID_EXCEPTION;
+        goto done_out;
     }
 
-    int result = -1;
+    if ( isStaticID(context, id) )
+    {
+        result = (uint32_t)-1;
+        goto done_out;
+    }
+
     char *symbol = NULL;
 
-    if ( ! context->ObjectToInt32(id, &result) )
+    if ( ! context->ObjectToUnsignedInt32(id, &result) )
     {
-        RexxDirectoryObject constDir = (RexxDirectoryObject)context->SendMessage0(dlg, "CONSTDIR");
+        RexxDirectoryObject constDir = (RexxDirectoryObject)context->SendMessage0(oodObj, "CONSTDIR");
         if ( constDir != NULLOBJECT )
         {
             /* The original ooDialog code uses:
@@ -162,52 +228,52 @@ int oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr dlg, RexxObje
             if ( symbol == NULL )
             {
                 outOfMemoryException(context);
-                return OOD_ID_EXCEPTION;
+                goto done_out;
             }
 
             RexxObjectPtr item = context->DirectoryAt(constDir, symbol);
             if ( item != NULLOBJECT )
             {
-                 context->ObjectToInt32(item, &result);
+                 context->ObjectToUnsignedInt32(item, &result);
             }
         }
     }
 
     safeFree(symbol);
 
-    if ( result < 1 )
+    if ( result == OOD_ID_EXCEPTION )
     {
-        wrongArgValueException(context, argPosID, "a valid numeric ID or a valid symbloic ID" , id);
-        return OOD_ID_EXCEPTION;
+        wrongArgValueException(context, argPosID, "a valid numeric ID or a valid symbolic ID" , id);
     }
 
+done_out:
     return result;
 }
 
 /**
  * Resolves a resource ID used in a native API method call to its numeric value,
- * without raising an exception. The resource ID may be numeric or symbolic.  An
- * exception is raised if the ID can not be resolved.
+ * without raising an exception. The resource ID may be numeric or symbolic.
  *
  * @param pID        The numeric resource ID is returned here.
  * @param context    Method context for the method call.
- * @param dlg        ooDialog dialog object. <Assumed>
+ * @param oodObj     ooDialog object that has inherited .ResourceUtils.
+ *                   <Assumed>
  * @param id         Resource ID.
- * @param argPosDlg  Arg position of the assumed dialog object.  Used for raised
- *                   exceptions.
+ * @param argPosObj  Arg position of the assumed ooDialog object.  Used for
+ *                   raised exceptions.
  * @param argPosID   Arg position of the ID, used for raised exceptions.
  *
  * @return True if the ID was resolved, otherwise false.
  *
- * @see oodResolveSymbolicID()
+ * @see oodResolveSymbolicID() for complete details.
  *
  * @note  This function merely calls oodResolveSymbolicID() to do the work.  If
  *        an exception is raised, it is cleared and false returned.
  */
-bool oodSafeResolveID(int *pID, RexxMethodContext *context, RexxObjectPtr dlg, RexxObjectPtr id,
-                   int argPosDlg, int argPosID)
+bool oodSafeResolveID(uint32_t *pID, RexxMethodContext *context, RexxObjectPtr oodObj, RexxObjectPtr id,
+                   int argPosObj, int argPosID)
 {
-    int tmp = oodResolveSymbolicID(context, dlg, id, argPosDlg, argPosID);
+    uint32_t tmp = oodResolveSymbolicID(context, oodObj, id, argPosObj, argPosID);
     if ( tmp == OOD_ID_EXCEPTION )
     {
         context->ClearCondition();
@@ -217,6 +283,25 @@ bool oodSafeResolveID(int *pID, RexxMethodContext *context, RexxObjectPtr dlg, R
     return true;
 }
 
+
+DWORD oodGetSysErrCode(RexxMethodContext *c)
+{
+    uint32_t code = 0;
+    RexxObjectPtr rxCode = c->DirectoryAt(TheDotLocalObj, "SYSTEMERRORCODE");
+    c->UnsignedInt32(rxCode, &code);
+    return (DWORD)code;
+}
+
+void oodSetSysErrCode(RexxMethodContext *context, DWORD code)
+{
+    context->DirectoryPut(TheDotLocalObj, context->UnsignedInt32(code), "SYSTEMERRORCODE");
+}
+
+
+void oodResetSysErrCode(RexxMethodContext *context)
+{
+    context->DirectoryPut(TheDotLocalObj, TheZeroObj, "SYSTEMERRORCODE");
+}
 
 BOOL DialogInAdminTable(DIALOGADMIN * Dlg)
 {
@@ -237,8 +322,8 @@ BOOL DialogInAdminTable(DIALOGADMIN * Dlg)
  *
  * @param string  The string to convert.
  *
- * @return The converted value, which could be null, or null if it is not
- *         converted.
+ * @return The converted value, which could be null to begin with, or null if it
+ *         is not converted.
  */
 void *string2pointer(const char *string)
 {
@@ -257,6 +342,25 @@ void *string2pointer(const char *string)
     return pointer;
 }
 
+/**
+ * Converts a pointer-sized type to a pointer-string, or 0 if the pointer is
+ * null.
+ *
+ * @param result   [out] Pointer-string is returned here.  Ensure the storage
+ *                 pointed to is big enough for a 64-bit pointer.
+ *
+ * @param pointer  [in] The pointer to convert.
+ *
+ * @remarks  Pointer-sized type is used to indicate that this will work for
+ *           opaque types, like HANDLE, HMENU, HINST, UINT_PTR, DWORD_PTR, etc.,
+ *           that are pointer size.
+ *
+ *           For now, 0 is returned for null rather than 0x00000000 because
+ *           many, many places in ooDialog test for 0 to detect error.
+ *
+ *           This function should go away when ooDialog is converted to use
+ *           .Pointer for all pointer-sized data types.
+ */
 void pointer2string(char *result, void *pointer)
 {
     if ( pointer == NULL )
@@ -269,6 +373,23 @@ void pointer2string(char *result, void *pointer)
     }
 }
 
+
+/**
+ * Variation of above.  Converts the pointer and returns it as a
+ * RexxStringObject.
+ *
+ * @param c        Method context we are operating in.
+ * @param pointer  Pointer to convert
+ *
+ * @return A string object representing the pointer as either 0xffff1111 if not
+ *         null or as 0 if null.
+ */
+RexxStringObject pointer2string(RexxMethodContext *c, void *pointer)
+{
+    char buf[32];
+    pointer2string(buf, pointer);
+    return c->String(buf);
+}
 
 LONG HandleError(PRXSTRING r, CHAR * text)
 {
@@ -310,34 +431,172 @@ bool IsNo(const char * s)
    return ( s && (*s == 'N' || *s == 'n') );
 }
 
+/**
+ * Returns an upper-cased copy of the string.
+ *
+ * @param str   The string to copy and upper case.
+ *
+ * @return      A pointer to a new string, or null on a memory allocation
+ *              failure.
+ *
+ * The caller is responsible for freeing the returned string.
+ */
+char *strdupupr(const char *str)
+{
+    char *retStr = NULL;
+    if ( str )
+    {
+        size_t l = strlen(str);
+        retStr = (char *)malloc(l + 1);
+        if ( retStr )
+        {
+            char *p;
+            for ( p = retStr; *str; ++str )
+            {
+                if ( ('a' <= *str) && (*str <= 'z') )
+                {
+                    *p++ = *str - ('a' - 'A');
+                }
+                else
+                {
+                    *p++ = *str;
+                }
+            }
+            *p = '\0';
+        }
+    }
+    return retStr;
+}
+
+/**
+ * Returns an upper-cased copy of the string with all space removed.
+ *
+ * @param str   The string to copy and upper case.
+ *
+ * @return      A pointer to a new string, or null on a memory allocation
+ *              failure.
+ *
+ * @note        The caller is responsible for freeing the returned string.
+ */
+char *strdupupr_nospace(const char *str)
+{
+    char *retStr = NULL;
+    if ( str )
+    {
+        size_t l = strlen(str);
+        retStr = (char *)malloc(l + 1);
+        if ( retStr )
+        {
+            char *p;
+            for ( p = retStr; *str; ++str )
+            {
+                if ( *str == ' ' )
+                {
+                    continue;
+                }
+                if ( ('a' <= *str) && (*str <= 'z') )
+                {
+                    *p++ = *str - ('a' - 'A');
+                }
+                else
+                {
+                    *p++ = *str;
+                }
+            }
+            *p = '\0';
+        }
+    }
+    return retStr;
+}
+
+/**
+ * Returns a copy of the string that is suitable for an ooRexx method name. All
+ * space, tab, ampersand, and '+' characters are removed.  In addition it
+ * removes any trailing ... from the string.  Upper-casing the characters is
+ * skipped, because this should not matter.
+ *
+ * @param str   The string to copy and make into a method name.
+ *
+ * @return      A pointer to a new string, or null on a memory allocation
+ *              failure.
+ *
+ * @note        The caller is responsible for freeing the returned string.
+ */
+char *strdup_2methodName(const char *str)
+{
+    char *retStr = NULL;
+    if ( str )
+    {
+        size_t l = strlen(str);
+        retStr = (char *)malloc(l + 1);
+        if ( retStr )
+        {
+            char *p;
+            for ( p = retStr; *str; ++str )
+            {
+                if ( *str == ' '|| *str == '\t' || *str == '&' || *str == '+' )
+                {
+                    continue;
+                }
+                else
+                {
+                    *p++ = *str;
+                }
+            }
+            *(p - 3) == '.' ? *(p - 3) = '\0' : *p = '\0';
+        }
+    }
+    return retStr;
+}
+
 DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
 {
     DIALOGADMIN *adm = (DIALOGADMIN *)rxGetPointerAttribute(context, dlg, "ADM");
     if ( adm == NULL )
     {
-         // Want this message: Could not retrieve the "value" information for "object"
-         // similar to old 98.921
-
-        TCHAR buf[128];
-        RexxObjectPtr name = context->SendMessage0(dlg, "OBJECTNAME");
-        _snprintf(buf, sizeof(buf), "Could not retrieve the dialog administration block information for %s",
-                  context->ObjectToStringValue(name));
-
-        context->RaiseException1(Rexx_Error_Execution_user_defined, context->String(buf));
+        failedToRetrieveException(context, "dialog administration block", dlg);
     }
     return adm;
 }
 
 
+PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos)
+{
+    if ( requiredClass(context, p, "Point", argPos) )
+    {
+        return (PPOINT)context->ObjectToCSelf(p);
+    }
+    return NULL;
+}
+
+
+PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos)
+{
+    if ( requiredClass(context, r, "Rect", argPos) )
+    {
+        return (PRECT)context->ObjectToCSelf(r);
+    }
+    return NULL;
+}
+
+
 // TODO move to APICommon when ooDialog is converted to use .Pointer instead of
 // pointer strings.
+//
+// NOTE: this function won't crash, but it can easily return null.
+//
+// NOTE 2: be sure to return the raw pointer, not .Pointer, that way calling do
+// not need to unwrap things.
 POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
 {
     CSTRING value = "";
-    RexxObjectPtr rxString = context->SendMessage0(obj, name);
-    if ( rxString != NULLOBJECT )
+    if ( obj != NULLOBJECT )
     {
-        value = context->ObjectToStringValue(rxString);
+        RexxObjectPtr rxString = context->SendMessage0(obj, name);
+        if ( rxString != NULLOBJECT )
+        {
+            value = context->ObjectToStringValue(rxString);
+        }
     }
     return string2pointer(value);
 }

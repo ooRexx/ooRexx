@@ -45,7 +45,7 @@
 #include "oodSymbols.h"
 
 extern INT DelDialog(DIALOGADMIN * aDlg);
-extern BOOL SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
+extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
 extern BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam, BOOL MsgEnabled);
 extern BOOL DrawBackgroundBmp(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam);
 extern BOOL DataAutodetection(DIALOGADMIN * aDlg);
@@ -102,8 +102,17 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
        if (addressedTo)
        {
           MsgEnabled = IsWindowEnabled(hDlg) && DialogInAdminTable(addressedTo);
-          if (MsgEnabled && (uMsg != WM_PAINT) && (uMsg != WM_NCPAINT)                /* do not search message table for WM_PAINT to improve redraw */
-              && SearchMessageTable(uMsg, wParam, lParam, addressedTo)) return FALSE;
+
+          // Do not search message table for WM_PAINT to improve redraw.
+          if ( MsgEnabled && (uMsg != WM_PAINT) && (uMsg != WM_NCPAINT) )
+          {
+              MsgReplyType searchReply;
+              if ( (searchReply = SearchMessageTable(uMsg, wParam, lParam, addressedTo)) != NotMatched )
+              {
+                  // Note pre 4.0.1, reply was always FALSE, pass on to the system to process.
+                  return (searchReply == ReplyTrue ? TRUE : FALSE);
+              }
+          }
 
           switch (uMsg) {
              case WM_PAINT:
@@ -241,15 +250,22 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
              case WM_USER_CONTEXT_MENU:
              {
                  PTRACKPOP ptp = (PTRACKPOP)wParam;
-                 int cmd;
+                 uint32_t cmd;
 
                  SetLastError(0);
-                 cmd = (int)TrackPopupMenuEx(ptp->hMenu, ptp->flags, ptp->point.x, ptp->point.y,
-                                             ptp->hWnd, ptp->lptpm);
+                 cmd = (uint32_t)TrackPopupMenuEx(ptp->hMenu, ptp->flags, ptp->point.x, ptp->point.y,
+                                                  ptp->hWnd, ptp->lptpm);
 
-                 if ( (! (ptp->flags & TPM_RETURNCMD)) && (cmd == 0) )
+                 // If TPM_RETURNCMD is specified, the return is the menu item
+                 // selected.  Otherwise, the return is 0 for failure and
+                 // non-zero for success.
+                 if ( ! (ptp->flags & TPM_RETURNCMD) )
                  {
-                     cmd = -(int)GetLastError();
+                     cmd = (cmd == 0 ? FALSE : TRUE);
+                     if ( cmd == FALSE )
+                     {
+                         ptp->dwErr = GetLastError();
+                     }
                  }
                  ReplyMessage((LRESULT)cmd);
                  return (TRUE);

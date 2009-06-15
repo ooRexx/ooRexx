@@ -35,53 +35,16 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/* Basic Dialog Class                                                         */
-/*                                                                            */
-/*                                                                            */
-/******************************************************************************/
 
-::requires "oodutils.cls"  /* load public routines (not static) */
+/* Windows Dialog Interface for Open Object Rexx (ooRexx)
+ *
+ * The basic dialog class
+ *
+ * PlainBaseDialog with its two inherited mixin classes, WindowBase and
+ * ResourceUtils, is the base dialog for all dialogs in the ooDialog framwork.
+ */
 
-
-::class 'DlgUtil' public
-::method init class external "LIBRARY oodialog dlgutil_init_cls"
-::method version class external "LIBRARY oodialog dlgutil_version_cls"
-::method comctl32Version class external "LIBRARY oodialog dlgutil_comctl32Version_cls"
-::method hiWord class external "LIBRARY oodialog dlgutil_hiWord_cls"
-::method loWord class external "LIBRARY oodialog dlgutil_loWord_cls"
-::method and class external "LIBRARY oodialog dlgutil_and_cls"
-::method or class external "LIBRARY oodialog dlgutil_or_cls"
-::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
-::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
-::method test class external "LIBRARY oodialog dlgutil_test_cls"
-
-::class 'Rect' public
-::method init external "LIBRARY oodialog rect_init"
-::method left external "LIBRARY oodialog rect_left"
-::method 'left=' external "LIBRARY oodialog rect_setLeft"
-::method top external "LIBRARY oodialog rect_top"
-::method 'top=' external "LIBRARY oodialog rect_setTop"
-::method right external "LIBRARY oodialog rect_right"
-::method 'right=' external "LIBRARY oodialog rect_setRight"
-::method bottom external "LIBRARY oodialog rect_bottom"
-::method 'bottom=' external "LIBRARY oodialog rect_setBottom"
-
-::class 'Point' public
-::method init external "LIBRARY oodialog point_init"
-::method x external "LIBRARY oodialog point_x"
-::method 'x=' external "LIBRARY oodialog point_setX"
-::method y external "LIBRARY oodialog point_y"
-::method 'y=' external "LIBRARY oodialog point_setY"
-
-::class 'Size' public
-::method init external "LIBRARY oodialog size_init"
-::method width external "LIBRARY oodialog size_cx"
-::method 'width=' external "LIBRARY oodialog size_setCX"
-::method height external "LIBRARY oodialog point_y"
-::method 'height=' external "LIBRARY oodialog point_setY"
+::requires "oodutils.cls"
 
 /******************************************************************************/
 /* The class WindowBase implements methods that are common to all windows,    */
@@ -198,12 +161,12 @@
 
 ::attribute processingLoad private    -- in LoadItems ?
 
-::method ParseIncludeFile
+::method parseIncludeFile
   use strict arg hFile
 
-  -- Revisit. Should an error msg box be put up if the file is not found?
+  -- Revisit. Should a syntax condition be raised if the file is not found or readable?
   hFile = SysSearchPath("PATH", hFile)
-  if hFile == "" then return 1
+  if hFile == "" then return .false
 
   f = .stream~new(hFile)
   f~open(read)
@@ -222,7 +185,7 @@
     end
   end
   f~close
-  return 0
+  return .true
 
 ::method skipThroughIfDefs private
   use arg fObj, line
@@ -251,13 +214,13 @@
    end
    return 0
 
-::method Errorfile private
+::method errorfile private
    use arg f, s
    f~close
    self~ProcessingLoad = 0
    ret = errorDialog("Error reading resource file:" f "("s")")
 
-::method CheckId
+::method checkId
   use strict arg id
 
   if id~datatype("W") then return id
@@ -274,24 +237,23 @@
                    "non-numeric identification number.")
   return -1
 
-::method ResolveSymbolicId unguarded
+::method resolveSymbolicId unguarded
    use strict arg id
    id = self~ConstDir[id~space(0)~translate]
    if id == .nil then return -1
    return id
 
 /**
- * Return a symbolic ID from the ConstDir that matches the numeric ID.
+ * Return the symbolic ID from the ConstDir that matches the numeric ID.
  * The docs will advise users of ooDialog to use unique numbers for all
  * resources.
  */
-::method ResolveNumericID unguarded
+::method resolveNumericID unguarded
   use arg numericID
   if \ numericID~datatype('W') then return -1
-  do symbolicID over self~ConstDir~allIndexes
-    if self~ConstDir[symbolicID] == numericID then return symbolicID
-  end
-  return -1
+  symbol = self~constDir~index(numericID)
+  if symbol == .nil then return -1
+  else return symbol
 
 ::method resolveIconID private
   use strict arg icon
@@ -304,7 +266,7 @@
 ::method resolveResourceID unguarded
   use strict arg id
   if id~datatype("W"), id > -1 then return id
-  return self~ResolveSymbolicId(id)
+  return self~resolveSymbolicId(id)
 
 ::method mergeSymbols
   use strict arg otherSymbolSrc

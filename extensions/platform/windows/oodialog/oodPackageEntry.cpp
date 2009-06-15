@@ -52,6 +52,15 @@ DIALOGADMIN * topDlg = {NULL};
 INT StoredDialogs = 0;
 CRITICAL_SECTION crit_sec = {0};
 
+// Initialized in dlgutil_init_cls
+RexxObjectPtr TheTrueObj = NULLOBJECT;
+RexxObjectPtr TheFalseObj = NULLOBJECT;
+RexxObjectPtr TheNilObj = NULLOBJECT;
+RexxPointerObject TheNullPtrObj = NULLOBJECT;
+RexxDirectoryObject TheDotLocalObj = NULLOBJECT;
+RexxObjectPtr TheZeroObj = NULLOBJECT;
+RexxObjectPtr TheOneObj = NULLOBJECT;
+RexxObjectPtr TheNegativeOneObj = NULLOBJECT;
 
 #ifdef __cplusplus
 extern "C" {
@@ -126,14 +135,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrCreateDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrDefineDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddNewCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddResource);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(WinMenu);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(InsertMII);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(SetMII);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(GetMII);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(SetMI);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(GetMI);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(TrackPopup);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(MemMenu);
 
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
@@ -187,14 +188,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(UsrAddNewCtrl,        UsrAddNewCtrl),
     REXX_CLASSIC_ROUTINE(UsrAddResource,       UsrAddResource),
 
-    REXX_CLASSIC_ROUTINE(WinMenu,              WinMenu),
-    REXX_CLASSIC_ROUTINE(InsertMII,            InsertMII),
-    REXX_CLASSIC_ROUTINE(SetMII,               SetMII),
-    REXX_CLASSIC_ROUTINE(GetMII,               GetMII),
-    REXX_CLASSIC_ROUTINE(SetMI,                SetMI),
-    REXX_CLASSIC_ROUTINE(GetMI,                GetMI),
-    REXX_CLASSIC_ROUTINE(TrackPopup,           TrackPopup),
-    REXX_CLASSIC_ROUTINE(MemMenu,              MemMenu),
     REXX_LAST_ROUTINE()
 };
 
@@ -339,9 +332,6 @@ REXX_METHOD_PROTOTYPE(ckbx_isIndeterminate);
 REXX_METHOD_PROTOTYPE(ckbx_setIndeterminate);
 REXX_METHOD_PROTOTYPE(bc_test);
 
-REXX_METHOD_PROTOTYPE(menu_test);
-REXX_METHOD_PROTOTYPE(menu_connectAllItems);
-
 REXX_METHOD_PROTOTYPE(rect_init);
 REXX_METHOD_PROTOTYPE(rect_left);
 REXX_METHOD_PROTOTYPE(rect_top);
@@ -363,6 +353,87 @@ REXX_METHOD_PROTOTYPE(size_cx);
 REXX_METHOD_PROTOTYPE(size_setCX);
 REXX_METHOD_PROTOTYPE(size_cy);
 REXX_METHOD_PROTOTYPE(size_setCY);
+
+// Menu classes methods
+REXX_METHOD_PROTOTYPE(menu_getHMenu);
+REXX_METHOD_PROTOTYPE(menu_wID);
+REXX_METHOD_PROTOTYPE(menu_isValidItemID);
+REXX_METHOD_PROTOTYPE(menu_isValidMenu);
+REXX_METHOD_PROTOTYPE(menu_isValidMenuHandle);
+REXX_METHOD_PROTOTYPE(menu_isSeparator);
+REXX_METHOD_PROTOTYPE(menu_isCommandItem);
+REXX_METHOD_PROTOTYPE(menu_isPopup);
+REXX_METHOD_PROTOTYPE(menu_getMenuHandle);
+REXX_METHOD_PROTOTYPE(menu_releaseMenuHandle);
+REXX_METHOD_PROTOTYPE(menu_destroy);
+REXX_METHOD_PROTOTYPE(menu_insertSeparator);
+REXX_METHOD_PROTOTYPE(menu_removeSeparator);
+REXX_METHOD_PROTOTYPE(menu_insertItem);
+REXX_METHOD_PROTOTYPE(menu_removeItem);
+REXX_METHOD_PROTOTYPE(menu_insertPopup);
+REXX_METHOD_PROTOTYPE(menu_removePopup);
+REXX_METHOD_PROTOTYPE(menu_deletePopup);
+REXX_METHOD_PROTOTYPE(menu_getPopup);
+REXX_METHOD_PROTOTYPE(menu_isEnabled);
+REXX_METHOD_PROTOTYPE(menu_isDisabled);
+REXX_METHOD_PROTOTYPE(menu_isChecked);
+REXX_METHOD_PROTOTYPE(menu_check);
+REXX_METHOD_PROTOTYPE(menu_unCheck);
+REXX_METHOD_PROTOTYPE(menu_checkRadio);
+REXX_METHOD_PROTOTYPE(menu_hilite);
+REXX_METHOD_PROTOTYPE(menu_unHilite);
+REXX_METHOD_PROTOTYPE(menu_getCount);
+REXX_METHOD_PROTOTYPE(menu_enable);
+REXX_METHOD_PROTOTYPE(menu_disable);
+REXX_METHOD_PROTOTYPE(menu_getItemState);
+REXX_METHOD_PROTOTYPE(menu_getItemType);
+REXX_METHOD_PROTOTYPE(menu_setID);
+REXX_METHOD_PROTOTYPE(menu_getID);
+REXX_METHOD_PROTOTYPE(menu_getHelpID);
+REXX_METHOD_PROTOTYPE(menu_setHelpID);
+REXX_METHOD_PROTOTYPE(menu_getMaxHeight);
+REXX_METHOD_PROTOTYPE(menu_setMaxHeight);
+REXX_METHOD_PROTOTYPE(menu_setText);
+REXX_METHOD_PROTOTYPE(menu_getText);
+REXX_METHOD_PROTOTYPE(menu_setAutoConnection);
+REXX_METHOD_PROTOTYPE(menu_getAutoConnectStatus);
+REXX_METHOD_PROTOTYPE(menu_connectWM);
+REXX_METHOD_PROTOTYPE(menu_connectItem);
+REXX_METHOD_PROTOTYPE(menu_connectAllItems);
+REXX_METHOD_PROTOTYPE(menu_connectSomeItems);
+REXX_METHOD_PROTOTYPE(menu_itemTextToMethodName);
+REXX_METHOD_PROTOTYPE(menu_test);
+
+REXX_METHOD_PROTOTYPE(menuBar_isAttached);
+REXX_METHOD_PROTOTYPE(menuBar_redraw);
+REXX_METHOD_PROTOTYPE(menuBar_attachTo);
+REXX_METHOD_PROTOTYPE(menuBar_detach);
+
+REXX_METHOD_PROTOTYPE(binMenu_init);
+
+REXX_METHOD_PROTOTYPE(sysMenu_init);
+REXX_METHOD_PROTOTYPE(sysMenu_revert);
+REXX_METHOD_PROTOTYPE(sysMenu_connectItem);
+REXX_METHOD_PROTOTYPE(sysMenu_connectAllItems);
+REXX_METHOD_PROTOTYPE(sysMenu_connectSomeItems);
+
+REXX_METHOD_PROTOTYPE(popMenu_init);
+REXX_METHOD_PROTOTYPE(popMenu_connectContextMenu);
+REXX_METHOD_PROTOTYPE(popMenu_isAssigned);
+REXX_METHOD_PROTOTYPE(popMenu_assignTo);
+REXX_METHOD_PROTOTYPE(popMenu_track);
+REXX_METHOD_PROTOTYPE(popMenu_show);
+
+REXX_METHOD_PROTOTYPE(scriptMenu_init);
+
+REXX_METHOD_PROTOTYPE(userMenu_init);
+REXX_METHOD_PROTOTYPE(userMenu_complete);
+
+REXX_METHOD_PROTOTYPE(menuTemplate_isComplete);
+REXX_METHOD_PROTOTYPE(menuTemplate_addSeparator);
+REXX_METHOD_PROTOTYPE(menuTemplate_addItem);
+REXX_METHOD_PROTOTYPE(menuTemplate_addPopup);
+
 
 RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_init_cls,             dlgutil_init_cls),
@@ -505,9 +576,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(gb_setStyle,             gb_setStyle),
     REXX_METHOD(bc_test,                 bc_test),
 
-    REXX_METHOD(menu_test,               menu_test),
-    REXX_METHOD(menu_connectAllItems,    menu_connectAllItems),
-
     REXX_METHOD(rect_init,               rect_init),
     REXX_METHOD(rect_left,               rect_left),
     REXX_METHOD(rect_top,                rect_top),
@@ -527,6 +595,87 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(size_setCX,              size_setCX),
     REXX_METHOD(size_cy,                 size_cy),
     REXX_METHOD(size_setCY,              size_setCY),
+
+    // Menu classes methods
+    REXX_METHOD(menu_getHMenu,                  menu_getHMenu),
+    REXX_METHOD(menu_wID,                       menu_wID),
+    REXX_METHOD(menu_isValidItemID,             menu_isValidItemID),
+    REXX_METHOD(menu_isValidMenu,               menu_isValidMenu),
+    REXX_METHOD(menu_isValidMenuHandle,         menu_isValidMenuHandle),
+    REXX_METHOD(menu_isSeparator,               menu_isSeparator),
+    REXX_METHOD(menu_isCommandItem,             menu_isCommandItem),
+    REXX_METHOD(menu_isPopup,                   menu_isPopup),
+    REXX_METHOD(menu_isEnabled,                 menu_isEnabled),
+    REXX_METHOD(menu_isDisabled,                menu_isDisabled),
+    REXX_METHOD(menu_isChecked,                 menu_isChecked),
+    REXX_METHOD(menu_getMenuHandle,             menu_getMenuHandle),
+    REXX_METHOD(menu_releaseMenuHandle,         menu_releaseMenuHandle),
+    REXX_METHOD(menu_destroy,                   menu_destroy),
+    REXX_METHOD(menu_enable,                    menu_enable),
+    REXX_METHOD(menu_disable,                   menu_disable),
+    REXX_METHOD(menu_check,                     menu_check),
+    REXX_METHOD(menu_unCheck,                   menu_unCheck),
+    REXX_METHOD(menu_checkRadio,                menu_checkRadio),
+    REXX_METHOD(menu_hilite,                    menu_hilite),
+    REXX_METHOD(menu_unHilite,                  menu_unHilite),
+    REXX_METHOD(menu_insertSeparator,           menu_insertSeparator),
+    REXX_METHOD(menu_removeSeparator,           menu_removeSeparator),
+    REXX_METHOD(menu_insertItem,                menu_insertItem),
+    REXX_METHOD(menu_removeItem,                menu_removeItem),
+    REXX_METHOD(menu_insertPopup,               menu_insertPopup),
+    REXX_METHOD(menu_getPopup,                  menu_getPopup),
+    REXX_METHOD(menu_removePopup,               menu_removePopup),
+    REXX_METHOD(menu_deletePopup,               menu_deletePopup),
+    REXX_METHOD(menu_getCount,                  menu_getCount),
+    REXX_METHOD(menu_getItemState,              menu_getItemState),
+    REXX_METHOD(menu_getItemType,               menu_getItemType),
+    REXX_METHOD(menu_getID,                     menu_getID),
+    REXX_METHOD(menu_setID,                     menu_setID),
+    REXX_METHOD(menu_getHelpID,                 menu_getHelpID),
+    REXX_METHOD(menu_setHelpID,                 menu_setHelpID),
+    REXX_METHOD(menu_getMaxHeight,              menu_getMaxHeight),
+    REXX_METHOD(menu_setMaxHeight,              menu_setMaxHeight),
+    REXX_METHOD(menu_getText,                   menu_getText),
+    REXX_METHOD(menu_setText,                   menu_setText),
+    REXX_METHOD(menu_getAutoConnectStatus,      menu_getAutoConnectStatus),
+    REXX_METHOD(menu_setAutoConnection,         menu_setAutoConnection),
+    REXX_METHOD(menu_connectWM,                 menu_connectWM),
+    REXX_METHOD(menu_connectItem,               menu_connectItem),
+    REXX_METHOD(menu_connectSomeItems,          menu_connectSomeItems),
+    REXX_METHOD(menu_connectAllItems,           menu_connectAllItems),
+    REXX_METHOD(menu_itemTextToMethodName,      menu_itemTextToMethodName),
+    REXX_METHOD(menu_test,                      menu_test),
+
+    REXX_METHOD(menuBar_isAttached,      menuBar_isAttached),
+    REXX_METHOD(menuBar_redraw,          menuBar_redraw),
+    REXX_METHOD(menuBar_attachTo,        menuBar_attachTo),
+    REXX_METHOD(menuBar_detach,          menuBar_detach),
+
+    REXX_METHOD(binMenu_init,            binMenu_init),
+
+    REXX_METHOD(sysMenu_init,              sysMenu_init),
+    REXX_METHOD(sysMenu_revert,            sysMenu_revert),
+    REXX_METHOD(sysMenu_connectItem,       sysMenu_connectItem),
+    REXX_METHOD(sysMenu_connectSomeItems,  sysMenu_connectSomeItems),
+    REXX_METHOD(sysMenu_connectAllItems,   sysMenu_connectAllItems),
+
+    REXX_METHOD(popMenu_init,               popMenu_init),
+    REXX_METHOD(popMenu_isAssigned,         popMenu_isAssigned),
+    REXX_METHOD(popMenu_connectContextMenu, popMenu_connectContextMenu),
+    REXX_METHOD(popMenu_assignTo,           popMenu_assignTo),
+    REXX_METHOD(popMenu_track,              popMenu_track),
+    REXX_METHOD(popMenu_show,               popMenu_show),
+
+    REXX_METHOD(scriptMenu_init,         scriptMenu_init),
+
+    REXX_METHOD(userMenu_init,           userMenu_init),
+    REXX_METHOD(userMenu_complete,       userMenu_complete),
+
+    REXX_METHOD(menuTemplate_isComplete,   menuTemplate_isComplete),
+    REXX_METHOD(menuTemplate_addSeparator, menuTemplate_addSeparator),
+    REXX_METHOD(menuTemplate_addItem,      menuTemplate_addItem),
+    REXX_METHOD(menuTemplate_addPopup,     menuTemplate_addPopup),
+
     REXX_LAST_METHOD()
 };
 

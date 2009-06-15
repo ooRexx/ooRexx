@@ -48,7 +48,6 @@ WORD NumDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 HPALETTE CreateDIBPalette(LPBITMAPINFO lpBmpInfo);
 void SetSysPalColors(HPALETTE hPal);
 HPALETTE CopyPalette(HPALETTE hSrcPal);
-extern BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, ULONG, ULONG, ULONG, ULONG, CSTRING, ULONG);
 extern BOOL DrawButton(DIALOGADMIN *,INT id);
 extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern HWND ScrollingButton;

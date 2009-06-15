@@ -49,6 +49,22 @@
 #include <errno.h>
 #include "APICommon.h"
 
+
+/**
+ * 49.900
+ * 49 -> A severe error was detected in the language processor or execution
+ *       process during internal self-consistency checks.
+ *
+ * 900 -> User message
+ *
+ * @param c
+ * @param msg
+ */
+void severeErrorException(RexxMethodContext *c, char *msg)
+{
+    c->RaiseException1(Rexx_Error_Interpretation_user_defined, c->String(msg));
+}
+
 void systemServiceException(RexxMethodContext *context, char *msg)
 {
     context->RaiseException1(Rexx_Error_System_service_user_defined, context->String(msg));
@@ -68,11 +84,16 @@ void systemServiceException(RexxMethodContext *context, char *msg, const char *s
     }
 }
 
-void systemServiceExceptionCode(RexxMethodContext *context, const char *msg, const char *arg1)
+void systemServiceExceptionCode(RexxMethodContext *context, const char *msg, const char *arg1, DWORD rc)
 {
     TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), msg, arg1, GetLastError());
+    _snprintf(buffer, sizeof(buffer), msg, arg1, rc);
     systemServiceException(context, buffer);
+}
+
+void systemServiceExceptionCode(RexxMethodContext *context, const char *msg, const char *arg1)
+{
+    systemServiceExceptionCode(context, msg, arg1, GetLastError());
 }
 
 void systemServiceExceptionComCode(RexxMethodContext *context, const char *msg, const char *arg1, HRESULT hr)
@@ -87,6 +108,14 @@ void outOfMemoryException(RexxMethodContext *c)
     systemServiceException(c, NO_MEMORY_MSG);
 }
 
+/**
+ * Message
+ *
+ * Raises 93.900
+ *
+ * @param c    Method context we are executing in.
+ * @param msg  "Some message"
+ */
 void userDefinedMsgException(RexxMethodContext *c, CSTRING msg)
 {
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(msg));
@@ -99,16 +128,42 @@ void userDefinedMsgException(RexxMethodContext *c, int pos, CSTRING msg)
     userDefinedMsgException(c, buffer);
 }
 
+/**
+ *  Method argument 'argument' must be of the 'class' class
+ *  Method argument 4 must be of the ImageList class
+ *
+ *  Raises 93.948
+ *
+ * @param c    The method context we are operating under.
+ * @param pos  The 'argument' position.
+ * @param n    The name of the class expected.
+ *
+ * @return Pointer to void, could be used in the return statement of a method
+ *         to return NULLOBJECT after the exeception is raised.
+ */
 void *wrongClassException(RexxMethodContext *c, int pos, const char *n)
 {
     c->RaiseException2(Rexx_Error_Incorrect_method_noclass, c->WholeNumber(pos), c->String(n));
     return NULL;
 }
 
+/**
+ * Method argument 'argument' is not a valid'msg'
+ * Mehtod argument 3 is not a valid menu handle
+ *
+ * Raises 93.900
+ *
+ * @param c    Method context we are executing in.
+ * @param pos  Argumet position
+ * @param msg  "Some message"
+ *
+ * @note  There is no space after 'valid' the caller must provide it in msg if
+ *        it is needed
+ */
 void invalidTypeException(RexxMethodContext *c, int pos, const char *type)
 {
     TCHAR buffer[256];
-    _snprintf(buffer, sizeof(buffer), "Method argument %d is not a valid %s", pos, type);
+    _snprintf(buffer, sizeof(buffer), "Method argument %d is not a valid%s", pos, type);
     userDefinedMsgException(c, buffer);
 }
 
@@ -151,6 +206,66 @@ void emptyArrayException(RexxMethodContext *c, int argPos)
     userDefinedMsgException(c, buffer);
 }
 
+/**
+ * Error 98.900
+ *
+ * 98 The language processor detected a specific error during execution. The
+ * associated error gives the reason for the error.
+ *
+ * 900 User message.
+ *
+ * @param c
+ * @param msg
+ */
+void executionErrorException(RexxMethodContext *c, CSTRING msg)
+{
+    c->RaiseException1(Rexx_Error_Execution_user_defined, c->CString(msg));
+}
+
+/**
+ * Error 98.913
+ *
+ * 98 The language processor detected a specific error during execution. The
+ * associated error gives the reason for the error.
+ *
+ * 913: Unable to convert object "a MyThings" to a single-dimensional array
+ * value
+ *
+ * @param c    Method context we are executing in.
+ * @param obj  The "MyThings" object.
+ *
+ * @Note  This would be the exception most often seen in a do n over c statement
+ *        when c does not have a makeArray() method.
+ */
+void doOverException(RexxMethodContext *c, RexxObjectPtr obj)
+{
+    c->RaiseException1(Rexx_Error_Execution_noarray, obj);
+}
+
+/**
+ * Produces a message:
+ *
+ * Could not retrieve the "value" information for "object"
+ *
+ * Could not retrive the window handle information for a BaseDialog object.
+ *
+ * similar to old 98.921
+ *
+ * @param c       Method context we are operating in.
+ * @param item    What was to be retrieved
+ * @param source  The object it was being retrieved from.
+ */
+void failedToRetrieveException(RexxMethodContext *c, CSTRING item, RexxObjectPtr source)
+{
+    TCHAR buf[128];
+
+    RexxObjectPtr name = c->SendMessage0(source, "OBJECTNAME");
+    _snprintf(buf, sizeof(buf), "Could not retrieve the %s information for %s",
+              item, c->ObjectToStringValue(name));
+
+    c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
+}
+
 void nullObjectException(RexxMethodContext *c, CSTRING name, int pos)
 {
     TCHAR buffer[256];
@@ -173,6 +288,11 @@ void nullObjectException(RexxMethodContext *c, CSTRING name)
 void nullPointerException(RexxMethodContext *c, int pos)
 {
     c->RaiseException1(Rexx_Error_Incorrect_method_null, c->WholeNumber(pos));
+}
+
+void notNonNegativeException(RexxMethodContext *c, int pos, RexxObjectPtr actual)
+{
+    c->RaiseException2(Rexx_Error_Incorrect_method_nonnegative, c->Int32(pos), actual);
 }
 
 void wrongRangeException(RexxMethodContext *c, int pos, int min, int max, RexxObjectPtr actual)
@@ -243,13 +363,32 @@ bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos)
     *number = _strtoui64(str, &end, 0);
     if ( (end - str != strlen(str)) || errno == EINVAL || *number == _UI64_MAX )
     {
-        invalidTypeException(c, pos, "number");
+        invalidTypeException(c, pos, " number");
         return false;
     }
     return true;
 
 }
 
+/**
+ * Gets a Class object.
+ *
+ * This is for use for classes visible within the scope of the context, like say
+ * .BaseDialog, or .Rect.  Use c->GetClass() to directly get classes from the
+ * environment like .Bag or .Directory.
+ *
+ * @param c     The method context we are operating in.
+ * @param name  The name of the class to try and find.
+ *
+ * @return The class object or null on failure.
+ *
+ * @remarks  When null is returned an error has been raised: 98.909
+ *
+ *   98: The language processor detected a specific error during execution. The
+ *   associated error gives the reason for the error.
+ *
+ *   909: Class "class" not found
+ */
 RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name)
 {
     RexxClassObject theClass = c->FindContextClass(name);
@@ -277,10 +416,32 @@ RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr v
     RexxObjectPtr result = c->GetObjectVariable(varName);
     if ( result == NULLOBJECT )
     {
-        result = c->Nil();
+        result = TheNilObj;
     }
     c->SetObjectVariable(varName, val);
 
     return result;
 }
 
+
+/**
+ * Test if a generic Rexx object is exactly some int.
+ *
+ * @param testFor  The int value being tested for.
+ * @param val      The generic Rexx object, which could be null.
+ * @param c        The method context we are executing under.
+ *
+ * @return True if val is the int number we are testing for, otherwise false.
+ */
+bool isInt(int testFor, RexxObjectPtr val, RexxMethodContext *c)
+{
+    if ( val != NULLOBJECT )
+    {
+        int n;
+        if ( c->ObjectToInt32(val, &n) )
+        {
+            return n == testFor;
+        }
+    }
+    return false;
+}

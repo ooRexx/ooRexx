@@ -47,9 +47,12 @@
 #define NO_MEMORY_MSG             "failed to allocate memory"
 #define FUNC_WINCTRL_FAILED_MSG   "the '%s'() function of the Windows '%s' control failed"
 #define MSG_WINCTRL_FAILED_MSG    "the '%s' message of the Windows '%s' control failed"
+#define NO_LOCAL_ENVIRONMENT_MSG  "the .local environment was not found"
 
+extern void severeErrorException(RexxMethodContext *c, char *msg);
 extern void systemServiceException(RexxMethodContext *context, char *msg);
 extern void systemServiceException(RexxMethodContext *context, char *msg, const char *sub);
+extern void systemServiceExceptionCode(RexxMethodContext *context, const char *msg, const char *arg1, DWORD rc);
 extern void systemServiceExceptionCode(RexxMethodContext *context, const char *msg, const char *arg1);
 extern void systemServiceExceptionComCode(RexxMethodContext *context, const char *msg, const char *arg1, HRESULT hr);
 extern void outOfMemoryException(RexxMethodContext *c);
@@ -58,8 +61,12 @@ extern void userDefinedMsgException(RexxMethodContext *c, int pos, CSTRING msg);
 extern void *wrongClassException(RexxMethodContext *c, int pos, const char *n);
 extern void invalidTypeException(RexxMethodContext *c, int pos, const char *type);
 extern void invalidImageException(RexxMethodContext *c, int pos, CSTRING type, CSTRING actual);
+extern void notNonNegativeException(RexxMethodContext *c, int pos, RexxObjectPtr actual);
 extern void wrongObjInArrayException(RexxMethodContext *c, int argPos, size_t index, CSTRING obj);
 extern void wrongObjInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual);
+extern void executionErrorException(RexxMethodContext *c, CSTRING msg);
+extern void doOverException(RexxMethodContext *c, RexxObjectPtr obj);
+extern void failedToRetrieveException(RexxMethodContext *c, CSTRING item, RexxObjectPtr source);
 extern void missingIndexInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index);
 extern void emptyArrayException(RexxMethodContext *c, int argPos);
 extern void nullObjectException(RexxMethodContext *c, CSTRING name, int pos);
@@ -76,5 +83,6 @@ extern size_t rxArgCount(RexxMethodContext * context);
 extern bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos);
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
+extern bool isInt(int, RexxObjectPtr, RexxMethodContext *);
 
 #endif

@@ -106,6 +106,7 @@
 ::method setMenu
   use strict arg id
   menuBar = .BinaryMenuBar~new(self, id, self, 0, .true)
-  if menuBar~initCode == 0 then self~menuBar = menuBar
-  return menuBar~initCode
+  if menuBar == 0 then return .false
+  self~menuBar = menuBar
+  return .true
 
