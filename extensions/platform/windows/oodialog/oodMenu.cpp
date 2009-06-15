@@ -1308,7 +1308,7 @@ logical_t CppMenu::connectSomeItems(RexxObjectPtr rxItemIds, CSTRING method, log
         goto done_out;
     }
 
-    uint32_t count;
+    size_t count;
     ids = getAllIDs(rxItemIds, &count, byPosition);
     if ( ids == NULL )
     {
