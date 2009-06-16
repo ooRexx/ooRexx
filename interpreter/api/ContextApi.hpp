@@ -183,7 +183,7 @@ public:
     /**
      * Indicates whether we need to release the lock on return.
      */
-    boolean releaseLock;
+    bool releaseLock;
 };
 
 
