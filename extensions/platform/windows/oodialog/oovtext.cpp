@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <shlwapi.h>
 #include <stdio.h>

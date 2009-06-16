@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <mmsystem.h>
 #include <commctrl.h>
@@ -51,7 +51,6 @@ extern BOOL DrawBackgroundBmp(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPAR
 extern BOOL DataAutodetection(DIALOGADMIN * aDlg);
 extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr);
-extern LONG HandleError(PRXSTRING r, CHAR * text);
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 extern BOOL GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
 
@@ -1519,6 +1518,10 @@ static BOOL parseKeyToken(PCHAR token, PUINT pFirst, PUINT pLast)
     return ret;
 }
 
+/* TODO this code is dead and looks like it has been since the initial code drop
+ * from IBM
+ */
+#if 0
 LONG InternalStopDialog(HWND h)
 {
    ULONG i, ret;
@@ -1575,7 +1578,7 @@ _declspec(dllexport) LONG __cdecl OODialogCleanup(BOOL Process)
     }
     return (StoredDialogs);
 }
-
+#endif
 
 size_t RexxEntry HandleDlg(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {

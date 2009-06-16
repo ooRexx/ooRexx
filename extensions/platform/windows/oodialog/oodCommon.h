@@ -43,11 +43,6 @@
 
 #define OOD_ID_EXCEPTION 0xFFFFFFF7   // -9
 
-// MFS_ENABLED, MFS_UNCHECKED, and MFS_UNHILITE are all 0, so we define our own
-// values for UNCHECKED and UNHILITE to differentiate.
-#define OOD_MFS_UNCHECKED 0x80000000
-#define OOD_MFS_UNHILITE  0x40000000
-
 // Enum for the type of an ooDialog class.  Types to be added as needed.
 typedef enum
 {

@@ -43,7 +43,7 @@
  * any code that uses the native API.  Include APICommon.h to use them.
  */
 
-#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
 #include <errno.h>

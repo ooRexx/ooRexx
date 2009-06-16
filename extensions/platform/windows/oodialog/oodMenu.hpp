@@ -50,6 +50,11 @@
 // DWORDs, 1 WORD, and 1 WCHAR == 5 * 4 bytes
 #define MENUEX_TEMPLATE_ITEM_SIZE     20
 
+// MFS_ENABLED, MFS_UNCHECKED, and MFS_UNHILITE are all 0, so we define our own
+// values for UNCHECKED and UNHILITE to differentiate.
+#define OOD_MFS_UNCHECKED 0x80000000
+#define OOD_MFS_UNHILITE  0x40000000
+
 #define TEMPLATE_TOO_SMALL_MSG       "the number of menu items has exceeded the storage allocated for the menu"
 #define CAN_NOT_ATTACH_ON_INIT_MSG   "can not attach menu unless arg 1 'src' is a ResDialog or arg 2 'symbolSrc' is a dialog object"
 #define INVALID_MENU_HANDLE_MSG      " menu handle"

@@ -127,7 +127,7 @@
  -- designed.  Use the connectListViewNotify method for method connections that
  -- can take advantage of this information.  A tag is added to the message to
  -- signal that the extra information should be processed.  The tag is an
- -- unsigned long made up of flags which are defined in oovutil.h
+ -- unsigned long made up of flags which are defined in ooDialog.h
 ::method connectListViewNotify
    use arg id, type, msgToRise
    if id~DataType("W") = 0 then id = self~ResolveSymbolicId(id)

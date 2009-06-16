@@ -42,7 +42,7 @@
  * Contains convenience / helper functions used throughout the ooDialog modules.
  */
 
-#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
 #include <dlgs.h>

@@ -44,7 +44,7 @@
  * variables and DLLMain().
  */
 
-#include "oovutil.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
 
 HINSTANCE MyInstance = NULL;
 DIALOGADMIN * DialogTab[MAXDIALOGS] = {NULL};
