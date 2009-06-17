@@ -259,7 +259,6 @@
    self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, w, h, name, opts)
    if lOpts~wordpos("CONNECTBUTTONS") > 0 then
       self~ConnectButton(id, name~space(0)~changestr('&','')~changestr(':',''))
-   else self~ConnectButton(id)
 
 
 ::method InternAddRC_RBCB
