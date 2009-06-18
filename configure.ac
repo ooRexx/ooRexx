@@ -188,6 +188,13 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
       ;;
+   s390x-*ibm*)
+      ORX_SYS_STR="LINUX"
+dnl   gcc is overly agressive on s390x so turn all optimizations off
+      GENERIC_DEFINES="$GENERIC_DEFINES -O0"
+      CC_WARNINGS="$GCC_WARNINGS"
+      CXX_WARNINGS="$GCXX_WARNINGS"
+      ;;
    *linux*)
       ORX_SYS_STR="LINUX"
       CC_WARNINGS="$GCC_WARNINGS"
