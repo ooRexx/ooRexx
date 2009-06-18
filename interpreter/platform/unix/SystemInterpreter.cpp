@@ -124,7 +124,8 @@ void SystemInterpreter::startInterpreter()
     new_action.sa_handler = signalHandler;
     old_action.sa_handler = NULL;
     sigfillset(&new_action.sa_mask);
-    new_action.sa_flags = SA_RESTART;
+//    new_action.sa_flags = SA_RESTART;
+    new_action.sa_flags = 0; // do not use SA_RESTART or ctrl-c will not work as expected!
 
 /* Termination signals are set by Object REXX whenever the signals were not set */
 /* from outside (calling C-routine). The SIGSEGV signal is not set any more, so */
@@ -141,10 +142,6 @@ void SystemInterpreter::startInterpreter()
 void SystemInterpreter::terminateInterpreter()
 {
 // revert stdin and stdout back to their original states
-    termios term;
-    tcgetattr(0, &term);
-    term.c_lflag ^= ICANON;
-    tcsetattr(0, TCSANOW, &term);
     setvbuf(stdin, (char *)NULL, _IOLBF, 0);
     setvbuf(stdout, (char *)NULL, _IOLBF, 0);
 }

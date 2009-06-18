@@ -1102,11 +1102,6 @@ void SysFile::setStdIn()
     getStreamTypeInfo();
     setBuffering(false, 0);
     readable = true;             // force this to readable
-
-    termios term;
-    tcgetattr(fileHandle, &term);
-    term.c_lflag &= ~ICANON;
-    tcsetattr(fileHandle, TCSANOW, &term);
     // STDIN is buffered by default so make it unbuffered
     setbuf(stdin, NULL);
 }
