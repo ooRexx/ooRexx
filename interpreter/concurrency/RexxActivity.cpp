@@ -335,12 +335,19 @@ wholenumber_t RexxActivity::error()
 }
 
 
-wholenumber_t RexxActivity::error(RexxActivationBase *activation)
+wholenumber_t RexxActivity::error(RexxActivationBase *activation, RexxDirectory *errorInfo)
 /******************************************************************************/
 /* Function:  Force error termination on an activity, returning the resulting */
 /*            REXX error code.                                                */
 /******************************************************************************/
 {
+    // if not passed an explicit error object, use whatever we have in our
+    // local holder.
+    if (errorInfo == OREF_NULL)
+    {
+        errorInfo = this->conditionobj;
+    }
+
     // unwind to a base activation
     while (topStackFrame != activation)
     {
@@ -351,12 +358,12 @@ wholenumber_t RexxActivity::error(RexxActivationBase *activation)
 
     wholenumber_t rc = Error_Interpretation/1000;      /* set default return code           */
     /* did we get a condtion object?     */
-    if (this->conditionobj != OREF_NULL)
+    if (errorInfo != OREF_NULL)
     {
         /* force it to display               */
-        this->display(this->conditionobj);
+        this->display(errorInfo);
         // try to convert.  Leaves unchanged if not value
-        this->conditionobj->at(OREF_RC)->numberValue(rc);
+        errorInfo->at(OREF_RC)->numberValue(rc);
     }
     return rc;                           /* return the error code             */
 }

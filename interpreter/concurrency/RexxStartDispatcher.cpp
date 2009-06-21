@@ -179,7 +179,7 @@ void RexxStartDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
     ActivityDispatcher::handleError(-r, c);
     retcode = (short)rc;
     // process the error to display the error message.
-    activity->error(activation);
+    activity->error(activation, conditionData);
 }
 
 

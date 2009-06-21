@@ -136,7 +136,7 @@ typedef enum
    void reset();
    void runThread();
    wholenumber_t error();
-   wholenumber_t error(RexxActivationBase *);
+   wholenumber_t error(RexxActivationBase *, RexxDirectory *errorInfo);
    wholenumber_t errorNumber(RexxDirectory *conditionObject);
    bool        raiseCondition(RexxString *, RexxObject *, RexxString *, RexxObject *, RexxObject *);
    bool        raiseCondition(RexxDirectory *);

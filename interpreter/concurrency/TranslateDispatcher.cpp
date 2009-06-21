@@ -107,7 +107,7 @@ void TranslateDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
     ActivityDispatcher::handleError(rc, c);
     rc = -r;
     // process the error to display the error message.
-    activity->error(activation);
+    activity->error(activation, conditionData);
 }
 
 
