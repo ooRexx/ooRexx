@@ -89,7 +89,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetDlgMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDlg);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(AddUserMessage);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetFileNameWindow);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DataTable);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDialogAdmin);
@@ -142,7 +141,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(GetDlgMsg,            GetDlgMsg),
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
     REXX_CLASSIC_ROUTINE(HandleDlg,            HandleDlg),
-    REXX_CLASSIC_ROUTINE(AddUserMessage,       AddUserMessage),
     REXX_CLASSIC_ROUTINE(GetFileNameWindow,    GetFileNameWindow),
     REXX_CLASSIC_ROUTINE(DataTable,            DataTable),
     REXX_CLASSIC_ROUTINE(HandleDialogAdmin,    HandleDialogAdmin),
@@ -212,6 +210,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_setDefaultFont_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontName_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontSize_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
+REXX_METHOD_PROTOTYPE(pbdlg_addUserMessage);
 
 REXX_METHOD_PROTOTYPE(resdlg_setFontAttrib_pvt);
 
@@ -456,6 +455,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setDefaultFont_cls,     pbdlg_setDefaultFont_cls),
     REXX_METHOD(pbdlg_getFontName_cls,        pbdlg_getFontName_cls),
     REXX_METHOD(pbdlg_getFontSize_cls,        pbdlg_getFontSize_cls),
+    REXX_METHOD(pbdlg_addUserMessage,         pbdlg_addUserMessage),
     REXX_METHOD(pbdlg_getTextSizeDlg,         pbdlg_getTextSizeDlg),
 
     REXX_METHOD(resdlg_setFontAttrib_pvt,     resdlg_setFontAttrib_pvt),

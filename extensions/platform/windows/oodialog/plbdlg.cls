@@ -588,16 +588,7 @@
 
    /* Connect any Windows message with a class method */
 
-::method AddUserMsg protected unguarded
-   use arg msgToRise, msgWindows, filt1, wP, filt2, lP, filt3, tag
-   if Arg(3, 'o') = 1 | filt1 = "FILT1" then filt1 = 0xFFFFFFFF
-   if Arg(5, 'o') = 1 | filt2 = "FILT2" then filt2 = 0
-   if Arg(7, 'o') = 1 | filt3 = "FILT3" then filt3 = 0
-   if Arg(4, 'o') = 1 | wP = "WP" then wP = 0
-   if Arg(6, 'o') = 1 | lP = "LP" then lP = 0
-   if msgToRise~space(0) = "" then return 1
-   if Arg(8, 'o') = 1 then return AddUserMessage(self~Adm, msgWindows, filt1, wP, filt2, lP, filt3, msgToRise)
-   else return AddUserMessage(self~Adm, msgWindows, filt1, wP, filt2, lP, filt3, msgToRise, tag)
+::method AddUserMsg protected unguarded external "LIBRARY oodialog pbdlg_addUserMessage"
 
 ::method ConnectFKeyPress unguarded
    use strict arg msgToRaise

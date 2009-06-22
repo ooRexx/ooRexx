@@ -40,6 +40,9 @@
 #define oodCommon_Included
 
 
+#define DEFAULT_FONTNAME       "MS Shell Dlg"
+#define DEFAULT_FONTSIZE       8
+
 
 #define OOD_ID_EXCEPTION 0xFFFFFFF7   // -9
 
@@ -71,21 +74,33 @@ extern char *strdup_2methodName(const char *str);
 extern DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
 extern LPWORD lpwAlign(LPWORD lpIn);
-extern BOOL AddTheMessage(DIALOGADMIN *, ULONG, ULONG, ULONG, ULONG, ULONG, ULONG, CSTRING, ULONG);
+extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
 extern void ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
 extern uint32_t oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
 extern bool oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+
 extern DWORD oodGetSysErrCode(RexxMethodContext *);
-extern void oodSetSysErrCode(RexxMethodContext *, DWORD);
-extern void oodResetSysErrCode(RexxMethodContext *context);
-extern PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos);
-extern PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos);
+extern void  oodSetSysErrCode(RexxMethodContext *, DWORD);
+extern void  oodResetSysErrCode(RexxMethodContext *context);
+
+extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos);
+extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
+extern PRECT         rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos);
+extern RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b);
+extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos);
+extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
 
 // TODO move to APICommon when ooDialog is converted to use .Pointer instead of
 // pointer strings.
 extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
+
+extern RexxObjectPtr getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t, HWND, RexxObjectPtr);
+extern bool textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SIZE *, HWND);
+extern bool textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
+extern bool getTextExtent(HFONT, HDC, CSTRING, SIZE *);
+
 
 #define GET_HANDLE(p) string2pointer(p)
 #define GET_HWND(p)   ((HWND)string2pointer(p))

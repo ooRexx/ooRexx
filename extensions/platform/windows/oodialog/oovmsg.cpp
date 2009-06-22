@@ -450,25 +450,24 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
 }
 
 
-// TODO FIXME wParam and lParam are 64-bit in 64-bit Windows.
-BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, ULONG filt2,
-                   ULONG lparam, ULONG filt3, CSTRING prog, ULONG ulTag)
+BOOL AddTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam, ULONG_PTR wpFilter,
+                   LPARAM lParam, ULONG_PTR lpFilter, CSTRING prog, ULONG ulTag)
 {
     size_t len = strlen(prog);
 
     if ( strlen(prog) == 0 )
     {
-        return 0;
+        return FALSE;
     }
-    if ( !(message | param | lparam) )
+    if ( ! (winMsg | wParam | lParam) )
     {
-        MessageBox(0,"Message passed is invalid","Error",MB_OK | MB_ICONHAND);
-        return 0;
+        MessageBox(0, "Message passed is invalid", "Error", MB_OK | MB_ICONHAND);
+        return FALSE;
     }
-    if ( !aDlg->MsgTab )
+    if ( ! aDlg->MsgTab )
     {
         aDlg->MsgTab = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_MT_ENTRIES);
-        if ( !aDlg->MsgTab )
+        if ( ! aDlg->MsgTab )
         {
             MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
             return 0;
@@ -478,24 +477,23 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, 
 
     if ( aDlg->MT_size < MAX_MT_ENTRIES )
     {
-        aDlg->MsgTab[aDlg->MT_size].msg = message;
-        aDlg->MsgTab[aDlg->MT_size].filterM = filt1;
-        aDlg->MsgTab[aDlg->MT_size].wParam = param;
-        aDlg->MsgTab[aDlg->MT_size].filterP = filt2;
-        aDlg->MsgTab[aDlg->MT_size].lParam = lparam;
-        aDlg->MsgTab[aDlg->MT_size].filterL = filt3;
-        aDlg->MsgTab[aDlg->MT_size].tag = ulTag;
         aDlg->MsgTab[aDlg->MT_size].rexxProgram = (PCHAR)LocalAlloc(LMEM_FIXED, len + 1);
-
-        /* This is what the original code did, but if we could not alloc memory,
-         * we should bail.
-         */
-        if ( aDlg->MsgTab[aDlg->MT_size].rexxProgram )
+        if ( aDlg->MsgTab[aDlg->MT_size].rexxProgram == NULL )
         {
-            strcpy(aDlg->MsgTab[aDlg->MT_size].rexxProgram, prog);
+            return FALSE;
         }
+        strcpy(aDlg->MsgTab[aDlg->MT_size].rexxProgram, prog);
+
+        aDlg->MsgTab[aDlg->MT_size].msg = winMsg;
+        aDlg->MsgTab[aDlg->MT_size].filterM = wmFilter;
+        aDlg->MsgTab[aDlg->MT_size].wParam = wParam;
+        aDlg->MsgTab[aDlg->MT_size].filterP = wpFilter;
+        aDlg->MsgTab[aDlg->MT_size].lParam = lParam;
+        aDlg->MsgTab[aDlg->MT_size].filterL = lpFilter;
+        aDlg->MsgTab[aDlg->MT_size].tag = ulTag;
+
         aDlg->MT_size ++;
-        return 1;
+        return TRUE;
     }
     else
     {
@@ -503,45 +501,8 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, ULONG message, ULONG filt1, ULONG param, 
                    "table entries. No message can be added.\n",
                    "Error",MB_OK | MB_ICONHAND);
     }
-    return 0;
+    return FALSE;
 }
-
-
-#define NARG 7
-
-size_t RexxEntry AddUserMessage(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   ULONG n[NARG];
-   INT i;
-   DEF_ADM;
-
-   CHECKARGL(NARG+1);
-
-   GET_ADM;
-
-   if (!dlgAdm) return 1;
-
-   for (i=1;i<NARG;i++)
-   {
-      if (isHex(argv[i].strptr))
-         n[i-1] = strtoul(argv[i].strptr,'\0',16);
-      else
-         n[i-1] = (ULONG)atol(argv[i].strptr);
-   }
-
-   if ( argc == 9 )
-   {
-      if ( isHex(argv[8].strptr) )
-         n[NARG-1] = strtoul(argv[8].strptr,'\0',16);
-      else
-         n[NARG-1] = (ULONG)atol(argv[8].strptr);
-   }
-   else
-      n[NARG-1] = 0;
-
-   RETC(!AddTheMessage(dlgAdm, n[0], n[1], n[2], n[3], n[4], n[5], argv[7].strptr, n[NARG-1]))
-}
-
 
 
 size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)

@@ -306,14 +306,14 @@ inline LONG_PTR getClassPtr(HWND hwnd, int index)
 
 /* structures to manage the dialogs */
 typedef struct {
-   WPARAM wParam;
-   LPARAM lParam;
-   ULONG msg;
-   ULONG filterM;
-   ULONG filterP;
-   ULONG filterL;
-   ULONG tag;
-   PCHAR rexxProgram;
+   WPARAM    wParam;
+   LPARAM    lParam;
+   UINT      msg;
+   UINT      filterM;
+   ULONG_PTR filterP;
+   ULONG_PTR filterL;
+   ULONG     tag;
+   PCHAR     rexxProgram;
 } MESSAGETABLEENTRY;
 
 typedef struct {

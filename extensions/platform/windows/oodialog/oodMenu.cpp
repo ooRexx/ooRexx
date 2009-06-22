@@ -154,9 +154,9 @@ inline BOOL _connectItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg)
         return 0;
     }
 
-    //                                       msg                wParam             lParam method
-    //                           WM_COMMAND  filter      wParam filter      lParam filter name   tag
-    return AddTheMessage(dlgAdm, 0x00000111, 0xFFFFFFFF, id,    0x0000FFFF,    0,     0,  msg,   0) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    //                             Window    msg                wParam             lParam method
+    //                             Message   filter      wParam filter      lParam filter name   tag
+    return AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id,    0x0000FFFF,    0,     0,  msg,   0) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /* Same as above but connects a System Menu item */
@@ -175,7 +175,7 @@ inline BOOL _connectSysItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg, logic
 
     //                             Window       msg                wParam             lParam method
     //                             Message      filter      wParam filter      lParam filter name   tag
-    return AddTheMessage(dlgAdm, WM_SYSCOMMAND, 0xFFFFFFFF, id,    0x0000FFF0,    0,     0,  msg,   tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
+    return AddTheMessage(dlgAdm, WM_SYSCOMMAND, UINT32_MAX, id,    0x0000FFF0,    0,     0,  msg,   tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
 CSTRING CppMenu::name()
@@ -1425,24 +1425,28 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
         {
             tag |= TAG_CONTEXTMENU;
             if ( hwndFilter != NULL )
-            {                                                         // TODO TODO this has to be fixed.
-                success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, 0xFFFFFFFF, (ULONG)hwndFilter, 0xFFFFFFFF, 0, 0, methodName, tag);
+            {
+                success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwndFilter, UINTPTR_MAX,
+                                        0, 0, methodName, tag);
             }
             else
             {
-                success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, 0xFFFFFFFF, 0, 0, 0, 0, methodName, tag);
+                success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, 0, 0,
+                                        0, 0, methodName, tag);
             }
         }
             break;
 
         case WM_INITMENU :
             tag |= TAG_MENUMESSAGE;
-            success = AddTheMessage(dialogAdm, WM_INITMENU, 0xFFFFFFFF, (ULONG)hMenu, 0xFFFFFFFF, 0, 0, methodName, tag);
+            success = AddTheMessage(dialogAdm, WM_INITMENU, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX,
+                                    0, 0, methodName, tag);
             break;
 
         case WM_INITMENUPOPUP :
             tag |= TAG_MENUMESSAGE;
-            success = AddTheMessage(dialogAdm, WM_INITMENUPOPUP, 0xFFFFFFFF, (ULONG)hMenu, 0xFFFFFFFF, 0, 0, methodName, tag);
+            success = AddTheMessage(dialogAdm, WM_INITMENUPOPUP, UINT32_MAX, (WPARAM)hMenu, UINTPTR_MAX,
+                                    0, 0, methodName, tag);
             break;
 
         default :

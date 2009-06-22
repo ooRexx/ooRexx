@@ -41,6 +41,7 @@
 #include <commctrl.h>
 #include <stdio.h>
 #include <dlgs.h>
+#include "APICommon.h"
 #include "oodCommon.h"
 #include "oodSymbols.h"
 
@@ -868,6 +869,199 @@ static HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, in
     }
 
     return (HICON)LoadImage(hInst, pName, IMAGE_ICON, cx, cy, loadFlags);
+}
+
+
+/**
+ *  Methods for the .PlainBaseDialog class.
+ */
+#define PLAINBASEDIALOG_CLASS  "PlainBaseDialog"
+
+RexxMethod0(RexxObjectPtr, pbdlg_init_cls)
+{
+    context->SetObjectVariable("FONTNAME", context->String(DEFAULT_FONTNAME));
+    context->SetObjectVariable("FONTSIZE", context->WholeNumber(DEFAULT_FONTSIZE));
+    return NULLOBJECT;
+}
+
+RexxMethod2(RexxObjectPtr, pbdlg_setDefaultFont_cls, CSTRING, fontName, uint32_t, fontSize)
+{
+    context->SetObjectVariable("FONTNAME", context->String(fontName));
+    context->SetObjectVariable("FONTSIZE", context->WholeNumber(fontSize));
+    return NULLOBJECT;
+}
+
+RexxMethod0(RexxObjectPtr, pbdlg_getFontName_cls)
+{
+    return context->GetObjectVariable("FONTNAME");
+}
+RexxMethod0(RexxObjectPtr, pbdlg_getFontSize_cls)
+{
+    return context->GetObjectVariable("FONTSIZE");
+}
+
+
+bool convert2PointerSize(RexxMethodContext *c, RexxObjectPtr obj, uint64_t *number, int argPos)
+{
+    if ( obj == NULLOBJECT )
+    {
+        *number = 0;
+        return true;
+    }
+
+    if ( c->IsPointer(obj) )
+    {
+        *number = (uint64_t)c->PointerValue((RexxPointerObject)obj);
+        return true;
+    }
+
+    return rxStr2Number(c, c->ObjectToStringValue(obj), number, argPos);
+}
+
+/** PlainBaseDialog::addUserMessage()
+ *
+ *  Adds a message to the message table.  This method is what implements the
+ *  connection of a Windows event to a dialog method.
+ *
+ *
+ *  @note  In the past this method returned 0 for okay and 1 for error, even
+ *         though the underlying implementation, AddTheMessage() returned true /
+ *         false for success / failure.  Although the return was never
+ *         documented.  So, I guess maintain the original return code, although
+ *         true / false make more sense.
+ */
+RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, _winMessage, OPTIONAL_CSTRING, _wmFilter,
+            OPTIONAL_RexxObjectPtr, wp, OPTIONAL_CSTRING, _wpFilter, OPTIONAL_RexxObjectPtr, lp, OPTIONAL_CSTRING, _lpFilter,
+            OPTIONAL_uint32_t, tag, OSELF, self)
+{
+    RexxMethodContext *c = context;
+    logical_t result = 1;
+
+    DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, self);
+    if ( dlgAdm == NULL )
+    {
+        goto done_out;
+    }
+    if ( *methodName == '\0' )
+    {
+        goto done_out;
+    }
+
+    uint64_t number;
+
+    UINT winMessage;
+    UINT wmFilter;
+    if ( ! rxStr2Number(context, _winMessage, &number, 2) )
+    {
+        goto done_out;
+    }
+    winMessage = (UINT)number;
+
+    if ( argumentOmitted(3) )
+    {
+        wmFilter = 0xFFFFFFFF;
+    }
+    else
+    {
+        if ( ! rxStr2Number(context, _wmFilter, &number, 3) )
+        {
+            goto done_out;
+        }
+        wmFilter = (UINT)number;
+    }
+
+    WPARAM    wParam;
+    ULONG_PTR wpFilter;
+
+    if ( ! convert2PointerSize(context, wp, &number, 4) )
+    {
+        goto done_out;
+    }
+    wParam = (WPARAM)number;
+
+    if ( argumentOmitted(5) )
+    {
+        wpFilter = 0;
+    }
+    else
+    {
+        if ( ! rxStr2Number(context, _wpFilter, &number, 5) )
+        {
+            goto done_out;
+        }
+        wpFilter = (number == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)number);
+    }
+
+    LPARAM    lParam;
+    ULONG_PTR lpFilter;
+
+    if ( ! convert2PointerSize(context, lp, &number, 6) )
+    {
+        goto done_out;
+    }
+    lParam = (WPARAM)number;
+
+    if ( argumentOmitted(7) )
+    {
+        lpFilter = 0;
+    }
+    else
+    {
+        if ( ! rxStr2Number(context, _lpFilter, &number, 8) )
+        {
+            goto done_out;
+        }
+        lpFilter = (number == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)number);
+    }
+
+    result = ! AddTheMessage(dlgAdm, winMessage, wmFilter, wParam, wpFilter, lParam, lpFilter, methodName, tag);
+
+done_out:
+    return result;
+}
+
+/** PlainBaseDialog::getTextSizeDlg()
+ *
+ *  Gets the size (width and height) in dialog units for any given string, for
+ *  the font specified.
+ *
+ *  @param  text         The string whose size is needed.
+ *
+ *  @param  fontName     Optional. If specified, use this font to calculate the
+ *                       size.
+ *
+ *  @param  fontSize     Optional. If specified, use this font size with
+ *                       fontName to calculate the size.  The default if omitted
+ *                       is 8.  This arg is ignored if fontName is omitted.
+ *
+ *  @param  hwndFontSrc  Optional. Use this window's font to calculate the size.
+ *                       This arg is always ignored if fontName is specified.
+ *
+ */
+RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING, fontName,
+            OPTIONAL_uint32_t, fontSize, OPTIONAL_POINTERSTRING, hwndFontSrc, OSELF, self)
+{
+    HWND hwndSrc = NULL;
+    if ( argumentExists(2) )
+    {
+        if ( argumentOmitted(3) )
+        {
+            fontSize = DEFAULT_FONTSIZE;
+        }
+    }
+    else if ( argumentExists(4) )
+    {
+        if ( hwndFontSrc == NULL )
+        {
+            nullObjectException(context, "window handle", 4);
+            goto error_out;
+        }
+        hwndSrc = (HWND)hwndFontSrc;
+    }
+    return getTextSize(context, text, fontName, fontSize, hwndSrc, self);
+
+error_out:
+    return NULLOBJECT;
 }
 
 

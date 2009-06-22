@@ -59,6 +59,10 @@ COMMON_SOURCEF = $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodMenu.obj $(OR_OUTDIR
                  $(OR_OUTDIR)\oovmsg.obj $(OR_OUTDIR)\oovother.obj $(OR_OUTDIR)\oovscrll.obj $(OR_OUTDIR)\oovtext.obj \
                  $(OR_OUTDIR)\oovuser.obj $(OR_OUTDIR)\ooDialog.obj
 
+# All Source files that include APICommon.h
+COMMON_SOURCEF = $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodMenu.obj $(OR_OUTDIR)\oovother.obj \
+                 $(OR_OUTDIR)\ooDialog.obj
+
 .c{$(OR_OUTDIR)}.obj:
     $(C) $(OPTIONS)  /DINCL_32  -c $(@B).c /Fo$(OR_OUTDIR)\$(@B).obj
 
