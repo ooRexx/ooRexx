@@ -212,6 +212,8 @@ bool DataQueue::pullData(ServerQueueManager *manager, ServiceMessage &message)
         // the message will delete the queue data once it has been sent
         // back to the client.
         message.setMessageData((void *)item->elementData, item->size);
+        // this data needs to be freed once the result is sent back
+        message.retainMessageData = false;
         // we've taken the data from the item, so clear it out before we delete.
         item->clear();
         // we're done with this, let it go.

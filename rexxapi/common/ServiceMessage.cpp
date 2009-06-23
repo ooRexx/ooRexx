@@ -166,6 +166,9 @@ void ServiceMessage::readResult(SysClientStream &pipe)
         required -= actual;
         offset += actual;
     }
+    // the server sets this value to what is required.  This can confuse things on this end, so
+    // automatically set this on so we don't double free the memory.
+    retainMessageData = true;
 
     // handle any errors that the server side might have raised.
     raiseServerError();
