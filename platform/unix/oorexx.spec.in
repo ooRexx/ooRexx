@@ -307,7 +307,7 @@ if [ -d /etc/rc.d/init.d ]; then
    rm /etc/rc.d/init.d/rxapid
 else
    # Suse
-   /etc/rc.d//rxapid stop
+   /etc/rc.d/rxapid stop
    rm /etc/rc.d/rc3.d/S89rxapid
    rm /etc/rc.d/rc5.d/S89rxapid
    rm /etc/rc.d/rxapid
