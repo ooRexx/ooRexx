@@ -988,6 +988,7 @@ am_config_clean-local:
 	rm -fr $(PACKAGE)-*.tar.gz
 	rm -fr $(PACKAGE)-*.zip
 	rm -fr $(top_srcdir)/rpm
+	rm -fr $(top_srcdir)/debian
 	rm -f $(top_srcdir)/*.cls
 
 install-exec-local:

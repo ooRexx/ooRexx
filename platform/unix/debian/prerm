@@ -74,24 +74,9 @@ rm -f /usr/include/oorexxerrors.h
 rm -f /usr/bin/rexxtry.rex
 rm -rf /usr/share/ooRexx
 
-if [ -d /etc/rc.d/init.d ]; then
-   # Red Hat
-   /etc/rc.d/init.d/rxapid stop
-   rm /etc/rc.d/rc3.d/S89rxapid
-   rm /etc/rc.d/rc5.d/S89rxapid
-   rm /etc/rc.d/init.d/rxapid
-elif [ -d /etc/init.d ]; then
-   # Debian
-   if [ -e /etc/init.d/rxapid ]; then
-      /etc/init.d/rxapid stop
-   fi
-   rm -f /etc/init.d/rc3.d/S89rxapid
-   rm -f /etc/init.d/rc5.d/S89rxapid
-   rm -f /etc/init.d/rxapid
-else
-   # This does work for SuSE, but I think the Debian above would also work
-   /etc/rc.d/rxapid stop
-   rm /etc/rc.d/rc3.d/S89rxapid
-   rm /etc/rc.d/rc5.d/S89rxapid
-   rm /etc/rc.d/rxapid
+# Debian specific removal of rxapid
+if [ -e /etc/init.d/rxapid ]; then
+   /etc/init.d/rxapid stop
 fi
+rm -f /etc/init.d/rxapid
+update-rc.d rxapid remove

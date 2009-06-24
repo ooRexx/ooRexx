@@ -102,26 +102,9 @@ if [ -d /opt/ooRexx ]; then
    ln -sf ${orx_prefix}/lib/ooRexx/librexxapi.so.${orx_libversion}  /usr/lib/librexxapi.so.2
 fi
 
-# Not sure which directory structure debian uses, but hopefully it matches one or the other.
-if [ -d /etc/rc.d/init.d ]; then
-   # Red Hat
-   cp ${orx_prefix}/bin/rxapid       /etc/rc.d/init.d
-   ln -sf /etc/rc.d/init.d/rxapid    /etc/rc.d/rc3.d/S89rxapid
-   ln -sf /etc/rc.d/init.d/rxapid    /etc/rc.d/rc5.d/S89rxapid
-   ldconfig
-   /etc/rc.d/init.d/rxapid start
-elif [ -d /etc/init.d ]; then
-   # Debian
-   cp ${orx_prefix}/bin/rxapid       /etc/init.d
-   ln -sf /etc/init.d/rxapid         /etc/rc3.d/S89rxapid
-   ln -sf /etc/init.d/rxapid         /etc/rc5.d/S89rxapid
-   ldconfig
-   /etc/init.d/rxapid start
-else
-   # This does work on SuSE, I think the above Debain will also work
-   cp ${orx_prefix}/bin/rxapid       /etc/rc.d
-   ln -sf /etc/rc.d/rxapid           /etc/rc.d/rc3.d/S89rxapid
-   ln -sf /etc/rc.d/rxapid           /etc/rc.d/rc5.d/S89rxapid
-   ldconfig
-   /etc/rc.d/rxapid start
-fi
+# Debian specific set up for rxapid
+cp ${orx_prefix}/bin/rxapid       /etc/init.d
+update-rc.d rxapid multiuser 89
+ldconfig
+/etc/init.d/rxapid start
+
