@@ -50,8 +50,9 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <netdb.h>
-#ifdef AIX
-#include <strings.h>
+
+#if defined( HAVE_STRINGS_H )
+# include <strings.h>
 #endif
 #include <errno.h>
 #include "SysCSStream.hpp"

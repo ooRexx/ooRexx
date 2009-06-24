@@ -57,6 +57,10 @@
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
+
+#if defined( HAVE_SYS_FILIO_H )
+# include <sys/filio.h>
+#endif
 #include "SysFile.hpp"
 
 // This is all the static stuff
