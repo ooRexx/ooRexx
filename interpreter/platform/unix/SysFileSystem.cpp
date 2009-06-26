@@ -412,20 +412,10 @@ bool SysFileSystem::hasExtension(const char *name)
  */
 bool SysFileSystem::hasDirectory(const char *name)
 {
-    const char *endPtr = name + strlen(name) - 1;
-
-    // scan backwards looking for a directory delimiter.  This name should
-    // be fully qualified, so we don't have to deal with drive letters
-    while (name < endPtr)
-    {
-        // find the first directory element?
-        if (*endPtr == '/')
-        {
-            return true;         // found a directory delimiter
-        }
-        endPtr--;
-    }
-    return false;          // no directory
+    // hasDirectory() means we have enough absolute directory 
+    // information at the beginning to bypass performing path searches. 
+    // We really only need to look at the first character. 
+    return name[0] == '~' || name[0] == '/' || name[0] == '.'; 
 }
 
 
