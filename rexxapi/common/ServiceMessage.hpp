@@ -367,6 +367,12 @@ public:
         freeMessageData();    // make sure any existing data is cleared.
         messageData = data;
         messageDataLength = length;
+        // make sure we only set a pointer if this is non-zero, else
+        // we end up transmitting a stale pointer to the other side of the connection.
+        if (length == 0)
+        {
+            messageData = NULL;
+        }
         // this is not freeable data
         retainMessageData = true;
     }
