@@ -208,13 +208,13 @@ void CallRoutineDispatcher::run()
  */
 void CallProgramDispatcher::run()
 {
-    RexxString *name = new_string(program);
+    RexxString *targetName = new_string(program);
     /* go resolve the name               */
-    name = activity->resolveProgramName(name, OREF_NULL, OREF_NULL);
+    RexxString *name = activity->resolveProgramName(targetName, OREF_NULL, OREF_NULL);
     if (name == OREF_NULL)                /* not found?                        */
     {
         /* got an error here                 */
-        reportException(Error_Program_unreadable_notfound, name);
+        reportException(Error_Program_unreadable_notfound, targetName);
     }
     ProtectedObject p(name);
     // create a routine from this file
