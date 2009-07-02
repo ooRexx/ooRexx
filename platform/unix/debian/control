@@ -9,6 +9,9 @@ Package: oorexx
 Architecture: any
 Depends: ${shlibs:Depends}
 Description:  Open Object Rexx (ooRexx)
+ * Note: Installing this package requires the complete removal of any previous ooRexx package. Please purge any
+ existing ooRexx package before installation of this package.
+ .
  ooRexx is an Open Source project managed by Rexx Language Association (RexxLA) providing a free implementation of Object Rexx.
  ooRexx is distributed under Common Public License (CPL) v1.0.
  Object Rexx is an enhancement of classic Rexx; a powerful, full-featured programming language which has a human-oriented syntax.
