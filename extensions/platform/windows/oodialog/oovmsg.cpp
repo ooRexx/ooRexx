@@ -450,20 +450,28 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
 }
 
 
+/**
+ *
+ *
+ *
+ * @param aDlg
+ * @param winMsg
+ * @param wmFilter
+ * @param wParam
+ * @param wpFilter
+ * @param lParam
+ * @param lpFilter
+ * @param prog
+ * @param ulTag
+ *
+ * @return BOOL
+ *
+ * @remarks  Caller must ensure that 'prog' is not an empty string and that
+ *           winMsg, wParam, lParam are not all 0.
+ */
 BOOL AddTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam, ULONG_PTR wpFilter,
                    LPARAM lParam, ULONG_PTR lpFilter, CSTRING prog, ULONG ulTag)
 {
-    size_t len = strlen(prog);
-
-    if ( strlen(prog) == 0 )
-    {
-        return FALSE;
-    }
-    if ( ! (winMsg | wParam | lParam) )
-    {
-        MessageBox(0, "Message passed is invalid", "Error", MB_OK | MB_ICONHAND);
-        return FALSE;
-    }
     if ( ! aDlg->MsgTab )
     {
         aDlg->MsgTab = (MESSAGETABLEENTRY *)LocalAlloc(LPTR, sizeof(MESSAGETABLEENTRY) * MAX_MT_ENTRIES);
@@ -477,7 +485,7 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam
 
     if ( aDlg->MT_size < MAX_MT_ENTRIES )
     {
-        aDlg->MsgTab[aDlg->MT_size].rexxProgram = (PCHAR)LocalAlloc(LMEM_FIXED, len + 1);
+        aDlg->MsgTab[aDlg->MT_size].rexxProgram = (PCHAR)LocalAlloc(LMEM_FIXED, strlen(prog) + 1);
         if ( aDlg->MsgTab[aDlg->MT_size].rexxProgram == NULL )
         {
             return FALSE;
@@ -499,7 +507,7 @@ BOOL AddTheMessage(DIALOGADMIN * aDlg, UINT winMsg, UINT wmFilter, WPARAM wParam
     {
         MessageBox(0, "Messages have exceeded the maximum number of allocated\n"
                    "table entries. No message can be added.\n",
-                   "Error",MB_OK | MB_ICONHAND);
+                   "Error", MB_OK | MB_ICONHAND);
     }
     return FALSE;
 }

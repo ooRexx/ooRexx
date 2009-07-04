@@ -46,93 +46,87 @@
 ::class 'MessageExtensions' Mixinclass Object public
 
 
-::method ConnectCommonNotify
-   use arg id, type, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectCommonNotify
+   use strict arg id, type, msgToRise = ""
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
-       when type = "OUTOFMEMORY" then lp =-1
-       when type = "CLICK" then lp =-2
-       when type = "DBLCLK" then lp =-3
-       when type = "ENTER" then lp =-4
-       when type = "RCLICK" then lp =-5
-       when type = "RDBLCLK" then lp =-6
-       when type = "GOTFOCUS" then lp =-7
-       when type = "LOSTFOCUS" then lp =-8
+       when type = "OUTOFMEMORY" then lp = -1
+       when type = "CLICK"       then lp = -2
+       when type = "DBLCLK"      then lp = -3
+       when type = "ENTER"       then lp = -4
+       when type = "RCLICK"      then lp = -5
+       when type = "RDBLCLK"     then lp = -6
+       when type = "GOTFOCUS"    then lp = -7
+       when type = "LOSTFOCUS"   then lp = -8
        otherwise return -1
    end
-   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
+   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
 
-::method ConnectTreeNotify
-   use arg id, type, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectTreeNotify
+   use strict arg id, type, msgToRise = ""
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    notifySize = 0
    type = type~translate
    select
        when type = "SELCHANGING" then lp = -401
-       when type = "SELCHANGED" then lp = -402
-       when type = "EXPANDING" then lp = -405
-       when type = "EXPANDED" then lp = -406
-       when type = "BEGINDRAG" then lp = -407
-       when type = "BEGINRDRAG" then lp = -408
-       when type = "DELETE" then lp = -409
-       when type = "BEGINEDIT" then lp = -410
-       when type = "ENDEDIT" then lp = -411
+       when type = "SELCHANGED"  then lp = -402
+       when type = "EXPANDING"   then lp = -405
+       when type = "EXPANDED"    then lp = -406
+       when type = "BEGINDRAG"   then lp = -407
+       when type = "BEGINRDRAG"  then lp = -408
+       when type = "DELETE"      then lp = -409
+       when type = "BEGINEDIT"   then lp = -410
+       when type = "ENDEDIT"     then lp = -411
        when type = "DEFAULTEDIT" then do
-            self~AddUserMsg("DefTreeEditStarter", 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", -410, "0xFFFFFFFF", notifySize)
+            self~addUserMsg("DefTreeEditStarter", 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", -410, "0xFFFFFFFF", notifySize)
             lp = -411
             msgToRise = "DefTreeEditHandler"
        end
        when type = "KEYDOWN" then lp = -412
        otherwise return -1
    end
-   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", notifySize)
+   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", notifySize)
 
 
-::method ConnectListNotify
-   use arg id, type, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectListNotify
+   use strict arg id, type, msgToRise = ""
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
-       when type = "CHANGING"   then lp = -100
-       when type = "CHANGED"    then lp = -101
-       when type = "INSERTED"   then lp = -102
-       when type = "DELETE"     then lp = -103
-       when type = "DELETEALL"  then lp = -104
-       when type = "BEGINEDIT"  then lp = -105
-       when type = "ENDEDIT"    then lp = -106
+       when type = "CHANGING"    then lp = -100
+       when type = "CHANGED"     then lp = -101
+       when type = "INSERTED"    then lp = -102
+       when type = "DELETE"      then lp = -103
+       when type = "DELETEALL"   then lp = -104
+       when type = "BEGINEDIT"   then lp = -105
+       when type = "ENDEDIT"     then lp = -106
        when type = "DEFAULTEDIT" then do
-            self~AddUserMsg("DefListEditStarter", 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", -105, "0xFFFFFFFF", notifySize)
+            self~addUserMsg("DefListEditStarter", 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", -105, "0xFFFFFFFF", notifySize)
             lp = -106
             msgToRise = "DefListEditHandler"
        end
        when type = "COLUMNCLICK" then lp = -108
-       when type = "BEGINDRAG"  then lp = -109
-       when type = "BEGINRDRAG" then lp = -111
-       when type = "ACTIVATE"   then lp = -114
-       when type = "KEYDOWN" then lp = -155
+       when type = "BEGINDRAG"   then lp = -109
+       when type = "BEGINRDRAG"  then lp = -111
+       when type = "ACTIVATE"    then lp = -114
+       when type = "KEYDOWN"     then lp = -155
        otherwise return -1
    end
-   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
+   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
 
 
- -- In the Windows API, when a list-view control sends a notification messsage,
- -- there is more information delievered than there was when ooDialog was first
- -- designed.  Use the connectListViewNotify method for method connections that
- -- can take advantage of this information.  A tag is added to the message to
- -- signal that the extra information should be processed.  The tag is an
- -- unsigned long made up of flags which are defined in ooDialog.h
 ::method connectListViewNotify
-   use arg id, type, msgToRise
-   if id~DataType("W") = 0 then id = self~ResolveSymbolicId(id)
+   use strict arg id, type, msgToRise = ""
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
       when type = "CLICK" then do
@@ -157,82 +151,82 @@
       end
       otherwise return -1
    end
-   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", tag)
+   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF", tag)
 
 
-::method ConnectButtonNotify
-   use arg id, type, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectButtonNotify
+   use strict arg id, type, msgToRise = ""
+   if id~dataType("W") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
-       when type = "CLICKED"        then lp = 0
-       when type = "PAINT"          then lp = 1
-       when type = "HILITE"         then lp = 2
-       when type = "UNHILITE"       then lp = 3
-       when type = "DISABLE"        then lp = 4
-       when type = "DBLCLK"         then lp = 5
-       when type = "GOTFOCUS"       then lp = 6
-       when type = "LOSTFOCUS"      then lp = 7
+       when type = "CLICKED"   then lp = 0
+       when type = "PAINT"     then lp = 1
+       when type = "HILITE"    then lp = 2
+       when type = "UNHILITE"  then lp = 3
+       when type = "DISABLE"   then lp = 4
+       when type = "DBLCLK"    then lp = 5
+       when type = "GOTFOCUS"  then lp = 6
+       when type = "LOSTFOCUS" then lp = 7
 
-       when type = "HOTITEM" then do
+       when type = "HOTITEM"   then do
          -- Sends WM_NOTIFY and notify code is: BCN_HOTITEMCHANGE=0xfffffb1f (decimal=-1249) TAG_BUTTON = 0x00000004
-         return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", 0xFFFFFB1F, "0xFFFFFFFF", 4)
+         return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", 0xFFFFFB1F, "0xFFFFFFFF", 4)
        end
 
        otherwise return -1
    end
-   return self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* buttons sends WM_COMMAND when BS_NOTIFY */
+   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0) /* buttons sends WM_COMMAND when BS_NOTIFY */
 
 
-::method ConnectEditNotify
-   use arg id, type, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectEditNotify
+   use arg id, type, msgToRise = ""
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
-       when type = "GOTFOCUS"   then lp = "100"
-       when type = "LOSTFOCUS"  then lp = "200"
-       when type = "CHANGE"     then lp = "300"
-       when type = "UPDATE"     then lp = "400"
-       when type = "ERRSPACE"   then lp = "500"
-       when type = "MAXTEXT "   then lp = "501"
-       when type = "HSCROLL"    then lp = "601"
-       when type = "VSCROLL"    then lp = "602"
+       when type = "GOTFOCUS"  then lp = "100"
+       when type = "LOSTFOCUS" then lp = "200"
+       when type = "CHANGE"    then lp = "300"
+       when type = "UPDATE"    then lp = "400"
+       when type = "ERRSPACE"  then lp = "500"
+       when type = "MAXTEXT "  then lp = "501"
+       when type = "HSCROLL"   then lp = "601"
+       when type = "VSCROLL"   then lp = "602"
        otherwise return -1
    end
-   return self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp~x2d * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
+   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp~x2d * x2d("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
 
 
 
-::method ConnectListBoxNotify
-   use arg id, type, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectListBoxNotify
+   use strict arg id, type, msgToRise = ""
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
-       when type = "SELCHANGE"  then lp = 1
-       when type = "DBLCLK"     then lp = 2
-       when type = "SELCANCEL"  then lp = 3
-       when type = "GOTFOCUS"   then lp = 4
-       when type = "LOSTFOCUS"  then lp = 5
-       when type = "ERRSPACE"   then lp = -2
-       when type = "KEYDOWN" then do   /* can first be called from InitDialog */
-           return self~AddUserMsg(msgToRise, 0x0000002E, "0xFFFFFFFF", 0, 0, self~GetItem(id), "0xFFFFFFFF") /* WM_VKEYTOITEM */
+       when type = "SELCHANGE" then lp = 1
+       when type = "DBLCLK"    then lp = 2
+       when type = "SELCANCEL" then lp = 3
+       when type = "GOTFOCUS"  then lp = 4
+       when type = "LOSTFOCUS" then lp = 5
+       when type = "ERRSPACE"  then lp = -2
+       when type = "KEYDOWN"   then do   /* can first be called from InitDialog */
+           return self~addUserMsg(msgToRise, 0x0000002E, "0xFFFFFFFF", 0, 0, self~getItem(id), "0xFFFFFFFF") /* WM_VKEYTOITEM */
        end
        otherwise return -1
    end
-   return self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
+   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
 
 
-::method ConnectComboBoxNotify
-   use arg id, type, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectComboBoxNotify
+   use strict arg id, type, msgToRise = ""
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
        when type = "SELCHANGE"    then lp = 1
@@ -248,40 +242,40 @@
        when type = "ERRSPACE"     then lp = -1
        otherwise return -1
    end
-   return self~AddUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * X2D("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
+   return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
 
 
-::method ConnectScrollBarNotify         /* can only be called in InitDialog */
-   use arg id, type, msgToRise, category
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectScrollBarNotify         /* can only be called in InitDialog */
+   use strict arg id, type, msgToRise = "", category = 1
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(4,'o') = 1 then hnd = self~GetItem(id)
-   else hnd = self~GetItem(id, category)
+   if arg(4,'O') then hnd = self~getItem(id)
+   else hnd = self~getItem(id, category)
    if hnd = 0 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
-       when type = "UP"    then wp = 0
-       when type = "DOWN"    then wp = 1
+       when type = "UP"        then wp = 0
+       when type = "DOWN"      then wp = 1
        when type = "PAGEUP"    then wp = 2
-       when type = "PAGEDOWN"    then wp = 3
-       when type = "POSITION"    then wp = 4
-       when type = "DRAG"    then wp = 5
-       when type = "TOP"    then wp = 6
+       when type = "PAGEDOWN"  then wp = 3
+       when type = "POSITION"  then wp = 4
+       when type = "DRAG"      then wp = 5
+       when type = "TOP"       then wp = 6
        when type = "BOTTOM"    then wp = 7
-       when type = "ENDSCROLL"    then wp = 8
+       when type = "ENDSCROLL" then wp = 8
        otherwise return -1
    end
-   ret = self~AddUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_HSCROLL */
+   ret = self~addUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_HSCROLL */
    if ret <> 0 then return ret
-   return self~AddUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_VSCROLL */
+   return self~addUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hnd, "0xFFFFFFFF") /* WM_VSCROLL */
 
 
-::method ConnectTabNotify
-   use arg id, type, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectTabNotify
+   use strict arg id, type, msgToRise = ""
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
        when type = "KEYDOWN"     then lp = -550
@@ -289,17 +283,17 @@
        when type = "SELCHANGING" then lp = -552
        otherwise return -1
    end
-   return self~AddUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
+   return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
 
 
-::method ConnectSliderNotify   /* can only be called in InitDialog */
-   use arg id, type, msgToRise, category
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectSliderNotify   /* can only be called in InitDialog */
+   use strict arg id, type, msgToRise = "", category = 1
+   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(4,'o') = 1 then hwnd = self~GetItem(id)
-   else hwnd = self~GetItem(id, category)
+   if arg(4,'O') then hwnd = self~getItem(id)
+   else hwnd = self~getItem(id, category)
    if hwnd = 0 then return -1
-   if Arg(3,'o') = 1 then msgToRise = "On" || type
+   if msgToRise == "" then msgToRise = "on" || type
    type = type~translate
    select
        when type = "UP"       then wp =0
@@ -313,16 +307,16 @@
        when type = "ENDTRACK" then wp =8
        otherwise return -1
    end
-   ret = self~AddUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_HSCROLL */
+   ret = self~addUserMsg(msgToRise, 0x00000114, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_HSCROLL */
    if ret <> 0 then return ret
-   return self~AddUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
+   return self~addUserMsg(msgToRise, 0x00000115, "0xFFFFFFFF", wp, "0x0000FFFF", hwnd, "0xFFFFFFFF")  /* WM_VSCROLL */
 
 
 ::method connectStaticNotify
    use strict arg id, type, msgToRaise = ""
    if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
    if id = -1 then return -1
-   if msgToRaise == "" then msgToRaise = "On" || type
+   if msgToRaise == "" then msgToRaise = "on" || type
    type = type~translate
    select
        when type = "CLICK"   then lp = 0
@@ -331,7 +325,7 @@
        when type = "DISABLE" then lp = 3
        otherwise return -1
    end
-   return self~AddUserMsg(msgToRaise, 0x00000111, "0xFFFFFFFF", lp~x2d * X2D("10000") + id, "0xFFFFFFFF", 0, 0)
+   return self~addUserMsg(msgToRaise, 0x00000111, "0xFFFFFFFF", lp~x2d * x2d("10000") + id, "0xFFFFFFFF", 0, 0)
 
 
 ::method DefTreeEditStarter

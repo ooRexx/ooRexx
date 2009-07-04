@@ -920,17 +920,37 @@ bool convert2PointerSize(RexxMethodContext *c, RexxObjectPtr obj, uint64_t *numb
 
 /** PlainBaseDialog::addUserMessage()
  *
- *  Adds a message to the message table.  This method is what implements the
- *  connection of a Windows event to a dialog method.
+ *  Adds a message to the message table.
  *
+ *  Each entry in the message table connects a Windows event message to a method
+ *  in a Rexx dialog.  The fields for the entry consist of the Windows message,
+ *  the WPARAM and LPARAM for the message, a filter for the message and its
+ *  parameters, and the method name. Using the proper filters for the Windows
+ *  message and its parameters allows the mapping of a very specific Windows
+ *  event to the named method.
  *
- *  @note  In the past this method returned 0 for okay and 1 for error, even
- *         though the underlying implementation, AddTheMessage() returned true /
- *         false for success / failure.  Although the return was never
- *         documented.  So, I guess maintain the original return code, although
- *         true / false make more sense.
+ *  @param  methodName   [required]  The method name to be connected.
+ *  @param  wm  [required]  The Windows event message
+ *  @param  _wmFilter    [optional]  Filter applied to the Windows message.  If
+ *                       omitted the filter is 0xFFFFFFFF.
+ *  @param  wp           [optional]  WPARAM for the message
+ *  @param  _wpFilter    [optional]  Filter applied to the WPARAM.  If omitted a
+ *                       filter of all hex Fs is applied
+ *  @param  lp           [optional]  LPARAM for the message.
+ *  @param  _lpFilter    [optional]  Filter applied to LPARAM.  If omitted the
+ *                       filter is all hex Fs.
+ *  @param  tag          [optional]  A tag that allows a further differentiation
+ *                       between messages.  This is an internal mechanism not to
+ *                       be documented publicly.
+ *
+ *  @return  0 on success, 1 on failure.  One possible source of error is the
+ *           message table being full.
+ *
+ *  @remarks  Although it would make more sense to return true on succes and
+ *            false on failure, there is too much old code that relies on 0 for
+ *            success and 1 for error.
  */
-RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, _winMessage, OPTIONAL_CSTRING, _wmFilter,
+RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIONAL_CSTRING, _wmFilter,
             OPTIONAL_RexxObjectPtr, wp, OPTIONAL_CSTRING, _wpFilter, OPTIONAL_RexxObjectPtr, lp, OPTIONAL_CSTRING, _lpFilter,
             OPTIONAL_uint32_t, tag, OSELF, self)
 {
@@ -944,6 +964,7 @@ RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, _winM
     }
     if ( *methodName == '\0' )
     {
+        c->RaiseException1(Rexx_Error_Invalid_argument_null, TheOneObj);
         goto done_out;
     }
 
@@ -951,7 +972,7 @@ RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, _winM
 
     UINT winMessage;
     UINT wmFilter;
-    if ( ! rxStr2Number(context, _winMessage, &number, 2) )
+    if ( ! rxStr2Number(context, wm, &number, 2) )
     {
         goto done_out;
     }
@@ -1014,7 +1035,17 @@ RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, _winM
         lpFilter = (number == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)number);
     }
 
-    result = ! AddTheMessage(dlgAdm, winMessage, wmFilter, wParam, wpFilter, lParam, lpFilter, methodName, tag);
+    if ( (winMessage | wParam | lParam) == 0 )
+    {
+        userDefinedMsgException(context, "The wm, wp, and lp arguements can not all be 0" );
+    }
+    else
+    {
+        if ( AddTheMessage(dlgAdm, winMessage, wmFilter, wParam, wpFilter, lParam, lpFilter, methodName, tag) )
+        {
+            result = 0;
+        }
+    }
 
 done_out:
     return result;

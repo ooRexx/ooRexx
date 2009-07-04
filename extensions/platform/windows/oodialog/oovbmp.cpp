@@ -648,12 +648,12 @@ size_t RexxEntry BmpButton(const char *funcname, size_t argc, CONSTRXSTRING *arg
              SetSysPalColors(dlgAdm->ColorPalette);
           }
 
-          if (!strlen(argv[2].strptr))
+          if ( strlen(argv[2].strptr) == 0 )
           {
              dlgAdm->BT_size ++;
              RETC(0)
-          } else
-          if (AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, atoi(buffer[0]), 0x0000FFFF, 0, 0, argv[2].strptr, 0))
+          }
+          else if ( AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, atoi(buffer[0]), 0x0000FFFF, 0, 0, argv[2].strptr, 0) )
           {
              dlgAdm->BT_size ++;
              RETC(0)

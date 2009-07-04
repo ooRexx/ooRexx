@@ -257,8 +257,10 @@
    opts = self~InternGetRCStyle(style, "BTN")
    self~DialogItemCount = self~DialogItemCount + 1
    self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, w, h, name, opts)
-   if lOpts~wordpos("CONNECTBUTTONS") > 0 then
-      self~ConnectButton(id, name~space(0)~changestr('&','')~changestr(':',''))
+   if lOpts~wordpos("CONNECTBUTTONS") > 0 then do
+      methName = name~space(0)~changestr('&','')~changestr(':','')~strip
+      if methName \== "" then self~ConnectButton(id, methName)
+   end
 
 
 ::method InternAddRC_RBCB
@@ -612,14 +614,16 @@
    /* argument 'options' can be one of: */
 
 ::method addButton
-   use arg id, x, y, cx, cy, text = "", msgToRise, options
+   use strict arg id, x, y, cx, cy, text = "", msgToRise = "", options = ""
    id = self~itemAdd(id)
    if id < 0 then return id
    options = self~getDefaultOpts(options)
    self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, cx, cy, text, options)
-   if Arg(7,"o") = 0 then return self~connectButton(id, msgToRise~space(0))
-   else return 0
+   if arg(7, 'O') then return 0
 
+   methName = msgToRise~space(0)
+   if methName \== '' then return self~connectButton(id, methName)
+   else return 1
 
 ::method addGroupBox
    use arg x, y, cx, cy, text = "", opts, id
@@ -1088,9 +1092,9 @@
    fileName = fileName~strip~strip('B', '"')
    return UsrAddResource(self~Adm, "ICO", id, fileName)
 
-::method GetDefaultOpts protected
-   use arg opts
-   if opts = .NIL | opts = "OPTS" | opts = "OPTIONS" then return ""
+::method getDefaultOpts protected
+   use strict arg opts
+   if opts == "" | opts == .NIL | opts == "OPTS" | opts == "OPTIONS" then return ""
    else return opts~translate
 
 

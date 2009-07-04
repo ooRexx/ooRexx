@@ -329,59 +329,58 @@
 /** PlainBaseDialog::init()  Performs the necessary intialization, including the
  * set up of the dialog management block, for all dialogs.
  */
-::method Init protected
-   expose Library Resource DlgData.
-   use arg Library, Resource, DlgData., includeFile
+::method init protected
+   expose library resource dlgData.
+   use arg library, resource, dlgData., includeFile
 
-   self~Adm = 0
-   self~ParentDlg = .Nil
+   self~adm = 0
+   self~parentDlg = .nil
 
-   /* Initialize the WindowBase */
+   -- Initialize the WindowBase
    self~initCode = self~init_WindowBase
 
-   /* prepare the dialog management for a new dialog */
-   self~Adm = HandleDialogAdmin()  /* allocate a new dialog table */
-   if self~Adm = 0 then do
-      self~Deinstall
-      self~InitCode = 1
+   -- Allocate the dialog management block for a new dialog
+   self~adm = HandleDialogAdmin()
+   if self~adm = 0 then do
+      self~deinstall
+      self~initCode = 1
       return 1
    end
 
-   /* call methods to get dialog settings */
-   self~InitAutoDetection
-   /* create array storing connection between ids and attributes */
-   self~DataConnection = .array~new(50)
-   /* there was no stem argument so don't use stems */
-   if Arg(3, 'o') = 1 then self~UseStem = 0; else self~UseStem = 1
+   -- call methods to get dialog settings
+   self~initAutoDetection
+   -- create array storing connection between ids and attributese */
+   self~dataConnection = .array~new(50)
+   -- if there is no stem argument the don't use stems
+   if arg(3, 'O') then self~useStem = 0; else self~useStem = 1
    self~finished = 0
-   self~AutomaticMethods = .queue~new    /* create a new queue */
-   self~AddUserMsg("OK", 0x00000111, 0xFFFFFFFF, 1, 0xFFFFFFFF, 0, 0)
-   self~AddUserMsg("Cancel", 0x00000111, 0xFFFFFFFF, 2, 0xFFFFFFFF, 0, 0)
-   self~AddUserMsg("Help", 0x00000111, 0xFFFFFFFF, 9, 0xFFFFFFFF, 0, 0)
-   self~ProcessingLoad = 0
-   self~DlgHandle = 0
-   self~ChildDialogs = .list~new
+   self~automaticMethods = .queue~new
+   self~addUserMsg("OK", 0x00000111, 0xFFFFFFFF, 1, 0xFFFFFFFF, 0, 0)
+   self~addUserMsg("Cancel", 0x00000111, 0xFFFFFFFF, 2, 0xFFFFFFFF, 0, 0)
+   self~addUserMsg("Help", 0x00000111, 0xFFFFFFFF, 9, 0xFFFFFFFF, 0, 0)
+   self~processingLoad = 0
+   self~dlgHandle = 0
+   self~childDialogs = .list~new
 
-   self~ConstDir = .directory~new
-   self~ConstDir["IDOK"] = 1
-   self~ConstDir["IDCANCEL"] = 2
-   self~ConstDir["IDHELP"] = 9
+   self~constDir = .directory~new
+   self~constDir["IDOK"] = 1
+   self~constDir["IDCANCEL"] = 2
+   self~constDir["IDHELP"] = 9
 
    -- Common in Microsoft compatible resource script files
-   self~ConstDir["IDC_STATIC"] = -1
+   self~constDir["IDC_STATIC"] = -1
 
    -- ooDialog supplied resources, defined in oodSymbols.h
-   self~ConstDir["IDI_DLG_OODIALOG"] = 11
-   self~ConstDir["IDI_DLG_APPICON"] = 12
-   self~ConstDir["IDI_DLG_APPICON2"] = 13
-   self~ConstDir["IDI_DLG_OOREXX"] = 14
-   self~ConstDir["IDI_DLG_DEFAULT"] = 12
+   self~constDir["IDI_DLG_OODIALOG"] = 11
+   self~constDir["IDI_DLG_APPICON"] = 12
+   self~constDir["IDI_DLG_APPICON2"] = 13
+   self~constDir["IDI_DLG_OOREXX"] = 14
+   self~constDir["IDI_DLG_DEFAULT"] = 12
 
    self~fontName = .PlainBaseDialog~getFontName
    self~fontSize = .PlainBaseDialog~getFontSize
 
-   if arg(4, 'E') then
-     self~ParseIncludeFile(includeFile)
+   if arg(4, 'E') then self~parseIncludeFile(includeFile)
 
    return 0
 
@@ -537,77 +536,55 @@
 
 
 -- Connect WM_HELP messages (F1) to a method.
-::method ConnectHelp
+::method connectHelp
    use strict arg msgToRise
    return self~addUserMsg(msgToRise, "0x00000053", "0xFFFFFFFF", 0, 0, 0, 0, 0x00000101)
 
-/* The following methods create a connection between a class method */
-/* and a dialog item (dialog control). The connected method will be */
-/* called whenever the dialog item will be activated (i.g. a push */
-/* button will be pushed) */
-
-   /* Connect a push button with a method */
-
-::method ConnectButton
-   use arg id, msgToRise
-   if Arg(2, 'o') = 1 then msgToRise = ""
-   if id~DataType("N") = 0 then do
-       if self~ProcessingLoad = 1 then msgToRise = id
-       id = self~ResolveSymbolicId(id)
-       if id = -1 then return -1
-   end
-   if id < 3 | id = 9 then return 0
-   return self~AddUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0xFFFFFFFF, 0, 0)
-
-
-   /* Connect any dialog control with a method */
-
-::method ConnectControl
-   use arg id, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectButton
+   use strict arg id, msgToRise
+   if \ id~dataType("N") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return self~AddUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0x0000FFFF, 0,0)
+   if id < 3 | id = 9 then return .true
+   return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0xFFFFFFFF, 0, 0)
 
-
-   /* Connect a list with a method */
-
-::method ConnectList
-   use arg id, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectControl
+   use strict arg id, msgToRise
+   if \ id~dataType("N") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return self~AddUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0001'||id~d2x(4), 0xFFFFFFFF, 0, 0)
+   return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0x0000FFFF, 0,0)
 
-   /* Connect a list left double-click with a method */
-
-::method ConnectListLeftDoubleClick
-   use arg id, msgToRise
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+::method connectList
+   use strict arg id, msgToRise
+   if \ id~dataType("N") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return self~AddUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0002'||id~d2x(4), 0xFFFFFFFF, 0, 0)
+   return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0001'||id~d2x(4), 0xFFFFFFFF, 0, 0)
 
+::method connectListLeftDoubleClick
+   use strict arg id, msgToRise
+   if \ id~dataType("N") then id = self~resolveSymbolicId(id)
+   if id = -1 then return -1
+   return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0002'||id~d2x(4), 0xFFFFFFFF, 0, 0)
 
-   /* Connect any Windows message with a class method */
+::method addUserMsg unguarded external "LIBRARY oodialog pbdlg_addUserMessage"
 
-::method AddUserMsg protected unguarded external "LIBRARY oodialog pbdlg_addUserMessage"
-
-::method ConnectFKeyPress unguarded
+::method connectFKeyPress unguarded
    use strict arg msgToRaise
    if \ msgToRaise~isA(.String) then return -1
    return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, "FKEYS", "NONE")
 
-::method ConnectKeyPress unguarded
+::method connectKeyPress unguarded
    use strict arg msgToRaise, keys, filter = ""
    if \ msgToRaise~isA(.String) | \ keys~isA(.String) | \ filter~isA(.String) then return -1
    if filter == "" then return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0))
    return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0), filter~translate)
 
-::method DisconnectKeyPress unguarded
+::method cisconnectKeyPress unguarded
    use arg msgToRaise
    if arg(1, 'O') then return WinAPI32Func("K", 'R', self~adm)
    if \ msgToRaise~isA(.String) then return -1
    return WinAPI32Func("K", 'R', self~adm, self~dlgHandle, msgToRaise~translate)
 
-::method HasKeyPressConnection unguarded
+::method hasKeyPressConnection unguarded
    use arg msgToRaise
    if arg(1, 'O') then ret = WinAPI32Func("K", 'Q', self~adm)
    else do

@@ -116,9 +116,9 @@
                           ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
 
 
-::method InitDialog protected
+::method initDialog protected
    /* this is to correct a redraw problem of a focused list view control that gets reactivated */
-   self~AddUserMsg(PropSheetActivated, "0x00000006", "0xFFFFFFFF")  /* WM_ACTIVATE */
+   self~addUserMsg(PropSheetActivated, "0x00000006", "0xFFFFFFFF")  /* WM_ACTIVATE */
 
    tc = self~GetTabControl(9001, 0)
    if tc \= .Nil then do
