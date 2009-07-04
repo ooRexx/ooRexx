@@ -123,11 +123,8 @@
    return retc
 
 
-::method Delete
-   use arg hkey, subkey
-   if arg(1,'o') = 1 then hkey = self~Current_Key
-   retc = WSRegistryKey("DELETE", hkey, subkey)
-   return retc
+::method deleteKey external "LIBRARY rxwinsys WSRegistry_delete"
+::method delete external "LIBRARY rxwinsys WSRegistry_delete"
 
 ::method SetValue
    use arg hkey, name, valu, atype

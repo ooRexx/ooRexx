@@ -276,10 +276,59 @@ BOOL IsRunningNT()
 }
 
 
+// TODO This is a function from oodCommon.cpp, need to put all this stuff together.
+POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
+{
+    CSTRING value = "";
+    if ( obj != NULLOBJECT )
+    {
+        RexxObjectPtr rxString = context->SendMessage0(obj, name);
+        if ( rxString != NULLOBJECT )
+        {
+            value = context->ObjectToStringValue(rxString);
+        }
+    }
+    POINTER p = NULL;
+    string2pointer(value, &p);
+    return p;
+}
+
+
+/** WindowsRegistry::delete() | WindowsRegistry::deleteKey()
+ *
+ *  Deletes a registry key.  Maps to both the delete() and the deleteKey()
+ *  methods.
+ *
+ *  delete() deletes a subkey and all its descendents (subkeys.)  deleteKey()
+ *  will only delete the subkey if it is empty, i.e. it contains no subkeys.
+ *
+ *  @param hkHandle    [optional] A handle to an open registry key. The key must
+ *                     have been opened with the DELETE access right.  If this
+ *                     argument is omitted then the CURRENT_KEY attribute is
+ *                     used.
+ *
+ *  @param subkeyName  The name of the subkey to be deleted.  The name is case
+ *                     insensitive.
+ *
+ *  @return O on success, otherwise the Windows system error code.
+ */
+RexxMethod3(uint32_t, WSRegistry_delete, OPTIONAL_POINTERSTRING, hkHandle, CSTRING, subKeyName, OSELF, self)
+{
+    HKEY hk = (HKEY)(argumentExists(1) ? hkHandle : rxGetPointerAttribute(context, self, "CURRENT_KEY"));
+
+    if ( strcmp(c->GetMessageName(), "DELETEKEY") == 0 )
+    {
+        return RegDeleteKey(hk, subKeyName);
+    }
+    else
+    {
+        return SHDeleteKey(hk, subKeyName);
+    }
+}
+
 size_t RexxEntry WSRegistryKey(const char *funcname, size_t argc, CONSTRXSTRING argv[], const char *qname, PRXSTRING retstr)
 {
     HKEY hk;
-    LONG rc;
 
     CHECKARG(2,5);
 
@@ -345,19 +394,6 @@ size_t RexxEntry WSRegistryKey(const char *funcname, size_t argc, CONSTRXSTRING 
         else
         {
             RETC(1);
-        }
-    }
-    else if ( strcmp(argv[0].strptr, "DELETE") == 0 )
-    {
-        GET_HKEY(argv[1].strptr, hk);
-
-        if ((rc = RegDeleteKey(hk, argv[2].strptr)) == ERROR_SUCCESS)
-        {
-            RETC(0);
-        }
-        else
-        {
-            RETVAL(rc);
         }
     }
     else if ( strcmp(argv[0].strptr, "QUERY") == 0 )
@@ -3912,6 +3948,8 @@ RexxRoutineEntry rxwinsys_functions[] =
 
 
 RexxMethodEntry rxwinsys_methods[] = {
+    REXX_METHOD(WSRegistry_delete,          WSRegistry_delete),
+
     REXX_METHOD(WSEventLog_test,            WSEventLog_test),
     REXX_METHOD(WSEventLog_init,            WSEventLog_init),
     REXX_METHOD(WSEventLog_uninit,          WSEventLog_uninit),
