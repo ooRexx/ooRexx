@@ -4265,75 +4265,108 @@ size_t RexxEntry SysQueryProcess(const char *name, size_t numargs, CONSTRXSTRING
   return INVALID_ROUTINE;              /* good completion            */
 }
 
-/**********************************************************************
-* Function:  SysShutDownSystem                                        *
-*                                                                     *
-* Syntax:    call SysShutDownSystem(<computer>,<message>,<timeout>,<appclose>,<reboot> *
-*                                                                     *
-* Params:    <computer> - name of the remote machine ('' = local)     *
-*            <message>  - message for dialog                          *
-*            <timeout>  - time to display message                     *
-*            <appclose> - no dialog "save unsaved data"               *
-*            <reboot>   - reboot the system                           *
-*                                                                     *
-* Return:    success (1) or failure (0) string                        *
-**********************************************************************/
-
-size_t RexxEntry SysShutDownSystem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+/** SysShutDownSystem()
+ *
+ *  Interface to the InitiateSystemShutdown() API on Windows.
+ *
+ *  @param  computer         The name of the computer to shut down.  If omitted
+ *                           or the empty string, the local machine is shut
+ *                           down.  Otherwise this is the name of a remote
+ *                           machine to shut down.
+ *  @param  message          If timout is not 0, a shut down dialog is displayed
+ *                           on the machine being shut down, naming the user who
+ *                           initiated the shut down, a timer counting down the
+ *                           seconds until the machine is shut down, and
+ *                           prompting the local user to log off. This parametr
+ *                           can be an additional message to add to the dialog
+ *                           box.  It can be ommitted if no additional message
+ *                           is desired.
+ *  @param  timeout          Number of seconds to display the shut down dialog.
+ *                           If this is ommitted or 0 no dialog is displayed.
+ *  @param  forceAppsClosed  If true applications with unsaved data are forcibly
+ *                           closed.  If false, the user is presented with a
+ *                           dialog telling the user to close the applcation(s).
+ *  @param  reboot           If true, the system is rebooted, if false the
+ *                           system is shut down.
+ *
+ *  @remarks Note that prior to 4.0.0, the defaults for all arguments were
+ *           exactly what the value of each parameter is if omitted.
+ *
+ *           machine         == NULL
+ *           message         == NULL
+ *           timeout         == 0
+ *           forceAppsClosed == false
+ *           reboot          == false
+ *
+ *           Because of this, there would be no need to check if any argument is
+ *           ommitted or not.  However, the consequences of having a 0 timeout
+ *           value are severe if the system has an application open with unsaved
+ *           data.  Therefore for 4.0.0 and on the default time out value is
+ *           changed to 30 (seconds.)
+ */
+RexxRoutine5(uint32_t, SysShutDownSystem, OPTIONAL_CSTRING, computer, OPTIONAL_CSTRING, message, OPTIONAL_uint32_t, timeout,
+             OPTIONAL_logical_t, forceAppsClosed, OPTIONAL_logical_t, reboot)
 {
-    const char  * machine = NULL;
-    const char  * message = NULL;
-    size_t timeout= 0;
-    LONG  rc = 0;
-    size_t forceClose = false;
-    size_t reboot = false;
+    uint32_t result = 0;
 
-    // More than 5 args is invalid.
-    if ( numargs>5 )
-    {
-        return INVALID_ROUTINE;
-    }
+    HANDLE hToken = NULL;
+    TOKEN_PRIVILEGES tkp;
 
-    if ( numargs >= 1 && RXVALIDSTRING(args[0]) )
+    // First we get the token for the current process so we can add the proper
+    // shutdown privilege.
+    if ( OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken) == 0 )
     {
-        machine = args[0].strptr;
-    }
-    if ( numargs >= 2 && RXVALIDSTRING(args[1]) )
-    {
-        message = args[1].strptr;
-    }
-    if ( numargs >= 3 && RXVALIDSTRING(args[2]) )
-    {
-         if ( !string2ulong(args[2].strptr, &timeout) )
-         {
-            return INVALID_ROUTINE;
-         }
-    }
-    if ( numargs >= 4 && RXVALIDSTRING(args[3]) )
-    {
-        if ( !string2ulong(args[3].strptr, &forceClose) )
-        {
-            return INVALID_ROUTINE;
-        }
-    }
-    if ( numargs >= 5 && RXVALIDSTRING(args[4]) )
-    {
-        if ( !string2ulong(args[4].strptr, &reboot) )
-        {
-            return INVALID_ROUTINE;
-        }
+        result = GetLastError();
+        goto done_out;
     }
 
-    /* Display the shutdown dialog box and start the time-out countdown. */
-    if ( !InitiateSystemShutdown(const_cast<LPSTR>(machine), const_cast<LPSTR>(message), (DWORD)timeout, (BOOL)forceClose, (BOOL)reboot) )
+    // Get the locally unique identifier for the shutdown privilege we need,
+    // local or remote, depending on what the user specified.
+    LPCTSTR privilegeName = (computer == NULL || *computer == '\0') ? SE_SHUTDOWN_NAME : SE_REMOTE_SHUTDOWN_NAME;
+    if ( LookupPrivilegeValue(NULL, privilegeName, &tkp.Privileges[0].Luid) == 0 )
     {
-        RETVAL(GetLastError())
+        result = GetLastError();
+        goto done_out;
     }
-    else
+
+    // We are only going to adjust 1 privilege and we are going to enable it.
+    tkp.PrivilegeCount = 1;
+    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    // The return from this function can not accurately be used to determine if
+    // it failed or not.  Instead we need to use GetLastError to determine
+    // success.
+    AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, NULL, 0);
+    result = GetLastError();
+    if ( result != ERROR_SUCCESS )
     {
-        RETVAL(0)
+        goto done_out;
     }
+
+    // Do not shut down in 0 seconds by default.
+    if ( argumentOmitted(3) )
+    {
+        timeout = 30;
+    }
+
+    // Now just call the API with the parameters specified by the user.
+    if ( InitiateSystemShutdown((LPSTR)computer, (LPSTR)message, timeout, (BOOL)forceAppsClosed, (BOOL)reboot) == 0 )
+    {
+        result = GetLastError();
+    }
+
+    // Finally, restore the shutdown privilege for this process to disabled.
+    tkp.Privileges[0].Attributes = 0;
+    AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, NULL, 0);
+
+done_out:
+    if ( hToken != NULL )
+    {
+        CloseHandle(hToken);
+    }
+    return result;
 }
+
 
 /*************************************************************************
 * Function:  SysSwitchSession                                            *
@@ -6965,7 +6998,6 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysPulseEventSem,            SysPulseEventSem),
     REXX_CLASSIC_ROUTINE(SysWaitEventSem,             SysWaitEventSem),
     REXX_CLASSIC_ROUTINE(SysSetPriority,              SysSetPriority),
-    REXX_CLASSIC_ROUTINE(SysShutDownSystem,           SysShutDownSystem),
     REXX_CLASSIC_ROUTINE(SysSwitchSession,            SysSwitchSession),
     REXX_CLASSIC_ROUTINE(SysWaitNamedPipe,            SysWaitNamedPipe),
     REXX_CLASSIC_ROUTINE(SysQueryProcess,             SysQueryProcess),
@@ -6986,6 +7018,8 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysWinGetPrinters,           SysWinGetPrinters),
     REXX_CLASSIC_ROUTINE(SysWinGetDefaultPrinter,     SysWinGetDefaultPrinter),
     REXX_CLASSIC_ROUTINE(SysWinSetDefaultPrinter,     SysWinSetDefaultPrinter),
+
+    REXX_TYPED_ROUTINE(SysShutDownSystem,             SysShutDownSystem),
     REXX_TYPED_ROUTINE(SysFileCopy,                   SysFileCopy),
     REXX_TYPED_ROUTINE(SysFileMove,                   SysFileMove),
     REXX_TYPED_ROUTINE(SysIsFile,                     SysIsFile),
