@@ -316,7 +316,7 @@ RexxMethod3(uint32_t, WSRegistry_delete, OPTIONAL_POINTERSTRING, hkHandle, CSTRI
 {
     HKEY hk = (HKEY)(argumentExists(1) ? hkHandle : rxGetPointerAttribute(context, self, "CURRENT_KEY"));
 
-    if ( strcmp(c->GetMessageName(), "DELETEKEY") == 0 )
+    if ( strcmp(context->GetMessageName(), "DELETEKEY") == 0 )
     {
         return RegDeleteKey(hk, subKeyName);
     }
