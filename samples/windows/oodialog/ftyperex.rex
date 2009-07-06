@@ -68,8 +68,8 @@ if r~InitCode \= 0 then do
   exit
 end
 
-/* Set from default HKEY_LOCAL_MACHINE to CLASSES_ROOT*/
-r~Current_Key = CLASSES_ROOT
+/* Set from default HKEY_LOCAL_MACHINE to HKEY_CLASSES_ROOT */
+r~Current_Key = r~CLASSES_ROOT
 
 /* Open the Key with Options QUERY and WRITE */
 if r~open(,"REXXScript\Shell\Open\Command","QUERY WRITE") = 0 then do
