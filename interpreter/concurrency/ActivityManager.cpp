@@ -893,6 +893,8 @@ void ActivityManager::returnRootActivity(RexxActivity *activity)
     // detach this from the instance.  This will also reactivate
     // and nested activity that's been pushed down.
     activity->detachInstance();
+    // make sure we release any system resources used by this activity, such as the semaphores
+    activity->cleanupActivityResources();
 
     ResourceSection lock;                // need the control block locks
     // remove this from the activity list so it will never get

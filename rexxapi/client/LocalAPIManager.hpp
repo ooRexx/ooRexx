@@ -65,6 +65,8 @@ public:
         session = 0;
     }
 
+    inline ~LocalAPIManager() { }
+
     static LocalAPIManager *getInstance();
     static void deleteInstance();
 
