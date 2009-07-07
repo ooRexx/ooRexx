@@ -140,9 +140,6 @@ LONG HandleArgError(PRXSTRING r, BOOL ToMuch)
                 }
 
 
-#define ISHEX(value) \
-   ((strlen(value) > 2) && (value[0] == '0') && (toupper(value[1]) == 'X'))
-
 
 /* Note many existing programs abbreviate HKEY_LOCAL_MACHINE to "LOCAL_MACHINE",
  * or "MACHINE", and many do not.  Many existing programs use the full
@@ -178,17 +175,6 @@ LONG HandleArgError(PRXSTRING r, BOOL ToMuch)
         }
 
 
-#define GET_ACCESS(argu, acc) \
-{ \
-      if (!stricmp(argu,"READ"))    acc = 'R'; else \
-      if (!stricmp(argu,"OPEN"))    acc = 'O'; else \
-      if (!stricmp(argu,"CLOSE"))   acc = 'C'; else  \
-      if (!stricmp(argu,"NUM"))     acc = 'N'; else  \
-      if (!stricmp(argu,"CLEAR"))   acc = 'L'; else  \
-      if (!stricmp(argu,"WRITE"))   acc = 'W'; else  \
-         RETERR; \
-}
-
 #define GET_TYPE_INDEX(type, index)   \
 {                                     \
     switch (type)                     \
@@ -216,6 +202,11 @@ LONG HandleArgError(PRXSTRING r, BOOL ToMuch)
     }                                 \
 }
 
+bool inline isHex(CSTRING value)
+{
+    return ((value[0] == '0') && (toupper(value[1]) == 'X'));
+}
+
 
 /********************************************************************
 * Function:  string2pointer(string)                                 *
@@ -239,7 +230,7 @@ BOOL string2pointer(
         return FALSE;
     }
 
-    if ( ISHEX(string) )
+    if ( isHex(string) )
     {
         return (string[1] == 'x' ?
                 sscanf(string, "0x%p", pointer) == 1 : sscanf(string, "0X%p", pointer) == 1);
@@ -276,23 +267,151 @@ BOOL IsRunningNT()
 }
 
 
-// TODO This is a function from oodCommon.cpp, need to put all this stuff together.
-POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name)
+// TODO START The following functions come from from oodCommon.cpp, need to put
+// all this stuff all together in a common object.
+
+/**
+ * Converts a pointer-sized type to a pointer-string, or 0 if the type is null.
+ *
+ * @param result   [out] Pointer-string is returned here.  Ensure the storage
+ *                 pointed to is big enough for a 64-bit pointer.
+ *
+ * @param pointer  [in] The pointer, or pointer-sized type to convert.
+ *
+ * @remarks  Pointer-sized type is used to indicate that this will work for
+ *           opaque types, like HANDLE, HMENU, HINST, UINT_PTR, DWORD_PTR, etc.,
+ *           that are pointer size.
+ *
+ *           For now, 0 is returned for null rather than 0x00000000 because
+ *           many, many places in the Windows specific classes test for 0 to
+ *           detect error.
+ *
+ *           This function should go away when the Windows classes are converted
+ *           to use .Pointer for all pointer-sized data types.
+ */
+void pointer2string(char *result, void *pointer)
 {
-    CSTRING value = "";
-    if ( obj != NULLOBJECT )
+    if ( pointer == NULL )
     {
-        RexxObjectPtr rxString = context->SendMessage0(obj, name);
-        if ( rxString != NULLOBJECT )
-        {
-            value = context->ObjectToStringValue(rxString);
-        }
+        sprintf(result, "0");
     }
-    POINTER p = NULL;
-    string2pointer(value, &p);
-    return p;
+    else
+    {
+        sprintf(result, "0x%p", pointer);
+    }
 }
 
+
+/**
+ * Variation of above.  Converts the pointer and returns it as a
+ * RexxStringObject.
+ *
+ * @param c        Method context we are operating in.
+ * @param pointer  Pointer to convert
+ *
+ * @return A string object representing the pointer as either 0xffff1111 if not
+ *         null or as 0 if null.
+ */
+RexxStringObject pointer2string(RexxMethodContext *c, void *pointer)
+{
+    char buf[32];
+    pointer2string(buf, pointer);
+    return c->String(buf);
+}
+
+// TODO END
+
+
+/**
+ * Resolves a, possibly omitted, registry key handle in string form to a HKEY.
+ *
+ * Most of the registry functions require an open 'parent' key handle.  Most of
+ * the WindowsRegistry methods allow the user to omitt the parent key handle, in
+ * which case the stored 'current key' value is used.
+ *
+ * @param c         Method context we are operating under.
+ * @param hkParent  The parent key value to resolve.
+ *
+ * @return  A HKEY resolved from hkParent, which could be the null value.
+ */
+HKEY getParentKeyHandle(RexxMethodContext *c, CSTRING hkParent)
+{
+    HKEY hk = NULL;
+
+    if ( hkParent == NULL )
+    {
+        hkParent = "";
+        RexxObjectPtr rxHK = c->GetObjectVariable("CURRENT_KEY");
+        if ( rxHK != NULLOBJECT )
+        {
+            hkParent = c->ObjectToStringValue(rxHK);
+        }
+    }
+    else if ( ! isHex(hkParent) )
+    {
+        if ( StrStrI(hkParent, "MACHINE") ) hk = HKEY_LOCAL_MACHINE;
+        else if ( StrStrI(hkParent, "CLASSES") ) hk = HKEY_CLASSES_ROOT;
+        else if ( StrStrI(hkParent, "CURRENT_USER") ) hk = HKEY_CURRENT_USER;
+        else if ( StrStrI(hkParent, "USERS") ) hk = HKEY_USERS;
+        else if ( StrStrI(hkParent, "PERFORMANCE") ) hk = HKEY_PERFORMANCE_DATA;
+        else if ( StrStrI(hkParent, "CURRENT_CONFIG") ) hk = HKEY_CURRENT_CONFIG;
+        else if ( StrStrI(hkParent, "DYN_DATA") ) hk = HKEY_DYN_DATA;
+    }
+
+    if ( hk == NULL )
+    {
+        string2pointer(hkParent, (void **)&hk);
+    }
+    return hk;
+}
+
+
+RexxMethod0(RexxObjectPtr, WSRegistry_init)
+{
+    context->SetObjectVariable("CURRENT_KEY", pointer2string(context, HKEY_LOCAL_MACHINE));
+    return NULLOBJECT;
+}
+
+RexxMethod0(RexxObjectPtr, getCurrent_Key)
+{
+    return context->GetObjectVariable("CURRENT_KEY");
+}
+
+RexxMethod1(RexxObjectPtr, setCurrent_Key, RexxStringObject, regKeyHandle)
+{
+    context->SetObjectVariable("CURRENT_KEY", regKeyHandle);
+    return NULLOBJECT;
+}
+
+RexxMethod0(POINTERSTRING, getLocal_Machine)
+{
+    return HKEY_LOCAL_MACHINE;
+}
+
+RexxMethod0(POINTERSTRING, getCurrent_User)
+{
+    return HKEY_CURRENT_USER;
+}
+
+RexxMethod0(POINTERSTRING, getUsers)
+{
+    return HKEY_USERS;
+}
+
+RexxMethod0(POINTERSTRING, getClasses_Root)
+{
+    return HKEY_CLASSES_ROOT;
+}
+
+RexxMethod0(POINTERSTRING, getPerformance_Data)
+{
+    return HKEY_PERFORMANCE_DATA;
+}
+
+RexxMethod0(POINTERSTRING, getCurrent_Config)
+{
+    return HKEY_CURRENT_CONFIG;
+}
 
 /** WindowsRegistry::delete() | WindowsRegistry::deleteKey()
  *
@@ -302,19 +421,20 @@ POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CST
  *  delete() deletes a subkey and all its descendents (subkeys.)  deleteKey()
  *  will only delete the subkey if it is empty, i.e. it contains no subkeys.
  *
- *  @param hkHandle    [optional] A handle to an open registry key. The key must
- *                     have been opened with the DELETE access right.  If this
- *                     argument is omitted then the CURRENT_KEY attribute is
- *                     used.
+ *  @param hkParent    [optional] A handle to an open registry key, or the name
+ *                     of one of the prefined, always open, registry keys. The
+ *                     key must have been opened with the DELETE access right.
+ *                     If this argument is omitted then the CURRENT_KEY
+ *                     attribute is used.
  *
  *  @param subkeyName  The name of the subkey to be deleted.  The name is case
  *                     insensitive.
  *
  *  @return O on success, otherwise the Windows system error code.
  */
-RexxMethod3(uint32_t, WSRegistry_delete, OPTIONAL_POINTERSTRING, hkHandle, CSTRING, subKeyName, OSELF, self)
+RexxMethod2(uint32_t, WSRegistry_delete, OPTIONAL_CSTRING, hkParent, CSTRING, subKeyName)
 {
-    HKEY hk = (HKEY)(argumentExists(1) ? hkHandle : rxGetPointerAttribute(context, self, "CURRENT_KEY"));
+    HKEY hk = getParentKeyHandle(context, hkParent);
 
     if ( strcmp(context->GetMessageName(), "DELETEKEY") == 0 )
     {
@@ -324,6 +444,67 @@ RexxMethod3(uint32_t, WSRegistry_delete, OPTIONAL_POINTERSTRING, hkHandle, CSTRI
     {
         return SHDeleteKey(hk, subKeyName);
     }
+}
+
+/** WindowsRegistry::open()
+ *
+ *  Opens a subkey with the specified access rights.  When the open is
+ *  successful, the CURRENT_KEY attribute is set to the opened key.
+ *
+ *  @param hkParent    [optional] A handle to an open registry key, or the name
+ *                     of one of the prefined, always open, registry keys. The
+ *                     key must have been opened with the DELETE access right.
+ *                     If this argument is omitted then the CURRENT_KEY
+ *                     attribute is used.
+ *
+ *  @param subkeyName  [optional] The name of the subkey to be opened.  The name
+ *                     is case insensitive.  If this argument is omitted or the
+ *                     empty string, the operating system will open a new handle
+ *                     to the key identified by hkParent.
+ *
+ *  @param access      [optional] A string of 0 or more keywords specifying the
+ *                     desired access rights.  The default if this argument is
+ *                     omitted is all access.  Specifying a higher level of
+ *                     access than the user has, will cause the open to fail.
+ *
+ */
+RexxMethod3(RexxObjectPtr, WSRegistry_open, OPTIONAL_CSTRING, hkParent, OPTIONAL_CSTRING, subKeyName, OPTIONAL_CSTRING, access)
+{
+    RexxMethodContext *c = context;
+    DWORD dwAccess = 0;
+    HKEY hk = getParentKeyHandle(context, hkParent);
+
+    // Docs say, have always said, that the access arg can be more than one
+    // keyword. So, even if "ALL" makes the other keywords unnecessary, we can't
+    // rely on it being the only word in the string.
+    if ( argumentOmitted(3) || StrStrI(access, "ALL") != 0 )
+    {
+        dwAccess = KEY_ALL_ACCESS;
+    }
+    else
+    {
+        if (StrStrI(access, "WRITE"))     dwAccess |= KEY_WRITE;
+        if (StrStrI(access, "READ"))      dwAccess |= KEY_READ;
+        if (StrStrI(access, "QUERY"))     dwAccess |= KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS;
+        if (StrStrI(access, "INQUIRE"))   dwAccess |= KEY_QUERY_VALUE;
+        if (StrStrI(access, "ENUMERATE")) dwAccess |= KEY_ENUMERATE_SUB_KEYS;
+        if (StrStrI(access, "SET"))       dwAccess |= KEY_SET_VALUE;
+        if (StrStrI(access, "DELETE"))    dwAccess |= KEY_SET_VALUE;
+        if (StrStrI(access, "CREATE"))    dwAccess |= KEY_CREATE_SUB_KEY;
+        if (StrStrI(access, "NOTIFY"))    dwAccess |= KEY_NOTIFY;
+        if (StrStrI(access, "EXECUTE"))   dwAccess |= KEY_EXECUTE;
+        if (StrStrI(access, "LINK"))      dwAccess |= KEY_CREATE_LINK;  // reserved for system use only.
+    }
+
+    RexxObjectPtr result = c->WholeNumber(0);
+    HKEY hkResult = NULL;
+
+    if ( RegOpenKeyEx(hk, subKeyName, 0, dwAccess, &hkResult ) == ERROR_SUCCESS)
+    {
+        result = pointer2string(context, hkResult);
+        c->SetObjectVariable("CURRENT_KEY", result);
+    }
+    return result;
 }
 
 size_t RexxEntry WSRegistryKey(const char *funcname, size_t argc, CONSTRXSTRING argv[], const char *qname, PRXSTRING retstr)
@@ -338,44 +519,6 @@ size_t RexxEntry WSRegistryKey(const char *funcname, size_t argc, CONSTRXSTRING 
 
         GET_HANDLE(argv[1].strptr, hk);
         if (RegCreateKey(hk, argv[2].strptr, &hkResult ) == ERROR_SUCCESS)
-        {
-            RET_HANDLE(hkResult);
-        }
-        else
-        {
-            RETC(0);
-        }
-    }
-    else if ( strcmp(argv[0].strptr, "OPEN") == 0 )
-    {
-        HKEY hkResult;
-        DWORD access=0;
-
-        GET_HKEY(argv[1].strptr, hk);
-
-        if (argc == 2)
-        {
-            RET_HANDLE(hk);      // return the predefined handle
-        }
-
-        // Docs say, have always said, that the access arg can be more than one
-        // keyword. So, even if "ALL" makes the other keywords unnecessary, we
-        // can't rely on it being the only word in the string.
-        if ((argc < 4) || strstr(argv[3].strptr,"ALL") != 0)
-        {
-            access = KEY_ALL_ACCESS;
-        }
-        else
-        {
-            if (strstr(argv[3].strptr,"WRITE")) access |= KEY_WRITE;
-            if (strstr(argv[3].strptr,"READ")) access |= KEY_READ;
-            if (strstr(argv[3].strptr,"QUERY")) access |= KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE;
-            if (strstr(argv[3].strptr,"EXECUTE")) access |= KEY_EXECUTE;
-            if (strstr(argv[3].strptr,"NOTIFY")) access |= KEY_NOTIFY;
-            if (strstr(argv[3].strptr,"LINK")) access |= KEY_CREATE_LINK;
-        }
-
-        if (RegOpenKeyEx(hk, argv[2].strptr, 0, access, &hkResult ) == ERROR_SUCCESS)
         {
             RET_HANDLE(hkResult);
         }
@@ -3948,7 +4091,17 @@ RexxRoutineEntry rxwinsys_functions[] =
 
 
 RexxMethodEntry rxwinsys_methods[] = {
+    REXX_METHOD(WSRegistry_init,            WSRegistry_init),
+    REXX_METHOD(setCurrent_Key,             setCurrent_Key),
+    REXX_METHOD(getCurrent_Key,             getCurrent_Key),
+    REXX_METHOD(getLocal_Machine,           getLocal_Machine),
+    REXX_METHOD(getCurrent_User,            getCurrent_User),
+    REXX_METHOD(getUsers,                   getUsers),
+    REXX_METHOD(getClasses_Root,            getClasses_Root),
+    REXX_METHOD(getPerformance_Data,        getPerformance_Data),
+    REXX_METHOD(getCurrent_Config,          getCurrent_Config),
     REXX_METHOD(WSRegistry_delete,          WSRegistry_delete),
+    REXX_METHOD(WSRegistry_open,            WSRegistry_open),
 
     REXX_METHOD(WSEventLog_test,            WSEventLog_test),
     REXX_METHOD(WSEventLog_init,            WSEventLog_init),

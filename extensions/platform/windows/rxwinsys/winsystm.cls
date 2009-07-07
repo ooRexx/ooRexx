@@ -41,47 +41,28 @@
 
 ::class 'WindowsRegistry' public
 
-::method Local_Machine attribute
-::method Current_User attribute
-::method Users attribute
-::method Classes_Root attribute
-::method Current_Key attribute
-::method Performance_Data attribute
-::method Current_Config attribute
+::attribute Local_Machine get external "LIBRARY rxwinsys getLocal_Machine"
+::attribute Current_User get external "LIBRARY rxwinsys getCurrent_User"
+::attribute Users get external "LIBRARY rxwinsys getUsers"
+::attribute Classes_Root get external "LIBRARY rxwinsys getClasses_Root"
+::attribute Performance_Data get external "LIBRARY rxwinsys getPerformance_Data"
+::attribute Current_Config get external "LIBRARY rxwinsys getCurrent_Config"
 
-::method init
-   self~Local_Machine = WSRegistryKey("OPEN","MACHINE");
-   self~Current_User = WSRegistryKey("OPEN","CURRENT_USER");
-   self~Users = WSRegistryKey("OPEN","USERS");
-   self~Classes_Root = WSRegistryKey("OPEN","CLASSES");
-   self~Performance_Data = WSRegistryKey("OPEN","PERFORMANCE");
-   self~Current_Config = WSRegistryKey("OPEN","CURRENT_CONFIG");
-   self~Current_Key = self~Local_Machine
+::attribute Current_Key external "LIBRARY rxwinsys"
 
-/* support previous version */
-::method CurrentKey
-   return self~Current_Key
+-- This is here to support some long time ago previous version.
+::attribute CurrentKey external "LIBRARY rxwinsys Current_Key"
 
-::method "CurrentKey="
-   use arg ck
-   self~Current_Key = ck
+::method init external "LIBRARY rxwinsys WSRegistry_init"
+::method open external "LIBRARY rxwinsys WSRegistry_open"
+::method deleteKey external "LIBRARY rxwinsys WSRegistry_delete"
+::method delete external "LIBRARY rxwinsys WSRegistry_delete"
+
 
 ::method Create
    use arg hkey, name
    if arg(1,'o') = 1 then hkey = self~Current_Key
    retc = WSRegistryKey("CREATE", hkey, name)
-   if (retc \= 0) then self~Current_Key = retc
-   return retc
-
-::method Open
-   use arg hkey, name, access
-   if arg(1,'o') = 1 then hkey = self~Current_Key
-   if arg(2,'o') = 1 then name = ""
-   if arg(3,'o') = 1 then access = "ALL"
-   if arg() < 2 then
-       retc = WSRegistryKey("OPEN", hkey)
-   else
-       retc = WSRegistryKey("OPEN", hkey, name, access~translate)
    if (retc \= 0) then self~Current_Key = retc
    return retc
 
@@ -121,10 +102,6 @@
    if arg(1,'o') = 1 then hkey = self~Current_Key
    retc = WSRegistryKey("FLUSH", hkey)
    return retc
-
-
-::method deleteKey external "LIBRARY rxwinsys WSRegistry_delete"
-::method delete external "LIBRARY rxwinsys WSRegistry_delete"
 
 ::method SetValue
    use arg hkey, name, valu, atype
