@@ -2091,18 +2091,32 @@ size_t RexxEntry SysFileTree(const char *name, size_t numargs, CONSTRXSTRING arg
 
                                        /* get file spec              */
   memcpy(FileSpec, args[0].strptr, args[0].strlength);
-                                       /* zero terminate             */
-  if (FileSpec[args[0].strlength])
-    FileSpec[args[0].strlength] = 0x00;
 
-   /** If FileSpec ends in \ then append *.*  *                      */
+  /* zero terminate, RXVALIDSTRING() guarentees strlength is not 0.  */
+  FileSpec[args[0].strlength] = 0x00;
 
+  // If FileSpec ends in \ then append *.*  *
   if (FileSpec[args[0].strlength-1] == '\\')
+  {
     strcat(FileSpec, "*.*");
-                                       /* in case of '.' or '..'     */
-                                       /* append wildcard '\*.*'     */
+  }
   else if (FileSpec[args[0].strlength-1] == '.')
-    strcat(FileSpec, "\\*.*");
+  {
+    // when '.' or '..' are used as directory specifiers append wildcard '\*.*'
+    if ( (args[0].strlength > 1) && FileSpec[args[0].strlength-2] != '\\' && FileSpec[args[0].strlength-2] != '.' )
+    {
+      // The '.' is not used as a directory specifier, but rather is tacked on
+      // to the end of a file name. Windows has a sometimes used convention that
+      // a '.' at the end of a file name can be used to indicate the file has
+      // no extension. For example, given a file named: MyFile a command of
+      // dir MyFile. will produce a listing of MyFile  Just remove the '.'
+      FileSpec[args[0].strlength-1] = '\0';
+    }
+    else
+    {
+      strcat(FileSpec, "\\*.*");
+    }
+  }
 
   if (numargs >= 3 &&                  /* check third option         */
       !RXNULLSTRING(args[2])) {
