@@ -45,7 +45,6 @@
 #include "ServiceException.hpp"
 #include <stdio.h>
 
-
 /**
  * Initialize the server side of the operation.
  */

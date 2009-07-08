@@ -214,9 +214,6 @@ RexxReturnCode LocalRegistrationManager::resolveCallback(RegistrationType type, 
 
     // first parameter for these calls is ALWAYS the type
     ClientMessage message(RegistrationManager, REGISTER_LOAD_LIBRARY, type, name);
-    ServiceRegistrationData regData(module);
-    message.setMessageData((char *)&regData, sizeof(ServiceRegistrationData));
-
     message.send();
 
     // if this was there, now try to load the module, if necessary.

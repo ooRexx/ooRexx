@@ -315,7 +315,6 @@ void RegistrationTable::registerCallback(ServiceMessage &message)
 // nameArg    -- The registration name
 void RegistrationTable::queryCallback(ServiceMessage &message)
 {
-    ServiceRegistrationData *regData = (ServiceRegistrationData *)message.allocateMessageData(sizeof(ServiceRegistrationData));
     // get the argument name (local copy only)
     const char *name = message.nameArg;
 
@@ -329,6 +328,7 @@ void RegistrationTable::queryCallback(ServiceMessage &message)
     // copy the data into the buffer if we found one
     if (callback != NULL)
     {
+        ServiceRegistrationData *regData = (ServiceRegistrationData *)message.allocateMessageData(sizeof(ServiceRegistrationData));
         // copy the registration information
         callback->getRegistrationData(*regData);
         message.setResult(CALLBACK_EXISTS);
@@ -336,8 +336,6 @@ void RegistrationTable::queryCallback(ServiceMessage &message)
     else
     {
         message.setResult(CALLBACK_NOT_FOUND);
-        // make sure the data message buffer is not passed back.
-        message.freeMessageData();
     }
 }
 
