@@ -77,7 +77,27 @@ RexxReturnCode REXXENTRY RexxPullQueue(
   REXXDATETIME *dt,
   size_t waitflag)
 {
+    RexxQueueTime qt;
+
     // for unix platforms, this is a straight passthrough to the real API.
-    return RexxPullFromQueue(name, data_buf, dt, waitflag);
+    RexxReturnCode rc = RexxPullFromQueue(name, data_buf, &qt, waitflag);
+    // older releases for Linux used an internal structure for the timestamp
+    // that had portability problems.  We need to manually copy over the fields
+    // because of the mismatches.
+    if (dt != NULL)
+    {
+        dt->hours = qt.hours;
+        dt->minutes = qt.minutes;
+        dt->seconds = qt.seconds;
+        dt->hundredths = qt.hundredths;
+        dt->microseconds = qt.microsecondss;
+        dt->day = qt.day;
+        dt->month = qt.month;
+        dt->year = qt.year;
+        dt->weekday = qt.weekday;
+        dt->yearday = qt.yearday;
+        dt->valid = 1;
+    }
+    return rc;
 }
 

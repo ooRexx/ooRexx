@@ -322,7 +322,7 @@ RexxReturnCode RexxEntry RexxAddQueue(
 RexxReturnCode RexxEntry RexxPullFromQueue(
   const char *name,
   RXSTRING  *data_buf,
-  REXXDATETIME *time,
+  RexxQueueTime *time,
   size_t waitflag)
 {
     ENTER_REXX_API(QueueManager)

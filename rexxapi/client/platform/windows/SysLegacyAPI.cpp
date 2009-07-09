@@ -72,7 +72,7 @@ RexxReturnCode REXXENTRY RexxPullQueue(
     SYSTEMTIME *dt,
     size_t waitflag)
 {
-    REXXDATETIME time;
+    RexxQueueTime time;
 
     RexxReturnCode rc = RexxPullFromQueue(name, data_buf, &time, waitflag);
     // we need to convert the time stamp, if requested

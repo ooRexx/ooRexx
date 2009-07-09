@@ -221,7 +221,7 @@ typedef size_t  logical_t;             // a Rexx logical (1 or 0) value
 
 
 /***    RexxPullFromQueue - Retrieve data from an External Data Queue */
-typedef struct _REXXDATETIME {         /* REXX time stamp format            */
+typedef struct _RexxQueueTime  {       /* REXX time stamp format            */
   uint16_t       hours;                /* hour of the day (24-hour)         */
   uint16_t       minutes;              /* minute of the hour                */
   uint16_t       seconds;              /* second of the minute              */
@@ -232,7 +232,7 @@ typedef struct _REXXDATETIME {         /* REXX time stamp format            */
   uint16_t       weekday;              /* day of the week                   */
   uint32_t       microseconds;         /* microseconds                      */
   uint32_t       yearday;              /* day number within the year        */
-} REXXDATETIME;
+} RexxQueueTime;
 
 
 typedef struct _RexxConditionData
@@ -815,9 +815,9 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXADDQUEUE)(const char *, PCONSTRXSTRING
 RexxReturnCode REXXENTRY RexxPullFromQueue (
         const char *,                          /* Name of queue to read from  */
         PRXSTRING,                             /* RXSTRING to receive data    */
-        REXXDATETIME *,                        /* Stor for data date/time     */
+        RexxQueueTime *,                       /* Stor for data date/time     */
         size_t);                               /* wait status (WAIT|NOWAIT)   */
-typedef RexxReturnCode (REXXENTRY *PFNREXXPULLFROMQUEUE)(const char *, PRXSTRING, REXXDATETIME *,
+typedef RexxReturnCode (REXXENTRY *PFNREXXPULLFROMQUEUE)(const char *, PRXSTRING, RexxQueueTime *,
                                            size_t);
 
 /***    RexxClearQueue - Clear all lines in a queue */

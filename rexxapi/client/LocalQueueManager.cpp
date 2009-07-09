@@ -400,7 +400,7 @@ RexxReturnCode LocalQueueManager::addToSessionQueue(CONSTRXSTRING &data, size_t 
 }
 
 
-RexxReturnCode LocalQueueManager::pullFromQueue(const char *name, RXSTRING &data, size_t waitFlag, REXXDATETIME *timeStamp)
+RexxReturnCode LocalQueueManager::pullFromQueue(const char *name, RXSTRING &data, size_t waitFlag, RexxQueueTime *timeStamp)
 {
     ClientMessage message(QueueManager, PULL_FROM_NAMED_QUEUE);
     // set up for either name or session queue read
@@ -427,7 +427,7 @@ RexxReturnCode LocalQueueManager::pullFromQueue(const char *name, RXSTRING &data
         // if the timestamp was requested, return it.
         if (timeStamp != NULL)
         {
-            memcpy(timeStamp, message.nameArg, sizeof(REXXDATETIME));
+            memcpy(timeStamp, message.nameArg, sizeof(RexxQueueTime));
         }
     }
     // map the server result to an API return code.

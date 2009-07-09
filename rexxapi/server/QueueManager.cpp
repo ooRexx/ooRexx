@@ -208,7 +208,7 @@ bool DataQueue::pullData(ServerQueueManager *manager, ServiceMessage &message)
         // make sure we pass the total length back
         message.parameter1 = item->size;
         // copy the time stamp into the now-unused name buffer
-        memcpy(message.nameArg, &item->addTime, sizeof(REXXDATETIME));
+        memcpy(message.nameArg, &item->addTime, sizeof(RexxQueueTime));
         // the message will delete the queue data once it has been sent
         // back to the client.
         message.setMessageData((void *)item->elementData, item->size);

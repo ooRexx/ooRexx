@@ -84,7 +84,7 @@ protected:
     QueueItem *next;             // next item in the queue
     const char *elementData;     // the element data
     size_t     size;             // size of the element data
-    REXXDATETIME  addTime;       // time the element was added
+    RexxQueueTime addTime;       // time the element was added
 };
 
 class DataQueue
