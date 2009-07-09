@@ -90,7 +90,7 @@ RexxReturnCode REXXENTRY RexxPullQueue(
         dt->minutes = qt.minutes;
         dt->seconds = qt.seconds;
         dt->hundredths = qt.hundredths;
-        dt->microseconds = qt.microsecondss;
+        dt->microseconds = qt.microseconds;
         dt->day = qt.day;
         dt->month = qt.month;
         dt->year = qt.year;
