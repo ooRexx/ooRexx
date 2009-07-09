@@ -76,25 +76,25 @@ void RexxMemory::buildVirtualFunctionTable()
 /******************************************************************************/
 {
     uintptr_t objectBuffer[256];       /* buffer for each object            */
-    void *objectPtr;
+    volatile void *objectPtr;
 
-    objectPtr = objectBuffer;
+    void *objectLoc = objectBuffer;
     // instantiate an instance of each class into the buffer and
     // grab the resulting virtual function table
    </xsl:text>
 
    <xsl:for-each select="Exported/Class">
    <xsl:text>
-   objectPtr = new (objectPtr) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
+   objectPtr = new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = *((void **)objectPtr);
    </xsl:text>
    <xsl:if test="@classclass">
    <xsl:text>
-   objectPtr = new (objectPtr) </xsl:text><xsl:value-of select="@classclass"/><xsl:text>(RESTOREIMAGE);</xsl:text>
+   objectPtr = new (objectLoc) </xsl:text><xsl:value-of select="@classclass"/><xsl:text>(RESTOREIMAGE);</xsl:text>
    </xsl:if>
    <xsl:if test="not(@classclass)">
    <xsl:text>
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);</xsl:text>
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);</xsl:text>
    </xsl:if>
    <xsl:text>
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>Class] = *((void **)objectPtr);
@@ -104,7 +104,7 @@ void RexxMemory::buildVirtualFunctionTable()
 
    <xsl:for-each select="Internal/Class">
    <xsl:text>
-   objectPtr = new (objectPtr) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
+   objectPtr = new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = *((void **)objectPtr);
    </xsl:text>
    </xsl:for-each>
@@ -112,13 +112,13 @@ void RexxMemory::buildVirtualFunctionTable()
    <xsl:for-each select="Transient/Class">
    <xsl:if test="@objectvirtual">
    <xsl:text>
-   objectPtr = new (objectPtr) RexxObject(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = *((void **)objectPtr);
    </xsl:text>
    </xsl:if>
    <xsl:if test="not(@objectvirtual)">
    <xsl:text>
-   objectPtr = new (objectPtr) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
+   objectPtr = new (objectLoc) </xsl:text><xsl:value-of select="@class"/><xsl:text>(RESTOREIMAGE);
    virtualFunctionTable[T_</xsl:text><xsl:value-of select="@id"/><xsl:text>] = *((void **)objectPtr);
    </xsl:text>
    </xsl:if>

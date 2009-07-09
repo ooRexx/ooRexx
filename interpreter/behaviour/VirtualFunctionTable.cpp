@@ -161,394 +161,394 @@ void RexxMemory::buildVirtualFunctionTable()
 /******************************************************************************/
 {
     uintptr_t objectBuffer[256];       /* buffer for each object            */
-    void *objectPtr;
+    volatile void *objectPtr;
 
-    objectPtr = objectBuffer;
+    void *objectLoc = objectBuffer;
     // instantiate an instance of each class into the buffer and
     // grab the resulting virtual function table
    
-   objectPtr = new (objectPtr) RexxObject(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_Object] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_ObjectClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_Class] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_ClassClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxArray(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxArray(RESTOREIMAGE);
    virtualFunctionTable[T_Array] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_ArrayClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxDirectory(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxDirectory(RESTOREIMAGE);
    virtualFunctionTable[T_Directory] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_DirectoryClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInteger(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInteger(RESTOREIMAGE);
    virtualFunctionTable[T_Integer] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxIntegerClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxIntegerClass(RESTOREIMAGE);
    virtualFunctionTable[T_IntegerClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxList(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxList(RESTOREIMAGE);
    virtualFunctionTable[T_List] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_ListClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxMessage(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxMessage(RESTOREIMAGE);
    virtualFunctionTable[T_Message] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_MessageClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxMethod(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxMethod(RESTOREIMAGE);
    virtualFunctionTable[T_Method] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_MethodClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxNumberString(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxNumberString(RESTOREIMAGE);
    virtualFunctionTable[T_NumberString] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_NumberStringClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxQueue(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxQueue(RESTOREIMAGE);
    virtualFunctionTable[T_Queue] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_QueueClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxStem(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxStem(RESTOREIMAGE);
    virtualFunctionTable[T_Stem] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_StemClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxString(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxString(RESTOREIMAGE);
    virtualFunctionTable[T_String] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_StringClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxSupplier(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxSupplier(RESTOREIMAGE);
    virtualFunctionTable[T_Supplier] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_SupplierClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxTable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxTable(RESTOREIMAGE);
    virtualFunctionTable[T_Table] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_TableClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxRelation(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxRelation(RESTOREIMAGE);
    virtualFunctionTable[T_Relation] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_RelationClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxMutableBuffer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxMutableBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_MutableBuffer] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_MutableBufferClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxPointer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxPointer(RESTOREIMAGE);
    virtualFunctionTable[T_Pointer] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_PointerClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxBuffer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_Buffer] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_BufferClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) WeakReference(RESTOREIMAGE);
+   objectPtr = new (objectLoc) WeakReference(RESTOREIMAGE);
    virtualFunctionTable[T_WeakReference] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_WeakReferenceClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RoutineClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RoutineClass(RESTOREIMAGE);
    virtualFunctionTable[T_Routine] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_RoutineClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) PackageClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) PackageClass(RESTOREIMAGE);
    virtualFunctionTable[T_Package] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_PackageClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxContext(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxContext(RESTOREIMAGE);
    virtualFunctionTable[T_RexxContext] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_RexxContextClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxIdentityTable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxIdentityTable(RESTOREIMAGE);
    virtualFunctionTable[T_IdentityTable] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClass(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_IdentityTableClass] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxNilObject(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxNilObject(RESTOREIMAGE);
    virtualFunctionTable[T_NilObject] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxBehaviour(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxBehaviour(RESTOREIMAGE);
    virtualFunctionTable[T_Behaviour] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxSource(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxSource(RESTOREIMAGE);
    virtualFunctionTable[T_RexxSource] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) LibraryPackage(RESTOREIMAGE);
+   objectPtr = new (objectLoc) LibraryPackage(RESTOREIMAGE);
    virtualFunctionTable[T_LibraryPackage] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxCode(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxCode(RESTOREIMAGE);
    virtualFunctionTable[T_RexxCode] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxNativeMethod(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxNativeMethod(RESTOREIMAGE);
    virtualFunctionTable[T_NativeMethod] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxNativeRoutine(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxNativeRoutine(RESTOREIMAGE);
    virtualFunctionTable[T_NativeRoutine] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RegisteredRoutine(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RegisteredRoutine(RESTOREIMAGE);
    virtualFunctionTable[T_RegisteredRoutine] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) CPPCode(RESTOREIMAGE);
+   objectPtr = new (objectLoc) CPPCode(RESTOREIMAGE);
    virtualFunctionTable[T_CPPCode] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) AttributeGetterCode(RESTOREIMAGE);
+   objectPtr = new (objectLoc) AttributeGetterCode(RESTOREIMAGE);
    virtualFunctionTable[T_AttributeGetterCode] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) AttributeSetterCode(RESTOREIMAGE);
+   objectPtr = new (objectLoc) AttributeSetterCode(RESTOREIMAGE);
    virtualFunctionTable[T_AttributeSetterCode] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) ConstantGetterCode(RESTOREIMAGE);
+   objectPtr = new (objectLoc) ConstantGetterCode(RESTOREIMAGE);
    virtualFunctionTable[T_ConstantGetterCode] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) AbstractCode(RESTOREIMAGE);
+   objectPtr = new (objectLoc) AbstractCode(RESTOREIMAGE);
    virtualFunctionTable[T_AbstractCode] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxHashTable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxHashTable(RESTOREIMAGE);
    virtualFunctionTable[T_HashTable] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxListTable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxListTable(RESTOREIMAGE);
    virtualFunctionTable[T_ListTable] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxSmartBuffer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxSmartBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_SmartBuffer] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxVariable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxVariable(RESTOREIMAGE);
    virtualFunctionTable[T_Variable] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxVariableDictionary(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxVariableDictionary(RESTOREIMAGE);
    virtualFunctionTable[T_VariableDictionary] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxParseVariable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxParseVariable(RESTOREIMAGE);
    virtualFunctionTable[T_VariableTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxCompoundVariable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxCompoundVariable(RESTOREIMAGE);
    virtualFunctionTable[T_CompoundVariableTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxStemVariable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxStemVariable(RESTOREIMAGE);
    virtualFunctionTable[T_StemVariableTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxDotVariable(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxDotVariable(RESTOREIMAGE);
    virtualFunctionTable[T_DotVariableTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxVariableReference(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxVariableReference(RESTOREIMAGE);
    virtualFunctionTable[T_IndirectVariableTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxExpressionFunction(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxExpressionFunction(RESTOREIMAGE);
    virtualFunctionTable[T_FunctionCallTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxExpressionMessage(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxExpressionMessage(RESTOREIMAGE);
    virtualFunctionTable[T_MessageSendTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxUnaryOperator(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxUnaryOperator(RESTOREIMAGE);
    virtualFunctionTable[T_UnaryOperatorTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxBinaryOperator(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxBinaryOperator(RESTOREIMAGE);
    virtualFunctionTable[T_BinaryOperatorTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxExpressionLogical(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxExpressionLogical(RESTOREIMAGE);
    virtualFunctionTable[T_LogicalTerm] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstruction(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstruction(RESTOREIMAGE);
    virtualFunctionTable[T_Instruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionAddress(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionAddress(RESTOREIMAGE);
    virtualFunctionTable[T_AddressInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionAssignment(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionAssignment(RESTOREIMAGE);
    virtualFunctionTable[T_AssignmentInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionCall(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionCall(RESTOREIMAGE);
    virtualFunctionTable[T_CallInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionCommand(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionCommand(RESTOREIMAGE);
    virtualFunctionTable[T_CommandInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionDo(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionDo(RESTOREIMAGE);
    virtualFunctionTable[T_DoInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionDrop(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionDrop(RESTOREIMAGE);
    virtualFunctionTable[T_DropInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionElse(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionElse(RESTOREIMAGE);
    virtualFunctionTable[T_ElseInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionEnd(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionEnd(RESTOREIMAGE);
    virtualFunctionTable[T_EndInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionEndIf(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionEndIf(RESTOREIMAGE);
    virtualFunctionTable[T_EndIfInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionExit(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionExit(RESTOREIMAGE);
    virtualFunctionTable[T_ExitInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionExpose(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionExpose(RESTOREIMAGE);
    virtualFunctionTable[T_ExposeInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionForward(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionForward(RESTOREIMAGE);
    virtualFunctionTable[T_ForwardInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionGuard(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionGuard(RESTOREIMAGE);
    virtualFunctionTable[T_GuardInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionIf(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionIf(RESTOREIMAGE);
    virtualFunctionTable[T_IfInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionInterpret(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionInterpret(RESTOREIMAGE);
    virtualFunctionTable[T_InterpretInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionLabel(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionLabel(RESTOREIMAGE);
    virtualFunctionTable[T_LabelInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionLeave(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionLeave(RESTOREIMAGE);
    virtualFunctionTable[T_LeaveInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionMessage(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionMessage(RESTOREIMAGE);
    virtualFunctionTable[T_MessageInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionNop(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionNop(RESTOREIMAGE);
    virtualFunctionTable[T_NopInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionNumeric(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionNumeric(RESTOREIMAGE);
    virtualFunctionTable[T_NumericInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionOptions(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionOptions(RESTOREIMAGE);
    virtualFunctionTable[T_OptionsInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionOtherwise(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionOtherwise(RESTOREIMAGE);
    virtualFunctionTable[T_OtherwiseInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionParse(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionParse(RESTOREIMAGE);
    virtualFunctionTable[T_ParseInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionProcedure(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionProcedure(RESTOREIMAGE);
    virtualFunctionTable[T_ProcedureInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionQueue(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionQueue(RESTOREIMAGE);
    virtualFunctionTable[T_QueueInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionRaise(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionRaise(RESTOREIMAGE);
    virtualFunctionTable[T_RaiseInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionReply(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionReply(RESTOREIMAGE);
    virtualFunctionTable[T_ReplyInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionReturn(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionReturn(RESTOREIMAGE);
    virtualFunctionTable[T_ReturnInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionSay(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionSay(RESTOREIMAGE);
    virtualFunctionTable[T_SayInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionSelect(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionSelect(RESTOREIMAGE);
    virtualFunctionTable[T_SelectInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionSignal(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionSignal(RESTOREIMAGE);
    virtualFunctionTable[T_SignalInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionThen(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionThen(RESTOREIMAGE);
    virtualFunctionTable[T_ThenInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionTrace(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionTrace(RESTOREIMAGE);
    virtualFunctionTable[T_TraceInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInstructionUseStrict(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInstructionUseStrict(RESTOREIMAGE);
    virtualFunctionTable[T_UseInstruction] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) ClassDirective(RESTOREIMAGE);
+   objectPtr = new (objectLoc) ClassDirective(RESTOREIMAGE);
    virtualFunctionTable[T_ClassDirective] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) LibraryDirective(RESTOREIMAGE);
+   objectPtr = new (objectLoc) LibraryDirective(RESTOREIMAGE);
    virtualFunctionTable[T_LibraryDirective] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RequiresDirective(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RequiresDirective(RESTOREIMAGE);
    virtualFunctionTable[T_RequiresDirective] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxCompoundElement(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxCompoundElement(RESTOREIMAGE);
    virtualFunctionTable[T_CompoundElement] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxTrigger(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxTrigger(RESTOREIMAGE);
    virtualFunctionTable[T_ParseTrigger] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxObject(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxObject(RESTOREIMAGE);
    virtualFunctionTable[T_Memory] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxInternalStack(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxInternalStack(RESTOREIMAGE);
    virtualFunctionTable[T_InternalStack] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxStack(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxStack(RESTOREIMAGE);
    virtualFunctionTable[T_Stack] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxActivity(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxActivity(RESTOREIMAGE);
    virtualFunctionTable[T_Activity] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxActivation(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxActivation(RESTOREIMAGE);
    virtualFunctionTable[T_Activation] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxNativeActivation(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxNativeActivation(RESTOREIMAGE);
    virtualFunctionTable[T_NativeActivation] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxActivationFrameBuffer(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxActivationFrameBuffer(RESTOREIMAGE);
    virtualFunctionTable[T_ActivationFrameBuffer] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxEnvelope(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxEnvelope(RESTOREIMAGE);
    virtualFunctionTable[T_Envelope] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxClause(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxClause(RESTOREIMAGE);
    virtualFunctionTable[T_Clause] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxToken(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxToken(RESTOREIMAGE);
    virtualFunctionTable[T_Token] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) RexxDoBlock(RESTOREIMAGE);
+   objectPtr = new (objectLoc) RexxDoBlock(RESTOREIMAGE);
    virtualFunctionTable[T_DoBlock] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) InterpreterInstance(RESTOREIMAGE);
+   objectPtr = new (objectLoc) InterpreterInstance(RESTOREIMAGE);
    virtualFunctionTable[T_InterpreterInstance] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) SecurityManager(RESTOREIMAGE);
+   objectPtr = new (objectLoc) SecurityManager(RESTOREIMAGE);
    virtualFunctionTable[T_SecurityManager] = *((void **)objectPtr);
    
-   objectPtr = new (objectPtr) CommandHandler(RESTOREIMAGE);
+   objectPtr = new (objectLoc) CommandHandler(RESTOREIMAGE);
    virtualFunctionTable[T_CommandHandler] = *((void **)objectPtr);
    
 };
