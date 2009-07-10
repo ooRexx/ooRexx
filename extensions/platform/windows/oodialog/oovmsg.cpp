@@ -121,31 +121,15 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
    register LONG i = 0;
    MESSAGETABLEENTRY * m = addressedTo->MsgTab;
 
-   #if 0
-   // TODO remove debugging code before release
-   if ( message == WM_SYSCOMMAND )
-   {
-       printf("Got WM_SYSCOMMAND wParam=%p lParam=%p\n", param, lparam);
-
-   }
-   #endif
-
    if (m)
    for (i=0; i<addressedTo->MT_size; i++)
-      if (((message & m[i].filterM) == m[i].msg)
-      && ( (ULONG)(param & m[i].filterP) == m[i].wParam)
-      && ( ((message == WM_NOTIFY) && ((ULONG)(((NMHDR *)lparam)->code & m[i].filterL) == m[i].lParam))
-         || ((message != WM_NOTIFY) && ( (ULONG)(lparam & m[i].filterL) == m[i].lParam)) ) )
+      if ( ((message & m[i].filterM) == m[i].msg)  &&
+           ((param & m[i].filterP) == m[i].wParam) &&
+           ( ((message == WM_NOTIFY) && ((((NMHDR *)lparam)->code & m[i].filterL) == (UINT)m[i].lParam)) ||
+             ((message != WM_NOTIFY) && ((lparam & m[i].filterL) == m[i].lParam))
+           )
+         )
       {
-          #if 0
-          // TODO remove debugging code before release
-          if ( message == WM_SYSCOMMAND )
-          {
-              printf("Got WM_SYSCOMMAND and matched in message table method=%s\n", m[i].rexxProgram);
-
-          }
-          #endif
-
          if (param || lparam)  /* if one of the params is <> 0, build argument string */
          {
             char msgstr[512];
@@ -154,7 +138,7 @@ MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIAL
             int item;
             HANDLE handle = NULL;
 
-                /* do we have a notification where we have to extract some information ? */
+            /* do we have a notification where we have to extract some information ? */
             if (message == WM_NOTIFY)
             {
                 UINT code = ((NMHDR *)lparam)->code;
