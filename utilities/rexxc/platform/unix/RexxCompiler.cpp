@@ -151,6 +151,7 @@ int main (int argc, char **argv)
     {
         ptr = RexxGetVersionInformation();
         printf(ptr);
+        printf("\n");
         RexxFreeMemory(ptr);
     }
     /* Check validity of arguments       */
