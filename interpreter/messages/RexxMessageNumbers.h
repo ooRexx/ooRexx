@@ -138,6 +138,7 @@
 #define Error_REXXC_SynCheckInfo_msg                                 130
 #define Error_RXQUE_syntax_msg                                       131
 #define Error_RXQUE_memfail_msg                                      132
+#define Error_REXXC_wrongNrArg_unix_msg                              133
 #define Error_Program_unreadable_name_msg                            200
 #define Error_Program_interrupted_condition_msg                      201
 #define Error_Unmatched_quote_comment_msg                            202

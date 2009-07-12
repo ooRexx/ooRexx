@@ -619,6 +619,7 @@
 #define Error_REXXC_SynCheckInfo                           999015
 #define Error_RXQUE_syntax                                 999016
 #define Error_RXQUE_memfail                                999017
+#define Error_REXXC_wrongNrArg_unix                        999018
 
 
 #endif

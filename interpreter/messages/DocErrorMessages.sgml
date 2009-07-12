@@ -3867,10 +3867,13 @@ returns the negated ooRexx error code. In addition, RexxC issues the following e
 <para>The REXXC utility was invoked with zero or more than three parameters.  REXXC accepts the following parameters:
         <itemizedlist>
         <listitem>
-<para>To check the syntax of a REXX program: REXXC Program_name [/s]</para>
+<para>To check the syntax of a REXX program: REXXC Program_name [-s]</para>
 </listitem>
         <listitem>
-<para>To convert a REXX program into a sourceless executable file: REXXC Program_name Output_file_name [/s]</para>
+<para>To convert a REXX program into a sourceless executable file: REXXC Program_name Output_file_name [-s]</para>
+</listitem>
+        <listitem>
+<para>The -s option will suppress the copyright banner.</para>
 </listitem>
         </itemizedlist>
         </para>
@@ -3885,6 +3888,10 @@ returns the negated ooRexx error code. In addition, RexxC issues the following e
 </section>
 <section id="ERR130">
 <title>Error 130 - Without OutProgramName REXXC only performs a syntax check</title>
+<para> </para>
+</section>
+<section id="ERR133">
+<title>Error 133 - SYNTAX: REXXC InProgramName [OutProgramName] [-s]</title>
 <para> </para>
 </section>
 </section>

@@ -95,7 +95,6 @@ void DisplayError(int msgid)           /* simplified catalog access@MAE004M */
     }                                 /* retrieve message from repository  */
     message = catgets(catd, set_num, msgid, NULL);
     if (!message)                    /* got a message ?                     */
-#if defined(OPSYS_LINUX) && !defined(OPSYS_SUN)
     {
         sprintf(DataArea, "%s/%s", ORX_CATDIR, REXXMESSAGEFILE);
         if ((catd = catopen(DataArea, SECOND_PARAMETER)) == (nl_catd)CATD_ERR)
@@ -116,15 +115,10 @@ void DisplayError(int msgid)           /* simplified catalog access@MAE004M */
             }
         }
     }
-#else
-    {
-        printf("*** Error message not found!");
-    }
     else
     {
         printf("\n%s\n", message);    /* print the message                 */
     }
-#endif
     catclose(catd);                   /* close the catalog                 */
 #else
     printf("*** Cannot get description for error %d!", msgid);
@@ -164,7 +158,7 @@ int main (int argc, char **argv)
         {
             DisplayError((int)Error_REXXC_cmd_parm_incorrect_msg);
         }
-        DisplayError((int) Error_REXXC_wrongNrArg_msg);
+        DisplayError((int) Error_REXXC_wrongNrArg_unix_msg);
         DisplayError((int) Error_REXXC_SynCheckInfo_msg);
         exit(-1);                          /* terminate with an error           */
     }                                    /* end additions                     */
