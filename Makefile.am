@@ -405,7 +405,7 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
 # These error message files are built BEFORE any other target
 #
 BUILT_SOURCES = $(errorHeaders) \
-                rexx.img @REXXCAT@ ooTest
+                rexx.img @REXXCAT@ ooTest $(build_messages_dir)/DocErrorMessages.sgml
 #
 # Binary targets
 #
@@ -917,6 +917,9 @@ $(build_messages_dir)/RexxMessageNumbers.h: $(build_messages_dir)/RexxMessageNum
 $(build_messages_dir)/RexxErrorCodes.h: $(build_messages_dir)/RexxErrorCodes.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/RexxErrorCodes.xsl
 
+$(build_messages_dir)/DocErrorMessages.sgml: $(build_messages_dir)/DocBookErrors.xsl $(messageXML)
+	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/DocBookErrors.xsl
+
 $(build_api_dir)/oorexxerrors.h: $(build_messages_dir)/ApiErrorCodes.xsl $(messageXML)
 	sh ./xsl.sh $(@) $(messageXML) $(build_messages_dir)/ApiErrorCodes.xsl
 
@@ -935,7 +938,7 @@ $(build_behaviour_dir)/PrimitiveBehaviourNames.h: $(build_behaviour_dir)/Primiti
 $(build_behaviour_dir)/PrimitiveBehaviours.cpp: $(build_behaviour_dir)/PrimitiveBehaviours.xsl $(classesXML)
 	sh ./xsl.sh $(@) $(classesXML) $(build_behaviour_dir)/PrimitiveBehaviours.xsl
 
-$(build_behaviour_dir)/VirtualFunctionTables.cpp: $(build_behaviour_dir)/VirtualFunctionTable.xsl $(classesXML)
+$(build_behaviour_dir)/VirtualFunctionTable.cpp: $(build_behaviour_dir)/VirtualFunctionTable.xsl $(classesXML)
 	sh ./xsl.sh $(@) $(classesXML) $(build_behaviour_dir)/VirtualFunctionTable.xsl
 
 rexx.img: rexximage librexxutil.la $(core_classes) $(core_platform_classes)
