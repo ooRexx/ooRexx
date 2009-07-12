@@ -41,11 +41,11 @@
 /***    RexxPullQueue - Retrieve data from an External Data Queue */
 
 RexxReturnCode REXXENTRY RexxPullQueue (
-        const char *,                          /* Name of queue to read from  */
+        CONSTANT_STRING,                       /* Name of queue to read from  */
         PRXSTRING,                             /* RXSTRING to receive data    */
         SYSTEMTIME *,                          /* Stor for data date/time     */
         size_t);                               /* wait status (WAIT|NOWAIT)   */
-typedef RexxReturnCode (REXXENTRY *PFNREXXPULLQUEUE)(const char *, PRXSTRING, SYSTEMTIME *,
+typedef RexxReturnCode (REXXENTRY *PFNREXXPULLQUEUE)(CONSTANT_STRING, PRXSTRING, SYSTEMTIME *,
                                            size_t);
 
 #endif /* REXXPLATFORMAPIS_INCLUDED */

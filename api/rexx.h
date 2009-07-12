@@ -159,6 +159,15 @@ typedef struct _CONSTRXSTRING {        /* const rxstr                */
     const char   *strptr;              /*   pointer to string        */
 } CONSTRXSTRING;
 
+#ifndef OOREXX_COMPATIBILITY
+#define CONSTANT_RXSTRING CONSTRXSTRING
+#define CONSTANT_STRING   CSTRING
+#else
+typedef char *PSZ;
+#define CONSTANT_RXSTRING RXSTRING
+#define CONSTANT_STRING   PSZ
+#endif
+
 /***    Macros for RexxString manipulation                   */
 
 #define RXNULLSTRING(r)      ((r).strptr == NULL)
@@ -169,14 +178,14 @@ typedef struct _CONSTRXSTRING {        /* const rxstr                */
 #define MAKERXSTRING(r,p,l)  { (r).strptr = p; (r).strlength = l; }
 
 
-typedef RXSTRING      *PRXSTRING;      /* pointer to a RXSTRING      */
-typedef CONSTRXSTRING *PCONSTRXSTRING; /* pointer to a RXSTRING      */
+typedef RXSTRING          *PRXSTRING;      /* pointer to a RXSTRING  */
+typedef CONSTANT_RXSTRING *PCONSTRXSTRING; /* pointer to a RXSTRING  */
 
 /***    Structure for system exit block (RXSYSEXIT) */
 
 typedef struct _RXSYSEXIT {            /* syse */
-   const char *sysexit_name;           /* subcom enviro for sysexit  */
-   int   sysexit_code;                 /* sysexit function code      */
+   CONSTANT_STRING sysexit_name;       /* subcom enviro for sysexit  */
+   int             sysexit_code;       /* sysexit function code      */
 }  RXSYSEXIT;
 typedef RXSYSEXIT *PRXSYSEXIT;         /* pointer to a RXSYSEXIT     */
 
@@ -190,7 +199,7 @@ typedef RXSYSEXIT *PRXSYSEXIT;         /* pointer to a RXSYSEXIT     */
 
 typedef struct _SHVBLOCK {            /* shvb */
     struct _SHVBLOCK  *shvnext;       /* pointer to the next block   */
-    CONSTRXSTRING      shvname;       /* Pointer to the name buffer  */
+    CONSTANT_RXSTRING  shvname;       /* Pointer to the name buffer  */
     RXSTRING           shvvalue;      /* Pointer to the value buffer */
     size_t             shvnamelen;    /* Length of the name value    */
     size_t             shvvaluelen;   /* Length of the fetch value   */
@@ -260,15 +269,15 @@ BEGIN_EXTERN_C()
 int REXXENTRY RexxStart (
          size_t,                       /* Num of args passed to rexx */
          PCONSTRXSTRING,               /* Array of args passed to rex */
-         const char *,                 /* [d:][path] filename[.ext]  */
+         CONSTANT_STRING,              /* [d:][path] filename[.ext]  */
          PRXSTRING,                    /* Loc of rexx proc in memory */
-         const char *,                 /* ASCIIZ initial environment.*/
+         CONSTANT_STRING,              /* ASCIIZ initial environment.*/
          int,                          /* type (command,subrtn,funct) */
          PRXSYSEXIT,                   /* SysExit env. names &  codes */
          short *,                      /* Ret code from if numeric   */
          PRXSTRING );                  /* Retvalue from the rexx proc */
-typedef RexxReturnCode (REXXENTRY *PFNREXXSTART)(size_t, PCONSTRXSTRING, const char *, PRXSTRING,
-                                        const char *, int, PRXSYSEXIT, short *,
+typedef RexxReturnCode (REXXENTRY *PFNREXXSTART)(size_t, PCONSTRXSTRING, CONSTANT_STRING, PRXSTRING,
+                                        CONSTANT_STRING, int, PRXSYSEXIT, short *,
                                         PRXSTRING);
 #define REXXSTART RexxStart
 
@@ -288,23 +297,23 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXSHUTDOWNAPI)(void);
 
 
 RexxReturnCode REXXENTRY RexxTranslateProgram(
-    const char *,                       // input program name
-    const char *,                       // output file name
+    CONSTANT_STRING,                    // input program name
+    CONSTANT_STRING,                    // output file name
     PRXSYSEXIT);                        // system exits to use during translation
 
 
-typedef RexxReturnCode (REXXENTRY *PFNREXXTRANSLATEPROGRAM)(const char *, const char *, PRXSYSEXIT);
+typedef RexxReturnCode (REXXENTRY *PFNREXXTRANSLATEPROGRAM)(CONSTANT_STRING, CONSTANT_STRING, PRXSYSEXIT);
 
 #define REXXTRANSLATEPROGRAM RexxTranslateProgram
 
 
 RexxReturnCode REXXENTRY RexxTranslateInstoreProgram(
-    const char *,                       // input program name
-    CONSTRXSTRING *,                    // program source
+    CONSTANT_STRING,                    // input program name
+    CONSTANT_RXSTRING *,                // program source
     RXSTRING *);                        // returned image
 
 
-typedef RexxReturnCode (REXXENTRY *PFNREXXTRANSLATEINSTOREPROGRAM)(const char *, CONSTRXSTRING *, RXSTRING *);
+typedef RexxReturnCode (REXXENTRY *PFNREXXTRANSLATEINSTOREPROGRAM)(CONSTANT_STRING, CONSTANT_RXSTRING *, RXSTRING *);
 
 #define REXXTRANSLATEINSTOREPROGRAM RexxTranslateInstoreProgram
 
@@ -329,12 +338,12 @@ typedef RexxReturnCode REXXENTRY RexxSubcomHandler(PCONSTRXSTRING,
 /***   as a Subcommand handler */
 
 RexxReturnCode REXXENTRY RexxRegisterSubcomDll (
-         const char *,                         /* Name of subcom handler     */
-         const char *,                         /* Name of DLL                */
-         const char *,                         /* Name of procedure in DLL   */
-         const char *,                         /* User area                  */
+         CONSTANT_STRING,                      /* Name of subcom handler     */
+         CONSTANT_STRING,                      /* Name of DLL                */
+         CONSTANT_STRING,                      /* Name of procedure in DLL   */
+         CONSTANT_STRING,                      /* User area                  */
          size_t );                             /* Drop authority.            */
-typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTERSUBCOMDLL)(const char *, const char *, const char *,
+typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTERSUBCOMDLL)(CONSTANT_STRING, CONSTANT_STRING, CONSTANT_STRING,
                                                     char *, size_t);
 #define REXXREGISTERSUBCOMDLL  RexxRegisterSubcomDll
 
@@ -343,21 +352,21 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTERSUBCOMDLL)(const char *, const
 /***   as a Subcommand handler */
 
 RexxReturnCode REXXENTRY RexxRegisterSubcomExe (
-         const char *,                 /* Name of subcom handler     */
+         CONSTANT_STRING,              /* Name of subcom handler     */
          REXXPFN,                      /* address of handler in EXE  */
-         const char *);                /* User area                  */
-typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTERSUBCOMEXE)(const char *, REXXPFN, char *);
+         CONSTANT_STRING);             /* User area                  */
+typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTERSUBCOMEXE)(CONSTANT_STRING, REXXPFN, char *);
 #define REXXREGISTERSUBCOMEXE  RexxRegisterSubcomExe
 
 
 /***    RexxQuerySubcom - Query an environment for Existance */
 
 RexxReturnCode REXXENTRY RexxQuerySubcom(
-         const char *,                 /* Name of the Environment    */
-         const char *,                 /* DLL Module Name            */
+         CONSTANT_STRING,              /* Name of the Environment    */
+         CONSTANT_STRING,              /* DLL Module Name            */
          unsigned short *,             /* Stor for existance code    */
          char *);                      /* Stor for user word         */
-typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYSUBCOM)(const char *, const char *, unsigned short *,
+typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYSUBCOM)(CONSTANT_STRING, CONSTANT_STRING, unsigned short *,
                                               char *);
 #define REXXQUERYSUBCOM  RexxQuerySubcom
 
@@ -366,9 +375,9 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYSUBCOM)(const char *, const char 
 /***    environment */
 
 RexxReturnCode REXXENTRY RexxDeregisterSubcom(
-         const char *,                         /* Name of the Environment    */
-         const char * );                       /* DLL Module Name            */
-typedef RexxReturnCode (REXXENTRY *PFNREXXDEREGISTERSUBCOM)(const char *, const char *);
+         CONSTANT_STRING,                      /* Name of the Environment    */
+         CONSTANT_STRING);                     /* DLL Module Name            */
+typedef RexxReturnCode (REXXENTRY *PFNREXXDEREGISTERSUBCOM)(CONSTANT_STRING, CONSTANT_STRING);
 #define REXXDEREGISTERSUBCOM  RexxDeregisterSubcom
 
 
@@ -390,50 +399,50 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXVARIABLEPOOL)(PSHVBLOCK);
 
 /* This typedef simplifies coding of an External Function.           */
 
-typedef size_t REXXENTRY RexxRoutineHandler(const char *,
+typedef size_t REXXENTRY RexxRoutineHandler(CONSTANT_STRING,
                                   size_t,
                                   PCONSTRXSTRING,
-                                  const char *,
+                                  CONSTANT_STRING,
                                   PRXSTRING);
 
-typedef size_t REXXENTRY RexxFunctionHandler(const char *,
+typedef size_t REXXENTRY RexxFunctionHandler(CONSTANT_STRING,
                                   size_t,
                                   PCONSTRXSTRING,
-                                  const char *,
+                                  CONSTANT_STRING,
                                   PRXSTRING);
 
 /***    RexxRegisterFunctionDll - Register a function in the AFT */
 
 RexxReturnCode REXXENTRY RexxRegisterFunctionDll (
-        const char *,                          /* Name of function to add    */
-        const char *,                          /* Dll file name (if in dll)  */
-        const char *);                         /* Entry in dll               */
-typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTERFUNCTIONDLL)(const char *, const char *, const char *);
+        CONSTANT_STRING,                       /* Name of function to add    */
+        CONSTANT_STRING,                       /* Dll file name (if in dll)  */
+        CONSTANT_STRING);                      /* Entry in dll               */
+typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTERFUNCTIONDLL)(CONSTANT_STRING, CONSTANT_STRING, CONSTANT_STRING);
 #define REXXREGISTERFUNCTIONDLL  RexxRegisterFunctionDll
 
 
 /***    RexxRegisterFunctionExe - Register a function in the AFT */
 
 RexxReturnCode REXXENTRY RexxRegisterFunctionExe (
-        const char *,                  /* Name of function to add    */
+        CONSTANT_STRING,               /* Name of function to add    */
         REXXPFN);                      /* Entry point in EXE         */
-typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTERFUNCTIONEXE)(const char *, REXXPFN);
+typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTERFUNCTIONEXE)(CONSTANT_STRING, REXXPFN);
 #define REXXREGISTERFUNCTIONEXE  RexxRegisterFunctionExe
 
 
 /***    RexxDeregisterFunction - Delete a function from the AFT */
 
 RexxReturnCode REXXENTRY RexxDeregisterFunction (
-        const char * );                         /* Name of function to remove */
-typedef RexxReturnCode (REXXENTRY *PFNREXXDEREGISTERFUNCTION)(const char *);
+        CONSTANT_STRING );                      /* Name of function to remove */
+typedef RexxReturnCode (REXXENTRY *PFNREXXDEREGISTERFUNCTION)(CONSTANT_STRING);
 #define REXXDEREGISTERFUNCTION  RexxDeregisterFunction
 
 
 /***    RexxQueryFunction - Scan the AFT for a function */
 
 RexxReturnCode REXXENTRY RexxQueryFunction (
-        const char * );                         /* Name of function to find   */
-typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYFUNCTION)(const char *);
+        CONSTANT_STRING );                      /* Name of function to find   */
+typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYFUNCTION)(CONSTANT_STRING);
 #define REXXQUERYFUNCTION  RexxQueryFunction
 
 
@@ -451,9 +460,9 @@ typedef  struct _RXFNC_FLAGS {          /* fl */
 
 typedef  struct _RXFNCCAL_PARM {        /* fnc */
    RXFNC_FLAGS       rxfnc_flags ;     /* function flags             */
-   const char *      rxfnc_name;       /* Pointer to function name.  */
+   CONSTANT_STRING   rxfnc_name;       /* Pointer to function name.  */
    unsigned short    rxfnc_namel;      /* Length of function name.   */
-   const char *      rxfnc_que;        /* Current queue name.        */
+   CONSTANT_STRING   rxfnc_que;        /* Current queue name.        */
    unsigned short    rxfnc_quel;       /* Length of queue name.      */
    unsigned short    rxfnc_argc;       /* Number of args in list.    */
    PCONSTRXSTRING    rxfnc_argv;       /* Pointer to argument list.  */
@@ -471,7 +480,7 @@ typedef  struct _RXOFNC_FLAGS {        /* fl */
 
 typedef  struct _RXOFNCCAL_PARM {      /* fnc */
    RXOFNC_FLAGS      rxfnc_flags ;     /* function flags             */
-   CONSTRXSTRING     rxfnc_name;       // the called function name
+   CONSTANT_RXSTRING rxfnc_name;       // the called function name
    size_t            rxfnc_argc;       /* Number of args in list.    */
    RexxObjectPtr    *rxfnc_argv;       /* Pointer to argument list.  */
    RexxObjectPtr     rxfnc_retc;       /* Return value.              */
@@ -489,7 +498,7 @@ typedef  struct _RXEXF_FLAGS {          /* fl */
 
 typedef  struct _RXEXFCAL_PARM {        /* fnc */
    RXEXF_FLAGS       rxfnc_flags ;     /* function flags             */
-   CONSTRXSTRING     rxfnc_name;       // the called function name
+   CONSTANT_RXSTRING rxfnc_name;       // the called function name
    size_t            rxfnc_argc;       /* Number of args in list.    */
    RexxObjectPtr    *rxfnc_argv;       /* Pointer to argument list.  */
    RexxObjectPtr     rxfnc_retc;       /* Return value.              */
@@ -504,11 +513,11 @@ typedef  struct _RXCMD_FLAGS {          /* fl */
 
 typedef  struct _RXCMDHST_PARM {        /* rx */
    RXCMD_FLAGS       rxcmd_flags;      /* error/failure flags        */
-   const char *      rxcmd_address;    /* Pointer to address name.   */
+   CONSTANT_STRING   rxcmd_address;    /* Pointer to address name.   */
    unsigned short    rxcmd_addressl;   /* Length of address name.    */
-   const char *      rxcmd_dll;        /* dll name for command.      */
+   CONSTANT_STRING   rxcmd_dll;        /* dll name for command.      */
    unsigned short    rxcmd_dll_len;    /* Length of dll name.        */
-   CONSTRXSTRING     rxcmd_command;    /* The command string.        */
+   CONSTANT_RXSTRING rxcmd_command;    /* The command string.        */
    RXSTRING          rxcmd_retc;       /* Pointer to return buffer   */
 }  RXCMDHST_PARM;
 
@@ -529,7 +538,7 @@ typedef  struct _RXMSQ_FLAGS {          /* fl */
 
 typedef  struct _RXMSQPSH_PARM {       /* psh */
    RXMSQ_FLAGS       rxmsq_flags;      /* LIFO/FIFO flag             */
-   CONSTRXSTRING     rxmsq_value;      /* The entry to be pushed.    */
+   CONSTANT_RXSTRING rxmsq_value;      /* The entry to be pushed.    */
 }  RXMSQPSH_PARM;
 
 
@@ -551,14 +560,14 @@ typedef struct _RXMSQNAM_PARM {        /* nam */
 /***    Subfunction RXSIOSAY -- Perform SAY Clause */
 
 typedef struct _RXSIOSAY_PARM {        /* say */
-   CONSTRXSTRING     rxsio_string;     /* String to display.         */
+   CONSTANT_RXSTRING rxsio_string;     /* String to display.         */
 }  RXSIOSAY_PARM;
 
 
 /***    Subfunction RXSIOTRC -- Write Trace Output */
 
 typedef struct _RXSIOTRC_PARM { /* trcparm */
-   CONSTRXSTRING     rxsio_string;     /* Trace line to display.     */
+   CONSTANT_RXSTRING rxsio_string;     /* Trace line to display.     */
 }  RXSIOTRC_PARM;
 
 
@@ -618,12 +627,12 @@ typedef int REXXENTRY RexxExitHandler(int, int, PEXIT);
 /***      RexxRegisterExitDll - Register a system exit. */
 
 RexxReturnCode REXXENTRY RexxRegisterExitDll (
-         const char *,                 /* Name of the exit handler   */
-         const char *,                 /* Name of the DLL            */
-         const char *,                 /* Name of the procedure      */
-         const char *,                 /* User area                  */
+         CONSTANT_STRING,              /* Name of the exit handler   */
+         CONSTANT_STRING,              /* Name of the DLL            */
+         CONSTANT_STRING,              /* Name of the procedure      */
+         CONSTANT_STRING,              /* User area                  */
          size_t);                      /* Drop authority             */
-typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTEREXITDLL)(const char *, const char *, const char *,
+typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTEREXITDLL)(CONSTANT_STRING, CONSTANT_STRING, CONSTANT_STRING,
                                                   char *, size_t);
 #define REXXREGISTEREXITDLL  RexxRegisterExitDll
 
@@ -631,30 +640,30 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTEREXITDLL)(const char *, const c
 /***      RexxRegisterExitExe - Register a system exit. */
 
 RexxReturnCode REXXENTRY RexxRegisterExitExe (
-         const char *,                 /* Name of the exit handler   */
+         CONSTANT_STRING,              /* Name of the exit handler   */
          REXXPFN,                      /* Address of exit handler    */
-         const char *);                /* User area                  */
-typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTEREXITEXE)(const char *, REXXPFN, char *);
+         CONSTANT_STRING);             /* User area                  */
+typedef RexxReturnCode (REXXENTRY *PFNREXXREGISTEREXITEXE)(CONSTANT_STRING, REXXPFN, char *);
 #define REXXREGISTEREXITEXE  RexxRegisterExitExe
 
 
 /***    RexxDeregisterExit - Drop registration of a system exit. */
 
 RexxReturnCode REXXENTRY RexxDeregisterExit (
-         const char *,                          /* Exit name                  */
-         const char * ) ;                       /* DLL module name            */
-typedef RexxReturnCode (REXXENTRY *PFNREXXDEREGISTEREXIT)(const char *, const char *);
+         CONSTANT_STRING,                       /* Exit name                  */
+         CONSTANT_STRING) ;                     /* DLL module name            */
+typedef RexxReturnCode (REXXENTRY *PFNREXXDEREGISTEREXIT)(CONSTANT_STRING, CONSTANT_STRING);
 #define REXXDEREGISTEREXIT  RexxDeregisterExit
 
 
 /***    RexxQueryExit - Query an exit for existance. */
 
 RexxReturnCode REXXENTRY RexxQueryExit (
-         const char *,                 /* Exit name                  */
-         const char *,                 /* DLL Module name.           */
+         CONSTANT_STRING,              /* Exit name                  */
+         CONSTANT_STRING,              /* DLL Module name.           */
          unsigned short *,             /* Existance flag.            */
          char * );                     /* User data.                 */
-typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYEXIT)(const char *, const char *, unsigned short *, char *);
+typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYEXIT)(CONSTANT_STRING, CONSTANT_STRING, unsigned short *, char *);
 #define REXXQUERYEXIT  RexxQueryExit
 
 
@@ -696,18 +705,18 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXRESETTRACE)(process_id_t, thread_id_t)
 /***    RexxAddMacro - Register a function in the Macro Space        */
 
 RexxReturnCode REXXENTRY RexxAddMacro(
-         const char *,                 /* Function to add or change   */
-         const char *,                 /* Name of file to get function*/
+         CONSTANT_STRING,              /* Function to add or change   */
+         CONSTANT_STRING,              /* Name of file to get function*/
          size_t);                      /* Flag indicating search pos  */
-typedef RexxReturnCode (REXXENTRY *PFNREXXADDMACRO)(const char *, const char *, size_t);
+typedef RexxReturnCode (REXXENTRY *PFNREXXADDMACRO)(CONSTANT_STRING, CONSTANT_STRING, size_t);
 #define REXXADDMACRO  RexxAddMacro
 
 
 /***    RexxDropMacro - Remove a function from the Macro Space       */
 
 RexxReturnCode REXXENTRY RexxDropMacro (
-         const char * );                        /* Name of function to remove */
-typedef RexxReturnCode (REXXENTRY *PFNREXXDROPMACRO)(const char *);
+         CONSTANT_STRING);                      /* Name of function to remove */
+typedef RexxReturnCode (REXXENTRY *PFNREXXDROPMACRO)(CONSTANT_STRING);
 #define REXXDROPMACRO  RexxDropMacro
 
 
@@ -715,9 +724,9 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXDROPMACRO)(const char *);
 
 RexxReturnCode REXXENTRY RexxSaveMacroSpace (
          size_t,                              /* Argument count (0==save all)*/
-         const char * *,                      /* List of funct names to save */
-         const char *);                       /* File to save functions in   */
-typedef RexxReturnCode (REXXENTRY * PFNREXXSAVEMACROSPACE)(size_t, const char * *, const char *);
+         CONSTANT_STRING *,                   /* List of funct names to save */
+         CONSTANT_STRING);                    /* File to save functions in   */
+typedef RexxReturnCode (REXXENTRY * PFNREXXSAVEMACROSPACE)(size_t, CONSTANT_STRING *, CONSTANT_STRING);
 #define REXXSAVEMACROSPACE  RexxSaveMacroSpace
 
 
@@ -725,18 +734,18 @@ typedef RexxReturnCode (REXXENTRY * PFNREXXSAVEMACROSPACE)(size_t, const char * 
 
 RexxReturnCode REXXENTRY RexxLoadMacroSpace (
          size_t,                              /* Argument count (0==load all)*/
-         const char * *,                      /* List of funct names to load */
-         const char *);                       /* File to load functions from */
-typedef RexxReturnCode (REXXENTRY *PFNREXXLOADMACROSPACE)(size_t, const char * *, const char *);
+         CONSTANT_STRING *,                   /* List of funct names to load */
+         CONSTANT_STRING);                    /* File to load functions from */
+typedef RexxReturnCode (REXXENTRY *PFNREXXLOADMACROSPACE)(size_t, CONSTANT_STRING *, CONSTANT_STRING);
 #define REXXLOADMACROSPACE  RexxLoadMacroSpace
 
 
 /***    RexxQueryMacro - Find a function's search-order position     */
 
 RexxReturnCode REXXENTRY RexxQueryMacro (
-         const char *,                         /* Function to search for      */
+         CONSTANT_STRING,                      /* Function to search for      */
          unsigned short * );                   /* Ptr for position flag return*/
-typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYMACRO)(const char *, unsigned short *);
+typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYMACRO)(CONSTANT_STRING, unsigned short *);
 #define REXXQUERYMACRO  RexxQueryMacro
 
 
@@ -744,9 +753,9 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYMACRO)(const char *, unsigned sho
 /***                            position                             */
 
 RexxReturnCode REXXENTRY RexxReorderMacro(
-         const char *,                        /* Name of funct change order  */
+         CONSTANT_STRING,                     /* Name of funct change order  */
          size_t);                             /* New position for function   */
-typedef RexxReturnCode (REXXENTRY *PFNREXXREORDERMACRO)(const char *, size_t);
+typedef RexxReturnCode (REXXENTRY *PFNREXXREORDERMACRO)(CONSTANT_STRING, size_t);
 #define REXXREORDERMACRO  RexxReorderMacro
 
 
@@ -769,62 +778,62 @@ typedef RexxReturnCode (REXXENTRY *PFNREXXCLEARMACROSPACE)(void);
 RexxReturnCode REXXENTRY RexxCreateQueue (
         char *,                                /* Name of queue created       */
         size_t,                                /* Size of buf for ret name    */
-        const char *,                          /* Requested name for queue    */
+        CONSTANT_STRING,                       /* Requested name for queue    */
         size_t *);                             /* Duplicate name flag.        */
-typedef RexxReturnCode (REXXENTRY *PFNREXXCREATEQUEUE)(char *, size_t, const char *, size_t);
+typedef RexxReturnCode (REXXENTRY *PFNREXXCREATEQUEUE)(char *, size_t, CONSTANT_STRING, size_t);
 
 /***    RexxOpenQueue - Create a named external queue, if necessary */
 
 RexxReturnCode REXXENTRY RexxOpenQueue (
-        const char *,                          /* Requested name for queue    */
+        CONSTANT_STRING,                       /* Requested name for queue    */
         size_t *);                             /* Flag for already created queue */
-typedef RexxReturnCode (REXXENTRY *PFNREXXOPENQUEUE)(const char *, size_t);
+typedef RexxReturnCode (REXXENTRY *PFNREXXOPENQUEUE)(CONSTANT_STRING, size_t);
 
 
 /***    RexxQueueExists - Check for the existance of an external data queue */
 
 RexxReturnCode REXXENTRY RexxQueueExists (
-        const char * );                         /* Name of queue to be deleted */
-typedef RexxReturnCode (REXXENTRY *PFNREXXQUEUEEXISTS)(const char *);
+        CONSTANT_STRING);                      /* Name of queue to be deleted */
+typedef RexxReturnCode (REXXENTRY *PFNREXXQUEUEEXISTS)(CONSTANT_STRING);
 
 /***    RexxDeleteQueue - Delete an External Data Queue */
 
 RexxReturnCode REXXENTRY RexxDeleteQueue (
-        const char * );                         /* Name of queue to be deleted */
-typedef RexxReturnCode (REXXENTRY *PFNREXXDELETEQUEUE)(const char *);
+        CONSTANT_STRING);                      /* Name of queue to be deleted */
+typedef RexxReturnCode (REXXENTRY *PFNREXXDELETEQUEUE)(CONSTANT_STRING);
 
 
 /*** RexxQueryQueue - Query an External Data Queue for number of      */
 /***                  entries                                         */
 
 RexxReturnCode REXXENTRY RexxQueryQueue (
-        const char *,                          /* Name of queue to query      */
+        CONSTANT_STRING,                       /* Name of queue to query      */
         size_t *);                             /* Place to put element count  */
-typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYQUEUE)(const char *, size_t *);
+typedef RexxReturnCode (REXXENTRY *PFNREXXQUERYQUEUE)(CONSTANT_STRING, size_t *);
 
 
 /***    RexxAddQueue - Add an entry to an External Data Queue */
 
 RexxReturnCode REXXENTRY RexxAddQueue (
-        const char *,                          /* Name of queue to add to     */
+        CONSTANT_STRING,                       /* Name of queue to add to     */
         PCONSTRXSTRING,                        /* Data string to add          */
         size_t);                               /* Queue type (FIFO|LIFO)      */
-typedef RexxReturnCode (REXXENTRY *PFNREXXADDQUEUE)(const char *, PCONSTRXSTRING, size_t);
+typedef RexxReturnCode (REXXENTRY *PFNREXXADDQUEUE)(CONSTANT_STRING, PCONSTRXSTRING, size_t);
 
 /***    RexxPullFromQueue - Retrieve data from an External Data Queue */
 RexxReturnCode REXXENTRY RexxPullFromQueue (
-        const char *,                          /* Name of queue to read from  */
+        CONSTANT_STRING,                       /* Name of queue to read from  */
         PRXSTRING,                             /* RXSTRING to receive data    */
         RexxQueueTime *,                       /* Stor for data date/time     */
         size_t);                               /* wait status (WAIT|NOWAIT)   */
-typedef RexxReturnCode (REXXENTRY *PFNREXXPULLFROMQUEUE)(const char *, PRXSTRING, RexxQueueTime *,
+typedef RexxReturnCode (REXXENTRY *PFNREXXPULLFROMQUEUE)(CONSTANT_STRING, PRXSTRING, RexxQueueTime *,
                                            size_t);
 
 /***    RexxClearQueue - Clear all lines in a queue */
 
 RexxReturnCode REXXENTRY RexxClearQueue (
-        const char * );                         /* Name of queue to be deleted */
-typedef RexxReturnCode (REXXENTRY *PFNREXXCLEARQUEUE)(const char *);
+        CONSTANT_STRING );                         /* Name of queue to be deleted */
+typedef RexxReturnCode (REXXENTRY *PFNREXXCLEARQUEUE)(CONSTANT_STRING);
 
 
 #include "rexxplatformapis.h"
