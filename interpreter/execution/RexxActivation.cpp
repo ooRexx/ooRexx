@@ -2029,6 +2029,10 @@ NumericSettings *RexxActivation::getNumericSettings()
  */
 RexxObject *RexxActivation::getReceiver()
 {
+    if (this->isInterpret())
+    {
+        return parent->getReceiver();
+    }
     return receiver;
 }
 
