@@ -2354,7 +2354,7 @@ typedef struct RxSemData {
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-RexxRoutine2(uintptr_t, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_CSTRING, reset)
+RexxRoutine2(RexxObjectPtr, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_CSTRING, reset)
 {
     RXSEMDATA *semdata;
     int rc;
@@ -2362,7 +2362,7 @@ RexxRoutine2(uintptr_t, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_CSTR
     // Note that the reset arg has no meaning on Unix/Linux and is unused.
     semdata = (RXSEMDATA *)malloc(sizeof(RXSEMDATA));
     if (semdata == NULL) {
-        return 0;
+        return context->String("");
     }
     if (name == NULL) {
         /* this is an unnamed semaphore */
@@ -2370,7 +2370,7 @@ RexxRoutine2(uintptr_t, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_CSTR
         rc = sem_init(semdata->handle, 0, 0);
         if (rc == -1) {
             free(semdata);
-            return 0;
+            return context->String("");
         }
         semdata->named = false;
     }
@@ -2380,11 +2380,11 @@ RexxRoutine2(uintptr_t, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_CSTR
         semdata->handle = sem_open(name, (O_CREAT | O_EXCL), (S_IRWXU | S_IRWXG), 0);
         if (semdata->handle == SEM_FAILED ) {
             free(semdata);
-            return 0;
+            return context->String("");
         }
         semdata->named = true;
     }
-    return (uintptr_t)semdata;
+    return context->Uintptr(semdata);
 }
 
 
@@ -2558,14 +2558,14 @@ RexxRoutine2(int, SysWaitEventSem, uintptr_t, vhandle, OPTIONAL_int, timeout)
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-RexxRoutine1(uintptr_t, SysCreateMutexSem, OPTIONAL_CSTRING, name)
+RexxRoutine1(RexxObjectPtr, SysCreateMutexSem, OPTIONAL_CSTRING, name)
 {
     RXSEMDATA *semdata;
     int rc;
 
     semdata = (RXSEMDATA *)malloc(sizeof(RXSEMDATA));
     if (semdata == NULL) {
-        return 0;
+        return context->String("");
     }
     if (strlen(name) == 0) {
         /* this is an unnamed semaphore */
@@ -2573,7 +2573,7 @@ RexxRoutine1(uintptr_t, SysCreateMutexSem, OPTIONAL_CSTRING, name)
         rc = sem_init(semdata->handle, 0, 0);
         if (rc == -1) {
             free(semdata);
-            return 0;
+            return context->String("");
         }
         semdata->named = false;
     }
@@ -2583,12 +2583,12 @@ RexxRoutine1(uintptr_t, SysCreateMutexSem, OPTIONAL_CSTRING, name)
         semdata->handle = sem_open(name, (O_CREAT | O_EXCL), (S_IRWXU | S_IRWXG), 0);
         if (semdata->handle == SEM_FAILED ) {
             free(semdata);
-            return 0;
+            return context->String("");
         }
         semdata->named = true;
     }
     rc = sem_post(semdata->handle);
-    return (uintptr_t)semdata;
+    return context->Uintptr(semdata);
 }
 
 

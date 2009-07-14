@@ -3746,28 +3746,36 @@ size_t RexxEntry SysVolumeLabel(const char *name, size_t numargs, CONSTRXSTRING 
 
 size_t RexxEntry SysCreateMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  HANDLE    handle;                    /* mutex handle               */
-  SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, true};
+    HANDLE    handle = 0;
+    SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, true};
 
-  handle = 0;                          /* zero the handle            */
-  if (numargs == 1) {                  /* request for named sem      */
-                                       /* create it by name          */
-    handle = CreateMutex(&sa, FALSE, args[0].strptr);
-    if (!handle)                       /* may already be created     */
-                                       /* try to open it             */
-      handle = OpenMutex(MUTEX_ALL_ACCESS, TRUE, args[0].strptr);
-  }
-  else                                 /* unnamed semaphore          */
-    handle = CreateMutex(&sa, FALSE, NULL);
-  if (!handle)                         /* failed?                    */
-    retstr->strlength = 0;             /* return null string         */
-  else {
-                                       /* format the result          */
-    sprintf(retstr->strptr, "%p", handle);
-                                       /* set the length             */
-    retstr->strlength = strlen(retstr->strptr);
-  }
-  return VALID_ROUTINE;                /* good completion            */
+    if ( numargs == 1 )
+    {
+        // Request for a named semaphore
+        handle = CreateMutex(&sa, FALSE, args[0].strptr);
+        if ( handle == NULL )
+        {
+            // It may have been already created, so open it by name.
+            handle = OpenMutex(MUTEX_ALL_ACCESS, TRUE, args[0].strptr);
+        }
+    }
+    else
+    {
+        // Request for an unamed semaphore.
+        handle = CreateMutex(&sa, FALSE, NULL);
+    }
+
+    if ( handle == NULL )
+    {
+        // Failed, return the empty string.
+        retstr->strlength = 0;
+    }
+    else
+    {
+        // Good handle, format it as a pointer string.
+        retstr->strlength = sprintf(retstr->strptr, "%p", handle);
+    }
+    return VALID_ROUTINE;                /* good completion            */
 }
 
 /*************************************************************************
@@ -3782,17 +3790,22 @@ size_t RexxEntry SysCreateMutexSem(const char *name, size_t numargs, CONSTRXSTRI
 
 size_t RexxEntry SysOpenMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  HANDLE    handle;                    /* mutex handle               */
-  SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+  HANDLE handle;
 
-  if (numargs != 1)                    /* Only one argument accepted */
-    return INVALID_ROUTINE;            /* raise error condition      */
+  // One and only one argument accepted.
+  if (numargs != 1)
+  {
+    return INVALID_ROUTINE;
+  }
 
-                                       /* get a binary handle        */
-                                       /* try to open it             */
   handle = OpenMutex(MUTEX_ALL_ACCESS, TRUE, args[0].strptr);
-  wsprintf(retstr->strptr, "%p", handle); /* format the return code */
-  retstr->strlength = strlen(retstr->strptr);
+  if ( handle == NULL )
+  {
+      RETVAL(0)
+  }
+
+  // Good handle, format it as a pointer string.
+  retstr->strlength = wsprintf(retstr->strptr, "%p", handle);
   return VALID_ROUTINE;                /* good completion            */
 }
 
@@ -3900,37 +3913,50 @@ size_t RexxEntry SysRequestMutexSem(const char *name, size_t numargs, CONSTRXSTR
 
 size_t RexxEntry SysCreateEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  HANDLE    handle;                    /* mutex handle               */
-  SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-  bool      manual;
+    HANDLE    handle = 0;
+    SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+    bool      manual;
 
-  handle = 0;                          /* zero the handle            */
-  if (numargs > 2)
-    return INVALID_ROUTINE;            /* raise error condition      */
-  else if (numargs == 2)
-     manual = true;
-  else manual = false;
+    if ( numargs > 2 )
+    {
+        return INVALID_ROUTINE;
+    }
+    else if ( numargs == 2 )
+    {
+        manual = true;
+    }
+    else
+    {
+        manual = false;
+    }
 
-  if ((numargs >= 1) && args[0].strptr != 0 && (strlen(args[0].strptr) > 0))
-  {                                    /* request for named sem      */
-                                       /* create it by name          */
-    handle = CreateEvent(&sa, manual, FALSE, args[0].strptr);
-    if (!handle)                       /* may already be created     */
-                                       /* try to open it             */
-      handle = OpenEvent(EVENT_ALL_ACCESS, TRUE, args[0].strptr);
-  }
-  else                                 /* unnamed semaphore          */
-    handle = CreateEvent(&sa, manual, FALSE, NULL);
-  if (!handle)                         /* failed?                    */
-    retstr->strlength = 0;             /* return null string         */
-  else
-  {
-                                       /* format the result          */
-    sprintf(retstr->strptr, "%p", handle);
-                                       /* set the length             */
-    retstr->strlength = strlen(retstr->strptr);
-  }
-  return VALID_ROUTINE;                /* good completion            */
+    if ( (numargs >= 1) && args[0].strptr != 0 && (strlen(args[0].strptr) > 0) )
+    {
+        // Request for a named semaphore.
+        handle = CreateEvent(&sa, manual, FALSE, args[0].strptr);
+        if ( handle == NULL )
+        {
+            // It may already exist, so try to open it.
+            handle = OpenEvent(EVENT_ALL_ACCESS, TRUE, args[0].strptr);
+        }
+    }
+    else
+    {
+        // Request for unamed semaphore.
+        handle = CreateEvent(&sa, manual, FALSE, NULL);
+    }
+
+    if ( handle == NULL )
+    {
+        // Failed, return null string.
+        retstr->strlength = 0;
+    }
+    else
+    {
+        // Format the result as a pointer string.
+        retstr->strlength = sprintf(retstr->strptr, "%p", handle);
+    }
+    return VALID_ROUTINE;                /* good completion            */
 }
 
 /*************************************************************************
@@ -3945,16 +3971,23 @@ size_t RexxEntry SysCreateEventSem(const char *name, size_t numargs, CONSTRXSTRI
 
 size_t RexxEntry SysOpenEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
 {
-  HANDLE    handle;                    /* mutex handle               */
-  SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+      HANDLE handle;
 
-  if (numargs != 1)                    /* Only one argument accepted */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* get a binary handle        */
-  handle = OpenEvent(EVENT_ALL_ACCESS, TRUE, args[0].strptr); /* try to open it */
-  wsprintf(retstr->strptr, "%p", handle); /* format the return code */
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;                /* good completion            */
+      /* Only one argument accepted */
+      if (numargs != 1)
+      {
+          return INVALID_ROUTINE;
+      }
+
+      handle = OpenEvent(EVENT_ALL_ACCESS, TRUE, args[0].strptr);
+      if ( handle == NULL )
+      {
+          RETVAL(0)
+      }
+
+      // Good handle, format it as pointer string.
+      retstr->strlength = wsprintf(retstr->strptr, "%p", handle);
+      return VALID_ROUTINE;
 }
 
 /*************************************************************************
