@@ -305,6 +305,9 @@ $ Error_RXQUE_syntax
 $ Error_RXQUE_memfail
 132 System error occurred while processing the command
 
+$ Error_REXXC_wrongNrArg_unix
+133 SYNTAX: REXXC InProgramName [OutProgramName] [-s]
+
 $ Error_Program_unreadable_name
 200 Failure during initialization: File "&1" is unreadable
 
@@ -1744,6 +1747,9 @@ $ Error_Symbol_or_string_fuzz_value
 
 $ Error_Symbol_or_string_trace_value
 715 String or symbol expected as TRACE value
+
+$ Error_Execution_invalid_thread
+716 Execution thread does not match API thread context.
 
 
 $ * -------------------------------------------------------------------------- */

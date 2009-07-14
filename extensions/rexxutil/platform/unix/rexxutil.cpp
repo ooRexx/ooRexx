@@ -2384,7 +2384,7 @@ RexxRoutine2(RexxObjectPtr, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_
         }
         semdata->named = true;
     }
-    return context->Uintptr(semdata);
+    return context->Uintptr((uintptr_t)semdata);
 }
 
 
@@ -2588,7 +2588,7 @@ RexxRoutine1(RexxObjectPtr, SysCreateMutexSem, OPTIONAL_CSTRING, name)
         semdata->named = true;
     }
     rc = sem_post(semdata->handle);
-    return context->Uintptr(semdata);
+    return context->Uintptr((uintptr_t)semdata);
 }
 
 
