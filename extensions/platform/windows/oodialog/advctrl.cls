@@ -46,108 +46,28 @@
 ::class 'AdvancedControls' Mixinclass Object public
 
 ::method putControl private unguarded external "LIBRARY oodialog advCtrl_putControl_pvt"
-
-::method GetControl unguarded private
-   use arg id, category, type
-   if arg(1, 'O') then return .nil
-   select
-       when type = "ST" then class = .StaticControl
-       when type = "EL" then class = .EditControl
-       when type = "BUT" then class = .ButtonControl
-       when type = "RB" then class = .RadioButton
-       when type = "CH" then class = .CheckBox
-       when type = "GB" then class = .GroupBox
-       when type = "LB" then class = .ListBox
-       when type = "CB" then class = .ComboBox
-       when type = "SB" then class = .ScrollBar
-       when type = "TC" then class = .TreeControl
-       when type = "LC" then class = .ListControl
-       when type = "PB" then class = .ProgressBar
-       when type = "SC" then class = .SliderControl
-       when type = "TAB" then class = .TabControl
-       when type = "DT" then class = .DateTimePicker
-       when type = "MC" then class = .MonthCalendar
-       otherwise return .Nil
-   end
-   ctrlobj = .nil
-   if arg(2, 'O') then do
-       /* check if dialog is subclass of CategoryDialog */
-       if self~HasMethod("!MarkAsCatDlg!") = 1 then
-           ctrlobj = class~new(self, id, self~catalog['category'])  /* suppose active page is meant */
-       else
-         ctrlobj = class~new(self, id)
-   end
-   else do
-     ctrlobj = class~new(self, id, category)
-   end
-
-   if ctrlobj \== .nil, ctrlobj~hwnd = 0 then
-     return .nil
-   else
-     return ctrlobj
-
-
-::method getStaticControl unguarded external "LIBRARY oodialog advCtrl_getStaticControl"
-::method getButtonControl unguarded external "LIBRARY oodialog advCtrl_getButtonControl"
-::method getTreeControl unguarded external "LIBRARY oodialog advCtrl_getTreeControl"
-::method getListControl unguarded external "LIBRARY oodialog advCtrl_getListControl"
-::method getTabControl unguarded external "LIBRARY oodialog advCtrl_getTabControl"
-
-::method GetEditControl unguarded
-   arr = Arg(1,"A")
-   arr[3] = "EL"
-   forward message "GetControl" Arguments (arr)
+::method getStaticControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getButtonControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getTreeControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getListControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getTabControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetEditControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetRadioButton unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetCheckBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetGroupBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetListBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetComboBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetScrollBar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetProgressBar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetSliderControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetMonthCalendar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetDateTimePicker unguarded external "LIBRARY oodialog advCtrl_getControl"
 
 ::method GetRadioControl unguarded
-   arr = Arg(1,"A")
-   arr[3] = "RB"
-   forward message "GetControl" Arguments (arr)
+   forward message "GetRadioButton"
 
 ::method GetCheckControl unguarded
-   arr = Arg(1,"A")
-   arr[3] = "CH"
-   forward message "GetControl" Arguments (arr)
-
-::method GetGroupBox unguarded
-   arr = Arg(1,"A")
-   arr[3] = "GB"
-   forward message "GetControl" Arguments (arr)
-
-::method GetListBox unguarded
-   arr = Arg(1,"A")
-   arr[3] = "LB"
-   forward message "GetControl" Arguments (arr)
-
-::method GetComboBox unguarded
-   arr = Arg(1,"A")
-   arr[3] = "CB"
-   forward message "GetControl" Arguments (arr)
-
-::method GetScrollBar unguarded
-   arr = Arg(1,"A")
-   arr[3] = "SB"
-   forward message "GetControl" Arguments (arr)
-
-::method GetProgressBar unguarded
-   arr = Arg(1,"A")
-   arr[3] = "PB"
-   forward message "GetControl" Arguments (arr)
-
-::method GetSliderControl unguarded
-   arr = Arg(1,"A")
-   arr[3] = "SC"
-   forward message "GetControl" Arguments (arr)
-
-::method GetMonthCalendar unguarded
-   arr = Arg(1,"A")
-   arr[3] = "MC"
-   forward message "GetControl" Arguments (arr)
-
-::method GetDateTimePicker unguarded
-   arr = Arg(1,"A")
-   arr[3] = "DT"
-   forward message "GetControl" Arguments (arr)
-
+   forward message "GetCheckBox"
 
 ::method ConnectTreeControl unguarded
    use arg id, attributeName

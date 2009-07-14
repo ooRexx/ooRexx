@@ -260,11 +260,7 @@ REXX_METHOD_PROTOTYPE(il_handle);
 
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
 
-REXX_METHOD_PROTOTYPE(advCtrl_getStaticControl);
-REXX_METHOD_PROTOTYPE(advCtrl_getButtonControl);
-REXX_METHOD_PROTOTYPE(advCtrl_getListControl);
-REXX_METHOD_PROTOTYPE(advCtrl_getTreeControl);
-REXX_METHOD_PROTOTYPE(advCtrl_getTabControl);
+REXX_METHOD_PROTOTYPE(advCtrl_getControl);
 REXX_METHOD_PROTOTYPE(advCtrl_putControl_pvt);
 
 REXX_METHOD_PROTOTYPE(lv_setImageList);
@@ -505,11 +501,7 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(dlgctrl_getTextSizeDlg,      dlgctrl_getTextSizeDlg),
 
-    REXX_METHOD(advCtrl_getStaticControl, advCtrl_getStaticControl),
-    REXX_METHOD(advCtrl_getButtonControl, advCtrl_getButtonControl),
-    REXX_METHOD(advCtrl_getListControl,   advCtrl_getListControl),
-    REXX_METHOD(advCtrl_getTreeControl,   advCtrl_getTreeControl),
-    REXX_METHOD(advCtrl_getTabControl,    advCtrl_getTabControl),
+    REXX_METHOD(advCtrl_getControl,       advCtrl_getControl),
     REXX_METHOD(advCtrl_putControl_pvt,   advCtrl_putControl_pvt),
 
     REXX_METHOD(lv_setImageList,          lv_setImageList),

@@ -104,9 +104,6 @@ extern DWORD ComCtl32Version = 0;
 #define BS_IMAGEMASK         0x000000c0
 #define MIN_HALFHEIGHT_GB    12
 
-typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;
-typedef enum {def, autoCheck, threeState, autoThreeState, noSubtype } BUTTONSUBTYPE, *PBUTTONSUBTYPE;
-
 /**
  * Defines, structs, etc., for the .ImageList class.
  */
@@ -1050,18 +1047,6 @@ DWORD ListExtendedStyleToString(HWND hList, RXSTRING *retstr)
 }
 
 /**
- * Determine if a window belongs to the specified window class.
- */
-static bool checkWindowClass(HWND hwnd, TCHAR *pClass)
-{
-    TCHAR buf[64];
-
-    if ( ! RealGetWindowClass(hwnd, buf, sizeof(buf)) || strcmp(buf, pClass) )
-        return false;
-    return true;
-}
-
-/**
  * Extended Common Control functionality.  This function implements capabilities
  * for the common controls that were not available at the time of the original
  * IBM ooDialog, or were available but not put into ooDialog.
@@ -1122,7 +1107,7 @@ size_t RexxEntry HandleControlEx(
      */
     if ( argv[2].strptr[0] == 'E' )      /* Edit control function */
     {
-        if ( ! checkWindowClass(hCtrl, WC_EDIT) )
+        if ( ! checkControlClass(hCtrl, winEdit) )
             RETVAL(-1)
 
         if ( strcmp(argv[3].strptr, "TXT") == 0 )       /* Set or get the control's text. */
@@ -3101,196 +3086,6 @@ error_out:
 }
 
 /**
- *  Methods for the .DialogControl class.
- */
-#define DIALOGCONTROL_CLASS        "DialogControl"
-
-
-/** DialogControl::getTextSizeDlg()
- *
- *  Gets the size (width and height) in dialog units for any given string for
- *  the font specified.
- *
- *  @param  text         The string whose size is needed.
- *
- *  @param  fontName     Optional. If specified, use this font to calculate the
- *                       size.
- *
- *  @param  fontSize     Optional. If specified, use this font size with
- *                       fontName to calculate the size.  The default if omitted
- *                       is 8.  This arg is ignored if fontName is omitted.
- *
- *  @param  hwndFontSrc  Optional. Use this window's font to calculate the size.
- *                       This arg is always ignored if fontName is specified.
- *
- */
-RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING, fontName,
-            OPTIONAL_uint32_t, fontSize, OPTIONAL_POINTERSTRING, hwndFontSrc, OSELF, self)
-{
-    HWND hwndSrc = NULL;
-    if ( argumentExists(2) )
-    {
-        if ( argumentOmitted(3) )
-        {
-            fontSize = DEFAULT_FONTSIZE;
-        }
-    }
-    else if ( argumentExists(4) )
-    {
-        if ( hwndFontSrc == NULL )
-        {
-            nullObjectException(context, "window handle", 4);
-            goto error_out;
-        }
-        hwndSrc = (HWND)hwndFontSrc;
-    }
-
-    RexxObjectPtr dlgObj = context->SendMessage0(self, "ODLG");
-    if ( dlgObj == NULLOBJECT )
-    {
-        // The interpreter kernel will have raised a syntax exception in this
-        // case.  But, the ooDialog framework traps the exception and puts up a
-        // message box saying ODLG is not a method of xx control.  I think that
-        // will be confusing to the users, since they have no idea about this
-        // call to oDlg. So, raise a more specific exception.
-        context->RaiseException1(Rexx_Error_Interpretation_user_defined,
-                                 context->String("Inconsistency: this .DialogControl object does not have "
-                                                 "the oDlg (owner dialog) attribute"));
-        goto error_out;
-    }
-
-    return getTextSize(context, text, fontName, fontSize, hwndSrc, dlgObj);
-
-error_out:
-    return NULLOBJECT;
-}
-
-
-/**
- *  Methods for the .AdvancedControls class.
- */
-#define ADVANCEDCONTROLS_CLASS        "AdvancedControls"
-#define ADVCTRLCONTROLBAG_ATTRIBUTE   "!advCtrlDlgControlBag"
-
-
-RexxObjectPtr advGetControl(RexxMethodContext *c, ARGLIST args, OSELF self, CSTRING ctrl)
-{
-    RexxObjectPtr result = TheNilObj;
-
-    HWND hwnd = rxGetWindowHandle(c, self);
-    if ( hwnd == NULL )
-    {
-        // This happens if the user were to invoke a getXXXControl() method
-        // before the underlying dialog has been created.
-        goto out;
-    }
-
-    HWND hControl = NULL;
-    RexxObjectPtr rxControl = NULLOBJECT;
-
-    // We have the dialog window handle.  We also need the resource ID to get
-    // the control.
-    RexxObjectPtr rxID = c->ArrayAt(args, 1);
-    if ( rxID == NULLOBJECT )
-    {
-        c->RaiseException1(Rexx_Error_Incorrect_method_noarg, TheOneObj);
-        goto out;
-    }
-
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, c, self, rxID, 0, 1) )
-    {
-        goto out;
-    }
-    else
-    {
-        hControl = GetDlgItem(hwnd, (int)id);
-    }
-
-    if ( hControl != NULL )
-    {
-        rxControl = (RexxObjectPtr)getWindowPtr(hControl, GWLP_USERDATA);
-        if ( rxControl != NULLOBJECT )
-        {
-            // Okay, this specific control has already had a control object
-            // instantiated to represent it.  We return this object.
-            result = rxControl;
-            goto out;
-        }
-    }
-
-    // No pointer is stored in the user data area, so no control object has been
-    // instantiated for this specific control, yet.  We instantiate one now and
-    // then store the object in the user data area of the control window.
-    c->ArrayPut(args, c->String(ctrl), 3);
-    rxControl = c->ForwardMessage(NULLOBJECT, "GetControl", NULLOBJECT, args);
-    if ( rxControl == NULLOBJECT )
-    {
-        goto out;
-    }
-    result = rxControl;
-
-    if ( result != TheNilObj )
-    {
-        // Good object.
-        setWindowPtr(hControl, GWLP_USERDATA, (LONG_PTR)result);
-        c->SendMessage1(self, "putControl", result);
-    }
-
-out:
-    return result;
-}
-
-RexxMethod2(RexxObjectPtr, advCtrl_getStaticControl, ARGLIST, args, OSELF, self)
-{
-    return advGetControl(context, args, self, "ST");
-}
-
-RexxMethod2(RexxObjectPtr, advCtrl_getButtonControl, ARGLIST, args, OSELF, self)
-{
-    return advGetControl(context, args, self, "BUT");
-}
-
-RexxMethod2(RexxObjectPtr, advCtrl_getListControl, ARGLIST, args, OSELF, self)
-{
-    return advGetControl(context, args, self, "LC");
-}
-
-RexxMethod2(RexxObjectPtr, advCtrl_getTreeControl, ARGLIST, args, OSELF, self)
-{
-    return advGetControl(context, args, self, "TC");
-}
-
-RexxMethod2(RexxObjectPtr, advCtrl_getTabControl, ARGLIST, args, OSELF, self)
-{
-    return advGetControl(context, args, self, "TAB");
-}
-
-RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF, self)
-{
-    // This should never fail, do we need an exception if it does?
-
-    RexxObjectPtr bag = context->GetObjectVariable(ADVCTRLCONTROLBAG_ATTRIBUTE);
-    if ( bag == NULLOBJECT )
-    {
-        RexxObjectPtr theBagClass = context->FindClass("BAG");
-        if ( theBagClass != NULLOBJECT )
-        {
-            bag = context->SendMessage0(theBagClass, "NEW");
-            context->SetObjectVariable(ADVCTRLCONTROLBAG_ATTRIBUTE, bag);
-        }
-    }
-
-    if ( bag != NULLOBJECT )
-    {
-        context->SendMessage2(bag, "PUT", control, control);
-    }
-
-    return TheNilObj;
-}
-
-
-/**
  * Methods for the DateTimePicker class.
  */
 #define DATETIMEPICKER_CLASS     "DateTimePicker"
@@ -4698,9 +4493,10 @@ RexxMethod2(RexxObjectPtr, stc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
 
 BUTTONTYPE getButtonInfo(HWND hwnd, PBUTTONSUBTYPE sub, DWORD *style)
 {
+    TCHAR buf[64];
     BUTTONTYPE type = notButton;
 
-    if ( ! checkWindowClass(hwnd, WC_BUTTON) )
+    if ( ! RealGetWindowClass(hwnd, buf, sizeof(buf)) || strcmp(buf, WC_BUTTON) )
     {
         if ( sub != NULL )
         {

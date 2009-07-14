@@ -367,7 +367,6 @@ bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos)
         return false;
     }
     return true;
-
 }
 
 /**

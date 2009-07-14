@@ -53,10 +53,13 @@ typedef enum
     oodListBox,         oodProgressBar,    oodUnknown
 } oodClass_t;
 
-// Enum for the type of Windows dialog control.
+// Enum for the type of Windows dialog control.  Note that a track bar is a
+// SliderControl in ooDiaolg. ;-(
 typedef enum
 {
-    winStatic, winButton, winEdit, winProgressBar
+    winStatic, winButton, winTreeView, winListView, winTab, winEdit, winRadioButton, winCheckBox,
+    winGroupBox, winListBox, winComboBox, winScrollBar, winProgressBar, winTrackBar, winMonthCalendar,
+    winDateTimePicker, winUnknown
 } oodControl_t;
 
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
@@ -100,7 +103,13 @@ extern RexxObjectPtr getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t
 extern bool textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SIZE *, HWND);
 extern bool textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
 extern bool getTextExtent(HFONT, HDC, CSTRING, SIZE *);
+extern bool checkControlClass(HWND, oodControl_t);
 
+// Shared button stuff.
+typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;
+typedef enum {def, autoCheck, threeState, autoThreeState, noSubtype } BUTTONSUBTYPE, *PBUTTONSUBTYPE;
+
+extern BUTTONTYPE getButtonInfo(HWND, PBUTTONSUBTYPE, DWORD *);
 
 #define GET_HANDLE(p) string2pointer(p)
 #define GET_HWND(p)   ((HWND)string2pointer(p))
