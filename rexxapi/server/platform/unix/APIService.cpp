@@ -46,6 +46,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <pwd.h>
 #include "APIServer.hpp"
 #include "stdio.h"
 
@@ -169,6 +170,14 @@ static bool morph2daemon(void)
 	for(int i = 0; i < 1024; i++) {
 		close(i);
 	}
+
+    // We start out with root privileges. This is bad from a security perspective. So
+    // switch to the nobody user so we do not have previleges we do not need.
+    struct passwd *pw;
+    pw = getpwnam("nobody");
+    if (pw != NULL) {
+        setuid(pw->pw_uid);
+    }
 
 	return true;
 }
