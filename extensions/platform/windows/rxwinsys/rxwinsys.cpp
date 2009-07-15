@@ -852,17 +852,48 @@ size_t RexxEntry WSRegistryValue(const char *funcname, size_t argc, CONSTRXSTRIN
     else if ( strcmp(argv[0].strptr, "LIST") == 0 )
     {
         DWORD retcode, ndx=0, valType, cbValue, cbData, initData = 1024;
-        char * valData, Name[256];
+        char * valData, *pTail, Name[256];
         char sname[300];
         SHVBLOCK shvb;
 
         GET_HKEY(argv[1].strptr, hk);
         valData = (char *)GlobalAlloc(GPTR, initData);
-        if (!valData) RETERR
+        if (!valData)
+        {
+            RETERR
+        }
 
-            do
+        // Copy the stem name to our sname buffer, point to the last character.
+        // Ensure the last character is a period, then point to the start of the
+        // tail.
+        strcpy(sname, argv[2].strptr);
+        pTail = sname + argv[2].strlength - 1;
+        if ( *pTail != '.')
+        {
+            *++pTail = '.';
+        }
+        pTail++;
+
+        do
+        {
+            cbData = initData;
+            cbValue = sizeof(Name);
+            retcode = RegEnumValue(hk,    // handle of key to query
+                                   ndx++,    // index of subkey to query
+                                   Name,    // address of buffer for subkey name
+                                   &cbValue,
+                                   NULL,    // reserved
+                                   &valType,    // address of buffer for type code
+                                   (LPBYTE)valData,    // address of buffer for value data
+                                   &cbData);     // address for size of data buffer
+
+            if ((retcode == ERROR_MORE_DATA) && (cbData > initData))   /* we need more memory */
             {
-                cbData = initData;
+                GlobalFree(valData);
+                initData = cbData;
+                valData = (char *)GlobalAlloc(GPTR, cbData);
+                if (!valData) RETERR
+                    ndx--;                      /* try to get the previous one again */
                 cbValue = sizeof(Name);
                 retcode = RegEnumValue(hk,    // handle of key to query
                                        ndx++,    // index of subkey to query
@@ -872,138 +903,105 @@ size_t RexxEntry WSRegistryValue(const char *funcname, size_t argc, CONSTRXSTRIN
                                        &valType,    // address of buffer for type code
                                        (LPBYTE)valData,    // address of buffer for value data
                                        &cbData);     // address for size of data buffer
+            }
 
-                if ((retcode == ERROR_MORE_DATA) && (cbData > initData))   /* we need more memory */
+            if (retcode == ERROR_SUCCESS)
+            {
+                sprintf(pTail, "%d.Name", ndx);
+                SET_VARIABLE(sname, Name, 2);
+
+                sprintf(pTail, "%d.Type", ndx);
+                switch (valType)
                 {
-                    GlobalFree(valData);
-                    initData = cbData;
-                    valData = (char *)GlobalAlloc(GPTR, cbData);
-                    if (!valData) RETERR
-                        ndx--;                      /* try to get the previous one again */
-                    cbValue = sizeof(Name);
-                    retcode = RegEnumValue(hk,    // handle of key to query
-                                           ndx++,    // index of subkey to query
-                                           Name,    // address of buffer for subkey name
-                                           &cbValue,
-                                           NULL,    // reserved
-                                           &valType,    // address of buffer for type code
-                                           (LPBYTE)valData,    // address of buffer for value data
-                                           &cbData);     // address for size of data buffer
+                    case REG_EXPAND_SZ:
+                        SET_VARIABLE(sname, "EXPAND", 2);
+                        break;
+                    case REG_NONE:
+                        SET_VARIABLE(sname, "NONE", 2);
+                        break;
+                    case REG_DWORD:
+                        SET_VARIABLE(sname, "NUMBER", 2);
+                        break;
+                    case REG_MULTI_SZ:
+                        SET_VARIABLE(sname, "MULTI", 2);
+                        break;
+                    case REG_BINARY:
+                        SET_VARIABLE(sname, "BINARY", 2);
+                        break;
+                    case REG_SZ:
+                        SET_VARIABLE(sname, "NORMAL", 2);
+                        break;
+                    case REG_RESOURCE_LIST:
+                        SET_VARIABLE(sname, "RESOURCELIST", 2);
+                        break;
+                    case REG_FULL_RESOURCE_DESCRIPTOR:
+                        SET_VARIABLE(sname, "RESOURCEDESC", 2);
+                        break;
+                    case REG_RESOURCE_REQUIREMENTS_LIST:
+                        SET_VARIABLE(sname, "RESOURCEREQS", 2);
+                        break;
+                    case REG_LINK:
+                        SET_VARIABLE(sname, "LINK", 2);
+                        break;
+                    case REG_DWORD_BIG_ENDIAN:
+                        SET_VARIABLE(sname, "BIGENDIAN", 2);
+                        break;
+                    default:
+                        SET_VARIABLE(sname, "OTHER", 2);
                 }
 
-                if (retcode == ERROR_SUCCESS)
+                sprintf(pTail, "%d.Data", ndx);
+                if ((valType == REG_MULTI_SZ) ||
+                    (valType == REG_BINARY) ||
+                    (valType == REG_LINK) ||
+                    (valType == REG_RESOURCE_LIST) ||
+                    (valType == REG_FULL_RESOURCE_DESCRIPTOR) ||
+                    (valType == REG_RESOURCE_REQUIREMENTS_LIST) ||
+                    (valType == REG_NONE))
                 {
-                    strcpy(sname, argv[2].strptr);
-                    // make sure there is a period on the stem name
-                    if (sname[argv[2].strlength - 1] != '.')
+                    shvb.shvnext = NULL;
+                    shvb.shvname.strptr = sname;
+                    shvb.shvname.strlength = strlen(sname);
+                    shvb.shvnamelen = shvb.shvname.strlength;
+                    shvb.shvvalue.strptr = valData;
+                    shvb.shvvalue.strlength = cbData;
+                    shvb.shvvaluelen = cbData;
+                    shvb.shvcode = RXSHV_SYSET;
+                    shvb.shvret = 0;
+                    if (RexxVariablePool(&shvb) == RXSHV_BADN)
                     {
-                        strcat(sname, ".");
+                        GlobalFree(valData);
+                        RETC(2);
                     }
-                    sprintf(sname + strlen(sname),"%d", ndx);
-                    SET_VARIABLE(sname, Name, 2);
-                    strcpy(sname, argv[2].strptr);
-                    // make sure there is a period on the stem name
-                    if (sname[argv[2].strlength - 1] != '.')
-                    {
-                        strcat(sname, ".");
-                    }
-                    sprintf(sname + strlen(sname),"%d.Type", ndx);
-                    switch (valType)
-                    {
-                        case REG_EXPAND_SZ:
-                            SET_VARIABLE(sname, "EXPAND", 2);
-                            break;
-                        case REG_NONE:
-                            SET_VARIABLE(sname, "NONE", 2);
-                            break;
-                        case REG_DWORD:
-                            SET_VARIABLE(sname, "NUMBER", 2);
-                            break;
-                        case REG_MULTI_SZ:
-                            SET_VARIABLE(sname, "MULTI", 2);
-                            break;
-                        case REG_BINARY:
-                            SET_VARIABLE(sname, "BINARY", 2);
-                            break;
-                        case REG_SZ:
-                            SET_VARIABLE(sname, "NORMAL", 2);
-                            break;
-                        case REG_RESOURCE_LIST:
-                            SET_VARIABLE(sname, "RESOURCELIST", 2);
-                            break;
-                        case REG_FULL_RESOURCE_DESCRIPTOR:
-                            SET_VARIABLE(sname, "RESOURCEDESC", 2);
-                            break;
-                        case REG_RESOURCE_REQUIREMENTS_LIST:
-                            SET_VARIABLE(sname, "RESOURCEREQS", 2);
-                            break;
-                        case REG_LINK:
-                            SET_VARIABLE(sname, "LINK", 2);
-                            break;
-                        case REG_DWORD_BIG_ENDIAN:
-                            SET_VARIABLE(sname, "BIGENDIAN", 2);
-                            break;
-                        default:
-                            SET_VARIABLE(sname, "OTHER", 2);
-                    }
-                    strcpy(sname, argv[2].strptr);
-                    // make sure there is a period on the stem name
-                    if (sname[argv[2].strlength - 1] != '.')
-                    {
-                        strcat(sname, ".");
-                    }
-                    sprintf(sname + strlen(sname),"%d.Data", ndx);
-                    if ((valType == REG_MULTI_SZ) ||
-                        (valType == REG_BINARY) ||
-                        (valType == REG_LINK) ||
-                        (valType == REG_RESOURCE_LIST) ||
-                        (valType == REG_FULL_RESOURCE_DESCRIPTOR) ||
-                        (valType == REG_RESOURCE_REQUIREMENTS_LIST) ||
-                        (valType == REG_NONE))
-                    {
-                        shvb.shvnext = NULL;
-                        shvb.shvname.strptr = sname;
-                        shvb.shvname.strlength = strlen(sname);
-                        shvb.shvnamelen = shvb.shvname.strlength;
-                        shvb.shvvalue.strptr = valData;
-                        shvb.shvvalue.strlength = cbData;
-                        shvb.shvvaluelen = cbData;
-                        shvb.shvcode = RXSHV_SYSET;
-                        shvb.shvret = 0;
-                        if (RexxVariablePool(&shvb) == RXSHV_BADN)
-                        {
-                            GlobalFree(valData);
-                            RETC(2);
-                        }
-                    }
-                    else if ((valType == REG_EXPAND_SZ) || (valType == REG_SZ))
-                    {
-                        SET_VARIABLE(sname, valData, 2);
-                    }
-                    else if ((valType == REG_DWORD) || (valType == REG_DWORD_BIG_ENDIAN))
-                    {
-                        char tmp[30];
-                        DWORD dwNumber;
+                }
+                else if ((valType == REG_EXPAND_SZ) || (valType == REG_SZ))
+                {
+                    SET_VARIABLE(sname, valData, 2);
+                }
+                else if ((valType == REG_DWORD) || (valType == REG_DWORD_BIG_ENDIAN))
+                {
+                    char tmp[30];
+                    DWORD dwNumber;
 
-                        dwNumber = *(DWORD *) valData;
-                        if (valType == REG_DWORD_BIG_ENDIAN)
-                        {
-                            Little2BigEndian((BYTE *)&dwNumber, sizeof(dwNumber));
-                        }
-                        ltoa(dwNumber, tmp, 10);
-                        SET_VARIABLE(sname, tmp, 2);
-                    }
-                    else
+                    dwNumber = *(DWORD *) valData;
+                    if (valType == REG_DWORD_BIG_ENDIAN)
                     {
-                        SET_VARIABLE(sname, "", 2);
+                        Little2BigEndian((BYTE *)&dwNumber, sizeof(dwNumber));
                     }
+                    ltoa(dwNumber, tmp, 10);
+                    SET_VARIABLE(sname, tmp, 2);
                 }
-                else if (retcode != ERROR_NO_MORE_ITEMS)
+                else
                 {
-                    GlobalFree(valData);
-                    RETC(1);
+                    SET_VARIABLE(sname, "", 2);
                 }
-            } while (retcode == ERROR_SUCCESS);
+            }
+            else if (retcode != ERROR_NO_MORE_ITEMS)
+            {
+                GlobalFree(valData);
+                RETC(1);
+            }
+        } while (retcode == ERROR_SUCCESS);
         GlobalFree(valData);
         RETC(0);
     }
