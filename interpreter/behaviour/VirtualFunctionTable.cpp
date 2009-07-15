@@ -151,7 +151,7 @@
 #include "SecurityManager.hpp"
 #include "CommandHandler.hpp"
 
-
+           
 void *RexxMemory::virtualFunctionTable[T_Last_Class_Type + 1] = {NULL};
 
 /******************************************************************************/
