@@ -206,8 +206,8 @@ RexxClassObject getControlClass(RexxMethodContext *c, CSTRING className, oodCont
     else if ( strcmp(className, "LISTCONTROL"   ) == 0 ) { ctrl = winListView; }
     else if ( strcmp(className, "TABCONTROL"    ) == 0 ) { ctrl = winTab; }
     else if ( strcmp(className, "EDITCONTROL"   ) == 0 ) { ctrl = winEdit; }
-    else if ( strcmp(className, "RADIOBUTTON"   ) == 0 ) { ctrl = winRadioButton; }
-    else if ( strcmp(className, "CHECKBOX"      ) == 0 ) { ctrl = winCheckBox; }
+    else if ( strcmp(className, "RADIOCONTROL"  ) == 0 ) { ctrl = winRadioButton; className = "RADIOBUTTON"; }
+    else if ( strcmp(className, "CHECKCONTROL"  ) == 0 ) { ctrl = winCheckBox; className = "CHECKBOX"; }
     else if ( strcmp(className, "GROUPBOX"      ) == 0 ) { ctrl = winGroupBox; }
     else if ( strcmp(className, "LISTBOX"       ) == 0 ) { ctrl = winListBox; }
     else if ( strcmp(className, "COMBOBOX"      ) == 0 ) { ctrl = winComboBox; }

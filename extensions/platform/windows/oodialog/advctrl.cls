@@ -52,8 +52,8 @@
 ::method getListControl unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method getTabControl unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method GetEditControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetRadioButton unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetCheckBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetRadioControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method GetCheckControl unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method GetGroupBox unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method GetListBox unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method GetComboBox unguarded external "LIBRARY oodialog advCtrl_getControl"
@@ -62,12 +62,6 @@
 ::method GetSliderControl unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method GetMonthCalendar unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method GetDateTimePicker unguarded external "LIBRARY oodialog advCtrl_getControl"
-
-::method GetRadioControl unguarded
-   forward message "GetRadioButton"
-
-::method GetCheckControl unguarded
-   forward message "GetCheckBox"
 
 ::method ConnectTreeControl unguarded
    use arg id, attributeName
