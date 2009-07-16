@@ -197,3 +197,15 @@ void SystemInterpreter::validateAddressName(RexxString *name )
     }
 }
 
+
+/**
+ * This was an undocumented API prior to 4.0, but is known to have been used by
+ * some IBM applications. This is maintained solely for binary compatibility.
+ *
+ * @return TRUE always.
+ */
+BOOL APIENTRY RexxSetProcessMessages(BOOL onoff)
+{
+   return TRUE;
+}
+

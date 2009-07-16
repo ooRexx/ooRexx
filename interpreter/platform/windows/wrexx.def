@@ -59,6 +59,7 @@ RexxCreateInterpreterImage     @94
 
 RexxWaitForTermination        @108
 RexxDidRexxTerminate          @109
+RexxSetProcessMessages        @110  ; not documented, but used by some IBM apps prior to 4.0
 RexxGetVersionInformation     @114
 RexxStemSort                  @124
 RexxCreateInterpreter         @125
