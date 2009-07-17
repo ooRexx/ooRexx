@@ -167,6 +167,11 @@ RexxRoutine2(RexxStringObject, sysFilespec, CSTRING, option, CSTRING, name)
 {
     const char *endPtr = name + strlen(name);        // point to last character
     const char *pathEnd = strrchr(name, '\\');       // find the last backslash in name
+    const char *altPathEnd = strrchr(name, '/');     // 3.2.0 also looked for a forward slash, so handle that also
+    if (altPathEnd > pathEnd)
+    {
+        pathEnd = altPathEnd;
+    }
     const char *driveEnd = strchr(name, ':');        // and first colon
     // get the end of the path portion (if any)
     const char *pathStart = driveEnd == NULL ? name : driveEnd + 1;
