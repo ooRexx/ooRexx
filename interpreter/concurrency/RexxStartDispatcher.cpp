@@ -70,16 +70,26 @@ void RexxStartDispatcher::run()
     // get an array version of the arguments and protect
     RexxArray *new_arglist = new_array(argcount);
     savedObjects.add(new_arglist);
-    /* loop through the argument list    */
-    for (size_t i = 0; i < argcount; i++)
+
+    // for compatibility reasons, if this is a command invocation and there is a leading blank
+    // on the only argument, then remove that leading blank from the argument
+    if (calltype == RXCOMMAND && argcount == 1 && arglist[0].strlength > 1 && arglist[0].strptr != NULL && arglist[0].strptr[0] == ' ')
     {
-        /* have a real argument?             */
-        if (arglist[i].strptr != NULL)
+        new_arglist->put(new_string(arglist[0].strptr + 1, arglist[0].strlength - 1), 1);
+    }
+    else {
+        /* loop through the argument list    */
+        for (size_t i = 0; i < argcount; i++)
         {
-            /* add to the argument array         */
-            new_arglist->put(new_string(arglist[i]), i + 1);
+            /* have a real argument?             */
+            if (arglist[i].strptr != NULL)
+            {
+                /* add to the argument array         */
+                new_arglist->put(new_string(arglist[i]), i + 1);
+            }
         }
     }
+
     RexxString *source_calltype;
 
     switch (calltype)                      /* turn calltype into a string       */
