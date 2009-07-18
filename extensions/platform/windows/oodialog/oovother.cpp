@@ -3912,7 +3912,6 @@ RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, OSELF, self)
                     goto done;
                 }
                 pOrder[i] = column;
-                printf("Item: %d value:%d\n", i, column);
             }
 
             if ( ListView_SetColumnOrderArray(hwnd, count, pOrder) )
