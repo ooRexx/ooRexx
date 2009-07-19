@@ -94,27 +94,6 @@ bool SysFileSystem::searchFileName(
 	/* (beware, don't test "." because files like ".hidden" alone are candidate for search in PATH */
     if (strstr(name, "/") != NULL || name[0] == '~' || name[0] == '.')
     {
-#if 0
-        switch (*name)
-        {
-            case '~':
-                strcpy(tempPath, getenv("HOME"));
-                strcat(tempPath, name + 1);
-                break;
-            case '.':
-                getcwd(tempPath, MaximumFileNameBuffer);
-                strcat(tempPath, name + 1);
-                break;
-            case '/':
-                strcpy(tempPath, name);
-                break;
-            default:
-                getcwd(tempPath, MaximumFileNameBuffer);
-                strcat(tempPath, "/");
-                strcat(tempPath, name);
-                break;
-        }
-#endif
         bool done = SysFileSystem::canonicalizeName(tempPath);
         if (done == false || fileExists(tempPath) == false)
         {
@@ -217,51 +196,6 @@ void SysFileSystem::qualifyStreamName(
         fullName[0] = '\0'; // or leave it unchanged ?
     }
     return;
-    
-#if 0    
-    /* does the filename already have a path? */
-    if (strstr(name, "/") != NULL)
-    {
-        switch (*name)
-        {
-            case '~':
-                strcpy(tempPath, getenv("HOME"));
-                strcat(tempPath, name + 1);
-                break;
-            case '/':
-                strcpy(tempPath, name);
-                break;
-            default:
-                getcwd(tempPath, MaximumFileNameBuffer);
-                strcat(tempPath, "/");
-                strcat(tempPath, name);
-                break;
-        }
-        if (strlen(tempPath) < bufferSize)
-        {
-            strcpy(fullName, tempPath);
-        }
-        else
-        {
-            *fullName = '\0';
-        }
-        return;
-    }
-
-    /* there was no leading path so try the current directory */
-    getcwd(tempPath, MaximumFileNameBuffer);
-    strcat(tempPath, "/");
-    strcat(tempPath, name);
-    if (strlen(tempPath) < bufferSize)
-    {
-        strcpy(fullName, tempPath);
-    }
-    else
-    {
-        *fullName = '\0';
-    }
-    return;
-#endif
 }
 
 /**
@@ -627,13 +561,7 @@ bool SysFileSystem::canonicalizeName(char *name)
             // make a copy of the name
             strncpy(tempName, name, PATH_MAX + 1);
             strcpy(name, getenv("HOME"));
-#if 0 // We don't need to add a slash : If we have "~" alone, then no final slash expected (same as for "~user"). If "~/..." then we have the slash already
-            // if we need a separator, add one
-            if (tempName[1] != '/')
-            {
-                strncat(name, "/", PATH_MAX + 1);
-            }
-#endif
+            // We don't need to add a slash : If we have "~" alone, then no final slash expected (same as for "~user"). If "~/..." then we have the slash already
             strncat(name, tempName + 1, PATH_MAX + 1);
         }
         else
