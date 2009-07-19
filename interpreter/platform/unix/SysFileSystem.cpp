@@ -207,10 +207,6 @@ void SysFileSystem::qualifyStreamName(
                 strcpy(tempPath, getenv("HOME"));
                 strcat(tempPath, name + 1);
                 break;
-            case '.':
-                getcwd(tempPath, MaximumFileNameBuffer);
-                strcat(tempPath, name + 1);
-                break;
             case '/':
                 strcpy(tempPath, name);
                 break;
