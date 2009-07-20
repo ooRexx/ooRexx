@@ -91,7 +91,10 @@ public:
     }
 
     inline size_t getObjectSize() { return (size_t)objectSize; }
-    inline void setObjectSize(size_t l) { objectSize = l; }
+    inline void setObjectSize(size_t l)
+    {
+        objectSize = l;
+    }
 
     inline void makeProxiedObject() { flags |= ProxiedObject; }
     inline bool requiresProxyObject() { return (flags & ProxiedObject) != 0; }

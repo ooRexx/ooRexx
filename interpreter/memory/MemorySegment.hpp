@@ -82,7 +82,7 @@
 /* Our threshold for deciding we're thrashing the garbage */
 /* collector.  We'll always just extend memory if we're below this */
 /* request threshold. */
-#define MemoryThrashingThreshold 8
+#define MemoryThrashingThreshold 4
 
 /* map an object length to an allocation deadpool.  NOTE:  this */
 /* assumes the length has already been rounded to ObjectGrain! */
