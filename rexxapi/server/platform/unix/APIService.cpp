@@ -279,6 +279,15 @@ int main(int argc, char *argv[])
         printf("Starting request processing loop.\n");
     } else {
         (void) setsid();
+
+        // We start out with root privileges. This is bad from a security perspective. So
+        // switch to the nobody user so we do not have previleges we do not need.
+        struct passwd *pw;
+        pw = getpwnam("nobody");
+        if (pw != NULL) {
+            setuid(pw->pw_uid);
+        }
+
     }
 #else
     if (run_as_daemon == false) {
