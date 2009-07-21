@@ -97,6 +97,7 @@ public:
     static bool  hasExtension(const char *name);
     static bool  hasDirectory(const char *name);
     static bool  canonicalizeName(char *name);
+    static bool  normalizePathName(const char *name, char *resolved);
     static RexxString *extractDirectory(RexxString *file);
     static RexxString *extractExtension(RexxString *file);
     static RexxString *extractFile(RexxString *file);

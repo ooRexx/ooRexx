@@ -622,18 +622,13 @@ bool SysFileSystem::canonicalizeName(char *name)
         strncat(name, tempName, PATH_MAX + 1);
     }
 
-    // NOTE:  realpath() is more portable than canonicalize_file_name().  The biggest difference between them
-    // is support for really long file names (longer than PATH_MAX).  Since everything we've done up to this point
-    // has assumed that PATH_MAX is the limit, it probably doesn't make much sense to start worrying about this
-    // at the very last stage of the process.
+    // NOTE:  realpath() is more portable than canonicalize_file_name().
+    // However, they both have problems in that they both fail if the file does
+    // not exist.  There are a number of places where the interpreter needs to
+    // canonicalize a path name whether the file exists or not.  So we use our
+    // own function to normalize the name.
     char tempName[PATH_MAX + 2];
-    *tempName = '\0';
-    char *temp = realpath(name, tempName);
-    if (temp == NULL && *tempName == '\0')
-    {
-        return false;
-    }
-    else if (temp != NULL || (*tempName != '\0' && errno == ENOENT))
+    if ( normalizePathName(name, tempName) )
     {
         strcpy(name, tempName);
         return true;
@@ -641,4 +636,99 @@ bool SysFileSystem::canonicalizeName(char *name)
     return false;
 }
 
+
+/**
+ * Normalize an absolute Unix path name.  Removes duplicate and trailing
+ * slashes, resolves and removes ./ or ../  This works for any path name,
+ * whether the resovled name exists or not.
+ *
+ * @param name      The path name to normalize.
+ * @param resolved  On success the normalized name is returned here.
+ *
+ * @return True on success, otherwise false.
+ *
+ * @assumes  Name is null-terminated and that resolved is an adequate buffer.
+ */
+bool SysFileSystem::normalizePathName(const char *name, char *resolved)
+{
+    // Path name has to be absolute.
+    if ( *name != '/' )
+    {
+        return false;
+    }
+
+    char *dest = resolved;
+    char *prevSl = dest;
+    *dest = '/';
+
+    // For each character in the path name, decide whether, and where, to copy.
+    for ( char *p = (char *)name; *p; p++ )
+    {
+        if ( *p == '/' )
+        {
+            // Only adjust prevSl if we don't have a "." coming up next.
+            if ( *(p + 1) != '.' )
+            {
+                prevSl = dest;
+            }
+            if ( *dest == '/' )
+            {
+                // Remove double "/"
+                continue;
+            }
+            *++dest = *p;
+        }
+        else if ( *p == '.' )
+        {
+            if ( *dest == '/' )
+            {
+                char next = *(p + 1);
+                if ( next == '\0' || next == '/' )
+                {
+                    // Don't copy the ".", if at the end, the trailing "/" will
+                    // be removed in the final step. If it is: "./", the double
+                    // "//" will be removed in the next iteration.
+                    continue;
+                }
+                else if ( next == '.' )
+                {
+                    // We have "..", but we don't do anything unless the next
+                    // position is a "/" or the end.  (In case of a file like:
+                    // ..my.file)
+                    next = *(p + 2);
+                    if ( next == '\0' || next == '/' )
+                    {
+                        p++;
+                        dest = prevSl;
+
+                        // Now we probably have to push prevSl back, unless we
+                        // are at the root of the file system.
+                        while ( prevSl > resolved )
+                        {
+                            if ( *--prevSl == '/' )
+                            {
+                                break;
+                            }
+                        }
+                        continue;
+                    }
+                }
+                *++dest = *p;
+            }
+            else
+            {
+                *++dest = *p;
+            }
+        }
+        else
+        {
+            *++dest = *p;
+        }
+    }
+
+    // Terminate. Where, depends on several things.
+    (*dest == '/' && dest != resolved) ? *dest = '\0' : *++dest = '\0';
+
+    return true;
+}
 
