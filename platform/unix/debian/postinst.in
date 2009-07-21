@@ -104,7 +104,7 @@ fi
 
 # Debian specific set up for rxapid
 cp ${orx_prefix}/bin/rxapid       /etc/init.d
-update-rc.d rxapid multiuser 89
+update-rc.d rxapid start 89 2 3 4 5 . stop 89 0 1 6 .
 ldconfig
 /etc/init.d/rxapid start
 
