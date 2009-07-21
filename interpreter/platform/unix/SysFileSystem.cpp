@@ -56,6 +56,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <errno.h>
 #include "SysFileSystem.hpp"
 #include "Utilities.hpp"
 
@@ -364,10 +365,10 @@ bool SysFileSystem::hasExtension(const char *name)
  */
 bool SysFileSystem::hasDirectory(const char *name)
 {
-    // hasDirectory() means we have enough absolute directory 
-    // information at the beginning to bypass performing path searches. 
-    // We really only need to look at the first character. 
-    return name[0] == '~' || name[0] == '/' || name[0] == '.'; 
+    // hasDirectory() means we have enough absolute directory
+    // information at the beginning to bypass performing path searches.
+    // We really only need to look at the first character.
+    return name[0] == '~' || name[0] == '/' || name[0] == '.';
 }
 
 
@@ -626,13 +627,18 @@ bool SysFileSystem::canonicalizeName(char *name)
     // has assumed that PATH_MAX is the limit, it probably doesn't make much sense to start worrying about this
     // at the very last stage of the process.
     char tempName[PATH_MAX + 2];
+    *tempName = '\0';
     char *temp = realpath(name, tempName);
-    if (temp == NULL)
+    if (temp == NULL && *tempName == '\0')
     {
         return false;
     }
-    strcpy(name, tempName);
-    return true;
+    else if (temp != NULL || (*tempName != '\0' && errno == ENOENT))
+    {
+        strcpy(name, tempName);
+        return true;
+    }
+    return false;
 }
 
 
