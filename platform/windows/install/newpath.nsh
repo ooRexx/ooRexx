@@ -6,22 +6,24 @@
 ;        Input - head of the stack
 ;        Note - Win9x systems requires reboot
 ; Usage:
-; Push "directory" or ".ext"
-; Push "true" or "false"
-; Push "PATH" or "PATHEXT"
+; Push "directory"           The directory or the ".ext" to add
+; Push "true" or "false"     True if installing with 'admin' rights, otherwise false
+; Push "PATH" or "PATHEXT"   Environment variable being added to
 ; Call AddToPath
 
 Function AddToPath
-  Pop $R8 ; env variable; PATH or PATHEXT
-  Pop $R7 ; "true" or "false" if admin user
-  Exch $0
+  Pop $R8 ; R8 now contains the env variable we are working with, PATH or PATHEXT
+  Pop $R7 ; R7 now cotains "true" or "false".  True if installing with admin rights
+  Exch $0 ; $0 now contains the value to add
   Push $1
   Push $2
   Push $3
 
-  StrCpy $4 "$0" ; save path part to be added in $4
-  ; don't add if the new item already exists in the registry value
-  StrCmp $R7 "true" ReadPath_AllUsers
+  StrCpy $4 "$0" ; save the value being added (directory or .ext) in $4
+
+  ; Get the current registry value and determine if the value being added already exists in the
+  ; current value.  Don't add the new value if it already exist.
+  StrCmp $R7 "true" ReadPath_AllUsers      ; if admin rights
   ReadRegStr $1 HKCU "Environment" "$R8"
   Goto ReadPath_UserCont
   ReadPath_AllUsers:
@@ -81,12 +83,22 @@ Function AddToPath
     Goto AddToPath_UserCont
   AddToPath_AllUsers:
     ReadRegStr $1 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "$R8"
-    StrCmp $1 "" 0 AddToPath_UserCont               ; if the value is blank, there is some problem, then
-    ReadRegStr $1 HKCU "Environment" "$R8"          ; use the current user specific path
+    StrCmp $1 "" 0 AddToPath_UserCont          ; if the value is blank, there is some problem, try to read it again
+    ReadRegStr $1 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "$R8"
+    StrCmp $1 "" AddToPath_Abort               ; if the value is still blank, there is some problem, then abort
   AddToPath_UserCont:
     StrCpy $2 $1 1 -1  # copy last char from path value to $2
     StrCmp $2 ";" 0 +2 # if last char == ';' then
     StrCpy $1 $1 -1    # remove last char from path value
+    ; There is a path limit of 1024 chars prior to XP sp2, 2048 after that. However, NSIS has a string limit
+    ; of 1024 unless a special build is used.  We check if the new path is going to be longer than 1024, and
+    ; if so, abort and tell the user she needs to update the path manually.
+    StrLen $2 $1
+    StrLen $3 $0
+    IntOp $2 $2 + 2   ; 1 for semi-colon, 1 for a (maybe) terminating null.
+                      ;NSIS docs not clear on if 1024 is the string limit or buffer limit
+    IntOp $2 $2 + $3
+    IntCmp $2 1024 AddToPath_Abort_TooLong 0 AddToPath_Abort_TooLong  ; abort if equal or more than, less than continue
     StrCpy $0 "$1;$0"
     StrCmp $R7 "true" AddToPath_AllUsers_doit
     ; Writing registry for current user.  It's okay here to write back only what we are adding.
@@ -116,7 +128,10 @@ Function AddToPath
   ; log file, but that requires building the NSIS system and setting some
   ; compile flags.
   AddToPath_Abort:
-    MessageBox MB_OK|MB_ICONINFORMATION "There was a problem reading the current value of $R8.$\nYou will need to set the $R8 environment variable manually."
+    MessageBox MB_OK|MB_ICONINFORMATION "There was a problem reading the current value of $R8.$\n$\nYou will need to set the $R8 environment variable manually."
+    Goto AddToPath_done
+  AddToPath_Abort_TooLong:
+    MessageBox MB_OK|MB_ICONINFORMATION "Adding the ooRexx directory to the PATH results in a string too$\nlong for the installer to handle.$\n$\nYou will need to set the PATH environment variable manually."
 
   AddToPath_done:
     Pop $3
