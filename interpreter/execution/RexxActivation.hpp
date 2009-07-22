@@ -311,12 +311,15 @@ class ActivationSettings
    void              closeStreams();
    void              checkTrapTable();
    RexxObject       *resolveStream(RexxString *name, bool input, RexxString **fullName, bool *added);
-   RexxDirectory   * getStreams();
-   RexxObject  *novalueHandler(RexxString *);
+   RexxDirectory    *getStreams();
+   RexxObject       *novalueHandler(RexxString *);
    RexxVariableBase *retriever(RexxString *);
    RexxVariableBase *directRetriever(RexxString *);
    RexxObject       *handleNovalueEvent(RexxString *name, RexxVariable *variable);
    RexxSource       *getSourceObject() { return sourceObject; }
+   inline RexxSource *getEffectiveSourceObject() {
+       return isInterpret() ? executable->getSourceObject() : sourceObject;
+   }
    PackageClass     *getPackage();
    RexxObject       *getExecutableObject() { return executable; }
    RexxObject       *getLocalEnvironment(RexxString *name);

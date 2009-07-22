@@ -1814,7 +1814,9 @@ BUILTIN(MIN)
 BUILTIN(SOURCELINE)
 {
     fix_args(SOURCELINE);                /* check on required number of args  */
-    RexxSource *source = context->getSourceObject(); /* get current source object         */
+    // get the effective source object.  If we're in an interpret context, this will
+    // be the one of our caller.
+    RexxSource *source = context->getEffectiveSourceObject();
     size_t size = source->sourceSize();  /* get the program size              */
     if (argcount == 1)                   /* asking for a specific line?       */
     {

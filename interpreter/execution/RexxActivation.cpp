@@ -160,8 +160,6 @@ RexxActivation::RexxActivation(RexxActivity* _activity, RexxMethod * _method, Re
     this->executable = _method;          // save this as the base executable
                                          // save the source object reference also
     this->sourceObject = _method->getSourceObject();
-                                         // save the source object reference also
-    this->sourceObject = _method->getSourceObject();
     this->settings.intermediate_trace = false;
     this->activation_context = METHODCALL;  // the context is a method call
     this->parent = OREF_NULL;            // we don't have a parent stack frame when invoked as a method
