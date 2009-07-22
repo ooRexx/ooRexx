@@ -40,6 +40,7 @@
 #include "MessageDispatcher.hpp"
 #include "ProtectedObject.hpp"
 #include "MessageClass.hpp"
+#include "RexxNativeActivation.hpp"
 
 
 /**
@@ -65,5 +66,8 @@ void MessageDispatcher::handleError(wholenumber_t r, RexxDirectory *c)
     ActivityDispatcher::handleError(-r, c);
     // tell the message object about the error
     message->error(c);
+
+    // but also display the error so the user knows something has happened.
+    activity->error(activation, conditionData);
 }
 

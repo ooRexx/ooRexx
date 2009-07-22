@@ -55,9 +55,13 @@
 #ifdef __REXX64__
 // default size for a segment allocation, we go larger on 64-bit
 #define SegmentSize (256*1024*2)
+/* our threshold for moving to a larger block allocation scheme */
+#define LargeBlockThreshold 8192
 #else
 /* default size for a segment allocation */
 #define SegmentSize (256*1024)
+/* our threshold for moving to a larger block allocation scheme */
+#define LargeBlockThreshold 4096
 #endif
 /* Minimum size segment we'll allow */
 #define MinimumSegmentSize (SegmentSize/2)
@@ -76,8 +80,6 @@
 
 #define LargestNormalSegmentSize (LargeObjectMinSize - (1024 * 1024)  - MemorySegmentOverhead)
 
-/* our threshold for moving to a larger block allocation scheme */
-#define LargeBlockThreshold 4096
 
 /* Our threshold for deciding we're thrashing the garbage */
 /* collector.  We'll always just extend memory if we're below this */
