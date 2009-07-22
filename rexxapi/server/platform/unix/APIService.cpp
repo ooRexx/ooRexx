@@ -50,8 +50,8 @@
 #include "APIServer.hpp"
 #include "stdio.h"
 
-// TEST: add signal handler for SIGTERM
-#define USE_SIGTERM_TEST
+// Add signal handler for SIGTERM
+#define ENABLE_SIGTERM
 
 // For testing purposes comment out the following line to force RXAPI to
 // run as a foreground process.
@@ -91,7 +91,7 @@ void Run (bool asService)
     apiServer.terminateServer();     // shut everything down
 }
 
-#ifdef USE_SIGTERM_TEST
+#ifdef ENABLE_SIGTERM
 /*==========================================================================*
  *  Function: Stop
  *
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 #if defined(AIX)
     struct stat st;
 #endif
-#ifdef USE_SIGTERM_TEST
+#ifdef ENABLE_SIGTERM
     struct sigaction sa;
 #endif
     // Get the command line args
@@ -287,7 +287,6 @@ int main(int argc, char *argv[])
         if (pw != NULL) {
             setuid(pw->pw_uid);
         }
-
     }
 #else
     if (run_as_daemon == false) {
@@ -295,7 +294,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-#ifdef USE_SIGTERM_TEST
+#ifdef ENABLE_SIGTERM
     // handle kill -15
     (void) sigemptyset(&sa.sa_mask);
     (void) sigaddset(&sa.sa_mask, SIGTERM);
