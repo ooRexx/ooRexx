@@ -363,6 +363,8 @@ commonMiscFiles = $(top_srcdir)/CPLv1.0.txt \
                   $(top_srcdir)/ReleaseNotes \
                   $(top_srcdir)/CONTRIBUTORS \
                   $(top_srcdir)/NOTICE \
+                  $(top_srcdir)/unix-like-build.txt \
+                  $(top_srcdir)/windows-build.txt \
                   $(top_srcdir)/oorexx.ver \
                   $(build_extensions_rxftp_dir)/rxftp.cls \
                   $(build_extensions_rxsock_dir)/socket.cls \
