@@ -67,12 +67,12 @@
 *                                                                     *
 **********************************************************************/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* In an pthread environment it is required to include errno.h on AIX */
+/* The reference to the process global symbol errno is not reliably */
+#ifdef OPSYS_AIX
+#  include <errno.h>
+#else
 extern int errno;
-#ifdef __cplusplus
-}
 #endif
 
 /*------------------------------------------------------------------
