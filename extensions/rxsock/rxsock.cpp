@@ -599,7 +599,7 @@ void hostent2stem(struct hostent *pHostEnt, const char *pszStem)
     /*---------------------------------------------------------------
      * set addr
      *---------------------------------------------------------------*/
-    addr.s_addr = (u_long)(*(size_t *)pHostEnt->h_addr);
+    addr.s_addr = (*(uint32_t *)pHostEnt->h_addr);
     RxVarSet(pszStem,"addr",inet_ntoa(addr));
     RxVarSet(pszStem,"addr",inet_ntoa(addr));
 
@@ -618,7 +618,7 @@ void hostent2stem(struct hostent *pHostEnt, const char *pszStem)
     for (count=0; pHostEnt->h_addr_list[count]; count++)
     {
         sprintf(szBuffer,"addr.%d",count+1);
-        addr.s_addr = (u_long)(*(size_t *)pHostEnt->h_addr_list[count]);
+        addr.s_addr = (*(uint32_t *)pHostEnt->h_addr_list[count]);
 
         RxVarSet(pszStem,szBuffer, inet_ntoa(addr));
     }
