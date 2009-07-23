@@ -601,7 +601,6 @@ void hostent2stem(struct hostent *pHostEnt, const char *pszStem)
      *---------------------------------------------------------------*/
     addr.s_addr = (*(uint32_t *)pHostEnt->h_addr);
     RxVarSet(pszStem,"addr",inet_ntoa(addr));
-    RxVarSet(pszStem,"addr",inet_ntoa(addr));
 
     /*---------------------------------------------------------------
      * this is an  extension to the os/2 version.   Dale Posey.
