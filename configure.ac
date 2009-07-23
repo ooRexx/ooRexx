@@ -121,7 +121,7 @@ case "$target" in
    *ibm-aix*)
       GENERIC_OS="-DAIX"
       GENERIC_OPSYS="-DOPSYS_AIX"
-      GENERIC_DEFINES="$GENERIC_DEFINES -DOPSYS_AIX43"
+      GENERIC_DEFINES="$GENERIC_DEFINES"
 #     ORX_SHARED_LIBRARY_EXT=".a"
       case "$CXX" in
          g++)
