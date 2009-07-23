@@ -425,7 +425,7 @@ size_t RexxEntry SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING arg
         retStr->strlength = strlen(retStr->strptr);
         return 0;
     }
-    ia.s_addr = (*(unsigned long *)pHostEnt->h_addr);// in network byte order already
+    ia.s_addr = (*(uint32_t *)pHostEnt->h_addr);// in network byte order already
     addr = inet_ntoa(ia);
 #else
 #if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
@@ -448,7 +448,7 @@ size_t RexxEntry SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING arg
         retStr->strlength = strlen(retStr->strptr);
         return 0;
     }
-    ia.s_addr = (*(unsigned long *)pHostEnt->h_addr);// in network byte order already
+    ia.s_addr = (*(uint32_t *)pHostEnt->h_addr);// in network byte order already
     addr = inet_ntoa(ia);
 #else
     ia.s_addr = htonl(gethostid());
