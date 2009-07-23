@@ -136,6 +136,32 @@ via /etc/inittab:
 
 rxapi:2:once:/opt/ooRexx/bin/rxapi >/dev/console 2>&1
 
+It is also possible to put the rxapi daemon under the control of the
+subsystem resource controller (SRC).
+
+Add the rxapi daemon to the SRC:
+
+  mkssys \
+    -s rxapi \
+    -p /opt/ooRexx/bin/rxapi \
+    -i /dev/null \
+    -e /dev/console \
+    -o /dev/console \
+    -u 0 \
+    -S \
+    -n 15 \
+    -f 9 \
+    -R \
+    -Q
+
+Remove the rxapi daemon from the SRC:
+
+  rmssys -s rxapi
+
+If you like to use the SRC method you need to add this to your /etc/inittab:
+
+rxapi:2:once:/usr/bin/startsrc -s rxapi > /dev/console 2>&1
+
 If you want to bootstrap ooRexx on AIX you will need the following tools:
 
 - libtool 1.5.26
