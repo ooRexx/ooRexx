@@ -183,15 +183,22 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
       ORX_SYS_STR="LINUX"
       ;;
    i370-*ibm*)
+      dnl This a 31 bit system
       ORX_SYS_STR="LINUX"
-      GENERIC_DEFINES="$GENERIC_DEFINES -m31 -OO"
+      GENERIC_DEFINES="$GENERIC_DEFINES -m31"
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
       ;;
    s390x-*ibm*)
+      dnl This a 64 bit system
       ORX_SYS_STR="LINUX"
-dnl   gcc is overly agressive on s390x so turn all optimizations off
-      GENERIC_DEFINES="$GENERIC_DEFINES -O0"
+      GENERIC_DEFINES="$GENERIC_DEFINES -m31"
+      CC_WARNINGS="$GCC_WARNINGS"
+      CXX_WARNINGS="$GCXX_WARNINGS"
+      ;;
+   s390-*ibm*)
+      dnl This a 31 bit system
+      ORX_SYS_STR="LINUX"
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
       ;;
