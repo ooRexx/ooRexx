@@ -192,13 +192,13 @@ dnl         AC_MSG_ERROR("Compiler $CXX is not supported on this platform")
    s390x-*ibm*)
       dnl This a 64 bit system
       ORX_SYS_STR="LINUX"
-      GENERIC_DEFINES="$GENERIC_DEFINES -m31"
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
       ;;
    s390-*ibm*)
       dnl This a 31 bit system
       ORX_SYS_STR="LINUX"
+      GENERIC_DEFINES="$GENERIC_DEFINES -m31"
       CC_WARNINGS="$GCC_WARNINGS"
       CXX_WARNINGS="$GCXX_WARNINGS"
       ;;
