@@ -178,6 +178,35 @@ inline BOOL _connectSysItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg, logic
     return AddTheMessage(dlgAdm, WM_SYSCOMMAND, UINT32_MAX, id,    0x0000FFF0,    0,     0,  msg,   tag) ? 0 : ERROR_NOT_ENOUGH_MEMORY;
 }
 
+/**
+ * Tries to get a pointer to a dialog admin block through the specified dialog.
+ *
+ * @param c       Method context we are operating in.
+ * @param dialog  A presumed ooDialog dialog object.
+ *
+ * @return A pointer to the dialog admin block for the specified dialog on
+ *         success, null on failure.
+ *
+ * @note   On failure, if dialog is not a BaseDialog then the .SystemErrorCode
+ *         is set, but no condition is raised.  On the other hand, if dialog is
+ *         a BaseDialog, and we can't get the admin block, something is
+ *         seriously wrong and a condition has been raised.
+ */
+DIALOGADMIN *_getAdminBlock(RexxMethodContext *c, RexxObjectPtr dialog)
+{
+    oodResetSysErrCode(c);
+
+    if ( ! c->IsOfType(dialog, "BASEDIALOG") )
+    {
+        oodSetSysErrCode(c, ERROR_WINDOW_NOT_DIALOG);
+        return NULL;
+    }
+
+    // This will raise an exception and return NULL on error.
+    return rxGetDlgAdm(c, dialog);
+}
+
+
 CSTRING CppMenu::name()
 {
     switch ( type )
@@ -1508,14 +1537,7 @@ DIALOGADMIN *CppMenu::getAdminBlock(RexxObjectPtr dialog)
     }
     else
     {
-        if ( ! c->IsOfType(dialog, "BASEDIALOG") )
-        {
-            oodSetSysErrCode(c, ERROR_WINDOW_NOT_DIALOG);
-            goto done_out;
-        }
-
-        // This will raise an exception and return NULL on error.
-        dialogAdm = rxGetDlgAdm(c, dialog);
+        dialogAdm = _getAdminBlock(c, dialog);
     }
 
 done_out:
@@ -2726,6 +2748,68 @@ static uint32_t deleteSeparatorByID(HMENU hMenu, uint32_t id)
     return 0;
 }
 
+/** Menu::connectItem() [class]
+ *
+ * This class method connects a menu command item with a method in the specified
+ * dialog.
+ *
+ * @param id          The resource ID of the menu item to be connected.
+ *
+ * @param methodName  The method to connect the menu item to.
+ *
+ * @param dlg         The dlg to connect the menu item too.
+ *
+ * @param isHandled   Whether the method handles completely the Windows message,
+ *                    or not.  If true the message is NOT passed on to the
+ *                    system for further processing, if false it is passed on.
+ *                    This argument is only used for a SystemMenu.
+ *
+ * @return  True on success, false on error.
+ *
+ * @note  Sets .SystemErrorCode on error.
+ *
+ *        The system error code is set this way in addition to what the OS might
+ *        set:
+ *
+ *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dialog argument is not a
+ *        .BaseDialog, (or subclass of course.)
+ *
+ *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
+ */
+RexxMethod5(logical_t, menu_connectItem_cls, RexxObjectPtr, rxID, CSTRING, methodName,
+            RexxObjectPtr, dlg, OPTIONAL_logical_t, isHandled, OSELF, self)
+{
+    logical_t success = FALSE;
+    bool isSystemMenu = isOfClassType(context, self, "SystemMenu");
+
+    DIALOGADMIN *dialogAdm = _getAdminBlock(context, dlg);
+    if ( dialogAdm == NULL )
+    {
+        goto done_out;
+    }
+
+    uint32_t id = oodResolveSymbolicID(context, dlg, rxID, -1, 1);
+    if ( id == OOD_ID_EXCEPTION )
+    {
+        goto done_out;
+    }
+
+    uint32_t rc;
+    if ( isSystemMenu )
+    {
+        rc = _connectSysItem(dialogAdm, id, methodName, isHandled);
+    }
+    else
+    {
+        rc = _connectItem(dialogAdm, id, methodName);
+    }
+
+    (rc == 0) ? success = TRUE : oodSetSysErrCode(context, rc);
+
+done_out:
+    return success;
+}
+
 
 /** Menu::hMenu()  [attribute get]
  *
@@ -3039,7 +3123,7 @@ RexxMethod3(logical_t, menu_isPopup, RexxObjectPtr, rxItemID, OPTIONAL_logical_t
 }
 
 
-/**Menu::destroy()
+/** Menu::destroy()
  *
  *  Releases the operating system resources for the menu this .Menu represents.
  *
@@ -5325,6 +5409,79 @@ RexxMethod5(logical_t, sysMenu_connectSomeItems, RexxObjectPtr, rxItemIDs, logic
 }
 
 
+/** PopupMenu::connectContextMenu() [class]
+ *
+ * This class method connects WM_CONTEXTMETHOD Windows messages to a method in a
+ * dialog. The WM_CONTEXTMENU is sent when the user right-mouse clicks on a
+ * window.
+ *
+ * @param dlg         The dialog being connected.
+ *
+ * @param methodName  The method name of the method being connected.
+ *
+ * @param hwnd        [optional] A window handle to filter the right-clicks on.
+ *                    This can be the window handle of any control in the dialog
+ *                    being connnected, or even the dialog window handle itself.
+ *                    If used, only right-clicks on the specified window will be
+ *                    received.  If omitted, all right-clicks on the dialog are
+ *                    received.
+ *
+ * @param handles     Whether the method handles completely the Windows message,
+ *                    or not.  If true the message is NOT passed on to the
+ *                    system for further processing, if false it is passed on.
+ *                    TODO - figure out if there is one value that should always
+ *                    be used and remove this extra parameter.
+ *
+ * @return  True on success, false on error.
+ *
+ * @note  Sets .SystemErrorCode on error.
+ *
+ *        The system error code is set this way in addition to what the OS might
+ *        set:
+ *
+ *        ERROR_WINDOW_NOT_DIALOG (1420) -> The dlg argument not a .BaseDialog,
+ *        (or subclass of course.)
+ *
+ *        ERROR_NOT_ENOUGH_MEMORY (8) -> The dialog message table is full.
+ */
+RexxMethod4(logical_t, popMenu_connectContextMenu_cls, RexxObjectPtr, dlg, CSTRING, methodName, OPTIONAL_POINTERSTRING, hwnd,
+            OPTIONAL_logical_t, handles)
+{
+    BOOL success = FALSE;
+
+    DIALOGADMIN *dialogAdm = _getAdminBlock(context, dlg);
+    if ( dialogAdm == NULL )
+    {
+        goto done_out;
+    }
+
+    uint32_t tag = TAG_DIALOG | TAG_CONTEXTMENU;
+    if ( handles )
+    {
+        tag |= TAG_MSGHANDLED;
+    }
+
+    if ( hwnd != NULL )
+    {
+        success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, (WPARAM)hwnd, UINTPTR_MAX,
+                                0, 0, methodName, tag);
+    }
+    else
+    {
+        success = AddTheMessage(dialogAdm, WM_CONTEXTMENU, UINT32_MAX, 0, 0,
+                                0, 0, methodName, tag);
+    }
+
+    if ( ! success )
+    {
+        oodSetSysErrCode(context, ERROR_NOT_ENOUGH_MEMORY);
+    }
+
+done_out:
+    return success;
+}
+
+
 /** PopupMenu::init()
  *
  *  Initializes a .PopupMenu object.  The underlying menu object is either
@@ -5698,7 +5855,7 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObject
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SetObjectVariable("CSELF", cMenuPtr);
 
-    bool idOmitted = isInt(-1, id, context);
+    bool idOmitted = isInt(context, -1, id);
 
     if ( ! cMenu->menuInit(id, symbolSrc, rcFile) )
     {

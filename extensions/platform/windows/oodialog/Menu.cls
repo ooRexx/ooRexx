@@ -48,6 +48,8 @@
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::class 'Menu' public mixinclass Object
 
+::method connectItem class external "LIBRARY oodialog menu_connectItem_cls"
+
 ::attribute wID get external "LIBRARY oodialog menu_wID"
 ::attribute hMenu get external "LIBRARY oodialog menu_getHMenu"
 
@@ -185,6 +187,7 @@
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::class 'PopupMenu' public subclass Object inherit Menu ResourceUtils
 
+::method connectContextMenu class external "LIBRARY oodialog popMenu_connectContextMenu_cls"
 ::method init external "LIBRARY oodialog popMenu_init"
 ::method isAssigned external "LIBRARY oodialog popMenu_isAssigned"
 ::method show external "LIBRARY oodialog popMenu_show"

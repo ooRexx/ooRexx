@@ -426,13 +426,13 @@ RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr v
 /**
  * Test if a generic Rexx object is exactly some int.
  *
+ * @param c        The method context we are executing under.
  * @param testFor  The int value being tested for.
  * @param val      The generic Rexx object, which could be null.
- * @param c        The method context we are executing under.
  *
  * @return True if val is the int number we are testing for, otherwise false.
  */
-bool isInt(int testFor, RexxObjectPtr val, RexxMethodContext *c)
+bool isInt(RexxMethodContext *c, int testFor, RexxObjectPtr val)
 {
     if ( val != NULLOBJECT )
     {
@@ -444,3 +444,27 @@ bool isInt(int testFor, RexxObjectPtr val, RexxMethodContext *c)
     }
     return false;
 }
+
+
+/**
+ * Test if a genric Rexx object is the type of specified class object.
+ *
+ * @param c        The method context we are executing under.
+ * @param obj      The object to test.
+ * @param classID  The ID string of the class we are looking for.
+ *
+ * @return True if obj is a class object of the type specified, otherwise false.
+ */
+bool isOfClassType(RexxMethodContext *c, RexxObjectPtr obj, CSTRING classID)
+{
+    if ( obj != NULLOBJECT && c->IsOfType(obj, "CLASS") )
+    {
+        RexxStringObject clsID = (RexxStringObject)c->SendMessage0(obj, "ID");
+        if ( clsID != NULLOBJECT && stricmp(c->StringData(clsID), classID) == 0 )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+

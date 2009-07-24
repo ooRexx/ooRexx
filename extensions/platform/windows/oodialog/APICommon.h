@@ -83,6 +83,7 @@ extern size_t rxArgCount(RexxMethodContext * context);
 extern bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos);
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
-extern bool isInt(int, RexxObjectPtr, RexxMethodContext *);
+extern bool isInt(RexxMethodContext *, int, RexxObjectPtr);
+extern bool isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
 
 #endif

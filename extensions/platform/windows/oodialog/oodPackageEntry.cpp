@@ -350,6 +350,7 @@ REXX_METHOD_PROTOTYPE(size_cy);
 REXX_METHOD_PROTOTYPE(size_setCY);
 
 // Menu classes methods
+REXX_METHOD_PROTOTYPE(menu_connectItem_cls);
 REXX_METHOD_PROTOTYPE(menu_getHMenu);
 REXX_METHOD_PROTOTYPE(menu_wID);
 REXX_METHOD_PROTOTYPE(menu_isValidItemID);
@@ -412,6 +413,7 @@ REXX_METHOD_PROTOTYPE(sysMenu_connectItem);
 REXX_METHOD_PROTOTYPE(sysMenu_connectAllItems);
 REXX_METHOD_PROTOTYPE(sysMenu_connectSomeItems);
 
+REXX_METHOD_PROTOTYPE(popMenu_connectContextMenu_cls);
 REXX_METHOD_PROTOTYPE(popMenu_init);
 REXX_METHOD_PROTOTYPE(popMenu_connectContextMenu);
 REXX_METHOD_PROTOTYPE(popMenu_isAssigned);
@@ -589,6 +591,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(size_setCY,              size_setCY),
 
     // Menu classes methods
+    REXX_METHOD(menu_connectItem_cls,           menu_connectItem_cls),
     REXX_METHOD(menu_getHMenu,                  menu_getHMenu),
     REXX_METHOD(menu_wID,                       menu_wID),
     REXX_METHOD(menu_isValidItemID,             menu_isValidItemID),
@@ -651,12 +654,13 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(sysMenu_connectSomeItems,  sysMenu_connectSomeItems),
     REXX_METHOD(sysMenu_connectAllItems,   sysMenu_connectAllItems),
 
-    REXX_METHOD(popMenu_init,               popMenu_init),
-    REXX_METHOD(popMenu_isAssigned,         popMenu_isAssigned),
-    REXX_METHOD(popMenu_connectContextMenu, popMenu_connectContextMenu),
-    REXX_METHOD(popMenu_assignTo,           popMenu_assignTo),
-    REXX_METHOD(popMenu_track,              popMenu_track),
-    REXX_METHOD(popMenu_show,               popMenu_show),
+    REXX_METHOD(popMenu_connectContextMenu_cls, popMenu_connectContextMenu_cls),
+    REXX_METHOD(popMenu_init,                   popMenu_init),
+    REXX_METHOD(popMenu_isAssigned,             popMenu_isAssigned),
+    REXX_METHOD(popMenu_connectContextMenu,     popMenu_connectContextMenu),
+    REXX_METHOD(popMenu_assignTo,               popMenu_assignTo),
+    REXX_METHOD(popMenu_track,                  popMenu_track),
+    REXX_METHOD(popMenu_show,                   popMenu_show),
 
     REXX_METHOD(scriptMenu_init,         scriptMenu_init),
 

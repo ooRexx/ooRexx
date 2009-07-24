@@ -1049,21 +1049,9 @@ syntax:
    use strict arg msgToRise
    self~addUserMsg(msgToRise, 0x00000215, 0xFFFFFFFF, 0, 0, 0, 0)
 
-::method connectMenuItem
+::method connectMenuItem   -- Deprecated
    use strict arg id, msgToRaise
-
-   id = self~resolveResourceId(id)
-   if id = -1 then return -1
-
-   if id < 3 | id = 9 then return 0
-
-   return self~addUserMsg(msgToRaise, 0x00000111, 0xFFFFFFFF, id, 0x0000FFFF, 0, 0)
-
--- Connect WM_CONTEXTMENU messages to a method.  TODO - this doesn't seem like the right place for this, what was I thinking?
-::method connectContextMenu
-   use strict arg msgToRaise, hwnd = .nil
-   if hwnd \== .nil then return self~addUserMsg(msgToRaise, 0x0000007B, 0xFFFFFFFF, hwnd, 0xFFFFFFFF, 0, 0, 0x00000201)
-   return self~addUserMsg(msgToRaise, 0x0000007B, 0xFFFFFFFF, 0, 0, 0, 0, 0x00000201)
+   return .Menu~connectItem(id, msgToRaise, self)
 
 ::method PeekDialogMessage unguarded
    return GetDlgMsg(self~Adm, "Peek")
