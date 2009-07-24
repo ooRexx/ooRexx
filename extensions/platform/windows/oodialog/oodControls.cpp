@@ -289,38 +289,37 @@ RexxMethod3(RexxObjectPtr, advCtrl_getControl, RexxObjectPtr, rxID, OPTIONAL_uin
         goto out;
     }
 
-    HWND hControl = NULL;
-    RexxObjectPtr rxControl = NULLOBJECT;
-
-    hControl = GetDlgItem(hDlg, (int)id);
-    if ( hControl != NULL )
-    {
-        rxControl = (RexxObjectPtr)getWindowPtr(hControl, GWLP_USERDATA);
-        if ( rxControl != NULLOBJECT )
-        {
-            // Okay, this specific control has already had a control object
-            // instantiated to represent it.  We return this object.
-            result = rxControl;
-            goto out;
-        }
-    }
-
-    // No pointer is stored in the user data area, so no control object has been
-    // instantiated for this specific control, yet.  We instantiate one now and
-    // then store the object in the user data area of the control window.
-    oodControl_t controlType;
-    RexxClassObject controlCls = getControlClass(context, c->GetMessageName() + 3, &controlType);
-    if ( controlCls == NULLOBJECT )
+    HWND hControl = GetDlgItem(hDlg, (int)id);
+    if ( hControl == NULL )
     {
         goto out;
     }
 
     // Check that the underlying Windows control is the control type requested
     // by the programmer.  Return .nil if this is not true.
+    oodControl_t controlType;
+    RexxClassObject controlCls = getControlClass(context, c->GetMessageName() + 3, &controlType);
+    if ( controlCls == NULLOBJECT )
+    {
+        goto out;
+    }
     if ( ! checkControlClass(hControl, controlType) )
     {
         goto out;
     }
+
+    RexxObjectPtr rxControl = (RexxObjectPtr)getWindowPtr(hControl, GWLP_USERDATA);
+    if ( rxControl != NULLOBJECT )
+    {
+        // Okay, this specific control has already had a control object
+        // instantiated to represent it.  We return this object.
+        result = rxControl;
+        goto out;
+    }
+
+    // No pointer is stored in the user data area, so no control object has been
+    // instantiated for this specific control, yet.  We instantiate one now and
+    // then store the object in the user data area of the control window.
 
     // TODO Much of the information we just determined, is re-determined in the
     // new method of the dialog control.  It would be nice to change the new
