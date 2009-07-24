@@ -64,7 +64,9 @@ inline char *dupString(const char *oldString)
     return newString;
 }
 
-#define REXX_API_PORT 43332
+// this port is assigned by IANA for the use of ooRexx, so
+// in theory, we're safe to use this.
+#define REXX_API_PORT 10010
 
 // a session identifier
 typedef uintptr_t SessionID;
