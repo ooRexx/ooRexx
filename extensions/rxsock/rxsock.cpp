@@ -102,24 +102,26 @@
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
 /*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
 
-#if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
 /*------------------------------------------------------------------
- * stricmp for aix
+ * caseless string compare
  *------------------------------------------------------------------*/
-int stricmp(const char *op1, const char *op2)
+int caselessCompare(const char *op1, const char *op2)
 {
     for (; tolower(*op1) == tolower(*op2); op1++,op2++)
+    {
         if (*op1 == 0)
+        {
             return 0;
+        }
+    }
 
     return(tolower(*op1) - tolower(*op2));
 }
-#endif
 
 /*------------------------------------------------------------------
  * strip blanks from a line
  *------------------------------------------------------------------*/
-void StripBlanks(char *string)
+void stripBlanks(char *string)
 {
     size_t sLen;
     size_t leading;
@@ -130,7 +132,9 @@ void StripBlanks(char *string)
      * strip trailing blanks
      *---------------------------------------------------------------*/
     while (sLen && (' ' == string[sLen-1]))
+    {
         string[sLen-1] = 0;
+    }
 
     /*---------------------------------------------------------------
      * strip leading blanks
@@ -142,327 +146,92 @@ void StripBlanks(char *string)
     }
 }
 
-/*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
-/*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
-
-/*------------------------------------------------------------------
- * set a rexx variable
- *------------------------------------------------------------------*/
-void RxVarSet(const char * pszStem, const char * pszTail, const char * pszValue )
-{
-    SHVBLOCK shv;
-    char *pszVariable;
-
-    if (!pszStem)
-        return;
-
-    /*---------------------------------------------------------------
-     * get variable name
-     *---------------------------------------------------------------*/
-    pszVariable = (char *)malloc(1+strlen(pszStem)+strlen(pszTail));
-    if (!pszVariable)
-        return;
-
-    strcpy(pszVariable,pszStem);
-    strcat(pszVariable,pszTail);
-
-    /*---------------------------------------------------------------
-     * set shv values
-     *---------------------------------------------------------------*/
-    shv.shvcode            = RXSHV_SYSET;
-    shv.shvnext            = NULL;
-    shv.shvname.strptr     = pszVariable;
-    shv.shvname.strlength  = strlen(pszVariable);
-    shv.shvvalue.strptr    = const_cast<char *>(pszValue);
-    shv.shvvalue.strlength = strlen(pszValue);
-
-    RexxVariablePool(&shv);
-
-    /*---------------------------------------------------------------
-     * free temp var, if we used it
-     *---------------------------------------------------------------*/
-    free(pszVariable);
-}
-
-/*------------------------------------------------------------------
- * set a rexx variable
- *------------------------------------------------------------------*/
-void RxVarSet(const char * pszVariable, const char * pszValue)
-{
-    SHVBLOCK shv;
-
-    if (!pszVariable)
-        return;
-
-    /*---------------------------------------------------------------
-     * set shv values
-     *---------------------------------------------------------------*/
-    shv.shvcode            = RXSHV_SYSET;
-    shv.shvnext            = NULL;
-    shv.shvname.strptr     = pszVariable;
-    shv.shvname.strlength  = strlen(pszVariable);
-    shv.shvvalue.strptr    = const_cast<char *>(pszValue);
-    shv.shvvalue.strlength = strlen(pszValue);
-
-    RexxVariablePool(&shv);
-}
-
-/*------------------------------------------------------------------
- * get a rexx variable - return value must be freed by caller
- *------------------------------------------------------------------*/
-char * RxVarGet(const char * pszVariable)
-{
-    SHVBLOCK shv;
-    char *      pszValue;
-
-    /*---------------------------------------------------------------
-     * set shv values
-     *---------------------------------------------------------------*/
-    shv.shvcode            = RXSHV_SYFET;
-    shv.shvnext            = NULL;
-    shv.shvname.strptr     = pszVariable;
-    shv.shvname.strlength  = strlen(pszVariable);
-    shv.shvvalue.strptr    = NULL;
-
-    RexxVariablePool(&shv);
-
-    /*---------------------------------------------------------------
-     * check for errors
-     *---------------------------------------------------------------*/
-    if (!shv.shvvalue.strptr)
-        return NULL;
-
-    /*---------------------------------------------------------------
-     * make copy of value, + 1 for hex 0 (not added by rexx)
-     *---------------------------------------------------------------*/
-    pszValue = (char *)malloc(shv.shvvalue.strlength+1);
-    if (!pszValue)
-        return NULL;
-
-    /*---------------------------------------------------------------
-     * copy value into new buffer, free old buffer, return new buffer
-     *---------------------------------------------------------------*/
-    memcpy(pszValue,shv.shvvalue.strptr,shv.shvvalue.strlength);
-    pszValue[shv.shvvalue.strlength] = 0;
-
-    RexxFreeMemory(shv.shvvalue.strptr);
-    return pszValue;
-}
-
-/*------------------------------------------------------------------
- * get a rexx variable - return value must be freed by caller
- *------------------------------------------------------------------*/
-char * RxVarGet(const char * pszStem, const char * pszTail)
-{
-    SHVBLOCK shv;
-    char *pszVariable;
-    char *pszValue;
-
-    if (!pszStem)
-        return NULL;
-
-    pszVariable = (char *)malloc(1+strlen(pszStem)+strlen(pszTail));
-    if (!pszVariable)
-        return NULL;
-
-    strcpy(pszVariable,pszStem);
-    strcat(pszVariable,pszTail);
-
-    /*---------------------------------------------------------------
-     * set shv values
-     *---------------------------------------------------------------*/
-    shv.shvcode            = RXSHV_SYFET;
-    shv.shvnext            = NULL;
-    shv.shvname.strptr     = pszVariable;
-    shv.shvname.strlength  = strlen(pszVariable);
-    shv.shvvalue.strptr    = NULL;
-
-    RexxVariablePool(&shv);
-
-    /*---------------------------------------------------------------
-     * free temp var, if we used it
-     *---------------------------------------------------------------*/
-    free(pszVariable);
-
-    /*---------------------------------------------------------------
-     * check for errors
-     *---------------------------------------------------------------*/
-    if (!shv.shvvalue.strptr)
-        return NULL;
-
-    /*---------------------------------------------------------------
-     * make copy of value, + 1 for hex 0 (not added by rexx)
-     *---------------------------------------------------------------*/
-    pszValue = (char *)malloc(shv.shvvalue.strlength+1);
-    if (!pszValue)
-        return NULL;
-
-    /*---------------------------------------------------------------
-     * copy value into new buffer, free old buffer, return new buffer
-     *---------------------------------------------------------------*/
-    memcpy(pszValue,shv.shvvalue.strptr,shv.shvvalue.strlength);
-    pszValue[shv.shvvalue.strlength] = 0;
-
-    RexxFreeMemory(shv.shvvalue.strptr);
-    return pszValue;
-}
 
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
 /*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
 
 /*------------------------------------------------------------------
- * convert a rexx string to a size_t
+ * get a rexx stem element as a string value.
  *------------------------------------------------------------------*/
-size_t rxs2size_t(PCONSTRXSTRING  pRxStr, int *rc)
+char *getStemElement(RexxCallContext *context, RexxStemObject stem, const char *name)
 {
-    size_t n;
-    char *   dummy;
+    // first get the referenced object, returning NULL if it is not set
+    RexxObjectPtr obj = context->GetStemElement(stem, name);
+    if (obj == NULLOBJECT)
+    {
+        return NULL;
+    }
 
-    /*---------------------------------------------------------------
-     * check for errors
-     *---------------------------------------------------------------*/
-    if (!pRxStr)
-        return 0;
-
-    if (!pRxStr->strlength)
-        return 0;
-
-    /*---------------------------------------------------------------
-     * convert
-     *---------------------------------------------------------------*/
-    n   = (size_t) strtoul(pRxStr->strptr,&dummy,10);
-    *rc = (0 == *dummy);
-
-    return n;
+    // get this as a copy of the string value, because we may munge this
+    return strdup(context->ObjectToStringValue(obj));
 }
 
-/*------------------------------------------------------------------
- * convert a rexx string to an int
- *------------------------------------------------------------------*/
-int rxs2int(PCONSTRXSTRING  pRxStr, int *rc)
-{
-    int   n;
-
-    *rc = 0;  /* default return code (an error occured) */
-
-    /*---------------------------------------------------------------
-     * check for errors
-     *---------------------------------------------------------------*/
-    if (!pRxStr)
-        return 0;
-
-    if (!pRxStr->strlength)
-        return 0;
-
-    /*---------------------------------------------------------------
-     * convert
-     *---------------------------------------------------------------*/
-    n   = atoi(pRxStr->strptr);
-    *rc = n;  /* set the real return code */
-    return n;
-}
-
-/*------------------------------------------------------------------
- * convert an int to a rexx string (already allocated)
- *------------------------------------------------------------------*/
-void int2rxs(int i, PRXSTRING  pRxStr)
-{
-    sprintf(pRxStr->strptr,"%d",i);
-    pRxStr->strlength = strlen(pRxStr->strptr);
-}
 
 /*------------------------------------------------------------------
  * convert a stem variable to an array of ints
  *------------------------------------------------------------------*/
-void rxstem2intarray(PCONSTRXSTRING   pRxStr, int *count, int **arr)
+void stemToIntArray(RexxCallContext *context, RexxStemObject stem, int &count, int *&arr)
 {
-    char *   countStr;
-    char *   dummy;
-    char  numBuff[10];
-    char *numString;
-    int   i;
+    // set initial values
+    count = 0;
+    arr = NULL;
 
-    /*---------------------------------------------------------------
-     * get stem.0 value
-     *---------------------------------------------------------------*/
-    if (!pRxStr || !pRxStr->strptr)
+    // get the stem.0 item
+    RexxObjectPtr countObj = context->GetStemArrayElement(stem, 0);
+
+    // try to convert this
+    wholenumber_t temp;
+    if (!context->WholeNumber(countObj, &temp))
     {
-        *count = 0;
-        *arr   = NULL;
         return;
     }
-
-    countStr = RxVarGet(pRxStr->strptr,"0");
-
-    /*---------------------------------------------------------------
-     * convert to an integer
-     *---------------------------------------------------------------*/
-    *count  = (int) strtoul(countStr,&dummy,10);
-    if (0 != *dummy)
-    {
-        *count = 0;
-        *arr   = NULL;
-        return;
-    }
-
-    free(countStr);
 
     /*---------------------------------------------------------------
      * allocate array
      *---------------------------------------------------------------*/
-    *arr = (int *)malloc(1 + sizeof(int) * *count);
-    if (!*arr)
+    arr = (int *)malloc(sizeof(int) * temp);
+    if (arr == NULL)
     {
-        *count = 0;
-        *arr   = NULL;
         return;
     }
+
+    count = temp;
 
     /*---------------------------------------------------------------
      * get each value ...
      *---------------------------------------------------------------*/
-    for (i=0; i<*count; i++)
+    for (int i = 0; i < count; i++)
     {
-        sprintf(numBuff,"%d",i+1);
-        numString = RxVarGet(pRxStr->strptr,numBuff);
-        (*arr)[i]  = (int) strtoul(numString,&dummy,10);
-        free(numString);
-    }
+        countObj = context->GetStemArrayElement(stem, i + 1);
 
+        if (!context->ObjectToWholeNumber(countObj, &temp))
+        {
+            free(arr);
+            arr = NULL;
+            return;
+        }
+        arr[i]  = (int)temp;
+    }
     return;
 }
 
 /*------------------------------------------------------------------
  * convert an array of ints to a stem variable
  *------------------------------------------------------------------*/
-void intarray2rxstem(PCONSTRXSTRING   pRxStr, int count, int *arr)
+void intArrayToStem(RexxCallContext *context, RexxStemObject stem, int count, int *arr)
 {
-    int   i;
-    char  numBuff1[10];
-    char  numBuff2[10];
-
-    /*---------------------------------------------------------------
-     * sanity check
-     *---------------------------------------------------------------*/
-    if (!pRxStr || !pRxStr->strptr)
-    {
-        return;
-    }
-
     /*---------------------------------------------------------------
      * set 0'th value
      *---------------------------------------------------------------*/
-    sprintf(numBuff1,"%d",count);
-    RxVarSet(pRxStr->strptr,"0",numBuff1);
+
+    context->SetStemArrayElement(stem, 0, context->WholeNumber(count));
 
     /*---------------------------------------------------------------
      * set each value
      *---------------------------------------------------------------*/
-    for (i=0; i<count; i++)
+    for (int i = 0; i < count; i++)
     {
-        sprintf(numBuff1,"%d",i+1);
-        sprintf(numBuff2,"%d",arr[i]);
-        RxVarSet(pRxStr->strptr,numBuff1,numBuff2);
+        context->SetStemArrayElement(stem, i + 1, context->WholeNumber(arr[i]));
     }
 
     return;
@@ -471,140 +240,143 @@ void intarray2rxstem(PCONSTRXSTRING   pRxStr, int count, int *arr)
 /*------------------------------------------------------------------
  * convert a stemmed variable to a sockaddr
  *------------------------------------------------------------------*/
-void stem2sockaddr(const char * pszStem, sockaddr_in *pSockAddr)
+void stemToSockAddr(RexxCallContext *context, RexxStemObject stem, sockaddr_in *pSockAddr)
 {
-    char * pszFamily = NULL;
-    char * pszPort   = NULL;
-    char * pszAddr   = NULL;
-
-    if (!pSockAddr || !pszStem)
-        return;
+    char *pszFamily = NULL;
+    char *pszPort   = NULL;
+    char *pszAddr   = NULL;
 
     /*---------------------------------------------------------------
      * initialize sockaddr
      *---------------------------------------------------------------*/
-    memset(pSockAddr,0,sizeof(*pSockAddr));
+    memset(pSockAddr, 0, sizeof(*pSockAddr));
 
     /*---------------------------------------------------------------
      * get fields
      *---------------------------------------------------------------*/
 
-    pszFamily = RxVarGet(pszStem,"family");
-    pszPort   = RxVarGet(pszStem,"port");
-    pszAddr   = RxVarGet(pszStem,"addr");
-
-    StripBlanks(pszFamily);
-    StripBlanks(pszPort);
-    StripBlanks(pszAddr);
+    pszFamily = getStemElement(context, stem, "FAMILY");
+    pszPort   = getStemElement(context, stem, "PORT");
+    pszAddr   = getStemElement(context, stem, "ADDR");
 
     /*---------------------------------------------------------------
      * if any fields invalid, quit
      *---------------------------------------------------------------*/
-    if (!pszFamily || !pszPort || !pszAddr)
+    if (pszFamily == NULL || pszPort == NULL || pszAddr == NULL)
+    {
         goto CleanUp;
+    }
+
+    stripBlanks(pszFamily);
+    stripBlanks(pszPort);
+    stripBlanks(pszAddr);
 
     /*---------------------------------------------------------------
      * get family
      *---------------------------------------------------------------*/
-    if (!stricmp(pszFamily,"AF_INET"))
+    if (!caselessCompare(pszFamily,"AF_INET"))
+    {
         pSockAddr->sin_family = AF_INET;
+    }
     else
-        pSockAddr->sin_family = (short)strtol(pszFamily,NULL,10);
+    {
+        pSockAddr->sin_family = (SHORT) strtol(pszFamily,NULL,10);
+    }
 
     /*---------------------------------------------------------------
      * get port
      *---------------------------------------------------------------*/
-    pSockAddr->sin_port = (unsigned short)strtoul(pszPort,NULL,10);
+    pSockAddr->sin_port = (unsigned short) strtoul(pszPort, NULL, 10);
     pSockAddr->sin_port = htons(pSockAddr->sin_port);
 
     /*---------------------------------------------------------------
      * get addr
      *---------------------------------------------------------------*/
     if (!stricmp(pszAddr,"INADDR_ANY"))
+    {
         pSockAddr->sin_addr.s_addr = INADDR_ANY;
+    }
     else
+    {
         pSockAddr->sin_addr.s_addr = inet_addr(pszAddr);
+    }
 
     /*------------------------------------------------------------------
      * clean up and leave
      *------------------------------------------------------------------*/
     CleanUp:
-    if (pszFamily) free(pszFamily);
-    if (pszPort)   free(pszPort);
-    if (pszAddr)   free(pszAddr);
+    if (pszFamily == NULL)
+    {
+        free(pszFamily);
+    }
+    if (pszPort == NULL)
+    {
+        free(pszPort);
+    }
+    if (pszAddr == NULL)
+    {
+        free(pszAddr);
+    }
 }
 
 /*------------------------------------------------------------------
  * convert a sockaddr to a stemmed variable
  *------------------------------------------------------------------*/
-void sockaddr2stem(sockaddr_in *pSockAddr, const char * pszStem)
+void sockAddrToStem(RexxCallContext *context, sockaddr_in *pSockAddr, RexxStemObject stem )
 {
-    char szBuffer[20];
-
-    if (!pSockAddr || !pszStem)
-        return;
-
     /*---------------------------------------------------------------
      * set family
      *---------------------------------------------------------------*/
-    sprintf(szBuffer,"%hd", pSockAddr->sin_family);
-    RxVarSet(pszStem,"family",szBuffer);
+    context->SetStemElement(stem, "FAMILY", context->WholeNumber(pSockAddr->sin_family));
 
     /*---------------------------------------------------------------
      * set port
      *---------------------------------------------------------------*/
-    sprintf(szBuffer,"%hu",htons(pSockAddr->sin_port));
-    RxVarSet(pszStem,"port",szBuffer);
+    context->SetStemElement(stem, "PORT", context->UnsignedInt32(htons(pSockAddr->sin_port)));
 
     /*---------------------------------------------------------------
      * set address
      *---------------------------------------------------------------*/
-    RxVarSet(pszStem,"addr",inet_ntoa(pSockAddr->sin_addr));
+    context->SetStemElement(stem, "ADDR", context->String(inet_ntoa(pSockAddr->sin_addr)));
 }
 
 /*------------------------------------------------------------------
  * convert a hostent to a stemmed variable
  *------------------------------------------------------------------*/
-void hostent2stem(struct hostent *pHostEnt, const char *pszStem)
+void hostEntToStem(RexxCallContext *context, struct hostent *pHostEnt, RexxStemObject stem)
 {
-    char    szBuffer[20];
+    char     szBuffer[20];
     int      count;
     in_addr  addr;
-
-    if (!pHostEnt || !pszStem)
-        return;
 
     /*---------------------------------------------------------------
      * set family
      *---------------------------------------------------------------*/
-    RxVarSet(pszStem,"name",pHostEnt->h_name);
+    context->SetStemElement(stem, "NAME", context->String(pHostEnt->h_name));
 
     /*---------------------------------------------------------------
      * set aliases
      *---------------------------------------------------------------*/
     for (count=0; pHostEnt->h_aliases[count]; count++)
     {
-        sprintf(szBuffer,"alias.%d",count+1);
-        RxVarSet(pszStem,szBuffer,pHostEnt->h_aliases[count]);
+        sprintf(szBuffer,"ALIAS.%d",count+1);
+        context->SetStemElement(stem, szBuffer, context->String(pHostEnt->h_aliases[count]));
     }
 
-    sprintf(szBuffer,"%d",count);
-    RxVarSet(pszStem,"alias.0",szBuffer);
+    context->SetStemElement(stem, "ALIAS.0", context->WholeNumber(count));
 
     /*---------------------------------------------------------------
      * set addrtype
      *---------------------------------------------------------------*/
-    RxVarSet(pszStem,"addrtype","AF_INET");
+    context->SetStemElement(stem, "ADDRTYPE", context->String("AF_INET"));
 
     /*---------------------------------------------------------------
      * set addr
      *---------------------------------------------------------------*/
     addr.s_addr = (*(uint32_t *)pHostEnt->h_addr);
-    RxVarSet(pszStem,"addr",inet_ntoa(addr));
+    context->SetStemElement(stem, "ADDR", context->String(inet_ntoa(addr)));
 
     /*---------------------------------------------------------------
-     * this is an  extension to the os/2 version.   Dale Posey.
-     *
      *  the stem variable variablename.addr.0  contains count of available
      *  addresses and variablename.addr.n is each address.
      *
@@ -616,39 +388,39 @@ void hostent2stem(struct hostent *pHostEnt, const char *pszStem)
      *---------------------------------------------------------------*/
     for (count=0; pHostEnt->h_addr_list[count]; count++)
     {
-        sprintf(szBuffer,"addr.%d",count+1);
+        sprintf(szBuffer, "ADDR.%d", count+1);
         addr.s_addr = (*(uint32_t *)pHostEnt->h_addr_list[count]);
 
-        RxVarSet(pszStem,szBuffer, inet_ntoa(addr));
+        context->SetStemElement(stem, szBuffer, context->String(inet_ntoa(addr)));
     }
 
-    sprintf(szBuffer,"%d",count);
-    RxVarSet(pszStem,"addr.0",szBuffer);
+    context->SetStemElement(stem, "ADDR.0", context->WholeNumber(count));
 }
+
 
 /*------------------------------------------------------------------
  * convert a string sock option to an integer
  *------------------------------------------------------------------*/
-int rxs2SockOpt(const char * pszOptName)
+int stringToSockOpt(const char * pszOptName)
 {
     if (!pszOptName) return 0;
 
-    if (!stricmp("SO_DEBUG"       ,pszOptName)) return SO_DEBUG;
-    else if (!stricmp("SO_REUSEADDR"   ,pszOptName)) return SO_REUSEADDR;
-    else if (!stricmp("SO_KEEPALIVE"   ,pszOptName)) return SO_KEEPALIVE;
-    else if (!stricmp("SO_DONTROUTE"   ,pszOptName)) return SO_DONTROUTE;
-    else if (!stricmp("SO_BROADCAST"   ,pszOptName)) return SO_BROADCAST;
-    else if (!stricmp("SO_USELOOPBACK" ,pszOptName)) return SO_USELOOPBACK;
-    else if (!stricmp("SO_LINGER"      ,pszOptName)) return SO_LINGER;
-    else if (!stricmp("SO_OOBINLINE"   ,pszOptName)) return SO_OOBINLINE;
-    else if (!stricmp("SO_SNDBUF"      ,pszOptName)) return SO_SNDBUF;
-    else if (!stricmp("SO_RCVBUF"      ,pszOptName)) return SO_RCVBUF;
-    else if (!stricmp("SO_SNDLOWAT"    ,pszOptName)) return SO_SNDLOWAT;
-    else if (!stricmp("SO_RCVLOWAT"    ,pszOptName)) return SO_RCVLOWAT;
-    else if (!stricmp("SO_SNDTIMEO"    ,pszOptName)) return SO_SNDTIMEO;
-    else if (!stricmp("SO_RCVTIMEO"    ,pszOptName)) return SO_RCVTIMEO;
-    else if (!stricmp("SO_ERROR"       ,pszOptName)) return SO_ERROR;
-    else if (!stricmp("SO_TYPE"        ,pszOptName)) return SO_TYPE;
+    if (!caselessCompare("SO_DEBUG"       ,pszOptName)) return SO_DEBUG;
+    else if (!caselessCompare("SO_REUSEADDR"   ,pszOptName)) return SO_REUSEADDR;
+    else if (!caselessCompare("SO_KEEPALIVE"   ,pszOptName)) return SO_KEEPALIVE;
+    else if (!caselessCompare("SO_DONTROUTE"   ,pszOptName)) return SO_DONTROUTE;
+    else if (!caselessCompare("SO_BROADCAST"   ,pszOptName)) return SO_BROADCAST;
+    else if (!caselessCompare("SO_USELOOPBACK" ,pszOptName)) return SO_USELOOPBACK;
+    else if (!caselessCompare("SO_LINGER"      ,pszOptName)) return SO_LINGER;
+    else if (!caselessCompare("SO_OOBINLINE"   ,pszOptName)) return SO_OOBINLINE;
+    else if (!caselessCompare("SO_SNDBUF"      ,pszOptName)) return SO_SNDBUF;
+    else if (!caselessCompare("SO_RCVBUF"      ,pszOptName)) return SO_RCVBUF;
+    else if (!caselessCompare("SO_SNDLOWAT"    ,pszOptName)) return SO_SNDLOWAT;
+    else if (!caselessCompare("SO_RCVLOWAT"    ,pszOptName)) return SO_RCVLOWAT;
+    else if (!caselessCompare("SO_SNDTIMEO"    ,pszOptName)) return SO_SNDTIMEO;
+    else if (!caselessCompare("SO_RCVTIMEO"    ,pszOptName)) return SO_RCVTIMEO;
+    else if (!caselessCompare("SO_ERROR"       ,pszOptName)) return SO_ERROR;
+    else if (!caselessCompare("SO_TYPE"        ,pszOptName)) return SO_TYPE;
 
     return 0;
 }
@@ -660,7 +432,7 @@ int rxs2SockOpt(const char * pszOptName)
 /*------------------------------------------------------------------
  * set errno
  *------------------------------------------------------------------*/
-void SetErrno(void)
+void setErrno(RexxCallContext *context)
 {
     char szBuff[20];
     const char *pszErrno = szBuff;
@@ -758,14 +530,14 @@ void SetErrno(void)
             sprintf(szBuff,"%d",theErrno);
     }
 
-    RxVarSet("errno", pszErrno);
+    context->SetContextVariable("errno", context->String(pszErrno));
 }
 
 
 /*------------------------------------------------------------------
  * set h_errno
  *------------------------------------------------------------------*/
-void SetH_Errno(void)
+void setH_Errno(RexxCallContext *context)
 {
     char szBuff[20];
     const char *pszErrno = szBuff;
@@ -784,17 +556,17 @@ void SetH_Errno(void)
             sprintf(szBuff,"%d",theErrno);
     }
 
-    RxVarSet("h_errno",pszErrno);
+    context->SetContextVariable("h_errno", context->String(pszErrno));
 }
 
 
 /*------------------------------------------------------------------
  * set the error variables at function cleanup.
  *------------------------------------------------------------------*/
-void cleanup()
+void cleanup(RexxCallContext *context)
 {
-    SetErrno();
-    SetH_Errno();
+    setErrno(context);
+    setH_Errno(context);
 }
 
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
@@ -806,22 +578,21 @@ void cleanup()
 /*------------------------------------------------------------------
  *
  *------------------------------------------------------------------*/
-size_t RexxEntry SockVersion(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
+RexxRoutine0(RexxStringObject, SockVersion)
 {
-    sprintf(retstr->strptr, "%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD);
-    retstr->strlength = strlen(retstr->strptr);
-    return 0;
-}
+    char buffer[256];
 
+    sprintf(buffer, "%d.%d.%d", ORX_VER, ORX_REL, ORX_MOD);
+    return context->String(buffer);
+}
 
 /*------------------------------------------------------------------
  * load the function package
  *------------------------------------------------------------------*/
-size_t RexxEntry SockLoadFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
+RexxRoutine1(CSTRING,  SockLoadFuncs, OPTIONAL_CSTRING, version)
 {
-    // this is a NOP now
-    retstr->strlength = 0;               /* set return value           */
-    return 0;
+    // The rest of this is a NOP now.
+    return "";
 }
 
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
@@ -830,11 +601,10 @@ size_t RexxEntry SockLoadFuncs(const char *name, size_t argc, PCONSTRXSTRING arg
 /*------------------------------------------------------------------
  * drop the function package
  *------------------------------------------------------------------*/
-size_t RexxEntry SockDropFuncs(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
+RexxRoutine0(RexxStringObject, SockDropFuncs)
 {
-    // this is a NOP now
-    retstr->strlength = 0;               /* set return value           */
-    return 0;
+    // No dropping when used as a package manager.
+    return context->NullString();
 }
 
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
@@ -843,47 +613,75 @@ size_t RexxEntry SockDropFuncs(const char *name, size_t argc, PCONSTRXSTRING arg
 /*------------------------------------------------------------------
  * cause a trap to unload the DLL
  *------------------------------------------------------------------*/
-size_t RexxEntry SockDie(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retstr)
+RexxRoutine0(int, SockDie)
 {
-    int *p;
-
-    p  = NULL;
-    *p = 1;
-
     return 0;
 }
+
+/*------------------------------------------------------------------
+ * declare external functions
+ *------------------------------------------------------------------*/
+
+REXX_TYPED_ROUTINE_PROTOTYPE(SockDropFuncs);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockVersion);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockDie);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockException);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockAccept);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockBind);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockClose);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockConnect);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockGetHostByAddr);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockGetHostByName);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockGetHostId);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockGetPeerName);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockGetSockName);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockGetSockOpt);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockInit);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockIoctl);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockListen);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockPSock_Errno);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockRecv);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockRecvFrom);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockSelect);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockSend);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockSendTo);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockSetSockOpt);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockShutDown);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockSock_Errno);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockSocket);
+REXX_TYPED_ROUTINE_PROTOTYPE(SockSoClose);
 
 
 // now build the actual entry list
 RexxRoutineEntry rxsock_functions[] =
 {
-    REXX_CLASSIC_ROUTINE( SockLoadFuncs,      SockLoadFuncs),
-    REXX_CLASSIC_ROUTINE( SockDropFuncs,      SockDropFuncs),
-    REXX_CLASSIC_ROUTINE( SockAccept,         SockAccept),
-    REXX_CLASSIC_ROUTINE( SockBind,           SockBind),
-    REXX_CLASSIC_ROUTINE( SockClose,          SockClose),
-    REXX_CLASSIC_ROUTINE( SockConnect,        SockConnect),
-    REXX_CLASSIC_ROUTINE( SockGetHostByAddr,  SockGetHostByAddr),
-    REXX_CLASSIC_ROUTINE( SockGetHostByName,  SockGetHostByName),
-    REXX_CLASSIC_ROUTINE( SockGetHostId,      SockGetHostId),
-    REXX_CLASSIC_ROUTINE( SockGetPeerName,    SockGetPeerName),
-    REXX_CLASSIC_ROUTINE( SockGetSockName,    SockGetSockName),
-    REXX_CLASSIC_ROUTINE( SockGetSockOpt,     SockGetSockOpt),
-    REXX_CLASSIC_ROUTINE( SockInit,           SockInit),
-    REXX_CLASSIC_ROUTINE( SockIoctl,          SockIoctl),
-    REXX_CLASSIC_ROUTINE( SockListen,         SockListen),
-    REXX_CLASSIC_ROUTINE( SockPSock_Errno,    SockPSock_Errno),
-    REXX_CLASSIC_ROUTINE( SockRecv,           SockRecv),
-    REXX_CLASSIC_ROUTINE( SockRecvFrom,       SockRecvFrom),
-    REXX_CLASSIC_ROUTINE( SockSelect,         SockSelect),
-    REXX_CLASSIC_ROUTINE( SockSend,           SockSend),
-    REXX_CLASSIC_ROUTINE( SockSendTo,         SockSendTo),
-    REXX_CLASSIC_ROUTINE( SockSetSockOpt,     SockSetSockOpt),
-    REXX_CLASSIC_ROUTINE( SockShutDown,       SockShutDown),
-    REXX_CLASSIC_ROUTINE( SockSock_Errno,     SockSock_Errno),
-    REXX_CLASSIC_ROUTINE( SockSocket,         SockSocket),
-    REXX_CLASSIC_ROUTINE( SockSoClose,        SockSoClose),
-    REXX_CLASSIC_ROUTINE( SockVersion,        SockVersion),
+    REXX_TYPED_ROUTINE( SockLoadFuncs,      SockLoadFuncs),
+    REXX_TYPED_ROUTINE( SockDropFuncs,      SockDropFuncs),
+    REXX_TYPED_ROUTINE( SockAccept,         SockAccept),
+    REXX_TYPED_ROUTINE( SockBind,           SockBind),
+    REXX_TYPED_ROUTINE( SockClose,          SockClose),
+    REXX_TYPED_ROUTINE( SockConnect,        SockConnect),
+    REXX_TYPED_ROUTINE( SockGetHostByAddr,  SockGetHostByAddr),
+    REXX_TYPED_ROUTINE( SockGetHostByName,  SockGetHostByName),
+    REXX_TYPED_ROUTINE( SockGetHostId,      SockGetHostId),
+    REXX_TYPED_ROUTINE( SockGetPeerName,    SockGetPeerName),
+    REXX_TYPED_ROUTINE( SockGetSockName,    SockGetSockName),
+    REXX_TYPED_ROUTINE( SockGetSockOpt,     SockGetSockOpt),
+    REXX_TYPED_ROUTINE( SockInit,           SockInit),
+    REXX_TYPED_ROUTINE( SockIoctl,          SockIoctl),
+    REXX_TYPED_ROUTINE( SockListen,         SockListen),
+    REXX_TYPED_ROUTINE( SockPSock_Errno,    SockPSock_Errno),
+    REXX_TYPED_ROUTINE( SockRecv,           SockRecv),
+    REXX_TYPED_ROUTINE( SockRecvFrom,       SockRecvFrom),
+    REXX_TYPED_ROUTINE( SockSelect,         SockSelect),
+    REXX_TYPED_ROUTINE( SockSend,           SockSend),
+    REXX_TYPED_ROUTINE( SockSendTo,         SockSendTo),
+    REXX_TYPED_ROUTINE( SockSetSockOpt,     SockSetSockOpt),
+    REXX_TYPED_ROUTINE( SockShutDown,       SockShutDown),
+    REXX_TYPED_ROUTINE( SockSock_Errno,     SockSock_Errno),
+    REXX_TYPED_ROUTINE( SockSocket,         SockSocket),
+    REXX_TYPED_ROUTINE( SockSoClose,        SockSoClose),
+    REXX_TYPED_ROUTINE( SockVersion,        SockVersion),
     REXX_LAST_ROUTINE()
 };
 
