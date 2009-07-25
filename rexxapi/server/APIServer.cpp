@@ -159,32 +159,42 @@ void APIServer::processMessages(SysServerConnection *connection)
             return;
         }
 
-        message.result = MESSAGE_OK;     // unconditionally zero the result
-        // each target handles its own dispatch.
-        switch (message.messageTarget)
-        {
-            case QueueManager:
-            case RegistrationManager:
-            case MacroSpaceManager:
-            {
-                getInstance(message)->dispatch(message);
-                break;
-            }
 
-            // general API control message.
-            case APIManager:
+        message.result = MESSAGE_OK;     // unconditionally zero the result
+        try
+        {
+            // each target handles its own dispatch.
+            switch (message.messageTarget)
             {
-                // this could be a shutdown operation
-                if (message.operation == CLOSE_CONNECTION)
+                case QueueManager:
+                case RegistrationManager:
+                case MacroSpaceManager:
                 {
-                    connection->disconnect();
-                    delete connection;
-                    return;
+                    getInstance(message)->dispatch(message);
+                    break;
                 }
 
-                dispatch(message);
-                break;
+                // general API control message.
+                case APIManager:
+                {
+                    // this could be a shutdown operation
+                    if (message.operation == CLOSE_CONNECTION)
+                    {
+                        connection->disconnect();
+                        delete connection;
+                        return;
+                    }
+
+                    dispatch(message);
+                    break;
+                }
             }
+        } catch (std::bad_alloc &ba)
+        {
+            // this catches any C++ memory allocation errors, which we'll just return into a
+            // memory failure result message.
+            message.result = SERVER_ERROR;
+
         }
 
         try

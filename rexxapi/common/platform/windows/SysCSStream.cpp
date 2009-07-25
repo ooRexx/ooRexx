@@ -42,6 +42,7 @@
 #include <string.h>
 #include <winsock2.h>
 #include "SysCSStream.hpp"
+#include "ServiceException.hpp"
 
 /**
  * Read from the connection.
@@ -181,12 +182,21 @@ char *SysSocketConnection::getMessageBuffer(size_t size)
     // if larger than our cached buffer, return
     if (size > MAX_CACHED_BUFFER)
     {
-        return (char *)malloc(size);
+        char *buffer = (char *)malloc(size);
+        if (buffer == NULL)
+        {
+            throw new ServiceException(SERVER_FAILURE, "Error allocating message buffer");
+        }
+        return buffer;
     }
     // use our cached buffer, allocating it if required.
     if (messageBuffer == NULL)
     {
         messageBuffer = (char *)malloc(MAX_CACHED_BUFFER);
+        if (messageBuffer == NULL)
+        {
+            throw new ServiceException(SERVER_FAILURE, "Error allocating message buffer");
+        }
     }
     return messageBuffer;
 }

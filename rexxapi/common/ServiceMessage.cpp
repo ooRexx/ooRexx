@@ -85,6 +85,11 @@ void ServiceMessage::readMessage(SysServerConnection *connection)
     {
         // allocate a data buffer for the extra information and read it in.
         messageData = allocateResultMemory(messageDataLength);
+        if (messageData == NULL)
+        {
+            // this will close this connection and raise an error back in the caller
+            throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readMessage() Failure allocating message buffer");
+        }
         required = messageDataLength;
         offset = 0;
         while (required > 0)
@@ -179,6 +184,11 @@ void ServiceMessage::readResult(SysClientStream &pipe)
         // allocate a data buffer for the extra information and read it in.
         // we add a courtesy null terminator on this message, so we read one extra bit
         messageData = allocateResultMemory(messageDataLength + 1);
+        if (messageData == NULL)
+        {
+            // this will close this connection and raise an error back in the caller
+            throw new ServiceException(SERVER_FAILURE, "ServiceMessage::readResult() Failure allocating message buffer");
+        }
         ((char *)messageData)[messageDataLength] = '\0';
         required = messageDataLength;
         offset = 0;
