@@ -787,6 +787,16 @@ void SetH_Errno(void)
     RxVarSet("h_errno",pszErrno);
 }
 
+
+/*------------------------------------------------------------------
+ * set the error variables at function cleanup.
+ *------------------------------------------------------------------*/
+void cleanup()
+{
+    SetErrno();
+    SetH_Errno();
+}
+
 /*-/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-*/
 /*-\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/-*/
 
@@ -842,9 +852,6 @@ size_t RexxEntry SockDie(const char *name, size_t argc, PCONSTRXSTRING argv, con
 
     return 0;
 }
-
-
-
 
 
 // now build the actual entry list

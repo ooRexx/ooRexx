@@ -157,6 +157,11 @@ void SetErrno(void);
  *------------------------------------------------------------------*/
 void SetH_Errno(void);
 
+/*------------------------------------------------------------------
+ * perform end-of-function processing (mostly setting error info
+ *------------------------------------------------------------------*/
+void cleanup();
+
 #if defined(OPSYS_AIX) || defined(OPSYS_LINUX)
 /*------------------------------------------------------------------
  * string compare ignore upper and lower case

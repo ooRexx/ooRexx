@@ -120,7 +120,6 @@ size_t RexxEntry SockSock_Errno(const char *name, size_t argc, PCONSTRXSTRING ar
  *------------------------------------------------------------------*/
 size_t RexxEntry SockPSock_Errno(const char *name, size_t argc, PCONSTRXSTRING argv, const char *qName, PRXSTRING  retStr)
 {
-
     retStr->strlength = 0;
     if (argc == 1)
         psock_errno(argv[0].strptr);
@@ -148,18 +147,24 @@ size_t RexxEntry SockAccept(const char *name, size_t argc, PCONSTRXSTRING argv, 
     retStr->strlength = 0;
 
     if ((argc < 1) || (argc > 2))
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || ((argc == 2) && !argv[1].strptr))
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -171,12 +176,17 @@ size_t RexxEntry SockAccept(const char *name, size_t argc, PCONSTRXSTRING argv, 
      * set addr, if asked for
      *---------------------------------------------------------------*/
     if (2 == argc)
+    {
         sockaddr2stem(&addr,argv[1].strptr);
+    }
+
 
     /*---------------------------------------------------------------
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -199,18 +209,24 @@ size_t RexxEntry SockBind(const char *name, size_t argc, PCONSTRXSTRING argv, co
     retStr->strlength = 0;
 
     if (argc != 2)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[1].strptr)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get addr
@@ -226,6 +242,8 @@ size_t RexxEntry SockBind(const char *name, size_t argc, PCONSTRXSTRING argv, co
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -259,18 +277,24 @@ size_t RexxEntry SockConnect(const char *name, size_t argc, PCONSTRXSTRING argv,
     retStr->strlength = 0;
 
     if (argc != 2)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[1].strptr)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get addr
@@ -286,7 +310,8 @@ size_t RexxEntry SockConnect(const char *name, size_t argc, PCONSTRXSTRING argv,
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
-
+    // set the errno information
+    cleanup();
     return 0;
 }
 
@@ -314,21 +339,29 @@ size_t RexxEntry SockGetHostByAddr(const char *name, size_t argc, PCONSTRXSTRING
      * get parms
      *---------------------------------------------------------------*/
     if ((argc < 2) | (argc > 3))
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[1].strptr ||
         ((argc == 3) && !argv[2].strptr))
+    {
         return 40;
+    }
 
     addr = inet_addr(argv[0].strptr);
 
     pszStem = argv[1].strptr;
 
     if (2 == argc)
+    {
         domain = AF_INET;
+    }
     else
+    {
         domain = rxs2int(&(argv[2]),&rc);
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -336,13 +369,18 @@ size_t RexxEntry SockGetHostByAddr(const char *name, size_t argc, PCONSTRXSTRING
     pHostEnt = gethostbyaddr((char*)&addr,sizeof(addr),domain);
 
     if (!pHostEnt)
+    {
         int2rxs(0,retStr);
+    }
 
     else
     {
         hostent2stem(pHostEnt,pszStem);
         int2rxs(1,retStr);
     }
+
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -368,14 +406,18 @@ size_t RexxEntry SockGetHostByName(const char *name, size_t argc, PCONSTRXSTRING
      * get parms
      *---------------------------------------------------------------*/
     if (argc != 2)
+    {
         return 40;
+    }
 
     pszName = argv[0].strptr;
     pszStem = argv[1].strptr;
 
     /* check for omitted arguments that might cause a trap*/
     if (!pszName || !pszStem || !argv[0].strlength || !argv[1].strlength)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -383,13 +425,17 @@ size_t RexxEntry SockGetHostByName(const char *name, size_t argc, PCONSTRXSTRING
     pHostEnt = gethostbyname(pszName);
 
     if (!pHostEnt)
+    {
         int2rxs(0,retStr);
-
+    }
     else
     {
         hostent2stem(pHostEnt,pszStem);
         int2rxs(1,retStr);
     }
+
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -416,6 +462,8 @@ size_t RexxEntry SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING arg
     {
         strcpy(retStr->strptr,"0.0.0.0");
         retStr->strlength = strlen(retStr->strptr);
+        // set the errno information
+        cleanup();
         return 0;
     }
     pHostEnt = gethostbyname(pszBuff);       // get our ip address
@@ -423,6 +471,8 @@ size_t RexxEntry SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING arg
     {
         strcpy(retStr->strptr,"0.0.0.0");
         retStr->strlength = strlen(retStr->strptr);
+        // set the errno information
+        cleanup();
         return 0;
     }
     ia.s_addr = (*(uint32_t *)pHostEnt->h_addr);// in network byte order already
@@ -439,6 +489,8 @@ size_t RexxEntry SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING arg
     {
         strcpy(retStr->strptr,"0.0.0.0");
         retStr->strlength = strlen(retStr->strptr);
+        // set the errno information
+        cleanup();
         return 0;
     }
     pHostEnt = gethostbyname(pszBuff);     /* get our ip address */
@@ -446,6 +498,8 @@ size_t RexxEntry SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING arg
     {
         strcpy(retStr->strptr,"0.0.0.0");
         retStr->strlength = strlen(retStr->strptr);
+        // set the errno information
+        cleanup();
         return 0;
     }
     ia.s_addr = (*(uint32_t *)pHostEnt->h_addr);// in network byte order already
@@ -458,6 +512,8 @@ size_t RexxEntry SockGetHostId(const char *name, size_t argc, PCONSTRXSTRING arg
 
     sprintf(retStr->strptr,"%s",addr);
     retStr->strlength = strlen(retStr->strptr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -481,18 +537,24 @@ size_t RexxEntry SockGetPeerName(const char *name, size_t argc, PCONSTRXSTRING a
     retStr->strlength = 0;
 
     if (argc != 2)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[1].strptr || !argv[1].strlength)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -509,6 +571,8 @@ size_t RexxEntry SockGetPeerName(const char *name, size_t argc, PCONSTRXSTRING a
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -532,18 +596,24 @@ size_t RexxEntry SockGetSockName(const char *name, size_t argc, PCONSTRXSTRING a
     retStr->strlength = 0;
 
     if (argc != 2)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[1].strptr || !argv[1].strlength)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -560,6 +630,8 @@ size_t RexxEntry SockGetSockName(const char *name, size_t argc, PCONSTRXSTRING a
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -590,27 +662,37 @@ size_t RexxEntry SockGetSockOpt(const char *name, size_t argc, PCONSTRXSTRING ar
     retStr->strlength = 0;
 
     if (argc != 4)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[2].strptr || !argv[1].strlength)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * check level
      *---------------------------------------------------------------*/
     if (!argv[1].strptr)
+    {
         return 40;
+    }
 
     if (stricmp("SOL_SOCKET",argv[1].strptr))
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get option name
@@ -622,7 +704,9 @@ size_t RexxEntry SockGetSockOpt(const char *name, size_t argc, PCONSTRXSTRING ar
      *---------------------------------------------------------------*/
     rxVar = argv[3];
     if (!rxVar.strptr || !rxVar.strlength)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * set up buffer
@@ -697,6 +781,9 @@ size_t RexxEntry SockGetSockOpt(const char *name, size_t argc, PCONSTRXSTRING ar
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
 
+    // set the errno information
+    cleanup();
+
     return 0;
 }
 
@@ -723,27 +810,37 @@ size_t RexxEntry SockIoctl(const char *name, size_t argc, PCONSTRXSTRING argv, c
     retStr->strlength = 0;
 
     if (argc != 3)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get command and data
      *---------------------------------------------------------------*/
     if (!argv[1].strptr || !argv[1].strlength)
+    {
         return 40;
+    }
 
     if (!argv[2].strptr || !argv[2].strlength)
+    {
         return 40;
+    }
 
     cmd = 0; /* to eliminate compiler warning */
 
@@ -799,6 +896,8 @@ size_t RexxEntry SockIoctl(const char *name, size_t argc, PCONSTRXSTRING argv, c
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -821,25 +920,33 @@ size_t RexxEntry SockListen(const char *name, size_t argc, PCONSTRXSTRING argv, 
     retStr->strlength = 0;
 
     if (argc != 2)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[1].strptr)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get addr
      *---------------------------------------------------------------*/
     backlog = rxs2int(&(argv[1]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -851,6 +958,8 @@ size_t RexxEntry SockListen(const char *name, size_t argc, PCONSTRXSTRING argv, 
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
 
+    // set the errno information
+    cleanup();
     return 0;
 }
 
@@ -877,19 +986,25 @@ size_t RexxEntry SockRecv(const char *name, size_t argc, PCONSTRXSTRING argv, co
     retStr->strlength = 0;
 
     if ((argc < 3) || (argc > 4))
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[1].strptr || !argv[2].strptr ||
         ((argc == 4) && (!argv[3].strptr || !argv[3].strlength)))
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&chk);
     if (!chk)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get variable name
@@ -901,7 +1016,9 @@ size_t RexxEntry SockRecv(const char *name, size_t argc, PCONSTRXSTRING argv, co
      *---------------------------------------------------------------*/
     dataLen = rxs2int(&(argv[2]),&chk);
     if (!chk)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get flags
@@ -930,7 +1047,9 @@ size_t RexxEntry SockRecv(const char *name, size_t argc, PCONSTRXSTRING argv, co
      *---------------------------------------------------------------*/
     pBuffer = (char *)malloc(dataLen);
     if (!pBuffer)
+    {
         return 5;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -938,9 +1057,13 @@ size_t RexxEntry SockRecv(const char *name, size_t argc, PCONSTRXSTRING argv, co
     rc = recv(sock,pBuffer,dataLen,flags);
 
     if (-1 == rc)
+    {
         dataLen = 0;
+    }
     else
+    {
         dataLen = rc;
+    }
     /*---------------------------------------------------------------
      * set variable
      *---------------------------------------------------------------*/
@@ -958,6 +1081,8 @@ size_t RexxEntry SockRecv(const char *name, size_t argc, PCONSTRXSTRING argv, co
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -988,20 +1113,26 @@ size_t RexxEntry SockRecvFrom(const char *name, size_t argc, PCONSTRXSTRING argv
     retStr->strlength = 0;
 
     if ((argc < 4) || (argc > 5))
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[1].strptr || !argv[2].strptr ||
         !argv[3].strptr || !argv[3].strlength ||
         ((argc == 5) && (!argv[4].strptr || !argv[4].strlength)))
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&chk);
     if (!chk)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get variable name
@@ -1013,7 +1144,9 @@ size_t RexxEntry SockRecvFrom(const char *name, size_t argc, PCONSTRXSTRING argv
      *---------------------------------------------------------------*/
     dataLen = rxs2int(&(argv[2]),&chk);
     if (!chk)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get flags
@@ -1042,9 +1175,13 @@ size_t RexxEntry SockRecvFrom(const char *name, size_t argc, PCONSTRXSTRING argv
      *---------------------------------------------------------------*/
 
     if (argc == 5)
+    {
         pStem=argv[4].strptr;
+    }
     else
+    {
         pStem=argv[3].strptr;
+    }
     stem2sockaddr(pStem,&addr);
     addr_size=sizeof(addr);
 
@@ -1053,7 +1190,9 @@ size_t RexxEntry SockRecvFrom(const char *name, size_t argc, PCONSTRXSTRING argv
      *---------------------------------------------------------------*/
     pBuffer = (char *)malloc(dataLen);
     if (!pBuffer)
+    {
         return 5;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -1061,9 +1200,13 @@ size_t RexxEntry SockRecvFrom(const char *name, size_t argc, PCONSTRXSTRING argv
     rc = recvfrom(sock,pBuffer,dataLen,flags,(struct sockaddr *)&addr,&addr_size);
 
     if (-1 == rc)
+    {
         dataLen = 0;
+    }
     else
+    {
         dataLen = rc;
+    }
 
 
     sockaddr2stem(&addr,pStem);
@@ -1085,6 +1228,8 @@ size_t RexxEntry SockRecvFrom(const char *name, size_t argc, PCONSTRXSTRING argv
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -1130,8 +1275,9 @@ size_t RexxEntry SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, 
      * get timeout value
      *---------------------------------------------------------------*/
     if ((argc == 3) || !argv[3].strptr || !argv[3].strlength)
+    {
         timeOutP = NULL;
-
+    }
     else
     {
         long to;
@@ -1139,7 +1285,9 @@ size_t RexxEntry SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, 
         to = strtol(argv[3].strptr,NULL,10);
 
         if (to < 0)
+        {
             to = 0;
+        }
 
         timeOutS.tv_sec  = to;
         timeOutS.tv_usec = 0;
@@ -1150,7 +1298,9 @@ size_t RexxEntry SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, 
      * get arrays of sockets
      *---------------------------------------------------------------*/
     if (argv[0].strptr && argv[0].strlength)
+    {
         rxstem2intarray(&(argv[0]),&rCount,&rArray);
+    }
     else
     {
         rCount = 0;
@@ -1158,7 +1308,9 @@ size_t RexxEntry SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, 
     }
 
     if (argv[1].strptr && argv[1].strlength)
+    {
         rxstem2intarray(&(argv[1]),&wCount,&wArray);
+    }
     else
     {
         wCount = 0;
@@ -1166,7 +1318,9 @@ size_t RexxEntry SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, 
     }
 
     if (argv[2].strptr && argv[2].strlength)
+    {
         rxstem2intarray(&(argv[2]),&eCount,&eArray);
+    }
     else
     {
         eCount = 0;
@@ -1258,6 +1412,8 @@ size_t RexxEntry SockSelect(const char *name, size_t argc, PCONSTRXSTRING argv, 
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -1283,19 +1439,25 @@ size_t RexxEntry SockSend(const char *name, size_t argc, PCONSTRXSTRING argv, co
     retStr->strlength = 0;
 
     if ((argc < 2) || (argc > 3))
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr ||
         ((argc == 3) && (!argv[2].strptr || !argv[2].strlength)))
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&chk);
     if (!chk)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get data length
@@ -1303,7 +1465,9 @@ size_t RexxEntry SockSend(const char *name, size_t argc, PCONSTRXSTRING argv, co
     dataLen = argv[1].strlength;
     data    = argv[1].strptr;
     if (!data || !dataLen)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get flags
@@ -1336,6 +1500,8 @@ size_t RexxEntry SockSend(const char *name, size_t argc, PCONSTRXSTRING argv, co
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -1363,19 +1529,25 @@ size_t RexxEntry SockSendTo(const char *name, size_t argc, PCONSTRXSTRING argv, 
     retStr->strlength = 0;
 
     if ((argc < 3) || (argc > 4))
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[2].strptr || !argv[2].strlength ||
         ((argc == 4) && (!argv[3].strptr || !argv[3].strlength)))
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&chk);
     if (!chk)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get data length
@@ -1383,7 +1555,9 @@ size_t RexxEntry SockSendTo(const char *name, size_t argc, PCONSTRXSTRING argv, 
     dataLen = argv[1].strlength;
     data    = argv[1].strptr;
     if (!data || !dataLen)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get flags
@@ -1401,7 +1575,9 @@ size_t RexxEntry SockSendTo(const char *name, size_t argc, PCONSTRXSTRING argv, 
         while (pszWord)
         {
             if (!stricmp(pszWord,"MSG_DONTROUTE"))
+            {
                 flags |= MSG_DONTROUTE;
+            }
             pszWord = strtok(NULL," ");
         }
         free(flagStr);
@@ -1412,9 +1588,13 @@ size_t RexxEntry SockSendTo(const char *name, size_t argc, PCONSTRXSTRING argv, 
      *---------------------------------------------------------------*/
 
     if (argc == 4)
+    {
         pStem=argv[3].strptr;
+    }
     else
+    {
         pStem=argv[2].strptr;
+    }
     stem2sockaddr(pStem,&addr);
 
     /*---------------------------------------------------------------
@@ -1426,6 +1606,8 @@ size_t RexxEntry SockSendTo(const char *name, size_t argc, PCONSTRXSTRING argv, 
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -1454,28 +1636,38 @@ size_t RexxEntry SockSetSockOpt(const char *name, size_t argc, PCONSTRXSTRING ar
     retStr->strlength = 0;
 
     if (argc != 4)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[2].strptr ||
         !argv[1].strlength || !argv[2].strlength)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * check level
      *---------------------------------------------------------------*/
     if (!argv[1].strptr)
+    {
         return 40;
+    }
 
     if (stricmp("SOL_SOCKET",argv[1].strptr))
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get option name
@@ -1486,7 +1678,9 @@ size_t RexxEntry SockSetSockOpt(const char *name, size_t argc, PCONSTRXSTRING ar
      * check value for a valid string
      *---------------------------------------------------------------*/
     if (!argv[3].strptr || !argv[3].strlength)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get option value
@@ -1534,6 +1728,8 @@ size_t RexxEntry SockSetSockOpt(const char *name, size_t argc, PCONSTRXSTRING ar
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -1556,25 +1752,33 @@ size_t RexxEntry SockShutDown(const char *name, size_t argc, PCONSTRXSTRING argv
     retStr->strlength = 0;
 
     if (argc != 2)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr || !argv[1].strptr)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get how
      *---------------------------------------------------------------*/
     how = rxs2int(&(argv[1]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -1586,6 +1790,8 @@ size_t RexxEntry SockShutDown(const char *name, size_t argc, PCONSTRXSTRING argv
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
 
+    // set the errno information
+    cleanup();
     return 0;
 }
 
@@ -1608,7 +1814,9 @@ size_t RexxEntry SockInit(const char *name, size_t argc, PCONSTRXSTRING argv, co
     retStr->strlength = 0;
 
     if (argc)
+    {
         return 40;
+    }
 
 #if defined(WIN32)
     wVersionRequested = MAKEWORD( 1, 1 );
@@ -1619,6 +1827,8 @@ size_t RexxEntry SockInit(const char *name, size_t argc, PCONSTRXSTRING argv, co
 
     int2rxs(rc,retStr);
 
+    // set the errno information
+    cleanup();
     return 0;
 }
 
@@ -1644,7 +1854,9 @@ size_t RexxEntry SockSocket(const char *name, size_t argc, PCONSTRXSTRING argv, 
     retStr->strlength = 0;
 
     if (argc != 3)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get parms
@@ -1654,34 +1866,58 @@ size_t RexxEntry SockSocket(const char *name, size_t argc, PCONSTRXSTRING argv, 
     pszProtocol = argv[2].strptr;
 
     if (!pszDomain || !pszType || !pszProtocol)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strlength || !argv[1].strlength || !argv[2].strlength)
+    {
         return 40;
+    }
 
-    if (!stricmp(pszDomain,"AF_INET")) domain = AF_INET;
+    if (!stricmp(pszDomain,"AF_INET"))
+    {
+        domain = AF_INET;
+    }
     else
+    {
         return 40;
+    }
 
-    if (!stricmp(pszType,"SOCK_STREAM")) type = SOCK_STREAM;
-    else if (!stricmp(pszType,"SOCK_DGRAM" )) type = SOCK_DGRAM;
-    else if (!stricmp(pszType,"SOCK_RAW"   )) type = SOCK_RAW;
+    if (!stricmp(pszType,"SOCK_STREAM"))
+    {
+        type = SOCK_STREAM;
+    }
+    else if (!stricmp(pszType,"SOCK_DGRAM" ))
+    {
+        type = SOCK_DGRAM;
+    }
+    else if (!stricmp(pszType,"SOCK_RAW"   ))
+    {
+        type = SOCK_RAW;
+    }
     else
+    {
         return 40;
+    }
 
     if (!stricmp(pszProtocol,"IPPROTO_UDP"))
+    {
         protocol = IPPROTO_UDP;
+    }
     else if (!stricmp(pszProtocol,"IPPROTO_TCP"))
+    {
         protocol = IPPROTO_TCP;
-/*   else if (!stricmp(pszProtocol,"IPPROTO_ICMP"))
-    protocol = IPPROTO_ICMP;
-   else if (!stricmp(pszProtocol,"IPPROTO_RAW"))
-    protocol = IPPROTO_RAW; */  /* Not supported !! */
+    }
     else if (!stricmp(pszProtocol,"0"          ))
+    {
         protocol = 0;
+    }
     else
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -1692,6 +1928,8 @@ size_t RexxEntry SockSocket(const char *name, size_t argc, PCONSTRXSTRING argv, 
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(sock,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
@@ -1713,18 +1951,24 @@ size_t RexxEntry SockSoClose(const char *name, size_t argc, PCONSTRXSTRING argv,
     retStr->strlength = 0;
 
     if (argc != 1)
+    {
         return 40;
+    }
 
     /* check for omitted arguments that might cause a trap*/
     if (!argv[0].strptr)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * get sock
      *---------------------------------------------------------------*/
     sock = rxs2int(&(argv[0]),&rc);
     if (!rc)
+    {
         return 40;
+    }
 
     /*---------------------------------------------------------------
      * call function
@@ -1739,6 +1983,8 @@ size_t RexxEntry SockSoClose(const char *name, size_t argc, PCONSTRXSTRING argv,
      * set return code
      *---------------------------------------------------------------*/
     int2rxs(rc,retStr);
+    // set the errno information
+    cleanup();
 
     return 0;
 }
