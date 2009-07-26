@@ -835,6 +835,23 @@ char *mystrstr(
   return strstr(line, target);
 }
 
+
+const char *mystrstr(const char *haystack, const char *needle)
+{
+    size_t hlen = strlen(haystack);
+    size_t nlen = strlen(haystack);
+
+    char *haystackCopy = strdup(haystack);
+    for (size_t i = 0; i < hlen; i++)
+    {
+        haystackCopy[i] = toupper(haystackCopy[i]);
+    }
+
+    const char *result = (haystackCopy, needle);
+    free(haystackCopy);
+    return result;
+}
+
 /*****************************************************************
 * Function:  getpath(string, path, filename)                     *
 *                                                                *
@@ -6185,177 +6202,167 @@ bool SetRexxStemLength(const char *name, const char *tailname, const char * data
     Replace exceptions with the default character during conversion.
 
 *************************************************************************/
-size_t RexxEntry SysFromUniCode(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+
+RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRING, codePageOpt,
+    OPTIONAL_CSTRING, mappingFlags, OPTIONAL_CSTRING, defaultChar, RexxStemObject, stem)
 {
-  int   iBytesDestination;
-  ULONG iBytesNeeded;
-  DWORD dwFlags = 0;
-  const char  *strDefaultChar = NULL;
-  BOOL  bUsedDefaultChar = FALSE;
-  UINT  codePage;
-  size_t len;
-  char* str = NULL;
-  char* strptr = NULL;
-  CHAR  stemName[MAX];
+    const char  *strDefaultChar = NULL;
+    BOOL  bUsedDefaultChar = FALSE;
 
-  /* correct number of arguments ? */
-  /* arguments must always be 5. Args 1 and 5 must be valid strings */
-  if ( numargs != 5 || !RXVALIDSTRING(args[0]) || !RXVALIDSTRING(args[4]) )
-//  if ( numargs < 2 || numargs > 5 ||
-//       !RXVALIDSTRING(args[4]) )
-    return INVALID_ROUTINE;
+    const char *source = context->StringData(sourceString);
+    size_t sourceLength = context->StringLength(sourceString);
 
-  /* calculate the length of the input string */
-  len = wcslen((wchar_t*)(args[0].strptr)) + 1;
+    /* calculate the length of the input string */
+    size_t len = wcslen((wchar_t*)(source)) + 1;
 
-                                       /* evaluate codepage          */
-  if (args[1].strlength == 0)
-    codePage = GetOEMCP();
-  else
-  {
-    if (_stricmp(args[1].strptr, "THREAD_ACP") == 0)
-      codePage = CP_THREAD_ACP;
-    else if (_stricmp(args[1].strptr,"ACP") == 0)
-      codePage = CP_ACP;
-    else if (_stricmp(args[1].strptr,"MACCP") == 0)
-      codePage = CP_MACCP;
-    else if (_stricmp(args[1].strptr,"OEMCP") == 0)
-      codePage = CP_OEMCP;
-    else if (_stricmp(args[1].strptr,"SYMBOL") == 0)
-      codePage = CP_SYMBOL;
-    else if (_stricmp(args[1].strptr,"UTF7") == 0)
-      codePage = CP_UTF7;
-    else if (_stricmp(args[1].strptr,"UTF8") == 0)
-      codePage = CP_UTF8;
+    UINT  codePage;
+    /* evaluate codepage          */
+    if (codePageOpt == NULL)
+    {
+        codePage = GetOEMCP();
+    }
     else
-      codePage = atoi(args[1].strptr);
-  }
+    {
+        if (_stricmp(codePageOpt, "THREAD_ACP") == 0)
+        {
+            codePage = CP_THREAD_ACP;
+        }
+        else if (_stricmp(codePageOpt,"ACP") == 0)
+        {
+            codePage = CP_ACP;
+        }
+        else if (_stricmp(codePageOpt,"MACCP") == 0)
+        {
+            codePage = CP_MACCP;
+        }
+        else if (_stricmp(codePageOpt,"OEMCP") == 0)
+        {
+            codePage = CP_OEMCP;
+        }
+        else if (_stricmp(codePageOpt,"SYMBOL") == 0)
+        {
+            codePage = CP_SYMBOL;
+        }
+        else if (_stricmp(codePageOpt,"UTF7") == 0)
+        {
+            codePage = CP_UTF7;
+        }
+        else if (_stricmp(codePageOpt,"UTF8") == 0)
+        {
+            codePage = CP_UTF8;
+        }
+        else
+        {
+            codePage = atoi(codePageOpt);
+        }
+    }
 
-                                       /* evaluate the mapping flags */
-  if (args[2].strlength != 0)
-  {
-    /* all flags MUST also specify WC_COMPOSITECHECK */
-    if (mystrstr(args[2].strptr,"COMPOSITECHECK",args[2].strlength,14,false)) dwFlags |= WC_COMPOSITECHECK;
-    if (mystrstr(args[2].strptr,"SEPCHARS",args[2].strlength,8,false))        dwFlags |= WC_SEPCHARS | WC_COMPOSITECHECK;
-    if (mystrstr(args[2].strptr,"DISCARDNS",args[2].strlength,9,false))       dwFlags |= WC_DISCARDNS| WC_COMPOSITECHECK;
-    if (mystrstr(args[2].strptr,"DEFAULTCHAR",args[2].strlength,11,false))    dwFlags |= WC_DEFAULTCHAR | WC_COMPOSITECHECK;
-    if (dwFlags == 0)
-      return INVALID_ROUTINE;
-  }
+    DWORD dwFlags = 0;
+    /* evaluate the mapping flags */
+    if (mappingFlags != NULL)
+    {
+        /* all flags MUST also specify WC_COMPOSITECHECK */
+        if (mystrstr(mappingFlags, "COMPOSITECHECK"))
+        {
+            dwFlags |= WC_COMPOSITECHECK;
+        }
+        if (mystrstr(mappingFlags, "SEPCHARS"))
+        {
+            dwFlags |= WC_SEPCHARS | WC_COMPOSITECHECK;
+        }
+        if (mystrstr(mappingFlags, "DISCARDNS"))
+        {
+            dwFlags |= WC_DISCARDNS| WC_COMPOSITECHECK;
+        }
+        if (mystrstr(mappingFlags, "DEFAULTCHAR"))
+        {
+            dwFlags |= WC_DEFAULTCHAR | WC_COMPOSITECHECK;
+        }
+        if (dwFlags == 0)
+        {
+            context->InvalidRoutine();
+            return 0;
+        }
+    }
 
-                                       /* evaluate default charcter  */
-  if (args[3].strlength != 0 && (dwFlags & WC_DEFAULTCHAR) == WC_DEFAULTCHAR)
-  {
-    strDefaultChar = args[3].strptr;
-  }
-  else
-  {
-    /* use our own default character rather than relying on the windows default */
-    strDefaultChar = "?";
-  }
+    /* evaluate default charcter  */
+    if (defaultChar != NULL && (dwFlags & WC_DEFAULTCHAR) == WC_DEFAULTCHAR)
+    {
+        strDefaultChar = defaultChar;
+    }
+    else
+    {
+        /* use our own default character rather than relying on the windows default */
+        strDefaultChar = "?";
+    }
 
-                                       /* evaluate output stem       */
-  strcpy(stemName, args[4].strptr);
+    /* Allocate space for the string, to allow double zero byte termination */
+    char *strptr = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, sourceLength + 4);
+    if (strptr == NULL)
+    {
+        context->InvalidRoutine();
+        return 0;
+    }
+    memcpy(strptr, source, sourceLength);
 
-                                       /* uppercase the name         */
-  memupper(stemName, args[4].strlength);
+    /* Query the number of bytes required to store the Dest string */
+    int iBytesNeeded = WideCharToMultiByte( codePage,
+                                        dwFlags,
+                                        (LPWSTR) strptr,     // (LPWSTR)args[0].strptr,
+                                        (int)(sourceLength/2), // len,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        NULL);
 
-                              /* get and correct the output stem name*/
-  if (stemName[args[4].strlength-1] != '.')
-  {
-    stemName[args[4].strlength] = '.';
-    stemName[args[4].strlength+1] = '\0';
-  }
+    if (iBytesNeeded == 0)
+    {
+        GlobalFree(strptr);
+        return GetLastError();
+    }
 
-  /* Allocate space for the string, to allow double zero byte termination */
-  if (!(strptr = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, args[0].strlength + 4)))
-    return INVALID_ROUTINE;
-  memcpy ( (void*)strptr, (void*)args[0].strptr, (size_t)args[0].strlength ) ;
+        // hard error, stop
+    char *str = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, iBytesNeeded + 4);
+    if (str == NULL)
+    {
+        context->InvalidRoutine();
+        return 0;
+    }
 
-  /* Query the number of bytes required to store the Dest string */
-  iBytesNeeded = WideCharToMultiByte( codePage,
-                                      dwFlags,
-                                      (LPWSTR) strptr,     // (LPWSTR)args[0].strptr,
-                                      (int)(args[0].strlength/2), // len,
-                                      NULL,
-                                      0,
-                                      NULL,
-                                      NULL);
+        /* Do the conversion */
+    int iBytesDestination = WideCharToMultiByte(codePage,               //codepage
+                                            dwFlags,                //conversion flags
+                                            (LPWSTR) strptr,        // (LPWSTR)args[0].strptr,  //source string
+                                            (int)(sourceLength/2),    // len,                     //source string length
+                                            str,                    //target string
+                                            (int)iBytesNeeded,      //size of target buffer
+                                            strDefaultChar,
+                                            &bUsedDefaultChar);
 
-  if (iBytesNeeded == 0) RETVAL(GetLastError())  // call to function fails
+    if (iBytesDestination == 0) // call to function fails
+    {
+        GlobalFree(str);          //  free allocated string
+        GlobalFree(strptr);          // free allocated string
+        return GetLastError();    // return error from function call
+    }
 
-  // hard error, stop
-  if (!(str = (char *)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, iBytesNeeded + 4)))
-  {
+    // set the default character flag in the output stem
+    if (bUsedDefaultChar && (dwFlags & WC_DEFAULTCHAR) == WC_DEFAULTCHAR)
+    {
+        context->SetStemElement(stem, "!USEDDEFAULTCHAR", context->String(strDefaultChar));
+    }
+    else
+    {
+        context->SetStemElement(stem, "!USEDDEFAULTCHAR", context->String(strDefaultChar));
+    }
+
+    context->SetStemElement(stem, "!TEXT", context->String(str, iBytesNeeded));
     GlobalFree(strptr);          // free allocated string
-    return INVALID_ROUTINE;
-  }
-
-  /* Do the conversion */
-  /* in case of UTF8, the documentation says: When CP_UTF8 is set, dwFlags must be zero  */
-  /* and both lpDefaultChar and lpUsedDefaultChar must be NULL.                          */
-  /* MHES 1 Mar 2006 - I find no documentation that says this */
-#if 0
-  if ( !bUsedDefaultChar )
-  {
-     iBytesDestination = WideCharToMultiByte(codePage,               //codepage
-                                          dwFlags,                //conversion flags
-                                          (LPWSTR) strptr,        //source string
-                                          args[0].strlength/2,    //source string length
-                                          str,                    //target string
-                                          iBytesNeeded,           //size of target buffer
-                                          NULL,
-                                          NULL);
-  }
-  else
-#endif
-  {
-	/* Do the conversion */
-  iBytesDestination = WideCharToMultiByte(codePage,               //codepage
-                                          dwFlags,                //conversion flags
-                                          (LPWSTR) strptr,        // (LPWSTR)args[0].strptr,  //source string
-                                          (int)(args[0].strlength/2),    // len,                     //source string length
-                                          str,                    //target string
-                                          (int)iBytesNeeded,      //size of target buffer
-                                          strDefaultChar,
-                                          &bUsedDefaultChar);
-
-  }
-  if (iBytesDestination == 0) // call to function fails
-  {
-     GlobalFree(str);          //  free allocated string
-     GlobalFree(strptr);          // free allocated string
-     RETVAL(GetLastError())    // return error from function call
-  }
-
-  // convert the default character flag to an character
-//  itoa(chDefaultChar,szUsedDefChar,10);
-//  szUsedDefChar[1] ='\0';
-
-  // set the default character flag in the output stem
-  if (bUsedDefaultChar && (dwFlags & WC_DEFAULTCHAR) == WC_DEFAULTCHAR)
-  {
-     if (!SetRexxStem(stemName, "!USEDDEFAULTCHAR", strDefaultChar))
-        return INVALID_ROUTINE;
-  }
-  else
-  {
-     if (!SetRexxStem(stemName, "!USEDDEFAULTCHAR", ""))
-        return INVALID_ROUTINE;
-  }
-
-  // set the output data character flag in the output stem
-  if (!SetRexxStemLength(stemName, "!TEXT", str, iBytesNeeded))
-  {
-     GlobalFree(strptr);          // free allocated string
-    return INVALID_ROUTINE;
-  }
-  GlobalFree(strptr);          // free allocated string
-
-  BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* set default result         */
-  return VALID_ROUTINE;                /* no error on call           */
-
+    GlobalFree(str);             // free allocated string
+    return 0;
 }
+
+
 /*************************************************************************
 * Function:  SetRexxUIStem                                               *
 *                                                                        *
@@ -6435,107 +6442,113 @@ LONG SetRexxUIStem(CHAR * name, char * tailname, LPWSTR data, int datalen)
 
 
 *************************************************************************/
-size_t RexxEntry SysToUniCode(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine4(int, SysToUniCode, RexxStringObject, source, OPTIONAL_CSTRING, codePageOpt,
+    OPTIONAL_CSTRING, mappingFlags, RexxStemObject, stem)
 {
-  ULONG  ulDataLen, ulWCharsNeeded;
-  DWORD  dwFlags = 0;
-  UINT   codePage;
-  LPWSTR lpwstr = NULL;
-  CHAR   stemName[MAX];
-
-  // check number of arguments
-  // arguments must always be 4. Args 1 and 4 must be valid strings
-  if ( numargs != 4 || !RXVALIDSTRING(args[0]) || !RXVALIDSTRING(args[3]) )
-//  if ( numargs < 2 || numargs > 4 ||
-//       !RXVALIDSTRING(args[3]) )
-    return INVALID_ROUTINE;            /* Invalid call to routine    */
-
-  // evaluate codepage
-  if (args[1].strlength == 0)
-    codePage = GetOEMCP();
-  else
-  {
-    if (_stricmp(args[1].strptr,"THREAD_ACP") == 0)
-      codePage = CP_THREAD_ACP;
-    else if (_stricmp(args[1].strptr,"ACP") == 0)
-      codePage = CP_ACP;
-    else if (_stricmp(args[1].strptr,"MACCP") == 0)
-      codePage = CP_MACCP;
-    else if (_stricmp(args[1].strptr,"OEMCP") == 0)
-      codePage = CP_OEMCP;
-    else if (_stricmp(args[1].strptr,"SYMBOL") == 0)
-      codePage = CP_SYMBOL;
-    else if (_stricmp(args[1].strptr,"UTF7") == 0)
-      codePage = CP_UTF7;
-    else if (_stricmp(args[1].strptr,"UTF8") == 0)
-      codePage = CP_UTF8;
+    // evaluate codepage
+    UINT   codePage;
+    if (codePageOpt == NULL)
+    {
+        codePage = GetOEMCP();
+    }
     else
-      codePage = atoi(args[1].strptr);
-  }
+    {
+        if (_stricmp(codePageOpt,"THREAD_ACP") == 0)
+        {
+            codePage = CP_THREAD_ACP;
+        }
+        else if (_stricmp(codePageOpt,"ACP") == 0)
+        {
+            codePage = CP_ACP;
+        }
+        else if (_stricmp(codePageOpt,"MACCP") == 0)
+        {
+            codePage = CP_MACCP;
+        }
+        else if (_stricmp(codePageOpt,"OEMCP") == 0)
+        {
+            codePage = CP_OEMCP;
+        }
+        else if (_stricmp(codePageOpt,"SYMBOL") == 0)
+        {
+            codePage = CP_SYMBOL;
+        }
+        else if (_stricmp(codePageOpt,"UTF7") == 0)
+        {
+            codePage = CP_UTF7;
+        }
+        else if (_stricmp(codePageOpt,"UTF8") == 0)
+        {
+            codePage = CP_UTF8;
+        }
+        else
+        {
+            codePage = atoi(codePageOpt);
+        }
+    }
 
-  // evaluate the mapping flags
-  if (args[2].strlength != 0)
-  {
-    if (mystrstr(args[2].strptr,"PRECOMPOSED",args[2].strlength,11,false))   dwFlags |= MB_PRECOMPOSED;
-    if (mystrstr(args[2].strptr,"COMPOSITE",args[2].strlength,9,false))     dwFlags  |= MB_COMPOSITE;
-    if (mystrstr(args[2].strptr,"ERR_INVALID",args[2].strlength,11,false))   dwFlags |= MB_ERR_INVALID_CHARS;
-    if (mystrstr(args[2].strptr,"USEGLYPHCHARS",args[2].strlength,13,false)) dwFlags |= MB_USEGLYPHCHARS;
-    if (dwFlags == 0)
-      return INVALID_ROUTINE;
-  }
+    DWORD  dwFlags = 0;
+    // evaluate the mapping flags
+    if (mappingFlags != NULL)
+    {
+        if (mystrstr(mappingFlags, "PRECOMPOSED"))
+        {
+            dwFlags |= MB_PRECOMPOSED;
+        }
+        if (mystrstr(mappingFlags, "COMPOSITE"))
+        {
+            dwFlags  |= MB_COMPOSITE;
+        }
+        if (mystrstr(mappingFlags, "ERR_INVALID"))
+        {
+            dwFlags |= MB_ERR_INVALID_CHARS;
+        }
+        if (mystrstr(mappingFlags, "USEGLYPHCHARS"))
+        {
+            dwFlags |= MB_USEGLYPHCHARS;
+        }
+        if (dwFlags == 0)
+        {
+            context->InvalidRoutine();
+            return 0;
+        }
+    }
 
-  // evaluate output stem
-  strcpy(stemName, args[3].strptr);
+    /* Query the number of bytes required to store the Dest string */
+    ULONG ulWCharsNeeded = MultiByteToWideChar( codePage, dwFlags,
+        context->StringData(source), (int)context->StringLength(source), NULL, NULL);
 
-  /* uppercase the name         */
-  memupper(stemName, args[3].strlength);
+    if (ulWCharsNeeded == 0)
+    {
+        return GetLastError();
+    }
 
-  if (stemName[args[3].strlength-1] != '.')
-  {
-    stemName[args[3].strlength] = '.';
-    stemName[args[3].strlength+1] = '\0';
-  }
+    ULONG ulDataLen = (ulWCharsNeeded)*2;
 
-  /* Query the number of bytes required to store the Dest string */
-  ulWCharsNeeded = MultiByteToWideChar( codePage,
-                                        dwFlags,
-                                        args[0].strptr,
-                                        (int)args[0].strlength,
-                                        NULL,
-                                        NULL);
+    LPWSTR lpwstr = (LPWSTR)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, ulDataLen+4);
 
-  if (ulWCharsNeeded == 0) RETVAL(GetLastError())  // call to function fails
-
-  ulDataLen = (ulWCharsNeeded)*2;
-
-  // hard error, stop
-  if (!(lpwstr = (LPWSTR)GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, ulDataLen+4)))
-    return INVALID_ROUTINE;
+    // hard error, stop
+    if (lpwstr == NULL)
+    {
+        context->InvalidRoutine();
+        return 0;
+    }
 
 
-  /* Do the conversion */
-  ulWCharsNeeded = MultiByteToWideChar( codePage,
-                                        dwFlags,
-                                        args[0].strptr,
-                                        (int)args[0].strlength,
-                                        lpwstr,
-                                        ulWCharsNeeded);
+    /* Do the conversion */
+    ulWCharsNeeded = MultiByteToWideChar(codePage,  dwFlags,
+        context->StringData(source), (int)context->StringLength(source),
+        lpwstr, ulWCharsNeeded);
 
-  if (ulWCharsNeeded == 0) // call to function fails
-  {
-     GlobalFree(lpwstr);       // free allocated string
-     RETVAL(GetLastError())    // return error from function call
-  }
+    if (ulWCharsNeeded == 0) // call to function fails
+    {
+        GlobalFree(lpwstr);       // free allocated string
+        return GetLastError();
+    }
 
-  if (!SetRexxUIStem(stemName, "!TEXT", lpwstr, ulDataLen)) {
+    context->SetStemElement(stem, "!TEXT", context->String((const char *)lpwstr, ulDataLen));
     GlobalFree(lpwstr);        // free allocated string
-    return INVALID_ROUTINE;
-  }
-
-  GlobalFree(lpwstr);        // free allocated string
-  BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* set default result         */
-  return VALID_ROUTINE;                /* no error on call           */
-
+    return 0;
 }
 
 /*************************************************************************
@@ -6547,74 +6560,44 @@ size_t RexxEntry SysToUniCode(const char *name, size_t numargs, CONSTRXSTRING ar
 *                                                                        *
 * Return:    error number                                                *
 *************************************************************************/
-size_t RexxEntry SysWinGetPrinters(const char *name, size_t numargs, CONSTRXSTRING args[],
-                                   const char *queuename, PRXSTRING retstr)
+
+RexxRoutine1(int, SysWinGetPrinters, RexxStemObject, stem)
 {
     DWORD realSize = 0;
     DWORD entries = 0;
-    BOOL  fSuccess = FALSE;
-    char  szBuffer[256];
-    PRINTER_INFO_2 *pResult;
     DWORD currentSize = 10*sizeof(PRINTER_INFO_2)*sizeof(char);
     char *pArray = (char*) malloc(sizeof(char)*currentSize);
 
-    // If no args, then its an incorrect call.
-    if ( numargs != 1 )
+    while (true)
     {
-        return INVALID_ROUTINE;
-    }
-
-    // must be a stem!
-    if ( args[0].strptr[args[0].strlength-1] != '.' )
-    {
-        return INVALID_ROUTINE;
-    }
-
-    while ( fSuccess == false )
-    {
-        fSuccess = EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, NULL, 2, (LPBYTE)pArray,
-                                currentSize, &realSize, &entries);
-        if ( currentSize < realSize )
+        if (EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, NULL, 2, (LPBYTE)pArray,
+                         currentSize, &realSize, &entries) == 0)
         {
-            currentSize = realSize;
-            realSize = 0;
-            pArray = (char*) realloc(pArray, sizeof(char)*currentSize);
-            fSuccess = false;
+            free(pArray);
+            return GetLastError();   // this is a failure if we get a bad return
         }
-        else
+        if ( currentSize >= realSize )
         {
-            fSuccess = true;
+            break;
         }
+        currentSize = realSize;
+        realSize = 0;
+        pArray = (char*) realloc(pArray, sizeof(char)*currentSize);
     }
 
-    pResult = (PRINTER_INFO_2*) pArray;
-    fSuccess = false;
+    PRINTER_INFO_2 *pResult = (PRINTER_INFO_2*) pArray;
 
     // set stem.0 to the number of entries then add all the found printers
-    sprintf(szBuffer,"%d",entries);
-    if ( SetRexxStem(args[0].strptr, "0", szBuffer) )
+    context->SetStemArrayElement(stem, 0, context->WholeNumber(entries));
+    while ( entries-- )
     {
-        fSuccess = true;
-        while ( entries-- )
-        {
-            sprintf(szBuffer,"%s,%s,%s", pResult[entries].pPrinterName, pResult[entries].pDriverName,
-                    pResult[entries].pPortName);
-            char tailBuffer[20];
-            sprintf(tailBuffer, "%d", entries + 1);
-
-            if ( ! SetRexxStem(args[0].strptr, tailBuffer, szBuffer) )
-            {
-                fSuccess = false;
-                break;
-            }
-        }
+        char  szBuffer[256];
+        sprintf(szBuffer,"%s,%s,%s", pResult[entries].pPrinterName, pResult[entries].pDriverName,
+                pResult[entries].pPortName);
+        context->SetStemArrayElement(stem, entries + 1, context->String(szBuffer));
     }
     free(pArray);
-
-    sprintf(retstr->strptr, "%s", fSuccess==TRUE ? "0" : "1");
-    retstr->strlength = strlen(retstr->strptr);
-
-    return VALID_ROUTINE;
+    return 0;          // a little reversed...success is false, failure is true
 }
 
 /*************************************************************************
@@ -6627,75 +6610,15 @@ size_t RexxEntry SysWinGetPrinters(const char *name, size_t numargs, CONSTRXSTRI
 * Return:    string describing default printer                           *
 *************************************************************************/
 
-size_t RexxEntry SysWinGetDefaultPrinter(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine0(RexxStringObject, SysWinGetDefaultPrinter)
 {
+    char buffer[256];
+    buffer[0] = '\0';
 
-  DWORD  errnum = 0;
-  OSVERSIONINFO osv;
-
-  if (numargs != 0)                    /* If args, then its an       */
-                                       /* incorrect call             */
-    return INVALID_ROUTINE;
-
-  // What version of Windows are you running?
-  osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-  GetVersionEx(&osv);
-
-  // If Windows 95 or 98, use EnumPrinters...
-  if (osv.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-    DWORD dwNeeded = 0;
-    DWORD dwReturned;
-    PRINTER_INFO_2 *printerInfo = NULL;
-
-    // find out how much memory is needed
-    EnumPrinters(PRINTER_ENUM_DEFAULT, NULL, 2, NULL, 0, &dwNeeded, &dwReturned);
-    if (dwNeeded == 0)
-      return INVALID_ROUTINE;
-
-    printerInfo = (PRINTER_INFO_2*) malloc(sizeof(char)*dwNeeded);
-    if (!printerInfo)
-      return INVALID_ROUTINE;
-
-    // fill in info
-    if (! EnumPrinters(PRINTER_ENUM_DEFAULT, NULL, 2, (LPBYTE) printerInfo, dwNeeded, &dwNeeded, &dwReturned) ) {
-      free(printerInfo);
-      return INVALID_ROUTINE;
-    }
-
-    lstrcpy(retstr->strptr,printerInfo->pPrinterName);
-
-    free(printerInfo);
-
-  } else
-    // NT / W2K:
-    GetProfileString("Windows", "DEVICE", ",,,", retstr->strptr, (DWORD)retstr->strlength);
-
-  retstr->strlength = strlen(retstr->strptr);
-
-  return VALID_ROUTINE;
+    GetProfileString("Windows", "DEVICE", ",,,", buffer, sizeof(buffer));
+    return context->String(buffer);
 }
 
-/* TODO FIXME we should have a general purpose function for determing the
- *  Window version.  There is one in the incubator in WinShell.
- */
-bool getOSVersionStruct(OSVERSIONINFOEX *pVersionInfo)
-{
-   // First try calling GetVersionEx with the extended struct and if it fails,
-   // try with the original struct.
-
-   ZeroMemory(pVersionInfo, sizeof(OSVERSIONINFOEX));
-   pVersionInfo->dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-
-   if( ! GetVersionEx((OSVERSIONINFO *)pVersionInfo) )
-   {
-      pVersionInfo->dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-      if ( ! GetVersionEx((OSVERSIONINFO *) pVersionInfo) )
-      {
-          return FALSE;
-      }
-   }
-   return true;
-}
 
 /*************************************************************************
 * Function:  SysWinSetDefaultPrinter                                     *
@@ -6706,55 +6629,50 @@ bool getOSVersionStruct(OSVERSIONINFOEX *pVersionInfo)
 *                                                                        *
 * Return:    0 on success, otherwise the OS system error number.         *
 *************************************************************************/
-size_t RexxEntry SysWinSetDefaultPrinter(const char *name, size_t numargs, CONSTRXSTRING args[],
-                                         const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysWinSetDefaultPrinter, CSTRING, printer)
 {
-    DWORD  errnum = 0;
-    bool   success = true;
-    UINT   count = 0;
-    OSVERSIONINFOEX osv;
-
-    if (numargs != 1)
-    {
-        return INVALID_ROUTINE;
-    }
+    int count = 0;
 
     // Two forms of input are allowed.  The old form of
     // "Printername,Drivername,Portname" and for W2K or later just the printer
     // name.  Count the commas to determine which form this might be.
-    for ( size_t i = 0; i < args[0].strlength; i++ )
+    for ( size_t i = 0; printer[i] != '\0'; i++ )
     {
-        if ( args[0].strptr[i] == ',' )
+        if (printer[i] == ',' )
         {
             count++;
         }
     }
 
-    if ( ! getOSVersionStruct(&osv) )
+    if (count != 0 && count != 2)
     {
-        return INVALID_ROUTINE;
+        context->InvalidRoutine();
+        return 0;
     }
-
     SetLastError(0);
 
-    if ( osv.dwMajorVersion >= 5 && count == 0 )
+    if (count == 0 )
     {
         // This is W2K or later and the user specified just the printer name.
         // This code will work on W2K through Vista.
-        if ( SetDefaultPrinter(args[0].strptr) == 0 )
+        if (SetDefaultPrinter(printer) == 0)
         {
-            success = false;
+            return 0;
+        }
+        else
+        {
+            return GetLastError();
         }
     }
-    else if ( count == 2 )
+    else
     {
-        // NT or earlier, or the user still specified the old format. Microssoft
+        // The user still specified the old format. Microssoft
         // only provides WriteProfileString() for backward compatibility to
         // 16-bit Windows, and at some point this may no longer be supported.
         // But it still appears to work on XP.
-        if ( WriteProfileString("Windows", "DEVICE", args[0].strptr) == 0 )
+        if (WriteProfileString("Windows", "DEVICE", printer) == 0)
         {
-            success = false;
+            return 0;
         }
         else
         {
@@ -6764,25 +6682,16 @@ size_t RexxEntry SysWinSetDefaultPrinter(const char *name, size_t numargs, CONST
                 // and the user will get the succes code.  If GetLastError()
                 // does not return 0, then chances are something really is
                 // wrong.
-                success = false;
+                return 0;
+            }
+            else
+            {
+                return GetLastError();
             }
         }
     }
-    else
-    {
-        return INVALID_ROUTINE;
-    }
-
-    if ( ! success )
-    {
-        errnum = GetLastError();
-    }
-
-    sprintf(retstr->strptr, "%d", errnum);
-    retstr->strlength = strlen(retstr->strptr);
-
-    return VALID_ROUTINE;
 }
+
 
 /*************************************************************************
 * Function:  SysFileCopy                                                 *
@@ -7060,11 +6969,11 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysWinEncryptFile,           SysWinEncryptFile),
     REXX_CLASSIC_ROUTINE(SysWinDecryptFile,           SysWinDecryptFile),
     REXX_CLASSIC_ROUTINE(SysGetErrortext,             SysGetErrortext),
-    REXX_CLASSIC_ROUTINE(SysFromUniCode,              SysFromUniCode),
-    REXX_CLASSIC_ROUTINE(SysToUniCode,                SysToUniCode),
-    REXX_CLASSIC_ROUTINE(SysWinGetPrinters,           SysWinGetPrinters),
-    REXX_CLASSIC_ROUTINE(SysWinGetDefaultPrinter,     SysWinGetDefaultPrinter),
-    REXX_CLASSIC_ROUTINE(SysWinSetDefaultPrinter,     SysWinSetDefaultPrinter),
+    REXX_TYPED_ROUTINE(SysFromUniCode,                SysFromUniCode),
+    REXX_TYPED_ROUTINE(SysToUniCode,                  SysToUniCode),
+    REXX_TYPED_ROUTINE(SysWinGetPrinters,             SysWinGetPrinters),
+    REXX_TYPED_ROUTINE(SysWinGetDefaultPrinter,       SysWinGetDefaultPrinter),
+    REXX_TYPED_ROUTINE(SysWinSetDefaultPrinter,       SysWinSetDefaultPrinter),
 
     REXX_TYPED_ROUTINE(SysShutDownSystem,             SysShutDownSystem),
     REXX_TYPED_ROUTINE(SysFileCopy,                   SysFileCopy),
