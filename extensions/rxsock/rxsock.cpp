@@ -280,7 +280,7 @@ void stemToSockAddr(RexxCallContext *context, RexxStemObject stem, sockaddr_in *
     }
     else
     {
-        pSockAddr->sin_family = (SHORT) strtol(pszFamily,NULL,10);
+        pSockAddr->sin_family = (short) strtol(pszFamily,NULL,10);
     }
 
     /*---------------------------------------------------------------
@@ -292,7 +292,7 @@ void stemToSockAddr(RexxCallContext *context, RexxStemObject stem, sockaddr_in *
     /*---------------------------------------------------------------
      * get addr
      *---------------------------------------------------------------*/
-    if (!stricmp(pszAddr,"INADDR_ANY"))
+    if (!caselessCompare(pszAddr,"INADDR_ANY"))
     {
         pSockAddr->sin_addr.s_addr = INADDR_ANY;
     }
