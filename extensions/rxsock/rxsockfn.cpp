@@ -237,7 +237,7 @@ RexxRoutine2(int, SockConnect, int, sock, RexxStemObject, stem)
 RexxRoutine3(int, SockGetHostByAddr, CSTRING, addrArg, RexxStemObject, stem, OPTIONAL_int, domain)
 {
     struct hostent *pHostEnt;
-    unsigned long   addr = inet_addr(addrArg);
+    unsigned int addr = inet_addr(addrArg);
 
     if (argumentOmitted(3))
     {
@@ -444,7 +444,6 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
     /*---------------------------------------------------------------
      * set up buffer
      *---------------------------------------------------------------*/
-    long longVal = 0;
     int intVal = 0;
 
     switch (opt)
@@ -452,12 +451,6 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
         case SO_LINGER:
             ptr = &lingStruct;
             len = sizeof(lingStruct);
-            break;
-
-        case SO_RCVBUF:
-        case SO_SNDBUF:
-            ptr = &longVal;
-            len = sizeof(long);
             break;
 
         default:
@@ -479,7 +472,7 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
     switch (opt)
     {
         case SO_LINGER:
-            sprintf(buffer,"%ld %ld", lingStruct.l_onoff, lingStruct.l_linger);
+            sprintf(buffer,"%d %d", lingStruct.l_onoff, lingStruct.l_linger);
             break;
 
         case SO_TYPE:
@@ -492,13 +485,8 @@ RexxRoutine4(int, SockGetSockOpt, int, sock, CSTRING, level, CSTRING, option, CS
             }
             break;
 
-        case SO_RCVBUF:
-        case SO_SNDBUF:
-            sprintf(buffer, "%ld", longVal);
-            break;
-
         default:
-            sprintf(buffer,"%ld", intVal);
+            sprintf(buffer,"%d", intVal);
     }
 
     // set the variable
@@ -1074,9 +1062,7 @@ RexxRoutine4(int, SockSetSockOpt, int, sock, CSTRING, target, CSTRING, option, C
 {
     struct linger  lingStruct;
     int            intVal;
-    long           longVal;
-    long           longVal1;
-    long           longVal2;
+    int            intVal2;
     int            len;
     void          *ptr;
 
@@ -1107,18 +1093,18 @@ RexxRoutine4(int, SockSetSockOpt, int, sock, CSTRING, target, CSTRING, option, C
             ptr = &lingStruct;
             len = sizeof(lingStruct);
 
-            sscanf(arg,"%ld %ld",&longVal1,&longVal2);
-            lingStruct.l_onoff  = (u_short)longVal1;
-            lingStruct.l_linger = (u_short)longVal2;
+            sscanf(arg,"%d %d", &intVal,&intVal2);
+            lingStruct.l_onoff  = (u_short)intVal;
+            lingStruct.l_linger = (u_short)intVal2;
 
             break;
 
         case SO_RCVBUF:
         case SO_SNDBUF:
-            ptr = &longVal;
-            len = sizeof(long);
+            ptr = &intVal;
+            len = sizeof(intVal);
 
-            sscanf(arg, "%ld", &longVal);
+            sscanf(arg, "%d", &intVal);
             break;
 
         case SO_ERROR:
