@@ -127,7 +127,8 @@ int REXXENTRY RexxStart(
   short * retcode,                     /* Integer form of result            */
   PRXSTRING result)                    /* Result returned from program      */
 {
-    if (calltype == RXCOMMAND && argcount == 1 && arglist[0].strptr != NULL && StringUtil::caselessCompare(arglist[0].strptr, "//T", arglist[0].strlength) == 0)
+    if (calltype == RXCOMMAND && argcount == 1 && arglist[0].strptr != NULL && arglist[0].strlength > 0 &&
+        StringUtil::caselessCompare(arglist[0].strptr, "//T", arglist[0].strlength) == 0)
     {
         TranslateDispatcher arguments;
         arguments.programName = programname;
