@@ -613,8 +613,8 @@ RexxRoutine4(int, SockRecv, int, sock, CSTRING, var, int, dataLen, OPTIONAL_CSTR
         const char *pszWord = strtok(flagStr, " ");
         while (pszWord)
         {
-            if (!stricmp(pszWord,"MSG_OOB"))  flags |= MSG_OOB;
-            else if (!stricmp(pszWord,"MSG_PEEK")) flags |= MSG_PEEK;
+            if (!caselessCompare(pszWord,"MSG_OOB"))  flags |= MSG_OOB;
+            else if (!caselessCompare(pszWord,"MSG_PEEK")) flags |= MSG_PEEK;
             pszWord = strtok(NULL," ");
         }
         free(flagStr);
@@ -683,11 +683,11 @@ RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjec
         const char *pszWord = strtok(flagStr, " ");
         while (pszWord)
         {
-            if (!stricmp(pszWord,"MSG_OOB"))
+            if (!caselessCompare(pszWord,"MSG_OOB"))
             {
                 flags |= MSG_OOB;
             }
-            else if (!stricmp(pszWord,"MSG_PEEK"))
+            else if (!caselessCompare(pszWord,"MSG_PEEK"))
             {
                 flags |= MSG_PEEK;
             }
@@ -976,11 +976,11 @@ RexxRoutine3(int, SockSend, int, sock, RexxStringObject, dataObj, OPTIONAL_CSTRI
         const char *pszWord = strtok(flagStr, " ");
         while (pszWord)
         {
-            if (!stricmp(pszWord,"MSG_OOB"))
+            if (!caselessCompare(pszWord,"MSG_OOB"))
             {
                 flags |= MSG_OOB;
             }
-            else if (!stricmp(pszWord,"MSG_DONTROUTE"))
+            else if (!caselessCompare(pszWord,"MSG_DONTROUTE"))
             {
                 flags |= MSG_DONTROUTE;
             }
@@ -1036,7 +1036,7 @@ RexxRoutine4(int, SockSendTo, int, sock, RexxStringObject, dataObj, RexxObjectPt
         const char *pszWord = strtok(flagStr, " ");
         while (pszWord)
         {
-            if (!stricmp(pszWord,"MSG_DONTROUTE"))
+            if (!caselessCompare(pszWord,"MSG_DONTROUTE"))
             {
                 flags |= MSG_DONTROUTE;
             }
