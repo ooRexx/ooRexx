@@ -740,13 +740,8 @@ RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjec
  *------------------------------------------------------------------*/
 RexxRoutine4(int, SockSelect, OPTIONAL_RexxStemObject, array1, OPTIONAL_RexxStemObject, array2, OPTIONAL_RexxStemObject, array3, OPTIONAL_int, timeout)
 {
-#if defined(OPSYS_LINUX)
-    struct timespec  timeOutS;
-    struct timespec *timeOutP;
-#else
     struct timeval  timeOutS;
     struct timeval *timeOutP;
-#endif
     int             rCount;
     int             wCount;
     int             eCount;
