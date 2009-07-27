@@ -777,11 +777,7 @@ RexxRoutine4(int, SockSelect, OPTIONAL_RexxStemObject, array1, OPTIONAL_RexxStem
         }
 
         timeOutS.tv_sec  = timeout;
-#if defined(OPSYS_LINUX)
-        timeOutS.tv_nsec = 0;
-#else
         timeOutS.tv_usec = 0;
-#endif
         timeOutP = &timeOutS;
     }
 
