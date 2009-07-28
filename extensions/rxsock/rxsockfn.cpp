@@ -1054,6 +1054,7 @@ RexxRoutine4(int, SockSetSockOpt, int, sock, CSTRING, target, CSTRING, option, C
     struct linger  lingStruct;
     int            intVal;
     int            intVal2;
+    socklen_t      lenVal;
     int            len;
     void          *ptr;
 
@@ -1092,10 +1093,10 @@ RexxRoutine4(int, SockSetSockOpt, int, sock, CSTRING, target, CSTRING, option, C
 
         case SO_RCVBUF:
         case SO_SNDBUF:
-            ptr = &intVal;
-            len = sizeof(intVal);
+            ptr = &lenVal;
+            len = sizeof(lenVal);
 
-            sscanf(arg, "%d", &intVal);
+            sscanf(arg, "%d", &lenVal);
             break;
 
         case SO_ERROR:
