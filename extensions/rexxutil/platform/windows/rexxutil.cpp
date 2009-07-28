@@ -678,108 +678,6 @@ bool SetFileMode(
 }
 
 /********************************************************************
-* Function:  string2long(string, number)                            *
-*                                                                   *
-* Purpose:   Validates and converts an ASCII-Z string from string   *
-*            form to an unsigned long.  Returns false if the number *
-*            is not valid, true if the number was successfully      *
-*            converted.                                             *
-*                                                                   *
-* RC:        true - Good number converted                           *
-*            false - Invalid number supplied.                       *
-*********************************************************************/
-
-bool string2long(
-  const char *string,
-  int *number)
-{
-  int      accumulator;                /* converted number           */
-  size_t   length;                     /* length of number           */
-  int      sign;                       /* sign of number             */
-
-  sign = 1;                            /* set default sign           */
-  if (*string == '-') {                /* negative?                  */
-    sign = -1;                         /* change sign                */
-    string++;                          /* step past sign             */
-  }
-
-  length = strlen(string);             /* get length of string       */
-  if (length == 0 ||                   /* if null string             */
-      length > MAX_DIGITS)             /* or too long                */
-    return false;                      /* not valid                  */
-
-  accumulator = 0;                     /* start with zero            */
-
-  while (length != 0) {                /* while more digits          */
-    if (!isdigit(*string))             /* not a digit?               */
-      return false;                    /* tell caller                */
-                                       /* add to accumulator         */
-    accumulator = accumulator * 10 + (*string - '0');
-    length--;                          /* reduce length              */
-    string++;                          /* step pointer               */
-  }
-  *number = accumulator * sign;        /* return the value           */
-  return true;                         /* good number                */
-}
-
-/********************************************************************
-* Function:  string2ulong(string, number)                           *
-*                                                                   *
-* Purpose:   Validates and converts an ASCII-Z string from string   *
-*            form to an unsigned long.  Returns false if the number *
-*            is not valid, true if the number was successfully      *
-*            converted.                                             *
-*                                                                   *
-* RC:        true - Good number converted                           *
-*            false - Invalid number supplied.                       *
-*********************************************************************/
-
-bool string2ulong(
-  const char  *string,                 /* string to convert          */
-  size_t *number)                      /* converted number           */
-{
-  size_t   accumulator;                /* converted number           */
-  size_t   length;                     /* length of number           */
-
-  length = strlen(string);             /* get length of string       */
-  if (length == 0 ||                   /* if null string             */
-      length > MAX_DIGITS + 1)         /* or too long                */
-    return false;                      /* not valid                  */
-
-  accumulator = 0;                     /* start with zero            */
-
-  while (length) {                     /* while more digits          */
-    if (!isdigit(*string))             /* not a digit?               */
-      return false;                    /* tell caller                */
-                                       /* add to accumulator         */
-    accumulator = accumulator * 10 + (*string - '0');
-    length--;                          /* reduce length              */
-    string++;                          /* step pointer               */
-  }
-  *number = accumulator;               /* return the value           */
-  return true;                         /* good number                */
-}
-
-/********************************************************************
-* Function:  string2pointer(string)                                 *
-*                                                                   *
-* Purpose:   Validates and converts an ASCII-Z string from string   *
-*            form to a pointer value.  Returns false if the number  *
-*            is not valid, true if the number was successfully      *
-*            converted.                                             *
-*                                                                   *
-* RC:        true - Good number converted                           *
-*            false - Invalid number supplied.                       *
-*********************************************************************/
-
-bool string2pointer(
-  const char *string,                  /* string to convert          */
-  void  **pointer)                     /* converted number           */
-{
-  return sscanf(string, "%p", pointer) == 1;
-}
-
-/********************************************************************
 * Function:  mystrstr(haystack, needle, hlen, nlen, sensitive)      *
 *                                                                   *
 * Purpose:   Determines if the string 'needle' is in the            *
@@ -834,7 +732,6 @@ char *mystrstr(
 
   return strstr(line, target);
 }
-
 
 const char *mystrstr(const char *haystack, const char *needle)
 {
@@ -1521,7 +1418,7 @@ size_t RexxEntry SysCls(const char *name, size_t numargs, CONSTRXSTRING args[], 
 }
 
 /*************************************************************************
-* Function:  SysCurPos - positions cursor in OS/2 session                *
+* Function:  SysCurPos - positions cursor in DOS window                  *
 *                                                                        *
 * Syntax:    call SysCurPos [row, col]                                   *
 *                                                                        *
@@ -1531,51 +1428,41 @@ size_t RexxEntry SysCls(const char *name, size_t numargs, CONSTRXSTRING args[], 
 * Return:    row, col                                                    *
 *************************************************************************/
 
-size_t RexxEntry SysCurPos(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(RexxStringObject, SysCurPos, OPTIONAL_stringsize_t, inrow, OPTIONAL_stringsize_t, incol)
 {
+    CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
 
-  int    inrow;                        /* Row to change to           */
-  int    incol;                        /* Col to change to           */
-  COORD NewHome;                       /* Position to move cursor    */
-  CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
-  HANDLE hStdout;                      /* Handle to Standard Out     */
 
-  BUILDRXSTRING(retstr, NO_UTIL_ERROR);/* set default result         */
-                                       /* check arguments            */
-  if ((numargs != 0 && numargs != 2))  /* wrong number?              */
-    return INVALID_ROUTINE;            /* raise an error             */
-
-                                       /* get handle to stdout       */
-  hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-
-                                       /* get current position, and  */
-                                       /* continue only if in        */
-                                       /* character mode             */
-  if (GetConsoleScreenBufferInfo(hStdout, &csbiInfo)) {
-
-    sprintf(retstr->strptr, "%d %d", csbiInfo.dwCursorPosition.Y,
-              csbiInfo.dwCursorPosition.X);
-    retstr->strlength = strlen(retstr->strptr);
-
-    if (numargs != 0) {                /* reset position to given    */
-      if (!RXVALIDSTRING(args[0]) ||   /* not real arguments give    */
-          !RXVALIDSTRING(args[1]))
-        return INVALID_ROUTINE;        /* raise an error             */
-                                       /* convert row to binary      */
-      if (!string2long(args[0].strptr, &inrow) || inrow < 0)
-        return INVALID_ROUTINE;        /* return error               */
-                                       /* convert row to binary      */
-      if (!string2long(args[1].strptr, &incol) || incol < 0)
-        return INVALID_ROUTINE;        /* return error               */
-
-      NewHome.Y = (SHORT)inrow;        /* convert to short form      */
-      NewHome.X = (SHORT)incol;        /* convert to short form      */
-                                       /* Set the cursor position    */
-      SetConsoleCursorPosition(hStdout, NewHome);
+    if ((argumentExists(2) && argumentOmitted(3)) || (argumentExists(3) && argumentOmitted(2)))
+    {
+        context->InvalidRoutine();
+        return NULL;
     }
-  }
+    /* get handle to stdout       */
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 
-  return VALID_ROUTINE;                /* no error on call           */
+    /* get current position, and  */
+    /* continue only if in        */
+    /* character mode             */
+    if (GetConsoleScreenBufferInfo(hStdout, &csbiInfo))
+    {
+        char buffer[256];
+
+        sprintf(buffer, "%d %d", csbiInfo.dwCursorPosition.Y, csbiInfo.dwCursorPosition.X);
+
+        if (argumentExists(2))
+        {
+            COORD newHome;                       /* Position to move cursor    */
+            newHome.Y = (short)inrow;      /* convert to short form      */
+            newHome.X = (short)incol;      /* convert to short form      */
+                                           /* Set the cursor position    */
+            SetConsoleCursorPosition(hStdout, newHome);
+        }
+
+        return context->NewStringFromAsciiz(buffer);
+    }
+
+    return context->NullString();
 }
 
 /*************************************************************************
@@ -1588,31 +1475,34 @@ size_t RexxEntry SysCurPos(const char *name, size_t numargs, CONSTRXSTRING args[
 * Return:    NO_UTIL_ERROR - Successful.                                 *
 *************************************************************************/
 
-size_t RexxEntry SysCurState(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysCurState, CSTRING, option)
 {
+    CONSOLE_CURSOR_INFO CursorInfo;      /* info about cursor          */
+                                         /* get handle to stdout       */
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    /* Get the cursor info        */
+    GetConsoleCursorInfo(hStdout,&CursorInfo);
 
-  CONSOLE_CURSOR_INFO CursorInfo;      /* info about cursor          */
-  HANDLE hStdout;                      /* Handle to Standard Out     */
-
-  BUILDRXSTRING(retstr, NO_UTIL_ERROR);
-                                       /* validate the arguments     */
-  if (numargs != 1)
-    return INVALID_ROUTINE;
-                                       /* get handle to stdout       */
-  hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-                                       /* Get the cursor info        */
-  GetConsoleCursorInfo(hStdout,&CursorInfo);
-                                       /* Get state and validate     */
-  if (_stricmp(args[0].strptr, "ON") == 0)
-    CursorInfo.bVisible = true;
-  else if (_stricmp(args[0].strptr, "OFF") == 0)
-    CursorInfo.bVisible = FALSE;
-  else
-    return INVALID_ROUTINE;            /* Invalid state              */
-                                       /* Set the cursor info        */
-  SetConsoleCursorInfo(hStdout,&CursorInfo);
-  return VALID_ROUTINE;                /* no error on call           */
+    /* Get state and validate     */
+    if (stricmp(option, "ON") == 0)
+    {
+        CursorInfo.bVisible = true;
+    }
+    else if (stricmp(option, "OFF") == 0)
+    {
+        CursorInfo.bVisible = false;
+    }
+    else
+    {
+        // this is an error, raise the condition and return
+        context->InvalidRoutine();
+        return 0;
+    }
+    /* Set the cursor info        */
+    SetConsoleCursorInfo(hStdout,&CursorInfo);
+    return 0;                            /* no error on call           */
 }
+
 
 /*************************************************************************
 * Function:  SysDriveInfo                                                *
@@ -3171,79 +3061,81 @@ size_t RexxEntry SysTempFileName(const char *name, size_t numargs, CONSTRXSTRING
 *                                                                        *
 * Return:    Characters read from text screen.                           *
 *************************************************************************/
-size_t RexxEntry SysTextScreenRead(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(RexxStringObject, SysTextScreenRead, int, row, int, col, OPTIONAL_int, len)
 {
+    int    lPos,lPosOffSet;              /* positioning                */
+                                         /* (132x50)                   */
+    int    lBufferLen = 16000;           /* default: 200x80 characters */
 
-  int   row;                           /* Row from which to start    */
-  int   col;                           /* Column from which to start */
-  int   len;                           /* nunber of chars to be read */
-  int   lPos,lPosOffSet;               /* positioning                */
-                                       /* (132x50)                   */
-  int  lBufferLen = 16000;             /* default: 200x80 characters */
+    COORD coordLine;                     /* coordinates of where to    */
+                                         /* read characters from       */
+    DWORD dwCharsRead,dwSumCharsRead;    /* Handle to Standard Out     */
+    HANDLE hStdout;
+    CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
 
-  COORD coordLine;                     /* coordinates of where to    */
-                                       /* read characters from       */
-  DWORD dwCharsRead,dwSumCharsRead;    /* Handle to Standard Out     */
-  HANDLE hStdout;
-  CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
-  PCH temp_strptr;
+    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 
-  hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-
-  if (GetConsoleScreenBufferInfo(hStdout, &csbiInfo))
-    len = csbiInfo.dwSize.Y * csbiInfo.dwSize.X;
-  else
-    RETVAL(GetLastError())
-
-  if (numargs < 2 ||                   /* validate arguments         */
-      numargs > 3 ||
-      !RXVALIDSTRING(args[0]) ||
-      !RXVALIDSTRING(args[1]) ||
-      !string2long(args[0].strptr, &row) || row < 0 ||
-      !string2long(args[1].strptr, &col) || col < 0)
-    return INVALID_ROUTINE;
-
-  if (numargs == 3) {                  /* check the length           */
-    if (!RXVALIDSTRING(args[2]) ||     /* bad string?                */
-        !string2long(args[2].strptr, &len) || len < 0)
-      return INVALID_ROUTINE;          /* error                      */
-  }
-  coordLine.X = (SHORT)col;
-  coordLine.Y = (SHORT)row;
-
-  if (len > (LONG)retstr->strlength) {
-                                       /* allocate a new one         */
-    if (!(temp_strptr = (PCH)GlobalAlloc(GMEM_FIXED , len))) { /* use GlobalAlloc */
-      BUILDRXSTRING(retstr, ERROR_NOMEM);
-      return VALID_ROUTINE        ;
-    }
-    else
-      retstr->strptr = temp_strptr;
-  }
-
-  if (len < lBufferLen)
-    lBufferLen = len;
-
-  lPos = 0;                            /* current position           */
-  lPosOffSet = row * csbiInfo.dwSize.X + col;   /* add offset if not started at beginning */
-  dwSumCharsRead = 0;
-
-  while (lPos < len ) {
-
-    if (!ReadConsoleOutputCharacter(hStdout, &retstr->strptr[lPos], lBufferLen, coordLine, &dwCharsRead))
+    if (!GetConsoleScreenBufferInfo(hStdout, &csbiInfo))
     {
-      RETVAL(GetLastError())
+        context->InvalidRoutine();
+        return NULLOBJECT;
     }
 
+    if (argumentOmitted(3))               /* check the length           */
+    {
+        len = csbiInfo.dwSize.Y * csbiInfo.dwSize.X;
+    }
 
-    lPos = lPos + lBufferLen;
-    coordLine.Y = (SHORT)((lPos + lPosOffSet) / csbiInfo.dwSize.X);
-    coordLine.X = (SHORT)((lPos + lPosOffSet) % csbiInfo.dwSize.X);
-    dwSumCharsRead = dwSumCharsRead + dwCharsRead;
-  }
+    coordLine.X = (short)col;
+    coordLine.Y = (short)row;
 
-  retstr->strlength = dwSumCharsRead;
-  return VALID_ROUTINE;
+    char buffer[256];
+    char *ptr = buffer;
+
+    if (len > sizeof(buffer))
+    {
+        // allocate a new buffer
+        ptr = (char *)malloc(len);
+        if (ptr == NULL)
+        {
+            context->InvalidRoutine();
+            return NULL;
+        }
+    }
+
+    if (len < lBufferLen)
+    {
+        lBufferLen = len;
+    }
+
+    lPos = 0;                                     /* current position */
+    lPosOffSet = row * csbiInfo.dwSize.X + col;   /* add offset if not started at beginning */
+    dwSumCharsRead = 0;
+
+    while (lPos < len )
+    {
+
+        if (!ReadConsoleOutputCharacter(hStdout, &ptr[lPos], lBufferLen, coordLine, &dwCharsRead))
+        {
+            if (ptr != buffer) {
+                free(ptr);
+            }
+            context->InvalidRoutine();
+            return NULL;
+        }
+
+
+        lPos = lPos + lBufferLen;
+        coordLine.Y = (short)((lPos + lPosOffSet) / csbiInfo.dwSize.X);
+        coordLine.X = (short)((lPos + lPosOffSet) % csbiInfo.dwSize.X);
+        dwSumCharsRead = dwSumCharsRead + dwCharsRead;
+    }
+
+    RexxStringObject result = context->NewString(ptr, dwSumCharsRead);
+    if (ptr != buffer) {
+        free(ptr);
+    }
+    return result;
 }
 
 /*************************************************************************
@@ -3254,29 +3146,23 @@ size_t RexxEntry SysTextScreenRead(const char *name, size_t numargs, CONSTRXSTRI
 * Return:    Size of screen in row and columns returned as:  row, col    *
 *************************************************************************/
 
-size_t RexxEntry SysTextScreenSize(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine0(RexxStringObject, SysTextScreenSize)
 {
+    CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
 
-  HANDLE    hStdout;                   /* Handle to Standard Out     */
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    /* if in character mode       */
+    if (GetConsoleScreenBufferInfo(hStdout, &csbiInfo))
+    {
+        char buffer[100];
 
-  CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
-
-  if (numargs != 0)                    /* no arguments on this       */
-    return INVALID_ROUTINE;
-
-  hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-                                       /* if in character mode       */
-  if (GetConsoleScreenBufferInfo(hStdout, &csbiInfo)) {
-
-    wsprintf(retstr->strptr, "%d %d", csbiInfo.dwSize.Y, csbiInfo.dwSize.X);
-    retstr->strlength = strlen(retstr->strptr);
-  }
-  else
-  {
-    strcpy(retstr->strptr, "0 0");
-    retstr->strlength = strlen(retstr->strptr);
-  }
-  return VALID_ROUTINE;
+        wsprintf(buffer, "%d %d", csbiInfo.dwSize.Y, csbiInfo.dwSize.X);
+        return context->NewStringFromAsciiz(buffer);
+    }
+    else
+    {
+        return context->NewStringFromAsciiz("0 0");
+    }
 }
 
 /*************************************************************************
@@ -4027,70 +3913,114 @@ RexxRoutine2(int, SysWaitEventSem, uintptr_t, h, OPTIONAL_int, timeout)
 *                                                                        *
 *************************************************************************/
 
-size_t RexxEntry SysSetPriority(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(int, SysSetPriority, RexxObjectPtr, classArg, RexxObjectPtr, levelArg)
 {
-  int       pclass;                    /* priority class             */
-  int       level;                     /* priority level             */
-  RexxReturnCode    rc;                        /* creation return code       */
-  HANDLE    process;
-  HANDLE    thread;
-  DWORD     iclass=-1;
+    HANDLE process = GetCurrentProcess();
+    HANDLE thread = GetCurrentThread();
 
-  process = GetCurrentProcess();
-  thread = GetCurrentThread();
+    DWORD     iclass=-1;
+    wholenumber_t classLevel;               /* priority class             */
+    if (context->WholeNumber(classArg, &classLevel))
+    {
+        switch (classLevel)
+        {
+            case 0: iclass = IDLE_PRIORITY_CLASS;
+                break;
+            case 1: iclass = NORMAL_PRIORITY_CLASS;
+                break;
+            case 2: iclass = HIGH_PRIORITY_CLASS;
+                break;
+            case 3: iclass = REALTIME_PRIORITY_CLASS;
+            default:
+                context->InvalidRoutine();
+                return 0;
+        }
+    }
+    else
+    {
+        const char *classStr = context->ObjectToStringValue(classArg);
 
-  if (numargs != 2 ||                  /* must have two              */
-      !RXVALIDSTRING(args[0]))         /* first is omitted           */
-    return INVALID_ROUTINE;            /* raise error condition      */
-
-  if (string2long(args[0].strptr, &pclass))
-  {
-    if (pclass < 0 || pclass > 3)
-        return INVALID_ROUTINE;        /* raise error condition      */
-    switch (pclass) {
-       case 0: iclass = IDLE_PRIORITY_CLASS;
-               break;
-       case 1: iclass = NORMAL_PRIORITY_CLASS;
-               break;
-       case 2: iclass = HIGH_PRIORITY_CLASS;
-               break;
-       case 3: iclass = REALTIME_PRIORITY_CLASS;
-    };
-  }
-  else
-  if (!stricmp(args[0].strptr, "REALTIME")) iclass = REALTIME_PRIORITY_CLASS; else
-  if (!stricmp(args[0].strptr, "HIGH")) iclass = HIGH_PRIORITY_CLASS; else
-  if (!stricmp(args[0].strptr, "NORMAL")) iclass = NORMAL_PRIORITY_CLASS; else
-  if (!stricmp(args[0].strptr, "IDLE")) iclass = IDLE_PRIORITY_CLASS;
-  if (iclass == -1)  return INVALID_ROUTINE; /* raise error condition*/
+        if (stricmp(classStr, "REALTIME") == 0)
+        {
+            iclass = REALTIME_PRIORITY_CLASS;
+        }
+        else if (stricmp(classStr, "HIGH") == 0)
+        {
+            iclass = HIGH_PRIORITY_CLASS;
+        }
+        else if (!stricmp(classStr, "NORMAL") == 0)
+        {
+            iclass = NORMAL_PRIORITY_CLASS;
+        }
+        else if (stricmp(classStr, "IDLE") == 0)
+        {
+            iclass = IDLE_PRIORITY_CLASS;
+        }
+        else
+        {
+            context->InvalidRoutine();
+            return 0;
+        }
+    }
 
 
-  if (string2long(args[1].strptr, &level))
-  {
-      if (level < -15 || level > 15)
-          return INVALID_ROUTINE;      /* raise error condition      */
-  }
-  else
-  {
-      if (!stricmp(args[1].strptr, "ABOVE_NORMAL")) level = THREAD_PRIORITY_ABOVE_NORMAL; else
-      if (!stricmp(args[1].strptr, "BELOW_NORMAL")) level = THREAD_PRIORITY_BELOW_NORMAL; else
-      if (!stricmp(args[1].strptr, "HIGHEST")) level = THREAD_PRIORITY_HIGHEST; else
-      if (!stricmp(args[1].strptr, "LOWEST")) level = THREAD_PRIORITY_LOWEST; else
-      if (!stricmp(args[1].strptr, "NORMAL")) level = THREAD_PRIORITY_NORMAL; else
-      if (!stricmp(args[1].strptr, "IDLE")) level = THREAD_PRIORITY_IDLE; else
-      if (!stricmp(args[1].strptr, "TIME_CRITICAL")) level = THREAD_PRIORITY_TIME_CRITICAL;
-      else return INVALID_ROUTINE;     /* raise error condition      */
-  }
+    wholenumber_t level;                    /* priority level             */
+    if (context->WholeNumber(levelArg, &level))
+    {
+        if (level < -15 || level > 15)
+        {
+            context->InvalidRoutine();
+            return 0;
+        }
+    }
+    else
+    {
+        const char *levelStr = context->ObjectToStringValue(levelArg);
 
-  rc = SetPriorityClass(process, iclass);
-  if (rc)
-     rc = SetThreadPriority(thread, level);
+        if (stricmp(levelStr, "ABOVE_NORMAL") == 0)
+        {
+            level = THREAD_PRIORITY_ABOVE_NORMAL;
+        }
+        else if (stricmp(levelStr, "BELOW_NORMAL") == 0)
+        {
+            level = THREAD_PRIORITY_BELOW_NORMAL;
+        }
+        else if (stricmp(levelStr, "HIGHEST") == 0)
+        {
+            level = THREAD_PRIORITY_HIGHEST;
+        }
+        else if (stricmp(levelStr, "LOWEST") == 0)
+        {
+            level = THREAD_PRIORITY_LOWEST;
+        }
+        else if (stricmp(levelStr, "NORMAL") == 0)
+        {
+            level = THREAD_PRIORITY_NORMAL;
+        }
+        else if (stricmp(levelStr, "IDLE") == 0)
+        {
+            level = THREAD_PRIORITY_IDLE;
+        }
+        else if (stricmp(levelStr, "TIME_CRITICAL") == 0)
+        {
+            level = THREAD_PRIORITY_TIME_CRITICAL;
+        }
+        else
+        {
+            context->InvalidRoutine();
+            return 0;
+        }
+    }
 
-  if (!rc)
-     RETVAL(GetLastError())
-  else
-     RETVAL(0)
+    int rc = SetPriorityClass(process, iclass);
+    if (rc)
+    {
+        rc = SetThreadPriority(thread, (int)level);
+    }
+
+    return rc == 0 ? 0 : GetLastError();
 }
+
 
 /*************************************************************************
 * Function:  SysQueryProcess                                             *
@@ -4103,98 +4033,100 @@ size_t RexxEntry SysSetPriority(const char *name, size_t numargs, CONSTRXSTRING 
 *            "TTIME" - (default) returns current thread times            *
 *************************************************************************/
 
-size_t RexxEntry SysQueryProcess(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(RexxObjectPtr, SysQueryProcess, OPTIONAL_CSTRING, option)
 {
-  if (numargs > 1)                  /* none or one argument accepted */
-    return INVALID_ROUTINE;            /* raise error condition      */
+    if (option == NULL || stricmp(option, "PID") == 0)
+    {
+        return context->WholeNumber(GetCurrentProcessId());
+    }
+    if (stricmp(option, "TID") == 0)
+    {
+        return context->WholeNumber(GetCurrentThreadId());
+    }
+    if (stricmp(option, "PPRIO") == 0)
+    {
+        LONG p;
+        p = GetPriorityClass(GetCurrentProcess());
 
-  if ((numargs == 0) || (!stricmp(args[0].strptr, "PID")))
-  {
-      ltoa(GetCurrentProcessId(), retstr->strptr, 10);
-      retstr->strlength = strlen(retstr->strptr);
-      return VALID_ROUTINE;            /* good completion            */
-  } else
-  if (!stricmp(args[0].strptr, "TID"))
-  {
-      ltoa(GetCurrentThreadId(), retstr->strptr, 10);
-      retstr->strlength = strlen(retstr->strptr);
-      return VALID_ROUTINE;            /* good completion            */
-  } else
-  if (!stricmp(args[0].strptr, "PPRIO"))
-  {
-      LONG p;
-      p = GetPriorityClass(GetCurrentProcess());
+        switch (p)
+        {
+            case HIGH_PRIORITY_CLASS:
+                return context->String("HIGH");
+            case IDLE_PRIORITY_CLASS:
+                return context->String("IDLE");
+            case NORMAL_PRIORITY_CLASS:
+                return context->String("NORMAL");
+            case REALTIME_PRIORITY_CLASS:
+                return context->String("REALTIME");
+            default:
+                return context->String("UNKNOWN");
+        }
+    }
+    if (stricmp(option, "TPRIO") == 0)
+    {
+        LONG p;
+        p = GetThreadPriority(GetCurrentThread());
 
-      switch(p) {
-        case HIGH_PRIORITY_CLASS: strcpy(retstr->strptr, "HIGH");
-            break;
-        case IDLE_PRIORITY_CLASS: strcpy(retstr->strptr, "IDLE");
-            break;
-        case NORMAL_PRIORITY_CLASS: strcpy(retstr->strptr, "NORMAL");
-            break;
-        case REALTIME_PRIORITY_CLASS: strcpy(retstr->strptr, "REALTIME");
-            break;
-        default: strcpy(retstr->strptr, "UNKNOWN");
-      }
-      retstr->strlength = strlen(retstr->strptr);
-      return VALID_ROUTINE;            /* good completion            */
-  } else
-  if (!stricmp(args[0].strptr, "TPRIO"))
-  {
-      LONG p;
-      p = GetThreadPriority(GetCurrentThread());
+        switch (p)
+        {
+            case THREAD_PRIORITY_ABOVE_NORMAL:
+                return context->String("ABOVE_NORMAL");
+            case THREAD_PRIORITY_BELOW_NORMAL:
+                return context->String("BELOW_NORMAL");
+            case THREAD_PRIORITY_HIGHEST:
+                return context->String("HIGHEST");
+            case THREAD_PRIORITY_IDLE:
+                return context->String("IDLE");
+            case THREAD_PRIORITY_LOWEST:
+                return context->String("LOWEST");
+                break;
+            case THREAD_PRIORITY_NORMAL:
+                return context->String("NORMAL");
+                break;
+            case THREAD_PRIORITY_TIME_CRITICAL:
+                return context->String("TIME_CRITICAL");
+            default:
+                return context->String("UNKNOWN");
+        }
+    }
+    if (stricmp(option, "PTIME") == 0 || stricmp(option, "TTIME") == 0)
+    {
+        FILETIME createT, kernelT, userT, dummy;
+        SYSTEMTIME createST, kernelST, userST;
+        BOOL ok;
 
-      switch(p) {
-        case THREAD_PRIORITY_ABOVE_NORMAL: strcpy(retstr->strptr, "ABOVE_NORMAL");
-            break;
-        case THREAD_PRIORITY_BELOW_NORMAL: strcpy(retstr->strptr, "BELOW_NORMAL");
-            break;
-        case THREAD_PRIORITY_HIGHEST: strcpy(retstr->strptr, "HIGHEST");
-            break;
-        case THREAD_PRIORITY_IDLE: strcpy(retstr->strptr, "IDLE");
-            break;
-        case THREAD_PRIORITY_LOWEST: strcpy(retstr->strptr, "LOWEST");
-            break;
-        case THREAD_PRIORITY_NORMAL: strcpy(retstr->strptr, "NORMAL");
-            break;
-        case THREAD_PRIORITY_TIME_CRITICAL: strcpy(retstr->strptr, "TIME_CRITICAL");
-            break;
-        default: strcpy(retstr->strptr, "UNKNOWN");
-      }
-      retstr->strlength = strlen(retstr->strptr);
-      return VALID_ROUTINE;            /* good completion            */
-  } else
-  if ((!stricmp(args[0].strptr, "PTIME")) || (!stricmp(args[0].strptr, "TTIME")))
-  {
-      FILETIME createT, kernelT, userT, dummy;
-      SYSTEMTIME createST, kernelST, userST;
-      BOOL ok;
+        if (*option == 'T' || *option == 't')
+        {
+            ok = GetThreadTimes(GetCurrentThread(), &createT,&dummy,&kernelT, &userT);
+        }
+        else
+        {
+            ok = GetProcessTimes(GetCurrentProcess(), &createT,&dummy,&kernelT, &userT);
+        }
 
-      if ((args[0].strptr[0] == 'T') || (args[0].strptr[0] == 't'))
-          ok = GetThreadTimes(GetCurrentThread(), &createT,&dummy,&kernelT, &userT);
-      else
-          ok = GetProcessTimes(GetCurrentProcess(), &createT,&dummy,&kernelT, &userT);
+        if (ok)
+        {
+            FileTimeToLocalFileTime(&createT, &createT);
+            FileTimeToSystemTime(&createT, &createST);
+            FileTimeToSystemTime(&kernelT, &kernelST);
+            FileTimeToSystemTime(&userT, &userST);
 
-      if (ok)
-      {
-          FileTimeToLocalFileTime(&createT, &createT);
-          FileTimeToSystemTime(&createT, &createST);
-          FileTimeToSystemTime(&kernelT, &kernelST);
-          FileTimeToSystemTime(&userT, &userST);
+            char buffer[256];
 
-          wsprintf(retstr->strptr,"Create: %4.4d/%2.2d/%2.2d %d:%2.2d:%2.2d:%3.3d  "\
-              "Kernel: %d:%2.2d:%2.2d:%3.3d  User: %d:%2.2d:%2.2d:%3.3d",
-              createST.wYear,createST.wMonth,createST.wDay,createST.wHour,createST.wMinute,
-              createST.wSecond,createST.wMilliseconds,
-              kernelST.wHour,kernelST.wMinute,kernelST.wSecond,kernelST.wMilliseconds,
-              userST.wHour,userST.wMinute,userST.wSecond,userST.wMilliseconds);
+            wsprintf(buffer, "Create: %4.4d/%2.2d/%2.2d %d:%2.2d:%2.2d:%3.3d  "\
+                     "Kernel: %d:%2.2d:%2.2d:%3.3d  User: %d:%2.2d:%2.2d:%3.3d",
+                     createST.wYear,createST.wMonth,createST.wDay,createST.wHour,createST.wMinute,
+                     createST.wSecond,createST.wMilliseconds,
+                     kernelST.wHour,kernelST.wMinute,kernelST.wSecond,kernelST.wMilliseconds,
+                     userST.wHour,userST.wMinute,userST.wSecond,userST.wMilliseconds);
 
-          retstr->strlength = strlen(retstr->strptr);
-          return VALID_ROUTINE;        /* good completion            */
-      }
-  }
-  return INVALID_ROUTINE;              /* good completion            */
+            return context->String(buffer);
+        }
+    }
+    context->InvalidRoutine();
+    return NULLOBJECT;
 }
+
 
 /** SysShutDownSystem()
  *
@@ -4298,7 +4230,6 @@ done_out:
     return result;
 }
 
-
 /*************************************************************************
 * Function:  SysSwitchSession                                            *
 *                                                                        *
@@ -4309,34 +4240,25 @@ done_out:
 * Return:    OS/2 error return code                                      *
 *************************************************************************/
 
-size_t RexxEntry SysSwitchSession(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysSwitchSession, CSTRING, name)
 {
-    HWND hwnd;
+    HWND hwnd = FindWindow(NULL, name);
 
-    if ( numargs != 1 )
+    if (hwnd)
     {
-        /* raise error condition  */
-        return INVALID_ROUTINE;
-    }
-
-    hwnd = FindWindow(NULL, args[0].strptr);
-
-    if ( hwnd == NULL )
-    {
-        RETVAL(GetLastError())
+        if (!SetForegroundWindow(hwnd))
+        {
+            return GetLastError();
+        }
+        else
+        {
+            return 0;
+        }
     }
     else
     {
-      if ( !SetForegroundWindow(hwnd) )
-      {
-          RETVAL(GetLastError())
-      }
-      else
-      {
-          RETVAL(0)
-      }
+        return 1;
     }
-    return VALID_ROUTINE;                /* good completion            */
 }
 
 /*************************************************************************
@@ -4350,273 +4272,256 @@ size_t RexxEntry SysSwitchSession(const char *name, size_t numargs, CONSTRXSTRIN
 * Return:    Return code from WaitNamedPipe                              *
 *************************************************************************/
 
-size_t RexxEntry SysWaitNamedPipe(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(int, SysWaitNamedPipe, CSTRING, name, OPTIONAL_int, timeout)
 {
-  int         timeout;                 /* timeout value              */
+    if (argumentOmitted(2))
+    {
+        timeout = NMPWAIT_USE_DEFAULT_WAIT;
+    }
+    else
+    {
+        if (timeout < -1)
+        {
+            context->InvalidRoutine();
+            return 0;
+        }
+        if (timeout == 0)
+        {
+            timeout = NMPWAIT_USE_DEFAULT_WAIT;
+        }
+        else if (timeout == -1)
+        {
+            timeout = NMPWAIT_WAIT_FOREVER;
+        }
+    }
 
-  if (numargs < 1 ||                   /* wrong number of arguments? */
-      numargs > 2 ||
-      !RXVALIDSTRING(args[0]))
-    return INVALID_ROUTINE;            /* raise error condition      */
-  timeout = NMPWAIT_USE_DEFAULT_WAIT;
-
-  if (numargs == 2) {                  /* have a timeout value?      */
-    if (!string2long(args[1].strptr, &timeout) ||
-        (timeout < 0 && timeout != -1))
-      return INVALID_ROUTINE;          /* raise error condition      */
-  }
-  if (timeout == 0) timeout = NMPWAIT_USE_DEFAULT_WAIT;
-  else if (timeout == -1) timeout = NMPWAIT_WAIT_FOREVER;
-
-  if (WaitNamedPipe(args[0].strptr, timeout))
-      RETVAL(0)
-  else
-      RETVAL(GetLastError())
-  return VALID_ROUTINE;
+    if (WaitNamedPipe(name, timeout))
+    {
+        return 0;
+    }
+    else
+    {
+        return GetLastError();
+    }
 }
 
-/*********************************************************************/
-/* Function FormatFloat:  Common routine to format a floating point  */
-/* result for the math functions                                     */
-/*********************************************************************/
-void FormatResult(
-  double    result,                    /* formatted result           */
-  size_t    precision,                 /* required precision         */
-  PRXSTRING retstr )                   /* return string              */
+
+// simple class for handling numeric values
+class NumericFormatter
 {
-  if (result == 0)                     /* zero result?               */
-    strcpy(retstr->strptr, "0");       /* make exactly 0             */
-  else
-                                       /* format the result          */
-    _gcvt(result, (int)precision, retstr->strptr);
-                                       /* set the length             */
-  retstr->strlength = strlen(retstr->strptr);
-                                       /* end in a period?           */
-  if (retstr->strptr[retstr->strlength - 1] == '.')
-    retstr->strlength--;               /* remove the period          */
-}
-
-/*********************************************************************/
-/* Function ValidateMath: Common validation routine for math         */
-/* that are of the form fn(number, <precision>)                      */
-/*********************************************************************/
-LONG  ValidateMath(
-  size_t    numargs,                   /* Number of arguments.       */
-  CONSTRXSTRING  args[],               /* Function arguments.        */
-  double   *x,                         /* input number               */
-  size_t   *precision )                /* returned precision         */
-{
-  LONG      rc;                        /* validation code            */
-
-  rc = VALID_ROUTINE;                  /* set default completion     */
-  *precision = DEFAULT_PRECISION;      /* set max digits count       */
-
-  if (numargs < 1 ||                   /* no arguments               */
-      numargs > 2 ||
-      !RXVALIDSTRING(args[0]))         /* first is omitted           */
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  else if (numargs == 2 &&             /* have a precision           */
-      !string2ulong(args[1].strptr, precision))
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-                                       /* convert input number       */
-  else if (sscanf(args[0].strptr, " %lf", x) != 1)
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-                                       /* truncate to maximum        */
-  *precision = min(*precision, MAX_PRECISION);
-  return rc;                           /* return success code        */
-}
-
-/*********************************************************************/
-/* Function ValidateTrig: Common validation routine for math         */
-/* that are of the form fn(number, <precision>, <unit>)              */
-/*********************************************************************/
-LONG  ValidateTrig(
-  size_t    numargs,                   /* Number of arguments.       */
-  CONSTRXSTRING  args[],               /* Function arguments.        */
-  PRXSTRING retstr,                    /* return string              */
-  INT       function )                 /* function to perform        */
-{
-  LONG      rc;                        /* validation code            */
-  INT       units;                     /* angle type                 */
-  double    angle;                     /* working angle              */
-  double    nsi;                       /* convertion factor          */
-  double    nco;                       /* convertion factor          */
-  size_t    precision;                 /* returned precision         */
-  double    result;                    /* result                     */
-
-  rc = VALID_ROUTINE;                  /* set default completion     */
-  precision = DEFAULT_PRECISION;       /* set max digits count       */
-  units = DEGREES;                     /* default angle is degrees   */
-  nsi = 1.;                            /* set default conversion     */
-  nco = 1.;                            /* set default conversion     */
-
-  if (numargs < 1 ||                   /* no arguments               */
-      numargs > 3 ||
-      !RXVALIDSTRING(args[0]))         /* first is omitted           */
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  else if (numargs >= 2 &&             /* have a precision           */
-      RXVALIDSTRING(args[1]) &&        /* and it is real string      */
-      !string2ulong(args[1].strptr, &precision))
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-                                       /* convert input number       */
-  else if (sscanf(args[0].strptr, " %lf", &angle) != 1)
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  else if (numargs == 3) {             /* have an option             */
-    if (RXZEROLENSTRING(args[2]))      /* null string?               */
-      rc = INVALID_ROUTINE;            /* this is invalid            */
-    else {                             /* process the options        */
-                                       /* get the option character   */
-      units = toupper(args[2].strptr[0]);
-                                       /* was it a good option?      */
-      if (units != DEGREES && units != RADIANS && units != GRADES)
-        rc = INVALID_ROUTINE;          /* bad option is error        */
-    }
-  }
-  if (!rc) {                           /* everything went well?      */
-                                       /* truncate to maximum        */
-    precision = min(precision, MAX_PRECISION);
-    if (units == DEGREES) {            /* need to convert degrees    */
-      nsi = (angle < 0.) ? -1. : 1.;   /* get the direction          */
-      angle = fmod(fabs(angle), 360.); /* make modulo 360            */
-      if (angle <= 45.)                /* less than 45?              */
-        angle = angle * pi / 180.;
-      else if (angle < 135.) {         /* over on the other side?    */
-        angle = (90. - angle) * pi / 180.;
-        function = MAXTRIG - function; /* change the function        */
-        nco = nsi;                     /* swap around the conversions*/
-        nsi = 1.;
-      }
-      else if (angle <= 225.) {        /* around the other way?      */
-        angle = (180. - angle) * pi / 180.;
-        nco = -1.;
-      }
-      else if (angle < 315.) {         /* close to the origin?       */
-        angle = (angle - 270.) * pi / 180.;
-        function = MAXTRIG - function; /* change the function        */
-        nco = -nsi;
-        nsi = 1.;
-      }
-      else
-        angle = (angle - 360.) * pi / 180.;
-    }
-    else if (units == GRADES) {        /* need to convert degrees    */
-      nsi = (angle < 0.) ? -1. : 1.;   /* get the direction          */
-      angle = fmod(fabs(angle), 400.); /* make modulo 400            */
-      if (angle <= 50.)
-        angle = angle * pi / 200.;
-      else if (angle < 150.) {
-        angle = (100. - angle) * pi / 200.;
-        function = MAXTRIG - function; /* change the function        */
-        nco = nsi;                     /* swap the conversions       */
-        nsi = 1.;
-      }
-      else if (angle <= 250.) {
-        angle = (200. - angle) * pi / 200.;
-        nco = -1.;
-      }
-      else if (angle < 350.) {
-        angle = (angle - 300.) * pi / 200.;
-        function = MAXTRIG - function; /* change the function        */
-        nco = -nsi;
-        nsi = 1.;
-      }
-      else
-        angle = (angle - 400.) * pi / 200.;
-    }
-    switch (function) {                /* process the function       */
-      case SINE:                       /* Sine function              */
-        result = nsi * sin(angle);
-        break;
-      case COSINE:                     /* Cosine function            */
-        result = nco * cos(angle);
-        break;
-      case TANGENT:                    /* Tangent function           */
-        result = nsi * nco * tan(angle);
-        break;
-      case COTANGENT:                  /* cotangent function         */
-                                       /* overflow?                  */
-        if ((result = tan(angle)) == 0.0)
-          rc = 40;                     /* this is an error           */
+public:
+    NumericFormatter(RexxCallContext *c, uint32_t p)
+    {
+        if (p == 0)
+        {
+            precision = DEFAULT_PRECISION;
+        }
         else
-          result = nsi * nco / result; /* real result                */
-        break;
+        {
+            precision = min(p, MAX_PRECISION);
+        }
+        context = c;
     }
-    if (!rc)                           /* good result?               */
-                                       /* format the result          */
-      FormatResult(result, precision, retstr);
-  }
-  return rc;                           /* return success code        */
-}
 
-/*********************************************************************/
-/* Function ValidateATrig: Common validation routine for math        */
-/* that are of the form fn(number, <precision>, <units>)             */
-/*********************************************************************/
-LONG  ValidateArcTrig(
-  size_t     numargs,                  /* Number of arguments.       */
-  CONSTRXSTRING   args[],              /* Function arguments.        */
-  PRXSTRING  retstr,                   /* return string              */
-  INT        function )                /* function to perform        */
+    RexxObjectPtr format(double x)
+    {
+        return context->DoubleToObjectWithPrecision(x, precision);
+    }
+
+protected:
+    uint32_t precision;
+    RexxCallContext *context;
+};
+
+class TrigFormatter : public NumericFormatter
 {
-  LONG      rc;                        /* validation code            */
-  INT       units;                     /* angle type                 */
-  double    angle;                     /* working angle              */
-  double    nsi;                       /* convertion factor          */
-  double    nco;                       /* convertion factor          */
-  size_t    precision;                 /* returned precision         */
-  double    x;                         /* input number               */
+public:
 
-  rc = VALID_ROUTINE;                  /* set default completion     */
-  precision = DEFAULT_PRECISION;       /* set max digits count       */
-  units = DEGREES;                     /* default angle is degrees   */
-  nsi = 1.;                            /* set default conversion     */
-  nco = 1.;                            /* set default conversion     */
+    TrigFormatter(RexxCallContext *c, int p) : NumericFormatter(c, p)
+    {
+        units = TRIG_DEGREES;
+    }
 
-  if (numargs < 1 ||                   /* no arguments               */
-      numargs > 3 ||
-      !RXVALIDSTRING(args[0]))         /* first is omitted           */
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  else if (numargs >= 2 &&             /* have a precision           */
-      RXVALIDSTRING(args[1]) &&        /* and it is real string      */
-      !string2ulong(args[1].strptr, &precision))
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-                                       /* convert input number       */
-  else if (sscanf(args[0].strptr, " %lf", &x) != 1)
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  else if (numargs == 3) {             /* have an option             */
-    if (RXZEROLENSTRING(args[2]))      /* null string?               */
-      rc = INVALID_ROUTINE;            /* this is invalid            */
-    else {                             /* process the options        */
-                                       /* get the option character   */
-      units = toupper(args[2].strptr[0]);
-                                       /* was it a good option?      */
-      if (units != DEGREES && units != RADIANS && units != GRADES)
-        rc = INVALID_ROUTINE;          /* bad option is error        */
+    bool setUnits(const char *u)
+    {
+        if (u != NULL)
+        {
+            switch (*u)
+            {
+                case 'D':
+                case 'd':
+                    units = TRIG_DEGREES;
+                    break;
+
+                case 'R':
+                case 'r':
+                    units = TRIG_RADIANS;
+                    break;
+
+                case 'G':
+                case 'g':
+                    units = TRIG_GRADES;
+                    break;
+
+                default:
+                    context->InvalidRoutine();
+                    return false;
+            }
+        }
+        return true;
     }
-  }
-  if (!rc) {                           /* everything went well?      */
-                                       /* truncate to maximum        */
-    precision = min(precision, MAX_PRECISION);
-    switch (function) {                /* process the function       */
-      case ARCSINE:                    /* ArcSine function           */
-        angle = asin(x);
-        break;
-      case ARCCOSINE:                  /* ArcCosine function         */
-        angle = acos(x);
-        break;
-      case ARCTANGENT:                 /* ArcTangent function        */
-        angle = atan(x);
-        break;
+
+    RexxObjectPtr evaluate(double angle, int function)
+    {
+        double    nsi;                       /* convertion factor          */
+        double    nco;                       /* convertion factor          */
+        double    result;                    /* result                     */
+
+        nsi = 1.;                            /* set default conversion     */
+        nco = 1.;                            /* set default conversion     */
+
+        switch (units)
+        {
+            case TRIG_DEGREES:         {            /* need to convert degrees    */
+                    nsi = (angle < 0.) ? -1. : 1.;   /* get the direction          */
+                    angle = fmod(fabs(angle), 360.); /* make modulo 360            */
+                    if (angle <= 45.)                /* less than 45?              */
+                    {
+                        angle = angle * pi / 180.;
+                    }
+                    else if (angle < 135.)
+                    {         /* over on the other side?    */
+                        angle = (90. - angle) * pi / 180.;
+                        function = MAXTRIG - function; /* change the function        */
+                        nco = nsi;                     /* swap around the conversions*/
+                        nsi = 1.;
+                    }
+                    else if (angle <= 225.)
+                    {        /* around the other way?      */
+                        angle = (180. - angle) * pi / 180.;
+                        nco = -1.;
+                    }
+                    else if (angle < 315.)
+                    {         /* close to the origin?       */
+                        angle = (angle - 270.) * pi / 180.;
+                        function = MAXTRIG - function; /* change the function        */
+                        nco = -nsi;
+                        nsi = 1.;
+                    }
+                    else
+                    {
+                        angle = (angle - 360.) * pi / 180.;
+                    }
+                    break;
+                }
+
+            case TRIG_GRADES:              {        /* need to convert degrees    */
+                    nsi = (angle < 0.) ? -1. : 1.;   /* get the direction          */
+                    angle = fmod(fabs(angle), 400.); /* make modulo 400            */
+                    if (angle <= 50.)
+                    {
+                        angle = angle * pi / 200.;
+                    }
+                    else if (angle < 150.)
+                    {
+                        angle = (100. - angle) * pi / 200.;
+                        function = MAXTRIG - function; /* change the function        */
+                        nco = nsi;                     /* swap the conversions       */
+                        nsi = 1.;
+                    }
+                    else if (angle <= 250.)
+                    {
+                        angle = (200. - angle) * pi / 200.;
+                        nco = -1.;
+                    }
+                    else if (angle < 350.)
+                    {
+                        angle = (angle - 300.) * pi / 200.;
+                        function = MAXTRIG - function; /* change the function        */
+                        nco = -nsi;
+                        nsi = 1.;
+                    }
+                    else
+                    {
+                        angle = (angle - 400.) * pi / 200.;
+                    }
+                    break;
+                }
+
+            // radians are already ok
+            case TRIG_RADIANS:
+                break;
+        }
+        switch (function) {                /* process the function       */
+          case SINE:                       /* Sine function              */
+            result = nsi * sin(angle);
+            break;
+          case COSINE:                     /* Cosine function            */
+            result = nco * cos(angle);
+            break;
+          case TANGENT:                    /* Tangent function           */
+            result = nsi * nco * tan(angle);
+            break;
+          case COTANGENT:                  /* cotangent function         */
+                                           /* overflow?                  */
+            if ((result = tan(angle)) == 0.0)
+            {
+                context->InvalidRoutine();
+                return NULLOBJECT;
+            }
+            result = nsi * nco / result; /* real result                */
+            break;
+        }
+
+        // now format based on precision setting
+        return format(result);
     }
-    if (units == DEGREES)              /* have to convert the result?*/
-      angle = angle * 180. / pi;       /* make into degrees          */
-    else if (units == GRADES)          /* need it in grades?         */
-      angle = angle * 200. / pi;       /* convert to base 400        */
-                                       /* format the result          */
-    FormatResult(angle, precision, retstr);
-  }
-  return rc;                           /* return success code        */
-}
+
+    RexxObjectPtr evaluateArc(double x, int function)
+    {
+        double    angle;                     /* working angle              */
+        double    nsi;                       /* convertion factor          */
+        double    nco;                       /* convertion factor          */
+
+        nsi = 1.;                            /* set default conversion     */
+        nco = 1.;                            /* set default conversion     */
+
+        switch (function) {                /* process the function       */
+          case ARCSINE:                    /* ArcSine function           */
+            angle = asin(x);
+            break;
+          case ARCCOSINE:                  /* ArcCosine function         */
+            angle = acos(x);
+            break;
+          case ARCTANGENT:                 /* ArcTangent function        */
+            angle = atan(x);
+            break;
+        }
+        if (units == TRIG_DEGREES)         /* have to convert the result?*/
+        {
+            angle = angle * 180. / pi;     /* make into degrees          */
+        }
+        else if (units == TRIG_GRADES)     /* need it in grades?         */
+        {
+            angle = angle * 200. / pi;     /* convert to base 400        */
+        }
+        // now format based on precision setting
+        return format(angle);
+    }
+
+protected:
+
+    typedef enum
+    {
+        TRIG_DEGREES,
+        TRIG_RADIANS,
+        TRIG_GRADES
+    } Units;
+
+
+    Units units;              // the type of units to process
+};
+
 
 /********************************************************************/
 /* Functions:           SysSqrt(), SysExp(), SysLog(), SysLog10,    */
@@ -4633,108 +4538,67 @@ LONG  ValidateArcTrig(
 /*   result = func_name(x <, prec> <,angle>)                        */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry SysSqrt(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(RexxObjectPtr, SysSqrt, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
-  LONG      rc;                        /* function return code       */
+    NumericFormatter formatter(context, precision);
 
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    FormatResult(sqrt(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(sqrt(x));
 }
 
 /*==================================================================*/
-size_t RexxEntry SysExp(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(RexxObjectPtr, SysExp, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
-  LONG      rc;                        /* validation return code     */
+    NumericFormatter formatter(context, precision);
 
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    FormatResult(exp(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(exp(x));
 }
 
 /*==================================================================*/
-size_t RexxEntry SysLog(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(RexxObjectPtr, SysLog, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
-  LONG      rc;                        /* validation return code     */
+    NumericFormatter formatter(context, precision);
 
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    FormatResult(log(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(log(x));
 }
 
 /*==================================================================*/
-size_t RexxEntry SysLog10(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(RexxObjectPtr, SysLog10, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
-  LONG      rc;                        /* validation return code     */
+    NumericFormatter formatter(context, precision);
 
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    FormatResult(log10(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(log10(x));
 }
 
 /*==================================================================*/
-size_t RexxEntry SysSinH(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)                 /* Hyperbolic sine function.  */
+RexxRoutine2(RexxObjectPtr, SysSinH, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
-  LONG      rc;                        /* validation return code     */
+    NumericFormatter formatter(context, precision);
 
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    FormatResult(sinh(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(sinh(x));
 }
 
 /*==================================================================*/
-size_t RexxEntry SysCosH(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(RexxObjectPtr, SysCosH, double, x, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
-  LONG      rc;                        /* validation return code     */
+    NumericFormatter formatter(context, precision);
 
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    FormatResult(cosh(x), precision, retstr);
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(cosh(x));
 }
 
-/*==================================================================*/
-size_t RexxEntry SysTanH(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
-{
-  double    x;                         /* input number               */
-  size_t    precision;                 /* precision used             */
-  LONG      rc;                        /* validation return code     */
 
-                                       /* validate the inputs        */
-  rc = ValidateMath(numargs, args, &x, &precision);
-  if (!rc)                             /* good function call         */
-                                       /* format the result          */
-    FormatResult(tanh(x), precision, retstr);
-  return rc;                           /* return error code          */
+/*==================================================================*/
+RexxRoutine2(RexxObjectPtr, SysTanH, double, x, OPTIONAL_uint32_t, precision)
+{
+    NumericFormatter formatter(context, precision);
+
+    // calculate and return
+    return formatter.format(tanh(x));
 }
 
 /********************************************************************/
@@ -4751,37 +4615,12 @@ size_t RexxEntry SysTanH(const char *name, size_t numargs, CONSTRXSTRING args[],
 /*   result = func_name(x, y <, prec>)                              */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry SysPower(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(RexxObjectPtr, SysPower, double, x, double, y, OPTIONAL_uint32_t, precision)
 {
-  double    x;                         /* input number               */
-  double    y;                         /* second input number        */
-  size_t    precision;                 /* precision used             */
-  LONG      rc;                        /* validation code            */
+    NumericFormatter formatter(context, precision);
 
-  rc = VALID_ROUTINE;                  /* set default completion     */
-  precision = DEFAULT_PRECISION;       /* set max digits count       */
-
-  if (numargs < 2 ||                   /* no arguments               */
-      numargs > 3 ||
-      !RXVALIDSTRING(args[0]) ||       /* first is omitted           */
-      !RXVALIDSTRING(args[1]))         /* second is omitted          */
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  else if (numargs == 3 &&             /* have a precision           */
-      !string2ulong(args[2].strptr, &precision))
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-                                       /* convert input number       */
-  else if (sscanf(args[0].strptr, " %lf", &x) != 1)
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-                                       /* convert second input       */
-  else if (sscanf(args[1].strptr, " %lf", &y) != 1)
-    rc = INVALID_ROUTINE;              /* this is invalid            */
-  if (!rc) {                           /* good function call         */
-                                       /* keep to maximum            */
-    precision = min(precision, MAX_PRECISION);
-                                       /* format the result          */
-    FormatResult(pow(x,y), precision, retstr);
-  }
-  return rc;                           /* return error code          */
+    // calculate and return
+    return formatter.format(pow(x, y));
 }
 
 /********************************************************************/
@@ -4798,32 +4637,54 @@ size_t RexxEntry SysPower(const char *name, size_t numargs, CONSTRXSTRING args[]
 /*   x = func_name(angle <, prec> <, [R | D | G]>)                  */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry SysSin(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(RexxObjectPtr, SysSin, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  return ValidateTrig(numargs, args, retstr, SINE);
+    TrigFormatter formatter(context, precision);
+    if (!formatter.setUnits(units))
+    {
+        return NULLOBJECT;
+    }
+
+    // calculate and return
+    return formatter.evaluate(angle, SINE);
 }
 
-/*==================================================================*/
-size_t RexxEntry SysCos(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(RexxObjectPtr, SysCos, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  return ValidateTrig(numargs, args, retstr, COSINE);
+    TrigFormatter formatter(context, precision);
+    if (!formatter.setUnits(units))
+    {
+        return NULLOBJECT;
+    }
+
+    // calculate and return
+    return formatter.evaluate(angle, COSINE);
 }
 
-/*==================================================================*/
-size_t RexxEntry SysTan(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(RexxObjectPtr, SysTan, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  return ValidateTrig(numargs, args, retstr, TANGENT);
+    TrigFormatter formatter(context, precision);
+    if (!formatter.setUnits(units))
+    {
+        return NULLOBJECT;
+    }
+
+    // calculate and return
+    return formatter.evaluate(angle, TANGENT);
 }
 
-/*==================================================================*/
-size_t RexxEntry SysCotan(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(RexxObjectPtr, SysCotan, double, angle, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  return ValidateTrig(numargs, args, retstr, COTANGENT);
+    TrigFormatter formatter(context, precision);
+    if (!formatter.setUnits(units))
+    {
+        return NULLOBJECT;
+    }
+
+    // calculate and return
+    return formatter.evaluate(angle, COTANGENT);
 }
+
 
 /********************************************************************/
 /* Functions:           SysPi()                                     */
@@ -4836,20 +4697,11 @@ size_t RexxEntry SysCotan(const char *name, size_t numargs, CONSTRXSTRING args[]
 /*   result = syspi(<precision>)                                    */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry SysPi(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(RexxObjectPtr, SysPi, OPTIONAL_uint32_t, precision)
 {
-  size_t    precision;                 /* required precision         */
+    NumericFormatter formatter(context, precision);
 
-  precision = DEFAULT_PRECISION;       /* set default precision      */
-  if (numargs > 1 ||                   /* too many arguments?        */
-      (numargs == 1 &&                 /* bad precision?             */
-      !string2ulong(args[0].strptr, &precision)))
-    return INVALID_ROUTINE;            /* bad routine                */
-                                       /* keep to maximum            */
-  precision = min(precision, MAX_PRECISION);
-                                       /* format the result          */
-  FormatResult(pi, precision, retstr); /* format the result          */
-  return VALID_ROUTINE;                /* good result                */
+    return formatter.format(pi);
 }
 
 /********************************************************************/
@@ -4866,24 +4718,42 @@ size_t RexxEntry SysPi(const char *name, size_t numargs, CONSTRXSTRING args[], c
 /*   a = func_name(arg <, prec> <, [R | D | G]>)                    */
 /*                                                                  */
 /********************************************************************/
-size_t RexxEntry SysArcSin(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(RexxObjectPtr, SysArcSin, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  return ValidateArcTrig(numargs, args, retstr, ARCSINE);
+    TrigFormatter formatter(context, precision);
+    if (!formatter.setUnits(units))
+    {
+        return NULLOBJECT;
+    }
+
+    // calculate and return
+    return formatter.evaluateArc(x, ARCSINE);
 }
 
 /*==================================================================*/
-size_t RexxEntry SysArcCos(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(RexxObjectPtr, SysArcCos, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  return ValidateArcTrig(numargs, args, retstr, ARCCOSINE);
+    TrigFormatter formatter(context, precision);
+    if (!formatter.setUnits(units))
+    {
+        return NULLOBJECT;
+    }
+
+    // calculate and return
+    return formatter.evaluateArc(x, ARCCOSINE);
 }
 
 /*==================================================================*/
-size_t RexxEntry SysArcTan(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine3(RexxObjectPtr, SysArcTan, double, x, OPTIONAL_uint32_t, precision, OPTIONAL_CSTRING, units)
 {
-                                       /* call common routine        */
-  return ValidateArcTrig(numargs, args, retstr, ARCTANGENT);
+    TrigFormatter formatter(context, precision);
+    if (!formatter.setUnits(units))
+    {
+        return NULLOBJECT;
+    }
+
+    // calculate and return
+    return formatter.evaluateArc(x, ARCTANGENT);
 }
 
 
@@ -4999,13 +4869,11 @@ size_t RexxEntry SysDumpVariables(const char *name, size_t numargs, CONSTRXSTRIN
   if (fCloseFile)
     CloseHandle(outFile);
 
-/*  if (rc != RXSHV_OK)  */
   if (rc != RXSHV_LVAR)
     RETVAL(-1)
   else
     RETVAL(0)
 }
-
 
 
 /*************************************************************************
@@ -6305,8 +6173,8 @@ RexxRoutine1(logical_t, SysFileExists, CSTRING, file)
 RexxRoutineEntry rexxutil_routines[] =
 {
     REXX_CLASSIC_ROUTINE(SysCls,                      SysCls),
-    REXX_CLASSIC_ROUTINE(SysCurPos,                   SysCurPos),
-    REXX_CLASSIC_ROUTINE(SysCurState,                 SysCurState),
+    REXX_TYPED_ROUTINE(SysCurPos,                     SysCurPos),
+    REXX_TYPED_ROUTINE(SysCurState,                   SysCurState),
     REXX_CLASSIC_ROUTINE(SysDriveInfo,                SysDriveInfo),
     REXX_CLASSIC_ROUTINE(SysDriveMap,                 SysDriveMap),
     REXX_CLASSIC_ROUTINE(SysDropFuncs,                SysDropFuncs),
@@ -6323,31 +6191,31 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysSearchPath,               SysSearchPath),
     REXX_CLASSIC_ROUTINE(SysSleep,                    SysSleep),
     REXX_CLASSIC_ROUTINE(SysTempFileName,             SysTempFileName),
-    REXX_CLASSIC_ROUTINE(SysTextScreenRead,           SysTextScreenRead),
-    REXX_CLASSIC_ROUTINE(SysTextScreenSize,           SysTextScreenSize),
-    REXX_CLASSIC_ROUTINE(SysPi,                       SysPi),
-    REXX_CLASSIC_ROUTINE(SysSqrt,                     SysSqrt),
-    REXX_CLASSIC_ROUTINE(SysExp,                      SysExp),
-    REXX_CLASSIC_ROUTINE(SysLog,                      SysLog),
-    REXX_CLASSIC_ROUTINE(SysLog10,                    SysLog10),
-    REXX_CLASSIC_ROUTINE(SysSinH,                     SysSinH),
-    REXX_CLASSIC_ROUTINE(SysCosH,                     SysCosH),
-    REXX_CLASSIC_ROUTINE(SysTanH,                     SysTanH),
-    REXX_CLASSIC_ROUTINE(SysPower,                    SysPower),
-    REXX_CLASSIC_ROUTINE(SysSin,                      SysSin),
-    REXX_CLASSIC_ROUTINE(SysCos,                      SysCos),
-    REXX_CLASSIC_ROUTINE(SysTan,                      SysTan),
-    REXX_CLASSIC_ROUTINE(SysCotan,                    SysCotan),
-    REXX_CLASSIC_ROUTINE(SysArcSin,                   SysArcSin),
-    REXX_CLASSIC_ROUTINE(SysArcCos,                   SysArcCos),
-    REXX_CLASSIC_ROUTINE(SysArcTan,                   SysArcTan),
-    REXX_CLASSIC_ROUTINE(SysAddRexxMacro,             SysAddRexxMacro),
-    REXX_CLASSIC_ROUTINE(SysDropRexxMacro,            SysDropRexxMacro),
-    REXX_CLASSIC_ROUTINE(SysReorderRexxMacro,         SysReorderRexxMacro),
-    REXX_CLASSIC_ROUTINE(SysQueryRexxMacro,           SysQueryRexxMacro),
-    REXX_CLASSIC_ROUTINE(SysClearRexxMacroSpace,      SysClearRexxMacroSpace),
-    REXX_CLASSIC_ROUTINE(SysLoadRexxMacroSpace,       SysLoadRexxMacroSpace),
-    REXX_CLASSIC_ROUTINE(SysSaveRexxMacroSpace,       SysSaveRexxMacroSpace),
+    REXX_TYPED_ROUTINE(SysTextScreenRead,             SysTextScreenRead),
+    REXX_TYPED_ROUTINE(SysTextScreenSize,             SysTextScreenSize),
+    REXX_TYPED_ROUTINE(SysPi,                         SysPi),
+    REXX_TYPED_ROUTINE(SysSqrt,                       SysSqrt),
+    REXX_TYPED_ROUTINE(SysExp,                        SysExp),
+    REXX_TYPED_ROUTINE(SysLog,                        SysLog),
+    REXX_TYPED_ROUTINE(SysLog10,                      SysLog10),
+    REXX_TYPED_ROUTINE(SysSinH,                       SysSinH),
+    REXX_TYPED_ROUTINE(SysCosH,                       SysCosH),
+    REXX_TYPED_ROUTINE(SysTanH,                       SysTanH),
+    REXX_TYPED_ROUTINE(SysPower,                      SysPower),
+    REXX_TYPED_ROUTINE(SysSin,                        SysSin),
+    REXX_TYPED_ROUTINE(SysCos,                        SysCos),
+    REXX_TYPED_ROUTINE(SysTan,                        SysTan),
+    REXX_TYPED_ROUTINE(SysCotan,                      SysCotan),
+    REXX_TYPED_ROUTINE(SysArcSin,                     SysArcSin),
+    REXX_TYPED_ROUTINE(SysArcCos,                     SysArcCos),
+    REXX_TYPED_ROUTINE(SysArcTan,                     SysArcTan),
+    REXX_TYPED_ROUTINE(SysAddRexxMacro,               SysAddRexxMacro),
+    REXX_TYPED_ROUTINE(SysDropRexxMacro,              SysDropRexxMacro),
+    REXX_TYPED_ROUTINE(SysReorderRexxMacro,           SysReorderRexxMacro),
+    REXX_TYPED_ROUTINE(SysQueryRexxMacro,             SysQueryRexxMacro),
+    REXX_TYPED_ROUTINE(SysClearRexxMacroSpace,        SysClearRexxMacroSpace),
+    REXX_TYPED_ROUTINE(SysLoadRexxMacroSpace,         SysLoadRexxMacroSpace),
+    REXX_TYPED_ROUTINE(SysSaveRexxMacroSpace,         SysSaveRexxMacroSpace),
     REXX_CLASSIC_ROUTINE(SysBootDrive,                SysBootDrive),
     REXX_CLASSIC_ROUTINE(SysSystemDirectory,          SysSystemDirectory),
     REXX_CLASSIC_ROUTINE(SysFileSystemType,           SysFileSystemType),
@@ -6364,16 +6232,16 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_TYPED_ROUTINE(SysPostEventSem,               SysPostEventSem),
     REXX_TYPED_ROUTINE(SysPulseEventSem,              SysPulseEventSem),
     REXX_TYPED_ROUTINE(SysWaitEventSem,               SysWaitEventSem),
-    REXX_CLASSIC_ROUTINE(SysSetPriority,              SysSetPriority),
-    REXX_CLASSIC_ROUTINE(SysSwitchSession,            SysSwitchSession),
-    REXX_CLASSIC_ROUTINE(SysWaitNamedPipe,            SysWaitNamedPipe),
-    REXX_CLASSIC_ROUTINE(SysQueryProcess,             SysQueryProcess),
+    REXX_TYPED_ROUTINE(SysSetPriority,                SysSetPriority),
+    REXX_TYPED_ROUTINE(SysSwitchSession,              SysSwitchSession),
+    REXX_TYPED_ROUTINE(SysWaitNamedPipe,              SysWaitNamedPipe),
+    REXX_TYPED_ROUTINE(SysQueryProcess,               SysQueryProcess),
     REXX_CLASSIC_ROUTINE(SysDumpVariables,            SysDumpVariables),
-    REXX_TYPED_ROUTINE(SysSetFileDateTime,          SysSetFileDateTime),
-    REXX_TYPED_ROUTINE(SysGetFileDateTime,          SysGetFileDateTime),
+    REXX_TYPED_ROUTINE(SysSetFileDateTime,            SysSetFileDateTime),
+    REXX_TYPED_ROUTINE(SysGetFileDateTime,            SysGetFileDateTime),
     REXX_CLASSIC_ROUTINE(SysStemSort,                 SysStemSort),
-    REXX_TYPED_ROUTINE(SysStemDelete,               SysStemDelete),
-    REXX_TYPED_ROUTINE(SysStemInsert,               SysStemInsert),
+    REXX_TYPED_ROUTINE(SysStemDelete,                 SysStemDelete),
+    REXX_TYPED_ROUTINE(SysStemInsert,                 SysStemInsert),
     REXX_TYPED_ROUTINE(SysStemCopy,                   SysStemCopy),
     REXX_TYPED_ROUTINE(SysUtilVersion,                SysUtilVersion),
     REXX_CLASSIC_ROUTINE(RxWinExec,                   RxWinExec),
