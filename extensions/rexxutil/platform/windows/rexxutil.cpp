@@ -3761,39 +3761,34 @@ size_t RexxEntry SysVolumeLabel(const char *name, size_t numargs, CONSTRXSTRING 
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-size_t RexxEntry SysCreateMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(RexxObjectPtr, SysCreateMutexSem, OPTIONAL_CSTRING, name)
 {
-    HANDLE    handle = 0;
+    HANDLE    handle;                    /* mutex handle               */
     SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, true};
 
-    if ( numargs == 1 )
+    handle = 0;                          /* zero the handle            */
+    if (name != NULL)                  /* request for named sem      */
     {
-        // Request for a named semaphore
-        handle = CreateMutex(&sa, FALSE, args[0].strptr);
-        if ( handle == NULL )
+        /* create it by name          */
+        handle = CreateMutex(&sa, false, name);
+        if (!handle)                            /* may already be created     */
         {
-            // It may have been already created, so open it by name.
-            handle = OpenMutex(MUTEX_ALL_ACCESS, TRUE, args[0].strptr);
+            /* try to open it             */
+            handle = OpenMutex(MUTEX_ALL_ACCESS, true, name);
         }
     }
-    else
+    else                                 /* unnamed semaphore          */
     {
-        // Request for an unamed semaphore.
-        handle = CreateMutex(&sa, FALSE, NULL);
+        handle = CreateMutex(&sa, false, NULL);
     }
 
-    if ( handle == NULL )
-    {
-        // Failed, return the empty string.
-        retstr->strlength = 0;
+    if (handle == NULL) {
+        return context->NullString();
     }
-    else
-    {
-        // Good handle, format it as a pointer string.
-        retstr->strlength = sprintf(retstr->strptr, "%p", handle);
-    }
-    return VALID_ROUTINE;                /* good completion            */
+
+    return context->Uintptr((uintptr_t)handle);
 }
+
 
 /*************************************************************************
 * Function:  SysOpenMutexSem                                             *
@@ -3805,25 +3800,12 @@ size_t RexxEntry SysCreateMutexSem(const char *name, size_t numargs, CONSTRXSTRI
 * Return:    result - handle to the mutex                                *
 *************************************************************************/
 
-size_t RexxEntry SysOpenMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(uintptr_t, SysOpenMutexSem, CSTRING, name)
 {
-  HANDLE handle;
+    SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, true};
 
-  // One and only one argument accepted.
-  if (numargs != 1)
-  {
-    return INVALID_ROUTINE;
-  }
-
-  handle = OpenMutex(MUTEX_ALL_ACCESS, TRUE, args[0].strptr);
-  if ( handle == NULL )
-  {
-      RETVAL(0)
-  }
-
-  // Good handle, format it as a pointer string.
-  retstr->strlength = wsprintf(retstr->strptr, "%p", handle);
-  return VALID_ROUTINE;                /* good completion            */
+                                       /* get a binary handle        */
+    return (uintptr_t) OpenMutex(MUTEX_ALL_ACCESS, true, name); /* try to open it             */
 }
 
 /*************************************************************************
@@ -3836,19 +3818,9 @@ size_t RexxEntry SysOpenMutexSem(const char *name, size_t numargs, CONSTRXSTRING
 * Return:    result - return code from ReleaseMutex                      *
 *************************************************************************/
 
-size_t RexxEntry SysReleaseMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysReleaseMutexSem, uintptr_t, h)
 {
-  void     *handle;                    /* mutex handle               */
-
-  if (numargs != 1)                    /* Only one argument accepted */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* get a binary handle        */
-  if (!string2pointer(args[0].strptr, &handle))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!ReleaseMutex((HANDLE)handle))
-     RETVAL(GetLastError())
-  else
-     RETVAL(0)
+    return !ReleaseMutex((HANDLE)h) ? GetLastError() : 0;
 }
 
 /*************************************************************************
@@ -3861,19 +3833,9 @@ size_t RexxEntry SysReleaseMutexSem(const char *name, size_t numargs, CONSTRXSTR
 * Return:    result - return code from CloseHandle                       *
 *************************************************************************/
 
-size_t RexxEntry SysCloseMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysCloseMutexSem, uintptr_t, h)
 {
-  void     *handle;                    /* mutex handle               */
-
-  if (numargs != 1)                    /* Only one argument accepted */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* get a binary handle        */
-  if (!string2pointer(args[0].strptr, &handle))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!CloseHandle((HANDLE)handle))
-     RETVAL(GetLastError())
-  else
-     RETVAL(0)
+    return !ReleaseMutex((HANDLE)h) ? GetLastError() : 0;
 }
 
 /*************************************************************************
@@ -3886,33 +3848,21 @@ size_t RexxEntry SysCloseMutexSem(const char *name, size_t numargs, CONSTRXSTRIN
 * Return:    result - return code from WaitForSingleObject               *
 *************************************************************************/
 
-size_t RexxEntry SysRequestMutexSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(int, SysRequestMutexSem, uintptr_t, h, OPTIONAL_int, timeout)
 {
-  void     *handle;                    /* mutex handle               */
-  RexxReturnCode    rc;                        /* creation return code       */
-  int       timeout;                   /* timeout value              */
-
-  if (numargs < 1 ||                   /* too few, or                */
-      numargs > 2 ||                   /* too many, or               */
-      !RXVALIDSTRING(args[0]))         /* first is omitted           */
-    return INVALID_ROUTINE;            /* raise error condition      */
-  timeout = INFINITE;                  /* default is no timeout      */
-  if (numargs == 2) {                  /* have a timeout value?      */
-                                       /* get number of seconds      */
-    if (!string2long(args[1].strptr, &timeout))
-      return INVALID_ROUTINE;          /* raise error if bad         */
-  }
-                                       /* get a binary handle        */
-  if (!string2pointer(args[0].strptr, &handle))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-                                       /* request the semaphore      */
-  rc = WaitForSingleObject((HANDLE)handle, timeout);
-  if (rc == WAIT_FAILED)
-    wsprintf(retstr->strptr, "%d", GetLastError());
-  else
-    wsprintf(retstr->strptr, "%d", rc);/* format the return code     */
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;                /* good completion            */
+    if (argumentOmitted(2))
+    {
+        timeout = INFINITE;       /* default is no timeout      */
+    }
+    int rc = WaitForSingleObject((HANDLE)h, timeout);
+    if (rc == WAIT_FAILED)
+    {
+        return GetLastError();
+    }
+    else
+    {
+        return rc;                         /* format the return code     */
+    }
 }
 
 /*************************************************************************
@@ -3928,17 +3878,14 @@ size_t RexxEntry SysRequestMutexSem(const char *name, size_t numargs, CONSTRXSTR
 *            '' - Empty string in case of any error                      *
 *************************************************************************/
 
-size_t RexxEntry SysCreateEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(RexxObjectPtr, SysCreateEventSem, OPTIONAL_CSTRING, name, OPTIONAL_CSTRING, reset)
 {
-    HANDLE    handle = 0;
-    SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+    HANDLE    handle;                    /* mutex handle               */
+    SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, true};
     bool      manual;
 
-    if ( numargs > 2 )
-    {
-        return INVALID_ROUTINE;
-    }
-    else if ( numargs == 2 )
+    handle = 0;                          /* zero the handle            */
+    if (reset != NULL)
     {
         manual = true;
     }
@@ -3947,33 +3894,26 @@ size_t RexxEntry SysCreateEventSem(const char *name, size_t numargs, CONSTRXSTRI
         manual = false;
     }
 
-    if ( (numargs >= 1) && args[0].strptr != 0 && (strlen(args[0].strptr) > 0) )
-    {
-        // Request for a named semaphore.
-        handle = CreateEvent(&sa, manual, FALSE, args[0].strptr);
-        if ( handle == NULL )
+    if (name != NULL)
+    {                                    /* request for named sem      */
+                                         /* create it by name          */
+        handle = CreateEvent(&sa, manual, false, name);
+        if (!handle)                       /* may already be created     */
         {
-            // It may already exist, so try to open it.
-            handle = OpenEvent(EVENT_ALL_ACCESS, TRUE, args[0].strptr);
+                                           /* try to open it             */
+            handle = OpenEvent(EVENT_ALL_ACCESS, true, name);
         }
     }
-    else
+    else                                 /* unnamed semaphore          */
     {
-        // Request for unamed semaphore.
-        handle = CreateEvent(&sa, manual, FALSE, NULL);
+        handle = CreateEvent(&sa, manual, false, NULL);
     }
 
-    if ( handle == NULL )
-    {
-        // Failed, return null string.
-        retstr->strlength = 0;
+    if (handle == NULL) {
+        return context->NullString();
     }
-    else
-    {
-        // Format the result as a pointer string.
-        retstr->strlength = sprintf(retstr->strptr, "%p", handle);
-    }
-    return VALID_ROUTINE;                /* good completion            */
+
+    return context->Uintptr((uintptr_t)handle);
 }
 
 /*************************************************************************
@@ -3986,25 +3926,12 @@ size_t RexxEntry SysCreateEventSem(const char *name, size_t numargs, CONSTRXSTRI
 * Return:    result - return code from OpenEvent                         *
 *************************************************************************/
 
-size_t RexxEntry SysOpenEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(uintptr_t, SysOpenEventSem, CSTRING, name)
 {
-      HANDLE handle;
+    SECURITY_ATTRIBUTES sa={sizeof(SECURITY_ATTRIBUTES), NULL, true};
 
-      /* Only one argument accepted */
-      if (numargs != 1)
-      {
-          return INVALID_ROUTINE;
-      }
-
-      handle = OpenEvent(EVENT_ALL_ACCESS, TRUE, args[0].strptr);
-      if ( handle == NULL )
-      {
-          RETVAL(0)
-      }
-
-      // Good handle, format it as pointer string.
-      retstr->strlength = wsprintf(retstr->strptr, "%p", handle);
-      return VALID_ROUTINE;
+                                       /* get a binary handle        */
+    return (uintptr_t)OpenEvent(EVENT_ALL_ACCESS, true, name); /* try to open it             */
 }
 
 /*************************************************************************
@@ -4017,19 +3944,9 @@ size_t RexxEntry SysOpenEventSem(const char *name, size_t numargs, CONSTRXSTRING
 * Return:    result - return code from SetEvent                          *
 *************************************************************************/
 
-size_t RexxEntry SysPostEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysPostEventSem, uintptr_t, h)
 {
-  void     *handle;                    /* mutex handle               */
-
-  if (numargs != 1)                    /* Only one argument accepted */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* get a binary handle        */
-  if (!string2pointer(args[0].strptr, &handle))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!SetEvent((HANDLE)handle))
-     RETVAL(GetLastError())
-  else
-     RETVAL(0)
+    return !SetEvent((HANDLE)h) ? GetLastError() : 0;
 }
 
 /*************************************************************************
@@ -4042,19 +3959,9 @@ size_t RexxEntry SysPostEventSem(const char *name, size_t numargs, CONSTRXSTRING
 * Return:    result - return code from ResetEvent                        *
 *************************************************************************/
 
-size_t RexxEntry SysResetEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysResetEventSem, uintptr_t, h)
 {
-  void     *handle;                    /* mutex handle               */
-
-  if (numargs != 1)                    /* Only one argument accepted */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* get a binary handle        */
-  if (!string2pointer(args[0].strptr, &handle))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!ResetEvent((HANDLE)handle))
-     RETVAL(GetLastError())
-  else
-     RETVAL(0)
+    return !ResetEvent((HANDLE)h) ? GetLastError() : 0;
 }
 
 
@@ -4068,19 +3975,9 @@ size_t RexxEntry SysResetEventSem(const char *name, size_t numargs, CONSTRXSTRIN
 * Return:    result - return code from PulseEvent                        *
 *************************************************************************/
 
-size_t RexxEntry SysPulseEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysPulseEventSem, uintptr_t, h)
 {
-  void     *handle;                    /* mutex handle               */
-
-  if (numargs != 1)                    /* Only one argument accepted */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* get a binary handle        */
-  if (!string2pointer(args[0].strptr, &handle))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!PulseEvent((HANDLE)handle))
-     RETVAL(GetLastError())
-  else
-     RETVAL(0)
+    return !PulseEvent((HANDLE)h) ? GetLastError() : 0;
 }
 
 
@@ -4094,19 +3991,9 @@ size_t RexxEntry SysPulseEventSem(const char *name, size_t numargs, CONSTRXSTRIN
 * Return:    result - return code from CloseHandle                       *
 *************************************************************************/
 
-size_t RexxEntry SysCloseEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysCloseEventSem, uintptr_t, h)
 {
-  void     *handle;                    /* mutex handle               */
-
-  if (numargs != 1)                    /* Only one argument accepted */
-    return INVALID_ROUTINE;            /* raise error condition      */
-                                       /* get a binary handle        */
-  if (!string2pointer(args[0].strptr, &handle))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-  if (!CloseHandle((HANDLE)handle))
-     RETVAL(GetLastError())
-  else
-     RETVAL(0)
+    return !CloseHandle((HANDLE)h) ? GetLastError() : 0;
 }
 
 /*************************************************************************
@@ -4119,35 +4006,23 @@ size_t RexxEntry SysCloseEventSem(const char *name, size_t numargs, CONSTRXSTRIN
 * Return:    result - return code from WaitForSingleObject               *
 *************************************************************************/
 
-size_t RexxEntry SysWaitEventSem(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine2(int, SysWaitEventSem, uintptr_t, h, OPTIONAL_int, timeout)
 {
-  void     *handle;                    /* mutex handle               */
-  RexxReturnCode    rc;                        /* creation return code       */
-  int       timeout;                   /* timeout value              */
-
-  if (numargs < 1 ||                   /* too few, or                */
-      numargs > 2 ||                   /* too many, or               */
-      !RXVALIDSTRING(args[0]))         /* first is omitted           */
-    return INVALID_ROUTINE;            /* raise error condition      */
-  timeout = INFINITE;       /* default is no timeout      */
-  if (numargs == 2) {                  /* have a timeout value?      */
-                                       /* get number of seconds      */
-    if (!string2long(args[1].strptr, &timeout))
-      return INVALID_ROUTINE;          /* raise error if bad         */
-  }
-                                       /* get a binary handle        */
-  if (!string2pointer(args[0].strptr, &handle))
-    return INVALID_ROUTINE;            /* raise error if bad         */
-                                       /* request the semaphore      */
-  rc = WaitForSingleObject((HANDLE)handle, timeout);
-  if (rc == WAIT_FAILED)
-    wsprintf(retstr->strptr, "%d", GetLastError());
-  else
-    wsprintf(retstr->strptr, "%d", rc);/* format the return code     */
-  retstr->strlength = strlen(retstr->strptr);
-  return VALID_ROUTINE;                /* good completion            */
+    if (!argumentExists(2))
+    {
+        timeout = INFINITE;       /* default is no timeout      */
+    }
+    /* request the semaphore      */
+    int rc = WaitForSingleObject((HANDLE)h, timeout);
+    if (rc == WAIT_FAILED)
+    {
+        return GetLastError();
+    }
+    else
+    {
+        return rc;                         /* format the return code     */
+    }
 }
-
 
 
 /*************************************************************************
@@ -6485,18 +6360,18 @@ RexxRoutineEntry rexxutil_routines[] =
     REXX_CLASSIC_ROUTINE(SysSystemDirectory,          SysSystemDirectory),
     REXX_CLASSIC_ROUTINE(SysFileSystemType,           SysFileSystemType),
     REXX_CLASSIC_ROUTINE(SysVolumeLabel,              SysVolumeLabel),
-    REXX_CLASSIC_ROUTINE(SysCreateMutexSem,           SysCreateMutexSem),
-    REXX_CLASSIC_ROUTINE(SysOpenMutexSem,             SysOpenMutexSem),
-    REXX_CLASSIC_ROUTINE(SysCloseMutexSem,            SysCloseMutexSem),
-    REXX_CLASSIC_ROUTINE(SysRequestMutexSem,          SysRequestMutexSem),
-    REXX_CLASSIC_ROUTINE(SysReleaseMutexSem,          SysReleaseMutexSem),
-    REXX_CLASSIC_ROUTINE(SysCreateEventSem,           SysCreateEventSem),
-    REXX_CLASSIC_ROUTINE(SysOpenEventSem,             SysOpenEventSem),
-    REXX_CLASSIC_ROUTINE(SysCloseEventSem,            SysCloseEventSem),
-    REXX_CLASSIC_ROUTINE(SysResetEventSem,            SysResetEventSem),
-    REXX_CLASSIC_ROUTINE(SysPostEventSem,             SysPostEventSem),
-    REXX_CLASSIC_ROUTINE(SysPulseEventSem,            SysPulseEventSem),
-    REXX_CLASSIC_ROUTINE(SysWaitEventSem,             SysWaitEventSem),
+    REXX_TYPED_ROUTINE(SysCreateMutexSem,             SysCreateMutexSem),
+    REXX_TYPED_ROUTINE(SysOpenMutexSem,               SysOpenMutexSem),
+    REXX_TYPED_ROUTINE(SysCloseMutexSem,              SysCloseMutexSem),
+    REXX_TYPED_ROUTINE(SysRequestMutexSem,            SysRequestMutexSem),
+    REXX_TYPED_ROUTINE(SysReleaseMutexSem,            SysReleaseMutexSem),
+    REXX_TYPED_ROUTINE(SysCreateEventSem,             SysCreateEventSem),
+    REXX_TYPED_ROUTINE(SysOpenEventSem,               SysOpenEventSem),
+    REXX_TYPED_ROUTINE(SysCloseEventSem,              SysCloseEventSem),
+    REXX_TYPED_ROUTINE(SysResetEventSem,              SysResetEventSem),
+    REXX_TYPED_ROUTINE(SysPostEventSem,               SysPostEventSem),
+    REXX_TYPED_ROUTINE(SysPulseEventSem,              SysPulseEventSem),
+    REXX_TYPED_ROUTINE(SysWaitEventSem,               SysWaitEventSem),
     REXX_CLASSIC_ROUTINE(SysSetPriority,              SysSetPriority),
     REXX_CLASSIC_ROUTINE(SysSwitchSession,            SysSwitchSession),
     REXX_CLASSIC_ROUTINE(SysWaitNamedPipe,            SysWaitNamedPipe),
