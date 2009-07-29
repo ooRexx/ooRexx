@@ -48,7 +48,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <dirent.h>
 
 #if defined(PATH_MAX)
 # define MAXIMUM_PATH_LENGTH PATH_MAX + 1
@@ -86,7 +86,7 @@ public:
     static const char *EOL_Marker;    // the end-of-line marker
     static const char PathDelimiter;  // directory path delimiter
 
-    static char *getTempFileName();
+    static const char *getTempFileName();
     static bool  searchFileName(const char * name, char *fullName);
     static void  qualifyStreamName(const char *unqualifiedName, char *qualifiedName, size_t bufferSize);
     static bool  fileExists(const char *name);
@@ -101,6 +101,36 @@ public:
     static RexxString *extractDirectory(RexxString *file);
     static RexxString *extractExtension(RexxString *file);
     static RexxString *extractFile(RexxString *file);
+
+    static int   deleteFile(const char *name);
+    static int   deleteDirectory(const char *name);
+    static bool  isDirectory(const char *name);
+    static bool  isReadOnly(const char *name);
+    static bool  isWriteOnly(const char *name);
+    static bool  isFile(const char *name);
+    static bool  exists(const char *name);
+    static int64_t getLastModifiedDate(const char *name);
+    static int64_t getFileLength(const char *name);
+    static bool  makeDirectory(const char *name);
+    static bool  moveFile(const char *oldName, const char *newName);
+    static bool  isHidden(const char *name);
+    static bool  setLastModifiedDate(const char *name, int64_t time);
+    static bool  setFileReadOnly(const char *name);
+    static bool  isCaseSensitive();
+};
+
+class SysFileIterator
+{
+public:
+    SysFileIterator(const char *pattern);
+    ~SysFileIterator();
+    void close();
+    bool hasNext();
+    void next(char *buffer);
+protected:
+    bool completed;       // the iteration completed flag
+    struct dirent *entry;
+    DIR    *handle;
 };
 
 #endif

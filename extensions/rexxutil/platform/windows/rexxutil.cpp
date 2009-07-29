@@ -1784,20 +1784,14 @@ size_t RexxEntry SysDropFuncs(const char *name, size_t numargs, CONSTRXSTRING ar
 *                                                                        *
 * Params:    file - file to be deleted.                                  *
 *                                                                        *
-* Return:    Return code from DeleteFile() function.                     *
+* Return:    Return code from DosDelete() function.                      *
 *************************************************************************/
 
-size_t RexxEntry SysFileDelete(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysFileDelete, CSTRING, name)
 {
-
-  if (numargs != 1)                    /* we need one argument       */
-    return INVALID_ROUTINE;            /* raise an error             */
-
-  if (!DeleteFile(args[0].strptr))     /* delete the file            */
-     RETVAL(GetLastError())            /* pass back return code      */
-  else
-     RETVAL(0)
+    return !DeleteFile(name) ? GetLastError() : 0;
 }
+
 
 /*************************************************************************
 * Function:  SysFileSearch                                               *
@@ -2548,16 +2542,9 @@ size_t RexxEntry SysLoadFuncs(const char *name, size_t numargs, CONSTRXSTRING ar
 *            Return code from CreateDirectory()                          *
 *************************************************************************/
 
-size_t RexxEntry SysMkDir(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysMkDir, CSTRING, dir)
 {
-
-  if (numargs != 1)                    /* we need one argument       */
-    return INVALID_ROUTINE;            /* raise an error             */
-
-  if (!CreateDirectory(args[0].strptr, NULL)) /* make the directory  */
-      RETVAL(GetLastError())            /* pass back return code     */
-  else
-      RETVAL(0)
+    return CreateDirectory(dir, NULL) == 0 ? 0 : GetLastError();
 }
 
 
@@ -2746,6 +2733,7 @@ size_t RexxEntry SysVersion(const char *name, size_t numargs, CONSTRXSTRING args
   return SysWinVer(name, numargs, args, queuename, retstr);
 }
 
+
 /*************************************************************************
 * Function:  SysRmDir                                                    *
 *                                                                        *
@@ -2757,17 +2745,11 @@ size_t RexxEntry SysVersion(const char *name, size_t numargs, CONSTRXSTRING args
 *            Return code from RemoveDirectory()                          *
 *************************************************************************/
 
-size_t RexxEntry SysRmDir(const char *name, size_t numargs, CONSTRXSTRING args[], const char *queuename, PRXSTRING retstr)
+RexxRoutine1(int, SysRmDir, CSTRING, dir)
 {
-
-  if (numargs != 1)                    /* we need one argument       */
-    return INVALID_ROUTINE;            /* raise an error             */
-
-  if (!RemoveDirectory(args[0].strptr)) /* remove the directory      */
-      RETVAL(GetLastError())           /* pass back return code      */
-  else
-      RETVAL(0)
+    return RemoveDirectory(dir) == 0 ? 0 : GetLastError();
 }
+
 
 /*************************************************************************
 * Function:  SysSearchPath                                               *

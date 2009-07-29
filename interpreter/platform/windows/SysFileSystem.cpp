@@ -109,26 +109,26 @@ bool SysFileSystem::searchFileName(
 }
 
 
-/*********************************************************************/
-/*                                                                   */
-/* FUNCTION    : getTempFileName                                     */
-/*                                                                   */
-/* DESCRIPTION : Returns a temp file name.                           */
-/*                                                                   */
-/*********************************************************************/
-
-char *SysFileSystem::getTempFileName()
+/**
+ * Generate a temporary file name.
+ *
+ * @return The string name of the temporary file.
+ */
+const char *SysFileSystem::getTempFileName()
 {
     return tmpnam(NULL);
 }
 
-void SysFileSystem::qualifyStreamName(
-  const char *unqualifiedName,              // input name
-  char *qualifiedName,                // the output name
-  size_t bufferSize)                  // size of the output buffer
-/*******************************************************************/
-/* Function:  Qualify a stream name for this system                */
-/*******************************************************************/
+/**
+ * Generate a fully qualified stream name.
+ *
+ * @param unqualifiedName
+ *                   The starting name.
+ * @param qualifiedName
+ *                   The fully expanded and canonicalized file name.
+ * @param bufferSize
+ */
+void SysFileSystem::qualifyStreamName(const char *unqualifiedName, char *qualifiedName, size_t bufferSize)
 {
     LPTSTR  lpszLastNamePart;
     UINT errorMode;
@@ -164,6 +164,13 @@ void SysFileSystem::qualifyStreamName(
 }
 
 
+/**
+ * Perform a "find first" operation for a file.
+ *
+ * @param name   the target name (may include wildcard characters)
+ *
+ * @return true if a file was located, false if not.
+ */
 bool SysFileSystem::findFirstFile(const char *name)
 {
     HANDLE FindHandle;
@@ -509,3 +516,370 @@ void SysFileSystem::getLongName(char *fullName, size_t size)
     }
     return;
 }
+
+
+/**
+ * Delete a file from the file system.
+ *
+ * @param name   The fully qualified name of the file.
+ *
+ * @return The return code from the delete operation.
+ */
+int SysFileSystem::deleteFile(const char *name)
+{
+    return DeleteFile(name) ? 0 : GetLastError();
+}
+
+/**
+ * Delete a directory from the file system.
+ *
+ * @param name   The name of the target directory.
+ *
+ * @return The return code from the delete operation.
+ */
+int SysFileSystem::deleteDirectory(const char *name)
+{
+    return RemoveDirectory(name) ? 0 : GetLastError();
+}
+
+
+/**
+ * Test if a given file name is for a directory.
+ *
+ * @param name   The target name.
+ *
+ * @return true if the file is a directory, false for any other
+ *         type of entity.
+ */
+bool SysFileSystem::isDirectory(const char *name)
+{
+    DWORD dwAttrs = GetFileAttributes(name);
+    return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+
+/**
+ * Test is a file is read only.
+ *
+ * @param name   The target file name.
+ *
+ * @return true if the file is marked as read-only.
+ */
+bool SysFileSystem::isReadOnly(const char *name)
+{
+    DWORD dwAttrs = GetFileAttributes(name);
+    return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_READONLY);
+}
+
+
+/**
+ * Test if a file is marked as write-only.
+ *
+ * @param name   The target file name.
+ *
+ * @return true if the file is only writeable.  false if read
+ *         operations are permitted.
+ */
+bool SysFileSystem::isWriteOnly(const char *name)
+{
+    // attempt to open for read...if this fails, this is write only
+    HANDLE handle = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        return true;
+    }
+
+    CloseHandle(handle);
+    return false;
+}
+
+
+/**
+ * Test if a give file name is for a real file (not
+ * a directory).
+ *
+ * @param name   The target file name.
+ *
+ * @return true if the file is a real file, false if some other
+ *         filesystem entity.
+ */
+bool SysFileSystem::isFile(const char *name)
+{
+    DWORD dwAttrs = GetFileAttributes(name);
+    return (dwAttrs != 0xffffffff) && (dwAttrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) != 0;
+}
+
+
+/**
+ * Test if a file exists using a fully qualified name.
+ *
+ * @param name   The target file name.
+ *
+ * @return True if the file exists, false if it is unknown.
+ */
+bool SysFileSystem::exists(const char *name)
+{
+    DWORD dwAttrs = GetFileAttributes(name);
+    return (dwAttrs != 0xffffffff);
+}
+
+
+/**
+ * Get the last modified file date as a file time value.
+ *
+ * @param name   The target name.
+ *
+ * @return the file time value for the modified date, or -1 for any
+ *         errors.
+ */
+int64_t SysFileSystem::getLastModifiedDate(const char *name)
+{
+    HANDLE newHandle = CreateFile(name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ,
+        NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (newHandle == INVALID_HANDLE_VALUE)
+    {
+        return -1;
+    }
+
+    FILETIME lastWriteTime;
+    if (!GetFileTime(newHandle, NULL, NULL, &lastWriteTime))
+    {
+        CloseHandle(newHandle);
+        return -1;
+    }
+
+    /*
+    * Search MSDN for 'Converting a time_t Value to a File Time' for following implementation.
+    */
+    int64_t tempResult = ((int64_t) lastWriteTime.dwHighDateTime << (int64_t)32) | (int64_t) lastWriteTime.dwLowDateTime;
+    int64_t result = (tempResult - 116444736000000000) / 10000;
+
+    CloseHandle(newHandle);
+    return result;
+}
+
+
+/**
+ * Retrieve the size of a file.
+ *
+ * @param name   The name of the target file.
+ *
+ * @return the 64-bit file size.
+ */
+int64_t SysFileSystem::getFileLength(const char *name)
+{
+    WIN32_FILE_ATTRIBUTE_DATA stat;
+
+    if (GetFileAttributesEx(name, GetFileExInfoStandard, &stat) == 0)
+    {
+        return 0;
+    }
+
+    int64_t result = ((int64_t)stat.nFileSizeHigh) << 32;
+    result += (int64_t)stat.nFileSizeLow;
+    return result;
+}
+
+
+/**
+ * Create a directory in the file system.
+ *
+ * @param name   The target name.
+ *
+ * @return The success/failure flag.
+ */
+bool SysFileSystem::makeDirectory(const char *name)
+{
+    return CreateDirectory(name, 0) != 0;
+}
+
+
+/**
+ * Move (rename) a file.
+ *
+ * @param oldName The name of an existing file.
+ * @param newName The new file name.
+ *
+ * @return A success/failure flag.
+ */
+bool SysFileSystem::moveFile(const char *oldName, const char *newName)
+{
+    return MoveFile(oldName, newName) != 0;
+}
+
+
+/**
+ * Test if a given file or directory is hidden.
+ *
+ * @param name   The target name.
+ *
+ * @return true if the file or directory is hidden, false otherwise.
+ */
+bool SysFileSystem::isHidden(const char *name)
+{
+    DWORD dwAttrs = GetFileAttributes(name);
+    return (dwAttrs != 0xffffffff) && (dwAttrs & FILE_ATTRIBUTE_HIDDEN);
+}
+
+
+/**
+ * Set the last modified date for a file.
+ *
+ * @param name   The target name.
+ * @param time   The new file time.
+ *
+ * @return true if the filedate was set correctly, false otherwise.
+ */
+bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
+{
+    FILETIME fileTime;
+
+    /**
+     * Open the path ensuring GENERIC_WRITE and FILE_FLAG_BACKUP_SEMANTICS if it's a directory.
+     * The directory modification is only supported on some platforms (NT, Windows2000).
+     */
+    DWORD flags = FILE_ATTRIBUTE_NORMAL;
+    int result = GetFileAttributes(name);
+    if (result == 0xFFFFFFFF)
+    {
+        return false;
+    }
+
+    if (result & FILE_ATTRIBUTE_DIRECTORY)
+    {
+        flags = FILE_FLAG_BACKUP_SEMANTICS;
+    }
+
+    HANDLE hFile = CreateFile (name, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+       NULL, OPEN_EXISTING, flags, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    // convert back to a file time
+    int64_t temp = (time * (int64_t)10000) + 116444736000000000;
+
+    fileTime.dwHighDateTime = (DWORD)(temp >> 32);
+    fileTime.dwLowDateTime = (DWORD)temp;
+    result = SetFileTime (hFile, (LPFILETIME)NULL, (LPFILETIME)NULL, &fileTime);
+    CloseHandle(hFile);
+    return result != 0;
+}
+
+
+/**
+ * Set the read-only attribute on a file or directory.
+ *
+ * @param name   The target name.
+ *
+ * @return true if the attribute was set, false otherwise.
+ */
+bool SysFileSystem::setFileReadOnly(const char *name)
+{
+    DWORD attrs = GetFileAttributes(name);
+    if (attrs == 0xFFFFFFFF)
+    {
+        return false;
+    }
+
+    attrs = attrs | FILE_ATTRIBUTE_READONLY;
+    return SetFileAttributes(name, attrs) != 0;
+}
+
+
+/**
+ * indicate whether the file system is case sensitive.
+ *
+ * @return For Windows, always returns false.
+ */
+bool SysFileSystem::isCaseSensitive()
+{
+    return false;
+}
+
+
+/**
+ * Create a new SysFileIterator instance.
+ *
+ * @param p      The directory we're iterating over.
+ */
+SysFileIterator::SysFileIterator(const char *p)
+{
+    char pattern[MAX_PATH + 1];
+
+    // save the pattern and convert into a wild card
+    // search
+    strncpy(pattern, p, sizeof(pattern));
+    strncat(pattern, "*", sizeof(pattern));
+
+    // this assumes we'll fail...if we find something,
+    // we'll flip this
+    completed = true;
+    handle = FindFirstFile (pattern, &findFileData);
+    if (handle != INVALID_HANDLE_VALUE)
+    {
+        // we can still return data
+        completed = false;
+    }
+}
+
+/**
+ * Destructor for the iteration operation.
+ */
+SysFileIterator::~SysFileIterator()
+{
+    close();
+}
+
+
+/**
+ * close the iterator.
+ */
+void SysFileIterator::close()
+{
+    if (handle != INVALID_HANDLE_VALUE)
+    {
+        FindClose(handle);
+        handle = INVALID_HANDLE_VALUE;
+    }
+}
+
+
+/**
+ * Check if the iterator has new results it can return.
+ *
+ * @return true if the iterator has another value to return, false if
+ *         the iteration is complete.
+ */
+bool SysFileIterator::hasNext()
+{
+    return !completed;
+}
+
+
+/**
+ * Retrieve the next iteration value.
+ *
+ * @param buffer The buffer used to return the value.
+ */
+void SysFileIterator::next(char *buffer)
+{
+    if (completed)
+    {
+        strcpy(buffer, "");
+    }
+    else
+    {
+        // copy our current result over
+        strcpy(buffer, findFileData.cFileName);
+    }
+    // now locate the next one
+    if (!FindNextFile (handle, &findFileData))
+    {
+        // we're done once we hit a failure
+        completed = true;
+        close();
+    }
+}
+
