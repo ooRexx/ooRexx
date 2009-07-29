@@ -55,6 +55,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <utime.h>
 #include <pwd.h>
 #include <errno.h>
 #include "SysFileSystem.hpp"
@@ -662,7 +663,7 @@ bool SysFileSystem::normalizePathName(const char *name, char *resolved)
     *dest = '/';
 
     // For each character in the path name, decide whether, and where, to copy.
-    for ( char *p = (char *)name; *p; p++ )
+    for ( const char *p = name; *p; p++ )
     {
         if ( *p == '/' )
         {
@@ -849,7 +850,7 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
     struct stat st;
     tzset ();
 
-    if (stat (path, &st))
+    if (stat (name, &st))
     {
         return 0;
     }
@@ -912,7 +913,7 @@ bool SysFileSystem::moveFile(const char *oldName, const char *newName)
 bool SysFileSystem::isHidden(const char *name)
 {
     // it must exist
-    if (!exists())
+    if (!exists(name))
     {
         return false;
     }
@@ -949,7 +950,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 
     timebuf.actime = statbuf.st_atime;
     timebuf.modtime = (time_t)(time / 1000);
-    return utime(path, &timebuf) == 0;
+    return utime(name, &timebuf) == 0;
 }
 
 
@@ -964,7 +965,6 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
 bool SysFileSystem::setFileReadOnly(const char *name)
 {
     struct stat buffer;
-    mode_t mode;
     if (stat(name, &buffer) != 0)
     {
         return false;
@@ -997,8 +997,6 @@ SysFileIterator::SysFileIterator(const char *p)
     // this assumes we'll fail...if we find something,
     // we'll flip this
     completed = true;
-    struct dirent *entry;
-
     handle = opendir(p);
     // if didn't open, this either doesn't exist or
     // isn't a directory
