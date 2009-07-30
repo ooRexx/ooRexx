@@ -112,6 +112,8 @@ variables:
 
 % ./configure --disable-static
 % make
+% make install
+% mkdir /var/run
 
 64 bit build
 
@@ -125,6 +127,8 @@ variables:
 
 % ./configure --disable-static
 % make
+% make install
+% mkdir /var/run
 
 As long as you do not move the binaries it is not necessary to add the
 directory containing the libraries to the LIBPATH. If you want to switch
