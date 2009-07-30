@@ -654,7 +654,8 @@ runtime_sources  = $(build_runtime_dir)/GlobalData.cpp \
                    $(build_runtime_dir)/RexxMisc.cpp \
                    $(build_runtime_dir)/Version.cpp
 streamlibrary_sources = $(build_streamlibrary_dir)/StreamCommandParser.cpp \
-                        $(build_streamlibrary_dir)/StreamNative.cpp
+                        $(build_streamlibrary_dir)/StreamNative.cpp \
+                        $(build_streamlibrary_dir)/File.cpp
 librexx_la_SOURCES = $(classes_sources) \
                      $(classes_support_sources) \
                      $(interpreter_api_sources) \
