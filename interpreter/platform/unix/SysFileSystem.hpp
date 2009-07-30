@@ -117,6 +117,9 @@ public:
     static bool  setLastModifiedDate(const char *name, int64_t time);
     static bool  setFileReadOnly(const char *name);
     static bool  isCaseSensitive();
+    static int   getRoots(char *roots);
+    static const char *getSeparator();
+    static const char *getPathSeparator();
 };
 
 class SysFileIterator

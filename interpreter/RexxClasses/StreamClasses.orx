@@ -52,6 +52,7 @@
 .Stream~!REXXDefined
 .StreamSupplier~!REXXDefined
 .RexxQueue~!REXXDefined
+.File~!REXXDefined
                                        /* add these classes to global, saved*/
                                        /*environment                        */
 .environment~setentry('STREAM', .Stream)
@@ -60,6 +61,7 @@
 .environment~setentry('INPUTOUTPUTSTREAM', .InputOutputStream)
 .environment~setentry('STREAMSUPPLIER', .StreamSupplier)
 .environment~setentry('REXXQUEUE', .RexxQueue)
+.environment~setentry('FILE', .File)
 
 -- mixin class objects used for stream types
 ::CLASS 'OutputStream' public MIXINCLASS Object
@@ -494,3 +496,303 @@ return position
 ::METHOD linein          EXTERNAL 'LIBRARY REXX rexx_linein_queue'
 ::METHOD queued          EXTERNAL 'LIBRARY REXX rexx_query_queue'
 ::METHOD empty           EXTERNAL 'LIBRARY REXX rexx_clear_queue'
+
+
+-- ooRexx File class
+::CLASS "File" inherit Comparable Orderable
+::METHOD init
+  expose path qualifiedPath
+  qualifiedPath = .nil
+  -- just a file name?
+  if arg() == 1 then do
+      use strict arg path
+      path = self~normalizePathSyntax(path)
+  end
+  else do
+      use strict arg dir, name
+      if dir~isA(.File) then do
+          dir = dir~path
+      end
+      path = self~createPath(dir, name)
+  end
+
+-- support the query methods as both instance and class methods
+::METHOD separator CLASS EXTERNAL 'LIBRARY REXX file_separator'
+::METHOD pathSeparator CLASS EXTERNAL 'LIBRARY REXX file_path_separator'
+::METHOD isCaseSensitive CLASS EXTERNAL 'LIBRARY REXX file_case_sensitive'
+
+::METHOD separator EXTERNAL 'LIBRARY REXX file_separator'
+::METHOD pathSeparator EXTERNAL 'LIBRARY REXX file_path_separator'
+::METHOD isCaseSensitive EXTERNAL 'LIBRARY REXX file_case_sensitive'
+
+-- Normalize the path separator syntax for a new File instance
+::METHOD normalizePathSyntax PRIVATE
+  use strict arg path
+
+  foundSeparator = false;
+  -- since we might need to make multiple updates,
+  -- do this in a mutable buffer
+  buffer = .mutableBuffer~new(path)
+  -- we apply special matching rules for Windows files
+  isWindows = self~separator == "\"
+
+  -- we only need to fix this up for Windows, since that has a platform
+  -- specific separator that's different from the default
+  if isWindows then do
+      buffer~changeStr('/', '\')   -- convert all slashes to backslashes
+  end
+
+  -- the last name element should not end with a separator, to remove it
+  -- if one is there
+  if buffer~length > 1 & buffer~match(buffer~length, self~separator) then do
+      buffer~delstr(buffer~length, 1)
+  end
+
+  return buffer~string
+
+-- Create a new path name from a parent directory and a path
+::METHOD createPath PRIVATE
+  use strict arg dir, name
+
+  dir = self~normalizePathSyntax(dir)
+  name = self~normalizePathSyntax(name)
+
+  separator = self~separator
+
+  -- remove leading separators from the name, if there are any
+  firstNonSep = name~verify(separator)
+
+  if firstNonSep > 1 then do
+      name = name~substr(firstNonSep)
+  end
+
+  -- the normalization process has removed trailing separators, except for
+  -- the case where the dir is a root specification
+
+  if dir == separator then do
+      return dir || name
+  end
+  else do
+      return dir || separator || name
+  end
+
+-- get the qualified path for this File instance
+::METHOD qualifiedPath PRIVATE
+  expose path qualifiedPath
+
+  if qualifiedPath == .nil then do
+      qualifiedPath = self~qualifyImpl(path)
+  end
+
+  return qualifiedPath
+
+::METHOD listRoots EXTERNAL 'LIBRARY REXX file_list_roots'
+::METHOD canReadImpl PRIVATE EXTERNAL 'LIBRARY REXX file_can_read'
+::METHOD setReadOnlyImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_read_only'
+::METHOD canWriteImpl PRIVATE EXTERNAL 'LIBRARY REXX file_can_write'
+::METHOD existsImpl PRIVATE EXTERNAL 'LIBRARY REXX file_exists'
+::METHOD qualifyImpl PRIVATE EXTERNAL 'LIBRARY REXX file_qualify'
+
+::METHOD canRead
+  use strict arg
+  return self~canReadImpl(self~qualifiedPath)
+
+::METHOD setReadOnly
+  use strict arg
+  self~setReadOnlyImpl(self~qualifiedPath)
+
+::METHOD canWrite
+  use strict arg
+  return self~canWriteImpl(self~qualifiedPath)
+
+-- perform a sorting comparison between two file objects
+::method compareTo
+  use strict arg other
+
+  .ArgUtil~validateClass("other", other, .File)
+
+  if self~isCaseSensitive then do
+       return self~path~caselessCompareTo(other~path)
+  end
+  else do
+       return self~path~compareTo(other~path)
+  end
+
+::METHOD deleteDir PRIVATE EXTERNAL 'LIBRARY REXX file_delete_directory'
+::METHOD deleteFile PRIVATE EXTERNAL 'LIBRARY REXX file_delete_file'
+
+
+::METHOD delete
+  use strict arg
+
+  if self~isDirectory then do
+      return self~self~deleteDir(self~qualifiedPath)
+  end
+  else do
+      return self~self~deleteFile(self~qualifiedPath)
+  end
+
+::METHOD exists
+  use strict arg
+  return self~existsImpl(self~qualifiedPath)
+
+::METHOD absolutePath
+  use strict arg
+  return self~qualifiedPath
+
+::METHOD absoluteFile
+  return self~class~new(self~qualifiedPath)
+
+-- return the name portion of the file.  This is everything after the
+-- last path separator
+::METHOD name
+  use strict arg
+
+  path = self~qualifiedPath
+
+  sep = path~lastPos(self~separator)
+  if sep == 0 then do
+      return path
+  end
+  else do
+      return path~substr(sep + 1)
+  end
+
+-- extract the parent directory portion of this file
+::METHOD parent
+  path = self~qualifiedPath
+
+  sep = path~lastPos(self~separator)
+  -- if no separator is found or the qualified name ends with a
+  -- separator (which means this is a root element), then return
+  -- .nil
+  if sep == 0 | path~match(path~length, self~separator) then do
+      return .nil
+  end
+
+  return path~substr(1, sep - 1)
+
+::METHOD parentFile
+  use strict arg
+  parent = self~parent
+  if parent == .nil then
+      return .nil
+
+  return self~class~new(parent)
+
+::METHOD path
+  use strict arg
+  return self~qualifiedPath
+
+::METHOD hashCode
+  use strict arg
+
+  return self~qualifiedPath~hashCode
+
+::METHOD isDirectoryImpl PRIVATE EXTERNAL 'LIBRARY REXX file_isDirectory'
+::METHOD isFileImpl PRIVATE EXTERNAL 'LIBRARY REXX file_isFile'
+::METHOD isHiddenImpl PRIVATE EXTERNAL 'LIBRARY REXX file_isHidden'
+
+::METHOD isDirectory
+  use strict arg
+  return self~isDirectoryImpl(self~qualifiedPath)
+
+::METHOD isFile
+  use strict arg
+  return self~isFileImpl(self~qualifiedPath)
+
+::METHOD isHidden
+  use strict arg
+  return self~isHiddenImpl(self~qualifiedPath)
+
+::METHOD getLastModifiedImpl PRIVATE EXTERNAL 'LIBRARY REXX file_get_last_modified'
+::METHOD setLastModifiedImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_last_modified'
+
+::ATTRIBUTE lastModified GET
+  use strict arg
+
+  ticks = self~lastModifiedImpl(self~qualifiedPath)
+  -- if this doesn't exist, return a .nil return value
+  if ticks = .nil then
+      return .nil
+
+  -- return as a DateTime object
+  return .DateTime~fromTicks(ticks)
+
+::ATTRIBUTE lastModified SET
+  use strict arg date
+
+  .ArgUtil~validateClass("date", date, .DateTime)
+
+  self~setLastModifiedImpl(date~ticks)
+
+::METHOD lengthImpl PRIVATE EXTERNAL 'LIBRARY REXX file_length'
+
+::METHOD length
+  use strict arg
+  return self~lengthImpl(self~qualifiedPath)
+
+::METHOD listImpl PRIVATE EXTERNAL 'LIBRARY REXX file_list'
+
+::METHOD list
+  use strict arg
+
+  return self~listImpl(self~qualifiedPath)
+
+::METHOD listFiles
+  use strict arg
+
+  names = self~list
+  if names == .nil then
+      return .nil
+
+  files = .array~new(names~items)
+
+  do name over names
+      files~append(self~class~new(self, name))
+  end
+
+  return files
+
+::METHOD makeDirImpl PRIVATE EXTERNAL 'LIBRARY REXX file_make_dir'
+
+-- makes just the directory represented by the top-level name.  Does not
+-- create any parent directories
+::METHOD makeDir
+  return self~makeDirImpl(self~qualifiedPath)
+
+-- create the entire directory hierarchy represented by this file
+::METHOD makeDirs
+  use strict arg
+
+  -- can't create if this already exists
+  if self~exists then
+      return .false
+  -- if we can create the fully resolved name, the parents exist
+  if self~makeDir() then
+      return .true
+
+  -- we might be at the top level already
+  parent = self~parent
+  if parent == .nil then
+      return .false
+  -- try to create the parent directories first
+  if \.File~new(parent)~makeDirs then
+      return .false
+  -- the parent worked, try to create our dir again
+  return self~makeDir
+
+::METHOD renameToImpl PRIVATE EXTERNAL 'LIBRARY REXX file_rename'
+
+::METHOD renameTo
+  use strict arg dest
+
+  .ArgUtil~validateClass("destination", dest, .File)
+
+  return self~renameToImpl(self~qualfiedPath, dest~qualfiedPath)
+
+::METHOD string
+  expose path
+  use strict arg
+  return path
+

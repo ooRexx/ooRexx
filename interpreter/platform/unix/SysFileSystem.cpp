@@ -843,7 +843,7 @@ bool SysFileSystem::exists(const char *name)
  * @param name   The target name.
  *
  * @return the file time value for the modified date, or -1 for any
- *         errors.
+ *         errors.  The time is returned in ticks units
  */
 int64_t SysFileSystem::getLastModifiedDate(const char *name)
 {
@@ -854,7 +854,7 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
     {
         return 0;
     }
-    return (int64_t)st.st_mtime * 1000;
+    return (int64_t)st.st_mtime * (int64_t)1000000;
 }
 
 
@@ -935,7 +935,7 @@ bool SysFileSystem::isHidden(const char *name)
  * Set the last modified date for a file.
  *
  * @param name   The target name.
- * @param time   The new file time.
+ * @param time   The new file time (in ticks).
  *
  * @return true if the filedate was set correctly, false otherwise.
  */
@@ -949,7 +949,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
     }
 
     timebuf.actime = statbuf.st_atime;
-    timebuf.modtime = (time_t)(time / 1000);
+    timebuf.modtime = (time_t)(time / 1000000);
     return utime(name, &timebuf) == 0;
 }
 
@@ -984,6 +984,42 @@ bool SysFileSystem::setFileReadOnly(const char *name)
 bool SysFileSystem::isCaseSensitive()
 {
     return true;
+}
+
+
+/**
+ * Retrieve the file system root elements.  On Windows,
+ * each of the drives is a root element.
+ *
+ * @return The number of roots located.
+ */
+int SysFileSystem::getRoots(char *roots)
+{
+    // just one root to return
+    strcpy(roots, "/");
+    return 1;
+}
+
+
+/**
+ * Return the separator used for separating path names.
+ *
+ * @return The ASCII-Z version of the path separator.
+ */
+const char *SysFileSystem::getSeparator()
+{
+    return "/";
+}
+
+
+/**
+ * Return the separator used for separating search path elements
+ *
+ * @return The ASCII-Z version of the path separator.
+ */
+const char *SysFileSystem::getPathSeparator()
+{
+    return ":";
 }
 
 

@@ -151,7 +151,7 @@ SYSOBJ1=$(OR_OUTDIR)\TimeSupport.$(OBJ)  \
 SYSOBJ2=$(OR_OUTDIR)\ExternalFunctions.$(OBJ) $(OR_OUTDIR)\SystemCommands.$(OBJ)   \
         $(OR_OUTDIR)\StreamNative.$(OBJ)   $(OR_OUTDIR)\StreamCommandParser.$(OBJ)    $(OR_OUTDIR)\ProgramMetaData.$(OBJ) \
 	$(OR_OUTDIR)\SysFile.$(OBJ) $(OR_OUTDIR)\SysFileSystem.$(OBJ) $(OR_OUTDIR)\SysLibrary.$(OBJ) $(OR_OUTDIR)\SysActivity.$(OBJ) \
-        $(OR_OUTDIR)\SysSemaphore.$(OBJ)
+        $(OR_OUTDIR)\SysSemaphore.$(OBJ) $(OR_OUTDIR)\FileNative.$(OBJ)
 
 SYSOBJ3=$(OR_OUTDIR)\MemorySupport.$(OBJ)   $(OR_OUTDIR)\MiscSystem.$(OBJ)  $(OR_OUTDIR)\SystemInitialization.$(OBJ)
 
