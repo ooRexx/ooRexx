@@ -166,6 +166,9 @@ notready:
                                        /* access general stream state       */
   expose stream_name
   use strict arg stream_name         /* get the stream name               */
+  if stream_name~isA(.File) then     -- if source is a file object, use the path name of the file
+      stream_name = stream_name~path
+
                                      /* get as a string                   */
   stream_name = stream_name~request('STRING')
   if .nil == stream_name then        /* not a real string value?          */
@@ -796,6 +799,3 @@ return position
   use strict arg
   return path
 
--- used for conversion into string form for use in the stream class
-::METHOD makestring
-  forward message("STRING")
