@@ -796,3 +796,6 @@ return position
   use strict arg
   return path
 
+-- used for conversion into string form for use in the stream class
+::METHOD makestring
+  forward message("STRING")
