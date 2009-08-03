@@ -102,8 +102,8 @@ public:
     static RexxString *extractExtension(RexxString *file);
     static RexxString *extractFile(RexxString *file);
 
-    static int   deleteFile(const char *name);
-    static int   deleteDirectory(const char *name);
+    static bool  deleteFile(const char *name);
+    static bool  deleteDirectory(const char *name);
     static bool  isDirectory(const char *name);
     static bool  isReadOnly(const char *name);
     static bool  isWriteOnly(const char *name);

@@ -73,6 +73,7 @@
 #include "Interpreter.hpp"
 #include "PackageClass.hpp"
 #include "SystemInterpreter.hpp"
+#include "ActivationFrame.hpp"
 
 const size_t ACT_STACK_SIZE = 20;
 
@@ -3119,4 +3120,26 @@ void RexxActivity::validateThread()
         reportException(Error_Execution_invalid_thread);
     }
 
+}
+
+
+/**
+ * Get the name of the last message invocation.
+ *
+ * @return The last message name.
+ */
+RexxString *RexxActivity::getLastMessageName()
+{
+    return activationFrames->messageName();
+}
+
+
+/**
+ * Get the method for the last method invocation.
+ *
+ * @return The last message name.
+ */
+RexxMethod *RexxActivity::getLastMethod()
+{
+    return activationFrames->method();
 }

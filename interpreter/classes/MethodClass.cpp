@@ -320,8 +320,6 @@ void RexxMethod::run(
 /******************************************************************************/
 {
     ProtectedObject p(this);           // belt-and-braces to make sure this is protected
-    // save this as the most recently executed method
-    ActivityManager::currentActivity->setLastMethod(msgname, this);
     // just forward this to the code object
     code->run(activity, this, receiver, msgname, argPtr, count, result);
 }

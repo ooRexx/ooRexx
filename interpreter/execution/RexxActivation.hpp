@@ -321,7 +321,6 @@ class ActivationSettings
        return isInterpret() ? executable->getSourceObject() : sourceObject;
    }
    PackageClass     *getPackage();
-   RexxObject       *getExecutableObject() { return executable; }
    RexxObject       *getLocalEnvironment(RexxString *name);
    void              setReturnStatus(int status);
 

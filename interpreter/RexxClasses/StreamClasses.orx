@@ -167,7 +167,7 @@ notready:
   expose stream_name
   use strict arg stream_name         /* get the stream name               */
   if stream_name~isA(.File) then     -- if source is a file object, use the path name of the file
-      stream_name = stream_name~path
+      stream_name = stream_name~absolutePath
 
                                      /* get as a string                   */
   stream_name = stream_name~request('STRING')
@@ -505,24 +505,24 @@ return position
 ::CLASS "File" inherit Comparable Orderable
 ::METHOD init
   expose path qualifiedPath
-  qualifiedPath = .nil
-  -- just a file name?
-  if arg() == 1 then do
-      use strict arg path
+
+  use strict arg path, dir = .nil
+
+  if dir == .nil then
       path = self~normalizePathSyntax(path)
-  end
   else do
-      use strict arg dir, name
       if dir~isA(.File) then do
-          dir = dir~path
+          dir = dir~absolutePath
       end
-      path = self~createPath(dir, name)
+      path = self~createPath(dir, path)
   end
+  qualifiedPath = .nil
 
 -- support the query methods as both instance and class methods
 ::METHOD separator CLASS EXTERNAL 'LIBRARY REXX file_separator'
 ::METHOD pathSeparator CLASS EXTERNAL 'LIBRARY REXX file_path_separator'
 ::METHOD isCaseSensitive CLASS EXTERNAL 'LIBRARY REXX file_case_sensitive'
+::METHOD listRoots CLASS EXTERNAL 'LIBRARY REXX file_list_roots'
 
 ::METHOD separator EXTERNAL 'LIBRARY REXX file_separator'
 ::METHOD pathSeparator EXTERNAL 'LIBRARY REXX file_path_separator'
@@ -589,7 +589,6 @@ return position
 
   return qualifiedPath
 
-::METHOD listRoots EXTERNAL 'LIBRARY REXX file_list_roots'
 ::METHOD canReadImpl PRIVATE EXTERNAL 'LIBRARY REXX file_can_read'
 ::METHOD setReadOnlyImpl PRIVATE EXTERNAL 'LIBRARY REXX file_set_read_only'
 ::METHOD canWriteImpl PRIVATE EXTERNAL 'LIBRARY REXX file_can_write'
@@ -615,24 +614,23 @@ return position
   .ArgUtil~validateClass("other", other, .File)
 
   if self~isCaseSensitive then do
-       return self~path~caselessCompareTo(other~path)
+       return self~absolutePath~compareTo(other~absolutePath)
   end
   else do
-       return self~path~compareTo(other~path)
+       return self~absolutePath~caselessCompareTo(other~absolutePath)
   end
 
 ::METHOD deleteDir PRIVATE EXTERNAL 'LIBRARY REXX file_delete_directory'
 ::METHOD deleteFile PRIVATE EXTERNAL 'LIBRARY REXX file_delete_file'
 
-
 ::METHOD delete
   use strict arg
 
   if self~isDirectory then do
-      return self~self~deleteDir(self~qualifiedPath)
+      return self~deleteDir(self~qualifiedPath)
   end
   else do
-      return self~self~deleteFile(self~qualifiedPath)
+      return self~deleteFile(self~qualifiedPath)
   end
 
 ::METHOD exists
@@ -683,9 +681,8 @@ return position
 
   return self~class~new(parent)
 
-::METHOD path
-  use strict arg
-  return self~qualifiedPath
+-- the original path name used to create the File object
+::ATTRIBUTE path GET
 
 ::METHOD hashCode
   use strict arg
@@ -714,9 +711,9 @@ return position
 ::ATTRIBUTE lastModified GET
   use strict arg
 
-  ticks = self~lastModifiedImpl(self~qualifiedPath)
+  ticks = self~getLastModifiedImpl(self~qualifiedPath)
   -- if this doesn't exist, return a .nil return value
-  if ticks = .nil then
+  if ticks = -1 then
       return .nil
 
   -- return as a DateTime object
@@ -727,7 +724,7 @@ return position
 
   .ArgUtil~validateClass("date", date, .DateTime)
 
-  self~setLastModifiedImpl(date~ticks)
+  self~setLastModifiedImpl(self~qualifiedPath, date~ticks)
 
 ::METHOD lengthImpl PRIVATE EXTERNAL 'LIBRARY REXX file_length'
 
@@ -752,7 +749,7 @@ return position
   files = .array~new(names~items)
 
   do name over names
-      files~append(self~class~new(self, name))
+      files~append(self~class~new(name, self))
   end
 
   return files
@@ -776,11 +773,11 @@ return position
       return .true
 
   -- we might be at the top level already
-  parent = self~parent
+  parent = self~parentFile
   if parent == .nil then
       return .false
   -- try to create the parent directories first
-  if \.File~new(parent)~makeDirs then
+  if \parent~makeDirs then
       return .false
   -- the parent worked, try to create our dir again
   return self~makeDir

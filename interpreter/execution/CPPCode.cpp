@@ -42,6 +42,7 @@
 #include "ProtectedObject.hpp"
 #include "Interpreter.hpp"
 #include "RexxVariableDictionary.hpp"
+#include "ActivationFrame.hpp"
 
 
 /**
@@ -110,6 +111,7 @@ RexxObject *CPPCode::unflatten(RexxEnvelope *envelope)
 void CPPCode::run(RexxActivity *activity, RexxMethod *method, RexxObject *receiver, RexxString *messageName,
     RexxObject **argPtr, size_t count, ProtectedObject &result)
 {
+    InternalActivationFrame frame(activity, messageName, method);
     PCPPM methodEntry = this->cppEntry;  /* get the entry point               */
                                        /* expecting an array?               */
                                        /* expecting a pointer/count pair?   */

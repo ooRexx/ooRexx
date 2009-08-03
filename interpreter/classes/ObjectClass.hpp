@@ -589,6 +589,7 @@ public:
     inline void setPreviousStackFrame(RexxActivationBase *p) { previous = p; }
     inline RexxActivationBase *getPreviousStackFrame() { return previous; }
     inline BaseExecutable *getExecutable() { return executable; }
+    RexxObject *getExecutableObject() { return (RexxObject *)executable; }
 
 protected:
     RexxActivationBase *previous;

@@ -82,8 +82,8 @@ public:
     static bool  searchPath(const char *name, const char *path, const char *extension, char *resolvedName);
     static void  getLongName(char *fullName, size_t size);
     static bool  findFirstFile(const char *name);
-    static int   deleteFile(const char *name);
-    static int   deleteDirectory(const char *name);
+    static bool  deleteFile(const char *name);
+    static bool  deleteDirectory(const char *name);
     static bool  isDirectory(const char *name);
     static bool  isReadOnly(const char *name);
     static bool  isWriteOnly(const char *name);

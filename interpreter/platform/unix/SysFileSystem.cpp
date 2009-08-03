@@ -741,9 +741,9 @@ bool SysFileSystem::normalizePathName(const char *name, char *resolved)
  *
  * @return The return code from the delete operation.
  */
-int SysFileSystem::deleteFile(const char *name)
+bool SysFileSystem::deleteFile(const char *name)
 {
-    return unlink(name);
+    return unlink(name) == 0;
 }
 
 /**
@@ -753,9 +753,9 @@ int SysFileSystem::deleteFile(const char *name)
  *
  * @return The return code from the delete operation.
  */
-int SysFileSystem::deleteDirectory(const char *name)
+bool SysFileSystem::deleteDirectory(const char *name)
 {
-    return remove(name);
+    return remove(name) == 0;
 }
 
 
@@ -852,7 +852,7 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
 
     if (stat (name, &st))
     {
-        return 0;
+        return -1;
     }
     return (int64_t)st.st_mtime * (int64_t)1000000;
 }

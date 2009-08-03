@@ -123,6 +123,7 @@ typedef enum
                                        /* methods                           */
  class RexxActivity : public RexxInternalObject {
   friend class ProtectedObject;
+  friend class ActivationFrame;
   public:
    void *operator new(size_t);
    inline void *operator new(size_t size, void *ptr) {return ptr;};
@@ -283,9 +284,8 @@ typedef enum
    inline void        clearWait()  { runsem.reset(); }
    inline uint64_t    getRandomSeed() { return randomSeed; }
    inline void setRandomSeed(uint64_t seed) { randomSeed = seed; };
-   inline RexxString *getLastMessageName() { return lastMessageName; }
-   inline RexxMethod *getLastMethod() { return lastMethod; }
-   inline void setLastMethod(RexxString *n, RexxMethod *m) { lastMessageName = n; lastMethod = m; }
+          RexxString *getLastMessageName();
+          RexxMethod *getLastMethod();
 
    inline RexxThreadContext *getThreadContext() { return &threadContext.threadContext; }
    inline RexxNativeActivation *getApiContext() { return (RexxNativeActivation *)topStackFrame; }
@@ -380,8 +380,7 @@ typedef enum
    uint64_t    randomSeed;             /* random number seed                */
    ExitHandler sysexits[LAST_EXIT];    /* Array to hold system exits        */
    ProtectedObject *protectedObjects;  // list of stack-based object protectors
-   RexxString *lastMessageName;        // class called message
-   RexxMethod *lastMethod;             // last called method
+   ActivationFrame *activationFrames;  // list of stack-based object protectors
    RexxActivity *nestedActivity;       // used to push down activities in threads with more than one instance
 
    // structures containing the various interface vectors

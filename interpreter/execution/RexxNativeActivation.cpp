@@ -62,6 +62,7 @@
 #include "CallbackDispatcher.hpp"
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
+#include "ActivationFrame.hpp"
 
 #include <math.h>
 #include <limits.h>
@@ -1180,6 +1181,8 @@ void RexxNativeActivation::removeLocalReference(RexxObject *objr)
 void RexxNativeActivation::run(RexxMethod *_method, RexxNativeMethod *_code, RexxObject  *_receiver,
     RexxString  *_msgname, RexxObject **_arglist, size_t _argcount, ProtectedObject &resultObj)
 {
+    // add the frame to the execution stack
+    NativeActivationFrame frame(activity, this);
     // anchor the relevant context information
     executable = _method;
     receiver = _receiver;
@@ -1270,6 +1273,8 @@ void RexxNativeActivation::run(RexxMethod *_method, RexxNativeMethod *_code, Rex
 void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeRoutine *_code, RexxString *functionName,
     RexxObject **list, size_t count, ProtectedObject &resultObj)
 {
+    NativeActivationFrame frame(activity, this);
+
     // anchor the context stuff
     executable = _routine;
     msgname = functionName;
@@ -1355,6 +1360,8 @@ void RexxNativeActivation::callNativeRoutine(RoutineClass *_routine, RexxNativeR
 void RexxNativeActivation::callRegisteredRoutine(RoutineClass *_routine, RegisteredRoutine *_code, RexxString *functionName,
     RexxObject **list, size_t count, ProtectedObject &resultObj)
 {
+    NativeActivationFrame frame(activity, this);
+
     // anchor the context stuff
     msgname = functionName;
     executable = _routine;

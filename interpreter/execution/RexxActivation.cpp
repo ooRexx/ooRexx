@@ -73,6 +73,7 @@
 #include "PackageManager.hpp"
 #include "RexxCompoundTail.hpp"
 #include "CommandHandler.hpp"
+#include "ActivationFrame.hpp"
 
 /* max instructions without a yield */
 #define MAX_INSTRUCTIONS  100
@@ -383,6 +384,9 @@ RexxObject * RexxActivation::run(RexxObject *_receiver, RexxString *msgname, Rex
 /*            interpreter that makes the whole thing run!                     */
 /******************************************************************************/
 {
+    // add the frame to the execution stack
+    RexxActivationFrame frame(activity, this);
+
     RexxActivity      *oldActivity;      /* old activity                      */
 #ifndef FIXEDTIMERS                      /* currently disabled                */
     size_t             instructionCount; /* instructions without yielding     */

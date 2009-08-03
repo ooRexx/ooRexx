@@ -525,9 +525,9 @@ void SysFileSystem::getLongName(char *fullName, size_t size)
  *
  * @return The return code from the delete operation.
  */
-int SysFileSystem::deleteFile(const char *name)
+bool SysFileSystem::deleteFile(const char *name)
 {
-    return DeleteFile(name) ? 0 : GetLastError();
+    return DeleteFile(name) != 0;
 }
 
 /**
@@ -537,9 +537,9 @@ int SysFileSystem::deleteFile(const char *name)
  *
  * @return The return code from the delete operation.
  */
-int SysFileSystem::deleteDirectory(const char *name)
+bool SysFileSystem::deleteDirectory(const char *name)
 {
-    return RemoveDirectory(name) ? 0 : GetLastError();
+    return RemoveDirectory(name) != 0;
 }
 
 
@@ -652,7 +652,7 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
     * Search MSDN for 'Converting a time_t Value to a File Time' for following implementation.
     */
     int64_t tempResult = ((int64_t) lastWriteTime.dwHighDateTime << (int64_t)32) | (int64_t) lastWriteTime.dwLowDateTime;
-    int64_t result = (tempResult - 116444736000000000) / 10;
+    int64_t result = (tempResult - 116444736000000000) / 10000000;
 
     CloseHandle(newHandle);
     return result;
@@ -758,7 +758,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
     }
 
     // convert back to a file time
-    int64_t temp = (time * (int64_t)1000) + 116444736000000000;
+    int64_t temp = (time * (int64_t)10000000) + 116444736000000000;
 
     fileTime.dwHighDateTime = (DWORD)(temp >> 32);
     fileTime.dwLowDateTime = (DWORD)temp;

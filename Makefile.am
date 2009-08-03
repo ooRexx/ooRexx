@@ -209,6 +209,7 @@ classesSupportHeaders = $(build_classes_support_dir)/ProgramMetaData.hpp \
                         $(build_classes_support_dir)/RexxListTable.hpp \
                         $(build_classes_support_dir)/StringUtil.hpp
 concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
+                     $(build_concurrency_dir)/ActivationFrame.hpp \
                      $(build_concurrency_dir)/ActivityDispatcher.hpp \
                      $(build_concurrency_dir)/ActivityManager.hpp \
                      $(build_concurrency_dir)/CallbackDispatcher.hpp \
@@ -559,6 +560,7 @@ behaviour_sources = $(build_behaviour_dir)/PrimitiveBehaviours.cpp \
                     $(build_behaviour_dir)/VirtualFunctionTable.cpp
 concurrency_sources = $(build_concurrency_dir)/ActivityDispatcher.cpp \
                       $(build_concurrency_dir)/ActivityManager.cpp \
+                      $(build_concurrency_dir)/ActivationFrame.cpp \
                       $(build_concurrency_dir)/CallbackDispatcher.cpp \
                       $(build_concurrency_dir)/ExitHandler.cpp \
                       $(build_concurrency_dir)/CommandHandler.cpp \
