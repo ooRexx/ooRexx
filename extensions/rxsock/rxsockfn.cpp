@@ -134,7 +134,7 @@ RexxRoutine1(CSTRING, SockPSock_Errno, OPTIONAL_CSTRING, type)
 /*------------------------------------------------------------------
  * accept()
  *------------------------------------------------------------------*/
-RexxRoutine2(int, SockAccept, int, sock, OPTIONAL_RexxStemObject, stem)
+RexxRoutine2(int, SockAccept, int, sock, OPTIONAL_RexxObjectPtr, stemSource)
 {
     sockaddr_in  addr;
     socklen_t    nameLen;
@@ -145,8 +145,14 @@ RexxRoutine2(int, SockAccept, int, sock, OPTIONAL_RexxStemObject, stem)
     /*---------------------------------------------------------------
      * set addr, if asked for
      *---------------------------------------------------------------*/
-    if (stem != NULLOBJECT)
+    if (stemSource != NULLOBJECT)
     {
+        StemManager stem(context);
+
+        if (!stem.resolveStem(stemSource))
+        {
+            return 0;
+        }
         sockAddrToStem(context, &addr, stem);
     }
 
@@ -162,8 +168,15 @@ RexxRoutine2(int, SockAccept, int, sock, OPTIONAL_RexxStemObject, stem)
 /*------------------------------------------------------------------
  * bind()
  *------------------------------------------------------------------*/
-RexxRoutine2(int, SockBind, int, sock, RexxStemObject, stem)
+RexxRoutine2(int, SockBind, int, sock, RexxObjectPtr, stemSource)
 {
+    StemManager stem(context);
+
+    if (!stem.resolveStem(stemSource))
+    {
+        return 0;
+    }
+
     sockaddr_in  addr;
 
     /*---------------------------------------------------------------
@@ -209,8 +222,15 @@ RexxRoutine1(int, SockClose, int, sock)
 /*------------------------------------------------------------------
  * connect()
  *------------------------------------------------------------------*/
-RexxRoutine2(int, SockConnect, int, sock, RexxStemObject, stem)
+RexxRoutine2(int, SockConnect, int, sock, RexxObjectPtr, stemSource)
 {
+    StemManager stem(context);
+
+    if (!stem.resolveStem(stemSource))
+    {
+        return 0;
+    }
+
     sockaddr_in  addr;
 
     /*---------------------------------------------------------------
@@ -234,8 +254,15 @@ RexxRoutine2(int, SockConnect, int, sock, RexxStemObject, stem)
 /*------------------------------------------------------------------
  * gethostbyaddr()
  *------------------------------------------------------------------*/
-RexxRoutine3(int, SockGetHostByAddr, CSTRING, addrArg, RexxStemObject, stem, OPTIONAL_int, domain)
+RexxRoutine3(int, SockGetHostByAddr, CSTRING, addrArg, RexxObjectPtr, stemSource, OPTIONAL_int, domain)
 {
+    StemManager stem(context);
+
+    if (!stem.resolveStem(stemSource))
+    {
+        return 0;
+    }
+
     struct hostent *pHostEnt;
     unsigned int addr = inet_addr(addrArg);
 
@@ -268,8 +295,14 @@ RexxRoutine3(int, SockGetHostByAddr, CSTRING, addrArg, RexxStemObject, stem, OPT
 /*------------------------------------------------------------------
  *  gethostbyname()
  *------------------------------------------------------------------*/
-RexxRoutine2(int, SockGetHostByName, CSTRING, name, RexxStemObject, stem)
+RexxRoutine2(int, SockGetHostByName, CSTRING, name, RexxObjectPtr, stemSource)
 {
+    StemManager stem(context);
+
+    if (!stem.resolveStem(stemSource))
+    {
+        return 0;
+    }
     struct hostent *pHostEnt;
 
     /*---------------------------------------------------------------
@@ -359,17 +392,22 @@ RexxRoutine0(RexxStringObject, SockGetHostId)
 /*------------------------------------------------------------------
  * getpeername()
  *------------------------------------------------------------------*/
-RexxRoutine2(int, SockGetPeerName, int, sock, RexxStemObject, stem)
+RexxRoutine2(int, SockGetPeerName, int, sock, RexxObjectPtr, stemSource)
 {
+    StemManager stem(context);
+
+    if (!stem.resolveStem(stemSource))
+    {
+        return 0;
+    }
     sockaddr_in  addr;
-    int          rc;
     socklen_t    nameLen;
 
     /*---------------------------------------------------------------
      * call function
      *---------------------------------------------------------------*/
     nameLen = sizeof(addr);
-    rc = getpeername(sock,(struct sockaddr *)&addr,&nameLen);
+    int rc = getpeername(sock,(struct sockaddr *)&addr,&nameLen);
 
     // set the errno information
     cleanup(context);
@@ -391,17 +429,22 @@ RexxRoutine2(int, SockGetPeerName, int, sock, RexxStemObject, stem)
 /*------------------------------------------------------------------
  *  getsockname()
  *------------------------------------------------------------------*/
-RexxRoutine2(int, SockGetSockName, int, sock, RexxStemObject, stem)
+RexxRoutine2(int, SockGetSockName, int, sock, RexxObjectPtr, stemSource)
 {
+    StemManager stem(context);
+
+    if (!stem.resolveStem(stemSource))
+    {
+        return 0;
+    }
     sockaddr_in  addr;
-    int          rc;
     socklen_t    nameLen;
 
     /*---------------------------------------------------------------
      * call function
      *---------------------------------------------------------------*/
     nameLen = sizeof(addr);
-    rc = getsockname(sock,(struct sockaddr *)&addr,&nameLen);
+    int rc = getsockname(sock,(struct sockaddr *)&addr,&nameLen);
     // set the errno information
     cleanup(context);
 
@@ -652,9 +695,15 @@ RexxRoutine4(int, SockRecv, int, sock, CSTRING, var, int, dataLen, OPTIONAL_CSTR
 /*------------------------------------------------------------------
  *  recvfrom()
  *------------------------------------------------------------------*/
-RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjectPtr, flagArg, OPTIONAL_RexxStemObject, stem)
+RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjectPtr, flagArg, OPTIONAL_RexxObjectPtr, stemSource)
 {
-    int       rc;
+    StemManager stem(context);
+
+    if (!stem.resolveStem(stemSource))
+    {
+        return 0;
+    }
+
     sockaddr_in addr;
     socklen_t   addr_size;
 
@@ -664,8 +713,13 @@ RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjec
      *---------------------------------------------------------------*/
     int flags = 0;
     // if we have a 5th argument, then the 4th argument is a flag value
-    if (stem != NULL)
+    if (stemSource != NULL)
     {
+        if (!stem.resolveStem(stemSource))
+        {
+            return 0;
+        }
+
         char *flagStr = strdup(context->ObjectToStringValue(flagArg));
 
         const char *pszWord = strtok(flagStr, " ");
@@ -686,7 +740,10 @@ RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjec
     else
     {
         // the 4th argument is a stem variable
-        stem = context->ResolveStemVariable(flagArg);
+        if (!stem.resolveStem(flagArg))
+        {
+            return 0;
+        }
     }
 
     stemToSockAddr(context, stem, &addr);
@@ -705,7 +762,7 @@ RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjec
     /*---------------------------------------------------------------
      * call function
      *---------------------------------------------------------------*/
-    rc = recvfrom(sock,pBuffer,dataLen,flags,(struct sockaddr *)&addr,&addr_size);
+    int rc = recvfrom(sock,pBuffer,dataLen,flags,(struct sockaddr *)&addr,&addr_size);
 
     // set the errno information
     cleanup(context);
@@ -738,7 +795,7 @@ RexxRoutine5(int, SockRecvFrom, int, sock, CSTRING, var, int, dataLen, RexxObjec
 /*------------------------------------------------------------------
  *  select()
  *------------------------------------------------------------------*/
-RexxRoutine4(int, SockSelect, OPTIONAL_RexxStemObject, array1, OPTIONAL_RexxStemObject, array2, OPTIONAL_RexxStemObject, array3, OPTIONAL_int, timeout)
+RexxRoutine4(int, SockSelect, OPTIONAL_RexxObjectPtr, array1, OPTIONAL_RexxObjectPtr, array2, OPTIONAL_RexxObjectPtr, array3, OPTIONAL_int, timeout)
 {
     struct timeval  timeOutS;
     struct timeval *timeOutP;
@@ -786,7 +843,7 @@ RexxRoutine4(int, SockSelect, OPTIONAL_RexxStemObject, array1, OPTIONAL_RexxStem
      *---------------------------------------------------------------*/
     stemToIntArray(context, array1, rCount, rArray);
     stemToIntArray(context, array2, wCount, wArray);
-    stemToIntArray(context, array2, eCount, eArray);
+    stemToIntArray(context, array3, eCount, eArray);
 
 /*------------------------------------------------------------------
  * unix-specific stuff
@@ -892,15 +949,15 @@ RexxRoutine4(int, SockSelect, OPTIONAL_RexxStemObject, array1, OPTIONAL_RexxStem
      *---------------------------------------------------------------*/
     if (rArray)
     {
-        intArrayToStem(context, array1,rCount,rArray);
+        intArrayToStem(context, array1, rCount, rArray);
     }
     if (wArray)
     {
-        intArrayToStem(context, array2,wCount,wArray);
+        intArrayToStem(context, array2, wCount, wArray);
     }
     if (eArray)
     {
-        intArrayToStem(context, array3,eCount,eArray);
+        intArrayToStem(context, array3, eCount, eArray);
     }
 
     /*---------------------------------------------------------------
@@ -989,8 +1046,10 @@ RexxRoutine3(int, SockSend, int, sock, RexxStringObject, dataObj, OPTIONAL_CSTRI
 /*------------------------------------------------------------------
  * sendto()
  *------------------------------------------------------------------*/
-RexxRoutine4(int, SockSendTo, int, sock, RexxStringObject, dataObj, RexxObjectPtr, flagsOrStem, OPTIONAL_RexxStemObject, stem)
+RexxRoutine4(int, SockSendTo, int, sock, RexxStringObject, dataObj, RexxObjectPtr, flagsOrStem, OPTIONAL_RexxObjectPtr, stemSource)
 {
+    StemManager stem(context);
+
     sockaddr_in addr;
 
     /*---------------------------------------------------------------
@@ -1003,8 +1062,13 @@ RexxRoutine4(int, SockSendTo, int, sock, RexxStringObject, dataObj, RexxObjectPt
      * get flags
      *---------------------------------------------------------------*/
     int flags = 0;
-    if (stem != NULLOBJECT)
+    if (stemSource != NULLOBJECT)
     {
+        if (!stem.resolveStem(stemSource))
+        {
+            return 0;
+        }
+
         char *flagStr = strdup(context->ObjectToStringValue(flagsOrStem));
         if (flagStr == NULL)
         {
@@ -1025,7 +1089,10 @@ RexxRoutine4(int, SockSendTo, int, sock, RexxStringObject, dataObj, RexxObjectPt
     }
     else
     {
-        stem = context->ResolveStemVariable(flagsOrStem);
+        if (!stem.resolveStem(flagsOrStem))
+        {
+            return 0;
+        }
     }
 
     stemToSockAddr(context, stem, &addr);

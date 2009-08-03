@@ -52,6 +52,8 @@ typedef struct in_addr     in_addr;
 typedef int socklen_t;
 #endif
 
+class StemManager;
+
 
 /*------------------------------------------------------------------
  * strip blanks from a line
@@ -61,27 +63,27 @@ void stripBlanks(char *string);
 /*------------------------------------------------------------------
  * convert a stem variable to an array of ints
  *------------------------------------------------------------------*/
-void stemToIntArray(RexxCallContext *context, RexxStemObject stem, int &count, int *&arr);
+void stemToIntArray(RexxCallContext *context, RexxObjectPtr stem, int &count, int *&arr);
 
 /*------------------------------------------------------------------
  * convert an array of ints to a stem variable
  *------------------------------------------------------------------*/
-void intArrayToStem(RexxCallContext *context, RexxStemObject stem, int count, int *arr);
+void intArrayToStem(RexxCallContext *context, RexxObjectPtr stem, int count, int *arr);
 
 /*------------------------------------------------------------------
  * convert a stemmed variable to a sockaddr
  *------------------------------------------------------------------*/
-void stemToSockAddr(RexxCallContext *context, RexxStemObject stem, sockaddr_in *pSockAddr);
+void stemToSockAddr(RexxCallContext *context, StemManager &stem, sockaddr_in *pSockAddr);
 
 /*------------------------------------------------------------------
  * convert a sockaddr to a stemmed variable
  *------------------------------------------------------------------*/
-void sockAddrToStem(RexxCallContext *context, sockaddr_in *pSockAddr, RexxStemObject stem);
+void sockAddrToStem(RexxCallContext *context, sockaddr_in *pSockAddr, StemManager &stem);
 
 /*------------------------------------------------------------------
  * convert a hostent to a stemmed variable
  *------------------------------------------------------------------*/
-void hostEntToStem(RexxCallContext *context, struct hostent *pHostEnt, RexxStemObject stem);
+void hostEntToStem(RexxCallContext *context, struct hostent *pHostEnt, StemManager &stem);
 
 /*------------------------------------------------------------------
  * convert a string sock option to an integer
@@ -108,3 +110,150 @@ void cleanup(RexxCallContext *context);
  *------------------------------------------------------------------*/
 int caselessCompare(const char *op1, const char *op2);
 
+
+class StemManager
+{
+public:
+    StemManager(RexxCallContext *c) : context(c), stem(NULL), prefix(NULL) { }
+    ~StemManager()
+    {
+        if (prefix != NULL)
+        {
+            free(prefix);
+        }
+    }
+
+    /**
+     * Resolve the stem object that was passed as an argument.
+     *
+     * @param source The source argument object.
+     *
+     * @return true if the stem could be resolved, false for any errors
+     *         resolving the stem object.
+     */
+    bool resolveStem(RexxObjectPtr source)
+    {
+        // this is the simplest solution
+        if (context->IsStem(source))
+        {
+            stem = (RexxStemObject)source;
+        }
+        else
+        {
+            const char *stemName = context->ObjectToStringValue(source);
+            const char *dotPos = strchr(stemName, '.');
+            // if no dot or the dot is the last character, this is a standard
+            // stem value
+            if (dotPos == NULL || dotPos == (stemName + strlen(stemName) + 1))
+            {
+                stem = context->ResolveStemVariable(source);
+            }
+            else
+            {
+                prefix = strdup(dotPos + 1);
+                if (prefix == NULL)
+                {
+                    context->InvalidRoutine();
+                    return false;
+                }
+
+                // uppercase the rest of the prefix value
+                char *scanner = prefix;
+                while (*scanner != '\0')
+                {
+                    *scanner = toupper(*scanner);
+                    scanner++;
+                }
+                RexxStringObject stemPortion = context->String(stemName, (dotPos - stemName) + 1);
+                stem = context->ResolveStemVariable(stemPortion);
+            }
+            if (stem == NULL)
+            {
+                context->InvalidRoutine();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Set a value in the argument stem.
+     *
+     * @param name   The name to set.
+     * @param value
+     */
+    void setValue(const char *name, RexxObjectPtr value)
+    {
+        if (prefix == NULL)
+        {
+            context->SetStemElement(stem, name, value);
+        }
+        else
+        {
+            char fullName[256];
+            sprintf(fullName, "%s%s", prefix, name);
+            context->SetStemElement(stem, fullName, value);
+        }
+    }
+
+    /**
+     * Set a value in the argument stem.
+     *
+     * @param index  The index to set.
+     * @param value
+     */
+    void setValue(size_t index, RexxObjectPtr value)
+    {
+        if (prefix == NULL)
+        {
+            context->SetStemArrayElement(stem, index, value);
+        }
+        else
+        {
+            char fullName[256];
+            sprintf(fullName, "%s.%d", prefix, (int)index);
+            context->SetStemElement(stem, fullName, value);
+        }
+    }
+
+    /**
+     * Retrieve a value from an argument stem.
+     *
+     * @param name   The argument stem name.
+     *
+     * @return The retrieved object, if any.
+     */
+    RexxObjectPtr getValue(const char *name)
+    {
+        if (prefix == NULL)
+        {
+            return context->GetStemElement(stem, name);
+        }
+        else
+        {
+            char fullName[256];
+            sprintf(fullName, "%s%s", prefix, name);
+            return context->GetStemElement(stem, fullName);
+        }
+    }
+
+    RexxObjectPtr getValue(size_t index)
+    {
+        if (prefix == NULL)
+        {
+            return context->GetStemArrayElement(stem, index);
+        }
+        else
+        {
+            char fullName[256];
+            sprintf(fullName, "%s.%d", prefix, (int)index);
+            return context->GetStemElement(stem, fullName);
+        }
+    }
+
+
+protected:
+    RexxCallContext *context; // the context pointer
+    RexxStemObject stem;      // the target stem
+    char *prefix;             // extra prefix to use on the stem
+};

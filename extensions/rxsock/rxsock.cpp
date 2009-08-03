@@ -153,10 +153,10 @@ void stripBlanks(char *string)
 /*------------------------------------------------------------------
  * get a rexx stem element as a string value.
  *------------------------------------------------------------------*/
-char *getStemElement(RexxCallContext *context, RexxStemObject stem, const char *name)
+char *getStemElement(RexxCallContext *context, StemManager &stem, const char *name)
 {
     // first get the referenced object, returning NULL if it is not set
-    RexxObjectPtr obj = context->GetStemElement(stem, name);
+    RexxObjectPtr obj = stem.getValue(name);
     if (obj == NULLOBJECT)
     {
         return NULL;
@@ -170,14 +170,21 @@ char *getStemElement(RexxCallContext *context, RexxStemObject stem, const char *
 /*------------------------------------------------------------------
  * convert a stem variable to an array of ints
  *------------------------------------------------------------------*/
-void stemToIntArray(RexxCallContext *context, RexxStemObject stem, int &count, int *&arr)
+void stemToIntArray(RexxCallContext *context, RexxObjectPtr stemSource, int &count, int *&arr)
 {
+    StemManager stem(context);
+
+    if (!stem.resolveStem(stemSource))
+    {
+        return;
+    }
+
     // set initial values
     count = 0;
     arr = NULL;
 
     // get the stem.0 item
-    RexxObjectPtr countObj = context->GetStemArrayElement(stem, 0);
+    RexxObjectPtr countObj = stem.getValue((size_t)0);
 
     // try to convert this
     wholenumber_t temp;
@@ -202,7 +209,7 @@ void stemToIntArray(RexxCallContext *context, RexxStemObject stem, int &count, i
      *---------------------------------------------------------------*/
     for (int i = 0; i < count; i++)
     {
-        countObj = context->GetStemArrayElement(stem, i + 1);
+        countObj = stem.getValue(i + 1);
 
         if (!context->ObjectToWholeNumber(countObj, &temp))
         {
@@ -218,20 +225,27 @@ void stemToIntArray(RexxCallContext *context, RexxStemObject stem, int &count, i
 /*------------------------------------------------------------------
  * convert an array of ints to a stem variable
  *------------------------------------------------------------------*/
-void intArrayToStem(RexxCallContext *context, RexxStemObject stem, int count, int *arr)
+void intArrayToStem(RexxCallContext *context, RexxObjectPtr stemSource, int count, int *arr)
 {
+    StemManager stem(context);
+
+    if (!stem.resolveStem(stemSource))
+    {
+        return;
+    }
+
     /*---------------------------------------------------------------
      * set 0'th value
      *---------------------------------------------------------------*/
 
-    context->SetStemArrayElement(stem, 0, context->WholeNumber(count));
+    stem.setValue((size_t)0, context->WholeNumber(count));
 
     /*---------------------------------------------------------------
      * set each value
      *---------------------------------------------------------------*/
     for (int i = 0; i < count; i++)
     {
-        context->SetStemArrayElement(stem, i + 1, context->WholeNumber(arr[i]));
+        stem.setValue(i + 1, context->WholeNumber(arr[i]));
     }
 
     return;
@@ -240,7 +254,7 @@ void intArrayToStem(RexxCallContext *context, RexxStemObject stem, int count, in
 /*------------------------------------------------------------------
  * convert a stemmed variable to a sockaddr
  *------------------------------------------------------------------*/
-void stemToSockAddr(RexxCallContext *context, RexxStemObject stem, sockaddr_in *pSockAddr)
+void stemToSockAddr(RexxCallContext *context, StemManager &stem, sockaddr_in *pSockAddr)
 {
     char *pszFamily = NULL;
     char *pszPort   = NULL;
@@ -322,28 +336,28 @@ void stemToSockAddr(RexxCallContext *context, RexxStemObject stem, sockaddr_in *
 /*------------------------------------------------------------------
  * convert a sockaddr to a stemmed variable
  *------------------------------------------------------------------*/
-void sockAddrToStem(RexxCallContext *context, sockaddr_in *pSockAddr, RexxStemObject stem )
+void sockAddrToStem(RexxCallContext *context, sockaddr_in *pSockAddr, StemManager &stem )
 {
     /*---------------------------------------------------------------
      * set family
      *---------------------------------------------------------------*/
-    context->SetStemElement(stem, "FAMILY", context->WholeNumber(pSockAddr->sin_family));
+    stem.setValue("FAMILY", context->WholeNumber(pSockAddr->sin_family));
 
     /*---------------------------------------------------------------
      * set port
      *---------------------------------------------------------------*/
-    context->SetStemElement(stem, "PORT", context->UnsignedInt32(htons(pSockAddr->sin_port)));
+    stem.setValue("PORT", context->UnsignedInt32(htons(pSockAddr->sin_port)));
 
     /*---------------------------------------------------------------
      * set address
      *---------------------------------------------------------------*/
-    context->SetStemElement(stem, "ADDR", context->String(inet_ntoa(pSockAddr->sin_addr)));
+    stem.setValue("ADDR", context->String(inet_ntoa(pSockAddr->sin_addr)));
 }
 
 /*------------------------------------------------------------------
  * convert a hostent to a stemmed variable
  *------------------------------------------------------------------*/
-void hostEntToStem(RexxCallContext *context, struct hostent *pHostEnt, RexxStemObject stem)
+void hostEntToStem(RexxCallContext *context, struct hostent *pHostEnt, StemManager &stem)
 {
     char     szBuffer[20];
     int      count;
@@ -352,7 +366,7 @@ void hostEntToStem(RexxCallContext *context, struct hostent *pHostEnt, RexxStemO
     /*---------------------------------------------------------------
      * set family
      *---------------------------------------------------------------*/
-    context->SetStemElement(stem, "NAME", context->String(pHostEnt->h_name));
+    stem.setValue("NAME", context->String(pHostEnt->h_name));
 
     /*---------------------------------------------------------------
      * set aliases
@@ -360,21 +374,21 @@ void hostEntToStem(RexxCallContext *context, struct hostent *pHostEnt, RexxStemO
     for (count=0; pHostEnt->h_aliases[count]; count++)
     {
         sprintf(szBuffer,"ALIAS.%d",count+1);
-        context->SetStemElement(stem, szBuffer, context->String(pHostEnt->h_aliases[count]));
+        stem.setValue(szBuffer, context->String(pHostEnt->h_aliases[count]));
     }
 
-    context->SetStemElement(stem, "ALIAS.0", context->WholeNumber(count));
+    stem.setValue("ALIAS.0", context->WholeNumber(count));
 
     /*---------------------------------------------------------------
      * set addrtype
      *---------------------------------------------------------------*/
-    context->SetStemElement(stem, "ADDRTYPE", context->String("AF_INET"));
+    stem.setValue("ADDRTYPE", context->String("AF_INET"));
 
     /*---------------------------------------------------------------
      * set addr
      *---------------------------------------------------------------*/
     addr.s_addr = (*(uint32_t *)pHostEnt->h_addr);
-    context->SetStemElement(stem, "ADDR", context->String(inet_ntoa(addr)));
+    stem.setValue("ADDR", context->String(inet_ntoa(addr)));
 
     /*---------------------------------------------------------------
      *  the stem variable variablename.addr.0  contains count of available
@@ -391,10 +405,10 @@ void hostEntToStem(RexxCallContext *context, struct hostent *pHostEnt, RexxStemO
         sprintf(szBuffer, "ADDR.%d", count+1);
         addr.s_addr = (*(uint32_t *)pHostEnt->h_addr_list[count]);
 
-        context->SetStemElement(stem, szBuffer, context->String(inet_ntoa(addr)));
+        stem.setValue(szBuffer, context->String(inet_ntoa(addr)));
     }
 
-    context->SetStemElement(stem, "ADDR.0", context->WholeNumber(count));
+    stem.setValue("ADDR.0", context->WholeNumber(count));
 }
 
 
