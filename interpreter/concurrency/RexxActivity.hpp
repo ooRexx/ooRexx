@@ -64,6 +64,7 @@ class InterpreterInstance;
 class ActivityDispatcher;
 class CallbackDispatcher;
 class CommandHandler;
+class ActivationFrame; 
 
                                        /* interface values for the          */
                                        /* activity_queue method             */
