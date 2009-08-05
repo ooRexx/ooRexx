@@ -150,7 +150,7 @@ inline void reportException(wholenumber_t error)
 
 inline void reportException(wholenumber_t error, RexxArray *args)
 {
-    ActivityManager::currentActivity->raiseException(error, NULL, OREF_NULL, OREF_NULL, args, OREF_NULL);
+    ActivityManager::currentActivity->raiseException(error, OREF_NULL, args, OREF_NULL);
 }
 
 inline void reportException(wholenumber_t error, RexxObject *a1)

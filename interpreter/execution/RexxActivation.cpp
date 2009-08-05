@@ -74,6 +74,7 @@
 #include "RexxCompoundTail.hpp"
 #include "CommandHandler.hpp"
 #include "ActivationFrame.hpp"
+#include "StackFrameClass.hpp"
 
 /* max instructions without a yield */
 #define MAX_INSTRUCTIONS  100
@@ -1608,7 +1609,7 @@ void RexxActivation::raise(
         else
         {
             /* go raise the error                */
-            ActivityManager::currentActivity->raiseException(((RexxInteger *)rc)->getValue(), NULL, OREF_NULL, description, (RexxArray *)additional, resultObj);
+            ActivityManager::currentActivity->raiseException(((RexxInteger *)rc)->getValue(), description, (RexxArray *)additional, resultObj);
         }
     }
     else
@@ -2490,6 +2491,27 @@ RexxObject *RexxActivation::getContextLine()
 
 
 /**
+ * Return the line context information for a context.
+ *
+ * @return The current execution line.
+ */
+size_t RexxActivation::getContextLineNumber()
+{
+    // if this is an interpret, we need to report the line number of
+    // the context that calls the interpret.
+    if (this->isInterpret())
+    {
+        return parent->getContextLineNumber();
+    }
+    else
+    {
+
+        return this->current->getLineNumber();
+    }
+}
+
+
+/**
  * Return the RS context information for a activation.
  *
  * @return The current execution line.
@@ -2874,22 +2896,14 @@ void RexxActivation::guardWait()
 }
 
 
-void RexxActivation::traceBack(
-     RexxList   * traceback_list )     /* list of traceback items           */
-/******************************************************************************/
-/* Function:  Add the activation's current line to an error trace back list   */
-/******************************************************************************/
+/**
+ * Get a traceback line for the current instruction.
+ *
+ * @return The formatted string traceback.
+ */
+RexxString *RexxActivation::getTraceBack()
 {
-    RexxSource *_source = getSourceObject();  /* get the source object             */
-    /* if we still have real source      */
-    if (_source->isTraceable())
-    {
-        RexxString *line = this->formatTrace(this->current, _source);
-        if (line != OREF_NULL)             /* have a real line?                 */
-        {
-            traceback_list->addLast(line);   /* add the next traceback item       */
-        }
-    }
+    return formatTrace(this->current, getSourceObject());
 }
 
 
@@ -4215,4 +4229,38 @@ SecurityManager *RexxActivation::getEffectiveSecurityManager()
 RexxObject *RexxActivation::getLocalEnvironment(RexxString *name)
 {
     return activity->getLocalEnvironment(name);
+}
+
+
+/**
+ * Create a stack frame for exception tracebacks.
+ *
+ * @return A StackFrame instance for this activation.
+ */
+StackFrameClass *RexxActivation::createStackFrame()
+{
+    const char *type = FRAME_METHOD;
+
+    if (isInterpret())
+    {
+        type = FRAME_INTERPRET;
+    }
+    else if (isInternalCall())
+    {
+        type = FRAME_INTERNAL_CALL;
+    }
+    else if (isMethod())
+    {
+        type = FRAME_METHOD;
+    }
+    else if (isProgram())
+    {
+        type = FRAME_PROGRAM;
+    }
+    else if (isRoutine())
+    {
+        type = FRAME_ROUTINE;
+    }
+
+    return new_stack_frame(type, getMessageName(), (RexxMethod *)getExecutableObject(), getTraceBack(), getContextLineNumber());
 }

@@ -43,6 +43,8 @@
 class RexxActivation;
 class RexxNativeActivation;
 class RexxMethod;
+class StackFrameClass;
+class RexxSource;
 
 class ActivationFrame
 {
@@ -66,6 +68,8 @@ public:
 
     virtual RexxString *messageName() = 0;
     virtual RexxMethod *method() = 0;
+    virtual StackFrameClass *createStackFrame() = 0;
+    virtual RexxSource *getSource() = 0;
 
 protected:
     ActivationFrame *next;             // the next activation frame in the chain
@@ -80,6 +84,8 @@ public:
 
     virtual RexxString *messageName();
     virtual RexxMethod *method();
+    virtual StackFrameClass *createStackFrame();
+    virtual RexxSource *getSource();
 
 protected:
     RexxActivation *activation;        // the activation backing this frame
@@ -93,6 +99,8 @@ public:
 
     virtual RexxString *messageName();
     virtual RexxMethod *method();
+    virtual StackFrameClass *createStackFrame();
+    virtual RexxSource *getSource();
 
 protected:
     RexxNativeActivation *activation;        // the activation backing this frame
@@ -106,10 +114,27 @@ public:
 
     virtual RexxString *messageName();
     virtual RexxMethod *method();
+    virtual StackFrameClass *createStackFrame();
+    virtual RexxSource *getSource();
 
 protected:
     RexxString *name;                        // message name associated with the invocation
     RexxMethod *frameMethod;                 // the backing method object
+};
+
+
+class ParseActivationFrame : public ActivationFrame
+{
+public:
+    inline ParseActivationFrame(RexxActivity *a, RexxSource *s) : ActivationFrame(a), source(s) { }
+
+    virtual RexxString *messageName();
+    virtual RexxMethod *method();
+    virtual StackFrameClass *createStackFrame();
+    virtual RexxSource *getSource();
+
+protected:
+    RexxSource *source;                      // the source object being parsed.
 };
 
 #endif

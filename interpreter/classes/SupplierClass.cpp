@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                         SupplierClass.c        */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Supplier Class                                                   */
 /*                                                                            */
@@ -133,12 +133,14 @@ RexxObject  *RexxSupplier::next()
 /* Function:  Step to the next element of the supplier                      */
 /****************************************************************************/
 {
-                                       /* already gone past the end?        */
-  if (this->position > this->values->size())
-                                       /* oops, give an error               */
-    reportException(Error_Incorrect_method_supplier);
-  this->position++;                    /* step the position pointer         */
-  return OREF_NULL;                    /* this returns nothing              */
+    /* already gone past the end?        */
+    if (this->position > this->values->size())
+    {
+        /* oops, give an error               */
+        reportException(Error_Incorrect_method_supplier);
+    }
+    this->position++;                    /* step the position pointer         */
+    return OREF_NULL;                    /* this returns nothing              */
 }
 
 RexxObject  *RexxSupplier::value()

@@ -74,6 +74,7 @@
 #include "PackageClass.hpp"
 #include "SystemInterpreter.hpp"
 #include "ActivationFrame.hpp"
+#include "StackFrameClass.hpp"
 
 const size_t ACT_STACK_SIZE = 20;
 
@@ -490,7 +491,7 @@ void RexxActivity::reportAnException(
 /******************************************************************************/
 {
                                        /* send along with nothing           */
-  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, OREF_NULL, OREF_NULL);
+  this->raiseException(errcode, OREF_NULL, OREF_NULL, OREF_NULL);
 }
 
 void RexxActivity::reportAnException(
@@ -500,7 +501,7 @@ void RexxActivity::reportAnException(
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
 {
-  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(substitution1), OREF_NULL);
+  this->raiseException(errcode, OREF_NULL, new_array(substitution1), OREF_NULL);
 }
 
 void RexxActivity::reportAnException(
@@ -511,7 +512,7 @@ void RexxActivity::reportAnException(
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
 {
-  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(substitution1, substitution2), OREF_NULL);
+  this->raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2), OREF_NULL);
 }
 
 void RexxActivity::reportAnException(
@@ -523,7 +524,7 @@ void RexxActivity::reportAnException(
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
 {
-  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(substitution1, substitution2, substitution3), OREF_NULL);
+  this->raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2, substitution3), OREF_NULL);
 }
 
 void RexxActivity::reportAnException(
@@ -536,7 +537,7 @@ void RexxActivity::reportAnException(
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
 {
-  this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(substitution1, substitution2, substitution3, substitution4), OREF_NULL);
+  this->raiseException(errcode, OREF_NULL, new_array(substitution1, substitution2, substitution3, substitution4), OREF_NULL);
 }
 
 void RexxActivity::reportAnException(
@@ -549,7 +550,7 @@ void RexxActivity::reportAnException(
 /* Function:  Forward on an exception condition                               */
 /******************************************************************************/
 {
-    this->raiseException(errcode, NULL, OREF_NULL, OREF_NULL, new_array(new_string(substitution1), substitution2, new_string(substitution3), substitution4), OREF_NULL);
+    this->raiseException(errcode, OREF_NULL, new_array(new_string(substitution1), substitution2, new_string(substitution3), substitution4), OREF_NULL);
 }
 
 void RexxActivity::reportAnException(
@@ -697,13 +698,16 @@ void RexxActivity::reportAnException(
 }
 
 
-void RexxActivity::raiseException(
-    wholenumber_t  errcode,            /* REXX error code                   */
-    SourceLocation *location,          /* location information              */
-    RexxSource    *source,             /* source file to process            */
-    RexxString    *description,        /* descriptive information           */
-    RexxArray     *additional,         /* substitution information          */
-    RexxObject    *result )            /* result information                */
+/**
+ * Raise an exception on the current activity.
+ *
+ * @param errcode    The syntax error code.
+ * @param description
+ *                   The associated description string.
+ * @param additional The message substitution parameters.
+ * @param result     The message result.
+ */
+void RexxActivity::raiseException(wholenumber_t  errcode, RexxString *description, RexxArray *additional, RexxObject *result)
 /******************************************************************************/
 /* This routine is used for SYNTAX conditions only.                           */
 /*                                                                            */
@@ -746,24 +750,18 @@ void RexxActivity::raiseException(
         activation = NULL;      // raised from a native context, don't add to stack trace
     }
 
-    this->conditionobj = createExceptionObject(errcode, activation, location, source, description, additional, result);
+    this->conditionobj = createExceptionObject(errcode, description, additional, result);
 
     /* process as common condition       */
     if (!this->raiseCondition(conditionobj))
     {
-        // get the traceback list so we can append to it was we unwind
-        RexxList *_traceback = (RexxList *)conditionobj->get(OREF_TRACEBACK);
         /* fill in the propagation status    */
         conditionobj->put(TheTrueObject, OREF_PROPAGATED);
-        // if we have an Rexx context to work with, unwind to that point, but adding the traceback
+        // if we have an Rexx context to work with, unwind to that point,
         if (activation != OREF_NULL)
         {
             // unwind the frame to this point
             unwindToFrame(activation);
-            if (activation->getIndent() > MAX_TRACEBACK_LIST)
-            {
-                _traceback->addLast(new_string("     >...<"));
-            }
             popStackFrame(activation);     // remove it from the stack
         }
         this->raisePropagate(conditionobj);  /* pass on down the chain            */
@@ -771,11 +769,19 @@ void RexxActivity::raiseException(
 }
 
 
+/**
+ * Create a new error exception object.
+ *
+ * @param errcode    The error code to raise.
+ * @param description
+ *                   The description string.
+ * @param additional Message substitution information.
+ * @param result     The result object.
+ *
+ * @return The created exception dictionary.
+ */
 RexxDirectory *RexxActivity::createExceptionObject(
     wholenumber_t  errcode,            /* REXX error code                   */
-    RexxActivation *activation,        // the activation context
-    SourceLocation *location,          /* location information              */
-    RexxSource    *source,             /* source file to process            */
     RexxString    *description,        /* descriptive information           */
     RexxArray     *additional,         /* substitution information          */
     RexxObject    *result )            /* result information                */
@@ -867,41 +873,50 @@ RexxDirectory *RexxActivity::createExceptionObject(
         exobj->put(result, OREF_RESULT);
     }
 
-    // now the source name and result values, if given
-    if (source == OREF_NULL && activation != OREF_NULL)
-    {
-        // get the source object from the activation if we haven't been handed an explicit one
-        source = activation->getSourceObject();
-    }
-
-    if (location != NULL)                /* have clause information available?*/
-    {
-        /* add the line number information   */
-        exobj->put(new_integer(location->getLineNumber()), OREF_POSITION);
-    }
-    /* have an activation?               */
-    else if (activation != OREF_NULL)
-    {
-        /* get the activation position       */
-        exobj->put(new_integer(activation->currentLine()), OREF_POSITION);
-    }
+    // create lists for both the stack frames and the traceback lines
+    RexxList *stackFrames = new_list();
+                                         /* add to the exception object       */
+    exobj->put(stackFrames, OREF_STACKFRAMES);
 
     RexxList *traceback = new_list();    /* create a traceback list           */
                                          /* add to the exception object       */
     exobj->put(traceback, OREF_TRACEBACK);
-    // if location information is given, this is a parsing error, so we
-    // need to extract the traceback information for that now because there
-    // is no activation on the stack that represents that process.
-    if (location != NULL)
+
+    ActivationFrame *frame = activationFrames;
+    while (frame != OREF_NULL && frame->getSource() == OREF_NULL)
     {
-        /* extract and add clause in error   */
-        traceback->addLast(source->traceBack(*location, 0, false));
+        frame = frame->next;
     }
-    /* have predecessors?                */
-    if (activation != OREF_NULL)
+
+    RexxSource *source = OREF_NULL;
+
+    // if we have a frame, then process the list
+    if (frame != NULL)
     {
-        activation->traceBack(traceback);  /* have them add lines to the list   */
+        StackFrameClass *firstFrame = frame->createStackFrame();
+        // save the source object associated with that frame
+        source = frame->getSource();
+        stackFrames->append(firstFrame);
+        traceback->append(firstFrame->getTraceLine());
+
+        // step to the next frame
+        frame = frame->next;
+        while (frame != NULL)
+        {
+            StackFrameClass *stackFrame = frame->createStackFrame();
+            stackFrames->append(stackFrame);
+            traceback->append(stackFrame->getTraceLine());
+            frame = frame->next;
+        }
+
+        RexxObject *lineNumber = firstFrame->getLine();
+        if (lineNumber != TheNilObject)
+        {
+            // add the line number information
+            exobj->put(lineNumber, OREF_POSITION);
+        }
     }
+
     if (source != OREF_NULL)             /* have source for this?             */
     {
         exobj->put(source->getProgramName(), OREF_PROGRAM);
@@ -913,7 +928,7 @@ RexxDirectory *RexxActivity::createExceptionObject(
         exobj->put(OREF_NULLSTRING, OREF_PROGRAM);
     }
 
-    // the condition name is alway SYNTAX
+    // the condition name is always SYNTAX
     exobj->put(OREF_SYNTAX, OREF_CONDITION);
     /* fill in the propagation status    */
     exobj->put(TheFalseObject, OREF_PROPAGATED);
@@ -1053,14 +1068,6 @@ void RexxActivity::raisePropagate(
 {
                                          /* get the condition                 */
     RexxString *condition = (RexxString *)conditionObj->at(OREF_CONDITION);
-
-    RexxList *traceback = OREF_NULL;       /* traceback information             */
-    /* propagating syntax errors?        */
-    if (condition->strCompare(CHAR_SYNTAX))
-    {
-        /* get the traceback                 */
-        traceback = (RexxList *)conditionObj->at(OREF_TRACEBACK);
-    }
     RexxActivationBase *activation = getTopStackFrame(); /* get the current activation        */
 
     /* loop to the top of the stack      */
@@ -1072,10 +1079,6 @@ void RexxActivity::raisePropagate(
         activation->trap(condition, conditionObj);
         /* this is a propagated condition    */
         conditionObj->put(TheTrueObject, OREF_PROPAGATED);
-        if ((traceback != TheNilObject) && (((RexxActivation*)activation)->getIndent() < MAX_TRACEBACK_LIST))
-        {
-            activation->traceBack(traceback);/* add this to the traceback info    */
-        }
         // if we've unwound to the stack base and not been trapped, we need
         // to fall through to the kill processing.  The stackbase should have trapped
         // this.  We never cleanup the stackbase activation though.

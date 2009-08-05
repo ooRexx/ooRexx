@@ -132,7 +132,7 @@ OKIOBJ1=$(OR_OUTDIR)\RexxActivation.$(OBJ) $(OR_OUTDIR)\RexxActivity.$(OBJ) $(OR
 	$(OR_OUTDIR)\Interpreter.$(OBJ) $(OR_OUTDIR)\SystemInterpreter.$(OBJ) $(OR_OUTDIR)\RexxStartDispatcher.$(OBJ) \
 	$(OR_OUTDIR)\InterpreterInstance.$(OBJ) $(OR_OUTDIR)\ActivityDispatcher.$(OBJ) $(OR_OUTDIR)\TranslateDispatcher.$(OBJ) \
 	$(OR_OUTDIR)\CallbackDispatcher.$(OBJ) $(OR_OUTDIR)\SecurityManager.$(OBJ) $(OR_OUTDIR)\ActivationFrame.$(OBJ) \
-	$(OR_OUTDIR)\MessageDispatcher.$(OBJ) $(OR_OUTDIR)\SysInterpreterInstance.$(OBJ)
+	$(OR_OUTDIR)\MessageDispatcher.$(OBJ) $(OR_OUTDIR)\SysInterpreterInstance.$(OBJ) $(OR_OUTDIR)\StackFrameClass.$(OBJ)
 OKIOBJ2=$(OR_OUTDIR)\RexxHashTable.$(OBJ)  $(OR_OUTDIR)\RexxCode.$(OBJ) $(OR_OUTDIR)\PackageManager.$(OBJ) \
         $(OR_OUTDIR)\RexxListTable.$(OBJ) $(OR_OUTDIR)\RexxNativeActivation.$(OBJ) $(OR_OUTDIR)\RexxNativeCode.$(OBJ) \
 	$(OR_OUTDIR)\CPPCode.$(OBJ) $(OR_OUTDIR)\LibraryPackage.$(OBJ) $(OR_OUTDIR)\InternalPackage.$(OBJ)

@@ -168,6 +168,7 @@ EXTERNMEM RexxMemory  memoryObject;   /* memory object                     */
 #define ThePointerClass RexxPointer::classInstance
 #define TheBufferClass RexxBuffer::classInstance
 #define TheWeakReferenceClass WeakReference::classInstance
+#define TheStackFrameClass StackFrameClass::classInstance
 
 #define TheEnvironment RexxMemory::environment
 #define TheStaticRequires RexxMemory::staticRequires

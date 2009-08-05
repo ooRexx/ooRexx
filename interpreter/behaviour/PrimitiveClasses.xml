@@ -58,6 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="Package" class="PackageClass" include="PackageClass.hpp"/>
 <Class id="RexxContext" class="RexxContext" include="ContextClass.hpp"/>
 <Class id="IdentityTable" class="RexxIdentityTable" include="IdentityTableClass.hpp"/>
+<Class id="StackFrame" class="StackFrameClass" include="StackFrameClass.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>

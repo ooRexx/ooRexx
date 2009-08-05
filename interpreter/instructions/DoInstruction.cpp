@@ -71,11 +71,11 @@ void RexxInstructionDo::matchLabel(
         if (myLabel == OREF_NULL)          /* name given on non-control form?   */
         {
                                            /* have a mismatched end             */
-            ActivityManager::currentActivity->raiseException(Error_Unexpected_end_nocontrol, &location, source, OREF_NULL, new_array(name, new_integer(lineNum)), OREF_NULL);
+            source->error(Error_Unexpected_end_nocontrol, location, new_array(name, new_integer(lineNum)));
         }
         else if (name != getLabel())       /* not the same name?                */
         {
-            ActivityManager::currentActivity->raiseException(Error_Unexpected_end_control, &location, source, OREF_NULL, new_array(name, myLabel, new_integer(lineNum)), OREF_NULL);
+            source->error(Error_Unexpected_end_control, location, new_array(name, myLabel, new_integer(lineNum)));
         }
     }
 }

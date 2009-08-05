@@ -59,6 +59,7 @@ class RexxInstructionCallBase;
 class ProtectedObject;
 class RexxSupplier;
 class PackageClass;
+class StackFrameClass;
 
 
 /******************************************************************************/
@@ -169,7 +170,6 @@ class ActivationSettings
    void live(size_t);
    void liveGeneral(int reason);
    RexxObject      * dispatch();
-   void              traceBack(RexxList *);
    size_t            digits();
    size_t            fuzz();
    bool              form();
@@ -197,6 +197,7 @@ class ActivationSettings
    inline bool isInterpret() { return activation_context == INTERPRET; }
    inline bool isInternalCall() { return activation_context == INTERNALCALL; }
    inline bool isMethod() { return activation_context == METHODCALL; }
+   inline bool isRoutine() { return activation_context == EXTERNALCALL; }
    inline bool isProgram() { return activation_context == PROGRAMCALL; }
    inline bool isTopLevelCall() { return (activation_context & TOP_LEVEL_CALL) != 0; }
    inline bool isProgramLevelCall() { return (activation_context & PROGRAM_LEVEL_CALL) != 0; }
@@ -262,6 +263,7 @@ class ActivationSettings
    void              traceClause(RexxInstruction *, int);
    void              resetElapsed();
    RexxString      * formatTrace(RexxInstruction *, RexxSource *);
+   RexxString      * getTraceBack();
    RexxDirectory   * local();
    inline void       implicitExit()
    {
@@ -439,7 +441,9 @@ class ActivationSettings
 
    RexxObject *getContextObject();
    RexxObject *getContextLine();
+   size_t      getContextLineNumber();
    RexxObject *getContextReturnStatus();
+   StackFrameClass *createStackFrame();
 
    inline RexxVariableDictionary *getLocalVariables()
    {

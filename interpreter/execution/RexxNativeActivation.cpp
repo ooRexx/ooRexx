@@ -63,6 +63,7 @@
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 #include "ActivationFrame.hpp"
+#include "StackFrameClass.hpp"
 
 #include <math.h>
 #include <limits.h>
@@ -1920,17 +1921,6 @@ RexxObject *RexxNativeActivation::dispatch()
     return (RexxObject *)r;
 }
 
-
-void RexxNativeActivation::traceBack(
-    RexxList *traceback_list)          /* list of traceback items           */
-/******************************************************************************/
-/* Function:  Add a trace back item to the list.  For native activations,     */
-/*            this is a no-op.                                                */
-/******************************************************************************/
-{
-    return;                              /* just return                       */
-}
-
 size_t RexxNativeActivation::digits()
 /******************************************************************************/
 /* Function:  Return the current digits setting                               */
@@ -3217,6 +3207,22 @@ void RexxNativeActivation::forwardMessage(RexxObject *to, RexxString *msg, RexxC
     {
         to->messageSend(msg, args->data(), args->size(), super, _result);
     }
+}
+
+
+/**
+ * Create a stack frame for exception tracebacks.
+ *
+ * @return A StackFrame instance for this activation.
+ */
+StackFrameClass *RexxNativeActivation::createStackFrame()
+{
+    const char *type = FRAME_METHOD;
+    if (receiver == OREF_NULL)
+    {
+        const char *type = FRAME_ROUTINE;
+    }
+    return new_stack_frame(type, getMessageName(), (RexxMethod *)getExecutableObject(), new_string(COMPILED_MARKER), SIZE_MAX);
 }
 
 

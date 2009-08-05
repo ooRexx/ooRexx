@@ -53,6 +53,7 @@ class RexxNativeRoutine;
 class RegisteredRoutine;
 class RexxStem;
 class RexxSupplier;
+class StackFrameClass;
 
 #define MAX_NATIVE_ARGUMENTS 16
 
@@ -88,7 +89,6 @@ class RexxNativeActivation : public RexxActivationBase
   void  *pointer(RexxObject *);
   void  *pointerString(RexxObject *object, size_t position);
   RexxObject *dispatch();
-  void   traceBack(RexxList *);
   size_t digits();
   size_t fuzz();
   bool   form();
@@ -177,6 +177,7 @@ class RexxNativeActivation : public RexxActivationBase
   void forwardMessage(RexxObject *to, RexxString *msg, RexxClass *super, RexxArray *args, ProtectedObject &result);
   void enableConditionTraps() { trapErrors = true; }
   void disableConditionTraps() { trapErrors = false; }
+  StackFrameClass *createStackFrame();
 
 protected:
 

@@ -95,6 +95,8 @@
 #define TheRexxContextClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_RexxContextClass])
 #define TheIdentityTableBehaviour      (&RexxBehaviour::primitiveBehaviours[T_IdentityTable])
 #define TheIdentityTableClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_IdentityTableClass])
+#define TheStackFrameBehaviour      (&RexxBehaviour::primitiveBehaviours[T_StackFrame])
+#define TheStackFrameClassBehaviour    (&RexxBehaviour::primitiveBehaviours[T_StackFrameClass])
 #define TheNilObjectBehaviour      (&RexxBehaviour::primitiveBehaviours[T_NilObject])
 #define TheBehaviourBehaviour      (&RexxBehaviour::primitiveBehaviours[T_Behaviour])
 #define TheRexxSourceBehaviour      (&RexxBehaviour::primitiveBehaviours[T_RexxSource])

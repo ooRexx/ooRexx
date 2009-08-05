@@ -64,6 +64,7 @@ class PackageClass;
 class ClassDirective;
 class RexxActivation;
 class RexxExpressionStack;
+class StackFrameClass;
 
 /******************************************************************************/
 /* Constants used for setting trace                                           */
@@ -262,6 +263,7 @@ class RexxSource : public RexxInternalObject {
     void        error(int, RexxObject *);
     void        error(int, RexxObject *, RexxObject *);
     void        error(int, RexxObject *, RexxObject *, RexxObject *);
+    void        error(int errorcode, SourceLocation &location, RexxArray *subs);
     void        errorLine(int, RexxInstruction *);
     void        errorPosition(int, RexxToken *);
     void        errorToken(int, RexxToken *);
@@ -311,6 +313,7 @@ class RexxSource : public RexxInternalObject {
     inline void        syntaxError(int errorcode, RexxObject *a1, RexxObject *a2, RexxObject *a3) { this->error(errorcode, a1, a2, a3); }
     inline void        syntaxError(int errorcode, RexxToken *token) { this->errorToken(errorcode, token); }
     inline void        syntaxError(int errorcode) { this->error(errorcode); }
+           StackFrameClass *createStackFrame();
 
     RexxInstruction *addressNew();
     RexxInstruction *assignmentNew(RexxToken *);

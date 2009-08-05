@@ -568,7 +568,6 @@ public:
     inline RexxActivationBase() {;};
     inline RexxActivationBase(RESTORETYPE restoreType) { ; };
     virtual RexxObject  *dispatch() {return NULL;};
-    virtual void traceBack(RexxList *) {;};
     virtual size_t digits() {return Numerics::DEFAULT_DIGITS;};
     virtual size_t fuzz() {return Numerics::DEFAULT_FUZZ;};
     virtual bool form() {return Numerics::DEFAULT_FORM;};

@@ -76,6 +76,7 @@
 #include "PackageClass.hpp"
 #include "ContextClass.hpp"
 #include "IdentityTableClass.hpp"
+#include "StackFrameClass.hpp"
 #include "RexxBehaviour.hpp"
 #include "SourceFile.hpp"
 #include "LibraryPackage.hpp"
@@ -315,6 +316,12 @@ void RexxMemory::buildVirtualFunctionTable()
    
    objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
    virtualFunctionTable[T_IdentityTableClass] = getVftPointer(objectLoc);
+   
+   objectPtr = new (objectLoc) StackFrameClass(RESTOREIMAGE);
+   virtualFunctionTable[T_StackFrame] = getVftPointer(objectLoc);
+   
+   objectPtr = new (objectLoc) RexxClass(RESTOREIMAGE);
+   virtualFunctionTable[T_StackFrameClass] = getVftPointer(objectLoc);
    
    objectPtr = new (objectLoc) RexxNilObject(RESTOREIMAGE);
    virtualFunctionTable[T_NilObject] = getVftPointer(objectLoc);

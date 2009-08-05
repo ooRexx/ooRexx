@@ -201,11 +201,11 @@ void RexxInstructionSelect::matchEnd(
         RexxString *myLabel = getLabel();
         if (myLabel == OREF_NULL)          /* name given on non-control form?   */
         {
-            ActivityManager::currentActivity->raiseException(Error_Unexpected_end_select_nolabel, &location, source, OREF_NULL, new_array(partner->name, new_integer(lineNum)), OREF_NULL);
+            source->error(Error_Unexpected_end_select_nolabel, location, new_array(partner->name, new_integer(lineNum)));
         }
         else if (name != myLabel)          /* not the same name?                */
         {
-            ActivityManager::currentActivity->raiseException(Error_Unexpected_end_select, &location, source, OREF_NULL, new_array(name, myLabel, new_integer(lineNum)), OREF_NULL);
+            source->error(Error_Unexpected_end_select, location, new_array(name, myLabel, new_integer(lineNum)));
         }
     }
     /* misplaced END instruction         */
@@ -217,7 +217,7 @@ void RexxInstructionSelect::matchEnd(
     {
         location = this->getLocation();    /* get the location info             */
                                            /* need at least one WHEN here       */
-        ActivityManager::currentActivity->raiseException(Error_When_expected_when, &location, source, OREF_NULL, new_array(new_integer(lineNum)), OREF_NULL);
+        source->error(Error_When_expected_when, location, new_array(new_integer(lineNum)));
     }
     /* link up each WHEN with the END    */
     while (when != (RexxInstructionIf *)TheNilObject)

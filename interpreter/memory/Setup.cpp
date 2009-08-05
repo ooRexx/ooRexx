@@ -85,6 +85,7 @@
 #include "PackageManager.hpp"
 #include "PackageClass.hpp"
 #include "ContextClass.hpp"
+#include "StackFrameClass.hpp"
 
 
 void RexxMemory::defineKernelMethod(
@@ -218,6 +219,7 @@ void RexxMemory::createImage()
 
   RexxBuffer::createInstance();
   WeakReference::createInstance();
+  StackFrameClass::createInstance();
 
                                        /* build the common retriever tables */
   TheCommonRetrievers = (RexxDirectory *)new_directory();
@@ -1298,6 +1300,34 @@ void RexxMemory::createImage()
                                        /* method                            */
   TheWeakReferenceClass->subClassable(false);
 
+
+  /***************************************************************************/
+  /*           STACKFRAME                                                    */
+  /***************************************************************************/
+                                       /* Add the NEW methods to the class  */
+                                       /* behaviour mdict                   */
+  defineKernelMethod(CHAR_NEW, TheStackFrameClassBehaviour, CPPM(StackFrameClass::newRexx), A_COUNT);
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheStackFrameClassBehaviour->setMethodDictionaryScope(TheStackFrameClass);
+
+
+                                       /* Add the instance methods to the   */
+                                       /* instance behaviour mdict          */
+  defineKernelMethod("NAME", TheStackFrameBehaviour, CPPM(StackFrameClass::getName), 0);
+  defineKernelMethod("EXECUTABLE", TheStackFrameBehaviour, CPPM(StackFrameClass::getExecutable), 0);
+  defineKernelMethod("LINE", TheStackFrameBehaviour, CPPM(StackFrameClass::getLine), 0);
+  defineKernelMethod("TRACELINE", TheStackFrameBehaviour, CPPM(StackFrameClass::getTraceLine), 0);
+  defineKernelMethod("TYPE", TheStackFrameBehaviour, CPPM(StackFrameClass::getType), 0);
+
+                                       /* set the scope of the methods to   */
+                                       /* this classes oref                 */
+  TheStackFrameBehaviour->setMethodDictionaryScope(TheStackFrameClass);
+
+                                       /* Now call the class subclassable   */
+                                       /* method                            */
+  TheWeakReferenceClass->subClassable(false);
+
   /***************************************************************************/
   /***************************************************************************/
   /***************************************************************************/
@@ -1333,6 +1363,7 @@ void RexxMemory::createImage()
   kernel_public(CHAR_POINTER          ,ThePointerClass ,TheEnvironment);
   kernel_public(CHAR_BUFFER           ,TheBufferClass  ,TheEnvironment);
   kernel_public(CHAR_WEAKREFERENCE    ,TheWeakReferenceClass  ,TheEnvironment);
+  kernel_public("STACKFRAME"          ,TheStackFrameClass  ,TheEnvironment);
   kernel_public(CHAR_TRUE             ,TheTrueObject   ,TheEnvironment);
 
   /* set up the kernel directory (MEMORY done elsewhere) */

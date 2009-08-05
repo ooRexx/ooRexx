@@ -86,6 +86,8 @@
 #include "PackageManager.hpp"
 #include "SysFileSystem.hpp"
 #include "RoutineClass.hpp"
+#include "ActivationFrame.hpp"
+#include "StackFrameClass.hpp"
 
 #define HOLDSIZE         60            /* room for 60 temporaries           */
 
@@ -913,6 +915,18 @@ void RexxSource::nextClause()
 #define PREFIX_LENGTH 3                /* length of the prefix flag         */
 #define INDENT_SPACING 2               /* spaces per indentation amount     */
 
+
+/**
+ * Create a stack frame for this parsing context.
+ *
+ * @return a stack frame instance for error reporting
+ */
+StackFrameClass *RexxSource::createStackFrame()
+{
+    return new_stack_frame(FRAME_PARSE, programName, (RexxMethod *)OREF_NULL, traceBack(clauseLocation, 0, true), clauseLocation.getLineNumber());
+}
+
+
 RexxString *RexxSource::traceBack(
      SourceLocation &location,         /* value to trace                    */
      size_t         indent,            /* blank indentation                 */
@@ -927,15 +941,17 @@ RexxString *RexxSource::traceBack(
     char        *linepointer;            /* pointer to the line number        */
     char         linenumber[11];         /* formatted line number             */
 
+                                           /* format the value                  */
+    sprintf(linenumber,"%u", location.getLineNumber());
+
     line = this->extract(location);      /* extract the source string         */
                                          /* doesn't exist and this isn't a    */
                                          /* trace instruction format?         */
-    if (line == OREF_NULLSTRING && !trace)
+    if (line == OREF_NULLSTRING)
     {
-        return OREF_NULL;                  /* don't trace this either           */
+        line = new_string(NO_SOURCE_MARKER);
     }
-                                           /* format the value                  */
-    sprintf(linenumber,"%u", location.getLineNumber());
+
     if (indent < 0)                      /* possible negative indentation?    */
     {
         indent = 0;                        /* just reset it                     */
@@ -1686,6 +1702,8 @@ RexxCode *RexxSource::translate(
 /* Function:  Translate a source object into a method object                  */
 /******************************************************************************/
 {
+    ParseActivationFrame frame(ActivityManager::currentActivity, this);
+
     // set up the package global defaults
     digits = Numerics::DEFAULT_DIGITS;
     form = Numerics::DEFAULT_FORM;
@@ -5341,15 +5359,25 @@ void RexxSource::errorCleanup()
   this->cleanup();                     /* do needed cleanup                 */
 }
 
-void RexxSource::error(
-     int   errorcode)                  /* error to raise                    */
+void RexxSource::error(int errorcode)
 /******************************************************************************/
 /* Function:  Raise an error caused by source translation problems.           */
 /******************************************************************************/
 {
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, OREF_NULL, OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, OREF_NULL, OREF_NULL);
+}
+
+void RexxSource::error(int errorcode, SourceLocation &location, RexxArray *subs)
+/******************************************************************************/
+/* Function:  Raise an error caused by source translation problems.           */
+/******************************************************************************/
+{
+  this->errorCleanup();                /* release any saved objects         */
+  clauseLocation = location;           // set the error location
+                                       /* pass on the exception info        */
+  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, subs, OREF_NULL);
 }
 
 void RexxSource::errorLine(
@@ -5362,7 +5390,7 @@ void RexxSource::errorLine(
 {
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(_instruction->getLineNumber())), OREF_NULL);
 }
 
 void RexxSource::errorPosition(
@@ -5376,7 +5404,7 @@ void RexxSource::errorPosition(
   SourceLocation token_location = token->getLocation(); /* get the token location            */
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(new_integer(token_location.getOffset()), new_integer(token_location.getLineNumber())), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(new_integer(token_location.getOffset()), new_integer(token_location.getLineNumber())), OREF_NULL);
 }
 
 void RexxSource::errorToken(
@@ -5445,7 +5473,7 @@ void RexxSource::errorToken(
     }
     this->errorCleanup();                /* release any saved objects         */
                                          /* pass on the exception info        */
-    ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(value), OREF_NULL);
+    ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -5457,7 +5485,7 @@ void RexxSource::error(
 {
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(value), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -5470,7 +5498,7 @@ void RexxSource::error(
 {
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(value1, value2), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2), OREF_NULL);
 }
 
 void RexxSource::error(
@@ -5484,7 +5512,7 @@ void RexxSource::error(
 {
   this->errorCleanup();                /* release any saved objects         */
                                        /* pass on the exception info        */
-  ActivityManager::currentActivity->raiseException(errorcode, &clauseLocation, this, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
+  ActivityManager::currentActivity->raiseException(errorcode, OREF_NULL, new_array(value1, value2, value3), OREF_NULL);
 }
 
 void RexxSource::blockError(

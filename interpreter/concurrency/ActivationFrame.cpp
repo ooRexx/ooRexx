@@ -40,6 +40,7 @@
 #include "ActivationFrame.hpp"
 #include "RexxActivation.hpp"
 #include "RexxNativeActivation.hpp"
+#include "StackFrameClass.hpp"
 
 RexxString *RexxActivationFrame::messageName()
 {
@@ -49,6 +50,16 @@ RexxString *RexxActivationFrame::messageName()
 RexxMethod *RexxActivationFrame::method()
 {
     return (RexxMethod *)activation->getExecutableObject();
+}
+
+StackFrameClass *RexxActivationFrame::createStackFrame()
+{
+    return activation->createStackFrame();
+}
+
+RexxSource *RexxActivationFrame::getSource()
+{
+    return activation->getEffectiveSourceObject();
 }
 
 RexxString *NativeActivationFrame::messageName()
@@ -61,6 +72,16 @@ RexxMethod *NativeActivationFrame::method()
     return (RexxMethod *)activation->getExecutableObject();
 }
 
+StackFrameClass *NativeActivationFrame::createStackFrame()
+{
+    return activation->createStackFrame();
+}
+
+RexxSource *NativeActivationFrame::getSource()
+{
+    return activation->getSourceObject();
+}
+
 RexxString *InternalActivationFrame::messageName()
 {
     return name;
@@ -69,4 +90,34 @@ RexxString *InternalActivationFrame::messageName()
 RexxMethod *InternalActivationFrame::method()
 {
     return frameMethod;
+}
+
+StackFrameClass *InternalActivationFrame::createStackFrame()
+{
+    return new_stack_frame(FRAME_METHOD, name, frameMethod, new_string(COMPILED_MARKER), SIZE_MAX);
+}
+
+RexxSource *InternalActivationFrame::getSource()
+{
+    return OREF_NULL;
+}
+
+RexxString *ParseActivationFrame::messageName()
+{
+    return OREF_NULL;
+}
+
+RexxMethod *ParseActivationFrame::method()
+{
+    return OREF_NULL;
+}
+
+StackFrameClass *ParseActivationFrame::createStackFrame()
+{
+    return source->createStackFrame();
+}
+
+RexxSource *ParseActivationFrame::getSource()
+{
+    return source;
 }
