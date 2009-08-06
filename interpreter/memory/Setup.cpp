@@ -1326,7 +1326,7 @@ void RexxMemory::createImage()
 
                                        /* Now call the class subclassable   */
                                        /* method                            */
-  TheWeakReferenceClass->subClassable(false);
+  TheStackFrameClass->subClassable(false);
 
   /***************************************************************************/
   /***************************************************************************/
