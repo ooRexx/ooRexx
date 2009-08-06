@@ -427,6 +427,8 @@ class ActivationSettings
        }
    }
 
+   inline RexxArray        *getArguments() { return new_array(argcount, arglist); }
+
    inline RexxObject      **getProgramArgumentlist() {return this->settings.parent_arglist;};
    inline size_t            getProgramArgumentCount() { return settings.parent_argcount; }
 

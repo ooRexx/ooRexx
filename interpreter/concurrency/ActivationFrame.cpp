@@ -94,7 +94,7 @@ RexxMethod *InternalActivationFrame::method()
 
 StackFrameClass *InternalActivationFrame::createStackFrame()
 {
-    return new_stack_frame(FRAME_METHOD, name, frameMethod, new_string(COMPILED_MARKER), SIZE_MAX);
+    return new StackFrameClass(FRAME_METHOD, name, frameMethod, new_array(count, argPtr), new_string(COMPILED_MARKER), SIZE_MAX);
 }
 
 RexxSource *InternalActivationFrame::getSource()

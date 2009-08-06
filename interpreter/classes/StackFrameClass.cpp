@@ -74,11 +74,12 @@ void *StackFrameClass::operator new(size_t size)
  *
  * @param a      The activation we're attached to.
  */
-StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxString *t, size_t l)
+StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxArray *a, RexxString *t, size_t l)
 {
     type = ty;
     name = n;
     executable = e;
+    arguments = a;
     traceLine = t;
     line = l;
 }
@@ -110,6 +111,7 @@ void StackFrameClass::live(size_t liveMark)
     memory_mark(this->name);
     memory_mark(this->executable);
     memory_mark(this->traceLine);
+    memory_mark(this->arguments);
 }
 
 void StackFrameClass::liveGeneral(int reason)
@@ -120,6 +122,7 @@ void StackFrameClass::liveGeneral(int reason)
     memory_mark_general(this->name);
     memory_mark_general(this->executable);
     memory_mark_general(this->traceLine);
+    memory_mark_general(this->arguments);
 }
 
 void StackFrameClass::flatten(RexxEnvelope *envelope)
@@ -132,6 +135,7 @@ void StackFrameClass::flatten(RexxEnvelope *envelope)
   newThis->name = OREF_NULL;   // this never should be getting flattened, so sever the connection
   newThis->executable = OREF_NULL;
   newThis->traceLine = OREF_NULL;
+  newThis->arguments = OREF_NULL;
 
   cleanUpFlatten
 }
@@ -200,5 +204,23 @@ RexxObject *StackFrameClass::getLine()
     else
     {
         return new_integer(line);
+    }
+}
+
+/**
+ * Return an array of arguments to the current activation.
+ *
+ * @return An array of arguments.  Returns an empty array if no
+ *         arguments.
+ */
+RexxArray *StackFrameClass::getArguments()
+{
+    if (arguments == OREF_NULL)
+    {
+        return new_array((size_t)0);
+    }
+    else
+    {
+        return arguments;
     }
 }

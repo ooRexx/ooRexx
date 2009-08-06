@@ -60,7 +60,7 @@ class StackFrameClass : public RexxObject
 public:
     void *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) { return ptr; };
-    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxString *t, size_t l);
+    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxArray *arguments, RexxString *t, size_t l);
     inline StackFrameClass(RESTORETYPE restoreType) { ; };
 
     void live(size_t);
@@ -75,6 +75,7 @@ public:
     RexxObject *getExecutable();
     RexxObject *getLine();
     RexxString *getTraceLine();
+    RexxArray  *getArguments();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 
@@ -82,14 +83,11 @@ protected:
     const char *type;               // the type of frame
     RexxString *name;               // the name of the item at that stack frame instance
     BaseExecutable *executable;     // the executable associated with this frame instance
+    RexxArray *arguments;           // arguments to the method/routine
     size_t          line;           // the frame line position (MAX_SIZE indicates no line available)
     RexxString *traceLine;          // a tracing line
 };
 
-inline StackFrameClass *new_stack_frame(const char *type, RexxString *name, RexxMethod *method, RexxString *trace, size_t line)  { return new StackFrameClass(type, name, method, trace, line); }
-inline StackFrameClass *new_stack_frame(const char *type, RexxString *name, RexxMethod *method, RexxString *trace)  { return new StackFrameClass(type, name, method, trace, SIZE_MAX); }
-inline StackFrameClass *new_stack_frame(const char *type, RexxString *name, RoutineClass *routine, RexxString *trace)  { return new StackFrameClass(type, name, routine, trace, SIZE_MAX); }
-inline StackFrameClass *new_stack_frame(const char *type, RexxString *name, RoutineClass *routine, RexxString *trace, size_t line)  { return new StackFrameClass(type, name, routine, trace, line); }
 #endif
 
 

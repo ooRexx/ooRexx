@@ -4240,6 +4240,7 @@ RexxObject *RexxActivation::getLocalEnvironment(RexxString *name)
 StackFrameClass *RexxActivation::createStackFrame()
 {
     const char *type = FRAME_METHOD;
+    RexxArray *arguments = OREF_NULL;
 
     if (isInterpret())
     {
@@ -4248,19 +4249,23 @@ StackFrameClass *RexxActivation::createStackFrame()
     else if (isInternalCall())
     {
         type = FRAME_INTERNAL_CALL;
+        arguments = getArguments();
     }
     else if (isMethod())
     {
         type = FRAME_METHOD;
+        arguments = getArguments();
     }
     else if (isProgram())
     {
         type = FRAME_PROGRAM;
+        arguments = getArguments();
     }
     else if (isRoutine())
     {
         type = FRAME_ROUTINE;
+        arguments = getArguments();
     }
 
-    return new_stack_frame(type, getMessageName(), (RexxMethod *)getExecutableObject(), getTraceBack(), getContextLineNumber());
+    return new StackFrameClass(type, getMessageName(), (BaseExecutable *)getExecutableObject(), arguments, getTraceBack(), getContextLineNumber());
 }

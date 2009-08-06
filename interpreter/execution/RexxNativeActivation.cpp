@@ -3222,7 +3222,7 @@ StackFrameClass *RexxNativeActivation::createStackFrame()
     {
         const char *type = FRAME_ROUTINE;
     }
-    return new_stack_frame(type, getMessageName(), (RexxMethod *)getExecutableObject(), new_string(COMPILED_MARKER), SIZE_MAX);
+    return new StackFrameClass(type, getMessageName(), (BaseExecutable *)getExecutableObject(), getArguments(), new_string(COMPILED_MARKER), SIZE_MAX);
 }
 
 

@@ -208,6 +208,11 @@ inline RexxArray *new_array(size_t s)
     return new (s, RexxArray::ARRAY_MIN_SIZE, TheArrayClass) RexxArray;
 }
 
+inline RexxArray *new_array(size_t s, RexxObject **o)
+{
+    return new (s, o) RexxArray;
+}
+
 inline RexxArray *new_array(RexxObject *o1)
 {
     return new (o1) RexxArray;
