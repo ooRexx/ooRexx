@@ -870,7 +870,7 @@ int64_t SysFileSystem::getFileLength(const char *name)
     struct stat st;
     if (stat(name, &st) != 0)
     {
-        return -1;
+        return 0;
     }
     return (int64_t)st.st_size;
 }
