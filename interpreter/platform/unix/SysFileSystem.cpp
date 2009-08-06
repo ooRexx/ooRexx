@@ -854,7 +854,7 @@ int64_t SysFileSystem::getLastModifiedDate(const char *name)
     {
         return -1;
     }
-    return (int64_t)st.st_mtime * (int64_t)1000000;
+    return (int64_t)st.st_mtime;
 }
 
 
@@ -949,7 +949,7 @@ bool SysFileSystem::setLastModifiedDate(const char *name, int64_t time)
     }
 
     timebuf.actime = statbuf.st_atime;
-    timebuf.modtime = (time_t)(time / 1000000);
+    timebuf.modtime = (time_t)time;
     return utime(name, &timebuf) == 0;
 }
 
