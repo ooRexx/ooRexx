@@ -126,10 +126,32 @@ systems.  The commands to install a .dmg file are as follows:
 AIX
 ---
 
-There is a .bff install package for AIX.  The commands to install are as
-follows:
+There is a LPP install package for AIX.
 
-%
+This LPP will add an SRC subsystem named rxapi. The subsystem is started
+automatically after the installation and via an entry in the /etc/inittab
+during boot.
+
+Copy the ooRexx 32 bit _or_ 64 bit installation package to an empty
+directory and then execute the following commands:
+
+To install the 32 bit version:
+
+root@box # inutoc ./
+root@box # installp -a -c -X -v -Y -V2 -g -d./ ooRexx.32.rte
+
+To uninstall the 32 bit version:
+
+root@box # installp -u ooRexx.32.rte
+
+To install the 64 bit version:
+
+root@box # inutoc ./
+root@box # installp -a -c -X -v -Y -V2 -g -d./ ooRexx.64.rte
+
+To uninstall the 64 bit version:
+
+root@box # installp -u ooRexx.64.rte
 
 
 Build and Install From a Release Source Archive
@@ -163,9 +185,13 @@ available at:
   http://subversion.tigris.org/project_packages.html
 
 Once the Subversion client is installed, the command to checkout is as
-follows, using the 3.x head as an example:
+follows, using the 4.x head as an example:
 
-E:\work>svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/interpreter-3.x/trunk interpreter
+E:\work>svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/main/trunk interpreter
+
+You can also check out the 4.0.0 release code:
+
+E:\work>svn co https://oorexx.svn.sourceforge.net/svnroot/oorexx/main/releases/4.0.0 interpreter
 
 In this command, the last word of the command is the directory into which
 the source tree will be checked out.  The name of the directory can be any
