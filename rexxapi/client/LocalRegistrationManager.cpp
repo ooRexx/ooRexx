@@ -148,6 +148,8 @@ RexxReturnCode LocalRegistrationManager::queryCallback(RegistrationType type, co
     ClientMessage message(RegistrationManager, REGISTER_QUERY, type, name);
 
     message.send();
+    // make sure everything is deleted
+    message.freeMessageData();
     return mapReturnResult(message);
 }
 
@@ -181,6 +183,8 @@ RexxReturnCode LocalRegistrationManager::queryCallback(RegistrationType type, co
 
             retData->retrieveUserData(userData);
         }
+        // make sure everything is deleted
+        message.freeMessageData();
         return mapReturnResult(message);
     }
     else
@@ -195,6 +199,8 @@ RexxReturnCode LocalRegistrationManager::queryCallback(RegistrationType type, co
 
             retData->retrieveUserData(userData);
         }
+        // make sure everything is deleted
+        message.freeMessageData();
         return mapReturnResult(message);
     }
 }
@@ -245,6 +251,8 @@ RexxReturnCode LocalRegistrationManager::resolveCallback(RegistrationType type, 
             entryPoint = (REXXPFN)retData->entryPoint;
         }
     }
+    // make sure everything is deleted
+    message.freeMessageData();
     return mapReturnResult(message);
 }
 
