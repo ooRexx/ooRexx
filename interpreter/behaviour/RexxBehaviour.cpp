@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                            RexxBehaviour.c     */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Behaviour Class                                                  */
 /*                                                                            */
@@ -101,26 +101,26 @@ void RexxBehaviour::liveGeneral(int reason)
 /* Function:  Generalized object marking                                      */
 /******************************************************************************/
 {
-                                       /* Save image processing?        */
-  if (memoryObject.savingImage() && this->isNonPrimitive())
-  {
-      // mark this as needing resolution when restored.
-      this->setNotResolved();
-  }
-  // the other side of the process?
-  else if (memoryObject.restoringImage())
-  {
-      // if we have a non-primitive here on a restore image, we need to fix this up.
-      if (isNonPrimitive())
-      {
-          resolveNonPrimitiveBehaviour();
-      }
-  }
+    /* Save image processing?        */
+    if (memoryObject.savingImage() && this->isNonPrimitive())
+    {
+        // mark this as needing resolution when restored.
+        this->setNotResolved();
+    }
+    // the other side of the process?
+    else if (memoryObject.restoringImage())
+    {
+        // if we have a non-primitive here on a restore image, we need to fix this up.
+        if (isNonPrimitive())
+        {
+            resolveNonPrimitiveBehaviour();
+        }
+    }
 
-  memory_mark_general(this->methodDictionary);
-  memory_mark_general(this->instanceMethodDictionary);
-  memory_mark_general(this->scopes);
-  memory_mark_general(this->owningClass);
+    memory_mark_general(this->methodDictionary);
+    memory_mark_general(this->instanceMethodDictionary);
+    memory_mark_general(this->scopes);
+    memory_mark_general(this->owningClass);
 }
 
 void RexxBehaviour::flatten(RexxEnvelope *envelope)
@@ -166,14 +166,12 @@ RexxObject *RexxBehaviour::copy()
 /*             dictionary, but leave the original create_class.               */
 /******************************************************************************/
 {
-    RexxBehaviour *newBehaviour;         /* new copy of the behaviour         */
-
     /* Instead of calling new_object and memcpy, ask the memory object to make*/
     /* a copy of ourself.  This way, any header information can be correctly  */
     /* initialized by memory.                                                 */
 
     /* first, clone the existing object  */
-    newBehaviour = (RexxBehaviour *)this->clone();
+    RexxBehaviour *newBehaviour = (RexxBehaviour *)this->clone();
     /* have an method dictionary         */
     if (this->methodDictionary != OREF_NULL)
     {
@@ -306,13 +304,16 @@ void RexxBehaviour::removeMethod(
 /* Function:  Reverse a SETMETHOD operation                                   */
 /******************************************************************************/
 {
-                                       /* actually done SETMETHOD calls?    */
-  if (this->instanceMethodDictionary != OREF_NULL) {
-                                       /* do we have one of these?          */
-    if (this->instanceMethodDictionary->remove(methodName) != OREF_NULL)
-                                       /* remove from the real dictionary   */
-      this->methodDictionary->remove(methodName);
-  }
+    /* actually done SETMETHOD calls?    */
+    if (this->instanceMethodDictionary != OREF_NULL)
+    {
+        /* do we have one of these?          */
+        if (this->instanceMethodDictionary->remove(methodName) != OREF_NULL)
+        {
+            /* remove from the real dictionary   */
+            this->methodDictionary->remove(methodName);
+        }
+    }
 }
 
 void RexxBehaviour::addMethod(
@@ -322,23 +323,29 @@ void RexxBehaviour::addMethod(
 /* Function:  Add a method to an object's behaviour                           */
 /******************************************************************************/
 {
-                                       /* no method dictionary yet?         */
-  if (this->methodDictionary == OREF_NULL)
-                                       /* allocate a table                  */
-    OrefSet(this, this->methodDictionary, new_table());
-                                       /* now repeat for the instance       */
-  if (this->instanceMethodDictionary == OREF_NULL)
-                                       /* methods to track additions        */
-    OrefSet(this, this->instanceMethodDictionary, new_table());
-                                       /* already added one by this name?   */
-  if (this->instanceMethodDictionary->stringGet(methodName) != OREF_NULL)
-                                       /* remove from the method dictionary */
-    this->methodDictionary->remove(methodName);
+    /* no method dictionary yet?         */
+    if (this->methodDictionary == OREF_NULL)
+    {
+        /* allocate a table                  */
+        OrefSet(this, this->methodDictionary, new_table());
+    }
+    /* now repeat for the instance       */
+    if (this->instanceMethodDictionary == OREF_NULL)
+    {
+        /* methods to track additions        */
+        OrefSet(this, this->instanceMethodDictionary, new_table());
+    }
+    /* already added one by this name?   */
+    if (this->instanceMethodDictionary->stringGet(methodName) != OREF_NULL)
+    {
+        /* remove from the method dictionary */
+        this->methodDictionary->remove(methodName);
+    }
 
-                                       /* now just add this directly        */
-  this->methodDictionary->stringAdd(method, methodName);
-                                       /* and also add to the instance one  */
-  this->instanceMethodDictionary->stringPut(method, methodName);
+    /* now just add this directly        */
+    this->methodDictionary->stringAdd(method, methodName);
+    /* and also add to the instance one  */
+    this->instanceMethodDictionary->stringPut(method, methodName);
 }
 
 RexxMethod *RexxBehaviour::methodObject(
@@ -347,11 +354,11 @@ RexxMethod *RexxBehaviour::methodObject(
 /* Function:  Retrieve a method associated with the given name                */
 /******************************************************************************/
 {
-                                       /* force to a string version (upper  */
-                                       /* case required)                    */
-  messageName = stringArgument(messageName, ARG_ONE)->upper();
-                                       /* now just do a method lookup       */
-  return this->methodLookup(messageName);
+    /* force to a string version (upper  */
+    /* case required)                    */
+    messageName = stringArgument(messageName, ARG_ONE)->upper();
+    /* now just do a method lookup       */
+    return this->methodLookup(messageName);
 }
 
 RexxMethod *RexxBehaviour::methodLookup(
@@ -382,12 +389,12 @@ RexxMethod *RexxBehaviour::getMethod(
 /*            returns OREF_NULL if the method does not exist.                 */
 /******************************************************************************/
 {
-  if (this->methodDictionary != OREF_NULL)
-  {
-                                       /* try to get the method             */
-      return (RexxMethod *)this->methodDictionary->stringGet(messageName);
-  }
-  return OREF_NULL;                    /* return the method object          */
+    if (this->methodDictionary != OREF_NULL)
+    {
+        /* try to get the method             */
+        return(RexxMethod *)this->methodDictionary->stringGet(messageName);
+    }
+    return OREF_NULL;                    /* return the method object          */
 }
 
 RexxObject *RexxBehaviour::deleteMethod(
@@ -396,13 +403,13 @@ RexxObject *RexxBehaviour::deleteMethod(
 /* Function:  Delete a method from an object's behaviour                      */
 /******************************************************************************/
 {
-                                       /* have a dictionary?                */
-  if (this->methodDictionary != OREF_NULL)
-  {
-                                         /* just remove from the table        */
-      this->methodDictionary->remove(messageName);
-  }
-  return OREF_NULL;                    /* always return nothing             */
+    /* have a dictionary?                */
+    if (this->methodDictionary != OREF_NULL)
+    {
+        /* just remove from the table        */
+        this->methodDictionary->remove(messageName);
+    }
+    return OREF_NULL;                    /* always return nothing             */
 }
 
 void RexxBehaviour::subclass(
@@ -413,7 +420,7 @@ void RexxBehaviour::subclass(
 /******************************************************************************/
 {
                                        /* replace the typenum               */
-  this->setClassType(subclass_behaviour->getClassType());
+    this->setClassType(subclass_behaviour->getClassType());
 }
 
 void RexxBehaviour::restore(
@@ -422,18 +429,18 @@ void RexxBehaviour::restore(
 /* Function:  Restore primtive behaviours                                                                                            */
 /******************************************************************************/
 {
-                                       /* set the behaviour behaviour       */
-  this->setBehaviour(getPrimitiveBehaviour(T_Behaviour));
-                                       /* set proper size                   */
-  this->setObjectSize(roundObjectBoundary(sizeof(RexxBehaviour)));
-  this->setOldSpace();
-                                       /* Make sure we pick up additional   */
-                                       /*  methods defined during saveimage */
-                                       /* Don't use OrefSet here            */
-  this->methodDictionary = saved->getMethodDictionary();
-  this->scopes = saved->getScopes();   /* and the scopes that are there     */
-                                       /* copy over the associated class    */
-  this->owningClass = saved->getOwningClass();
+    /* set the behaviour behaviour       */
+    this->setBehaviour(getPrimitiveBehaviour(T_Behaviour));
+    /* set proper size                   */
+    this->setObjectSize(roundObjectBoundary(sizeof(RexxBehaviour)));
+    this->setOldSpace();
+    /* Make sure we pick up additional   */
+    /*  methods defined during saveimage */
+    /* Don't use OrefSet here            */
+    this->methodDictionary = saved->getMethodDictionary();
+    this->scopes = saved->getScopes();   /* and the scopes that are there     */
+                                         /* copy over the associated class    */
+    this->owningClass = saved->getOwningClass();
 }
 
 RexxClass *RexxBehaviour::restoreClass()
@@ -441,14 +448,14 @@ RexxClass *RexxBehaviour::restoreClass()
 /* Function:  Update and return a primitive behaviour's primitive class       */
 /******************************************************************************/
 {
-  /* Adjust the instance behaviour.  Note that we don't use */
-  /* OrefSet() for this.  When we're restoring the classes, the */
-  /* class objects are in oldspace, and the behaviours are */
-  /* primitive objects, not subject to sweeping.  We do a direct */
-  /* assignment to avoid creating a reference entry in the old2new */
-  /* table. */
-  this->owningClass->setInstanceBehaviour(this);
-  return this->owningClass;            /* return the associated class       */
+    /* Adjust the instance behaviour.  Note that we don't use */
+    /* OrefSet() for this.  When we're restoring the classes, the */
+    /* class objects are in oldspace, and the behaviours are */
+    /* primitive objects, not subject to sweeping.  We do a direct */
+    /* assignment to avoid creating a reference entry in the old2new */
+    /* table. */
+    this->owningClass->setInstanceBehaviour(this);
+    return this->owningClass;            /* return the associated class       */
 }
 
 void *RexxBehaviour::operator new(size_t size,
@@ -467,12 +474,12 @@ RexxObject * RexxBehaviour::superScope(
 /* Function:  Return the scope following a give scope                         */
 /******************************************************************************/
 {
-  if (this->scopes == OREF_NULL)       /* no scopes defined?                */
-  {
-      return TheNilObject;               /* no super scoping possible         */
-  }
-                                       /* go get the super scope            */
-  return this->scopes->findSuperScope(start_scope);
+    if (this->scopes == OREF_NULL)       /* no scopes defined?                */
+    {
+        return TheNilObject;               /* no super scoping possible         */
+    }
+    /* go get the super scope            */
+    return this->scopes->findSuperScope(start_scope);
 }
 
 RexxMethod *RexxBehaviour::superMethod(
@@ -596,8 +603,8 @@ RexxObject *RexxBehaviour::setScopes(
 /******************************************************************************/
 {
                                        /* set the scoping info              */
-  OrefSet(this, this->scopes, newscopes);
-  return OREF_NULL;                    /* always return nothing             */
+    OrefSet(this, this->scopes, newscopes);
+    return OREF_NULL;                    /* always return nothing             */
 }
 
 RexxObject *RexxBehaviour::addScope(
@@ -606,16 +613,16 @@ RexxObject *RexxBehaviour::addScope(
 /* Function:  Set a new set of scoping information for an object              */
 /******************************************************************************/
 {
-  if (this->scopes == OREF_NULL)       /* no scopes set?                     */
-  {
-                                       /* add a scope table to add to        */
-      OrefSet(this, this->scopes, new_identity_table());
-  }
-                                       /* set the scoping info              */
-  this->scopes->add(scope, TheNilObject);
-                                       /* add the scope list for this scope */
-  this->scopes->add(this->scopes->allAt(TheNilObject), scope);
-  return OREF_NULL;                    /* return the big nothing            */
+    if (this->scopes == OREF_NULL)       /* no scopes set?                     */
+    {
+        /* add a scope table to add to        */
+        OrefSet(this, this->scopes, new_identity_table());
+    }
+    /* set the scoping info              */
+    this->scopes->add(scope, TheNilObject);
+    /* add the scope list for this scope */
+    this->scopes->add(this->scopes->allAt(TheNilObject), scope);
+    return OREF_NULL;                    /* return the big nothing            */
 }
 
 RexxObject *RexxBehaviour::mergeScope(
@@ -624,12 +631,12 @@ RexxObject *RexxBehaviour::mergeScope(
 /* Function:  Set a new set of scoping information for an object              */
 /******************************************************************************/
 {
-  if (this->checkScope(scope))         // seen this one before?
-  {
-      return OREF_NULL;                // we're done
-  }
+    if (this->checkScope(scope))         // seen this one before?
+    {
+        return OREF_NULL;                // we're done
+    }
 
-  return this->addScope(scope);        // go and add this
+    return this->addScope(scope);        // go and add this
 }
 
 
@@ -639,12 +646,12 @@ bool RexxBehaviour::checkScope(
 /* Function: Check if the passed scope is already in the scope table         */
 /*****************************************************************************/
 {
-  if (this->scopes == OREF_NULL)       /* no scopes set?                    */
-  {
-      return false;                      /* then it can't be in the table     */
-  }
-                                       /* have the table check for the index*/
-  return this->scopes->get(scope) != OREF_NULL;
+    if (this->scopes == OREF_NULL)       /* no scopes set?                    */
+    {
+        return false;                      /* then it can't be in the table     */
+    }
+    /* have the table check for the index*/
+    return this->scopes->get(scope) != OREF_NULL;
 }
 
 void RexxBehaviour::merge(
@@ -655,8 +662,6 @@ void RexxBehaviour::merge(
 /*             to be found before the source behaviour                       */
 /*****************************************************************************/
 {
-    RexxTable *newMethods;               /* new dictionary of methods         */
-
                                          /* if there isn't a source mdict     */
                                          /* there isn't anything to do        */
     if (source_behav->methodDictionary == OREF_NULL)
@@ -673,7 +678,7 @@ void RexxBehaviour::merge(
     {
         /* get a copy of the source mdict    */
         /* for the merge                     */
-        newMethods = (RexxTable *)source_behav->methodDictionary->copy();
+        RexxTable *newMethods = (RexxTable *)source_behav->methodDictionary->copy();
         ProtectedObject p(newMethods);
         /* merge this mdict with the copy    */
         this->methodDictionary->merge(newMethods);

@@ -415,10 +415,10 @@ RexxTable *RexxClass::getBehaviourDictionary()
     }
 }
 
+
 /**
  * Initialize a base Rexx class.
  *
- * @param class_id   The name of the class.
  * @param restricted Whether we should turn the RexxRestricted flag on at this time.
  *                   Some classes get additional customization after initial
  *                   creation, so we delay setting this attribute until the
@@ -543,6 +543,77 @@ void RexxClass::subClassable(bool restricted)
         this->setMetaClass();
     }
 }
+
+
+/**
+ * Initialize a base Rexx class that inherits from a primitive
+ * class other than Object.
+ *
+ * @param superClass The immediate superclass of the created
+ *                   class.
+ * @param restricted Whether we should turn the RexxRestricted flag on at this time.
+ *                   Some classes get additional customization after initial
+ *                   creation, so we delay setting this attribute until the
+ *                   class is fully constructed.
+ */
+void RexxClass::subClassable(RexxClass *superClass, bool restricted)
+{
+    // get a copy of the class instance behaviour mdict before the merge
+    // with OBJECT.  This unmerged mdict is kept in this class's
+    // class_instance_mdict field.
+    OrefSet(this, this->instanceMethodDictionary, this->getInstanceBehaviourDictionary());
+
+    // set up the superclass/subclass relationships
+    OrefSet(this, this->classSuperClasses, new_array(superClass));
+    OrefSet(this, this->instanceSuperClasses, new_array(superClass));
+    // create the subclasses list
+    OrefSet(this, this->subClasses, new_list());
+    // and add this as a subclass to our superclass
+    superClass->addSubClass(this);
+
+    // create the merged method dictionary for the instancebehavior
+    // and update all of the scopes.
+    mergeSuperClassScopes(this->instanceBehaviour);
+
+    /* add self to the scope table        */
+    this->instanceBehaviour->addScope(this);
+
+    // get a copy of the class behaviour mdict before the merge with the
+    // CLASS instance behaviour. This unmerged mdict is kept in the
+    // class_mdict field
+    OrefSet(this, this->classMethodDictionary, this->getBehaviourDictionary());
+    // The merge of the mdict's is order specific. By processing OBJECT
+    // first then CLASS and then the rest of the subclassable classes
+    // the mdict's will be set up correctly.In this way merging the CLASS
+    // behaviour will only be the CLASS instance methods when OBJECT is
+    // processed, but will be CLASS's and OBJECT's after CLASS is
+    // processed                          */
+    this->behaviour->merge(TheClassBehaviour);
+    // now add the scope levels to this class behaviour
+    this->behaviour->addScope(TheObjectClass);
+    // add the class scope levels
+    this->behaviour->addScope(TheClassClass);
+    // and finally the new class.
+    this->behaviour->addScope(this);
+
+    // now fill in some state data for the class object.
+    // set up the new metaclass list
+    OrefSet(this, this->metaClass, new_array(TheClassClass));
+    // the metaclass mdict list
+    OrefSet(this, this->metaClassMethodDictionary, new_array(TheClassClass->instanceMethodDictionary->copy()));
+    // and the metaclass scopes list
+    OrefSet(this, this->metaClassScopes, (RexxIdentityTable *)TheClassClass->behaviour->getScopes()->copy());
+
+    // The Baseclass for non-mixin classes is self
+    OrefSet(this, this->baseClass, this);
+    // and point the instance behaviour back to this class
+    this->instanceBehaviour->setOwningClass(this);
+    // and the class behaviour to CLASS
+    this->behaviour->setOwningClass(TheClassClass);
+    // these are primitive classes
+    this->classFlags |= PRIMITIVE_CLASS;
+}
+
 
 RexxObject *RexxClass::defineMethod(
     RexxString * method_name,          /*define method name                 */
@@ -884,6 +955,39 @@ void RexxClass::createInstanceBehaviour(
         /* Merge this class mdict with the    */
         /* target behaviour class mdict       */
         target_instance_behaviour->methodDictionaryMerge(this->instanceMethodDictionary);
+        /* And update the target behaviour    */
+        /* scopes table with this class       */
+        target_instance_behaviour->addScope(this);
+    }
+}
+
+
+/**
+ * Merge the scopes from the superclasses into a target primitive class.
+ *
+ * @param target_instance_behaviour
+ *               The target behavior to update.
+ */
+void RexxClass::mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour)
+{
+    // Call each of the superclasses in this superclass list starting from
+    // the last going to the first
+    for (HashLink index = this->instanceSuperClasses->size(); index > 0; index--)
+    {
+        RexxClass *superclass = (RexxClass *)this->instanceSuperClasses->get(index);
+        // if there is a superclass and it hasn't been added into this
+        // behaviour yet, call and have it add itself                        */
+        if (superclass != TheNilObject && !target_instance_behaviour->checkScope(superclass))
+        {
+            superclass->mergeSuperClassScopes(target_instance_behaviour);
+        }
+    }
+    // now add in the scope for this class, if still needed.
+    if (!target_instance_behaviour->checkScope(this))
+    {
+        /* Merge this class mdict with the    */
+        /* target behaviour class mdict       */
+        target_instance_behaviour->merge(this->instanceBehaviour);
         /* And update the target behaviour    */
         /* scopes table with this class       */
         target_instance_behaviour->addScope(this);

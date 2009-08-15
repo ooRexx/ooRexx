@@ -4241,6 +4241,7 @@ StackFrameClass *RexxActivation::createStackFrame()
 {
     const char *type = FRAME_METHOD;
     RexxArray *arguments = OREF_NULL;
+    RexxObject *target = OREF_NULL;
 
     if (isInterpret())
     {
@@ -4255,6 +4256,7 @@ StackFrameClass *RexxActivation::createStackFrame()
     {
         type = FRAME_METHOD;
         arguments = getArguments();
+        target = receiver;
     }
     else if (isProgram())
     {
@@ -4267,5 +4269,5 @@ StackFrameClass *RexxActivation::createStackFrame()
         arguments = getArguments();
     }
 
-    return new StackFrameClass(type, getMessageName(), (BaseExecutable *)getExecutableObject(), arguments, getTraceBack(), getContextLineNumber());
+    return new StackFrameClass(type, getMessageName(), (BaseExecutable *)getExecutableObject(), target, arguments, getTraceBack(), getContextLineNumber());
 }

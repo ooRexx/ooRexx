@@ -84,6 +84,8 @@
    RexxTable  *getBehaviourDictionary();
    RexxString *defaultName();
    void        subClassable(bool);
+   void        subClassable(RexxClass *superClass, bool restricted);
+   void        mergeSuperClassScopes(RexxBehaviour *target_instance_behaviour);
    RexxObject *defineMethod(RexxString *, RexxMethod *);
    RexxObject *defineMethods(RexxTable *);
    RexxObject *deleteMethod(RexxString *);

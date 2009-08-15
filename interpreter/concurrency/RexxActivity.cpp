@@ -937,6 +937,39 @@ RexxDirectory *RexxActivity::createExceptionObject(
 }
 
 
+/**
+ * Generate a list of stack frames for an Exception object.
+ *
+ * @return A list of the stack frames in the call context.
+ */
+RexxList *RexxActivity::generateStackFrames()
+{
+    // create lists for both the stack frames and the traceback lines
+    RexxList *stackFrames = new_list();
+    ProtectedObject p(stackFrames);
+
+    ActivationFrame *frame = activationFrames;
+    while (frame != OREF_NULL && frame->getSource() == OREF_NULL)
+    {
+        frame = frame->next;
+    }
+
+    RexxSource *source = OREF_NULL;
+
+    // if we have a frame, then process the list
+    if (frame != NULL)
+    {
+        while (frame != NULL)
+        {
+            StackFrameClass *stackFrame = frame->createStackFrame();
+            stackFrames->append(stackFrame);
+            frame = frame->next;
+        }
+    }
+    return stackFrames;
+}
+
+
 RexxString *RexxActivity::messageSubstitution(
     RexxString *message,               /* REXX error message                */
     RexxArray  *additional )           /* substitution information          */

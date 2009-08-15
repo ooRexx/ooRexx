@@ -110,8 +110,8 @@ protected:
 class InternalActivationFrame : public ActivationFrame
 {
 public:
-    inline InternalActivationFrame(RexxActivity *a, RexxString *n, RexxMethod *m, RexxObject **args, size_t c)
-        : ActivationFrame(a), name(n), frameMethod(m), argPtr(args), count(c) { }
+    inline InternalActivationFrame(RexxActivity *a, RexxString *n, RexxObject *t, RexxMethod *m, RexxObject **args, size_t c)
+        : ActivationFrame(a), name(n), target(t), frameMethod(m), argPtr(args), count(c) { }
 
     virtual RexxString *messageName();
     virtual RexxMethod *method();
@@ -121,6 +121,7 @@ public:
 protected:
     RexxString *name;                        // message name associated with the invocation
     RexxMethod *frameMethod;                 // the backing method object
+    RexxObject *target;                      // method target
     RexxObject **argPtr;                     // arguments passed to this instance
     size_t       count;                      // count of arguments
 };

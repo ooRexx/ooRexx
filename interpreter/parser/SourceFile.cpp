@@ -923,7 +923,7 @@ void RexxSource::nextClause()
  */
 StackFrameClass *RexxSource::createStackFrame()
 {
-    return new StackFrameClass(FRAME_PARSE, programName, OREF_NULL, OREF_NULL, traceBack(clauseLocation, 0, true), clauseLocation.getLineNumber());
+    return new StackFrameClass(FRAME_PARSE, programName, OREF_NULL, OREF_NULL, OREF_NULL, traceBack(clauseLocation, 0, true), clauseLocation.getLineNumber());
 }
 
 

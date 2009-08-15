@@ -37,33 +37,22 @@
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
 /*                                                                            */
-/* Primitive Kernel StackFrame class definitions                              */
+/* Primitive Kernel Exception class definitions                               */
 /*                                                                            */
 /******************************************************************************/
-#ifndef Included_StackFrameClass
-#define Included_StackFrameClass
+#ifndef Included_ExceptionClass
+#define Included_ExceptionClass
 
-#include "RoutineClass.hpp"
-#include "MethodClass.hpp"
+class RexxList;
+class RexxDirectory;
 
-#define COMPILED_MARKER "       *-* Compiled code"
-#define NO_SOURCE_MARKER "Source unavailable"
-#define FRAME_PARSE "PARSE"
-#define FRAME_ROUTINE "ROUTINE"
-#define FRAME_METHOD "ROUTINE"
-#define FRAME_INTERNAL_CALL "INTERNALCALL"
-#define FRAME_INTERPRET "INTERPRET"
-#define FRAME_PROGRAM "PROGRAM"
-
-class RexxSource;
-
-class StackFrameClass : public RexxObject
+class ExceptionClass : public RexxObject
 {
 public:
     void *operator new(size_t);
     inline void *operator new(size_t size, void *ptr) { return ptr; };
-    StackFrameClass(const char *type, RexxString *name, BaseExecutable *p, RexxObject *target, RexxArray *arguments, RexxString *t, size_t l);
-    inline StackFrameClass(RESTORETYPE restoreType) { ; };
+    ExceptionClass();
+    inline ExceptionClass(RESTORETYPE restoreType) { ; };
 
     void live(size_t);
     void liveGeneral(int reason);
@@ -72,25 +61,29 @@ public:
     static void createInstance();
     static RexxClass *classInstance;
 
+    RexxObject *init(RexxString *type, RexxString *message, RexxString *description, RexxObject *additional, ExceptionClass *exception);
+
     RexxString *getType();
-    RexxString *getName();
-    RexxObject *getExecutable();
-    RexxObject *getTarget();
-    RexxObject *getLine();
-    RexxString *getTraceLine();
-    RexxArray  *getArguments();
-    RexxSource *getSourceObject();
+    RexxString *getMessage();
+    RexxString *getDescription();
+    RexxObject *getAdditional();
+    ExceptionClass *getCause();
+    RexxList   *getStackFrames();
+    RexxList   *getTraceBack();
+    RexxDirectory *getCondition();
+    RexxObject *fillInStackTrace();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 
 protected:
-    const char *type;               // the type of frame
-    RexxString *name;               // the name of the item at that stack frame instance
-    BaseExecutable *executable;     // the executable associated with this frame instance
-    RexxObject *target;             // the target object, if a message send
-    RexxArray *arguments;           // arguments to the method/routine
-    size_t          line;           // the frame line position (MAX_SIZE indicates no line available)
-    RexxString *traceLine;          // a tracing line
+    RexxString *type;               // the type of frame
+    RexxString *message;            // the message associated with the exception
+    ExceptionClass *cause;          // An optional cause object.
+    RexxList  *stackFrames;         // arguments to the method/routine
+    RexxList  *traceBack;           // traceback lines
+    RexxString *description;        // the exception description
+    RexxObject *additional;         // the additional information
+    RexxDirectory *condition;       // a created condition object
 };
 
 #endif

@@ -59,6 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <Class id="RexxContext" class="RexxContext" include="ContextClass.hpp"/>
 <Class id="IdentityTable" class="RexxIdentityTable" include="IdentityTableClass.hpp"/>
 <Class id="StackFrame" class="StackFrameClass" include="StackFrameClass.hpp"/>
+<Class id="Exception" class="ExceptionClass" include="ExceptionClass.hpp"/>
 </Exported>
 <Internal>
 <Class id="NilObject" class="RexxNilObject" include="ObjectClass.hpp"/>

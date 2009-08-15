@@ -74,11 +74,12 @@ void *StackFrameClass::operator new(size_t size)
  *
  * @param a      The activation we're attached to.
  */
-StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxArray *a, RexxString *t, size_t l)
+StackFrameClass::StackFrameClass(const char *ty, RexxString *n, BaseExecutable *e, RexxObject *tg, RexxArray *a, RexxString *t, size_t l)
 {
     type = ty;
     name = n;
     executable = e;
+    target = tg;
     arguments = a;
     traceLine = t;
     line = l;
@@ -112,6 +113,7 @@ void StackFrameClass::live(size_t liveMark)
     memory_mark(this->executable);
     memory_mark(this->traceLine);
     memory_mark(this->arguments);
+    memory_mark(this->target);
 }
 
 void StackFrameClass::liveGeneral(int reason)
@@ -123,6 +125,7 @@ void StackFrameClass::liveGeneral(int reason)
     memory_mark_general(this->executable);
     memory_mark_general(this->traceLine);
     memory_mark_general(this->arguments);
+    memory_mark_general(this->target);
 }
 
 void StackFrameClass::flatten(RexxEnvelope *envelope)
@@ -136,6 +139,7 @@ void StackFrameClass::flatten(RexxEnvelope *envelope)
   newThis->executable = OREF_NULL;
   newThis->traceLine = OREF_NULL;
   newThis->arguments = OREF_NULL;
+  newThis->target = OREF_NULL;
 
   cleanUpFlatten
 }
@@ -223,4 +227,35 @@ RexxArray *StackFrameClass::getArguments()
     {
         return arguments;
     }
+}
+
+
+/**
+ * Get the source object associated with the stack frame.
+ *
+ * @return The Source object instance for the stack frame.
+ */
+RexxSource *StackFrameClass::getSourceObject()
+{
+    if (executable == OREF_NULL)
+    {
+        return OREF_NULL;
+    }
+
+    return executable->getSourceObject();
+}
+
+
+/**
+ * Get the message target if this is a method call.
+ *
+ * @return The target object, or .nil if this stack frame is not for a method call.
+ */
+RexxObject *StackFrameClass::getTarget()
+{
+    if (target == OREF_NULL)
+    {
+        return TheNilObject;
+    }
+    return target;
 }
