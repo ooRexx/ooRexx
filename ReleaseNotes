@@ -4,7 +4,71 @@
                               Version 4.0.0
 
   Copyright 2005, 2009 Rexx Language Association.  All rights reserved.
-                            May 1, 2009
+                            August 15, 2009
+
+File List
+=========
+
+0readme.pdf
+Installation help and other relevant notes, prior to installation,
+
+INSTALL
+Installation help in a text format.
+
+ReleaseNotes
+This file.
+
+ooRexx-4.0.0.i586.deb
+Installation package for any recent Debian-based distribution of 32-bit
+Linux that supports the Debian package manager
+
+ooRexx-4.0.0.i586.exe
+Installation package for any supported Windows 32-bit OS
+
+ooRexx-4.0.0.i586.fedora11.rpm
+Installation package for a Fedora Core 11 distribution of 32-bit Linux.
+
+ooRexx-4.0.0.i586.rpm
+Generic installation package for a distribution of 32-bit Linux that
+supports rpm.  If all other rpm packages fail, try this one.  It may
+still fail, in which case report your specifice Linux distribution to
+the ooRexx team and a developer *may* build a package for your sytem.
+
+ooRexx-4.0.0.i586.suse10.rpm
+Installation package for 32-bit SuSE 10.x or earlier Linux that supports
+rpm.
+
+ooRexx-4.0.0.x86_64.deb
+Installation package for any recent Debian-based distribution of 64-bit
+Linux that supports the Debian package manager
+
+ooRexx-4.0.0.x86_64.exe
+Installation package for any supported Windows 64-bit OS
+
+ooRexx-4.0.0.x86_64.fedora11.rpm
+Installation package for a Fedora Core 11 distribution of 64-bit Linux.
+
+ooRexx-4.0.0.x86_64.suse10.rpm
+Installation package for 64-bit SuSE 10.x or earlier Linux that supports
+rpm.
+
+ooRexx-4.0.0.x86_64.suse11.rpm
+Installation package for 64-bit SuSE 11.x or later Linux that supports
+rpm.
+
+ooRexx-debuginfo-4.0.0.i586.fedora11.rpm
+debuginfo package for ooRexx-4.0.0.i586.fedora11.rpm
+
+ooRexx-debuginfo-4.0.0.x86_64.fedora11.rpm
+debuginfo package for ooRexx-4.0.0.x86_64.fedora11.rpm
+
+ooRexx.4.0.0.source.tar.gz
+Source code tree with unix line ending files
+
+ooRexx.4.0.0.source.zip
+Source code tree with Windows line ending files and PDF doc files required
+to build the Windows installation package.
+
 
 Installation and Configuration
 ==============================
