@@ -60,6 +60,7 @@
 #include "PointerClass.hpp"
 #include "ActivityDispatcher.hpp"
 #include "CallbackDispatcher.hpp"
+#include "TrappingDispatcher.hpp"
 #include "Interpreter.hpp"
 #include "SystemInterpreter.hpp"
 #include "ActivationFrame.hpp"
@@ -1590,6 +1591,54 @@ void RexxNativeActivation::run(CallbackDispatcher &dispatcher)
         activity->releaseAccess();           /* force this to "safe" mode         */
         dispatcher.run();
         activity->requestAccess();           /* now in unsafe mode again          */
+    }
+    catch (ActivityException)
+    {
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    // if we're not the current kernel holder when things return, make sure we
+    // get the lock before we continue
+    if (ActivityManager::currentActivity != activity)
+    {
+        activity->requestAccess();
+    }
+
+    trapErrors = false;          // back to normal mode for error trapping
+
+    // belt and braces...this restores the activity level to whatever
+    // level we had when we made the callout.
+    this->activity->restoreActivationLevel(activityLevel);
+    // make sure we handle the error notifications
+    if (conditionObj != OREF_NULL)
+    {
+        // pass the condition information on to the dispatch unig
+        dispatcher.handleError(conditionObj);
+    }
+    return;                             /* and finished                      */
+}
+
+
+/**
+ * Run a some type of activity using a fresh activation stack.
+ * This generally us a method call such as an uninit method
+ * where we wish to run the method and ignore errors.  This runs
+ * without releasing the kernel lock.
+ *
+ * @param dispatcher The dispatcher instance we're going to run.
+ */
+void RexxNativeActivation::run(TrappingDispatcher &dispatcher)
+{
+    activationType = TRAPPING_ACTIVATION;    // we're handling a callback
+    size_t activityLevel = this->activity->getActivationLevel();
+    trapErrors = true;               // trap errors on
+    try
+    {
+        // make the activation hookup and run it.  Note that this
+        // version does not release the kernel lock
+        dispatcher.setContext(activity, this);
+        dispatcher.run();
     }
     catch (ActivityException)
     {

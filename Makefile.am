@@ -215,6 +215,7 @@ concurrencyHeaders = $(build_concurrency_dir)/ActivationApiContexts.hpp \
                      $(build_concurrency_dir)/ActivityDispatcher.hpp \
                      $(build_concurrency_dir)/ActivityManager.hpp \
                      $(build_concurrency_dir)/CallbackDispatcher.hpp \
+                     $(build_concurrency_dir)/TrappingDispatcher.hpp \
                      $(build_concurrency_dir)/ExitHandler.hpp \
                      $(build_concurrency_dir)/CommandHandler.hpp \
                      $(build_concurrency_dir)/MessageDispatcher.hpp \
@@ -292,7 +293,8 @@ memoryHeaders = $(build_memory_dir)/DeadObject.hpp \
                 $(build_memory_dir)/RexxEnvelope.hpp \
                 $(build_memory_dir)/RexxInternalStack.hpp \
                 $(build_memory_dir)/RexxMemory.hpp \
-                $(build_memory_dir)/RexxSmartBuffer.hpp
+                $(build_memory_dir)/RexxSmartBuffer.hpp \
+                $(build_memory_dir)/UninitDispatcher.hpp
 errorHeaders = $(build_messages_dir)/RexxMessageNumbers.h \
                $(build_messages_dir)/RexxErrorCodes.h \
                $(build_messages_dir)/RexxMessageTable.h \
@@ -547,6 +549,7 @@ memory_sources = $(build_memory_dir)/DeadObject.cpp \
                  $(build_memory_dir)/RexxEnvelope.cpp \
                  $(build_memory_dir)/RexxInternalStack.cpp \
                  $(build_memory_dir)/RexxSmartBuffer.cpp \
+                 $(build_memory_dir)/UninitDispatcher.hpp \
                  $(build_memory_dir)/Setup.cpp \
                  $(build_memory_dir)/RexxMemory.cpp
 execution_sources = $(build_execution_dir)/CPPCode.cpp \
@@ -566,6 +569,7 @@ concurrency_sources = $(build_concurrency_dir)/ActivityDispatcher.cpp \
                       $(build_concurrency_dir)/ActivityManager.cpp \
                       $(build_concurrency_dir)/ActivationFrame.cpp \
                       $(build_concurrency_dir)/CallbackDispatcher.cpp \
+                      $(build_concurrency_dir)/TrappingDispatcher.cpp \
                       $(build_concurrency_dir)/ExitHandler.cpp \
                       $(build_concurrency_dir)/CommandHandler.cpp \
                       $(build_concurrency_dir)/MessageDispatcher.cpp \

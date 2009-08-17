@@ -3042,6 +3042,27 @@ void RexxActivity::run(CallbackDispatcher &target)
 
 
 /**
+ * Run a task under the context of an activity.  This will be
+ * a task that runs with a nested error trapping without
+ * releasing the kernel lock.
+ *
+ * @param target The dispatcher object that implements the call out.
+ */
+void RexxActivity::run(TrappingDispatcher &target)
+{
+    // create new activation frame using the current Rexx frame (which can be null, but
+    // is not likely to be).
+    RexxNativeActivation *new_activation = ActivityManager::newNativeActivation(this, currentRexxFrame);
+    // this becomes the new top activation.
+    this->pushStackFrame(new_activation);
+    // go run this
+    new_activation->run(target);
+    // and pop the activation when we're done.
+    this->popStackFrame(new_activation);
+}
+
+
+/**
  * Inherit all activity-specific settings from a parent activity.
  *
  * @param parent The source of the setting information.
