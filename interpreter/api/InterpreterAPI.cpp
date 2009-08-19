@@ -221,9 +221,6 @@ RexxReturnCode REXXENTRY RexxTranslateInstoreProgram(const char *inFile, CONSTRX
     arguments.image = image;
     // go run this program
     arguments.invoke(NULL, NULL);
-    // terminate and clean up the interpreter runtime.  This only works
-    // if there are no active instances
-    Interpreter::terminateInterpreter();
     return (RexxReturnCode)arguments.rc;       /* return the error code (negated)   */
 }
 

@@ -160,9 +160,20 @@ protected:
                                        /* function table pointer at         */
                                        /* different locations.  This forces */
                                        /* to the front location             */
-  protected:
-     virtual ~RexxVirtualBase() { ; }
-     virtual void      baseVirtual() {;}
+     protected:
+        virtual ~RexxVirtualBase() { ; }
+        virtual void      baseVirtual() {;}
+
+     public:
+        // the following need to be defined at the base virtual level.  When
+        // an exception is thrown from within an object constructor, the destructors
+        // unwind and the constructed object just ends up with a virtual base
+        // vft.  If the garbage collector sees this, it will crash unless these
+        // are defined at this level.
+        virtual void         live(size_t) {;}
+        virtual void         liveGeneral(int reason) {;}
+        virtual void         flatten(RexxEnvelope *) {;}
+        virtual RexxObject  *unflatten(RexxEnvelope *) { return (RexxObject *)this; };
   };
 
 class RexxObject;
@@ -252,13 +263,6 @@ inline uintptr_t HASHOREF(RexxVirtualBase *r) { return ((uintptr_t)r) >> OREFSHI
      inline bool   isSameType(RexxInternalObject *o) { return behaviour == o->getObjectType(); }
      inline void   setBehaviour(RexxBehaviour *b) { behaviour = b; }
 
-                                       /* the following are virtual         */
-                                       /* functions required for every      */
-                                       /* class                             */
-     virtual void         live(size_t) {;}
-     virtual void         liveGeneral(int reason) {;}
-     virtual void         flatten(RexxEnvelope *) {;}
-     virtual RexxObject  *unflatten(RexxEnvelope *) { return (RexxObject *)this; };
      virtual RexxObject  *makeProxy(RexxEnvelope *);
      virtual RexxObject  *copy();
      virtual RexxObject  *evaluate(RexxActivation *, RexxExpressionStack *) { return OREF_NULL; }
