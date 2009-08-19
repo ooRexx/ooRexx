@@ -1628,7 +1628,7 @@ RexxString *RexxNumberString::formatInternal(
                         /* adjust the exponent factor        */
                         expfactor = expfactor + temp;
                         /* format exponent to a string       */
-                        Numerics::formatWholeNumber(expfactor, exponent);
+                        Numerics::formatWholeNumber(Numerics::abs(expfactor), exponent);
                         /* get the number of digits needed   */
                         exponentsize = strlen(exponent);
 
