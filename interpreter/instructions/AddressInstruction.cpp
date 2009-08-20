@@ -122,7 +122,7 @@ void RexxInstructionAddress::execute(
            /* get the expression value          */
             RexxObject *result = this->command->evaluate(context, stack);
             RexxString *_command = REQUEST_STRING(result);/* force to string form              */
-            context->traceResult(command);   /* trace if necessary                */
+            context->traceResult(_command);  /* trace if necessary                */
                                              /* validate the address name         */
             SystemInterpreter::validateAddressName(this->environment);
             /* go process the command            */
