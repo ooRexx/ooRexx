@@ -55,7 +55,7 @@
    exit
  end
 
- d~createCenter(570 / d~FactorX, 440 / d~FactorY, ,
+ d~createCenter(770 / d~FactorX, 440 / d~FactorY, ,
                 "Graphical Demonstration of Open Object Rexx and OODialog Capabilities")
  d~execute("SHOWTOP")
  d~deinstall
@@ -71,15 +71,29 @@
 
 ::method DefineDialog
    expose but2size
-   but2pos  = 140 / self~FactorY
+   but2pos  = 160 / self~FactorY
    but2size = 300 / self~FactorY
-   self~AddBitmapButton(101,1,10,self~SizeX-1, 110 / self~FactorY,,,"bmp\install.bmp",,,,"USEPAL")
-   self~AddBitmapButton(102,10,but2pos,self~SizeX - 20,but2size,,,"bmp\install2.bmp")
 
-   self~AddWhiteFrame(10, self~SizeY - 52, self~SizeX-20, 24,"HIDDEN", 203)
-   self~AddButton(103,12, self~SizeY - 50, self~SizeX-24, 20,,,"OWNER NOTAB")
+   -- The two bitmap buttons are created larger than they need to be.  In particular,
+   -- The 102 button height is much larger, it covers most of the lower part of the
+   -- dialog.
+   --
+   -- Then, the bitmaps for the buttons are displaced (moved from the upper left corner
+   -- of the button) by a large amount.  The 101 button is displaced far to the right,
+   -- and the 102 button is displaced far to the bottom and far to the left.  In the run()
+   -- method, scrollBitmapFromTo() is used to scroll the bitmaps from their displaced positions
+   -- back to the upper left corner of the buttons.  This gives the bitmaps the appearance of
+   -- scrolling from the right to the left, the 101 button, and from the bottom to the top,
+   -- the 102 button.
+
+   self~AddBitmapButton(101,1,10,self~SizeX-1, 130 / self~FactorY,,,"bmp\install.bmp",,,,"USEPAL")
+   self~AddBitmapButton(102,20,but2pos,self~SizeX - 20,but2size,,,"bmp\install2.bmp")
    self~DisplaceBitmap(101,self~SizeX * self~FactorX+10, 0)
    self~DisplaceBitmap(102, -450, 100)
+
+   -- Add the other controls.
+   self~AddWhiteFrame(10, self~SizeY - 52, self~SizeX-20, 28,"HIDDEN", 203)
+   self~AddButton(103,12, self~SizeY - 50, self~SizeX-24, 24,,,"OWNER NOTAB")
    self~AddButtonGroup(self~SizeX-220, self~SizeY - 18,60,12, ,
             "&Bitmap-Viewer 111 BmpView &Draw-Color-Demo 112 OODraw &Cancel 2 CANCEL", 1, "DEFAULT")
 
@@ -92,7 +106,7 @@
    self~setItemSysColor(101, COLOR_BTNFACE)
    self~setItemSysColor(102, COLOR_BTNFACE)
 
-::method Run unguarded
+::method run unguarded
    expose m but2size
    bmppos = but2size - 125 / self~FactorY
    self~DisableItem(111)  /* disable push buttons */
@@ -100,10 +114,18 @@
    self~DisableItem(2)
 
    ret = play("inst.wav", yes)
-   self~ScrollBitmapFromTo(101, self~SizeX * self~FactorX, 5, 5, 5, -12, 0, 1)
+
+   -- Scroll the bitmaps from their displaced positions back to the upper left corners
+   -- of the buttons.
+   self~ScrollBitmapFromTo(101, self~SizeX * self~FactorX, 5, 12, 5, -12, 0, 1)
    self~ScrollBitmapFromTo(102, 30, bmppos, 30, 0, 0, -3, 2, 1)
 
-   self~ResizeItem(102, self~SizeX-40, self~SizeY-120, "NOREDRAW")
+   -- The size of the 102 button actually covers the controls under the button.  If the
+   -- user clicks on any portion of the button, the button is repainted in the 'depressed'
+   -- state.  Since the other controls are not repainted, this cause them (or parts of
+   -- them) to disappear.  To prevent that, we resize the button to only take up the height
+   -- needed for the bitamp.
+   self~ResizeItem(102, self~sizeX-40, (120 / self~factorY) + 2, "NOREDRAW")
 
    self~ShowItem(103)     /* show scroll button */
    self~ShowItem(203)
@@ -112,7 +134,7 @@
    self~EnableItem(112)
                           /* asynchronuous scroll */
    m = self~start("ScrollInButton",103,"This OODialog sample demonstrates dynamic dialog creation", ,
-                   "Arial", 36, "BOLD", 2,2,2,6)
+                   "Arial", 36, "BOLD", 0,2,2,6)
    do while self~finished = 0 & m~completed = 0
       self~HandleMessages
    end
@@ -121,7 +143,7 @@
    do while self~finished = 0
       /* scroll asynchronously so scrolling can be interrupted when button is pressed */
       m = self~start("ScrollInButton", 103, "... please press Bitmap-Viewer or Draw-Color-Demo buttons to run graphical applications ...", ,
-                     "Arial", 32, "SEMIBOLD", 7, 2,4)
+                     "Arial", 32, "SEMIBOLD", 0, 2,4)
 
       do while self~finished = 0 & m~completed = 0
          self~HandleMessages
