@@ -94,7 +94,7 @@
    self~SizeX = cx
    self~SizeY = cy
    self~DefineDialog
-   return ptr  /* self~activePtr could have been set to 0 for a CategoryDialog */
+   return ptr <> 0
 
    /* This method will create the dialog and place it in a centered position */
    /* See 'Create' for possible 'options' */
