@@ -144,9 +144,9 @@
 
 
 ::method StartIt   /* don't call parent startit */
-   if self~DlgHandle = 0 then return 0
+   if self~dlgHandle = 0 then return 0
    self~InitDialog
-   return self~DlgHandle
+   return self~dlgHandle
 
 ::method DefineDialog protected
    if self~baseptr = 0 then return 0
@@ -167,7 +167,7 @@
 
    if (n > 0 | m > 0) & self~catstyle~wordpos('NOBORDER') = 0 then self~catstyle = self~catstyle||" NOBORDER"
 
-   if self~catalog['page']['h'] = .Nil then self~catalog['page']['h'] = self~SizeY - 40
+   if self~catalog['page']['h'] = .Nil then self~catalog['page']['h'] = self~sizeY - 40
 
    size = self~getTextSizeDlg("Hg")
    textHeight = size~height
@@ -191,7 +191,7 @@
       end
       else if self~catalog['page']['y'] = .Nil then self~catalog['page']['y'] = self~caty+textHeight+5
 
-      if self~catalog['page']['w'] = .Nil then self~catalog['page']['w'] = self~SizeX - 2
+      if self~catalog['page']['w'] = .Nil then self~catalog['page']['w'] = self~sizeX - 2
    end
    else do
       if self~catmax = 0 then do
@@ -202,7 +202,7 @@
 
       if self~catalog['page']['y'] = .Nil then self~catalog['page']['y'] = 5
 
-      if self~catalog['page']['w'] = .Nil then self~catalog['page']['w'] = self~SizeX - (self~catX+self~catcx+20)
+      if self~catalog['page']['w'] = .Nil then self~catalog['page']['w'] = self~sizeX - (self~catX+self~catcx+20)
    end
 
    self~CategoryPage
@@ -233,9 +233,9 @@
          self~AddRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax, newstyle || " CAT")
    end
 
-   self~DlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, self~AutoDetect, 1, 0, 0)
+   self~dlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, self~AutoDetect, 1, 0, 0)
    self~activePtr = 0
-   if self~DlgHandle = 0 then return 0
+   if self~dlgHandle = 0 then return 0
 
    do i = 1 to self~catalog['count']
       self~DialogItemCount = 0
@@ -244,7 +244,7 @@
       self~CreateCategoryDialog(p['x'], p['y'], p['w'], p['h'],p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
       msg = "self~" || self~catalog['names'][i]~space(0)
       interpret(msg)
-      ret = UsrCreateDialog(self~Adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~DlgHandle, i)
+      ret = UsrCreateDialog(self~Adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
       self~activePtr = 0
       self~catalog['handles'][i] = ret
    end
@@ -262,9 +262,9 @@
    textHeight = size~height
 
    if self~catstyle~wordpos("TOPLINE") > 0 then
-      self~addBlackFrame(0, 2, self~SizeX, textHeight + (self~caty+2))
+      self~addBlackFrame(0, 2, self~sizeX, textHeight + (self~caty+2))
    else if self~catstyle~wordpos("DROPDOWN") > 0 then
-      self~addBlackFrame(0, 2, self~SizeX, textHeight + (self~caty*2)+1)
+      self~addBlackFrame(0, 2, self~sizeX, textHeight + (self~caty*2)+1)
 
    lbtext = self~catalog['page']['leftbtntext']
    rbtext = self~catalog['page']['rightbtntext']
@@ -272,18 +272,18 @@
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
    if (self~catalog['page']['btnwidth'] > 0) then
    do
-      self~AddButtonGroup(self~SizeX-self~catalog['page']['btnwidth']*2-15,,
-         self~SizeY - 15,self~catalog['page']['btnwidth'],, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
+      self~AddButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
+         self~sizeY - 15,self~catalog['page']['btnwidth'],, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
       if self~Wizard = 1 then
-         self~AddButtonGroup(5,self~SizeY - 15,self~catalog['page']['btnwidth'],,
+         self~AddButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
                              ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
    end
    else do
       self~AddOkCancelRightBottom
       if self~Wizard = 1 then
-         self~AddButtonGroup(5, self~SizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
+         self~AddButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
    end
-   self~addBlackFrame(0, self~SizeY - 20, self~SizeX, 1)
+   self~addBlackFrame(0, self~sizeY - 20, self~sizeX, 1)
 
    /* */
 
@@ -755,7 +755,7 @@
 
 ::method GetItem unguarded
    use arg id, hDlg
-   if Arg(2,'o') = 1 then hDlg = self~DlgHandle
+   if Arg(2,'o') = 1 then hDlg = self~dlgHandle
    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
    if id = -1 then return 0
    hnd = HandleDlg("ITEM", id, hDlg)
@@ -790,7 +790,7 @@
    if Arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    hnd = self~GetItem(id, self~catalog['handles'][category])
    if hnd = 0 then return -1
-   return WndShow_Pos("P",hnd, 0, 0, width * self~FactorX, high* self~FactorY,,
+   return WndShow_Pos("P",hnd, 0, 0, width * self~factorX, high* self~factorY,,
                            "NOMOVE "||showOptions)
 
    /* This method will move a dialog item to an other position */
@@ -801,7 +801,7 @@
    if Arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    h = self~GetItem(id, self~catalog['handles'][category])
    if h = 0 then return -1
-   return WndShow_Pos("P",h, xPos * self~FactorX, yPos * self~FactorY, 0, 0,,
+   return WndShow_Pos("P",h, xPos * self~factorX, yPos * self~factorY, 0, 0,,
                            "NOSIZE "||showOptions)
 
 
@@ -810,25 +810,25 @@
 ::method SetCategoryListWidth unguarded
    use arg id, dlgunits, category
    if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(category, id, 0x00000194, dlgunits*self~FactorX, 0)
+   return self~BoxMessage(category, id, 0x00000194, dlgunits*self~factorX, 0)
 
 ::method GetCategoryListWidth unguarded
    use arg id, category
-   return self~BoxMessage(category, id, 0x00000193, 0, 0)/self~FactorX
+   return self~BoxMessage(category, id, 0x00000193, 0, 0)/self~factorX
 
 ::method SetCategoryListColumnWidth unguarded
    use arg id, dlgunits, category
    if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(category, id, 0x00000195, dlgunits*self~FactorX, 0)
+   return self~BoxMessage(category, id, 0x00000195, dlgunits*self~factorX, 0)
 
 ::method SetCategoryListItemHeight unguarded
    use arg id, dlgunits, category
    if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(category, id, 0x000001A0, 0, dlgunits*self~FactorY)
+   return self~BoxMessage(category, id, 0x000001A0, 0, dlgunits*self~factorY)
 
 ::method GetCategoryListItemHeight unguarded
    use arg id, category
-   return self~BoxMessage(category, id, 0x000001A1, 0, 0)/self~FactorY
+   return self~BoxMessage(category, id, 0x000001A1, 0, 0)/self~factorY
 
 
 /* These methods are necessary for Win32 controls when used in a cetegory dialog */

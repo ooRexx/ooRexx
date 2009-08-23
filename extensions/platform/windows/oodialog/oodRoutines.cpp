@@ -93,7 +93,7 @@ size_t RexxEntry YesNoMessage(const char *funcname, size_t argc, CONSTRXSTRING *
    {
       if ( IsNo(argv[1].strptr) )
          uType |= MB_DEFBUTTON2;
-      else if ( ! IsYes(argv[1].strptr) )
+      else if ( ! isYes(argv[1].strptr) )
       {
          PSZ  pszMsg;
          CHAR szText[] = "YesNoMessage argument 2 must be one of [Yes, No]; "

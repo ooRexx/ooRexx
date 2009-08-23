@@ -261,7 +261,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
       if (args->autoDetect != NULL) strcpy(buffer, args->autoDetect);
       else strcpy(buffer, "0");
 
-      if (IsYes(buffer))
+      if (isYes(buffer))
       if (!DataAutodetection(Dlg))
       {
          Dlg->TheThread = NULL;
@@ -387,7 +387,7 @@ size_t RexxEntry UsrCreateDialog(const char *funcname, size_t argc, CONSTRXSTRIN
               dlgAdm->OnTheTop = TRUE;
               dlgAdm->threadID = thID;
 
-              if ((argc < 9) || !IsYes(argv[8].strptr))  /* do we have a modal dialog? */
+              if ((argc < 9) || !isYes(argv[8].strptr))  /* do we have a modal dialog? */
               {
                 if (dlgAdm->previous && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg))
                     EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);

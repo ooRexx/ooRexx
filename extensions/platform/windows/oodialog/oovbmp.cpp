@@ -464,7 +464,7 @@ size_t RexxEntry BmpButton(const char *funcname, size_t argc, CONSTRXSTRING *arg
 
           if (strstr(optb, "FRAME"))
           {
-             if (IsYes(buffer[4]))
+             if (isYes(buffer[4]))
                 dlgAdm->BmpTab[i].Frame = TRUE;
              else
                 dlgAdm->BmpTab[i].Frame = FALSE;
@@ -777,7 +777,7 @@ size_t RexxEntry ScrollTheWindow(const char *funcname, size_t argc, CONSTRXSTRIN
             code = 0;
         }
 
-        if ( IsYes(argv[8].strptr) )
+        if ( isYes(argv[8].strptr) )
         {
            /* draw rectangle with background color */
            if (dlgAdm->BkgBrush)

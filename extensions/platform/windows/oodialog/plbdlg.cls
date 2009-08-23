@@ -43,109 +43,131 @@
  * PlainBaseDialog with its two inherited mixin classes, WindowBase and
  * ResourceUtils, is the base dialog for all dialogs in the ooDialog framwork.
  */
-
 ::requires "oodutils.cls"
 
-/******************************************************************************/
-/* The class WindowBase implements methods that are common to all windows,    */
-/* if it is a dialog or a dialog item                                         */
-/******************************************************************************/
+/* The WindowBase class implements methods that are common to all windows.  The
+ * methods only require the operating system window handle to function.
+ */
+::class 'WindowBase' public mixinclass object
 
-::class 'WindowBase' public MIXINCLASS object
+::method init_windowBase external "LIBRARY oodialog wb_init_windowBase"
 
-::method Hwnd attribute
-::method InitCode attribute        /* attribute to get the result of init */
+::attribute hwnd get external "LIBRARY oodialog wb_getHwnd"
+::attribute hwnd set external "LIBRARY oodialog wb_setHwnd"
 
-    /* Size and Dialog Unit Factor */
-::method SizeX attribute
-::method SizeY attribute
-::method FactorX attribute
-::method FactorY attribute
+::attribute initCode get external "LIBRARY oodialog wb_getInitCode"
+::attribute initCode set external "LIBRARY oodialog wb_setInitCode"
 
-::method Unknown unguarded
-   use arg msgname
-   call errorDialog msgname || " is not a method of " || self
+-- Size and Dialog Unit Factor
+::attribute sizeX get external "LIBRARY oodialog wb_getSizeX"
+::attribute sizeX set external "LIBRARY oodialog wb_setSizeX"
 
-::method init_WindowBase
-   use arg hwnd
+::attribute sizeY get external "LIBRARY oodialog wb_getSizeY"
+::attribute sizeY set external "LIBRARY oodialog wb_setSizeY"
 
-   self~SizeX = 0
-   self~SizeY = 0
-   parse value GetDialogFactor() with x y
-   self~FactorX=x
-   self~FactorY=Y
+::attribute factorX get external "LIBRARY oodialog wb_getFactorX"
+::attribute factorX set external "LIBRARY oodialog wb_setFactorX"
 
-   if arg(1,'o') then self~Hwnd = 0
-   else do
-       self~hwnd = hwnd
-       parse value Wnd_Desktop("RECT", hwnd) with x y cx cy
-       self~SizeX = cx % self~FactorX
-       self~SizeY = cy % self~FactorY
-   end
+::attribute factorY get external "LIBRARY oodialog wb_getFactorY"
+::attribute factorY set external "LIBRARY oodialog wb_setFactorY"
 
-   return 0
+-- True size in pixels
+::attribute pixelX get external "LIBRARY oodialog wb_getPixelX"
+::attribute pixelY get external "LIBRARY oodialog wb_getPixelY"
 
+::method enable unguarded external "LIBRARY oodialog wb_enable"
+::method disable unguarded external "LIBRARY oodialog wb_enable"
+::method isVisible unguarded external "LIBRARY oodialog wb_isVisible"
+::method isEnabled unguarded external "LIBRARY oodialog wb_isEnabled"
 
-::method AssignWindow unguarded
-   use arg hwnd
-   self~Hwnd = hwnd
-   parse value Wnd_Desktop("RECT", hwnd) with x y cx cy
-   self~SizeX = cx % self~FactorX
-   self~SizeY = cy % self~FactorY
+::method show unguarded external "LIBRARY oodialog wb_show"
+::method hide unguarded external "LIBRARY oodialog wb_show"
+::method showFast unguarded external "LIBRARY oodialog wb_showFast"
+::method hideFast unguarded external "LIBRARY oodialog wb_showFast"
 
+::method getWindowLong private unguarded external "LIBRARY oodialog wb_getWindowLong_pvt"
+::method getID unguarded
+  return self~getWindowLong(-12)
 
-::method Enable unguarded
-   return Wnd_Desktop("ENABLE",self~Hwnd, 1)
+::method getStyleRaw unguarded
+  return self~getWindowLong(-16)
 
-::method Disable unguarded
-   return Wnd_Desktop("ENABLE",self~Hwnd, 0)
+::method getExStyleRaw unguarded
+  return self~getWindowLong(-20)
 
-::method Hide unguarded
-   return WndShow_Pos("S", self~Hwnd, "HIDE")
+::method Draw unguarded external "LIBRARY oodialog wb_redrawClient"
+::method RedrawClient unguarded external "LIBRARY oodialog wb_redrawClient"
+::method Redraw unguarded external "LIBRARY oodialog wb_redraw"
 
-::method Show unguarded
-   return WndShow_Pos("S",self~Hwnd, "NORMAL")
-
-::method IsVisible unguarded
-   return WinAPI32Func("G", "WNDSTATE", "V", self~hwnd)
-
-::method IsEnabled unguarded
-   return WinAPI32Func("G", "WNDSTATE", "E", self~hwnd)
+::method "title=" unguarded external "LIBRARY oodialog wb_setText"
+::method title unguarded external "LIBRARY oodialog wb_getText"
+::method setText unguarded external "LIBRARY oodialog wb_setText"
+::method getText unguarded external "LIBRARY oodialog wb_getText"
 
 ::method Resize unguarded
    use arg width, hight, showOptions
    if Arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   return WndShow_Pos("P",self~hwnd,0,0,width*self~FactorX,hight*self~FactorY,"NOMOVE "||showOptions )
+   return WndShow_Pos("P",self~hwnd,0,0,width*self~factorX,hight*self~factorY,"NOMOVE "||showOptions )
 
 ::method Move unguarded
    use arg xPos, yPos, showOptions
    if Arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   return WndShow_Pos("P",self~hwnd, xPos*self~FactorX,yPos*self~FactorY,0,0,"NOSIZE "||showOptions)
+   return WndShow_Pos("P",self~hwnd, xPos*self~factorX,yPos*self~factorY,0,0,"NOSIZE "||showOptions)
 
 ::method GetSize unguarded
    parse value Wnd_Desktop("RECT",self~Hwnd) with x y cx cy
-   return (cx - x) % self~FactorX || " " || (cy - y) % self~FactorY
+   return (cx - x) % self~factorX || " " || (cy - y) % self~factorY
 
 ::method GetPos unguarded
    parse value Wnd_Desktop("RECT",self~Hwnd) with x y cx cy
-   return (x%self~FactorX) || " " || (y % self~FactorY)
+   return (x%self~factorX) || " " || (y % self~factorY)
 
-::method "Title=" unguarded
-   use arg text
-   call Wnd_Desktop "SETTXT", self~hwnd, text
+-- Hmm, this code is wrong MIN and MAX are not allowed, by documentaion, for this method
+::method display unguarded
+   use strict arg displayType = "NORMAL"
+   if displayType = "" then displayType = "NORMAL"; else displayType = displayType~translate
+   if self~isA(.DialogControl) & (disptype~wordpos("MIN") <> 0 | disptype~wordpos("MAX") <> 0) then do
+     if self~oDlg~isA(.PlainBaseDialog) then
+       forward to (self~oDlg)
+     else
+       return 1
+   end
+   return WndShow_Pos("S",self~hwnd, disptype)
 
-::method SetTitle unguarded
-   use arg text
-   call Wnd_Desktop "SETTXT", self~hwnd, text
+::method GetRect unguarded
+   return WindowRect("GET", self~Hwnd)
 
-::method Title unguarded
-   return Wnd_Desktop("TXT", self~hwnd)
+::method GetClientRect unguarded
+   use arg hwnd
+   if Arg(1,'o') = 1 then hwnd = self~hwnd
+   return WindowRect("GET", hwnd, "CLIENT")
 
-::method GetID unguarded
-   return Wnd_Desktop("ID", self~hwnd)
+::method SetRect unguarded
+   use arg x, y, width, high, showOptions
+   if Arg(5,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
+   return WndShow_Pos("P",self~hwnd, x, y, width, high, showOptions)
 
-::method getStyleRaw unguarded external "LIBRARY oodialog wb_getStyleRaw"
-::method getExStyleRaw unguarded external "LIBRARY oodialog wb_getExStyleRaw"
+::method Update unguarded
+   return WndShow_Pos("S",self~Hwnd, "UPDATE")
+
+::method SetForegroundWindow unguarded
+    use arg hwnd
+    return Wnd_Desktop("TOP", hwnd)
+
+::method ForegroundWindow unguarded
+   return Wnd_Desktop("FG")
+
+::method ScreenToClient unguarded
+    use arg x,y
+    return Wnd_Desktop("COORD", self~hwnd, x, y, "S2C")
+
+::method ClientToScreen unguarded
+    use arg x,y
+    return Wnd_Desktop("COORD", self~hwnd, x, y, "C2S")
+
+::method unknown unguarded
+   use arg msgname
+   call errorDialog msgname || " is not a method of " || self
 
 -- DEPRECATED
 ::method getSystemMetrics unguarded
@@ -289,12 +311,12 @@
   -- End select
   return 0
 
-/******************************************************************************/
-/* The class PlainBaseDialog implements methods that are common to a dialog   */
-/* by Resource Workshop (ResDialog) and to a dialog created by using Add...   */
-/* methods (UserDialog).                                                      */
-/******************************************************************************/
-
+/**
+ *  The PlainBaseDialog class is the base class of all ooDialog dialogs.  It
+ *  implements those methods that are common to all dialogs, whether the dialog
+ *  template comes from a binary resource, a resource script file, or is con-
+ *  structed dynamically.
+ */
 ::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils
 
 ::method init class external "LIBRARY oodialog pbdlg_init_cls"
@@ -329,15 +351,13 @@
 /** PlainBaseDialog::init()  Performs the necessary intialization, including the
  * set up of the dialog management block, for all dialogs.
  */
-::method init protected
-   expose library resource dlgData.
-   use arg library, resource, dlgData., includeFile
+::method init external "LIBRARY oodialog pbdlg_init"
+
+::method finalInit private
+   use arg includeFile
 
    self~adm = 0
    self~parentDlg = .nil
-
-   -- Initialize the WindowBase
-   self~initCode = self~init_WindowBase
 
    -- Allocate the dialog management block for a new dialog
    self~adm = HandleDialogAdmin()
@@ -351,8 +371,7 @@
    self~initAutoDetection
    -- create array storing connection between ids and attributese */
    self~dataConnection = .array~new(50)
-   -- if there is no stem argument the don't use stems
-   if arg(3, 'O') then self~useStem = 0; else self~useStem = 1
+
    self~finished = 0
    self~automaticMethods = .queue~new
    self~addUserMsg("OK", 0x00000111, 0xFFFFFFFF, 1, 0xFFFFFFFF, 0, 0)
@@ -380,14 +399,14 @@
    self~fontName = .PlainBaseDialog~getFontName
    self~fontSize = .PlainBaseDialog~getFontSize
 
-   if arg(4, 'E') then self~parseIncludeFile(includeFile)
+   if arg(1, 'E') then self~parseIncludeFile(includeFile)
 
    return 0
 
-::method DlgHandle unguarded
+::method dlgHandle unguarded
    return self~hwnd
 
-::method "DlgHandle=" unguarded
+::method "dlgHandle=" unguarded
    use arg hwnd
    self~hwnd=hwnd
 
@@ -443,10 +462,10 @@
 
 ::method Stopit
    use arg caller
-   if self~DlgHandle = 0 | self~Adm = 0 then return -1
+   if self~dlgHandle = 0 | self~Adm = 0 then return -1
    self~Leaving
-   ret =  HandleDlg("STOP", self~DlgHandle)
-   self~DlgHandle = 0
+   ret =  HandleDlg("STOP", self~dlgHandle)
+   self~dlgHandle = 0
    self~Adm = 0
 
    /* we ourselves are a child dialog and not called by the parent's stopit */
@@ -493,7 +512,7 @@
    use arg id, hDlg
    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
    if id = -1 then return 0
-   if Arg(2,'o') = 1 then hDlg = self~DlgHandle
+   if Arg(2,'o') = 1 then hDlg = self~dlgHandle
    return HandleDlg("ITEM",id, hDlg)
 
 ::method GetControlID unguarded
@@ -506,33 +525,33 @@
    use arg option = "NORMAL"
    if option = "" then option = "NORMAL"; else option = option~translate
    if option~wordpos("SHOWTOP") > 0 then self~ToTheTop
-   return WndShow_Pos("S",self~DlgHandle, option)
+   return WndShow_Pos("S",self~dlgHandle, option)
 
 
    /* Use this method to make the dialog the front dialog */
 
 ::method ToTheTop unguarded
-   return Wnd_Desktop("TOP",self~DlgHandle)
+   return Wnd_Desktop("TOP",self~dlgHandle)
 
 
 ::method Minimize unguarded
-   return WndShow_Pos("S",self~DlgHandle, "MIN")
+   return WndShow_Pos("S",self~dlgHandle, "MIN")
 
 ::method Maximize unguarded
-   return WndShow_Pos("S",self~DlgHandle, "MAX")
+   return WndShow_Pos("S",self~dlgHandle, "MAX")
 
 ::method IsMaximized unguarded
-   return WinAPI32Func("G", "WNDSTATE", "Z", self~DlgHandle)
+   return WinAPI32Func("G", "WNDSTATE", "Z", self~dlgHandle)
 
 ::method IsMinimized unguarded
-   return WinAPI32Func("G", "WNDSTATE", "I", self~DlgHandle)
+   return WinAPI32Func("G", "WNDSTATE", "I", self~dlgHandle)
 
 ::method Restore unguarded
-   return WndShow_Pos("S",self~DlgHandle, "RESTORE")
+   return WndShow_Pos("S",self~dlgHandle, "RESTORE")
 
 -- Send the DM_REPOSITION  message to the dialog.
 ::method EnsureVisible unguarded
-   return SendWinMsg("ANY", self~DlgHandle, "0x0402", 0, 0)
+   return SendWinMsg("ANY", self~dlgHandle, "0x0402", 0, 0)
 
 
 -- Connect WM_HELP messages (F1) to a method.
@@ -688,7 +707,7 @@
 
 ::method SetStaticText unguarded
    use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~DlgHandle, 0)
+   return self~InternalSetItemData(id, dataString, self~dlgHandle, 0)
 
    /* This method loads the data attributes into the dialog */
 
@@ -762,7 +781,7 @@
    use arg id, msg, wP, lP
    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
    if id = -1 then return -1
-   return SendWinMsg("PTR", Self~DlgHandle, id, msg, wP, lP)
+   return SendWinMsg("PTR", self~dlgHandle, id, msg, wP, lP)
 
    /* This method adds a string to the combobox */
 
@@ -825,9 +844,9 @@
    use arg id, ndx
    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
    if id = -1 then return -1
-   len = SendWinMsg("DLG", Self~DlgHandle, id, 0x00000149, ndx-1,0)
+   len = SendWinMsg("DLG", self~dlgHandle, id, 0x00000149, ndx-1,0)
    if len <= 0 then return ""
-   else return SendWinMsg("PTR", Self~DlgHandle, id, 0x00000148, ndx-1,"G" || len+1)
+   else return SendWinMsg("PTR", self~dlgHandle, id, 0x00000148, ndx-1,"G" || len+1)
 
    /* Changes the value of 'item' to 'string' */
 
@@ -922,9 +941,9 @@
    use arg id, ndx
    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
    if id = -1 then return -1
-   len = SendWinMsg("DLG", Self~DlgHandle, id, 0x0000018A, ndx-1,0)
+   len = SendWinMsg("DLG", self~dlgHandle, id, 0x0000018A, ndx-1,0)
    if len <= 0 then return ""
-   else return SendWinMsg("PTR", Self~DlgHandle, id, 0x00000189, ndx-1,"G" || len+1)
+   else return SendWinMsg("PTR", self~dlgHandle, id, 0x00000189, ndx-1,"G" || len+1)
 
    /* Changes the item at 'index' with 'dataString' */
 
@@ -974,32 +993,32 @@
 
 ::method GetEntryLine unguarded
    use arg id
-   return self~InternalGetItemData(id, self~DlgHandle, 0)
+   return self~InternalGetItemData(id, self~dlgHandle, 0)
 
    /* Returns the content of the currently selected item in a list box */
 
 ::method GetListLine unguarded
    use arg id
-   return self~InternalGetItemData(id, self~DlgHandle, 3)
+   return self~InternalGetItemData(id, self~dlgHandle, 3)
 
    /* Returns the content of the currently selected item in a combo box */
 
 ::method GetComboLine unguarded
    use arg id
-   return self~InternalGetItemData(id, self~DlgHandle, 0)
+   return self~InternalGetItemData(id, self~dlgHandle, 0)
 
    /* Returns 1 if the check box 'id' is selected, that is it has a check */
    /* mark. Otherwise it returns 0 */
 
 ::method GetCheckBox unguarded
    use arg id
-   return self~InternalGetItemData(id, self~DlgHandle, 1)
+   return self~InternalGetItemData(id, self~dlgHandle, 1)
 
    /* Returns 1 if the radio button 'id' is selected, otherwise it returns 0 */
 
 ::method GetRadioButton unguarded
    use arg id
-   return self~InternalGetItemData(id, self~DlgHandle, 2)
+   return self~InternalGetItemData(id, self~dlgHandle, 2)
 
    /* This method can be applied to a multiple choice list box. */
    /* It returns a string containing all the selected items' index. */
@@ -1007,14 +1026,14 @@
 
 ::method GetMultiList unguarded
    use arg id
-   return self~InternalGetItemData(id, self~DlgHandle, 4)
+   return self~InternalGetItemData(id, self~dlgHandle, 4)
 
    /* This method gets the value of a dialog item. You don't have to know */
    /* what kind of item it is when it has been connected before */
 
 ::method GetValue unguarded
     use arg id
-    return self~InternalGetItemData(id, self~DlgHandle)
+    return self~InternalGetItemData(id, self~dlgHandle)
 
    /* Sets 'attributeName' with the value of the associated dialog field. */
    /* Returns  nothing! */
@@ -1048,33 +1067,33 @@
 
 ::method SetEntryLine unguarded
    use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~DlgHandle, 0)
+   return self~InternalSetItemData(id, dataString, self~dlgHandle, 0)
 
    /* Puts 'dataString' into the list box 'id' */
 
 ::method SetListLine unguarded
    use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~DlgHandle, 3)
+   return self~InternalSetItemData(id, dataString, self~dlgHandle, 3)
 
    /* Puts 'dataString' into the combo box 'id' */
 
 ::method SetComboLine unguarded
    use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~DlgHandle, 0)
+   return self~InternalSetItemData(id, dataString, self~dlgHandle, 0)
 
    /* Puts a check mark to the check box if 'data' equals 1 */
    /* and remove the check mark if 'data' equals 0 */
 
 ::method SetCheckBox unguarded
    use arg id, data
-   return self~InternalSetItemData(id, data, self~DlgHandle, 1)
+   return self~InternalSetItemData(id, data, self~dlgHandle, 1)
 
    /* Checks the radio button if 'data' equals 1 */
    /* and unchecks it if 'data' equals 0 */
 
 ::method SetRadioButton unguarded
    use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~DlgHandle, 2)
+   return self~InternalSetItemData(id, dataString, self~dlgHandle, 2)
 
    /* Use this method to select one ore more lines in a multiple choice */
    /* list box. Provide the index of all lines you want to select */
@@ -1082,7 +1101,7 @@
 
 ::method SetMultiList unguarded
    use arg id, data
-   return self~InternalSetItemData(id, data, self~DlgHandle, 4)
+   return self~InternalSetItemData(id, data, self~dlgHandle, 4)
 
    /* This method sets the value of a dialog item. You don't have */
    /* to know what kind of item it is if it has been connected before */
@@ -1110,7 +1129,7 @@
    /* Returns 1 (true) if Windows dialog is still existing */
 
 ::method IsDialogActive unguarded
-   return HandleDlg("ACTIVE", self~DlgHandle)
+   return HandleDlg("ACTIVE", self~dlgHandle)
 
 
    /* This method will handle one dialog message synchronously */
@@ -1185,22 +1204,22 @@
    if Arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    parse value Wnd_Desktop("RECT", self~hwnd) with x y cx cy
    /* diffsx and diffsy are needed for the title and the frame */
-   diffsx = cx - x - (self~SizeX * self~FactorX)
-   diffsy = cy - y - (self~SizeY * self~FactorY)
-   self~SizeX = width
-   self~SizeY = hight
-   return WndShow_Pos("P", self~DlgHandle, 0, 0, width * self~FactorX + diffsx,,
-                          hight* self~FactorY + diffsy,"NOMOVE "||showOptions )
+   diffsx = cx - x - (self~sizeX * self~factorX)
+   diffsy = cy - y - (self~sizeY * self~factorY)
+   self~sizeX = width
+   self~sizeY = hight
+   return WndShow_Pos("P", self~dlgHandle, 0, 0, width * self~factorX + diffsx,,
+                          hight* self~factorY + diffsy,"NOMOVE "||showOptions )
 
 ::method FocusItem unguarded
    use arg id
-   return SendWinMsg("ANY", self~DlgHandle, "0x0028", self~GetItem(id), 1)
+   return SendWinMsg("ANY", self~dlgHandle, "0x0028", self~GetItem(id), 1)
 
 ::method TabToNext unguarded
-   return Wnd_Desktop("SETFOC", self~DlgHandle, 0, "N")
+   return Wnd_Desktop("SETFOC", self~dlgHandle, 0, "N")
 
 ::method TabToPrevious unguarded
-   return Wnd_Desktop("SETFOC", self~DlgHandle, 1, "P")
+   return Wnd_Desktop("SETFOC", self~dlgHandle, 1, "P")
 
 ::method getTextSize unguarded
   forward message "getTextSizeDlg" continue
@@ -1215,21 +1234,21 @@
    if \ id~datatype("W") then id = self~ResolveSymbolicId(id)
    if id == -1 then return -1
    if \ wantStop~datatype('O')then return -3
-   return HandleControlEx(self~DlgHandle, id, "X", "TAB", wantStop)
+   return HandleControlEx(self~dlgHandle, id, "X", "TAB", wantStop)
 
 ::method SetGroup unguarded
    use strict arg id, wantGroup = .true
    if \ id~datatype("W") then id = self~ResolveSymbolicId(id)
    if id == -1 then return -1
    if \ wantGroup~datatype('O')then return -3
-   return HandleControlEx(self~DlgHandle, id, "X", "GROUP", wantGroup)
+   return HandleControlEx(self~dlgHandle, id, "X", "GROUP", wantGroup)
 
 ::method Center unguarded
    use arg showOptions
    if Arg(1,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    parse value self~GetSize with dcx dcy
    s = screenSize()
-   return WndShow_Pos("P",self~DlgHandle, (s[3] - dcx * self~FactorX) %2, (s[4] - dcy * self~FactorY) %2, 0, 0,,
+   return WndShow_Pos("P",self~dlgHandle, (s[3] - dcx * self~factorX) %2, (s[4] - dcy * self~factorY) %2, 0, 0,,
                            "NOSIZE "||showOptions)
 
 
@@ -1293,3 +1312,7 @@
    -- Check if the dialog table still needs to be freed.
    if self~Adm \= 0 then ret = HandleDialogAdmin(self~Adm)
    self~Adm = 0
+
+
+::class 'Window' public inherit WindowBase
+::method init  external "LIBRARY oodialog window_init"

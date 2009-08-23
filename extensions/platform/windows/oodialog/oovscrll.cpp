@@ -59,7 +59,7 @@ size_t RexxEntry HandleScrollBar(const char *funcname, size_t argc, CONSTRXSTRIN
        ret = atof(argv[2].strptr);
        if (ret < LONG_MIN) ret = 1-LONG_MAX;
 
-       if (SetScrollRange(w, SB_CTL, (LONG)ret, (LONG)atof(argv[3].strptr), IsYes(argv[4].strptr)))
+       if (SetScrollRange(w, SB_CTL, (LONG)ret, (LONG)atof(argv[3].strptr), isYes(argv[4].strptr)))
           RETC(0)
        else
           RETC(1)
@@ -88,7 +88,7 @@ size_t RexxEntry HandleScrollBar(const char *funcname, size_t argc, CONSTRXSTRIN
        CHECKARG(4);
 
        w = GET_HWND(argv[1]);
-       if (SetScrollPos(w, SB_CTL, atol(argv[2].strptr), IsYes(argv[3].strptr)))
+       if (SetScrollPos(w, SB_CTL, atol(argv[2].strptr), isYes(argv[3].strptr)))
           RETC(0)
        else
           RETC(1)

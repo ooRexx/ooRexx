@@ -290,68 +290,11 @@
 
 ::method oDlg attribute   -- The ooRexx dialog object this control belongs to
 ::method hDlg attribute   -- The window handle of that dialog
-::method Id attribute     -- The numerical resource ID for this control
+::method id attribute     -- The numerical resource ID for this control
 
-::method new class
-   use arg pdialog, id, category
+::method new class external "LIBRARY oodialog dlgctrl_new_cls"
 
-   -- Before this returns, the object init() method will have been invoked.  If
-   -- there are args, then init() will have resolved id to a numeric resource
-   -- id.
-   Forward Class(Super) continue
-   obj = result
-
-   if obj \= .Nil then do
-      obj~Hwnd = 0  -- Signal hwnd is not assigned yet.
-
-      if Arg() = 0 then do
-         obj~init_WindowBase
-         obj~oDlg = .nil
-         obj~Id = 0
-         return obj
-      end
-
-      if obj~id = -1 then return .nil
-
-      parse value GetDialogFactor() with x y
-      obj~FactorX=x
-      obj~FactorY=Y
-
-      if Arg(3,'o') = 1 | category = 0 then do
-          obj~hDlg = pDialog~DlgHandle
-          obj~AssignWindow(pDialog~GetItem(obj~id))
-      end
-      else do
-          obj~hDlg = pDialog~catalog['handles'][category]
-          obj~AssignWindow(pDialog~GetItem(obj~id, obj~hDlg))
-      end
-   end
-   return obj
-
-
-::method Init
-   use arg pdialog, id, category
-   self~init:super
-   if Arg() = 0 then return
-   self~oDlg = pDialog
-   if id~DataType("N") = 0 then id = pDialog~ResolveSymbolicId(id)
-   self~Id = id
-
-::method AssignWindow
-   use arg hwnd, parent, category
-   self~Hwnd = hwnd
-   if hwnd = 0 then return 0
-   parse value Wnd_Desktop("RECT", hwnd) with x y cx cy
-   self~SizeX = (cx - x) % self~FactorX
-   self~SizeY = (cy - y) % self~FactorY
-
-   if Arg(2,'e') = 1 then do
-       self~oDlg = parent
-       if Arg(3,'o') = 1 then self~hDlg = self~oDlg~DlgHandle
-       else self~hDlg = self~oDlg~catalog['handles'][category]
-   end
-   return hwnd
-
+::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
 
 ::method ProcessMessage
    parse arg msg,wp,lp
@@ -359,14 +302,7 @@
 
 ::method Message2Parent unguarded private /* This is the replacement for BoxMessage */
    use arg msg, wP, lP
-   return SendWinMsg("PTR", Self~hDlg, Self~Id, msg, wP, lP)
-
--- DEPRECATED
-::method getTextSize unguarded
-  forward message "getTextSizeDlg" continue
-  return result~width result~height
-
-::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
+   return SendWinMsg("PTR", self~hDlg, self~Id, msg, wP, lP)
 
 ::method SetColor
    use arg colorbk, colorfg
@@ -467,6 +403,16 @@
    use arg left, top, right, bottom, erasebkg
    if Arg(5, 'o') = 1 then erasebkg = 0
    return WindowRect("RDW", self~hwnd,left,top,right,bottom, erasebkg)
+
+-- DEPRECATED
+::method assignWindow
+  return 0
+
+-- DEPRECATED
+::method getTextSize unguarded
+  forward message "getTextSizeDlg" continue
+  return result~width result~height
+
 
 /****************************************************** Tree Control Class *********************************************************/
 
@@ -793,7 +739,7 @@
 ::method InsertColumn
    use arg nr, text, width, fmt
    if arg(1,'O') then nr = 0
-   if Arg(3,'o') = 1 then width = -1; else width = width*self~FactorX
+   if Arg(3,'o') = 1 then width = -1; else width = width*self~factorX
    if Arg(4,'o') = 1 then fmt = "LEFT"
    return HandleListCtrl("C","INS", self~Hwnd, nr, text, width, fmt~translate)
 
@@ -808,7 +754,7 @@
    use arg nr, text, width, fmt
    if Arg(1,'o') = 1 then return -1
    if Arg(2,'o') = 1 then text = ""
-   if Arg(3,'o') = 1 then width = -1; else width = width*self~FactorX
+   if Arg(3,'o') = 1 then width = -1; else width = width*self~factorX
    if Arg(4,'o') = 1 then fmt = ""
    return HandleListCtrl("C","SET", self~Hwnd, nr, text, width, fmt~translate)
 
@@ -817,7 +763,7 @@
    use arg nr
    if Arg(1,'o') = 1 then return -1
    ret = HandleListCtrl("C","GET", self~Hwnd, nr, "InternalLVColInfo")
-   if InternalLVColInfo.!Width~Datatype('N') = 1 then InternalLVColInfo.!Width = InternalLVColInfo.!Width / self~FactorX
+   if InternalLVColInfo.!Width~Datatype('N') = 1 then InternalLVColInfo.!Width = InternalLVColInfo.!Width / self~factorX
    return InternalLVColInfo.
 
 
@@ -826,13 +772,13 @@
 ::method ColumnWidth
    use arg nr
    if Arg(1,'o') = 1 then return -1
-   return HandleListCtrl("C","GETWIDTH", self~Hwnd, nr) / self~FactorX
+   return HandleListCtrl("C","GETWIDTH", self~Hwnd, nr) / self~factorX
 
 ::method SetColumnWidth
    use arg nr, width
    if Arg(1,'o') = 1 then return -1
    if Arg(2,'o') = 1 then width = "AUTO"
-   if width~datatype("N") = 1 then width = width * self~FactorX
+   if width~datatype("N") = 1 then width = width * self~factorX
    return HandleListCtrl("C","SETWIDTH", self~Hwnd, nr, width~translate)
 
 ::method getColumnCount external "LIBRARY oodialog lv_getColumnCount"
@@ -842,7 +788,7 @@
 ::method StringWidth
    use arg text
    if Arg(1,'o') = 1 then return -1
-   return HandleListCtrl("M","STRWIDTH", self~Hwnd, text) / self~FactorX
+   return HandleListCtrl("M","STRWIDTH", self~Hwnd, text) / self~factorX
 
 
 ::method Insert
@@ -1416,8 +1362,6 @@
 ::method setIcon external "LIBRARY oodialog stc_setIcon"
 ::method getImage external "LIBRARY oodialog stc_getImage"
 ::method setImage external "LIBRARY oodialog stc_setImage"
-::method getText external "LIBRARY oodialog stc_getText"
-::method setText external "LIBRARY oodialog stc_setText"
 
 
 /****************************************************** Edit Control Class *********************************************************/
@@ -1532,13 +1476,6 @@
 ::method "Tab="
     use arg dlgunits
     self~Message2Parent(0x00CB, 1, "L" || dlgunits)
-
-::method GetText
-    return HandleControlEx(self~hDlg, self~id, "E", "TXT")
-
-::method SetText
-    use strict arg text
-    return HandleControlEx(self~hDlg, self~id, "E", "TXT", text)
 
 ::method HideBalloon
     return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP")
@@ -1768,9 +1705,9 @@
 
 ::method GetText
    use arg ndx
-   len = SendWinMsg("DLG", Self~hDlg, self~id, 0x0000018A, ndx-1,0)
+   len = SendWinMsg("DLG", self~hDlg, self~id, 0x0000018A, ndx-1,0)
    if len <= 0 then return ""
-   else return SendWinMsg("PTR", Self~hDlg, self~id, 0x00000189, ndx-1,"G" || len+1)
+   else return SendWinMsg("PTR", self~hDlg, self~id, 0x00000189, ndx-1,"G" || len+1)
 
 ::method Modify
    use arg index, dataString
@@ -1798,23 +1735,23 @@
 ::method SetWidth
    use arg dlgunits
    if Arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   self~Message2Parent(0x00000194, dlgunits*self~FactorX, 0)
+   self~Message2Parent(0x00000194, dlgunits*self~factorX, 0)
 
 ::method Width
-   return self~Message2Parent(0x00000193, 0, 0)/self~FactorX
+   return self~Message2Parent(0x00000193, 0, 0)/self~factorX
 
 ::method "ItemHeight="
    use arg dlgunits
    if Arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   self~Message2Parent(0x000001A0, 0, dlgunits*self~FactorY)
+   self~Message2Parent(0x000001A0, 0, dlgunits*self~factorY)
 
 ::method ItemHeight
-   return self~Message2Parent(0x000001A1, 0, 0)/self~FactorY
+   return self~Message2Parent(0x000001A1, 0, 0)/self~factorY
 
 ::method "ColumnWidth="
    use arg dlgunits
    if Arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   self~Message2Parent(0x00000195, dlgunits*self~FactorX, 0)
+   self~Message2Parent(0x00000195, dlgunits*self~factorX, 0)
 
 
 
@@ -1876,9 +1813,9 @@
 
 ::method GetText
    use arg ndx
-   len = SendWinMsg("DLG", Self~hDlg, self~id, 0x00000149, ndx-1,0)
+   len = SendWinMsg("DLG", self~hDlg, self~id, 0x00000149, ndx-1,0)
    if len <= 0 then return ""
-   else return SendWinMsg("PTR", Self~hDlg, self~id, 0x00000148, ndx-1,"G" || len+1)
+   else return SendWinMsg("PTR", self~hDlg, self~id, 0x00000148, ndx-1,"G" || len+1)
 
 ::method Modify
    use arg index, dataString

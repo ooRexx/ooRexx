@@ -185,7 +185,7 @@ size_t RexxEntry PlaySoundFile(const char *funcname, size_t argc, CONSTRXSTRING 
 
    CHECKARGL(1);
 
-   if ((argc > 1) && (IsYes(argv[1].strptr)))
+   if ((argc > 1) && (isYes(argv[1].strptr)))
       opts = SND_ASYNC;
    else
       opts = SND_SYNC;
@@ -350,7 +350,7 @@ size_t RexxEntry GetFileNameWindow(const char *funcname, size_t argc, CONSTRXSTR
         else title = "Save File As";
     }
     if ((argc >= 6) && (argv[5].strptr)) defext = argv[5].strptr;
-    if (VALIDARG(7)) multi = IsYes(argv[6].strptr);
+    if (VALIDARG(7)) multi = isYes(argv[6].strptr);
 
     if (VALIDARG(8)) chSepChar =  argv[7].strptr[0];
 
@@ -386,7 +386,7 @@ size_t RexxEntry PlaySnd(const char *funcname, size_t argc, CONSTRXSTRING *argv,
 
    if (!dlgAdm) RETERR
 
-   if ((argc > 2) && (IsYes(argv[2].strptr)))
+   if ((argc > 2) && (isYes(argv[2].strptr)))
       opts = SND_ASYNC;
    else
       opts = SND_SYNC;
@@ -799,7 +799,7 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
    {
        CHECKARG(3);
 
-       RETC(!TreeView_EndEditLabelNow(h, IsYes(argv[2].strptr)))
+       RETC(!TreeView_EndEditLabelNow(h, isYes(argv[2].strptr)))
    }
    else
    if (!strcmp(argv[0].strptr, "SORT"))
@@ -807,7 +807,7 @@ size_t RexxEntry HandleTreeCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        CHECKARG(4);
 
        HTREEITEM hItem = (HTREEITEM)GET_HANDLE(argv[2]);
-       RETC(!TreeView_SortChildren(h, (HTREEITEM)hItem, IsYes(argv[3].strptr)))
+       RETC(!TreeView_SortChildren(h, (HTREEITEM)hItem, isYes(argv[3].strptr)))
    }
    else
    if (!strcmp(argv[0].strptr, "SUBCL_EDIT"))
@@ -1110,48 +1110,7 @@ size_t RexxEntry HandleControlEx(
         if ( ! checkControlClass(hCtrl, winEdit) )
             RETVAL(-1)
 
-        if ( strcmp(argv[3].strptr, "TXT") == 0 )       /* Set or get the control's text. */
-        {
-            if ( argc > 4 )
-            {
-                if ( SetWindowText(hCtrl, argv[4].strptr) == 0 )
-                    RETVAL(-(LONG)GetLastError())
-                else
-                    RETVAL(0)
-            }
-            else
-            {
-                ULONG count = (ULONG)GetWindowTextLength(hCtrl);
-
-                if ( count == 0 )
-                {
-                    retstr->strptr[0] = '\0';
-                    retstr->strlength = 0;
-                }
-                else
-                {
-                    if ( ++count > RXAUTOBUFLEN )
-                    {
-                        PVOID p = GlobalAlloc(GMEM_FIXED, count);
-                        if ( ! p )
-                        {
-                            RETVAL(-(LONG)GetLastError())
-                        }
-
-                        retstr->strptr = (PCHAR)p;
-                    }
-                    count = GetWindowText(hCtrl, (LPTSTR)retstr->strptr, count);
-
-                    retstr->strlength = count;
-                    if ( count == 0 )
-                    {
-                        retstr->strptr[0] = '\0';
-                    }
-                }
-            }
-            return 0;
-        }
-        else if ( !strcmp(argv[3].strptr, "MSG") ) /* Send an edit message (EM_*) */
+        if ( !strcmp(argv[3].strptr, "MSG") ) /* Send an edit message (EM_*) */
         {
             CHECKARGL(5);
 
@@ -1828,7 +1787,7 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        if (!strcmp(argv[1].strptr, "ENVIS"))
        {
            CHECKARG(5);
-           RETC(!ListView_EnsureVisible(h, atol(argv[3].strptr), IsYes(argv[4].strptr)))
+           RETC(!ListView_EnsureVisible(h, atol(argv[3].strptr), isYes(argv[4].strptr)))
        }
        else
        if (!strcmp(argv[1].strptr, "CNTPP"))
@@ -1918,7 +1877,7 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        if (!strcmp(argv[1].strptr,"GETSPC"))
        {
            CHECKARG(4);
-           RETVAL(ListView_GetItemSpacing(h, IsYes(argv[3].strptr)));
+           RETVAL(ListView_GetItemSpacing(h, isYes(argv[3].strptr)));
        }
        else
        if (!strcmp(argv[1].strptr,"SETSTYLE"))
@@ -2095,17 +2054,17 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            if (argc == 4)
                RETVAL((long)SendMessage(h, TBM_GETPOS, 0, 0))
            else
-               SendMessage(h, TBM_SETPOS, IsYes(argv[4].strptr), atol(argv[3].strptr));
+               SendMessage(h, TBM_SETPOS, isYes(argv[4].strptr), atol(argv[3].strptr));
        }
        else if (!strcmp(argv[1].strptr, "SETRANGE"))
        {
            CHECKARG(6);
            if (argv[3].strptr[0] == 'L')
-               SendMessage(h, TBM_SETRANGEMIN, IsYes(argv[5].strptr), atol(argv[4].strptr));
+               SendMessage(h, TBM_SETRANGEMIN, isYes(argv[5].strptr), atol(argv[4].strptr));
            else if (argv[3].strptr[0] == 'H')
-               SendMessage(h, TBM_SETRANGEMAX, IsYes(argv[5].strptr), atol(argv[4].strptr));
+               SendMessage(h, TBM_SETRANGEMAX, isYes(argv[5].strptr), atol(argv[4].strptr));
            else
-               SendMessage(h, TBM_SETRANGE, IsYes(argv[5].strptr), MAKELONG(atol(argv[3].strptr), atol(argv[4].strptr)));
+               SendMessage(h, TBM_SETRANGE, isYes(argv[5].strptr), MAKELONG(atol(argv[3].strptr), atol(argv[4].strptr)));
        }
        else if (!strcmp(argv[1].strptr, "GETRANGE"))
        {
@@ -2120,7 +2079,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            if (argv[3].strptr[0] == 'C')
            {
                CHECKARG(5);
-               SendMessage(h, TBM_CLEARTICS, IsYes(argv[4].strptr), 0);
+               SendMessage(h, TBM_CLEARTICS, isYes(argv[4].strptr), 0);
            }
            else if (argv[3].strptr[0] == 'N')
            {
@@ -2163,16 +2122,16 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            CHECKARGL(5);
            if (argv[3].strptr[0] == 'C')
            {
-               SendMessage(h, TBM_CLEARSEL, IsYes(argv[4].strptr), 0);
+               SendMessage(h, TBM_CLEARSEL, isYes(argv[4].strptr), 0);
                RETC(0);
            }
            CHECKARG(6);
            if (argv[3].strptr[0] == 'S')
-               SendMessage(h, TBM_SETSELSTART, IsYes(argv[5].strptr), atol(argv[4].strptr));
+               SendMessage(h, TBM_SETSELSTART, isYes(argv[5].strptr), atol(argv[4].strptr));
            else if (argv[3].strptr[0] == 'E')
-               SendMessage(h, TBM_SETSELEND, IsYes(argv[5].strptr), atol(argv[4].strptr));
+               SendMessage(h, TBM_SETSELEND, isYes(argv[5].strptr), atol(argv[4].strptr));
            else
-               SendMessage(h, TBM_SETSEL, IsYes(argv[5].strptr), MAKELONG(atol(argv[3].strptr), atol(argv[4].strptr)));
+               SendMessage(h, TBM_SETSEL, isYes(argv[5].strptr), MAKELONG(atol(argv[3].strptr), atol(argv[4].strptr)));
        }
        else if (!strcmp(argv[1].strptr, "GETSEL"))
        {
@@ -2361,7 +2320,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
            BOOL adapt;  /* or only query */
            CHECKARG(8);
 
-           adapt = IsYes(argv[3].strptr);
+           adapt = isYes(argv[3].strptr);
 
            r.left = atol(argv[4].strptr);
            r.top = atol(argv[5].strptr);
@@ -2588,22 +2547,6 @@ RexxObjectPtr oodGetImageAttribute(RexxMethodContext *c, OSELF self, CSTRING var
     }
     return result;
 }
-
-/**
- *  Methods for the .WindowBase mixin class.
- */
-#define WINDOWBASE_CLASS       "WindowBase"
-
-RexxMethod1(uint32_t, wb_getStyleRaw, OSELF, self)
-{
-    return GetWindowLong(rxGetWindowHandle(context, self), GWL_STYLE);
-}
-
-RexxMethod1(uint32_t, wb_getExStyleRaw, OSELF, self)
-{
-    return GetWindowLong(rxGetWindowHandle(context, self), GWL_EXSTYLE);
-}
-
 
 /**
  *  Methods for the .ResDialog class.
@@ -4326,58 +4269,6 @@ RexxMethod1(RexxObjectPtr, tab_getImageList, OSELF, self)
  */
 #define STATIC_CLASS              "StaticControl"
 #define STATICIMAGE_ATTRIBUTE     "!STATICIMAGE"
-
-/** StaticControl::setText()
- *
- *
- */
-RexxMethod2(uint32_t, stc_setText, CSTRING, text, OSELF, self)
-{
-    HWND hwnd = rxGetWindowHandle(context, self);
-    uint32_t rc = 0;
-
-    if ( SetWindowText(hwnd, text) == 0 )
-    {
-        rc = GetLastError();
-    }
-    return rc;
-}
-
-/** StaticControl::getText()
- *
- *
- */
-RexxMethod1(RexxStringObject, stc_getText, OSELF, self)
-{
-    RexxStringObject result = NULLOBJECT;
-    HWND hwnd = rxGetWindowHandle(context, self);
-    oodResetSysErrCode(context);
-
-    ULONG count = (ULONG)GetWindowTextLength(hwnd);
-    if ( count == 0 )
-    {
-        result = context->String("");
-    }
-    else
-    {
-        char *buf = (char *)malloc(++count);
-        if ( ! buf )
-        {
-            outOfMemoryException(context);
-        }
-        else
-        {
-            *buf = '\0';
-            if ( GetWindowText(hwnd, buf, count) == 0 )
-            {
-                oodSetSysErrCode(context);
-            }
-            result = context->String(buf);
-            free(buf);
-        }
-    }
-    return result;
-}
 
 /** StaticControl::setIcon()
  *

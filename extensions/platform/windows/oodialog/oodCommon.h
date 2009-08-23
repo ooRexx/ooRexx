@@ -62,10 +62,21 @@ typedef enum
     winDateTimePicker, winUnknown
 } oodControl_t;
 
+/* Struct for the WindowBase class CSelf. */
+typedef struct _wbCSelf {
+   HWND           hwnd;
+   wholenumber_t  initCode;
+   uint32_t       sizeX;
+   uint32_t       sizeY;
+   double         factorX;
+   double         factorY;
+} wbCSelf;
+typedef wbCSelf *pWbCSelf;
+
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
 extern void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
 extern void rxdatacpy(CHAR * tar, RXSTRING &src);
-extern bool IsYes(const char *s);
+extern bool isYes(const char *s);
 extern bool IsNo(const char * s);
 extern void *string2pointer(const char *string);
 extern void pointer2string(char *, void *pointer);
@@ -104,6 +115,8 @@ extern bool textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SI
 extern bool textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
 extern bool getTextExtent(HFONT, HDC, CSTRING, SIZE *);
 extern bool checkControlClass(HWND, oodControl_t);
+
+bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;
@@ -158,6 +171,41 @@ inline void oodSetSysErrCode(RexxMethodContext *context)
 inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr windowObject)
 {
     return (HWND)rxGetPointerAttribute(context, windowObject, "HWND");
+}
+
+/**
+ * Returns the first character of the message name that invoked the current
+ * method.
+ *
+ * @param context  The method context.
+ *
+ * @return The first charactere of the message name.
+ */
+inline char msgAbbrev(RexxMethodContext *context)
+{
+    return *(context->GetMessageName());
+}
+
+/**
+ * Checks that the argument could be construed as 'true'.  This would be 1 or
+ * yes, but for historical reasons the German ja must also be included.
+ *
+ * This will also work for an optional arg to an API method.  I.e., if s is
+ * null, false is returned.
+ *
+ * @param s  The string to check.
+ *
+ * @return bool
+ */
+inline bool isYes(const char * s)
+{
+   if ( s == NULL || strlen(s) == 0 )
+   {
+       return FALSE;
+   }
+
+   char c = toupper(s[0]);
+   return ( c == 'J' || c =='Y' || c == '1' );
 }
 
 #endif

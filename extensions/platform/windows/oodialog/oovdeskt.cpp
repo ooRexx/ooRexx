@@ -342,7 +342,8 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
 
        if (strstr(argv[2].strptr, "REDRAW"))
        {
-           if (RedrawWindow(w, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN))
+           // Causes the entire window, including frame, to be redrawn.2
+           if (RedrawWindow(w, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN))
                RETC(0) else RETC(1)
        }
        else
@@ -440,7 +441,7 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
        if (argc == 5)
        {
            w = GET_HWND(argv[1]);
-           RETVAL(SetScrollPos(w, atoi(argv[2].strptr), atoi(argv[3].strptr), IsYes(argv[4].strptr)))  /* SB_HORZ = 0, SB_VERT = 1 */
+           RETVAL(SetScrollPos(w, atoi(argv[2].strptr), atoi(argv[3].strptr), isYes(argv[4].strptr)))  /* SB_HORZ = 0, SB_VERT = 1 */
        }
        RETERR
    }

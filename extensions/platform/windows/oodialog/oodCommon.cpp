@@ -418,14 +418,7 @@ void rxdatacpy(CHAR * tar, RXSTRING &src)
    tar[i] = '\0';
 }
 
-bool IsYes(const char * s)
-{
-   if (!strlen(s)) return FALSE;
-
-   return ((s[0]=='j') || (s[0]=='J') || (s[0]=='y') || (s[0]=='Y') || atoi(s));
-}
-
-/* Slightly stricter than IsYes. TODO remove this when YesNoMessage() is
+/* Slightly stricter than isYes. TODO remove this when YesNoMessage() is
    fixed. */
 bool IsNo(const char * s)
 {

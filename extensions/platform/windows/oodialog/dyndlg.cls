@@ -91,8 +91,8 @@
    self~BasePtr = base
    self~activePtr = ptr
    if ptr = 0 then call HandleDlg "STOP"
-   self~SizeX = cx
-   self~SizeY = cy
+   self~sizeX = cx
+   self~sizeY = cy
    self~DefineDialog
    return ptr <> 0
 
@@ -1072,13 +1072,13 @@
 
 
 ::method AddOkCancelRightBottom
-   return self~AddButtonGroup(self~SizeX-95, self~SizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
+   return self~AddButtonGroup(self~sizeX-95, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
 
 ::method AddOkCancelLeftBottom
-   return self~AddButtonGroup(5, self~SizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
+   return self~AddButtonGroup(5, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
 
 ::method AddOkCancelRightTop
-   return self~AddButtonGroup(self~SizeX-45, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
+   return self~AddButtonGroup(self~sizeX-45, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
 
 ::method AddOkCancelLeftTop
    return self~AddButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
@@ -1111,11 +1111,11 @@
      if modal~translate = "NOTMODAL" then modal = 1
      else modal = 0
    end
-   self~DlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, 0 /* no autodetection */, 1, icon, modal)
+   self~dlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, 0 /* no autodetection */, 1, icon, modal)
    self~activePtr = 0
-   if self~DlgHandle = 0 then return 0
+   if self~dlgHandle = 0 then return 0
    else self~InitDialog
-   return self~DlgHandle
+   return self~dlgHandle
 
 ::method StopDynamic protected
    self~DialogItemCount = 0

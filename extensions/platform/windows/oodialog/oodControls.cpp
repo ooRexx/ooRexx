@@ -43,9 +43,18 @@
  */
 #include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
 
-//#include <stdio.h>
+#include <stdio.h>
 #include "APICommon.h"
 #include "oodCommon.h"
+
+
+typedef struct newControlParams {
+   HWND           hwnd;
+   uint32_t       id;
+   HWND           hwndDlg;
+   RexxObjectPtr  parentDlg;
+} NEWCONTROLPARAMS;
+typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
 
 
 /**
@@ -53,6 +62,42 @@
  */
 #define DIALOGCONTROL_CLASS        "DialogControl"
 
+/** DialogControl::new()
+ *
+ *
+ */
+RexxMethod3(RexxObjectPtr, dlgctrl_new_cls, OPTIONAL_POINTER, args, OSELF, self, SUPER, superClass)
+{
+    RexxMethodContext *c = context;
+    RexxObjectPtr control = TheNilObj;
+
+    if ( argumentOmitted(1) || args == NULL )
+    {
+        goto done_out;
+    }
+
+    control = c->ForwardMessage(NULLOBJECT, NULL, superClass, c->NewArray(0));
+    if ( control == NULLOBJECT )
+    {
+        control = TheNilObj;
+        goto done_out;
+    }
+
+    PNEWCONTROLPARAMS params = (PNEWCONTROLPARAMS)args;
+
+    if ( ! initWindowBase(context, params->hwnd, control) )
+    {
+        control = TheNilObj;
+        goto done_out;
+    }
+
+    c->SendMessage1(control, "ID=", c->UnsignedInt32(params->id));
+    c->SendMessage1(control, "ODLG=", params->parentDlg);
+    c->SendMessage1(control, "HDLG=", pointer2string(context, params->hwndDlg));
+
+done_out:
+    return control;
+}
 
 /** DialogControl::getTextSizeDlg()
  *
@@ -248,7 +293,7 @@ done_out:
  * @returns  The properly instantiated dialog control object on success, or the
  *           nil object on failure.
  *
- * @remarks Replaces / combines the individualy getXXXControl() and the
+ * @remarks Replaces / combines the individual getXXXControl() and the
  *          getControl() methods of the AdvancedControl class.  Either returns
  *          the control object asked for, or .nil.
  *
@@ -321,28 +366,24 @@ RexxMethod3(RexxObjectPtr, advCtrl_getControl, RexxObjectPtr, rxID, OPTIONAL_uin
     // instantiated for this specific control, yet.  We instantiate one now and
     // then store the object in the user data area of the control window.
 
-    // TODO Much of the information we just determined, is re-determined in the
-    // new method of the dialog control.  It would be nice to change the new
-    // method to take a .Pointer object and rewrite the new method as a native
-    // API method and pass this information directly.
-    RexxArrayObject args;
-    if ( isCategoryDlg )
+    PNEWCONTROLPARAMS pArgs = (PNEWCONTROLPARAMS)malloc(sizeof(NEWCONTROLPARAMS));
+    if ( pArgs == NULL )
     {
-         args = c->ArrayOfThree(self, c->UnsignedInt32(id), c->UnsignedInt32(categoryPageID));
-    }
-    else
-    {
-        args = c->ArrayOfTwo(self, c->UnsignedInt32(id));
+        outOfMemoryException(context);
+        goto out;
     }
 
-    rxControl = c->SendMessage(controlCls, "NEW", args);
+    pArgs->hwnd = hControl;
+    pArgs->hwndDlg = hDlg;
+    pArgs->id = id;
+    pArgs->parentDlg = self;
+
+    rxControl = c->SendMessage1(controlCls, "NEW", c->NewPointer(pArgs));
+    free(pArgs);
+
     if ( rxControl != NULLOBJECT && rxControl != TheNilObj )
     {
-        // In the old Rexx implementing code, there was the possibility here
-        // that we would have a control object that would not be valid and have
-        // its hwnd set to 0.  That is no longer possible.
         result = rxControl;
-
         setWindowPtr(hControl, GWLP_USERDATA, (LONG_PTR)result);
         c->SendMessage1(self, "putControl", result);
     }

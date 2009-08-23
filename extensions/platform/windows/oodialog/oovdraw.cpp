@@ -165,7 +165,7 @@ size_t RexxEntry WindowRect(const char *funcname, size_t argc, CONSTRXSTRING *ar
            }
        }
 
-       if (InvalidateRect(w, &r, IsYes(erasebgr)))
+       if (InvalidateRect(w, &r, isYes(erasebgr)))
        {
           UpdateWindow(w);
           RETC(0)

@@ -54,60 +54,8 @@
 
 ::class 'WindowExtensions' public MIXINCLASS object
 
-::method HideFast unguarded
-   return WndShow_Pos("S",self~hwnd, "HIDE FAST")
-
-::method ShowFast unguarded
-   return WndShow_Pos("S",self~hwnd, "NORMAL FAST")
-
-::method Display unguarded
-   use arg disptype = "NORMAL"
-   if disptype = "" then disptype = "NORMAL"; else disptype = disptype~translate
-   if self~isA(.DialogControl) & (disptype~wordpos("MIN") <> 0 | disptype~wordpos("MAX") <> 0) then do
-     if self~oDlg~isA(.PlainBaseDialog) then
-       forward to (self~oDlg)
-     else
-       return 1
-   end
-   return WndShow_Pos("S",self~hwnd, disptype)
-
 ::method setFont unguarded external "LIBRARY oodialog winex_setFont"
 ::method getFont unguarded external "LIBRARY oodialog winex_getFont"
-
-::method GetRect unguarded
-   return WindowRect("GET", self~Hwnd)
-
-::method GetClientRect unguarded
-   use arg hwnd
-   if Arg(1,'o') = 1 then hwnd = self~hwnd
-   return WindowRect("GET", hwnd, "CLIENT")
-
-::method SetRect unguarded
-   use arg x, y, width, high, showOptions
-   if Arg(5,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   return WndShow_Pos("P",self~hwnd, x, y, width, high, showOptions)
-
-::method Update unguarded
-   return WndShow_Pos("S",self~Hwnd, "UPDATE")
-
-   /* This method draws the window */
-::method Draw unguarded
-   return WindowRect("RDW", self~hwnd, "")
-
-::method Redraw unguarded
-   return WndShow_Pos("S",self~hwnd, "REDRAW")
-
-::method RedrawClient unguarded
-   use arg erasebkg
-   if Arg(1, 'o') = 1 then erasebkg = 0
-   return WindowRect("RDW", self~Hwnd, erasebkg)
-
-::method GetDC unguarded
-   return HandleDC_Obj("G", self~hwnd)
-
-::method FreeDC unguarded
-   use arg dc
-   return HandleDC_obj("F", self~hwnd, dc)
 
 ::method HScrollPos unguarded
     return WndShow_Pos("B", self~hwnd, 0)
@@ -129,20 +77,12 @@
     use arg x, y
     return WndShow_Pos("M", self~hwnd, x, y)
 
-::method ScreenToClient unguarded
-    use arg x,y
-    return Wnd_Desktop("COORD", self~hwnd, x, y, "S2C")
+::method GetDC unguarded
+   return HandleDC_Obj("G", self~hwnd)
 
-::method ClientToScreen unguarded
-    use arg x,y
-    return Wnd_Desktop("COORD", self~hwnd, x, y, "C2S")
-
-::method SetForegroundWindow unguarded
-    use arg hwnd
-    return Wnd_Desktop("TOP", hwnd)
-
-::method ForegroundWindow unguarded
-   return Wnd_Desktop("FG")
+::method FreeDC unguarded
+   use arg dc
+   return HandleDC_obj("F", self~hwnd, dc)
 
 ::method SetCursorPos unguarded
    use arg x, y
@@ -345,18 +285,18 @@
 
 ::method LogRect2AbsRect unguarded
    parse arg l, t, r, b
-   ret.left = l*self~FactorX
-   ret.right = r*self~FactorX
-   ret.top = t*self~FactorY
-   ret.bottom = b*self~FactorY
+   ret.left = l*self~factorX
+   ret.right = r*self~factorX
+   ret.top = t*self~factorY
+   ret.bottom = b*self~factorY
    return ret.
 
 ::method AbsRect2LogRect unguarded
    parse arg l, t, r, b
-   ret.left = l/self~FactorX
-   ret.right = r/self~FactorX
-   ret.top = t/self~FactorY
-   ret.bottom = b/self~FactorY
+   ret.left = l/self~factorX
+   ret.right = r/self~factorX
+   ret.top = t/self~factorY
+   ret.bottom = b/self~factorY
    return ret.
 
 /** class: BaseDialog

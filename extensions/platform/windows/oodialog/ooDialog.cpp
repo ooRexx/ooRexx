@@ -587,7 +587,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
             strcpy(buffer, "0");
         }
 
-        if (IsYes(buffer))
+        if (isYes(buffer))
         {
             if (!DataAutodetection(Dlg))
             {
@@ -696,7 +696,7 @@ size_t RexxEntry StartDialog(const char *funcname, size_t argc, CONSTRXSTRING *a
             dlgAdm->OnTheTop = TRUE;
             dlgAdm->threadID = thID;
             /* modal flag = yes ? */
-            if (dlgAdm->previous && !IsYes(argv[6].strptr) && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg)) EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
+            if (dlgAdm->previous && !isYes(argv[6].strptr) && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg)) EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
 
             if ( GetDialogIcons(dlgAdm, atoi(argv[5].strptr), ICON_DLL, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
             {
@@ -873,9 +873,480 @@ static HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, in
 
 
 /**
+ *  Methods for the .WindowBase mixin class.
+ */
+#define WINDOWBASE_CLASS       "WindowBase"
+
+static inline HWND getWBWindow(void *pCSelf)
+{
+    return ((pWbCSelf)pCSelf)->hwnd;
+}
+
+/**
+ * Invalidates a rectangle in a window and has the window update.  This should
+ * cause the window to immediately repaint the rectangle.
+ *
+ * @param hwnd              Handle to the window to be redrawn.
+ * @param pr                Pointer to a rect structure specifying the area to
+ *                          be redrawn.  If this arg is null, the entire client
+ *                          area is redrawn.
+ * @param eraseBackground   Should the background of the window be redrawn
+ *                          during the repaint.
+ *
+ * @return True on success, otherwise false.
+ *
+ * @remarks  This is common code for several API methods.
+ */
+bool redrawRect(HWND hwnd, PRECT pr, bool eraseBackground)
+{
+    if ( InvalidateRect(hwnd, pr, eraseBackground) )
+    {
+       UpdateWindow(hwnd);
+       return true;
+    }
+    return false;
+}
+
+/**
+ * Performs the initialization of the WindowBase mixin class.
+ *
+ * This is done by creating the cself struct for that class and then sending
+ * that struct to the init_windowBase() method.  That method will raise an
+ * exception if its arg is not a RexxBufferObject.  This implies that the
+ * WindowBase mixin class can only be initialized through the native API.
+ *
+ * The base dialog, dialog control, and window classes in ooDialog inherit
+ * WindowBase.
+ *
+ * @param c        Method context we are operating in.
+ * @param hwndObj  Window handle of the underlying object.  This can be null and
+ *                 for a dialog object, it is always null.
+ * @param self     The Rexx object that inherited WindowBase.
+ *
+ * @return True on success, otherwise false.  If false an exception has been
+ *         raised.
+ *
+ * @remarks  This method calculates the factor X and Y values using the old,
+ *           incorrect, ooDialog method.  When the hwnd is unknown, that is the
+ *           best that can be done.  But, when the hwnd is known, it would be
+ *           better to calculate it correctly.  Even when the hwnd is unknown,
+ *           we could calculate it correctly using the font of the dialog.
+ *
+ *           Note that in the original ooDialog code, factorX and factorY were
+ *           formatted to only 1 decimal place.
+ *
+ *           Note that in the original ooDialog, if the object was a dialog,
+ *           (i.e. the hwnd is unknown,) then sizeX and sizeY simply remain at
+ *           0.
+ */
+bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self)
+{
+    RexxBufferObject obj = c->NewBuffer(sizeof(wbCSelf));
+
+    pWbCSelf pcs = (pWbCSelf)c->BufferData(obj);
+    if ( pcs == NULL )
+    {
+        outOfMemoryException(c);
+        return false;
+    }
+    memset(pcs, 0, sizeof(wbCSelf));
+
+    ULONG bu = GetDialogBaseUnits();
+    pcs->factorX = LOWORD(bu) / 4;
+    pcs->factorY = HIWORD(bu) / 8;
+
+    if ( hwndObj != NULL )
+    {
+        pcs->hwnd = hwndObj;
+
+        RECT r = {0};
+        if ( GetWindowRect(hwndObj, &r) == 0 )
+        {
+            systemServiceExceptionCode(c, API_FAILED_MSG, "GetWindowRect");
+            return false;
+        }
+
+        pcs->sizeX =  (uint32_t)((r.right - r.left) / pcs->factorX);
+        pcs->sizeY =  (uint32_t)((r.bottom - r.top) / pcs->factorY);
+    }
+
+    c->SendMessage1(self, "INIT_WINDOWBASE", obj);
+    return true;
+}
+
+/** WindowBase::init_windowBase()
+ *
+ *
+ */
+RexxMethod1(logical_t, wb_init_windowBase, RexxObjectPtr, cSelf)
+{
+    if ( ! context->IsBuffer(cSelf) )
+    {
+        wrongClassException(context, 1, "Buffer");
+    }
+    else
+    {
+        context->SetObjectVariable("CSELF", cSelf);
+    }
+    return 0;
+}
+
+/* Attributes for the WindowBase class */
+RexxMethod1(RexxStringObject, wb_getHwnd, CSELF, pCSelf)
+{
+    return pointer2string(context, ((pWbCSelf)pCSelf)->hwnd);
+}
+RexxMethod2(RexxObjectPtr, wb_setHwnd, CSTRING, hwnd, CSELF, pCSelf)
+{
+    ((pWbCSelf)pCSelf)->hwnd = (HWND)string2pointer(hwnd);
+    return NULLOBJECT;
+}
+
+RexxMethod1(wholenumber_t, wb_getInitCode, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->initCode; }
+RexxMethod2(RexxObjectPtr, wb_setInitCode, CSELF, pCSelf, wholenumber_t, code) { ((pWbCSelf)pCSelf)->initCode = code; return NULLOBJECT; }
+
+RexxMethod1(double, wb_getFactorX, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->factorX; }
+RexxMethod2(RexxObjectPtr, wb_setFactorX, CSELF, pCSelf, float, xFactor) { ((pWbCSelf)pCSelf)->factorX = xFactor; return NULLOBJECT; }
+
+RexxMethod1(double, wb_getFactorY, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->factorY; }
+RexxMethod2(RexxObjectPtr, wb_setFactorY, CSELF, pCSelf, float, yFactor) { ((pWbCSelf)pCSelf)->factorY = yFactor; return NULLOBJECT; }
+
+RexxMethod1(uint32_t, wb_getSizeX, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->sizeX; }
+RexxMethod2(RexxObjectPtr, wb_setSizeX, CSELF, pCSelf, uint32_t, xSize) { ((pWbCSelf)pCSelf)->sizeX = xSize; return NULLOBJECT; }
+
+RexxMethod1(uint32_t, wb_getSizeY, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->sizeY; }
+RexxMethod2(RexxObjectPtr, wb_setSizeY, CSELF, pCSelf, uint32_t, ySize) { ((pWbCSelf)pCSelf)->sizeY = ySize; return NULLOBJECT; }
+
+/** WindowBase::pixelX  [attribute]
+ *
+ *  Returns the width of the window in pixels.  This is a 'get' only attribute.
+ *
+ */
+RexxMethod1(uint32_t, wb_getPixelX, CSELF, pCSelf)
+{
+    pWbCSelf pcs = (pWbCSelf)pCSelf;
+    if ( pcs->hwnd == NULL )
+    {
+        return 0;
+    }
+
+    RECT r = {0};
+    GetWindowRect(pcs->hwnd, &r);
+    return r.right - r.left;
+}
+
+/** WindowBase::pixelY  [attribute]
+ *
+ *  Returns the height of the window in pixels.  This is a 'get' only attribute.
+ *
+ */
+RexxMethod1(uint32_t, wb_getPixelY, CSELF, pCSelf)
+{
+    pWbCSelf pcs = (pWbCSelf)pCSelf;
+    if ( pcs->hwnd == NULL )
+    {
+        return 0;
+    }
+
+    RECT r = {0};
+    GetWindowRect(pcs->hwnd, &r);
+    return r.bottom - r.top;
+}
+
+/** WindowBase::enable() / WindowBase::disable()
+ *
+ *  Enables or disables the window.  This function is mapped to both methods of
+ *  WindowBase.
+ *
+ *  @return  True if the window was previously disabled, returns false if the
+ *           window was not previously disabled.  Note that this is not succes
+ *           or failure.  It always succeeds.
+ *
+ *  @remarks  The return was not previously documented.
+ */
+RexxMethod1(logical_t, wb_enable, CSELF, pCSelf)
+{
+    BOOL enable = TRUE;
+    if ( msgAbbrev(context) == 'D' )
+    {
+        enable = FALSE;
+    }
+    return EnableWindow(getWBWindow(pCSelf), enable);
+}
+
+RexxMethod1(logical_t, wb_isEnabled, CSELF, pCSelf)
+{
+    return IsWindowEnabled(getWBWindow(pCSelf));
+}
+
+RexxMethod1(logical_t, wb_isVisible, CSELF, pCSelf)
+{
+    return IsWindowVisible(getWBWindow(pCSelf));
+}
+
+/**
+ * Common code to call ShowWindow() for a native API method.
+ *
+ * @param pCSelf   Pointer to a struct with the window handle.  Must be a
+ *                 wbCSelf struct.
+ * @param type     Single character indicating which SW_ flag to use.
+ *
+ * @return  True if the window was previously visible.  Return false if the
+ *          window was previously hidden.
+ */
+logical_t _showWindow(void *pCSelf, char type)
+{
+    int flag;
+    switch ( type )
+    {
+        case 'D' :
+        case 'N' :
+        case 'S' :
+            flag = SW_NORMAL;
+            break;
+
+        case 'H' :
+            flag = SW_HIDE;
+            break;
+
+        case 'I' :
+            flag = SW_SHOWNA;
+            break;
+
+        case 'M' :
+            flag = SW_SHOWMINIMIZED;
+            break;
+
+        case 'R' :
+            flag = SW_RESTORE;
+            break;
+
+        case 'X' :
+            flag = SW_SHOWMAXIMIZED;
+            break;
+
+        default :
+            flag = SW_SHOW;
+            break;
+
+    }
+    return ShowWindow(getWBWindow(pCSelf), flag);
+}
+
+uint32_t showFast(void *pCSelf, char type)
+{
+    HWND hwnd = getWBWindow(pCSelf);
+    uint32_t style = GetWindowLong(hwnd, GWL_STYLE);
+    if ( style )
+    {
+        if ( type == 'H' )
+        {
+            style ^= WS_VISIBLE;
+        }
+        else
+        {
+            style |= WS_VISIBLE;
+        }
+        SetWindowLong(hwnd, GWL_STYLE, style);
+        return 0;
+    }
+    return 1;
+}
+
+/** WindowBase::show() / WindowBase::hide()
+ *
+ *  Hides or shows the window.  This function is mapped to both methods of
+ *  WindowBase.  The return for these methods was not previously documented.
+ *
+ *  @return  True if the window was previously visible.  Return false if the
+ *           window was previously hidden.
+ */
+RexxMethod1(logical_t, wb_show, CSELF, pCSelf)
+{
+    return _showWindow(pCSelf, msgAbbrev(context));
+}
+
+/** WindowBase::showFast() / WindowBase::hideFast()
+ *
+ *  Hides or shows the window 'fast'.  What this means is the visible flag is
+ *  set, but the window is not forced to update.
+ *
+ *  This function is mapped to both methods of WindowBase. The return for these
+ *  methods was not previously documented.
+ *
+ *  @return  0 for no error, 1 for error.  An error is highly unlikely.
+ */
+RexxMethod1(uint32_t, wb_showFast, CSELF, pCSelf)
+{
+    return showFast(pCSelf, msgAbbrev(context));
+}
+
+/** WindowsBase::draw() / WindowsBase::redraw
+ *
+ *  Causes the entire client area of the the window to be redrawn.
+ *
+ *  This method maps to both the draw() and the redrawClient() methods.  The
+ *  implementation preserves existing behavior prior to ooRexx 4.0.0.  That is:
+ *  the draw() method takes no argument and always uses false for the erase
+ *  background arg.  The redrawClient() method takes an argument to set the
+ *  erase background arg.  The argument can be either .true / .false (1 or 0),
+ *  or yes / no, or ja / nein.
+ *
+ *  @param  erase  [optional]  Whether the redraw operation should erase the
+ *                 window background.  Can be true / false or yes / no.  The
+ *                 default is false.
+ *
+ *  @return  0 for success, 1 for error.
+ */
+RexxMethod2(uint32_t, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSelf)
+{
+    RECT r;
+    HWND hwnd = getWBWindow(pCSelf);
+
+    bool doErase = (msgAbbrev(context) == 'R') ? isYes(erase) : false;
+
+    GetClientRect(hwnd, &r);
+    return redrawRect(hwnd, &r, doErase) ? 0 : 1;
+}
+
+/** WindowsBase::redraw()
+ *
+ *  Causes the entire window, including frame, to be redrawn.
+ *
+ *  @return  0 for success, 1 for error.
+ */
+RexxMethod1(logical_t, wb_redraw, CSELF, pCSelf)
+{
+    return RedrawWindow(getWBWindow(pCSelf), NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN) != 0;
+}
+
+/** WindowBase::title / WindowBase::getText()
+ *
+ *  Gets the window text.
+ *
+ *  For a window with a frame, this is the window title.  But for a dialog
+ *  control, this is the text for the control.  This of course varies depending
+ *  on the type of control.  For a button, it is the button label, for an edit
+ *  control it is the edit text, etc..
+ *
+ *  @return  On success, the window text, which could be the empty string.  On
+ *           failure, the empty string.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ */
+RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context);
+    RexxStringObject result = context->NullString();
+
+    HWND hwnd = getWBWindow(pCSelf);
+    uint32_t count = (uint32_t)GetWindowTextLength(hwnd);
+
+    if ( count == 0 )
+    {
+        oodSetSysErrCode(context);
+        return result;
+    }
+
+    // TODO For all windows except an edit control this is fine.  For an edit
+    // control with a very large amount of text, see if it could be optimized by
+    // using a string buffer.
+
+    LPTSTR pBuf = (LPTSTR)malloc(++count);
+    if ( pBuf == NULL )
+    {
+        outOfMemoryException(context);
+        return result;
+    }
+
+    count = GetWindowText(hwnd, pBuf, count);
+    if ( count != 0 )
+    {
+        result = context->String(pBuf);
+    }
+    else
+    {
+        oodSetSysErrCode(context);
+    }
+    free(pBuf);
+
+    return result;
+}
+
+/** WindowBase::setText() / WindowBase::setTitle() / WindowBase::title=
+ *
+ *  Sets the window text to the value specified.
+ *
+ *  @param  text  The text to be set as the window text
+ *
+ *  @return  0 for success, 1 for error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  Unfortunately, in 3.2.0, setText for an edit control was
+ *            documented as returning the negated system error code and in 4.0.0
+ *            setText for a static control was documented as returning the
+ *            system error code (which is positive of course.)  The mapping here
+ *            to the various versions of 'getText' is cleaner, but we may need
+ *            to special case the return to match the previous documentation.
+ */
+RexxMethod2(wholenumber_t, wb_setText, CSTRING, text, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context);
+    if ( SetWindowText(getWBWindow(pCSelf), text) == 0 )
+    {
+        oodSetSysErrCode(context);
+        return 1;
+    }
+    return 0;
+}
+
+RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
+{
+    return GetWindowLong(getWBWindow(pCSelf), flag);
+}
+
+/**
+ *  Methods for the .Window class.
+ */
+#define WINDOW_CLASS  "Window"
+
+RexxMethod2(RexxObjectPtr, window_init, POINTERSTRING, hwnd, OSELF, self)
+{
+    if ( !IsWindow((HWND)hwnd) )
+    {
+        invalidTypeException(context, 1, " window handle");
+    }
+    else
+    {
+        initWindowBase(context, (HWND)hwnd, self);
+    }
+    return NULLOBJECT;
+}
+
+
+/**
  *  Methods for the .PlainBaseDialog class.
  */
 #define PLAINBASEDIALOG_CLASS  "PlainBaseDialog"
+
+bool convert2PointerSize(RexxMethodContext *c, RexxObjectPtr obj, uint64_t *number, int argPos)
+{
+    if ( obj == NULLOBJECT )
+    {
+        *number = 0;
+        return true;
+    }
+
+    if ( c->IsPointer(obj) )
+    {
+        *number = (uint64_t)c->PointerValue((RexxPointerObject)obj);
+        return true;
+    }
+
+    return rxStr2Number(c, c->ObjectToStringValue(obj), number, argPos);
+}
 
 RexxMethod0(RexxObjectPtr, pbdlg_init_cls)
 {
@@ -900,23 +1371,40 @@ RexxMethod0(RexxObjectPtr, pbdlg_getFontSize_cls)
     return context->GetObjectVariable("FONTSIZE");
 }
 
-
-bool convert2PointerSize(RexxMethodContext *c, RexxObjectPtr obj, uint64_t *number, int argPos)
+RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, resource,
+            OPTIONAL_RexxObjectPtr, dlgDataStem, OPTIONAL_RexxObjectPtr, hFile, OSELF, self)
 {
-    if ( obj == NULLOBJECT )
+    RexxMethodContext *c = context;
+
+    context->SetObjectVariable("LIBRARY", library);
+    context->SetObjectVariable("RESOURCE", resource);
+
+    if ( argumentExists(3) )
     {
-        *number = 0;
-        return true;
+        context->SetObjectVariable("DLGDATA.", dlgDataStem);
+        c->SendMessage1(self, "USESTEM=", TheTrueObj);
+    }
+    else
+    {
+        context->SetObjectVariable("DLGDATA.", TheNilObj);
+        c->SendMessage1(self, "USESTEM=", TheFalseObj);
     }
 
-    if ( c->IsPointer(obj) )
+    if ( ! initWindowBase(context, NULL, self) )
     {
-        *number = (uint64_t)c->PointerValue((RexxPointerObject)obj);
-        return true;
+        return NULLOBJECT;
     }
 
-    return rxStr2Number(c, c->ObjectToStringValue(obj), number, argPos);
+    if ( argumentOmitted(4) )
+    {
+        return c->SendMessage(self, "FINALINIT", c->NewArray(0));
+    }
+    else
+    {
+        return c->SendMessage1(self, "FINALINIT", hFile);
+    }
 }
+
 
 /** PlainBaseDialog::addUserMessage()
  *
@@ -1128,14 +1616,6 @@ size_t RexxEntry WinAPI32Func(const char *funcname, size_t argc, CONSTRXSTRING *
             hWnd = GET_HWND(argv[3]);
             if ( hWnd == 0 || ! IsWindow(hWnd) ) RETERR
 
-            if ( argv[2].strptr[0] == 'E' )          /* Enabled */
-            {
-                RETVAL((BOOL)IsWindowEnabled(hWnd));
-            }
-            else if ( argv[2].strptr[0] == 'V' )     /* Visible */
-            {
-                RETVAL((BOOL)IsWindowVisible(hWnd));
-            }
             else if ( argv[2].strptr[0] == 'Z' )     /* Zoomed is Maximized */
             {
                 RETVAL((BOOL)IsZoomed(hWnd));

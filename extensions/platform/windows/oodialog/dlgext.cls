@@ -128,7 +128,7 @@
    parse arg id,a2,a3,a4
    if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
    if id = -1 then return -1
-   return SendWinMsg("DLG",self~DlgHandle,id,a2,a3,a4)
+   return SendWinMsg("DLG",self~dlgHandle,id,a2,a3,a4)
 
 
  /* The following Methods are to set/get the behaviour of/from a scrollbar */
@@ -275,25 +275,25 @@
 ::method SetListWidth unguarded
    use arg id, dlgunits
    if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(id, 0x00000194, dlgunits*self~FactorX, 0)
+   return self~BoxMessage(id, 0x00000194, dlgunits*self~factorX, 0)
 
 ::method GetListWidth unguarded
    use arg id
-   return self~BoxMessage(id, 0x00000193, 0, 0)/self~FactorX
+   return self~BoxMessage(id, 0x00000193, 0, 0)/self~factorX
 
 ::method SetListColumnWidth unguarded
    use arg id, dlgunits
    if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(id, 0x00000195, dlgunits*self~FactorX, 0)
+   return self~BoxMessage(id, 0x00000195, dlgunits*self~factorX, 0)
 
 ::method SetListItemHeight unguarded
    use arg id, dlgunits
    if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   return self~BoxMessage(id, 0x000001A0, 0, dlgunits*self~FactorY)
+   return self~BoxMessage(id, 0x000001A0, 0, dlgunits*self~factorY)
 
 ::method GetListItemHeight unguarded
    use arg id
-   return self~BoxMessage(id, 0x000001A1, 0, 0)/self~FactorY
+   return self~BoxMessage(id, 0x000001A1, 0, 0)/self~factorY
 
 ::method SetItemFont unguarded
    use arg id, hFont, bRedraw     /* WM_SETFONT */
@@ -339,7 +339,7 @@
    showOptions = showOptions~translate
    hwnd = self~GetItem(id)
    if hwnd = 0 then return -1
-   return WndShow_Pos("P",hwnd, 0, 0, width * self~FactorX, high* self~FactorY,,
+   return WndShow_Pos("P",hwnd, 0, 0, width * self~factorX, high* self~factorY,,
                            "NOMOVE "||showOptions)
 
    /* This method will move a dialog item to an other position */
@@ -349,7 +349,7 @@
    showOptions = showOptions~translate
    hwnd = self~GetItem(id)
    if h = 0 then return -1
-   return WndShow_Pos("P", hwnd, xPos * self~FactorX, yPos * self~FactorY, 0, 0,,
+   return WndShow_Pos("P", hwnd, xPos * self~factorX, yPos * self~factorY, 0, 0,,
                            "NOSIZE "||showOptions)
 
    /* This method will add a method that will be started automatically */
@@ -533,7 +533,7 @@
                        displaceY, step, sleep, color)
    end; else do
       -- Send the interrupt scroll message, 0x0a02 == WM_USER_INTERRUPTSCROLL
-      ret = SendWinMsg("ANY",self~DlgHandle, "0x0a02", hwnd, 0)
+      ret = SendWinMsg("ANY",self~dlgHandle, "0x0a02", hwnd, 0)
    end
    self~ScrollNow = 0
    return ret
@@ -1073,31 +1073,31 @@ syntax:
    return WndShow_Pos("S", hwnd, "REDRAW")
 
 ::method GetFocus unguarded
-   return Wnd_Desktop("GETFOC", self~DlgHandle)
+   return Wnd_Desktop("GETFOC", self~dlgHandle)
 
 ::method SetFocus unguarded
    use arg hwnd
-   return Wnd_Desktop("SETFOC", self~DlgHandle, hwnd)
+   return Wnd_Desktop("SETFOC", self~dlgHandle, hwnd)
 
 ::method SetFocusToWindow unguarded
    use arg hwnd
-   return Wnd_Desktop("SETFOC", self~DlgHandle, hwnd, 'F')
+   return Wnd_Desktop("SETFOC", self~dlgHandle, hwnd, 'F')
 
 ::method GetMouseCapture
-   return Wnd_Desktop("CAP", self~DlgHandle, "G")
+   return Wnd_Desktop("CAP", self~dlgHandle, "G")
 
 ::method CaptureMouse
-   return Wnd_Desktop("CAP", self~DlgHandle, self~DlgHandle)
+   return Wnd_Desktop("CAP", self~dlgHandle, self~dlgHandle)
 
 ::method ReleaseMouseCapture
-   return Wnd_Desktop("CAP", self~DlgHandle, "R")
+   return Wnd_Desktop("CAP", self~dlgHandle, "R")
 
 ::method IsMouseButtonDown
    use arg mb = "LEFT"
    mb = mb~translate~space(0)
-   if mb = "LEFT" then return Wnd_Desktop("KSTAT", self~DlgHandle,1) /* VK_LBUTTON */
-   if mb = "MIDDLE" then return Wnd_Desktop("KSTAT", self~DlgHandle,4) /* VK_MBUTTON */
-   if mb = "RIGHT" then return Wnd_Desktop("KSTAT", self~DlgHandle,2) /* VK_RBUTTON */
+   if mb = "LEFT" then return Wnd_Desktop("KSTAT", self~dlgHandle,1) /* VK_LBUTTON */
+   if mb = "MIDDLE" then return Wnd_Desktop("KSTAT", self~dlgHandle,4) /* VK_MBUTTON */
+   if mb = "RIGHT" then return Wnd_Desktop("KSTAT", self~dlgHandle,2) /* VK_RBUTTON */
 
 
 ::method Dump

@@ -112,26 +112,26 @@ then self~Margin = margin~trunc
 else self~margin = max(min(height % 7,5),1)
 
 if top~datatype('n')
-then Self~top       = top~trunc
-else Self~top       = 10
+then self~top       = top~trunc
+else self~top       = 10
 
 if left~datatype('n')
-then Self~left      = left~trunc
-else Self~left      = 10
+then self~left      = left~trunc
+else self~left      = 10
 
 if width~datatype('n')
-then Self~width     = width~trunc
-else Self~width     = 100
+then self~width     = width~trunc
+else self~width     = 100
 
 if height~datatype('n')
-then Self~height    = height~trunc
-else Self~height    = 100
+then self~height    = height~trunc
+else self~height    = 100
 
 
 self~T = self~Top  + self~Margin
-self~L = self~left + Self~Margin
+self~L = self~left + self~Margin
 self~B = self~top  + self~height - self~margin
-self~R = self~Left + Self~Width  - self~Margin
+self~R = self~Left + self~Width  - self~Margin
 
 self~LastX = 0
 self~LastY = 0
@@ -198,7 +198,7 @@ else return trunc(h)
 /* ------------------------------------------------------------------------- */
 
 if self~LastY~pos('%') = 0                                 /* Y was absolute */
-then return self~Top + Self~Height - Self~Margin - Self~LastY
+then return self~Top + self~Height - self~Margin - self~LastY
 else return self~h(100 - self~LastY~changestr('%','')||'%')       /* Y was % */
 
 /* ------------------------------------------------------------------------- */
@@ -219,7 +219,7 @@ else return w
 /* ------------------------------------------------------------------------- */
 
 if self~LastX~pos('%') = 0                                 /* X was absolute */
-then return self~Left + Self~Width - Self~Margin - Self~LastX
+then return self~Left + self~Width - self~Margin - self~LastX
 else return self~w(100 - self~LastX~changestr('%','')||'%')       /* X was % */
 
 /* ----------------------- compatibility methods --------------------------- */
@@ -264,12 +264,12 @@ self~NoMove   = NoMove
 
 if \margin~datatype('n') then margin = 5
 
-Self~CorrectionFactor = 1.05
+self~CorrectionFactor = 1.05
 
-self~init:super(0,0,DlgObj~SizeX,DlgObj~SizeY,margin)
+self~init:super(0,0,DlgObj~sizeX,DlgObj~sizeY,margin)
 
-self~OriginalWidth  = DlgObj~SizeX
-self~OriginalHeight = DlgObj~SizeY
+self~OriginalWidth  = DlgObj~sizeX
+self~OriginalHeight = DlgObj~sizeY
 self~LastError      = .nil
 
                                   /* Analyze the callers DefineDialog Method */
@@ -386,18 +386,18 @@ SEQUENCE STYLE USERMSG
 /* ------------------------------------------------------------------------- */
 expose DlgObjList
   use arg dlg,data
-  dlg~SizeX = .DlgUtil~loWord(data) % dlg~FactorX
-  dlg~SizeY = .DlgUtil~hiWord(data) % dlg~FactorY
+  dlg~sizeX = .DlgUtil~loWord(data) % dlg~factorX
+  dlg~sizeY = .DlgUtil~hiWord(data) % dlg~factorY
 
-  wFactor   = (dlg~SizeX / self~OriginalWidth ) * Self~CorrectionFactor
-  hFactor   = (dlg~SizeY / self~OriginalHeight) * Self~CorrectionFactor
+  wFactor   = (dlg~sizeX / self~OriginalWidth ) * self~CorrectionFactor
+  hFactor   = (dlg~sizeY / self~OriginalHeight) * self~CorrectionFactor
 
 
   do dlgObjDef over DlgObjList
      parse var dlgObjdef DOid'@'DOx'@'DOy'@'DOw'@'DOh
-     if \Self~NoResize~HasIndex(DOid~strip)
+     if \self~NoResize~HasIndex(DOid~strip)
      then dlg~ResizeItem(Doid,DOw * wFactor,DOh * hFactor,"NOREDRAW")
-     if \Self~NoMove~HasIndex(DOid)
+     if \self~NoMove~HasIndex(DOid)
      then dlg~MoveItem(DOid,DOx * wFactor,DOy * hFactor,"NOREDRAW")
   end /* DO */
   dlg~update
