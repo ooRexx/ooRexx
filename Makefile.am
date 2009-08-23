@@ -549,7 +549,7 @@ memory_sources = $(build_memory_dir)/DeadObject.cpp \
                  $(build_memory_dir)/RexxEnvelope.cpp \
                  $(build_memory_dir)/RexxInternalStack.cpp \
                  $(build_memory_dir)/RexxSmartBuffer.cpp \
-                 $(build_memory_dir)/UninitDispatcher.hpp \
+                 $(build_memory_dir)/UninitDispatcher.cpp \
                  $(build_memory_dir)/Setup.cpp \
                  $(build_memory_dir)/RexxMemory.cpp
 execution_sources = $(build_execution_dir)/CPPCode.cpp \

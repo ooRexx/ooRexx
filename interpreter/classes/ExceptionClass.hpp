@@ -54,14 +54,16 @@ public:
     ExceptionClass();
     inline ExceptionClass(RESTORETYPE restoreType) { ; };
 
-    void live(size_t);
-    void liveGeneral(int reason);
-    void flatten(RexxEnvelope*);
+    virtual void live(size_t);
+    virtual void liveGeneral(int reason);
+    virtual void flatten(RexxEnvelope*);
 
     static void createInstance();
     static RexxClass *classInstance;
 
     RexxObject *init(RexxString *type, RexxString *message, RexxString *description, RexxObject *additional, ExceptionClass *exception);
+
+    virtual RexxDirectory *getCondition();
 
     RexxString *getType();
     RexxString *getMessage();
@@ -70,8 +72,8 @@ public:
     ExceptionClass *getCause();
     RexxList   *getStackFrames();
     RexxList   *getTraceBack();
-    RexxDirectory *getCondition();
     RexxObject *fillInStackTrace();
+    RexxDirectory *getConditionRexx();
 
     RexxObject *newRexx(RexxObject **args, size_t argc);
 
