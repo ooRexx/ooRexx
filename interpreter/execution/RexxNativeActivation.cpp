@@ -1938,7 +1938,7 @@ void *RexxNativeActivation::cself()
         // this is necessary to get turn on a guard lock if the method
         // is guarded.  Failure to do this can cause multithreading problems.
         methodVariables();
-        return receiver->getCSelf();
+        return receiver->getCSelf(((RexxMethod *)executable)->getScope());
     }
     // nope, call context doesn't allow this
     return OREF_NULL;

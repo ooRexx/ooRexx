@@ -2524,6 +2524,43 @@ void *RexxObject::getCSelf()
 
 
 /**
+ * Attempt to get a CSELF value from an object instance,
+ * starting from a given scope value and checking each of the
+ * super scopes for the class
+ *
+ * @param scope  The starting scope for the search.
+ *
+ * @return An unwrappered CSELF value, if one can be found.
+ */
+void *RexxObject::getCSelf(RexxObject *scope)
+{
+    while (scope != TheNilObject)
+    {
+        // try for the variable value
+        RexxObject *C_self = getObjectVariable(OREF_CSELF, scope);
+        // if we found one, validate for unwrappering
+        if (C_self != OREF_NULL)
+        {
+            // if this is a pointer, then unwrapper the value
+            if (C_self->isInstanceOf(ThePointerClass))
+            {
+                return ((RexxPointer *)C_self)->pointer();
+            }
+            // this could be a containing buffer instance as well
+            else if (C_self->isInstanceOf(TheBufferClass))
+            {
+                // return a pointer to the buffer beginning
+                return(void *)((RexxBuffer *)C_self)->getData();
+            }
+        }
+        // step to the next scope
+        scope = this->superScope(scope);
+    }
+    return NULL;                     /* no object available               */
+}
+
+
+/**
  * new operator for creating a RexxNilObject
  */
 void *RexxNilObject::operator new(size_t size)

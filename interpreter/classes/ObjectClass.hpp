@@ -490,6 +490,7 @@ class RexxObject : public RexxInternalObject {
      RexxObject  *unknownRexx(RexxString *, RexxArray *);
      RexxObject  *hasMethodRexx(RexxString *);
      void *getCSelf();
+     void *getCSelf(RexxObject *scope);
      // compare 2 values for equality, potentially falling back on the
      // "==" method for the test.
      bool inline equalValue(RexxObject *other)
