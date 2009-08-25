@@ -131,12 +131,15 @@ void RexxInstructionEndIf::execute(
                                            /* set the restart point             */
         context->setNext((this->else_end)->nextInstruction);
     }
-    if (this->else_end != OREF_NULL)     /* have to jump around an else?      */
+    else
     {
         context->unindent();                 /* unindent the context              */
         context->unindent();                 /* unindent for the total            */
-                                         /* set the restart point             */
-        context->setNext((this->else_end)->nextInstruction);
+        if (this->else_end != OREF_NULL)     /* have to jump around an else?      */
+        {
+                                             /* set the restart point             */
+            context->setNext((this->else_end)->nextInstruction);
+        }
     }
 }
 

@@ -99,10 +99,9 @@ void RexxInstructionEnd::execute(
 {
     RexxDoBlock       *doBlock;          /* target DO block                   */
 
-    context->unindent();                 /* remove indentation                */
-    context->traceInstruction(this);     /* trace if necessary                */
     if (!context->hasActiveBlocks())     /* no possible blocks?               */
     {
+        context->traceInstruction(this);     /* trace if necessary                */
                                          /* this is an error                  */
         reportException(Error_Unexpected_end_nodo);
     }
@@ -114,11 +113,14 @@ void RexxInstructionEnd::execute(
             doBlock = context->topBlock();   /* get the top DO block              */
                                              /* reset the indentation             */
             context->setIndent(doBlock->getIndent());
+            context->traceInstruction(this);     /* trace if necessary                */
             /* pass on the reexecution           */
             ((RexxInstructionDo *)(doBlock->getParent()))->reExecute(context, stack, doBlock);
             break;
 
         case SELECT_BLOCK:                 /* END of a select block             */
+            context->unindent();                 /* remove indentation                */
+            context->traceInstruction(this);     /* trace if necessary                */
             /* looking for a WHEN match          */
             /* this is an error                  */
             reportException(Error_When_expected_nootherwise);
@@ -129,10 +131,13 @@ void RexxInstructionEnd::execute(
         case LABELED_OTHERWISE_BLOCK:
         case LABELED_DO_BLOCK:
             context->terminateBlock();
+            context->traceInstruction(this);     /* trace if necessary                */
             break;
 
-        default:                           /* all others                        */
-            context->removeBlock();          /* just step back next level         */
+        default:                                 /* all others                        */
+            context->unindent();                 /* remove indentation                */
+            context->removeBlock();              /* just step back next level         */
+            context->traceInstruction(this);     /* trace if necessary                */
             break;
     }
 }

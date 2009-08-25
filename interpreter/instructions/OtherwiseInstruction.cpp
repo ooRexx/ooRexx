@@ -73,6 +73,7 @@ void RexxInstructionOtherwise::execute(
       reportException(Error_Unexpected_when_otherwise);
   }
   context->traceInstruction(this);     /* trace if necessary                */
+  context->indent();
   return;                              /* do nothing at all (honest)        */
 }
 

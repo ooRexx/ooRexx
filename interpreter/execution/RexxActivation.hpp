@@ -333,8 +333,8 @@ class ActivationSettings
    inline void              terminateBlock(size_t _indent) { this->popBlock(); this->blockNest--; this->settings.traceindent = _indent; }
    inline void              terminateBlock() { this->settings.traceindent = this->dostack->getIndent(); this->popBlock(); this->blockNest--; }
    inline void              newDo(RexxDoBlock *block) { this->pushBlock(block); this->blockNest++; this->settings.traceindent++;}
-   inline void              removeBlock() { this->blockNest--; };
-   inline void              addBlock()    { this->blockNest++; };
+   inline void              removeBlock() { this->blockNest--; unindent(); };
+   inline void              addBlock()    { this->blockNest++; indent(); };
    inline bool              hasActiveBlocks() { return blockNest != 0; }
    inline bool              inMethod()  {return this->activation_context == METHODCALL; }
    inline void              indent() {this->settings.traceindent++; };

@@ -428,7 +428,6 @@ void RexxInstructionDo::execute(
             /* create an active DO block         */
             doblock = new RexxDoBlock (this, context->getIndent());
             context->newDo(doblock);           /* set the new block                 */
-
         }
         else
         {
