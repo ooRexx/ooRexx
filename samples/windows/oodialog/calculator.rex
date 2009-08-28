@@ -246,7 +246,7 @@ any:
 
 ::method BLOG10
   /* Displays the 10-base logarithm of the checked line */
-	self~SetLine(RxCalcLog(self~GetCheckedLine), MATHERRNO)
+	self~SetLine(RxCalcLog10(self~GetCheckedLine), MATHERRNO)
 
 ::method BPI
   /* Displays the number Pi */

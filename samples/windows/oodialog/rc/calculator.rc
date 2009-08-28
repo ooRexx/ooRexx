@@ -44,38 +44,38 @@ produced by IBM Object REXX Resource Workshop
 
 *****************************************************************************/
 
-#define DIALOG_1	1
-#define BNo1	101
-#define BNo8	108
-#define BNo9	109
-#define BNo0	110
-#define BSign	114
-#define BPoint	115
-#define BPlus	119
-#define BMinus	118
-#define BTimes	117
-#define BDivide	116
-#define BPi	123
-#define BArcTan	129
-#define BArcCos	127
-#define BArcSin	120
-#define BLog10	129
-#define OK	1
-#define BLog	122
-#define BSqrt	121
-#define BBackspace	128
-#define TLine	113
-#define BTangens	126
-#define BCosinus	125
-#define BSinus	124
-#define BCalc	111
-#define BClear	112
-#define BNo7	107
-#define BNo6	106
-#define BNo5	105
-#define BNo4	104
-#define BNo3	103
-#define BNo2	102
+#define DIALOG_1    100
+#define BNo1        101
+#define BNo2        102
+#define BNo3        103
+#define BNo4        104
+#define BNo5        105
+#define BNo6        106
+#define BNo7        107
+#define BNo8        108
+#define BNo9        109
+#define BNo0        110
+#define BCalc       111
+#define BClear      112
+#define TLine       113
+#define BSign       114
+#define BPoint      115
+#define BDivide     116
+#define BTimes      117
+#define BMinus      118
+#define BPlus       119
+#define BArcSin     120
+#define BSqrt       121
+#define BLog        122
+#define BPi         123
+#define BSinus      124
+#define BCosinus    125
+#define BTangens    126
+#define BArcCos     127
+#define BBackspace  128
+#define BArcTan     129
+#define BLog10      130
+
 DIALOG_1 DIALOG 13, 20, 222, 212
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
 CAPTION "Calculator"
@@ -105,7 +105,7 @@ FONT 8, "MS Sans Serif"
  PUSHBUTTON "<-", BBackspace, 177, 39, 24, 14
  PUSHBUTTON "Clear", BClear, 177, 65, 24, 14
  DEFPUSHBUTTON "=", BCalc, 177, 91, 24, 14
- PUSHBUTTON "Exit", OK, 177, 117, 24, 14
+ PUSHBUTTON "Exit", IDOK, 177, 117, 24, 14
  PUSHBUTTON "Sin", BSinus, 20, 150, 27, 14
  PUSHBUTTON "Cos", BCosinus, 60, 150, 27, 14
  PUSHBUTTON "Tan", BTangens, 100, 150, 27, 14
