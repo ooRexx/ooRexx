@@ -2414,7 +2414,7 @@ special character (such as a parenthesis).
         <Component>Rexx</Component>
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_logical_list</SymbolicName>
-        <Text>Missing expression in logical_expression_list</Text>
+        <Text>Missing expression in logical expression list</Text>
       </SubMessage>
       <SubMessage>
         <Code>35</Code>
@@ -2424,6 +2424,24 @@ special character (such as a parenthesis).
         <Severity>Warning</Severity>
         <SymbolicName>Error_Invalid_expression_use_strict_default</SymbolicName>
         <Text>Missing expression following <q>=</q> token of a USE STRICT ARG instruction</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>931</Subcode>
+        <MessageNumber>717</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_parse</SymbolicName>
+        <Text>Missing expression following ( of parse template</Text>
+      </SubMessage>
+      <SubMessage>
+        <Code>35</Code>
+        <Subcode>932</Subcode>
+        <MessageNumber>718</MessageNumber>
+        <Component>Rexx</Component>
+        <Severity>Warning</Severity>
+        <SymbolicName>Error_Invalid_expression_call</SymbolicName>
+        <Text>Missing expression for calculated CALL name</Text>
       </SubMessage>
     </Subcodes>
   </Message>

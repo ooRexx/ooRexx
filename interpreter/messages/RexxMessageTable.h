@@ -306,6 +306,8 @@ ERROR_MESSAGE Message_table[] = {      /* table of major and minor errors   */
       MINOR(Error_Invalid_expression_forward_class)
       MINOR(Error_Invalid_expression_logical_list)
       MINOR(Error_Invalid_expression_use_strict_default)
+      MINOR(Error_Invalid_expression_parse)
+      MINOR(Error_Invalid_expression_call)
   MAJOR(Error_Unmatched_parenthesis)
       MINOR(Error_Unmatched_parenthesis_user_defined)
       MINOR(Error_Unmatched_parenthesis_paren)

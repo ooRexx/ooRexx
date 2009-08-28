@@ -303,6 +303,8 @@
 #define Rexx_Error_Invalid_expression_forward_class             35928
 #define Rexx_Error_Invalid_expression_logical_list              35929
 #define Rexx_Error_Invalid_expression_use_strict_default        35930
+#define Rexx_Error_Invalid_expression_parse                     35931
+#define Rexx_Error_Invalid_expression_call                      35932
 #define Rexx_Error_Unmatched_parenthesis                        36000
 #define Rexx_Error_Unmatched_parenthesis_user_defined           36900
 #define Rexx_Error_Unmatched_parenthesis_paren                  36901

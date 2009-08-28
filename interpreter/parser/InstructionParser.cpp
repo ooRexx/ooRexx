@@ -399,6 +399,11 @@ RexxInstruction *RexxSource::callNew()
     {
         _flags |= RexxInstructionCall::call_dynamic;             /* going to be indirect              */
         name = this->parenExpression(token); // this is a full expression
+        // an expression is required
+        if (name == OREF_NULL)
+        {
+            syntaxError(Error_Invalid_expression_call);
+        }
         /* process the argument list         */
         argCount = this->argList(OREF_NULL, TERM_EOC);
         /* NOTE:  this call is not added to  */
@@ -1598,6 +1603,11 @@ RexxInstruction *RexxSource::parseNew(
             {
                 // parse off an expression in the parens.
                 RexxObject *subExpr = this->parenExpression(token);
+                // an expression is required
+                if (subExpr == OREF_NULL)
+                {
+                    syntaxError(Error_Invalid_expression_parse);
+                }
                 /* create the appropriate trigger    */
                 trigger = new (variableCount) RexxTrigger(trigger_type, subExpr, variableCount, _variables);
                 variableCount = 0;             /* have a new set of variables       */
@@ -1639,6 +1649,11 @@ RexxInstruction *RexxSource::parseNew(
         {
             // parse off an expression in the parens.
             RexxObject *subExpr = this->parenExpression(token);
+            // an expression is required
+            if (subExpr == OREF_NULL)
+            {
+                syntaxError(Error_Invalid_expression_parse);
+            }
             /* create the appropriate trigger    */
             trigger = new (variableCount) RexxTrigger(_flags&parse_caseless ? TRIGGER_MIXED : TRIGGER_STRING, subExpr, variableCount, _variables);
             variableCount = 0;               /* have a new set of variables       */

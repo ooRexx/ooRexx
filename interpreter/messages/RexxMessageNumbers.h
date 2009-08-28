@@ -620,6 +620,8 @@
 #define Error_Symbol_or_string_fuzz_value_msg                        714
 #define Error_Symbol_or_string_trace_value_msg                       715
 #define Error_Execution_invalid_thread_msg                           716
+#define Error_Invalid_expression_parse_msg                           717
+#define Error_Invalid_expression_call_msg                            718
 
 
 #endif

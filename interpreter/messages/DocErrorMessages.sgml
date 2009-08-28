@@ -1756,13 +1756,25 @@ special character (such as a parenthesis).
 <varlistentry>
 <term>929</term>
 <listitem>
-<para>Missing expression in logical_expression_list</para>
+<para>Missing expression in logical expression list</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term>930</term>
 <listitem>
 <para>Missing expression following "=" token of a USE STRICT ARG instruction</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>931</term>
+<listitem>
+<para>Missing expression following ( of parse template</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>932</term>
+<listitem>
+<para>Missing expression for calculated CALL name</para>
 </listitem>
 </varlistentry>
 </variablelist>

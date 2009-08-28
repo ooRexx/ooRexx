@@ -566,7 +566,7 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Invalid_leave_iterate_name    "Symbol following ITERATE (""&1"") does not match a repetitive block instruction"
    Error_Unexpected_end_select_nolabel    "END corresponding to SELECT on line &2 must not have a symbol following it because there is no LABEL; found ""&1"""
    Error_Logical_value_logical_list    "Value of logical list expression element must be exactly ""0"" or ""1""; found ""&2"""
-   Error_Invalid_expression_logical_list    "Missing expression in logical_expression_list"
+   Error_Invalid_expression_logical_list    "Missing expression in logical expression list"
    Error_Translation_use_strict_ellipsis    "The ""..."" argument marker can only appear at the end of the argument list"
    Error_Invalid_expression_use_strict_default    "Missing expression following ""="" token of a USE STRICT ARG instruction"
    Error_Incorrect_method_abstract    "Method &1 is ABSTRACT and cannot be directly invoked"
@@ -620,6 +620,8 @@ Error_Program_unreadable    "Failure during initialization"
    Error_Symbol_or_string_fuzz_value    "String or symbol expected as FUZZ value"
    Error_Symbol_or_string_trace_value    "String or symbol expected as TRACE value"
    Error_Execution_invalid_thread    "Execution thread does not match API thread context."
+   Error_Invalid_expression_parse    "Missing expression following ( of parse template"
+   Error_Invalid_expression_call    "Missing expression for calculated CALL name"
    
 END
 
