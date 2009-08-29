@@ -208,6 +208,8 @@ bool Interpreter::terminateInterpreter()
             // the libraries (it needs to pass a RexxThreadContext
             // pointer out to package unloaders, if they are defined)
             InstanceBlock instance;
+            // run whatever uninits we can before we start releasing the libraries
+            memoryObject.lastChanceUninit();
 
             PackageManager::unload();
         }

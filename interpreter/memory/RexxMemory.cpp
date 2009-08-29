@@ -488,6 +488,22 @@ void RexxMemory::collectAndUninit(bool clearStack)
 }
 
 
+/**
+ * Force a last-gasp garbage collection and running of the
+ * uninits during interpreter instance shutdown.  This is an
+ * attempt to ensure that all objects with uninit methods get
+ * a chance to clean up prior to termination.
+ */
+void RexxMemory::lastChanceUninit()
+{
+    // collect and run any uninits still pending
+    collectAndUninit(true);
+    // we're about to start releasing libraries, so it is critical
+    // we don't run any more uninits after this
+    uninitTable->empty();
+}
+
+
 void  RexxMemory::runUninits()
 /******************************************************************************/
 /* Function:  Run any UNINIT methods for this activity                        */
