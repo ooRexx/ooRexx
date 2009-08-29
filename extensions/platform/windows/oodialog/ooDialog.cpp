@@ -2594,67 +2594,6 @@ static BOOL parseKeyToken(PCHAR token, PUINT pFirst, PUINT pLast)
     return ret;
 }
 
-/* TODO this code is dead and looks like it has been since the initial code drop
- * from IBM
- */
-#if 0
-LONG InternalStopDialog(HWND h)
-{
-   ULONG i, ret;
-   DIALOGADMIN * dadm = NULL;
-   MSG msg;
-   HANDLE hTh;
-
-   if (!h) dadm = topDlg;
-   else SEEK_DLGADM_TABLE(h, dadm);
-
-   if (dadm)
-   {
-       DWORD ec;
-       hTh = dadm->TheThread;
-       if (!dadm->LeaveDialog) dadm->LeaveDialog = 3;    /* signal to exit */
-       PostMessage(dadm->TheDlg, WM_QUIT, 0, 0);      /* to exit GetMessage */
-       DestroyWindow(dadm->TheDlg);      /* to remove system resources */
-       if (dadm->TheThread) GetExitCodeThread(dadm->TheThread, &ec);
-       i = 0; while (dadm && (ec == STILL_ACTIVE) && dadm->TheThread && (i < 1000))  /* wait for window thread of old dialog to terminate */
-       {
-           if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-               DispatchMessage(&msg);
-           }
-           Sleep(1); i++;
-           GetExitCodeThread(dadm->TheThread, &ec);
-       }
-
-       if (dadm->TheThread && (ec == STILL_ACTIVE))
-       {
-           TerminateThread(dadm->TheThread, -1);
-           ret = 1;
-       } else ret = 0;
-       if (hTh) CloseHandle(hTh);
-       if (dadm == topDlg) topDlg = NULL;
-
-       /* The message queue and the admin block are freed in HandleDialogAdmin called from HandleMessages */
-
-       return ret;
-   }
-   return -1;
-}
-
-_declspec(dllexport) LONG __cdecl OODialogCleanup(BOOL Process)
-{
-    if (Process)
-    {
-        INT i;
-        for (i = MAXDIALOGS; i>0; i--)
-        {
-            if (DialogTab[i-1]) InternalStopDialog(DialogTab[i-1]->TheDlg);
-            DialogTab[i-1] = NULL;
-        }
-        StoredDialogs = 0;
-    }
-    return (StoredDialogs);
-}
-#endif
 
 size_t RexxEntry HandleDlg(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
