@@ -91,7 +91,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDlg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetFileNameWindow);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DataTable);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDialogAdmin);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SetItemData);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SetStemData);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetItemData);
@@ -143,7 +142,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(HandleDlg,            HandleDlg),
     REXX_CLASSIC_ROUTINE(GetFileNameWindow,    GetFileNameWindow),
     REXX_CLASSIC_ROUTINE(DataTable,            DataTable),
-    REXX_CLASSIC_ROUTINE(HandleDialogAdmin,    HandleDialogAdmin),
     REXX_CLASSIC_ROUTINE(SetItemData,          SetItemData),
     REXX_CLASSIC_ROUTINE(SetStemData,          SetStemData),
     REXX_CLASSIC_ROUTINE(GetItemData,          GetItemData),

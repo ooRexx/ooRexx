@@ -327,62 +327,6 @@ done_out:
     return adm;
 }
 
-/* prepare dialog management table for a new dialog entry */
-size_t RexxEntry HandleDialogAdmin(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    DIALOGADMIN * current;
-    DEF_ADM;
-
-    EnterCriticalSection(&crit_sec);
-
-    if (argc == 1)  /* we have to do a dialog admin cleanup */
-    {
-        GET_ADM;
-        if (!dlgAdm)
-        {
-            LeaveCriticalSection(&crit_sec);
-            RETVAL(-1);
-        }
-
-        if (DialogInAdminTable(dlgAdm))
-        {
-            DelDialog(dlgAdm);
-        }
-        safeLocalFree(dlgAdm->pMessageQueue);
-        LocalFree(dlgAdm);
-    }
-    else   /* we have to do a new dialog admin allocation */
-    {
-        if (StoredDialogs<MAXDIALOGS)
-        {
-            current = (DIALOGADMIN *) LocalAlloc(LPTR, sizeof(DIALOGADMIN));
-            if (current)
-            {
-                current->pMessageQueue = (char *)LocalAlloc(LPTR, MAXLENQUEUE);
-            }
-            if (!current || !current->pMessageQueue)
-            {
-                MessageBox(0,"Out of system resources","Error",MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
-                LeaveCriticalSection(&crit_sec);
-                RETC(0);
-            }
-            current->previous = topDlg;
-            current->TableEntry = StoredDialogs;
-            StoredDialogs++;
-            DialogTab[current->TableEntry] = current;
-            LeaveCriticalSection(&crit_sec);
-            RETPTR(current)
-        }
-        else
-        {
-            MessageBox(0,"Too many active Dialogs","Error",MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
-        }
-    }
-    LeaveCriticalSection(&crit_sec);
-    RETC(0);
-}
-
-
 /**
  * Do some common set up when creating the underlying Windows dialog for any
  * ooDialog dialog.  This involves setting the 'topDlg' and the TheInstance
