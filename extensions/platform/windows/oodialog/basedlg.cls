@@ -62,7 +62,7 @@
 
 ::method SetHScrollPos unguarded
     use arg pos, redraw
-    if Arg(2, 'o') = 1 then redraw = 1
+    if arg(2, 'o') = 1 then redraw = 1
     return WndShow_Pos("B", self~hwnd, 0, pos, redraw)
 
 ::method VScrollPos unguarded
@@ -70,7 +70,7 @@
 
 ::method SetVScrollPos unguarded
     use arg pos, redraw
-    if Arg(2, 'o') = 1 then redraw = 1
+    if arg(2, 'o') = 1 then redraw = 1
     return WndShow_Pos("B", self~hwnd, 1, pos, redraw)
 
 ::method Scroll unguarded
@@ -130,24 +130,24 @@
 
 ::method LoadBitmap unguarded
    use arg bmpFilename, option
-   if Arg(2, 'o') = 1 then option = ""; else option = option~translate
-   return LoadRemoveBitmap(0 /* NULL Adm */, bmpFilename, "LOAD" || option)
+   if arg(2, 'o') = 1 then option = ""; else option = option~translate
+   return LoadRemoveBitmap(0 /* NULL adm */, bmpFilename, "LOAD" || option)
 
    /* This method will free a memory bitmap */
 
 ::method RemoveBitmap unguarded
    use arg hBitmap
-   return LoadRemoveBitmap(0 /* NULL Adm */, hBitmap, "REMOVE")
+   return LoadRemoveBitmap(0 /* NULL adm */, hBitmap, "REMOVE")
 
 ::method CreateBrush unguarded
     use arg color, brushSpecifier
-    if Arg() = 0 then return HandleDC_Obj("B")
-    if Arg(1, "o") = 1 then color = 1
-    if Arg(2, "o") = 1 then return HandleDC_Obj("B", color)
+    if arg() = 0 then return HandleDC_Obj("B")
+    if arg(1, "o") = 1 then color = 1
+    if arg(2, "o") = 1 then return HandleDC_Obj("B", color)
     brushSpecifier = brushSpecifier~translate
     if brushSpecifier = "UPDIAGONAL" | brushSpecifier = "DOWNDIAGONAL" | brushSpecifier = "CROSS" | brushSpecifier = "DIAGCROSS",
     | brushSpecifier = "HORIZONTAL" | brushSpecifier = "VERTICAL" then return HandleDC_Obj("B", color, brushSpecifier)
-    else return HandleDC_Obj("B", 0 /* NULL ADM */, color, brushSpecifier)  /* brushSpecifier must be filename */
+    else return HandleDC_Obj("B", 0 /* NULL adm */, color, brushSpecifier)  /* brushSpecifier must be filename */
 
    /* This method allows you to write text to a window in the given font, in */
    /* the given size, and to the given position */
@@ -162,9 +162,9 @@
    /*    "HEAVY"                 */
 
 ::method Write unguarded
-   argarr = Arg(1, "A")
+   argarr = arg(1, "A")
    newarg = .array~new(argarr~Items+1)
-   do i = 1 to Arg(); newarg[i+1] = argarr[i]; end
+   do i = 1 to arg(); newarg[i+1] = argarr[i]; end
    newarg[1] = self~hwnd
    forward message (WriteToWindow) arguments (newarg)
 
@@ -193,7 +193,7 @@
 
 ::method FontColor unguarded
    use arg color, dc
-   if Arg(1,'o') = 1 then color = 1
+   if arg(1,'o') = 1 then color = 1
    return DrawGetSet("COL", dc, color)
 
 ::method getTextSizeScreen  external "LIBRARY oodialog winex_getTextSizeScreen"
@@ -202,9 +202,9 @@
    /* It returns a handle to a pen object */
 ::method CreatePen unguarded
    use arg width, style, color
-   if Arg(1, "o") = 1 then width = 1
-   if Arg(2, "o") = 1 then style = "SOLID"; else style = style~translate
-   if Arg(3, "o") = 1 then color = 0
+   if arg(1, "o") = 1 then width = 1
+   if arg(2, "o") = 1 then style = "SOLID"; else style = style~translate
+   if arg(3, "o") = 1 then color = 0
    return HandleDC_Obj("P", width, style, color)
 
    /* This method will draw a rectangle to the given device context */
@@ -213,7 +213,7 @@
 
 ::method Rectangle unguarded
    use arg dc, x, y, cx, cy, fill
-   if Arg(6, "o") = 1 then fill = ''
+   if arg(6, "o") = 1 then fill = ''
    if fill~left(1)~translate = 'F' then
         return DCDraw("REC", dc, x, y, cx, cy)
    ret = DrawGetSet("SDP", dc, x, y)
@@ -226,7 +226,7 @@
 
 ::method DrawLine unguarded
    use arg dc, fromX, fromY, toX, toY
-   if Arg(2, 'o') = 0 | Arg(3, 'o') = 0 then ret = DrawGetSet("SDP",dc, fromX, fromY)
+   if arg(2, 'o') = 0 | arg(3, 'o') = 0 then ret = DrawGetSet("SDP",dc, fromX, fromY)
    return DCDraw("LN",dc, toX, toY)
 
    /* This method draws a pixel within the device context */
@@ -270,7 +270,7 @@
 
 ::method DrawAngleArc unguarded
    use arg dc, movex, movey, x, y, radius, startangle, sweepangle
-   if Arg(2, 'o') = 0 | Arg(3, 'o') = 0 then ret = DrawGetSet("SDP", dc, movex, movey)
+   if arg(2, 'o') = 0 | arg(3, 'o') = 0 then ret = DrawGetSet("SDP", dc, movex, movey)
    return DCDraw("ANG",dc, x, y, radius, startangle, sweepangle)
 
 ::method SetArcDirection unguarded
@@ -312,8 +312,6 @@
    if result <> 0 then return result
 
    self~scrollNow = 0   -- a kind of semaphore to handle multiple text scrolling
-   self~initCode = 0
-
    self~bkgBitmap = 0     -- no background bitmap
    self~bkgBrushBmp = 0   -- no background bitmap
    self~menuBar = .nil

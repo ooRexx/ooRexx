@@ -37,9 +37,10 @@
 /*----------------------------------------------------------------------------*/
 
 /**
- * oodControls.cpp
+ * oodControl.cpp
  *
- * Contains the base classes used for objects representing Windows Controls.
+ * Contains the base classes used for an object that represents a Windows
+ * Control.
  */
 #include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
 
@@ -66,37 +67,99 @@ typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
  *
  *
  */
-RexxMethod3(RexxObjectPtr, dlgctrl_new_cls, OPTIONAL_POINTER, args, OSELF, self, SUPER, superClass)
+RexxMethod3(RexxObjectPtr, dlgctrl_new_cls, OPTIONAL_RexxObjectPtr, args, OSELF, self, SUPER, superClass)
 {
     RexxMethodContext *c = context;
     RexxObjectPtr control = TheNilObj;
+
+    if ( argumentOmitted(1) || ! c->IsPointer(args) )
+    {
+        goto done_out;
+    }
+
+    // Forwarding this message to the super class will also invoke the init()
+    // method of the control instance object.
+    control = c->ForwardMessage(NULLOBJECT, NULL, superClass, NULL);
+    if ( control == NULLOBJECT )
+    {
+        control = TheNilObj;
+    }
+
+done_out:
+    return control;
+}
+
+/** DialogControl::init()
+ *
+ *  The base init() for all dialog control objects.
+ *
+ *  Initializes the WindowBase and sets the 3 attributes: id, hDlg, and oDlg.
+ *  These attributes are publicly 'get' only attributes and can not be changed.
+ *
+ *
+ */
+RexxMethod2(uint32_t, dlgctrl_init, OPTIONAL_POINTER, args, OSELF, self)
+{
+    RexxMethodContext *c = context;
+    uint32_t result = 1;
 
     if ( argumentOmitted(1) || args == NULL )
     {
         goto done_out;
     }
 
-    control = c->ForwardMessage(NULLOBJECT, NULL, superClass, c->NewArray(0));
-    if ( control == NULLOBJECT )
+    // Set up for the DialogControl CSelf.
+    RexxBufferObject cdcBuf = c->NewBuffer(sizeof(CDialogControl));
+    if ( cdcBuf == NULLOBJECT )
     {
-        control = TheNilObj;
         goto done_out;
     }
 
+    // Do the WindowBase initialization.
+    pCWindowBase wbCSelf;
     PNEWCONTROLPARAMS params = (PNEWCONTROLPARAMS)args;
-
-    if ( ! initWindowBase(context, params->hwnd, control) )
+    if ( ! initWindowBase(context, params->hwnd, self, &wbCSelf) )
     {
-        control = TheNilObj;
         goto done_out;
     }
 
-    c->SendMessage1(control, "ID=", c->UnsignedInt32(params->id));
-    c->SendMessage1(control, "ODLG=", params->parentDlg);
-    c->SendMessage1(control, "HDLG=", pointer2string(context, params->hwndDlg));
+    pCDialogControl cdcCSelf = (pCDialogControl)c->BufferData(cdcBuf);
+    memset(cdcCSelf, 0, sizeof(CDialogControl));
+
+    cdcCSelf->wndBase = wbCSelf;
+    cdcCSelf->rexxSelf = self;
+    cdcCSelf->hCtrl = params->hwnd;
+    cdcCSelf->id = params->id;
+    cdcCSelf->hDlg = params->hwndDlg;
+    cdcCSelf->oDlg = params->parentDlg;
+
+    context->SetObjectVariable("CSELF", cdcBuf);
+
+    context->SetObjectVariable("ID", c->UnsignedInt32(params->id));
+    context->SetObjectVariable("HDLG", pointer2string(context, params->hwndDlg));
+    context->SetObjectVariable("ODLG", params->parentDlg);
+    result = 0;
 
 done_out:
-    return control;
+    return result;
+}
+
+/** DialogControl::unInit()
+ *
+ *  Release the global reference for CWindowBase::rexxHwnd.
+ *
+ */
+RexxMethod1(RexxObjectPtr, dlgctrl_unInit, CSELF, pCSelf)
+{
+    if ( pCSelf != NULLOBJECT )
+    {
+        pCWindowBase pcwb = ((pCDialogControl)pCSelf)->wndBase;
+        if ( pcwb->rexxHwnd != TheZeroObj )
+        {
+            context->ReleaseGlobalReference(pcwb->rexxHwnd);
+            pcwb->rexxHwnd = TheZeroObj;
+        }
+    } return NULLOBJECT;
 }
 
 /** DialogControl::getTextSizeDlg()
@@ -279,6 +342,7 @@ done_out:
     return controlClass;
 }
 
+
 /** AdvancedControls::getXXXControl()
  *
  *  Instantiates a DialogControl object for the specified Windows control.  All
@@ -329,7 +393,7 @@ RexxMethod3(RexxObjectPtr, advCtrl_getControl, RexxObjectPtr, rxID, OPTIONAL_uin
     }
 
     uint32_t id;
-    if ( ! oodSafeResolveID(&id, c, self, rxID, -1, 1) )
+    if ( ! oodSafeResolveID(&id, c, self, rxID, -1, 1) || (int)id < 0 )
     {
         goto out;
     }

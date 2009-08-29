@@ -321,6 +321,8 @@ BOOL DialogInAdminTable(DIALOGADMIN * Dlg)
  * Converts a string in hexadecimal format (starts with 0x) to its pointer-sized
  * value.
  *
+ * Note that this converts "0" to null, which is what we want.
+ *
  * @param string  The string to convert.
  *
  * @return The converted value, which could be null to begin with, or null if it
@@ -341,6 +343,15 @@ void *string2pointer(const char *string)
         }
     }
     return pointer;
+}
+
+void *string2pointer(RexxMethodContext *c, RexxStringObject string)
+{
+    if ( string == NULLOBJECT )
+    {
+        return NULL;
+    }
+    return string2pointer(c->CString(string));
 }
 
 /**
@@ -383,7 +394,7 @@ void pointer2string(char *result, void *pointer)
  * @param pointer  Pointer to convert
  *
  * @return A string object representing the pointer as either 0xffff1111 if not
- *         null or as 0 if null.
+ *         null, or as 0 if null.
  */
 RexxStringObject pointer2string(RexxMethodContext *c, void *pointer)
 {
@@ -802,10 +813,7 @@ bool textSizeIndirect(RexxMethodContext *context, CSTRING text, CSTRING fontName
     }
 
     DeleteObject(font);
-    if ( ReleaseDC(hwnd, hdc) == 0 )
-    {
-        printf("RelaseDC() failed\n");
-    }
+    ReleaseDC(hwnd, hdc);
 
     return success;
 }

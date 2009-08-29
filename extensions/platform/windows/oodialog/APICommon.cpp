@@ -468,3 +468,30 @@ bool isOfClassType(RexxMethodContext *c, RexxObjectPtr obj, CSTRING classID)
     return false;
 }
 
+/**
+ * Print out the class ID of a Rexx object.  Useful in debugging to identify
+ * exactly what a Rexx object is.  Will work with class objects or instance
+ * objects.
+ *
+ * @param c    The method context we are operating in.
+ * @param obj  The object to identify.
+ */
+void dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj)
+{
+    if ( ! c->IsOfType(obj, "CLASS") )
+    {
+        obj = c->SendMessage0(obj, "CLASS");
+    }
+
+    CSTRING name = "<null>";
+    if ( obj != NULLOBJECT )
+    {
+        RexxStringObject id = (RexxStringObject)c->SendMessage0(obj, "ID");
+        if ( id != NULLOBJECT )
+        {
+            name = c->CString(id);
+        }
+    }
+    printf("Class: %s\n", name);
+}
+

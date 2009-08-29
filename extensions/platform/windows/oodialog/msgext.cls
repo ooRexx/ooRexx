@@ -314,7 +314,7 @@
 
 ::method connectStaticNotify
    use strict arg id, type, msgToRaise = ""
-   if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
+   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    if msgToRaise == "" then msgToRaise = "on" || type
    type = type~translate
@@ -330,33 +330,33 @@
 
 ::method DefTreeEditStarter
     use arg id, dummy, category
-    if Arg(3,'o') = 1 then tc = self~GetTreeControl(id)
+    if arg(3,'o') = 1 then tc = self~GetTreeControl(id)
     else tc = self~GetTreeControl(id, category)
-    if tc \= .Nil then tc~SubclassEdit
+    if tc \= .nil then tc~SubclassEdit
 
 
 ::method DefTreeEditHandler
     use arg id, item, newText, category
-    if Arg(3,'o') = 1 then return
-    if Arg(4,'o') = 1 then tc = self~GetTreeControl(id)
+    if arg(3,'o') = 1 then return
+    if arg(4,'o') = 1 then tc = self~GetTreeControl(id)
     else tc = self~GetTreeControl(id, category)
-    if tc \= .Nil then do
+    if tc \= .nil then do
         tc~Modify(item,newText)
         tc~RestoreEditClass
     end
 
 ::method DefListEditStarter
     use arg id, dummy, category
-    if Arg(3,'o') = 1 then lc = self~GetListControl(id)
+    if arg(3,'o') = 1 then lc = self~GetListControl(id)
     else lc = self~GetListControl(id, category)
-    if lc \= .Nil then lc~SubclassEdit
+    if lc \= .nil then lc~SubclassEdit
 
 ::method DefListEditHandler
     use arg id, item, newText, category
-    if Arg(3,'o') = 1 then return
-    if Arg(4,'o') = 1 then lc = self~GetListControl(id)
+    if arg(3,'o') = 1 then return
+    if arg(4,'o') = 1 then lc = self~GetListControl(id)
     else lc = self~GetListControl(id, category)
-    if lc \= .Nil then do
+    if lc \= .nil then do
         lc~Modify(item,0,newText)
         lc~RestoreEditClass
     end

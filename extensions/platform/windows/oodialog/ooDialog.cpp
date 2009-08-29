@@ -41,6 +41,7 @@
 #include <commctrl.h>
 #include <stdio.h>
 #include <dlgs.h>
+#include <shlwapi.h>
 #include "APICommon.h"
 #include "oodCommon.h"
 #include "oodSymbols.h"
@@ -285,7 +286,46 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
    return FALSE;
 }
 
+static DIALOGADMIN * allocDlgAdmin(RexxMethodContext *c)
+{
+    DIALOGADMIN *adm = NULL;
 
+    EnterCriticalSection(&crit_sec);
+
+    if ( StoredDialogs < MAXDIALOGS )
+    {
+        adm = (DIALOGADMIN *)LocalAlloc(LPTR, sizeof(DIALOGADMIN));
+        if ( adm == NULL )
+        {
+            goto err_out;
+        }
+
+        adm->pMessageQueue = (char *)LocalAlloc(LPTR, MAXLENQUEUE);
+        if ( adm->pMessageQueue == NULL )
+        {
+            goto err_out;
+        }
+
+        adm->previous = topDlg;
+        adm->TableEntry = StoredDialogs;
+        StoredDialogs++;
+        DialogTab[adm->TableEntry] = adm;
+        goto done_out;
+    }
+    else
+    {
+        MessageBox(0, "Too many active Dialogs","Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+        goto done_out;
+    }
+
+err_out:
+    safeLocalFree(adm);
+    MessageBox(0, "Out of system resources", "Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+
+done_out:
+    LeaveCriticalSection(&crit_sec);
+    return adm;
+}
 
 /* prepare dialog management table for a new dialog entry */
 size_t RexxEntry HandleDialogAdmin(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
@@ -343,13 +383,29 @@ size_t RexxEntry HandleDialogAdmin(const char *funcname, size_t argc, CONSTRXSTR
 }
 
 
-
-/* install DLL, control program and 3D controls */
-BOOL InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc)
+/**
+ * Do some common set up when creating the underlying Windows dialog for any
+ * ooDialog dialog.  This involves setting the 'topDlg' and the TheInstance
+ * field of the DIALOGADMIN struct.
+ *
+ * If this is a ResDialog then the resource DLL is loaded, otherwise the
+ * TheInstance field is the ooDialog.dll instance.
+ *
+ * @param dlgAdm
+ * @param ar
+ * @param argc
+ *
+ * @return True on success, false only if this is for a ResDialog and the
+ *         loading of the resource DLL failed.
+ */
+bool InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc)
 {
     const char *Library;
 
-    if (dlgAdm->previous) ((DIALOGADMIN*)dlgAdm->previous)->OnTheTop = FALSE;
+    if ( dlgAdm->previous )
+    {
+        ((DIALOGADMIN*)dlgAdm->previous)->OnTheTop = FALSE;
+    }
     topDlg = dlgAdm;
     Library = ar[0].strptr;
 
@@ -363,7 +419,7 @@ BOOL InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc)
                     "  File name:\t\t\t%s\n"
                     "  Windows System Error Code:\t%d\n", Library, GetLastError());
             MessageBox(0, msg, "ooDialog DLL Load Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
-            return FALSE;
+            return false;
         }
     }
     else
@@ -375,7 +431,7 @@ BOOL InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc)
     {
         dlgAdm->Use3DControls = FALSE;
     }
-    return TRUE;
+    return true;
 }
 
 
@@ -394,25 +450,43 @@ INT DelDialog(DIALOGADMIN * aDlg)
 
     ret = aDlg->LeaveDialog;
 
-    /* add this message, so HandleMessages in DIALOG.CMD knows that finsihed shall be set */
+    // Add this message, so PlainBaseDialog::handleMessages() knows that
+    // PlainBaseDialog::finished() should be set.
     AddDialogMessage((char *) MSG_TERMINATE, aDlg->pMessageQueue);
 
-    if (!aDlg->LeaveDialog) aDlg->LeaveDialog = 3;    /* signal to exit */
+    if ( aDlg->LeaveDialog == 0 )
+    {
+        // Signal to exit.
+        aDlg->LeaveDialog = 3;
+    }
 
-    /* the entry must be removed before the last message is sent so the GetMessage loop can quit */
-    if (aDlg->TableEntry == StoredDialogs-1)
+    // The dialog adminstration block entry must be removed before the WM_QUIT
+    // message is posted.
+    if ( aDlg->TableEntry == StoredDialogs - 1 )
+    {
+        // The dialog being ended is the last entry in the table, just set it to
+        // null.
         DialogTab[aDlg->TableEntry] = NULL;
+    }
     else
     {
-        DialogTab[aDlg->TableEntry] = DialogTab[StoredDialogs-1];  /* move last entry to deleted one */
+        // The dialog being ended is not the last entry.  Move the last entry to
+        // the one being deleted and then delete the last entry.
+        DialogTab[aDlg->TableEntry] = DialogTab[StoredDialogs-1];
         DialogTab[aDlg->TableEntry]->TableEntry = aDlg->TableEntry;
-        DialogTab[StoredDialogs-1] = NULL;              /* and delete last entry */
+        DialogTab[StoredDialogs-1] = NULL;
     }
     StoredDialogs--;
 
-    PostMessage(aDlg->TheDlg, WM_QUIT, 0, 0);      /* to exit GetMessage */
+    // Post the WM_QUIT message to exit the message loop.
+    PostMessage(aDlg->TheDlg, WM_QUIT, 0, 0);
 
-    if (aDlg->TheDlg) DestroyWindow(aDlg->TheDlg);      /* docu states "must not use EndDialog for non-modal dialogs" */
+    if ( aDlg->TheDlg )
+    {
+        // The Windows documentation states: "must not use EndDialog for
+        // non-modal dialogs"
+        DestroyWindow(aDlg->TheDlg);
+    }
 
 #ifdef __CTL3D
     if ((!StoredDialogs) && (aDlg->Use3DControls)) Ctl3dUnregister(aDlg->TheInstance);
@@ -448,16 +522,16 @@ INT DelDialog(DIALOGADMIN * aDlg)
         }
     }
 
-    if ((aDlg->TheInstance) && (aDlg->TheInstance != MyInstance))
+    if ( aDlg->TheInstance != NULL && aDlg->TheInstance != MyInstance )
     {
         FreeLibrary(aDlg->TheInstance);
     }
     current = (DIALOGADMIN *)aDlg->previous;
 
-    /* delete data, message and bitmap table of the dialog */
-    if (aDlg->MsgTab)
+    // Delete the data and message tables of the dialog.
+    if ( aDlg->MsgTab )
     {
-        for (i=0;i<aDlg->MT_size;i++)
+        for ( i = 0; i < aDlg->MT_size; i++ )
         {
             safeLocalFree(aDlg->MsgTab[i].rexxProgram);
         }
@@ -467,7 +541,7 @@ INT DelDialog(DIALOGADMIN * aDlg)
     safeLocalFree(aDlg->DataTab);
     aDlg->DT_size = 0;
 
-    /* delete color brushs */
+    // Delete the color brushes.
     if (aDlg->ColorTab)
     {
         for (i=0;i<aDlg->CT_size;i++)
@@ -478,19 +552,20 @@ INT DelDialog(DIALOGADMIN * aDlg)
         aDlg->CT_size = 0;
     }
 
-    /* delete bitmaps */
+    // Delete the bitmaps and bitmap table.
     if (aDlg->BmpTab)
     {
         for (i=0;i<aDlg->BT_size;i++)
         {
-            if ((aDlg->BmpTab[i].Loaded & 0x1011) == 1)           /* otherwise stretched bitmap files are not freed */
+            if ( (aDlg->BmpTab[i].Loaded & 0x1011) == 1 )
             {
+                /* otherwise stretched bitmap files are not freed */
                 safeLocalFree((void *)aDlg->BmpTab[i].bitmapID);
                 safeLocalFree((void *)aDlg->BmpTab[i].bmpFocusID);
                 safeLocalFree((void *)aDlg->BmpTab[i].bmpSelectID);
                 safeLocalFree((void *)aDlg->BmpTab[i].bmpDisableID);
             }
-            else if (aDlg->BmpTab[i].Loaded == 0)
+            else if ( aDlg->BmpTab[i].Loaded == 0 )
             {
                 safeDeleteObject((HBITMAP)aDlg->BmpTab[i].bitmapID);
                 safeDeleteObject((HBITMAP)aDlg->BmpTab[i].bmpFocusID);
@@ -504,7 +579,7 @@ INT DelDialog(DIALOGADMIN * aDlg)
         aDlg->BT_size = 0;
     }
 
-    /* delete the icon resource table */
+    // Delete the icon resource table.
     if (aDlg->IconTab)
     {
         for ( i = 0; i < aDlg->IT_size; i++ )
@@ -515,15 +590,16 @@ INT DelDialog(DIALOGADMIN * aDlg)
         aDlg->IT_size = 0;
     }
 
-    /* Unhook a hook if it is installed */
+    // Unhook a hook if it is installed.
     if ( aDlg->hHook )
     {
         removeKBHook(aDlg);
     }
 
-    /* The message queue and the admin block are freed in HandleDialogAdmin called from HandleMessages */
+    // The message queue and the dialog administration block itself are freed
+    // from the PlainBaseDialog::deInstall() or PlainBaseDialog::unInit()
 
-    if (!StoredDialogs)
+    if ( StoredDialogs == NULL )
     {
         topDlg = NULL;
     }
@@ -531,15 +607,16 @@ INT DelDialog(DIALOGADMIN * aDlg)
     {
         topDlg = current;
     }
-    if (topDlg)
+
+    if ( topDlg != NULL )
     {
-        if (DialogInAdminTable(topDlg))
+        if ( DialogInAdminTable(topDlg) )
         {
             if (!IsWindowEnabled(topDlg->TheDlg))
             {
                 EnableWindow(topDlg->TheDlg, TRUE);
             }
-            if (wasFGW)
+            if ( wasFGW )
             {
                 SetForegroundWindow(topDlg->TheDlg);
                 topDlg->OnTheTop = TRUE;
@@ -644,7 +721,17 @@ size_t RexxEntry GetDialogFactor(const char *funcname, size_t argc, CONSTRXSTRIN
 
 
 
-/* create an asynchronous dialog */
+/**
+ * Create a dialog stored in a DLL.  Currently this is only used by ResDialog.
+ *
+ * @param funcname
+ * @param argc
+ * @param argv
+ * @param qname
+ * @param retstr
+ *
+ * @return size_t RexxEntry
+ */
 size_t RexxEntry StartDialog(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
     ULONG thID;
@@ -659,13 +746,16 @@ size_t RexxEntry StartDialog(const char *funcname, size_t argc, CONSTRXSTRING *a
     }
 
     EnterCriticalSection(&crit_sec);
-    if (!InstallNecessaryStuff(dlgAdm, &argv[1], argc-1))
+    if ( ! InstallNecessaryStuff(dlgAdm, &argv[1], argc-1) )
     {
-        if (dlgAdm)
+        if ( dlgAdm )
         {
+            // TODO why is DelDialog() used here, but not below ??
             DelDialog(dlgAdm);
-            if (dlgAdm->pMessageQueue) LocalFree((void *)dlgAdm->pMessageQueue);
-            LocalFree(dlgAdm);
+
+            // Note: The message queue and dialog administration block are /
+            // must be freed from PlainBaseDialog::deInstall() or
+            // PlainBaseDialog::unInit().
         }
         LeaveCriticalSection(&crit_sec);
         RETC(0)
@@ -679,10 +769,11 @@ size_t RexxEntry StartDialog(const char *funcname, size_t argc, CONSTRXSTRING *a
 
     dlgAdm->TheThread = CreateThread(NULL, 2000, WindowLoopThread, &threadArgs, 0, &thID);
 
-    while ((!Release) && (dlgAdm->TheThread))
+    // Wait for dialog start.
+    while ( ! Release && (dlgAdm->TheThread) )
     {
         Sleep(1);
-    };  /* wait for dialog start */
+    }
     LeaveCriticalSection(&crit_sec);
 
     if (dlgAdm)
@@ -692,11 +783,16 @@ size_t RexxEntry StartDialog(const char *funcname, size_t argc, CONSTRXSTRING *a
             HICON hBig = NULL;
             HICON hSmall = NULL;
 
-            SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);   /* for a faster drawing */
+            // Set the thread priority higher for faster drawing.
+            SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);
             dlgAdm->OnTheTop = TRUE;
             dlgAdm->threadID = thID;
-            /* modal flag = yes ? */
-            if (dlgAdm->previous && !isYes(argv[6].strptr) && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg)) EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
+
+            // Is this to be a modal dialog?
+            if ( dlgAdm->previous && !isYes(argv[6].strptr) && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
+            {
+                EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
+            }
 
             if ( GetDialogIcons(dlgAdm, atoi(argv[5].strptr), ICON_DLL, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
             {
@@ -709,6 +805,13 @@ size_t RexxEntry StartDialog(const char *funcname, size_t argc, CONSTRXSTRING *a
 
             RETPTR(dlgAdm->TheDlg);
         }
+
+        // The dialog creation failed, so clean up.  For now, with the
+        // mixture of old and new native APIs, the freeing of the dialog
+        // administration block must be done in the deInstall() or
+        // unInit() methods.
+
+        // TODO this seems very wrong.  Why isn't a DelDialog() done here???
         dlgAdm->OnTheTop = FALSE;
         if (dlgAdm->previous)
         {
@@ -879,7 +982,7 @@ static HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, in
 
 static inline HWND getWBWindow(void *pCSelf)
 {
-    return ((pWbCSelf)pCSelf)->hwnd;
+    return ((pCWindowBase)pCSelf)->hwnd;
 }
 
 /**
@@ -915,12 +1018,16 @@ bool redrawRect(HWND hwnd, PRECT pr, bool eraseBackground)
  * exception if its arg is not a RexxBufferObject.  This implies that the
  * WindowBase mixin class can only be initialized through the native API.
  *
- * The base dialog, dialog control, and window classes in ooDialog inherit
+ * The plain base dialog, dialog control, and window classes in ooDialog inherit
  * WindowBase.
  *
  * @param c        Method context we are operating in.
+ *
  * @param hwndObj  Window handle of the underlying object.  This can be null and
- *                 for a dialog object, it is always null.
+ *                 for a dialog object, it is always null.  (Because for a
+ *                 dialog object the underlying dialog has not been created at
+ *                 this point.)
+ *
  * @param self     The Rexx object that inherited WindowBase.
  *
  * @return True on success, otherwise false.  If false an exception has been
@@ -939,26 +1046,23 @@ bool redrawRect(HWND hwnd, PRECT pr, bool eraseBackground)
  *           (i.e. the hwnd is unknown,) then sizeX and sizeY simply remain at
  *           0.
  */
-bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self)
+bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB)
 {
-    RexxBufferObject obj = c->NewBuffer(sizeof(wbCSelf));
-
-    pWbCSelf pcs = (pWbCSelf)c->BufferData(obj);
-    if ( pcs == NULL )
+    RexxBufferObject obj = c->NewBuffer(sizeof(CWindowBase));
+    if ( obj == NULLOBJECT )
     {
-        outOfMemoryException(c);
         return false;
     }
-    memset(pcs, 0, sizeof(wbCSelf));
+
+    pCWindowBase pcwb = (pCWindowBase)c->BufferData(obj);
+    memset(pcwb, 0, sizeof(CWindowBase));
 
     ULONG bu = GetDialogBaseUnits();
-    pcs->factorX = LOWORD(bu) / 4;
-    pcs->factorY = HIWORD(bu) / 8;
+    pcwb->factorX = LOWORD(bu) / 4;
+    pcwb->factorY = HIWORD(bu) / 8;
 
     if ( hwndObj != NULL )
     {
-        pcs->hwnd = hwndObj;
-
         RECT r = {0};
         if ( GetWindowRect(hwndObj, &r) == 0 )
         {
@@ -966,11 +1070,24 @@ bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self)
             return false;
         }
 
-        pcs->sizeX =  (uint32_t)((r.right - r.left) / pcs->factorX);
-        pcs->sizeY =  (uint32_t)((r.bottom - r.top) / pcs->factorY);
+        RexxStringObject h = pointer2string(c, hwndObj);
+        pcwb->hwnd = hwndObj;
+        pcwb->rexxHwnd = c->RequestGlobalReference(h);
+
+        pcwb->sizeX =  (uint32_t)((r.right - r.left) / pcwb->factorX);
+        pcwb->sizeY =  (uint32_t)((r.bottom - r.top) / pcwb->factorY);
+    }
+    else
+    {
+        pcwb->rexxHwnd = TheZeroObj;
     }
 
     c->SendMessage1(self, "INIT_WINDOWBASE", obj);
+
+    if ( ppCWB != NULL )
+    {
+        *ppCWB = pcwb;
+    }
     return true;
 }
 
@@ -980,42 +1097,47 @@ bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self)
  */
 RexxMethod1(logical_t, wb_init_windowBase, RexxObjectPtr, cSelf)
 {
+    RexxMethodContext *c = context;
     if ( ! context->IsBuffer(cSelf) )
     {
+        context->SetObjectVariable("INITCODE", TheOneObj);
         wrongClassException(context, 1, "Buffer");
+        return FALSE;
     }
-    else
-    {
-        context->SetObjectVariable("CSELF", cSelf);
-    }
-    return 0;
+
+    context->SetObjectVariable("CSELF", cSelf);
+
+    context->SetObjectVariable("INITCODE", TheZeroObj);
+
+    return TRUE;
 }
 
-/* Attributes for the WindowBase class */
-RexxMethod1(RexxStringObject, wb_getHwnd, CSELF, pCSelf)
+/** WindowBase::hwnd  [attribute get]
+ */
+RexxMethod1(RexxObjectPtr, wb_getHwnd, CSELF, pCSelf)
 {
-    return pointer2string(context, ((pWbCSelf)pCSelf)->hwnd);
-}
-RexxMethod2(RexxObjectPtr, wb_setHwnd, CSTRING, hwnd, CSELF, pCSelf)
-{
-    ((pWbCSelf)pCSelf)->hwnd = (HWND)string2pointer(hwnd);
-    return NULLOBJECT;
+    return ((pCWindowBase)pCSelf)->rexxHwnd;
 }
 
-RexxMethod1(wholenumber_t, wb_getInitCode, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->initCode; }
-RexxMethod2(RexxObjectPtr, wb_setInitCode, CSELF, pCSelf, wholenumber_t, code) { ((pWbCSelf)pCSelf)->initCode = code; return NULLOBJECT; }
+/** WindowBase::factorX  [attribute]
+ */
+RexxMethod1(double, wb_getFactorX, CSELF, pCSelf) { return ((pCWindowBase)pCSelf)->factorX; }
+RexxMethod2(RexxObjectPtr, wb_setFactorX, float, xFactor, CSELF, pCSelf) { ((pCWindowBase)pCSelf)->factorX = xFactor; return NULLOBJECT; }
 
-RexxMethod1(double, wb_getFactorX, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->factorX; }
-RexxMethod2(RexxObjectPtr, wb_setFactorX, CSELF, pCSelf, float, xFactor) { ((pWbCSelf)pCSelf)->factorX = xFactor; return NULLOBJECT; }
+/** WindowBase::factorY  [attribute]
+ */
+RexxMethod1(double, wb_getFactorY, CSELF, pCSelf) { return ((pCWindowBase)pCSelf)->factorY; }
+RexxMethod2(RexxObjectPtr, wb_setFactorY, float, yFactor, CSELF, pCSelf) { ((pCWindowBase)pCSelf)->factorY = yFactor; return NULLOBJECT; }
 
-RexxMethod1(double, wb_getFactorY, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->factorY; }
-RexxMethod2(RexxObjectPtr, wb_setFactorY, CSELF, pCSelf, float, yFactor) { ((pWbCSelf)pCSelf)->factorY = yFactor; return NULLOBJECT; }
+/** WindowBase::sizeX  [attribute]
+ */
+RexxMethod1(uint32_t, wb_getSizeX, CSELF, pCSelf) { return ((pCWindowBase)pCSelf)->sizeX; }
+RexxMethod2(RexxObjectPtr, wb_setSizeX, uint32_t, xSize, CSELF, pCSelf) { ((pCWindowBase)pCSelf)->sizeX = xSize; return NULLOBJECT; }
 
-RexxMethod1(uint32_t, wb_getSizeX, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->sizeX; }
-RexxMethod2(RexxObjectPtr, wb_setSizeX, CSELF, pCSelf, uint32_t, xSize) { ((pWbCSelf)pCSelf)->sizeX = xSize; return NULLOBJECT; }
-
-RexxMethod1(uint32_t, wb_getSizeY, CSELF, pCSelf) { return ((pWbCSelf)pCSelf)->sizeY; }
-RexxMethod2(RexxObjectPtr, wb_setSizeY, CSELF, pCSelf, uint32_t, ySize) { ((pWbCSelf)pCSelf)->sizeY = ySize; return NULLOBJECT; }
+/** WindowBase::sizeY  [attribute]
+ */
+RexxMethod1(uint32_t, wb_getSizeY, CSELF, pCSelf) { return ((pCWindowBase)pCSelf)->sizeY; }
+RexxMethod2(RexxObjectPtr, wb_setSizeY, uint32_t, ySize, CSELF, pCSelf) { ((pCWindowBase)pCSelf)->sizeY = ySize; return NULLOBJECT; }
 
 /** WindowBase::pixelX  [attribute]
  *
@@ -1024,7 +1146,7 @@ RexxMethod2(RexxObjectPtr, wb_setSizeY, CSELF, pCSelf, uint32_t, ySize) { ((pWbC
  */
 RexxMethod1(uint32_t, wb_getPixelX, CSELF, pCSelf)
 {
-    pWbCSelf pcs = (pWbCSelf)pCSelf;
+    pCWindowBase pcs = (pCWindowBase)pCSelf;
     if ( pcs->hwnd == NULL )
     {
         return 0;
@@ -1042,7 +1164,7 @@ RexxMethod1(uint32_t, wb_getPixelX, CSELF, pCSelf)
  */
 RexxMethod1(uint32_t, wb_getPixelY, CSELF, pCSelf)
 {
-    pWbCSelf pcs = (pWbCSelf)pCSelf;
+    pCWindowBase pcs = (pCWindowBase)pCSelf;
     if ( pcs->hwnd == NULL )
     {
         return 0;
@@ -1051,6 +1173,27 @@ RexxMethod1(uint32_t, wb_getPixelY, CSELF, pCSelf)
     RECT r = {0};
     GetWindowRect(pcs->hwnd, &r);
     return r.bottom - r.top;
+}
+
+/** WindowBase::size()
+ *
+ *  Returns the size of the window in pixels.
+ *
+ *  @return  A .Size object with the width and height of the window in pixels.
+ *           If there is now underlying window yet, the width and height will be
+ *           0.
+ */
+RexxMethod1(RexxObjectPtr, wb_size, CSELF, pCSelf)
+{
+    pCWindowBase pcs = (pCWindowBase)pCSelf;
+    if ( pcs->hwnd == NULL )
+    {
+        return rxNewSize(context, 0, 0);
+    }
+
+    RECT r = {0};
+    GetWindowRect(pcs->hwnd, &r);
+    return rxNewSize(context, r.right - r.left, r.bottom - r.top);
 }
 
 /** WindowBase::enable() / WindowBase::disable()
@@ -1088,13 +1231,13 @@ RexxMethod1(logical_t, wb_isVisible, CSELF, pCSelf)
  * Common code to call ShowWindow() for a native API method.
  *
  * @param pCSelf   Pointer to a struct with the window handle.  Must be a
- *                 wbCSelf struct.
+ *                 CWindowBase struct.
  * @param type     Single character indicating which SW_ flag to use.
  *
  * @return  True if the window was previously visible.  Return false if the
  *          window was previously hidden.
  */
-logical_t _showWindow(void *pCSelf, char type)
+logical_t showWindow(void *pCSelf, char type)
 {
     int flag;
     switch ( type )
@@ -1163,7 +1306,16 @@ uint32_t showFast(void *pCSelf, char type)
  */
 RexxMethod1(logical_t, wb_show, CSELF, pCSelf)
 {
-    return _showWindow(pCSelf, msgAbbrev(context));
+    return showWindow(pCSelf, msgAbbrev(context));
+}
+
+RexxMethod1(uint32_t, wb_update, CSELF, pCSelf)
+{
+    RECT r;
+    HWND hwnd = getWBWindow(pCSelf);
+    GetClientRect(hwnd, &r);
+    InvalidateRect(hwnd, &r, TRUE);
+    return 0;
 }
 
 /** WindowBase::showFast() / WindowBase::hideFast()
@@ -1181,16 +1333,65 @@ RexxMethod1(uint32_t, wb_showFast, CSELF, pCSelf)
     return showFast(pCSelf, msgAbbrev(context));
 }
 
-/** WindowsBase::draw() / WindowsBase::redraw
+/** WindowBase::display()
+ *
+ *
+ *  @return  0 for success, 1 for error.  An error is highly unlikely.
+ */
+RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
+{
+    char type;
+    uint32_t ret = 0;
+    bool doFast = false;
+
+    if ( opts != NULL && StrStrI(opts, "FAST") != NULL )
+    {
+        doFast = true;
+    }
+
+    if ( opts == NULL ) {type = 'S';}
+    else if ( StrStrI(opts, "NORMAL") != NULL ) {type = 'S';}
+    else if ( StrStrI(opts, "DEFAULT") != NULL ) {type = 'S';}
+    else if ( StrStrI(opts, "HIDE") != NULL ) {type = 'H';}
+    else if ( StrStrI(opts, "INACTIVE") != NULL )
+    {
+        if ( doFast )
+        {
+            userDefinedMsgException(context, 1, "The keyword FAST can not be used with INACTIVE");
+            goto done_out;
+        }
+        type = 'I';
+    }
+    else
+    {
+        userDefinedMsgException(context, 1, "The keyword option string must contain one of NORMAL, DEFAULT, HIDE, INACTIVE");
+        goto done_out;
+    }
+
+    if ( doFast )
+    {
+        ret = showFast(pCSelf, type);
+    }
+    else
+    {
+        showWindow(pCSelf, type);
+    }
+
+done_out:
+    return ret;
+}
+
+/** WindowsBase::draw() / WindowsBase::redraw() / WindowsBase::update()
  *
  *  Causes the entire client area of the the window to be redrawn.
  *
- *  This method maps to both the draw() and the redrawClient() methods.  The
- *  implementation preserves existing behavior prior to ooRexx 4.0.0.  That is:
- *  the draw() method takes no argument and always uses false for the erase
- *  background arg.  The redrawClient() method takes an argument to set the
- *  erase background arg.  The argument can be either .true / .false (1 or 0),
- *  or yes / no, or ja / nein.
+ *  This method maps to the draw(), update() and the redrawClient() methods.
+ *  The implementation preserves existing behavior prior to ooRexx 4.0.0.  That
+ *  is: the draw() method takes no argument and always uses false for the erase
+ *  background arg. The update() method takes no argument and always uses true
+ *  for the erase background arg, The redrawClient() method takes an argument to
+ *  set the erase background arg. The argument can be either .true / .false (1
+ *  or 0), or yes / no, or ja / nein.
  *
  *  @param  erase  [optional]  Whether the redraw operation should erase the
  *                 window background.  Can be true / false or yes / no.  The
@@ -1202,8 +1403,21 @@ RexxMethod2(uint32_t, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSelf)
 {
     RECT r;
     HWND hwnd = getWBWindow(pCSelf);
+    char flag = msgAbbrev(context);
+    bool doErase;
 
-    bool doErase = (msgAbbrev(context) == 'R') ? isYes(erase) : false;
+    if ( flag == 'R' )
+    {
+        doErase = false;
+    }
+    else if ( flag == 'U' )
+    {
+        doErase = true;
+    }
+    else
+    {
+        doErase = isYes(erase);
+    }
 
     GetClientRect(hwnd, &r);
     return redrawRect(hwnd, &r, doErase) ? 0 : 1;
@@ -1320,7 +1534,26 @@ RexxMethod2(RexxObjectPtr, window_init, POINTERSTRING, hwnd, OSELF, self)
     }
     else
     {
-        initWindowBase(context, (HWND)hwnd, self);
+        initWindowBase(context, (HWND)hwnd, self, NULL);
+    }
+    return NULLOBJECT;
+}
+
+/** Window::unInit()
+ *
+ *  Release the global reference for CWindowBase::rexxHwnd.
+ *
+ */
+RexxMethod1(RexxObjectPtr, window_unInit, CSELF, pCSelf)
+{
+    if ( pCSelf != NULLOBJECT )
+    {
+        pCWindowBase pcwb = (pCWindowBase)pCSelf;
+        if ( pcwb->rexxHwnd != TheZeroObj )
+        {
+            context->ReleaseGlobalReference(pcwb->rexxHwnd);
+            pcwb->rexxHwnd = TheZeroObj;
+        }
     }
     return NULLOBJECT;
 }
@@ -1374,7 +1607,7 @@ RexxMethod0(RexxObjectPtr, pbdlg_getFontSize_cls)
 RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, resource,
             OPTIONAL_RexxObjectPtr, dlgDataStem, OPTIONAL_RexxObjectPtr, hFile, OSELF, self)
 {
-    RexxMethodContext *c = context;
+    RexxObjectPtr result = TheOneObj;  // This is an error return.
 
     context->SetObjectVariable("LIBRARY", library);
     context->SetObjectVariable("RESOURCE", resource);
@@ -1382,29 +1615,157 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     if ( argumentExists(3) )
     {
         context->SetObjectVariable("DLGDATA.", dlgDataStem);
-        c->SendMessage1(self, "USESTEM=", TheTrueObj);
+        context->SetObjectVariable("USESTEM", TheTrueObj);
     }
     else
     {
         context->SetObjectVariable("DLGDATA.", TheNilObj);
-        c->SendMessage1(self, "USESTEM=", TheFalseObj);
+        context->SetObjectVariable("USESTEM", TheFalseObj);
     }
 
-    if ( ! initWindowBase(context, NULL, self) )
+    // Get a buffer for the PlainBaseDialog CSelf.
+    RexxBufferObject cpbdBuf = context->NewBuffer(sizeof(CPlainBaseDialog));
+    if ( cpbdBuf == NULLOBJECT )
     {
-        return NULLOBJECT;
+        goto err_out;
     }
+
+    // Initialize the window base.
+    pCWindowBase pWB;
+    if ( ! initWindowBase(context, NULL, self, &pWB) )
+    {
+        goto done_out;
+    }
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->BufferData(cpbdBuf);
+
+    pcpbd->wndBase = pWB;
+    pcpbd->rexxSelf = self;
+    pcpbd->hDlg = NULL;
+
+    context->SetObjectVariable("CSELF", cpbdBuf);
+
+    // The adm attribute needs to be set to whatever the result of allocating
+    // the dialog administration block is.  If it is null, then the attribute
+    // will be set to 0, which is what most of the existing ooDialog code
+    // expects.
+
+    DIALOGADMIN *dlgAdm = allocDlgAdmin(context);
+
+    pcpbd->dlgAdm = dlgAdm;
+    context->SetObjectVariable("ADM", pointer2string(context, dlgAdm));
+    if ( dlgAdm == NULL )
+    {
+        goto done_out;
+    }
+
+    context->SetObjectVariable("PARENTDLG", TheNilObj);
+    context->SetObjectVariable("FINISHED", TheZeroObj);
+    context->SetObjectVariable("PROCESSINGLOAD", TheFalseObj);
+
+    // We don't check the return of AddTheMessage() because the message table
+    // can not be full at this point, we are just starting out.  A memory
+    // allocation failure, which is highly unlikely, will just be ignored.  If
+    // this ooRexx process is out of memory, that will quickly show up.
+    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDOK,     (ULONG_PTR)SIZE_MAX, 0, 0, "OK", 0);
+    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDCANCEL, (ULONG_PTR)SIZE_MAX, 0, 0, "Cancel", 0);
+    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDHELP,   (ULONG_PTR)SIZE_MAX, 0, 0, "Help", 0);
 
     if ( argumentOmitted(4) )
     {
-        return c->SendMessage(self, "FINALINIT", c->NewArray(0));
+        result = context->SendMessage0(self, "FINALINIT");
     }
     else
     {
-        return c->SendMessage1(self, "FINALINIT", hFile);
+        result = context->SendMessage1(self, "FINALINIT", hFile);
     }
+
+done_out:
+    context->SendMessage1(self, "INITCODE=", result);
+err_out:
+    return result;
 }
 
+/** PlainBaseDialog::dlgHandle  [attribute set private]
+ *
+ *  Sets the handle of the underlying Windows dialog.  When a PlainBaseDialog is
+ *  first initialized, the dialog handle is of course unknown.  The underlying
+ *  dialog has not been created.
+ *
+ *  While this ooDialog is still a mix of old and new native APIs has to remain
+ *  an actual method implementation.  See for example:
+ *
+ *  self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount,
+ *  0, self~BasePtr, self~autoDetect, 1, 0, 0)
+ *
+ *  When / if the functions that actually create the underlying Windows dialog
+ *  are converted to the new APIs, then the code for this method can be done
+ *  entirely in the native API context and the dlgHandle= method can be removed.
+ *
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_setDlgHandle, RexxStringObject, hDlg, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    pCWindowBase pcwb = pcpbd->wndBase;
+
+    pcpbd->hDlg = (HWND)string2pointer(context, hDlg);
+
+    if ( pcpbd->hDlg != NULL )
+    {
+        pcwb->hwnd = pcpbd->hDlg;
+        pcwb->rexxHwnd = context->RequestGlobalReference(hDlg);
+    }
+    else
+    {
+        pcwb->rexxHwnd = TheOneObj;
+    }
+
+    return NULLOBJECT;
+}
+
+/** PlainBaseDialog::dlgHandle  [attribute set private]
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
+{
+    return ( ((pCPlainBaseDialog)pCSelf)->wndBase->rexxHwnd );
+}
+
+RexxMethod1(RexxObjectPtr, pbdlg_deInstall, CSELF, pCSelf)
+{
+    if ( pCSelf != NULLOBJECT )
+    {
+        pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+        DIALOGADMIN *adm = pcpbd->dlgAdm;
+        if ( adm != NULL )
+        {
+            EnterCriticalSection(&crit_sec);
+
+            if (DialogInAdminTable(adm))
+            {
+                DelDialog(adm);
+            }
+            safeLocalFree(adm->pMessageQueue);
+            LocalFree(adm);
+            ((pCPlainBaseDialog)pCSelf)->dlgAdm = NULL;
+
+            LeaveCriticalSection(&crit_sec);
+        }
+
+        pCWindowBase pcwb = pcpbd->wndBase;
+        if ( pcwb->rexxHwnd != TheZeroObj )
+        {
+            context->ReleaseGlobalReference(pcwb->rexxHwnd);
+            pcwb->rexxHwnd = TheZeroObj;
+        }
+    }
+
+    // Set the adm attribute to null here, to be sure it reflects that, no
+    // matter what, dlgAdm is null at this point.
+    context->SetObjectVariable("ADM", TheZeroObj);
+
+    return TheZeroObj;
+}
 
 /** PlainBaseDialog::addUserMessage()
  *
@@ -1427,7 +1788,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
  *  @param  lp           [optional]  LPARAM for the message.
  *  @param  _lpFilter    [optional]  Filter applied to LPARAM.  If omitted the
  *                       filter is all hex Fs.
- *  @param  tag          [optional]  A tag that allows a further differentiation
+ *  @param  -tag         [optional]  A tag that allows a further differentiation
  *                       between messages.  This is an internal mechanism not to
  *                       be documented publicly.
  *
@@ -1440,7 +1801,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
  */
 RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIONAL_CSTRING, _wmFilter,
             OPTIONAL_RexxObjectPtr, wp, OPTIONAL_CSTRING, _wpFilter, OPTIONAL_RexxObjectPtr, lp, OPTIONAL_CSTRING, _lpFilter,
-            OPTIONAL_uint32_t, tag, OSELF, self)
+            OPTIONAL_CSTRING, _tag, OSELF, self)
 {
     RexxMethodContext *c = context;
     logical_t result = 1;
@@ -1516,11 +1877,21 @@ RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, wm, O
     }
     else
     {
-        if ( ! rxStr2Number(context, _lpFilter, &number, 8) )
+        if ( ! rxStr2Number(context, _lpFilter, &number, 7) )
         {
             goto done_out;
         }
         lpFilter = (number == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)number);
+    }
+
+    ULONG tag = 0;
+    if ( argumentExists(8) )
+    {
+        if ( ! rxStr2Number(context, _tag, &number, 8) )
+        {
+            goto done_out;
+        }
+        tag = (ULONG)number;
     }
 
     if ( (winMessage | wParam | lParam) == 0 )

@@ -45,7 +45,7 @@
 
 ::class 'AnimatedButton' public
 
-::method ParentDlg attribute
+::method parentDlg attribute
 ::method stopped attribute
 
 ::method init
@@ -75,9 +75,9 @@
      sprite.smooth = 1
      sprite.step = 1
 
-     self~ParentDlg = dlg
-     spritewin = self~ParentDlg~GetItem(sprite.buttonid)
-     parse value self~ParentDlg~GetWindowRect(spritewin) with spos.left spos.top spos.right spos.bottom
+     self~parentDlg = dlg
+     spritewin = self~parentDlg~GetItem(sprite.buttonid)
+     parse value self~parentDlg~GetWindowRect(spritewin) with spos.left spos.top spos.right spos.bottom
 
      spos.bottom = spos.bottom - spos.top
      spos.right = spos.right - spos.left
@@ -127,7 +127,7 @@
         else spos.y = spos.y + move.y
      end
 
-     if self~ParentDlg~finished = 1 then return 1
+     if self~parentDlg~finished = 1 then return 1
 
      if (reset.x + reset.y) > 0 then do
         if reset.x = 1 then do
@@ -148,24 +148,24 @@
               if self~hittop = 1 then spos.y = spos.bottom - ss.y
            end
         end
-        if self~ParentDlg~finished = 1 then return 1
-        self~ParentDlg~ChangeBitmapButton(sprite.buttonid, 0)
-        /* self~ParentDlg~ClearRect(spritewin, oldpos.x, oldpos.y, (oldpos.x + sprite.sizex), (oldpos.y + sprite.sizey)) */
+        if self~parentDlg~finished = 1 then return 1
+        self~parentDlg~ChangeBitmapButton(sprite.buttonid, 0)
+        /* self~parentDlg~ClearRect(spritewin, oldpos.x, oldpos.y, (oldpos.x + sprite.sizex), (oldpos.y + sprite.sizey)) */
      end
-     if self~ParentDlg~finished = 1 then return 1
-     self~ParentDlg~DisplaceBitmap(sprite.buttonid, spos.x, spos.y);
+     if self~parentDlg~finished = 1 then return 1
+     self~parentDlg~DisplaceBitmap(sprite.buttonid, spos.x, spos.y);
 
 
 ::method setpos unguarded
      expose spritewin spos. sprite.
      use arg new.x, new.y
 
-     if self~ParentDlg~finished = 1 then return 1
-     self~ParentDlg~ChangeBitmapButton(sprite.buttonid, 0)
-     self~ParentDlg~ClearRect(spritewin, spos.x, spos.y, (spos.x + sprite.sizex), (spos.y + sprite.sizey))
+     if self~parentDlg~finished = 1 then return 1
+     self~parentDlg~ChangeBitmapButton(sprite.buttonid, 0)
+     self~parentDlg~ClearRect(spritewin, spos.x, spos.y, (spos.x + sprite.sizex), (spos.y + sprite.sizey))
      spos.x = new.x
      spos.y = new.y
-     self~ParentDlg~DisplaceBitmap(sprite.buttonid, spos.x, spos.y);
+     self~parentDlg~DisplaceBitmap(sprite.buttonid, spos.x, spos.y);
 
 ::method getpos
      expose spos.
@@ -183,8 +183,8 @@
         do actsprite = sprite.from by sprite.step to sprite.to
            if (sprite.movex \= 0) | (sprite.movey \=0) then
               self~movepos(sprite.movex, sprite.movey)
-           if self~ParentDlg~finished = 1 then return 1
-           self~ParentDlg~ChangeBitmapButton(sprite.buttonid, actsprite,,,,opts)
+           if self~parentDlg~finished = 1 then return 1
+           self~parentDlg~ChangeBitmapButton(sprite.buttonid, actsprite,,,,opts)
            if (sprite.delay \= 0) then ret = msSleep(sprite.delay)
         end
      end
@@ -194,8 +194,8 @@
            if (sprite.movex \= 0) | (sprite.movey \=0) then
               self~movepos(sprite.movex, sprite.movey)
 
-           if self~ParentDlg~finished = 1 then return 1
-           self~ParentDlg~ChangeBitmapButton(sprite.buttonid, actsprite,,,,opts)
+           if self~parentDlg~finished = 1 then return 1
+           self~parentDlg~ChangeBitmapButton(sprite.buttonid, actsprite,,,,opts)
            if (sprite.delay \= 0) then ret = msSleep(sprite.delay)
         end
      end
@@ -226,13 +226,13 @@
 
 
 ::method run unguarded
-   do until(self~stopped = 1) | (self~ParentStopped) | self~ParentDlg~finished = 1
+   do until(self~stopped = 1) | (self~ParentStopped) | self~parentDlg~finished = 1
       self~moveseq
    end
    return 0
 
 ::method Parentstopped
-   return self~ParentDlg~finished
+   return self~parentDlg~finished
 
 ::method stop
    self~stopped = 1

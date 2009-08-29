@@ -51,7 +51,7 @@
 ::class 'PropertySheet' subclass CategoryDialog public inherit MessageExtensions AdvancedControls
 
 ::method Init
-   argarr = Arg(1, "A")
+   argarr = arg(1, "A")
    newarg = .array~new(argarr~items+1)
    if argarr~hasindex(1) = 1 then newarg[1] = argarr[1] /* dlgData */
    if argarr~hasindex(2) = 1 then newarg[6] = argarr[2] /* CatLabels */
@@ -85,7 +85,7 @@
    p = self~catalog['page']
    self~AddTabControl(9001,,p['x'], p['y'], p['w'], p['h'],self~CatStyle || " CAT CLIPSIBLINGS")
 
-   self~dlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, self~AutoDetect, 1, 0, 0)
+   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, self~autoDetect, 1, 0, 0)
    self~activePtr = 0
    if self~dlgHandle = 0 then return 0
 
@@ -95,7 +95,7 @@
       self~CreateCategoryDialog(p['x']+2, p['y']+(size~height*2), p['w']-10, p['h']-(size~height*3),p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
       msg = "self~" || self~catalog['names'][i]~space(0)
       interpret(msg)
-      ret = UsrCreateDialog(self~Adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+      ret = UsrCreateDialog(self~adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
       self~activePtr = 0
       self~catalog['handles'][i] = ret
    end
@@ -121,7 +121,7 @@
    self~addUserMsg(PropSheetActivated, "0x00000006", "0xFFFFFFFF")  /* WM_ACTIVATE */
 
    tc = self~GetTabControl(9001, 0)
-   if tc \= .Nil then do
+   if tc \= .nil then do
       do i = 1 to self~catalog['count']
          tc~Insert(,self~catalog['names'][i])
       end
@@ -145,7 +145,7 @@
    was overlapped by another window and is activated, the list is overlapped by the tab control */
 ::method PropSheetActivated
    use arg wP, lp
-   if Arg() = 0 then code = 0
+   if arg() = 0 then code = 0
    else code = .DlgUtil~loWord(wp)
    if code \= 0 then do
        self~Update
@@ -162,7 +162,7 @@
 
    oldPage = self~catalog['category']
    /* if ChangePage is called automatically then 2 arguments are passed (WParam and LParam) */
-   if Arg(2,'o') = 0 | NewPage > 9000 then NewPage = self~GetSelectedPage
+   if arg(2,'o') = 0 | NewPage > 9000 then NewPage = self~GetSelectedPage
    else do
       self~GetTabControl(9001, 0)~SelectIndex(NewPage-1)
    end

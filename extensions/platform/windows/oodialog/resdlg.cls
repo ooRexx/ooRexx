@@ -55,7 +55,7 @@
    else ret = self~init:super(library, resource, dlgData.)
    if ret \= 0 then return ret
 
-   if arg(3,'o') then self~useStem = 0; else self~useStem = 1
+   if arg(3,'o') then self~useStem = .false; else self~useStem = .true
    if \ resource~datatype("N") then resource = self~resolveSymbolicId(resource)
    if resource < 1 then self~initCode = -1
 
@@ -77,7 +77,7 @@
    if self~dlgHandle \= 0 then do
       self~setFontAttrib
       /* if autodetection is on, create the data attributes */
-      if self~autoDetect = 1 then do
+      if self~autoDetect then do
          id = 1; i=0
          do while id > 0
             parse value DataTable(self~adm,"GET", i) with id typ cat

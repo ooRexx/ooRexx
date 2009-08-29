@@ -92,8 +92,8 @@
 ::method init
    expose message title datas. size
    use arg message, title, default, size
-   if Arg(3,"o") = 1 | default = "DEFAULT" then datas.101 = ""; else datas.101 = default
-   if Arg(4,"o") = 1 | size = "SIZE" then size = 0
+   if arg(3,"o") = 1 | default = "DEFAULT" then datas.101 = ""; else datas.101 = default
+   if arg(4,"o") = 1 | size = "SIZE" then size = 0
    self~init:super(datas.)
 
 ::method DefineDialog
@@ -157,7 +157,7 @@
 ::method init
    expose message title datas. entries. len
    use arg message, title, entries., datas., len
-   if Arg(5,"o") = 1 then len = 0
+   if arg(5,"o") = 1 then len = 0
    self~init:super(datas.)
 
 ::method DefineDialog
@@ -209,9 +209,9 @@
 ::method init
    expose message title datas. input. lenx leny
    use arg message, title, input., lenx, leny, predev
-   if Arg(4,"o") = 1 then lenx = 0
-   if Arg(5,"o") = 1 then leny = 0
-   if Arg(6,"o") = 0 then datas.101 = predev; else datas.101 = ""
+   if arg(4,"o") = 1 then lenx = 0
+   if arg(5,"o") = 1 then leny = 0
+   if arg(6,"o") = 0 then datas.101 = predev; else datas.101 = ""
    self~init:super(datas.)
    s = self~getTextSizeDlg(message)
    self~sx = s.width
@@ -286,8 +286,8 @@
 ::method Init
    expose message title datas. entries. len max
    use arg message, title, entries., datas., len, max
-   if Arg(5,"o") = 1 then len = 0
-   if Arg(6,"o") = 1 then max = 0
+   if arg(5,"o") = 1 then len = 0
+   if arg(6,"o") = 1 then max = 0
    self~init:super(datas.)
 
 ::method DefineDialog
@@ -337,9 +337,9 @@
 ::method Init
    expose message title entries. len datas. prev max
    use arg message, title, entries., prev, len, max
-   if Arg(5,"o") = 1 then len = 0
-   if Arg(6,"o") = 1 then max = 0
-   if Arg(4,"o") = 1 then prev = 1
+   if arg(5,"o") = 1 then len = 0
+   if arg(6,"o") = 1 then max = 0
+   if arg(4,"o") = 1 then prev = 1
    self~init:super(datas.)
 
 ::method DefineDialog

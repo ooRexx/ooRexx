@@ -85,5 +85,6 @@ extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
 extern bool isInt(RexxMethodContext *, int, RexxObjectPtr);
 extern bool isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
+extern void dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 
 #endif

@@ -203,9 +203,6 @@ REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
 REXX_METHOD_PROTOTYPE(wb_getHwnd);
-REXX_METHOD_PROTOTYPE(wb_setHwnd);
-REXX_METHOD_PROTOTYPE(wb_getInitCode);
-REXX_METHOD_PROTOTYPE(wb_setInitCode);
 REXX_METHOD_PROTOTYPE(wb_getFactorX);
 REXX_METHOD_PROTOTYPE(wb_setFactorX);
 REXX_METHOD_PROTOTYPE(wb_getFactorY);
@@ -222,6 +219,8 @@ REXX_METHOD_PROTOTYPE(wb_isEnabled);
 REXX_METHOD_PROTOTYPE(wb_isVisible);
 REXX_METHOD_PROTOTYPE(wb_show);
 REXX_METHOD_PROTOTYPE(wb_showFast);
+REXX_METHOD_PROTOTYPE(wb_update);
+REXX_METHOD_PROTOTYPE(wb_display);
 REXX_METHOD_PROTOTYPE(wb_redrawClient);
 REXX_METHOD_PROTOTYPE(wb_redraw);
 REXX_METHOD_PROTOTYPE(wb_getText);
@@ -229,14 +228,18 @@ REXX_METHOD_PROTOTYPE(wb_setText);
 REXX_METHOD_PROTOTYPE(wb_getWindowLong_pvt);
 
 REXX_METHOD_PROTOTYPE(window_init);
+REXX_METHOD_PROTOTYPE(window_unInit);
 
 REXX_METHOD_PROTOTYPE(pbdlg_init_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_setDefaultFont_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontName_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontSize_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_init);
+REXX_METHOD_PROTOTYPE(pbdlg_setDlgHandle);
+REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(pbdlg_addUserMessage);
+REXX_METHOD_PROTOTYPE(pbdlg_deInstall);
 
 REXX_METHOD_PROTOTYPE(resdlg_setFontAttrib_pvt);
 
@@ -285,6 +288,8 @@ REXX_METHOD_PROTOTYPE(il_isNull);
 REXX_METHOD_PROTOTYPE(il_handle);
 
 REXX_METHOD_PROTOTYPE(dlgctrl_new_cls);
+REXX_METHOD_PROTOTYPE(dlgctrl_init);
+REXX_METHOD_PROTOTYPE(dlgctrl_unInit);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
 
 REXX_METHOD_PROTOTYPE(advCtrl_getControl);
@@ -469,13 +474,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_test_cls,             dlgutil_test_cls),
 
-    REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
 
     REXX_METHOD(wb_init_windowBase,           wb_init_windowBase),
     REXX_METHOD(wb_getHwnd,                   wb_getHwnd),
-    REXX_METHOD(wb_setHwnd,                   wb_setHwnd),
-    REXX_METHOD(wb_getInitCode,               wb_getInitCode),
-    REXX_METHOD(wb_setInitCode,               wb_setInitCode),
     REXX_METHOD(wb_getFactorX,                wb_getFactorX),
     REXX_METHOD(wb_setFactorX,                wb_setFactorX),
     REXX_METHOD(wb_getFactorY,                wb_getFactorY),
@@ -491,6 +492,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_isVisible,                 wb_isVisible),
     REXX_METHOD(wb_show,                      wb_show),
     REXX_METHOD(wb_showFast,                  wb_showFast),
+    REXX_METHOD(wb_update,                    wb_update),
+    REXX_METHOD(wb_display,                   wb_display),
     REXX_METHOD(wb_redrawClient,              wb_redrawClient),
     REXX_METHOD(wb_redraw,                    wb_redraw),
     REXX_METHOD(wb_getText,                   wb_getText),
@@ -502,10 +505,22 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getFontName_cls,        pbdlg_getFontName_cls),
     REXX_METHOD(pbdlg_getFontSize_cls,        pbdlg_getFontSize_cls),
     REXX_METHOD(pbdlg_init,                   pbdlg_init),
+    REXX_METHOD(pbdlg_getDlgHandle,           pbdlg_getDlgHandle),
+    REXX_METHOD(pbdlg_setDlgHandle,           pbdlg_setDlgHandle),
     REXX_METHOD(pbdlg_addUserMessage,         pbdlg_addUserMessage),
     REXX_METHOD(pbdlg_getTextSizeDlg,         pbdlg_getTextSizeDlg),
+    REXX_METHOD(pbdlg_deInstall,         	  pbdlg_deInstall),
+
+    REXX_METHOD(dlgctrl_new_cls,              dlgctrl_new_cls),
+    REXX_METHOD(dlgctrl_init,                 dlgctrl_init),
+    REXX_METHOD(dlgctrl_unInit,               dlgctrl_unInit),
+    REXX_METHOD(dlgctrl_getTextSizeDlg,       dlgctrl_getTextSizeDlg),
+
+    REXX_METHOD(advCtrl_getControl,           advCtrl_getControl),
+    REXX_METHOD(advCtrl_putControl_pvt,       advCtrl_putControl_pvt),
 
     REXX_METHOD(window_init,                  window_init),
+    REXX_METHOD(window_unInit,                window_unInit),
 
     REXX_METHOD(resdlg_setFontAttrib_pvt,     resdlg_setFontAttrib_pvt),
 
@@ -552,11 +567,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(il_isNull,                   il_isNull),
     REXX_METHOD(il_handle,                   il_handle),
 
-    REXX_METHOD(dlgctrl_new_cls,             dlgctrl_new_cls),
-    REXX_METHOD(dlgctrl_getTextSizeDlg,      dlgctrl_getTextSizeDlg),
-
-    REXX_METHOD(advCtrl_getControl,       advCtrl_getControl),
-    REXX_METHOD(advCtrl_putControl_pvt,   advCtrl_putControl_pvt),
+    REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
 
     REXX_METHOD(lv_setImageList,          lv_setImageList),
     REXX_METHOD(lv_getImageList,          lv_getImageList),

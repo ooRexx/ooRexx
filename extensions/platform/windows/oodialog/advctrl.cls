@@ -51,56 +51,56 @@
 ::method getTreeControl unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method getListControl unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method getTabControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetEditControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetRadioControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetCheckControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetGroupBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetListBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetComboBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetScrollBar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetProgressBar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetSliderControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetMonthCalendar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method GetDateTimePicker unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getEditControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getRadioControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getCheckControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getGroupBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getListBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getComboBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getScrollBar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getProgressBar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getSliderControl unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getMonthCalendar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getDateTimePicker unguarded external "LIBRARY oodialog advCtrl_getControl"
 
-::method ConnectTreeControl unguarded
+::method connectTreeControl unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,6);      /* new id in result  6 == Tree Type */
+   return DataTable(self~adm,"ADD",result,6);      /* new id in result  6 == Tree Type */
 
-::method ConnectListControl unguarded
+::method connectListControl unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,7);      /* new id in result  7 == List Type */
+   return DataTable(self~adm,"ADD",result,7);      /* new id in result  7 == List Type */
 
-::method ConnectSliderControl unguarded
+::method connectSliderControl unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,8);      /* new id in result  8 == Track Bar Type */
+   return DataTable(self~adm,"ADD",result,8);      /* new id in result  8 == Track Bar Type */
 
-::method ConnectTabControl unguarded
+::method connectTabControl unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,9);      /* new id in result  9 == Tab Type */
+   return DataTable(self~adm,"ADD",result,9);      /* new id in result  9 == Tab Type */
 
-::method ConnectDateTimePicker unguarded
+::method connectDateTimePicker unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,10);     /* new id in result  10 == Date and Time Picker */
+   return DataTable(self~adm,"ADD",result,10);     /* new id in result  10 == Date and Time Picker */
 
-::method ConnectMonthCalendar unguarded
+::method connectMonthCalendar unguarded
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,11);     /* new id in result  11 == Month Calendar */
+   return DataTable(self~adm,"ADD",result,11);     /* new id in result  11 == Month Calendar */
 
 
-::method InternGetNewCtrlStyle
+::method internGetNewCtrlStyle
    use arg style, kind
    ret = ""
    if style~wordpos("NOT WS_VISIBLE") > 0 then ret = "HIDDEN"
@@ -192,34 +192,34 @@
    return ret
 
 
-::method AddTreeControl
+::method addTreeControl
    use arg id, attname, x, y, cx, cy, opts
    symbid = id
    id = self~ItemAdd(id)
    if id < 0 then return id
-   if Arg(2,'o') = 1 then attname = "DATA"id
+   if arg(2,'o') = 1 then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
    if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
    self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
-   if self~AutoDetect = 1 then do
+   if self~autoDetect then do
        return self~ConnectTreeControl(symbid, attname)
    end
    return 0
 
-::method AddListControl
+::method addListControl
    use arg id, attname, x, y, cx, cy, opts
    symbid = id
    id = self~ItemAdd(id)
    if id < 0 then return id
-   if Arg(2,'o') = 1 then attname = "DATA"id
+   if arg(2,'o') = 1 then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
-   if self~AutoDetect = 1 then do
+   if self~autoDetect then do
        return self~ConnectListControl(symbid, attname)
    end
    return 0
 
-::method AddProgressBar
+::method addProgressBar
    use arg id, x, y, cx, cy, opts
    symbid = id
    id = self~ItemAdd(id)
@@ -228,28 +228,28 @@
    self~activePtr = UsrAddNewCtrl("PROGRESS", self~activePtr, id, x, y, cx, cy, opts)
    return 0
 
-::method AddSliderControl
+::method addSliderControl
    use arg id, attname, x, y, cx, cy, opts
    symbid = id
    id = self~ItemAdd(id)
    if id < 0 then return id
-   if Arg(2,'o') = 1 then attname = "DATA"id
+   if arg(2,'o') = 1 then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
-   if self~AutoDetect = 1 then do
+   if self~autoDetect then do
        return self~ConnectSliderControl(symbid, attname)
    end
    return 0
 
-::method AddTabControl
+::method addTabControl
    use arg id, attname, x, y, cx, cy, opts
    symbid = id
    id = self~ItemAdd(id)
    if id < 0 then return id
-   if Arg(2,'o') = 1 then attname = "DATA"id
+   if arg(2,'o') = 1 then attname = "DATA"id
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
-   if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then do
+   if opts~wordpos("CAT") = 0 & self~autoDetect then do
        return self~ConnectTabControl(symbid, attname)
    end
    return 0
@@ -288,84 +288,87 @@
 /* Base class for all other controls */
 ::class 'DialogControl' public inherit WindowBase WindowExtensions
 
-::method oDlg attribute   -- The ooRexx dialog object this control belongs to
-::method hDlg attribute   -- The window handle of that dialog
-::method id attribute     -- The numerical resource ID for this control
-
 ::method new class external "LIBRARY oodialog dlgctrl_new_cls"
 
-::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
+::method init external "LIBRARY oodialog dlgctrl_init"
 
-::method ProcessMessage
+::attribute id get    -- The numerical resource ID for this control
+::attribute oDlg get  -- The ooRexx dialog object this control belongs to
+::attribute hDlg get  -- The window handle of that dialog
+
+::method getTextSizeDlg unguarded external "LIBRARY oodialog dlgctrl_getTextSizeDlg"
+::method unInit external "LIBRARY oodialog dlgctrl_unInit"
+
+::method processMessage
    parse arg msg,wp,lp
    return SendWinMsg("DLG",self~hDlg,self~Id,msg,wp,lp)
 
-::method Message2Parent unguarded private /* This is the replacement for BoxMessage */
+::method message2Parent unguarded private /* This is the replacement for BoxMessage */
    use arg msg, wP, lP
    return SendWinMsg("PTR", self~hDlg, self~Id, msg, wP, lP)
 
-::method SetColor
+::method setColor
    use arg colorbk, colorfg
-   if Arg(2,'o') = 1 then
-       return SetBackground(self~oDlg~Adm, "COL", self~id, colorbk)  /* creates an entry in the dialogs color table */
+   if arg(2,'o') = 1 then
+       return SetBackground(self~oDlg~adm, "COL", self~id, colorbk)  /* creates an entry in the dialogs color table */
    else
-       return SetBackground(self~oDlg~Adm, "COL", self~id, colorbk, colorfg)  /* set both, background and foreground color */
+       return SetBackground(self~oDlg~adm, "COL", self~id, colorbk, colorfg)  /* set both, background and foreground color */
 
-::method SetSysColor
+::method setSysColor
    use arg colorbk, colorfg
-   if Arg(2,'o') = 1 then
-       return SetBackground(self~oDlg~Adm, "COL", self~id, colorbk, "", "SYS")  /* creates an entry in the dialogs color table */
+   if arg(2,'o') = 1 then
+       return SetBackground(self~oDlg~adm, "COL", self~id, colorbk, "", "SYS")  /* creates an entry in the dialogs color table */
    else
-       return SetBackground(self~oDlg~Adm, "COL", self~id, colorbk, colorfg, "SYS")  /* set both, background and foreground color */
+       return SetBackground(self~oDlg~adm, "COL", self~id, colorbk, colorfg, "SYS")  /* set both, background and foreground color */
 
-::method AssignFocus
+::method assignFocus
    return SendWinMsg("ANY",self~hDlg, "0x0028", self~hwnd, 1)
 
-::method GetFocus unguarded
+::method getFocus unguarded
    return Wnd_Desktop("GETFOC", self~hDlg)
 
-::method SetFocus unguarded
+::method setFocus unguarded
    use arg hwnd
    return Wnd_Desktop("SETFOC", self~hDlg, hwnd)
 
-::method TabToNext unguarded
+::method tabToNext unguarded
    return Wnd_Desktop("SETFOC", self~hDlg, 0, "N")
 
-::method TabToPrevious unguarded
+::method tabToPrevious unguarded
    return Wnd_Desktop("SETFOC", self~hDlg, 1, "P")
 
-::method TabStop unguarded
+::method tabStop unguarded
    use arg wantStop = .true
    if \ wantStop~datatype('O')then return -3
    return HandleControlEx(self~hDlg, self~id, "X", "TAB", wantStop)
 
-::method Group unguarded
+::method group unguarded
    use arg wantGroup = .true
    if \ wantGroup~datatype('O')then return -3
    return HandleControlEx(self~hDlg, self~id, "X", "GROUP", wantGroup)
 
-::method Clear
+::method clear
    parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
-   return WindowRect("CLR", self~oDlg~Adm, self~Hwnd,r.1,r.2,r.3,r.4)
+   return WindowRect("CLR", self~oDlg~adm, self~Hwnd,r.1,r.2,r.3,r.4)
 
-::method ClearRect
+::method clearRect
    use arg left, top, right, bottom
-   return WindowRect("CLR", self~oDlg~Adm, self~hwnd,left,top,right,bottom)
+   return WindowRect("CLR", self~oDlg~adm, self~hwnd,left,top,right,bottom)
 
-::method Value unguarded
+::method value unguarded
     return self~oDlg~InternalGetItemData(self~Id, self~hDlg)
 
-::method "Value=" unguarded
+::method "value=" unguarded
     use arg data
     self~oDlg~InternalSetItemData(self~Id, data, self~hDlg)
 
-::method CaptureMouse
+::method captureMouse
    return Wnd_Desktop("CAP", self~hDlg, self~hwnd)
 
-::method GetMouseCapture
+::method getMouseCapture
    return Wnd_Desktop("CAP", self~hDlg, "G")
 
-::method ReleaseMouseCapture
+::method releaseMouseCapture
    return Wnd_Desktop("CAP", self~hDlg, "R")
 
 ::method IsMouseButtonDown
@@ -401,7 +404,7 @@
    /* Redraws the given rectangle */
 ::method RedrawRect unguarded
    use arg left, top, right, bottom, erasebkg
-   if Arg(5, 'o') = 1 then erasebkg = 0
+   if arg(5, 'o') = 1 then erasebkg = 0
    return WindowRect("RDW", self~hwnd,left,top,right,bottom, erasebkg)
 
 -- DEPRECATED
@@ -421,34 +424,34 @@
 
 ::method RootArray attribute private
 
-::method Init
+::method init
    forward class (super) continue
    self~RootArray = .array~new(4)
 
 ::method Insert
    use arg parent, after, text, image, selImage, opts, children
-   if Arg(1,'o') = 1 then parent = "ROOT"
-   if Arg(2,'o') = 1 then after = "LAST"
-   if Arg(4,'o') = 1 then image = -1
-   if Arg(5,'o') = 1 then selImage = image
-   if Arg(6,'o') = 1 then opts = ""
-   if Arg(7,'o') = 1 then children = 0
+   if arg(1,'o') = 1 then parent = "ROOT"
+   if arg(2,'o') = 1 then after = "LAST"
+   if arg(4,'o') = 1 then image = -1
+   if arg(5,'o') = 1 then selImage = image
+   if arg(6,'o') = 1 then opts = ""
+   if arg(7,'o') = 1 then children = 0
    return HandleTreeCtrl("INS", self~Hwnd, parent, after, text, image, opts~translate, children, selImage)
 
 ::method Add
-   do i = 1 to Arg()
-      if Arg(i,'E') = 1 then do
-          if Arg(i+1,'e') = 1 then image = Arg(i+1); else image = -1
-          if Arg(i+2,'e') = 1 then selImage = Arg(i+2); else selImage = image
-          if Arg(i+3,'e') = 1 then opts = Arg(i+3); else opts = ""
-          if Arg(i+4,'e') = 1 then children = Arg(i+4); else children = 0  /* for dynamic children */
+   do i = 1 to arg()
+      if arg(i,'E') = 1 then do
+          if arg(i+1,'e') = 1 then image = arg(i+1); else image = -1
+          if arg(i+2,'e') = 1 then selImage = arg(i+2); else selImage = image
+          if arg(i+3,'e') = 1 then opts = arg(i+3); else opts = ""
+          if arg(i+4,'e') = 1 then children = arg(i+4); else children = 0  /* for dynamic children */
           if i=1 then do
-              self~RootArray[i] = self~Insert("ROOT",,Arg(i),image,selimage,opts~translate, children)
+              self~RootArray[i] = self~Insert("ROOT",,arg(i),image,selimage,opts~translate, children)
               return self~RootArray[i]
           end
           else if self~RootArray~HasIndex(i-1)=1 then do
               if i=1 then parent = "ROOT"; else parent = self~RootArray[i-1]
-              self~RootArray[i] = self~Insert(parent,,Arg(i),image,selimage,opts~translate, children)
+              self~RootArray[i] = self~Insert(parent,,arg(i),image,selimage,opts~translate, children)
               return self~RootArray[i]
           end
           else return 0
@@ -701,7 +704,7 @@
 
 ::method SetHoverTime
    use arg time
-   if Arg(1, 'O') then time = -1
+   if arg(1, 'O') then time = -1
    if \ time~datatype('W') then raise syntax 93.905 array(1, time)
    if time < -1 then time = -1
    return HandleListCtrlEx(self~Hwnd, "M", "HOVER", time)
@@ -739,29 +742,29 @@
 ::method InsertColumn
    use arg nr, text, width, fmt
    if arg(1,'O') then nr = 0
-   if Arg(3,'o') = 1 then width = -1; else width = width*self~factorX
-   if Arg(4,'o') = 1 then fmt = "LEFT"
+   if arg(3,'o') = 1 then width = -1; else width = width*self~factorX
+   if arg(4,'o') = 1 then fmt = "LEFT"
    return HandleListCtrl("C","INS", self~Hwnd, nr, text, width, fmt~translate)
 
 
 ::method DeleteColumn
    use arg nr
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("C","DEL", self~Hwnd, nr)
 
 
 ::method ModifyColumn
    use arg nr, text, width, fmt
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then text = ""
-   if Arg(3,'o') = 1 then width = -1; else width = width*self~factorX
-   if Arg(4,'o') = 1 then fmt = ""
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then text = ""
+   if arg(3,'o') = 1 then width = -1; else width = width*self~factorX
+   if arg(4,'o') = 1 then fmt = ""
    return HandleListCtrl("C","SET", self~Hwnd, nr, text, width, fmt~translate)
 
 
 ::method ColumnInfo
    use arg nr
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    ret = HandleListCtrl("C","GET", self~Hwnd, nr, "InternalLVColInfo")
    if InternalLVColInfo.!Width~Datatype('N') = 1 then InternalLVColInfo.!Width = InternalLVColInfo.!Width / self~factorX
    return InternalLVColInfo.
@@ -771,13 +774,13 @@
 ::method columnWidthEx external "LIBRARY oodialog lv_columnWidthEx"  -- TODO review method name
 ::method ColumnWidth
    use arg nr
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("C","GETWIDTH", self~Hwnd, nr) / self~factorX
 
 ::method SetColumnWidth
    use arg nr, width
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then width = "AUTO"
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then width = "AUTO"
    if width~datatype("N") = 1 then width = width * self~factorX
    return HandleListCtrl("C","SETWIDTH", self~Hwnd, nr, width~translate)
 
@@ -787,18 +790,18 @@
 
 ::method StringWidth
    use arg text
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("M","STRWIDTH", self~Hwnd, text) / self~factorX
 
 
 ::method Insert
    use arg nr, subnr, text, image
    if arg(2,'O') then subnr = 0
-   if Arg(1,'o') = 1 then do
+   if arg(1,'o') = 1 then do
         if subnr = 0 then nr = self~LastItem + 1
         else nr = self~LastItem
    end
-   if Arg(4,'o') = 1 then image = -1
+   if arg(4,'o') = 1 then image = -1
    if subnr = 0 then do
        item = HandleListCtrl("I","INS", self~Hwnd, nr, text, image)
        if item \= -1 then self~LastItem = item
@@ -809,33 +812,33 @@
 
 ::method Modify
    use arg nr, subnr, text, image
-   if Arg(1,'o') = 1 then nr = self~Selected
+   if arg(1,'o') = 1 then nr = self~Selected
    if arg(2,'O') then subnr = 0
-   if Arg(4,'o') = 1 then image = -1
+   if arg(4,'o') = 1 then image = -1
    return HandleListCtrl("I","SET", self~Hwnd, nr, subnr, text, image)
 
 ::method SetItemText
    use arg item, subitem, text
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    if arg(2,'O') then subitem = 0
    return HandleListCtrl("I","SET", self~Hwnd, item, subitem, text,"TXT")
 
 ::method SetItemState
    use arg item, state
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("I","SET", self~Hwnd, item, 0, state, "STATE")
 
 
 ::method Add
-   do i = 1 to Arg()
-      if Arg(i,'E') = 1 then do
-          if Arg(i+1,'e') = 1 then image = Arg(i+1); else image = -1
+   do i = 1 to arg()
+      if arg(i,'E') = 1 then do
+          if arg(i+1,'e') = 1 then image = arg(i+1); else image = -1
           if i = 1 then do
-              item = self~Insert(self~LastItem+1,i-1,Arg(i),image)
+              item = self~Insert(self~LastItem+1,i-1,arg(i),image)
               if item \= -1 then self~LastItem = item
           end
           else do
-             item = self~Insert(self~LastItem,i-1,Arg(i),image)
+             item = self~Insert(self~LastItem,i-1,arg(i),image)
           end
           return item
       end
@@ -845,14 +848,14 @@
 
 ::method AddRow
    use arg nr, image, text
-   if Arg(1,'o') = 1 then nr = self~LastItem+1
-   if Arg(2,'o') = 1 then image = -1
-   if Arg(3,'o') = 1 then text = ""
+   if arg(1,'o') = 1 then nr = self~LastItem+1
+   if arg(2,'o') = 1 then image = -1
+   if arg(3,'o') = 1 then text = ""
    item = self~Insert(nr,0,text,image)
    if item \= -1 then do
        self~LastItem = item
-       do i = 4 to Arg()
-           if Arg(i,'E') = 1 then self~Insert(item,i-3,Arg(i),-1)
+       do i = 4 to arg()
+           if arg(i,'E') = 1 then self~Insert(item,i-3,arg(i),-1)
        end
    end
    return item
@@ -861,7 +864,7 @@
 
 ::method Delete
    use arg item
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("I","DEL",self~hwnd, item)
 
 ::method DeleteAll
@@ -875,7 +878,7 @@
 
 ::method Prepare4nItems
    use arg citems
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("M","SETCNT", self~Hwnd, citems)
 
 
@@ -884,30 +887,30 @@
 
 ::method ItemInfo
    use arg item, subitem
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    if arg(2,'O') then subitem = 0
    ret = HandleListCtrl("I","GET", self~Hwnd, item, subitem, "InternalLVItemInfo", "")
    return InternalLVItemInfo.
 
 ::method ItemText
    use arg item, subitem
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    if arg(2,'O') then subitem = 0
    return HandleListCtrl("I","GET", self~Hwnd, item, subitem, "", "TXT")
 
 ::method ItemState
    use arg item
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("I","GET", self~Hwnd, item, subitem, "", "STATE")
 
 ::method Select
    use arg item
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("I","SET", self~Hwnd, item, 0, "SELECTED", "STATE")
 
 ::method Deselect
    use arg item
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("I","SET", self~Hwnd, item, 0, "NOTSELECTED", "STATE")
 
 ::method Selected
@@ -956,7 +959,7 @@
    -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
    -- a -1 value to mark the iteration end.
    if self~Items < 2 then return -1
-   if Arg(1,'o') = 1 then startItem = -1
+   if arg(1,'o') = 1 then startItem = -1
    return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "ABOVE TOLEFT")
 
 ::method NextLeft
@@ -965,7 +968,7 @@
    -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
    -- a -1 value to mark the iteration end.
    if self~Items < 2 then return -1
-   if Arg(1,'o') = 1 then startItem = -1
+   if arg(1,'o') = 1 then startItem = -1
    return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TOLEFT")
 
 ::method NextRight
@@ -974,7 +977,7 @@
    -- 0.  This, rather unfortunately, can cause some infinite loops because iterating code is looking for
    -- a -1 value to mark the iteration end.
    if self~Items < 2 then return -1
-   if Arg(1,'o') = 1 then startItem = -1
+   if arg(1,'o') = 1 then startItem = -1
    return HandleListCtrl("I","GETNEXT", self~Hwnd, startItem, "TORIGHT")
 
 ::method SmallSpacing
@@ -985,13 +988,13 @@
 
 ::method RedrawItems
    use arg first, last
-   if Arg(1,'o') = 1 then first = 0
-   if Arg(2,'o') = 1 then last = self~items
+   if arg(1,'o') = 1 then first = 0
+   if arg(2,'o') = 1 then last = self~items
    return HandleListCtrl("M","REDRAW", self~Hwnd, first, last)
 
 ::method UpdateItem
    use arg item
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("M","UPDATE", self~Hwnd, item)
 
 ::method Update
@@ -999,8 +1002,8 @@
 
 ::method EnsureVisible
    use arg item, partial
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then partial = 0
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then partial = 0
    return HandleListCtrl("M", "ENVIS", self~Hwnd, item, partial)
 
 -- DEPRECATED
@@ -1017,7 +1020,7 @@
    return self~removeImageList(.nil, 1)
 
 -- DEPRECATED
-::method RemoveImages
+::method removeImages
    return self~removeImageList(.nil, 0)
 
 ::method setImageList external "LIBRARY oodialog lv_setImageList"
@@ -1025,22 +1028,22 @@
 
 ::method Find
    use arg txt, startItem, wrap
-   if Arg(2,'o') = 1 then startItem = -1
-   if Arg(3,'o') = 1 then wrap = 0
+   if arg(2,'o') = 1 then startItem = -1
+   if arg(3,'o') = 1 then wrap = 0
    if wrap = 1 | wrap~translate = "J" then opt = "WRAP"; else opt = ""
    return HandleListCtrl("I", "FIND", self~Hwnd, startItem, opt, txt)
 
 ::method FindPartial
    use arg txt, startItem, wrap
-   if Arg(2,'o') = 1 then startItem = -1
-   if Arg(3,'o') = 1 then wrap = 0
+   if arg(2,'o') = 1 then startItem = -1
+   if arg(3,'o') = 1 then wrap = 0
    if wrap = 1 | wrap~translate = "J" then opt = "PARTIAL WRAP"; else opt = "PARTIAL"
    return HandleListCtrl("I", "FIND", self~Hwnd, startItem, opt, txt)
 
 ::method FindNearestXY
    use arg x,y, direction
-   if Arg(1,'o') = 1 | Arg(2,'o') = 1 then return -1
-   if Arg(3,'o') = 1 then direction = "DOWN"
+   if arg(1,'o') = 1 | arg(2,'o') = 1 then return -1
+   if arg(3,'o') = 1 then direction = "DOWN"
    return HandleListCtrl("I", "FIND", self~Hwnd, -1, "NEAREST", x, y, direction~translate)
 
 ::method Arrange
@@ -1057,19 +1060,19 @@
 
 ::Method ItemPos
    use arg item
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("M", "GETPOS", self~Hwnd, item)
 
 ::Method SetItemPos
    use arg item, x, y
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then x = 0
-   if Arg(3,'o') = 1 then y = 0
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then x = 0
+   if arg(3,'o') = 1 then y = 0
    return HandleListCtrl("M", "SETPOS", self~Hwnd, item, x, y)
 
 ::method Edit
    use arg hitem
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleListCtrl("I", "EDIT", self~Hwnd, hitem)
 
 ::method EndEdit
@@ -1086,8 +1089,8 @@
 
 ::method Scroll
    use arg x, y
-   if Arg(1,'o') = 1 then x = 0
-   if Arg(2,'o') = 1 then y = 0
+   if arg(1,'o') = 1 then x = 0
+   if arg(2,'o') = 1 then y = 0
    return HandleListCtrl("M", "SCROLL", self~Hwnd, x, y)
 
 ::Method BkColor
@@ -1230,10 +1233,10 @@
 
 ::method Insert
    use arg nr, text, image, lparam
-   if Arg(1,'o') = 1 then nr = self~LastItem + 1
-   if Arg(2,'o') = 1 then text = ""
-   if Arg(3,'o') = 1 then image = -1
-   if Arg(4,'o') = 1 then item = HandleOtherNewCtrls("TAB","INS", self~Hwnd, nr, text, image)
+   if arg(1,'o') = 1 then nr = self~LastItem + 1
+   if arg(2,'o') = 1 then text = ""
+   if arg(3,'o') = 1 then image = -1
+   if arg(4,'o') = 1 then item = HandleOtherNewCtrls("TAB","INS", self~Hwnd, nr, text, image)
    else item = HandleOtherNewCtrls("TAB","INS", self~Hwnd, nr, text, image, lparam)
    if item \= -1 then self~LastItem = item
    return item
@@ -1241,19 +1244,19 @@
 
 ::method Modify
    use arg nr, text, image, lparam
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then text = ""
-   if Arg(3,'o') = 1 then image = -1
-   if Arg(4,'o') = 1 then return HandleOtherNewCtrls("TAB","SET", self~Hwnd, nr, text, image)
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then text = ""
+   if arg(3,'o') = 1 then image = -1
+   if arg(4,'o') = 1 then return HandleOtherNewCtrls("TAB","SET", self~Hwnd, nr, text, image)
    else return HandleOtherNewCtrls("TAB","SET", self~Hwnd, nr, text, image, lparam)
 
 
 /* adds text1, text2, text3.... */
 ::method AddSequence
    nr = self~LastItem
-   do i= 1 to Arg()
+   do i= 1 to arg()
        nr = nr + 1
-       nr = self~Insert(nr,Arg(i))
+       nr = self~Insert(nr,arg(i))
        if nr = -1 then return -1    /* error occurred */
        self~LastItem = nr
    end
@@ -1261,17 +1264,17 @@
 
 /* adds text1, image1, lparam1, text2, image2, lparam2, text3.... */
 ::method AddFullSeq
-   args = Arg()
+   args = arg()
    nr = self~LastItem
    i = 1
    do while i <= args
        nr = nr + 1
-       if i+2 <= args & Arg(i+2,'e') = 1 then do
-           if Arg(i+1,'e') = 1 then nr = self~Insert(nr,Arg(i), Arg(i+1), Arg(i+2))
-           else nr = self~Insert(nr,Arg(i),, Arg(i+2))
+       if i+2 <= args & arg(i+2,'e') = 1 then do
+           if arg(i+1,'e') = 1 then nr = self~Insert(nr,arg(i), arg(i+1), arg(i+2))
+           else nr = self~Insert(nr,arg(i),, arg(i+2))
        end
-       else if i+1 <= args & Arg(i+1,'e') = 1 then nr = self~Insert(nr,Arg(i), Arg(i+1))
-       else nr = self~Insert(nr,Arg(i))
+       else if i+1 <= args & arg(i+1,'e') = 1 then nr = self~Insert(nr,arg(i), arg(i+1))
+       else nr = self~Insert(nr,arg(i))
        if nr = -1 then return -1   /* error occurred */
        self~LastItem = nr
        i = i+3
@@ -1286,13 +1289,13 @@
 
 ::method ItemInfo
    use arg hItem
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    ret = HandleOtherNewCtrls("TAB","GET",self~Hwnd, hItem, "InternalTCItemInfo")
    return InternalTCItemInfo.
 
 ::method Delete
    use arg item
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return HandleOtherNewCtrls("TAB","DEL",self~Hwnd, item)
 
 ::method DeleteAll
@@ -1342,7 +1345,7 @@
 
 ::method PosRectangle
    use arg item
-   if Arg(1,'o') = 1 then return ""
+   if arg(1,'o') = 1 then return ""
    return HandleOtherNewCtrls("TAB","RECT",self~Hwnd, item)
 
 ::method AdjustToRectangle
@@ -1373,14 +1376,14 @@
 
 ::Method Select
     use arg start, end
-    if Arg(1,'o') = 1 then start = 1
-    if Arg(2,'o') = 1 then end = 0
+    if arg(1,'o') = 1 then start = 1
+    if arg(2,'o') = 1 then end = 0
     self~Message2Parent(0x00B1, start-1, end-1)
 
 ::Method ScrollCommand
     use arg kind, reps
-    if Arg(1,'o') = 1 then kind = "UP"; else kind = kind~translate
-    if Arg(2,'o') = 1 then reps = 1
+    if arg(1,'o') = 1 then kind = "UP"; else kind = kind~translate
+    if arg(2,'o') = 1 then reps = 1
     select
         when kind = "UP" | kind = "LEFT" then sb = 0
         when kind = "DOWN" | kind = "RIGHT" then sb = 1
@@ -1403,7 +1406,7 @@
 
 ::Method SetModified
     use arg bool
-    if Arg(1,'o') = 1 then bool = 1
+    if arg(1,'o') = 1 then bool = 1
     self~Message2Parent(0x00B9, bool, 0)
 
 ::Method Lines
@@ -1411,18 +1414,18 @@
 
 ::Method LineIndex
     use arg line
-    if Arg(1,'o') = 1 then line = 0
+    if arg(1,'o') = 1 then line = 0
     return self~Message2Parent(0x00BB, line-1, 0) +1
 
 ::Method LineLength
     use arg line
-    if Arg(1,'o') = 1 then line = -1; else line = line-1
+    if arg(1,'o') = 1 then line = -1; else line = line-1
     ndx = self~Message2Parent(0x00BB, line, 0)
     return self~Message2Parent(0x00C1, ndx, 0)
 
 ::Method ReplaceSelText
     use arg text
-    if Arg(1,'o') = 1 then return -1
+    if arg(1,'o') = 1 then return -1
     self~Message2Parent(0x00C2, 1, "T" || text)
 
 ::Method SetLimit
@@ -1431,7 +1434,7 @@
 
 ::Method LineFromIndex
     use arg ndx
-    if Arg(1,'o') = 1 then ndx = -1; else ndx = ndx -1
+    if arg(1,'o') = 1 then ndx = -1; else ndx = ndx -1
     return self~Message2Parent(0x00C9, ndx, 0) +1
 
 ::Method "PasswordChar="
@@ -1448,16 +1451,16 @@
 
 ::Method SetReadOnly
     use arg bool
-    if Arg(1,'o') = 1 then bool = 1
+    if arg(1,'o') = 1 then bool = 1
     return \self~Message2Parent(0x00CF, bool, 0)
 
 ::Method SetMargins
     use arg left, right
     flag = 0
-    if Arg(1,'o') = 1 & Arg(2,'o') = 1 then flag = "0xFFFF" /* no arguments = auto margins */
+    if arg(1,'o') = 1 & arg(2,'o') = 1 then flag = "0xFFFF" /* no arguments = auto margins */
     else do
-        if Arg(1,'e') = 1 then flag = flag + 1
-        if Arg(2,'e') = 1 then flag = flag + 2
+        if arg(1,'e') = 1 then flag = flag + 1
+        if arg(2,'e') = 1 then flag = flag + 2
     end
     self~Message2Parent(0x00D3, flag, right*X2D("10000") + left)
 
@@ -1469,8 +1472,8 @@
 
 ::method GetLine
     use arg line, maxlen
-    if Arg(1,'o') = 1 then line = 0
-    if Arg(2,'o') = 1 then maxlen = 255
+    if arg(1,'o') = 1 then line = 0
+    if arg(2,'o') = 1 then maxlen = 255
     return self~Message2Parent(0x00C4, line-1, "G" || maxlen)
 
 ::method "Tab="
@@ -1532,7 +1535,7 @@
 ::method test external "LIBRARY oodialog bc_test"
 
 ::method changeBitmap unguarded
-   arga = Arg(1,"A")
+   arga = arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~ID
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
@@ -1546,7 +1549,7 @@
    return self~oDlg~GetBmpDisplacement(self~ID)
 
 ::method scrollText unguarded
-   arga = Arg(1,"A")
+   arga = arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~hwnd
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
@@ -1555,7 +1558,7 @@
    /* This method moves the rectangle within a button and redraws the uncovered area */
 ::method scroll unguarded
    use arg xPos, yPos, left, top, right, bottom
-   return ScrollTheWindow(self~oDlg~Adm, self~hwnd, xPos, yPos, left, top, right, bottom, "yes")
+   return ScrollTheWindow(self~oDlg~adm, self~hwnd, xPos, yPos, left, top, right, bottom, "yes")
 
 ::method getBitmapSizeX unguarded
    return self~oDlg~GetBitmapSizeX(self~ID)
@@ -1567,7 +1570,7 @@
    /* Use this method to move a bitmap or a part of it... */
 
 ::method drawBitmap unguarded
-   arga = Arg(1,"A")
+   arga = arg(1,"A")
    newarg = .array~new(arga~Items+2)
    newarg[1] = self~hwnd
    newarg[2] = self~id
@@ -1578,7 +1581,7 @@
    /* This method will draw the bitmap step by step */
 
 ::method dimBitmap unguarded
-   arga = Arg(1,"A")
+   arga = arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~id
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
@@ -1586,7 +1589,7 @@
 
 
 ::method scrollBitmapFromTo unguarded
-   arga = Arg(1,"A")
+   arga = arg(1,"A")
    newarg = .array~new(arga~Items+1)
    newarg[1] = self~id
    do i = 1 to arga~Items; if arga~hasindex(i) = 1 then newarg[i+1] = arga[i]; end
@@ -1618,18 +1621,18 @@
 
 ::method Add
    use arg data
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return self~Message2Parent(0x00000180, 0, "T" || data) +1
 
 ::method Insert
    use arg index, data
-   if Arg(2,'o') = 1 then return -1
-   if Arg(1,"o") = 1 then index = self~SelectedIndex
+   if arg(2,'o') = 1 then return -1
+   if arg(1,"o") = 1 then index = self~SelectedIndex
    return self~Message2Parent(0x00000181, index-1, "T" || data) + 1
 
 ::method Delete
    use arg index
-   if Arg(1,"o") = 1 then index = self~SelectedIndex
+   if arg(1,"o") = 1 then index = self~SelectedIndex
    return self~Message2Parent(0x00000182, index-1, 0)
 
 ::method DeleteAll
@@ -1637,9 +1640,9 @@
 
 ::method Find
    use arg dataString, ndx, how
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then ndx = 0
-   if Arg(3,'e') = 1 & (how = 1 | how~left(1)~translate = "E") then
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then ndx = 0
+   if arg(3,'e') = 1 & (how = 1 | how~left(1)~translate = "E") then
        index = self~Message2Parent(0x000001A2, ndx-1, "T" || dataString)  /* find exactly */
    else
        index = self~Message2Parent(0x0000018F, ndx-1, "T" || dataString)  /* find prefix */
@@ -1663,15 +1666,15 @@
 
 ::method Select
    use arg text
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    index = self~Message2Parent(0x0000018F, 0, "T" || text)
    if index < 0 then return 0
    return self~Message2Parent(0x00000186, index, 0)
 
 ::method SelectRange
    use arg fromNdx, toNdx
-   if Arg(1,'o') = 1 then fromNdx = 1
-   if Arg(2,'o') = 1 then toNdx = self~Items
+   if arg(1,'o') = 1 then fromNdx = 1
+   if arg(2,'o') = 1 then toNdx = self~Items
 
    lparam = (toNdx-1) * "10000"~x2d + (fromNdx-1)
    return self~Message2Parent(0x0000019B, 1, lparam)
@@ -1679,8 +1682,8 @@
 
 ::method DeselectRange
    use arg fromNdx, toNdx
-   if Arg(1,'o') = 1 then fromNdx = 1
-   if Arg(2,'o') = 1 then toNdx = self~Items
+   if arg(1,'o') = 1 then fromNdx = 1
+   if arg(2,'o') = 1 then toNdx = self~Items
 
    lparam = (toNdx-1) * "10000"~x2d + (fromNdx-1)
    return self~Message2Parent(0x0000019B, 0, lparam)
@@ -1711,7 +1714,7 @@
 
 ::method Modify
    use arg index, dataString
-   if Arg(1,"o") = 1 then index = self~SelectedIndex
+   if arg(1,"o") = 1 then index = self~SelectedIndex
    if index <= 0 then return -1
    self~Delete(index)
    return self~Insert(index, dataString)
@@ -1720,7 +1723,7 @@
 
 ::method AddDirectory
    use arg drvPath, fileAttributes
-   if Arg(2,"o") = 1 then fileAttributes = "READWRITE"
+   if arg(2,"o") = 1 then fileAttributes = "READWRITE"
    READWRITE  = 0
    READONLY   = 1
    HIDDEN     = 2
@@ -1734,7 +1737,7 @@
 
 ::method SetWidth
    use arg dlgunits
-   if Arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
+   if arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
    self~Message2Parent(0x00000194, dlgunits*self~factorX, 0)
 
 ::method Width
@@ -1742,7 +1745,7 @@
 
 ::method "ItemHeight="
    use arg dlgunits
-   if Arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
+   if arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
    self~Message2Parent(0x000001A0, 0, dlgunits*self~factorY)
 
 ::method ItemHeight
@@ -1750,7 +1753,7 @@
 
 ::method "ColumnWidth="
    use arg dlgunits
-   if Arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
+   if arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
    self~Message2Parent(0x00000195, dlgunits*self~factorX, 0)
 
 
@@ -1762,18 +1765,18 @@
 
 ::method Add
    use arg data
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    return self~Message2Parent(0x00000143, 0, "T" || data) + 1
 
 ::method Insert
    use arg index, data
-   if Arg(2,'o') = 1 then return -1
-   if Arg(1,"o") = 1 then index = self~SelectedIndex
+   if arg(2,'o') = 1 then return -1
+   if arg(1,"o") = 1 then index = self~SelectedIndex
    return self~Message2Parent(0x0000014A, index-1, "T" || data) + 1
 
 ::method Delete
    use arg index
-   if Arg(1,"o") = 1 then index = self~SelectedIndex
+   if arg(1,"o") = 1 then index = self~SelectedIndex
    return self~Message2Parent(0x00000144, index-1, 0)
 
 ::method DeleteAll
@@ -1781,9 +1784,9 @@
 
 ::method Find
    use arg dataString, ndx, how
-   if Arg(1,'o') = 1 then return -1
-   if Arg(2,'o') = 1 then ndx = 0
-   if Arg(3,'e') = 1 & (how = 1 | how~left(1)~translate = "E") then
+   if arg(1,'o') = 1 then return -1
+   if arg(2,'o') = 1 then ndx = 0
+   if arg(3,'e') = 1 & (how = 1 | how~left(1)~translate = "E") then
        index = self~Message2Parent(0x00000158, ndx-1, "T" || dataString)  /* find exactly */
    else
        index = self~Message2Parent(0x0000014C, ndx-1, "T" || dataString)    /* find prefix */
@@ -1803,7 +1806,7 @@
 
 ::method Select
    use arg text
-   if Arg(1,'o') = 1 then return -1
+   if arg(1,'o') = 1 then return -1
    index = self~Message2Parent(0x0000014C, 0, "T" || text)
    if index < 0 then return 0
    return self~Message2Parent(0x0000014E, index, 0)
@@ -1819,7 +1822,7 @@
 
 ::method Modify
    use arg index, dataString
-   if Arg(1,"o") = 1 then index = self~SelectedIndex
+   if arg(1,"o") = 1 then index = self~SelectedIndex
    if index <= 0 then return -1
    self~Delete(index)
    return self~Insert(index, dataString)
@@ -1835,8 +1838,8 @@
 
 ::method EditSelection
    use arg startndx, endndx
-   if Arg(1,'o') = 1 then startNdx = 0
-   if Arg(2,'o') = 1 then endNdx = 0
+   if arg(1,'o') = 1 then startNdx = 0
+   if arg(2,'o') = 1 then endNdx = 0
    lparam = (endndx-1) * "10000"~x2d + (startndx -1)
    return (self~Message2Parent(0x00000142, 0, lparam)\=1)
 
@@ -1844,7 +1847,7 @@
 
 ::method AddDirectory
    use arg drvPath, fileAttributes
-   if Arg(2,"o") = 1 then fileAttributes = "READWRITE"
+   if arg(2,"o") = 1 then fileAttributes = "READWRITE"
    READWRITE  = 0
    READONLY   = 1
    HIDDEN     = 2
@@ -1865,7 +1868,7 @@
 
 ::method SetRange
    use arg min, max, redraw
-   if Arg(3, "o") = 1 then redraw = 1
+   if arg(3, "o") = 1 then redraw = 1
    return HandleScrollBar("SR",self~hwnd,min,max, redraw)
 
 ::method Range
@@ -1873,7 +1876,7 @@
 
 ::method SetPos
    use arg pos, redraw
-   if Arg(2, "o") = 1 then redraw = 1
+   if arg(2, "o") = 1 then redraw = 1
    return HandleScrollBar("SP",self~hwnd,pos, redraw)
 
 ::method Position
@@ -1881,8 +1884,8 @@
 
 ::method DeterminePosition
    use arg posdata, single, page
-   if Arg(2,"o") = 1 then single = 1
-   if Arg(3,"o") = 1 then page = 10
+   if arg(2,"o") = 1 then single = 1
+   if arg(3,"o") = 1 then page = 10
    code = .DlgUtil~loWord(posdata)
    parse value self~Range with rmin rmax
    pos = self~Position

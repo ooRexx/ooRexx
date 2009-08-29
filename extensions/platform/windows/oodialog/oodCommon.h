@@ -64,21 +64,45 @@ typedef enum
 
 /* Struct for the WindowBase class CSelf. */
 typedef struct _wbCSelf {
-   HWND           hwnd;
-   wholenumber_t  initCode;
-   uint32_t       sizeX;
-   uint32_t       sizeY;
-   double         factorX;
-   double         factorY;
-} wbCSelf;
-typedef wbCSelf *pWbCSelf;
+    HWND              hwnd;
+    RexxObjectPtr     rexxHwnd;
+    wholenumber_t     initCode;
+    uint32_t          sizeX;
+    uint32_t          sizeY;
+    double            factorX;
+    double            factorY;
+} CWindowBase;
+typedef CWindowBase *pCWindowBase;
+
+/* Struct for the PlainBaseDialog class CSelf. */
+typedef struct _pbdCSelf {
+    pCWindowBase   wndBase;
+    RexxObjectPtr  rexxSelf;
+    HWND           hDlg;
+    DIALOGADMIN    *dlgAdm;
+
+} CPlainBaseDialog;
+typedef CPlainBaseDialog *pCPlainBaseDialog;
+
+/* Struct for the DialogControl class CSelf. */
+typedef struct _dcCSelf {
+    pCWindowBase   wndBase;
+    RexxObjectPtr  rexxSelf;
+    uint32_t       id;
+    HWND           hCtrl;    // Handle of the dialog control
+    HWND           hDlg;     // Handle of the owner dialog
+    RexxObjectPtr  oDlg;     // The Rexx owner dialog object
+} CDialogControl;
+typedef CDialogControl *pCDialogControl;
 
 extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
+extern bool InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc);
 extern void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
 extern void rxdatacpy(CHAR * tar, RXSTRING &src);
 extern bool isYes(const char *s);
 extern bool IsNo(const char * s);
 extern void *string2pointer(const char *string);
+extern void *string2pointer(RexxMethodContext *c, RexxStringObject string);
 extern void pointer2string(char *, void *pointer);
 extern RexxStringObject pointer2string(RexxMethodContext *, void *);
 extern LONG HandleError(PRXSTRING r, CHAR * text);
@@ -116,7 +140,7 @@ extern bool textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
 extern bool getTextExtent(HFONT, HDC, CSTRING, SIZE *);
 extern bool checkControlClass(HWND, oodControl_t);
 
-bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self);
+bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;

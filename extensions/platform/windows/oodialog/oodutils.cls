@@ -88,7 +88,7 @@
 ::routine play public
    use arg fileName, asyn = "NO"
 
-   if Arg(1, 'o') then return StopSoundFile()
+   if arg(1, 'o') then return StopSoundFile()
 
    file = SysSearchPath("SOUNDPATH",fileName)
    if file = "" then return 1
@@ -126,7 +126,7 @@
    if load == 1 & amulti~left(1)~translate = "M" then amulti = 1; else amulti = 0
 
    if arg() < 3 then return GetFileNameWindow(selfile, parentwnd)
-   else if Arg(3, 'O') then return GetFileNameWindow(selfile, parentwnd, arg(3), load, arg(5), defextension, amulti, sepchar)
+   else if arg(3, 'O') then return GetFileNameWindow(selfile, parentwnd, arg(3), load, arg(5), defextension, amulti, sepchar)
    else return GetFileNameWindow(selfile, parentwnd, arg(3) || '0'x, load, arg(5), defextension, amulti, sepchar)
 
 
@@ -198,7 +198,7 @@
 
 ::routine MultiInputBox public
    use arg msg, title, labels, datas, len
-   if Arg(5,"o") = 1 then len = 0
+   if arg(5,"o") = 1 then len = 0
    num = labels~items
    do i=1 to num
       j = i+100
@@ -217,9 +217,9 @@
 
 ::routine ListChoice public
    use arg msg, title, list, lx, ly, predev
-   if Arg(4,"o") = 1 then lx = 0
-   if Arg(5,"o") = 1 then ly = 0
-   if Arg(6,"o") = 1 then predev = ""
+   if arg(4,"o") = 1 then lx = 0
+   if arg(5,"o") = 1 then ly = 0
+   if arg(6,"o") = 1 then predev = ""
    num = list~items
    do i=1 to num
       lst.i = list[i]
@@ -231,9 +231,9 @@
 
 ::routine MultiListChoice public
    use arg msg, title, list, lx, ly, predev
-   if Arg(4,"o") = 1 then lx = 0
-   if Arg(5,"o") = 1 then ly = 0
-   if Arg(6,"o") = 1 then predev = ""
+   if arg(4,"o") = 1 then lx = 0
+   if arg(5,"o") = 1 then ly = 0
+   if arg(6,"o") = 1 then predev = ""
    num = list~items
    do i=1 to num
       lst.i = list[i]
@@ -250,7 +250,7 @@
 
 ::routine CheckList public
    use arg msg, title, labels, checks, lx = 0, max = 0
-   if Arg(4,"o") then checks = .array~new
+   if arg(4,"o") then checks = .array~new
    num = labels~items
    do i=1 to num
       j = i+100
@@ -272,8 +272,8 @@
 
 ::routine SingleSelection public
    use arg msg, title, labels, data, lx, max
-   if Arg(5,"o") = 1 then lx = 0
-   if Arg(6,"o") = 1 then max= 0
+   if arg(5,"o") = 1 then lx = 0
+   if arg(6,"o") = 1 then max= 0
    num = labels~items
    do i=1 to num
       lab.i = labels[i]

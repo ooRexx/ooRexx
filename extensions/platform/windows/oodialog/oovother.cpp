@@ -4279,7 +4279,7 @@ RexxMethod1(RexxObjectPtr, tab_getImageList, OSELF, self)
  *
  *  @return  The existing icon, or .nil if there is no existing icon.
  */
-RexxMethod2(RexxObjectPtr, stc_setIcon, RexxObjectPtr, icon, OSELF, self)
+RexxMethod2(RexxObjectPtr, stc_setIcon, RexxObjectPtr, icon, CSELF, pCSelf)
 {
     RexxObjectPtr result = NULLOBJECT;
 
@@ -4294,7 +4294,7 @@ RexxMethod2(RexxObjectPtr, stc_setIcon, RexxObjectPtr, icon, OSELF, self)
         hNewIcon = oi->hImage;
     }
 
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = ((pCDialogControl)pCSelf)->hCtrl;
     HICON hIcon = (HICON)SendMessage(hwnd, STM_SETICON, (WPARAM)hNewIcon, 0);
 
     result = oodSetImageAttribute(context, STATICIMAGE_ATTRIBUTE, icon, hwnd, hIcon, IMAGE_ICON, winStatic);
@@ -4590,9 +4590,10 @@ RexxObjectPtr bcRemoveImageList(RexxMethodContext *c, RexxObjectPtr self)
  * the right or left alignment of the text.  Other changes either have no
  * effect, or cause the group box / dialog to paint in a weird way.
  */
-RexxMethod2(int, gb_setStyle, OSELF, self, CSTRING, opts)
+RexxMethod2(int, gb_setStyle, CSTRING, opts, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = ((pCDialogControl)pCSelf)->hCtrl;
+    HWND hDlg = ((pCDialogControl)pCSelf)->hDlg;
 
     LONG style = GetWindowLong(hwnd, GWL_STYLE);
 
@@ -4616,8 +4617,6 @@ RexxMethod2(int, gb_setStyle, OSELF, self, CSTRING, opts)
      * screen.  But, it is only the top part of the group box that needs to be
      * redrawn, so we only invalidate the top half of the group box.
      */
-
-    HWND hDlg = GetParent(hwnd);
     RECT r;
 
     // Get the screen area of the group box and map it to the client area of the
@@ -4638,9 +4637,11 @@ RexxMethod2(int, gb_setStyle, OSELF, self, CSTRING, opts)
     return 0;
 }
 
-RexxMethod2(RexxObjectPtr, bc_setState, CSTRING, opts, OSELF, self)
+RexxMethod2(RexxObjectPtr, bc_setState, CSTRING, opts, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = ((pCDialogControl)pCSelf)->hCtrl;
+    HWND hDlg = ((pCDialogControl)pCSelf)->hDlg;
+
     BUTTONTYPE type = getButtonInfo(hwnd, NULL, NULL);
     UINT msg = 0;
     WPARAM wp = 0;
@@ -4683,7 +4684,7 @@ RexxMethod2(RexxObjectPtr, bc_setState, CSTRING, opts, OSELF, self)
         else if ( strcmp(token, "FOCUS") == 0 )
         {
             msg = 0;
-            SendMessage(GetParent(hwnd), WM_NEXTDLGCTL, (WPARAM)hwnd, TRUE);
+            SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)hwnd, TRUE);
         }
         else if ( strcmp(token, "PUSHED") == 0 )
         {
@@ -5243,9 +5244,9 @@ RexxMethod4(int, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst
     return result;
 }
 
-RexxMethod1(logical_t, rb_checked, OSELF, self)
+RexxMethod1(logical_t, rb_checked, CSELF, pCSelf)
 {
-    return (SendMessage(rxGetWindowHandle(context, self), BM_GETCHECK, 0, 0) == BST_CHECKED ? 1 : 0);
+    return (SendMessage(((pCDialogControl)pCSelf)->hCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED ? 1 : 0);
 }
 
 CSTRING getIsChecked(HWND hwnd)

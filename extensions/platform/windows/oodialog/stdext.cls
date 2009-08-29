@@ -54,7 +54,7 @@
    /* The class' constructor */
 ::method init
    use arg message, title, fixedx
-   if Arg(3,'o') = 1 then self~XExt = 0; else self~XExt = fixedx
+   if arg(3,'o') = 1 then self~XExt = 0; else self~XExt = fixedx
    self~Msg = message
    self~TitleTxt = title
    self~dims = .directory~new
@@ -127,15 +127,15 @@
    /* The class' constructor */
 ::method init
    use arg message, title, low, high, step, fixedx
-   if Arg(6,'o') = 1 then fixedx = 0
-   if Arg(3,'o') = 1 then self~LowValue = 0; else self~LowValue = low
-   if Arg(4,'o') = 1 then self~HighValue = 100; else self~HighValue = high
-   if Arg(5,'o') = 1 then self~IncStep = 10; else self~IncStep = step
+   if arg(6,'o') = 1 then fixedx = 0
+   if arg(3,'o') = 1 then self~LowValue = 0; else self~LowValue = low
+   if arg(4,'o') = 1 then self~HighValue = 100; else self~HighValue = high
+   if arg(5,'o') = 1 then self~IncStep = 10; else self~IncStep = step
    self~init:super(message, title, fixedx)
 
 ::method InitDialog
    pb = self~GetProgressBar(101)
-   if pb \= .Nil then do
+   if pb \= .nil then do
        pb~SetRange(self~LowValue, self~HighValue)
        pb~SetPos(self~LowValue)
        pb~SetStep(self~IncStep)
@@ -158,7 +158,7 @@
    self~GetProgressBar(101)~SetPos(newpos)
 
 ::method Increase
-   if Arg(1,'e') = 1 then self~GetProgressBar(101)~Step(Arg(1))
+   if arg(1,'e') = 1 then self~GetProgressBar(101)~Step(arg(1))
    else self~GetProgressBar(101)~Step
 
 ::method Complete

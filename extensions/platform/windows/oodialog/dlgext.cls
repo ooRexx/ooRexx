@@ -51,17 +51,17 @@
 ::method ExecuteAsync unguarded
    use arg sleeptime, sh, icon = 0, nomodal
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
-   if Arg(2,'o') = 1 then sh = "DEFAULT"
-   if Arg(4,'o') = 1 then nomodal = 0
+   if arg(2,'o') = 1 then sh = "DEFAULT"
+   if arg(4,'o') = 1 then nomodal = 0
    if self~startit(icon, nomodal) \= 0 then
    do
-      if self~UseStem = 1 then self~SetDataStem(self~DlgData); else self~SetData
+      if self~useStem then self~SetDataStem(self~dlgData); else self~SetData
       self~show(sh)
       self~start("AsyncMessageHandling", sleeptime)
-      do while self~AutomaticMethods~Items > 0
-         p = self~AutomaticMethods~pull
-         m = self~AutomaticMethods~pull
-         c = self~AutomaticMethods~pull
+      do while self~automaticMethods~Items > 0
+         p = self~automaticMethods~pull
+         m = self~automaticMethods~pull
+         c = self~automaticMethods~pull
          o = c~new(p, self)
          o~start(m)
       end
@@ -77,10 +77,10 @@
       call msSleep 20
    end
    if self~InitCode = 1 then do
-      if (self~UseStem = 1) then self~GetDataStem(self~DlgData)
+      if self~useStem then self~GetDataStem(self~dlgData)
       self~GetData
    end
-   if self~Adm \= 0 then self~stopit
+   if self~adm \= 0 then self~stopit
    return self~InitCode
 
 
@@ -88,8 +88,8 @@
 
 ::method AsyncMessageHandling unguarded protected
    use arg sleeptime
-   do while self~finished = 0 & self~Adm \= 0
-      msg = GetDlgMsg(self~Adm)
+   do while self~finished = 0 & self~adm \= 0
+      msg = GetDlgMsg(self~adm)
       if msg~pos("1DLGDELETED1") > 0 then do
           if self~finished = 0 then self~finished = 2
       end
@@ -102,7 +102,7 @@
    /* Run a nonmodal dialog */
 ::method Popup
    use arg sh, sleeptime, icon = 0
-   if Arg(1,'o') = 1 then sh = "DEFAULT"
+   if arg(1,'o') = 1 then sh = "DEFAULT"
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
    /* start Execute and return to caller */
    self~start("Execute", sh, icon, sleeptime, "NOTMODAL")
@@ -111,14 +111,14 @@
 ::method PopupAsChild
    use arg parent, sh, sleeptime, icon = 0
 
-   if Arg(1,'o') = 1 | parent = 0 then do
+   if arg(1,'o') = 1 | parent = 0 then do
        call errorDialog "No parent dialog specified!"
        return -1
    end
-   if Arg(2,'o') = 1 then sh = "DEFAULT"
+   if arg(2,'o') = 1 then sh = "DEFAULT"
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
-   parent~ChildDialogs~insert(self)  /* add to the parents child list (last item) */
-   self~ParentDlg = parent
+   parent~childDialogs~insert(self)  /* add to the parents child list (last item) */
+   self~parentDlg = parent
 
    /* start Execute and return to caller */
    self~start("Execute", sh, icon, sleeptime, "NOTMODAL")
@@ -126,7 +126,7 @@
 
 ::method SendMessageToItem unguarded
    parse arg id,a2,a3,a4
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return SendWinMsg("DLG",self~dlgHandle,id,a2,a3,a4)
 
@@ -136,27 +136,27 @@
 
 ::method SetSBRange unguarded
    use arg id, min, max, redraw
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(4, "o") = 1 then redraw = 1
+   if arg(4, "o") = 1 then redraw = 1
    return HandleScrollBar("SR", self~GetItem(id),min,max, redraw)
 
 ::method GetSBRange unguarded
    use arg id
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return HandleScrollBar("GR",self~GetItem(id))
 
 ::method SetSBPos unguarded
    use arg id, pos, redraw
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3, "o") = 1 then redraw = 1
+   if arg(3, "o") = 1 then redraw = 1
    return HandleScrollBar("SP",self~GetItem(id),pos, redraw)
 
 ::method GetSBPos unguarded
    use arg id
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return HandleScrollBar("GP",self~GetItem(id))
 
@@ -215,7 +215,7 @@
    parse value self~GetSBRange(sbid) with min max
    if pos~DataType("N") = 0 then return
 
-   if Arg(4,"o") = 0 then do
+   if arg(4,"o") = 0 then do
        sbc = .DlgUtil~loWord(poscode)
        if sbc = 0 & step > 0 then step = -step
        else if sbc = 1 & step < 0 then step = +step
@@ -227,7 +227,7 @@
    else if (step < 0) then do
       if pos > min then pos = pos + step
    end
-   else if Arg(4,'o') = 0 then do
+   else if arg(4,'o') = 0 then do
       /* calc the position returned by message */
       pos = .DlgUtil~hiWord(poscode)
    end
@@ -242,8 +242,8 @@
 
 ::method DetermineSBPosition unguarded
    use arg id, posdata, single, page
-   if Arg(3,"o") = 1 then single = 1
-   if Arg(4,"o") = 1 then page = 10
+   if arg(3,"o") = 1 then single = 1
+   if arg(4,"o") = 1 then page = 10
    code = .DlgUtil~loWord(posdata)
    parse value self~GetSBRange(id) with rmin rmax
    pos = self~GetSBPos(id)
@@ -274,7 +274,7 @@
 
 ::method SetListWidth unguarded
    use arg id, dlgunits
-   if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
+   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
    return self~BoxMessage(id, 0x00000194, dlgunits*self~factorX, 0)
 
 ::method GetListWidth unguarded
@@ -283,12 +283,12 @@
 
 ::method SetListColumnWidth unguarded
    use arg id, dlgunits
-   if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
+   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
    return self~BoxMessage(id, 0x00000195, dlgunits*self~factorX, 0)
 
 ::method SetListItemHeight unguarded
    use arg id, dlgunits
-   if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
+   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
    return self~BoxMessage(id, 0x000001A0, 0, dlgunits*self~factorY)
 
 ::method GetListItemHeight unguarded
@@ -297,7 +297,7 @@
 
 ::method SetItemFont unguarded
    use arg id, hFont, bRedraw     /* WM_SETFONT */
-   if Arg(3, 'o') = 1 then bRedraw = 1
+   if arg(3, 'o') = 1 then bRedraw = 1
    return SendWinMsg("ANY", self~GetItem(id), "0x0030", hFont, bRedraw)
 
 ::method HideWindowFast unguarded
@@ -306,7 +306,7 @@
 
 ::method ShowWindowFast unguarded
    use arg hwnd
-   return WndShow_Pos("S", hwnd, "NORMAL FAST", self~Adm)
+   return WndShow_Pos("S", hwnd, "NORMAL FAST", self~adm)
 
 ::method HideItemFast unguarded
    use arg id
@@ -360,9 +360,9 @@
 
 ::method AddAutoStartMethod
    use arg InClass, MethodName, Parameters
-   if Arg(1,"o") = 0 then self~AutomaticMethods~push(InClass); else self~AutomaticMethods~push(self)
-   if Arg(2,"o") = 0 then self~AutomaticMethods~push(MethodName)
-   if Arg(3,"o") = 0 then self~AutomaticMethods~push(Parameters)
+   if arg(1,"o") = 0 then self~automaticMethods~push(InClass); else self~automaticMethods~push(self)
+   if arg(2,"o") = 0 then self~automaticMethods~push(MethodName)
+   if arg(3,"o") = 0 then self~automaticMethods~push(Parameters)
 
 
 
@@ -379,13 +379,13 @@
 ::method LoadBitmap
    use arg bmpFilename, option = ""
    option = option~translate
-   return LoadRemoveBitmap(self~Adm, bmpFilename, "LOAD" || option)
+   return LoadRemoveBitmap(self~adm, bmpFilename, "LOAD" || option)
 
    /* This method will free a memory bitmap */
 
 ::method RemoveBitmap
    use arg hBitmap
-   return LoadRemoveBitmap(self~Adm, hBitmap, "REMOVE")
+   return LoadRemoveBitmap(self~adm, hBitmap, "REMOVE")
 
 -- This method adds a bitmap button and optionally connects a method with a push
 -- button.  The given bitmap(s) will be shown instead of a push button.  The
@@ -421,26 +421,26 @@
 
 ::method ChangeBitmapButton unguarded
    use arg id, bmpNormal, bmpFocused = "", bmpSelected = "", bmpDisabled = "", styleOptions = ""
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    styleOptions = styleOptions~translate
-   return BmpButton(self~Adm, "C", id, bmpNormal, bmpFocused, bmpSelected, bmpDisabled, styleOptions);
+   return BmpButton(self~adm, "C", id, bmpNormal, bmpFocused, bmpSelected, bmpDisabled, styleOptions);
 
    /* Sets the position of a bitmap within a button */
 
 ::method DisplaceBitmap unguarded
    use arg id, x, y
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return BmpButton(self~Adm, "S", id, x, y)
+   return BmpButton(self~adm, "S", id, x, y)
 
    /* Gets the position of a bitmap within a button */
 
 ::method GetBmpDisplacement unguarded
    use arg id
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return BmpButton(self~Adm, "G", id)
+   return BmpButton(self~adm, "G", id)
 
    /* This method will set a bitmap as the background brush. */
    /* (seems to work only on NT) */
@@ -449,13 +449,13 @@
    use arg bmpFilename
    if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
    self~BkgBrushBmp = self~CreateBrush(,bmpFilename)
-   ret = SetBackground(self~Adm, "BRU", self~BkgBrushBmp)
+   ret = SetBackground(self~adm, "BRU", self~BkgBrushBmp)
 
 ::method BackgroundColor
    use arg color
    if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
    self~BkgBrushBmp = self~CreateBrush(color)
-   ret = SetBackground(self~Adm, "BRU", self~BkgBrushBmp)
+   ret = SetBackground(self~adm, "BRU", self~BkgBrushBmp)
 
    /* This method sets a bitmap as the background brush. */
    /* (seems to work only on NT) */
@@ -466,36 +466,36 @@
    use arg bmpFilename, option = ""
    option = option~translate
    self~BkgBitmap = self~LoadBitmap(bmpFilename, option)
-   ret = SetBackground(self~Adm, "BMP", self~BkgBitmap)
+   ret = SetBackground(self~adm, "BMP", self~BkgBitmap)
 
 
 ::method CreateBrush unguarded
     use arg color = 1, brushSpecifier = ""
-    if Arg() = 0 then return HandleDC_Obj("B")
+    if arg() = 0 then return HandleDC_Obj("B")
     if brushSpecifier == "" then return HandleDC_Obj("B", color)
     brushSpecifier = brushSpecifier~translate
     if brushSpecifier = "UPDIAGONAL" | brushSpecifier = "DOWNDIAGONAL" | brushSpecifier = "CROSS" | brushSpecifier = "DIAGCROSS",
     | brushSpecifier = "HORIZONTAL" | brushSpecifier = "VERTICAL" then return HandleDC_Obj("B", color, brushSpecifier)
-    else return HandleDC_Obj("B", self~Adm, color, brushSpecifier)  /* brushSpecifier must be filename or resource ID */
+    else return HandleDC_Obj("B", self~adm, color, brushSpecifier)  /* brushSpecifier must be filename or resource ID */
 
 
 ::method SetItemSysColor
    use arg id, colorbk, colorfg
-   if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
+   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then
-       return SetBackground(self~Adm, "COL", id, colorbk, "", "SYS")
+   if arg(3,'o') = 1 then
+       return SetBackground(self~adm, "COL", id, colorbk, "", "SYS")
    else
-       return SetBackground(self~Adm, "COL", id, colorbk, colorfg, "SYS")
+       return SetBackground(self~adm, "COL", id, colorbk, colorfg, "SYS")
 
 ::method SetItemColor
    use arg id, colorbk, colorfg
-   if \ id~DataType("W") then id = self~ResolveSymbolicId(id)
+   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(3,'o') = 1 then
-       return SetBackground(self~Adm, "COL", id, colorbk)
+   if arg(3,'o') = 1 then
+       return SetBackground(self~adm, "COL", id, colorbk)
    else
-       return SetBackground(self~Adm, "COL", id, colorbk, colorfg)
+       return SetBackground(self~adm, "COL", id, colorbk, colorfg)
 
 
    /* This method scrolls 'text' in the button */
@@ -503,7 +503,7 @@
 ::method ScrollInButton unguarded
    use arg id, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color
    hwnd = self~GetItem(id)
-   if Arg() = 1 then
+   if arg() = 1 then
       return self~ScrollText(hwnd)
    else
       return self~ScrollText(hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
@@ -518,18 +518,18 @@
    use arg hwnd, text, fontName, fontSize, fontStyle,,
            displaceY, step, sleep, color
 
-   if Arg(3, "o") = 1 | fontName = "FONTNAME" then fontName = "System"
-   if Arg(4, "o") = 1 | fontSize = "FONTSIZE" then fontSize = 10
-   if Arg(5, "o") = 1 | fontStyle = "FONTSTYLE" then fontStyle = ""
-   if Arg(6, "o") = 1 | displaceY = "DISPLACEY" then displaceY = 0
-   if Arg(7, "o") = 1 | step = "STEP" then step = 4
-   if Arg(8, "o") = 1 | sleep = "SLEEP" then sleep = 10
-   if Arg(9, "o") = 1 | color = "COLOR" then color = 0
+   if arg(3, "o") = 1 | fontName = "FONTNAME" then fontName = "System"
+   if arg(4, "o") = 1 | fontSize = "FONTSIZE" then fontSize = 10
+   if arg(5, "o") = 1 | fontStyle = "FONTSTYLE" then fontStyle = ""
+   if arg(6, "o") = 1 | displaceY = "DISPLACEY" then displaceY = 0
+   if arg(7, "o") = 1 | step = "STEP" then step = 4
+   if arg(8, "o") = 1 | sleep = "SLEEP" then sleep = 10
+   if arg(9, "o") = 1 | color = "COLOR" then color = 0
 
-   if self~ScrollNow = 0 & Arg() > 1 then
+   if self~ScrollNow = 0 & arg() > 1 then
    do
       self~ScrollNow = 1
-      ret = ScrollText(self~Adm, hwnd, text, fontName, fontSize, fontStyle,,
+      ret = ScrollText(self~adm, hwnd, text, fontName, fontSize, fontStyle,,
                        displaceY, step, sleep, color)
    end; else do
       -- Send the interrupt scroll message, 0x0a02 == WM_USER_INTERRUPTSCROLL
@@ -562,48 +562,48 @@
 
 ::method DrawButton unguarded
    use arg id
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return WindowRect("BTN", self~Adm, id)
+   return WindowRect("BTN", self~adm, id)
 
    /* This method erases the draw area of the given button */
 
 ::method ClearButtonRect unguarded
    use arg id
    hwnd = self~GetItem(id)
-   return WindowRect("CLR", self~Adm, hwnd)
+   return WindowRect("CLR", self~adm, hwnd)
 
    /* This method erases the draw area of the given window */
 
 ::method ClearWindowRect unguarded
    use arg hwnd
-   return WindowRect("CLR", self~Adm, hwnd)
+   return WindowRect("CLR", self~adm, hwnd)
 
    /* Clears the whole dialog  */
 ::method Clear unguarded
    parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
-   return WindowRect("CLR", self~Adm, self~Hwnd,r.1,r.2,r.3,r.4)
+   return WindowRect("CLR", self~adm, self~Hwnd,r.1,r.2,r.3,r.4)
 
    /* Clears the given rectangle left, top, right, bottom of the given window */
 
 ::method ClearRect unguarded
    use arg hwnd, left, top, right, bottom
-   return WindowRect("CLR", self~Adm, hwnd,left,top,right,bottom)
+   return WindowRect("CLR", self~adm, hwnd,left,top,right,bottom)
 
    /* This method redraws the given button */
 
 ::method RedrawButton unguarded
    use arg id, erasebkg
    hwnd = self~GetItem(id)
-   if Arg(2, 'o') = 1 then erasebkg = 0
+   if arg(2, 'o') = 1 then erasebkg = 0
    return WindowRect("RDW", hwnd, erasebkg)
 
    /* This method redraws the rectangle of the given window */
 
 ::method RedrawWindowRect unguarded
    use arg hwnd, erasebkg
-   if Arg(1, 'o') = 1 then hwnd = self~hwnd
-   if Arg(2, 'o') = 1 then erasebkg = 0
+   if arg(1, 'o') = 1 then hwnd = self~hwnd
+   if arg(2, 'o') = 1 then erasebkg = 0
    return WindowRect("RDW", hwnd, erasebkg)
 
 
@@ -630,7 +630,7 @@
    /* See method WriteToWindow for valid fontStyles */
 
 ::method WriteToButton unguarded
-   argarr = Arg(1, "A")
+   argarr = arg(1, "A")
    argarr[1] = self~GetItem(argarr[1])  /* transform first argument into window handle */
    forward message (WriteToWindow) arguments (argarr)
 
@@ -639,7 +639,7 @@
 
 ::method ScrollButton unguarded
    use arg id, xPos, yPos, left, top, right, bottom
-   return ScrollTheWindow(self~Adm, self~GetItem(id), xPos, yPos, left, top, right, bottom, "yes")
+   return ScrollTheWindow(self~adm, self~GetItem(id), xPos, yPos, left, top, right, bottom, "yes")
 
 
    /* This method will return the device context of a window */
@@ -671,18 +671,18 @@
 
 ::method GetBitmapSizeX unguarded
    use arg id
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   parse value BmpButton(self~Adm, "E", id) with x .
+   parse value BmpButton(self~adm, "E", id) with x .
    return x
 
    /* This method will return the vertical bitmap extension */
 
 ::method GetBitmapSizeY unguarded
    use arg id
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   parse value BmpButton(self~Adm, "E", id) with . y
+   parse value BmpButton(self~adm, "E", id) with . y
    return y
 
    /* This method will draw the bitmap of a button */
@@ -690,16 +690,16 @@
 
 ::method DrawBitmap unguarded
    use arg hwnd, id, px, py, srcx, srcy, xlen, ylen
-   if Arg(3, "o") = 1 then px = 0
-   if Arg(4, "o") = 1 then py = 0
-   if Arg(5, "o") = 1 then srcx = 0
-   if Arg(6, "o") = 1 then srcy = 0
-   if Arg(7, "o") = 1 then xlen = 0
-   if Arg(8, "o") = 1 then ylen = 0
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if arg(3, "o") = 1 then px = 0
+   if arg(4, "o") = 1 then py = 0
+   if arg(5, "o") = 1 then srcx = 0
+   if arg(6, "o") = 1 then srcy = 0
+   if arg(7, "o") = 1 then xlen = 0
+   if arg(8, "o") = 1 then ylen = 0
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if Arg(1, "o") = 1 then hwnd = self~GetItem(id)
-   return BmpButton(self~Adm, "D", hwnd, id, px, py, srcx, srcy, xlen, ylen)
+   if arg(1, "o") = 1 then hwnd = self~GetItem(id)
+   return BmpButton(self~adm, "D", hwnd, id, px, py, srcx, srcy, xlen, ylen)
 
 
    /* This method will draw the bitmap step by step */
@@ -707,12 +707,12 @@
 ::method DimBitmap unguarded
    use arg id, bmp, cx, cy, stepx, stepy, steps
 
-   if Arg(5, "o") = 1 then steps = 10
-   if Arg(6, "o") = 1 then stepx = 2
-   if Arg(7, "o") = 1 then stepy = 2
+   if arg(5, "o") = 1 then steps = 10
+   if arg(6, "o") = 1 then stepx = 2
+   if arg(7, "o") = 1 then stepy = 2
 
    dc = self~GetButtonDC(id)
-   br = HandleDC_Obj("B",self~Adm, 0, bmp)
+   br = HandleDC_Obj("B",self~adm, 0, bmp)
    pen = HandleDC_Obj("P",0, "NULL", 0)
    obr = self~ObjectToDC(dc, br)
    open = self~ObjectToDC(dc, pen)
@@ -730,14 +730,14 @@
 ::method ScrollBitmapFromTo unguarded
    use arg id, fromX, fromY, toX, toY, stepX, stepY, delay, displace
 
-   if Arg(8, "o") = 1 then delay = 0
-   if Arg(9, "o") = 1 then displace = 1
+   if arg(8, "o") = 1 then delay = 0
+   if arg(9, "o") = 1 then displace = 1
    xl = self~GetBitmapSizeX(id)
    yl = self~GetBitmapSizeY(id)
 
    if xl <= 0 | yl <= 0 then return 1
-   if Arg(6, "o") = 1 then stepx = 0
-   if Arg(7, "o") = 1 then stepy = 0
+   if arg(6, "o") = 1 then stepx = 0
+   if arg(7, "o") = 1 then stepy = 0
 
    if stepx = 0 & stepy = 0 then return 1
 
@@ -794,7 +794,7 @@
       if sbot > r.bottom-stepy then sbot = r.bottom-stepy
       if s_top < 0 then s_top = 0
 
-      ret = ScrollTheWindow(self~Adm, hwnd, stepx, stepy, sleft, s_top, srgt, sbot, "yes")
+      ret = ScrollTheWindow(self~adm, hwnd, stepx, stepy, sleft, s_top, srgt, sbot, "yes")
       if ret = 1 then do
          if (timer \== 0) then ret = WinTimer("STOP", timer)
          return 1
@@ -1054,7 +1054,7 @@ syntax:
    return .Menu~connectItem(id, msgToRaise, self)
 
 ::method PeekDialogMessage unguarded
-   return GetDlgMsg(self~Adm, "Peek")
+   return GetDlgMsg(self~adm, "Peek")
 
 ::method SetWindowRect unguarded
    use arg hwnd, x, y, width, high, showOptions = ""
@@ -1064,8 +1064,8 @@ syntax:
    /* Redraws the given rectangle */
 ::method RedrawRect unguarded
    use arg hwnd, left, top, right, bottom, erasebkg
-   if Arg(1,'o') = 1 then hwnd = self~hwnd
-   if Arg(6, 'o') = 1 then erasebkg = 0
+   if arg(1,'o') = 1 then hwnd = self~hwnd
+   if arg(6, 'o') = 1 then erasebkg = 0
    return WindowRect("RDW", hwnd,left,top,right,bottom, erasebkg)
 
 ::method RedrawWindow unguarded
@@ -1102,7 +1102,7 @@ syntax:
 
 ::method Dump
     use arg adm
-    if Arg() == 1 then do
+    if arg() == 1 then do
         say "Dump of current dialog administration"
         say "====================================="
         call DumpAdmin "ADMDUMP", adm

@@ -54,7 +54,7 @@
 ::method DynamicInit private
    self~activePtr = 0
    self~DialogItemCount = 0
-   if Arg(1,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
+   if arg(1,'o') = 1 then self~useStem = .false; else self~useStem = .true
    return 0
 
    /*  */
@@ -100,9 +100,9 @@
    /* See 'Create' for possible 'options' */
 
 ::method CreateCenter
-   arga = Arg(1,"A")
-   newarg = .array~new(Arg()+2)
-   do i = Arg() to 1 by -1; if arga~hasindex(i) = 1 then newarg[i+2] = arga[i]; end   /* shift arguments up by 2 */
+   arga = arg(1,"A")
+   newarg = .array~new(arg()+2)
+   do i = arg() to 1 by -1; if arga~hasindex(i) = 1 then newarg[i+2] = arga[i]; end   /* shift arguments up by 2 */
    -- Let OS center the dialog.
    if \ newarg~hasindex(6) then newarg[6] = "CENTER"
    else newarg[6] = newarg[6] || " CENTER"
@@ -283,7 +283,7 @@
 
 ::method LoadFrame protected
    use arg resfile, dialogid, options, expected
-   if Arg(4,"o") = 1 | expected = 0 then expected = 200
+   if arg(4,"o") = 1 | expected = 0 then expected = 200
    if options~translate~wordpos("CENTER") > 0 then internopts = "CENTER "
    else internopts = ""
 
@@ -321,7 +321,7 @@
          -- End select
       end
       if (self~checkfile(f) = 1) then return 1
-      if Arg(2,'o') = 1 | dialogid = "DIALOGID" then found = 1
+      if arg(2,'o') = 1 | dialogid = "DIALOGID" then found = 1
       else do
          foundID = s~word(n-1)~translate
          if foundID = dialogid~translate then found = 1
@@ -390,7 +390,7 @@
       say "Resource file not found --> " op
       return 1
    end
-   if Arg(3, "o") = 1 then loadOptions = ""; else loadOptions = loadOptions~translate
+   if arg(3, "o") = 1 then loadOptions = ""; else loadOptions = loadOptions~translate
    found = 0; n = 0
    fl = f~lines
    do while found = 0 & fl > 0
@@ -406,7 +406,7 @@
          if n = 0 then n = s~wordpos("DIALOGEX")
       end
       if self~checkfile(f)=1 then return 1
-      if Arg(2,'o') = 1 | dialogid = "DIALOGID" then found = 1
+      if arg(2,'o') = 1 | dialogid = "DIALOGID" then found = 1
       else do
          foundID = s~word(n-1)~translate
          if foundID = dialogid~translate then found = 1
@@ -597,7 +597,7 @@
 ::method ItemAdd
    use arg id, staticId
    if self~activePtr = 0 then return -2
-   if Arg(2,'o') = 1 then do
+   if arg(2,'o') = 1 then do
        id = self~CheckId(id)
        if id = -1 then return -1
    end
@@ -689,31 +689,31 @@
    return 0
 
 ::method addWhiteRect
-   return self~InternAddStatic(Arg(1,"A"), 0)
+   return self~InternAddStatic(arg(1,"A"), 0)
 
 ::method addGrayRect
-   return self~InternAddStatic(Arg(1,"A"), 1)
+   return self~InternAddStatic(arg(1,"A"), 1)
 
 ::method addBlackRect
-   return self~InternAddStatic(Arg(1,"A"), 2)
+   return self~InternAddStatic(arg(1,"A"), 2)
 
 ::method addWhiteFrame
-   return self~InternAddStatic(Arg(1,"A"), 3)
+   return self~InternAddStatic(arg(1,"A"), 3)
 
 ::method addGrayFrame
-   return self~InternAddStatic(Arg(1,"A"), 4)
+   return self~InternAddStatic(arg(1,"A"), 4)
 
 ::method addBlackFrame
-   return self~InternAddStatic(Arg(1,"A"), 5)
+   return self~InternAddStatic(arg(1,"A"), 5)
 
 ::method addEtchedFrame
-   return self~InternAddStatic(Arg(1,"A"), 6)
+   return self~InternAddStatic(arg(1,"A"), 6)
 
 ::method addEtchedHorizontal
-   return self~InternAddStatic(Arg(1,"A"), 7)
+   return self~InternAddStatic(arg(1,"A"), 7)
 
 ::method addEtchedVertical
-   return self~InternAddStatic(Arg(1,"A"), 8)
+   return self~InternAddStatic(arg(1,"A"), 8)
 
 ::method InternAddStatic private
    use arg arga, type
@@ -728,21 +728,21 @@
    symbid = id
    id = self~ItemAdd(id)
    if id < 0 then return id
-   if Arg(2,'o') = 1 then fname = "DATA"id
-   if Arg(6,'o') = 1 then cy = 0
+   if arg(2,'o') = 1 then fname = "DATA"id
+   if arg(6,'o') = 1 then cy = 0
    if cy = 0 then do
       size = self~getTextSizeDlg("Tg")
       cy = size~height + 4
    end
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("EL", self~activePtr, id, x, y, cx, cy, opts)
-   if self~AutoDetect = 1 then return self~ConnectEntryLine(symbid, fname)
+   if self~autoDetect then return self~ConnectEntryLine(symbid, fname)
    else return 0
 
 
 ::method AddPasswordLine
-   newarg = Arg(1, 'A')
-   if Arg(7,'o') = 1 then newarg[7] = ""
+   newarg = arg(1, 'A')
+   if arg(7,'o') = 1 then newarg[7] = ""
    newarg[7] = newarg[7] || " PASSWORD"
    forward message "AddEntryLine" Arguments (newarg)
 
@@ -752,10 +752,10 @@
    symbid = id
    id = self~ItemAdd(id)
    if id < 0 then return id
-   if Arg(2,'o') = 1 then fname = "DATA"id
+   if arg(2,'o') = 1 then fname = "DATA"id
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("LB", self~activePtr, id, x, y, cx, cy, opts)
-   if self~AutoDetect = 1 then do
+   if self~autoDetect then do
       if opts~wordpos("MULTI") > 0 then ret = self~ConnectMultiListBox(symbid, fname)
       else ret = self~ConnectListBox(symbid, fname)
    end
@@ -767,10 +767,10 @@
    symbid = id
    id = self~ItemAdd(id)
    if id < 0 then return id
-   if Arg(2,'o') = 1 then fname = "DATA"id
+   if arg(2,'o') = 1 then fname = "DATA"id
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("CB", self~activePtr, id, x, y, cx, cy, opts)
-   if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then return self~ConnectComboBox(symbid, fname, opts)
+   if opts~wordpos("CAT") = 0 & self~autoDetect then return self~ConnectComboBox(symbid, fname, opts)
    else return 0
 
 
@@ -779,9 +779,9 @@
    symbid = id
    id = self~ItemAdd(id)
    if id < 0 then return id
-   if Arg(2,'o') = 1 then fname = text
-   if Arg(5, 'o') = 1 then cx = 0
-   if Arg(6, 'o') = 1 then cy = 0
+   if arg(2,'o') = 1 then fname = text
+   if arg(5, 'o') = 1 then cx = 0
+   if arg(6, 'o') = 1 then cy = 0
    if cx = 0 | cy = 0 then do
       size = self~getTextSizeDlg(text)
       if cx = 0 then cx = size~width + 12
@@ -789,7 +789,7 @@
    end
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("CH", self~activePtr, id, x, y, cx, cy, text, opts)
-   if self~AutoDetect = 1 then return self~ConnectCheckBox(symbid, fname)
+   if self~autoDetect then return self~ConnectCheckBox(symbid, fname)
    else return 0
 
 
@@ -798,9 +798,9 @@
    symbid = id
    id = self~ItemAdd(id)
    if id < 0 then return id
-   if Arg(2,'o') = 1 then fname = text
-   if Arg(5, 'o') = 1 then cx = 0
-   if Arg(6, 'o') = 1 then cy = 0
+   if arg(2,'o') = 1 then fname = text
+   if arg(5, 'o') = 1 then cx = 0
+   if arg(6, 'o') = 1 then cy = 0
    if cx = 0 | cy = 0 then do
       size =self~getTextSizeDlg(text)
       if cx=0 then cx=size~width + 12
@@ -808,7 +808,7 @@
    end
    opts = self~GetDefaultOpts(opts)
    self~activePtr = UsrAddControl("RB", self~activePtr, id, x, y, cx, cy, text, opts)
-   if opts~wordpos("CAT") = 0 & self~AutoDetect = 1 then return self~ConnectRadioButton(symbid, fname)
+   if opts~wordpos("CAT") = 0 & self~autoDetect then return self~ConnectRadioButton(symbid, fname)
    else return 0
 
 
@@ -822,12 +822,12 @@
 
 
 ::method AddRadioGroup
-   arr = Arg(1,"A")
+   arr = arg(1,"A")
    arr[8] = "R"
    forward message "InternAddRBCBGroup" Arguments (arr)
 
 ::method AddCheckGroup
-   arr = Arg(1,"A")
+   arr = arg(1,"A")
    arr[8] = "C"
    forward message "InternAddRBCBGroup" Arguments (arr)
 
@@ -836,7 +836,7 @@
 
    if self~activePtr = 0 then return -2
    if self~CheckID(startid) = -1 then return
-   if Arg(4, 'o') = 1 then cx = 0
+   if arg(4, 'o') = 1 then cx = 0
    parse var inp rb inp
    size = self~getTextSizeDlg(rb)
    len = size~width
@@ -847,7 +847,7 @@
    if nob = 0 then my = y + oldy; else my = y
    newopts = opts~changestr("NOBORDER","")
    if cx \= 0 then len = cx-20
-   if Arg(7,'o') = 1 then idstat = self~GetStaticID(idstat)
+   if arg(7,'o') = 1 then idstat = self~GetStaticID(idstat)
 
    i = 0
    do while rb \= ""
@@ -876,15 +876,15 @@
    use arg id, fname, x, y, cx1, cx2, cy, text, opts, idstat
    if self~activePtr = 0 then return -2
    if self~CheckID(id) = -1 then return
-   if Arg(2,'o') = 1 then fname = text
-   if Arg(5, 'o') = 1 then cx1 = 0
-   if Arg(7, 'o') = 1 then cy = 0
+   if arg(2,'o') = 1 then fname = text
+   if arg(5, 'o') = 1 then cx1 = 0
+   if arg(7, 'o') = 1 then cy = 0
    if cy = 0 | cx1 = 0 then do
       size = self~getTextSizeDlg(text)
       if cy = 0 then cy = size~height + 4
       if cx1 = 0 then cx1 = size~width + 4
    end
-   if Arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
+   if arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
    opts = self~GetDefaultOpts(opts)
    ret = self~addText(x, y+2, cx1, cy, text, opts, idstat)
    if ret == 0 then ret = self~AddEntryLine(id, fname, x+cx1+1, y, cx2, cy, opts)
@@ -897,7 +897,7 @@
 
    if self~activePtr = 0 then return -2
    if self~CheckID(startid) = -1 then return
-   if Arg(4, 'o') = 1 then cx1 = 0
+   if arg(4, 'o') = 1 then cx1 = 0
    count = 0; ll = 0
    do while rb \= ""
       count = count + 1
@@ -909,7 +909,7 @@
       parse var inp rb inp
    end
    if cx1 = 0 then cx1 = ll+4
-   if Arg(8,'o') = 1 then idstat = self~GetStaticID(idstat)
+   if arg(8,'o') = 1 then idstat = self~GetStaticID(idstat)
    is = idstat
 
    s = self~getTextSizeDlg("Tg")
@@ -932,14 +932,14 @@
 
    if self~activePtr = 0 then return -2
    if self~CheckID(id) = -1 then return
-   if Arg(2, 'o') = 1 then attname = text
-   if Arg(5, 'o') = 1 then cx1 = 0
-   if Arg(7, 'o') = 1 then clines = 5
+   if arg(2, 'o') = 1 then attname = text
+   if arg(5, 'o') = 1 then cx1 = 0
+   if arg(7, 'o') = 1 then clines = 5
 
    s = self~getTextSizeDlg(text)
    cy = s~height + 4
    if cx1 = 0 then cx1 = s~width + 4
-   if Arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
+   if arg(10,'o') = 1 then idstat = self~GetStaticID(idstat)
    opts = self~GetDefaultOpts(opts)
    ret = self~addText(x, y, cx1, cy, text, opts, idstat)
    if ret == 0 then return self~AddComboBox(id, attname, x+cx1+2, y, cx2, cy*clines, opts)
@@ -951,7 +951,7 @@
 
    if self~activePtr = 0 then return -2
    if self~CheckID(startid)= -1 then return
-   if Arg(4, 'o') = 1 then cx1 = 0
+   if arg(4, 'o') = 1 then cx1 = 0
    count = 0; ll = 0
    do while var("inp."count+1) = 1
       count = count + 1
@@ -981,12 +981,12 @@
 
 
 ::method AddCheckBoxStem
-   arr = Arg(1,"A")
+   arr = arg(1,"A")
    arr[11] = "C"
    forward message "InternAddRBCBStem" Arguments (arr)
 
 ::method AddRadioStem
-   arr = Arg(1,"A")
+   arr = arg(1,"A")
    arr[11] = "R"
    forward message "InternAddRBCBStem" Arguments (arr)
 
@@ -997,7 +997,7 @@
 
    if self~activePtr = 0 then return -2
    if self~CheckID(startid) = -1 then return
-   if Arg(4, 'o') = 1 then cxx = 0
+   if arg(4, 'o') = 1 then cxx = 0
    count = 0; ll = 0
    do while var("inp."count+1) = 1
       count = count + 1
@@ -1008,7 +1008,7 @@
    end
    if var("max") = 0 | max = 0 then max = count
    if cxx = 0 & max \= 1 then cx = ll+20; else cx = cxx
-   if Arg(8, 'o') = 1 then idstat = self~GetStaticID(idstat)
+   if arg(8, 'o') = 1 then idstat = self~GetStaticID(idstat)
    s = self~getTextSizeDlg("Tg")
    stepx = s~width
    oldy = s~height
@@ -1052,9 +1052,9 @@
    parse var inp bt bid bfnk newinp
 
    if self~activePtr = 0 then return -2
-   if Arg(6,"o") = 1 then bottom = 0
-   if cx = 0 | Arg(3,"o") = 1 then cx = 40
-   if cy = 0 | Arg(4,"o") = 1 then cy = 12
+   if arg(6,"o") = 1 then bottom = 0
+   if cx = 0 | arg(3,"o") = 1 then cx = 40
+   if cy = 0 | arg(4,"o") = 1 then cy = 12
 
    opts = self~GetDefaultOpts(opts)
    do while bt \= ""
@@ -1090,7 +1090,7 @@
    if id < 0 then return id
 
    fileName = fileName~strip~strip('B', '"')
-   return UsrAddResource(self~Adm, "ICO", id, fileName)
+   return UsrAddResource(self~adm, "ICO", id, fileName)
 
 ::method getDefaultOpts protected
    use strict arg opts
@@ -1111,7 +1111,7 @@
      if modal~translate = "NOTMODAL" then modal = 1
      else modal = 0
    end
-   self~dlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, 0 /* no autodetection */, 1, icon, modal)
+   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, 0 /* no autodetection */, 1, icon, modal)
    self~activePtr = 0
    if self~dlgHandle = 0 then return 0
    else self~InitDialog

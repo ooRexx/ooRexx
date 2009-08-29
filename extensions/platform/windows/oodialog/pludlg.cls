@@ -49,13 +49,13 @@
 ::class 'PlainUserDialog' subclass PlainBaseDialog public inherit DynamicDialog
 
 ::method init
-   use arg DlgData., includeFile
+   use arg dlgData., includeFile
 
    newArgs = .array~new(2)
    newArgs[1] = 0
    newArgs[2] = 0
    if arg(1, 'E') then newArgs[3] = dlgData.
-   if Arg(2, 'E') then newArgs[4] = includeFile
+   if arg(2, 'E') then newArgs[4] = includeFile
    forward class (super) arguments (newArgs) continue
 
    if result = 0 then forward message "DynamicInit"

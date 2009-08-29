@@ -52,11 +52,9 @@
 
 ::method init_windowBase external "LIBRARY oodialog wb_init_windowBase"
 
-::attribute hwnd get external "LIBRARY oodialog wb_getHwnd"
-::attribute hwnd set external "LIBRARY oodialog wb_setHwnd"
+::attribute initCode
 
-::attribute initCode get external "LIBRARY oodialog wb_getInitCode"
-::attribute initCode set external "LIBRARY oodialog wb_setInitCode"
+::attribute hwnd get external "LIBRARY oodialog wb_getHwnd"
 
 -- Size and Dialog Unit Factor
 ::attribute sizeX get external "LIBRARY oodialog wb_getSizeX"
@@ -84,6 +82,7 @@
 ::method hide unguarded external "LIBRARY oodialog wb_show"
 ::method showFast unguarded external "LIBRARY oodialog wb_showFast"
 ::method hideFast unguarded external "LIBRARY oodialog wb_showFast"
+::method display unguarded external "LIBRARY oodialog wb_display"
 
 ::method getWindowLong private unguarded external "LIBRARY oodialog wb_getWindowLong_pvt"
 ::method getID unguarded
@@ -95,9 +94,10 @@
 ::method getExStyleRaw unguarded
   return self~getWindowLong(-20)
 
-::method Draw unguarded external "LIBRARY oodialog wb_redrawClient"
-::method RedrawClient unguarded external "LIBRARY oodialog wb_redrawClient"
-::method Redraw unguarded external "LIBRARY oodialog wb_redraw"
+::method update unguarded external "LIBRARY oodialog wb_redrawClient"
+::method draw unguarded external "LIBRARY oodialog wb_redrawClient"
+::method redrawClient unguarded external "LIBRARY oodialog wb_redrawClient"
+::method redraw unguarded external "LIBRARY oodialog wb_redraw"
 
 ::method "title=" unguarded external "LIBRARY oodialog wb_setText"
 ::method title unguarded external "LIBRARY oodialog wb_getText"
@@ -106,12 +106,12 @@
 
 ::method Resize unguarded
    use arg width, hight, showOptions
-   if Arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
+   if arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    return WndShow_Pos("P",self~hwnd,0,0,width*self~factorX,hight*self~factorY,"NOMOVE "||showOptions )
 
 ::method Move unguarded
    use arg xPos, yPos, showOptions
-   if Arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
+   if arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    return WndShow_Pos("P",self~hwnd, xPos*self~factorX,yPos*self~factorY,0,0,"NOSIZE "||showOptions)
 
 ::method GetSize unguarded
@@ -122,33 +122,18 @@
    parse value Wnd_Desktop("RECT",self~Hwnd) with x y cx cy
    return (x%self~factorX) || " " || (y % self~factorY)
 
--- Hmm, this code is wrong MIN and MAX are not allowed, by documentaion, for this method
-::method display unguarded
-   use strict arg displayType = "NORMAL"
-   if displayType = "" then displayType = "NORMAL"; else displayType = displayType~translate
-   if self~isA(.DialogControl) & (disptype~wordpos("MIN") <> 0 | disptype~wordpos("MAX") <> 0) then do
-     if self~oDlg~isA(.PlainBaseDialog) then
-       forward to (self~oDlg)
-     else
-       return 1
-   end
-   return WndShow_Pos("S",self~hwnd, disptype)
-
 ::method GetRect unguarded
    return WindowRect("GET", self~Hwnd)
 
 ::method GetClientRect unguarded
    use arg hwnd
-   if Arg(1,'o') = 1 then hwnd = self~hwnd
+   if arg(1,'o') = 1 then hwnd = self~hwnd
    return WindowRect("GET", hwnd, "CLIENT")
 
 ::method SetRect unguarded
    use arg x, y, width, high, showOptions
-   if Arg(5,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
+   if arg(5,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    return WndShow_Pos("P",self~hwnd, x, y, width, high, showOptions)
-
-::method Update unguarded
-   return WndShow_Pos("S",self~Hwnd, "UPDATE")
 
 ::method SetForegroundWindow unguarded
     use arg hwnd
@@ -226,11 +211,11 @@
     if ifDefStack~items == 0 then leave
   end
 
-::method Checkfile private
+::method checkfile private
    use arg f
    if (f~lines = 0) then do
       f~close
-      self~ProcessingLoad = 0
+      self~processingLoad = 0
       ret = errorDialog("Error reading resource file!" f)
       return 1
    end
@@ -239,7 +224,7 @@
 ::method errorfile private
    use arg f, s
    f~close
-   self~ProcessingLoad = 0
+   self~processingLoad = 0
    ret = errorDialog("Error reading resource file:" f "("s")")
 
 ::method checkId
@@ -251,7 +236,7 @@
 
   if self~ConstDir[id~space(0)~translate] = .nil then return self~idError(id)
 
-  return self~ResolveSymbolicId(id)
+  return self~resolveSymbolicId(id)
 
 ::method idError private
   use strict arg id
@@ -280,7 +265,7 @@
 ::method resolveIconID private
   use strict arg icon
 
-  if \ icon~Datatype('W') then icon = self~ResolveSymbolicId(icon)
+  if \ icon~Datatype('W') then icon = self~resolveSymbolicId(icon)
   if icon = -1 then icon = 0
   else if icon >= 1, icon <= 4 then icon += 10
   return icon
@@ -324,17 +309,21 @@
 ::method getFontName class external "LIBRARY oodialog pbdlg_getFontName_cls"
 ::method getFontSize class external "LIBRARY oodialog pbdlg_getFontSize_cls"
 
+-- External adminstration buffer. Get can not be private for now see MenuBar::attachTo()
+--
+::attribute adm get
 
-::method Adm attribute protected   /* external adminstration buffer */
-::method AutoDetect attribute      /* Automatic data field detection on/off */
-::method DataConnection attribute protected /* store connections between ids and class attributes */
-::method UseStem attribute protected   /* flag whether to use a stem to set/get data or not */
-::method DlgData private
-   expose DlgData.
-   return DlgData.
+::attribute autoDetect              -- Automatic data field detection on/off
+::attribute dataConnection private  -- store connections between ids and class attributes
+::attribute useStem private         -- flag whether to use a stem to set/get data or not
+::attribute finished                -- finsished state of dialog, not a logical, can be 0, 1, or 2
 
-::method Finished attribute
-::method ParentDlg attribute protected
+::method dlgData private
+   expose dlgData.
+   return dlgData.
+
+::attribute parentDlg private
+::attribute childDialogs
 
 ::attribute fontName get
 ::attribute fontName set private
@@ -342,44 +331,34 @@
 ::attribute fontSize get
 ::attribute fontSize set private
 
-  /* A queue containing the methods that will be started concurrently before */
-  /* execution of the dialog */
-::method AutomaticMethods attribute protected
+::attribute dlgHandle get unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
+::attribute dlgHandle set private unguarded external "LIBRARY oodialog pbdlg_setDlgHandle"
 
-::method ChildDialogs attribute
+-- A queue containing the methods that will be started concurrently before execution of the dialog
+::attribute automaticMethods private
+
 
 /** PlainBaseDialog::init()  Performs the necessary intialization, including the
  * set up of the dialog management block, for all dialogs.
  */
 ::method init external "LIBRARY oodialog pbdlg_init"
 
+-- Invoked from the native API implementation of init() to finish up the initialization that is
+-- easier to do from the Rexx side.
 ::method finalInit private
    use arg includeFile
 
-   self~adm = 0
-   self~parentDlg = .nil
+   self~childDialogs = .list~new
 
-   -- Allocate the dialog management block for a new dialog
-   self~adm = HandleDialogAdmin()
-   if self~adm = 0 then do
-      self~deinstall
-      self~initCode = 1
-      return 1
-   end
+   self~fontName = .PlainBaseDialog~getFontName
+   self~fontSize = .PlainBaseDialog~getFontSize
 
    -- call methods to get dialog settings
    self~initAutoDetection
-   -- create array storing connection between ids and attributese */
+   -- create array storing connection between ids and attributese
    self~dataConnection = .array~new(50)
 
-   self~finished = 0
    self~automaticMethods = .queue~new
-   self~addUserMsg("OK", 0x00000111, 0xFFFFFFFF, 1, 0xFFFFFFFF, 0, 0)
-   self~addUserMsg("Cancel", 0x00000111, 0xFFFFFFFF, 2, 0xFFFFFFFF, 0, 0)
-   self~addUserMsg("Help", 0x00000111, 0xFFFFFFFF, 9, 0xFFFFFFFF, 0, 0)
-   self~processingLoad = 0
-   self~dlgHandle = 0
-   self~childDialogs = .list~new
 
    self~constDir = .directory~new
    self~constDir["IDOK"] = 1
@@ -396,19 +375,15 @@
    self~constDir["IDI_DLG_OOREXX"] = 14
    self~constDir["IDI_DLG_DEFAULT"] = 12
 
-   self~fontName = .PlainBaseDialog~getFontName
-   self~fontSize = .PlainBaseDialog~getFontSize
-
    if arg(1, 'E') then self~parseIncludeFile(includeFile)
 
    return 0
 
-::method dlgHandle unguarded
-   return self~hwnd
+::method setDlgFont
+  use strict arg name, size = 8
+  self~fontName = name
+  self~fontSize = size
 
-::method "dlgHandle=" unguarded
-   use arg hwnd
-   self~hwnd=hwnd
 
    /* This method will be called after the Windows dialog has been created. */
    /* It is useful to set data fields and initialize combo & list boxes */
@@ -423,7 +398,7 @@
    use strict arg sleeptime = 0
 
    do while self~finished = 0
-      self~HandleMessages(sleeptime)
+      self~handleMessages(sleeptime)
    end
 
    /* this method will create the dialog, show it (see method show), start */
@@ -431,28 +406,28 @@
    /* received */
 
 ::method Execute unguarded
-   expose DlgData.
+   expose dlgData.
    use arg sh, icon = 0, sleeptime, nomodal
    icon = self~resolveIconId(icon)
    if sleeptime~Datatype('N') = 0 then sleeptime = 0   /* default is no sleep for execute */
-   if Arg(4, 'o') = 1 then nomodal = 0
+   if arg(4, 'o') = 1 then nomodal = 0
    if self~startit(icon, nomodal) \= 0 then
    do
-      if self~UseStem = 1 then self~SetDataStem(DlgData.); else self~SetData
+      if self~useStem then self~SetDataStem(dlgData.); else self~SetData
       self~show(sh)
-      do while self~AutomaticMethods~Items > 0
-         p = self~AutomaticMethods~pull
-         m = self~AutomaticMethods~pull
-         c = self~AutomaticMethods~pull
+      do while self~automaticMethods~Items > 0
+         p = self~automaticMethods~pull
+         m = self~automaticMethods~pull
+         c = self~automaticMethods~pull
          o = c~new(p, self)
          o~start(m)
       end
       self~run(sleeptime)
       if self~InitCode = 1 then do
-         if (self~UseStem = 1) then self~GetDataStem(DlgData.)
+         if self~useStem then self~GetDataStem(dlgData.)
              self~GetData
       end
-      if self~Adm \= 0 then self~stopit
+      if self~adm \= 0 then self~stopit
       return self~InitCode
    end
    else self~stopit
@@ -460,39 +435,41 @@
 
    /* This method deletes the Windows dialog */
 
-::method Stopit
+::method stopIt
    use arg caller
-   if self~dlgHandle = 0 | self~Adm = 0 then return -1
-   self~Leaving
+   if self~dlgHandle = 0 | self~adm = 0 then return -1
+   self~leaving
    ret =  HandleDlg("STOP", self~dlgHandle)
    self~dlgHandle = 0
-   self~Adm = 0
+
+   -- TODO this stopIt() method is a good canidate for the new native API, for now, just call deInstall()
+   self~deinstall
 
    /* we ourselves are a child dialog and not called by the parent's stopit */
-   if self~ParentDlg \= .Nil & caller \= "PARENT" then self~ParentDlg~ChildDied(self)
+   if self~parentDlg \= .nil & caller \= "PARENT" then self~parentDlg~ChildDied(self)
 
    /* if we have child dialogs, stop all of them */
-   if self~ChildDialogs \= .Nil then do
-       if self~ChildDialogs~items > 0 then
-       do child over self~ChildDialogs
+   if self~childDialogs \= .nil then do
+       if self~childDialogs~items > 0 then
+       do child over self~childDialogs
           child~Stopit("PARENT")
        end
-       self~ChildDialogs = .Nil
+       self~childDialogs = .nil
    end
    return ret
 
 
-   /* remove a child dialog from the chain */
-::method ChildDied
+-- Remove a child dialog from the chain of child dialogs.
+::method childDied
    use arg child
-   if self~ChildDialogs \= .Nil then do
-       ndx = self~ChildDialogs~first
-       do while ndx \= .Nil
-          if self~ChildDialogs[ndx] == child then do
-              self~ChildDialogs~remove(ndx)
-              ndx = .Nil
+   if self~childDialogs \= .nil then do
+       ndx = self~childDialogs~first
+       do while ndx \= .nil
+          if self~childDialogs[ndx] == child then do
+              self~childDialogs~remove(ndx)
+              ndx = .nil
           end
-          else ndx = self~ChildDialogs~next(ndx)
+          else ndx = self~childDialogs~next(ndx)
        end
    end
 
@@ -503,16 +480,16 @@
    return HandleDlg("HNDL")
 
 ::method GetSelf unguarded
-   return HandleDlg("HNDL", self~Adm)
+   return HandleDlg("HNDL", self~adm)
 
 
    /* This method returns the handle of a dialog item */
 
 ::method GetItem unguarded
    use arg id, hDlg
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return 0
-   if Arg(2,'o') = 1 then hDlg = self~dlgHandle
+   if arg(2,'o') = 1 then hDlg = self~dlgHandle
    return HandleDlg("ITEM",id, hDlg)
 
 ::method GetControlID unguarded
@@ -597,7 +574,7 @@
    if filter == "" then return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0))
    return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0), filter~translate)
 
-::method cisconnectKeyPress unguarded
+::method disconnectKeyPress unguarded
    use arg msgToRaise
    if arg(1, 'O') then return WinAPI32Func("K", 'R', self~adm)
    if \ msgToRaise~isA(.String) then return -1
@@ -622,56 +599,56 @@
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD", result,0);                /* new id in result */
+   return DataTable(self~adm,"ADD", result,0);                /* new id in result */
 
 ::method ConnectComboBox
    use arg id, attributeName, opts
    forward message "AddAttribute" continue
    id = result; if id = -1 then return -1              /* new id in result */
    if opts~translate~wordpos("LIST") = 0 then type = 0; else type = 5
-   return DataTable(self~Adm,"ADD",id,type);
+   return DataTable(self~adm,"ADD",id,type);
 
 ::method ConnectCheckBox
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,1);                /* new id in result */
+   return DataTable(self~adm,"ADD",result,1);                /* new id in result */
 
 ::method ConnectRadioButton
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,2);                /* new id in result */
+   return DataTable(self~adm,"ADD",result,2);                /* new id in result */
 
 ::method ConnectListBox
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,3);                /* new id in result */
+   return DataTable(self~adm,"ADD",result,3);                /* new id in result */
 
 ::method ConnectMultiListBox
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1
-   return DataTable(self~Adm,"ADD",result,4);                /* new id in result */
+   return DataTable(self~adm,"ADD",result,4);                /* new id in result */
 
    /* Use this method to separate two radiobutton groups */
 
 ::method ConnectSeparator
    use arg id
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return DataTable(self~Adm,"ADD",id,9);
+   return DataTable(self~adm,"ADD",id,9);
 
    /* This method adds an attribute to the object. The attribute is associated */
    /* with the windows control 'id' */
 
 ::method AddAttribute protected
    use arg id, attributeName
-   if Arg(2,'o') = 1 then attributeName = "DATA"id~space(0)
+   if arg(2,'o') = 1 then attributeName = "DATA"id~space(0)
    if id~DataType("N") = 0 then do
        if self~ProcessingLoad = 1 then attributeName = id
-       id = self~ResolveSymbolicId(id)
+       id = self~resolveSymbolicId(id)
    end
    if id < 1 then return -1
    if attributeName~space(0) = "" | self~HasMethod(attributeName) = 1 then
@@ -681,7 +658,7 @@
       if attributeName~datatype('V')=0 then attributeName = "DATA"id~space(0)
    end
 
-   self~DataConnection[id] = attributeName
+   self~dataConnection[id] = attributeName
    self~setmethod(attributeName, "expose "attributeName"; return "attributeName)
    self~setmethod(attributeName || "=", "expose "attributeName"; use arg "attributeName)
    interpret("self~"attributeName"=''")   /* initial value = "" */
@@ -712,27 +689,27 @@
    /* This method loads the data attributes into the dialog */
 
 ::method SetData unguarded
-   i = self~DataConnection~First
+   i = self~dataConnection~First
    do while (i \= .NIL)
-      s = "self~" || self~DataConnection[i]
+      s = "self~" || self~dataConnection[i]
       s = "InternDlgData."i || " = " || s
       interpret(s)
-      i = self~DataConnection~Next(i)
+      i = self~dataConnection~Next(i)
    end
-   ret = SetStemData(self~Adm, "InternDlgData.")
+   ret = SetStemData(self~adm, "InternDlgData.")
 
    /* This method receives data from dialog and copies them to the */
    /* associated attributes */
 
 ::method GetData unguarded
-   ret = GetStemData(self~Adm, "InternDlgData.")
+   ret = GetStemData(self~adm, "InternDlgData.")
 
-   i = self~DataConnection~First
+   i = self~dataConnection~First
    do while (i \= .NIL)
-      s = "self~" || self~DataConnection[i]
+      s = "self~" || self~dataConnection[i]
       s = s ||"= InternDlgData."i
       interpret(s)
-      i = self~DataConnection~Next(i)
+      i = self~dataConnection~Next(i)
    end
 
 
@@ -741,12 +718,12 @@
 
 ::method MakeArray unguarded
 
-   a = .Array~new(self~DataConnection~items)
-   i = self~DataConnection~First
+   a = .Array~new(self~dataConnection~items)
+   i = self~dataConnection~First
    do j=1 while (i \= .NIL)
-      cml="a["j"]=self~"self~DataConnection~at(i)
+      cml="a["j"]=self~"self~dataConnection~at(i)
       interpret( cml )
-      i = self~DataConnection~Next(i)
+      i = self~dataConnection~Next(i)
    end
    return a
 
@@ -762,14 +739,14 @@
       InternDlgData.numericID = dataStem.k
       if InternDlgData.numericID = "INTERNDLGDATA."numericID then InternDlgData.numericID = ""
    end
-   ret = SetStemData(self~Adm, "InternDlgData.")
+   ret = SetStemData(self~adm, "InternDlgData.")
 
    /* This method gets the values of all the dialog's windows controls */
    /* and copies them to 'dataStem'. */
 
 ::method GetDataStem protected unguarded
    use arg dataStem.
-   ret = GetStemData(self~Adm, "InternDlgData.")
+   ret = GetStemData(self~adm, "InternDlgData.")
    do k over InternDlgData.
       dataStem.k = InternDlgData.k
       symbolicID = self~resolveNumericID(k)
@@ -779,7 +756,7 @@
 
 ::method BoxMessage unguarded private
    use arg id, msg, wP, lP
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return SendWinMsg("PTR", self~dlgHandle, id, msg, wP, lP)
 
@@ -787,15 +764,15 @@
 
 ::method AddComboEntry unguarded
    use arg id, string
-   if Arg(2,'o') = 1 | string = "DATA" then return -1
+   if arg(2,'o') = 1 | string = "DATA" then return -1
    return self~BoxMessage(id, 0x00000143, 0, "T" || string) + 1
 
    /* This method inserts a string to the combobox */
 
 ::method InsertComboEntry unguarded
    use arg id, item, string
-   if Arg(3,'o') = 1 | string = "DATA" then return -1
-   if Arg(2,"o") = 1 then item = self~GetCurrentComboIndex(id)
+   if arg(3,'o') = 1 | string = "DATA" then return -1
+   if arg(2,"o") = 1 then item = self~GetCurrentComboIndex(id)
    return self~BoxMessage(id, 0x0000014A, item-1, "T" || string) + 1
 
    /* This method deletes a string from the combo box. */
@@ -804,7 +781,7 @@
 
 ::method DeleteComboEntry unguarded
    use arg id, index
-   if Arg(2,"o") = 1 then index = self~GetCurrentComboIndex(id)
+   if arg(2,"o") = 1 then index = self~GetCurrentComboIndex(id)
    return self~BoxMessage(id, 0x00000144, index-1, 0)
 
 
@@ -813,7 +790,7 @@
 
 ::method FindComboEntry unguarded
    use arg id, string
-   if Arg(2,'o') = 1 | string = "DATA" then return -1
+   if arg(2,'o') = 1 | string = "DATA" then return -1
    item = self~BoxMessage(id, 0x0000014C, 0, "T" || string)
    if item >= 0 then return item + 1; else return 0
 
@@ -842,7 +819,7 @@
 
 ::method GetComboEntry unguarded
    use arg id, ndx
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    len = SendWinMsg("DLG", self~dlgHandle, id, 0x00000149, ndx-1,0)
    if len <= 0 then return ""
@@ -852,7 +829,7 @@
 
 ::method ChangeComboEntry unguarded
    use arg id, item, string
-   if Arg(2,"o") = 1 then item = self~GetCurrentComboIndex(id)
+   if arg(2,"o") = 1 then item = self~GetCurrentComboIndex(id)
    if item <= 0 then return -1
    self~DeleteComboEntry(id, item)
    return self~InsertComboEntry(id, item, string)
@@ -888,7 +865,7 @@
 
 ::method AddListEntry unguarded
    use arg id, data
-   if Arg(2,'o') = 1 | data = "DATA" then return -1
+   if arg(2,'o') = 1 | data = "DATA" then return -1
    return self~BoxMessage(id, 0x00000180, 0, "T" || data) + 1
 
    /* Inserts 'data' (a string) into the list box 'id'. The new item */
@@ -896,8 +873,8 @@
 
 ::method InsertListEntry unguarded
    use arg id, index, data
-   if Arg(3,'o') = 1 | data = "DATA" then return -1
-   if Arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
+   if arg(3,'o') = 1 | data = "DATA" then return -1
+   if arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
    return self~BoxMessage(id, 0x00000181, index-1, "T" || data) + 1
 
    /* Deletes an item from a list box. */
@@ -905,14 +882,14 @@
 
 ::method DeleteListEntry unguarded
    use arg id, index
-   if Arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
+   if arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
    return self~BoxMessage(id, 0x00000182, index-1, 0)
 
    /* Returns the index of 'dataString' in the list box 'id' */
 
 ::method FindListEntry unguarded
    use arg id, dataString
-   if Arg(2,'o') = 1 | dataString = "DATASTRING" then return -1
+   if arg(2,'o') = 1 | dataString = "DATASTRING" then return -1
    index = self~BoxMessage(id, 0x0000018F, 0, "T" || dataString)
    if index >= 0 then return index + 1; else return 0
 
@@ -939,7 +916,7 @@
 
 ::method GetListEntry unguarded
    use arg id, ndx
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    len = SendWinMsg("DLG", self~dlgHandle, id, 0x0000018A, ndx-1,0)
    if len <= 0 then return ""
@@ -949,7 +926,7 @@
 
 ::method ChangeListEntry unguarded
    use arg id, index, dataString
-   if Arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
+   if arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
    if index <= 0 then return -1
    self~DeleteListEntry(id, index)
    return self~InsertListEntry(id, index, dataString)
@@ -982,11 +959,11 @@
 
 ::method InternalGetItemData unguarded
    use arg id, handle, type
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if arg(2,"o") = 1 then return GetItemData(self~Adm, id)
-   else if arg(3,"o") = 1 then return GetItemData(self~Adm, id, handle)
-   else return GetItemData(self~Adm, id, handle, type)
+   if arg(2,"o") = 1 then return GetItemData(self~adm, id)
+   else if arg(3,"o") = 1 then return GetItemData(self~adm, id, handle)
+   else return GetItemData(self~adm, id, handle, type)
 
 
    /* Returns the content of the entry line control with id 'id' */
@@ -1040,15 +1017,15 @@
 
 ::method GetAttrib unguarded
    use arg attributeName
-   i = self~DataConnection~First
+   i = self~dataConnection~First
    do while (i \= .NIL)
-      if self~DataConnection[i] = attributeName~space(0) then
+      if self~dataConnection[i] = attributeName~space(0) then
       do
          s = "self~"attributeName"= self~GetValue("i")"
          interpret(s)
          return
       end
-      i = self~DataConnection~Next(i)
+      i = self~dataConnection~Next(i)
    end
 
 
@@ -1057,11 +1034,11 @@
 
 ::method InternalSetItemData unguarded
    use arg id, dataString, handle, type
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if arg(3,"o") = 1 then return SetItemData(self~Adm, id, dataString)
-   else if arg(4,"o") = 1 then return SetItemData(self~Adm, id, dataString, handle)
-   else return SetItemData(self~Adm, id, dataString, handle, type)
+   if arg(3,"o") = 1 then return SetItemData(self~adm, id, dataString)
+   else if arg(4,"o") = 1 then return SetItemData(self~adm, id, dataString, handle)
+   else return SetItemData(self~adm, id, dataString, handle, type)
 
    /* Puts 'dataString' into the entry line control 'id' */
 
@@ -1114,15 +1091,15 @@
 
 ::method SetAttrib unguarded
    use arg attributeName
-   i = self~DataConnection~First
+   i = self~dataConnection~First
    do while (i \= .NIL)
-      if self~DataConnection[i] = attributeName~space(0) then
+      if self~dataConnection[i] = attributeName~space(0) then
       do
          s = "self~SetValue("i", self~"attributeName")"
          interpret(s)
          return
       end
-      i = self~DataConnection~Next(i)
+      i = self~dataConnection~Next(i)
    end
 
 
@@ -1134,14 +1111,14 @@
 
    /* This method will handle one dialog message synchronously */
 
-::method HandleMessages unguarded protected
+::method handleMessages unguarded protected
    use arg sleeptime
-   if self~Adm = 0 then do
+   if self~adm = 0 then do
        self~finished = 2
        return
    end
-   if Arg(1,'o') = 1 then sleeptime = 0
-   msg = GetDlgMsg(self~Adm)
+   if arg(1,'o') = 1 then sleeptime = 0
+   msg = GetDlgMsg(self~adm)
    if msg~pos("1DLGDELETED1") > 0 then do
       if self~finished = 0 then self~finished = 2
    end
@@ -1153,13 +1130,13 @@
    /* This method will clear all pending dialog messages */
 
 ::method ClearMessages unguarded protected
-   if self~Adm = 0 then return
-   msg = GetDlgMsg(self~Adm)
-   do while msg \= "" & self~Adm \= 0
+   if self~adm = 0 then return
+   msg = GetDlgMsg(self~adm)
+   do while msg \= "" & self~adm \= 0
        if msg~pos("1DLGDELETED1") > 0 then do
           if self~finished = 0 then self~finished = 2
        end
-       msg = GetDlgMsg(self~Adm)
+       msg = GetDlgMsg(self~adm)
    end
 
 
@@ -1196,12 +1173,12 @@
 
 ::method ShowWindow unguarded  /* used for the category dialog */
    use arg hwnd
-   return WndShow_Pos("S",hwnd, "NORMAL", self~Adm)
+   return WndShow_Pos("S",hwnd, "NORMAL", self~adm)
 
    /* resize a dialog including border */
 ::method Resize unguarded
    use arg width, hight, showOptions
-   if Arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
+   if arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    parse value Wnd_Desktop("RECT", self~hwnd) with x y cx cy
    /* diffsx and diffsy are needed for the title and the frame */
    diffsx = cx - x - (self~sizeX * self~factorX)
@@ -1231,21 +1208,21 @@
  -- 2 methods to set / remove the WS_TABSTOP / WS_GROUP styles for any control.
 ::method SetTabStop unguarded
    use strict arg id, wantStop = .true
-   if \ id~datatype("W") then id = self~ResolveSymbolicId(id)
+   if \ id~datatype("W") then id = self~resolveSymbolicId(id)
    if id == -1 then return -1
    if \ wantStop~datatype('O')then return -3
    return HandleControlEx(self~dlgHandle, id, "X", "TAB", wantStop)
 
 ::method SetGroup unguarded
    use strict arg id, wantGroup = .true
-   if \ id~datatype("W") then id = self~ResolveSymbolicId(id)
+   if \ id~datatype("W") then id = self~resolveSymbolicId(id)
    if id == -1 then return -1
    if \ wantGroup~datatype('O')then return -3
    return HandleControlEx(self~dlgHandle, id, "X", "GROUP", wantGroup)
 
 ::method Center unguarded
    use arg showOptions
-   if Arg(1,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
+   if arg(1,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    parse value self~GetSize with dcx dcy
    s = screenSize()
    return WndShow_Pos("P",self~dlgHandle, (s[3] - dcx * self~factorX) %2, (s[4] - dcy * self~factorY) %2, 0, 0,,
@@ -1261,10 +1238,10 @@
    self~AutoDetection
 
 ::method NoAutoDetection    /* disable autodetection */
-   self~AutoDetect = 0
+   self~autoDetect = .false
 
 ::method AutoDetection      /* enable autodetection */
-   self~AutoDetect = 1
+   self~autoDetect = .true
 
  /* The following methods are abstract methods that will be called */
  /* whenever the push buttons 1, 2, or 9 will be pressed */
@@ -1301,18 +1278,13 @@
 ::method validate unguarded
    return 1
 
-/** deinstall()
- * Clean up memory allocated for this dialog.
+/** deinstall() / unInit()
+ *  Both methods do the same thing, clean up memory allocated for this dialog.
  */
-::method deInstall
-   if self~Adm \= 0 then ret = HandleDialogAdmin(self~Adm)
-   self~Adm = 0
-
-::method uninit
-   -- Check if the dialog table still needs to be freed.
-   if self~Adm \= 0 then ret = HandleDialogAdmin(self~Adm)
-   self~Adm = 0
+::method deInstall external "LIBRARY oodialog pbdlg_deInstall"
+::method unInit external "LIBRARY oodialog pbdlg_deInstall"
 
 
 ::class 'Window' public inherit WindowBase
 ::method init  external "LIBRARY oodialog window_init"
+::method unInit  external "LIBRARY oodialog window_unInit"

@@ -68,11 +68,11 @@
    /* arg style=[ "DROPDOWN" | "TOPLINE" | "NOBORDER" | "WIZARD"] */
 
 ::method Init
-   use arg DlgData., cdx, cdy, cdcx, cdstyle, cdtable, cdlabel, cdmax, includeFile
+   use arg dlgData., cdx, cdy, cdcx, cdstyle, cdtable, cdlabel, cdmax, includeFile
 
    newArgs = .array~new(2)
-   if Arg(1, 'E') then newArgs[1] = Arg(1)
-   if Arg(9, 'E') then newArgs[2] = Arg(9)
+   if arg(1, 'E') then newArgs[1] = arg(1)
+   if arg(9, 'E') then newArgs[2] = arg(9)
    forward class (super) arguments (newArgs) continue
    if result <> 0 then return result
 
@@ -87,14 +87,14 @@
    self~catalog['page']['rightbtntext'] = "&Forward"
    self~catalog['page']['expected'] = 200
 
-   if Arg(1,'o') = 1 then self~UseStem = 0; else self~UseStem = 1
-   if Arg(2,'o') = 1 then self~catx = 10; else self~catX = cdx
-   if Arg(3,'o') = 1 then self~caty = 4; else self~caty = cdy
-   if Arg(4,'o') = 1 then self~catcx = 0; else self~catcx = cdcx
-   if Arg(5,'o') = 1 then self~catstyle = ""; else self~catstyle = cdstyle~translate
-   if Arg(6,'o') = 1 then cdtable = ""
-   if Arg(7,"o") = 1 then self~catlabel = "Page:"; else self~catlabel = cdlabel
-   if Arg(8,"o") = 1 then self~catmax = 0; else self~catmax = cdmax
+   if arg(1,'o') = 1 then self~useStem = .false; else self~useStem = .true
+   if arg(2,'o') = 1 then self~catx = 10; else self~catX = cdx
+   if arg(3,'o') = 1 then self~caty = 4; else self~caty = cdy
+   if arg(4,'o') = 1 then self~catcx = 0; else self~catcx = cdcx
+   if arg(5,'o') = 1 then self~catstyle = ""; else self~catstyle = cdstyle~translate
+   if arg(6,'o') = 1 then cdtable = ""
+   if arg(7,"o") = 1 then self~catlabel = "Page:"; else self~catlabel = cdlabel
+   if arg(8,"o") = 1 then self~catmax = 0; else self~catmax = cdmax
 
    if cdtable \= '' then
    do
@@ -167,7 +167,7 @@
 
    if (n > 0 | m > 0) & self~catstyle~wordpos('NOBORDER') = 0 then self~catstyle = self~catstyle||" NOBORDER"
 
-   if self~catalog['page']['h'] = .Nil then self~catalog['page']['h'] = self~sizeY - 40
+   if self~catalog['page']['h'] = .nil then self~catalog['page']['h'] = self~sizeY - 40
 
    size = self~getTextSizeDlg("Hg")
    textHeight = size~height
@@ -185,24 +185,24 @@
    end
 
    if n > 0 | m > 0 then do  /* topline or dropdown */
-      if self~catalog['page']['x'] = .Nil then self~catalog['page']['x'] = 1
+      if self~catalog['page']['x'] = .nil then self~catalog['page']['x'] = 1
       if m > 0 then do
-        if self~catalog['page']['y'] = .Nil then self~catalog['page']['y'] = self~caty*2+textHeight+4
+        if self~catalog['page']['y'] = .nil then self~catalog['page']['y'] = self~caty*2+textHeight+4
       end
-      else if self~catalog['page']['y'] = .Nil then self~catalog['page']['y'] = self~caty+textHeight+5
+      else if self~catalog['page']['y'] = .nil then self~catalog['page']['y'] = self~caty+textHeight+5
 
-      if self~catalog['page']['w'] = .Nil then self~catalog['page']['w'] = self~sizeX - 2
+      if self~catalog['page']['w'] = .nil then self~catalog['page']['w'] = self~sizeX - 2
    end
    else do
       if self~catmax = 0 then do
-        if self~catalog['page']['x'] = .Nil then self~catalog['page']['x'] = self~catX+10+self~catcx
+        if self~catalog['page']['x'] = .nil then self~catalog['page']['x'] = self~catX+10+self~catcx
       end
       else
-        if self~catalog['page']['x'] = .Nil then self~catalog['page']['x'] = self~catX+10+self~catcx * ((self~catalog['count']-1)%self~catmax+1)
+        if self~catalog['page']['x'] = .nil then self~catalog['page']['x'] = self~catX+10+self~catcx * ((self~catalog['count']-1)%self~catmax+1)
 
-      if self~catalog['page']['y'] = .Nil then self~catalog['page']['y'] = 5
+      if self~catalog['page']['y'] = .nil then self~catalog['page']['y'] = 5
 
-      if self~catalog['page']['w'] = .Nil then self~catalog['page']['w'] = self~sizeX - (self~catX+self~catcx+20)
+      if self~catalog['page']['w'] = .nil then self~catalog['page']['w'] = self~sizeX - (self~catX+self~catcx+20)
    end
 
    self~CategoryPage
@@ -233,7 +233,7 @@
          self~AddRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax, newstyle || " CAT")
    end
 
-   self~dlgHandle = UsrCreateDialog(self~Adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, self~AutoDetect, 1, 0, 0)
+   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, self~autoDetect, 1, 0, 0)
    self~activePtr = 0
    if self~dlgHandle = 0 then return 0
 
@@ -244,7 +244,7 @@
       self~CreateCategoryDialog(p['x'], p['y'], p['w'], p['h'],p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
       msg = "self~" || self~catalog['names'][i]~space(0)
       interpret(msg)
-      ret = UsrCreateDialog(self~Adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+      ret = UsrCreateDialog(self~adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
       self~activePtr = 0
       self~catalog['handles'][i] = ret
    end
@@ -340,12 +340,12 @@
    use arg options
    if self~catalog['category'] = 0 then
    do
-      if Arg(1,"o") = 1 | options = "OPTIONS" | options = .Nil then options = "FIX";
+      if arg(1,"o") = 1 | options = "OPTIONS" | options = .nil then options = "FIX";
       else do
           if options~wordpos("FIX") = 0 then options = options || " FIX"
       end
    end
-   else if Arg(1,"o") = 1 | options = "OPTIONS" | options = .Nil then options = ""
+   else if arg(1,"o") = 1 | options = "OPTIONS" | options = .nil then options = ""
    return options~translate
 
    /* This method returs the currently selected page. Return value 1 means */
@@ -380,7 +380,7 @@
 
    oldPage = self~catalog['category']
    /* if ChangePage is called automatically, 2 arg are passed (WParam and LParam) */
-   if Arg(2,'o') = 0 | NewPage > 9000 then NewPage = self~GetSelectedPage
+   if arg(2,'o') = 0 | NewPage > 9000 then NewPage = self~GetSelectedPage
    else do
       if self~catstyle~wordpos("DROPDOWN") = 0 then do
           /* SetRadioButton only works for registered radio buttons */
@@ -435,73 +435,73 @@
    use arg id, fname
    forward message "AddAttribute" continue
    if result = -1 then return -1              /* new id in result */
-   return DataTable(self~Adm,"ADD",result,0, self~catalog['category']);
+   return DataTable(self~adm,"ADD",result,0, self~catalog['category']);
 
 ::method ConnectComboBox
    use arg id, fname, opts
    forward message "AddAttribute" continue
    id = result; if result = -1 then return -1              /* new id in result */
    if opts~translate~wordpos("LIST") = 0 then type = 0; else type = 5
-   return DataTable(self~Adm,"ADD",id,type, self~catalog['category']);
+   return DataTable(self~adm,"ADD",id,type, self~catalog['category']);
 
 ::method ConnectCheckBox
    use arg id, fname
    forward message "AddAttribute" continue
    if result = -1 then return -1              /* new id in result */
-   return DataTable(self~Adm,"ADD",result,1, self~catalog['category']);
+   return DataTable(self~adm,"ADD",result,1, self~catalog['category']);
 
 ::method ConnectRadioButton
    use arg id, fname
    forward message "AddAttribute" continue
    if result = -1 then return -1              /* new id in result */
-   return DataTable(self~Adm,"ADD",result,2, self~catalog['category']);
+   return DataTable(self~adm,"ADD",result,2, self~catalog['category']);
 
 ::method ConnectListBox
    use arg id, fname
    forward message "AddAttribute" continue
    if result = -1 then return -1              /* new id in result */
-   return DataTable(self~Adm,"ADD",result,3, self~catalog['category']);
+   return DataTable(self~adm,"ADD",result,3, self~catalog['category']);
 
 ::method ConnectMultiListBox
    use arg id, fname
    forward message "AddAttribute" continue
    if result = -1 then return -1              /* new id in result */
-   return DataTable(self~Adm,"ADD",result,4, self~catalog['category']);
+   return DataTable(self~adm,"ADD",result,4, self~catalog['category']);
 
 ::method ConnectSeparator
    use arg id
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return DataTable(self~Adm,"ADD",id,9, self~catalog['category']);
+   return DataTable(self~adm,"ADD",id,9, self~catalog['category']);
 
 ::method BoxMessage unguarded private
    use arg category, id, msg, wP, lP
    if category~Datatype("N") = 0 then category = self~catalog['category']  /* assume current page is addressed */
    if category > 9000 then forward class (super)
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return SendWinMsg("PTR", self~catalog['handles'][category], id, msg, wP, lP)
 
 ::method AddCategoryComboEntry unguarded
    use arg id, data, category
-   if Arg(2,"o") = 1 then return -1
+   if arg(2,"o") = 1 then return -1
    return self~BoxMessage(category, id, 0x00000143, 0, "T" || data)
 
 ::method InsertCategoryComboEntry unguarded
    use arg id, item, data, category
-   if Arg(3,"o") = 1 then return -1
-   if Arg(2,"o") = 1 then item = self~GetCurrentCategoryComboIndex(id, category)
+   if arg(3,"o") = 1 then return -1
+   if arg(2,"o") = 1 then item = self~GetCurrentCategoryComboIndex(id, category)
    return self~BoxMessage(category, id, 0x0000014A, item-1, "T" || data)
 
 /* don't use string but the index */
 ::method DeleteCategoryComboEntry unguarded
    use arg id, index, category
-   if Arg(2,"o") = 1 then index = self~GetCurrentCategoryComboIndex(id, category)
+   if arg(2,"o") = 1 then index = self~GetCurrentCategoryComboIndex(id, category)
    return self~BoxMessage(category, id, 0x00000144, index-1, 0)
 
 ::method FindCategoryComboEntry unguarded
    use arg id, data, category
-   if Arg(2,'o') = 1 | data = "DATA" then return -1
+   if arg(2,'o') = 1 | data = "DATA" then return -1
    item = self~BoxMessage(category, id, 0x0000014C, 0, "T" || data)
    if item > 0 then return item + 1; else return 0
 
@@ -520,7 +520,7 @@
 
 ::method GetCategoryComboEntry unguarded
    use arg id, ndx, category
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    len = SendWinMsg("DLG", self~catalog['handles'][category], id, 0x00000149, ndx-1,0)
    if len <= 0 then return ""
@@ -528,7 +528,7 @@
 
 ::method ChangeCategoryComboEntry unguarded
    use arg id, item, data, category
-   if Arg(2,"o") = 1 then item = self~GetCurrentCategoryComboIndex(id, category)
+   if arg(2,"o") = 1 then item = self~GetCurrentCategoryComboIndex(id, category)
    if item <= 0 then return -1
    self~DeleteCategoryComboEntry(id, item, category)
    return self~InsertCategoryComboEntry(id, item, data, category)
@@ -551,24 +551,24 @@
 
 ::method AddCategoryListEntry unguarded
    use arg id, data, category
-   if Arg(2,"o") = 1 then return -1
+   if arg(2,"o") = 1 then return -1
    return self~BoxMessage(category, id, 0x00000180, 0, "T" || data)
 
 ::method InsertCategoryListEntry unguarded
    use arg id, item, data, category
-   if Arg(3,"o") = 1 then return -1
-   if Arg(2,"o") = 1 then item = self~GetCurrentCategoryListIndex(id, category)
+   if arg(3,"o") = 1 then return -1
+   if arg(2,"o") = 1 then item = self~GetCurrentCategoryListIndex(id, category)
    return self~BoxMessage(category, id, 0x00000181, item-1, "T" || data)
 
 /* don't use string but the index */
 ::method DeleteCategoryListEntry unguarded
    use arg id, index, category
-   if Arg(2,"o") = 1 then index = self~GetCurrentCategoryListIndex(id, category)
+   if arg(2,"o") = 1 then index = self~GetCurrentCategoryListIndex(id, category)
    return self~BoxMessage(category, id, 0x00000182, index-1, 0)
 
 ::method FindCategoryListEntry unguarded
    use arg id, data, category
-   if Arg(2,"o") = 1 then return -1
+   if arg(2,"o") = 1 then return -1
    item = self~BoxMessage(category, id, 0x0000018F, 0, "T" || data)
    if item > 0 then return item + 1; else return 0
 
@@ -587,7 +587,7 @@
 
 ::method GetCategoryListEntry unguarded
    use arg id, ndx, category
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    len = SendWinMsg("DLG", self~catalog['handles'][category], id, 0x0000018A, ndx-1,0)
    if len <= 0 then return ""
@@ -595,7 +595,7 @@
 
 ::method ChangeCategoryListEntry unguarded
    use arg id, item, data, category
-   if Arg(2,"o") = 1 then item = self~GetCurrentCategoryListIndex(id, category)
+   if arg(2,"o") = 1 then item = self~GetCurrentCategoryListIndex(id, category)
    if item <= 0 then return -1
    self~DeleteCategoryListEntry(id, item, category)
    return self~InsertCategoryListEntry(id, item, data, category)
@@ -622,144 +622,144 @@
 
 ::method GetCategoryEntryLine unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalGetItemData(id, self~catalog['handles'][category], 0)
 
 ::method GetCategoryListLine unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalGetItemData(id, self~catalog['handles'][category], 3)
 
 ::method GetCategoryComboLine unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalGetItemData(id, self~catalog['handles'][category], 0)
 
 ::method GetCategoryCheckBox unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalGetItemData(id, self~catalog['handles'][category], 1)
 
 ::method GetCategoryRadioButton unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalGetItemData(id, self~catalog['handles'][category], 2)
 
 ::method GetCategoryMultiList unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalGetItemData(id, self~catalog['handles'][category], 4)
 
 ::method GetCategoryValue unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalGetItemData(id, self~catalog['handles'][category])
 
 ::method GetCategoryAttrib unguarded
    use arg aname, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   i = self~DataConnection~First
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   i = self~dataConnection~First
    do while (i \= .NIL)
-      if self~DataConnection[i] = aname then
+      if self~dataConnection[i] = aname then
       do
          s = "self~"aname"= self~GetValue("i", category)"
          interpret(s)
          return
       end
-      i = self~DataConnection~Next(i)
+      i = self~dataConnection~Next(i)
    end
 
 
 ::method SetCategoryStaticText unguarded
    use arg id, data, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalSetItemData(id, data, self~catalog['handles'][category], 0)
 
 ::method SetCategoryEntryLine unguarded
    use arg id, data, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalSetItemData(id, data, self~catalog['handles'][category], 0)
 
 ::method SetCategoryListLine unguarded
    use arg id, data, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalSetItemData(id, data, self~catalog['handles'][category], 3)
 
 ::method SetCategoryComboLine unguarded
    use arg id, data, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalSetItemData(id, data, self~catalog['handles'][category], 0)
 
 ::method SetCategoryCheckBox unguarded
    use arg id, data, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalSetItemData(id, data, self~catalog['handles'][category], 1)
 
 ::method SetCategoryRadioButton unguarded
    use arg id, data, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalSetItemData(id, data, self~catalog['handles'][category], 2)
 
 ::method SetCategoryMultiList unguarded
    use arg id, data, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalSetItemData(id, data, self~catalog['handles'][category], 4)
 
 ::method SetCategoryValue unguarded
    use arg id, data, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return self~InternalSetItemData(id, data, self~catalog['handles'][category])
 
 ::method SetCategoryAttrib unguarded
    use arg aname, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   i = self~DataConnection~First
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   i = self~dataConnection~First
    do while (i \= .NIL)
-      if self~DataConnection[i] = aname then
+      if self~dataConnection[i] = aname then
       do
          s = "self~SetCategoryValue("i", self~"aname", category)"
          interpret(s)
          return
       end
-      i = self~DataConnection~Next(i)
+      i = self~dataConnection~Next(i)
    end
 
 
 ::method EnableCategoryItem unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    h = self~GetItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
    return Wnd_Desktop("ENABLE", h, 1)
 
 ::method DisableCategoryItem unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    h = self~GetItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
    return Wnd_Desktop("ENABLE",h, 0)
 
 ::method HideCategoryItem unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    h = self~GetItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
    return WndShow_Pos("S",h, "HIDE")
 
 ::method ShowCategoryItem unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    h = self~GetItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
    return WndShow_Pos("S",h, "NORMAL")
 
 ::method GetItem unguarded
    use arg id, hDlg
-   if Arg(2,'o') = 1 then hDlg = self~dlgHandle
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if arg(2,'o') = 1 then hDlg = self~dlgHandle
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return 0
    hnd = HandleDlg("ITEM", id, hDlg)
-   if hnd = 0 & Arg(2,'o') = 1 then do
+   if hnd = 0 & arg(2,'o') = 1 then do
        hnd = HandleDlg("ITEM", id, self~catalog['handles'][self~catalog['category']])  /* try current page */
        if hnd = 0 then do i = 1 to self~catalog['count'] while hnd = 0   /* try all pages */
             hnd = HandleDlg("ITEM", id, self~catalog['handles'][i])
@@ -769,25 +769,25 @@
 
 ::method SendMessageToCategoryItem unguarded
    parse arg id,a2,a3,a4, category
-   if Arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   if id~DataType("N") = 0 then id = self~ResolveSymbolicId(id)
+   if arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    return SendWinMsg("DLG", self~catalog['handles'][category],id,a2,a3,a4)
 
 ::method SetCategoryItemFont unguarded
    use arg id, hFont, bRedraw, category     /* WM_SETFONT */
-   if Arg(4,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   if Arg(3, 'o') = 1 then bRedraw = 1
+   if arg(4,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(3, 'o') = 1 then bRedraw = 1
    return SendWinMsg("ANY",self~GetItem(id, self~catalog['handles'][category]), "0x0030", hFont, bRedraw)
 
 ::method FocusCategoryItem unguarded
    use arg id, category
-   if Arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    return SendWinMsg("ANY",self~catalog['handles'][category], "0x0028", self~GetItem(id, self~catalog['handles'][category]), 1)
 
 ::method ResizeCategoryItem unguarded
    use arg id, width, high, showOptions, category
-   if Arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   if Arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
+   if arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    hnd = self~GetItem(id, self~catalog['handles'][category])
    if hnd = 0 then return -1
    return WndShow_Pos("P",hnd, 0, 0, width * self~factorX, high* self~factorY,,
@@ -797,8 +797,8 @@
 
 ::method MoveCategoryItem unguarded
    use arg id, xPos, yPos, showOptions, category
-   if Arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   if Arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
+   if arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   if arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    h = self~GetItem(id, self~catalog['handles'][category])
    if h = 0 then return -1
    return WndShow_Pos("P",h, xPos * self~factorX, yPos * self~factorY, 0, 0,,
@@ -809,7 +809,7 @@
 
 ::method SetCategoryListWidth unguarded
    use arg id, dlgunits, category
-   if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
+   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
    return self~BoxMessage(category, id, 0x00000194, dlgunits*self~factorX, 0)
 
 ::method GetCategoryListWidth unguarded
@@ -818,12 +818,12 @@
 
 ::method SetCategoryListColumnWidth unguarded
    use arg id, dlgunits, category
-   if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
+   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
    return self~BoxMessage(category, id, 0x00000195, dlgunits*self~factorX, 0)
 
 ::method SetCategoryListItemHeight unguarded
    use arg id, dlgunits, category
-   if Arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
+   if arg(2,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
    return self~BoxMessage(category, id, 0x000001A0, 0, dlgunits*self~factorY)
 
 ::method GetCategoryListItemHeight unguarded
@@ -836,22 +836,22 @@
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1                /* current category */
-   return DataTable(self~Adm,"ADD", result,6, self~catalog['category']);         /* new id in result  6 == Tree Type */
+   return DataTable(self~adm,"ADD", result,6, self~catalog['category']);         /* new id in result  6 == Tree Type */
 
 ::method ConnectListControl
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1                /* current category */
-   return DataTable(self~Adm,"ADD",result,7, self~catalog['category']);         /* new id in result  7 == List Type */
+   return DataTable(self~adm,"ADD",result,7, self~catalog['category']);         /* new id in result  7 == List Type */
 
 ::method ConnectSliderControl
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1                /* current category */
-   return DataTable(self~Adm,"ADD",result,8, self~catalog['category']);         /* new id in result  8 == Track Bar Type */
+   return DataTable(self~adm,"ADD",result,8, self~catalog['category']);         /* new id in result  8 == Track Bar Type */
 
 ::method ConnectTabControl
    use arg id, attributeName
    forward message "AddAttribute" continue
    if result = -1 then return -1                /* current category */
-   return DataTable(self~Adm,"ADD",result,9, self~catalog['category']);         /* new id in result  9 == Tab Type */
+   return DataTable(self~adm,"ADD",result,9, self~catalog['category']);         /* new id in result  9 == Tab Type */
