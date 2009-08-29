@@ -285,7 +285,7 @@
 /*                                       Control Classes                                                       */
 /***************************************************************************************************************/
 
-/* Base class for all other controls */
+-- Base class for all dialog controls
 ::class 'DialogControl' public inherit WindowBase WindowExtensions
 
 ::method new class external "LIBRARY oodialog dlgctrl_new_cls"

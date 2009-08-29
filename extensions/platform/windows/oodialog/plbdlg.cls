@@ -100,6 +100,7 @@
 ::method redraw unguarded external "LIBRARY oodialog wb_redraw"
 
 ::method "title=" unguarded external "LIBRARY oodialog wb_setText"
+::method setTitle unguarded external "LIBRARY oodialog wb_setText"
 ::method title unguarded external "LIBRARY oodialog wb_getText"
 ::method setText unguarded external "LIBRARY oodialog wb_setText"
 ::method getText unguarded external "LIBRARY oodialog wb_getText"
