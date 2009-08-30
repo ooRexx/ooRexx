@@ -1114,7 +1114,7 @@
    self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, 0 /* no autodetection */, 1, icon, modal)
    self~activePtr = 0
    if self~dlgHandle = 0 then return 0
-   else self~InitDialog
+   else self~initDialog
    return self~dlgHandle
 
 ::method StopDynamic protected

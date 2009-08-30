@@ -145,7 +145,7 @@
 
 ::method StartIt   /* don't call parent startit */
    if self~dlgHandle = 0 then return 0
-   self~InitDialog
+   self~initDialog
    return self~dlgHandle
 
 ::method DefineDialog protected
@@ -306,7 +306,7 @@
 
    /* */
 
-::method InitDialog protected
+::method initDialog protected
    /* set the mark to the first radio button */
    if self~catstyle~wordpos('DROPDOWN') > 0 then
    do

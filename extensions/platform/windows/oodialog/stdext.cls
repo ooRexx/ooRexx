@@ -59,7 +59,7 @@
    self~TitleTxt = title
    self~dims = .directory~new
    self~init:super("")
-   if self~InitCode = 0 then self~Popup
+   if self~initCode = 0 then self~Popup
 
 ::method DefineDialog
    self~addText(10,10,self~dims["sx"]+2,self~dims["sy"], self~msg,, 100)
@@ -133,7 +133,7 @@
    if arg(5,'o') = 1 then self~IncStep = 10; else self~IncStep = step
    self~init:super(message, title, fixedx)
 
-::method InitDialog
+::method initDialog
    pb = self~GetProgressBar(101)
    if pb \= .nil then do
        pb~SetRange(self~LowValue, self~HighValue)
