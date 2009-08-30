@@ -48,8 +48,6 @@
 
 ::class 'TimedMessage' subclass PlainUserDialog public
 
-   /* The class' constructor */
-
 ::method init
    expose message title sleeping earlyReply
    use arg message, title, sleeping, earlyReply = .false
@@ -57,12 +55,12 @@
    if \ sleeping~datatype('W') then sleeping = 0
    self~init:super("")
 
-::method DefineDialog
+::method defineDialog
    expose message sx sy
    self~addText(10,10,sx+2,sy, message)
 
-::method InitAutoDetection
-   self~NoAutoDetection
+::method initAutoDetection
+   self~noAutoDetection
 
 ::method execute
    expose message title sleeping earlyReply sx sy
@@ -73,17 +71,15 @@
    self~createCenter(sx+20, sy + 20, title,"NOMENU", , , , 1)
    self~startit
    self~show("SHOWTOP")
-   if sleeping >= 0 then
-   do
+   if sleeping >= 0 then do
       if earlyReply then reply
       ret = msSleep(sleeping)
       self~stopit
    end
 
 
-/* This class provides a simple dialog with a titel, a message, one entry line, */
-/*   an OK and a Cancel push button */
-
+-- This class provides a simple dialog with a title, a message, one entry line,
+-- an OK and a Cancel push button.
 ::class 'InputBox' subclass PlainUserDialog public
 
 ::method sx attribute
@@ -121,7 +117,7 @@
 
    self~createCenter(dlgx, dlgy, title,,,,,4)
    self~execute:super("SHOWTOP")
-   if self~InitCode = 1 then return datas.101
+   if self~initCode = 1 then return datas.101
    else return ""
 
 
@@ -190,7 +186,7 @@
 
    self~createCenter(dlgx, dlgy, title,,,,, count*2+5)
    self~execute:super("SHOWTOP")
-   return self~InitCode
+   return self~initCode
 
 
 /* This class provides a dialog with a list box, an OK and a Cancel button. */
@@ -224,7 +220,7 @@
    self~AddListBox(101, "DATA", 10, sy+4+10, lenx, leny+4)
    self~AddButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
-::method InitDialog
+::method initDialog
    expose count input.
    do i = 1 to count
       self~AddListEntry(101, input.i)
@@ -262,7 +258,7 @@
    self~createCenter(self~dlgx, self~dlgy, title,,,,, 4)
    self~execute:super("SHOWTOP")
 
-   if self~InitCode = 1 then return datas.101
+   if self~initCode = 1 then return datas.101
    else return ""
 
 
@@ -296,7 +292,7 @@
    self~AddCheckBoxStem(101, placex, sy+4+10, len, entries., max)
    self~AddButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
-::method Execute
+::method execute
    expose message title sx sy datas. dlgx dlgy len entries. placex max
 
    s = self~getTextSizeDlg(message)
@@ -325,7 +321,7 @@
 
    self~createCenter(dlgx, dlgy, title,,,,, count+5)
    self~execute:super("SHOWTOP")
-   return self~InitCode
+   return self~initCode
 
 
 /* The dialog this class shows has a group of radio buttons. That is you only can */
@@ -348,7 +344,7 @@
    self~AddRadioStem(101, placex, sy+4+10, len, entries., max)
    self~AddButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
-::method Execute
+::method execute
    expose message title sx sy datas. dlgx dlgy len entries. placex prev max
 
    s = self~getTextSizeDlg(message)
@@ -383,7 +379,7 @@
 
    self~createCenter(dlgx, dlgy, title,,,,, count+5)
    self~execute:super("SHOWTOP")
-   if self~InitCode = 1 then
+   if self~initCode = 1 then
    do
      do i = 101 to 100+count
       if datas.i = 1 then return i-100
