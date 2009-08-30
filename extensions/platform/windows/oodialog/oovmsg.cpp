@@ -632,7 +632,7 @@ size_t RexxEntry GetDlgMsg(const char *funcname, size_t argc, CONSTRXSTRING *arg
    EnterCriticalSection(&crit_sec);
    if (argc == 2) remove = FALSE;
 
-   if (!DialogInAdminTable(dlgAdm))   /* Is the dialog admin valid? */
+   if (!dialogInAdminTable(dlgAdm))   /* Is the dialog admin valid? */
    {
        strcpy(retstr->strptr, MSG_TERMINATE);
        retstr->strlength = strlen(retstr->strptr);

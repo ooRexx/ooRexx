@@ -98,11 +98,11 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
    if (uMsg != WM_INITDIALOG)
    {
        SEEK_DLGADM_TABLE(hDlg, addressedTo);
-       if (!addressedTo && topDlg && DialogInAdminTable(topDlg) && topDlg->TheDlg) addressedTo = topDlg;
+       if (!addressedTo && topDlg && dialogInAdminTable(topDlg) && topDlg->TheDlg) addressedTo = topDlg;
 
        if (addressedTo)
        {
-          MsgEnabled = IsWindowEnabled(hDlg) && DialogInAdminTable(addressedTo);
+          MsgEnabled = IsWindowEnabled(hDlg) && dialogInAdminTable(addressedTo);
 
           // Do not search message table for WM_PAINT to improve redraw.
           if ( MsgEnabled && (uMsg != WM_PAINT) && (uMsg != WM_NCPAINT) )
@@ -554,7 +554,7 @@ INT DelDialog(DIALOGADMIN * aDlg)
 
     if ( topDlg != NULL )
     {
-        if ( DialogInAdminTable(topDlg) )
+        if ( dialogInAdminTable(topDlg) )
         {
             if (!IsWindowEnabled(topDlg->TheDlg))
             {
@@ -627,14 +627,14 @@ DWORD WINAPI WindowLoopThread(void *arg)
                     DispatchMessage(&msg);
                 }
             }
-        } while (Dlg && DialogInAdminTable(Dlg) && !Dlg->LeaveDialog);
+        } while (Dlg && dialogInAdminTable(Dlg) && !Dlg->LeaveDialog);
     }
     else
     {
         *release = TRUE;
     }
     EnterCriticalSection(&crit_sec);
-    if (DialogInAdminTable(Dlg))
+    if (dialogInAdminTable(Dlg))
     {
         ret = DelDialog(Dlg);
         Dlg->TheThread = NULL;
@@ -1685,7 +1685,7 @@ RexxMethod1(RexxObjectPtr, pbdlg_deInstall, CSELF, pCSelf)
         {
             EnterCriticalSection(&crit_sec);
 
-            if (DialogInAdminTable(adm))
+            if (dialogInAdminTable(adm))
             {
                 DelDialog(adm);
             }
