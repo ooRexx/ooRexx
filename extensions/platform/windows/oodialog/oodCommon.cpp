@@ -304,17 +304,17 @@ void oodResetSysErrCode(RexxMethodContext *context)
     context->DirectoryPut(TheDotLocalObj, TheZeroObj, "SYSTEMERRORCODE");
 }
 
-BOOL DialogInAdminTable(DIALOGADMIN * Dlg)
+bool dialogInAdminTable(DIALOGADMIN * Dlg)
 {
-    register INT i;
+    register int i;
     for ( i = 0; i < StoredDialogs; i++ )
     {
         if ( DialogTab[i] == Dlg )
         {
-           break;
+           return true;
         }
     }
-    return(i < StoredDialogs);
+    return false;
 }
 
 /**
