@@ -214,7 +214,7 @@
        when type = "GOTFOCUS"  then lp = 4
        when type = "LOSTFOCUS" then lp = 5
        when type = "ERRSPACE"  then lp = -2
-       when type = "KEYDOWN"   then do   /* can first be called from InitDialog */
+       when type = "KEYDOWN"   then do   /* can first be called from initDialog */
            return self~addUserMsg(msgToRise, 0x0000002E, "0xFFFFFFFF", 0, 0, self~getItem(id), "0xFFFFFFFF") /* WM_VKEYTOITEM */
        end
        otherwise return -1
@@ -245,7 +245,7 @@
    return self~addUserMsg(msgToRise, 0x00000111, "0xFFFFFFFF", lp * x2d("10000") + id, "0xFFFFFFFF", 0, 0) /* also send WM_COMMAND */
 
 
-::method connectScrollBarNotify         /* can only be called in InitDialog */
+::method connectScrollBarNotify         /* can only be called in initDialog */
    use strict arg id, type, msgToRise = "", category = 1
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
@@ -286,7 +286,7 @@
    return self~addUserMsg(msgToRise, 0x0000004E, "0xFFFFFFFF", id, "0xFFFFFFFF", lp, "0xFFFFFFFF")
 
 
-::method connectSliderNotify   /* can only be called in InitDialog */
+::method connectSliderNotify   /* can only be called in initDialog */
    use strict arg id, type, msgToRise = "", category = 1
    if \ id~dataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
