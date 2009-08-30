@@ -1661,7 +1661,7 @@ RexxMethod2(RexxObjectPtr, pbdlg_setDlgHandle, RexxStringObject, hDlg, CSELF, pC
     }
     else
     {
-        pcwb->rexxHwnd = TheOneObj;
+        pcwb->rexxHwnd = TheZeroObj;
     }
 
     return NULLOBJECT;
