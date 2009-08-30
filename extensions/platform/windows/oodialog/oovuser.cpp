@@ -281,7 +281,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
             };
 
         *release = TRUE;
-        while ( GetMessage(&msg,NULL, 0,0) && DialogInAdminTable(adm) && (!adm->LeaveDialog) )
+        while ( GetMessage(&msg,NULL, 0,0) && dialogInAdminTable(adm) && (!adm->LeaveDialog) )
         {
 #ifdef USE_DS_CONTROL
             if ( adm && !IsDialogMessage(adm->TheDlg, &msg)
@@ -297,7 +297,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
         *release = TRUE;
     }
     EnterCriticalSection(&crit_sec);  /* otherwise adm might be still in table but DelDialog is already running */
-    if ( DialogInAdminTable(adm) )
+    if ( dialogInAdminTable(adm) )
     {
         DelDialog(adm);
         adm->TheThread = NULL;
