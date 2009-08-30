@@ -61,6 +61,6 @@
    if result = 0 then forward message "DynamicInit"
    else return result
 
-::method StopIt
+::method stopIt
    forward class (super) continue
    forward message "StopDynamic"
