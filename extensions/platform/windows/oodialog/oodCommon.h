@@ -95,7 +95,7 @@ typedef struct _dcCSelf {
 } CDialogControl;
 typedef CDialogControl *pCDialogControl;
 
-extern BOOL DialogInAdminTable(DIALOGADMIN * Dlg);
+extern bool dialogInAdminTable(DIALOGADMIN * Dlg);
 extern bool InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc);
 extern void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
 extern void rxdatacpy(CHAR * tar, RXSTRING &src);
