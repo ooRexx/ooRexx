@@ -343,6 +343,8 @@
  * set up of the dialog management block, for all dialogs.
  */
 ::method init external "LIBRARY oodialog pbdlg_init"
+::method unInit external "LIBRARY oodialog pbdlg_unInit"
+
 
 -- Invoked from the native API implementation of init() to finish up the initialization that is
 -- easier to do from the Rexx side.
@@ -1279,12 +1281,9 @@
 ::method validate unguarded
    return 1
 
-/** deinstall() / unInit()
- *  Both methods do the same thing, clean up memory allocated for this dialog.
- */
-::method deInstall external "LIBRARY oodialog pbdlg_deInstall"
-::method unInit external "LIBRARY oodialog pbdlg_deInstall"
-
+-- DEPRECATED
+::method deInstall
+  return 0
 
 ::class 'Window' public inherit WindowBase
 ::method init  external "LIBRARY oodialog window_init"

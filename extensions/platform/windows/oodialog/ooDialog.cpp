@@ -1674,7 +1674,7 @@ RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
     return ( ((pCPlainBaseDialog)pCSelf)->wndBase->rexxHwnd );
 }
 
-RexxMethod1(RexxObjectPtr, pbdlg_deInstall, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
 {
     if ( pCSelf != NULLOBJECT )
     {
@@ -1685,7 +1685,7 @@ RexxMethod1(RexxObjectPtr, pbdlg_deInstall, CSELF, pCSelf)
         {
             EnterCriticalSection(&crit_sec);
 
-            if (dialogInAdminTable(adm))
+            if ( dialogInAdminTable(adm) )
             {
                 DelDialog(adm);
             }

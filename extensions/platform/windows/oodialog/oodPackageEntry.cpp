@@ -237,7 +237,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_setDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(pbdlg_addUserMessage);
-REXX_METHOD_PROTOTYPE(pbdlg_deInstall);
+REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(resdlg_setFontAttrib_pvt);
 
@@ -507,7 +507,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setDlgHandle,           pbdlg_setDlgHandle),
     REXX_METHOD(pbdlg_addUserMessage,         pbdlg_addUserMessage),
     REXX_METHOD(pbdlg_getTextSizeDlg,         pbdlg_getTextSizeDlg),
-    REXX_METHOD(pbdlg_deInstall,         	  pbdlg_deInstall),
+    REXX_METHOD(pbdlg_unInit,         	      pbdlg_unInit),
 
     REXX_METHOD(dlgctrl_new_cls,              dlgctrl_new_cls),
     REXX_METHOD(dlgctrl_init,                 dlgctrl_init),
