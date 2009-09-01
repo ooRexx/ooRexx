@@ -53,7 +53,7 @@
 ::method and class external "LIBRARY oodialog dlgutil_and_cls"
 ::method or class external "LIBRARY oodialog dlgutil_or_cls"
 ::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
-::method findWindow class external "LIBRARY oodialog dlgutil_findWindwo_cls"
+::method findWindow class external "LIBRARY oodialog dlgutil_findWindow_cls"
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
