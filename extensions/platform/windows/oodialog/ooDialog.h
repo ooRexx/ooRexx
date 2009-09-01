@@ -260,18 +260,6 @@ typedef enum
 #define DIB_PBI(pDIB)       ((LPBITMAPINFO)(pDIB))
 
 
-#define SEEK_DLGADM_TABLE(hDlg, addressedTo) \
-   if (topDlg && ((topDlg->TheDlg == hDlg) || (topDlg->AktChild == hDlg))) \
-       addressedTo = topDlg; \
-   else { register INT i=0; \
-       while ((i<StoredDialogs) && (DialogTab[i]->TheDlg != hDlg) && (DialogTab[i]->AktChild != hDlg)) i++; \
-       if (i<StoredDialogs) addressedTo = DialogTab[i]; else addressedTo = NULL;   } \
-
-
-#define DEF_ADM     DIALOGADMIN * dlgAdm = NULL
-#define GET_ADM     dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0])
-
-
 inline LONG_PTR setWindowPtr(HWND hwnd, int index, LONG_PTR newPtr)
 {
 #ifndef __REXX64__
@@ -477,6 +465,32 @@ extern DIALOGADMIN * DialogTab[];
 extern DIALOGADMIN * topDlg;
 extern INT StoredDialogs;
 extern CRITICAL_SECTION crit_sec;
+
+inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
+{
+    if (topDlg && ((topDlg->TheDlg == hDlg) || (topDlg->AktChild == hDlg)))
+    {
+        return topDlg;
+    }
+
+    register INT i = 0;
+    while ( (i < StoredDialogs) && (DialogTab[i]->TheDlg != hDlg) && (DialogTab[i]->AktChild != hDlg) )
+    {
+        i++;
+    }
+    return i < StoredDialogs ? DialogTab[i] : NULL;
+}
+
+#define SEEK_DLGADM_TABLE(hDlg, addressedTo) \
+   if (topDlg && ((topDlg->TheDlg == hDlg) || (topDlg->AktChild == hDlg))) \
+       addressedTo = topDlg; \
+   else { register INT i=0; \
+       while ((i<StoredDialogs) && (DialogTab[i]->TheDlg != hDlg) && (DialogTab[i]->AktChild != hDlg)) i++; \
+       if (i<StoredDialogs) addressedTo = DialogTab[i]; else addressedTo = NULL;   } \
+
+
+#define DEF_ADM     DIALOGADMIN * dlgAdm = NULL
+#define GET_ADM     dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0])
 
 extern RexxObjectPtr TheTrueObj;
 extern RexxObjectPtr TheFalseObj;

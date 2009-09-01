@@ -45,7 +45,7 @@
 
 ::class 'DialogExtensions' public MIXINCLASS object
 
-   /* This method will do the same as Execute but it will do an asynchronous */
+   /* This method will do the same as execute but it will do an asynchronous */
    /* dispatch of messages      */
 
 ::method ExecuteAsync unguarded
@@ -76,12 +76,12 @@
    do while self~finished = 0
       call msSleep 20
    end
-   if self~InitCode = 1 then do
+   if self~initCode = 1 then do
       if self~useStem then self~GetDataStem(self~dlgData)
       self~GetData
    end
    if self~adm \= 0 then self~stopit
-   return self~InitCode
+   return self~initCode
 
 
    /* This method is started asynchronously to handle dialog messages */
@@ -104,8 +104,8 @@
    use arg sh, sleeptime, icon = 0
    if arg(1,'o') = 1 then sh = "DEFAULT"
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
-   /* start Execute and return to caller */
-   self~start("Execute", sh, icon, sleeptime, "NOTMODAL")
+   /* start execute and return to caller */
+   self~start("execute", sh, icon, sleeptime, "NOTMODAL")
 
 
 ::method PopupAsChild
@@ -120,8 +120,8 @@
    parent~childDialogs~insert(self)  /* add to the parents child list (last item) */
    self~parentDlg = parent
 
-   /* start Execute and return to caller */
-   self~start("Execute", sh, icon, sleeptime, "NOTMODAL")
+   /* start execute and return to caller */
+   self~start("execute", sh, icon, sleeptime, "NOTMODAL")
 
 
 ::method SendMessageToItem unguarded
@@ -139,26 +139,26 @@
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    if arg(4, "o") = 1 then redraw = 1
-   return HandleScrollBar("SR", self~GetItem(id),min,max, redraw)
+   return HandleScrollBar("SR", self~getItem(id),min,max, redraw)
 
 ::method GetSBRange unguarded
    use arg id
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return HandleScrollBar("GR",self~GetItem(id))
+   return HandleScrollBar("GR",self~getItem(id))
 
 ::method SetSBPos unguarded
    use arg id, pos, redraw
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    if arg(3, "o") = 1 then redraw = 1
-   return HandleScrollBar("SP",self~GetItem(id),pos, redraw)
+   return HandleScrollBar("SP",self~getItem(id),pos, redraw)
 
 ::method GetSBPos unguarded
    use arg id
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   return HandleScrollBar("GP",self~GetItem(id))
+   return HandleScrollBar("GP",self~getItem(id))
 
 ::method connectScrollBar
    use arg id, progUp, progDn, progPos, min, max, pos, progPgUp, progPgDn, progTop, progBottom, progTrack, progEndSc
@@ -298,7 +298,7 @@
 ::method SetItemFont unguarded
    use arg id, hFont, bRedraw     /* WM_SETFONT */
    if arg(3, 'o') = 1 then bRedraw = 1
-   return SendWinMsg("ANY", self~GetItem(id), "0x0030", hFont, bRedraw)
+   return SendWinMsg("ANY", self~getItem(id), "0x0030", hFont, bRedraw)
 
 ::method HideWindowFast unguarded
    use arg hwnd
@@ -310,20 +310,20 @@
 
 ::method HideItemFast unguarded
    use arg id
-   h = self~GetItem(id)
+   h = self~getItem(id)
    if h = 0 then return -1
    return WndShow_Pos("S", h, "HIDE FAST")
 
 ::method ShowItemFast unguarded
    use arg id
-   h = self~GetItem(id)
+   h = self~getItem(id)
    if h = 0 then return -1
    return WndShow_Pos("S",h, "NORMAL FAST")
 
    /* This method returns the size and position of the given button */
 ::method GetButtonRect unguarded
    use arg id
-   ret = self~GetItem(id)
+   ret = self~getItem(id)
    return WindowRect("GET", ret)
 
    /* Returns the size and position of the given window */
@@ -337,7 +337,7 @@
 ::method ResizeItem unguarded
    use arg id, width, high, showOptions = ""
    showOptions = showOptions~translate
-   hwnd = self~GetItem(id)
+   hwnd = self~getItem(id)
    if hwnd = 0 then return -1
    return WndShow_Pos("P",hwnd, 0, 0, width * self~factorX, high* self~factorY,,
                            "NOMOVE "||showOptions)
@@ -347,7 +347,7 @@
 ::method MoveItem unguarded
    use arg id, xPos, yPos, showOptions = ""
    showOptions = showOptions~translate
-   hwnd = self~GetItem(id)
+   hwnd = self~getItem(id)
    if h = 0 then return -1
    return WndShow_Pos("P", hwnd, xPos * self~factorX, yPos * self~factorY, 0, 0,,
                            "NOSIZE "||showOptions)
@@ -502,7 +502,7 @@
 
 ::method ScrollInButton unguarded
    use arg id, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color
-   hwnd = self~GetItem(id)
+   hwnd = self~getItem(id)
    if arg() = 1 then
       return self~ScrollText(hwnd)
    else
@@ -570,7 +570,7 @@
 
 ::method ClearButtonRect unguarded
    use arg id
-   hwnd = self~GetItem(id)
+   hwnd = self~getItem(id)
    return WindowRect("CLR", self~adm, hwnd)
 
    /* This method erases the draw area of the given window */
@@ -594,7 +594,7 @@
 
 ::method RedrawButton unguarded
    use arg id, erasebkg
-   hwnd = self~GetItem(id)
+   hwnd = self~getItem(id)
    if arg(2, 'o') = 1 then erasebkg = 0
    return WindowRect("RDW", hwnd, erasebkg)
 
@@ -631,7 +631,7 @@
 
 ::method WriteToButton unguarded
    argarr = arg(1, "A")
-   argarr[1] = self~GetItem(argarr[1])  /* transform first argument into window handle */
+   argarr[1] = self~getItem(argarr[1])  /* transform first argument into window handle */
    forward message (WriteToWindow) arguments (argarr)
 
 
@@ -639,7 +639,7 @@
 
 ::method ScrollButton unguarded
    use arg id, xPos, yPos, left, top, right, bottom
-   return ScrollTheWindow(self~adm, self~GetItem(id), xPos, yPos, left, top, right, bottom, "yes")
+   return ScrollTheWindow(self~adm, self~getItem(id), xPos, yPos, left, top, right, bottom, "yes")
 
 
    /* This method will return the device context of a window */
@@ -652,7 +652,7 @@
 
 ::method GetButtonDC unguarded
    use arg id
-   return self~GetWindowDC(self~GetItem(id))
+   return self~GetWindowDC(self~getItem(id))
 
    /* This method will free the device context of a window */
 
@@ -664,7 +664,7 @@
 
 ::method FreeButtonDC unguarded
    use arg id, dc
-   hwnd = self~GetItem(id)
+   hwnd = self~getItem(id)
    return self~FreeWindowDC(hwnd, dc)
 
    /* This method will return the horizontal bitmap extension */
@@ -698,7 +698,7 @@
    if arg(8, "o") = 1 then ylen = 0
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if arg(1, "o") = 1 then hwnd = self~GetItem(id)
+   if arg(1, "o") = 1 then hwnd = self~getItem(id)
    return BmpButton(self~adm, "D", hwnd, id, px, py, srcx, srcy, xlen, ylen)
 
 
@@ -748,7 +748,7 @@
    if (cursx > xl) then cursx = xl
    if (cursy > yl) then cursy = yl
 
-   hwnd = self~GetItem(id)
+   hwnd = self~getItem(id)
    if hwnd = 0 then return -1
 
    parse value self~GetWindowRect(hwnd) with r.left r.top r.right r.bottom
@@ -1054,7 +1054,7 @@ syntax:
    return .Menu~connectItem(id, msgToRaise, self)
 
 ::method PeekDialogMessage unguarded
-   return GetDlgMsg(self~adm, "Peek")
+   return GetDlgMsg(self~adm, .true)
 
 ::method SetWindowRect unguarded
    use arg hwnd, x, y, width, high, showOptions = ""

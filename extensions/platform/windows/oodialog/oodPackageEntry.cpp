@@ -86,9 +86,7 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 
 
-REXX_CLASSIC_ROUTINE_PROTOTYPE(GetDlgMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleDlg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetFileNameWindow);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DataTable);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SetItemData);
@@ -134,12 +132,12 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrDefineDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddNewCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddResource);
 
+REXX_TYPED_ROUTINE_PROTOTYPE(GetDlgMsg);
+
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
-    REXX_CLASSIC_ROUTINE(GetDlgMsg,            GetDlgMsg),
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
-    REXX_CLASSIC_ROUTINE(HandleDlg,            HandleDlg),
     REXX_CLASSIC_ROUTINE(GetFileNameWindow,    GetFileNameWindow),
     REXX_CLASSIC_ROUTINE(DataTable,            DataTable),
     REXX_CLASSIC_ROUTINE(SetItemData,          SetItemData),
@@ -183,6 +181,8 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(UsrDefineDialog,      UsrDefineDialog),
     REXX_CLASSIC_ROUTINE(UsrAddNewCtrl,        UsrAddNewCtrl),
     REXX_CLASSIC_ROUTINE(UsrAddResource,       UsrAddResource),
+
+    REXX_TYPED_ROUTINE(GetDlgMsg,              GetDlgMsg),
 
     REXX_LAST_ROUTINE()
 };
@@ -235,9 +235,15 @@ REXX_METHOD_PROTOTYPE(pbdlg_getFontSize_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_init);
 REXX_METHOD_PROTOTYPE(pbdlg_setDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
+REXX_METHOD_PROTOTYPE(pbdlg_get);
+REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
+REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
+REXX_METHOD_PROTOTYPE(pbdlg_getItem);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(pbdlg_addUserMessage);
 REXX_METHOD_PROTOTYPE(pbdlg_unInit);
+
+REXX_METHOD_PROTOTYPE(dyndlg_stop);
 
 REXX_METHOD_PROTOTYPE(resdlg_setFontAttrib_pvt);
 
@@ -472,7 +478,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_test_cls,             dlgutil_test_cls),
 
-
     REXX_METHOD(wb_init_windowBase,           wb_init_windowBase),
     REXX_METHOD(wb_getHwnd,                   wb_getHwnd),
     REXX_METHOD(wb_getFactorX,                wb_getFactorX),
@@ -503,11 +508,17 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getFontName_cls,        pbdlg_getFontName_cls),
     REXX_METHOD(pbdlg_getFontSize_cls,        pbdlg_getFontSize_cls),
     REXX_METHOD(pbdlg_init,                   pbdlg_init),
-    REXX_METHOD(pbdlg_getDlgHandle,           pbdlg_getDlgHandle),
     REXX_METHOD(pbdlg_setDlgHandle,           pbdlg_setDlgHandle),
+    REXX_METHOD(pbdlg_getDlgHandle,           pbdlg_getDlgHandle),
+    REXX_METHOD(pbdlg_get,                    pbdlg_get),
+    REXX_METHOD(pbdlg_isDialogActive,         pbdlg_isDialogActive),
+    REXX_METHOD(pbdlg_getItem,                pbdlg_getItem),
+    REXX_METHOD(pbdlg_stopIt,                 pbdlg_stopIt),
     REXX_METHOD(pbdlg_addUserMessage,         pbdlg_addUserMessage),
     REXX_METHOD(pbdlg_getTextSizeDlg,         pbdlg_getTextSizeDlg),
     REXX_METHOD(pbdlg_unInit,         	      pbdlg_unInit),
+
+    REXX_METHOD(dyndlg_stop,                  dyndlg_stop),
 
     REXX_METHOD(dlgctrl_new_cls,              dlgctrl_new_cls),
     REXX_METHOD(dlgctrl_init,                 dlgctrl_init),

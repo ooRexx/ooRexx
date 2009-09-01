@@ -63,28 +63,40 @@ BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr)
 }
 
 
-CHAR * GetDlgMessage(DIALOGADMIN * addressedTo, CHAR * buffer, BOOL remove)
+char *getDlgMessage(DIALOGADMIN *addressedTo, char *buffer, bool peek)
 {
-   int i = 0, l;
+   size_t i = 0, l;
    MSG msg;
 
-   if (addressedTo->pMessageQueue)
+   if ( addressedTo->pMessageQueue )
    {
-       CHAR * QPtr = addressedTo->pMessageQueue;
-       l = (int)strlen(QPtr);
-       if (!l && !PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) && remove) Sleep(1);   /* don't sleep for just a Peek */
+       char * pMsgQ = addressedTo->pMessageQueue;
+       l = strlen(pMsgQ);
 
-       /* copy up to ; */
-       while ((i<l) && (QPtr[i] != ';'))
+       // Don't sleep for just a peek.
+       if ( !l &&  !PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) && !peek )
        {
-          buffer[i] = QPtr[i];
-          i++;
+           Sleep(1);
+       }
+
+       // Copy up to the ';'
+       while ( i < l && pMsgQ[i] != ';' )
+       {
+           buffer[i] = pMsgQ[i];
+           i++;
        }
        buffer[i]='\0';
 
-       if (l && remove)   {
-           if (i>=l) QPtr[0] = '\0';
-           else memmove(&QPtr[0], &QPtr[i+1], l-i);
+       if ( l &&  !peek )
+       {
+           if ( i >= l )
+           {
+               pMsgQ[0] = '\0';
+           }
+           else
+           {
+               memmove(&pMsgQ[0], &pMsgQ[i + 1], l - i);
+           }
        }
    }
    return buffer;
@@ -601,9 +613,6 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
         HANDLE wParam = GET_HANDLE(argv[3].strptr);
         LONG lParam = atol(argv[4].strptr);
 
-       // TODO SendMessage returns LRESULT, which could possibly be a 64-bit
-       // number.  Need to look at each one of the ooDialog calls and decide if
-       // it can still be used here.
        ret = SendMessage(hWnd, msgID, (WPARAM)wParam, (LPARAM)lParam);
        if ( ret == 0 )
        {
@@ -616,32 +625,63 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
 }
 
 
-
-size_t RexxEntry GetDlgMsg(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+/** GetDlgMsg()
+ *
+ *  Retrieves a windows event message from the message queue buffer.
+ *
+ *  Each Rexx dialog object has a C/C++ string buffer used to store strings
+ *  representing window event messages.  The Rexx programmer "connects" a
+ *  windows event by supplying a filter to apply to window messages and the name
+ *  of a method in the Rexx dialog to invoke when / if the window message is
+ *  sent to the underlying Windows dialog.
+ *
+ *  Each window message sent to the underlying Windows dialog is checked against
+ *  the set of message filters.  If a match is found, a string event message is
+ *  constructed using the method name and the parameters of the window message.
+ *  This string is then placed in the message queue buffer.
+ *
+ *  On the Rexx side, the Rexx dialog object periodically checks the message
+ *  queue using this routine.  If a message is waiting, it is then dispatched to
+ *  the Rexx dialog method using interpret.
+ *
+ *  @param  adm    Pointer to the dialog administration block for the Rexx
+ *                 dialog.
+ *  @param  peek   [optional]  Whether to just do a message "peek" which returns
+ *                 the message but does not remove it.  The default is false.
+ *
+ *  @return  The next message in the queue, or the empty string if the queue is
+ *           empty.
+ *
+ */
+RexxRoutine2(RexxStringObject, GetDlgMsg, CSTRING, adm, OPTIONAL_logical_t, doPeek)
 {
-   BOOL remove = TRUE;
-   HWND hDlg = NULL;
-   DEF_ADM;
+    RexxCallContext *c = context;
+    DIALOGADMIN * dlgAdm = (DIALOGADMIN *)string2pointer(adm);
+    if ( dlgAdm == NULL )
+    {
+        c->RaiseException1(Rexx_Error_Incorrect_call_user_defined,
+                           c->String("GetDlgMsg() argument 1 must not be a null Pointer"));
+        return NULLOBJECT;
+    }
 
-   CHECKARGL(1);
+    char msg[256];
+    RexxStringObject result;
+    bool peek = doPeek != 0 ? true : false;
 
-   GET_ADM;
+    EnterCriticalSection(&crit_sec);
 
-   if (!dlgAdm) RETERR
+    // Is the dialog admin valid?
+    if ( dialogInAdminTable(dlgAdm) )
+    {
+        getDlgMessage(dlgAdm, msg, peek);
+        result = c->String(msg);
+    }
+    else
+    {
+        result = c->String(MSG_TERMINATE);
+    }
+    LeaveCriticalSection(&crit_sec);
 
-   EnterCriticalSection(&crit_sec);
-   if (argc == 2) remove = FALSE;
-
-   if (!dialogInAdminTable(dlgAdm))   /* Is the dialog admin valid? */
-   {
-       strcpy(retstr->strptr, MSG_TERMINATE);
-       retstr->strlength = strlen(retstr->strptr);
-       LeaveCriticalSection(&crit_sec);
-       return 0;
-   }
-   GetDlgMessage(dlgAdm, retstr->strptr, remove);
-   retstr->strlength = strlen(retstr->strptr);
-   LeaveCriticalSection(&crit_sec);
-   return 0;
+    return result;
 }
 

@@ -57,9 +57,10 @@
    if arg(1,'o') = 1 then self~useStem = .false; else self~useStem = .true
    return 0
 
-   /*  */
 ::method InitAutoDetection protected
    self~AutoDetection
+
+::method stop private external "LIBRARY oodialog dyndlg_stop"
 
    /* This method creates the dialog you previously defined via Add... methods */
    /* You can set the font and the number of expected items */
@@ -90,7 +91,7 @@
    parse var ret base ptr
    self~BasePtr = base
    self~activePtr = ptr
-   if ptr = 0 then call HandleDlg "STOP"
+   if ptr = 0 then self~stop
    self~sizeX = cx
    self~sizeY = cy
    self~DefineDialog
@@ -129,7 +130,7 @@
 ::method Load
    forward message "LoadFrame" continue
    hnd = result
-   if hnd \= 0 then forward message "LoadItems" continue; else call HandleDlg "STOP"
+   if hnd \= 0 then forward message "LoadItems" continue; else self~stop
    return (hnd=0)
 
 

@@ -343,11 +343,6 @@
  * set up of the dialog management block, for all dialogs.
  */
 ::method init external "LIBRARY oodialog pbdlg_init"
-::method unInit external "LIBRARY oodialog pbdlg_unInit"
-
-
--- Invoked from the native API implementation of init() to finish up the initialization that is
--- easier to do from the Rexx side.
 ::method finalInit private
    use arg includeFile
 
@@ -382,6 +377,8 @@
 
    return 0
 
+::method unInit external "LIBRARY oodialog pbdlg_unInit"
+
 ::method setDlgFont
   use strict arg name, size = 8
   self~fontName = name
@@ -391,13 +388,13 @@
    /* This method will be called after the Windows dialog has been created. */
    /* It is useful to set data fields and initialize combo & list boxes */
 
-::method InitDialog unguarded protected
+::method initDialog unguarded protected
    return 0
 
    /* This method will dispatch messages from dialog until OK or Cancel */
    /* push button has been pushed or ESC or Enter has been presed */
 
-::method Run unguarded protected
+::method run unguarded protected
    use strict arg sleeptime = 0
 
    do while self~finished = 0
@@ -408,7 +405,7 @@
    /* automatic methods and destroy the dialog. Data will be set and */
    /* received */
 
-::method Execute unguarded
+::method execute unguarded
    expose dlgData.
    use arg sh, icon = 0, sleeptime, nomodal
    icon = self~resolveIconId(icon)
@@ -426,32 +423,29 @@
          o~start(m)
       end
       self~run(sleeptime)
-      if self~InitCode = 1 then do
+      if self~initCode = 1 then do
          if self~useStem then self~GetDataStem(dlgData.)
              self~GetData
       end
       if self~adm \= 0 then self~stopit
-      return self~InitCode
+      return self~initCode
    end
    else self~stopit
    return 0
 
    /* This method deletes the Windows dialog */
 
-::method stopIt
+::method stopIt external "LIBRARY oodialog pbdlg_stopIt"
+::method finalStopIt private
    use arg caller
-   if self~dlgHandle = 0 | self~adm = 0 then return -1
-   self~leaving
-   ret =  HandleDlg("STOP", self~dlgHandle)
-   self~dlgHandle = 0
 
-   -- TODO this stopIt() method is a good canidate for the new native API, for now, just call deInstall()
-   self~deinstall
-
-   /* we ourselves are a child dialog and not called by the parent's stopit */
+   -- If we ourselves are a child dialog and not called by the parent's stopIt(), then
+   -- remove ourself from the parent dialog's child list.  (Child dialogs are independent
+   -- and the user could close them at any time.)
    if self~parentDlg \= .nil & caller \= "PARENT" then self~parentDlg~ChildDied(self)
 
-   /* if we have child dialogs, stop all of them */
+   -- If we have child dialogs, then stop all of them.  Child dialogs are always started
+   -- through popupAsChild() and are always closed when the parent closes.
    if self~childDialogs \= .nil then do
        if self~childDialogs~items > 0 then
        do child over self~childDialogs
@@ -459,7 +453,7 @@
        end
        self~childDialogs = .nil
    end
-   return ret
+   return 0
 
 
 -- Remove a child dialog from the chain of child dialogs.
@@ -477,23 +471,10 @@
    end
 
 
-   /* This method returns the handle of the current dialog */
-
-::method Get unguarded
-   return HandleDlg("HNDL")
-
-::method GetSelf unguarded
-   return HandleDlg("HNDL", self~adm)
-
-
-   /* This method returns the handle of a dialog item */
-
-::method GetItem unguarded
-   use arg id, hDlg
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return 0
-   if arg(2,'o') = 1 then hDlg = self~dlgHandle
-   return HandleDlg("ITEM",id, hDlg)
+::method get unguarded external "LIBRARY oodialog pbdlg_get"
+::method getSelf unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
+::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
+::method getItem unguarded external "LIBRARY oodialog pbdlg_getItem"
 
 ::method GetControlID unguarded
    use strict arg hWnd
@@ -681,7 +662,7 @@
    /* This method returns the title of the item 'id'  */
 ::method ItemTitle unguarded
    use arg id
-   return Wnd_Desktop("TXT", self~GetItem(id))
+   return Wnd_Desktop("TXT", self~getItem(id))
 
    /* This changes the text of a static text control */
 
@@ -1106,11 +1087,6 @@
    end
 
 
-   /* Returns 1 (true) if Windows dialog is still existing */
-
-::method IsDialogActive unguarded
-   return HandleDlg("ACTIVE", self~dlgHandle)
-
 
    /* This method will handle one dialog message synchronously */
 
@@ -1148,25 +1124,25 @@
 
 ::method EnableItem unguarded
    use arg id
-   h = self~GetItem(id)
+   h = self~getItem(id)
    if h = 0 then return -1
    return Wnd_Desktop("ENABLE",h, 1)
 
 ::method DisableItem unguarded
    use arg id
-   h = self~GetItem(id)
+   h = self~getItem(id)
    if h = 0 then return -1
    return Wnd_Desktop("ENABLE",h, 0)
 
 ::method HideItem unguarded
    use arg id
-   h = self~GetItem(id)
+   h = self~getItem(id)
    if h = 0 then return -1
    return WndShow_Pos("S",h, "HIDE")
 
 ::method ShowItem unguarded
    use arg id
-   h = self~GetItem(id)
+   h = self~getItem(id)
    if h = 0 then return -1
    return WndShow_Pos("S",h, "NORMAL")
 
@@ -1193,7 +1169,7 @@
 
 ::method FocusItem unguarded
    use arg id
-   return SendWinMsg("ANY", self~dlgHandle, "0x0028", self~GetItem(id), 1)
+   return SendWinMsg("ANY", self~dlgHandle, "0x0028", self~getItem(id), 1)
 
 ::method TabToNext unguarded
    return Wnd_Desktop("SETFOC", self~dlgHandle, 0, "N")
@@ -1255,7 +1231,7 @@
 
 ::method OK unguarded
    self~finished = self~Validate
-   self~InitCode = 1
+   self~initCode = 1
    return self~finished
 
  /* If self~finished = 1 the dialog is destroyed, if 0 the dialog */
@@ -1263,7 +1239,7 @@
 
 ::method Cancel unguarded
    self~finished = 1
-   if self~finished = 1 then self~InitCode = 2
+   if self~finished = 1 then self~initCode = 2
    return self~finished
 
 ::method Help unguarded

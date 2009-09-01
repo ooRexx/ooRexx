@@ -728,44 +728,51 @@
 ::method EnableCategoryItem unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   h = self~GetItem(id, self~catalog['handles'][category])
+   h = self~getItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
    return Wnd_Desktop("ENABLE", h, 1)
 
 ::method DisableCategoryItem unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   h = self~GetItem(id, self~catalog['handles'][category])
+   h = self~getItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
    return Wnd_Desktop("ENABLE",h, 0)
 
 ::method HideCategoryItem unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   h = self~GetItem(id, self~catalog['handles'][category])
+   h = self~getItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
    return WndShow_Pos("S",h, "HIDE")
 
 ::method ShowCategoryItem unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   h = self~GetItem(id, self~catalog['handles'][category])
+   h = self~getItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
    return WndShow_Pos("S",h, "NORMAL")
 
-::method GetItem unguarded
+::method getItem unguarded
    use arg id, hDlg
-   if arg(2,'o') = 1 then hDlg = self~dlgHandle
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return 0
-   hnd = HandleDlg("ITEM", id, hDlg)
-   if hnd = 0 & arg(2,'o') = 1 then do
-       hnd = HandleDlg("ITEM", id, self~catalog['handles'][self~catalog['category']])  /* try current page */
-       if hnd = 0 then do i = 1 to self~catalog['count'] while hnd = 0   /* try all pages */
-            hnd = HandleDlg("ITEM", id, self~catalog['handles'][i])
+
+   forward class (super) continue
+   hwnd = result
+   if hwnd == -1 then return -1
+
+   if hwnd = 0 & arg(2,'O') then do
+       if \ id~datatype("W") then id = self~resolveSymbolicId(id)
+       if id == -1 then return -1
+
+       -- Try current page.
+       hwnd = self~getItem:super(id, self~catalog['handles'][self~catalog['category']])
+
+       -- If still no good, try all pages.
+       if hwnd = 0 then do i = 1 to self~catalog['count'] while hwnd = 0
+           hwnd = self~getItem:super(id, self~catalog['handles'][i])
        end
    end
-   return hnd
+   return hwnd
 
 ::method SendMessageToCategoryItem unguarded
    parse arg id,a2,a3,a4, category
@@ -777,18 +784,18 @@
    use arg id, hFont, bRedraw, category     /* WM_SETFONT */
    if arg(4,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    if arg(3, 'o') = 1 then bRedraw = 1
-   return SendWinMsg("ANY",self~GetItem(id, self~catalog['handles'][category]), "0x0030", hFont, bRedraw)
+   return SendWinMsg("ANY",self~getItem(id, self~catalog['handles'][category]), "0x0030", hFont, bRedraw)
 
 ::method FocusCategoryItem unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return SendWinMsg("ANY",self~catalog['handles'][category], "0x0028", self~GetItem(id, self~catalog['handles'][category]), 1)
+   return SendWinMsg("ANY",self~catalog['handles'][category], "0x0028", self~getItem(id, self~catalog['handles'][category]), 1)
 
 ::method ResizeCategoryItem unguarded
    use arg id, width, high, showOptions, category
    if arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    if arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   hnd = self~GetItem(id, self~catalog['handles'][category])
+   hnd = self~getItem(id, self~catalog['handles'][category])
    if hnd = 0 then return -1
    return WndShow_Pos("P",hnd, 0, 0, width * self~factorX, high* self~factorY,,
                            "NOMOVE "||showOptions)
@@ -799,7 +806,7 @@
    use arg id, xPos, yPos, showOptions, category
    if arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    if arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   h = self~GetItem(id, self~catalog['handles'][category])
+   h = self~getItem(id, self~catalog['handles'][category])
    if h = 0 then return -1
    return WndShow_Pos("P",h, xPos * self~factorX, yPos * self~factorY, 0, 0,,
                            "NOSIZE "||showOptions)

@@ -381,10 +381,11 @@ bool InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc)
 
 
 /* end a dialog and remove installed components */
-INT DelDialog(DIALOGADMIN * aDlg)
+int32_t DelDialog(DIALOGADMIN * aDlg)
 {
     DIALOGADMIN * current;
-    INT ret, i;
+    int32_t ret;
+    INT i;
     BOOL wasFGW;
     HICON hIconBig = NULL;
     HICON hIconSmall = NULL;
@@ -1525,6 +1526,29 @@ bool convert2PointerSize(RexxMethodContext *c, RexxObjectPtr obj, uint64_t *numb
     return rxStr2Number(c, c->ObjectToStringValue(obj), number, argPos);
 }
 
+int32_t stopDialog(HWND hDlg)
+{
+    if ( hDlg != NULL )
+    {
+        DIALOGADMIN * dlgAdm = seekDlgAdm(hDlg);
+        if ( dlgAdm != NULL)
+        {
+            return DelDialog(dlgAdm);
+        }
+        else
+        {
+            return -1;
+        }
+    }
+    else if ( hDlg == NULL && topDlg != NULL )
+    {
+        // Remove the top most.  This scenario is invoked from the DynamicDialog
+        // class when create() or load() fail.
+        return DelDialog(topDlg);
+    }
+    return -1;
+}
+
 RexxMethod0(RexxObjectPtr, pbdlg_init_cls)
 {
     context->SetObjectVariable("FONTNAME", context->String(DEFAULT_FONTNAME));
@@ -1630,50 +1654,6 @@ err_out:
     return result;
 }
 
-/** PlainBaseDialog::dlgHandle  [attribute set private]
- *
- *  Sets the handle of the underlying Windows dialog.  When a PlainBaseDialog is
- *  first initialized, the dialog handle is of course unknown.  The underlying
- *  dialog has not been created.
- *
- *  While this ooDialog is still a mix of old and new native APIs has to remain
- *  an actual method implementation.  See for example:
- *
- *  self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount,
- *  0, self~BasePtr, self~autoDetect, 1, 0, 0)
- *
- *  When / if the functions that actually create the underlying Windows dialog
- *  are converted to the new APIs, then the code for this method can be done
- *  entirely in the native API context and the dlgHandle= method can be removed.
- *
- */
-RexxMethod2(RexxObjectPtr, pbdlg_setDlgHandle, RexxStringObject, hDlg, CSELF, pCSelf)
-{
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-    pCWindowBase pcwb = pcpbd->wndBase;
-
-    pcpbd->hDlg = (HWND)string2pointer(context, hDlg);
-
-    if ( pcpbd->hDlg != NULL )
-    {
-        pcwb->hwnd = pcpbd->hDlg;
-        pcwb->rexxHwnd = context->RequestGlobalReference(hDlg);
-    }
-    else
-    {
-        pcwb->rexxHwnd = TheZeroObj;
-    }
-
-    return NULLOBJECT;
-}
-
-/** PlainBaseDialog::dlgHandle  [attribute set private]
- */
-RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
-{
-    return ( ((pCPlainBaseDialog)pCSelf)->wndBase->rexxHwnd );
-}
-
 RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
 {
     if ( pCSelf != NULLOBJECT )
@@ -1709,6 +1689,148 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     context->SetObjectVariable("ADM", TheZeroObj);
 
     return TheZeroObj;
+}
+
+/** PlainBaseDialog::dlgHandle  [attribute set private]
+ *
+ *  Sets the handle of the underlying Windows dialog.  When a PlainBaseDialog is
+ *  first initialized, the dialog handle is of course unknown.  The underlying
+ *  dialog has not been created.
+ *
+ *  While ooDialog is still a mix of old and new native APIs this has to remain
+ *  an actual method implementation.  See for example:
+ *
+ *  self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount,
+ *  0, self~BasePtr, self~autoDetect, 1, 0, 0)
+ *
+ *  When / if the functions that actually create the underlying Windows dialog
+ *  are converted to the new APIs, then the code for this method can be done
+ *  entirely in the native API context and the dlgHandle= method can be removed.
+ *
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_setDlgHandle, RexxStringObject, hDlg, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    pCWindowBase pcwb = pcpbd->wndBase;
+
+    pcpbd->hDlg = (HWND)string2pointer(context, hDlg);
+
+    if ( pcpbd->hDlg != NULL )
+    {
+        pcwb->hwnd = pcpbd->hDlg;
+        pcwb->rexxHwnd = context->RequestGlobalReference(hDlg);
+    }
+    else
+    {
+        pcwb->rexxHwnd = TheZeroObj;
+    }
+
+    return NULLOBJECT;
+}
+
+/** PlainBaseDialog::dlgHandle  [attribute get] / PlainBaseDialog::getSelf()
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
+{
+    return ( ((pCPlainBaseDialog)pCSelf)->wndBase->rexxHwnd );
+}
+
+/** PlainBaseDialog::get()
+ *
+ *  Returns the handle of the "top" dialog.
+ *
+ *  @return  The handle of the top dialog, or the null handle if there is no
+ *           top dialog.
+ *
+ *  @remarks  This is a documented method from the original ooDialog
+ *            implementation.  The original documentaion said: "The Get method
+ *            returns the handle of the current Windows dialog."  The
+ *            implementation has always been to get the handle of the topDlg.  I
+ *            have never understood what the point of this method is, since the
+ *            topDlg, usually, just reflects the last dialog created.
+ */
+RexxMethod0(RexxObjectPtr, pbdlg_get)
+{
+    if (topDlg && topDlg->TheDlg)
+    {
+        return pointer2string(context, topDlg->TheDlg);
+    }
+    else
+    {
+        return TheZeroObj;  // TODO for now, 0. Should be null Pointer.
+    }
+}
+
+/** PlainBaseDialog::isDialogActive()
+ *
+ *  Tests if the Windows dialog is still active.
+ *
+ *  @return  True if the underlying Windows dialog is active, otherwise false.
+ *
+ *  @remarks  The original ooDialog code checked if the dlgAdm was still in the
+ *            DialogAdmin table.  ??  This would be true for a dialog in a
+ *            CategoryDialog, if the dialog was the active child, and false if
+ *            it was a good dialog, but for one of the other pages.  That may
+ *            have been the point of the method.
+ *
+ *            Since the DialogTable will be going away, this method will need to
+ *            be re-thought.
+ */
+RexxMethod1(logical_t, pbdlg_isDialogActive, CSELF, pCSelf)
+{
+    return seekDlgAdm(((pCPlainBaseDialog)pCSelf)->hDlg) != NULL;
+}
+
+RexxMethod3(RexxObjectPtr, pbdlg_getItem, RexxObjectPtr, rxID, OPTIONAL_RexxStringObject, _hDlg, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    HWND hDlg;
+    if ( argumentOmitted(2) )
+    {
+        hDlg = pcpbd->hDlg;
+    }
+    else
+    {
+        hDlg = (HWND)string2pointer(context, _hDlg);
+    }
+    return pointer2string(context, GetDlgItem(hDlg, id));
+}
+
+RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    if ( pcpbd->hDlg == NULL || pcpbd->dlgAdm == NULL )
+    {
+        return -1;
+    }
+
+    // PlainBaseDialog::leaving() does nothing.  It is intended to be over-
+    // ridden by the Rexx programmer to do whatever she would want.
+    context->SendMessage0(pcpbd->rexxSelf, "LEAVING");
+
+    int32_t result = stopDialog(pcpbd->hDlg);
+
+    pcpbd->hDlg = NULL;
+    pcpbd->wndBase->hwnd = NULL;
+    pcpbd->wndBase->rexxHwnd = TheZeroObj;
+
+    if ( argumentOmitted(1) )
+    {
+        context->SendMessage0(pcpbd->rexxSelf, "FINALSTOPIT");
+    }
+    else
+    {
+        context->SendMessage1(pcpbd->rexxSelf, "FINALSTOPIT", caller);
+    }
+    return result;
 }
 
 /** PlainBaseDialog::addUserMessage()
@@ -1897,6 +2019,20 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
 error_out:
     return NULLOBJECT;
 }
+
+
+/**
+ *  Methods for the .DynamicDialog class.  TODO There should be a
+ *  oodUserDialog.cpp file and this should be moved in to it.
+ */
+#define DYNAMICDIALOG_CLASS  "DynamicDialog"
+
+RexxMethod0(RexxObjectPtr, dyndlg_stop)
+{
+    stopDialog(NULL);
+    return NULLOBJECT;
+}
+
 
 
 /**
@@ -2536,109 +2672,6 @@ static BOOL parseKeyToken(PCHAR token, PUINT pFirst, PUINT pLast)
         if ( ! *pFirst || (*pFirst < VK_LBUTTON)   || (*pFirst > VK_OEM_CLEAR) ) ret = FALSE;
     }
     return ret;
-}
-
-
-size_t RexxEntry HandleDlg(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    DEF_ADM;
-
-    CHECKARGL(1);
-
-    if (!strcmp(argv[0].strptr, "ACTIVE"))   /* see if the dialog is still in the dialog management table */
-    {
-        CHECKARG(2);
-        SEEK_DLGADM_TABLE(GET_HWND(argv[1]), dlgAdm);
-
-        if (dlgAdm)    /* it's alive */
-        {
-            RETC(1);
-        }
-        else
-        {
-            RETC(0);
-        }
-    }
-    else if (!strcmp(argv[0].strptr, "HNDL"))   /* Get the dialog handle */
-    {
-        if (argc==2)
-        {
-            dlgAdm = (DIALOGADMIN*)GET_POINTER(argv[1]);
-            if (!dlgAdm)
-            {
-                RETERR;
-            }
-            RETHANDLE(dlgAdm->TheDlg);
-        }
-        else
-        {
-            if (topDlg && topDlg->TheDlg)
-            {
-                RETHANDLE(topDlg->TheDlg);
-            }
-            else
-            {
-                RETC(0);
-            }
-        }
-    }
-    else if (!strcmp(argv[0].strptr, "ITEM"))   /* Get the handle to a dialog item */
-    {
-        HWND hW, hD;
-
-        CHECKARGL(2);
-
-        if (argc > 2)
-        {
-            hD = GET_HWND(argv[2]);
-        }
-        else
-        {
-            hD = topDlg->TheDlg;
-        }
-
-        hW = GetDlgItem(hD, atoi(argv[1].strptr));
-
-        if (hW == NULL)
-        {
-            RETC(0);
-        }
-        else
-        {
-            RETHANDLE(hW);
-        }
-    }
-    else if (!strcmp(argv[0].strptr, "STOP"))   /* Stop a dialog */
-    {
-        HWND h = NULL;
-
-        if (argc>1)
-        {
-            h= GET_HWND(argv[1]);
-        }
-
-        if (h)
-        {
-            SEEK_DLGADM_TABLE(h, dlgAdm);
-            if (dlgAdm)
-            {
-                RETVAL(DelDialog(dlgAdm));
-            }
-            else
-            {
-                RETVAL(-1);
-            }
-        }
-        else if (!h && topDlg)
-        {
-            RETVAL(DelDialog(topDlg));       /* remove the top most */
-        }
-        else
-        {
-            RETVAL(-1);
-        }
-    }
-    RETC(0);
 }
 
 
