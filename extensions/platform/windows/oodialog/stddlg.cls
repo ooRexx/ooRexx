@@ -302,7 +302,7 @@
    do while var("entries."count+1) = 1
       count = count + 1
       s = self~getTextSizeDlg(entries.count)
-      if s.width > ll then ll = s~width
+      if s~width > ll then ll = s~width
    end
 
    if max = 0 then max = count
