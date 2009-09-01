@@ -152,7 +152,7 @@
 
 ::routine findWindow public
    use strict arg caption
-   return .DlgUtil~findWindow(info)
+   return .DlgUtil~findWindow(caption)
 
 ::routine InstMMFuncs public
   return 1
