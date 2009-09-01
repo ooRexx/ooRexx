@@ -53,6 +53,7 @@
 ::method and class external "LIBRARY oodialog dlgutil_and_cls"
 ::method or class external "LIBRARY oodialog dlgutil_or_cls"
 ::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
+::method findWindow class external "LIBRARY oodialog dlgutil_findWindwo_cls"
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
@@ -129,11 +130,6 @@
    else if arg(3, 'O') then return GetFileNameWindow(selfile, parentwnd, arg(3), load, arg(5), defextension, amulti, sepchar)
    else return GetFileNameWindow(selfile, parentwnd, arg(3) || '0'x, load, arg(5), defextension, amulti, sepchar)
 
-
-::routine findWindow public
-   use strict arg info
-   return FindTheWindow(info)
-
 ::routine msSleep public
    use strict arg ms
    return SleepMS(ms)
@@ -150,9 +146,13 @@
  *  pre-4.0.0, because a classic Rexx external function with the same name was
  *  documented.
  */
-::routine GetSysMetrics public
+::routine getSysMetrics public
   use strict arg index
   return .DlgUtil~getSystemMetrics(index)
+
+::routine findWindow public
+   use strict arg caption
+   return .DlgUtil~findWindow(info)
 
 ::routine InstMMFuncs public
   return 1

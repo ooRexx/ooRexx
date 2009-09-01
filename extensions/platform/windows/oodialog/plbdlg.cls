@@ -433,8 +433,6 @@
    else self~stopit
    return 0
 
-   /* This method deletes the Windows dialog */
-
 ::method stopIt external "LIBRARY oodialog pbdlg_stopIt"
 ::method finalStopIt private
    use arg caller

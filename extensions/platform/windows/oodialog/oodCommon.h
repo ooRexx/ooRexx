@@ -139,6 +139,7 @@ extern bool textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SI
 extern bool textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
 extern bool getTextExtent(HFONT, HDC, CSTRING, SIZE *);
 extern bool checkControlClass(HWND, oodControl_t);
+extern bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
 
 bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
 

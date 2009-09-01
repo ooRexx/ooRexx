@@ -465,6 +465,18 @@ extern DIALOGADMIN * DialogTab[];
 extern DIALOGADMIN * topDlg;
 extern INT StoredDialogs;
 extern CRITICAL_SECTION crit_sec;
+extern DWORD ComCtl32Version;
+
+
+extern RexxObjectPtr TheTrueObj;
+extern RexxObjectPtr TheFalseObj;
+extern RexxObjectPtr TheNilObj;
+extern RexxObjectPtr TheZeroObj;
+extern RexxObjectPtr TheOneObj;
+extern RexxObjectPtr TheNegativeOneObj;
+extern RexxDirectoryObject TheDotLocalObj;
+extern RexxPointerObject TheNullPtrObj;
+
 
 inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
 {
@@ -492,11 +504,3 @@ inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
 #define DEF_ADM     DIALOGADMIN * dlgAdm = NULL
 #define GET_ADM     dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0])
 
-extern RexxObjectPtr TheTrueObj;
-extern RexxObjectPtr TheFalseObj;
-extern RexxObjectPtr TheNilObj;
-extern RexxObjectPtr TheZeroObj;
-extern RexxObjectPtr TheOneObj;
-extern RexxObjectPtr TheNegativeOneObj;
-extern RexxDirectoryObject TheDotLocalObj;
-extern RexxPointerObject TheNullPtrObj;

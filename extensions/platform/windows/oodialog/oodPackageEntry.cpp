@@ -51,6 +51,7 @@ DIALOGADMIN * DialogTab[MAXDIALOGS] = {NULL};
 DIALOGADMIN * topDlg = {NULL};
 INT StoredDialogs = 0;
 CRITICAL_SECTION crit_sec = {0};
+DWORD ComCtl32Version = 0;
 
 // Initialized in dlgutil_init_cls
 RexxObjectPtr TheTrueObj = NULLOBJECT;
@@ -99,7 +100,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(WinAPI32Func);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(InfoMessage);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(ErrorMessage);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(YesNoMessage);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(FindTheWindow);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(StartDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WindowRect);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetScreenSize);
@@ -150,7 +150,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(InfoMessage,          InfoMessage),
     REXX_CLASSIC_ROUTINE(ErrorMessage,         ErrorMessage),
     REXX_CLASSIC_ROUTINE(YesNoMessage,         YesNoMessage),
-    REXX_CLASSIC_ROUTINE(FindTheWindow,        FindTheWindow),
     REXX_CLASSIC_ROUTINE(StartDialog,          StartDialog),
     REXX_CLASSIC_ROUTINE(WindowRect,           WindowRect),
     REXX_CLASSIC_ROUTINE(GetScreenSize,        GetScreenSize),
@@ -195,6 +194,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_loWord_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_findWindow_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
