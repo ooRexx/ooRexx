@@ -119,15 +119,27 @@ size_t RexxEntry YesNoMessage(const char *funcname, size_t argc, CONSTRXSTRING *
    return 0;
 }
 
-/**
- * This classic Rexx external function was documented prior to 4.0.0.
+/** msSleep()
+ *
+ *  Sleeps the specified number of miliseconds.
+ *
+ *  Prior to ooRexx 4.0.0, both the public routine msSleep() and the external
+ *  function sleepMS() were both documented.  For backward compatibility, both
+ *  need to be maintained.  sleepMS() is marked as deprecated and mapped to this
+ *  function.
+ *
+ *  @param ms   The number of miliseconds to sleep.
+ *
+ *  @return     Always returns 0.
+ *
+ *  @note  This function can block the Windows message loop.  It should really
+ *         only be used for durations less than 1 second.  Certainly no more
+ *         than a few seconds.  Use SysSleep() instead.
  */
-size_t RexxEntry SleepMS(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+RexxRoutine1(RexxObjectPtr, msSleep, uint32_t, ms)
 {
-   CHECKARG(1);
-
-   Sleep(atoi(argv[0].strptr));
-   RETC(0)
+    Sleep(ms);
+    return TheZeroObj;
 }
 
 /**
@@ -209,7 +221,7 @@ BOOL OpenFileDlg( BOOL load, PCHAR szFile, const char *szInitialDir, const char 
    OpenFileName.lpfnHook          = OFNSetForegroundHookProc;   /* hook to set dialog to foreground */
 
    /* The OFN_EXPLORER flag is required when using OFN_ENABLEHOOK, otherwise the dialog is old style and does not change directory */
-   OpenFileName.Flags = OFN_SHOWHELP | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK | OFN_EXPLORER;   /* enable hook */
+   OpenFileName.Flags = OFN_SHOWHELP | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK | OFN_EXPLORER | OFN_ENABLESIZING;   /* enable hook */
 
    if (load && multi) OpenFileName.Flags |= OFN_ALLOWMULTISELECT;
 

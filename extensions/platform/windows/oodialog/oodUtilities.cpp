@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include "APICommon.h"
 #include "oodCommon.h"
+#include "oodText.hpp"
 
 
 /**
@@ -584,6 +585,94 @@ RexxMethod2(RexxObjectPtr, dlgutil_findWindow_cls, CSTRING, caption, OPTIONAL_CS
     }
     return pointer2string(context, hwnd);
 }
+
+
+/** DlgUtil::screenSize() [class method]
+ *
+ *  Retrieves the screen size in either pixels, dialog units, or both.
+ *
+ *  @param  _flag  [optional]  Keyword signaling whether to return the size in
+ *                 pixels, dialog units, or both.  The default is both.  The
+ *                 keywords are Pixels, DialogUnits, and Both.  Only the first
+ *                 letter is checked and case is insignificant.
+ *
+ *  @param  dlgObj  [optional]  A Rexx dialog object.  When this argument is
+ *                  used, dialog units are calculated correctly for the dialog.
+ *                  If it is omitted, the dialog units are calculated using 8 pt
+ *                  System font, which will be incorrect for any dialog that
+ *                  uses a different fault.  However, this will give the same
+ *                  result as was returned prior to ooRexx 4.0.0.
+ *
+ *  @return  The return is dependent on the flag in use:
+ *           Pixels:       A .Size object with the screen size in pixels.
+ *           DialogUnits:  A .Size object with the screen size in dialog units.
+ *           Both:         An array:
+ *                         a[1] = duX, a[2] = duY, a[3] = pixelX, a[4] = pixelY
+ *
+ */
+RexxMethod2(RexxObjectPtr, dlgutil_screenSize_cls, OPTIONAL_CSTRING, _flag, OPTIONAL_RexxObjectPtr, dlgObj)
+{
+    RexxObjectPtr result = NULLOBJECT;
+
+    uint32_t pixelX = GetSystemMetrics(SM_CXSCREEN);
+    uint32_t pixelY = GetSystemMetrics(SM_CYSCREEN);
+
+    char flag = 'B';
+    if ( argumentExists(1) )
+    {
+        flag = toupper(*_flag);
+        if ( ! (flag == 'B' || flag == 'D' || flag == 'P') )
+        {
+            wrongArgValueException(context, 1, "DialogUnit, Pixel, Both", _flag);
+            goto done_out;
+        }
+    }
+
+    uint32_t duX, duY;
+    if ( flag == 'B' || flag == 'D' )
+    {
+        // We need to calculate the dialog units.  Iff we have a dlgObj, we'll
+        // calculate them correctly, otherwise we use the broken method.
+        if ( argumentExists(2) )
+        {
+            if ( ! requiredClass(context, dlgObj, "PlainBaseDialog", 2) )
+            {
+                goto done_out;
+            }
+
+            POINT point = {pixelX, pixelY};
+            mapPixelToDu(context, dlgObj, &point);
+            duX = point.x;
+            duY = point.y;
+        }
+        else
+        {
+            long bu = GetDialogBaseUnits();
+            duX = (pixelX * 4) / LOWORD(bu);
+            duY = (pixelY * 8) / HIWORD(bu);
+        }
+    }
+
+    if ( flag == 'B')
+    {
+        result = context->ArrayOfFour(context->UnsignedInt32(duX),
+                                      context->UnsignedInt32(duY),
+                                      context->UnsignedInt32(pixelX),
+                                      context->UnsignedInt32(pixelY));
+    }
+    else if ( flag == 'D' )
+    {
+        result = rxNewSize(context, duX, duY);
+    }
+    else
+    {
+        result = rxNewSize(context, pixelX, pixelY);
+    }
+
+done_out:
+    return result;
+}
+
 
 /**
  * A temporary utility to convert from a handle that is still being stored in

@@ -625,7 +625,7 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
 }
 
 
-/** GetDlgMsg()
+/** getDlgMsg()
  *
  *  Retrieves a windows event message from the message queue buffer.
  *
@@ -653,14 +653,14 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
  *           empty.
  *
  */
-RexxRoutine2(RexxStringObject, GetDlgMsg, CSTRING, adm, OPTIONAL_logical_t, doPeek)
+RexxRoutine2(RexxStringObject, getDlgMsg, CSTRING, adm, OPTIONAL_logical_t, doPeek)
 {
     RexxCallContext *c = context;
     DIALOGADMIN * dlgAdm = (DIALOGADMIN *)string2pointer(adm);
     if ( dlgAdm == NULL )
     {
         c->RaiseException1(Rexx_Error_Incorrect_call_user_defined,
-                           c->String("GetDlgMsg() argument 1 must not be a null Pointer"));
+                           c->String("getDlgMsg() argument 1 must not be a null Pointer"));
         return NULLOBJECT;
     }
 

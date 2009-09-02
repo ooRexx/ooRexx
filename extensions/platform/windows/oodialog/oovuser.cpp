@@ -103,28 +103,6 @@ int nCopyAnsiToWideChar (LPWORD lpWCStr, const char *lpAnsiIn)
 }
 
 
-/**
- * This classic Rexx external function was documented prior to 4.0.0.  The
- * dialog unit part of it has always been broken.  It is only correct if the
- * dialog uses the 8 pt System font, which most modern dialogs do not.
- */
-size_t RexxEntry GetScreenSize(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   ULONG sx, sy;
-   ULONG bux, buy;
-
-   buy = GetDialogBaseUnits();
-   bux = LOWORD(buy);
-   buy = HIWORD(buy);
-   sx = GetSystemMetrics(SM_CXSCREEN);
-   sy = GetSystemMetrics(SM_CYSCREEN);
-
-   sprintf(retstr->strptr, "%d %d %d %d", (sx * 4) / bux, (sy * 8) / buy, sx, sy);
-   retstr->strlength = strlen(retstr->strptr);
-   return 0;
-}
-
-
 void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
                 const char * dlgClass, const char * title, const char * fontname, INT fontsize, ULONG lStyle)
 {

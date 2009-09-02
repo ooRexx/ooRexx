@@ -77,7 +77,11 @@ extern void wrongRangeException(RexxMethodContext *c, int pos, int min, int max,
 extern void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, RexxObjectPtr actual);
 extern void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, const char *actual);
 
-extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);;
+extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
+extern bool    rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, wholenumber_t *pNumber);
+extern bool    rxGetUIntPtrAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uintptr_t *pNumber);
+extern bool    rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uint32_t *pNumber);
+
 extern bool requiredClass(RexxMethodContext *c, RexxObjectPtr obj, const char *name, int pos);
 extern size_t rxArgCount(RexxMethodContext * context);
 extern bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos);

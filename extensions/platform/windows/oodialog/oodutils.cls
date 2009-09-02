@@ -52,6 +52,7 @@
 ::method loWord class external "LIBRARY oodialog dlgutil_loWord_cls"
 ::method and class external "LIBRARY oodialog dlgutil_and_cls"
 ::method or class external "LIBRARY oodialog dlgutil_or_cls"
+::method screenSize class external "LIBRARY oodialog dlgutil_screenSize_cls"
 ::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
 ::method findWindow class external "LIBRARY oodialog dlgutil_findWindow_cls"
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
@@ -130,13 +131,10 @@
    else if arg(3, 'O') then return GetFileNameWindow(selfile, parentwnd, arg(3), load, arg(5), defextension, amulti, sepchar)
    else return GetFileNameWindow(selfile, parentwnd, arg(3) || '0'x, load, arg(5), defextension, amulti, sepchar)
 
-::routine msSleep public
-   use strict arg ms
-   return SleepMS(ms)
+::routine msSleep public external "LIBRARY oodialog msSleep"
 
 ::routine screenSize public
-   parse value GetScreenSize() with dx dy px py
-   return .array~of(dx,dy,px,py)
+   return .DlgUtil~screenSize
 
 ::routine systemMetrics public
    use strict arg index
@@ -146,6 +144,8 @@
  *  pre-4.0.0, because a classic Rexx external function with the same name was
  *  documented.
  */
+::routine sleepMS public external "LIBRARY oodialog msSleep"
+
 ::routine getSysMetrics public
   use strict arg index
   return .DlgUtil~getSystemMetrics(index)
@@ -154,10 +154,14 @@
    use strict arg caption
    return .DlgUtil~findWindow(caption)
 
-::routine InstMMFuncs public
+::routine getScreenSize public
+  vals = .DlgUtil~screenSize
+  return vals[1] vals[2] vals[3] vals[4]
+
+::routine instMMFuncs public
   return 1
 
-::routine BinaryAnd public
+::routine binaryAnd public
   use strict arg n1, n2
   return .DlgUtil~and(n1, n2)
 

@@ -328,6 +328,54 @@ CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTR
     return value;
 }
 
+bool rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, wholenumber_t *pNumber)
+{
+    bool result = false;
+    RexxObjectPtr rxNumber = context->SendMessage0(obj, name);
+    if ( rxNumber != NULLOBJECT )
+    {
+        wholenumber_t number;
+        if ( context->WholeNumber(rxNumber, &number) )
+        {
+            *pNumber = number;
+            result = true;
+        }
+    }
+    return result;
+}
+
+bool rxGetUIntPtrAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uintptr_t *pNumber)
+{
+    bool result = false;
+    RexxObjectPtr rxNumber = context->SendMessage0(obj, name);
+    if ( rxNumber != NULLOBJECT )
+    {
+        uintptr_t number;
+        if ( context->ObjectToUintptr(rxNumber, &number) )
+        {
+            *pNumber = number;
+            result = true;
+        }
+    }
+    return result;
+}
+
+bool rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uint32_t *pNumber)
+{
+    bool result = false;
+    RexxObjectPtr rxNumber = context->SendMessage0(obj, name);
+    if ( rxNumber != NULLOBJECT )
+    {
+        uint32_t number;
+        if ( context->ObjectToUnsignedInt32(rxNumber, &number) )
+        {
+            *pNumber = number;
+            result = true;
+        }
+    }
+    return result;
+}
+
 bool requiredClass(RexxMethodContext *c, RexxObjectPtr obj, const char *name, int pos)
 {
     if ( obj == NULLOBJECT || ! c->IsOfType(obj, name) )

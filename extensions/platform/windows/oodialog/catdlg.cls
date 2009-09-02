@@ -294,10 +294,11 @@
    options = options~translate
 
    if arg(8, "O") | fontName == "" then fontName = self~fontName
+   else self~fontName = fontName
    if arg(9, "O") | fontSize = 0 then fontSize = self~fontSize
+   else self~fontSize = fontSize
 
-   ret = UsrDefineDialog(x, y, cx, cy, "", "", fontName, fontSize,,
-                                                   options, expected)
+   ret = UsrDefineDialog(x, y, cx, cy, "", "", fontName, fontSize, options, expected)
 
    parse var ret base Ptr
    self~catalog['base'][self~catalog['category']] = base

@@ -46,6 +46,7 @@
 #include <commctrl.h>
 #include "APICommon.h"
 #include "oodCommon.h"
+#include "oodText.hpp"
 
 // Map strings representing constant defines to their int values.  For
 // translating things like "IDI_APPLICATION" from the user to the proper API
@@ -2207,6 +2208,12 @@ RexxObjectPtr oodGetImageAttribute(RexxMethodContext *c, OSELF self, CSTRING var
 #define RESDIALOG_CLASS        "ResDialog"
 
 
+/** ResourceDialog::setFontAttrib()  [private]
+ *
+ *  Used internally to correctly set the fontName and fontSize attributes of the
+ *  resource dialog.
+ *
+ */
 RexxMethod1(RexxObjectPtr, resdlg_setFontAttrib_pvt, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);

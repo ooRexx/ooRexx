@@ -134,10 +134,6 @@ extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
 // pointer strings.
 extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 
-extern RexxObjectPtr getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t, HWND, RexxObjectPtr);
-extern bool textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SIZE *, HWND);
-extern bool textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
-extern bool getTextExtent(HFONT, HDC, CSTRING, SIZE *);
 extern bool checkControlClass(HWND, oodControl_t);
 extern bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
 

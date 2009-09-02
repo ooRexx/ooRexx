@@ -44,6 +44,7 @@
 #include <shlwapi.h>
 #include "APICommon.h"
 #include "oodCommon.h"
+#include "oodText.hpp"
 #include "oodSymbols.h"
 
 extern INT DelDialog(DIALOGADMIN * aDlg);

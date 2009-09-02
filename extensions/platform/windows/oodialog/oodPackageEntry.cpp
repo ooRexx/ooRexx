@@ -102,10 +102,8 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(ErrorMessage);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(YesNoMessage);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(StartDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WindowRect);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(GetScreenSize);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetSysMetrics);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetDialogFactor);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(SleepMS);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(PlaySoundFile);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(PlaySoundFileInLoop);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(StopSoundFile);
@@ -132,7 +130,8 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrDefineDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddNewCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddResource);
 
-REXX_TYPED_ROUTINE_PROTOTYPE(GetDlgMsg);
+REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg);
+REXX_TYPED_ROUTINE_PROTOTYPE(msSleep);
 
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
@@ -152,9 +151,7 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(YesNoMessage,         YesNoMessage),
     REXX_CLASSIC_ROUTINE(StartDialog,          StartDialog),
     REXX_CLASSIC_ROUTINE(WindowRect,           WindowRect),
-    REXX_CLASSIC_ROUTINE(GetScreenSize,        GetScreenSize),
     REXX_CLASSIC_ROUTINE(GetDialogFactor,      GetDialogFactor),
-    REXX_CLASSIC_ROUTINE(SleepMS,              SleepMS),
     REXX_CLASSIC_ROUTINE(PlaySoundFile,        PlaySoundFile),
     REXX_CLASSIC_ROUTINE(PlaySoundFileInLoop,  PlaySoundFileInLoop),
     REXX_CLASSIC_ROUTINE(StopSoundFile,        StopSoundFile),
@@ -181,7 +178,8 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(UsrAddNewCtrl,        UsrAddNewCtrl),
     REXX_CLASSIC_ROUTINE(UsrAddResource,       UsrAddResource),
 
-    REXX_TYPED_ROUTINE(GetDlgMsg,              GetDlgMsg),
+    REXX_TYPED_ROUTINE(getDlgMsg,              getDlgMsg),
+    REXX_TYPED_ROUTINE(msSleep,                msSleep),
 
     REXX_LAST_ROUTINE()
 };
@@ -194,6 +192,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_loWord_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_findWindow_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
@@ -475,6 +474,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_and_cls,              dlgutil_and_cls),
     REXX_METHOD(dlgutil_or_cls,               dlgutil_or_cls),
     REXX_METHOD(dlgutil_findWindow_cls,       dlgutil_findWindow_cls),
+    REXX_METHOD(dlgutil_screenSize_cls,       dlgutil_screenSize_cls),
     REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_handleToPointer_cls,  dlgutil_handleToPointer_cls),
     REXX_METHOD(dlgutil_test_cls,             dlgutil_test_cls),

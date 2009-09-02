@@ -89,7 +89,7 @@
 ::method AsyncMessageHandling unguarded protected
    use arg sleeptime
    do while self~finished = 0 & self~adm \= 0
-      msg = GetDlgMsg(self~adm)
+      msg = getDlgMsg(self~adm)
       if msg~pos("1DLGDELETED1") > 0 then do
           if self~finished = 0 then self~finished = 2
       end
@@ -1054,7 +1054,7 @@ syntax:
    return .Menu~connectItem(id, msgToRaise, self)
 
 ::method PeekDialogMessage unguarded
-   return GetDlgMsg(self~adm, .true)
+   return getDlgMsg(self~adm, .true)
 
 ::method SetWindowRect unguarded
    use arg hwnd, x, y, width, high, showOptions = ""

@@ -1095,7 +1095,7 @@
        return
    end
    if arg(1,'o') = 1 then sleeptime = 0
-   msg = GetDlgMsg(self~adm)
+   msg = getDlgMsg(self~adm)
    if msg~pos("1DLGDELETED1") > 0 then do
       if self~finished = 0 then self~finished = 2
    end
@@ -1108,12 +1108,12 @@
 
 ::method ClearMessages unguarded protected
    if self~adm = 0 then return
-   msg = GetDlgMsg(self~adm)
+   msg = getDlgMsg(self~adm)
    do while msg \= "" & self~adm \= 0
        if msg~pos("1DLGDELETED1") > 0 then do
           if self~finished = 0 then self~finished = 2
        end
-       msg = GetDlgMsg(self~adm)
+       msg = getDlgMsg(self~adm)
    end
 
 

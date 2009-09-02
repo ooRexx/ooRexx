@@ -86,8 +86,7 @@
    if arg(9, "O") then fontSize = self~fontSize
    else self~fontSize = fontSize
 
-   ret = UsrDefineDialog(x, y, cx, cy, dlgclass, title, fontName, fontSize,,
-                                      options, expected)
+   ret = UsrDefineDialog(x, y, cx, cy, dlgclass, title, fontName, fontSize, options, expected)
    parse var ret base ptr
    self~BasePtr = base
    self~activePtr = ptr

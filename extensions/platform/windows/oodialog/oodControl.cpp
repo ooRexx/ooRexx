@@ -47,6 +47,7 @@
 #include <stdio.h>
 #include "APICommon.h"
 #include "oodCommon.h"
+#include "oodText.hpp"
 
 
 typedef struct newControlParams {
