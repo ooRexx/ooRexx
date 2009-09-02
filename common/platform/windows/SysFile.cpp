@@ -482,6 +482,8 @@ bool SysFile::write(const char *data, size_t len, size_t &bytesWritten)
                 return false;
             }
             bytesWritten = written;
+            // update the real output position
+            filePointer += written;
             return true;
         }
 
