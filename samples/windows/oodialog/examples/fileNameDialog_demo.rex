@@ -67,8 +67,8 @@ When....:   August 13, 2007
         option.3 = '(Open) Allow either a *.cls file or a *.dll file to be selected'
         option.4 = '(Open) Allow *.cls, *.dll, or *.* to be selected'
         option.5 = '(Open) Allow multiple *.cls files to be selected'
-        option.6 = '(Save) Create a save dialog where the user is expected to specify an extension (if they want one)'
-        option.7 = '(Save) Create a save dialog where the user is given a default extension (.txt)'
+        option.6 = '(Save) Create a save dialog where the appended extension is the default (.txt)'
+        option.7 = '(Save) Create a save dialog where the default extension is changed (.cls)'
 
         max = 7
         ssdlg = .SingleSelection~new('Select A Demonstration','FileNameDialog Demonstration',option.,preselect,,max)
@@ -157,7 +157,7 @@ return
 Option5:
     selfile       = path
     parent        = ''                      -- don't need this in this example - just a place holder
-    filemask      = 'Class Files (*.cls)'delimiter'*.cls'delimiter
+    filemask      = 'Class Files (*.cls)'delimiter'*.cls'delimiter'All Files (*.*)'delimiter'*.*'delimiter
     loadorsave    = 'LOAD'                  -- Load is the default
     title         = 'FileNameDialog-Option5'-- Define our own title
     defExtension  = ''                      -- don't need this in this example - just a place holder
@@ -168,10 +168,22 @@ Option5:
         call errorDialog 'You Did Not Select A File'
     else
         do
-            msg = 'You Selected'.endOfLine
-            do until a_file = ''
-                parse var a_file file_a'^'a_file
-                msg = msg||file_a||.endOfLine
+            if a_file~pos('^') == 0 then do
+                msg = 'You Selected one file:'.endOfLine
+                msg ||= '  ' a_file
+            end
+            else do
+                msg = 'You Selected multiple files.'.endOfLine~copies(2)
+
+                parse var a_file dir'^'a_file
+                if dir~length < 30 then msg ||= 'The files are in the directory:' dir
+                else msg ||= 'The files are in the directory:'.endOfLine || '  ' dir
+                msg ||= .endOfLine~copies(2)
+
+                do until a_file = ''
+                    parse var a_file file_a'^'a_file
+                    msg ||= '  ' file_a||.endOfLine
+                end
             end
             call infoDialog msg
         end
@@ -196,10 +208,10 @@ return
 Option7:
     selfile       = path
     parent        = ''                      -- don't need this in this example - just a place holder
-    filemask      = 'Text Files (*.txt)'delimiter'*.txt'delimiter
+    filemask      = 'Class Files (*.cls)'delimiter'*.cls'delimiter'All Files (*.*)'delimiter'*.*'delimiter
     loadorsave    = 'SAVE'                  -- Load is the default
     title         = 'FileNameDialog-Option7'-- Define our own title
-    defExtension  = '.txt'                  -- Define an extension to append to the user's input
+    defExtension  = 'cls'                   -- Define an extension to append to the user's input
     multiSelect   = ''                      -- don't need this in this example - just a place holder
     sepChar       = ''                      -- don't need this in this example - just a place holder
     a_file = FileNameDialog(selfile,parent,filemask,loadorsave,title,defExtension,multiSelect,sepChar)
