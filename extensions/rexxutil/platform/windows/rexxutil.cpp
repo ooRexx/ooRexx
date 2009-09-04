@@ -5822,7 +5822,7 @@ RexxRoutine4(int, SysToUniCode, RexxStringObject, source, OPTIONAL_CSTRING, code
 * Return:    error number                                                *
 *************************************************************************/
 
-RexxRoutine1(int, SysWinGetPrinters, RexxStemObject, stem)
+RexxRoutine1(uint32_t, SysWinGetPrinters, RexxStemObject, stem)
 {
     DWORD realSize = 0;
     DWORD entries = 0;
@@ -5834,8 +5834,13 @@ RexxRoutine1(int, SysWinGetPrinters, RexxStemObject, stem)
         if (EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, NULL, 2, (LPBYTE)pArray,
                          currentSize, &realSize, &entries) == 0)
         {
-            free(pArray);
-            return GetLastError();   // this is a failure if we get a bad return
+            // this is not a failure if we get ERROR_INSUFFICIENT_BUFFER
+            DWORD rc = GetLastError();
+            if ( rc != ERROR_INSUFFICIENT_BUFFER )
+            {
+                free(pArray);
+                return rc;
+            }
         }
         if ( currentSize >= realSize )
         {
