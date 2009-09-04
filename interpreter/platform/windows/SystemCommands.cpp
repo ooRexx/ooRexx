@@ -342,15 +342,22 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         interncmd = cmd;
     }
 
-    /* check for redirection symbols, ignore them when enclosed in double quotes */
+    /* Check for redirection symbols, ignore them when enclosed in double
+     * quotes.  If there are more than 2 double qoutes, cmd.exe strips off the
+     * first and last.  To preserve what the user sent to us, we count the
+     * double quotes, and, if more than two, add a double quote to the front and
+     * end of the string.
+     */
     bool noDirectInvoc = false;
     bool inQuotes = false;
+    size_t quoteCount = 0;
     size_t i;
     for (i = 0; i<strlen(interncmd); i++)
     {
         if (interncmd[i] == '"')
         {
             inQuotes = !inQuotes;
+            quoteCount++;
         }
         else
         {
@@ -360,7 +367,10 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
             if (!inQuotes && (strchr("<>|&", interncmd[i]) != NULL))
             {
                 noDirectInvoc = true;
-                break;
+                if ( quoteCount > 2 )
+                {
+                    break;
+                }
             }
         }
     }
@@ -415,7 +425,7 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
                 }
                 else
                 {
-                    /* check if a START command is specified, if so don not start it directly */
+                    /* check if a START command is specified, if so do not start it directly */
                     strncpy(tmp, &interncmd[j], 6);
                     tmp[6] = '\0';
                     noDirectInvoc = stricmp("start ",tmp) == 0;
@@ -523,7 +533,17 @@ RexxObjectPtr RexxEntry systemCommandHandler(RexxExitContext *context, RexxStrin
         strcat(cmdstring_ptr," ");
     }
 
-    strcat(cmdstring_ptr,interncmd);        /* And cmd to be executed         */
+    /* Add cmd to be executed, possibly quoting it to preserve embedded quotes. */
+    if ( quoteCount> 2 )
+    {
+        strcat(cmdstring_ptr,"\"");
+        strcat(cmdstring_ptr,interncmd);
+        strcat(cmdstring_ptr,"\"");
+    }
+    else
+    {
+        strcat(cmdstring_ptr,interncmd);
+    }
 
     /****************************************************************************/
     /* Invoke the system command handler to execute the command                 */
