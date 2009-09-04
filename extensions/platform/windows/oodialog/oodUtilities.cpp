@@ -259,18 +259,18 @@ bool getComCtl32Version(RexxMethodContext *context, DWORD *pDllVersion, DWORD mi
             }
             else
             {
-                systemServiceExceptionComCode(context, COM_API_FAILED_MSG, DLLGETVERSION_FUNCTION, hr);
+                systemServiceExceptionComCode(context->threadContext, COM_API_FAILED_MSG, DLLGETVERSION_FUNCTION, hr);
             }
         }
         else
         {
-            systemServiceExceptionCode(context, NO_PROC_MSG, DLLGETVERSION_FUNCTION);
+            systemServiceExceptionCode(context->threadContext, NO_PROC_MSG, DLLGETVERSION_FUNCTION);
         }
         FreeLibrary(hinst);
     }
     else
     {
-        systemServiceExceptionCode(context, NO_HMODULE_MSG, COMMON_CONTROL_DLL);
+        systemServiceExceptionCode(context->threadContext, NO_HMODULE_MSG, COMMON_CONTROL_DLL);
     }
 
     if ( *pDllVersion == 0 )
@@ -322,7 +322,7 @@ bool initCommonControls(RexxMethodContext *context, DWORD classes, CSTRING packa
 
     if ( ! InitCommonControlsEx(&ctrlex) )
     {
-        systemServiceExceptionCode(context, NO_COMMCTRL_MSG, "Common Control Library");
+        systemServiceExceptionCode(context->threadContext, NO_COMMCTRL_MSG, "Common Control Library");
 
         CHAR msg[128];
         _snprintf(msg, sizeof(msg),
@@ -395,7 +395,7 @@ RexxMethod0(logical_t, dlgutil_init_cls)
     }
     else
     {
-        severeErrorException(context, NO_LOCAL_ENVIRONMENT_MSG);
+        severeErrorException(context->threadContext, NO_LOCAL_ENVIRONMENT_MSG);
         return false;
     }
 
@@ -473,11 +473,6 @@ RexxMethod1(RexxStringObject, dlgutil_version_cls, OPTIONAL_CSTRING, format)
     return context->String(buf);
 }
 
-RexxMethod1(logical_t, dlgutil_test_cls, RexxObjectPtr, obj)
-{
-    return 0;
-}
-
 RexxMethod1(uint16_t, dlgutil_hiWord_cls, uint32_t, dw) { return HIWORD(dw); }
 RexxMethod1(uint16_t, dlgutil_loWord_cls, uint32_t, dw) { return LOWORD(dw); }
 
@@ -544,50 +539,7 @@ RexxMethod1(uint32_t, dlgutil_getSystemMetrics_cls, int32_t, index)
     return GetSystemMetrics(index);
 }
 
-/** DlgUtil::findWindow() [class method]
- *
- *  Retrieves a window handle to the top-level window whose class name and
- *  window name match the specified strings. This function does not search child
- *  windows. This function does not perform a case-sensitive search.
- *
- *  @param caption     The title of the window to search for.  Although this
- *                     argument is required, the empty string can be used to
- *                     indicate a null should be used for the caption.
- *
- *  @param className   [optional]  Specifies the window class name of the window
- *                     to search for.  The class name can be any name registered
- *                     with RegisterClass() or RegisterClassEx(), or any of the
- *                     predefined control-class names.
- *
- *                     If className is omitted, it finds any window whose title
- *                     matches the caption argument.
- *
- *  @return  The window handle if the window is found, otherwise 0.
- *
- *  @note  Sets the system error code.
- *
- *  @remarks  This method serves as the implementation for the findWindow()
- *            public function which is maintained for backwards compatibility.
- *
- */
-RexxMethod2(RexxObjectPtr, dlgutil_findWindow_cls, CSTRING, caption, OPTIONAL_CSTRING, className)
-{
-    oodResetSysErrCode(context);
-
-    if ( strlen(caption) == 0 )
-    {
-        caption = NULL;
-    }
-    HWND hwnd = FindWindow(className, caption);
-    if ( hwnd == NULL )
-    {
-        oodSetSysErrCode(context);
-    }
-    return pointer2string(context, hwnd);
-}
-
-
-/** DlgUtil::screenSize() [class method]
+/** DlgUtil::screenSize()  [class method]
  *
  *  Retrieves the screen size in either pixels, dialog units, or both.
  *
@@ -623,7 +575,7 @@ RexxMethod2(RexxObjectPtr, dlgutil_screenSize_cls, OPTIONAL_CSTRING, _flag, OPTI
         flag = toupper(*_flag);
         if ( ! (flag == 'B' || flag == 'D' || flag == 'P') )
         {
-            wrongArgValueException(context, 1, "DialogUnit, Pixel, Both", _flag);
+            wrongArgValueException(context->threadContext, 1, "DialogUnit, Pixel, Both", _flag);
             goto done_out;
         }
     }
@@ -635,7 +587,7 @@ RexxMethod2(RexxObjectPtr, dlgutil_screenSize_cls, OPTIONAL_CSTRING, _flag, OPTI
         // calculate them correctly, otherwise we use the broken method.
         if ( argumentExists(2) )
         {
-            if ( ! requiredClass(context, dlgObj, "PlainBaseDialog", 2) )
+            if ( ! requiredClass(context->threadContext, dlgObj, "PlainBaseDialog", 2) )
             {
                 goto done_out;
             }
@@ -685,6 +637,14 @@ RexxMethod1(POINTER, dlgutil_handleToPointer_cls, POINTERSTRING, handle)
     return handle;
 }
 
+/** DlgUtil::test()  [class method]
+ *
+ *  Simple method to use for testing.
+ */
+RexxMethod1(logical_t, dlgutil_test_cls, RexxObjectPtr, obj)
+{
+    return 0;
+}
 
 /** ListBox::setTabulators()
  *  PlainBaseDialog::setListTabulators()
@@ -818,7 +778,7 @@ RexxMethod2(int32_t, generic_setListTabulators, ARGLIST, args, OSELF, self)
         tabs = (uint32_t *)malloc(sizeof(uint32_t *) * count);
         if ( tabs == NULL )
         {
-            outOfMemoryException(context);
+            outOfMemoryException(context->threadContext);
             goto done_out;
         }
 

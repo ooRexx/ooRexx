@@ -54,7 +54,6 @@
 ::method or class external "LIBRARY oodialog dlgutil_or_cls"
 ::method screenSize class external "LIBRARY oodialog dlgutil_screenSize_cls"
 ::method getSystemMetrics class external "LIBRARY oodialog dlgutil_getSystemMetrics_cls"
-::method findWindow class external "LIBRARY oodialog dlgutil_findWindow_cls"
 ::method handleToPointer class external "LIBRARY oodialog dlgutil_handleToPointer_cls"
 ::method test class external "LIBRARY oodialog dlgutil_test_cls"
 
@@ -85,6 +84,18 @@
 
 
 /* - - - - - - - - - - - - - Public routines - - - - - - - - - - - - - - - - -*/
+
+::routine fileNameDialog public external "LIBRARY oodialog fileNameDlg_rtn"
+::routine msSleep public external "LIBRARY oodialog msSleep_rtn"
+::routine findWindow public external "LIBRARY oodialog findWindow_rtn"
+::routine routineTest public external "LIBRARY oodialog routineTest_rtn"
+
+::routine screenSize public
+   return .DlgUtil~screenSize
+
+::routine systemMetrics public
+   use strict arg index
+   return .DlgUtil~getSystemMetrics(index)
 
 /* Routine play() will search for a sound file in the PATH and play it */
 ::routine play public
@@ -121,38 +132,17 @@
    else return YesNoMessage(info, defaultButton)
 
 
-::routine fileNameDialog public
-   use arg selfile = "", parentwnd = 0, filter, load, title, defextension = "TXT", amulti, sepchar = ' '
-
-   if load == 0 | load~left(1)~translate = "S" then load = 0; else load = 1
-   if load == 1 & amulti~left(1)~translate = "M" then amulti = 1; else amulti = 0
-
-   if arg() < 3 then return GetFileNameWindow(selfile, parentwnd)
-   else if arg(3, 'O') then return GetFileNameWindow(selfile, parentwnd, arg(3), load, arg(5), defextension, amulti, sepchar)
-   else return GetFileNameWindow(selfile, parentwnd, arg(3) || '0'x, load, arg(5), defextension, amulti, sepchar)
-
-::routine msSleep public external "LIBRARY oodialog msSleep"
-
-::routine screenSize public
-   return .DlgUtil~screenSize
-
-::routine systemMetrics public
-   use strict arg index
-   return .DlgUtil~getSystemMetrics(index)
-
-/** The following routines are needed to maintain backward compatibilty with
- *  pre-4.0.0, because a classic Rexx external function with the same name was
- *  documented.
+/** The following routines are, mostly, duplicates of the public routines above.
+ *  They are needed to maintain backward compatibilty with  pre-4.0.0, because
+ *  both names were documented.
  */
-::routine sleepMS public external "LIBRARY oodialog msSleep"
+::routine sleepMS public external "LIBRARY oodialog msSleep_rtn"
+::routine winTimer public external "LIBRARY oodialog winTimer_rtn"
+::routine getFileNameWindow public external "LIBRARY oodialog fileNameDlg_rtn"
 
 ::routine getSysMetrics public
   use strict arg index
   return .DlgUtil~getSystemMetrics(index)
-
-::routine findWindow public
-   use strict arg caption
-   return .DlgUtil~findWindow(caption)
 
 ::routine getScreenSize public
   vals = .DlgUtil~screenSize

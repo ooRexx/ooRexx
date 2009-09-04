@@ -655,12 +655,11 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
  */
 RexxRoutine2(RexxStringObject, getDlgMsg, CSTRING, adm, OPTIONAL_logical_t, doPeek)
 {
-    RexxCallContext *c = context;
     DIALOGADMIN * dlgAdm = (DIALOGADMIN *)string2pointer(adm);
     if ( dlgAdm == NULL )
     {
-        c->RaiseException1(Rexx_Error_Incorrect_call_user_defined,
-                           c->String("getDlgMsg() argument 1 must not be a null Pointer"));
+        context->RaiseException1(Rexx_Error_Incorrect_call_user_defined,
+                                 context->String("getDlgMsg() argument 1 must not be a null Pointer"));
         return NULLOBJECT;
     }
 
@@ -674,11 +673,11 @@ RexxRoutine2(RexxStringObject, getDlgMsg, CSTRING, adm, OPTIONAL_logical_t, doPe
     if ( dialogInAdminTable(dlgAdm) )
     {
         getDlgMessage(dlgAdm, msg, peek);
-        result = c->String(msg);
+        result = context->String(msg);
     }
     else
     {
-        result = c->String(MSG_TERMINATE);
+        result = context->String(MSG_TERMINATE);
     }
     LeaveCriticalSection(&crit_sec);
 

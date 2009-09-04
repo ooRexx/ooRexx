@@ -165,13 +165,18 @@ RexxMethod1(RexxObjectPtr, dlgctrl_unInit, CSELF, pCSelf)
 
 /** DialogControl::getTextSizeDlg()
  *
- *  Gets the size (width and height) in dialog units for any given string for
- *  the font specified.
+ *  Gets the size (width and height) in dialog units for any given string.
+ *
+ *  Since dialog units only have meaning for a specific dialog, normally the
+ *  dialog units are calculated using the font of the dialog.  Optionally, this
+ *  method will calculate the dialog units using a specified font.
  *
  *  @param  text         The string whose size is needed.
  *
  *  @param  fontName     Optional. If specified, use this font to calculate the
- *                       size.
+ *                       size.  The default is to use the font of the owner
+ *                       dialog of the dialog control.  This would be the normal
+ *                       usage.
  *
  *  @param  fontSize     Optional. If specified, use this font size with
  *                       fontName to calculate the size.  The default if omitted
@@ -180,9 +185,16 @@ RexxMethod1(RexxObjectPtr, dlgctrl_unInit, CSELF, pCSelf)
  *  @param  hwndFontSrc  Optional. Use this window's font to calculate the size.
  *                       This arg is always ignored if fontName is specified.
  *
+ *  @return  A .Size object representing the area (width and height,) in dialog
+ *           units, needed for the specified string.
+ *
+ *  @note  This method, mapped to a dialog control object, does not really make
+ *         sense.  It, and its convoluted optional arguments, are maintained
+ *         only for backward compatibility.  Its use should be strongly
+ *         discouraged.
  */
 RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING, fontName,
-            OPTIONAL_uint32_t, fontSize, OPTIONAL_POINTERSTRING, hwndFontSrc, OSELF, self)
+            OPTIONAL_uint32_t, fontSize, OPTIONAL_POINTERSTRING, hwndFontSrc, CSELF, pCSelf)
 {
     HWND hwndSrc = NULL;
     if ( argumentExists(2) )
@@ -194,32 +206,15 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
     }
     else if ( argumentExists(4) )
     {
+        hwndSrc = (HWND)hwndFontSrc;
         if ( hwndFontSrc == NULL )
         {
-            nullObjectException(context, "window handle", 4);
-            goto error_out;
+            nullObjectException(context->threadContext, "window handle", 4);
+            return NULLOBJECT;
         }
-        hwndSrc = (HWND)hwndFontSrc;
     }
 
-    RexxObjectPtr dlgObj = context->SendMessage0(self, "ODLG");
-    if ( dlgObj == NULLOBJECT )
-    {
-        // The interpreter kernel will have raised a syntax exception in this
-        // case.  But, the ooDialog framework traps the exception and puts up a
-        // message box saying ODLG is not a method of xx control.  I think that
-        // will be confusing to the users, since they have no idea about this
-        // call to oDlg. So, raise a more specific exception.
-        context->RaiseException1(Rexx_Error_Interpretation_user_defined,
-                                 context->String("Inconsistency: this .DialogControl object does not have "
-                                                 "the oDlg (owner dialog) attribute"));
-        goto error_out;
-    }
-
-    return getTextSize(context, text, fontName, fontSize, hwndSrc, dlgObj);
-
-error_out:
-    return NULLOBJECT;
+    return getTextSize(context, text, fontName, fontSize, hwndSrc, ((pCDialogControl)pCSelf)->oDlg);
 }
 
 
@@ -434,7 +429,7 @@ RexxMethod3(RexxObjectPtr, advCtrl_getControl, RexxObjectPtr, rxID, OPTIONAL_uin
     PNEWCONTROLPARAMS pArgs = (PNEWCONTROLPARAMS)malloc(sizeof(NEWCONTROLPARAMS));
     if ( pArgs == NULL )
     {
-        outOfMemoryException(context);
+        outOfMemoryException(context->threadContext);
         goto out;
     }
 

@@ -1533,6 +1533,7 @@
 
 /* For internal testing only, do not use this method */
 ::method test external "LIBRARY oodialog bc_test"
+::method test class external "LIBRARY oodialog bc_test_cls"
 
 ::method changeBitmap unguarded
    arga = arg(1,"A")

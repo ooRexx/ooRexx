@@ -476,7 +476,7 @@ bool calcDlgBaseUnits(RexxMethodContext *c, RexxObjectPtr dlg, int *baseUnitX, i
     hdc = GetDC(NULL);
     if ( hdc == NULL )
     {
-        systemServiceExceptionCode(c, API_FAILED_MSG, "GetDC");
+        systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GetDC");
         goto done_out;
     }
 
@@ -495,7 +495,7 @@ bool calcDlgBaseUnits(RexxMethodContext *c, RexxObjectPtr dlg, int *baseUnitX, i
     font = createFontFromName(hdc, fontName, fontSize);
     if ( font == NULL )
     {
-        systemServiceExceptionCode(c, API_FAILED_MSG, "CreateFontIndirect");
+        systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "CreateFontIndirect");
         goto done_out;
     }
 
@@ -593,21 +593,21 @@ bool textSizeIndirect(RexxMethodContext *context, CSTRING text, CSTRING fontName
     HDC hdc = GetDC(hwnd);
     if ( hdc == NULL )
     {
-        systemServiceExceptionCode(context, API_FAILED_MSG, "GetDC");
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetDC");
         return false;
     }
 
     HFONT font = createFontFromName(hdc, fontName, fontSize);
     if ( font == NULL )
     {
-        systemServiceExceptionCode(context, API_FAILED_MSG, "CreateFontIndirect");
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "CreateFontIndirect");
         ReleaseDC(hwnd, hdc);
         return false;
     }
 
     if ( ! getTextExtent(font, hdc, text, size) )
     {
-        systemServiceExceptionCode(context, API_FAILED_MSG, "GetTextExtentPoint32");
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetTextExtentPoint32");
         success = false;
     }
 
@@ -622,7 +622,7 @@ bool textSizeFromWindow(RexxMethodContext *context, CSTRING text, SIZE *size, HW
     HDC hdc = GetDC(hwnd);
     if ( hdc == NULL )
     {
-        systemServiceExceptionCode(context, API_FAILED_MSG, "GetDC");
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetDC");
         return false;
     }
 
@@ -637,7 +637,7 @@ bool textSizeFromWindow(RexxMethodContext *context, CSTRING text, SIZE *size, HW
     bool success = true;
     if ( ! getTextExtent(font, hdc, text, size) )
     {
-        systemServiceExceptionCode(context, API_FAILED_MSG, "GetTextExtentPoint32");
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetTextExtentPoint32");
         success = false;
     }
 
@@ -678,7 +678,7 @@ RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING font
     HDC hdc = GetDC(hwndForDC);
     if ( hdc == NULL )
     {
-        systemServiceExceptionCode(context, API_FAILED_MSG, "GetDC");
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetDC");
         goto error_out;
     }
 

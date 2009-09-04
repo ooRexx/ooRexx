@@ -1012,7 +1012,7 @@ bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWi
         RECT r = {0};
         if ( GetWindowRect(hwndObj, &r) == 0 )
         {
-            systemServiceExceptionCode(c, API_FAILED_MSG, "GetWindowRect");
+            systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GetWindowRect");
             return false;
         }
 
@@ -1047,7 +1047,7 @@ RexxMethod1(logical_t, wb_init_windowBase, RexxObjectPtr, cSelf)
     if ( ! context->IsBuffer(cSelf) )
     {
         context->SetObjectVariable("INITCODE", TheOneObj);
-        wrongClassException(context, 1, "Buffer");
+        wrongClassException(context->threadContext, 1, "Buffer");
         return FALSE;
     }
 
@@ -1303,14 +1303,14 @@ RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
     {
         if ( doFast )
         {
-            userDefinedMsgException(context, 1, "The keyword FAST can not be used with INACTIVE");
+            userDefinedMsgException(context->threadContext, 1, "The keyword FAST can not be used with INACTIVE");
             goto done_out;
         }
         type = 'I';
     }
     else
     {
-        userDefinedMsgException(context, 1, "The keyword option string must contain one of NORMAL, DEFAULT, HIDE, INACTIVE");
+        userDefinedMsgException(context->threadContext, 1, "The keyword option string must contain one of NORMAL, DEFAULT, HIDE, INACTIVE");
         goto done_out;
     }
 
@@ -1397,7 +1397,7 @@ RexxMethod1(logical_t, wb_redraw, CSELF, pCSelf)
  */
 RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
 {
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     RexxStringObject result = context->NullString();
 
     HWND hwnd = getWBWindow(pCSelf);
@@ -1405,7 +1405,7 @@ RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
 
     if ( count == 0 )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
         return result;
     }
 
@@ -1416,7 +1416,7 @@ RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
     LPTSTR pBuf = (LPTSTR)malloc(++count);
     if ( pBuf == NULL )
     {
-        outOfMemoryException(context);
+        outOfMemoryException(context->threadContext);
         return result;
     }
 
@@ -1427,7 +1427,7 @@ RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
     }
     else
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
     }
     free(pBuf);
 
@@ -1453,10 +1453,10 @@ RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
  */
 RexxMethod2(wholenumber_t, wb_setText, CSTRING, text, CSELF, pCSelf)
 {
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     if ( SetWindowText(getWBWindow(pCSelf), text) == 0 )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
         return 1;
     }
     return 0;
@@ -1476,7 +1476,7 @@ RexxMethod2(RexxObjectPtr, window_init, POINTERSTRING, hwnd, OSELF, self)
 {
     if ( !IsWindow((HWND)hwnd) )
     {
-        invalidTypeException(context, 1, " window handle");
+        invalidTypeException(context->threadContext, 1, " window handle");
     }
     else
     {
@@ -1963,7 +1963,7 @@ RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, wm, O
 
     if ( (winMessage | wParam | lParam) == 0 )
     {
-        userDefinedMsgException(context, "The wm, wp, and lp arguements can not all be 0" );
+        userDefinedMsgException(context->threadContext, "The wm, wp, and lp arguements can not all be 0" );
     }
     else
     {
@@ -1979,8 +1979,11 @@ done_out:
 
 /** PlainBaseDialog::getTextSizeDlg()
  *
- *  Gets the size (width and height) in dialog units for any given string, for
- *  the font specified.
+ *  Gets the size (width and height) in dialog units for any given string.
+ *
+ *  Since dialog units only have meaning for a specific dialog, normally the
+ *  dialog units are calculated using the font of the dialog.  Optionally, this
+ *  method will calculate the dialog units using a specified font.
  *
  *  @param  text         The string whose size is needed.
  *
@@ -1994,6 +1997,23 @@ done_out:
  *  @param  hwndFontSrc  Optional. Use this window's font to calculate the size.
  *                       This arg is always ignored if fontName is specified.
  *
+ *  @note The normal useage for this method would be, before the underlying
+ *        dialog is created:
+ *
+ *          dlg~setDlgFont("fontName", fontSize)
+ *          dlg~getTextSizeDlg("some text")
+ *
+ *        or, after the underlying dialog is created, just:
+ *
+ *          dlg~getTextSizeDlg("some text")
+ *
+ *        The convoluted use of the optional arguments are needed to maintain
+ *        backwards compatibility with the pre 4.0.0 ooDialog, the Rexx
+ *        programmer should be strongly discouraged from using them.
+ *
+ *        In addition, a version of this method is mapped to the DialogControl
+ *        class.  This also is done only for backwards compatibility.  There is
+ *        no logical reason for this to be a method of a dialog control.
  */
 RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING, fontName,
             OPTIONAL_uint32_t, fontSize, OPTIONAL_POINTERSTRING, hwndFontSrc, OSELF, self)
@@ -2010,15 +2030,13 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
     {
         if ( hwndFontSrc == NULL )
         {
-            nullObjectException(context, "window handle", 4);
-            goto error_out;
+            nullObjectException(context->threadContext, "window handle", 4);
+            return NULLOBJECT;
         }
         hwndSrc = (HWND)hwndFontSrc;
     }
-    return getTextSize(context, text, fontName, fontSize, hwndSrc, self);
 
-error_out:
-    return NULLOBJECT;
+    return getTextSize(context, text, fontName, fontSize, hwndSrc, self);
 }
 
 

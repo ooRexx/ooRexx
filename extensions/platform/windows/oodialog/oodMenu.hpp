@@ -112,6 +112,7 @@ public:
     inline void setHMenu(HMENU h) { hMenu = h; }
     inline RexxObjectPtr getSelf() { return self; }
     inline RexxMethodContext *getContext() { return c; }
+    inline RexxThreadContext *getThreadContext() { return c->threadContext; }
     inline bool isMenuBar() { return type != PopupMenu && type != SystemMenu; }
     inline bool isPopup() { return type == PopupMenu; }
     inline bool isSystemMenu() { return type == SystemMenu; }

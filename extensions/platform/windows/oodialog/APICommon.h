@@ -49,46 +49,46 @@
 #define MSG_WINCTRL_FAILED_MSG    "the '%s' message of the Windows '%s' control failed"
 #define NO_LOCAL_ENVIRONMENT_MSG  "the .local environment was not found"
 
-extern void severeErrorException(RexxMethodContext *c, char *msg);
-extern void systemServiceException(RexxMethodContext *context, char *msg);
-extern void systemServiceException(RexxMethodContext *context, char *msg, const char *sub);
-extern void systemServiceExceptionCode(RexxMethodContext *context, const char *msg, const char *arg1, DWORD rc);
-extern void systemServiceExceptionCode(RexxMethodContext *context, const char *msg, const char *arg1);
-extern void systemServiceExceptionComCode(RexxMethodContext *context, const char *msg, const char *arg1, HRESULT hr);
-extern void outOfMemoryException(RexxMethodContext *c);
-extern void userDefinedMsgException(RexxMethodContext *c, CSTRING msg);
-extern void userDefinedMsgException(RexxMethodContext *c, int pos, CSTRING msg);
-extern void *wrongClassException(RexxMethodContext *c, int pos, const char *n);
-extern void invalidTypeException(RexxMethodContext *c, int pos, const char *type);
-extern void invalidImageException(RexxMethodContext *c, int pos, CSTRING type, CSTRING actual);
-extern void notNonNegativeException(RexxMethodContext *c, int pos, RexxObjectPtr actual);
-extern void wrongObjInArrayException(RexxMethodContext *c, int argPos, size_t index, CSTRING obj);
-extern void wrongObjInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual);
-extern void executionErrorException(RexxMethodContext *c, CSTRING msg);
-extern void doOverException(RexxMethodContext *c, RexxObjectPtr obj);
-extern void failedToRetrieveException(RexxMethodContext *c, CSTRING item, RexxObjectPtr source);
-extern void missingIndexInDirectoryException(RexxMethodContext *c, int argPos, CSTRING index);
-extern void emptyArrayException(RexxMethodContext *c, int argPos);
-extern void nullObjectException(RexxMethodContext *c, CSTRING name, int pos);
-extern void nullObjectException(RexxMethodContext *c, CSTRING name);
-extern void nullPointerException(RexxMethodContext *c, int pos);
-extern void wrongRangeException(RexxMethodContext *c, int pos, int min, int max, RexxObjectPtr actual);
-extern void wrongRangeException(RexxMethodContext *c, int pos, int min, int max, int actual);
-extern void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, RexxObjectPtr actual);
-extern void wrongArgValueException(RexxMethodContext *c, int pos, const char *list, const char *actual);
+extern void severeErrorException(RexxThreadContext *c, char *msg);
+extern void systemServiceException(RexxThreadContext *context, char *msg);
+extern void systemServiceException(RexxThreadContext *context, char *msg, const char *sub);
+extern void systemServiceExceptionCode(RexxThreadContext *context, const char *msg, const char *arg1, DWORD rc);
+extern void systemServiceExceptionCode(RexxThreadContext *context, const char *msg, const char *arg1);
+extern void systemServiceExceptionComCode(RexxThreadContext *context, const char *msg, const char *arg1, HRESULT hr);
+extern void outOfMemoryException(RexxThreadContext *c);
+extern void userDefinedMsgException(RexxThreadContext *c, CSTRING msg);
+extern void userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg);
+extern void *wrongClassException(RexxThreadContext *c, int pos, const char *n);
+extern void invalidTypeException(RexxThreadContext *c, int pos, const char *type);
+extern void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING actual);
+extern void notNonNegativeException(RexxThreadContext *c, int pos, RexxObjectPtr actual);
+extern void wrongObjInArrayException(RexxThreadContext *c, int argPos, size_t index, CSTRING obj);
+extern void wrongObjInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual);
+extern void executionErrorException(RexxThreadContext *c, CSTRING msg);
+extern void doOverException(RexxThreadContext *c, RexxObjectPtr obj);
+extern void failedToRetrieveException(RexxThreadContext *c, CSTRING item, RexxObjectPtr source);
+extern void missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index);
+extern void emptyArrayException(RexxThreadContext *c, int argPos);
+extern void nullObjectException(RexxThreadContext *c, CSTRING name, int pos);
+extern void nullObjectException(RexxThreadContext *c, CSTRING name);
+extern void nullPointerException(RexxThreadContext *c, int pos);
+extern void wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual);
+extern void wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual);
+extern void wrongArgValueException(RexxThreadContext *c, int pos, const char *list, RexxObjectPtr actual);
+extern void wrongArgValueException(RexxThreadContext *c, int pos, const char *list, const char *actual);
 
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 extern bool    rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, wholenumber_t *pNumber);
 extern bool    rxGetUIntPtrAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uintptr_t *pNumber);
 extern bool    rxGetUInt32Attribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, uint32_t *pNumber);
 
-extern bool requiredClass(RexxMethodContext *c, RexxObjectPtr obj, const char *name, int pos);
-extern size_t rxArgCount(RexxMethodContext * context);
-extern bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos);
+extern bool            requiredClass(RexxThreadContext *c, RexxObjectPtr obj, const char *name, int pos);
+extern size_t          rxArgCount(RexxMethodContext * context);
+extern bool            rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos);
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
-extern RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
-extern bool isInt(RexxMethodContext *, int, RexxObjectPtr);
-extern bool isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
-extern void dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
+extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
+extern bool            isInt(RexxMethodContext *, int, RexxObjectPtr);
+extern bool            isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
+extern void            dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 
 #endif

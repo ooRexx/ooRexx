@@ -201,7 +201,7 @@ uint32_t oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr oodObj, 
 {
     uint32_t result = OOD_ID_EXCEPTION;
 
-    if ( argPosObj != -1 && ! requiredClass(context, oodObj, "ResourceUtils", argPosObj) )
+    if ( argPosObj != -1 && ! requiredClass(context->threadContext, oodObj, "ResourceUtils", argPosObj) )
     {
         goto done_out;
     }
@@ -228,7 +228,7 @@ uint32_t oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr oodObj, 
             symbol = strdupupr_nospace(context->ObjectToStringValue(id));
             if ( symbol == NULL )
             {
-                outOfMemoryException(context);
+                outOfMemoryException(context->threadContext);
                 goto done_out;
             }
 
@@ -244,7 +244,7 @@ uint32_t oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr oodObj, 
 
     if ( result == OOD_ID_EXCEPTION )
     {
-        wrongArgValueException(context, argPosID, "a valid numeric ID or a valid symbolic ID" , id);
+        wrongArgValueException(context->threadContext, argPosID, "a valid numeric ID or a valid symbolic ID" , id);
     }
 
 done_out:
@@ -285,7 +285,7 @@ bool oodSafeResolveID(uint32_t *pID, RexxMethodContext *context, RexxObjectPtr o
 }
 
 
-DWORD oodGetSysErrCode(RexxMethodContext *c)
+DWORD oodGetSysErrCode(RexxThreadContext *c)
 {
     uint32_t code = 0;
     RexxObjectPtr rxCode = c->DirectoryAt(TheDotLocalObj, "SYSTEMERRORCODE");
@@ -293,13 +293,13 @@ DWORD oodGetSysErrCode(RexxMethodContext *c)
     return (DWORD)code;
 }
 
-void oodSetSysErrCode(RexxMethodContext *context, DWORD code)
+void oodSetSysErrCode(RexxThreadContext *context, DWORD code)
 {
     context->DirectoryPut(TheDotLocalObj, context->UnsignedInt32(code), "SYSTEMERRORCODE");
 }
 
 
-void oodResetSysErrCode(RexxMethodContext *context)
+void oodResetSysErrCode(RexxThreadContext *context)
 {
     context->DirectoryPut(TheDotLocalObj, TheZeroObj, "SYSTEMERRORCODE");
 }
@@ -397,6 +397,23 @@ void pointer2string(char *result, void *pointer)
  *         null, or as 0 if null.
  */
 RexxStringObject pointer2string(RexxMethodContext *c, void *pointer)
+{
+    char buf[32];
+    pointer2string(buf, pointer);
+    return c->String(buf);
+}
+
+/**
+ * Variation of above, but takes a thread context pointer instead of a method
+ * context pointer. Converts the pointer and returns it as a RexxStringObject.
+ *
+ * @param c        Thread context we are operating in.
+ * @param pointer  Pointer to convert
+ *
+ * @return A string object representing the pointer as either 0xffff1111 if not
+ *         null, or as 0 if null.
+ */
+RexxStringObject pointer2string(RexxThreadContext *c, void *pointer)
 {
     char buf[32];
     pointer2string(buf, pointer);
@@ -559,7 +576,7 @@ DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
     DIALOGADMIN *adm = (DIALOGADMIN *)rxGetPointerAttribute(context, dlg, "ADM");
     if ( adm == NULL )
     {
-        failedToRetrieveException(context, "dialog administration block", dlg);
+        failedToRetrieveException(context->threadContext, "dialog administration block", dlg);
     }
     return adm;
 }
@@ -567,7 +584,7 @@ DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
 
 PPOINT rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos)
 {
-    if ( requiredClass(context, p, "Point", argPos) )
+    if ( requiredClass(context->threadContext, p, "Point", argPos) )
     {
         return (PPOINT)context->ObjectToCSelf(p);
     }
@@ -589,7 +606,7 @@ RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y)
 
 PRECT rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos)
 {
-    if ( requiredClass(context, r, "Rect", argPos) )
+    if ( requiredClass(context->threadContext, r, "Rect", argPos) )
     {
         return (PRECT)context->ObjectToCSelf(r);
     }
@@ -618,7 +635,7 @@ RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long
 
 PSIZE rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos)
 {
-    if ( requiredClass(context, s, "Size", argPos) )
+    if ( requiredClass(context->threadContext, s, "Size", argPos) )
     {
         return (PSIZE)context->ObjectToCSelf(s);
     }

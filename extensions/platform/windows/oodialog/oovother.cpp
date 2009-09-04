@@ -2133,7 +2133,7 @@ size_t RexxEntry HandleOtherNewCtrls(const char *funcname, size_t argc, CONSTRXS
    RETC(0)
 }
 
-void controlFailedException(RexxMethodContext *c, const char *msg, const char *func, const char *control)
+void controlFailedException(RexxThreadContext *c, const char *msg, const char *func, const char *control)
 {
     TCHAR buffer[256];
     _snprintf(buffer, sizeof(buffer), msg, func, control);
@@ -2144,7 +2144,7 @@ void wrongWindowStyleException(RexxMethodContext *c, const char *obj, const char
 {
     char msg[128];
     _snprintf(msg, sizeof(msg), "This %s does not have the %s style", obj, style);
-    userDefinedMsgException(c, msg);
+    userDefinedMsgException(c->threadContext, msg);
 }
 
 inline bool hasStyle(HWND hwnd, LONG style)
@@ -2300,7 +2300,7 @@ RexxMethod5(RexxObjectPtr, winex_getTextSizeScreen, CSTRING, text, OPTIONAL_CSTR
     HWND hwnd = rxGetWindowHandle(context, self);
     if ( hwnd == NULL )
     {
-        nullObjectException(context, "window handle");
+        nullObjectException(context->threadContext, "window handle");
         goto error_out;
     }
 
@@ -2341,7 +2341,7 @@ RexxMethod5(RexxObjectPtr, winex_getTextSizeScreen, CSTRING, text, OPTIONAL_CSTR
             HDC hdc = (HDC)string2pointer(fontSrc);
             if ( hdc == NULL )
             {
-                invalidTypeException(context, 3, " handle to a device context");
+                invalidTypeException(context->threadContext, 3, " handle to a device context");
             }
             GetTextExtentPoint32(hdc, text, (int)strlen(text), &size);
         }
@@ -2350,20 +2350,20 @@ RexxMethod5(RexxObjectPtr, winex_getTextSizeScreen, CSTRING, text, OPTIONAL_CSTR
             HFONT hFont = (HFONT)string2pointer(fontSrc);
             if ( hFont == NULL )
             {
-                invalidTypeException(context, 3, " handle to a font");
+                invalidTypeException(context->threadContext, 3, " handle to a font");
             }
 
             HDC hdc = GetDC(hwnd);
             if ( hdc == NULL )
             {
-                systemServiceExceptionCode(context, API_FAILED_MSG, "GetDC");
+                systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetDC");
                 goto error_out;
             }
 
             bool success = true;
             if ( ! getTextExtent(hFont, hdc, text, &size) )
             {
-                systemServiceExceptionCode(context, API_FAILED_MSG, "GetTextExtentPoint32");
+                systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetTextExtentPoint32");
                 success = false;
             }
 
@@ -2402,7 +2402,7 @@ RexxMethod1(POINTERSTRING, winex_getFont, OSELF, self)
     HWND hwnd = rxGetWindowHandle(context, self);
     if ( hwnd == NULL )
     {
-        nullObjectException(context, "window handle");
+        nullObjectException(context->threadContext, "window handle");
         goto error_out;
     }
 
@@ -2433,7 +2433,7 @@ RexxMethod3(int, winex_setFont, POINTERSTRING, font, OPTIONAL_logical_t, redraw,
     HWND hwnd = rxGetWindowHandle(context, self);
     if ( hwnd == NULL )
     {
-        nullObjectException(context, "window handle");
+        nullObjectException(context->threadContext, "window handle");
     }
     else
     {
@@ -2455,7 +2455,7 @@ bool rxLogicalFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, C
     {
         if ( ! context->Logical(obj, &value) )
         {
-            wrongObjInDirectoryException(context, argPos, index, "a logical", obj);
+            wrongObjInDirectoryException(context->threadContext, argPos, index, "a logical", obj);
             return false;
         }
         *logical = (BOOL)value;
@@ -2472,7 +2472,7 @@ bool rxNumberFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CS
     {
         if ( ! context->UnsignedInt32(obj, (uint32_t*)&value) )
         {
-            wrongObjInDirectoryException(context, argPos, index, "a positive whole number", obj);
+            wrongObjInDirectoryException(context->threadContext, argPos, index, "a positive whole number", obj);
             return false;
         }
         *number = value;
@@ -2489,7 +2489,7 @@ bool rxIntFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRI
     {
         if ( ! context->Int32(obj, &value) )
         {
-            wrongObjInDirectoryException(context, argPos, index, "an integer", obj);
+            wrongObjInDirectoryException(context->threadContext, argPos, index, "an integer", obj);
             return false;
         }
         *number = value;
@@ -2605,7 +2605,7 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
     DWORD quality = DEFAULT_QUALITY;              // output quality
     DWORD pitchAndFamily = FF_DONTCARE;           // pitch and family
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
 
     if ( argumentOmitted(2) )
     {
@@ -2620,7 +2620,7 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
     {
         if ( ! context->IsDirectory(args) )
         {
-            wrongClassException(context, 3, "Directory");
+            wrongClassException(context->threadContext, 3, "Directory");
             goto error_out;
         }
         RexxDirectoryObject d = (RexxDirectoryObject)args;
@@ -2680,7 +2680,7 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
 
     if ( font == NULL )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
     }
     return font;
 
@@ -2740,7 +2740,7 @@ static bool dt2sysTime(RexxMethodContext *c, RexxObjectPtr dateTime, SYSTEMTIME 
 
         if ( st.wYear < SYSTEMTIME_MIN_YEAR )
         {
-            userDefinedMsgException(c, "The DateTime object can not represent a year prior to 1601");
+            userDefinedMsgException(c->threadContext, "The DateTime object can not represent a year prior to 1601");
             goto failed_out;
         }
 
@@ -2853,7 +2853,7 @@ RexxMethod1(RexxObjectPtr, get_dtp_dateTime, OSELF, self)
         case GDT_ERROR:
         default :
             // Some error with the DTP, raise an exception.
-            controlFailedException(context, FUNC_WINCTRL_FAILED_MSG, "DateTime_GetSystemtime", DATETIMEPICKER_WINNAME);
+            controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "DateTime_GetSystemtime", DATETIMEPICKER_WINNAME);
             break;
     }
     return dateTime;
@@ -2887,13 +2887,13 @@ RexxMethod2(RexxObjectPtr, set_dtp_dateTime, RexxObjectPtr, dateTime, OSELF, sel
     }
     else
     {
-        if ( requiredClass(context, dateTime, "DATETIME", 1) )
+        if ( requiredClass(context->threadContext, dateTime, "DATETIME", 1) )
         {
             if ( dt2sysTime(c, dateTime, &sysTime, dtFull) )
             {
                 if ( DateTime_SetSystemtime(hwnd, GDT_VALID, &sysTime) == 0 )
                 {
-                    controlFailedException(context, FUNC_WINCTRL_FAILED_MSG, "DateTime_SetSystemtime", DATETIMEPICKER_WINNAME);
+                    controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "DateTime_SetSystemtime", DATETIMEPICKER_WINNAME);
                 }
             }
         }
@@ -2916,7 +2916,7 @@ RexxMethod1(RexxObjectPtr, get_mc_date, OSELF, self)
 
     if ( MonthCal_GetCurSel(rxGetWindowHandle(context, self), &sysTime) == 0 )
     {
-        controlFailedException(context, FUNC_WINCTRL_FAILED_MSG, "MonthCal_GetCurSel", MONTHCALENDAR_WINNAME);
+        controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "MonthCal_GetCurSel", MONTHCALENDAR_WINNAME);
     }
     else
     {
@@ -2930,13 +2930,13 @@ RexxMethod2(RexxObjectPtr, set_mc_date, RexxObjectPtr, dateTime, OSELF, self)
     RexxMethodContext *c = context;
     SYSTEMTIME sysTime = {0};
 
-    if ( requiredClass(context, dateTime, "DATETIME", 1) )
+    if ( requiredClass(context->threadContext, dateTime, "DATETIME", 1) )
     {
         if ( dt2sysTime(context, dateTime, &sysTime, dtDate) )
         {
             if ( MonthCal_SetCurSel(rxGetWindowHandle(context, self), &sysTime) == 0 )
             {
-                controlFailedException(context, FUNC_WINCTRL_FAILED_MSG, "MonthCal_SetCurSel", MONTHCALENDAR_WINNAME);
+                controlFailedException(context->threadContext, FUNC_WINCTRL_FAILED_MSG, "MonthCal_SetCurSel", MONTHCALENDAR_WINNAME);
             }
         }
     }
@@ -3249,7 +3249,7 @@ RexxObjectPtr rxILFromBMP(RexxMethodContext *c, HIMAGELIST *himl, RexxObjectPtr 
                                       DIB_PBI(hDDB), DIB_RGB_COLORS);
                 if ( hDDB == NULL )
                 {
-                    oodSetSysErrCode(c);
+                    oodSetSysErrCode(c->threadContext);
                     ReleaseDC(hwnd, dc);
                     goto done_out;
                 }
@@ -3262,7 +3262,7 @@ RexxObjectPtr rxILFromBMP(RexxMethodContext *c, HIMAGELIST *himl, RexxObjectPtr 
             hDDB = (HBITMAP)LoadImage(NULL, bitmap, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
             if ( hDDB == NULL )
             {
-                oodSetSysErrCode(c);
+                oodSetSysErrCode(c->threadContext);
                 goto done_out;
             }
             canRelease = true;
@@ -3270,7 +3270,7 @@ RexxObjectPtr rxILFromBMP(RexxMethodContext *c, HIMAGELIST *himl, RexxObjectPtr 
     }
     else
     {
-        wrongArgValueException(c, 1, "ImageList, Image, bitmap file name, bitmap handle", ilSrc);
+        wrongArgValueException(c->threadContext, 1, "ImageList, Image, bitmap file name, bitmap handle", ilSrc);
         goto done_out;
     }
 
@@ -3348,7 +3348,7 @@ RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
             OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OPTIONAL_int32_t, ilType, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
 
     HIMAGELIST himl = NULL;
     RexxObjectPtr imageList = NULL;
@@ -3392,7 +3392,7 @@ RexxMethod5(RexxObjectPtr, lv_setImageList, RexxObjectPtr, ilSrc,
 
     if ( type > LVSIL_STATE )
     {
-        wrongRangeException(context, argumentExists(4) ? 4 : 2, LVSIL_NORMAL, LVSIL_STATE, type);
+        wrongRangeException(context->threadContext, argumentExists(4) ? 4 : 2, LVSIL_NORMAL, LVSIL_STATE, type);
         goto err_out;
     }
 
@@ -3420,7 +3420,7 @@ RexxMethod2(RexxObjectPtr, lv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
     }
     else if ( type > LVSIL_STATE )
     {
-        wrongRangeException(context, 1, LVSIL_NORMAL, LVSIL_STATE, type);
+        wrongRangeException(context->threadContext, 1, LVSIL_NORMAL, LVSIL_STATE, type);
         return NULLOBJECT;
     }
 
@@ -3461,7 +3461,7 @@ RexxMethod1(RexxObjectPtr, lv_getColumnOrder, OSELF, self)
         int *pOrder = (int *)malloc(count * sizeof(int));
         if ( pOrder == NULL )
         {
-            outOfMemoryException(context);
+            outOfMemoryException(context->threadContext);
         }
         else
         {
@@ -3495,7 +3495,7 @@ RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, OSELF, self)
     {
         if ( count != items )
         {
-            userDefinedMsgException(context, "the number of items in the order array does not match the number of columns");
+            userDefinedMsgException(context->threadContext, "the number of items in the order array does not match the number of columns");
             goto done;
         }
 
@@ -3510,7 +3510,7 @@ RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, OSELF, self)
                 item = context->ArrayAt(order, i + 1);
                 if ( item == NULLOBJECT || ! context->ObjectToInt32(item, &column) )
                 {
-                    wrongObjInArrayException(context, 1, i + 1, "valid column number");
+                    wrongObjInArrayException(context->threadContext, 1, i + 1, "valid column number");
                     goto done;
                 }
                 pOrder[i] = column;
@@ -3526,7 +3526,7 @@ RexxMethod2(logical_t, lv_setColumnOrder, RexxArrayObject, order, OSELF, self)
         }
         else
         {
-            outOfMemoryException(context);
+            outOfMemoryException(context->threadContext);
         }
     }
 
@@ -3553,7 +3553,7 @@ RexxMethod5(int, lv_insertColumnEx, OPTIONAL_uint16_t, column, CSTRING, text, ui
     lvi.cchTextMax = (int)strlen(text);
     if ( lvi.cchTextMax > (sizeof(szText) - 1) )
     {
-        userDefinedMsgException(context, 2, "the column title must be less than 256 characters");
+        userDefinedMsgException(context->threadContext, 2, "the column title must be less than 256 characters");
         return 0;
     }
     strcpy(szText, text);
@@ -3656,7 +3656,7 @@ RexxMethod5(int, lv_addRowEx, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL_i
     }
     if ( ! context->IsArray(subItems) )
     {
-        wrongClassException(context, 4, "Array");
+        wrongClassException(context->threadContext, 4, "Array");
         goto done_out;
     }
 
@@ -3666,14 +3666,14 @@ RexxMethod5(int, lv_addRowEx, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL_i
         RexxDirectoryObject subItem = (RexxDirectoryObject)context->ArrayAt((RexxArrayObject)subItems, i);
         if ( subItem == NULLOBJECT || ! context->IsDirectory(subItem) )
         {
-            wrongObjInArrayException(context, 4, i, "Directory");
+            wrongObjInArrayException(context->threadContext, 4, i, "Directory");
             goto done_out;
         }
 
         RexxObjectPtr subItemText = context->DirectoryAt(subItem, "TEXT");
         if ( subItemText == NULLOBJECT )
         {
-            missingIndexInDirectoryException(context, 4, "TEXT");
+            missingIndexInDirectoryException(context->threadContext, 4, "TEXT");
             goto done_out;
         }
         imageIndex = -1;
@@ -3759,7 +3759,7 @@ RexxMethod4(RexxObjectPtr, tv_setImageList, RexxObjectPtr, ilSrc,
             OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
 
     HIMAGELIST himl = NULL;
     int type = TVSIL_NORMAL;
@@ -3797,7 +3797,7 @@ RexxMethod4(RexxObjectPtr, tv_setImageList, RexxObjectPtr, ilSrc,
 
     if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
     {
-        invalidTypeException(context, 2, " TVSIL_XXX flag");
+        invalidTypeException(context->threadContext, 2, " TVSIL_XXX flag");
         goto err_out;
     }
 
@@ -3825,7 +3825,7 @@ RexxMethod2(RexxObjectPtr, tv_getImageList, OPTIONAL_uint8_t, type, OSELF, self)
     }
     else if ( type != TVSIL_STATE && type != TVSIL_NORMAL )
     {
-        invalidTypeException(context, 2, " TVSIL_XXX flag");
+        invalidTypeException(context->threadContext, 2, " TVSIL_XXX flag");
         return NULLOBJECT;
     }
 
@@ -3877,7 +3877,7 @@ RexxMethod4(RexxObjectPtr, tab_setImageList, RexxObjectPtr, ilSrc,
             OPTIONAL_int32_t, width, OPTIONAL_int32_t, height, OSELF, self)
 {
     HWND hwnd = rxGetWindowHandle(context, self);
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
 
     HIMAGELIST himl = NULL;
     RexxObjectPtr imageList = NULLOBJECT;
@@ -4025,7 +4025,7 @@ RexxMethod2(RexxObjectPtr, stc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
     }
     if ( type > IMAGE_ENHMETAFILE )
     {
-        wrongArgValueException(context, 1, IMAGE_TYPE_LIST, getImageTypeName(type));
+        wrongArgValueException(context->threadContext, 1, IMAGE_TYPE_LIST, getImageTypeName(type));
         return NULLOBJECT;
     }
     return oodGetImageAttribute(context, self, STATICIMAGE_ATTRIBUTE, STM_GETIMAGE, type, -1, winStatic);
@@ -4267,7 +4267,7 @@ RexxMethod2(int, gb_setStyle, CSTRING, opts, CSELF, pCSelf)
     }
     else
     {
-        wrongArgValueException(context, 1, "RIGHT, LEFT", opts);
+        wrongArgValueException(context->threadContext, 1, "RIGHT, LEFT", opts);
         return 0;
     }
 
@@ -4310,7 +4310,7 @@ RexxMethod2(RexxObjectPtr, bc_setState, CSTRING, opts, CSELF, pCSelf)
     char *str = strdupupr(opts);
     if ( ! str )
     {
-        outOfMemoryException(context);
+        outOfMemoryException(context->threadContext);
         return NULLOBJECT;
     }
 
@@ -4358,7 +4358,7 @@ RexxMethod2(RexxObjectPtr, bc_setState, CSTRING, opts, CSELF, pCSelf)
         }
         else
         {
-            wrongArgValueException(context, 1, BC_SETSTATE_OPTS, token);
+            wrongArgValueException(context->threadContext, 1, BC_SETSTATE_OPTS, token);
             free(str);
             return NULLOBJECT;
         }
@@ -4439,7 +4439,7 @@ RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
     char *str = strdupupr(opts);
     if ( ! str )
     {
-        outOfMemoryException(context);
+        outOfMemoryException(context->threadContext);
         return NULLOBJECT;
     }
 
@@ -4591,7 +4591,7 @@ RexxMethod2(RexxObjectPtr, bc_setStyle, OSELF, self, CSTRING, opts)
         }
         else
         {
-            wrongArgValueException(context, 1, BC_SETSTYLE_OPTS, token);
+            wrongArgValueException(context->threadContext, 1, BC_SETSTYLE_OPTS, token);
             free(str);
             return NULLOBJECT;
         }
@@ -4695,7 +4695,7 @@ RexxMethod2(RexxObjectPtr, bc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
     }
     if ( type > IMAGE_CURSOR )
     {
-        wrongArgValueException(context, 1, "Bitmap, Icon, Cursor", getImageTypeName(type));
+        wrongArgValueException(context->threadContext, 1, "Bitmap, Icon, Cursor", getImageTypeName(type));
         return NULLOBJECT;
     }
     WPARAM wParam = (type == IMAGE_BITMAP) ? IMAGE_BITMAP : IMAGE_ICON;
@@ -4731,7 +4731,7 @@ RexxMethod2(RexxObjectPtr, bc_setImage, RexxObjectPtr, rxNewImage, OSELF, self)
 
         if ( oi->type > IMAGE_CURSOR )
         {
-            wrongArgValueException(context, 1, "Bitmap, Icon, Cursor", oi->typeName);
+            wrongArgValueException(context->threadContext, 1, "Bitmap, Icon, Cursor", oi->typeName);
             goto out;
         }
         hImage = oi->hImage;
@@ -4809,7 +4809,7 @@ RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_R
             OPTIONAL_uint8_t, align, OSELF, self)
 {
     BUTTON_IMAGELIST biml = {0};
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     RexxObjectPtr result = NULLOBJECT;
 
     if ( ! requiredComCtl32Version(context, "setImageList", COMCTL32_6_0) )
@@ -4848,7 +4848,7 @@ RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_R
     {
         if ( align > BUTTON_IMAGELIST_ALIGN_CENTER )
         {
-            wrongRangeException(context, 3, BUTTON_IMAGELIST_ALIGN_LEFT,
+            wrongRangeException(context->threadContext, 3, BUTTON_IMAGELIST_ALIGN_LEFT,
                                 BUTTON_IMAGELIST_ALIGN_CENTER, align);
             goto err_out;
         }
@@ -4864,7 +4864,7 @@ RexxMethod4(RexxObjectPtr, bc_setImageList, RexxObjectPtr, imageList, OPTIONAL_R
 
     if ( Button_SetImageList(hwnd, &biml) == 0 )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
         goto err_out;
     }
     else
@@ -4884,7 +4884,7 @@ RexxMethod4(int, rb_checkInGroup_cls, RexxObjectPtr, dlg, RexxObjectPtr, idFirst
             RexxObjectPtr, idLast, RexxObjectPtr, idCheck)
 {
     int result = 0;
-    if ( requiredClass(context, dlg, "PlainBaseDialog", 1) )
+    if ( requiredClass(context->threadContext, dlg, "PlainBaseDialog", 1) )
     {
         HWND hwnd = rxGetWindowHandle(context, dlg);
 
@@ -4984,12 +4984,23 @@ RexxMethod1(int, ckbx_setIndeterminate, OSELF, self)
 }
 
 
-/* This method is used as a convenient way to test code. */
+/** ButtonControl::test()
+ *
+ *  This method is used as a convenient way to test code.
+ */
 RexxMethod1(int, bc_test, RexxObjectPtr, obj)
 {
     return 0;
 }
 
+/** ButtonControl::test()  [class method]
+ *
+ *  This method is used as a convenient way to test code.
+ */
+RexxMethod1(int, bc_test_cls, RexxObjectPtr, obj)
+{
+    return 0;
+}
 
 /**
  * Methods for the .ImageList class.
@@ -5000,13 +5011,13 @@ RexxMethod1(int, bc_test, RexxObjectPtr, obj)
 HIMAGELIST rxGetImageList(RexxMethodContext *context, RexxObjectPtr il, int argPos)
 {
     HIMAGELIST himl = NULL;
-    if ( requiredClass(context, il, "ImageList", argPos) )
+    if ( requiredClass(context->threadContext, il, "ImageList", argPos) )
     {
         // Make sure we don't use a null ImageList.
         himl = (HIMAGELIST)context->ObjectToCSelf(il);
         if ( himl == NULL )
         {
-            nullObjectException(context, IMAGELISTCLASS, argPos);
+            nullObjectException(context->threadContext, IMAGELISTCLASS, argPos);
         }
     }
     return himl;
@@ -5056,7 +5067,7 @@ RexxMethod1(RexxObjectPtr, il_init, POINTER, p)
     int cx = 2, cy = 2;
     if ( ! ImageList_GetIconSize(himl, &cx, &cy) )
     {
-        invalidTypeException(context, 1, " ImageList handle");
+        invalidTypeException(context->threadContext, 1, " ImageList handle");
         goto out;
     }
     context->SetObjectVariable("CSELF", context->NewPointer(himl));
@@ -5124,7 +5135,7 @@ RexxMethod3(int, il_add, RexxObjectPtr, image, OPTIONAL_RexxObjectPtr, optMask, 
     HIMAGELIST himl = (HIMAGELIST)il;
     if ( himl == NULL )
     {
-        nullObjectException(c, IMAGELISTCLASS);
+        nullObjectException(c->threadContext, IMAGELISTCLASS);
         goto out;
     }
 
@@ -5158,7 +5169,7 @@ RexxMethod3(int, il_addMasked, RexxObjectPtr, image, uint32_t, cRef, CSELF, il)
     HIMAGELIST himl = (HIMAGELIST)il;
     if ( himl == NULL )
     {
-        nullObjectException(context, IMAGELISTCLASS);
+        nullObjectException(context->threadContext, IMAGELISTCLASS);
         goto out;
     }
 
@@ -5180,7 +5191,7 @@ RexxMethod2(int, il_addIcon, RexxObjectPtr, image, CSELF, il)
     HIMAGELIST himl = (HIMAGELIST)il;
     if ( himl == NULL )
     {
-        nullObjectException(context, IMAGELISTCLASS);
+        nullObjectException(context->threadContext, IMAGELISTCLASS);
         goto out;
     }
     POODIMAGE oi = rxGetImageIcon(context, image, 1);
@@ -5203,13 +5214,13 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
     HIMAGELIST himl = (HIMAGELIST)il;
     if ( himl == NULL )
     {
-        nullObjectException(context, IMAGELISTCLASS);
+        nullObjectException(context->threadContext, IMAGELISTCLASS);
         goto out;
     }
     size_t count = c->ArraySize(images);
     if ( count < 1 )
     {
-        emptyArrayException(c, 1);
+        emptyArrayException(c->threadContext, 1);
         goto out;
     }
 
@@ -5221,13 +5232,13 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
         RexxObjectPtr image = c->ArrayAt(images, i);
         if ( image == NULLOBJECT || ! c->IsOfType(image, "Image") )
         {
-            wrongObjInArrayException(c, 1, i, "Image");
+            wrongObjInArrayException(c->threadContext, 1, i, "Image");
             goto out;
         }
         POODIMAGE oi = (POODIMAGE)context->ObjectToCSelf(image);
         if ( oi->hImage == NULL )
         {
-            wrongObjInArrayException(c, 1, i, "non-null Image");
+            wrongObjInArrayException(c->threadContext, 1, i, "non-null Image");
             goto out;
         }
 
@@ -5246,7 +5257,7 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
 
             if ( imageType == -1 )
             {
-                wrongObjInArrayException(c, 1, i, "bitmap, icon, or cursor Image");
+                wrongObjInArrayException(c->threadContext, 1, i, "bitmap, icon, or cursor Image");
                 goto out;
             }
         }
@@ -5257,7 +5268,7 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
             case IMAGE_CURSOR :
                 if ( imageType != IMAGE_ICON )
                 {
-                    wrongObjInArrayException(c, 1, i, "cursor or icon Image");
+                    wrongObjInArrayException(c->threadContext, 1, i, "cursor or icon Image");
                     goto out;
                 }
                 tmpResult = ImageList_AddIcon(himl, (HICON)oi->hImage);
@@ -5266,7 +5277,7 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
             case IMAGE_BITMAP :
                 if ( imageType != IMAGE_BITMAP )
                 {
-                    wrongObjInArrayException(c, 1, i, "bitmap Image");
+                    wrongObjInArrayException(c->threadContext, 1, i, "bitmap Image");
                     goto out;
                 }
                 if ( doMasked )
@@ -5280,7 +5291,7 @@ RexxMethod3(int, il_addImages, RexxArrayObject, images, OPTIONAL_uint32_t, cRef,
                 break;
 
             default :
-                wrongObjInArrayException(c, 1, i, "bitmap, icon, or cursor Image");
+                wrongObjInArrayException(c->threadContext, 1, i, "bitmap, icon, or cursor Image");
                 goto out;
 
         }
@@ -5308,7 +5319,7 @@ RexxMethod1(int, il_getCount, CSELF, il)
     {
         return ImageList_GetImageCount(himl);
     }
-    nullObjectException(context, IMAGELISTCLASS);
+    nullObjectException(context->threadContext, IMAGELISTCLASS);
     return NULL;
 }
 
@@ -5333,7 +5344,7 @@ RexxMethod1(RexxObjectPtr, il_getImageSize, CSELF, il)
             return rxNewSize(context, s.cx, s.cy);
         }
     }
-    nullObjectException(context, IMAGELISTCLASS);
+    nullObjectException(context->threadContext, IMAGELISTCLASS);
     return NULL;
 }
 
@@ -5344,7 +5355,7 @@ RexxMethod1(RexxObjectPtr, il_duplicate, CSELF, il)
     {
         return rxNewImageList(context, ImageList_Duplicate(himl));
     }
-    nullObjectException(context, IMAGELISTCLASS);
+    nullObjectException(context->threadContext, IMAGELISTCLASS);
     return NULL;
 }
 
@@ -5355,7 +5366,7 @@ RexxMethod2(logical_t, il_remove, int, index, CSELF, il)
     {
         return ImageList_Remove(himl, index);
     }
-    nullObjectException(context, IMAGELISTCLASS);
+    nullObjectException(context->threadContext, IMAGELISTCLASS);
     return NULL;
 }
 
@@ -5366,7 +5377,7 @@ RexxMethod1(logical_t, il_removeAll, CSELF, il)
     {
         return ImageList_RemoveAll(himl);
     }
-    nullObjectException(context, IMAGELISTCLASS);
+    nullObjectException(context->threadContext, IMAGELISTCLASS);
     return NULL;
 }
 
@@ -5384,7 +5395,7 @@ RexxMethod1(POINTER, il_handle, CSELF, il)
 {
     if ( il == NULL )
     {
-        nullObjectException(context, IMAGELISTCLASS);
+        nullObjectException(context->threadContext, IMAGELISTCLASS);
     }
     return il;
 }
@@ -5416,14 +5427,14 @@ CSTRING getImageTypeName(uint8_t type)
 
 POODIMAGE rxGetOodImage(RexxMethodContext *context, RexxObjectPtr o, int argPos)
 {
-    if ( requiredClass(context, o, "Image", argPos) )
+    if ( requiredClass(context->threadContext, o, "Image", argPos) )
     {
         POODIMAGE oi = (POODIMAGE)context->ObjectToCSelf(o);
         if ( oi->isValid )
         {
             return oi;
         }
-        nullObjectException(context, IMAGECLASS, argPos);
+        nullObjectException(context->threadContext, IMAGECLASS, argPos);
     }
     return NULL;
 }
@@ -5446,7 +5457,7 @@ POODIMAGE rxGetImageIcon(RexxMethodContext *c, RexxObjectPtr o, int pos)
     {
         return oi;
     }
-    wrongArgValueException(c, pos, "Icon, Cursor", oi->typeName);
+    wrongArgValueException(c->threadContext, pos, "Icon, Cursor", oi->typeName);
     return NULL;
 }
 
@@ -5455,7 +5466,7 @@ POODIMAGE rxGetImageBitmap(RexxMethodContext *c, RexxObjectPtr o, int pos)
     POODIMAGE oi = rxGetOodImage(c, o, pos);
     if ( oi != NULL && oi->type != IMAGE_BITMAP )
     {
-        invalidImageException(c, pos, "Bitmap", oi->typeName);
+        invalidImageException(c->threadContext, pos, "Bitmap", oi->typeName);
         return NULL;
     }
     return oi;
@@ -5637,7 +5648,7 @@ RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject id
             {
                 rxReleaseAllImages(c, result, i - 1);
             }
-            wrongObjInArrayException(c, 1, i, "number");
+            wrongObjInArrayException(c->threadContext, 1, i, "number");
             result = NULLOBJECT;
             goto out;
         }
@@ -5646,7 +5657,7 @@ RexxArrayObject rxImagesFromArrayOfInts(RexxMethodContext *c, RexxArrayObject id
         if ( hImage == NULL )
         {
             // Set the system error code and leave this slot in the array blank.
-            oodSetSysErrCode(c);
+            oodSetSysErrCode(c->threadContext);
         }
         else
         {
@@ -5673,7 +5684,7 @@ out:
 bool getStandardImageArgs(RexxMethodContext *context, uint8_t *type, uint8_t defType, RexxObjectPtr size,
                           SIZE *defSize, uint32_t *flags, uint32_t defFlags)
 {
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
 
     if ( argumentOmitted(2) )
     {
@@ -5853,7 +5864,7 @@ RexxMethod1(uint32_t, image_toID_cls, CSTRING, symbol)
     int idValue = getConstantValue(imageConstantsMap, symbol);
     if ( idValue == -1 )
     {
-        wrongArgValueException(context, 1, "the Image class symbol IDs", symbol);
+        wrongArgValueException(context->threadContext, 1, "the Image class symbol IDs", symbol);
     }
     return (uint32_t)idValue;
 }
@@ -5894,7 +5905,7 @@ RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8
 
         if ( ! context->Int32(id, &resourceID) )
         {
-            wrongArgValueException(context, 1, "either an image file name, or a system image ID", id);
+            wrongArgValueException(context->threadContext, 1, "either an image file name, or a system image ID", id);
             goto out;
         }
         name = MAKEINTRESOURCE(resourceID);
@@ -5911,7 +5922,7 @@ RexxMethod4(RexxObjectPtr, image_getImage_cls, RexxObjectPtr, id, OPTIONAL_uint8
     if ( hImage == NULL )
     {
         DWORD rc = GetLastError();
-        oodSetSysErrCode(context, rc);
+        oodSetSysErrCode(context->threadContext, rc);
         result = rxNewEmptyImage(context, rc);
         goto out;
     }
@@ -5954,7 +5965,7 @@ RexxMethod4(RexxObjectPtr, image_fromFiles_cls, RexxArrayObject, files, OPTIONAL
         if ( hImage == NULL )
         {
             // Set the system error code and leave this slot in the array blank.
-            oodSetSysErrCode(context);
+            oodSetSysErrCode(context->threadContext);
         }
         else
         {
@@ -6041,7 +6052,7 @@ RexxMethod3(uint32_t, image_colorRef_cls, OPTIONAL_RexxObjectPtr, rVal,
     return RGB(r, g, b);
 
 error_out:
-    wrongArgValueException(context, 1, "CLR_DEFAULT, CLR_NONE, or a number from 0 through 255", rVal);
+    wrongArgValueException(context->threadContext, 1, "CLR_DEFAULT, CLR_NONE, or a number from 0 through 255", rVal);
     return 0;
 }
 
@@ -6056,7 +6067,7 @@ RexxMethod1(uint8_t, image_getBValue_cls, uint32_t, colorRef) { return GetBValue
  */
 RexxMethod1(RexxObjectPtr, image_init, RexxObjectPtr, cselfObj)
 {
-    if ( requiredClass(context, cselfObj, "Buffer", 1) )
+    if ( requiredClass(context->threadContext, cselfObj, "Buffer", 1) )
     {
         context->SetObjectVariable("CSELF", cselfObj);
     }
@@ -6114,7 +6125,7 @@ RexxMethod1(uint32_t, image_release, CSELF, oi)
     pOI->canRelease = false;
     pOI->lastError = rc;
 
-    oodSetSysErrCode(context, pOI->lastError);
+    oodSetSysErrCode(context->threadContext, pOI->lastError);
 
     return rc;
 }
@@ -6123,7 +6134,7 @@ RexxMethod1(POINTER, image_handle, CSELF, oi)
 {
     if ( ! ((POODIMAGE)oi)->isValid )
     {
-        nullObjectException(context, IMAGECLASS);
+        nullObjectException(context->threadContext, IMAGECLASS);
     }
     return ((POODIMAGE)oi)->hImage;
 }
@@ -6144,7 +6155,7 @@ RexxMethod1(uint32_t, image_systemErrorCode, CSELF, oi) { return ((POODIMAGE)oi)
  */
 RexxMethod2(RexxObjectPtr, ri_init, CSTRING, file, OPTIONAL_RexxObjectPtr, dlg)
 {
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
 
     RexxBufferObject cself = context->NewBuffer(sizeof(RESOURCEIMAGE));
     context->SetObjectVariable("CSELF", cself);
@@ -6158,7 +6169,7 @@ RexxMethod2(RexxObjectPtr, ri_init, CSTRING, file, OPTIONAL_RexxObjectPtr, dlg)
         if ( ri->hMod == NULL )
         {
             ri->lastError = GetLastError();
-            oodSetSysErrCode(context, ri->lastError);
+            oodSetSysErrCode(context->threadContext, ri->lastError);
         }
         else
         {
@@ -6168,7 +6179,7 @@ RexxMethod2(RexxObjectPtr, ri_init, CSTRING, file, OPTIONAL_RexxObjectPtr, dlg)
     }
     else
     {
-        if ( ! requiredClass(context, dlg, "PlainBaseDialog", 2) )
+        if ( ! requiredClass(context->threadContext, dlg, "PlainBaseDialog", 2) )
         {
             goto err_out;
         }
@@ -6180,7 +6191,7 @@ RexxMethod2(RexxObjectPtr, ri_init, CSTRING, file, OPTIONAL_RexxObjectPtr, dlg)
         }
         else
         {
-            if ( ! requiredClass(context, dlg, "ResDialog", 2) )
+            if ( ! requiredClass(context->threadContext, dlg, "ResDialog", 2) )
             {
                 goto err_out;
             }
@@ -6204,7 +6215,7 @@ err_out:
     // The specified image file did not contain a resource section.
 
     ri->lastError = 1812;
-    oodSetSysErrCode(context, ri->lastError);
+    oodSetSysErrCode(context->threadContext, ri->lastError);
     return NULLOBJECT;
 }
 
@@ -6237,7 +6248,7 @@ RexxMethod5(RexxObjectPtr, ri_getImage, int, id, OPTIONAL_uint8_t, type,
     PRESOURCEIMAGE ri = (PRESOURCEIMAGE)cself;
     if ( ! ri->isValid )
     {
-        nullObjectException(context, RESOURCEIMAGECLASS);
+        nullObjectException(context->threadContext, RESOURCEIMAGECLASS);
         goto out;
     }
     ri->lastError = 0;
@@ -6251,7 +6262,7 @@ RexxMethod5(RexxObjectPtr, ri_getImage, int, id, OPTIONAL_uint8_t, type,
     if ( hImage == NULL )
     {
         ri->lastError = GetLastError();
-        oodSetSysErrCode(context, ri->lastError);
+        oodSetSysErrCode(context->threadContext, ri->lastError);
         result = rxNewEmptyImage(context, ri->lastError);
         goto out;
     }
@@ -6271,7 +6282,7 @@ RexxMethod5(RexxObjectPtr, ri_getImages, RexxArrayObject, ids, OPTIONAL_uint8_t,
     PRESOURCEIMAGE ri = (PRESOURCEIMAGE)cself;
     if ( ! ri->isValid )
     {
-        nullObjectException(context, RESOURCEIMAGECLASS);
+        nullObjectException(context->threadContext, RESOURCEIMAGECLASS);
         goto out;
     }
     ri->lastError = 0;
@@ -6284,7 +6295,7 @@ RexxMethod5(RexxObjectPtr, ri_getImages, RexxArrayObject, ids, OPTIONAL_uint8_t,
     result = rxImagesFromArrayOfInts(context, ids, ri->hMod, type, &s, flags);
     if ( result == NULLOBJECT )
     {
-        ri->lastError = oodGetSysErrCode(context);
+        ri->lastError = oodGetSysErrCode(context->threadContext);
     }
 
 out:
@@ -6308,7 +6319,7 @@ RexxMethod1(uint32_t, ri_release, CSELF, r)
     ri->isValid = false;
     ri->hMod = NULL;
     ri->lastError = rc;
-    oodSetSysErrCode(context, ri->lastError);
+    oodSetSysErrCode(context->threadContext, ri->lastError);
 
     return rc;
 }
@@ -6317,7 +6328,7 @@ RexxMethod1(POINTER, ri_handle, CSELF, ri)
 {
     if ( ! ((PRESOURCEIMAGE)ri)->isValid )
     {
-        nullObjectException(context, RESOURCEIMAGECLASS);
+        nullObjectException(context->threadContext, RESOURCEIMAGECLASS);
     }
     return ((PRESOURCEIMAGE)ri)->hMod;
 }

@@ -194,11 +194,11 @@ inline BOOL _connectSysItem(DIALOGADMIN *dlgAdm, uint32_t id, CSTRING msg, logic
  */
 DIALOGADMIN *_getAdminBlock(RexxMethodContext *c, RexxObjectPtr dialog)
 {
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
 
     if ( ! c->IsOfType(dialog, "BASEDIALOG") )
     {
-        oodSetSysErrCode(c, ERROR_WINDOW_NOT_DIALOG);
+        oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
         return NULL;
     }
 
@@ -228,7 +228,7 @@ CSTRING CppMenu::name()
 logical_t CppMenu::addTemplateSepartor(RexxObjectPtr rxID, CSTRING opts)
 {
     logical_t success = FALSE;
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     char *upperOpts = NULL;
 
     uint32_t id = oodResolveSymbolicID(c, self, rxID, -1, 1);
@@ -239,7 +239,7 @@ logical_t CppMenu::addTemplateSepartor(RexxObjectPtr rxID, CSTRING opts)
 
     if ( isFinal )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
         goto done_out;
     }
 
@@ -251,7 +251,7 @@ logical_t CppMenu::addTemplateSepartor(RexxObjectPtr rxID, CSTRING opts)
         upperOpts = strdupupr(opts);
         if ( upperOpts == NULL )
         {
-            oodSetSysErrCode(c, ERROR_NOT_ENOUGH_MEMORY);
+            oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
             goto done_out;
         }
 
@@ -284,7 +284,7 @@ done_out:
 logical_t CppMenu::addTemplateItem(RexxObjectPtr rxID, CSTRING text, CSTRING opts, CSTRING method)
 {
     logical_t success = FALSE;
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     char *upperOpts = NULL;
 
     uint32_t id = oodResolveSymbolicID(c, self, rxID, -1, 1);
@@ -295,7 +295,7 @@ logical_t CppMenu::addTemplateItem(RexxObjectPtr rxID, CSTRING text, CSTRING opt
 
     if ( isFinal )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
         goto done_out;
     }
 
@@ -308,7 +308,7 @@ logical_t CppMenu::addTemplateItem(RexxObjectPtr rxID, CSTRING text, CSTRING opt
         upperOpts = strdupupr(opts);
         if ( upperOpts == NULL )
         {
-            oodSetSysErrCode(c, ERROR_NOT_ENOUGH_MEMORY);
+            oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
             goto done_out;
         }
 
@@ -353,7 +353,7 @@ done_out:
 logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING opts, RexxObjectPtr helpID)
 {
     logical_t success = FALSE;
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     char *upperOpts = NULL;
 
     uint32_t id = oodResolveSymbolicID(c, self, rxID, -1, 1);
@@ -374,7 +374,7 @@ logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING op
 
     if ( isFinal )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
         goto done_out;
     }
 
@@ -387,7 +387,7 @@ logical_t CppMenu::addTemplatePopup(RexxObjectPtr rxID, CSTRING text, CSTRING op
         upperOpts = strdupupr(opts);
         if ( upperOpts == NULL )
         {
-            oodSetSysErrCode(c, ERROR_NOT_ENOUGH_MEMORY);
+            oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
             goto done_out;
         }
 
@@ -421,7 +421,7 @@ bool CppMenu::initTemplate(uint32_t count, uint32_t _helpID)
     hTemplateMemory = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, size);
     if ( hTemplateMemory == NULL )
     {
-        systemServiceExceptionCode(c, API_FAILED_MSG, "GlobalAlloc");
+        systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GlobalAlloc");
         goto done_out;
     }
 
@@ -432,7 +432,7 @@ bool CppMenu::initTemplate(uint32_t count, uint32_t _helpID)
         // should be impossible.  In either case, hTemplateMemory does not need
         // to get freed.
         hTemplateMemory = NULL;
-        systemServiceExceptionCode(c, API_FAILED_MSG, "GlobalLock");
+        systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GlobalLock");
         goto done_out;
     }
 
@@ -490,7 +490,7 @@ BOOL CppMenu::addTemplateMenuItem(DWORD menuID, DWORD dwType, DWORD dwState, DWO
 
     if ( ! haveTemplateRoom(cchWideChar, (byte *)pCurrentTemplatePos) )
     {
-        executionErrorException(c, TEMPLATE_TOO_SMALL_MSG);
+        executionErrorException(c->threadContext, TEMPLATE_TOO_SMALL_MSG);
         return FALSE;
     }
 
@@ -552,11 +552,11 @@ void CppMenu::deleteTemplate()
 bool CppMenu::finishTemplate()
 {
     bool result = false;
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
 
     if ( isFinal )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
         goto done_out;
     }
 
@@ -571,7 +571,7 @@ bool CppMenu::finishTemplate()
 
     if ( hMenu == NULL )
     {
-        systemServiceExceptionCode(c, API_FAILED_MSG, "LoadMenuIndirect", rc);
+        systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "LoadMenuIndirect", rc);
         goto done_out;
     }
     result = true;
@@ -579,7 +579,7 @@ bool CppMenu::finishTemplate()
     uint32_t ret = menuHelpID(hMenu, helpID, TRUE, NULL);
     if ( ret != 0 )
     {
-        oodSetSysErrCode(c, ret);
+        oodSetSysErrCode(c->threadContext, ret);
     }
 
 done_out:
@@ -633,7 +633,7 @@ CppMenu::CppMenu(RexxObjectPtr s, MenuType t, RexxMethodContext *context) : self
  */
 bool CppMenu::menuInit(RexxObjectPtr rxID, RexxObjectPtr symbolSrc, RexxObjectPtr rcFile)
 {
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     int idPos = ( type == PopupMenu || type == UserMenuBar ) ? 1 : 2;
 
     if ( symbolSrc == NULLOBJECT || symbolSrc == TheNilObj )
@@ -653,13 +653,13 @@ bool CppMenu::menuInit(RexxObjectPtr rxID, RexxObjectPtr symbolSrc, RexxObjectPt
         c->SendMessage1(self, "CONSTDIR=", c->NewDirectory());
         if ( c->SendMessage1(self, "PARSEINCLUDEFILE", symbolSrc) == TheFalseObj )
         {
-            invalidTypeException(c, idPos + 1, ", readable, symbolic ID definition file");
+            invalidTypeException(c->threadContext, idPos + 1, ", readable, symbolic ID definition file");
             goto err_out;
         }
     }
     else
     {
-        wrongArgValueException(c, idPos + 1, "a Directory object, a ResourceUtils object, a file name, or .nil", symbolSrc);
+        wrongArgValueException(c->threadContext, idPos + 1, "a Directory object, a ResourceUtils object, a file name, or .nil", symbolSrc);
         goto err_out;
     }
 
@@ -761,7 +761,7 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
             _methodName = strdup_2methodName(text);
             if ( _methodName = NULL )
             {
-                oodSetSysErrCode(c, ERROR_NOT_ENOUGH_MEMORY);
+                oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
                 goto done_out;
             }
         }
@@ -769,7 +769,7 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
         rc = _connectItem(dlgAdm, id, connectionMethod == NULL ? _methodName : connectionMethod);
         if ( rc != 0 )
         {
-            oodSetSysErrCode(c, rc);
+            oodSetSysErrCode(c->threadContext, rc);
             goto done_out;
         }
     }
@@ -784,7 +784,7 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
                 _methodName = strdup_2methodName(text);
                 if ( _methodName = NULL )
                 {
-                    oodSetSysErrCode(c, ERROR_NOT_ENOUGH_MEMORY);
+                    oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
                     goto done_out;
                 }
             }
@@ -798,7 +798,7 @@ BOOL CppMenu::maybeConnectItem(uint32_t id, CSTRING text, logical_t connect, CST
             rc = _connectItem(dlgAdm, id, _methodName);
             if ( rc != 0 )
             {
-                oodSetSysErrCode(c, rc);
+                oodSetSysErrCode(c->threadContext, rc);
                 goto done_out;
             }
         }
@@ -829,7 +829,7 @@ bool CppMenu::addToConnectionQ(uint32_t id, CSTRING methodName)
         connectionQ = (MapItem **)GlobalAlloc(GPTR, DEFAULT_MENUITEM_COUNT * sizeof(MapItem *));
         if ( connectionQ == NULL )
         {
-            outOfMemoryException(c);
+            outOfMemoryException(c->threadContext);
             goto done_out;
         }
         connectionQSize = DEFAULT_MENUITEM_COUNT;
@@ -844,7 +844,7 @@ bool CppMenu::addToConnectionQ(uint32_t id, CSTRING methodName)
         if ( pNew == NULL )
         {
             releaseConnectionQ();
-            outOfMemoryException(c);
+            outOfMemoryException(c->threadContext);
             goto done_out;
         }
         connectionQ = pNew;
@@ -856,7 +856,7 @@ bool CppMenu::addToConnectionQ(uint32_t id, CSTRING methodName)
     if ( m == NULL )
     {
         releaseConnectionQ();
-        outOfMemoryException(c);
+        outOfMemoryException(c->threadContext);
         goto done_out;
     }
 
@@ -866,7 +866,7 @@ bool CppMenu::addToConnectionQ(uint32_t id, CSTRING methodName)
     {
         GlobalFree(m);
         releaseConnectionQ();
-        outOfMemoryException(c);
+        outOfMemoryException(c->threadContext);
         goto done_out;
     }
     strcpy(m->methodName, methodName);
@@ -907,24 +907,24 @@ void CppMenu::releaseConnectionQ()
 
 logical_t CppMenu::attachToDlg(RexxObjectPtr dialog)
 {
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     logical_t success = FALSE;
 
     // Check all of our required conditions.
     if ( hMenu == NULL )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_MENU_HANDLE);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
         goto done_out;
     }
     if ( ! c->IsOfType(dialog, "BASEDIALOG") )
     {
-        oodSetSysErrCode(c, ERROR_WINDOW_NOT_DIALOG);
+        oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
         goto done_out;
     }
     if ( dlg != TheNilObj )
     {
         // Already attached to a dialog.
-        oodSetSysErrCode(c, ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
         goto done_out;
     }
 
@@ -938,14 +938,14 @@ logical_t CppMenu::attachToDlg(RexxObjectPtr dialog)
     dlgHwnd = rxGetWindowHandle(c, dialog);
     if ( dlgHwnd == NULL || c->SendMessage0(dialog, "HASMENUBAR") == TheTrueObj || GetMenu(dlgHwnd) != NULL )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_WINDOW_STYLE);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_STYLE);
         goto done_out;
     }
 
     success = SetMenu(dlgHwnd, hMenu);
     if ( ! success )
     {
-        oodSetSysErrCode(c);
+        oodSetSysErrCode(c->threadContext);
         goto done_out;
     }
 
@@ -965,17 +965,17 @@ done_out:
 
 logical_t CppMenu::assignToDlg(RexxObjectPtr dialog, logical_t _autoConnect, CSTRING methodName)
 {
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     logical_t success = FALSE;
 
     if ( hMenu == NULL )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_MENU_HANDLE);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
         goto done_out;
     }
     if ( ! c->IsOfType(dialog, "BASEDIALOG") )
     {
-        oodSetSysErrCode(c, ERROR_WINDOW_NOT_DIALOG);
+        oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
         goto done_out;
     }
 
@@ -991,7 +991,7 @@ logical_t CppMenu::assignToDlg(RexxObjectPtr dialog, logical_t _autoConnect, CST
     HWND tmpHwnd = rxGetWindowHandle(c, dialog);
     if ( tmpHwnd == NULL )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_WINDOW_STYLE);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_STYLE);
         goto done_out;
     }
 
@@ -1029,14 +1029,14 @@ done_out:
  */
 BOOL CppMenu::detach(bool skipChecks)
 {
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     BOOL success = FALSE;
 
     if ( ! skipChecks )
     {
         if ( ! isMenuBar() || dlg == TheNilObj )
         {
-            oodSetSysErrCode(c, ERROR_INVALID_FUNCTION);
+            oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
             goto done_out;
         }
     }
@@ -1044,7 +1044,7 @@ BOOL CppMenu::detach(bool skipChecks)
     success = SetMenu(dlgHwnd, NULL);
     if ( ! success )
     {
-        oodSetSysErrCode(c);
+        oodSetSysErrCode(c->threadContext);
     }
     c->SendMessage0(dlg, "UNLINKMENU");
     dlg = TheNilObj;
@@ -1070,12 +1070,12 @@ BOOL CppMenu::destroy()
     {
         detach(true);
     }
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
 
     BOOL success = DestroyMenu(hMenu);
     if ( ! success )
     {
-        oodSetSysErrCode(c);
+        oodSetSysErrCode(c->threadContext);
     }
     hMenu = NULL;
     releaseConnectionQ();
@@ -1088,7 +1088,7 @@ BOOL CppMenu::destroy()
 logical_t CppMenu::setMaxHeight(uint32_t height, logical_t recurse)
 {
     logical_t success = FALSE;
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
 
     MENUINFO mi = {0};
     mi.cbSize = sizeof(MENUINFO);
@@ -1102,7 +1102,7 @@ logical_t CppMenu::setMaxHeight(uint32_t height, logical_t recurse)
     success = SetMenuInfo(hMenu, &mi);
     if ( ! success )
     {
-        oodSetSysErrCode(c);
+        oodSetSysErrCode(c->threadContext);
     }
     return success;
 }
@@ -1110,7 +1110,7 @@ logical_t CppMenu::setMaxHeight(uint32_t height, logical_t recurse)
 int CppMenu::getMaxHeight()
 {
     int result = -1;
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
 
     MENUINFO mi = {0};
     mi.cbSize = sizeof(MENUINFO);
@@ -1118,7 +1118,7 @@ int CppMenu::getMaxHeight()
 
     if ( GetMenuInfo(hMenu, &mi) == 0 )
     {
-        oodSetSysErrCode(c);
+        oodSetSysErrCode(c->threadContext);
     }
     else
     {
@@ -1155,7 +1155,7 @@ void CppMenu::putSysCommands()
 
 bool CppMenu::setUpSysMenu(RexxObjectPtr dialog)
 {
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     bool success = false;
 
     dlgAdm = rxGetDlgAdm(c, dialog);
@@ -1167,14 +1167,14 @@ bool CppMenu::setUpSysMenu(RexxObjectPtr dialog)
     dlgHwnd = rxGetWindowHandle(c, dialog);
     if ( dlgHwnd == NULL )
     {
-        failedToRetrieveException(c, "window handle", dialog);
+        failedToRetrieveException(c->threadContext, "window handle", dialog);
         goto done_out;
     }
 
     hMenu = GetSystemMenu(dlgHwnd, FALSE);
     if ( hMenu == NULL || ! IsMenu(hMenu) )
     {
-        failedToRetrieveException(c, "system menu", dialog);
+        failedToRetrieveException(c->threadContext, "system menu", dialog);
         goto done_out;
     }
     dlg = dialog;
@@ -1195,12 +1195,12 @@ done_out:
 
 logical_t CppMenu::revertSysMenu()
 {
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     logical_t success = FALSE;
 
     if ( hMenu == NULL )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_MENU_HANDLE);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
         goto done_out;
     }
 
@@ -1241,13 +1241,13 @@ BOOL CppMenu::maybeRedraw(bool failOnNoDlg)
         success = DrawMenuBar(dlgHwnd);
         if ( ! success )
         {
-            oodSetSysErrCode(c);
+            oodSetSysErrCode(c->threadContext);
         }
     }
     else if ( failOnNoDlg )
     {
         success = FALSE;
-        oodSetSysErrCode(c, ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
     }
     return success;
 }
@@ -1284,7 +1284,7 @@ logical_t CppMenu::connectItem(RexxObjectPtr rxID, CSTRING methodName, RexxObjec
     }
     else
     {
-        oodSetSysErrCode(c, rc);
+        oodSetSysErrCode(c->threadContext, rc);
     }
 
 done_out:
@@ -1311,7 +1311,7 @@ logical_t CppMenu::connectAllItems(CSTRING methodName, RexxObjectPtr dialog, log
     }
     else
     {
-        oodSetSysErrCode(c, rc);
+        oodSetSysErrCode(c->threadContext, rc);
     }
 
 done_out:
@@ -1333,7 +1333,7 @@ logical_t CppMenu::connectSomeItems(RexxObjectPtr rxItemIds, CSTRING method, log
 
     if ( ! c->IsOfType(rxItemIds, "COLLECTION") )
     {
-        wrongClassException(c, 1, ".Collection");
+        wrongClassException(c->threadContext, 1, ".Collection");
         goto done_out;
     }
 
@@ -1363,7 +1363,7 @@ logical_t CppMenu::connectSomeItems(RexxObjectPtr rxItemIds, CSTRING method, log
 
         if ( _isSeparator(&mii) || _isSubMenu(&mii) )
         {
-            oodSetSysErrCode(c, ERROR_INVALID_PARAMETER);
+            oodSetSysErrCode(c->threadContext, ERROR_INVALID_PARAMETER);
             goto done_out;
         }
 
@@ -1372,7 +1372,7 @@ logical_t CppMenu::connectSomeItems(RexxObjectPtr rxItemIds, CSTRING method, log
             name = strdup_2methodName(buf);
             if ( name == NULL )
             {
-                oodSetSysErrCode(c, ERROR_NOT_ENOUGH_MEMORY);
+                oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
                 goto done_out;
             }
         }
@@ -1388,7 +1388,7 @@ logical_t CppMenu::connectSomeItems(RexxObjectPtr rxItemIds, CSTRING method, log
 
         if ( rc != 0 )
         {
-            oodSetSysErrCode(c, rc);
+            oodSetSysErrCode(c->threadContext, rc);
             goto done_out;
         }
 
@@ -1438,7 +1438,7 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
     uint32_t windowMessage = string2WM(keyWord);
     if ( windowMessage == 0 )
     {
-        wrongArgValueException(c, 2, "INITMENU", keyWord);
+        wrongArgValueException(c->threadContext, 2, "INITMENU", keyWord);
         return FALSE;
     }
 
@@ -1485,7 +1485,7 @@ logical_t CppMenu::connectMenuMessage(CSTRING methodName, CSTRING keyWord, HWND 
 
     if ( ! success )
     {
-        oodSetSysErrCode(c, ERROR_NOT_ENOUGH_MEMORY);
+        oodSetSysErrCode(c->threadContext, ERROR_NOT_ENOUGH_MEMORY);
     }
 
 done_out:
@@ -1494,12 +1494,12 @@ done_out:
 
 DIALOGADMIN *CppMenu::basicConnectSetup(RexxObjectPtr dialog)
 {
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     DIALOGADMIN *dialogAdm = NULL;
 
     if ( hMenu == NULL )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_MENU_HANDLE);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
         goto done_out;
     }
 
@@ -1530,7 +1530,7 @@ DIALOGADMIN *CppMenu::getAdminBlock(RexxObjectPtr dialog)
     {
         if ( dlg == TheNilObj )
         {
-            oodSetSysErrCode(c, ERROR_INVALID_FUNCTION);
+            oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
             goto done_out;
         }
         dialogAdm = dlgAdm;
@@ -1556,7 +1556,7 @@ logical_t CppMenu::getItemText(uint32_t id, logical_t byPosition, char *text, ui
     mii->cch = cch;
     if ( GetMenuItemInfo(hMenu, id, (BOOL)byPosition, mii) == 0 )
     {
-        oodSetSysErrCode(c);
+        oodSetSysErrCode(c->threadContext);
         return FALSE;
     }
     return TRUE;
@@ -1591,7 +1591,7 @@ BOOL CppMenu::checkPendingConnections()
             rc = _connectItem(dlgAdm, m->id, m->methodName);
             if ( rc != 0 )
             {
-                oodSetSysErrCode(c, rc);
+                oodSetSysErrCode(c->threadContext, rc);
                 break;
             }
         }
@@ -1616,7 +1616,7 @@ BOOL CppMenu::checkAutoConnect()
         uint32_t rc = menuConnectItems(hMenu, dlgAdm, connectionMethod, isSystemMenu(), FALSE);
         if ( rc != 0 )
         {
-            oodSetSysErrCode(c, rc);
+            oodSetSysErrCode(c->threadContext, rc);
             return FALSE;
         }
     }
@@ -1666,7 +1666,7 @@ void CppMenu::setAutoConnection(logical_t on, CSTRING methodName)
 RexxObjectPtr CppMenu::trackPopup(RexxObjectPtr location, RexxObjectPtr _dlg, CSTRING opts,
                                   logical_t bothButtons, RexxObjectPtr excludeRect, bool doTrack)
 {
-    oodResetSysErrCode(c);
+    oodResetSysErrCode(c->threadContext);
     RexxObjectPtr result = TheNegativeOneObj;
 
     TRACKPOP tp = {0};
@@ -1677,7 +1677,7 @@ RexxObjectPtr CppMenu::trackPopup(RexxObjectPtr location, RexxObjectPtr _dlg, CS
     {
         if ( dlg == TheNilObj )
         {
-            oodSetSysErrCode(c, ERROR_INVALID_FUNCTION);
+            oodSetSysErrCode(c->threadContext, ERROR_INVALID_FUNCTION);
             goto done_out;
         }
         ownerWindow = dlgHwnd;
@@ -1686,14 +1686,14 @@ RexxObjectPtr CppMenu::trackPopup(RexxObjectPtr location, RexxObjectPtr _dlg, CS
     {
         if ( ! c->IsOfType(_dlg, "BASEDIALOG") )
         {
-            oodSetSysErrCode(c, ERROR_WINDOW_NOT_DIALOG);
+            oodSetSysErrCode(c->threadContext, ERROR_WINDOW_NOT_DIALOG);
             goto done_out;
         }
 
         ownerWindow = rxGetWindowHandle(c, _dlg);
         if ( ownerWindow == NULL )
         {
-            oodSetSysErrCode(c, ERROR_INVALID_WINDOW_HANDLE);
+            oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
             goto done_out;
         }
 
@@ -1711,7 +1711,7 @@ RexxObjectPtr CppMenu::trackPopup(RexxObjectPtr location, RexxObjectPtr _dlg, CS
 
     if ( hMenu == NULL )
     {
-        oodSetSysErrCode(c, ERROR_INVALID_MENU_HANDLE);
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_MENU_HANDLE);
         goto done_out;
     }
     tp.hMenu = hMenu;
@@ -1723,7 +1723,7 @@ RexxObjectPtr CppMenu::trackPopup(RexxObjectPtr location, RexxObjectPtr _dlg, CS
         flags = getTrackFlags(opts);
         if ( flags == ERROR_OUTOFMEMORY )
         {
-            outOfMemoryException(c);
+            outOfMemoryException(c->threadContext);
             goto done_out;
         }
     }
@@ -1768,7 +1768,7 @@ RexxObjectPtr CppMenu::trackPopup(RexxObjectPtr location, RexxObjectPtr _dlg, CS
         }
         else
         {
-            oodSetSysErrCode(c, tp.dwErr);
+            oodSetSysErrCode(c->threadContext, tp.dwErr);
             result = TheFalseObj;
         }
     }
@@ -1917,7 +1917,7 @@ static bool getMII(CppMenu *cMenu, RexxObjectPtr rxItemID, BOOL byPosition, uint
             UINT fMask, MENUITEMINFO *mii)
 {
     bool success = false;
-    oodResetSysErrCode(cMenu->getContext());
+    oodResetSysErrCode(cMenu->getThreadContext());
 
     // We add FTYPE and SUBMENU so the caller can determine the type of the item
     // if needed.
@@ -1933,7 +1933,7 @@ static bool getMII(CppMenu *cMenu, RexxObjectPtr rxItemID, BOOL byPosition, uint
 
     if ( GetMenuItemInfo(cMenu->getHMenu(), itemID, (BOOL)byPosition, mii) == 0 )
     {
-        oodSetSysErrCode(cMenu->getContext());
+        oodSetSysErrCode(cMenu->getThreadContext());
         goto done_out;
     }
     success = true;
@@ -1975,7 +1975,7 @@ done_out:
  */
 HMENU getSubMenuHandle(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosition, uint32_t *pID, uint32_t *pPositionID)
 {
-    oodResetSysErrCode(cMenu->getContext());
+    oodResetSysErrCode(cMenu->getThreadContext());
     MENUITEMINFO mii = {0};
 
     uint32_t itemID = resolveItemID(cMenu->getContext(), rxItemID, byPosition, cMenu->getSelf(), 1);
@@ -1989,19 +1989,19 @@ HMENU getSubMenuHandle(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosit
 
     if ( GetMenuItemInfo(cMenu->getHMenu(), itemID, (BOOL)byPosition, &mii) == 0 )
     {
-        oodSetSysErrCode(cMenu->getContext());
+        oodSetSysErrCode(cMenu->getThreadContext());
         goto done_out;
     }
 
     if ( mii.hSubMenu == NULL )
     {
-        oodSetSysErrCode(cMenu->getContext(), ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(cMenu->getThreadContext(), ERROR_INVALID_FUNCTION);
         goto done_out;
     }
 
     if ( ! IsMenu(mii.hSubMenu) )
     {
-        oodSetSysErrCode(cMenu->getContext(), ERROR_INVALID_MENU_HANDLE);
+        oodSetSysErrCode(cMenu->getThreadContext(), ERROR_INVALID_MENU_HANDLE);
         mii.hSubMenu = NULL;
         goto done_out;
     }
@@ -2057,7 +2057,7 @@ static uint32_t resolveItemID(RexxMethodContext *c, RexxObjectPtr rxItemID, logi
     {
         if ( ! c->UnsignedInt32(rxItemID, &itemID) )
         {
-            notNonNegativeException(c, argPos, rxItemID);
+            notNonNegativeException(c->threadContext, argPos, rxItemID);
             goto done_out;
         }
     }
@@ -2101,8 +2101,8 @@ BOOL isType(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosition, uint32
     {
         if ( ! cMenu->getContext()->CheckCondition() )
         {
-            systemServiceExceptionCode(cMenu->getContext(), API_FAILED_MSG, "GetMenuItemInfo",
-                                       oodGetSysErrCode(cMenu->getContext()));
+            systemServiceExceptionCode(cMenu->getThreadContext(), API_FAILED_MSG, "GetMenuItemInfo",
+                                       oodGetSysErrCode(cMenu->getThreadContext()));
         }
         goto done_out;
     }
@@ -2161,7 +2161,7 @@ BOOL deleteMenuItem(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosition
         case MF_SEPARATOR:
             if ( ! _isSeparator(&mii) )
             {
-                oodSetSysErrCode(cMenu->getContext(), ERROR_INVALID_FUNCTION);
+                oodSetSysErrCode(cMenu->getThreadContext(), ERROR_INVALID_FUNCTION);
                 goto done_out;
             }
 
@@ -2170,7 +2170,7 @@ BOOL deleteMenuItem(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosition
                 uint32_t rc = deleteSeparatorByID(cMenu->getHMenu(), itemID);
                 if ( rc == 0 )
                 {
-                    oodSetSysErrCode(cMenu->getContext(), ERROR_MENU_ITEM_NOT_FOUND);
+                    oodSetSysErrCode(cMenu->getThreadContext(), ERROR_MENU_ITEM_NOT_FOUND);
                 }
                 else if ( rc == (uint32_t)-1 )
                 {
@@ -2179,7 +2179,7 @@ BOOL deleteMenuItem(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosition
                 }
                 else
                 {
-                    oodSetSysErrCode(cMenu->getContext(), rc);
+                    oodSetSysErrCode(cMenu->getThreadContext(), rc);
                 }
                 goto done_out;
             }
@@ -2188,7 +2188,7 @@ BOOL deleteMenuItem(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosition
         case MF_STRING :
             if ( ! _isCommandItem(&mii) )
             {
-                oodSetSysErrCode(cMenu->getContext(), ERROR_INVALID_FUNCTION);
+                oodSetSysErrCode(cMenu->getThreadContext(), ERROR_INVALID_FUNCTION);
                 goto done_out;
             }
             break;
@@ -2196,7 +2196,7 @@ BOOL deleteMenuItem(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosition
         default :
             if ( ! _isSubMenu(&mii) )
             {
-                oodSetSysErrCode(cMenu->getContext(), ERROR_INVALID_FUNCTION);
+                oodSetSysErrCode(cMenu->getThreadContext(), ERROR_INVALID_FUNCTION);
                 goto done_out;
             }
             break;
@@ -2205,7 +2205,7 @@ BOOL deleteMenuItem(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosition
     success = DeleteMenu(cMenu->getHMenu(), itemID, byPositionFlag(byPosition));
     if ( ! success )
     {
-        oodSetSysErrCode(cMenu->getContext());
+        oodSetSysErrCode(cMenu->getThreadContext());
         goto done_out;
     }
 
@@ -2235,8 +2235,8 @@ BOOL checkState(CppMenu *cMenu, RexxObjectPtr rxItemID, logical_t byPosition, ui
     {
         if ( ! cMenu->getContext()->CheckCondition() )
         {
-            systemServiceExceptionCode(cMenu->getContext(), API_FAILED_MSG, "GetMenuItemInfo",
-                                       oodGetSysErrCode(cMenu->getContext()));
+            systemServiceExceptionCode(cMenu->getThreadContext(), API_FAILED_MSG, "GetMenuItemInfo",
+                                       oodGetSysErrCode(cMenu->getThreadContext()));
         }
         goto done_out;
     }
@@ -2281,13 +2281,13 @@ uint32_t *CppMenu::getAllIDs(RexxObjectPtr rxItemIDs, size_t *items, logical_t b
             // A condition should already be raised, but it could be cryptic to
             // the programmer.  Better to use our own.
             c->ClearCondition();
-            doOverException(c, rxItemIDs);
+            doOverException(c->threadContext, rxItemIDs);
             goto done_out;
         }
         count = c->ArrayItems(rxIDs);
         if ( count == 0 )
         {
-            emptyArrayException(c, 1);
+            emptyArrayException(c->threadContext, 1);
             goto done_out;
         }
     }
@@ -2304,7 +2304,7 @@ uint32_t *CppMenu::getAllIDs(RexxObjectPtr rxItemIDs, size_t *items, logical_t b
     result = (uint32_t *)malloc(count * sizeof(uint32_t));
     if ( result == NULL )
     {
-        outOfMemoryException(c);
+        outOfMemoryException(c->threadContext);
         goto done_out;
     }
 
@@ -2350,7 +2350,7 @@ done_out:
  */
 BOOL setSingleState(CppMenu *cMenu, RexxObjectPtr rxItemIDs, logical_t byPosition, uint32_t state)
 {
-    oodResetSysErrCode(cMenu->getContext());
+    oodResetSysErrCode(cMenu->getThreadContext());
     BOOL success = FALSE;
     MENUITEMINFO mii = {0};
     mii.cbSize = sizeof(MENUITEMINFO);
@@ -2372,13 +2372,13 @@ BOOL setSingleState(CppMenu *cMenu, RexxObjectPtr rxItemIDs, logical_t byPositio
 
         if ( GetMenuItemInfo(cMenu->getHMenu(), itemID, (BOOL)byPosition, &mii) == 0 )
         {
-            oodSetSysErrCode(cMenu->getContext());
+            oodSetSysErrCode(cMenu->getThreadContext());
             goto done_out;
         }
 
         if ( _isSeparator(&mii) )
         {
-            oodSetSysErrCode(cMenu->getContext(), ERROR_INVALID_FUNCTION);
+            oodSetSysErrCode(cMenu->getThreadContext(), ERROR_INVALID_FUNCTION);
             goto done_out;
         }
 
@@ -2418,7 +2418,7 @@ BOOL setSingleState(CppMenu *cMenu, RexxObjectPtr rxItemIDs, logical_t byPositio
 
         if ( SetMenuItemInfo(cMenu->getHMenu(), itemID, byPositionFlag(byPosition), &mii) == 0 )
         {
-            oodSetSysErrCode(cMenu->getContext());
+            oodSetSysErrCode(cMenu->getThreadContext());
             goto done_out;
         }
     }
@@ -2534,7 +2534,7 @@ RexxObjectPtr newPopupFromHandle(RexxMethodContext *c, HMENU hPopup, RexxObjectP
         // This is a good error code for this, buthow could it happen to begin
         // with?
         c->ClearCondition();
-        oodSetSysErrCode(c, OR_INVALID_OID);
+        oodSetSysErrCode(c->threadContext, OR_INVALID_OID);
         goto done_out;
     }
 
@@ -2586,7 +2586,7 @@ bool menuData(RexxMethodContext *c, HMENU hMenu, RexxObjectPtr *data)
     {
         if ( GetMenuInfo(hMenu, &mi) == 0 )
         {
-            systemServiceExceptionCode(c, API_FAILED_MSG, "GetMenuInfo");
+            systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GetMenuInfo");
             success = false;
         }
         else
@@ -2598,7 +2598,7 @@ bool menuData(RexxMethodContext *c, HMENU hMenu, RexxObjectPtr *data)
     {
         if ( SetMenuInfo(hMenu, &mi) == 0 )
         {
-            systemServiceExceptionCode(c, API_FAILED_MSG, "SetMenuInfo");
+            systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "SetMenuInfo");
             success = false;
         }
     }
@@ -2804,7 +2804,7 @@ RexxMethod5(logical_t, menu_connectItem_cls, RexxObjectPtr, rxID, CSTRING, metho
         rc = _connectItem(dialogAdm, id, methodName);
     }
 
-    (rc == 0) ? success = TRUE : oodSetSysErrCode(context, rc);
+    (rc == 0) ? success = TRUE : oodSetSysErrCode(context->threadContext, rc);
 
 done_out:
     return success;
@@ -2882,7 +2882,7 @@ RexxMethod3(POINTER, menu_getMenuHandle, RexxObjectPtr, rxItemID, OPTIONAL_logic
  */
 RexxMethod2(logical_t, menu_releaseMenuHandle, RexxObjectPtr, handle, OSELF, self)
 {
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     RexxMethodContext *c = context;
     HMENU hMenu = NULL;
     logical_t success = FALSE;
@@ -2898,13 +2898,13 @@ RexxMethod2(logical_t, menu_releaseMenuHandle, RexxObjectPtr, handle, OSELF, sel
 
     if ( hMenu == NULL )
     {
-        invalidTypeException(context, 1, INVALID_MENU_HANDLE_MSG);
+        invalidTypeException(context->threadContext, 1, INVALID_MENU_HANDLE_MSG);
     }
     else
     {
         if ( DestroyMenu(hMenu) == 0 )
         {
-            oodSetSysErrCode(context);
+            oodSetSysErrCode(context->threadContext);
         }
         else
         {
@@ -2928,12 +2928,12 @@ RexxMethod1(int32_t, menu_getCount, CSELF, cMenuPtr)
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
 
    int count = GetMenuItemCount(cMenu->getHMenu());
    if ( count == -1 )
    {
-       oodSetSysErrCode(context);
+       oodSetSysErrCode(context->threadContext);
    }
    return count;
 }
@@ -2976,7 +2976,7 @@ RexxMethod3(logical_t, menu_isValidItemID, RexxObjectPtr, rxItemID, OPTIONAL_log
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     BOOL result = FALSE;
     MENUITEMINFO mii = {0};
 
@@ -2984,7 +2984,7 @@ RexxMethod3(logical_t, menu_isValidItemID, RexxObjectPtr, rxItemID, OPTIONAL_log
     if ( context->CheckCondition() )
     {
         context->ClearCondition();
-        oodSetSysErrCode(context, ERROR_INVALID_PARAMETER);
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_PARAMETER);
         goto done_out;
     }
 
@@ -2996,7 +2996,7 @@ RexxMethod3(logical_t, menu_isValidItemID, RexxObjectPtr, rxItemID, OPTIONAL_log
     result = GetMenuItemInfo(cMenu->getHMenu(), itemID, (BOOL)byPosition, &mii);
     if ( ! result )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
     }
 
 done_out:
@@ -3450,7 +3450,7 @@ RexxMethod5(logical_t, menu_checkRadio, RexxObjectPtr, start, RexxObjectPtr, end
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     logical_t success = FALSE;
 
     int idStart = resolveItemID(context, start, byPosition, cMenu->getSelf(), 1);
@@ -3472,7 +3472,7 @@ RexxMethod5(logical_t, menu_checkRadio, RexxObjectPtr, start, RexxObjectPtr, end
     success = CheckMenuRadioItem(cMenu->getHMenu(), idStart, idEnd, idCheck, byPositionFlag(byPosition));
     if ( ! success )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
     }
 
 done_out:
@@ -3509,7 +3509,7 @@ RexxMethod4(logical_t, menu_insertSeparator, RexxObjectPtr, before, RexxObjectPt
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     logical_t success = FALSE;
     MENUITEMINFO mii = {0};
 
@@ -3538,7 +3538,7 @@ RexxMethod4(logical_t, menu_insertSeparator, RexxObjectPtr, before, RexxObjectPt
     success = InsertMenuItem(cMenu->getHMenu(), idBefore, byPositionFlag(byPosition), &mii);
     if ( ! success )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
         goto done_out;
     }
 
@@ -3630,7 +3630,7 @@ RexxMethod9(logical_t, menu_insertItem, RexxObjectPtr, rxBefore, RexxObjectPtr, 
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     BOOL success = FALSE;
     MENUITEMINFO mii = {0};
 
@@ -3665,7 +3665,7 @@ RexxMethod9(logical_t, menu_insertItem, RexxObjectPtr, rxBefore, RexxObjectPtr, 
 
     if ( ! InsertMenuItem(cMenu->getHMenu(), idBefore, (BOOL)byPosition, &mii) )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
         goto done_out;
     }
 
@@ -3751,7 +3751,7 @@ RexxMethod8(logical_t, menu_insertPopup, RexxObjectPtr, rxBefore, RexxObjectPtr,
     RexxMethodContext *c = context;
     RexxObjectPtr self = cMenu->getSelf();
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     logical_t success = FALSE;
     MENUITEMINFO mii = {0};
 
@@ -3762,7 +3762,7 @@ RexxMethod8(logical_t, menu_insertPopup, RexxObjectPtr, rxBefore, RexxObjectPtr,
     }
     if ( ! c->IsOfType(popup, "POPUPMENU") )
     {
-        wrongClassException(context, 3, "POPUPMENU");
+        wrongClassException(context->threadContext, 3, "POPUPMENU");
         goto done_out;
     }
     uint32_t id = oodResolveSymbolicID(context, self, rxID, -1, 2);
@@ -3795,7 +3795,7 @@ RexxMethod8(logical_t, menu_insertPopup, RexxObjectPtr, rxBefore, RexxObjectPtr,
     success = InsertMenuItem(cMenu->getHMenu(), idBefore, (BOOL)byPosition, &mii);
     if ( ! success )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
         goto done_out;
     }
 
@@ -3896,7 +3896,7 @@ RexxMethod3(RexxObjectPtr, menu_removePopup, RexxObjectPtr, rxItemID, OPTIONAL_l
 
     if ( RemoveMenu(cMenu->getHMenu(), (byPosition ? positionID : wID), byPositionFlag(byPosition)) == 0 )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
         goto done_out;
     }
 
@@ -4146,7 +4146,7 @@ RexxMethod2(RexxObjectPtr, menu_getID, uint32_t, pos, CSELF, cMenuPtr)
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     RexxObjectPtr result = TheNegativeOneObj;
     MENUITEMINFO mii = {0};
 
@@ -4155,7 +4155,7 @@ RexxMethod2(RexxObjectPtr, menu_getID, uint32_t, pos, CSELF, cMenuPtr)
 
     if ( GetMenuItemInfo(cMenu->getHMenu(), pos, TRUE, &mii) == 0 )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
     }
     else
     {
@@ -4192,7 +4192,7 @@ RexxMethod4(logical_t, menu_setID, RexxObjectPtr, rxItemID, RexxObjectPtr, newID
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     logical_t success = FALSE;
     MENUITEMINFO mii = {0};
 
@@ -4211,7 +4211,7 @@ RexxMethod4(logical_t, menu_setID, RexxObjectPtr, rxItemID, RexxObjectPtr, newID
     mii.fMask = MIIM_ID;
     if ( SetMenuItemInfo(cMenu->getHMenu(), itemID, byPositionFlag(byPosition), &mii) == 0 )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
         goto done_out;
     }
     success = TRUE;
@@ -4243,7 +4243,7 @@ RexxMethod3(logical_t, menu_setHelpID, RexxObjectPtr, id, OPTIONAL_logical_t, re
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     logical_t result = FALSE;
 
     DWORD helpID = oodResolveSymbolicID(context, cMenu->getSelf(), id, -1, 1);
@@ -4259,7 +4259,7 @@ RexxMethod3(logical_t, menu_setHelpID, RexxObjectPtr, id, OPTIONAL_logical_t, re
     }
     else
     {
-        oodSetSysErrCode(context, rc);
+        oodSetSysErrCode(context->threadContext, rc);
     }
 
 done_out:
@@ -4284,7 +4284,7 @@ RexxMethod1(RexxObjectPtr, menu_getHelpID, CSELF, cMenuPtr)
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
 
     RexxObjectPtr result = TheNegativeOneObj;
     uint32_t helpID;
@@ -4296,7 +4296,7 @@ RexxMethod1(RexxObjectPtr, menu_getHelpID, CSELF, cMenuPtr)
     }
     else
     {
-        oodSetSysErrCode(context, rc);
+        oodSetSysErrCode(context->threadContext, rc);
     }
     return result;
 }
@@ -4378,7 +4378,7 @@ RexxMethod4(logical_t, menu_setText, RexxObjectPtr, rxItemID, CSTRING, text, OPT
     }
     if ( _isSeparator(&mii) )
     {
-        oodSetSysErrCode(context, ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
         goto done_out;
     }
 
@@ -4388,7 +4388,7 @@ RexxMethod4(logical_t, menu_setText, RexxObjectPtr, rxItemID, CSTRING, text, OPT
     mii.dwTypeData = (LPSTR)text;
     if ( SetMenuItemInfo(cMenu->getHMenu(), itemID, (BOOL)byPosition, &mii) == 0 )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
         goto done_out;
     }
     success = TRUE;
@@ -4432,7 +4432,7 @@ RexxMethod3(RexxStringObject, menu_getText, RexxObjectPtr, rxItemID, OPTIONAL_lo
     }
     if ( _isSeparator(&mii) )
     {
-        oodSetSysErrCode(context, ERROR_INVALID_FUNCTION);
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_FUNCTION);
         goto done_out;
     }
 
@@ -4443,7 +4443,7 @@ RexxMethod3(RexxStringObject, menu_getText, RexxObjectPtr, rxItemID, OPTIONAL_lo
     mii.cch = sizeof(buf);
     if ( GetMenuItemInfo(cMenu->getHMenu(), itemID, (BOOL)byPosition, &mii) == 0 )
     {
-        oodSetSysErrCode(context);
+        oodSetSysErrCode(context->threadContext);
     }
 
 done_out:
@@ -4518,7 +4518,7 @@ RexxMethod2(RexxStringObject, menu_itemTextToMethodName, CSTRING, text, OSELF, s
     }
     else
     {
-        outOfMemoryException(context);
+        outOfMemoryException(context->threadContext);
     }
     return result;
 }
@@ -4720,7 +4720,7 @@ RexxMethod1(logical_t, menuBar_redraw, CSELF, cMenuPtr)
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
 
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     return cMenu->maybeRedraw(true);
 }
 
@@ -4800,7 +4800,7 @@ RexxMethod1(logical_t, menuBar_isAttached, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     return cMenu->isAttached();
 }
 
@@ -5048,7 +5048,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
         hMenu = CreateMenu();
         if ( hMenu == NULL )
         {
-            systemServiceExceptionCode(context, API_FAILED_MSG, "LoadMenu");
+            systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "LoadMenu");
             goto done_out;
         }
     }
@@ -5059,7 +5059,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
         hMenu = (HMENU)c->PointerValue((RexxPointerObject)src);
         if ( ! IsMenu(hMenu) )
         {
-            invalidTypeException(context, 1, INVALID_MENU_HANDLE_MSG);
+            invalidTypeException(context->threadContext, 1, INVALID_MENU_HANDLE_MSG);
             goto done_out;
         }
     }
@@ -5073,7 +5073,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
     }
     else
     {
-        wrongArgValueException(context, 1, "ResDialog, module file name, menu handle, or .nil", src);
+        wrongArgValueException(context->threadContext, 1, "ResDialog, module file name, menu handle, or .nil", src);
         goto done_out;
     }
 
@@ -5083,7 +5083,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
         if ( cMenu->wID == -1 )
         {
-            wrongArgValueException(context, 2, "a valid numeric ID or a valid symbolic ID" , id);
+            wrongArgValueException(context->threadContext, 2, "a valid numeric ID or a valid symbolic ID" , id);
             goto done_out;
         }
 
@@ -5102,7 +5102,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
             hinst = LoadLibrary(TEXT(fileName));
             if ( hinst == NULL )
             {
-                systemServiceExceptionCode(context, NO_HMODULE_MSG, fileName);
+                systemServiceExceptionCode(context->threadContext, NO_HMODULE_MSG, fileName);
                 goto done_out;
             }
         }
@@ -5110,7 +5110,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
         hMenu = LoadMenu(hinst, MAKEINTRESOURCE(cMenu->wID));
         if ( hMenu == NULL )
         {
-            systemServiceExceptionCode(context, API_FAILED_MSG, "LoadMenu");
+            systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "LoadMenu");
             goto done_out;
         }
 
@@ -5129,7 +5129,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
         uint32_t rc = menuHelpID(hMenu, dwHelpID, TRUE, NULL);
         if ( rc )
         {
-            oodSetSysErrCode(context, rc);
+            oodSetSysErrCode(context->threadContext, rc);
         }
     }
 
@@ -5150,7 +5150,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
         }
         else
         {
-            userDefinedMsgException(context, CAN_NOT_ATTACH_ON_INIT_MSG);
+            userDefinedMsgException(context->threadContext, CAN_NOT_ATTACH_ON_INIT_MSG);
             goto err_out;
         }
     }
@@ -5207,7 +5207,7 @@ RexxMethod3(RexxObjectPtr, sysMenu_init, RexxObjectPtr, dialog, OPTIONAL_RexxObj
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SetObjectVariable("CSELF", cMenuPtr);
 
-    if ( ! requiredClass(context, dialog, "BASEDIALOG", 1) )
+    if ( ! requiredClass(context->threadContext, dialog, "BASEDIALOG", 1) )
     {
         goto done_out;
     }
@@ -5474,7 +5474,7 @@ RexxMethod4(logical_t, popMenu_connectContextMenu_cls, RexxObjectPtr, dlg, CSTRI
 
     if ( ! success )
     {
-        oodSetSysErrCode(context, ERROR_NOT_ENOUGH_MEMORY);
+        oodSetSysErrCode(context->threadContext, ERROR_NOT_ENOUGH_MEMORY);
     }
 
 done_out:
@@ -5546,7 +5546,7 @@ RexxMethod5(RexxObjectPtr, popMenu_init, OPTIONAL_RexxObjectPtr, id, OPTIONAL_Re
         hMenu = CreatePopupMenu();
         if ( hMenu == NULL )
         {
-            systemServiceExceptionCode(context, API_FAILED_MSG, "CreatePopupMenu");
+            systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "CreatePopupMenu");
             goto done_out;
         }
     }
@@ -5555,7 +5555,7 @@ RexxMethod5(RexxObjectPtr, popMenu_init, OPTIONAL_RexxObjectPtr, id, OPTIONAL_Re
         hMenu = (HMENU)handle;
         if ( ! IsMenu(hMenu) )
         {
-            invalidTypeException(context, 4, INVALID_MENU_HANDLE_MSG);
+            invalidTypeException(context->threadContext, 4, INVALID_MENU_HANDLE_MSG);
             goto done_out;
         }
     }
@@ -5567,7 +5567,7 @@ RexxMethod5(RexxObjectPtr, popMenu_init, OPTIONAL_RexxObjectPtr, id, OPTIONAL_Re
         uint32_t rc = menuHelpID(hMenu, dwHelpID, TRUE, NULL);
         if ( rc )
         {
-            oodSetSysErrCode(context, rc);
+            oodSetSysErrCode(context->threadContext, rc);
         }
     }
 
@@ -5641,7 +5641,7 @@ RexxMethod1(logical_t, popMenu_isAssigned, CSELF, cMenuPtr)
 {
     CppMenu *cMenu = (CppMenu *)cMenuPtr;
     cMenu->setContext(context, TheFalseObj);
-    oodResetSysErrCode(context);
+    oodResetSysErrCode(context->threadContext);
     return cMenu->isAssigned();
 }
 
@@ -5920,7 +5920,7 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObject
         }
         else
         {
-            userDefinedMsgException(context, "Can not attach menu unless arg 3 'symbolSrc' is a dialog object");
+            userDefinedMsgException(context->threadContext, "Can not attach menu unless arg 3 'symbolSrc' is a dialog object");
             DestroyMenu(cMenu->getHMenu());
             cMenu->setHMenu(NULL);
         }

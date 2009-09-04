@@ -88,7 +88,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(GetFileNameWindow);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DataTable);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SetItemData);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SetStemData);
@@ -122,7 +121,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleControlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleOtherNewCtrls);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(WinTimer);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DumpAdmin);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddControl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrCreateDialog);
@@ -131,13 +129,16 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddNewCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddResource);
 
 REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg);
-REXX_TYPED_ROUTINE_PROTOTYPE(msSleep);
+REXX_TYPED_ROUTINE_PROTOTYPE(fileNameDlg_rtn);
+REXX_TYPED_ROUTINE_PROTOTYPE(findWindow_rtn);
+REXX_TYPED_ROUTINE_PROTOTYPE(msSleep_rtn);
+REXX_TYPED_ROUTINE_PROTOTYPE(winTimer_rtn);
+REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 
 // now build the actual entry list
 RexxRoutineEntry oodialog_functions[] =
 {
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
-    REXX_CLASSIC_ROUTINE(GetFileNameWindow,    GetFileNameWindow),
     REXX_CLASSIC_ROUTINE(DataTable,            DataTable),
     REXX_CLASSIC_ROUTINE(SetItemData,          SetItemData),
     REXX_CLASSIC_ROUTINE(SetStemData,          SetStemData),
@@ -170,7 +171,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(HandleListCtrlEx,     HandleListCtrlEx),
     REXX_CLASSIC_ROUTINE(HandleControlEx,      HandleControlEx),
     REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
-    REXX_CLASSIC_ROUTINE(WinTimer,             WinTimer),
     REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),
     REXX_CLASSIC_ROUTINE(UsrAddControl,        UsrAddControl),
     REXX_CLASSIC_ROUTINE(UsrCreateDialog,      UsrCreateDialog),
@@ -179,7 +179,11 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(UsrAddResource,       UsrAddResource),
 
     REXX_TYPED_ROUTINE(getDlgMsg,              getDlgMsg),
-    REXX_TYPED_ROUTINE(msSleep,                msSleep),
+    REXX_TYPED_ROUTINE(findWindow_rtn,         findWindow_rtn),
+    REXX_TYPED_ROUTINE(fileNameDlg_rtn,        fileNameDlg_rtn),
+    REXX_TYPED_ROUTINE(msSleep_rtn,            msSleep_rtn),
+    REXX_TYPED_ROUTINE(winTimer_rtn,           winTimer_rtn),
+    REXX_TYPED_ROUTINE(routineTest_rtn,             routineTest_rtn),
 
     REXX_LAST_ROUTINE()
 };
@@ -193,7 +197,6 @@ REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
-REXX_METHOD_PROTOTYPE(dlgutil_findWindow_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
@@ -359,6 +362,7 @@ REXX_METHOD_PROTOTYPE(rb_indeterminate);
 REXX_METHOD_PROTOTYPE(ckbx_isIndeterminate);
 REXX_METHOD_PROTOTYPE(ckbx_setIndeterminate);
 REXX_METHOD_PROTOTYPE(bc_test);
+REXX_METHOD_PROTOTYPE(bc_test_cls);
 
 REXX_METHOD_PROTOTYPE(rect_init);
 REXX_METHOD_PROTOTYPE(rect_left);
@@ -473,7 +477,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_loWord_cls,           dlgutil_loWord_cls),
     REXX_METHOD(dlgutil_and_cls,              dlgutil_and_cls),
     REXX_METHOD(dlgutil_or_cls,               dlgutil_or_cls),
-    REXX_METHOD(dlgutil_findWindow_cls,       dlgutil_findWindow_cls),
     REXX_METHOD(dlgutil_screenSize_cls,       dlgutil_screenSize_cls),
     REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_handleToPointer_cls,  dlgutil_handleToPointer_cls),
@@ -640,6 +643,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(ckbx_setIndeterminate,   ckbx_setIndeterminate),
     REXX_METHOD(gb_setStyle,             gb_setStyle),
     REXX_METHOD(bc_test,                 bc_test),
+    REXX_METHOD(bc_test_cls,             bc_test_cls),
 
     REXX_METHOD(rect_init,               rect_init),
     REXX_METHOD(rect_left,               rect_left),

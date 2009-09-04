@@ -95,21 +95,22 @@ typedef struct _dcCSelf {
 } CDialogControl;
 typedef CDialogControl *pCDialogControl;
 
-extern bool dialogInAdminTable(DIALOGADMIN * Dlg);
-extern bool InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc);
-extern void rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
-extern void rxdatacpy(CHAR * tar, RXSTRING &src);
-extern bool isYes(const char *s);
-extern bool IsNo(const char * s);
-extern void *string2pointer(const char *string);
-extern void *string2pointer(RexxMethodContext *c, RexxStringObject string);
-extern void pointer2string(char *, void *pointer);
+extern bool             dialogInAdminTable(DIALOGADMIN * Dlg);
+extern bool             InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc);
+extern void             rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
+extern void             rxdatacpy(CHAR * tar, RXSTRING &src);
+extern bool             isYes(const char *s);
+extern bool             IsNo(const char * s);
+extern void *           string2pointer(const char *string);
+extern void *           string2pointer(RexxMethodContext *c, RexxStringObject string);
+extern void             pointer2string(char *, void *pointer);
 extern RexxStringObject pointer2string(RexxMethodContext *, void *);
-extern LONG HandleError(PRXSTRING r, CHAR * text);
-extern char *strdupupr(const char *str);
-extern char *strdupupr_nospace(const char *str);
-extern char *strdup_2methodName(const char *str);
-extern DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
+extern RexxStringObject pointer2string(RexxThreadContext *c, void *pointer);
+extern LONG             HandleError(PRXSTRING r, CHAR * text);
+extern char *           strdupupr(const char *str);
+extern char *           strdupupr_nospace(const char *str);
+extern char *           strdup_2methodName(const char *str);
+extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
 extern LPWORD lpwAlign(LPWORD lpIn);
 extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
@@ -119,9 +120,9 @@ extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, siz
 extern uint32_t oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
 extern bool oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
 
-extern DWORD oodGetSysErrCode(RexxMethodContext *);
-extern void  oodSetSysErrCode(RexxMethodContext *, DWORD);
-extern void  oodResetSysErrCode(RexxMethodContext *context);
+extern DWORD oodGetSysErrCode(RexxThreadContext *);
+extern void  oodSetSysErrCode(RexxThreadContext *, DWORD);
+extern void  oodResetSysErrCode(RexxThreadContext *context);
 
 extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos);
 extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
@@ -184,7 +185,7 @@ inline void safeDeleteObject(HANDLE h)
     }
 }
 
-inline void oodSetSysErrCode(RexxMethodContext *context)
+inline void oodSetSysErrCode(RexxThreadContext *context)
 {
     oodSetSysErrCode(context, GetLastError());
 }
