@@ -1433,7 +1433,7 @@ RexxRoutine2(RexxStringObject, SysCurPos, OPTIONAL_stringsize_t, inrow, OPTIONAL
     CONSOLE_SCREEN_BUFFER_INFO csbiInfo; /* Console information        */
 
 
-    if ((argumentExists(2) && argumentOmitted(3)) || (argumentExists(3) && argumentOmitted(2)))
+    if ((argumentExists(1) && argumentOmitted(2)) || (argumentExists(2) && argumentOmitted(1)))
     {
         context->InvalidRoutine();
         return NULL;
