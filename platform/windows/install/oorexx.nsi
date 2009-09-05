@@ -378,9 +378,6 @@ Section "${LONGNAME} Samples" SecDemo
   ${SetOutPath} $INSTDIR\samples\oodialog
   ; Distribution files...
   ${File} "${SRCDIR}\extensions\platform\windows\oodialog\" "oodialog.ico"
-  ${File} "${BINDIR}\" "oodialog.cls"
-  ${File} "${BINDIR}\" "oodwin32.cls"
-  ${File} "${BINDIR}\" "oodplain.cls"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "*.rex"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "*.inp"
   ${File} "${SRCDIR}\samples\windows\oodialog\" "*.ico"
