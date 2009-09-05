@@ -1,0 +1,60 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2009-20096 Rexx Language Association. All rights reserved.   */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+#include <windows.h>
+#include <commctrl.h>
+
+#define IDD_ADD_TREE_ITEM                       101
+#define IDC_CHK_FOLDER                          1001
+#define IDC_RB_SIBLING                          1004
+#define IDC_RB_CHILD                            1006
+#define IDC_EDIT_NAME                           1007
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+IDD_ADD_TREE_ITEM DIALOG 0, 0, 209, 91
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_VISIBLE | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+CAPTION "Add New Item"
+FONT 8, "MS Sans Serif"
+{
+    LTEXT           "Name:", IDC_STATIC, 10, 13, 20, 8, SS_LEFT, WS_EX_RIGHT
+    EDITTEXT        IDC_EDIT_NAME, 34, 11, 106, 14, ES_AUTOHSCROLL
+    GROUPBOX        "Add new item as:", IDC_STATIC, 15, 32, 123, 49
+    AUTORADIOBUTTON "Sibling", IDC_RB_SIBLING, 23, 46, 32, 10, WS_TABSTOP
+    AUTORADIOBUTTON "Child", IDC_RB_CHILD, 23, 63, 32, 10, WS_TABSTOP
+    AUTOCHECKBOX    "Folder", IDC_CHK_FOLDER, 85, 46, 41, 10
+    DEFPUSHBUTTON   "OK", IDOK, 149, 47, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 149, 67, 50, 14
+}

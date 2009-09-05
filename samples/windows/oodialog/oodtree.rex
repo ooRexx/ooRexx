@@ -196,7 +196,7 @@ CleanUp:
   /* and delete all children of the item if it will be collapsed                   */
   if itemInfo.!TEXT = "Special Offers" then
   do
-    if what = "COLLAPSED" & curTree~Child(item)~substr(3) = 0 then
+    if what = "COLLAPSED" & curTree~Child(item) = 0 then
     do
       do while lines(itemFile)
         line = linein(itemFile)
@@ -206,10 +206,9 @@ CleanUp:
       curTree~Expand(item)
     end
     else
-      if what = "EXPANDED" & curTree~Child(item)~substr(3) \= 0 then
+      if what = "EXPANDED" & curTree~Child(item) \= 0 then
       do
         curTree~CollapseAndReset(item)
-        say curTree~Child(item)
       end
   end
 
@@ -238,25 +237,10 @@ CleanUp:
 
 /* Method IDC_PB_NEW is connected to item IDC_PB_NEW */
 ::method IDC_PB_NEW
-  /* if the new button is pressed, display an input box, get the name of the new item */
-  /* and insert it in the tree                                                        */
-  dlg = .InputBox~New("Enter the name of the new item:", "Item Name")
-  itemText = dlg~Execute
-  if itemText \= "" then
-  do
-    curTree = self~GetTreeControl("IDC_TREE")
-    /* if selected item has childs, insert new item as sibling */
-    if curTree~Child(curTree~Selected) = 0 then
-    do
-      curTree~Insert(curTree~Parent(curTree~Selected),,itemText,2,3)
-    end
-    else
-    do
-      /* if selected item has childs, insert new item as child */
-      newItem = curTree~Insert(curTree~Selected,,itemText,0,1)
-      curTree~Expand(curTree~Parent(newItem))
-    end
-  end
+  -- When the new button is pressed, display a dialog that gets the name of the new item
+  -- and inserts it into the tree.
+  dlg = .NewTreeItemDlg~new("rc\oodtreeNewItem.rc",  IDD_ADD_TREE_ITEM, self~getTreeControl("IDC_TREE"))
+  dlg~execute
 
 
 /* Method IDC_PB_DELETE is connected to item IDC_PB_DELETE */
@@ -317,16 +301,72 @@ CleanUp:
   call infoDialog "No help available."
   self~Help:super
 
+::class 'NewTreeItemDlg' subclass RcDialog inherit AdvancedControls
 
+::method init
+  expose treeControl
+  use arg scriptFile, dlgID, treeControl
 
+  -- Initialize the super class.
+  self~init:super(scriptFile, dlgID)
 
+::method initDialog
+  expose treeControl editControl childRB folderChk selected
 
+  -- Save a reference to the current selected item
+  selected = treeControl~selected
 
+  -- Save a reference to some of the controls we will use repeatedly
+  editControl = self~getEditControl(IDC_EDIT_NAME)
+  childRB = self~getRadioControl(IDC_RB_CHILD)
+  folderChk = self~getCheckControl(IDC_CHK_FOLDER)
 
+  -- If the selected is the root of the tree, a new item has to be inserted as
+  -- a child.  So disable the radio buttons that allow the user to choose to
+  -- insert as a child or sibling.  And, pre-check the add as a folder check
+  -- box.
+  if selected == treeControl~root then do
+    childRB~~check~disable
+    self~getRadioControl(IDC_RB_SIBLING)~disable
+    folderChk~check
+  end
+  else do
+    self~getRadioControl(IDC_RB_SIBLING)~check
+  end
 
+  -- Set a visual cue for the edit control.  This will only show when the edit
+  -- control has no text in it, and does not have the focus.
+  editControl~setCue("Enter name of new item")
 
+::method ok
+  expose treeControl editControl childRB folderChk selected
 
+  -- Make sure the user has given the item a name.
+  text = editControl~getText~strip
+  if text == "" then do
+    j = infoDialog("You must enter the name of the new item")
+    editControl~assignFocus
+    return 0
+  end
 
+  -- See if the user wants to add this as a folder item, or a regular item.
+  -- This will determine the image IDs we use when we insert the item
+  addAsFolder = folderChk~checked
 
+  -- Now insert the item either as a child or a sibling depending on what the
+  -- user requested.
+  if childRB~checked then do
+    if addAsFolder then newItem = treeControl~insert(selected, , text, 0, 1)
+    else newItem = treeControl~insert(selected, , text, 2, 3)
+    treeControl~expand(treeControl~parent(newItem))
+  end
+  else do
+    if addAsFolder then treeControl~insert(treeControl~Parent(selected), , text, 0, 1)
+    else treeControl~insert(treeControl~Parent(selected), , text, 2, 3)
+  end
 
+  -- Finally, quit by invoking the super class ok() method.
+  return self~ok:super
 
+::method initAutoDetection
+  self~noAutoDetection
