@@ -4127,7 +4127,9 @@ RexxRoutine1(RexxObjectPtr, SysQueryProcess, OPTIONAL_CSTRING, option)
  *                           box.  It can be ommitted if no additional message
  *                           is desired.
  *  @param  timeout          Number of seconds to display the shut down dialog.
- *                           If this is ommitted or 0 no dialog is displayed.
+ *                           If this is 0 no dialog is displayed.  The default
+ *                           is 30 seconds, see the remarks below.  The user can
+ *                           force a 0 timeout by explicitly specifying 0.
  *  @param  forceAppsClosed  If true applications with unsaved data are forcibly
  *                           closed.  If false, the user is presented with a
  *                           dialog telling the user to close the applcation(s).

@@ -88,7 +88,22 @@
 ::routine fileNameDialog public external "LIBRARY oodialog fileNameDlg_rtn"
 ::routine msSleep public external "LIBRARY oodialog msSleep_rtn"
 ::routine findWindow public external "LIBRARY oodialog findWindow_rtn"
-::routine routineTest public external "LIBRARY oodialog routineTest_rtn"
+::routine play public external "LIBRARY oodialog playSound_rtn"
+
+::routine messageDialog public external "LIBRARY oodialog messageDialog_rtn"
+::routine infoDialog public
+   use strict arg info
+   return messageDialog(info, , "Information", "OK", "INFORMATION", "SETFOREGROUND TASKMODAL")
+
+::routine errorDialog public
+   use strict arg info
+   return messageDialog(info, , "Error", "OK", "HAND", "SETFOREGROUND TASKMODAL")
+
+::routine askDialog public
+   use strict arg info, defaultButton = 'Y'
+   miscStyles = "SETFOREGROUND TASKMODAL"
+   if defaultButton~left(1)~translate == 'N' then miscStyles ||= ' DEFBUTTON2'
+   return (messageDialog(info, , "Question", "YESNO", "QUESTION", miscStyles) == 6)
 
 ::routine screenSize public
    return .DlgUtil~screenSize
@@ -97,39 +112,7 @@
    use strict arg index
    return .DlgUtil~getSystemMetrics(index)
 
-/* Routine play() will search for a sound file in the PATH and play it */
-::routine play public
-   use arg fileName, asyn = "NO"
-
-   if arg(1, 'o') then return StopSoundFile()
-
-   file = SysSearchPath("SOUNDPATH",fileName)
-   if file = "" then return 1
-
-   if asyn~translate = "LOOP" then return PlaySoundFileInLoop(file)
-   else return PlaySoundFile(file, asyn)
-
-
-::routine infoDialog public
-   use arg info
-   return InfoMessage(info)
-
-
-::routine errorDialog public
-   use arg info
-   return ErrorMessage(info)
-
-
-::routine askDialog public
-   use arg info, defaultButton
-   if arg(2,'e') then do
-       defaultButton = defaultButton~left(1)~translate
-       if defaultButton <> 'N', defaultButton <> 'Y' then do
-           raise syntax 40.904 array('AskDialog', '2', '[Yes, No]', arg(2))
-       end
-   end
-   if arg(2,'o') then return YesNoMessage(info)
-   else return YesNoMessage(info, defaultButton)
+::routine routineTest public external "LIBRARY oodialog routineTest_rtn"
 
 
 /** The following routines are, mostly, duplicates of the public routines above.
@@ -139,6 +122,23 @@
 ::routine sleepMS public external "LIBRARY oodialog msSleep_rtn"
 ::routine winTimer public external "LIBRARY oodialog winTimer_rtn"
 ::routine getFileNameWindow public external "LIBRARY oodialog fileNameDlg_rtn"
+::routine playSoundFile public external "LIBRARY oodialog playSound_rtn"
+::routine playSoundFileInLoop public external "LIBRARY oodialog playSound_rtn"
+::routine StopSoundFile public external "LIBRARY oodialog playSound_rtn"
+
+::routine infoMessage public
+   use strict arg info
+   return messageDialog(info, , "Information", "OK", "INFORMATION", "SETFOREGROUND TASKMODAL")
+
+::routine errorMessage public
+   use strict arg info
+   return messageDialog(info, , "Error", "OK", "HAND", "SETFOREGROUND TASKMODAL")
+
+::routine yesNoMessage public
+   use strict arg info, defaultButton = 'Y'
+   miscStyles = "SETFOREGROUND TASKMODAL"
+   if defaultButton~left(1)~translate == 'N' then miscStyles ||= ' DEFBUTTON2'
+   return messageDialog(info, , "Question", "YESNO", "QUESTION", miscStyles) == 6
 
 ::routine getSysMetrics public
   use strict arg index

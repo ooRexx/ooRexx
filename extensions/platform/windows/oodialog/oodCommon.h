@@ -39,6 +39,14 @@
 #ifndef oodCommon_Included
 #define oodCommon_Included
 
+// Map string keywords representing constant defines to their int values.  For
+// translating things like "IDI_APPLICATION" from the user to the proper API
+// value.
+#include <string>
+#include <map>
+using namespace std;
+typedef map<string, int, less<string> > String2Int;
+
 
 #define DEFAULT_FONTNAME       "MS Shell Dlg"
 #define DEFAULT_FONTSIZE       8
@@ -138,7 +146,8 @@ extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr o
 extern bool checkControlClass(HWND, oodControl_t);
 extern bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
 
-bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
+extern bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
+extern int  getKeywordValue(String2Int *cMap, const char * str);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;

@@ -48,14 +48,6 @@
 #include "oodCommon.h"
 #include "oodText.hpp"
 
-// Map strings representing constant defines to their int values.  For
-// translating things like "IDI_APPLICATION" from the user to the proper API
-// value.
-#include <string>
-#include <map>
-using namespace std;
-typedef map<string, int, less<string> > String2Int;
-
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 WORD NumDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 extern LPBITMAPINFO LoadDIB(const char *szFile);
@@ -67,7 +59,7 @@ extern void removeKeyPressMethod(KEYPRESSDATA *, UINT);
 extern void processKeyPress(KEYPRESSDATA *, WPARAM, LPARAM, PCHAR);
 extern void freeKeyPressData(KEYPRESSDATA *);
 
-/* Local functions */
+/* Local function prototypes */
 static ULONG SetStyle(HWND, LONG, PRXSTRING);
 static void freeSubclassData(SUBCLASSDATA *);
 static BOOL removeKeyPressSubclass(SUBCLASSDATA *, HWND, INT);
@@ -161,82 +153,6 @@ typedef struct _RESOURCEIMAGE
  * Defines and structs for the .ProgressBar class.
  */
 #define PROGRESSBARCLASS  ".ProgressBar"
-
-
-/**
- * This classic Rexx external function was documented prior to 4.0.0.
- */
-size_t RexxEntry PlaySoundFile(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   UINT opts;
-
-   CHECKARGL(1);
-
-   if ((argc > 1) && (isYes(argv[1].strptr)))
-      opts = SND_ASYNC;
-   else
-      opts = SND_SYNC;
-
-   if (sndPlaySound(argv[0].strptr,opts | SND_NODEFAULT))
-      RETC(0)
-   else
-      RETC(1)
-}
-
-/**
- * This classic Rexx external function was documented prior to 4.0.0.
- */
-size_t RexxEntry PlaySoundFileInLoop(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   UINT opts;
-
-   CHECKARG(1);
-
-   opts = SND_ASYNC;
-
-   if (sndPlaySound(argv[0].strptr,opts|SND_LOOP | SND_NODEFAULT))
-      RETC(0)
-   else
-      RETC(1)
-}
-
-/**
- * This classic Rexx external function was documented prior to 4.0.0.
- */
-size_t RexxEntry StopSoundFile(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   UINT opts;
-
-   opts = SND_SYNC;
-
-   if (sndPlaySound(NULL,opts | SND_NODEFAULT))
-      RETC(0)
-   else
-      RETC(1)
-}
-
-
-size_t RexxEntry PlaySnd(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   UINT opts;
-   DEF_ADM;
-
-   CHECKARGL(2);
-
-   GET_ADM;
-
-   if (!dlgAdm) RETERR
-
-   if ((argc > 2) && (isYes(argv[2].strptr)))
-      opts = SND_ASYNC;
-   else
-      opts = SND_SYNC;
-
-   if (PlaySound(MAKEINTRESOURCE(atoi(argv[1].strptr)),dlgAdm->TheInstance, SND_RESOURCE | opts | SND_NODEFAULT))
-      RETC(0)
-   else
-      RETC(1)
-}
 
 /**
  * This is the window procedure used to subclass the edit control for both the
@@ -5727,20 +5643,6 @@ bool getStandardImageArgs(RexxMethodContext *context, uint8_t *type, uint8_t def
 }
 
 /**
- * Look up the int value of a string.
- */
-int getConstantValue(String2Int *cMap, const char * str)
-{
-    String2Int::iterator itr;
-    itr = cMap->find(str);
-    if ( itr != cMap->end() )
-    {
-        return itr->second;
-    }
-    return -1;
-}
-
-/**
  * Initializes the string to int map for IDs and flags used by images and image
  * lists.  This will included things like a button control's alignment flags for
  * an image list, image list creation flags, OEM icon IDs, etc..
@@ -5861,7 +5763,7 @@ RexxMethod1(uint32_t, image_toID_cls, CSTRING, symbol)
     {
         imageConstantsMap = imageInitMap();
     }
-    int idValue = getConstantValue(imageConstantsMap, symbol);
+    int idValue = getKeywordValue(imageConstantsMap, symbol);
     if ( idValue == -1 )
     {
         wrongArgValueException(context->threadContext, 1, "the Image class symbol IDs", symbol);

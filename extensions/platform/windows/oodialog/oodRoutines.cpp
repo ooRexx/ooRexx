@@ -52,73 +52,203 @@
 #include "oodCommon.h"
 #include "oodText.hpp"
 
+
+#define MB_BUTTON_KEYWORDS "ABORTRETRYIGNORE CANCELTRYCONTINUE HELP OK OKCANCEL RETRYCANCEL YESNO YESNOCANCEL"
+
 /**
- * This classic Rexx external function was documented prior to 4.0.0.
+ * Initializes the string to int map for common Windows constant flags.  Things
+ * like MB_OK, etc..
+ *
+ * @return The string to int map.
  */
-size_t RexxEntry InfoMessage(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+static String2Int *winCommonInitMap(void)
 {
-   HWND hW;
+    String2Int *cMap = new String2Int;
 
-   CHECKARG(1);
+    // MessagBox flags.  Buttons
+    cMap->insert(String2Int::value_type("ABORTRETRYIGNORE",  MB_ABORTRETRYIGNORE ));
+    cMap->insert(String2Int::value_type("CANCELTRYCONTINUE", MB_CANCELTRYCONTINUE));
+    cMap->insert(String2Int::value_type("HELP",              MB_HELP             ));
+    cMap->insert(String2Int::value_type("OK",                MB_OK               ));
+    cMap->insert(String2Int::value_type("OKCANCEL",          MB_OKCANCEL         ));
+    cMap->insert(String2Int::value_type("RETRYCANCEL",       MB_RETRYCANCEL      ));
+    cMap->insert(String2Int::value_type("YESNO",             MB_YESNO            ));
+    cMap->insert(String2Int::value_type("YESNOCANCEL",       MB_YESNOCANCEL      ));
 
-   if ((topDlg) && (topDlg->OnTheTop)) hW = topDlg->TheDlg; else hW = NULL;
-   MessageBox(hW,argv[0].strptr,"Information", MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND | MB_TASKMODAL);
-   RETC(0)
+    // MessageBox Icons
+    cMap->insert(String2Int::value_type("EXCLAMATION", MB_ICONEXCLAMATION));
+    cMap->insert(String2Int::value_type("WARNING",     MB_ICONWARNING    ));
+    cMap->insert(String2Int::value_type("INFORMATION", MB_ICONINFORMATION));
+    cMap->insert(String2Int::value_type("ASTERISK",    MB_ICONASTERISK   ));
+    cMap->insert(String2Int::value_type("QUESTION",    MB_ICONQUESTION   ));
+    cMap->insert(String2Int::value_type("STOP",        MB_ICONSTOP       ));
+    cMap->insert(String2Int::value_type("ERROR",       MB_ICONERROR      ));
+    cMap->insert(String2Int::value_type("HAND",        MB_ICONHAND       ));
+    cMap->insert(String2Int::value_type("QUERY",       MB_ICONQUESTION   ));
+    cMap->insert(String2Int::value_type("NONE",        0                 ));
+
+    // MessageBox default button
+    cMap->insert(String2Int::value_type("DEFBUTTON1",         MB_DEFBUTTON1));
+    cMap->insert(String2Int::value_type("DEFBUTTON2",         MB_DEFBUTTON2));
+    cMap->insert(String2Int::value_type("DEFBUTTON3",         MB_DEFBUTTON3));
+    cMap->insert(String2Int::value_type("DEFBUTTON4",         MB_DEFBUTTON4));
+
+    // MessageBox modal
+    cMap->insert(String2Int::value_type("APPLMODAL",          MB_APPLMODAL  ));
+    cMap->insert(String2Int::value_type("SYSTEMMODAL",        MB_SYSTEMMODAL));
+    cMap->insert(String2Int::value_type("TASKMODAL",          MB_TASKMODAL  ));
+
+    // MessageBox miscellaneous
+    cMap->insert(String2Int::value_type("DEFAULTDESKTOP",      MB_DEFAULT_DESKTOP_ONLY));
+    cMap->insert(String2Int::value_type("RIGHT",               MB_RIGHT               ));
+    cMap->insert(String2Int::value_type("RTLREADING",          MB_RTLREADING          ));
+    cMap->insert(String2Int::value_type("SETFOREGROUND",       MB_SETFOREGROUND       ));
+    cMap->insert(String2Int::value_type("TOPMOST",             MB_TOPMOST             ));
+    cMap->insert(String2Int::value_type("SERVICENOTIFICATION", MB_SERVICE_NOTIFICATION));
+
+    //cMap->insert(String2Int::value_type("", ));
+
+    return cMap;
 }
 
 
 /**
- * This classic Rexx external function was documented prior to 4.0.0.
+ * Translate a keyword to its equivalent numeric value.
+ *
+ * @param  symbol  The keyword to translate.
+ *
+ * @return  The numeric value for symbol on success, (int)value == -1 on
+ *          failure.
  */
-size_t RexxEntry ErrorMessage(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+static uint32_t winKeyword2ID(CSTRING symbol, RexxThreadContext *c, int pos, CSTRING type)
 {
-   HWND hW;
+    static String2Int *winConstantsMap = NULL;
 
-   CHECKARG(1);
+    if ( winConstantsMap == NULL )
+    {
+        winConstantsMap = winCommonInitMap();
+    }
 
-   if ((topDlg) && (topDlg->OnTheTop)) hW = topDlg->TheDlg; else hW = NULL;
-   MessageBox(hW,argv[0].strptr,"Error", MB_OK | MB_ICONHAND | MB_SETFOREGROUND | MB_TASKMODAL);
-   RETC(0)
+    int id = getKeywordValue(winConstantsMap, symbol);
+    if ( id == -1 )
+    {
+        invalidTypeException(c, pos, type);
+    }
+    return (uint32_t)getKeywordValue(winConstantsMap, symbol);
 }
 
+
 /**
- * This classic Rexx external function was documented prior to 4.0.0.
+ * Helper function for the MessageDialog() routine.  Parses the miscellaneous
+ * message box style keywords.
  */
-size_t RexxEntry YesNoMessage(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+static uint32_t getMiscMBStyle(char *mbStyle, RexxCallContext *c, int pos, CSTRING msg)
 {
-   HWND hW;
-   UINT uType = MB_YESNO | MB_ICONQUESTION | MB_SETFOREGROUND | MB_TASKMODAL;
+    uint32_t flag, styles = 0;
 
-   CHECKARGLH(1, 2);
+    char *token = strtok(mbStyle, " ");
+    while ( token != NULL )
+    {
+        flag = winKeyword2ID(token, c->threadContext, pos, msg);
+        if ( flag == (int)-1 )
+        {
+            return flag;
+        }
+        styles |= flag;
+        token = strtok(NULL, " ");
+    }
 
-   if ( argc == 2 )
-   {
-      if ( IsNo(argv[1].strptr) )
-         uType |= MB_DEFBUTTON2;
-      else if ( ! isYes(argv[1].strptr) )
-      {
-         PSZ  pszMsg;
-         CHAR szText[] = "YesNoMessage argument 2 must be one of [Yes, No]; "
-                         "found \"%s\"";
+    return styles;
+}
 
-         pszMsg = (PSZ)LocalAlloc(LPTR, sizeof(szText) + 1 + argv[1].strlength);
-         if ( ! pszMsg )
-            RETERR;
-         sprintf(pszMsg, szText, argv[1].strptr);
-         HandleError(retstr, pszMsg);
-         LocalFree(pszMsg);
-         return 40;
-      }
-   }
+RexxRoutine6(int, messageDialog_rtn, CSTRING, text, OPTIONAL_CSTRING, hwnd, OPTIONAL_CSTRING, _title,
+             OPTIONAL_CSTRING, button, OPTIONAL_CSTRING, icon, OPTIONAL_CSTRING, miscStyles)
+{
+    int result = -1;
 
-   retstr->strlength = 1;
-   if ((topDlg) && (topDlg->OnTheTop)) hW = topDlg->TheDlg; else hW = NULL;
+    char *uprButton = NULL;
+    char *uprIcon = NULL;
+    char *uprMiscStyles = NULL;
 
-   if (MessageBox(hW,argv[0].strptr,"Question", uType) == IDYES)
-      retstr->strptr[0] = '1';
-   else
-      retstr->strptr[0] = '0';
-   return 0;
+    HWND hwndOwner = (HWND)string2pointer(hwnd);
+    if ( hwndOwner == NULL )
+    {
+        if ( topDlg != NULL && topDlg->OnTheTop )
+        {
+            hwndOwner = topDlg->TheDlg;
+        }
+    }
+
+    CSTRING title = "ooDialog Application Message";
+    if ( argumentExists(3) )
+    {
+        title = _title;
+    }
+
+    // Defaults.  These values are all 0.
+    uint32_t flags = MB_OK | MB_DEFBUTTON1 | MB_APPLMODAL;
+
+    uint32_t flag;
+    if ( argumentExists(4) )
+    {
+        uprButton = strdupupr(button);
+        if ( uprButton == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+
+        flag = winKeyword2ID(uprButton, context->threadContext, 4, "MessageDialog button keyword");
+        if ( flag == (int)-1 )
+        {
+            goto done_out;
+        }
+        flags |= flag;
+    }
+
+    // There is no default for the icon, if omitted there is no icon.
+    if ( argumentExists(5) )
+    {
+        uprIcon = strdupupr(icon);
+        if ( uprIcon == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+
+        flag = winKeyword2ID(uprIcon, context->threadContext, 5, "MessageDialog icon keyword");
+        if ( flag == (int)-1 )
+        {
+            goto done_out;
+        }
+        flags |= flag;
+    }
+
+    if ( argumentExists(6) )
+    {
+        uprMiscStyles = strdupupr(miscStyles);
+        if ( uprIcon == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+
+        flag = getMiscMBStyle(uprMiscStyles, context, 6, "MessageDialog style keyword");
+        if ( flag == (int)-1 )
+        {
+            goto done_out;
+        }
+        flags |= flag;
+    }
+
+    result = MessageBox(hwndOwner, text, title, flags);
+
+done_out:
+    safeFree(uprButton);
+    safeFree(uprIcon);
+    safeFree(uprMiscStyles);
+
+    return result;
 }
 
 /** findWindow()
@@ -457,13 +587,128 @@ RexxRoutine8(RexxObjectPtr, fileNameDlg_rtn,
 }
 
 
+static char *searchSoundPath(CSTRING file, RexxCallContext *c)
+{
+    oodResetSysErrCode(c->threadContext);
+
+    // We need a buffer for the path to search, a buffer for the returned full
+    // file name, (if found,) and a pointer to char (an unused arg to
+    // SearchPath().)
+    char *buf = NULL;
+    char *fullFileName = NULL;
+    char *pFileName;
+
+    // Calculate how much room we need for the search path buffer.
+    uint32_t cchCWD = GetCurrentDirectory(0, NULL);
+
+    // Many modern systems no longer have the SOUNDPATH set.
+    SetLastError(0);
+    uint32_t cchSoundPath = GetEnvironmentVariable("SOUNDPATH", NULL, 0);
+    uint32_t rc = GetLastError();
+    if ( cchSoundPath == 0 && rc != ERROR_ENVVAR_NOT_FOUND )
+    {
+        oodSetSysErrCode(c->threadContext, rc);
+        goto err_out;
+    }
+
+    // Allocate our needed buffers.
+    buf = (char *)malloc(cchCWD + cchSoundPath + 3);
+    fullFileName = (char *)malloc(_MAX_PATH);
+    if ( buf == NULL || fullFileName == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        goto err_out;
+    }
+
+    // Now get the current directory and the sound path.
+    cchCWD = GetCurrentDirectory(cchCWD + 1, buf);
+    if ( cchCWD == 0 )
+    {
+        oodSetSysErrCode(c->threadContext);
+        goto err_out;
+    }
+
+    if ( cchSoundPath != 0 )
+    {
+        buf[cchCWD++] = ';';
+        cchSoundPath = GetEnvironmentVariable("SOUNDPATH", buf + cchCWD, cchSoundPath + 1);
+        if ( cchSoundPath == 0 )
+        {
+            oodSetSysErrCode(c->threadContext);
+            goto err_out;
+        }
+    }
+
+    uint32_t errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    cchSoundPath = SearchPath(buf, file, NULL, _MAX_PATH, fullFileName, &pFileName);
+    SetErrorMode(errorMode);
+
+    if ( cchSoundPath == 0 || cchSoundPath >= _MAX_PATH )
+    {
+        oodSetSysErrCode(c->threadContext);
+        goto err_out;
+    }
+
+    free(buf);
+    return fullFileName;
+
+err_out:
+    safeFree(buf);
+    safeFree(fullFileName);
+    return NULL;
+}
+
+RexxRoutine3(RexxObjectPtr, playSound_rtn, OPTIONAL_CSTRING, fileName, OPTIONAL_CSTRING, modifier, NAME, routineName)
+{
+    bool isStopRoutine = strcmp("STOPSOUNDFILE", routineName) == 0;
+
+    if ( (! isStopRoutine && argumentOmitted(1)) || isStopRoutine )
+    {
+        return (sndPlaySound(NULL, SND_SYNC | SND_NODEFAULT) ? TheZeroObj : TheOneObj);
+    }
+
+    char *fullFileName = searchSoundPath(fileName, context);
+    if ( fullFileName == NULL )
+    {
+        return TheOneObj;
+    }
+
+    uint32_t opts = SND_NODEFAULT;
+    if ( strcmp("PLAYSOUNDFILE", routineName) == 0 )
+    {
+        opts |= isYes(modifier) ? SND_ASYNC : SND_SYNC;
+    }
+    else if ( strcmp("PLAYSOUNDFILEINLOOP", modifier) == 0 )
+    {
+        opts |= SND_ASYNC | SND_LOOP;
+    }
+    else
+    {
+        // Must be Play()
+        if ( argumentExists(2) )
+        {
+            if ( stricmp("LOOP", modifier) == 0 )
+            {
+                opts |= SND_ASYNC | SND_LOOP;
+            }
+            else
+            {
+                opts |= isYes(modifier) ? SND_ASYNC : SND_SYNC;
+            }
+        }
+        else
+        {
+            opts |= SND_SYNC;
+        }
+    }
+
+    RexxObjectPtr result = sndPlaySound(fullFileName, opts) ? TheZeroObj : TheOneObj;
+    free(fullFileName);
+    return result;
+}
+
 RexxRoutine1(RexxObjectPtr, routineTest_rtn, RexxObjectPtr, obj)
 {
-    RexxCallContext *cc = context;
-    RexxThreadContext *c = context->threadContext;
-    printf("FindClass routine thread context .Size=%p\n", c->FindClass("RECT"));
-    printf("FindClass routine context .Size=%p\n", context->FindClass("RECT"));
-    printf("FindContextClass call context .Size=%p\n", cc->FindContextClass("REXT"));
     return TheZeroObj;
 }
 

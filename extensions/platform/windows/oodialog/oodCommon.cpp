@@ -321,7 +321,8 @@ bool dialogInAdminTable(DIALOGADMIN * Dlg)
  * Converts a string in hexadecimal format (starts with 0x) to its pointer-sized
  * value.
  *
- * Note that this converts "0" to null, which is what we want.
+ * Note that this converts "0" to null, which is what we want.  It also accepts
+ * a NULL pointer for string.
  *
  * @param string  The string to convert.
  *
@@ -331,7 +332,7 @@ bool dialogInAdminTable(DIALOGADMIN * Dlg)
 void *string2pointer(const char *string)
 {
     void *pointer = NULL;
-    if ( strlen(string) > 1 )
+    if ( string != NULL && strlen(string) > 1 )
     {
         if ( string[1] == 'x' )
         {
@@ -776,5 +777,26 @@ bool checkControlClass(HWND hControl, oodControl_t control)
         }
     }
     return true;
+}
+
+
+/**
+ * Look up the int value of a keyword.
+ *
+ *
+ * @param cMap  The string to int map to use for the look up.
+ * @param str   The keyword to map.
+ *
+ * @return Return the value for the keyword, or -1 for not found.
+ */
+int getKeywordValue(String2Int *cMap, const char * str)
+{
+    String2Int::iterator itr;
+    itr = cMap->find(str);
+    if ( itr != cMap->end() )
+    {
+        return itr->second;
+    }
+    return -1;
 }
 

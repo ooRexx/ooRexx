@@ -54,14 +54,14 @@ CRITICAL_SECTION crit_sec = {0};
 DWORD ComCtl32Version = 0;
 
 // Initialized in dlgutil_init_cls
-RexxObjectPtr TheTrueObj = NULLOBJECT;
-RexxObjectPtr TheFalseObj = NULLOBJECT;
-RexxObjectPtr TheNilObj = NULLOBJECT;
-RexxPointerObject TheNullPtrObj = NULLOBJECT;
+RexxObjectPtr       TheTrueObj = NULLOBJECT;
+RexxObjectPtr       TheFalseObj = NULLOBJECT;
+RexxObjectPtr       TheNilObj = NULLOBJECT;
+RexxPointerObject   TheNullPtrObj = NULLOBJECT;
 RexxDirectoryObject TheDotLocalObj = NULLOBJECT;
-RexxObjectPtr TheZeroObj = NULLOBJECT;
-RexxObjectPtr TheOneObj = NULLOBJECT;
-RexxObjectPtr TheNegativeOneObj = NULLOBJECT;
+RexxObjectPtr       TheZeroObj = NULLOBJECT;
+RexxObjectPtr       TheOneObj = NULLOBJECT;
+RexxObjectPtr       TheNegativeOneObj = NULLOBJECT;
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,16 +96,8 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(GetStemData);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(Wnd_Desktop);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WndShow_Pos);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WinAPI32Func);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(InfoMessage);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(ErrorMessage);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(YesNoMessage);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(StartDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WindowRect);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(GetSysMetrics);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(GetDialogFactor);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(PlaySoundFile);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(PlaySoundFileInLoop);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(StopSoundFile);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleScrollBar);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DCDraw);
@@ -129,9 +121,11 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddNewCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddResource);
 
 REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg);
+REXX_TYPED_ROUTINE_PROTOTYPE(messageDialog_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(fileNameDlg_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(findWindow_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(msSleep_rtn);
+REXX_TYPED_ROUTINE_PROTOTYPE(playSound_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(winTimer_rtn);
 REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 
@@ -147,15 +141,8 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(Wnd_Desktop,          Wnd_Desktop),
     REXX_CLASSIC_ROUTINE(WndShow_Pos,          WndShow_Pos),
     REXX_CLASSIC_ROUTINE(WinAPI32Func,         WinAPI32Func),
-    REXX_CLASSIC_ROUTINE(InfoMessage,          InfoMessage),
-    REXX_CLASSIC_ROUTINE(ErrorMessage,         ErrorMessage),
-    REXX_CLASSIC_ROUTINE(YesNoMessage,         YesNoMessage),
     REXX_CLASSIC_ROUTINE(StartDialog,          StartDialog),
     REXX_CLASSIC_ROUTINE(WindowRect,           WindowRect),
-    REXX_CLASSIC_ROUTINE(GetDialogFactor,      GetDialogFactor),
-    REXX_CLASSIC_ROUTINE(PlaySoundFile,        PlaySoundFile),
-    REXX_CLASSIC_ROUTINE(PlaySoundFileInLoop,  PlaySoundFileInLoop),
-    REXX_CLASSIC_ROUTINE(StopSoundFile,        StopSoundFile),
     REXX_CLASSIC_ROUTINE(HandleScrollBar,      HandleScrollBar),
     REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),
     REXX_CLASSIC_ROUTINE(DCDraw,               DCDraw),
@@ -179,11 +166,13 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(UsrAddResource,       UsrAddResource),
 
     REXX_TYPED_ROUTINE(getDlgMsg,              getDlgMsg),
+    REXX_TYPED_ROUTINE(messageDialog_rtn,      messageDialog_rtn),
     REXX_TYPED_ROUTINE(findWindow_rtn,         findWindow_rtn),
     REXX_TYPED_ROUTINE(fileNameDlg_rtn,        fileNameDlg_rtn),
     REXX_TYPED_ROUTINE(msSleep_rtn,            msSleep_rtn),
+    REXX_TYPED_ROUTINE(playSound_rtn,          playSound_rtn),
     REXX_TYPED_ROUTINE(winTimer_rtn,           winTimer_rtn),
-    REXX_TYPED_ROUTINE(routineTest_rtn,             routineTest_rtn),
+    REXX_TYPED_ROUTINE(routineTest_rtn,        routineTest_rtn),
 
     REXX_LAST_ROUTINE()
 };
