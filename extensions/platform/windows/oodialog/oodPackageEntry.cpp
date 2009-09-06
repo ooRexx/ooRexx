@@ -89,8 +89,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DataTable);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(SetItemData);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(GetItemData);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(Wnd_Desktop);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WndShow_Pos);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WinAPI32Func);
@@ -132,8 +130,6 @@ RexxRoutineEntry oodialog_functions[] =
 {
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
     REXX_CLASSIC_ROUTINE(DataTable,            DataTable),
-    REXX_CLASSIC_ROUTINE(SetItemData,          SetItemData),
-    REXX_CLASSIC_ROUTINE(GetItemData,          GetItemData),
     REXX_CLASSIC_ROUTINE(Wnd_Desktop,          Wnd_Desktop),
     REXX_CLASSIC_ROUTINE(WndShow_Pos,          WndShow_Pos),
     REXX_CLASSIC_ROUTINE(WinAPI32Func,         WinAPI32Func),
@@ -225,9 +221,11 @@ REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
 REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
+REXX_METHOD_PROTOTYPE(pbdlg_getItem);
 REXX_METHOD_PROTOTYPE(pbdlg_setDlgDataFromStem_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_putDlgDataInStem_pvt);
-REXX_METHOD_PROTOTYPE(pbdlg_getItem);
+REXX_METHOD_PROTOTYPE(pbdlg_internalGetItemData_pvt);
+REXX_METHOD_PROTOTYPE(pbdlg_internalSetItemData_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(pbdlg_addUserMessage);
 REXX_METHOD_PROTOTYPE(pbdlg_unInit);
@@ -494,22 +492,24 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_setText,                   wb_setText),
     REXX_METHOD(wb_getWindowLong_pvt,         wb_getWindowLong_pvt),
 
-    REXX_METHOD(pbdlg_init_cls,               pbdlg_init_cls),
-    REXX_METHOD(pbdlg_setDefaultFont_cls,     pbdlg_setDefaultFont_cls),
-    REXX_METHOD(pbdlg_getFontName_cls,        pbdlg_getFontName_cls),
-    REXX_METHOD(pbdlg_getFontSize_cls,        pbdlg_getFontSize_cls),
-    REXX_METHOD(pbdlg_init,                   pbdlg_init),
-    REXX_METHOD(pbdlg_setDlgHandle,           pbdlg_setDlgHandle),
-    REXX_METHOD(pbdlg_getDlgHandle,           pbdlg_getDlgHandle),
-    REXX_METHOD(pbdlg_get,                    pbdlg_get),
-    REXX_METHOD(pbdlg_isDialogActive,         pbdlg_isDialogActive),
-    REXX_METHOD(pbdlg_setDlgDataFromStem_pvt, pbdlg_setDlgDataFromStem_pvt),
-    REXX_METHOD(pbdlg_putDlgDataInStem_pvt,   pbdlg_putDlgDataInStem_pvt),
-    REXX_METHOD(pbdlg_getItem,                pbdlg_getItem),
-    REXX_METHOD(pbdlg_stopIt,                 pbdlg_stopIt),
-    REXX_METHOD(pbdlg_addUserMessage,         pbdlg_addUserMessage),
-    REXX_METHOD(pbdlg_getTextSizeDlg,         pbdlg_getTextSizeDlg),
-    REXX_METHOD(pbdlg_unInit,         	      pbdlg_unInit),
+    REXX_METHOD(pbdlg_init_cls,                pbdlg_init_cls),
+    REXX_METHOD(pbdlg_setDefaultFont_cls,      pbdlg_setDefaultFont_cls),
+    REXX_METHOD(pbdlg_getFontName_cls,         pbdlg_getFontName_cls),
+    REXX_METHOD(pbdlg_getFontSize_cls,         pbdlg_getFontSize_cls),
+    REXX_METHOD(pbdlg_init,                    pbdlg_init),
+    REXX_METHOD(pbdlg_setDlgHandle,            pbdlg_setDlgHandle),
+    REXX_METHOD(pbdlg_getDlgHandle,            pbdlg_getDlgHandle),
+    REXX_METHOD(pbdlg_get,                     pbdlg_get),
+    REXX_METHOD(pbdlg_isDialogActive,          pbdlg_isDialogActive),
+    REXX_METHOD(pbdlg_setDlgDataFromStem_pvt,  pbdlg_setDlgDataFromStem_pvt),
+    REXX_METHOD(pbdlg_putDlgDataInStem_pvt,    pbdlg_putDlgDataInStem_pvt),
+    REXX_METHOD(pbdlg_internalGetItemData_pvt, pbdlg_internalGetItemData_pvt),
+    REXX_METHOD(pbdlg_internalSetItemData_pvt, pbdlg_internalSetItemData_pvt),
+    REXX_METHOD(pbdlg_getItem,                 pbdlg_getItem),
+    REXX_METHOD(pbdlg_stopIt,                  pbdlg_stopIt),
+    REXX_METHOD(pbdlg_addUserMessage,          pbdlg_addUserMessage),
+    REXX_METHOD(pbdlg_getTextSizeDlg,          pbdlg_getTextSizeDlg),
+    REXX_METHOD(pbdlg_unInit,                  pbdlg_unInit),
 
     REXX_METHOD(dyndlg_stop,                  dyndlg_stop),
 

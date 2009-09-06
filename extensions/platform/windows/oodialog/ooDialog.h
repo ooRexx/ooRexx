@@ -208,19 +208,6 @@ typedef enum
    (addr && &addr->BmpTab[ndx] && (ndx < addr->BT_size) && (addr->BmpTab[ndx].buttonID == (ULONG)id))
 
 
-/* macros for searching and checking the bitmap table */
-#define SEARCHDATA(addr, ndx, id) \
-   {                     \
-      ndx = 0;              \
-      if (addr && addr->DataTab)              \
-      while ((ndx < addr->DT_size) && (addr->DataTab[ndx].id != (ULONG)id))\
-         ndx++;                                                  \
-   }
-
-#define VALIDDATA(addr, ndx, id) \
-   (addr && (ndx < addr->DT_size) && (addr->DataTab[ndx].id == (ULONG)id))
-
-
 #define SEARCHBRUSH(addr, ndx, id, brush) \
    {                     \
       ndx = 0;\

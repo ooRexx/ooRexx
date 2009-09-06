@@ -624,37 +624,37 @@
 ::method GetCategoryEntryLine unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalGetItemData(id, self~catalog['handles'][category], 0)
+   return self~internalGetItemData(id, self~catalog['handles'][category], 0)
 
 ::method GetCategoryListLine unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalGetItemData(id, self~catalog['handles'][category], 3)
+   return self~internalGetItemData(id, self~catalog['handles'][category], 3)
 
 ::method GetCategoryComboLine unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalGetItemData(id, self~catalog['handles'][category], 0)
+   return self~internalGetItemData(id, self~catalog['handles'][category], 0)
 
 ::method GetCategoryCheckBox unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalGetItemData(id, self~catalog['handles'][category], 1)
+   return self~internalGetItemData(id, self~catalog['handles'][category], 1)
 
 ::method GetCategoryRadioButton unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalGetItemData(id, self~catalog['handles'][category], 2)
+   return self~internalGetItemData(id, self~catalog['handles'][category], 2)
 
 ::method GetCategoryMultiList unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalGetItemData(id, self~catalog['handles'][category], 4)
+   return self~internalGetItemData(id, self~catalog['handles'][category], 4)
 
 ::method GetCategoryValue unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalGetItemData(id, self~catalog['handles'][category])
+   return self~internalGetItemData(id, self~catalog['handles'][category])
 
 ::method GetCategoryAttrib unguarded
    use arg aname, category
@@ -674,42 +674,42 @@
 ::method SetCategoryStaticText unguarded
    use arg id, data, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalSetItemData(id, data, self~catalog['handles'][category], 0)
+   return self~internalSetItemData(id, data, self~catalog['handles'][category], 0)
 
 ::method SetCategoryEntryLine unguarded
    use arg id, data, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalSetItemData(id, data, self~catalog['handles'][category], 0)
+   return self~internalSetItemData(id, data, self~catalog['handles'][category], 0)
 
 ::method SetCategoryListLine unguarded
    use arg id, data, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalSetItemData(id, data, self~catalog['handles'][category], 3)
+   return self~internalSetItemData(id, data, self~catalog['handles'][category], 3)
 
 ::method SetCategoryComboLine unguarded
    use arg id, data, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalSetItemData(id, data, self~catalog['handles'][category], 0)
+   return self~internalSetItemData(id, data, self~catalog['handles'][category], 0)
 
 ::method SetCategoryCheckBox unguarded
    use arg id, data, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalSetItemData(id, data, self~catalog['handles'][category], 1)
+   return self~internalSetItemData(id, data, self~catalog['handles'][category], 1)
 
 ::method SetCategoryRadioButton unguarded
    use arg id, data, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalSetItemData(id, data, self~catalog['handles'][category], 2)
+   return self~internalSetItemData(id, data, self~catalog['handles'][category], 2)
 
 ::method SetCategoryMultiList unguarded
    use arg id, data, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalSetItemData(id, data, self~catalog['handles'][category], 4)
+   return self~internalSetItemData(id, data, self~catalog['handles'][category], 4)
 
 ::method SetCategoryValue unguarded
    use arg id, data, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~InternalSetItemData(id, data, self~catalog['handles'][category])
+   return self~internalSetItemData(id, data, self~catalog['handles'][category])
 
 ::method SetCategoryAttrib unguarded
    use arg aname, category

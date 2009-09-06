@@ -66,23 +66,47 @@
 #include "oodCommon.h"
 #include "oodData.hpp"
 
+static inline int searchDataTable(DIALOGADMIN *dlgAdm, uint32_t id)
+{
+    if ( dlgAdm->DataTab != NULL )
+    {
+        register int ndx = 0;
+        while ( ndx < dlgAdm->DT_size && dlgAdm->DataTab[ndx].id != id )
+        {
+            ndx++;
+        }
+        if ( ndx < dlgAdm->DT_size )
+        {
+            return ndx;
+        }
+    }
+    return -1;
+}
+
+/* The assumption is that if UnsignedInt32() fails, number remains unchanged. */
+static inline uint32_t dlgDataToNumber(RexxMethodContext *c, RexxObjectPtr data)
+{
+    uint32_t number = 0;
+    c->UnsignedInt32(data, &number);
+    return number;
+}
 
 /*
  * The manualCheckRadioButton() function is used to check one radio button
  * within a WS_GROUP group and uncheck all the others.
  */
 
-inline bool hasGroupStyle(HWND hwnd, DIALOGADMIN *dlgAdm, uint32_t index)
+static inline bool hasGroupStyle(HWND hwnd, DIALOGADMIN *dlgAdm, uint32_t index)
 {
     return ((GetWindowLong(GetDlgItem(hwnd, dlgAdm->DataTab[index + 1].id), GWL_STYLE) & WS_GROUP) == WS_GROUP);
 }
 
-inline bool isInSameDlg(DIALOGADMIN *dlgAdm, uint32_t control1, uint32_t control2)
+static inline bool isInSameDlg(DIALOGADMIN *dlgAdm, uint32_t control1, uint32_t control2)
 {
     return (dlgAdm->DataTab[control1].category == dlgAdm->DataTab[control2].category);
 }
 
-bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULONG value)
+static bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULONG value)
 {
    LONG beg, en, ndx, i;
    bool rc, ordered;
@@ -160,7 +184,7 @@ bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULONG value
 }
 
 
-void GetMultiListBoxSelections(HWND hW, ULONG id, char * data)
+static void getMultiListBoxSelections(HWND hW, ULONG id, char * data)
 {
     INT sel[1500];
     CHAR buffer[NR_BUFFER];
@@ -181,7 +205,7 @@ void GetMultiListBoxSelections(HWND hW, ULONG id, char * data)
 }
 
 
-BOOL SetMultiListBoxSelections(HWND hW, ULONG id, const char * data)
+static bool setMultiListBoxSelections(HWND hW, ULONG id, const char * data)
 {
     CHAR buffer[NR_BUFFER];
     const char * p;
@@ -204,15 +228,15 @@ BOOL SetMultiListBoxSelections(HWND hW, ULONG id, const char * data)
         if (atoi(buffer) > 0)
         {
             i = SendDlgItemMessage(hW, id, LB_SETSEL, TRUE, (LPARAM)atoi(buffer)-1);
-            if (i == LB_ERR) return FALSE;
+            if (i == LB_ERR) return false;
         }
         if (*p) p++;
     }
-    return TRUE;
+    return true;
 }
 
 
-int getListBoxData(HWND hwnd, uint32_t itemID, char *data)
+static int getListBoxData(HWND hwnd, uint32_t itemID, char *data)
 {
     int i = (int)SendDlgItemMessage(hwnd, itemID, LB_GETCURSEL, 0, 0);
     if ( i != LB_ERR && (SendDlgItemMessage(hwnd, itemID, LB_GETTEXTLEN, i, 0) < DATA_BUFFER) )
@@ -222,20 +246,7 @@ int getListBoxData(HWND hwnd, uint32_t itemID, char *data)
     return i;                                                                                                                               \
 }
 
-#define GETLBDATA(ldat, item, quit) \
-                {\
-                   i = (int)SendDlgItemMessage(hW, item, LB_GETCURSEL, 0, 0); \
-                   if ((i!=LB_ERR) && (SendDlgItemMessage(hW, item, LB_GETTEXTLEN, i, 0) < DATA_BUFFER))    \
-                   {                                                                                                                                 \
-                       i = (int)SendDlgItemMessage(hW, item, LB_GETTEXT, i, (LPARAM)ldat); \
-                       if (i!=LB_ERR)                                                                                                         \
-                       {                                                                                                                              \
-                          if (quit) RETC(0);                                                                                                                \
-                       }                                                                                                                              \
-                   }                                                                                                                                         \
-                }
-
-uint32_t setListBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
+static uint32_t setListBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
 {
     int i = (int)SendDlgItemMessage(hwnd, itemID, LB_FINDSTRING, 0, (LPARAM)itemText);
     if ( i != LB_ERR)
@@ -252,32 +263,13 @@ uint32_t setListBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
     }
     return 0;
 }
-#define SETLBDATA(ldat, item, quit) \
-                {\
-                   i = (int)SendDlgItemMessage(hW, item, LB_FINDSTRING, 0, (LPARAM)ldat); \
-                   if (i!=LB_ERR)                                                                                                    \
-                   {                                                                                                                                  \
-                      i = (int)SendDlgItemMessage(hW, item, LB_SETCURSEL, i, 0);            \
-                      if (i!=LB_ERR)                                                                                               \
-                      {                                                                                                                            \
-                         if (quit) RETC(0);                                                                                             \
-                      } \
-                      else                                                                                                                               \
-                      { \
-                          i = (int)SendDlgItemMessage(hW, item, LB_SETCURSEL, 0, 0);     \
-                      }  \
-                    }                                                                                                                                   \
-                    else i = (int)SendDlgItemMessage(hW, item, LB_SETCURSEL, 0, 0);     \
-                 }
-
 
 /*
  * The following functions are to get the value of a combo box that has the
- * CBS_DROPDOWNLIST flag enabled and behaves like a list
+ * CBS_DROPDOWNLIST flag enabled and behaves like a list box.
  */
 
-
-int getComboBoxData(HWND hwnd, uint32_t itemID, char *data)
+static int getComboBoxData(HWND hwnd, uint32_t itemID, char *data)
 {
     int i = (int)SendDlgItemMessage(hwnd, itemID, CB_GETCURSEL, 0, 0);
     if ( i != LB_ERR && (SendDlgItemMessage(hwnd, itemID, CB_GETLBTEXTLEN, i, 0) < DATA_BUFFER) )
@@ -286,26 +278,14 @@ int getComboBoxData(HWND hwnd, uint32_t itemID, char *data)
     }
     return i;                                                                                                                                      \
 }
-#define GETCBDATA(ldat, item, quit) \
-                {\
-                   i = (int)SendDlgItemMessage(hW, item, CB_GETCURSEL, 0, 0); \
-                   if ((i!=LB_ERR) && (SendDlgItemMessage(hW, item, CB_GETLBTEXTLEN, i, 0) < DATA_BUFFER)) \
-                   {                                                                                                                                 \
-                       i = (int)SendDlgItemMessage(hW, item, CB_GETLBTEXT, i, (LPARAM)ldat); \
-                       if (i!=LB_ERR)                                                                                                         \
-                       {                                                                                                                              \
-                          if (quit) RETC(0)                                                                                                               \
-                       }                                                                                                                              \
-                   }                                                                                                                                         \
-                }
 
-uint32_t setComboBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
+static uint32_t setComboBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
 {
     int index = (int)SendDlgItemMessage(hwnd, itemID, CB_FINDSTRING, 0, (LPARAM)itemText);
     if ( index != LB_ERR )
     {                                                                                                                                  \
         index = (int)SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, index, 0);
-        if ( index == LB_ERR )
+        if ( index == CB_ERR )
         {                                                                                                                            \
             SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, 0, 0);
         }
@@ -317,45 +297,30 @@ uint32_t setComboBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
     return 0;
 }
 
-#define SETCBDATA(ldat, item, quit) \
-                {\
-                   i = (int)SendDlgItemMessage(hW, item, CB_FINDSTRING, 0, (LPARAM)ldat); \
-                   if (i!=LB_ERR)                                                                                                    \
-                   {                                                                                                                                  \
-                      i = (int)SendDlgItemMessage(hW, item, CB_SETCURSEL, i, 0);            \
-                      if (i!=LB_ERR)                                                                                               \
-                      {                                                                                                                            \
-                         if (quit) RETC(0)                                                                                             \
-                      } else                                                                                                                               \
-                      i = (int)SendDlgItemMessage(hW, item, CB_SETCURSEL, 0, 0);     \
-                    }                                                                                                                                   \
-                    else i = (int)SendDlgItemMessage(hW, item, CB_SETCURSEL, 0, 0);     \
-                 }
-
 
 /* TODO these stub functions for Get / Set data need to be filled in. */
-BOOL GetDateTimeData(HWND hDlg, char *data, int ctrlID)
+static bool getDateTimeData(HWND hDlg, char *data, int ctrlID)
 {
-   return FALSE;
+   return false;
 }
 
-BOOL SetDateTimeData(HWND hDlg, const char *data, int ctrlID)
+static bool setDateTimeData(HWND hDlg, const char *data, int ctrlID)
 {
-   return FALSE;
+   return false;
 }
 
-BOOL GetMonthCalendarData(HWND hDlg, char *data, int ctrlID)
+static bool getMonthCalendarData(HWND hDlg, char *data, int ctrlID)
 {
-   return FALSE;
+   return false;
 }
 
-BOOL SetMonthCalendarData(HWND hDlg, const char *data, int ctrlID)
+static bool setMonthCalendarData(HWND hDlg, const char *data, int ctrlID)
 {
-   return FALSE;
+   return false;
 }
 
 
-BOOL GetTreeData(HWND hW, char * ldat, INT item)
+static bool getTreeData(HWND hW, char * ldat, INT item)
 {
    TV_ITEM tvi;
    tvi.hItem = TreeView_GetNextItem(GetDlgItem(hW, item), NULL, TVGN_CARET);
@@ -364,12 +329,13 @@ BOOL GetTreeData(HWND hW, char * ldat, INT item)
        tvi.mask = TVIF_HANDLE | TVIF_TEXT;
        tvi.pszText = ldat;
        tvi.cchTextMax = DATA_BUFFER-1;
-       if (TreeView_GetItem(GetDlgItem(hW, item), &tvi)) return TRUE;
+       if (TreeView_GetItem(GetDlgItem(hW, item), &tvi)) return true;
    }
-   return FALSE;
+   return false;
 }
 
-BOOL SetTreeData(HWND hW, const char * ldat, INT item)
+// TODO this seems like it might be missing a return true.
+static bool setTreeData(HWND hW, const char * ldat, INT item)
 {
    TV_ITEM tvi;
    CHAR data[DATA_BUFFER];
@@ -378,7 +344,8 @@ BOOL SetTreeData(HWND hW, const char * ldat, INT item)
    if (iW && strlen(ldat)) {
        HTREEITEM it, root = TreeView_GetRoot(iW);
        tvi.hItem = root;
-       while (tvi.hItem) {
+       while (tvi.hItem)
+       {
             tvi.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_CHILDREN;
             tvi.pszText = data;
             tvi.cchTextMax = DATA_BUFFER-1;
@@ -386,7 +353,7 @@ BOOL SetTreeData(HWND hW, const char * ldat, INT item)
             {
                 if (!stricmp(tvi.pszText, ldat))
                 {
-                    if (TreeView_SelectItem(iW, tvi.hItem)) return TRUE;
+                    if (TreeView_SelectItem(iW, tvi.hItem)) return true;
                 }
                 else
                 {
@@ -396,20 +363,20 @@ BOOL SetTreeData(HWND hW, const char * ldat, INT item)
                     {
                         tvi.hItem = TreeView_GetParent(iW, tvi.hItem);
                         it = TreeView_GetNextSibling(iW, tvi.hItem);
-                        if (it == root) return FALSE;
+                        if (it == root) return false;
                     }
-                    if (!tvi.hItem) return FALSE;
+                    if (!tvi.hItem) return false;
                     tvi.hItem = it;
                 }
             }
             else tvi.hItem = NULL;
        }
    }
-   return FALSE;
+   return false;
 }
 
 
-BOOL GetListData(HWND hW, char * ldat, INT item)
+static bool getListData(HWND hW, char * ldat, INT item)
 {
    LONG it = -1, cnt, j;
    CHAR buffer[NR_BUFFER];
@@ -429,13 +396,13 @@ BOOL GetListData(HWND hW, char * ldat, INT item)
           strcat(ldat, " ");
           len += strlen(buffer)+1;
       }
-      else return FALSE;
+      else return false;
    }
-   return TRUE;
+   return true;
 }
 
 
-BOOL SetListData(HWND hW, const char * ldat, INT item)
+static bool setListData(HWND hW, const char * ldat, INT item)
 {
    INT i, j;
    CHAR buffer[NR_BUFFER];
@@ -457,25 +424,25 @@ BOOL SetListData(HWND hW, const char * ldat, INT item)
       ListView_SetItemState(iW, atol(buffer), LVIS_SELECTED, LVIS_SELECTED);
       if (*p) p++;
    }
-   return TRUE;
+   return true;
 }
 
 
-BOOL GetSliderData(HWND hW, char * ldat, INT item)
+static bool getSliderData(HWND hW, char * ldat, INT item)
 {
    ltoa((long)SendMessage(GetDlgItem(hW, item), TBM_GETPOS, 0,0), ldat, 10);
-   return TRUE;
+   return true;
 }
 
 
-BOOL SetSliderData(HWND hW, const char * ldat, INT item)
+static bool setSliderData(HWND hW, const char * ldat, INT item)
 {
    SendMessage(GetDlgItem(hW, item), TBM_SETPOS, TRUE, atol(ldat));
-   return TRUE;
+   return true;
 }
 
 
-BOOL GetTabCtrlData(HWND hW, char * ldat, INT item)
+static bool getTabCtrlData(HWND hW, char * ldat, INT item)
 {
    TC_ITEM tab;
    LONG cur;
@@ -487,11 +454,11 @@ BOOL GetTabCtrlData(HWND hW, char * ldat, INT item)
    tab.mask = TCIF_TEXT;
    tab.pszText = ldat;
    tab.cchTextMax = DATA_BUFFER-1;
-   return TabCtrl_GetItem(iw, cur, &tab);
+   return TabCtrl_GetItem(iw, cur, &tab) ? true : false;
 }
 
 
-BOOL SetTabCtrlData(HWND hW, const char * ldat, INT item)
+static bool setTabCtrlDatas(HWND hW, const char * ldat, INT item)
 {
    TC_ITEM tab;
    LONG cnt, i = 0;
@@ -499,242 +466,174 @@ BOOL SetTabCtrlData(HWND hW, const char * ldat, INT item)
    HWND iw = GetDlgItem(hW, item);
 
    cnt = TabCtrl_GetItemCount(iw);
-   if (!cnt) return FALSE;
+   if (!cnt) return false;
 
    while (i<cnt)
    {
        tab.mask = TCIF_TEXT;
        tab.pszText = data;
        tab.cchTextMax = DATA_BUFFER-1;
-       if (!TabCtrl_GetItem(iw, i, &tab)) return FALSE;
-       if (!stricmp(tab.pszText, ldat)) return (!TabCtrl_SetCurSel(iw, i));
+       if (!TabCtrl_GetItem(iw, i, &tab)) return false;
+       if (!stricmp(tab.pszText, ldat))
+       {
+           return (TabCtrl_SetCurSel(iw, i) == -1 ? false : true);
+       }
        i++;
    }
-   return FALSE;
+   return false;
 }
 
 
-size_t RexxEntry GetItemData(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-
+RexxObjectPtr internalGetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t id, HWND hDlg, int ctrlType)
 {
-   CHAR data[DATA_BUFFER];
-   HWND hW;
-   INT i,id,k;
-   DEF_ADM;
-
-   CHECKARGL(2);
-
-   GET_ADM;
-   if (!dlgAdm) RETERR
-
-   if (argc > 2)
-      hW = GET_HWND(argv[2]);
-   else
-      hW = dlgAdm->TheDlg;
-
-   id = atoi(argv[1].strptr);
-
-   k = 0;
-   if (argc > 3)
-       k = atoi(argv[3].strptr);
-   else
-   {
-       SEARCHDATA(dlgAdm, i, id)
-       if (VALIDDATA(dlgAdm, i, id)) k = dlgAdm->DataTab[i].typ;
-   }
-
-   data[0] = '\0';
-   switch (k)
-   {
-      case 0:
-        {
-          /* DATA_BUFFER was used to get the text which is a */
-          /* hardcoded limit. Now get the text lenght and allocate */
-          LPTSTR lpBuffer;
-          size_t len = (size_t)SendDlgItemMessage(hW,id,WM_GETTEXTLENGTH,0,0)+1;
-          lpBuffer = (LPTSTR)GlobalAlloc(GMEM_FIXED, len);
-          if (!lpBuffer) return 1;
-          len = GetDlgItemText(hW, id, lpBuffer, (int)len);
-          retstr->strptr = lpBuffer;
-          strcpy(retstr->strptr, lpBuffer);
-          retstr->strlength = len;
-          return 0;
-          break;
-        }
-      case 1:
-      case 2:
-         i = IsDlgButtonChecked(hW, id);
-         itoa(i, data, 10);
-         break;
-      case 3:
-         GETLBDATA(data, id, FALSE)
-         if (i==LB_ERR) data[0] = '\0';
-         break;
-      case 4:
-         GetMultiListBoxSelections(hW, id, data);
-         break;
-      case 5:
-         GETCBDATA(data, id, FALSE)
-         if (i==CB_ERR) data[0] = '\0';
-         break;
-      case 6:
-         if (!GetTreeData(hW, data, id)) data[0] = '\0';
-         break;
-      case 7:
-         if (!GetListData(hW, data, id)) data[0] = '\0';
-         break;
-      case 8:
-         if (!GetSliderData(hW, data, id)) data[0] = '\0';
-         break;
-      case 9:
-         if (!GetTabCtrlData(hW, data, id)) data[0] = '\0';
-         break;
-      case 10:
-         if (!GetDateTimeData(hW, data, id)) data[0] = '\0';
-         break;
-      case 11:
-         if (!GetMonthCalendarData(hW, data, id)) data[0] = '\0';
-         break;
-
-      default:
-         data[0] = '\0';
-   }
-
-   size_t len = strlen(data);
-   if (len > 255)
-   {
-       CHAR * p;
-       p = (char *)GlobalAlloc(GMEM_FIXED, len + 1);
-       if (!p) return 1;
-       retstr->strptr = p;
-       strcpy(retstr->strptr, data);
-       retstr->strlength = len;
-   }
-   else
-   {
-       strcpy(retstr->strptr, data);
-       retstr->strlength = len;
-   }
-   return 0;
-}
-
-
-
-size_t RexxEntry SetItemData(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-
-{
-    HWND hW;
-    INT i, k, id;
-
-    DEF_ADM;
-
-    CHECKARGL(3);
-
-    GET_ADM;
-    if (!dlgAdm)
+    if ( pcpbd->dlgAdm == NULL || pcpbd->hDlg == NULL )
     {
-        RETERR;
+        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
+        return 0;
     }
 
-    if (argc > 3)
+    DIALOGADMIN *dlgAdm = seekDlgAdm(pcpbd->hDlg);
+    if ( dlgAdm == NULL )
     {
-        hW = GET_HWND(argv[3]);
-    }
-    else
-    {
-        hW = dlgAdm->TheDlg;
+        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
+        return 0;
     }
 
-    id = atoi(argv[1].strptr);
-
-    k = 0;
-    if (argc > 4)
+    ctrlType = searchDataTable(dlgAdm, id);
+    if ( ctrlType == -1 )
     {
-        k = atoi(argv[4].strptr);
-    }
-    else
-    {
-        SEARCHDATA(dlgAdm, i, id)
-        if (VALIDDATA(dlgAdm, i, id))
-        {
-            k = dlgAdm->DataTab[i].typ;
-        }
+        ctrlType = 0;
     }
 
-    const char *data = argv[2].strptr;
-    switch (k)
+    char data[DATA_BUFFER];
+    data[0] = '\0';
+    RexxStringObject result = c->NullString();
+
+    switch ( ctrlType )
     {
         case 0:
-            if (SetDlgItemText(hW, id, data))
-            {
-                RETC(0);
-            }
-            else
-            {
-                RETC(1);
-            }
-            break;
+        {
+            // We don't check for errors, result will end up being the "right"
+            // thing and we just return it.
+            rxGetWindowText(c, GetDlgItem(hDlg, id), &result);
+            return result;
+        }
         case 1:
-            if (CheckDlgButton(hW, id, atoi(data)))
-            {
-                RETC(0);
-            }
-            else
-            {
-                RETC(1);
-            }
-            break;
         case 2:
-            if (manualCheckRadioButton(dlgAdm, hW, id, atoi(data)))
+            return c->UnsignedInt32(IsDlgButtonChecked(hDlg, id));
+        case 3:
+            if ( getListBoxData(hDlg, id, data) == LB_ERR )
             {
-                RETC(0);
-            }
-            else
-            {
-                RETC(1);
+                return result;
             }
             break;
-        case 3:
-            SETLBDATA(data, id, TRUE)
-            RETC(0);
         case 4:
-            if (SetMultiListBoxSelections(hW, id, data))
-            {
-                RETC(0);
-            }
-            else
-            {
-                RETC(1);
-            }
+            getMultiListBoxSelections(hDlg, id, data);
+            break;
         case 5:
-            SETCBDATA(data, id, TRUE)
-            RETC(0);
+            if ( getComboBoxData(hDlg, id, data) == CB_ERR )
+            {
+                return result;
+            }
+            break;
         case 6:
-            RETC(!SetTreeData(hW, data, id))
+            if ( ! getTreeData(hDlg, data, id) )
+            {
+                return result;
+            }
+            break;
         case 7:
-            RETC(!SetListData(hW, data, id))
+            if ( ! getListData(hDlg, data, id) )
+            {
+                return result;
+            }
+            break;
         case 8:
-            RETC(!SetSliderData(hW, data, id))
+            if ( ! getSliderData(hDlg, data, id) )
+            {
+                return result;
+            }
+            break;
         case 9:
-            RETC(!SetTabCtrlData(hW, data, id))
+            if ( ! getTabCtrlData(hDlg, data, id) )
+            {
+                return result;
+            }
+            break;
         case 10:
-            RETC(!SetDateTimeData(hW, data, id))
+            if ( ! getDateTimeData(hDlg, data, id) )
+            {
+                return result;
+            }
+            break;
         case 11:
-            RETC(!SetMonthCalendarData(hW, data, id))
+            if ( ! getMonthCalendarData(hDlg, data, id) )
+            {
+                return result;
+            }
+            break;
 
         default:
-            RETC(1);
+            return result;
+    }
+
+    return c->String(data);
+}
+
+
+uint32_t internalSetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t id, CSTRING data,
+                             HWND hDlg, int ctrlType)
+{
+    if ( pcpbd->dlgAdm == NULL || pcpbd->hDlg == NULL )
+    {
+        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
+        return 0;
+    }
+
+    DIALOGADMIN *dlgAdm = seekDlgAdm(pcpbd->hDlg);
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
+        return 0;
+    }
+
+    ctrlType = searchDataTable(dlgAdm, id);
+    if ( ctrlType == -1 )
+    {
+        ctrlType = 0;
+    }
+
+    switch ( ctrlType )
+    {
+        case 0:
+            return (SetDlgItemText(hDlg, id, data) ? 0 : 1);
+        case 1:
+            return (CheckDlgButton(hDlg, id, atoi(data)) ? 0 : 1);
+        case 2:
+            return (manualCheckRadioButton(dlgAdm, hDlg, id, atoi(data)) ? 0 : 1);
+        case 3:
+            return setListBoxData(hDlg, id, data);
+        case 4:
+            return (setMultiListBoxSelections(hDlg, id, data) ? 0 : 1);
+        case 5:
+            return setComboBoxData(hDlg, id, data);
+        case 6:
+            return (setTreeData(hDlg, data, id) ? 0 : 1);
+        case 7:
+            return (setListData(hDlg, data, id) ? 0 : 1);
+        case 8:
+            return (setSliderData(hDlg, data, id) ? 0 : 1);
+        case 9:
+            return (setTabCtrlDatas(hDlg, data, id) ? 0 : 1);
+        case 10:
+            return (setDateTimeData(hDlg, data, id) ? 0 : 1);
+        case 11:
+            return (setMonthCalendarData(hDlg, data, id) ? 0 : 1);
+        default:
+            return 1;
     }
 }
 
-
-/* The assumption is that if WholeNumber() fails, number remains unchanged. */
-inline uint32_t dlgDataToNumber(RexxMethodContext *c, RexxObjectPtr data)
-{
-    uint32_t number = 0;
-    c->UnsignedInt32(data, &number);
-    return number;
-}
 
 /**
  * The implementation for PlainBaseDialog::setDlgDataFromStem() which is a private
@@ -811,7 +710,7 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
         }
         else if ( controlType == 4 )
         {
-            SetMultiListBoxSelections(hwnd, itemID, c->ObjectToStringValue(dataObj));
+            setMultiListBoxSelections(hwnd, itemID, c->ObjectToStringValue(dataObj));
         }
         else if ( controlType == 5 )
         {
@@ -819,19 +718,19 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
         }
         else if ( controlType == 6 )
         {
-            SetTreeData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+            setTreeData(hwnd, c->ObjectToStringValue(dataObj), itemID);
         }
         else if ( controlType == 7 )
         {
-            SetListData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+            setListData(hwnd, c->ObjectToStringValue(dataObj), itemID);
         }
         else if ( controlType == 8 )
         {
-            SetSliderData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+            setSliderData(hwnd, c->ObjectToStringValue(dataObj), itemID);
         }
         else if ( controlType == 9 )
         {
-            SetTabCtrlData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+            setTabCtrlDatas(hwnd, c->ObjectToStringValue(dataObj), itemID);
         }
     }
     return 0;
@@ -892,7 +791,7 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
         }
         else if ( controlType == 4 )
         {
-            GetMultiListBoxSelections(hwnd, itemID, data);
+            getMultiListBoxSelections(hwnd, itemID, data);
         }
         else if ( controlType == 5 )
         {
@@ -903,28 +802,28 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
         }
         else if ( controlType == 6 )
         {
-            if ( ! GetTreeData(hwnd, data, itemID) )
+            if ( ! getTreeData(hwnd, data, itemID) )
             {
                 data[0] = '\0';
             }
         }
         else if ( controlType == 7 )
         {
-            if ( ! GetListData(hwnd, data, itemID) )
+            if ( ! getListData(hwnd, data, itemID) )
             {
                 data[0] = '\0';
             }
         }
         else if ( controlType == 8 )
         {
-            if ( ! GetSliderData(hwnd, data, itemID) )
+            if ( ! getSliderData(hwnd, data, itemID) )
             {
                 data[0] = '\0';
             }
         }
         else if ( controlType == 9 )
         {
-            if ( ! GetTabCtrlData(hwnd, data, itemID) )
+            if ( ! getTabCtrlData(hwnd, data, itemID) )
             {
                 data[0] = '\0';
             }

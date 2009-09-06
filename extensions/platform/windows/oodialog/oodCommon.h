@@ -123,10 +123,10 @@ extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 extern LPWORD lpwAlign(LPWORD lpIn);
 extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
-extern void ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
+extern void       ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
-extern uint32_t oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
-extern bool oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern uint32_t   oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern bool       oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
 
 extern DWORD oodGetSysErrCode(RexxThreadContext *);
 extern void  oodSetSysErrCode(RexxThreadContext *, DWORD);
@@ -138,6 +138,8 @@ extern PRECT         rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int 
 extern RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b);
 extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos);
 extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
+
+extern bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj);
 
 // TODO move to APICommon when ooDialog is converted to use .Pointer instead of
 // pointer strings.

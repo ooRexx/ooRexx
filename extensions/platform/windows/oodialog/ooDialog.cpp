@@ -1397,40 +1397,11 @@ RexxMethod1(logical_t, wb_redraw, CSELF, pCSelf)
  */
 RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
 {
-    oodResetSysErrCode(context->threadContext);
     RexxStringObject result = context->NullString();
-
     HWND hwnd = getWBWindow(pCSelf);
-    uint32_t count = (uint32_t)GetWindowTextLength(hwnd);
 
-    if ( count == 0 )
-    {
-        oodSetSysErrCode(context->threadContext);
-        return result;
-    }
-
-    // TODO For all windows except an edit control this is fine.  For an edit
-    // control with a very large amount of text, see if it could be optimized by
-    // using a string buffer.
-
-    LPTSTR pBuf = (LPTSTR)malloc(++count);
-    if ( pBuf == NULL )
-    {
-        outOfMemoryException(context->threadContext);
-        return result;
-    }
-
-    count = GetWindowText(hwnd, pBuf, count);
-    if ( count != 0 )
-    {
-        result = context->String(pBuf);
-    }
-    else
-    {
-        oodSetSysErrCode(context->threadContext);
-    }
-    free(pBuf);
-
+    // Whether this fails or succeeds doesn't matter, we just return result.
+    rxGetWindowText(context, hwnd, &result);
     return result;
 }
 
@@ -1794,6 +1765,66 @@ RexxMethod2(uint32_t, pbdlg_putDlgDataInStem_pvt, RexxStemObject, internDlgData,
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
     return putDlgDataInStem(context, pcpbd, internDlgData);
+}
+
+
+RexxMethod4(RexxObjectPtr, pbdlg_internalGetItemData_pvt, RexxObjectPtr, rxID, OPTIONAL_RexxStringObject, _hDlg,
+            OPTIONAL_int, ctrlType, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    HWND hDlg;
+    if ( argumentOmitted(2) )
+    {
+        hDlg = pcpbd->hDlg;
+    }
+    else
+    {
+        hDlg = (HWND)string2pointer(context, _hDlg);
+    }
+
+    if ( argumentOmitted(3) )
+    {
+        ctrlType = -1;
+    }
+
+    return internalGetItemData(context, pcpbd, id, hDlg, ctrlType);
+}
+
+
+RexxMethod5(uint32_t, pbdlg_internalSetItemData_pvt, RexxObjectPtr, rxID, CSTRING, data, OPTIONAL_RexxStringObject, _hDlg,
+            OPTIONAL_int, ctrlType, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return -1;
+    }
+
+    HWND hDlg;
+    if ( argumentOmitted(3) )
+    {
+        hDlg = pcpbd->hDlg;
+    }
+    else
+    {
+        hDlg = (HWND)string2pointer(context, _hDlg);
+    }
+
+    if ( argumentOmitted(4) )
+    {
+        ctrlType = -1;
+    }
+
+    return internalSetItemData(context, pcpbd, id, data, hDlg, ctrlType);
 }
 
 

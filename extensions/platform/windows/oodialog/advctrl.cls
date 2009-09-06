@@ -356,11 +356,11 @@
    return WindowRect("CLR", self~oDlg~adm, self~hwnd,left,top,right,bottom)
 
 ::method value unguarded
-    return self~oDlg~InternalGetItemData(self~Id, self~hDlg)
+    return self~oDlg~internalGetItemData(self~Id, self~hDlg)
 
 ::method "value=" unguarded
     use arg data
-    self~oDlg~InternalSetItemData(self~Id, data, self~hDlg)
+    self~oDlg~internalSetItemData(self~Id, data, self~hDlg)
 
 ::method captureMouse
    return Wnd_Desktop("CAP", self~hDlg, self~hwnd)
@@ -1697,7 +1697,7 @@
    return self~Message2Parent(0x00000190, 0, 0)
 
 ::method SelectedIndexes
-   return self~oDlg~InternalGetItemData(self~id, self~hDlg, 4)
+   return self~oDlg~internalGetItemData(self~id, self~hDlg, 4)
 
 ::method MakeFirstVisible
    use arg ndx

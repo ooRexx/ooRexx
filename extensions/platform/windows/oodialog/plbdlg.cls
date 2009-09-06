@@ -665,8 +665,8 @@
    /* This changes the text of a static text control */
 
 ::method SetStaticText unguarded
-   use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~dlgHandle, 0)
+   use arg id, data
+   return self~internalSetItemData(id, data, , 0)
 
 ::method setDlgDataFromStem private unguarded external "LIBRARY oodialog pbdlg_setDlgDataFromStem_pvt"
 ::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"
@@ -941,64 +941,49 @@
 /* The following methods are to get the data entry from a single */
 /*   dialog item */
 
-::method InternalGetItemData unguarded
-   use arg id, handle, type
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(2,"o") = 1 then return GetItemData(self~adm, id)
-   else if arg(3,"o") = 1 then return GetItemData(self~adm, id, handle)
-   else return GetItemData(self~adm, id, handle, type)
-
+::method internalGetItemData private unguarded external "LIBRARY oodialog pbdlg_internalGetItemData_pvt"
 
    /* Returns the content of the entry line control with id 'id' */
-
 ::method GetEntryLine unguarded
    use arg id
-   return self~InternalGetItemData(id, self~dlgHandle, 0)
+   return self~internalGetItemData(id, , 0)
 
    /* Returns the content of the currently selected item in a list box */
-
 ::method GetListLine unguarded
    use arg id
-   return self~InternalGetItemData(id, self~dlgHandle, 3)
+   return self~internalGetItemData(id, , 3)
 
    /* Returns the content of the currently selected item in a combo box */
-
 ::method GetComboLine unguarded
    use arg id
-   return self~InternalGetItemData(id, self~dlgHandle, 0)
+   return self~internalGetItemData(id, , 0)
 
    /* Returns 1 if the check box 'id' is selected, that is it has a check */
    /* mark. Otherwise it returns 0 */
-
 ::method GetCheckBox unguarded
    use arg id
-   return self~InternalGetItemData(id, self~dlgHandle, 1)
+   return self~internalGetItemData(id, , 1)
 
    /* Returns 1 if the radio button 'id' is selected, otherwise it returns 0 */
-
 ::method GetRadioButton unguarded
    use arg id
-   return self~InternalGetItemData(id, self~dlgHandle, 2)
+   return self~internalGetItemData(id, , 2)
 
    /* This method can be applied to a multiple choice list box. */
    /* It returns a string containing all the selected items' index. */
    /* The numbers are seperated by spaces. You can parse it using 'parse var' */
-
 ::method GetMultiList unguarded
    use arg id
-   return self~InternalGetItemData(id, self~dlgHandle, 4)
+   return self~internalGetItemData(id, , 4)
 
    /* This method gets the value of a dialog item. You don't have to know */
    /* what kind of item it is when it has been connected before */
-
 ::method GetValue unguarded
     use arg id
-    return self~InternalGetItemData(id, self~dlgHandle)
+    return self~internalGetItemData(id)
 
    /* Sets 'attributeName' with the value of the associated dialog field. */
    /* Returns  nothing! */
-
 ::method GetAttrib unguarded
    use arg attributeName
    i = self~dataConnection~First
@@ -1016,45 +1001,39 @@
  /* The following methods are to set the data entry of a single */
  /* dialog item */
 
-::method InternalSetItemData unguarded
-   use arg id, dataString, handle, type
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(3,"o") = 1 then return SetItemData(self~adm, id, dataString)
-   else if arg(4,"o") = 1 then return SetItemData(self~adm, id, dataString, handle)
-   else return SetItemData(self~adm, id, dataString, handle, type)
+::method internalSetItemData private unguarded external "LIBRARY oodialog pbdlg_internalSetItemData_pvt"
 
    /* Puts 'dataString' into the entry line control 'id' */
 
 ::method SetEntryLine unguarded
-   use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~dlgHandle, 0)
+   use arg id, data
+   return self~internalSetItemData(id, data, , 0)
 
    /* Puts 'dataString' into the list box 'id' */
 
 ::method SetListLine unguarded
-   use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~dlgHandle, 3)
+   use arg id, data
+   return self~internalSetItemData(id, data, , 3)
 
    /* Puts 'dataString' into the combo box 'id' */
 
 ::method SetComboLine unguarded
-   use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~dlgHandle, 0)
+   use arg id, data
+   return self~internalSetItemData(id, data, , 0)
 
    /* Puts a check mark to the check box if 'data' equals 1 */
    /* and remove the check mark if 'data' equals 0 */
 
 ::method SetCheckBox unguarded
    use arg id, data
-   return self~InternalSetItemData(id, data, self~dlgHandle, 1)
+   return self~internalSetItemData(id, data, , 1)
 
    /* Checks the radio button if 'data' equals 1 */
    /* and unchecks it if 'data' equals 0 */
 
 ::method SetRadioButton unguarded
-   use arg id, dataString
-   return self~InternalSetItemData(id, dataString, self~dlgHandle, 2)
+   use arg id, data
+   return self~internalSetItemData(id, data, , 2)
 
    /* Use this method to select one ore more lines in a multiple choice */
    /* list box. Provide the index of all lines you want to select */
@@ -1062,14 +1041,14 @@
 
 ::method SetMultiList unguarded
    use arg id, data
-   return self~InternalSetItemData(id, data, self~dlgHandle, 4)
+   return self~internalSetItemData(id, data, , 4)
 
    /* This method sets the value of a dialog item. You don't have */
    /* to know what kind of item it is if it has been connected before */
 
 ::method SetValue unguarded
-   use arg id, dataString
-   return self~InternalSetItemData(id, dataString)
+   use arg id, data
+   return self~internalSetItemData(id, data)
 
    /* Put the value of 'attributeName' into the associated dialog field */
 

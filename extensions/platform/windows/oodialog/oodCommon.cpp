@@ -678,6 +678,45 @@ POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CST
 }
 
 
+bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj)
+{
+    oodResetSysErrCode(c->threadContext);
+
+    uint32_t count = (uint32_t)GetWindowTextLength(hwnd);
+    if ( count == 0 )
+    {
+        oodSetSysErrCode(c->threadContext);
+        *pStringObj = c->NullString();
+        return true;
+    }
+
+    // TODO For all windows except an edit control this is fine.  We should
+    // check the count and if bigger than a certain size, see if it could be
+    // optimized by using a string buffer.
+
+    LPTSTR pBuf = (LPTSTR)malloc(++count);
+    if ( pBuf == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+
+    count = GetWindowText(hwnd, pBuf, count);
+    if ( count != 0 )
+    {
+        *pStringObj = c->String(pBuf);
+    }
+    else
+    {
+        oodSetSysErrCode(c->threadContext);
+        *pStringObj = c->NullString();
+    }
+    free(pBuf);
+
+    return true;
+}
+
+
 /**
  * Determine if a dialog control belongs to the specified dialog control class.
  *
