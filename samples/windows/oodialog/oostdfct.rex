@@ -41,60 +41,72 @@
 /*                                                                          */
 /*--------------------------------------------------------------------------*/
 
+commonTitle = "Standard Functions Demo"
 
 say
 say 'Starting standard dialog function demonstration...'
 
-x = TimedMessage('Hey please read this','Message',2000)
+x = TimedMessage('Hey please read this', 'Message', 2000)
 
-say 'Input=' Inputbox('value','title')
-say 'Input=' Inputbox('Please enter a value','title')
-say 'Input=' Inputbox('Please enter a value to be honest with you','title','aa')
-say 'Input=' Inputbox('Please enter...','title','bb',200)
+say 'Input=' Inputbox('value', commonTitle)
+say 'Input=' Inputbox('Please enter a value', commonTitle)
+say 'Input=' Inputbox('Please enter a value to be honest with you', commonTitle, 'aa')
+say 'Input=' Inputbox('Please enter...', commonTitle, 'bb', 200)
 
-say 'Integer=' Integerbox('Numeric','title')
-say 'Integer=' Integerbox('Please enter a numeric value now ...','title')
+say 'Integer=' Integerbox('Numeric',commonTitle)
+say 'Integer=' Integerbox('Please enter a numeric value now ...', commonTitle)
 
-say 'Password=' Passwordbox('Please enter a password now and quick','title')
-say 'Password=' Passwordbox('Password','title')
+say 'Password=' Passwordbox('Please enter a password now and quick', commonTitle)
+say 'Password=' Passwordbox('Password', commonTitle)
 
-ar = MultiInputBox('Enter address','title', ,
-        .array~of("&First name","Last &name now","&State"),,
-        .array~of("Ueli","Wahli",''))
+ar = MultiInputBox('Enter address', commonTitle,                             -
+                   .array~of("&First name","Last &name now","&State"),       -
+                   .array~of("Ueli","Wahli",''))
 if ar \= .NIL then do v over ar
                        say 'Multi-input[]=' v
                    end
-ar = MultiInputBox('Enter address','title', ,
-        .array~of("&First name","Last &name now","&State"),,
-        .array~of("Ueli","Wahli",''), 100)
+ar = MultiInputBox('Enter address', commonTitle,                             -
+                   .array~of("&First name", "Last &name now", "&State"),     -
+                   .array~of("Ueli", "Wahli", ''), 100)
 if ar \= .NIL then do v over ar
                        say 'Multi-input[]=' v
                    end
 
-say 'ListChoice=' ListChoice('Select','title',,
-         .array~of("Monday","Tuesday","Wednesday","Tursday",,
-                   "Friday","Saturday","Sunday") )
-say 'ListChoice=' ListChoice('Select a line','title',,
-         .array~of("Monday","Tuesday","Wednesday","Tursday",,
-                   "Friday","Saturday","Sunday"), 100 )
+say 'ListChoice=' ListChoice('Select', commonTitle,                                 -
+                             .array~of("Monday", "Tuesday", "Wednesday", "Tursday", -
+                                       "Friday", "Saturday", "Sunday"))
+say 'ListChoice=' ListChoice('Select a line', commonTitle,                          -
+                             .array~of("Monday", "Tuesday", "Wednesday", "Tursday", -
+                                       "Friday", "Saturday", "Sunday"), 100)
 
-ar = MultiListChoice('Select a few lines','title',,
-         .array~of("Monday","Tuesday","Wednesday","Tursday",,
-                   "Friday","Saturday","Sunday") )
+ar = MultiListChoice('Select a few lines', commonTitle,                             -
+                     .array~of("Monday","Tuesday","Wednesday","Tursday",            -
+                               "Friday","Saturday","Sunday"))
 if ar \= .nil then do v over ar
                       say 'Multi-list[]=' v
                    end
 
-ar = CheckList('Select a few','title', ,
-         .array~of("Jan","Feb","Mar","April in Paris is nice","May","Jun",,
-                   "Jul","Aug","Sep","Oct","Nov","Dec"),, 4  )
+chks = .array~new
+chks[3] = .true
+chks[4] = .true
+ar = CheckList('Select a few', commonTitle,                                  -
+               .array~of("Jan", "Feb", "Mar", "April in Paris is nice",      -
+                         "May", "Jun", "Jul", "Aug",                         -
+                         "Sep", "Oct", "Nov", "Dec"),                        -
+                         chks, , 4)
 if ar \= .nil then do i=1 to ar~items
                       if ar[i]=1 then say 'CheckList['i']'
                    end
 
-say 'Single=' SingleSelection('Select one','title',,
-         .array~of("Jan","Feb","Mar","Apr","May","Jun",,
-                   "July is the hottest month again","Aug","Sep","Oct","Nov","Dec"), 2)
+say 'Single=' SingleSelection('Select one', commonTitle,                            -
+                              .array~of("Jan", "Feb", "Mar", "Apr", "May", "Jun",  -
+                                        "July is the hottest month again", "Aug",  -
+                                        "Sep","Oct","Nov","Dec"), 7)
+
+say 'Single=' SingleSelection('Select one again', commonTitle,                     -
+                              .array~of("Jan", "Feb", "Mar", "Apr", "May", "Jun",  -
+                                        "July is the hottest month again", "Aug",  -
+                                        "Sep","Oct","Nov","Dec"), 3, , 6)
 
 say 'End of standard dialog function demonstration...'
 
