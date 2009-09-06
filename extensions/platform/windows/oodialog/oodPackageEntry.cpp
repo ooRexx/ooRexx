@@ -90,9 +90,7 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DataTable);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SetItemData);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(SetStemData);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(GetItemData);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(GetStemData);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(Wnd_Desktop);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WndShow_Pos);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WinAPI32Func);
@@ -135,9 +133,7 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
     REXX_CLASSIC_ROUTINE(DataTable,            DataTable),
     REXX_CLASSIC_ROUTINE(SetItemData,          SetItemData),
-    REXX_CLASSIC_ROUTINE(SetStemData,          SetStemData),
     REXX_CLASSIC_ROUTINE(GetItemData,          GetItemData),
-    REXX_CLASSIC_ROUTINE(GetStemData,          GetStemData),
     REXX_CLASSIC_ROUTINE(Wnd_Desktop,          Wnd_Desktop),
     REXX_CLASSIC_ROUTINE(WndShow_Pos,          WndShow_Pos),
     REXX_CLASSIC_ROUTINE(WinAPI32Func,         WinAPI32Func),
@@ -229,6 +225,8 @@ REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
 REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
+REXX_METHOD_PROTOTYPE(pbdlg_setDlgDataFromStem_pvt);
+REXX_METHOD_PROTOTYPE(pbdlg_putDlgDataInStem_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_getItem);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(pbdlg_addUserMessage);
@@ -505,6 +503,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getDlgHandle,           pbdlg_getDlgHandle),
     REXX_METHOD(pbdlg_get,                    pbdlg_get),
     REXX_METHOD(pbdlg_isDialogActive,         pbdlg_isDialogActive),
+    REXX_METHOD(pbdlg_setDlgDataFromStem_pvt, pbdlg_setDlgDataFromStem_pvt),
+    REXX_METHOD(pbdlg_putDlgDataInStem_pvt,   pbdlg_putDlgDataInStem_pvt),
     REXX_METHOD(pbdlg_getItem,                pbdlg_getItem),
     REXX_METHOD(pbdlg_stopIt,                 pbdlg_stopIt),
     REXX_METHOD(pbdlg_addUserMessage,         pbdlg_addUserMessage),

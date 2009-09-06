@@ -668,8 +668,10 @@
    use arg id, dataString
    return self~InternalSetItemData(id, dataString, self~dlgHandle, 0)
 
-   /* This method loads the data attributes into the dialog */
+::method setDlgDataFromStem private unguarded external "LIBRARY oodialog pbdlg_setDlgDataFromStem_pvt"
+::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"
 
+   /* This method loads the data attributes into the dialog */
 ::method SetData unguarded
    i = self~dataConnection~First
    do while (i \= .NIL)
@@ -678,13 +680,13 @@
       interpret(s)
       i = self~dataConnection~Next(i)
    end
-   ret = SetStemData(self~adm, "InternDlgData.")
+   return self~setDlgDataFromStem(InternDlgData.)
 
    /* This method receives data from dialog and copies them to the */
    /* associated attributes */
 
 ::method GetData unguarded
-   ret = GetStemData(self~adm, "InternDlgData.")
+   self~putDlgDataInStem(InternDlgData.)
 
    i = self~dataConnection~First
    do while (i \= .NIL)
@@ -721,14 +723,14 @@
       InternDlgData.numericID = dataStem.k
       if InternDlgData.numericID = "INTERNDLGDATA."numericID then InternDlgData.numericID = ""
    end
-   ret = SetStemData(self~adm, "InternDlgData.")
+   return self~setDlgDataFromStem(InternDlgData.)
 
    /* This method gets the values of all the dialog's windows controls */
    /* and copies them to 'dataStem'. */
 
 ::method GetDataStem protected unguarded
    use arg dataStem.
-   ret = GetStemData(self~adm, "InternDlgData.")
+   self~putDlgDataInStem(InternDlgData.)
    do k over InternDlgData.
       dataStem.k = InternDlgData.k
       symbolicID = self~resolveNumericID(k)

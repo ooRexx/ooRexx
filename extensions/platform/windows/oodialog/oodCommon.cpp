@@ -577,7 +577,7 @@ DIALOGADMIN *rxGetDlgAdm(RexxMethodContext *context, RexxObjectPtr dlg)
     DIALOGADMIN *adm = (DIALOGADMIN *)rxGetPointerAttribute(context, dlg, "ADM");
     if ( adm == NULL )
     {
-        failedToRetrieveException(context->threadContext, "dialog administration block", dlg);
+        failedToRetrieveDlgAdmException(context->threadContext, dlg);
     }
     return adm;
 }

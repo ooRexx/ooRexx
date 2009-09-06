@@ -35,55 +35,126 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+
+/**
+ * oodData.cpp
+ *
+ * Implements the function that "sets" and "gets" data.
+ *
+ * The original ooDialog design used the abstraction that there were only two
+ * objects involved.  The underlying Windows dialog object and the Rexx dialog
+ * object. The Rexx dialog object would exchange information (data) with the
+ * underlying dialog object by "setting" or "getting" data.  The data itself was
+ * the state of the various dialog controls.
+ *
+ * Although ooDialog design has evolved away from that abstraction, the
+ * functionality of this module needs to remain to retain backwards
+ * compatibility.
+ */
+
 #include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
 #include <dlgs.h>
+
 #include <commctrl.h>
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
+
+#include "APICommon.h"
 #include "oodCommon.h"
+#include "oodData.hpp"
 
 
-/* I do most of the radio button handling myself now so I know it works */
-BOOL MyCheckRadioButton(DIALOGADMIN * aDlg, HWND hW, ULONG id, ULONG value)
+/*
+ * The manualCheckRadioButton() function is used to check one radio button
+ * within a WS_GROUP group and uncheck all the others.
+ */
+
+inline bool hasGroupStyle(HWND hwnd, DIALOGADMIN *dlgAdm, uint32_t index)
+{
+    return ((GetWindowLong(GetDlgItem(hwnd, dlgAdm->DataTab[index + 1].id), GWL_STYLE) & WS_GROUP) == WS_GROUP);
+}
+
+inline bool isInSameDlg(DIALOGADMIN *dlgAdm, uint32_t control1, uint32_t control2)
+{
+    return (dlgAdm->DataTab[control1].category == dlgAdm->DataTab[control2].category);
+}
+
+bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULONG value)
 {
    LONG beg, en, ndx, i;
-   BOOL rc, ordered;
+   bool rc, ordered;
    ndx = 0;
 
-   if (!value) return TRUE;
-   while ((ndx < aDlg->DT_size) && (aDlg->DataTab[ndx].id != id)) ndx++;
-
-   if (ndx >= aDlg->DT_size) return FALSE;
-   if (aDlg->DataTab[ndx].typ != 2) return FALSE;  /* the selected one is no radio button */
-
-   /* search for first and last radio button in group (there may be other items in the group also) */
-   beg = ndx;
-   while ((beg>0) && (aDlg->DataTab[beg-1].category == aDlg->DataTab[ndx].category))
+   if ( value == 0 )
    {
-        if ((GetWindowLong(GetDlgItem(hW, aDlg->DataTab[beg].id), GWL_STYLE) & WS_GROUP) == WS_GROUP) break; /* must be before beg--*/
-        beg--;
+       // This function only checks a radio button, not unchecks a radio button.
+       return true;
+   }
+   while ( (ndx < dlgAdm->DT_size) && (dlgAdm->DataTab[ndx].id != id) )
+   {
+       ndx++;
+   }
+
+   if ( ndx >= dlgAdm->DT_size )
+   {
+       // Not found.
+       return false;
+   }
+   if ( dlgAdm->DataTab[ndx].typ != 2 )
+   {
+       // The one to check is not a radio button.
+       return false;
+   }
+
+   // Search for first and last radio button in the same group, in the same
+   // dialog. (There may be other dialog controls in the group.)
+   beg = ndx;
+   while ( beg > 0 && isInSameDlg(dlgAdm, beg - 1, ndx) )
+   {
+       // Check must be before decrement (beg--)
+       if ( hasGroupStyle(hW, dlgAdm, beg) )
+       {
+           break;
+       }
+       beg--;
    }
    en = ndx;
-   while ((en+1 < aDlg->DT_size) && (aDlg->DataTab[en+1].category == aDlg->DataTab[ndx].category) &&
-   ((GetWindowLong(GetDlgItem(hW, aDlg->DataTab[en+1].id), GWL_STYLE)  & WS_GROUP) != WS_GROUP)) en++;
-
-   /* check whether or not the ids are ordered ascending */
-   /* also check whether or not any other kind of dialog item is in the group */
-   ordered = TRUE;
-   for (i = beg; i<en; i++) if ((aDlg->DataTab[i].id >= aDlg->DataTab[i+1].id) || (aDlg->DataTab[i].typ != 2))
+   while ( ((en + 1) < dlgAdm->DT_size) && isInSameDlg(dlgAdm, en + 1, ndx) && ! hasGroupStyle(hW, dlgAdm, en + 1) )
    {
-       ordered = FALSE;
-       break;
+       en++;
    }
-   if (ordered)  /* ids are ordered and no other item in group so we can use Windows API */
-       rc = CheckRadioButton(hW, aDlg->DataTab[beg].id, aDlg->DataTab[en].id, aDlg->DataTab[ndx].id);
-   else {  /* we have to do it ourselves */
-       for (i = beg; i<=en; i++) if (aDlg->DataTab[i].typ == 2)
-           CheckDlgButton(hW, aDlg->DataTab[i].id, 0);  /* uncheck all radio buttons */
-       rc = CheckDlgButton(hW, aDlg->DataTab[ndx].id, 1);  /* check selected */
+
+   // Check whether the ids are all radio buttons in ascending order.
+   ordered = true;
+   for ( i = beg; i < en; i++ )
+   {
+       if ( dlgAdm->DataTab[i].id >= dlgAdm->DataTab[i+1].id || dlgAdm->DataTab[i].typ != 2 )
+       {
+           ordered = false;
+           break;
+       }
+   }
+
+   // If the ids are ordered, use the Windows API, otherwise do it manually.
+   if ( ordered )
+   {
+       rc = CheckRadioButton(hW, dlgAdm->DataTab[beg].id, dlgAdm->DataTab[en].id, dlgAdm->DataTab[ndx].id) != 0;
+   }
+   else
+   {
+       // Uncheck all radio buttons ...
+       for ( i = beg; i <= en; i++ )
+       {
+           if ( dlgAdm->DataTab[i].typ == 2 )
+           {
+               CheckDlgButton(hW, dlgAdm->DataTab[i].id, 0);
+           }
+       }
+       // ... and check the specified one.
+       rc = CheckDlgButton(hW, dlgAdm->DataTab[ndx].id, 1) != 0;
    }
    return rc;
 }
@@ -141,7 +212,15 @@ BOOL SetMultiListBoxSelections(HWND hW, ULONG id, const char * data)
 }
 
 
-
+int getListBoxData(HWND hwnd, uint32_t itemID, char *data)
+{
+    int i = (int)SendDlgItemMessage(hwnd, itemID, LB_GETCURSEL, 0, 0);
+    if ( i != LB_ERR && (SendDlgItemMessage(hwnd, itemID, LB_GETTEXTLEN, i, 0) < DATA_BUFFER) )
+    {
+        return (int)SendDlgItemMessage(hwnd, itemID, LB_GETTEXT, i, (LPARAM)data);
+    }
+    return i;                                                                                                                               \
+}
 
 #define GETLBDATA(ldat, item, quit) \
                 {\
@@ -156,6 +235,23 @@ BOOL SetMultiListBoxSelections(HWND hW, ULONG id, const char * data)
                    }                                                                                                                                         \
                 }
 
+uint32_t setListBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
+{
+    int i = (int)SendDlgItemMessage(hwnd, itemID, LB_FINDSTRING, 0, (LPARAM)itemText);
+    if ( i != LB_ERR)
+    {                                                                                                                                  \
+       i = (int)SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, i, 0);
+       if ( i == LB_ERR )
+       {                                                                                                                            \
+           SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, 0, 0);
+       }
+    }                                                                                                                                   \
+    else
+    {
+        SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, 0, 0);
+    }
+    return 0;
+}
 #define SETLBDATA(ldat, item, quit) \
                 {\
                    i = (int)SendDlgItemMessage(hW, item, LB_FINDSTRING, 0, (LPARAM)ldat); \
@@ -175,9 +271,21 @@ BOOL SetMultiListBoxSelections(HWND hW, ULONG id, const char * data)
                  }
 
 
-/* The following #defines are to get the value of a combo box that has
-   the CBS_DROPDOWNLIST flag enabled and behaves like a list */
+/*
+ * The following functions are to get the value of a combo box that has the
+ * CBS_DROPDOWNLIST flag enabled and behaves like a list
+ */
 
+
+int getComboBoxData(HWND hwnd, uint32_t itemID, char *data)
+{
+    int i = (int)SendDlgItemMessage(hwnd, itemID, CB_GETCURSEL, 0, 0);
+    if ( i != LB_ERR && (SendDlgItemMessage(hwnd, itemID, CB_GETLBTEXTLEN, i, 0) < DATA_BUFFER) )
+    {
+        return (int)SendDlgItemMessage(hwnd, itemID, CB_GETLBTEXT, i, (LPARAM)data);
+    }
+    return i;                                                                                                                                      \
+}
 #define GETCBDATA(ldat, item, quit) \
                 {\
                    i = (int)SendDlgItemMessage(hW, item, CB_GETCURSEL, 0, 0); \
@@ -191,6 +299,23 @@ BOOL SetMultiListBoxSelections(HWND hW, ULONG id, const char * data)
                    }                                                                                                                                         \
                 }
 
+uint32_t setComboBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
+{
+    int index = (int)SendDlgItemMessage(hwnd, itemID, CB_FINDSTRING, 0, (LPARAM)itemText);
+    if ( index != LB_ERR )
+    {                                                                                                                                  \
+        index = (int)SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, index, 0);
+        if ( index == LB_ERR )
+        {                                                                                                                            \
+            SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, 0, 0);
+        }
+    }                                                                                                                                   \
+    else
+    {
+        SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, 0, 0);
+    }
+    return 0;
+}
 
 #define SETCBDATA(ldat, item, quit) \
                 {\
@@ -560,7 +685,7 @@ size_t RexxEntry SetItemData(const char *funcname, size_t argc, CONSTRXSTRING *a
             }
             break;
         case 2:
-            if (MyCheckRadioButton(dlgAdm, hW, id, atoi(data)))
+            if (manualCheckRadioButton(dlgAdm, hW, id, atoi(data)))
             {
                 RETC(0);
             }
@@ -603,190 +728,215 @@ size_t RexxEntry SetItemData(const char *funcname, size_t argc, CONSTRXSTRING *a
 }
 
 
-
-
-size_t RexxEntry SetStemData(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+/* The assumption is that if WholeNumber() fails, number remains unchanged. */
+inline uint32_t dlgDataToNumber(RexxMethodContext *c, RexxObjectPtr data)
 {
-   INT i,j, c, rc;
-   CHAR data[DATA_BUFFER];
-   SHVBLOCK shvb;
-   CHAR name[64];
-   CHAR sname[64];
-   HWND hW;
-   DEF_ADM;
+    uint32_t number = 0;
+    c->UnsignedInt32(data, &number);
+    return number;
+}
 
-   CHECKARG(2);
+/**
+ * The implementation for PlainBaseDialog::setDlgDataFromStem() which is a private
+ * method.
+ *
+ * @param c              Method context we are operating in.
+ * @param pcpbd          Pointer to the PlainBaseDialog CSelf.
+ * @param internDlgData  Stem object.  The set tails are the dialog control
+ *                       resource IDs and the values of the tails represent how
+ *                       to set the "data" of the control.
+ */
+uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStemObject internDlgData)
+{
+    // TODO  Since this is an implementation of a private mehtod, these error
+    // conditions should be impossible.  But, while converting from the old APIs
+    // to the new APIs, the following checks exactly mimic the old code.  Once
+    // things are fully converted, it should be sufficient to just check that
+    // hDlg is not null.
+    if ( pcpbd->dlgAdm == NULL || pcpbd->hDlg == NULL )
+    {
+        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
+        return 0;
+    }
 
-   GET_ADM;
-   if (!dlgAdm) RETERR
+    DIALOGADMIN *dlgAdm = seekDlgAdm(pcpbd->hDlg);
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
+        return 0;
+    }
 
-   rxstrlcpy(name, argv[1]);
-   if (name[strlen(name)-1] == '.') name[strlen(name)-1] = '\0';
+    size_t j;
+    HWND hwnd;
+    uint32_t itemID;
+    RexxObjectPtr dataObj;
+    USHORT controlType;
 
-   c = 0;
-   for (j=0;j<dlgAdm->DT_size;j++)
-   {
-      if (dlgAdm->DataTab[j].typ != 999)   /* no separator */
-          {
-            c++;
-            sprintf(sname,"%s.%d",name,dlgAdm->DataTab[j].id);
-            shvb.shvnext = NULL;
-            shvb.shvname.strptr = sname;
-            shvb.shvname.strlength = strlen(sname);
-            shvb.shvnamelen = shvb.shvname.strlength;
-            shvb.shvvalue.strptr = data;
-            shvb.shvvalue.strlength = (DATA_BUFFER-1);
-            shvb.shvvaluelen = (DATA_BUFFER-1);
-            shvb.shvcode = RXSHV_SYFET;
-            shvb.shvret = 0;
+    for ( j = 0; j < dlgAdm->DT_size; j++ )
+    {
+        if ( dlgAdm->DataTab[j].typ == 999 )
+        {
+            continue;
+        }
 
-            if ((rc = RexxVariablePool(&shvb)) == RXSHV_BADN)
-            {
-               sprintf(data, "Variable %s is not declared!", sname);
-               MessageBox(0,data,"Error",MB_OK | MB_ICONHAND);
-               RETERR
-            }
-            shvb.shvvalue.strlength = shvb.shvvaluelen;
+        hwnd        = dlgAdm->ChildDlg[dlgAdm->DataTab[j].category];
+        itemID      = dlgAdm->DataTab[j].id;
+        controlType = dlgAdm->DataTab[j].typ;
 
-            rxdatacpy(data,shvb.shvvalue);
-            hW = dlgAdm->ChildDlg[dlgAdm->DataTab[j].category];
+        dataObj = c->GetStemArrayElement(internDlgData, itemID);
+        if ( dataObj == NULLOBJECT )
+        {
+            // TOOD need better exception here, or maybe not.
+            char buf[128];
+            sprintf(buf, "setDlgDataFromStem() %s.%d has no value", c->GetStemValue(internDlgData), itemID);
+            executionErrorException(c->threadContext, buf);
+            return 0;
+        }
 
-            if (dlgAdm->DataTab[j].typ == 0)
-            {
-                SetDlgItemText(hW, dlgAdm->DataTab[j].id, data);
-            }
-            else if (dlgAdm->DataTab[j].typ == 1)
-            {
-                CheckDlgButton(hW, dlgAdm->DataTab[j].id, atoi(data));
-            }
-            else if (dlgAdm->DataTab[j].typ == 2)
-            {
-                MyCheckRadioButton(dlgAdm, hW, dlgAdm->DataTab[j].id, atoi(data)) ;
-            }
-            else if (dlgAdm->DataTab[j].typ == 3)
-            {
-               SETLBDATA(data, dlgAdm->DataTab[j].id, FALSE)
-            }
-            else if (dlgAdm->DataTab[j].typ == 4)
-            {
-               SetMultiListBoxSelections(hW, dlgAdm->DataTab[j].id, data);
-            }
-            else if (dlgAdm->DataTab[j].typ == 5)
-            {
-               SETCBDATA(data, dlgAdm->DataTab[j].id, FALSE)
-            }
-            else if (dlgAdm->DataTab[j].typ == 6)
-            {
-               SetTreeData(hW, data, dlgAdm->DataTab[j].id);
-            }
-            else if (dlgAdm->DataTab[j].typ == 7)
-            {
-               SetListData(hW, data, dlgAdm->DataTab[j].id);
-            }
-            else if (dlgAdm->DataTab[j].typ == 8)
-            {
-               SetSliderData(hW, data, dlgAdm->DataTab[j].id);
-            }
-            else if (dlgAdm->DataTab[j].typ == 9)
-            {
-               SetTabCtrlData(hW, data, dlgAdm->DataTab[j].id);
-            }
-          }
-   }
-   RETC(0);
+        if ( controlType == 0 )
+        {
+            SetDlgItemText(hwnd, itemID, c->ObjectToStringValue(dataObj));
+        }
+        else if ( controlType == 1 )
+        {
+            CheckDlgButton(hwnd, itemID, dlgDataToNumber(c, dataObj));
+        }
+        else if ( controlType == 2 )
+        {
+            manualCheckRadioButton(dlgAdm, hwnd, itemID, dlgDataToNumber(c, dataObj));
+        }
+        else if ( controlType == 3 )
+        {
+            setListBoxData(hwnd, itemID, c->ObjectToStringValue(dataObj));
+        }
+        else if ( controlType == 4 )
+        {
+            SetMultiListBoxSelections(hwnd, itemID, c->ObjectToStringValue(dataObj));
+        }
+        else if ( controlType == 5 )
+        {
+            setComboBoxData(hwnd, itemID, c->ObjectToStringValue(dataObj));
+        }
+        else if ( controlType == 6 )
+        {
+            SetTreeData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+        }
+        else if ( controlType == 7 )
+        {
+            SetListData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+        }
+        else if ( controlType == 8 )
+        {
+            SetSliderData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+        }
+        else if ( controlType == 9 )
+        {
+            SetTabCtrlData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+        }
+    }
+    return 0;
 }
 
 
 
-size_t RexxEntry GetStemData(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStemObject internDlgData)
 {
-   INT i,j, c;
-   CHAR data[DATA_BUFFER];
-   SHVBLOCK shvb;
-   CHAR name[64];
-   CHAR sname[64];
-   ULONG da;
-   HWND hW;
-   DEF_ADM;
+    if ( pcpbd->dlgAdm == NULL || pcpbd->hDlg == NULL )
+    {
+        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
+        return 0;
+    }
 
-   CHECKARG(2);
+    DIALOGADMIN *dlgAdm = seekDlgAdm(pcpbd->hDlg);
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
+        return 0;
+    }
 
-   GET_ADM;
-   if (!dlgAdm) RETERR
+    size_t j;
+    CHAR data[DATA_BUFFER];
+    HWND hwnd;
+    uint32_t itemID;
+    USHORT controlType;
 
-   rxstrlcpy(name, argv[1]);
-   if (name[strlen(name)-1] == '.') name[strlen(name)-1] = '\0';
-
-   c = 0;
-   for (j=0;j<dlgAdm->DT_size;j++)
-   {
-      if (dlgAdm->DataTab[j].typ != 999)   /* no separator */
-      {
-        c++;
-        data[0] = '\0';
-        hW = dlgAdm->ChildDlg[dlgAdm->DataTab[j].category];
-        if (dlgAdm->DataTab[j].typ == 0)
-            da = GetDlgItemText(hW, dlgAdm->DataTab[j].id, data, (DATA_BUFFER-1));
-        else
-        if (dlgAdm->DataTab[j].typ == 2 || dlgAdm->DataTab[j].typ == 1)
+    for ( j = 0; j < dlgAdm->DT_size; j++ )
+    {
+        if ( dlgAdm->DataTab[j].typ == 999 )
         {
-           da = IsDlgButtonChecked(hW, dlgAdm->DataTab[j].id);
-           itoa(da, data, 10);
+            /* Old comment: "no separator"  What does that mean? */
+            continue;
+        }
+
+        data[0] = '\0';
+
+        hwnd =        dlgAdm->ChildDlg[dlgAdm->DataTab[j].category];
+        itemID =      dlgAdm->DataTab[j].id;
+        controlType = dlgAdm->DataTab[j].typ;
+
+        if ( controlType == 0 )
+        {
+            GetDlgItemText(hwnd, itemID, data, (DATA_BUFFER-1));
+        }
+        else if ( controlType == 2 || controlType == 1 )
+        {
+            c->SetStemArrayElement(internDlgData, itemID, c->UnsignedInt32(IsDlgButtonChecked(hwnd, itemID)));
+            continue;
+        }
+        else if ( controlType == 3 )
+        {
+            if ( getListBoxData(hwnd, itemID, data) == LB_ERR )
+            {
+                data[0] = '\0';
+            }
+        }
+        else if ( controlType == 4 )
+        {
+            GetMultiListBoxSelections(hwnd, itemID, data);
+        }
+        else if ( controlType == 5 )
+        {
+            if ( getComboBoxData(hwnd, itemID, data) == LB_ERR )
+            {
+                data[0] = '\0';
+            }
+        }
+        else if ( controlType == 6 )
+        {
+            if ( ! GetTreeData(hwnd, data, itemID) )
+            {
+                data[0] = '\0';
+            }
+        }
+        else if ( controlType == 7 )
+        {
+            if ( ! GetListData(hwnd, data, itemID) )
+            {
+                data[0] = '\0';
+            }
+        }
+        else if ( controlType == 8 )
+        {
+            if ( ! GetSliderData(hwnd, data, itemID) )
+            {
+                data[0] = '\0';
+            }
+        }
+        else if ( controlType == 9 )
+        {
+            if ( ! GetTabCtrlData(hwnd, data, itemID) )
+            {
+                data[0] = '\0';
+            }
         }
         else
-        if (dlgAdm->DataTab[j].typ == 3)
-        {
-            GETLBDATA(data, dlgAdm->DataTab[j].id, FALSE)
-            if (i == LB_ERR) data[0] = '\0';
-        } else
-        if (dlgAdm->DataTab[j].typ == 4)
-        {
-           GetMultiListBoxSelections(hW, dlgAdm->DataTab[j].id, data);
-        } else
-        if (dlgAdm->DataTab[j].typ == 5)
-        {
-            GETCBDATA(data, dlgAdm->DataTab[j].id, FALSE)
-            if (i == CB_ERR) data[0] = '\0';
-        } else
-        if (dlgAdm->DataTab[j].typ == 6)
-        {
-            if (!GetTreeData(hW, data, dlgAdm->DataTab[j].id)) data[0] = '\0';
-        } else
-        if (dlgAdm->DataTab[j].typ == 7)
-        {
-            if (!GetListData(hW, data, dlgAdm->DataTab[j].id)) data[0] = '\0';
-        } else
-        if (dlgAdm->DataTab[j].typ == 8)
-        {
-            if (!GetSliderData(hW, data, dlgAdm->DataTab[j].id)) data[0] = '\0';
-        } else
-        if (dlgAdm->DataTab[j].typ == 9)
-        {
-            if (!GetTabCtrlData(hW, data, dlgAdm->DataTab[j].id)) data[0] = '\0';
-        } else
         {
             data[0] = '\0';
         }
 
-
-        sprintf(sname,"%s.%d",name,dlgAdm->DataTab[j].id);
-        shvb.shvnext = NULL;
-        shvb.shvname.strptr = sname;
-        shvb.shvname.strlength = strlen(sname);
-        shvb.shvnamelen = shvb.shvname.strlength;
-        shvb.shvvalue.strptr = data;
-        shvb.shvvalue.strlength = strlen(data);
-        shvb.shvvaluelen = strlen(data);
-        shvb.shvcode = RXSHV_SYSET;
-        shvb.shvret = 0;
-        if (RexxVariablePool(&shvb) == RXSHV_BADN) {
-           sprintf(data, "Variable %s could not be declared", sname);
-           MessageBox(0,data,"Error",MB_OK | MB_ICONHAND);
-           RETERR
-        }
-      }
-   }
-   RETC(0)
+        c->SetStemArrayElement(internDlgData, itemID, c->String(data));
+    }
+    return 0;
 }
 
 
@@ -871,14 +1021,14 @@ size_t RexxEntry DataTable(const char *funcname, size_t argc, CONSTRXSTRING *arg
 
 
 /* search for all the child windows in the dialog and add them to the data list */
-BOOL DataAutodetection(DIALOGADMIN * aDlg)
+bool DataAutodetection(DIALOGADMIN * dlgAdm)
 {
     HWND parent, current, next;
     LONG style;
     CHAR classname[64];
     INT itemtoadd;
 
-    parent = aDlg->TheDlg;
+    parent = dlgAdm->TheDlg;
     current = parent;
     next = GetTopWindow(current);
     while ((next) && ((HWND)getWindowPtr(next, GWLP_HWNDPARENT) == parent))
@@ -934,22 +1084,22 @@ BOOL DataAutodetection(DIALOGADMIN * aDlg)
 
        if (itemtoadd >= 0)
        {
-          if (!aDlg->DataTab)
+          if (!dlgAdm->DataTab)
           {
-              aDlg->DataTab = (DATATABLEENTRY *)LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
-              if (!aDlg->DataTab)
+              dlgAdm->DataTab = (DATATABLEENTRY *)LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
+              if (!dlgAdm->DataTab)
               {
                    MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
-                   return FALSE;
+                   return false;
               }
-              aDlg->DT_size = 0;
+              dlgAdm->DT_size = 0;
           }
-          if (aDlg->DT_size < MAX_DT_ENTRIES)
+          if (dlgAdm->DT_size < MAX_DT_ENTRIES)
           {
-              aDlg->DataTab[aDlg->DT_size].id = GetWindowLong(current, GWL_ID);
-              aDlg->DataTab[aDlg->DT_size].typ = itemtoadd;
-              aDlg->DataTab[aDlg->DT_size].category = 0;
-              aDlg->DT_size ++;
+              dlgAdm->DataTab[dlgAdm->DT_size].id = GetWindowLong(current, GWL_ID);
+              dlgAdm->DataTab[dlgAdm->DT_size].typ = itemtoadd;
+              dlgAdm->DataTab[dlgAdm->DT_size].category = 0;
+              dlgAdm->DT_size ++;
           }
           else
           {
@@ -957,10 +1107,10 @@ BOOL DataAutodetection(DIALOGADMIN * aDlg)
                             "number of allocated table entries. Data\n"
                             "autodetection has failed.",
                          "Error",MB_OK | MB_ICONHAND);
-              return FALSE;
+              return false;
           }
        }
        next = GetNextWindow(current, GW_HWNDNEXT);
     }
-    return TRUE;
+    return true;
 }

@@ -45,13 +45,13 @@
 #include "APICommon.h"
 #include "oodCommon.h"
 #include "oodText.hpp"
+#include "oodData.hpp"
 #include "oodSymbols.h"
 
 extern INT DelDialog(DIALOGADMIN * aDlg);
 extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
 extern BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam, BOOL MsgEnabled);
 extern BOOL DrawBackgroundBmp(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam);
-extern BOOL DataAutodetection(DIALOGADMIN * aDlg);
 extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr);
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
@@ -424,7 +424,7 @@ int32_t DelDialog(DIALOGADMIN * aDlg)
     }
     StoredDialogs--;
 
-    // Post the WM_QUIT message to exit the message loop.
+    // Post the WM_QUIT message to exit the Windows message loop.
     PostMessage(aDlg->TheDlg, WM_QUIT, 0, 0);
 
     if ( aDlg->TheDlg )
@@ -612,7 +612,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
 
         if (isYes(buffer))
         {
-            if (!DataAutodetection(Dlg))
+            if ( ! DataAutodetection(Dlg) )
             {
                 Dlg->TheThread = NULL;
                 return 0;
@@ -1781,6 +1781,21 @@ RexxMethod1(logical_t, pbdlg_isDialogActive, CSELF, pCSelf)
 {
     return seekDlgAdm(((pCPlainBaseDialog)pCSelf)->hDlg) != NULL;
 }
+
+
+RexxMethod2(uint32_t, pbdlg_setDlgDataFromStem_pvt, RexxStemObject, internDlgData, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    return setDlgDataFromStem(context, pcpbd, internDlgData);
+}
+
+
+RexxMethod2(uint32_t, pbdlg_putDlgDataInStem_pvt, RexxStemObject, internDlgData, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    return putDlgDataInStem(context, pcpbd, internDlgData);
+}
+
 
 RexxMethod3(RexxObjectPtr, pbdlg_getItem, RexxObjectPtr, rxID, OPTIONAL_RexxStringObject, _hDlg, CSELF, pCSelf)
 {

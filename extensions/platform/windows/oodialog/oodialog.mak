@@ -48,26 +48,29 @@ OPTIONS= $(cflags_common) $(cflags_dll) $(OR_ORYXINCL)
 OR_LIB=$(OR_OUTDIR)
 
 # All Source Files
-SOURCEF= $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\ooDialog.obj \
-         $(OR_OUTDIR)\oodMenu.obj $(OR_OUTDIR)\oodPackageEntry.obj $(OR_OUTDIR)\oodRoutines.obj $(OR_OUTDIR)\oodUtilities.obj \
-         $(OR_OUTDIR)\oovbmp.obj $(OR_OUTDIR)\oovdata.obj $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovdraw.obj \
+SOURCEF= $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodData.obj \
+         $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj $(OR_OUTDIR)\oodPackageEntry.obj $(OR_OUTDIR)\oodRoutines.obj \
+         $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovbmp.obj $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovdraw.obj \
          $(OR_OUTDIR)\oovmsg.obj $(OR_OUTDIR)\oovother.obj $(OR_OUTDIR)\oovscrll.obj  $(OR_OUTDIR)\oodText.obj \
          $(OR_OUTDIR)\oovuser.obj $(OR_OUTDIR)\oodialog.res
 
 # All Source files that include oodCommon.h
-COMMON_SOURCEF = $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodMenu.obj \
-                 $(OR_OUTDIR)\oodRoutines.obj $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovbmp.obj $(OR_OUTDIR)\oovdata.obj \
+COMMON_SOURCEF = $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oodMenu.obj \
+                 $(OR_OUTDIR)\oodRoutines.obj $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovbmp.obj \
                  $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovdraw.obj $(OR_OUTDIR)\oovmsg.obj $(OR_OUTDIR)\oovother.obj \
                  $(OR_OUTDIR)\oovscrll.obj $(OR_OUTDIR)\oodText.obj $(OR_OUTDIR)\oovuser.obj
 
 # All Source files that include APICommon.h
 APICOMMON_SOURCEF = $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodControl.obj \
-                    $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj$(OR_OUTDIR)\oodText.obj \
+                    $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj$(OR_OUTDIR)\oodText.obj \
                     $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovother.obj
 
 # All Source files that include oodText.hpp
 OODTEXT_SOURCEF = $(OR_OUTDIR)\oodControl.cpp $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodText.cpp $(OR_OUTDIR)\oodUtilities.cpp \
                   $(OR_OUTDIR)\oovother.cpp
+
+# All Source files that include oodData.hpp
+OODDATA_SOURCEF = $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oovuser.obj
 
 .c{$(OR_OUTDIR)}.obj:
     $(C) $(OPTIONS)  /DINCL_32  -c $(@B).c /Fo$(OR_OUTDIR)\$(@B).obj
@@ -112,4 +115,5 @@ $(SOURCEF) : ooDialog.h
 $(COMMON_SOURCEF) : oodCommon.h
 $(APICOMMON_SOURCEF) : APICommon.h
 $(OODTEXT_SOURCEF) : oodText.hpp
+$(OODDATA_SOURCEF) : oodData.hpp
 $(OR_OUTDIR)\oodMenu.obj : oodMenu.hpp

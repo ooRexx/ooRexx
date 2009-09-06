@@ -255,6 +255,8 @@ void doOverException(RexxThreadContext *c, RexxObjectPtr obj)
 }
 
 /**
+ * Error 98.900
+ *
  * Produces a message:
  *
  * Could not retrieve the "value" information for "object"
@@ -276,6 +278,11 @@ void failedToRetrieveException(RexxThreadContext *c, CSTRING item, RexxObjectPtr
               item, c->ObjectToStringValue(name));
 
     c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
+}
+
+void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
+{
+    failedToRetrieveException(c, "dialog administration block", source);
 }
 
 void nullObjectException(RexxThreadContext *c, CSTRING name, int pos)

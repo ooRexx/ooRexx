@@ -44,10 +44,10 @@
 #include <ctl3d.h>
 #endif
 #include "oodCommon.h"
+#include "oodData.hpp"
 #include "oodSymbols.h"
 
 extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
-extern BOOL DataAutodetection(DIALOGADMIN * aDlg);
 extern INT DelDialog(DIALOGADMIN * aDlg);
 extern BOOL GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
 
@@ -252,7 +252,7 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
         }
 
         if ( isYes(buffer) )
-            if ( !DataAutodetection(adm) )
+            if ( ! DataAutodetection(adm) )
             {
                 adm->TheThread = NULL;
                 return 0;
