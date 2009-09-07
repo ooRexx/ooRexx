@@ -111,7 +111,7 @@
     end
  end
 
- dlg = .TicketDialog~new(data.,posx,,,dlgst,,title)
+ dlg = .TicketDialog~new( ,posx,,,dlgst,,title)
 
  if dlg~InitCode \= 0 then do; say "Dialog init did not work"; exit; end
 
@@ -302,9 +302,12 @@
          if self~getCategoryRadioButton(id,3) then leave
       end
       today = date('W')
-      if today = daynames[id-30] then
+      if id == 38 then
+           self~setCategoryStaticText(42, "==> No day selected", 4)
+      else if today = daynames[id-30] then
            self~setCategoryStaticText(42, "Today" daynames[id-30], 4)
-      else self~setCategoryStaticText(42, "Next" daynames[id-30], 4)
+      else
+           self~setCategoryStaticText(42, "Next" daynames[id-30], 4)
    /* time */
       id = random(1,4) + 45
       self~setCategoryRadioButton(id,1,4)
@@ -312,9 +315,26 @@
 ::method printTicket
    selectedFilm   = self~getCategoryComboLine(41,4)
    selectedCinema = self~getCategoryValue(44,4)
-   if selectedFilm~left(3) = '==>' | selectedCinema~left(3) = '==>' then
-        ret = TimedMessage("You have to select a movie and a cinema first", ,
-                           "Incomplete Selections", 3000)
+   selectedDay    = self~getCategoryValue(42, 4)
+
+   noFilm = selectedFilm~left(3) = '==>'
+   noCine = selectedCinema~left(3) = '==>'
+   noDay  = selectedDay~left(3) = '==>'
+   msg = ""
+   select
+     when noFilm, noCine, noDay then msg = "You have to select a movie, a cinema, and a day first"
+     when noFilm, noCine        then msg = "You have to select a movie and a cinema first"
+     when noFilm, noDay         then msg = "You have to select a movie and a day first"
+     when noFilm                then msg = "You have to select a movie first"
+     when noCine, noDay         then msg = "You have to select a cinema and a day first"
+     when noCine                then msg = "You have to select a cinema first"
+     when noDay                 then msg = "You have to select a day first"
+     otherwise nop
+   end
+   -- End select
+
+   if msg \== '' then
+      ret = TimedMessage(msg, "Incomplete Selections", 3000)
    else ret = TimedMessage("This is where we would ask for money!.... and print the ticket", ,
                            selectedFilm '-at-' selectedCinema~substr(2), 3000)
 
