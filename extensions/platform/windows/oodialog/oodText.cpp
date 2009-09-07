@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <shlwapi.h>
 #include <stdio.h>
@@ -44,8 +44,8 @@
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
-#include "oodCommon.h"
-#include "APICommon.h"
+#include "oodCommon.hpp"
+#include "APICommon.hpp"
 #include "oodText.hpp"
 
 extern HWND ScrollingButton = NULL;

@@ -430,50 +430,19 @@
    oldPage = self~CurrentCategory
    if oldPage < self~catalog['count'] then self~ChangePage(oldPage+1)
 
-  /* The following methods */
-
-::method ConnectEntryLine
-   use arg id, fname
-   forward message "AddAttribute" continue
-   if result = -1 then return -1              /* new id in result */
-   return DataTable(self~adm,"ADD",result,0, self~catalog['category']);
-
-::method ConnectComboBox
-   use arg id, fname, opts
-   forward message "AddAttribute" continue
-   id = result; if result = -1 then return -1              /* new id in result */
-   if opts~translate~wordpos("LIST") = 0 then type = 0; else type = 5
-   return DataTable(self~adm,"ADD",id,type, self~catalog['category']);
-
-::method ConnectCheckBox
-   use arg id, fname
-   forward message "AddAttribute" continue
-   if result = -1 then return -1              /* new id in result */
-   return DataTable(self~adm,"ADD",result,1, self~catalog['category']);
-
-::method ConnectRadioButton
-   use arg id, fname
-   forward message "AddAttribute" continue
-   if result = -1 then return -1              /* new id in result */
-   return DataTable(self~adm,"ADD",result,2, self~catalog['category']);
-
-::method ConnectListBox
-   use arg id, fname
-   forward message "AddAttribute" continue
-   if result = -1 then return -1              /* new id in result */
-   return DataTable(self~adm,"ADD",result,3, self~catalog['category']);
-
-::method ConnectMultiListBox
-   use arg id, fname
-   forward message "AddAttribute" continue
-   if result = -1 then return -1              /* new id in result */
-   return DataTable(self~adm,"ADD",result,4, self~catalog['category']);
-
-::method ConnectSeparator
-   use arg id
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return DataTable(self~adm,"ADD",id,9, self~catalog['category']);
+::method ConnectEntryLine external "LIBRARY oodialog generic_connectControl"
+::method ConnectComboBox external "LIBRARY oodialog generic_connectControl"
+::method ConnectCheckBox external "LIBRARY oodialog generic_connectControl"
+::method ConnectRadioButton external "LIBRARY oodialog generic_connectControl"
+::method ConnectListBox external "LIBRARY oodialog generic_connectControl"
+::method ConnectMultiListBox external "LIBRARY oodialog generic_connectControl"
+::method ConnectSeparator external "LIBRARY oodialog generic_connectControl"
+::method ConnectTreeControl external "LIBRARY oodialog generic_connectControl"
+::method ConnectListControl external "LIBRARY oodialog generic_connectControl"
+::method ConnectSliderControl external "LIBRARY oodialog generic_connectControl"
+::method ConnectTabControl external "LIBRARY oodialog generic_connectControl"
+::method connectDateTimePicker unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectMonthCalendar unguarded external "LIBRARY oodialog generic_connectControl"
 
 ::method BoxMessage unguarded private
    use arg category, id, msg, wP, lP
@@ -839,27 +808,3 @@
    return self~BoxMessage(category, id, 0x000001A1, 0, 0)/self~factorY
 
 
-/* These methods are necessary for Win32 controls when used in a cetegory dialog */
-::method ConnectTreeControl
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1                /* current category */
-   return DataTable(self~adm,"ADD", result,6, self~catalog['category']);         /* new id in result  6 == Tree Type */
-
-::method ConnectListControl
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1                /* current category */
-   return DataTable(self~adm,"ADD",result,7, self~catalog['category']);         /* new id in result  7 == List Type */
-
-::method ConnectSliderControl
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1                /* current category */
-   return DataTable(self~adm,"ADD",result,8, self~catalog['category']);         /* new id in result  8 == Track Bar Type */
-
-::method ConnectTabControl
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1                /* current category */
-   return DataTable(self~adm,"ADD",result,9, self~catalog['category']);         /* new id in result  9 == Tab Type */

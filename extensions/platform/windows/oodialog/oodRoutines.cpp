@@ -42,14 +42,14 @@
  * Contains the implementation for the ooDialog public routines.
  */
 
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
 #include <malloc.h>
 #include <dlgs.h>
 #include <shlwapi.h>
-#include "APICommon.h"
-#include "oodCommon.h"
+#include "APICommon.hpp"
+#include "oodCommon.hpp"
 #include "oodText.hpp"
 
 
@@ -678,7 +678,7 @@ RexxRoutine3(RexxObjectPtr, playSound_rtn, OPTIONAL_CSTRING, fileName, OPTIONAL_
     {
         opts |= isYes(modifier) ? SND_ASYNC : SND_SYNC;
     }
-    else if ( strcmp("PLAYSOUNDFILEINLOOP", modifier) == 0 )
+    else if ( strcmp("PLAYSOUNDFILEINLOOP", routineName) == 0 )
     {
         opts |= SND_ASYNC | SND_LOOP;
     }

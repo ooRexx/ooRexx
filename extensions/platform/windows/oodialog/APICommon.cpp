@@ -40,14 +40,14 @@
  * APICommon.cpp
  *
  * This module contains generic convenience functions that might be useful in
- * any code that uses the native API.  Include APICommon.h to use them.
+ * any code that uses the native API.  Include APICommon.hpp to use them.
  */
 
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
 #include <errno.h>
-#include "APICommon.h"
+#include "APICommon.hpp"
 
 
 /**
@@ -278,11 +278,6 @@ void failedToRetrieveException(RexxThreadContext *c, CSTRING item, RexxObjectPtr
               item, c->ObjectToStringValue(name));
 
     c->RaiseException1(Rexx_Error_Execution_user_defined, c->String(buf));
-}
-
-void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
-{
-    failedToRetrieveException(c, "dialog administration block", source);
 }
 
 void nullObjectException(RexxThreadContext *c, CSTRING name, int pos)

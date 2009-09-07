@@ -35,13 +35,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
 #include <limits.h>
-#include "APICommon.h"
-#include "oodCommon.h"
+#include "APICommon.hpp"
+#include "oodCommon.hpp"
 #include "oodMenu.hpp"
 
 

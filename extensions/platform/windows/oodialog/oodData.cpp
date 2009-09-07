@@ -52,7 +52,7 @@
  * compatibility.
  */
 
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
 #include <dlgs.h>
@@ -62,8 +62,8 @@
 #include <ctl3d.h>
 #endif
 
-#include "APICommon.h"
-#include "oodCommon.h"
+#include "APICommon.hpp"
+#include "oodCommon.hpp"
 #include "oodData.hpp"
 
 static inline int searchDataTable(DIALOGADMIN *dlgAdm, uint32_t id)
@@ -77,7 +77,7 @@ static inline int searchDataTable(DIALOGADMIN *dlgAdm, uint32_t id)
         }
         if ( ndx < dlgAdm->DT_size )
         {
-            return ndx;
+            return dlgAdm->DataTab[ndx].typ;
         }
     }
     return -1;
@@ -499,10 +499,13 @@ RexxObjectPtr internalGetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd,
         return 0;
     }
 
-    ctrlType = searchDataTable(dlgAdm, id);
     if ( ctrlType == -1 )
     {
-        ctrlType = 0;
+        ctrlType = searchDataTable(dlgAdm, id);
+        if ( ctrlType == -1 )
+        {
+            ctrlType = 0;
+        }
     }
 
     char data[DATA_BUFFER];
@@ -597,10 +600,13 @@ uint32_t internalSetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint
         return 0;
     }
 
-    ctrlType = searchDataTable(dlgAdm, id);
     if ( ctrlType == -1 )
     {
-        ctrlType = 0;
+        ctrlType = searchDataTable(dlgAdm, id);
+        if ( ctrlType == -1 )
+        {
+            ctrlType = 0;
+        }
     }
 
     switch ( ctrlType )
@@ -675,6 +681,9 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
     {
         if ( dlgAdm->DataTab[j].typ == 999 )
         {
+            // See the connectSeparator() method and the manualCheckRadioButton
+            // above. Used to separate two groups of radio buttons, there is no
+            // real control involved.
             continue;
         }
 
@@ -685,11 +694,10 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
         dataObj = c->GetStemArrayElement(internDlgData, itemID);
         if ( dataObj == NULLOBJECT )
         {
-            // TOOD need better exception here, or maybe not.
-            char buf[128];
-            sprintf(buf, "setDlgDataFromStem() %s.%d has no value", c->GetStemValue(internDlgData), itemID);
-            executionErrorException(c->threadContext, buf);
-            return 0;
+            // The pre-4.0.0 code just ignored a stem index not set and would
+            // use the string, say INTERNDLGDATA.31.  We will use the empty
+            // string.
+            dataObj = c->NullString();
         }
 
         if ( controlType == 0 )
@@ -763,7 +771,9 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
     {
         if ( dlgAdm->DataTab[j].typ == 999 )
         {
-            /* Old comment: "no separator"  What does that mean? */
+            // See the connectSeparator() method and the manualCheckRadioButton
+            // above. Used to separate two groups of radio buttons, there is no
+            // real control involved.
             continue;
         }
 
@@ -839,6 +849,40 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
 }
 
 
+RexxObjectPtr addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, RexxObjectPtr rxID, uint32_t typ, uint32_t category)
+{
+    int id;
+    if ( ! c->Int32(rxID, &id) || id == -1 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    if ( dlgAdm->DataTab == NULL )
+    {
+        dlgAdm->DataTab = (DATATABLEENTRY *)LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
+        if ( !dlgAdm->DataTab )
+        {
+            outOfMemoryException(c->threadContext);
+            return TheOneObj;
+        }
+        dlgAdm->DT_size = 0;
+    }
+
+    if ( dlgAdm->DT_size < MAX_DT_ENTRIES )
+    {
+        dlgAdm->DataTab[dlgAdm->DT_size].id = id;
+        dlgAdm->DataTab[dlgAdm->DT_size].typ = typ;
+        dlgAdm->DataTab[dlgAdm->DT_size].category = category;
+        dlgAdm->DT_size ++;
+        return TheZeroObj;
+    }
+
+    MessageBox(0, "Dialog data items have exceeded the maximum number of\n"
+               "allocated table entries. No data item can be added.",
+               "Error", MB_OK | MB_ICONHAND);
+    return TheOneObj;
+}
+
 size_t RexxEntry DataTable(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    DEF_ADM;
@@ -847,36 +891,7 @@ size_t RexxEntry DataTable(const char *funcname, size_t argc, CONSTRXSTRING *arg
 
    GET_ADM;
    if (!dlgAdm) RETERR
-   if (!strcmp(argv[1].strptr, "ADD"))    /* add a dialog data item to the table */
-   {
-       CHECKARGL(4);
-       if (!dlgAdm->DataTab)
-       {
-          dlgAdm->DataTab = (DATATABLEENTRY *)LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
-          if (!dlgAdm->DataTab)
-          {
-             MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
-             RETC(1);
-          }
-          dlgAdm->DT_size = 0;
-       }
-       if (dlgAdm->DT_size < MAX_DT_ENTRIES)
-       {
-          dlgAdm->DataTab[dlgAdm->DT_size].id = atoi(argv[2].strptr);
-          dlgAdm->DataTab[dlgAdm->DT_size].typ = atoi(argv[3].strptr);
-          if (argc > 4)
-              dlgAdm->DataTab[dlgAdm->DT_size].category = atoi(argv[4].strptr);
-          else
-              dlgAdm->DataTab[dlgAdm->DT_size].category = 0;
-          dlgAdm->DT_size ++;
-          RETC(0);
-       }
-       MessageBox(0, "Dialog data items have exceeded the maximum number of\n"
-                     "allocated table entries. No data item can be added.",
-                  "Error",MB_OK | MB_ICONHAND);
-       RETC(1);
-   }
-   else
+
    if (!strcmp(argv[1].strptr, "GET"))     /* get a dialog data item from the table */
    {
        INT i;

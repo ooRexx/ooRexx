@@ -35,15 +35,15 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <mmsystem.h>
 #include <commctrl.h>
 #include <stdio.h>
 #include <dlgs.h>
 #include <shlwapi.h>
-#include "APICommon.h"
-#include "oodCommon.h"
+#include "APICommon.hpp"
+#include "oodCommon.hpp"
 #include "oodText.hpp"
 #include "oodData.hpp"
 #include "oodSymbols.h"
@@ -2085,6 +2085,53 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
     return getTextSize(context, text, fontName, fontSize, hwndSrc, self);
 }
 
+
+RexxMethod5(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
+            OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self)
+{
+    DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, self);
+    if ( dlgAdm == NULL )
+    {
+        return TheOneObj;
+    }
+
+    // result will be the resolved resource ID, which may be -1 on error.
+    RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
+
+    // TODO these numbers need to be mapped to the oodControl_t enum.
+    uint32_t typ;
+    if ( strcmp("CONNECTENTRYLINE", msgName) == 0 )           {typ =    0;}
+    else if ( strcmp("CONNECTCOMBOBOX", msgName) == 0 )       {typ = (opts != NULL && StrStrI(opts, "LIST") != NULL) ? 5 : 0;}
+    else if ( strcmp("CONNECTCHECKBOX", msgName) == 0 )       {typ =    1;}
+    else if ( strcmp("CONNECTRADIOBUTTON", msgName) == 0 )    {typ =    2;}
+    else if ( strcmp("CONNECTLISTBOX", msgName) == 0 )        {typ =    3;}
+    else if ( strcmp("CONNECTMULTILISTBOX", msgName) == 0 )   {typ =    4;}
+    else if ( strcmp("CONNECTSEPARATOR", msgName) == 0 )      {typ =  999;}
+    else if ( strcmp("CONNECTMULTILISTBOX", msgName) == 0 )   {typ =    4;}
+    else if ( strcmp("CONNECTTREECONTROL", msgName) == 0 )    {typ =    6;}
+    else if ( strcmp("CONNECTLISTCONTROL", msgName) == 0 )    {typ =    7;}
+    else if ( strcmp("CONNECTSLIDERCONTROL", msgName) == 0 )  {typ =    8;}
+    else if ( strcmp("CONNECTTABCONTROL", msgName) == 0 )     {typ =    9;}
+    else if ( strcmp("CONNECTDATETIMEPICKER", msgName) == 0 ) {typ =   10;}
+    else if ( strcmp("CONNECTMONTHCALENDAR", msgName) == 0 )  {typ =   11;}
+    else
+    {
+        return TheOneObj;
+    }
+
+    // Category is 0 for PlainBaseDialog and AdvancedControls.
+    uint32_t category = 0;
+
+    if ( context->IsOfType(self, "CATEGORYDIALOG") )
+    {
+        // Figure out the category number.  There should be no way things fail.
+        RexxDirectoryObject catalog = (RexxDirectoryObject)context->SendMessage0(self, "CATALOG");
+        RexxObjectPtr rxPageID = context->DirectoryAt(catalog, "category");
+        context->UnsignedInt32(rxPageID, &category);
+    }
+
+    return addToDataTable(context, dlgAdm, result, typ, category);
+}
 
 /**
  *  Methods for the .DynamicDialog class.  TODO There should be a

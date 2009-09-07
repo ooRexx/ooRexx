@@ -44,7 +44,7 @@
  * variables and DLLMain().
  */
 
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 HINSTANCE MyInstance = NULL;
 DIALOGADMIN * DialogTab[MAXDIALOGS] = {NULL};
@@ -181,8 +181,6 @@ REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
-REXX_METHOD_PROTOTYPE(generic_setListTabulators);
-
 REXX_METHOD_PROTOTYPE(wb_getHwnd);
 REXX_METHOD_PROTOTYPE(wb_getFactorX);
 REXX_METHOD_PROTOTYPE(wb_setFactorX);
@@ -229,6 +227,9 @@ REXX_METHOD_PROTOTYPE(pbdlg_internalSetItemData_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(pbdlg_addUserMessage);
 REXX_METHOD_PROTOTYPE(pbdlg_unInit);
+
+REXX_METHOD_PROTOTYPE(generic_connectControl);
+REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
 
@@ -285,6 +286,7 @@ REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
 
 REXX_METHOD_PROTOTYPE(advCtrl_getControl);
 REXX_METHOD_PROTOTYPE(advCtrl_putControl_pvt);
+REXX_METHOD_PROTOTYPE(advCtrl_test);
 
 REXX_METHOD_PROTOTYPE(lv_setImageList);
 REXX_METHOD_PROTOTYPE(lv_getImageList);
@@ -511,6 +513,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getTextSizeDlg,          pbdlg_getTextSizeDlg),
     REXX_METHOD(pbdlg_unInit,                  pbdlg_unInit),
 
+    REXX_METHOD(generic_connectControl,       generic_connectControl),
+    REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
+
     REXX_METHOD(dyndlg_stop,                  dyndlg_stop),
 
     REXX_METHOD(dlgctrl_new_cls,              dlgctrl_new_cls),
@@ -520,6 +525,7 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(advCtrl_getControl,           advCtrl_getControl),
     REXX_METHOD(advCtrl_putControl_pvt,       advCtrl_putControl_pvt),
+    REXX_METHOD(advCtrl_test,                 advCtrl_test),
 
     REXX_METHOD(window_init,                  window_init),
     REXX_METHOD(window_unInit,                window_unInit),
@@ -569,7 +575,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(il_isNull,                   il_isNull),
     REXX_METHOD(il_handle,                   il_handle),
 
-    REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
 
     REXX_METHOD(lv_setImageList,          lv_setImageList),
     REXX_METHOD(lv_getImageList,          lv_getImageList),

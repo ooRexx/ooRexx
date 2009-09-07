@@ -161,6 +161,8 @@ extern BUTTONTYPE getButtonInfo(HWND, PBUTTONSUBTYPE, DWORD *);
 #define GET_HWND(p)   ((HWND)string2pointer(p))
 #define GET_POINTER(p) string2pointer(p)
 
+inline void failedToRetrieveDlgAdmException(RexxThreadContext *, RexxObjectPtr);
+
 inline void *string2pointer(CONSTRXSTRING *string) { return string2pointer(string->strptr); }
 inline void *string2pointer(CONSTRXSTRING &string) { return string2pointer(string.strptr); }
 

@@ -54,13 +54,13 @@ SOURCEF= $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodC
          $(OR_OUTDIR)\oovmsg.obj $(OR_OUTDIR)\oovother.obj $(OR_OUTDIR)\oovscrll.obj  $(OR_OUTDIR)\oodText.obj \
          $(OR_OUTDIR)\oovuser.obj $(OR_OUTDIR)\oodialog.res
 
-# All Source files that include oodCommon.h
+# All Source files that include oodCommon.hpp
 COMMON_SOURCEF = $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oodMenu.obj \
                  $(OR_OUTDIR)\oodRoutines.obj $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovbmp.obj \
                  $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovdraw.obj $(OR_OUTDIR)\oovmsg.obj $(OR_OUTDIR)\oovother.obj \
                  $(OR_OUTDIR)\oovscrll.obj $(OR_OUTDIR)\oodText.obj $(OR_OUTDIR)\oovuser.obj
 
-# All Source files that include APICommon.h
+# All Source files that include APICommon.hpp
 APICOMMON_SOURCEF = $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodControl.obj \
                     $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj$(OR_OUTDIR)\oodText.obj \
                     $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovother.obj
@@ -111,9 +111,9 @@ $(OR_OUTDIR)\oodialog.res: $(OR_OODIALOGSRC)\oodialog.rc
         $(rc) $(rcflags_common) /i $(OR_OODIALOGSRC) /i $(OR_WINKERNELSRC) -r -fo$(OR_OUTDIR)\$(@B).res $(OR_OODIALOGSRC)\$(@B).rc
 
 # Source .obj files that should be recompiled when header file(s) change.
-$(SOURCEF) : ooDialog.h
-$(COMMON_SOURCEF) : oodCommon.h
-$(APICOMMON_SOURCEF) : APICommon.h
+$(SOURCEF) : ooDialog.hpp
+$(COMMON_SOURCEF) : oodCommon.hpp
+$(APICOMMON_SOURCEF) : APICommon.hpp
 $(OODTEXT_SOURCEF) : oodText.hpp
 $(OODDATA_SOURCEF) : oodData.hpp
 $(OR_OUTDIR)\oodMenu.obj : oodMenu.hpp

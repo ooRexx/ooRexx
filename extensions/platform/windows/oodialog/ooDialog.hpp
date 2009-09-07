@@ -35,10 +35,10 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/* Open Object Rexx - ooDialog                                      ooDialog.h */
-/*                                                                            */
-/******************************************************************************/
+
+#ifndef oodDialog_Included
+#define oodDialog_Included
+
 #define NTDDI_VERSION   NTDDI_WINXPSP2
 #define _WIN32_WINNT    0x0501
 #define WINVER          0x0501
@@ -49,20 +49,20 @@
 #include <windows.h>
 #include "oorexxapi.h"
 
-#define MAXREXXNAME 128
-#define MAXLENQUEUE 2056
-#define NR_BUFFER 15
-#define STR_BUFFER 256
-#define LONGSTR_BUFFER 1024
-#define DATA_BUFFER 4096*2      // was 256 before ES_MULTILINE
-#define MAX_P 64
-#define MAX_MT_ENTRIES  500
-#define MAX_BT_ENTRIES  300
-#define MAX_DT_ENTRIES  750
-#define MAX_CT_ENTRIES 1000
-#define MAX_IT_ENTRIES   20
-#define MAXCHILDDIALOGS 20
-#define MAXDIALOGS 20
+#define MAXREXXNAME        128
+#define MAXLENQUEUE       2056
+#define NR_BUFFER           15
+#define STR_BUFFER         256
+#define LONGSTR_BUFFER    1024
+#define DATA_BUFFER       8192
+#define MAX_P               64
+#define MAX_MT_ENTRIES     500
+#define MAX_BT_ENTRIES     300
+#define MAX_DT_ENTRIES     750
+#define MAX_CT_ENTRIES    1000
+#define MAX_IT_ENTRIES      20
+#define MAXCHILDDIALOGS     20
+#define MAXDIALOGS          20
 
 /* User defined window messages used for RexxDlgProc() */
 #define WM_USER_CREATECHILD         WM_USER + 0x0601
@@ -491,3 +491,4 @@ inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
 #define DEF_ADM     DIALOGADMIN * dlgAdm = NULL
 #define GET_ADM     dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0])
 
+#endif

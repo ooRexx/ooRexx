@@ -577,53 +577,13 @@
 /* and the dialog fields will be assigned in the same order they are  */
 /* called */
 
-::method ConnectEntryLine
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD", result,0);                /* new id in result */
-
-::method ConnectComboBox
-   use arg id, attributeName, opts
-   forward message "AddAttribute" continue
-   id = result; if id = -1 then return -1              /* new id in result */
-   if opts~translate~wordpos("LIST") = 0 then type = 0; else type = 5
-   return DataTable(self~adm,"ADD",id,type);
-
-::method ConnectCheckBox
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,1);                /* new id in result */
-
-::method ConnectRadioButton
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,2);                /* new id in result */
-
-::method ConnectListBox
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,3);                /* new id in result */
-
-::method ConnectMultiListBox
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,4);                /* new id in result */
-
-   /* Use this method to separate two radiobutton groups */
-
-::method ConnectSeparator
-   use arg id
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return DataTable(self~adm,"ADD",id,9);
-
-   /* This method adds an attribute to the object. The attribute is associated */
-   /* with the windows control 'id' */
+::method ConnectEntryLine external "LIBRARY oodialog generic_connectControl"
+::method ConnectComboBox external "LIBRARY oodialog generic_connectControl"
+::method ConnectCheckBox external "LIBRARY oodialog generic_connectControl"
+::method ConnectRadioButton external "LIBRARY oodialog generic_connectControl"
+::method ConnectListBox external "LIBRARY oodialog generic_connectControl"
+::method ConnectMultiListBox external "LIBRARY oodialog generic_connectControl"
+::method ConnectSeparator external "LIBRARY oodialog generic_connectControl"
 
 ::method AddAttribute protected
    use arg id, attributeName
@@ -643,7 +603,7 @@
    self~dataConnection[id] = attributeName
    self~setmethod(attributeName, "expose "attributeName"; return "attributeName)
    self~setmethod(attributeName || "=", "expose "attributeName"; use arg "attributeName)
-   interpret("self~"attributeName"=''")   /* initial value = "" */
+   self~sendWith(attributeName || '=', .array~of(""))  /* initial value = "" */
    return id
 
 
@@ -717,6 +677,7 @@
 
 ::method SetDataStem protected unguarded
    use arg dataStem.
+   if dataStem.~items == 0 then return 1
    do k over dataStem.
       if k~dataType('W') then numericID = k
       else numericID = self~ResolveSymbolicID(k)

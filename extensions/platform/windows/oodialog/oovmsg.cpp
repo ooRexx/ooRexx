@@ -39,12 +39,12 @@
 /**
  * Open Object REXX OODialog - ooDialog Messaging function
  */
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
 #include <dlgs.h>
 #include <commctrl.h>
-#include "oodCommon.h"
+#include "oodCommon.hpp"
 
 
 inline bool isHex(CSTRING c)

@@ -35,7 +35,7 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <mmsystem.h>
 #include <stdio.h>
@@ -44,8 +44,8 @@
 #include <errno.h>
 #include <shlwapi.h>
 #include <commctrl.h>
-#include "APICommon.h"
-#include "oodCommon.h"
+#include "APICommon.hpp"
+#include "oodCommon.hpp"
 #include "oodText.hpp"
 
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);

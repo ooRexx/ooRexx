@@ -63,42 +63,14 @@
 ::method getMonthCalendar unguarded external "LIBRARY oodialog advCtrl_getControl"
 ::method getDateTimePicker unguarded external "LIBRARY oodialog advCtrl_getControl"
 
-::method connectTreeControl unguarded
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,6);      /* new id in result  6 == Tree Type */
+::method connectTreeControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectListControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectSliderControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectTabControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectDateTimePicker unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectMonthCalendar unguarded external "LIBRARY oodialog generic_connectControl"
 
-::method connectListControl unguarded
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,7);      /* new id in result  7 == List Type */
-
-::method connectSliderControl unguarded
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,8);      /* new id in result  8 == Track Bar Type */
-
-::method connectTabControl unguarded
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,9);      /* new id in result  9 == Tab Type */
-
-::method connectDateTimePicker unguarded
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,10);     /* new id in result  10 == Date and Time Picker */
-
-::method connectMonthCalendar unguarded
-   use arg id, attributeName
-   forward message "AddAttribute" continue
-   if result = -1 then return -1
-   return DataTable(self~adm,"ADD",result,11);     /* new id in result  11 == Month Calendar */
-
+::method test unguarded external "LIBRARY oodialog advCtrl_test"
 
 ::method internGetNewCtrlStyle
    use arg style, kind

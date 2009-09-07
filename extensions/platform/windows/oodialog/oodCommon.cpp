@@ -42,14 +42,14 @@
  * Contains convenience / helper functions used throughout the ooDialog modules.
  */
 
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
 #include <dlgs.h>
 #include <malloc.h>
 #include <CommCtrl.h>
-#include "APICommon.h"
-#include "oodCommon.h"
+#include "APICommon.hpp"
+#include "oodCommon.hpp"
 
 /**
  * 49.900
@@ -75,6 +75,11 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
                                 "Function: %s line: %d compiled date: %s  File: %s", function, line, date, file);
 
     c->RaiseException1(Rexx_Error_Interpretation_user_defined, c->String(buf));
+}
+
+inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
+{
+    failedToRetrieveException(c, "dialog administration block", source);
 }
 
 /**

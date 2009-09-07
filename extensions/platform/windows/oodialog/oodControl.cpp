@@ -42,13 +42,13 @@
  * Contains the base classes used for an object that represents a Windows
  * Control.
  */
-#include "ooDialog.h"     // Must be first, includes windows.h and oorexxapi.h
+#include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
-#include "APICommon.h"
-#include "oodCommon.h"
+#include "APICommon.hpp"
+#include "oodCommon.hpp"
 #include "oodText.hpp"
-
+#include "oodData.hpp"
 
 typedef struct newControlParams {
    HWND           hwnd;
@@ -452,6 +452,36 @@ out:
     return result;
 }
 
+
+RexxMethod4(RexxObjectPtr, advCtrl_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
+            NAME, msgName, OSELF, self)
+{
+    RexxMethodContext *c = context;
+    DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, self);
+    if ( dlgAdm == NULL )
+    {
+        return TheOneObj;
+    }
+
+    // result will be the resolved resource ID, which may be -1 on error.
+    RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
+
+    // TODO these numbers need to be mapped to the oodControl_t enum.
+    uint32_t typ = 0;
+    if ( strcmp("CONNECTTREECONTROL", msgName) == 0 )         {typ =  6;}
+    else if ( strcmp("CONNECTLISTCONTROL", msgName) == 0 )    {typ =  7;}
+    else if ( strcmp("CONNECTSLIDERCONTROL", msgName) == 0 )  {typ =  8;}
+    else if ( strcmp("CONNECTTABCONTROL", msgName) == 0 )     {typ =  9;}
+    else if ( strcmp("CONNECTDATETIMEPICKER", msgName) == 0 ) {typ = 10;}
+    else if ( strcmp("CONNECTMONTHCALENDAR", msgName) == 0 )  {typ = 11;}
+    else
+    {
+        return TheOneObj;
+    }
+
+    return addToDataTable(context, dlgAdm, result, typ, 0);
+}
+
 RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF, self)
 {
     // This should never fail, do we need an exception if it does?
@@ -472,5 +502,24 @@ RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF
         context->SendMessage2(bag, "PUT", control, control);
     }
 
+    return TheNilObj;
+}
+
+
+RexxMethod2(RexxObjectPtr, advCtrl_test, OSELF, self, CSELF, pDlgCSelf)
+{
+    RexxMethodContext *c = context;
+
+    void *dlgCSelf = c->ObjectToCSelf(self);
+    printf("advCtrl_test() self=%p self.get.CSelf=%p pDlgCSelf=%p\n", self, dlgCSelf, pDlgCSelf);
+    dbgPrintClassID(context, self);
+
+    DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, self);
+    printf("dlgAdm=%p\n", dlgAdm);
+    if ( dlgCSelf != NULL )
+    {
+        pCWindowBase pcwb = (pCWindowBase)dlgCSelf;
+        printf("pcwb hwnd=%p factorX=%f\n", pcwb->hwnd, pcwb->factorX);
+    }
     return TheNilObj;
 }
