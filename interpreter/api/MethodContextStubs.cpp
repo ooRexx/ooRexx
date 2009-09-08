@@ -114,6 +114,19 @@ RexxObjectPtr RexxEntry GetSelf(RexxMethodContext *c)
     return NULLOBJECT;
 }
 
+POINTER RexxEntry GetCSelf(RexxMethodContext *c)
+{
+    ApiContext context(c);
+    try
+    {
+        return context.context->cself();
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULLOBJECT;
+}
+
 RexxClassObject RexxEntry GetSuper(RexxMethodContext *c)
 {
     ApiContext context(c);
@@ -251,7 +264,8 @@ MethodContextInterface RexxActivity::methodContextFunctions =
     ForwardMessage,
     SetGuardOn,
     SetGuardOff,
-    FindContextClass
+    FindContextClass,
+    GetCSelf,
 };
 
 

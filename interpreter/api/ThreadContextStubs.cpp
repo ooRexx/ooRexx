@@ -586,6 +586,21 @@ POINTER RexxEntry ObjectToCSelf(RexxThreadContext *c, RexxObjectPtr o)
 }
 
 
+POINTER RexxEntry ObjectToCSelfScoped(RexxThreadContext *c, RexxObjectPtr o, RexxObjectPtr s)
+{
+    ApiContext context(c);
+    try
+    {
+        // ask the object to figure this out
+        return ((RexxObject *)o)->getCSelf((RexxObject *)s);
+    }
+    catch (RexxNativeActivation *)
+    {
+    }
+    return NULL;
+}
+
+
 RexxObjectPtr RexxEntry WholeNumberToObject(RexxThreadContext *c, wholenumber_t n)
 {
     ApiContext context(c);
@@ -1936,5 +1951,6 @@ RexxThreadInterface RexxActivity::threadContextFunctions =
     OREF_NULL,
     OREF_NULL,
     OREF_NULL,
-    OREF_NULL
+    OREF_NULL,
+    ObjectToCSelfScoped,
 };

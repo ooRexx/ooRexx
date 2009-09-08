@@ -433,7 +433,8 @@ typedef struct
     void        (RexxEntry *SetTrace)(RexxInstance *, logical_t);
 } RexxInstanceInterface;
 
-#define THREAD_INTERFACE_VERSION 100
+#define THREAD_INTERFACE_VERSION_4_0_0 100
+#define THREAD_INTERFACE_VERSION 101
 
 BEGIN_EXTERN_C()
 
@@ -584,10 +585,13 @@ typedef struct
     RexxObjectPtr    RexxFalse;
     RexxStringObject RexxNullString;
 
+    POINTER          (RexxEntry *ObjectToCSelfScoped)(RexxThreadContext *, RexxObjectPtr, RexxObjectPtr);
+
 } RexxThreadInterface;
 
 
-#define METHOD_INTERFACE_VERSION 100
+#define METHOD_INTERFACE_VERSION_4_0_0 100
+#define METHOD_INTERFACE_VERSION 101
 
 typedef struct
 {
@@ -607,6 +611,7 @@ typedef struct
     void             (RexxEntry *SetGuardOn)(RexxMethodContext *);
     void             (RexxEntry *SetGuardOff)(RexxMethodContext *);
     RexxClassObject  (RexxEntry *FindContextClass)(RexxMethodContext *, CSTRING);
+    POINTER          (RexxEntry *GetCSelf)(RexxMethodContext *);
 } MethodContextInterface;
 
 #define CALL_INTERFACE_VERSION 100
@@ -839,6 +844,10 @@ struct RexxThreadContext_
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {
         return functions->ObjectToCSelf(this, o);
+    }
+    POINTER ObjectToCSelf(RexxObjectPtr o, RexxObjectPtr s)
+    {
+        return functions->ObjectToCSelfScoped(this, o, s);
     }
     RexxObjectPtr WholeNumberToObject(wholenumber_t n)
     {
@@ -1482,6 +1491,11 @@ struct RexxMethodContext_
     {
         return threadContext->ObjectToCSelf(o);
     }
+
+    POINTER ObjectToCSelf(RexxObjectPtr o, RexxObjectPtr s)
+    {
+        return threadContext->ObjectToCSelf(o, s);
+    }
     RexxObjectPtr WholeNumberToObject(wholenumber_t n)
     {
         return threadContext->WholeNumberToObject(n);
@@ -2000,6 +2014,10 @@ struct RexxMethodContext_
     {
         return functions->GetScope(this);
     }
+    POINTER GetCSelf()
+    {
+        return functions->GetCSelf(this);
+    }
     void SetObjectVariable(CSTRING s, RexxObjectPtr o)
     {
         functions->SetObjectVariable(this, s, o);
@@ -2182,6 +2200,11 @@ struct RexxCallContext_
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {
         return threadContext->ObjectToCSelf(o);
+    }
+
+    POINTER ObjectToCSelf(RexxObjectPtr o, RexxObjectPtr s)
+    {
+        return threadContext->ObjectToCSelf(o, s);
     }
     RexxObjectPtr WholeNumberToObject(wholenumber_t n)
     {
@@ -2889,6 +2912,11 @@ struct RexxExitContext_
     POINTER ObjectToCSelf(RexxObjectPtr o)
     {
         return threadContext->ObjectToCSelf(o);
+    }
+
+    POINTER ObjectToCSelf(RexxObjectPtr o, RexxObjectPtr s)
+    {
+        return threadContext->ObjectToCSelf(o, s);
     }
     RexxObjectPtr WholeNumberToObject(wholenumber_t n)
     {
