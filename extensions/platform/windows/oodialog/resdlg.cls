@@ -78,15 +78,13 @@
       self~setFontAttrib
       /* if autodetection is on, create the data attributes */
       if self~autoDetect then do
-         id = 1; i=0
-         do while id > 0
-            parse value DataTable(self~adm,"GET", i) with id typ cat
+         ids = self~getDataTableIDs
+         do id over ids
             hnd = self~getItem(id)
             if (hnd \= 0) then do
                 txt = Wnd_Desktop("TXT",hnd)
                 self~addAttribute(id, txt)
             end
-            i = i +1
          end
       end
       self~initDialog
@@ -94,6 +92,7 @@
 
    return self~dlgHandle
 
+::method getDataTableIDs private external "LIBRARY oodialog resdlg_getDataTableIDs_pvt"
 
 ::method stopIt
    forward class (super) continue

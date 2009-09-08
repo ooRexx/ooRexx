@@ -46,6 +46,7 @@
 #include <commctrl.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodData.hpp"
 #include "oodText.hpp"
 
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
@@ -2160,6 +2161,12 @@ RexxMethod1(RexxObjectPtr, resdlg_setFontAttrib_pvt, OSELF, self)
         ReleaseDC(hwnd, hdc);
     }
     return NULLOBJECT;
+}
+
+
+RexxMethod2(RexxArrayObject, resdlg_getDataTableIDs_pvt, CSELF, pCSelf, OSELF, self)
+{
+    return getDataTableIDs(context, (pCPlainBaseDialog)pCSelf, self);
 }
 
 

@@ -848,7 +848,51 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
     return 0;
 }
 
-
+/**
+ * Adds an entry to the Rexx dialog's "data table."  The data table essentially
+ * maps a dialog control's resource ID to the type of control it is.  An edit
+ * control, a check box control, etc..  This in turn is used by the Rexx
+ * dialog's "get" and "set" data functions.  Note that the 'data' is really the
+ * state of the control.
+ *
+ * The table entry is either made through the Rexx dialog's connectXXX()
+ * methods, or by the data autodetection feature.  For data autodetection, when
+ * the underlying dialog is first created, its child windows are enumerated and
+ * an entry is made in the data table for each control found.  The connectXXX()
+ * methods allow the Rexx programmer to manually connect the controls she wants.
+ *
+ * In both scenarios, a Rexx dialog attribute that represents the 'data' of a
+ * specific control is created and the data table entry allows the get / set
+ * data methods to change the value of the attribute through the data table
+ * mapping.
+ *
+ * The data table entry contains the resource id, the 'type' identifier, and a
+ * CatalogDialog's category number.  (These numbers are the page number of the
+ * control in the catalog dialog.)  The category numbers in the table entry are
+ * not used anywhere in the code, as of 4.0.0.  It looks like they never were.
+ * It could be that the original developers had some future use in mind for this
+ * field that never got implemented.
+ *
+ * The pre 4.1.0 code also had "get" and "set" functions beside the "add"
+ * function.  The set function was not used anywhere in the code.  Set was used
+ * to change the value of an existing data table entry.  Since there does not
+ * seem to be any purpose to that, the function was dropped.
+ *
+ * The get function returned the values of a single data table entry.  But it
+ * was only used in one place, in a loop to get all entries.  And only the ID
+ * value was used. So that function was replaced by getDataTableIDs() which
+ * returns an array of all the resource IDs for every table entry.
+ *
+ * @param c
+ * @param dlgAdm
+ * @param rxID     The resource ID of the control.  This has already been
+ *                 resolved to a numeric id by the caller, but, it has not been
+ *                 checked to see if it is -1 yet.
+ * @param typ
+ * @param category
+ *
+ * @return 0 on succes, -1 for a bad resource ID, and 1 for error.
+ */
 RexxObjectPtr addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, RexxObjectPtr rxID, uint32_t typ, uint32_t category)
 {
     int id;
@@ -883,56 +927,31 @@ RexxObjectPtr addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, RexxObje
     return TheOneObj;
 }
 
-size_t RexxEntry DataTable(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+/**
+ * Return an array containing, in order, the resource ID of each table entry.
+ *
+ * @param c
+ * @param pcpbd
+ * @param self
+ *
+ * @return An array containing all the resource IDs in the data table.
+ */
+RexxArrayObject getDataTableIDs(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr self)
 {
-   DEF_ADM;
+    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(c->threadContext, self);
+        return NULLOBJECT;
+    }
 
-   CHECKARGL(3);
-
-   GET_ADM;
-   if (!dlgAdm) RETERR
-
-   if (!strcmp(argv[1].strptr, "GET"))     /* get a dialog data item from the table */
-   {
-       INT i;
-       if (!dlgAdm->DataTab) RETC(0)
-
-       i = atoi(argv[2].strptr);
-
-       if ((i >= 0) && (i < dlgAdm->DT_size))
-       {
-           sprintf(retstr->strptr, "%ld %d %d", dlgAdm->DataTab[i].id,
-                                            dlgAdm->DataTab[i].typ,
-                                            dlgAdm->DataTab[i].category);
-           retstr->strlength = strlen(retstr->strptr);
-           return 0;
-       } else RETC(0)
-   }
-   else
-   if (!strcmp(argv[1].strptr, "SET"))     /* replace a dialog data item in the table */
-   {
-       INT sl;
-
-       CHECKARGL(5);
-
-       if (!dlgAdm->DataTab)
-       {
-          MessageBox(0,"No data table available","Error",MB_OK | MB_ICONHAND);
-          RETC(1);
-       }
-       sl = atoi(argv[2].strptr);
-
-       dlgAdm->DataTab[sl].id = atoi(argv[3].strptr);
-       dlgAdm->DataTab[sl].typ = atoi(argv[4].strptr);
-       if (argc > 5)
-           dlgAdm->DataTab[sl].category = atoi(argv[5].strptr);
-       else
-           dlgAdm->DataTab[sl].category = 0;
-       RETC(0);
-   }
-   RETERR
+    uint32_t count = pcpbd->dlgAdm->DT_size;
+    RexxArrayObject result = c->NewArray(count);
+    for ( size_t i = 0; i < count; i++ )
+    {
+        c->ArrayPut(result, c->UnsignedInt32(pcpbd->dlgAdm->DataTab[i].id), i + 1);
+    }
+    return result;
 }
-
 
 /* search for all the child windows in the dialog and add them to the data list */
 bool DataAutodetection(DIALOGADMIN * dlgAdm)

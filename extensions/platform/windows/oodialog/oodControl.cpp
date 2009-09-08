@@ -453,35 +453,6 @@ out:
 }
 
 
-RexxMethod4(RexxObjectPtr, advCtrl_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
-            NAME, msgName, OSELF, self)
-{
-    RexxMethodContext *c = context;
-    DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, self);
-    if ( dlgAdm == NULL )
-    {
-        return TheOneObj;
-    }
-
-    // result will be the resolved resource ID, which may be -1 on error.
-    RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
-
-    // TODO these numbers need to be mapped to the oodControl_t enum.
-    uint32_t typ = 0;
-    if ( strcmp("CONNECTTREECONTROL", msgName) == 0 )         {typ =  6;}
-    else if ( strcmp("CONNECTLISTCONTROL", msgName) == 0 )    {typ =  7;}
-    else if ( strcmp("CONNECTSLIDERCONTROL", msgName) == 0 )  {typ =  8;}
-    else if ( strcmp("CONNECTTABCONTROL", msgName) == 0 )     {typ =  9;}
-    else if ( strcmp("CONNECTDATETIMEPICKER", msgName) == 0 ) {typ = 10;}
-    else if ( strcmp("CONNECTMONTHCALENDAR", msgName) == 0 )  {typ = 11;}
-    else
-    {
-        return TheOneObj;
-    }
-
-    return addToDataTable(context, dlgAdm, result, typ, 0);
-}
-
 RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF, self)
 {
     // This should never fail, do we need an exception if it does?
