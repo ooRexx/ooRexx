@@ -45,7 +45,6 @@
 
 ::class 'ResDialog' subclass BaseDialog public
 
-::method setFontAttrib private external "LIBRARY oodialog resdlg_setFontAttrib_pvt"
 
 ::method init
    expose library resource dlgData.
@@ -62,21 +61,27 @@
    return self~initCode
 
 -- Create a Windows dialog out of the resource stored in Library.
+--
+-- From docs for the arg: modal
+-- If a modal or a modeless dialog is to be created. A value of 0 signals a modal dialog should be
+-- created. A value of 1, or the string "NOTMODAL" case insignificant, signals a modeless dialog
+-- should be created. The default is 0.
+--
+-- So the arg 'modal' is misnamed, it should be modeless so that 0 (false) signals a modal dialog
+-- and 1 (true) signals a modeless dialog.  Changing this, 9/7/2009
 ::method startIt
    expose library resource dlgData.
-   use arg icon = 0, modal = 0
+   use arg icon = 0, modeless = 0
 
    icon = self~resolveIconID(icon)
 
-   if modal <> 0 & modal <> 1 then do
-     if modal~translate = "NOTMODAL" then modal = 1
-     else modal = 0
+   if modeless <> 0 & modeless <> 1 then do
+     if modeless~translate = "NOTMODAL" then modeless = 1
+     else modeless = 0
    end
 
-   self~dlgHandle = StartDialog(self~adm, library, resource, self~autoDetect, 1, icon, modal)
-   if self~dlgHandle \= 0 then do
-      self~setFontAttrib
-      /* if autodetection is on, create the data attributes */
+   if self~startDialog(library, resource, self~autoDetect, icon, modeless) then do
+      -- if autodetection is on, create the data attributes
       if self~autoDetect then do
          ids = self~getDataTableIDs
          do id over ids
@@ -88,10 +93,12 @@
          end
       end
       self~initDialog
+      return .true
    end
 
-   return self~dlgHandle
+   return .false
 
+::method startDialog private external "LIBRARY oodialog resdlg_startDialog_pvt"
 ::method getDataTableIDs private external "LIBRARY oodialog resdlg_getDataTableIDs_pvt"
 
 ::method stopIt

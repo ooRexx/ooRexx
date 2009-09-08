@@ -75,10 +75,10 @@ static HICON GetIconForID(DIALOGADMIN *, UINT, UINT, int, int);
 class LoopThreadArgs
 {
 public:
-    const char *resourceId;
     DIALOGADMIN *dlgAdmin;
-    const char *autoDetect;
-    BOOL *release;           // used for a return value
+    uint32_t resourceId;
+    bool autoDetect;
+    bool *release;           // used for a return value
 };
 
 
@@ -336,33 +336,31 @@ done_out:
  * If this is a ResDialog then the resource DLL is loaded, otherwise the
  * TheInstance field is the ooDialog.dll instance.
  *
- * @param dlgAdm
- * @param ar
- * @param argc
+ * @param dlgAdm    Pointer to the dialog administration block
+ * @param library   The library to load the dialog from, if a ResDialog,
+ *                  othewise null.
  *
  * @return True on success, false only if this is for a ResDialog and the
  *         loading of the resource DLL failed.
  */
-bool InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc)
+bool InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CSTRING library)
 {
-    const char *Library;
-
     if ( dlgAdm->previous )
     {
         ((DIALOGADMIN*)dlgAdm->previous)->OnTheTop = FALSE;
     }
     topDlg = dlgAdm;
-    Library = ar[0].strptr;
 
-    if (Library[0] != '0')
+    if ( library != NULL )
     {
-        dlgAdm->TheInstance = LoadLibrary(Library);
-        if (!dlgAdm->TheInstance)
+        dlgAdm->TheInstance = LoadLibrary(library);
+        if ( ! dlgAdm->TheInstance )
         {
             CHAR msg[256];
-            sprintf(msg, "Failed to load Dynamic Link Library (resource DLL.)\n"
+            sprintf(msg,
+                    "Failed to load Dynamic Link Library (resource DLL.)\n"
                     "  File name:\t\t\t%s\n"
-                    "  Windows System Error Code:\t%d\n", Library, GetLastError());
+                    "  Windows System Error Code:\t%d\n", library, GetLastError());
             MessageBox(0, msg, "ooDialog DLL Load Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
             return false;
         }
@@ -372,10 +370,7 @@ bool InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CONSTRXSTRING ar[], size_t argc)
         dlgAdm->TheInstance = MyInstance;
     }
 
-    if (argc >= 4)
-    {
-        dlgAdm->Use3DControls = FALSE;
-    }
+    dlgAdm->Use3DControls = FALSE;
     return true;
 }
 
@@ -586,60 +581,50 @@ int32_t DelDialog(DIALOGADMIN * aDlg)
 DWORD WINAPI WindowLoopThread(void *arg)
 {
     MSG msg;
-    CHAR buffer[NR_BUFFER];
-    DIALOGADMIN * Dlg;
-    BOOL * release;
+    DIALOGADMIN * dlgAdm;
+    bool * release;
     ULONG ret;
 
     LoopThreadArgs *args = (LoopThreadArgs *)arg;
 
 
-    Dlg = args->dlgAdmin;        /*  thread local admin pointer from StartDialog */
-    Dlg->TheDlg = CreateDialogParam( Dlg->TheInstance, MAKEINTRESOURCE(atoi(args->resourceId)), 0, (DLGPROC) RexxDlgProc, Dlg->Use3DControls);  /* pass 3D flag to WM_INITDIALOG */
-    Dlg->ChildDlg[0] = Dlg->TheDlg;
+    dlgAdm = args->dlgAdmin;        /*  thread local admin pointer from startDialog() */
+    dlgAdm->TheDlg = CreateDialogParam(dlgAdm->TheInstance, MAKEINTRESOURCE(args->resourceId), 0, (DLGPROC)RexxDlgProc, dlgAdm->Use3DControls);  /* pass 3D flag to WM_INITDIALOG */
+    dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
 
-    release = args->release;   /* the Release flag is stored as the 4th argument */
-    if (Dlg->TheDlg)
+    release = args->release;
+    if ( dlgAdm->TheDlg )
     {
-        if (args->autoDetect)
+        if ( args->autoDetect )
         {
-            strcpy(buffer, args->autoDetect);
-        }
-        else
-        {
-            strcpy(buffer, "0");
-        }
-
-        if (isYes(buffer))
-        {
-            if ( ! DataAutodetection(Dlg) )
+            if ( ! DataAutodetection(dlgAdm) )
             {
-                Dlg->TheThread = NULL;
+                dlgAdm->TheThread = NULL;
                 return 0;
-            };
+            }
         }
 
-        *release = TRUE;  /* Release wait in StartDialog  */
+        *release = true;  /* Release wait in startDialog()  */
         do
         {
             if (GetMessage(&msg,NULL, 0,0))
             {
-                if (!IsDialogMessage (Dlg->TheDlg, &msg))
+                if ( ! IsDialogMessage(dlgAdm->TheDlg, &msg) )
                 {
                     DispatchMessage(&msg);
                 }
             }
-        } while (Dlg && dialogInAdminTable(Dlg) && !Dlg->LeaveDialog);
+        } while ( dlgAdm && dialogInAdminTable(dlgAdm) && ! dlgAdm->LeaveDialog );
     }
     else
     {
-        *release = TRUE;
+        *release = true;
     }
     EnterCriticalSection(&crit_sec);
-    if (dialogInAdminTable(Dlg))
+    if (dialogInAdminTable(dlgAdm))
     {
-        ret = DelDialog(Dlg);
-        Dlg->TheThread = NULL;
+        ret = DelDialog(dlgAdm);
+        dlgAdm->TheThread = NULL;
     }
     LeaveCriticalSection(&crit_sec);
     return ret;
@@ -662,113 +647,6 @@ size_t RexxEntry GetDialogFactor(const char *funcname, size_t argc, CONSTRXSTRIN
    sprintf(retstr->strptr, "%4.1f %4.1f", x, y);
    retstr->strlength = strlen(retstr->strptr);
    return 0;
-}
-
-
-
-
-/**
- * Create a dialog stored in a DLL.  Currently this is only used by ResDialog.
- *
- * @param funcname
- * @param argc
- * @param argv
- * @param qname
- * @param retstr
- *
- * @return size_t RexxEntry
- */
-size_t RexxEntry StartDialog(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    ULONG thID;
-    BOOL Release = FALSE;
-    DEF_ADM;
-
-    CHECKARG(7);
-    GET_ADM;
-    if (!dlgAdm)
-    {
-        RETERR;
-    }
-
-    EnterCriticalSection(&crit_sec);
-    if ( ! InstallNecessaryStuff(dlgAdm, &argv[1], argc-1) )
-    {
-        if ( dlgAdm )
-        {
-            // TODO why is DelDialog() used here, but not below ??
-            DelDialog(dlgAdm);
-
-            // Note: The message queue and dialog administration block are /
-            // must be freed from PlainBaseDialog::deInstall() or
-            // PlainBaseDialog::unInit().
-        }
-        LeaveCriticalSection(&crit_sec);
-        RETC(0)
-    }
-
-    LoopThreadArgs threadArgs;
-    threadArgs.resourceId = argv[2].strptr;
-    threadArgs.dlgAdmin = dlgAdm;
-    threadArgs.autoDetect = argv[3].strptr;
-    threadArgs.release = &Release;
-
-    dlgAdm->TheThread = CreateThread(NULL, 2000, WindowLoopThread, &threadArgs, 0, &thID);
-
-    // Wait for dialog start.
-    while ( ! Release && (dlgAdm->TheThread) )
-    {
-        Sleep(1);
-    }
-    LeaveCriticalSection(&crit_sec);
-
-    if (dlgAdm)
-    {
-        if (dlgAdm->TheDlg)
-        {
-            HICON hBig = NULL;
-            HICON hSmall = NULL;
-
-            // Set the thread priority higher for faster drawing.
-            SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);
-            dlgAdm->OnTheTop = TRUE;
-            dlgAdm->threadID = thID;
-
-            // Is this to be a modal dialog?
-            if ( dlgAdm->previous && !isYes(argv[6].strptr) && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
-            {
-                EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
-            }
-
-            if ( GetDialogIcons(dlgAdm, atoi(argv[5].strptr), ICON_DLL, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
-            {
-                dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
-                dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
-                dlgAdm->DidChangeIcon = TRUE;
-
-                SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
-            }
-
-            RETPTR(dlgAdm->TheDlg);
-        }
-
-        // The dialog creation failed, so clean up.  For now, with the
-        // mixture of old and new native APIs, the freeing of the dialog
-        // administration block must be done in the deInstall() or
-        // unInit() methods.
-
-        // TODO this seems very wrong.  Why isn't a DelDialog() done here???
-        dlgAdm->OnTheTop = FALSE;
-        if (dlgAdm->previous)
-        {
-            ((DIALOGADMIN *)(dlgAdm->previous))->OnTheTop = TRUE;
-        }
-        if ((dlgAdm->previous) && !IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg))
-        {
-            EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, TRUE);
-        }
-    }
-    RETC(0);
 }
 
 
@@ -1663,6 +1541,23 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     return TheZeroObj;
 }
 
+RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStringObject hDlg)
+{
+    pCWindowBase pcwb = pcpbd->wndBase;
+    pcpbd->hDlg = (HWND)string2pointer(c, hDlg);
+
+    if ( pcpbd->hDlg != NULL )
+    {
+        pcwb->hwnd = pcpbd->hDlg;
+        pcwb->rexxHwnd = c->RequestGlobalReference(hDlg);
+    }
+    else
+    {
+        pcwb->rexxHwnd = TheZeroObj;
+    }
+
+    return NULLOBJECT;
+}
 /** PlainBaseDialog::dlgHandle  [attribute set private]
  *
  *  Sets the handle of the underlying Windows dialog.  When a PlainBaseDialog is
@@ -1682,22 +1577,7 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, pbdlg_setDlgHandle, RexxStringObject, hDlg, CSELF, pCSelf)
 {
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-    pCWindowBase pcwb = pcpbd->wndBase;
-
-    pcpbd->hDlg = (HWND)string2pointer(context, hDlg);
-
-    if ( pcpbd->hDlg != NULL )
-    {
-        pcwb->hwnd = pcpbd->hDlg;
-        pcwb->rexxHwnd = context->RequestGlobalReference(hDlg);
-    }
-    else
-    {
-        pcwb->rexxHwnd = TheZeroObj;
-    }
-
-    return NULLOBJECT;
+    return setDlgHandle(context, (pCPlainBaseDialog)pCSelf, hDlg);
 }
 
 /** PlainBaseDialog::dlgHandle  [attribute get] / PlainBaseDialog::getSelf()
@@ -2132,6 +2012,160 @@ RexxMethod5(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL
 
     return addToDataTable(context, dlgAdm, result, typ, category);
 }
+
+
+/**
+ *  Methods for the .ResDialog class.
+ */
+#define RESDIALOG_CLASS        "ResDialog"
+
+
+/**
+ *  Used to set the fontName and fontSize attributes of the resource dialog.
+ */
+void setFontAttrib(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
+{
+    HFONT font = (HFONT)SendMessage(pcpbd->hDlg, WM_GETFONT, 0, 0);
+    if ( font == NULL )
+    {
+        font = (HFONT)GetStockObject(SYSTEM_FONT);
+    }
+
+    HDC hdc = GetDC(pcpbd->hDlg);
+    if ( hdc )
+    {
+        HFONT oldFont = (HFONT)SelectObject(hdc, font);
+
+        char fontName[64];
+        TEXTMETRIC tm;
+
+        GetTextMetrics(hdc, &tm);
+        GetTextFace(hdc, sizeof(fontName), fontName);
+
+        long fontSize = MulDiv((tm.tmHeight - tm.tmInternalLeading), 72, GetDeviceCaps(hdc, LOGPIXELSY));
+
+        c->SendMessage1(pcpbd->rexxSelf, "FONTNAME=", c->String(fontName));
+        c->SendMessage1(pcpbd->rexxSelf, "FONTSIZE=", c->WholeNumber(fontSize));
+
+        SelectObject(hdc, oldFont);
+        ReleaseDC(pcpbd->hDlg, hdc);
+    }
+    return;
+}
+
+
+/**
+ * Create a dialog stored in a DLL.  Currently this is only used by ResDialog.
+ *
+ * @param funcname
+ * @param argc
+ * @param argv
+ * @param qname
+ * @param retstr
+ *
+ * @return size_t RexxEntry
+ */
+RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID, logical_t, autoDetect, uint32_t, iconID,
+            logical_t, modeless, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+
+    ULONG thID;
+    bool Release = false;
+
+    EnterCriticalSection(&crit_sec);
+    if ( ! InstallNecessaryStuff(dlgAdm, library) )
+    {
+        if ( dlgAdm )
+        {
+            // TODO why is DelDialog() used here, but not below ??
+            DelDialog(dlgAdm);
+
+            // Note: The message queue and dialog administration block are /
+            // must be freed from PlainBaseDialog::deInstall() or
+            // PlainBaseDialog::unInit().
+        }
+        LeaveCriticalSection(&crit_sec);
+        return FALSE;
+    }
+
+    LoopThreadArgs threadArgs;
+    threadArgs.dlgAdmin = dlgAdm;
+    threadArgs.resourceId = dlgID;
+    threadArgs.autoDetect = autoDetect ? true : false;
+    threadArgs.release = &Release;
+
+    dlgAdm->TheThread = CreateThread(NULL, 2000, WindowLoopThread, &threadArgs, 0, &thID);
+
+    // Wait for dialog start.
+    while ( ! Release && (dlgAdm->TheThread) )
+    {
+        Sleep(1);
+    }
+    LeaveCriticalSection(&crit_sec);
+
+    if (dlgAdm)
+    {
+        if (dlgAdm->TheDlg)
+        {
+            HICON hBig = NULL;
+            HICON hSmall = NULL;
+
+            // Set the thread priority higher for faster drawing.
+            SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);
+            dlgAdm->OnTheTop = TRUE;
+            dlgAdm->threadID = thID;
+
+            // Is this to be a modal dialog?
+            if ( dlgAdm->previous && ! modeless && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
+            {
+                EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
+            }
+
+            if ( GetDialogIcons(dlgAdm, iconID, ICON_DLL, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
+            {
+                dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
+                dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
+                dlgAdm->DidChangeIcon = TRUE;
+
+                SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
+            }
+
+                RexxMethodContext *c = context;
+
+            // TODO for now we need to convert hDlg back to a Rexx object
+            setDlgHandle(context, pcpbd, pointer2string(context, dlgAdm->TheDlg));
+            setFontAttrib(context, pcpbd);
+            return TRUE;
+        }
+
+        // The dialog creation failed, so clean up.  For now, with the
+        // mixture of old and new native APIs, the freeing of the dialog
+        // administration block must be done in the deInstall() or
+        // unInit() methods.
+
+        // TODO this seems very wrong.  Why isn't a DelDialog() done here???
+        dlgAdm->OnTheTop = FALSE;
+        if (dlgAdm->previous)
+        {
+            ((DIALOGADMIN *)(dlgAdm->previous))->OnTheTop = TRUE;
+        }
+        if ((dlgAdm->previous) && !IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg))
+        {
+            EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, TRUE);
+        }
+    }
+    return FALSE;
+}
+
+
+RexxMethod2(RexxArrayObject, resdlg_getDataTableIDs_pvt, CSELF, pCSelf, OSELF, self)
+{
+    return getDataTableIDs(context, (pCPlainBaseDialog)pCSelf, self);
+}
+
 
 /**
  *  Methods for the .DynamicDialog class.  TODO There should be a

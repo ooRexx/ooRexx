@@ -2119,56 +2119,6 @@ RexxObjectPtr oodGetImageAttribute(RexxMethodContext *c, OSELF self, CSTRING var
     return result;
 }
 
-/**
- *  Methods for the .ResDialog class.
- */
-#define RESDIALOG_CLASS        "ResDialog"
-
-
-/** ResourceDialog::setFontAttrib()  [private]
- *
- *  Used internally to correctly set the fontName and fontSize attributes of the
- *  resource dialog.
- *
- */
-RexxMethod1(RexxObjectPtr, resdlg_setFontAttrib_pvt, OSELF, self)
-{
-    HWND hwnd = rxGetWindowHandle(context, self);
-
-    HFONT font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
-    if ( font == NULL )
-    {
-        font = (HFONT)GetStockObject(SYSTEM_FONT);
-    }
-
-    HDC hdc = GetDC(hwnd);
-    if ( hdc )
-    {
-        HFONT oldFont = (HFONT)SelectObject(hdc, font);
-
-        char fontName[64];
-        TEXTMETRIC tm;
-
-        GetTextMetrics(hdc, &tm);
-        GetTextFace(hdc, sizeof(fontName), fontName);
-
-        long fontSize = MulDiv((tm.tmHeight - tm.tmInternalLeading), 72, GetDeviceCaps(hdc, LOGPIXELSY));
-
-        context->SendMessage1(self, "FONTNAME=", context->String(fontName));
-        context->SendMessage1(self, "FONTSIZE=", context->WholeNumber(fontSize));
-
-        SelectObject(hdc, oldFont);
-        ReleaseDC(hwnd, hdc);
-    }
-    return NULLOBJECT;
-}
-
-
-RexxMethod2(RexxArrayObject, resdlg_getDataTableIDs_pvt, CSELF, pCSelf, OSELF, self)
-{
-    return getDataTableIDs(context, (pCPlainBaseDialog)pCSelf, self);
-}
-
 
 /**
  *  Methods for the .WindowExtensions class.

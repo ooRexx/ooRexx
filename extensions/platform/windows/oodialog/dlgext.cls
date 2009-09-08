@@ -53,8 +53,7 @@
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
    if arg(2,'o') = 1 then sh = "DEFAULT"
    if arg(4,'o') = 1 then nomodal = 0
-   if self~startit(icon, nomodal) \= 0 then
-   do
+   if self~startit(icon, nomodal) \= 0 then do
       if self~useStem then self~SetDataStem(self~dlgData); else self~SetData
       self~show(sh)
       self~start("AsyncMessageHandling", sleeptime)

@@ -232,8 +232,8 @@ DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
     MSG msg;
     CHAR buffer[NR_BUFFER];
     ULONG ret = 0;
-    BOOL * release;        // Thread local pointer to the release flag passed from StarDialog().
-    DIALOGADMIN * adm;     // Thread local pointer to the dialog administration block passed from StartDialog().
+    BOOL * release;        // Thread local pointer to the release flag passed from UsrCreateDialog().
+    DIALOGADMIN * adm;     // Thread local pointer to the dialog administration block passed from UsrCreateDialog().
 
     adm = args->dlgAdmin;
     adm->TheDlg = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *) args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, adm->Use3DControls);  /* pass 3D flag to WM_INITDIALOG */
@@ -348,7 +348,7 @@ size_t RexxEntry UsrCreateDialog(const char *funcname, size_t argc, CONSTRXSTRIN
         EnterCriticalSection(&crit_sec);
 
         // InstallNecessaryStuff() can not fail for a UserDialog.
-        InstallNecessaryStuff(dlgAdm, &argv[3], argc-3);
+        InstallNecessaryStuff(dlgAdm, NULL);
 
         LoopThreadArgs threadArgs;
         threadArgs.dlgTemplate = p;

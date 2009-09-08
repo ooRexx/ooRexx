@@ -91,7 +91,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(Wnd_Desktop);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WndShow_Pos);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WinAPI32Func);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(StartDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WindowRect);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleScrollBar);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
@@ -131,7 +130,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(Wnd_Desktop,          Wnd_Desktop),
     REXX_CLASSIC_ROUTINE(WndShow_Pos,          WndShow_Pos),
     REXX_CLASSIC_ROUTINE(WinAPI32Func,         WinAPI32Func),
-    REXX_CLASSIC_ROUTINE(StartDialog,          StartDialog),
     REXX_CLASSIC_ROUTINE(WindowRect,           WindowRect),
     REXX_CLASSIC_ROUTINE(HandleScrollBar,      HandleScrollBar),
     REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),
@@ -232,7 +230,7 @@ REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
 
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
-REXX_METHOD_PROTOTYPE(resdlg_setFontAttrib_pvt);
+REXX_METHOD_PROTOTYPE(resdlg_startDialog_pvt);
 
 REXX_METHOD_PROTOTYPE(winex_getTextSizeScreen);
 REXX_METHOD_PROTOTYPE(winex_getFont);
@@ -530,7 +528,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(window_unInit,                window_unInit),
 
     REXX_METHOD(resdlg_getDataTableIDs_pvt,   resdlg_getDataTableIDs_pvt),
-    REXX_METHOD(resdlg_setFontAttrib_pvt,     resdlg_setFontAttrib_pvt),
+    REXX_METHOD(resdlg_startDialog_pvt,       resdlg_startDialog_pvt),
 
     REXX_METHOD(winex_getTextSizeScreen,      winex_getTextSizeScreen),
     REXX_METHOD(winex_getFont,                winex_getFont),
