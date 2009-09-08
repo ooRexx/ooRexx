@@ -143,13 +143,13 @@
    return 0
 
 
-::method StartIt   /* don't call parent startit */
+::method startIt   /* don't call parent startIt */
    if self~dlgHandle = 0 then return 0
    self~initDialog
    return self~dlgHandle
 
-::method DefineDialog protected
-   if self~baseptr = 0 then return 0
+::method defineDialog protected
+   if self~basePtr = 0 then return 0
    if self~catstyle~wordpos('DROPDOWN') = 0 then
       do i = 9001 to (9000 + self~catalog['count'])
          self~ConnectControl(i, "CHANGEPAGE")
@@ -213,38 +213,38 @@
           if self~catalog['count'] < self~catmax then self~catmax = self~catalog['count']
       if self~catmax < self~catalog['count'] then
            if self~catlabel='' then
-                self~AddComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),,
+                self~addComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),,
                                  self~catstyle~delword(m, 1) || " CAT VSCROLL")
-           else self~AddComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
+           else self~addComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
                                    self~catlabel, self~catstyle~delword(m, 1) || " CAT VSCROLL")
       else if self~catlabel='' then
-                self~AddComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),,
+                self~addComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),,
                                  self~catstyle~delword(m, 1) || " CAT")
-           else self~AddComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
+           else self~addComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
                                    self~catlabel, self~catstyle~delword(m, 1) || " CAT")
    end
    else do
       if (n >0) then newstyle = self~catstyle~delword(n, 1)
                 else newstyle = self~catstyle
       if self~catalog['page']['font'] <> "" then
-         self~AddRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax,,
+         self~addRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax,,
                            newstyle || " CAT",,self~catalog['page']['font'],self~catalog['page']['fsize'])
       else
-         self~AddRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax, newstyle || " CAT")
+         self~addRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax, newstyle || " CAT")
    end
 
-   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, self~autoDetect, 1, 0, 0)
+   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~dialogItemCount, 0, self~basePtr, self~autoDetect, 1, 0, 0)
    self~activePtr = 0
    if self~dlgHandle = 0 then return 0
 
    do i = 1 to self~catalog['count']
-      self~DialogItemCount = 0
+      self~dialogItemCount = 0
       self~catalog['category'] = i
       p = self~catalog['page']
       self~CreateCategoryDialog(p['x'], p['y'], p['w'], p['h'],p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
       msg = "self~" || self~catalog['names'][i]~space(0)
       interpret(msg)
-      ret = UsrCreateDialog(self~adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+      ret = UsrCreateDialog(self~adm, "CHILD", self~dialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
       self~activePtr = 0
       self~catalog['handles'][i] = ret
    end
@@ -272,16 +272,16 @@
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
    if (self~catalog['page']['btnwidth'] > 0) then
    do
-      self~AddButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
+      self~addButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
          self~sizeY - 15,self~catalog['page']['btnwidth'],, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
       if self~Wizard = 1 then
-         self~AddButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
+         self~addButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
                              ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
    end
    else do
-      self~AddOkCancelRightBottom
+      self~addOkCancelRightBottom
       if self~Wizard = 1 then
-         self~AddButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
+         self~addButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
    end
    self~addBlackFrame(0, self~sizeY - 20, self~sizeX, 1)
 
@@ -337,7 +337,7 @@
 
    /* */
 
-::method GetDefaultOpts protected
+::method getDefaultOpts protected
    use arg options
    if self~catalog['category'] = 0 then
    do

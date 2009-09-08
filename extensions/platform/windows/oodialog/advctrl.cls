@@ -167,10 +167,10 @@
 ::method addTreeControl
    use arg id, attname, x, y, cx, cy, opts
    symbid = id
-   id = self~ItemAdd(id)
+   id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then attname = "DATA"id
-   opts = self~GetDefaultOpts(opts)
+   opts = self~getDefaultOpts(opts)
    if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
    self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
@@ -181,10 +181,10 @@
 ::method addListControl
    use arg id, attname, x, y, cx, cy, opts
    symbid = id
-   id = self~ItemAdd(id)
+   id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then attname = "DATA"id
-   opts = self~GetDefaultOpts(opts)
+   opts = self~getDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
        return self~ConnectListControl(symbid, attname)
@@ -194,19 +194,19 @@
 ::method addProgressBar
    use arg id, x, y, cx, cy, opts
    symbid = id
-   id = self~ItemAdd(id)
+   id = self~itemAdd(id)
    if id < 0 then return id
-   opts = self~GetDefaultOpts(opts)
+   opts = self~getDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("PROGRESS", self~activePtr, id, x, y, cx, cy, opts)
    return 0
 
 ::method addSliderControl
    use arg id, attname, x, y, cx, cy, opts
    symbid = id
-   id = self~ItemAdd(id)
+   id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then attname = "DATA"id
-   opts = self~GetDefaultOpts(opts)
+   opts = self~getDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
        return self~ConnectSliderControl(symbid, attname)
@@ -216,10 +216,10 @@
 ::method addTabControl
    use arg id, attname, x, y, cx, cy, opts
    symbid = id
-   id = self~ItemAdd(id)
+   id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then attname = "DATA"id
-   opts = self~GetDefaultOpts(opts)
+   opts = self~getDefaultOpts(opts)
    self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
    if opts~wordpos("CAT") = 0 & self~autoDetect then do
        return self~ConnectTabControl(symbid, attname)

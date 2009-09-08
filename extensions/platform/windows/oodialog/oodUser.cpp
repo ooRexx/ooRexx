@@ -35,6 +35,15 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+
+/**
+ * oodUser.cpp
+ *
+ * Implements the function used to build and execute dialogs dynamically in
+ * memory.  Historically this has been referred to as "User" functionality for
+ * "User defined dialogs."
+ */
+
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
@@ -47,12 +56,7 @@
 #include "oodData.hpp"
 #include "oodSymbols.h"
 
-extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
-extern INT DelDialog(DIALOGADMIN * aDlg);
-extern BOOL GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
-
 //#define USE_DS_CONTROL
-
 
 #ifndef USE_DS_CONTROL
 BOOL IsNestedDialogMessage(
@@ -1123,6 +1127,18 @@ size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING 
    }
 
    RETC(0);
+}
+
+
+/**
+ *  Methods for the .DynamicDialog class.
+ */
+#define DYNAMICDIALOG_CLASS  "DynamicDialog"
+
+RexxMethod0(RexxObjectPtr, dyndlg_stop)
+{
+    stopDialog(NULL);
+    return NULLOBJECT;
 }
 
 

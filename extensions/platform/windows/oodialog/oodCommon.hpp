@@ -103,8 +103,12 @@ typedef struct _dcCSelf {
 } CDialogControl;
 typedef CDialogControl *pCDialogControl;
 
+extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 extern bool             dialogInAdminTable(DIALOGADMIN * Dlg);
 extern bool             InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CSTRING library);
+extern int32_t          stopDialog(HWND hDlg);
+extern int32_t          DelDialog(DIALOGADMIN * aDlg);
+extern BOOL             GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
 extern void             rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
 extern void             rxdatacpy(CHAR * tar, RXSTRING &src);
 extern bool             isYes(const char *s);

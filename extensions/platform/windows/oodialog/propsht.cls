@@ -63,8 +63,8 @@
    forward class (super) arguments (newarg)
 
 
-::method DefineDialog protected
-   if self~baseptr = 0 then return 0
+::method defineDialog protected
+   if self~basePtr = 0 then return 0
    self~ConnectTabNotify(9001, "SELCHANGE", "CHANGEPAGE")
 
    do i = 1 to self~catalog['count']
@@ -85,17 +85,17 @@
    p = self~catalog['page']
    self~AddTabControl(9001,,p['x'], p['y'], p['w'], p['h'],self~CatStyle || " CAT CLIPSIBLINGS")
 
-   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount, 0, self~BasePtr, self~autoDetect, 1, 0, 0)
+   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~dialogItemCount, 0, self~basePtr, self~autoDetect, 1, 0, 0)
    self~activePtr = 0
    if self~dlgHandle = 0 then return 0
 
    do i = 1 to self~catalog['count']
-      self~DialogItemCount = 0
+      self~dialogItemCount = 0
       self~catalog['category'] = i
       self~CreateCategoryDialog(p['x']+2, p['y']+(size~height*2), p['w']-10, p['h']-(size~height*3),p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
       msg = "self~" || self~catalog['names'][i]~space(0)
       interpret(msg)
-      ret = UsrCreateDialog(self~adm, "CHILD", self~DialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+      ret = UsrCreateDialog(self~adm, "CHILD", self~dialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
       self~activePtr = 0
       self~catalog['handles'][i] = ret
    end
@@ -109,10 +109,10 @@
    if lbtext~pos(" ") > 0 then lbtext = '"' || lbtext || '"'
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
    if (p['btnwidth'] > 0) then bw = p['btnwidth']; else bw = 35
-   self~AddButtonGroup(p['w']+p['x']+2-bw*2.25,,
+   self~addButtonGroup(p['w']+p['x']+2-bw*2.25,,
       self~sizeY - 15,bw,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
    if self~Wizard = 1 then
-      self~AddButtonGroup(p['x']-2,self~sizeY - 15,bw,,
+      self~addButtonGroup(p['x']-2,self~sizeY - 15,bw,,
                           ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
 
 

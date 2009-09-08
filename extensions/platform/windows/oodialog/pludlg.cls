@@ -57,10 +57,10 @@
    if arg(1, 'E') then newArgs[3] = dlgData.
    if arg(2, 'E') then newArgs[4] = includeFile
    forward class (super) arguments (newArgs) continue
-
-   if result = 0 then forward message "DynamicInit"
-   else return result
+   ret = result
+   if ret = 0 then self~dynamicInit
+   return ret
 
 ::method stopIt
    forward class (super) continue
-   forward message "StopDynamic"
+   forward message "stopDynamic"

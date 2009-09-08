@@ -272,9 +272,9 @@ self~OriginalWidth  = DlgObj~sizeX
 self~OriginalHeight = DlgObj~sizeY
 self~LastError      = .nil
 
-                                  /* Analyze the callers DefineDialog Method */
+                                  /* Analyze the callers defineDialog Method */
                                        /* Remove comments prefixed by --     */
-DDSourceArr=DlgObj~class~method('DefineDialog')~source
+DDSourceArr=DlgObj~class~method('defineDialog')~source
 DDSBuff=.mutableBuffer~new
 do line over DDSourceArr
    parse var line line '--' .       -- strip out this style inline comments
@@ -288,7 +288,7 @@ do forever
    commStart = DDSource~SubStr(1,CommEnd-1)~lastPos('/'||'*')
    if comStart=0
    then do
-      self~LastError='Error in DlgAreaU Class: Unbalanced comments in DefineDialog class of' Dlg
+      self~LastError='Error in DlgAreaU Class: Unbalanced comments in defineDialog class of' Dlg
       leave
    end /* DO */
 
@@ -296,7 +296,7 @@ do forever
    DDSource = front back
 end /* DO */
 
-DDSource1 = DDSource           /* copy of de-commented DefineDialog source   */
+DDSource1 = DDSource           /* copy of de-commented defineDialog source   */
 
                                /* re-create DlgArea objects within scope     */
 do forever
@@ -379,7 +379,7 @@ SEQUENCE STYLE USERMSG
 /* in your dialog init method place this line after call to the superclass   */
 /* self~connectResize('OnResize')                                            */
 /* the method resize would contain the following                             */
-/* expose u /* our topmost dlgAreaClass exposed in definedialog */           */
+/* expose u /* our topmost dlgAreaClass exposed in defineDialog */           */
 /* use arg dummy, sizeinfo    /* sizeinfo contains information about the     */
 /*                                                  new width and height */  */
 /* if self~PeekDialogMessage~left(8)\="OnResize" then u~resize(self,sizeinfo)*/

@@ -61,11 +61,11 @@
    self~init:super("")
    if self~initCode = 0 then self~Popup
 
-::method DefineDialog
+::method defineDialog
    self~addText(10,10,self~dims["sx"]+2,self~dims["sy"], self~msg,, 100)
 
-::method InitAutoDetection
-   self~NoAutoDetection
+::method initAutoDetection
+   self~noAutoDetection
 
 ::method CalcSize
    size = self~getTextSizeDlg(self~msg)
@@ -93,7 +93,7 @@
 ::method Popup
    self~CalcSize
    self~create(self~dims["x"],self~dims["y"], self~dims["cx"], self~dims["cy"], self~TitleTxt,"NOMENU",,,1 )
-   self~startit
+   self~startIt
    self~show("SHOWTOP")
 
 ::method Destroy
@@ -141,7 +141,7 @@
        pb~SetStep(self~IncStep)
    end
 
-::method DefineDialog
+::method defineDialog
    self~AddProgressBar(101,5,5, self~sizex-10,14)
    self~addText(10,25,self~dims["sx"]+2,self~dims["sy"], self~msg,, 100)
 

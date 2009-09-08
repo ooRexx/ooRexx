@@ -167,7 +167,7 @@
 ::attribute constDir get
 ::attribute constDir set private
 
-::attribute processingLoad private    -- in LoadItems ?
+::attribute processingLoad private    -- in loadItems ?
 
 ::method parseIncludeFile
   use strict arg hFile
@@ -411,7 +411,7 @@
    icon = self~resolveIconId(icon)
    if sleeptime~Datatype('N') = 0 then sleeptime = 0   /* default is no sleep for execute */
    if arg(4, 'o') = 1 then nomodal = 0
-   if self~startit(icon, nomodal) \= 0 then
+   if self~startIt(icon, nomodal) \= 0 then
    do
       if self~useStem then self~SetDataStem(dlgData.); else self~SetData
       self~show(sh)
@@ -1153,13 +1153,13 @@
    /* have to use the Connect... methods to assign a dialog item */
    /* to a data stem field */
 
-::method InitAutoDetection protected /* autodetection is enabled by default */
-   self~AutoDetection
+::method initAutoDetection protected /* autodetection is enabled by default */
+   self~autoDetection
 
-::method NoAutoDetection    /* disable autodetection */
+::method noAutoDetection    /* disable autodetection */
    self~autoDetect = .false
 
-::method AutoDetection      /* enable autodetection */
+::method autoDetection      /* enable autodetection */
    self~autoDetect = .true
 
  /* The following methods are abstract methods that will be called */

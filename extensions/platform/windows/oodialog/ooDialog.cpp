@@ -48,14 +48,12 @@
 #include "oodData.hpp"
 #include "oodSymbols.h"
 
-extern INT DelDialog(DIALOGADMIN * aDlg);
 extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
 extern BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam, BOOL MsgEnabled);
 extern BOOL DrawBackgroundBmp(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam);
 extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr);
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
-extern BOOL GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDLE);
 
 /* Shared functions for keyboard hooks and key press subclassing */
 extern LONG setKeyPressData(KEYPRESSDATA *, CONSTRXSTRING, CONSTRXSTRING, const char *);
@@ -1399,6 +1397,24 @@ int32_t stopDialog(HWND hDlg)
     return -1;
 }
 
+RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStringObject hDlg)
+{
+    pCWindowBase pcwb = pcpbd->wndBase;
+    pcpbd->hDlg = (HWND)string2pointer(c, hDlg);
+
+    if ( pcpbd->hDlg != NULL )
+    {
+        pcwb->hwnd = pcpbd->hDlg;
+        pcwb->rexxHwnd = c->RequestGlobalReference(hDlg);
+    }
+    else
+    {
+        pcwb->rexxHwnd = TheZeroObj;
+    }
+
+    return NULLOBJECT;
+}
+
 RexxMethod0(RexxObjectPtr, pbdlg_init_cls)
 {
     context->SetObjectVariable("FONTNAME", context->String(DEFAULT_FONTNAME));
@@ -1541,23 +1557,6 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     return TheZeroObj;
 }
 
-RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStringObject hDlg)
-{
-    pCWindowBase pcwb = pcpbd->wndBase;
-    pcpbd->hDlg = (HWND)string2pointer(c, hDlg);
-
-    if ( pcpbd->hDlg != NULL )
-    {
-        pcwb->hwnd = pcpbd->hDlg;
-        pcwb->rexxHwnd = c->RequestGlobalReference(hDlg);
-    }
-    else
-    {
-        pcwb->rexxHwnd = TheZeroObj;
-    }
-
-    return NULLOBJECT;
-}
 /** PlainBaseDialog::dlgHandle  [attribute set private]
  *
  *  Sets the handle of the underlying Windows dialog.  When a PlainBaseDialog is
@@ -2165,20 +2164,6 @@ RexxMethod2(RexxArrayObject, resdlg_getDataTableIDs_pvt, CSELF, pCSelf, OSELF, s
 {
     return getDataTableIDs(context, (pCPlainBaseDialog)pCSelf, self);
 }
-
-
-/**
- *  Methods for the .DynamicDialog class.  TODO There should be a
- *  oodUserDialog.cpp file and this should be moved in to it.
- */
-#define DYNAMICDIALOG_CLASS  "DynamicDialog"
-
-RexxMethod0(RexxObjectPtr, dyndlg_stop)
-{
-    stopDialog(NULL);
-    return NULLOBJECT;
-}
-
 
 
 /**

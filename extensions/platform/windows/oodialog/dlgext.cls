@@ -53,7 +53,7 @@
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
    if arg(2,'o') = 1 then sh = "DEFAULT"
    if arg(4,'o') = 1 then nomodal = 0
-   if self~startit(icon, nomodal) \= 0 then do
+   if self~startIt(icon, nomodal) \= 0 then do
       if self~useStem then self~SetDataStem(self~dlgData); else self~SetData
       self~show(sh)
       self~start("AsyncMessageHandling", sleeptime)
@@ -399,7 +399,7 @@
    opts = self~getDefaultOpts(opts) || " OWNER"
    if focus = "" & sel = "" & opts~wordpos("FRAME") = 0 & opts~wordpos("TAB") = 0 then opts = opts || " NOTAB"
 
-   self~dialogItemCount = self~dialogItemCount + 1
+   self~dialogItemCount += 1
    self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, cx, cy, text, opts)
    return self~connectBitmapButton(id, fnk~space(0), bmp, focus, sel, disabl, opts)
 
