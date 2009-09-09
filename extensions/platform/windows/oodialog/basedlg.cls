@@ -316,6 +316,7 @@
    self~bkgBrushBmp = 0   -- no background bitmap
    self~menuBar = .nil
    self~isLinked = .false
+
    return 0
 
 -- TODO needs doc

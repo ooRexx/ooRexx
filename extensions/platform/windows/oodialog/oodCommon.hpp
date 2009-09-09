@@ -103,6 +103,16 @@ typedef struct _dcCSelf {
 } CDialogControl;
 typedef CDialogControl *pCDialogControl;
 
+/* Struct for the DynamicDialog class CSelf. */
+typedef struct _ddCSelf {
+    pCPlainBaseDialog  pcpbd;
+    RexxObjectPtr      rexxSelf;
+    DLGTEMPLATE       *base;    // Base pointer to dialog template (basePtr)
+    void              *active;  // Pointer to current location in dialog template (activePtr)
+    uint32_t           count;   // Dialog item count (dialogItemCount)
+} CDynamicDialog;
+typedef CDynamicDialog *pCDynamicDialog;
+
 extern LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 extern bool             dialogInAdminTable(DIALOGADMIN * Dlg);
 extern bool             InstallNecessaryStuff(DIALOGADMIN* dlgAdm, CSTRING library);
@@ -152,8 +162,9 @@ extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr o
 extern bool checkControlClass(HWND, oodControl_t);
 extern bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
 
-extern bool initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
-extern int  getKeywordValue(String2Int *cMap, const char * str);
+extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
+extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStringObject hDlg);
+extern int           getKeywordValue(String2Int *cMap, const char * str);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;

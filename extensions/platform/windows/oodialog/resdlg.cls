@@ -54,7 +54,6 @@
    else ret = self~init:super(library, resource, dlgData.)
    if ret \= 0 then return ret
 
-   if arg(3,'o') then self~useStem = .false; else self~useStem = .true
    if \ resource~datatype("N") then resource = self~resolveSymbolicId(resource)
    if resource < 1 then self~initCode = -1
 

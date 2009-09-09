@@ -207,7 +207,7 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
               case WM_USER_CREATECHILD:
                 /* Create a child dialog of this dialog and return its window
                  * handle. The dialog template pointer is passed here as the
-                 * LPARAM arg from UsrCreateDialog().
+                 * LPARAM arg from DynamicDialog::startChildDialog().
                  */
                 hW = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc, addressedTo->Use3DControls);
                 ReplyMessage((LRESULT)hW);
@@ -1458,8 +1458,8 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     }
 
     // Get a buffer for the PlainBaseDialog CSelf.
-    RexxBufferObject cpbdBuf = context->NewBuffer(sizeof(CPlainBaseDialog));
-    if ( cpbdBuf == NULLOBJECT )
+    RexxBufferObject cselfBuffer = context->NewBuffer(sizeof(CPlainBaseDialog));
+    if ( cselfBuffer == NULLOBJECT )
     {
         goto err_out;
     }
@@ -1471,13 +1471,12 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
         goto done_out;
     }
 
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->BufferData(cpbdBuf);
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->BufferData(cselfBuffer);
 
     pcpbd->wndBase = pWB;
     pcpbd->rexxSelf = self;
     pcpbd->hDlg = NULL;
-
-    context->SetObjectVariable("CSELF", cpbdBuf);
+    context->SetObjectVariable("CSELF", cselfBuffer);
 
     // The adm attribute needs to be set to whatever the result of allocating
     // the dialog administration block is.  If it is null, then the attribute
@@ -1555,28 +1554,6 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     context->SetObjectVariable("ADM", TheZeroObj);
 
     return TheZeroObj;
-}
-
-/** PlainBaseDialog::dlgHandle  [attribute set private]
- *
- *  Sets the handle of the underlying Windows dialog.  When a PlainBaseDialog is
- *  first initialized, the dialog handle is of course unknown.  The underlying
- *  dialog has not been created.
- *
- *  While ooDialog is still a mix of old and new native APIs this has to remain
- *  an actual method implementation.  See for example:
- *
- *  self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~DialogItemCount,
- *  0, self~BasePtr, self~autoDetect, 1, 0, 0)
- *
- *  When / if the functions that actually create the underlying Windows dialog
- *  are converted to the new APIs, then the code for this method can be done
- *  entirely in the native API context and the dlgHandle= method can be removed.
- *
- */
-RexxMethod2(RexxObjectPtr, pbdlg_setDlgHandle, RexxStringObject, hDlg, CSELF, pCSelf)
-{
-    return setDlgHandle(context, (pCPlainBaseDialog)pCSelf, hDlg);
 }
 
 /** PlainBaseDialog::dlgHandle  [attribute get] / PlainBaseDialog::getSelf()
@@ -1968,12 +1945,12 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
 RexxMethod5(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
             OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self)
 {
-    DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, self);
-    if ( dlgAdm == NULL )
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->ObjectToCSelf(self, context->SendMessage0(self, "CLASS"));
+    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
     {
+        // TODO should an exception be raised here?
         return TheOneObj;
     }
-
     // result will be the resolved resource ID, which may be -1 on error.
     RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
 
@@ -2009,7 +1986,7 @@ RexxMethod5(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL
         context->UnsignedInt32(rxPageID, &category);
     }
 
-    return addToDataTable(context, dlgAdm, result, typ, category);
+    return addToDataTable(context, pcpbd->dlgAdm, result, typ, category);
 }
 
 

@@ -50,13 +50,11 @@
 ::method activePtr attribute private
 ::method dialogItemCount attribute private
 
-::method dynamicInit private
-   self~activePtr = 0
-   self~dialogItemCount = 0
-   self~basePtr = 0
-   return 0
-
+::method dynamicInit private external "LIBRARY oodialog dyndlg_dynamicInit"
 ::method stop private external "LIBRARY oodialog dyndlg_stop"
+
+::method startParentDialog external "LIBRARY oodialog dyndlg_startParentDialog"
+::method startChildDialog external "LIBRARY oodialog dyndlg_startChildDialog"
 
    /* This method creates the dialog you previously defined via Add... methods */
    /* You can set the font and the number of expected items */
@@ -1094,18 +1092,19 @@
 
 
 ::method startIt
-   use arg icon = 0, modal = 0
+   use arg icon = 0, modeless = .false
    if self~basePtr = 0 then return 0
 
    icon = self~resolveIconID(icon)
-   if modal <> 0 & modal <> 1 then do
-     if modal~translate = "NOTMODAL" then modal = 1
-     else modal = 0
+   if modeless <> 0 & modless <> 1 then do
+     if modeless~translate = "NOTMODAL" then modeless = .true
+     else modeless = .false
    end
-   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~dialogItemCount, 0, self~basePtr, 0 /* no autodetection */, 1, icon, modal)
+
    self~activePtr = 0
-   if self~dlgHandle = 0 then return 0
-   else self~initDialog
+   if \ self~startParentDialog(self~dialogItemCount, self~basePtr, icon, modeless) then return 0
+
+   self~initDialog
    return self~dlgHandle
 
 ::method stopDynamic protected

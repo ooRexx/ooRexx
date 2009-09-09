@@ -109,7 +109,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleControlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleOtherNewCtrls);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DumpAdmin);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddControl);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrCreateDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrDefineDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddNewCtrl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddResource);
@@ -148,7 +147,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
     REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),
     REXX_CLASSIC_ROUTINE(UsrAddControl,        UsrAddControl),
-    REXX_CLASSIC_ROUTINE(UsrCreateDialog,      UsrCreateDialog),
     REXX_CLASSIC_ROUTINE(UsrDefineDialog,      UsrDefineDialog),
     REXX_CLASSIC_ROUTINE(UsrAddNewCtrl,        UsrAddNewCtrl),
     REXX_CLASSIC_ROUTINE(UsrAddResource,       UsrAddResource),
@@ -210,7 +208,6 @@ REXX_METHOD_PROTOTYPE(pbdlg_setDefaultFont_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontName_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontSize_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_init);
-REXX_METHOD_PROTOTYPE(pbdlg_setDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
@@ -227,6 +224,11 @@ REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 REXX_METHOD_PROTOTYPE(generic_connectControl);
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
+REXX_METHOD_PROTOTYPE(userdlg_init);
+
+REXX_METHOD_PROTOTYPE(dyndlg_dynamicInit);
+REXX_METHOD_PROTOTYPE(dyndlg_startParentDialog);
+REXX_METHOD_PROTOTYPE(dyndlg_startChildDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
 
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
@@ -496,7 +498,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getFontName_cls,         pbdlg_getFontName_cls),
     REXX_METHOD(pbdlg_getFontSize_cls,         pbdlg_getFontSize_cls),
     REXX_METHOD(pbdlg_init,                    pbdlg_init),
-    REXX_METHOD(pbdlg_setDlgHandle,            pbdlg_setDlgHandle),
     REXX_METHOD(pbdlg_getDlgHandle,            pbdlg_getDlgHandle),
     REXX_METHOD(pbdlg_get,                     pbdlg_get),
     REXX_METHOD(pbdlg_isDialogActive,          pbdlg_isDialogActive),
@@ -513,6 +514,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(generic_connectControl,       generic_connectControl),
     REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
 
+    REXX_METHOD(userdlg_init,                 userdlg_init),
+
+    REXX_METHOD(dyndlg_dynamicInit,           dyndlg_dynamicInit),
+    REXX_METHOD(dyndlg_startParentDialog,     dyndlg_startParentDialog),
+    REXX_METHOD(dyndlg_startChildDialog,      dyndlg_startChildDialog),
     REXX_METHOD(dyndlg_stop,                  dyndlg_stop),
 
     REXX_METHOD(dlgctrl_new_cls,              dlgctrl_new_cls),
@@ -572,7 +578,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(il_remove,                   il_remove),
     REXX_METHOD(il_isNull,                   il_isNull),
     REXX_METHOD(il_handle,                   il_handle),
-
 
     REXX_METHOD(lv_setImageList,          lv_setImageList),
     REXX_METHOD(lv_getImageList,          lv_getImageList),

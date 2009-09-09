@@ -85,19 +85,17 @@
    p = self~catalog['page']
    self~AddTabControl(9001,,p['x'], p['y'], p['w'], p['h'],self~CatStyle || " CAT CLIPSIBLINGS")
 
-   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~dialogItemCount, 0, self~basePtr, self~autoDetect, 1, 0, 0)
    self~activePtr = 0
-   if self~dlgHandle = 0 then return 0
+   if \ self~startParentDialog(self~dialogItemCount, self~basePtr, 0, .false) then return 0
 
    do i = 1 to self~catalog['count']
       self~dialogItemCount = 0
       self~catalog['category'] = i
       self~CreateCategoryDialog(p['x']+2, p['y']+(size~height*2), p['w']-10, p['h']-(size~height*3),p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
-      msg = "self~" || self~catalog['names'][i]~space(0)
-      interpret(msg)
-      ret = UsrCreateDialog(self~adm, "CHILD", self~dialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+      self~send(self~catalog['names'][i]~space(0))
       self~activePtr = 0
-      self~catalog['handles'][i] = ret
+      hChildDlg = self~startChildDialog(self~dialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+      self~catalog['handles'][i] = hChildDlg
    end
 
    /* This method adds controls to the base window of a 'CategoryDialog' */
@@ -120,25 +118,25 @@
    /* this is to correct a redraw problem of a focused list view control that gets reactivated */
    self~addUserMsg(PropSheetActivated, "0x00000006", "0xFFFFFFFF")  /* WM_ACTIVATE */
 
-   tc = self~GetTabControl(9001, 0)
+   tc = self~getTabControl(9001, 0)
    if tc \= .nil then do
       do i = 1 to self~catalog['count']
-         tc~Insert(,self~catalog['names'][i])
+         tc~insert(,self~catalog['names'][i])
       end
-      tc~SelectIndex(0)
+      tc~selectIndex(0)
    end
-   if self~Wizard = 1 then self~DisableItem(11)
+   if self~wizard then self~disableItem(11)
 
-   /* call InitXXX for each category if such a method exists */
+   -- call initXXXX for each category, if such a method exists
    do i = 1 to self~catalog['count']
       self~catalog['category'] = i
-      msg = "Init" || self~catalog['names'][i]~space(0)
-      if self~HasMethod(msg) = 1 then interpret("self~"||msg)   /* does user class provide the Init method? If so call it */
+      initMethod = "init" || self~catalog['names'][i]~space(0)
+      if self~hasMethod(initMethod) then self~send(initMethod
    end
 
    /* set the mark to the first radio button */
    self~catalog['category'] = 1
-   self~ShowWindow(self~catalog['handles'][self~catalog['category']])
+   self~showWindow(self~catalog['handles'][self~catalog['category']])
 
 
    /* this is to correct a redraw problem of a focused list view control. If the list control has the focus,

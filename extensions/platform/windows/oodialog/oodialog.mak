@@ -63,7 +63,7 @@ COMMON_SOURCEF = $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR
 # All Source files that include APICommon.hpp
 APICOMMON_SOURCEF = $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodControl.obj \
                     $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj$(OR_OUTDIR)\oodText.obj \
-                    $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovother.obj
+                    $(OR_OUTDIR)\oodUser.obj $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovother.obj
 
 # All Source files that include oodText.hpp
 OODTEXT_SOURCEF = $(OR_OUTDIR)\oodControl.cpp $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodText.cpp $(OR_OUTDIR)\oodUtilities.cpp \

@@ -5849,13 +5849,11 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObject
             OPTIONAL_RexxObjectPtr, helpID, OPTIONAL_uint32_t, count, OPTIONAL_logical_t, connect, OPTIONAL_logical_t, attach,
             OSELF, self)
 {
-    RexxMethodContext *c = context;
-
     CppMenu *cMenu = new CppMenu(self, ScriptMenuBar, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
     context->SetObjectVariable("CSELF", cMenuPtr);
 
-    bool idOmitted = isInt(context, -1, id);
+    bool idOmitted = isInt(-1, id, context);
 
     if ( ! cMenu->menuInit(id, symbolSrc, rcFile) )
     {
@@ -5886,21 +5884,22 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObject
     // If wID == -1 and id was not ommitted, then id could be a string menu
     // name.  Or, it could be a bad symbolic ID.  If it is a bad symbol, then
     // load() will raise an exception, so that's ok.
-    RexxObjectPtr menuName = (cMenu->wID == -1 && ! idOmitted) ? id : c->NullString();
+    RexxObjectPtr menuName = (cMenu->wID == -1 && ! idOmitted) ? id : context->NullString();
 
-    RexxArrayObject args = c->ArrayOfFour(rcFile, c->UnsignedInt32(cMenu->wID), c->Logical(connect), c->UnsignedInt32(count));
-    c->ArrayAppend(args, idOmitted ? TheTrueObj : TheFalseObj);
-    c->ArrayAppend(args, menuName);
+    RexxArrayObject args = context->ArrayOfFour(rcFile, context->UnsignedInt32(cMenu->wID),
+                                                context->Logical(connect), context->UnsignedInt32(count));
+    context->ArrayAppend(args, idOmitted ? TheTrueObj : TheFalseObj);
+    context->ArrayAppend(args, menuName);
 
     // Note well: the load() method makes repeated calls to addItem(),
     // addPopup(), etc. Each call resets the internal CppMenu context.  When we
     // return, the internal cMenu context will no longer be this context.  It
     // *must* be reset.
 
-    c->SendMessage(self, "LOAD", args);
-    cMenu->setContext(c, TheNilObj);
+    context->SendMessage(self, "LOAD", args);
+    cMenu->setContext(context, TheNilObj);
 
-    if ( c->CheckCondition() )
+    if ( context->CheckCondition() )
     {
         cMenu->deleteTemplate();
         cMenu->noTempHelpID();
@@ -5914,7 +5913,7 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObject
 
     if ( attach )
     {
-        if ( symbolSrc != NULLOBJECT && c->IsOfType(symbolSrc, "BASEDIALOG") )
+        if ( symbolSrc != NULLOBJECT && context->IsOfType(symbolSrc, "BASEDIALOG") )
         {
             cMenu->attachToDlg(symbolSrc);
         }

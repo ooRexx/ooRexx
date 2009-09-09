@@ -233,20 +233,18 @@
          self~addRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax, newstyle || " CAT")
    end
 
-   self~dlgHandle = UsrCreateDialog(self~adm, "PARENT", self~dialogItemCount, 0, self~basePtr, self~autoDetect, 1, 0, 0)
    self~activePtr = 0
-   if self~dlgHandle = 0 then return 0
+   if \ self~startParentDialog(self~dialogItemCount, self~basePtr, 0, .false) then return 0
 
    do i = 1 to self~catalog['count']
       self~dialogItemCount = 0
       self~catalog['category'] = i
       p = self~catalog['page']
       self~CreateCategoryDialog(p['x'], p['y'], p['w'], p['h'],p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
-      msg = "self~" || self~catalog['names'][i]~space(0)
-      interpret(msg)
-      ret = UsrCreateDialog(self~adm, "CHILD", self~dialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+      self~send(self~catalog['names'][i]~space(0))
       self~activePtr = 0
-      self~catalog['handles'][i] = ret
+      hChildDlg = self~startChildDialog(self~dialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+      self~catalog['handles'][i] = hChildDlg
    end
 
    /* This method returns the current page */

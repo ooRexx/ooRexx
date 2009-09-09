@@ -333,7 +333,6 @@
 ::attribute fontSize set private
 
 ::attribute dlgHandle get unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
-::attribute dlgHandle set private unguarded external "LIBRARY oodialog pbdlg_setDlgHandle"
 
 -- A queue containing the methods that will be started concurrently before execution of the dialog
 ::attribute automaticMethods private

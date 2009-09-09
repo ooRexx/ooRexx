@@ -488,13 +488,13 @@ RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr v
 /**
  * Test if a generic Rexx object is exactly some int.
  *
- * @param c        The method context we are executing under.
  * @param testFor  The int value being tested for.
  * @param val      The generic Rexx object, which could be null.
+ * @param c        The method context we are executing under.
  *
  * @return True if val is the int number we are testing for, otherwise false.
  */
-bool isInt(RexxMethodContext *c, int testFor, RexxObjectPtr val)
+bool isInt(int testFor, RexxObjectPtr val, RexxMethodContext *c)
 {
     if ( val != NULLOBJECT )
     {
