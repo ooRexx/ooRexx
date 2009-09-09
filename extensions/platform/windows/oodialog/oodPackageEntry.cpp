@@ -175,6 +175,10 @@ REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
+REXX_METHOD_PROTOTYPE(rsrcUtils_resolveResourceID);
+REXX_METHOD_PROTOTYPE(rsrcUtils_idError);
+REXX_METHOD_PROTOTYPE(rsrcUtils_checkID);
+
 REXX_METHOD_PROTOTYPE(wb_getHwnd);
 REXX_METHOD_PROTOTYPE(wb_getFactorX);
 REXX_METHOD_PROTOTYPE(wb_setFactorX);
@@ -467,6 +471,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_handleToPointer_cls,  dlgutil_handleToPointer_cls),
     REXX_METHOD(dlgutil_test_cls,             dlgutil_test_cls),
+
+    REXX_METHOD(rsrcUtils_resolveResourceID,  rsrcUtils_resolveResourceID),
+    REXX_METHOD(rsrcUtils_idError,            rsrcUtils_idError),
+    REXX_METHOD(rsrcUtils_checkID,            rsrcUtils_checkID),
 
     REXX_METHOD(wb_init_windowBase,           wb_init_windowBase),
     REXX_METHOD(wb_getHwnd,                   wb_getHwnd),

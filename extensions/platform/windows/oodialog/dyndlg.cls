@@ -244,7 +244,7 @@
 
 ::method internAddRCButton
    use arg id, x, y, w, h, name, style, lOpts
-   id = self~CheckId(id)
+   id = self~checkID(id)
    if id < 0 then return
    opts = self~internGetRCStyle(style, "BTN")
    self~dialogItemCount += 1
@@ -317,8 +317,8 @@
       else do
          foundID = s~word(n-1)~translate
          if foundID = dialogid~translate then found = 1
-         else if self~CheckId(foundID) = dialogid then found = 1
-         else if foundID = self~CheckId(dialogid~translate) then found = 1
+         else if self~checkID(foundID) = dialogid then found = 1
+         else if foundID = self~checkID(dialogid~translate) then found = 1
          else n = 0
       end
    end
@@ -399,8 +399,8 @@
       else do
          foundID = s~word(n-1)~translate
          if foundID = dialogid~translate then found = 1
-         else if self~CheckId(foundID) = dialogid then found = 1
-         else if foundID = self~CheckId(dialogid~translate) then found = 1
+         else if self~checkID(foundID) = dialogid then found = 1
+         else if foundID = self~checkID(dialogid~translate) then found = 1
          else n = 0
       end
    end
@@ -587,11 +587,11 @@
    use arg id, staticId
    if self~activePtr = 0 then return -2
    if arg(2,'o') = 1 then do
-       id = self~CheckId(id)
+       id = self~checkID(id)
        if id = -1 then return -1
    end
    else do
-       if staticId = 1 then id = self~CheckId(id)
+       if staticId = 1 then id = self~checkID(id)
        else id = self~getStaticID
    end
    self~dialogItemCount += 1
@@ -824,7 +824,7 @@
    use arg startid, x, y, cx, inp, opts, idstat, kind
 
    if self~activePtr = 0 then return -2
-   if self~CheckID(startid) = -1 then return
+   if self~checkID(startid) = -1 then return
    if arg(4, 'o') = 1 then cx = 0
    parse var inp rb inp
    size = self~getTextSizeDlg(rb)
@@ -864,7 +864,7 @@
 ::method addInput
    use arg id, fname, x, y, cx1, cx2, cy, text, opts, idstat
    if self~activePtr = 0 then return -2
-   if self~CheckID(id) = -1 then return
+   if self~checkID(id) = -1 then return
    if arg(2,'o') = 1 then fname = text
    if arg(5, 'o') = 1 then cx1 = 0
    if arg(7, 'o') = 1 then cy = 0
@@ -885,7 +885,7 @@
    parse var inp rb inp
 
    if self~activePtr = 0 then return -2
-   if self~CheckID(startid) = -1 then return
+   if self~checkID(startid) = -1 then return
    if arg(4, 'o') = 1 then cx1 = 0
    count = 0; ll = 0
    do while rb \= ""
@@ -920,7 +920,7 @@
    use arg id, attname, x, y, cx1, cx2, clines, text, opts, idstat
 
    if self~activePtr = 0 then return -2
-   if self~CheckID(id) = -1 then return
+   if self~checkID(id) = -1 then return
    if arg(2, 'o') = 1 then attname = text
    if arg(5, 'o') = 1 then cx1 = 0
    if arg(7, 'o') = 1 then clines = 5
@@ -939,7 +939,7 @@
    use arg startid, x, y, cx1, cx2, inp., opts, idstat
 
    if self~activePtr = 0 then return -2
-   if self~CheckID(startid)= -1 then return
+   if self~checkID(startid)= -1 then return
    if arg(4, 'o') = 1 then cx1 = 0
    count = 0; ll = 0
    do while var("inp."count+1) = 1
@@ -985,7 +985,7 @@
    -- here for backwards compatibility.
 
    if self~activePtr = 0 then return -2
-   if self~CheckID(startid) = -1 then return
+   if self~checkID(startid) = -1 then return
    if arg(4, 'o') = 1 then cxx = 0
    count = 0; ll = 0
    do while var("inp."count+1) = 1
@@ -1075,7 +1075,7 @@
 ::method addIcon
    use arg id, fileName
 
-   id = self~CheckId(id~strip~translate)
+   id = self~checkID(id~strip~translate)
    if id < 0 then return id
 
    fileName = fileName~strip~strip('B', '"')

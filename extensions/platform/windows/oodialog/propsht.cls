@@ -50,7 +50,7 @@
 
 ::class 'PropertySheet' subclass CategoryDialog public inherit MessageExtensions AdvancedControls
 
-::method Init
+::method init
    argarr = arg(1, "A")
    newarg = .array~new(argarr~items+1)
    if argarr~hasindex(1) = 1 then newarg[1] = argarr[1] /* dlgData */
@@ -65,7 +65,7 @@
 
 ::method defineDialog protected
    if self~basePtr = 0 then return 0
-   self~ConnectTabNotify(9001, "SELCHANGE", "CHANGEPAGE")
+   self~connectTabNotify(9001, "SELCHANGE", "CHANGEPAGE")
 
    do i = 1 to self~catalog['count']
       catnames.i = self~catalog['names'][i]
@@ -80,10 +80,10 @@
    self~catalog['page']['w'] = self~sizeX - self~catx*2
    self~catalog['page']['h'] = self~sizeY - self~catalog['page']['y'] - 27
 
-   self~CategoryPage
+   self~categoryPage
 
    p = self~catalog['page']
-   self~AddTabControl(9001,,p['x'], p['y'], p['w'], p['h'],self~CatStyle || " CAT CLIPSIBLINGS")
+   self~addTabControl(9001,,p['x'], p['y'], p['w'], p['h'],self~catStyle || " CAT CLIPSIBLINGS")
 
    self~activePtr = 0
    if \ self~startParentDialog(self~dialogItemCount, self~basePtr, 0, .false) then return 0
@@ -91,7 +91,7 @@
    do i = 1 to self~catalog['count']
       self~dialogItemCount = 0
       self~catalog['category'] = i
-      self~CreateCategoryDialog(p['x']+2, p['y']+(size~height*2), p['w']-10, p['h']-(size~height*3),p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
+      self~createCategoryDialog(p['x']+2, p['y']+(size~height*2), p['w']-10, p['h']-(size~height*3),p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
       self~send(self~catalog['names'][i]~space(0))
       self~activePtr = 0
       hChildDlg = self~startChildDialog(self~dialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
@@ -100,18 +100,18 @@
 
    /* This method adds controls to the base window of a 'CategoryDialog' */
 
-::method CategoryPage protected
+::method categoryPage protected
    p = self~catalog['page']
    lbtext = p['leftbtntext']
    rbtext = p['rightbtntext']
    if lbtext~pos(" ") > 0 then lbtext = '"' || lbtext || '"'
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
    if (p['btnwidth'] > 0) then bw = p['btnwidth']; else bw = 35
-   self~addButtonGroup(p['w']+p['x']+2-bw*2.25,,
-      self~sizeY - 15,bw,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
-   if self~Wizard = 1 then
-      self~addButtonGroup(p['x']-2,self~sizeY - 15,bw,,
-                          ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
+
+   self~addButtonGroup(p['w']+p['x']+2-bw*2.25, self~sizeY - 15, bw, , "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
+   if self~wizard then do
+      self~addButtonGroup(p['x']-2,self~sizeY - 15, bw, , lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
+   end
 
 
 ::method initDialog protected
@@ -131,7 +131,7 @@
    do i = 1 to self~catalog['count']
       self~catalog['category'] = i
       initMethod = "init" || self~catalog['names'][i]~space(0)
-      if self~hasMethod(initMethod) then self~send(initMethod
+      if self~hasMethod(initMethod) then self~send(initMethod)
    end
 
    /* set the mark to the first radio button */
@@ -141,52 +141,49 @@
 
    /* this is to correct a redraw problem of a focused list view control. If the list control has the focus,
    was overlapped by another window and is activated, the list is overlapped by the tab control */
-::method PropSheetActivated
+::method propSheetActivated
    use arg wP, lp
    if arg() = 0 then code = 0
    else code = .DlgUtil~loWord(wp)
    if code \= 0 then do
-       self~Update
+       self~update
        wnd = .Window~new(self~catalog['handles'][self~catalog['category']])
-       wnd~Update
+       wnd~update
    end
 
-::method GetSelectedPage unguarded
-   return self~GetTabControl(9001, 0)~SelectedIndex+1
+::method getSelectedPage unguarded
+   return self~getTabControl(9001, 0)~selectedIndex+1
 
 
-::method ChangePage unguarded
-   use arg NewPage
+::method changePage unguarded
+   use arg newPage
 
    oldPage = self~catalog['category']
    /* if ChangePage is called automatically then 2 arguments are passed (WParam and LParam) */
-   if arg(2,'o') = 0 | NewPage > 9000 then NewPage = self~GetSelectedPage
+   if arg(2,'o') = 0 | newPage > 9000 then newPage = self~getSelectedPage
    else do
-      self~GetTabControl(9001, 0)~SelectIndex(NewPage-1)
+      self~getTabControl(9001, 0)~selectIndex(newPage-1)
    end
-   if (NewPage = self~catalog['category']) |,
-      (NewPage < 1 | NewPage> self~catalog['count']) then return 0
-   self~HideWindowFast(self~catalog['handles'][self~catalog['category']])
-   self~catalog['category'] = NewPage
-   if self~Wizard = 1 then
-   do
-      if NewPage = 1 then
-      do
-         self~DisableItem(11)
-         self~EnableItem(12)
-      end; else
-      if NewPage = self~catalog['count'] then
-      do
-         self~EnableItem(11)
-         self~DisableItem(12)
-      end; else
-      do
-         self~EnableItem(11)
-         self~EnableItem(12)
+   if (newPage = self~catalog['category']) |,
+      (newPage < 1 | newPage> self~catalog['count']) then return 0
+   self~hideWindowFast(self~catalog['handles'][self~catalog['category']])
+   self~catalog['category'] = newPage
+   if self~wizard then do
+      if newPage = 1 then do
+         self~disableItem(11)
+         self~enableItem(12)
+      end
+      else if newPage = self~catalog['count'] then do
+         self~enableItem(11)
+         self~disableItem(12)
+      end
+      else do
+         self~enableItem(11)
+         self~enableItem(12)
       end
    end
-   self~ShowWindow(self~catalog['handles'][self~catalog['category']])
+   self~showWindow(self~catalog['handles'][self~catalog['category']])
 
-   self~PageHasChanged(oldPage, NewPage)
-   return NewPage
+   self~pageHasChanged(oldPage, newPage)
+   return newPage
 

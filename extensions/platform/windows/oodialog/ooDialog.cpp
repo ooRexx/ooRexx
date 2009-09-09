@@ -1314,6 +1314,71 @@ RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
     return GetWindowLong(getWBWindow(pCSelf), flag);
 }
 
+
+/**
+ *  Methods for the .ResourceUtils mixin class.
+ */
+#define RESOURCEUTILS_CLASS        "ResourceUtils"
+
+int32_t idError(RexxMethodContext *c, RexxObjectPtr rxID)
+{
+    char buf[256];
+    _snprintf(buf, sizeof(buf),
+              "Error trying to add a dialog resource:\n\n%s is an undefined, non-numeric,\nidentification number.",
+              c->ObjectToStringValue(rxID));
+
+    MessageBox(NULL, buf, "ooDialog - Dialog Definition Error", MB_OK | MB_ICONHAND | MB_SETFOREGROUND | MB_TASKMODAL);
+    return -1;
+}
+
+/**
+ * Checks that a resource ID, which may be a symbolic ID, can be resolved
+ * successfully, and returns the numeric ID.  If, it can not be resolved, an
+ * error message box is put up.
+ *
+ * This is the implementation for ResourceUtils::checkID() and *must* resolve
+ * ID_STATIC correctly.  Which it does, by returning -1 and not generating an
+ * error.
+ *
+ * @param c     Method context we are operating in.
+ * @param rxID  Rexx object to be resolved, may be, and often is, a symbolic
+ *              resource ID.
+ * @param self  The Rexx object that has inherited ResourceUtils.
+ *
+ * @return The numeric resource ID value.
+ */
+int32_t checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self)
+{
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, c, self, rxID, -1, 1) )
+    {
+        return idError(c, rxID);
+    }
+    return (int)id;
+}
+
+int32_t resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self)
+{
+    uint32_t id;
+    oodSafeResolveID(&id, c, self, rxID, -1, 1);
+    return (int)id;
+}
+
+RexxMethod2(int32_t, rsrcUtils_checkID, RexxObjectPtr, rxID, OSELF, self)
+{
+    return checkID(context, rxID, self);
+}
+
+RexxMethod1(int32_t, rsrcUtils_idError, RexxObjectPtr, rxID)
+{
+    return idError(context, rxID);
+}
+
+RexxMethod2(int32_t, rsrcUtils_resolveResourceID, RexxObjectPtr, rxID, OSELF, self)
+{
+    return resolveResourceID(context, rxID, self);
+}
+
 /**
  *  Methods for the .Window class.
  */

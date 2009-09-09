@@ -228,28 +228,10 @@
    self~processingLoad = 0
    ret = errorDialog("Error reading resource file:" f "("s")")
 
-::method checkId
-  use strict arg id
-
-  if id~datatype("W") then return id
-
-  if \ self~ConstDir~isA(.directory) then return self~idError(id)
-
-  if self~ConstDir[id~space(0)~translate] = .nil then return self~idError(id)
-
-  return self~resolveSymbolicId(id)
-
-::method idError private
-  use strict arg id
-  j = errorDialog("Adding dialog resource:" id "undefined" || '0d0a'x || -
-                   "non-numeric identification number.")
-  return -1
-
-::method resolveSymbolicId unguarded
-   use strict arg id
-   id = self~ConstDir[id~space(0)~translate]
-   if id == .nil then return -1
-   return id
+::method checkID external "LIBRARY oodialog rsrcUtils_checkID"
+::method idError private external "LIBRARY oodialog rsrcUtils_idError"
+::method resolveSymbolicId unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
+::method resolveResourceID unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
 
 /**
  * Return the symbolic ID from the ConstDir that matches the numeric ID.
@@ -270,11 +252,6 @@
   if icon = -1 then icon = 0
   else if icon >= 1, icon <= 4 then icon += 10
   return icon
-
-::method resolveResourceID unguarded
-  use strict arg id
-  if id~datatype("W"), id > -1 then return id
-  return self~resolveSymbolicId(id)
 
 ::method mergeSymbols
   use strict arg otherSymbolSrc
