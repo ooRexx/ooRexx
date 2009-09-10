@@ -48,11 +48,25 @@ using namespace std;
 typedef map<string, int, less<string> > String2Int;
 
 
-#define DEFAULT_FONTNAME       "MS Shell Dlg"
-#define DEFAULT_FONTSIZE       8
+#define COMCTL_ERR_TITLE             "ooDialog - Windows Common Controls Error"
+#define DLLGETVERSION_FUNCTION       "DllGetVersion"
+#define COMMON_CONTROL_DLL           "comctl32.dll"
 
+#define NO_COMMCTRL_MSG              "failed to initialize %s; OS error code %d"
+#define COMCTL32_FULL_PART           0
+#define COMCTL32_NUMBER_PART         1
+#define COMCTL32_OS_PART             2
 
-#define OOD_ID_EXCEPTION 0xFFFFFFF7   // -9
+#define OOD_RESOURCE_ERR_TITLE      "ooDialog - Resource Definition Error"
+
+#define OOD_ADDICONFILE_ERR_MSG     "Icon resource elements have exceeded the maximum\n" \
+                                    "number of allocated icon table entries. The icon\n" \
+                                    "resource will not be added."
+
+#define DEFAULT_FONTNAME            "MS Shell Dlg"
+#define DEFAULT_FONTSIZE            8
+
+#define OOD_ID_EXCEPTION            0xFFFFFFF7   // -9
 
 // Enum for the type of an ooDialog class.  Types to be added as needed.
 typedef enum
@@ -135,16 +149,20 @@ extern char *           strdup_2methodName(const char *str);
 extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
 extern LPWORD lpwAlign(LPWORD lpIn);
-extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
+extern BOOL   AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
 extern void       ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
 extern uint32_t   oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
 extern bool       oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
 
-extern DWORD oodGetSysErrCode(RexxThreadContext *);
-extern void  oodSetSysErrCode(RexxThreadContext *, DWORD);
-extern void  oodResetSysErrCode(RexxThreadContext *context);
+extern int32_t    checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
+extern int32_t    idError(RexxMethodContext *c, RexxObjectPtr rxID);
+extern int32_t    resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
+
+extern DWORD      oodGetSysErrCode(RexxThreadContext *);
+extern void       oodSetSysErrCode(RexxThreadContext *, DWORD);
+extern void       oodResetSysErrCode(RexxThreadContext *context);
 
 extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos);
 extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
@@ -159,8 +177,9 @@ extern bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *p
 // pointer strings.
 extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 
-extern bool checkControlClass(HWND, oodControl_t);
-extern bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
+extern bool        checkControlClass(HWND, oodControl_t);
+extern bool        requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
+extern const char *comctl32VersionPart(DWORD id, DWORD type);
 
 extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
 extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStringObject hDlg);
@@ -257,5 +276,22 @@ inline bool isYes(const char * s)
    char c = toupper(s[0]);
    return ( c == 'J' || c =='Y' || c == '1' );
 }
+
+inline const char *comctl32VersionName(DWORD id)
+{
+    return comctl32VersionPart(id, COMCTL32_FULL_PART);
+}
+
+/**
+ * Convenience function to put up an error message box.
+ *
+ * @param pszMsg    The message.
+ * @param pszTitle  The title of for the message box.
+ */
+inline void internalErrorMsgBox(CSTRING pszMsg, CSTRING pszTitle)
+{
+    MessageBox(0, pszMsg, pszTitle, MB_OK | MB_ICONHAND | MB_SETFOREGROUND | MB_TASKMODAL);
+}
+
 
 #endif

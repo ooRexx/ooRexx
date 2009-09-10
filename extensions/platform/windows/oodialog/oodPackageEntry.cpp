@@ -111,7 +111,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(DumpAdmin);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddControl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrDefineDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddNewCtrl);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddResource);
 
 REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg);
 REXX_TYPED_ROUTINE_PROTOTYPE(messageDialog_rtn);
@@ -149,7 +148,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(UsrAddControl,        UsrAddControl),
     REXX_CLASSIC_ROUTINE(UsrDefineDialog,      UsrDefineDialog),
     REXX_CLASSIC_ROUTINE(UsrAddNewCtrl,        UsrAddNewCtrl),
-    REXX_CLASSIC_ROUTINE(UsrAddResource,       UsrAddResource),
 
     REXX_TYPED_ROUTINE(getDlgMsg,              getDlgMsg),
     REXX_TYPED_ROUTINE(messageDialog_rtn,      messageDialog_rtn),
@@ -233,6 +231,7 @@ REXX_METHOD_PROTOTYPE(userdlg_init);
 REXX_METHOD_PROTOTYPE(dyndlg_dynamicInit);
 REXX_METHOD_PROTOTYPE(dyndlg_startParentDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_startChildDialog);
+REXX_METHOD_PROTOTYPE(dyndlg_addIconFile_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
 
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
@@ -256,6 +255,7 @@ REXX_METHOD_PROTOTYPE(image_toID_cls);
 REXX_METHOD_PROTOTYPE(image_getImage_cls);
 REXX_METHOD_PROTOTYPE(image_fromFiles_cls);
 REXX_METHOD_PROTOTYPE(image_fromIDs_cls);
+REXX_METHOD_PROTOTYPE(image_userIcon_cls);
 REXX_METHOD_PROTOTYPE(image_colorRef_cls);
 REXX_METHOD_PROTOTYPE(image_getRValue_cls);
 REXX_METHOD_PROTOTYPE(image_getGValue_cls);
@@ -527,6 +527,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_dynamicInit,           dyndlg_dynamicInit),
     REXX_METHOD(dyndlg_startParentDialog,     dyndlg_startParentDialog),
     REXX_METHOD(dyndlg_startChildDialog,      dyndlg_startChildDialog),
+    REXX_METHOD(dyndlg_addIconFile_pvt,       dyndlg_addIconFile_pvt),
     REXX_METHOD(dyndlg_stop,                  dyndlg_stop),
 
     REXX_METHOD(dlgctrl_new_cls,              dlgctrl_new_cls),
@@ -562,6 +563,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(image_getImage_cls,          image_getImage_cls),
     REXX_METHOD(image_fromFiles_cls,         image_fromFiles_cls),
     REXX_METHOD(image_fromIDs_cls,           image_fromIDs_cls),
+    REXX_METHOD(image_userIcon_cls,          image_userIcon_cls),
     REXX_METHOD(image_colorRef_cls,          image_colorRef_cls),
     REXX_METHOD(image_getRValue_cls,         image_getRValue_cls),
     REXX_METHOD(image_getGValue_cls,         image_getGValue_cls),

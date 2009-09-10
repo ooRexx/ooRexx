@@ -1073,13 +1073,10 @@
    return self~addButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
 
 ::method addIcon
-   use arg id, fileName
+   use strict arg id, fileName
+   return self~addIconFile(id, fileName~strip~strip('B', '"'))
 
-   id = self~checkID(id~strip~translate)
-   if id < 0 then return id
-
-   fileName = fileName~strip~strip('B', '"')
-   return UsrAddResource(self~adm, "ICO", id, fileName)
+::method addIconFile private external "LIBRARY oodialog dyndlg_addIconFile_pvt"
 
 ::method getDefaultOpts protected
    use strict arg opts

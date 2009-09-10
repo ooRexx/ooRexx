@@ -75,11 +75,10 @@
 #define WM_USER_HOOK                WM_USER + 0x0608
 #define WM_USER_CONTEXT_MENU        WM_USER + 0x0609
 
-#define OODDLL "oodialog.dll"
-#define DLLVER 2130
+#define OODDLL                      "oodialog.dll"
+#define DLLVER                      2130
 
-#define MSG_TERMINATE "1DLGDELETED1"
-
+#define MSG_TERMINATE               "1DLGDELETED1"
 
 /* Flags for the get icon functions.  Indicates the source of the icon. */
 #define ICON_FILE                 0x00000001
@@ -413,36 +412,36 @@ typedef struct
 {
    void * previous;
    INT TableEntry;
-   MESSAGETABLEENTRY * MsgTab;
-   INT MT_size;
-   DATATABLEENTRY * DataTab;
-   INT DT_size;
-   BITMAPTABLEENTRY * BmpTab;
-   INT BT_size;
-   COLORTABLEENTRY * ColorTab;
-   INT CT_size;
-   ICONTABLEENTRY * IconTab;
-   INT IT_size;
-   HWND TheDlg;
-   HWND ChildDlg[MAXCHILDDIALOGS+1];
-   HWND AktChild;
-   HINSTANCE TheInstance;
-   HANDLE TheThread;
-   BOOL OnTheTop;
-   ULONG LeaveDialog;
-   BOOL Use3DControls;
-   HBRUSH BkgBrush;
-   HBITMAP BkgBitmap;
-   HPALETTE ColorPalette;
-   HICON SysMenuIcon;
-   HICON TitleBarIcon;
-   BOOL  SharedIcon;
-   BOOL  DidChangeIcon;
-   HHOOK hHook;
-   KEYPRESSDATA * pKeyPressData;
-   DWORD threadID;
-   WPARAM StopScroll;
-   CHAR * pMessageQueue;
+   MESSAGETABLEENTRY *MsgTab;
+   INT                MT_size;
+   DATATABLEENTRY    *DataTab;
+   INT                DT_size;
+   BITMAPTABLEENTRY  *BmpTab;
+   INT                BT_size;
+   COLORTABLEENTRY   *ColorTab;
+   INT                CT_size;
+   ICONTABLEENTRY    *IconTab;
+   size_t             IT_size;
+   HWND               TheDlg;
+   HWND               ChildDlg[MAXCHILDDIALOGS+1];
+   HWND               AktChild;
+   HINSTANCE          TheInstance;
+   HANDLE             TheThread;
+   BOOL               OnTheTop;
+   ULONG              LeaveDialog;
+   BOOL               Use3DControls;
+   HBRUSH             BkgBrush;
+   HBITMAP            BkgBitmap;
+   HPALETTE           ColorPalette;
+   HICON              SysMenuIcon;
+   HICON              TitleBarIcon;
+   BOOL               SharedIcon;
+   BOOL               DidChangeIcon;
+   HHOOK              hHook;
+   KEYPRESSDATA      *pKeyPressData;
+   DWORD              threadID;
+   WPARAM             StopScroll;
+   CHAR              *pMessageQueue;
 } DIALOGADMIN;
 
 

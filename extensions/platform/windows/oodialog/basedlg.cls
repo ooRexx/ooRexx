@@ -344,6 +344,7 @@
 ::method getImage class external "LIBRARY oodialog image_getImage_cls"
 ::method fromFiles class external "LIBRARY oodialog image_fromFiles_cls"
 ::method fromIDs class external "LIBRARY oodialog image_fromIDs_cls"
+::method userIcon class external "LIBRARY oodialog image_userIcon_cls"
 
 ::method colorRef class external "LIBRARY oodialog image_colorRef_cls"
 ::method getRValue class external "LIBRARY oodialog image_getRValue_cls"

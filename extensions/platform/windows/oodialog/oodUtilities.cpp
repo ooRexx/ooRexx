@@ -55,15 +55,7 @@
  * Defines and structs for the DlgUtil class.
  */
 #define DLGUTILCLASS                 ".DlgUtil"
-#define COMCTL_ERR_TITLE             "ooDialog - Windows Common Controls Error"
-#define GENERIC_ERR_TITLE            "ooDialog - Error"
-#define DLLGETVERSION_FUNCTION       "DllGetVersion"
-#define COMMON_CONTROL_DLL           "comctl32.dll"
 
-#define NO_COMMCTRL_MSG              "failed to initialize %s; OS error code %d"
-#define COMCTL32_FULL_PART           0
-#define COMCTL32_NUMBER_PART         1
-#define COMCTL32_OS_PART             2
 
 const char *comctl32VersionPart(DWORD id, DWORD type)
 {
@@ -182,39 +174,10 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
     return part;
 }
 
-inline const char *comctl32VersionName(DWORD id)
-{
-    return comctl32VersionPart(id, COMCTL32_FULL_PART);
-}
-
-bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum)
-{
-    if ( ComCtl32Version < minimum )
-    {
-        char msg[256];
-        _snprintf(msg, sizeof(msg), "The %s() method requires %s or later", methodName, comctl32VersionName(minimum));
-        context->RaiseException1(Rexx_Error_System_service_user_defined, context->String(msg));
-        return false;
-    }
-    return true;
-}
-
-
 /**
  * Methods for the .DlgUtil class.
  */
 #define DLG_UTIL_CLASS  "DlgUtil"
-
-/**
- * Convenience function to put up an error message box.
- *
- * @param pszMsg    The message.
- * @param pszTitle  The title of for the message box.
- */
-static void internalErrorMsg(CSTRING pszMsg, CSTRING pszTitle)
-{
-    MessageBox(0, pszMsg, pszTitle, MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
-}
 
 /**
  * Determines the version of comctl32.dll and compares it against a minimum
@@ -281,7 +244,7 @@ bool getComCtl32Version(RexxMethodContext *context, DWORD *pDllVersion, DWORD mi
                   "could not be determined.  %s can not continue",
                   COMMON_CONTROL_DLL, packageName);
 
-        internalErrorMsg(msg, errTitle);
+        internalErrorMsgBox(msg, errTitle);
         success = false;
     }
     else if ( *pDllVersion < minVersion )
@@ -295,7 +258,7 @@ bool getComCtl32Version(RexxMethodContext *context, DWORD *pDllVersion, DWORD mi
                   packageName, COMMON_CONTROL_DLL, comctl32VersionName(minVersion),
                   comctl32VersionName(*pDllVersion));
 
-        internalErrorMsg(msg, errTitle);
+        internalErrorMsgBox(msg, errTitle);
         *pDllVersion = 0;
         success = false;
     }
@@ -330,7 +293,7 @@ bool initCommonControls(RexxMethodContext *context, DWORD classes, CSTRING packa
                   "library failed.  %s can not continue.\n\n"
                   "Windows System Error Code: %d\n", packageName, GetLastError());
 
-        internalErrorMsg(msg, errTitle);
+        internalErrorMsgBox(msg, errTitle);
         return false;
     }
     return true;

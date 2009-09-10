@@ -757,80 +757,6 @@ LONG EvaluateListStyle(const char * styledesc)
     return lStyle;
 }
 
-/* Store a resource in a resource table.  Currently this is only icon resources,
- * but this function could be expanded to include other resources.
- */
-size_t RexxEntry UsrAddResource(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    DIALOGADMIN * dlgAdm = NULL;
-    ULONG iconID;
-
-    CHECKARG(4);
-
-    dlgAdm = (DIALOGADMIN *)GET_POINTER(argv[0]);
-    if ( !dlgAdm ) RETERR
-
-        /* Store the file name of an ICON that can then be loaded as a resource. */
-        if ( !strcmp(argv[1].strptr,"ICO") )
-        {
-            if ( !dlgAdm->IconTab )
-            {
-                dlgAdm->IconTab = (ICONTABLEENTRY *)LocalAlloc(LPTR, sizeof(ICONTABLEENTRY) * MAX_IT_ENTRIES);
-                if ( !dlgAdm->IconTab )
-                {
-                    MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
-                    RETVAL(-1);
-                }
-                dlgAdm->IT_size = 0;
-            }
-
-            if ( dlgAdm->IT_size < MAX_IT_ENTRIES )
-            {
-                INT i;
-
-                iconID = atol(argv[2].strptr);
-                if ( iconID <= IDI_DLG_MAX_ID )
-                {
-                    char szBuf[196];
-                    sprintf(szBuf, "Icon resource ID: %d is not valid.  Resource\n"
-                            "IDs from 1 through %d are reserved for ooDialog\n"
-                            "internal resources.  The icon resource will not\n"
-                            "be added.", iconID, IDI_DLG_MAX_ID);
-                    MessageBox(0, szBuf, "Error", MB_OK | MB_ICONHAND);
-                    RETVAL(-1);
-                }
-
-                /* If there is already a resource with this ID, it is replaced. */
-                for ( i = 0; i < dlgAdm->IT_size; i++ )
-                {
-                    if ( dlgAdm->IconTab[i].iconID == iconID )
-                        break;
-                }
-
-                dlgAdm->IconTab[i].fileName = (PCHAR)LocalAlloc(LPTR, argv[3].strlength + 1);
-                if ( ! dlgAdm->IconTab[i].fileName )
-                {
-                    MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
-                    RETVAL(-1);
-                }
-                dlgAdm->IconTab[i].iconID = iconID;
-                strcpy(dlgAdm->IconTab[i].fileName, argv[3].strptr);
-                if ( i == dlgAdm->IT_size )
-                    dlgAdm->IT_size++;
-
-            }
-            else
-            {
-                MessageBox(0, "Icon resource elements have exceeded the maximum\n"
-                           "number of allocated icon table entries. The icon\n"
-                           "resource will not be added.",
-                           "Error", MB_OK | MB_ICONHAND);
-                RETVAL(-1)
-            }
-        }
-    RETC(0)
-}
-
 size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    INT buffer[5];
@@ -1052,6 +978,7 @@ RexxMethod6(RexxObjectPtr, dyndlg_startChildDialog, uint32_t, itemCount, POINTER
     if ( dlgAdm == NULL )
     {
         failedToRetrieveDlgAdmException(context->threadContext, self);
+        return TheZeroObj;
     }
 
     DLGTEMPLATE *p = (DLGTEMPLATE *)basePtr;
@@ -1099,6 +1026,7 @@ RexxMethod6(logical_t, dyndlg_startParentDialog, uint32_t, itemCount, POINTERSTR
     if ( dlgAdm == NULL )
     {
         failedToRetrieveDlgAdmException(context->threadContext, self);
+        return FALSE;
     }
 
     DLGTEMPLATE *p = (DLGTEMPLATE *)basePtr;
@@ -1194,6 +1122,86 @@ RexxMethod6(logical_t, dyndlg_startParentDialog, uint32_t, itemCount, POINTERSTR
         }
     }
     return FALSE;
+}
+
+/** DynamicDialog::addIconFile  [private]
+ *
+ *  Basic implemetation for DyamicDialog::addIcon(resourceID, fileName).
+ *
+ */
+RexxMethod3(int32_t, dyndlg_addIconFile_pvt, RexxObjectPtr, rxID, CSTRING, fileName, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+
+    int32_t rc = -1;
+    DIALOGADMIN * dlgAdm = pcdd->pcpbd->dlgAdm;
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(context->threadContext, pcdd->rexxSelf);
+        goto done_out;
+    }
+
+    int32_t iconID = checkID(context, rxID, pcdd->rexxSelf);
+    if ( iconID < 0 )
+    {
+        goto done_out;
+    }
+
+    if ( iconID <= IDI_DLG_MAX_ID )
+    {
+        char szBuf[196];
+        sprintf(szBuf, "Icon resource ID: %d is not valid.  Resource\n"
+                "IDs from 1 through %d are reserved for ooDialog\n"
+                "internal resources.  The icon resource will not\n"
+                "be added.", iconID, IDI_DLG_MAX_ID);
+        internalErrorMsgBox(szBuf, OOD_RESOURCE_ERR_TITLE);
+        goto done_out;
+    }
+
+    if ( dlgAdm->IconTab == NULL )
+    {
+        dlgAdm->IconTab = (ICONTABLEENTRY *)LocalAlloc(LPTR, sizeof(ICONTABLEENTRY) * MAX_IT_ENTRIES);
+        if ( dlgAdm->IconTab == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+        dlgAdm->IT_size = 0;
+    }
+
+    if ( dlgAdm->IT_size < MAX_IT_ENTRIES )
+    {
+        size_t i;
+
+        // If there is already a resource with this ID, it is replaced.
+        for ( i = 0; i < dlgAdm->IT_size; i++ )
+        {
+            if ( dlgAdm->IconTab[i].iconID == iconID )
+                break;
+        }
+
+        dlgAdm->IconTab[i].fileName = (PCHAR)LocalAlloc(LPTR, strlen(fileName) + 1);
+        if ( dlgAdm->IconTab[i].fileName == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+
+        dlgAdm->IconTab[i].iconID = iconID;
+        strcpy(dlgAdm->IconTab[i].fileName, fileName);
+        if ( i == dlgAdm->IT_size )
+        {
+            dlgAdm->IT_size++;
+        }
+        rc = 0;
+    }
+    else
+    {
+        internalErrorMsgBox(OOD_ADDICONFILE_ERR_MSG, OOD_RESOURCE_ERR_TITLE);
+    }
+
+done_out:
+    return rc;
 }
 
 

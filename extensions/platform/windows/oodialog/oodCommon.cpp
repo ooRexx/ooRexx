@@ -82,6 +82,19 @@ inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr 
     failedToRetrieveException(c, "dialog administration block", source);
 }
 
+bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum)
+{
+    if ( ComCtl32Version < minimum )
+    {
+        char msg[256];
+        _snprintf(msg, sizeof(msg), "The %s() method requires %s or later", methodName, comctl32VersionName(minimum));
+        context->RaiseException1(Rexx_Error_System_service_user_defined, context->String(msg));
+        return false;
+    }
+    return true;
+}
+
+
 /**
  * Given an unknown Rexx object and a list of possible ooDialog classes,
  * determines the ooDialog class of the object.
@@ -307,6 +320,51 @@ void oodSetSysErrCode(RexxThreadContext *context, DWORD code)
 void oodResetSysErrCode(RexxThreadContext *context)
 {
     context->DirectoryPut(TheDotLocalObj, TheZeroObj, "SYSTEMERRORCODE");
+}
+
+
+int32_t idError(RexxMethodContext *c, RexxObjectPtr rxID)
+{
+    char buf[256];
+    _snprintf(buf, sizeof(buf),
+              "Error trying to add a dialog resource:\n\n%s is an undefined, non-numeric,\nidentification number.",
+              c->ObjectToStringValue(rxID));
+
+    internalErrorMsgBox(buf, OOD_RESOURCE_ERR_TITLE);
+    return -1;
+}
+
+/**
+ * Checks that a resource ID, which may be a symbolic ID, can be resolved
+ * successfully, and returns the numeric ID.  If, it can not be resolved, an
+ * error message box is put up.
+ *
+ * This is the implementation for ResourceUtils::checkID() and *must* resolve
+ * ID_STATIC correctly.  Which it does, by returning -1 and not generating an
+ * error.
+ *
+ * @param c     Method context we are operating in.
+ * @param rxID  Rexx object to be resolved, may be, and often is, a symbolic
+ *              resource ID.
+ * @param self  The Rexx object that has inherited ResourceUtils.
+ *
+ * @return The numeric resource ID value.
+ */
+int32_t checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self)
+{
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, c, self, rxID, -1, 1) )
+    {
+        return idError(c, rxID);
+    }
+    return (int)id;
+}
+
+int32_t resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self)
+{
+    uint32_t id;
+    oodSafeResolveID(&id, c, self, rxID, -1, 1);
+    return (int)id;
 }
 
 bool dialogInAdminTable(DIALOGADMIN * Dlg)

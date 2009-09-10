@@ -1333,7 +1333,7 @@ logical_t CppMenu::connectSomeItems(RexxObjectPtr rxItemIds, CSTRING method, log
 
     if ( ! c->IsOfType(rxItemIds, "COLLECTION") )
     {
-        wrongClassException(c->threadContext, 1, ".Collection");
+        wrongClassException(c->threadContext, 1, "Collection");
         goto done_out;
     }
 
@@ -3762,7 +3762,7 @@ RexxMethod8(logical_t, menu_insertPopup, RexxObjectPtr, rxBefore, RexxObjectPtr,
     }
     if ( ! c->IsOfType(popup, "POPUPMENU") )
     {
-        wrongClassException(context->threadContext, 3, "POPUPMENU");
+        wrongClassException(context->threadContext, 3, "PopupMenu");
         goto done_out;
     }
     uint32_t id = oodResolveSymbolicID(context, self, rxID, -1, 2);
