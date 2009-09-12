@@ -46,7 +46,7 @@
 #include "oodCommon.hpp"
 #include "oodText.hpp"
 #include "oodData.hpp"
-#include "oodSymbols.h"
+#include "oodResourceIDs.hpp"
 
 extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
 extern BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam, BOOL MsgEnabled);
@@ -1429,39 +1429,69 @@ RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSt
         pcwb->rexxHwnd = c->RequestGlobalReference(hDlg);
     }
     else
-    {
+    {   pcwb->hwnd = NULL;
+        if ( pcwb->rexxHwnd != NULLOBJECT && pcwb->rexxHwnd != TheZeroObj )
+        {
+            c->ReleaseGlobalReference(pcwb->rexxHwnd);
+        }
         pcwb->rexxHwnd = TheZeroObj;
     }
 
     return NULLOBJECT;
 }
 
-RexxMethod0(RexxObjectPtr, pbdlg_init_cls)
+RexxMethod1(RexxObjectPtr, pbdlg_init_cls, OSELF, self)
 {
-    context->SetObjectVariable("FONTNAME", context->String(DEFAULT_FONTNAME));
-    context->SetObjectVariable("FONTSIZE", context->WholeNumber(DEFAULT_FONTSIZE));
+    if ( isOfClassType(context, self, PLAINBASEDIALOG_CLASS) )
+    {
+        ThePlainBaseDialogClass = (RexxClassObject)self;
+        context->RequestGlobalReference(ThePlainBaseDialogClass);
+
+        RexxBufferObject buf = context->NewBuffer(sizeof(CPlainBaseDialogClass));
+        if ( buf != NULLOBJECT )
+        {
+            pCPlainBaseDialogClass pcpbdc = (pCPlainBaseDialogClass)context->BufferData(buf);
+
+            strcpy(pcpbdc->fontName, DEFAULT_FONTNAME);
+            pcpbdc->fontSize = DEFAULT_FONTSIZE;
+            context->SetObjectVariable("CSELF", buf);
+        }
+    }
     return NULLOBJECT;
 }
 
 RexxMethod2(RexxObjectPtr, pbdlg_setDefaultFont_cls, CSTRING, fontName, uint32_t, fontSize)
 {
-    context->SetObjectVariable("FONTNAME", context->String(fontName));
-    context->SetObjectVariable("FONTSIZE", context->WholeNumber(fontSize));
+    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(context);
+
+    if ( strlen(fontName) > (MAX_DEFAULT_FONTNAME - 1) )
+    {
+        stringTooLongException(context->threadContext, 1, MAX_DEFAULT_FONTNAME, strlen(fontName));
+    }
+    else
+    {
+        strcpy(pcpbdc->fontName, fontName);
+        pcpbdc->fontSize = fontSize;
+    }
     return NULLOBJECT;
 }
 
-RexxMethod0(RexxObjectPtr, pbdlg_getFontName_cls)
+RexxMethod1(CSTRING, pbdlg_getFontName_cls, CSELF, pCSelf)
 {
-    return context->GetObjectVariable("FONTNAME");
+    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(context);
+    return pcpbdc->fontName;
 }
-RexxMethod0(RexxObjectPtr, pbdlg_getFontSize_cls)
+RexxMethod1(uint32_t, pbdlg_getFontSize_cls, CSELF, pCSelf)
 {
-    return context->GetObjectVariable("FONTSIZE");
+    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(context);
+    return pcpbdc->fontSize;
 }
 
 RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, resource,
             OPTIONAL_RexxObjectPtr, dlgDataStem, OPTIONAL_RexxObjectPtr, hFile, OSELF, self)
 {
+    RexxMethodContext *c = context;
+
     RexxObjectPtr result = TheOneObj;  // This is an error return.
 
     context->SetObjectVariable("LIBRARY", library);
@@ -1513,6 +1543,8 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
         goto done_out;
     }
 
+    result = TheZeroObj;
+
     context->SetObjectVariable("PARENTDLG", TheNilObj);
     context->SetObjectVariable("FINISHED", TheZeroObj);
     context->SetObjectVariable("PROCESSINGLOAD", TheFalseObj);
@@ -1525,17 +1557,38 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDCANCEL, (ULONG_PTR)SIZE_MAX, 0, 0, "Cancel", 0);
     AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDHELP,   (ULONG_PTR)SIZE_MAX, 0, 0, "Help", 0);
 
-    if ( argumentOmitted(4) )
+    // Set our default font to the PlainBaseDialog class default font.
+    pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(c);
+    strcpy(pcpbd->fontName, pcpbdc->fontName);
+    pcpbd->fontSize = pcpbdc->fontSize;
+
+    // TODO at this point calculate the true dialog base units and set them into CPlainBaseDialog.
+
+    c->SendMessage1(self, "CHILDDIALOGS=", rxNewList(context));       // self~childDialogs = .list~new
+    c->SendMessage0(self, "INITAUTODETECTION");                       // self~initAutoDetection
+    c->SendMessage1(self, "DATACONNECTION=", c->NewArray(50));        // self~dataConnection = .array~new(50)
+    c->SendMessage1(self, "AUTOMATICMETHODS=", rxNewQueue(context));  // self~autoMaticMethods = .queue~new
+
+    RexxDirectoryObject constDir = c->NewDirectory();
+    c->SendMessage1(self, "CONSTDIR=", constDir);                     // self~constDir = .directory~new
+
+    c->DirectoryPut(constDir, c->Int32(IDOK),             "IDOK");
+    c->DirectoryPut(constDir, c->Int32(IDCANCEL),         "IDCANCEL");
+    c->DirectoryPut(constDir, c->Int32(IDHELP),           "IDHELP");
+    c->DirectoryPut(constDir, c->Int32(IDC_STATIC),       "IDC_STATIC");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OODIALOG), "IDI_DLG_OODIALOG");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON),  "IDI_DLG_APPICON");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_APPICON2), "IDI_DLG_APPICON2");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_OOREXX),   "IDI_DLG_OOREXX");
+    c->DirectoryPut(constDir, c->Int32(IDI_DLG_DEFAULT),  "IDI_DLG_DEFAULT");
+
+    if ( argumentExists(4) )
     {
-        result = context->SendMessage0(self, "FINALINIT");
-    }
-    else
-    {
-        result = context->SendMessage1(self, "FINALINIT", hFile);
+        c->SendMessage1(self, "PARSEINCLUDEFILE", hFile);
     }
 
 done_out:
-    context->SendMessage1(self, "INITCODE=", result);
+    c->SendMessage1(self, "INITCODE=", result);
 err_out:
     return result;
 }
@@ -1577,6 +1630,19 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     return TheZeroObj;
 }
 
+/** PlainBaseDialog::fontName  [attribute get]
+ */
+RexxMethod1(CSTRING, pbdlg_getFontName, CSELF, pCSelf)
+{
+    return ( ((pCPlainBaseDialog)pCSelf)->fontName );
+}
+/** PlainBaseDialog::fontSize  [attribute get]
+ */
+RexxMethod1(uint32_t, pbdlg_getFontSize, CSELF, pCSelf)
+{
+    return ( ((pCPlainBaseDialog)pCSelf)->fontSize );
+}
+
 /** PlainBaseDialog::dlgHandle  [attribute get] / PlainBaseDialog::getSelf()
  */
 RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
@@ -1609,6 +1675,61 @@ RexxMethod0(RexxObjectPtr, pbdlg_get)
         return TheZeroObj;  // TODO for now, 0. Should be null Pointer.
     }
 }
+
+/** PlaingBaseDialog::setDlgFont()
+ *
+ *  Sets the font that will be used for the font of the underlying Windows
+ *  dialog, when it is created.  This is primarily of use in a UserDialog or a
+ *  subclasses of a UserDialog.
+ *
+ *  In a ResDialog, the font of the compiled binary resource will be used and
+ *  the font set by this method has no bearing.  In a RcDialog, if the resource
+ *  script file specifies the font, that font will be used.
+ *
+ *  Likewise, in a UserDialog, if the programmer specifies a font in the create
+ *  method call (or createCenter() method call) the specified font over-rides
+ *  what is set by this method.
+ *
+ *  However, setting the font through the setDlgFont() method allows the true
+ *  dialog unit values to be correctly calculated.  That is the primary use for
+ *  this method.  A typical sequence might be:
+ *
+ *  dlg = .MyDialog~new
+ *  dlg~setFont("Tahoma", 12)
+ *  ...
+ *  ::method defineDialog
+ *  ...
+ *
+ *  @param  fontName  The font name, such as Tahoma.  The name must be less than
+ *                    256 characters in length.
+ *  @param  fontSize  [optional]  The point size of the font, for instance 10.
+ *                    The default if this argument is omitted is 8.
+ *
+ *  @return  This method does not return a value.
+ */
+RexxMethod3(RexxObjectPtr, pbdlg_setDlgFont, CSTRING, fontName, OPTIONAL_uint32_t, fontSize, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+
+    if ( strlen(fontName) > (MAX_DEFAULT_FONTNAME - 1) )
+    {
+        stringTooLongException(context->threadContext, 1, MAX_DEFAULT_FONTNAME, strlen(fontName));
+    }
+    else
+    {
+        if ( argumentOmitted(2) )
+        {
+            fontSize = DEFAULT_FONTSIZE;
+        }
+        strcpy(pcpbd->fontName, fontName);
+        pcpbd->fontSize = fontSize;
+
+        // TODO at this point calculate the true dialog base units from the font
+        // and set them into CPlainBaseDialog.
+    }
+    return NULLOBJECT;
+}
+
 
 /** PlainBaseDialog::isDialogActive()
  *
@@ -1966,10 +2087,9 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
 RexxMethod5(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
             OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self)
 {
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->ObjectToCSelf(self, context->SendMessage0(self, "CLASS"));
-    if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+    if ( pcpbd->dlgAdm == NULL )
     {
-        // TODO should an exception be raised here?
         return TheOneObj;
     }
     // result will be the resolved resource ID, which may be -1 on error.
@@ -2041,8 +2161,8 @@ void setFontAttrib(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
 
         long fontSize = MulDiv((tm.tmHeight - tm.tmInternalLeading), 72, GetDeviceCaps(hdc, LOGPIXELSY));
 
-        c->SendMessage1(pcpbd->rexxSelf, "FONTNAME=", c->String(fontName));
-        c->SendMessage1(pcpbd->rexxSelf, "FONTSIZE=", c->WholeNumber(fontSize));
+        strcpy(pcpbd->fontName, fontName);
+        pcpbd->fontSize = fontSize;
 
         SelectObject(hdc, oldFont);
         ReleaseDC(pcpbd->hDlg, hdc);

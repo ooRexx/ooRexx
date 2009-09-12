@@ -442,8 +442,9 @@ void calcDlgBaseUnits(HWND hDlg, int *baseUnitX, int *baseUnitY)
 }
 
 /**
- * Calculates the dialog base units using a Rexx dialog object.  The underlying
- * Windows dialog does not need to have been created.
+ * Calculates the dialog base units for a Rexx dialog object.  The underlying
+ * Windows dialog does not need to have been created.  The font name and size
+ * are gotten from the Rexx dialog object.
  *
  * The base units are calculated using the font of the dialog.  If the
  * underlying Windows dialog is then created later using a different font, the
@@ -456,18 +457,22 @@ void calcDlgBaseUnits(HWND hDlg, int *baseUnitX, int *baseUnitY)
  * dlg~setDlgFont("Tahoma", 14)
  *
  * @param c          Method context we are operating in.
- * @param dlg        Rexx dialog object.
+ * @param fontName   The font name in use for the Rexx dialog object.
+ * @param fontSize   The font size in use for the Rexx dialog object.
  * @param baseUnitX  The X base unit is returned here.
  * @param baseUnitY  The Y base unit is returned here.
  *
  * @return True on success, false on failure.  On failure an exception has been
  *         raised.
  *
+ * @note  It is presumed that the font name and size come from a Rexx dialog
+ *        object.
+ *
  * @remarks  Once the dialog has been created use:
  *
  *           calcDlgBaseUnits(HWND, baseUnitX, baseUnitY)
  */
-bool calcDlgBaseUnits(RexxMethodContext *c, RexxObjectPtr dlg, int *baseUnitX, int *baseUnitY)
+bool calcDlgBaseUnits(RexxMethodContext *c, CSTRING fontName, uint32_t fontSize, int *baseUnitX, int *baseUnitY)
 {
     HDC hdc = NULL;
     HFONT font = NULL;
@@ -477,18 +482,6 @@ bool calcDlgBaseUnits(RexxMethodContext *c, RexxObjectPtr dlg, int *baseUnitX, i
     if ( hdc == NULL )
     {
         systemServiceExceptionCode(c->threadContext, API_FAILED_MSG, "GetDC");
-        goto done_out;
-    }
-
-    CSTRING fontName = rxGetStringAttribute(c, dlg, "FONTNAME");
-    if ( fontName == NULL )
-    {
-        goto done_out;
-    }
-
-    uint32_t fontSize = 0;
-    if ( ! rxGetUInt32Attribute(c, dlg, "FONTSIZE", &fontSize) )
-    {
         goto done_out;
     }
 
@@ -538,7 +531,7 @@ done_out:
  */
 bool mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p)
 {
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)c->ObjectToCSelf(dlg);
+    pCPlainBaseDialog pcpbd = dlgToCSelf(c, dlg);
 
     if ( pcpbd->hDlg != NULL )
     {
@@ -546,7 +539,7 @@ bool mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p)
     }
 
     int buX, buY;
-    if ( ! calcDlgBaseUnits(c, dlg, &buX, &buY) )
+    if ( ! calcDlgBaseUnits(c, pcpbd->fontName, pcpbd->fontSize, &buX, &buY) )
     {
         return false;
     }
@@ -646,17 +639,40 @@ bool textSizeFromWindow(RexxMethodContext *context, CSTRING text, SIZE *size, HW
 }
 
 
+/**
+ * Retrieves the size needed, in dialog units, to display a given text string in
+ * a dialog.
+ *
+ * This function first retrieves the size needed for the text in pixels, then
+ * accurately converts the pixel size to the dialog unit size for the specified
+ * dialog.
+ *
+ * @param context
+ * @param text
+ * @param fontName
+ * @param fontSize
+ * @param hwndFontSrc
+ * @param dlgObj
+ *
+ * @return RexxObjectPtr
+ */
 RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING fontName, uint32_t fontSize,
                           HWND hwndFontSrc, RexxObjectPtr dlgObj)
 {
-    // hwndDlg can be null if this is happening before the real dialog is created.
-    HWND hwndDlg = rxGetWindowHandle(context, dlgObj);
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, dlgObj);
 
-    // We may not have a window handle, but using null is okay.
+    // hwndDlg can be null if this is happening before the real dialog is created.
+    HWND hwndDlg = pcpbd->hDlg;
+
+    // See if we have a real window handle to use for the call to GetDC().  If
+    // both hwndFontSrc and hwndDlg are null, that's okay, we can use null.
     HWND hwndForDC = (hwndFontSrc != NULL ? hwndFontSrc : hwndDlg);
 
     SIZE textSize = {0};
 
+    // If either the font name or the font source window handle were specified,
+    // we calculate the text size in pixels now.  The normal case is that the
+    // font is coming from the dialog object.
     if ( fontName != NULL )
     {
         if ( ! textSizeIndirect(context, text, fontName, fontSize, &textSize, hwndForDC) )
@@ -672,9 +688,9 @@ RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING font
         }
     }
 
-    // Even if we use a font other than the dialog font to calculate the text
-    // size, we always have to get the dialog font and select it into a HDC to
-    // correctly calculate the dialog units.
+    // Even if we have already caclulated the text size above, we always have to
+    // get the dialog font and select it into a HDC to correctly convert the
+    // pixel size to the dialog unit size.
     HDC hdc = GetDC(hwndForDC);
     if ( hdc == NULL )
     {
@@ -687,17 +703,10 @@ RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING font
 
     if ( hwndDlg == NULL )
     {
-        fontSize = 0;
-        fontName = rxGetStringAttribute(context, dlgObj, "FONTNAME");
-        rxGetUInt32Attribute(context, dlgObj, "FONTSIZE", &fontSize);
-
-        if ( fontName != NULL && fontSize != 0 )
+        dlgFont = createFontFromName(hdc, pcpbd->fontName, pcpbd->fontSize);
+        if ( dlgFont != NULL )
         {
-            dlgFont = createFontFromName(hdc, fontName, fontSize);
-            if ( dlgFont != NULL )
-            {
-                createdFont = true;
-            }
+            createdFont = true;
         }
     }
     else
@@ -706,21 +715,29 @@ RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING font
     }
 
     // If dlgFont is null, then, (almost for sure,) the dialog will be using the
-    // default system font.  The exception to this is if the user calls the
-    // getTextSizeDlg() method before the create() method, and then defines a
-    // custom font in create().  The docs tell the user not to do that, but
-    // there is nothing to do about it if they do.
+    // default system font.  We use that font for the rest of the calculations.
+    // This may be inacurrate, but we have to use some font.
+    //
+    // If the user has called getTextSizeDlg() method before the create()
+    // method, and then defines a custom font in create(), then this will be
+    // inaccurate for sure.  Need to explain in the docs how to correctly use
+    // this functionality.
     if ( dlgFont == NULL )
     {
         dlgFont = (HFONT)GetStockObject(SYSTEM_FONT);
     }
 
     HFONT hOldFont = (HFONT)SelectObject(hdc, dlgFont);
+
+    // Check if the pixel text size has been determined above.  The normal case
+    // will be that it has not.  The normal case is that the size is determined
+    // here using the DC with the dialog font selected into it.
     if ( textSize.cx == 0 )
     {
         GetTextExtentPoint32(hdc, text, (int)strlen(text), &textSize);
     }
 
+    // Now, convert the pixel size to dialog unit size, and clean up.
     screenToDlgUnit(hdc, (POINT *)&textSize);
 
     SelectObject(hdc, hOldFont);

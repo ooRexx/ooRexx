@@ -463,6 +463,8 @@ extern RexxObjectPtr TheNegativeOneObj;
 extern RexxDirectoryObject TheDotLocalObj;
 extern RexxPointerObject TheNullPtrObj;
 
+extern RexxClassObject ThePlainBaseDialogClass;
+
 
 inline DIALOGADMIN *seekDlgAdm(HWND hDlg)
 {

@@ -55,7 +55,7 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodData.hpp"
-#include "oodSymbols.h"
+#include "oodResourceIDs.hpp"
 
 //#define USE_DS_CONTROL
 

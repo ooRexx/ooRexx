@@ -2811,6 +2811,20 @@ done_out:
 }
 
 
+/** Menu::menuInit() [private]
+ *
+ * Sets the menu CSelf.
+ *
+ * @param  cselfObject  The CSelf object for all menus.
+ *
+ */
+RexxMethod1(RexxObjectPtr, menu_menuInit_pvt, RexxObjectPtr, cselfObject)
+{
+    context->SetObjectVariable("CSELF", cselfObject);
+    return NULLOBJECT;
+}
+
+
 /** Menu::hMenu()  [attribute get]
  *
  * Gets the hMenu attribute.
@@ -4844,14 +4858,15 @@ RexxMethod1(logical_t, menuBar_isAttached, CSELF, cMenuPtr)
  *
  */
 RexxMethod5(logical_t, menuTemplate_addPopup, RexxObjectPtr, rxID, CSTRING, text,
-            OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxHelpID, CSELF, cMenuPtr)
+            OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxHelpID, OSELF, self)
 {
-    CppMenu *cMenu = (CppMenu *)cMenuPtr;
+    RexxMethodContext *c = context;
+
+    CppMenu *cMenu = menuToCSelf(context, self);
     cMenu->setContext(context, TheFalseObj);
 
     return cMenu->addTemplatePopup(rxID, text, opts, rxHelpID);
 }
-
 
 /** MenuTemplate::addItem()
  *
@@ -4893,9 +4908,9 @@ RexxMethod5(logical_t, menuTemplate_addPopup, RexxObjectPtr, rxID, CSTRING, text
  *
  */
 RexxMethod5(logical_t, menuTemplate_addItem, RexxObjectPtr, rxID, CSTRING, text,
-            OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, method, CSELF, cMenuPtr)
+            OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, method, OSELF, self)
 {
-    CppMenu *cMenu = (CppMenu *)cMenuPtr;
+    CppMenu *cMenu = menuToCSelf(context, self);
     cMenu->setContext(context, TheFalseObj);
 
     return cMenu->addTemplateItem(rxID, text, opts, method);
@@ -4935,9 +4950,9 @@ RexxMethod5(logical_t, menuTemplate_addItem, RexxObjectPtr, rxID, CSTRING, text,
  *        command item is the last item at the current level of the menu.
  *
  */
-RexxMethod3(logical_t, menuTemplate_addSeparator, RexxObjectPtr, rxID, OPTIONAL_CSTRING, opts, CSELF, cMenuPtr)
+RexxMethod3(logical_t, menuTemplate_addSeparator, RexxObjectPtr, rxID, OPTIONAL_CSTRING, opts, OSELF, self)
 {
-    CppMenu *cMenu = (CppMenu *)cMenuPtr;
+    CppMenu *cMenu = menuToCSelf(context, self);
     cMenu->setContext(context, TheFalseObj);
 
     return cMenu->addTemplateSepartor(rxID, opts);
@@ -4956,9 +4971,9 @@ RexxMethod3(logical_t, menuTemplate_addSeparator, RexxObjectPtr, rxID, OPTIONAL_
  *  @return  True if the memory template has been finished and loaded into
  *           memory, otherwise false.
  */
-RexxMethod1(logical_t, menuTemplate_isComplete, CSELF, cMenuPtr)
+RexxMethod1(logical_t, menuTemplate_isComplete, OSELF, self)
 {
-    CppMenu *cMenu = (CppMenu *)cMenuPtr;
+    CppMenu *cMenu = menuToCSelf(context, self);
     cMenu->setContext(context, TheFalseObj);
     return cMenu->templateIsComplete();
 }
@@ -5021,7 +5036,7 @@ RexxMethod8(RexxObjectPtr, binMenu_init, OPTIONAL_RexxObjectPtr, src, OPTIONAL_R
 
     CppMenu *cMenu = new CppMenu(self, BinaryMenuBar, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
-    context->SetObjectVariable("CSELF", cMenuPtr);
+    context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
     if ( ! cMenu->menuInit(id, symbolSrc, NULLOBJECT) )
     {
@@ -5205,7 +5220,7 @@ RexxMethod3(RexxObjectPtr, sysMenu_init, RexxObjectPtr, dialog, OPTIONAL_RexxObj
 {
     CppMenu *cMenu = new CppMenu(self, SystemMenu, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
-    context->SetObjectVariable("CSELF", cMenuPtr);
+    context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
     if ( ! requiredClass(context->threadContext, dialog, "BASEDIALOG", 1) )
     {
@@ -5522,7 +5537,7 @@ RexxMethod5(RexxObjectPtr, popMenu_init, OPTIONAL_RexxObjectPtr, id, OPTIONAL_Re
 {
     CppMenu *cMenu = new CppMenu(self, PopupMenu, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
-    context->SetObjectVariable("CSELF", cMenuPtr);
+    context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
     if ( ! cMenu->menuInit(id, symbolSrc, NULLOBJECT) )
     {
@@ -5851,7 +5866,7 @@ RexxMethod8(RexxObjectPtr, scriptMenu_init, RexxStringObject, rcFile, RexxObject
 {
     CppMenu *cMenu = new CppMenu(self, ScriptMenuBar, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
-    context->SetObjectVariable("CSELF", cMenuPtr);
+    context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
     bool idOmitted = isInt(-1, id, context);
 
@@ -5985,7 +6000,7 @@ RexxMethod7(RexxObjectPtr, userMenu_init, OPTIONAL_RexxObjectPtr, id, OPTIONAL_R
 {
     CppMenu *cMenu = new CppMenu(self, UserMenuBar, context);
     RexxPointerObject cMenuPtr = context->NewPointer(cMenu);
-    context->SetObjectVariable("CSELF", cMenuPtr);
+    context->SendMessage1(self, "MENUINIT", cMenuPtr);
 
     if ( ! cMenu->menuInit(id, symbolSrc, NULLOBJECT) )
     {

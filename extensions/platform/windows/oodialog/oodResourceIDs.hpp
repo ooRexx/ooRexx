@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2007 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2007-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -35,10 +35,14 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-/* Symbolic ID definitions for ooDialog resources.  The init method in
- * PlainBaseDialog puts these into the ConstDir directory.  IF changing these
- * IDs here, it would be nice to sync up the PlainBaseDialog.
+/* Symbolic ID definitions for ooDialog resources.  The init method for the
+ * PlainBaseDialog puts these into the constDir directory.
  */
+
+#ifdef IDC_STATIC
+#undef IDC_STATIC
+#endif
+#define IDC_STATIC        (-1)
 
 #define IDI_DLG_OODIALOG    11
 #define IDI_DLG_APPICON     12

@@ -205,4 +205,10 @@ protected:
    bool autoConnect;
 };
 
+inline CppMenu *menuToCSelf(RexxMethodContext *c, RexxObjectPtr self)
+{
+    return (CppMenu *)c->ObjectToCSelf(self, c->SendMessage0(self, "CLASS"));
+}
+
+
 #endif

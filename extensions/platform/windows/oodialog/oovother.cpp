@@ -5832,7 +5832,7 @@ RexxMethod4(RexxObjectPtr, image_userIcon_cls, RexxObjectPtr, dlg, RexxObjectPtr
         goto out;
     }
 
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->ObjectToCSelf(dlg, context->SendMessage0(dlg, "CLASS"));
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, dlg);
     if ( pcpbd == NULL || pcpbd->dlgAdm == NULL )
     {
         failedToRetrieveDlgAdmException(context->threadContext, dlg);

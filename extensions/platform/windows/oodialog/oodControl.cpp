@@ -452,22 +452,15 @@ out:
     return result;
 }
 
-
 RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF, self)
 {
-    // This should never fail, do we need an exception if it does?
 
     RexxObjectPtr bag = context->GetObjectVariable(ADVCTRLCONTROLBAG_ATTRIBUTE);
     if ( bag == NULLOBJECT )
     {
-        RexxObjectPtr theBagClass = context->FindClass("BAG");
-        if ( theBagClass != NULLOBJECT )
-        {
-            bag = context->SendMessage0(theBagClass, "NEW");
-            context->SetObjectVariable(ADVCTRLCONTROLBAG_ATTRIBUTE, bag);
-        }
+        bag = rxNewBag(context);
+        context->SetObjectVariable(ADVCTRLCONTROLBAG_ATTRIBUTE, bag);
     }
-
     if ( bag != NULLOBJECT )
     {
         context->SendMessage2(bag, "PUT", control, control);
@@ -476,21 +469,23 @@ RexxMethod2(RexxObjectPtr, advCtrl_putControl_pvt, RexxObjectPtr, control, OSELF
     return TheNilObj;
 }
 
-
-RexxMethod2(RexxObjectPtr, advCtrl_test, OSELF, self, CSELF, pDlgCSelf)
+RexxMethod2(RexxObjectPtr, advCtrl_test, OSELF, self, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;
 
     void *dlgCSelf = c->ObjectToCSelf(self);
-    printf("advCtrl_test() self=%p self.get.CSelf=%p pDlgCSelf=%p\n", self, dlgCSelf, pDlgCSelf);
+    pCPlainBaseDialog realDlgCSelf = dlgToCSelf(c, self);
+
     dbgPrintClassID(context, self);
+    printf("advCtrl_test() self=%p pCSelf=%p ObjectToCSelf(self)=%p ObjectToCSelf(self, self~class)=%p\n",
+           self, pCSelf, dlgCSelf, realDlgCSelf);
 
     DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, self);
     printf("dlgAdm=%p\n", dlgAdm);
-    if ( dlgCSelf != NULL )
+    if ( realDlgCSelf != NULL )
     {
-        pCWindowBase pcwb = (pCWindowBase)dlgCSelf;
-        printf("pcwb hwnd=%p factorX=%f\n", pcwb->hwnd, pcwb->factorX);
+        pCWindowBase pcwb = ((pCPlainBaseDialog)realDlgCSelf)->wndBase;
+        printf("pcpbd->dlgAdm=%p pcwb hwnd=%p factorX=%f\n", realDlgCSelf->dlgAdm, pcwb->hwnd, pcwb->factorX);
     }
     return TheNilObj;
 }

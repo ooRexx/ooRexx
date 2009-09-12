@@ -172,7 +172,7 @@
 ::method parseIncludeFile
   use strict arg hFile
 
-  -- Revisit. Should a syntax condition be raised if the file is not found or readable?
+  -- TODO Revisit. Should a syntax condition be raised if the file is not found or readable?
   hFile = SysSearchPath("PATH", hFile)
   if hFile == "" then return .false
 
@@ -303,12 +303,8 @@
 ::attribute parentDlg private
 ::attribute childDialogs
 
-::attribute fontName get
-::attribute fontName set private
-
-::attribute fontSize get
-::attribute fontSize set private
-
+::attribute fontName get external "LIBRARY oodialog pbdlg_getFontName"
+::attribute fontSize get external "LIBRARY oodialog pbdlg_getFontSize"
 ::attribute dlgHandle get unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
 
 -- A queue containing the methods that will be started concurrently before execution of the dialog
@@ -319,47 +315,9 @@
  * set up of the dialog management block, for all dialogs.
  */
 ::method init external "LIBRARY oodialog pbdlg_init"
-::method finalInit private
-   use arg includeFile
-
-   self~childDialogs = .list~new
-
-   self~fontName = .PlainBaseDialog~getFontName
-   self~fontSize = .PlainBaseDialog~getFontSize
-
-   -- call methods to get dialog settings
-   self~initAutoDetection
-   -- create array storing connection between ids and attributese
-   self~dataConnection = .array~new(50)
-
-   self~automaticMethods = .queue~new
-
-   self~constDir = .directory~new
-   self~constDir["IDOK"] = 1
-   self~constDir["IDCANCEL"] = 2
-   self~constDir["IDHELP"] = 9
-
-   -- Common in Microsoft compatible resource script files
-   self~constDir["IDC_STATIC"] = -1
-
-   -- ooDialog supplied resources, defined in oodSymbols.h
-   self~constDir["IDI_DLG_OODIALOG"] = 11
-   self~constDir["IDI_DLG_APPICON"] = 12
-   self~constDir["IDI_DLG_APPICON2"] = 13
-   self~constDir["IDI_DLG_OOREXX"] = 14
-   self~constDir["IDI_DLG_DEFAULT"] = 12
-
-   if arg(1, 'E') then self~parseIncludeFile(includeFile)
-
-   return 0
-
 ::method unInit external "LIBRARY oodialog pbdlg_unInit"
 
-::method setDlgFont
-  use strict arg name, size = 8
-  self~fontName = name
-  self~fontSize = size
-
+::method setDlgFont external "LIBRARY oodialog pbdlg_setDlgFont"
 
    /* This method will be called after the Windows dialog has been created. */
    /* It is useful to set data fields and initialize combo & list boxes */

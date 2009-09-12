@@ -223,7 +223,6 @@ uint32_t oodResolveSymbolicID(RexxMethodContext *context, RexxObjectPtr oodObj, 
     {
         goto done_out;
     }
-
     if ( isStaticID(context, id) )
     {
         result = (uint32_t)-1;
@@ -340,7 +339,7 @@ int32_t idError(RexxMethodContext *c, RexxObjectPtr rxID)
  * error message box is put up.
  *
  * This is the implementation for ResourceUtils::checkID() and *must* resolve
- * ID_STATIC correctly.  Which it does, by returning -1 and not generating an
+ * IDC_STATIC correctly.  Which it does, by returning -1 and not generating an
  * error.
  *
  * @param c     Method context we are operating in.

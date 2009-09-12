@@ -75,10 +75,10 @@
    if arg(7,"O") | dlgClass = 0 then dlgClass = ""
 
    if arg(8, "O") then fontName = self~fontName
-   else self~fontName = fontName
-
    if arg(9, "O") then fontSize = self~fontSize
-   else self~fontSize = fontSize
+
+   -- Temp until create() is implemented in the C++ API.
+   if arg(8, "E") | arg(9, "E") then self~setDlgFont(fontName, fontSize)
 
    ret = UsrDefineDialog(x, y, cx, cy, dlgclass, title, fontName, fontSize, options, expected)
    parse var ret base ptr
@@ -416,10 +416,10 @@
       s = f~linein; fl = fl - 1
       if s~wordpos("END") > 0 | s~pos("}") > 0 then leave;
 
-      if s~wordpos("CONTROL") > 0 then
-      do
+      if s~wordpos("CONTROL") > 0 then do
          parse var s type '"'name'"' "," id "," class "," style "," x "," y "," w "," h "," extStyle
          opts = ""
+         id = id~strip
          class = class~strip~translate
          style = style~translate(" ", "|")
          extStyle = extStyle~translate(" ", "|")
@@ -520,6 +520,7 @@
       else do
          parse var s type '"'name'"' "," id "," x "," y "," w "," h "," style "," extStyle
          if id~space(0) = "" then parse var s type id "," x "," y "," w "," h "," style "," extStyle
+         id = id~strip
          type = type~strip~translate
          style = style~translate(" ", "|")
          extStyle = extStyle~translate(" ", "|")
@@ -527,7 +528,7 @@
          select
             when type = "DEFPUSHBUTTON" | type = "PUSHBUTTON" then
             do
-               if type~strip~left(3) = ("DEF") then style = style || " | BS_DEFPUSHBUTTON"
+               if type~left(3) = ("DEF") then style = style || " | BS_DEFPUSHBUTTON"
                self~internAddRCButton(id, x, y, w, h, name, style, loadOptions)
             end
 

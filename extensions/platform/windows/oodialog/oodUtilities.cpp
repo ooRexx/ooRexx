@@ -502,6 +502,19 @@ RexxMethod1(uint32_t, dlgutil_getSystemMetrics_cls, int32_t, index)
     return GetSystemMetrics(index);
 }
 
+RexxMethod2(logical_t, dlgutil_mapPixel2Du_cls, RexxObjectPtr, dlg, RexxObjectPtr, size)
+{
+    SIZE *s = rxGetSize(context, size, 2);
+    if ( s != NULL )
+    {
+        if ( mapPixelToDu(context, dlg, (PPOINT)s) )
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 /** DlgUtil::screenSize()  [class method]
  *
  *  Retrieves the screen size in either pixels, dialog units, or both.

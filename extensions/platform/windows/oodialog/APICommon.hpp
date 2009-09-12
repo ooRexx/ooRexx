@@ -61,6 +61,7 @@ extern void userDefinedMsgException(RexxThreadContext *c, int pos, CSTRING msg);
 extern void *wrongClassException(RexxThreadContext *c, int pos, const char *n);
 extern void invalidTypeException(RexxThreadContext *c, int pos, const char *type);
 extern void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING actual);
+extern void stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen);
 extern void notNonNegativeException(RexxThreadContext *c, int pos, RexxObjectPtr actual);
 extern void wrongObjInArrayException(RexxThreadContext *c, int argPos, size_t index, CSTRING obj);
 extern void wrongObjInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual);
@@ -88,8 +89,25 @@ extern size_t          rxArgCount(RexxMethodContext * context);
 extern bool            rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos);
 extern RexxClassObject rxGetContextClass(RexxMethodContext *c, CSTRING name);
 extern RexxObjectPtr   rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr val);
+extern RexxObjectPtr   rxNewBuiltinObject(RexxMethodContext *c, CSTRING className);
 extern bool            isInt(int, RexxObjectPtr, RexxMethodContext *);
 extern bool            isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING);
 extern void            dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
+
+
+inline RexxObjectPtr rxNewBag(RexxMethodContext *c)
+{
+    return rxNewBuiltinObject(c, "BAG");
+}
+
+inline RexxObjectPtr rxNewList(RexxMethodContext *c)
+{
+    return rxNewBuiltinObject(c, "LIST");
+}
+
+inline RexxObjectPtr rxNewQueue(RexxMethodContext *c)
+{
+    return rxNewBuiltinObject(c, "QUEUE");
+}
 
 #endif

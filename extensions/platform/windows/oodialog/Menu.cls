@@ -50,6 +50,8 @@
 
 ::method connectItem class external "LIBRARY oodialog menu_connectItem_cls"
 
+::method menuInit private external "LIBRARY oodialog menu_menuInit_pvt"
+
 ::attribute wID get external "LIBRARY oodialog menu_wID"
 ::attribute hMenu get external "LIBRARY oodialog menu_getHMenu"
 

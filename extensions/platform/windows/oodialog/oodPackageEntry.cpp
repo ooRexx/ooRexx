@@ -63,6 +63,9 @@ RexxObjectPtr       TheZeroObj = NULLOBJECT;
 RexxObjectPtr       TheOneObj = NULLOBJECT;
 RexxObjectPtr       TheNegativeOneObj = NULLOBJECT;
 
+// Initialized in the PlainBaseDialog class init method (pbdlg_init_cls).
+RexxClassObject     ThePlainBaseDialogClass = NULLOBJECT;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -170,6 +173,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_mapPixel2Du_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
@@ -210,6 +214,9 @@ REXX_METHOD_PROTOTYPE(pbdlg_setDefaultFont_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontName_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontSize_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_init);
+REXX_METHOD_PROTOTYPE(pbdlg_getFontName);
+REXX_METHOD_PROTOTYPE(pbdlg_getFontSize);
+REXX_METHOD_PROTOTYPE(pbdlg_setDlgFont);
 REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
@@ -377,6 +384,7 @@ REXX_METHOD_PROTOTYPE(size_cy);
 REXX_METHOD_PROTOTYPE(size_setCY);
 
 // Menu classes methods
+REXX_METHOD_PROTOTYPE(menu_menuInit_pvt);
 REXX_METHOD_PROTOTYPE(menu_connectItem_cls);
 REXX_METHOD_PROTOTYPE(menu_getHMenu);
 REXX_METHOD_PROTOTYPE(menu_wID);
@@ -467,6 +475,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_loWord_cls,           dlgutil_loWord_cls),
     REXX_METHOD(dlgutil_and_cls,              dlgutil_and_cls),
     REXX_METHOD(dlgutil_or_cls,               dlgutil_or_cls),
+    REXX_METHOD(dlgutil_mapPixel2Du_cls,      dlgutil_mapPixel2Du_cls),
     REXX_METHOD(dlgutil_screenSize_cls,       dlgutil_screenSize_cls),
     REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_handleToPointer_cls,  dlgutil_handleToPointer_cls),
@@ -506,6 +515,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getFontName_cls,         pbdlg_getFontName_cls),
     REXX_METHOD(pbdlg_getFontSize_cls,         pbdlg_getFontSize_cls),
     REXX_METHOD(pbdlg_init,                    pbdlg_init),
+    REXX_METHOD(pbdlg_getFontName,             pbdlg_getFontName),
+    REXX_METHOD(pbdlg_getFontSize,             pbdlg_getFontSize),
+    REXX_METHOD(pbdlg_setDlgFont,              pbdlg_setDlgFont),
     REXX_METHOD(pbdlg_getDlgHandle,            pbdlg_getDlgHandle),
     REXX_METHOD(pbdlg_get,                     pbdlg_get),
     REXX_METHOD(pbdlg_isDialogActive,          pbdlg_isDialogActive),
@@ -673,6 +685,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(size_setCY,              size_setCY),
 
     // Menu classes methods
+    REXX_METHOD(menu_menuInit_pvt,              menu_menuInit_pvt),
     REXX_METHOD(menu_connectItem_cls,           menu_connectItem_cls),
     REXX_METHOD(menu_getHMenu,                  menu_getHMenu),
     REXX_METHOD(menu_wID,                       menu_wID),

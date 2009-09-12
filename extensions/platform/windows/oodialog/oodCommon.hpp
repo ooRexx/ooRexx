@@ -65,6 +65,7 @@ typedef map<string, int, less<string> > String2Int;
 
 #define DEFAULT_FONTNAME            "MS Shell Dlg"
 #define DEFAULT_FONTSIZE            8
+#define MAX_DEFAULT_FONTNAME        256
 
 #define OOD_ID_EXCEPTION            0xFFFFFFF7   // -9
 
@@ -84,7 +85,7 @@ typedef enum
     winDateTimePicker, winUnknown
 } oodControl_t;
 
-/* Struct for the WindowBase class CSelf. */
+/* Struct for the WindowBase object CSelf. */
 typedef struct _wbCSelf {
     HWND              hwnd;
     RexxObjectPtr     rexxHwnd;
@@ -96,17 +97,26 @@ typedef struct _wbCSelf {
 } CWindowBase;
 typedef CWindowBase *pCWindowBase;
 
-/* Struct for the PlainBaseDialog class CSelf. */
+// Struct for the PlainBaseDialog class CSelf.
+typedef struct _pbdcCSelf {
+    char         fontName[MAX_DEFAULT_FONTNAME];
+    uint32_t     fontSize;
+
+} CPlainBaseDialogClass;
+typedef CPlainBaseDialogClass *pCPlainBaseDialogClass;
+
+/* Struct for the PlainBaseDialog object CSelf. */
 typedef struct _pbdCSelf {
+    char           fontName[MAX_DEFAULT_FONTNAME];
+    uint32_t       fontSize;
     pCWindowBase   wndBase;
     RexxObjectPtr  rexxSelf;
     HWND           hDlg;
     DIALOGADMIN    *dlgAdm;
-
 } CPlainBaseDialog;
 typedef CPlainBaseDialog *pCPlainBaseDialog;
 
-/* Struct for the DialogControl class CSelf. */
+/* Struct for the DialogControl object CSelf. */
 typedef struct _dcCSelf {
     pCWindowBase   wndBase;
     RexxObjectPtr  rexxSelf;
@@ -117,7 +127,7 @@ typedef struct _dcCSelf {
 } CDialogControl;
 typedef CDialogControl *pCDialogControl;
 
-/* Struct for the DynamicDialog class CSelf. */
+/* Struct for the DynamicDialog object CSelf. */
 typedef struct _ddCSelf {
     pCPlainBaseDialog  pcpbd;
     RexxObjectPtr      rexxSelf;
@@ -280,6 +290,33 @@ inline bool isYes(const char * s)
 inline const char *comctl32VersionName(DWORD id)
 {
     return comctl32VersionPart(id, COMCTL32_FULL_PART);
+}
+
+/**
+ * Retrieves th PlainBaseDialog class CSelf pointer.
+ *
+ * @param c  Method contex we are operating in.
+ *
+ * @return The pointer to the CPlainBaseDialogClass struct.
+ */
+inline pCPlainBaseDialogClass getPBDClass_CSelf(RexxMethodContext *c)
+{
+    return (pCPlainBaseDialogClass)c->ObjectToCSelf(ThePlainBaseDialogClass);
+}
+
+/**
+ * Retrieves the CSelf pointer for a dialog object when the dialog object is not
+ * the direct object the method was invoked on.  This performs a scoped CSelf
+ * lookup.
+ *
+ * @param c    The methdo context we are operating in.
+ * @param dlg  The dialog object whose CSelf pointer is needed.
+ *
+ * @return A pointer to the CSelf of the dlg object.
+ */
+inline pCPlainBaseDialog dlgToCSelf(RexxMethodContext *c, RexxObjectPtr dlg)
+{
+    return (pCPlainBaseDialog)c->ObjectToCSelf(dlg, ThePlainBaseDialogClass);
 }
 
 /**

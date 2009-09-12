@@ -186,6 +186,27 @@ void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING 
     userDefinedMsgException(c, buffer);
 }
 
+/**
+ * Argument <argPos> must be less than <len> characters in length; length is
+ * <realLen>
+ *
+ * Argument 2 must be less than 255 characters in length; length is 260
+ *
+ * Raises 88.900
+ *
+ * @param c        Thread context we are executing in.
+ * @param pos      Argumet position
+ * @param len      Fixed length
+ * @param realLen  Actual length
+ */
+void stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "Argument %d must be less than %d characters in length; length is %d",
+              pos, len, realLen);
+    userDefinedMsgException(c, buffer);
+}
+
 void wrongObjInArrayException(RexxThreadContext *c, int argPos, size_t index, CSTRING obj)
 {
     TCHAR buffer[256];
@@ -435,7 +456,7 @@ bool rxStr2Number(RexxMethodContext *c, CSTRING str, uint64_t *number, int pos)
  * Gets a Class object.
  *
  * This is for use for classes visible within the scope of the context, like say
- * .BaseDialog, or .Rect.  Use c->GetClass() to directly get classes from the
+ * .BaseDialog, or .Rect.  Use c->FindClass() to directly get classes from the
  * environment like .Bag or .Directory.
  *
  * @param c     The thread context we are operating in.
@@ -482,6 +503,15 @@ RexxObjectPtr rxSetObjVar(RexxMethodContext *c, CSTRING varName, RexxObjectPtr v
     c->SetObjectVariable(varName, val);
 
     return result;
+}
+
+
+RexxObjectPtr rxNewBuiltinObject(RexxMethodContext *c, CSTRING className)
+{
+    // This should never fail, provided the caller sends the right class name,
+    // do we need an exception if it does?
+    RexxClassObject classObj = c->FindClass(className);
+    return c->SendMessage0(classObj, "NEW");
 }
 
 
