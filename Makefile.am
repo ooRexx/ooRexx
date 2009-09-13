@@ -290,6 +290,7 @@ memoryHeaders = $(build_memory_dir)/DeadObject.hpp \
                 $(build_memory_dir)/MemorySegment.hpp \
                 $(build_memory_dir)/MemoryStats.hpp \
                 $(build_memory_dir)/ProtectedObject.hpp \
+                $(build_memory_dir)/GlobalProtectedObject.hpp \
                 $(build_memory_dir)/RexxEnvelope.hpp \
                 $(build_memory_dir)/RexxInternalStack.hpp \
                 $(build_memory_dir)/RexxMemory.hpp \

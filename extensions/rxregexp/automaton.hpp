@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* Object REXX Support                                          rxregexp.cpp  */
+/* Object REXX Support                                                        */
 /*                                                                            */
 /* Regular Expression Utility functions - automaton header file               */
 /*                                                                            */

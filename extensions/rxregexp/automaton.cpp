@@ -52,26 +52,30 @@
 automaton::automaton() : ch(NULL), next1(NULL), next2(NULL), final(-1), regexp(NULL),
                          setArray(NULL), setSize(0), size(16), freeState(1), currentPos(0), minimal(false)
 {
-  int bytes = sizeof(int)*size;
+    int bytes = sizeof(int)*size;
 
-  ch    = (int*) malloc(bytes);
-  next1 = (int*) malloc(bytes);
-  next2 = (int*) malloc(bytes);
+    ch    = (int*) malloc(bytes);
+    next1 = (int*) malloc(bytes);
+    next2 = (int*) malloc(bytes);
 }
 
 // destructor: free memory
 automaton::~automaton()
 {
-  if (size) {
-    free(ch);
-    free(next1);
-    free(next2);
-  }
-  if (setSize) {
-    for (int i=0;i<setSize;i++)
-      free(setArray[i]);
-    free(setArray);
-  }
+    if (size)
+    {
+        free(ch);
+        free(next1);
+        free(next2);
+    }
+    if (setSize)
+    {
+        for (int i=0;i<setSize;i++)
+        {
+            free(setArray[i]);
+        }
+        free(setArray);
+    }
 
 }
 
@@ -84,16 +88,21 @@ automaton::~automaton()
 /*************************************************************/
 void automaton::setMinimal(bool f)
 {
-  if (f != this->minimal) {
-    if (this->final != -1) {
-      if (f == false) {
-        setState(this->final, 0x00, this->final+1, this->final+1);
-      } else {
-        setState(this->final, EPSILON, EOP, EOP);
-      }
+    if (f != this->minimal)
+    {
+        if (this->final != -1)
+        {
+            if (f == false)
+            {
+                setState(this->final, 0x00, this->final+1, this->final+1);
+            }
+            else
+            {
+                setState(this->final, EPSILON, EOP, EOP);
+            }
+        }
+        this->minimal = f;
     }
-    this->minimal = f;
-  }
 }
 
 
@@ -107,86 +116,106 @@ void automaton::setMinimal(bool f)
 /*************************************************************/
 int automaton::parse(const char *regexp)
 {
-  int temp;
-  this->regexp = regexp;
-  currentPos = 0;
-  freeState  = 1;
-  memset(ch,    0x00, sizeof(int)*size);
-  memset(next1, 0x00, sizeof(int)*size);
-  memset(next2, 0x00, sizeof(int)*size);
-  if (setSize) {
-    for (int i=0;i<setSize;i++)
-      free(setArray[i]);
-    free(setArray);
-    setSize = 0;
-    setArray = NULL;
-  }
+    int temp;
+    this->regexp = regexp;
+    currentPos = 0;
+    freeState  = 1;
+    memset(ch,    0x00, sizeof(int)*size);
+    memset(next1, 0x00, sizeof(int)*size);
+    memset(next2, 0x00, sizeof(int)*size);
+    if (setSize)
+    {
+        for (int i=0;i<setSize;i++)
+        {
+            free(setArray[i]);
+        }
+        free(setArray);
+        setSize = 0;
+        setArray = NULL;
+    }
 
-  try {
-    // parse expression recursively by splitting it up
-    temp = expression();
-    // using a temporary place to store the start state
-    // is needed since next1 may change during reallocation
-    next1[0] = temp;
-  } catch (RE_ERROR err) {
-    this->regexp = NULL;
-    // an error occured!
-    setState(0, EPSILON, 0, 0);  // make automaton match anything
-    return (int) err;
-  }
-  // set start state
-  setState(0, EPSILON, next1[0], next1[0]);
-  this->final = freeState;
-  if (minimal == false) {
-    // zero-terminate the expression...
-    setState(freeState, 0x00, freeState+1, freeState+1);
-    freeState++;
-  } else {
-    // this ends the pattern, but we need a dummy
-    // show the regexp be switched between min and max matching
+    try
+    {
+        // parse expression recursively by splitting it up
+        temp = expression();
+        // using a temporary place to store the start state
+        // is needed since next1 may change during reallocation
+        next1[0] = temp;
+    }
+    catch (RE_ERROR err)
+    {
+        this->regexp = NULL;
+        // an error occured!
+        setState(0, EPSILON, 0, 0);  // make automaton match anything
+        return(int) err;
+    }
+    // set start state
+    setState(0, EPSILON, next1[0], next1[0]);
+    this->final = freeState;
+    if (minimal == false)
+    {
+        // zero-terminate the expression...
+        setState(freeState, 0x00, freeState+1, freeState+1);
+        freeState++;
+    }
+    else
+    {
+        // this ends the pattern, but we need a dummy
+        // show the regexp be switched between min and max matching
+        setState(freeState, EPSILON, EOP, EOP);
+        freeState++;
+    }
+    // ...and set epsilon transition to end state
     setState(freeState, EPSILON, EOP, EOP);
-    freeState++;
-  }
-  // ...and set epsilon transition to end state
-  setState(freeState, EPSILON, EOP, EOP);
 
 // in debug mode, print out the automaton
 #ifdef MYDEBUG
-  printf("S\tT\t1\t2\n");
-  for (int i=0;i<size && next1[i] != EOP;i++) {
-    if ((unsigned int) next1[i] < 32000) {
-    printf("%d\t",i);
-    switch (ch[i] & SCAN) {
-    case ANY:
-      printf("any\t");
-      break;
-    case SET:
-      printf("set %d\t",(ch[i] & 0x0fff0000) >> 16);
-      break;
-    case SET|NOT:
-      printf("nset %d\t",(ch[i] & 0x0fff0000) >> 16);
-      break;
-    case EPSILON:
-      printf("eps\t");
-      break;
-    default:
-      printf("%c\t",ch[i]);
-      break;
+    printf("S\tT\t1\t2\n");
+    for (int i=0;i<size && next1[i] != EOP;i++)
+    {
+        if ((unsigned int) next1[i] < 32000)
+        {
+            printf("%d\t",i);
+            switch (ch[i] & SCAN)
+            {
+                case ANY:
+                    printf("any\t");
+                    break;
+                case SET:
+                    printf("set %d\t",(ch[i] & 0x0fff0000) >> 16);
+                    break;
+                case SET|NOT:
+                    printf("nset %d\t",(ch[i] & 0x0fff0000) >> 16);
+                    break;
+                case EPSILON:
+                    printf("eps\t");
+                    break;
+                default:
+                    printf("%c\t",ch[i]);
+                    break;
+            }
+            if ( (ch[i] & SCAN) == EPSILON )
+            {
+                if (next1[i] != next2[i])
+                {
+                    printf("%d\t%d\n",next1[i],next2[i]);
+                }
+            }
+                else
+            {
+                    printf("%d\n",next1[i]);
+            }
+            else
+            {
+                printf("%d\n",next1[i]);
+            }
+        }
     }
-    if ( (ch[i] & SCAN) == EPSILON )
-      if (next1[i] != next2[i])
-        printf("%d\t%d\n",next1[i],next2[i]);
-      else
-        printf("%d\n",next1[i]);
-    else
-      printf("%d\n",next1[i]);
-    }
-  }
 #endif
 
-  this->regexp = NULL;  // contents only guaranteed during
-                        // runtime of this method
-  return 0;
+    this->regexp = NULL;  // contents only guaranteed during
+                          // runtime of this method
+    return 0;
 }
 
 /***********************************************************/
@@ -226,24 +255,25 @@ int automaton::letter(int c)
 /**************************************************************/
 int automaton::expression()
 {
-  int t1, t2;
-  int r;
+    int t1, t2;
+    int r;
 
-  t1 = term();
-  r = t1;
-  // is the current character an 'or' operator?
-  if (regexp[currentPos] == '|') {
-    currentPos++;
-    freeState++;
-    r = t2 = freeState;
-    freeState++;
-    // set epsilon transitions, evaluate right expression
-    // (left one has already been processed at this point)
-    setState(t2, EPSILON, expression(), t1);
-    setState(t2-1, EPSILON, freeState, freeState);
-    setState(t1-1, ch[t1-1], t2, next2[t1-1]);
-  }
-  return r;
+    t1 = term();
+    r = t1;
+    // is the current character an 'or' operator?
+    if (regexp[currentPos] == '|')
+    {
+        currentPos++;
+        freeState++;
+        r = t2 = freeState;
+        freeState++;
+        // set epsilon transitions, evaluate right expression
+        // (left one has already been processed at this point)
+        setState(t2, EPSILON, expression(), t1);
+        setState(t2-1, EPSILON, freeState, freeState);
+        setState(t1-1, ch[t1-1], t2, next2[t1-1]);
+    }
+    return r;
 }
 
 /*******************/
@@ -253,23 +283,26 @@ int automaton::expression()
 /*******************/
 int automaton::term()
 {
-  int r;
+    int r;
 
-  r = factor();
+    r = factor();
 
-  // do we need to concatenate parenthesis?
-  // parenthesis need an extra epsilon transition so that | works correctly
-  if ( (regexp[currentPos] == '(') ) {
-    int t1 = freeState, t2;
-    freeState++;
-    t2 = term();
-    setState(t1, EPSILON, t2, t2);
-  } else if ((regexp[currentPos] == '[') ||
-             letter(regexp[currentPos])) {
-    term(); // simple concat
-  }
+    // do we need to concatenate parenthesis?
+    // parenthesis need an extra epsilon transition so that | works correctly
+    if ( (regexp[currentPos] == '(') )
+    {
+        int t1 = freeState, t2;
+        freeState++;
+        t2 = term();
+        setState(t1, EPSILON, t2, t2);
+    }
+    else if ((regexp[currentPos] == '[') ||
+             letter(regexp[currentPos]))
+    {
+        term(); // simple concat
+    }
 
-  return r;
+    return r;
 }
 
 /***************************************************************/
@@ -281,112 +314,138 @@ int automaton::term()
 /***************************************************************/
 int automaton::factor()
 {
-  int t1, t2;
-  int r;
+    int t1, t2;
+    int r;
 
-  t1 = freeState;
-  switch (regexp[currentPos]) {
-  // match any single character
-  case '?':
-    setState(freeState, ANY, freeState+1, freeState+1);
-    r = t2 = freeState;
-    freeState++;
-    currentPos++;
-    break;
-  // escape operator, use next character literally
-  case '\\':
-    currentPos++;
-    if (regexp[currentPos] == 0x00) throw E_UNEXPECTED_EOP;
-    setState(freeState, regexp[currentPos], freeState+1, freeState+1);
-    t2 = freeState;
-    freeState++;
-    currentPos++;
-    break;
-  // set definition
-  case '[':
-    currentPos++;
-    t2 = set();
-    if (regexp[currentPos] == ']') currentPos++;
-    else throw E_ILLEGAL_SET;
-    break;
-  // an expression in parenthesis
-  case '(':
-    currentPos++;
-    t2 = expression();
-    if (regexp[currentPos] == ')') currentPos++;
-    else throw E_MISSING_PAREN_CLOSE;
-    break;
-  default:
-    // only a letter is valid at this position
-    if (letter(regexp[currentPos])) {
-      setState(freeState, regexp[currentPos], freeState+1, freeState+1);
-      t2 = freeState;
-      freeState++;
-      currentPos++;
-    } else throw E_UNEXPECTED_SYMBOL;
-  }
-
-  // the next statements are left out of the switch-block because
-  // they are all postfix operators.
-  // if they are used without operands, E_UNEXPECTED_SYMBOL is
-  // caused in the switch-block
-
-  // match previous expression zero or more times
-  if (regexp[currentPos] == '*') {
-    setState(freeState, EPSILON, freeState+1, t2);
-    r = freeState;
-    next1[t1-1] = freeState;
-    freeState++;
-    currentPos++;
-  }
-  // match previous expression one or more times
-  else if (regexp[currentPos] == '+') {
-    setState(freeState, EPSILON, t1, freeState+1);
-    r = t1;
-    freeState++;
-    currentPos++;
-  }
-  // match previous expression exactly n times
-  else if (regexp[currentPos] == '{') {
-    char stringBuffer[64];
-    int tempPos = currentPos+1;
-    int i = 0;
-    int j,k, size;
-    bool orExpression = t1!=t2;
-
-    r = t2;
-
-    // get n
-    while (regexp[tempPos] && regexp[tempPos] != '}') {
-      stringBuffer[i] = regexp[tempPos];
-      tempPos++;
-      if (i<62) i++;
+    t1 = freeState;
+    switch (regexp[currentPos])
+    {
+        // match any single character
+        case '?':
+            setState(freeState, ANY, freeState+1, freeState+1);
+            r = t2 = freeState;
+            freeState++;
+            currentPos++;
+            break;
+            // escape operator, use next character literally
+        case '\\':
+            currentPos++;
+            if (regexp[currentPos] == 0x00) throw E_UNEXPECTED_EOP;
+            setState(freeState, regexp[currentPos], freeState+1, freeState+1);
+            t2 = freeState;
+            freeState++;
+            currentPos++;
+            break;
+            // set definition
+        case '[':
+            currentPos++;
+            t2 = set();
+            if (regexp[currentPos] == ']') currentPos++;
+            else throw E_ILLEGAL_SET;
+            break;
+            // an expression in parenthesis
+        case '(':
+            currentPos++;
+            t2 = expression();
+            if (regexp[currentPos] == ')') currentPos++;
+            else throw E_MISSING_PAREN_CLOSE;
+            break;
+        default:
+            // only a letter is valid at this position
+            if (letter(regexp[currentPos]))
+            {
+                setState(freeState, regexp[currentPos], freeState+1, freeState+1);
+                t2 = freeState;
+                freeState++;
+                currentPos++;
+            }
+            else
+            {
+                throw E_UNEXPECTED_SYMBOL;
+            }
     }
 
-    if (regexp[tempPos] == 0x00) throw E_UNEXPECTED_EOP;
-    stringBuffer[i] = 0x00;
-    i = atoi(stringBuffer) - 1;
-    if (i <= 0) throw E_ILLEGAL_NUMBER;
+    // the next statements are left out of the switch-block because
+    // they are all postfix operators.
+    // if they are used without operands, E_UNEXPECTED_SYMBOL is
+    // caused in the switch-block
 
-    // the previous expression will be copied and insert
-    // n times into the automaton
-    size = freeState - t1;
-    if (orExpression)
-      size++;
-    while (i--) {
-      k = freeState;
-      if (orExpression) {
-        t2 += size;
-        setState(freeState++, EPSILON, t2, t2);
-      }
-      for (j=t1;j<k;j++,freeState++)
-        setState(freeState, ch[j], next1[j]+size, next2[j]+size);
-      t1 += size;
+    // match previous expression zero or more times
+    if (regexp[currentPos] == '*')
+    {
+        setState(freeState, EPSILON, freeState+1, t2);
+        r = freeState;
+        next1[t1-1] = freeState;
+        freeState++;
+        currentPos++;
     }
+    // match previous expression one or more times
+    else if (regexp[currentPos] == '+')
+    {
+        setState(freeState, EPSILON, t1, freeState+1);
+        r = t1;
+        freeState++;
+        currentPos++;
+    }
+    // match previous expression exactly n times
+    else if (regexp[currentPos] == '{')
+    {
+        char stringBuffer[64];
+        int tempPos = currentPos+1;
+        int i = 0;
+        int j,k, size;
+        bool orExpression = t1!=t2;
 
-    currentPos = tempPos + 1;
-  } else r = t2;
-  return r;
+        r = t2;
+
+        // get n
+        while (regexp[tempPos] && regexp[tempPos] != '}')
+        {
+            stringBuffer[i] = regexp[tempPos];
+            tempPos++;
+            if (i<62) i++;
+        }
+
+        if (regexp[tempPos] == 0x00)
+        {
+            throw E_UNEXPECTED_EOP;
+        }
+        stringBuffer[i] = 0x00;
+        i = atoi(stringBuffer) - 1;
+        if (i <= 0)
+        {
+           throw E_ILLEGAL_NUMBER;
+        }
+
+        // the previous expression will be copied and insert
+        // n times into the automaton
+        size = freeState - t1;
+        if (orExpression)
+        {
+            size++;
+        }
+        while (i--)
+        {
+            k = freeState;
+            if (orExpression)
+            {
+                t2 += size;
+                setState(freeState++, EPSILON, t2, t2);
+            }
+            for (j=t1;j<k;j++,freeState++)
+            {
+                setState(freeState, ch[j], next1[j]+size, next2[j]+size);
+            }
+            t1 += size;
+        }
+
+        currentPos = tempPos + 1;
+    }
+    else
+    {
+        r = t2;
+    }
+    return r;
 }
 
 /**********************************************************/

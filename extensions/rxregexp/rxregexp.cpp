@@ -47,27 +47,22 @@
 #include "oorexxapi.h"
 #include <string.h>
 
-RexxMethod2(int,                          // Return type
-            RegExp_Init,               // Object_method name
-            OPTIONAL_CSTRING, expression,    // optional regular expression
-            OPTIONAL_CSTRING, matchtype)     // optional match type (MAXIMAL (def.) or MINIMAL)
+RexxMethod2(int, RegExp_Init, OPTIONAL_CSTRING, expression, OPTIONAL_CSTRING, matchtype)
 {
     int         iResult = 0;
-    automaton  *pAutomaton;
-
-    pAutomaton = new automaton();
+    automaton *pAutomaton = new automaton();
 
     // optional matchtype given?
-    if (matchtype)
+    if (matchtype != NULL)
     {
-        if ( strcmp(matchtype, "MINIMAL") == 0)
+        if (strcmp(matchtype, "MINIMAL") == 0)
         {
             pAutomaton->setMinimal(true);
         }
     }
 
     // optional expression given?
-    if (expression)
+    if (expression != NULL)
     {
         iResult = pAutomaton->parse(expression);
         if (iResult != 0)
@@ -82,12 +77,10 @@ RexxMethod2(int,                          // Return type
     return 0;
 }
 
-RexxMethod1(int,                          // Return type
-            RegExp_Uninit,             // Object_method name
-            CSELF, self)               // Pointer to self
+RexxMethod1(int, RegExp_Uninit, CSELF, self)
 {
     automaton  *pAutomaton = (automaton *)self;
-    if (pAutomaton)
+    if (pAutomaton != NULL)
     {
         delete pAutomaton;
     }
@@ -96,54 +89,46 @@ RexxMethod1(int,                          // Return type
     return 0;
 }
 
-RexxMethod3(int,                          // Return type
-            RegExp_Parse,              // Object_method name
-            CSELF, self,               // Pointer to automaton control block
-            CSTRING, expression,       // regular expression to parse
-            OPTIONAL_CSTRING, matchtype)     // optional match type (MAXIMAL (def.) or MINIMAL)
+RexxMethod3(int,                            // Return type
+            RegExp_Parse,                   // Object_method name
+            CSELF, self,                    // Pointer to automaton control block
+            CSTRING, expression,            // regular expression to parse
+            OPTIONAL_CSTRING, matchtype)    // optional match type (MAXIMAL (def.) or MINIMAL)
 {
     automaton  *pAutomaton = (automaton *)self;
-    if (pAutomaton)
+    // moved some ptrs to re-use variables
+    // optional matchtype given?
+    if (matchtype != NULL)
     {
-        // moved some ptrs to re-use variables
-        // optional matchtype given?
-        if (matchtype != NULL)
+        if ( strcmp(matchtype, "MINIMAL") == 0)
         {
-            if ( strcmp(matchtype, "MINIMAL") == 0)
-            {
-                pAutomaton->setMinimal(true); // set minimal matching
-            }
-            else if (strcmp(matchtype, "CURRENT") != 0)
-            {
-                pAutomaton->setMinimal(false); // set maximal matching
-            }
+            pAutomaton->setMinimal(true); // set minimal matching
         }
-        int i = pAutomaton->parse( expression);
-        context->SetObjectVariable("!POS", context->WholeNumberToObject(pAutomaton->getCurrentPos()));
-        return i;
+        else if (strcmp(matchtype, "CURRENT") != 0)
+        {
+            pAutomaton->setMinimal(false); // set maximal matching
+        }
     }
-    return -1;
+    int i = pAutomaton->parse( expression);
+    context->SetObjectVariable("!POS", context->WholeNumber(pAutomaton->getCurrentPos()));
+    return i;
 }
 
 RexxMethod2(int,                          // Return type
-            RegExp_Match,              // Object_method name
-            CSELF, self,               // Pointer to self
-            RexxStringObject, string)        // string to match
+            RegExp_Match,                 // Object_method name
+            CSELF, self,                  // Pointer to self
+            RexxStringObject, string)     // string to match
 {
     automaton  *pAutomaton = (automaton *)self;
-    if (pAutomaton)
-    {
-        int i = pAutomaton->match( context->StringData(string), (int)context->StringLength(string));
-        context->SetObjectVariable("!POS", context->WholeNumberToObject(pAutomaton->getCurrentPos()));
-        return i;
-    }
-    return 0;
+    int i = pAutomaton->match( context->StringData(string), (int)context->StringLength(string));
+    context->SetObjectVariable("!POS", context->WholeNumber(pAutomaton->getCurrentPos()));
+    return i;
 }
 
 RexxMethod2(int,                          // Return type
-            RegExp_Pos,                // Object_method name
-            CSELF, self,               // Pointer to self
-            RexxStringObject, string)        // string to match
+            RegExp_Pos,                   // Object_method name
+            CSELF, self,                  // Pointer to self
+            RexxStringObject, string)     // string to match
 {
     automaton  *pAutomaton = (automaton *)self;
     bool        fOldState;
@@ -156,7 +141,7 @@ RexxMethod2(int,                          // Return type
     int matchPosition = 0;
 
     /* only check when input > 0 */
-    if (pAutomaton && strlength > 0)
+    if (strlength > 0)
     {
         fOldState = pAutomaton->getMinimal();
 
@@ -190,7 +175,7 @@ RexxMethod2(int,                          // Return type
             matchPosition = i + pAutomaton->getCurrentPos() - 1;
         }
 
-        context->SetObjectVariable("!POS", context->WholeNumberToObject(matchPosition));
+        context->SetObjectVariable("!POS", context->WholeNumber(matchPosition));
         pAutomaton->setMinimal(fOldState);  // restore to state at POS invocation time
         return i;
     }

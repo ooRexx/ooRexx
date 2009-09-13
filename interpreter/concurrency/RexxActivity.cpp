@@ -75,6 +75,7 @@
 #include "SystemInterpreter.hpp"
 #include "ActivationFrame.hpp"
 #include "StackFrameClass.hpp"
+#include "GlobalProtectedObject.hpp"
 
 const size_t ACT_STACK_SIZE = 20;
 
@@ -224,6 +225,11 @@ void *RexxActivity::operator new(size_t size)
  */
 RexxActivity::RexxActivity(bool createThread)
 {
+    // we need to protect this from garbage collection while constructing.
+    // unfortunately, we can't use ProtectedObject because that requires an
+    // active activity, which we can't guarantee at this point.
+    GlobalProtectedObject p(this);
+
     this->clearObject();               /* globally clear the object         */
                                        /* create an activation stack        */
     this->activations = new_internalstack(ACT_STACK_SIZE);

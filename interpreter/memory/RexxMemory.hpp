@@ -103,6 +103,7 @@ class RexxMethod;
 class RexxVariable;
 class WeakReference;
 class RexxIdentityTable;
+class GlobalProtectedObject;
 
 #ifdef _DEBUG
 class RexxMemory;
@@ -290,6 +291,7 @@ class RexxMemory : public RexxInternalObject
   size_t markWord;                     /* current marking counter           */
   int    markReason;                   // reason for calling liveGeneral()
   RexxVariable *variableCache;         /* our cache of variable objects     */
+  GlobalProtectedObject *protectedObjects;  // specially protected objects
 
   static RexxDirectory *environment;      // global environment
   static RexxDirectory *functionsDir;     // statically defined requires
