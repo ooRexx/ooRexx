@@ -45,53 +45,23 @@
 
 ::class 'DynamicDialog' Mixinclass Object public
 
-    /* attributes for internal use */
-::method basePtr attribute private
-::method activePtr attribute private
-::method dialogItemCount attribute private
+::method init class external "LIBRARY oodialog dyndlg_init_cls"
+
+::attribute basePtr get private external "LIBRARY oodialog dyndlg_getBasePtr"
+::attribute basePtr set private external "LIBRARY oodialog dyndlg_setBasePtr"
+
+::attribute activePtr get private external "LIBRARY oodialog dyndlg_getActivePtr"
+::attribute activePtr set private external "LIBRARY oodialog dyndlg_setActivePtr"
+
+::attribute dialogItemCount get private external "LIBRARY oodialog dyndlg_getDialogItemCount"
+::attribute dialogItemCount set private external "LIBRARY oodialog dyndlg_setDialogItemCount"
 
 ::method dynamicInit private external "LIBRARY oodialog dyndlg_dynamicInit"
 ::method stop private external "LIBRARY oodialog dyndlg_stop"
 
+::method create external "LIBRARY oodialog dyndlg_create"
 ::method startParentDialog external "LIBRARY oodialog dyndlg_startParentDialog"
 ::method startChildDialog external "LIBRARY oodialog dyndlg_startChildDialog"
-
-   /* This method creates the dialog you previously defined via Add... methods */
-   /* You can set the font and the number of expected items */
-   /* argument 'options' can be one of:
-         "CHILD"       -  create a child dialog
-         "NOMENU"      -  create a dialog without menu
-         "VISIBLE"     -  make the dialog visible before executing
-         "SYSTEMMODAL" -  create a dialog that is always on top
-         "NOTMODAL"    -  create a dialog with a normal window frame
-         "THICKFRAME"  -  create a dialog with a thick frame */
-
-::method create
-   use arg x, y, cx, cy, title, options = "", dlgClass, fontName, fontSize, expected = 200
-
-   -- options must be all upper case
-   options = options~translate
-
-   if arg(7,"O") | dlgClass = 0 then dlgClass = ""
-
-   if arg(8, "O") then fontName = self~fontName
-   if arg(9, "O") then fontSize = self~fontSize
-
-   -- Temp until create() is implemented in the C++ API.
-   if arg(8, "E") | arg(9, "E") then self~setDlgFont(fontName, fontSize)
-
-   ret = UsrDefineDialog(x, y, cx, cy, dlgclass, title, fontName, fontSize, options, expected)
-   parse var ret base ptr
-   self~basePtr = base
-   self~activePtr = ptr
-   if ptr = 0 then self~stop
-   self~sizeX = cx
-   self~sizeY = cy
-   self~defineDialog
-   return ptr <> 0
-
-   /* This method will create the dialog and place it in a centered position */
-   /* See create() for possible 'options' */
 
 ::method createCenter
    arga = arg(1,"A")
@@ -120,9 +90,15 @@
 --    "CONNECTCHECKS"
 ::method load
    forward message "loadFrame" continue
-   hnd = result
-   if hnd \= 0 then forward message "loadItems" continue; else self~stop
-   return (hnd=0)
+   ret = result
+   if ret == 0 then do
+      forward message "loadItems" continue
+      ret = result
+   end
+   else do
+      self~stop
+   end
+   return ret
 
 
 ::method internGetRCStyle
@@ -270,12 +246,13 @@
    end
 
 
-   /* This method creates the dialog main window using the data of the */
-   /* given resource file. It is called by the load() method. */
-
+-- This method starts the in-memory dialog template using the specified resource script file.
+-- It is usually called from the load() method.  The return was not documented prior to
+-- 4.1.0, but it returned 0 for success and 1 for error.  Need to preserve that, I guess,
+-- although .true and .false make much more sense.
 ::method loadFrame protected
    use arg resfile, dialogid, options, expected
-   if arg(4,"o") = 1 | expected = 0 then expected = 200
+   if arg(4,"o") | expected = 0 then expected = 200
    if options~translate~wordpos("CENTER") > 0 then internopts = "CENTER "
    else internopts = ""
 
@@ -284,7 +261,7 @@
    op = f~open(read)
    if op \= "READY:" then do
       say "Resource file not found -->" resfile "("op")"
-      return 0
+      return 1
    end
 
    found = 0; n = 0
@@ -362,12 +339,12 @@
    end
    f~close
 
-   return self~create(dlg.x, dlg.y, dlg.w, dlg.h, dlg.title, internopts,, dlg.font, dlg.fsize, expected)
+   if self~create(dlg.x, dlg.y, dlg.w, dlg.h, dlg.title, internopts,, dlg.font, dlg.fsize, expected) then return 0
+   else return 1
 
 
-
-
--- This method creates the dialog's controls from a resource script file. It is called by the load() method.
+-- This method creates the dialog's controls from a resource script file. It is usuall called by the load() method.
+-- Although its return was not documented prior to 4.1.0, it has returned 0 for success and non-zero for failure.
 ::method loadItems protected
    use arg resfile, dialogid, loadOptions
    if self~activePtr = 0 then return -2
@@ -1099,14 +1076,10 @@
      else modeless = .false
    end
 
-   self~activePtr = 0
-   if \ self~startParentDialog(self~dialogItemCount, self~basePtr, icon, modeless) then return 0
+   if \ self~startParentDialog(icon, modeless) then return 0
 
    self~initDialog
    return self~dlgHandle
 
-::method stopDynamic protected
-   self~dialogItemCount = 0
-   self~basePtr = 0
-   return ret
+::method stopDynamic private external "LIBRARY oodialog dyndlg_stopDynamic_pvt"
 

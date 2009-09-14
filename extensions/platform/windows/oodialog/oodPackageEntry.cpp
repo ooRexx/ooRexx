@@ -66,6 +66,9 @@ RexxObjectPtr       TheNegativeOneObj = NULLOBJECT;
 // Initialized in the PlainBaseDialog class init method (pbdlg_init_cls).
 RexxClassObject     ThePlainBaseDialogClass = NULLOBJECT;
 
+// Initialized in the DynamicDialog class init method (dyndlg_init_cls).
+RexxClassObject     TheDynamicDialogClass = NULLOBJECT;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -112,7 +115,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleControlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleOtherNewCtrls);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DumpAdmin);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddControl);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrDefineDialog);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddNewCtrl);
 
 REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg);
@@ -149,7 +151,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
     REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),
     REXX_CLASSIC_ROUTINE(UsrAddControl,        UsrAddControl),
-    REXX_CLASSIC_ROUTINE(UsrDefineDialog,      UsrDefineDialog),
     REXX_CLASSIC_ROUTINE(UsrAddNewCtrl,        UsrAddNewCtrl),
 
     REXX_TYPED_ROUTINE(getDlgMsg,              getDlgMsg),
@@ -235,11 +236,22 @@ REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
 REXX_METHOD_PROTOTYPE(userdlg_init);
 
+REXX_METHOD_PROTOTYPE(catdlg_createCategoryDialog);
+
+REXX_METHOD_PROTOTYPE(dyndlg_init_cls);
+REXX_METHOD_PROTOTYPE(dyndlg_getBasePtr);
+REXX_METHOD_PROTOTYPE(dyndlg_setBasePtr);
+REXX_METHOD_PROTOTYPE(dyndlg_getActivePtr);
+REXX_METHOD_PROTOTYPE(dyndlg_setActivePtr);
+REXX_METHOD_PROTOTYPE(dyndlg_getDialogItemCount);
+REXX_METHOD_PROTOTYPE(dyndlg_setDialogItemCount);
 REXX_METHOD_PROTOTYPE(dyndlg_dynamicInit);
+REXX_METHOD_PROTOTYPE(dyndlg_create);
 REXX_METHOD_PROTOTYPE(dyndlg_startParentDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_startChildDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_addIconFile_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
+REXX_METHOD_PROTOTYPE(dyndlg_stopDynamic_pvt);
 
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
 REXX_METHOD_PROTOTYPE(resdlg_startDialog_pvt);
@@ -536,11 +548,22 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(userdlg_init,                 userdlg_init),
 
+    REXX_METHOD(catdlg_createCategoryDialog,  catdlg_createCategoryDialog),
+
+    REXX_METHOD(dyndlg_init_cls,              dyndlg_init_cls),
+    REXX_METHOD(dyndlg_getBasePtr,            dyndlg_getBasePtr),
+    REXX_METHOD(dyndlg_setBasePtr,            dyndlg_setBasePtr),
+    REXX_METHOD(dyndlg_getActivePtr,          dyndlg_getActivePtr),
+    REXX_METHOD(dyndlg_setActivePtr,          dyndlg_setActivePtr),
+    REXX_METHOD(dyndlg_getDialogItemCount,    dyndlg_getDialogItemCount),
+    REXX_METHOD(dyndlg_setDialogItemCount,    dyndlg_setDialogItemCount),
     REXX_METHOD(dyndlg_dynamicInit,           dyndlg_dynamicInit),
+    REXX_METHOD(dyndlg_create,                dyndlg_create),
     REXX_METHOD(dyndlg_startParentDialog,     dyndlg_startParentDialog),
     REXX_METHOD(dyndlg_startChildDialog,      dyndlg_startChildDialog),
     REXX_METHOD(dyndlg_addIconFile_pvt,       dyndlg_addIconFile_pvt),
     REXX_METHOD(dyndlg_stop,                  dyndlg_stop),
+    REXX_METHOD(dyndlg_stopDynamic_pvt,       dyndlg_stopDynamic_pvt),
 
     REXX_METHOD(dlgctrl_new_cls,              dlgctrl_new_cls),
     REXX_METHOD(dlgctrl_init,                 dlgctrl_init),

@@ -85,16 +85,21 @@
    p = self~catalog['page']
    self~addTabControl(9001,,p['x'], p['y'], p['w'], p['h'],self~catStyle || " CAT CLIPSIBLINGS")
 
-   self~activePtr = 0
-   if \ self~startParentDialog(self~dialogItemCount, self~basePtr, 0, .false) then return 0
+   if \ self~startParentDialog(0, .false) then return 0
 
    do i = 1 to self~catalog['count']
-      self~dialogItemCount = 0
       self~catalog['category'] = i
-      self~createCategoryDialog(p['x']+2, p['y']+(size~height*2), p['w']-10, p['h']-(size~height*3),p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
+
+      -- Start the dialog template for this page.  (Ignore an error, an exception will be raised)
+      self~createCategoryDialog(p['x']+2, p['y']+(size~height*2), p['w']-10, p['h']-(size~height*3),p['font'], p['fsize'], p['expected'])
+
+      -- Invoke the user defined method with the same name as the page name.  This is where the
+      -- dialog control items for this page are defined.
       self~send(self~catalog['names'][i]~space(0))
-      self~activePtr = 0
-      hChildDlg = self~startChildDialog(self~dialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+
+      -- Create the underlying Windows dialog for this page.
+      hChildDlg = self~startChildDialog(self~catalog['base'][i], i)
+      self~catalog['base'][i] = 0
       self~catalog['handles'][i] = hChildDlg
    end
 

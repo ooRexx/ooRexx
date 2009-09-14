@@ -62,6 +62,7 @@ extern void *wrongClassException(RexxThreadContext *c, int pos, const char *n);
 extern void invalidTypeException(RexxThreadContext *c, int pos, const char *type);
 extern void invalidImageException(RexxThreadContext *c, int pos, CSTRING type, CSTRING actual);
 extern void stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t realLen);
+extern void numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual);
 extern void notNonNegativeException(RexxThreadContext *c, int pos, RexxObjectPtr actual);
 extern void wrongObjInArrayException(RexxThreadContext *c, int argPos, size_t index, CSTRING obj);
 extern void wrongObjInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index, CSTRING needed, RexxObjectPtr actual);

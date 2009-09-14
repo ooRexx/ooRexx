@@ -1418,15 +1418,15 @@ int32_t stopDialog(HWND hDlg)
     return -1;
 }
 
-RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStringObject hDlg)
+RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hDlg)
 {
     pCWindowBase pcwb = pcpbd->wndBase;
-    pcpbd->hDlg = (HWND)string2pointer(c, hDlg);
+    pcpbd->hDlg = hDlg;
 
     if ( pcpbd->hDlg != NULL )
     {
         pcwb->hwnd = pcpbd->hDlg;
-        pcwb->rexxHwnd = c->RequestGlobalReference(hDlg);
+        pcwb->rexxHwnd = c->RequestGlobalReference(pointer2string(c, hDlg));
     }
     else
     {   pcwb->hwnd = NULL;
@@ -2172,15 +2172,18 @@ void setFontAttrib(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
 
 
 /**
- * Create a dialog stored in a DLL.  Currently this is only used by ResDialog.
+ * Creates the underlying Windows dialog using a dialog resource stored in a
+ * DLL.  Currently this is only used for ResDialog dialogs.  All other ooDialog
+ * dialogs use DynamicDialog::startParentDialog() to create the underlying
+ * Windows dialog.
  *
- * @param funcname
- * @param argc
- * @param argv
- * @param qname
- * @param retstr
+ * @param libray      The name of the DLL.
+ * @param dlgID       The resource ID for the dialog in the DLL
+ * @param autoDetect  True if auto detect is on, otherwise false.
+ * @param iconID      Ther resource ID to use for the application icon.
+ * @param modeless    Whether to create a modeless or a modal dialog.
  *
- * @return size_t RexxEntry
+ * @return True on succes, otherwise false.
  */
 RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID, logical_t, autoDetect, uint32_t, iconID,
             logical_t, modeless, CSELF, pCSelf)
@@ -2252,8 +2255,7 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
 
                 RexxMethodContext *c = context;
 
-            // TODO for now we need to convert hDlg back to a Rexx object
-            setDlgHandle(context, pcpbd, pointer2string(context, dlgAdm->TheDlg));
+            setDlgHandle(context, pcpbd, dlgAdm->TheDlg);
             setFontAttrib(context, pcpbd);
             return TRUE;
         }

@@ -192,7 +192,7 @@ extern bool        requiredComCtl32Version(RexxMethodContext *context, const cha
 extern const char *comctl32VersionPart(DWORD id, DWORD type);
 
 extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
-extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStringObject hDlg);
+extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hDlg);
 extern int           getKeywordValue(String2Int *cMap, const char * str);
 
 // Shared button stuff.

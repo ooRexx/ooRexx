@@ -107,12 +107,18 @@ int nCopyAnsiToWideChar (LPWORD lpWCStr, const char *lpAnsiIn)
 }
 
 
-void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx, INT cy,
-                const char * dlgClass, const char * title, const char * fontname, INT fontsize, ULONG lStyle)
+bool startDialogTemplate(RexxMethodContext *c, WORD **ppTemplate, WORD **p, uint32_t count,
+                         INT x, INT y, INT cx, INT cy, const char * dlgClass, const char * title,
+                         const char * fontname, INT fontsize, uint32_t lStyle)
 {
     int   nchar;
 
-    *ppTemplate = *p = (PWORD) LocalAlloc(LPTR, (NrItems+3)*256);
+    *ppTemplate = *p = (PWORD) LocalAlloc(LPTR, (count+3)*256);
+    if ( p == NULL )
+    {
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
 
     /* start to fill in the dlgtemplate information.  addressing by WORDs */
     **p = LOWORD (lStyle);
@@ -123,7 +129,7 @@ void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx,
     (*p)++;
     **p = 0;          // HIWORD (lExtendedStyle)
     (*p)++;
-    **p = NrItems;    // NumberOfItems
+    **p = count;      // NumberOfItems
     (*p)++;
     **p = x;          // x
     (*p)++;
@@ -139,7 +145,7 @@ void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx,
     **p = 0;
     (*p)++;
 
-    /* copy the class of the dialog */
+    /* copy the class of the dialog. currently dlgClass is always null */
     if ( !(lStyle & WS_CHILD) && (dlgClass) )
     {
         nchar = nCopyAnsiToWideChar (*p, TEXT(dlgClass));
@@ -162,7 +168,9 @@ void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx,
         (*p)++;
     }
 
-    /* add in the wPointSize and szFontName here iff the DS_SETFONT bit on */
+    /* add in the wPointSize and szFontName here iff the DS_SETFONT bit on.
+     * currently DS_SETFONT is always set
+     */
     **p = fontsize;   // fontsize
     (*p)++;
     nchar = nCopyAnsiToWideChar (*p, TEXT(fontname));
@@ -170,58 +178,79 @@ void UCreateDlg(WORD ** ppTemplate, WORD **p, INT NrItems, INT x, INT y, INT cx,
 
     /* make sure the first item starts on a DWORD boundary */
     (*p) = lpwAlign (*p);
+    return true;
 }
 
+#define DEFAULT_EXPECTED_DIALOG_ITEMS   200
+#define FONT_NAME_ARG_POS                 8
+#define FONT_SIZE_ARG_POS                 9
+#define EXPECTED_ITEM_COUNT_ARG_POS      10
 
-
-size_t RexxEntry UsrDefineDialog(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
+/**
+ * Ensures the font name and font size for a dialog are correct, based on the
+ * args for DynamicDialog::create().
+ *
+ * The font name and font size args to create() are optional.  If the user
+ * omitted them, we use the default font for the dialog.  If the user specified
+ * the font, the default font for the dialog is replaced by what the user has
+ * specified.
+ *
+ * @param c           Method context we are operating in.
+ * @param args        Argument array for the method.
+ * @param pcpbd       Pointer to the CSelf for the method's dialog.
+ *
+ * @return True on no error, false if an exception has been raised.
+ */
+static bool adjustDialogFont(RexxMethodContext *c, RexxArrayObject args, pCPlainBaseDialog pcpbd)
 {
+    RexxObjectPtr name = c->ArrayAt(args, FONT_NAME_ARG_POS);
+    if ( name != NULLOBJECT )
+    {
+        if ( ! c->IsString(name) )
+        {
+            wrongClassException(c->threadContext, FONT_NAME_ARG_POS, "String");
+            return false;
+        }
 
-   INT buffer[5];
-   const char *opts;
+        CSTRING fontName = c->ObjectToStringValue(name);
+        if ( strlen(fontName) > (MAX_DEFAULT_FONTNAME - 1) )
+        {
+            stringTooLongException(c->threadContext, 1, MAX_DEFAULT_FONTNAME, strlen(fontName));
+            return false;
+        }
+        strcpy(pcpbd->fontName, fontName);
+    }
 
-   BOOL child;
-   ULONG lStyle;
-   WORD *p;
-   WORD *pbase;
-   int i;
-
-   CHECKARG(10);
-
-   for (i=0;i<4;i++) buffer[i] = atoi(argv[i].strptr);
-   opts = argv[8].strptr;
-
-   if (strstr(opts, "CHILD")) child = TRUE; else child = FALSE;
-   buffer[4] = atoi(argv[9].strptr);
-
-   if (child) lStyle = DS_SETFONT | WS_CHILD;
-   else lStyle = WS_CAPTION | DS_SETFONT;
-
-#ifdef USE_DS_CONTROL
-   if (child) lStyle |= DS_CONTROL;
-#endif
-
-   if (strstr(opts, "VISIBLE")) lStyle |= WS_VISIBLE;
-   if (!strstr(opts, "NOMENU") && !child) lStyle |= WS_SYSMENU;
-   if (!strstr(opts, "NOTMODAL") && !child) lStyle |= DS_MODALFRAME;
-   if (strstr(opts, "SYSTEMMODAL")) lStyle |= DS_SYSMODAL;
-   if (strstr(opts, "CENTER")) lStyle |= DS_CENTER;
-   if (strstr(opts, "THICKFRAME")) lStyle |= WS_THICKFRAME;
-   if (strstr(opts, "MINIMIZEBOX")) lStyle |= WS_MINIMIZEBOX;
-   if (strstr(opts, "MAXIMIZEBOX")) lStyle |= WS_MAXIMIZEBOX;
-   if (strstr(opts, "VSCROLL")) lStyle |= WS_VSCROLL;
-   if (strstr(opts, "HSCROLL")) lStyle |= WS_HSCROLL;
-
-   if (strstr(opts, "OVERLAPPED")) lStyle |= WS_OVERLAPPED;
-
-   /*                     expected        x          y        cx        cy  */
-   UCreateDlg(&pbase, &p, buffer[4], buffer[0], buffer[1], buffer[2], buffer[3],
-   /*            class         title            fontname         fontsize */
-              argv[4].strptr, argv[5].strptr, argv[6].strptr, atoi(argv[7].strptr), lStyle);
-   sprintf(retstr->strptr, "0x%p 0x%p", pbase, p);
-   retstr->strlength = strlen(retstr->strptr);
-   return 0;
+    RexxObjectPtr size = c->ArrayAt(args, FONT_SIZE_ARG_POS);
+    if ( size != NULLOBJECT )
+    {
+        uint32_t fontSize;
+        if ( ! c->UnsignedInt32(size, &fontSize) )
+        {
+            c->RaiseException2(Rexx_Error_Invalid_argument_positive, c->WholeNumber(FONT_SIZE_ARG_POS), size);
+            return false;
+        }
+        pcpbd->fontSize = fontSize;
+    }
+    return true;
 }
+
+static uint32_t getExpectedCount(RexxMethodContext *c, RexxArrayObject args)
+{
+    uint32_t expected = DEFAULT_EXPECTED_DIALOG_ITEMS;
+
+    RexxObjectPtr count = c->ArrayAt(args, EXPECTED_ITEM_COUNT_ARG_POS);
+    if ( count != NULLOBJECT )
+    {
+        if ( ! c->UnsignedInt32(count, &expected) || expected == 0 )
+        {
+            c->RaiseException2(Rexx_Error_Invalid_argument_positive, c->WholeNumber(EXPECTED_ITEM_COUNT_ARG_POS), count);
+            expected = 0;
+        }
+    }
+    return expected;
+}
+
 
 /**
  * Windows message loop for a UserDialog or UserDialog subclass.
@@ -943,6 +972,51 @@ RexxMethod4(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
 #define DYNAMICDIALOG_CLASS  "DynamicDialog"
 
 
+
+RexxMethod1(RexxObjectPtr, dyndlg_init_cls, OSELF, self)
+{
+    TheDynamicDialogClass = (RexxClassObject)self;
+    return NULLOBJECT;
+}
+
+/** DynamicDialog::basePtr  [attribute private]
+ */
+RexxMethod1(RexxObjectPtr, dyndlg_getBasePtr, CSELF, pCSelf)
+{
+    RexxObjectPtr ptr = pointer2string(context, ((pCDynamicDialog)pCSelf)->base);
+    return ptr;
+}
+RexxMethod2(RexxObjectPtr, dyndlg_setBasePtr, CSTRING, ptrStr, CSELF, pCSelf)
+{
+    ((pCDynamicDialog)pCSelf)->base = (DLGTEMPLATE *)string2pointer(ptrStr);
+    return NULLOBJECT;
+}
+
+/** DynamicDialog::activePtr  [attribute private]
+ */
+RexxMethod1(RexxObjectPtr, dyndlg_getActivePtr, CSELF, pCSelf)
+{
+    RexxObjectPtr ptr = pointer2string(context, ((pCDynamicDialog)pCSelf)->active);
+    return ptr;
+}
+RexxMethod2(RexxObjectPtr, dyndlg_setActivePtr, CSTRING, ptrStr, CSELF, pCSelf)
+{
+    ((pCDynamicDialog)pCSelf)->active = string2pointer(ptrStr);
+    return NULLOBJECT;
+}
+
+/** DynamicDialog::dialogItemCount  [attribute private]
+ */
+RexxMethod1(uint32_t, dyndlg_getDialogItemCount, CSELF, pCSelf) { return ( ((pCDynamicDialog)pCSelf)->count ); }
+RexxMethod2(RexxObjectPtr, dyndlg_setDialogItemCount, uint32_t, count, CSELF, pCSelf)
+{
+    ((pCDynamicDialog)pCSelf)->count = count;
+    return NULLOBJECT;
+}
+
+
+/** DynamicDialog::dynamicInit()  [private]
+ */
 RexxMethod2(RexxObjectPtr, dyndlg_dynamicInit, POINTER, arg, OSELF, self)
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)arg;
@@ -960,24 +1034,141 @@ RexxMethod2(RexxObjectPtr, dyndlg_dynamicInit, POINTER, arg, OSELF, self)
     pcdd->rexxSelf = self;
     context->SetObjectVariable("CSELF", pddBuffer);
 
-    context->SendMessage1(self, "BASEPTR=", TheZeroObj);
-    context->SendMessage1(self, "ACTIVEPTR=", TheZeroObj);
-    context->SendMessage1(self, "DIALOGITEMCOUNT=", TheZeroObj);
-
 done_out:
     return TheZeroObj;
 }
 
 
-RexxMethod6(RexxObjectPtr, dyndlg_startChildDialog, uint32_t, itemCount, POINTERSTRING, basePtr,
-            RexxStringObject, hDlgParent, uint32_t, childIndex, OSELF, self, CSELF, pCSelf)
+/**
+ *
+ * @param  x          ( 1 required) X co-ordinate
+ * @param  y          ( 2 required) Y co-ordinate
+ * @param  cx         ( 3 required) width
+ * @param  cy         ( 4 required) height
+ * @param  title      ( 5 required) Title for the caption bar
+ * @param  _opts      ( 6 optional) Style 0ptions for the dialog
+ * @param  dlgClass   ( 7 optional) The dialog class.  Has never been used.
+ * @param  fontName   ( 8 optional) Font name for the dialog
+ * @param  fontSize   ( 9 optional) Font size
+ * @param  expected   (10 optional) Expected number of dialog items.
+ *
+ * @return True on success, false if an exception has been raised.
+ *
+ * @remarks  It is important to remember that when a "Child" dialog is being
+ *           created, there is n9 backing Rexx dialog object.  Child dialogs are
+ *           created for the 'category' pages of a CategoryDialog or its
+ *           subclasses.
+ */
+RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint32_t, cy, CSTRING, title,
+            OPTIONAL_RexxStringObject, _opts, OPTIONAL_CSTRING, dlgClass, ARGLIST, args, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+
+    uint32_t style = DS_SETFONT | WS_CAPTION;
+    dlgClass = NULL;        // The dialog class is always ignored, at this time.
+
+    if ( argumentExists(6) )
+    {
+        CSTRING opts = c->StringData(c->StringUpper(_opts));
+
+        if ( strstr(opts, "VISIBLE")     != 0 ) style |= WS_VISIBLE;
+        if ( strstr(opts, "NOMENU")      == 0 ) style |= WS_SYSMENU;
+        if ( strstr(opts, "NOTMODAL")    == 0 ) style |= DS_MODALFRAME;
+        if ( strstr(opts, "SYSTEMMODAL") != 0 ) style |= DS_SYSMODAL;
+        if ( strstr(opts, "CENTER")      != 0 ) style |= DS_CENTER;
+        if ( strstr(opts, "THICKFRAME")  != 0 ) style |= WS_THICKFRAME;
+        if ( strstr(opts, "MINIMIZEBOX") != 0 ) style |= WS_MINIMIZEBOX;
+        if ( strstr(opts, "MAXIMIZEBOX") != 0 ) style |= WS_MAXIMIZEBOX;
+        if ( strstr(opts, "VSCROLL")     != 0 ) style |= WS_VSCROLL;
+        if ( strstr(opts, "HSCROLL")     != 0 ) style |= WS_HSCROLL;
+        if ( strstr(opts, "OVERLAPPED")  != 0 ) style |= WS_OVERLAPPED;
+    }
+
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( ! adjustDialogFont(context, args, pcpbd) )
+    {
+        // See comment below, do we need to do a stop()?
+        return FALSE;
+    }
+
+    uint32_t expected = getExpectedCount(context, args);
+    if ( expected == 0 )
+    {
+        // See comment below, do we need to do a stop()?
+        return FALSE;
+    }
+
+    WORD *p;
+    WORD *pBase;
+
+    if ( ! startDialogTemplate(context, &pBase, &p, expected, x, y, cx, cy, dlgClass, title,
+                               pcpbd->fontName, pcpbd->fontSize, style) )
+    {
+        // TODO an exception has been raised, so I don't think we need to do any
+        // clean up ?  For a regular dialog, the original code did a
+        // DynamicDialog::stop(), which does a stopDialog().  For a
+        // CategoryDialog, things were just ignored.  Within ooDialog, this
+        // exception is not trapped, so the interpreter should just end.  But,
+        // what happens if the user traps syntax errors?
+        return FALSE;
+    }
+    pcdd->base = (DLGTEMPLATE *)pBase;
+    pcdd->active = p;
+    pcpbd->wndBase->sizeX = cx;
+    pcpbd->wndBase->sizeY = cy;
+
+    c->SendMessage0(pcdd->rexxSelf, "DEFINEDIALOG");
+    return pcdd->active != NULL;
+}
+
+/** DynamicDialog::startChildDialog()
+ *
+ *  Creates the underlying Windows child dialog.
+ *
+ *  Child dialogs are the dialogs used for the pages in a CategoryDialog, or its
+ *  subclass the PropertySheet dialog.  The parent window / dialog for the child
+ *  dialog is always the category or propert sheet dialog.  At this time, there
+ *  is no corresponding Rexx object for child dialogs.
+ *
+ *  @param  basePtr     Pointer to the in-memory dialog template for the child
+ *                      dialog.
+ *  @param  childIndex  The index number of the child.  This corresponds to the
+ *                      page number the child is used in.  I.e., the child at
+ *                      index 1 is the dialog for the first page of the category
+ *                      or property sheet dialog, index 2 is the second page,
+ *                      etc..
+ *
+ *  @return  The handle of the underlying Windows dialog, 0 on error.
+ *
+ *  @remarks  The child dialog needs to be created in the window procedure
+ *            thread of the parent.  SendMessage() is used to send a user
+ *            message to the message loop thread.  The child dialog is then
+ *            created in that thread and the dialog handle returned.  On error,
+ *            the returned handle will be NULL.
+ *
+ *            The basePtr is sent from the CategoryDialog code where it is
+ *            stored as such: self~catalog['base'][i] where 'i' is the index of
+ *            the child dialog.  This index is sent to us as childIndex.  After
+ *            freeing the base pointer, we are relying on the category dialog
+ *            code setting self~catalog['base'][i] back to 0.
+ *
+ *            We could eliminate the basePtr arg altogether and retrieve the
+ *            pointer using the childIndex arg.  And, we could also set the
+ *            value of self~catalog['base'][i] ourselfs.  TODO, this would make
+ *            things more self-contained.
+ *
+ */
+RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint32_t, childIndex, CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
 
-    DIALOGADMIN *dlgAdm = pcdd->pcpbd->dlgAdm;
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
     if ( dlgAdm == NULL )
     {
-        failedToRetrieveDlgAdmException(context->threadContext, self);
+        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
         return TheZeroObj;
     }
 
@@ -988,48 +1179,48 @@ RexxMethod6(RexxObjectPtr, dyndlg_startChildDialog, uint32_t, itemCount, POINTER
         return TheZeroObj;
     }
 
-    bool Release = false;
-    HWND hDlg;
+    // Set the field for the number of dialog controls in the dialog template.
+    p->cdit = (WORD)pcdd->count;
 
-    /* Get the number of dialog controls. */
-    p->cdit = (WORD)itemCount;
+    HWND hChild = (HWND)SendMessage(pcpbd->hDlg, WM_USER_CREATECHILD, 0, (LPARAM)p);
 
-    /* Get the parent dialog's window handle. */
-    hDlg = (HWND)string2pointer(context, hDlgParent);
+    // Free the memory allocated for template.
+    LocalFree(p);
+    pcdd->active = NULL;
+    pcdd->count = 0;
 
-    /* The child dialog needs to be created in the window procedure thread
-     * of the parent.  The child dialog's handle is returned, will be NULL on
-     * error.
-     */
-    hDlg = (HWND)SendMessage(hDlg, WM_USER_CREATECHILD, 0, (LPARAM)p);
-
-    /* We are done with the dialog template. */
-    safeLocalFree(p);
-
-    /* The child dialog may not have been created. */
-    if ( hDlg == NULL )
+    // The child dialog may not have been created.
+    if ( hChild == NULL )
     {
         return TheZeroObj;
     }
 
-    dlgAdm->ChildDlg[childIndex] = hDlg;
-    return pointer2string(context, hDlg);
+    dlgAdm->ChildDlg[childIndex] = hChild;
+    return pointer2string(context, hChild);
 }
 
 
-RexxMethod6(logical_t, dyndlg_startParentDialog, uint32_t, itemCount, POINTERSTRING, basePtr,
-            uint32_t, iconID, logical_t, modeless, OSELF, self, CSELF, pCSelf)
+/** DyamicDialog::startParentDialog()
+ *
+ *  Creates the underlying Windows dialog for a user dialog (or one of its
+ *  subclasses) object.  This is the counterpart to the ResDialog::startDialog()
+ *  which is only used to create the underlying Windows dialog for ResDialog
+ *  dialogs.
+ *
+ *
+ */
+RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, modeless, CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
 
     DIALOGADMIN *dlgAdm = pcdd->pcpbd->dlgAdm;
     if ( dlgAdm == NULL )
     {
-        failedToRetrieveDlgAdmException(context->threadContext, self);
+        failedToRetrieveDlgAdmException(context->threadContext, pcdd->pcpbd->rexxSelf);
         return FALSE;
     }
 
-    DLGTEMPLATE *p = (DLGTEMPLATE *)basePtr;
+    DLGTEMPLATE *p = pcdd->base;
     if ( p == NULL )
     {
         return illegalBuffer();
@@ -1038,17 +1229,14 @@ RexxMethod6(logical_t, dyndlg_startParentDialog, uint32_t, itemCount, POINTERSTR
     ULONG thID;
     bool Release = false;
 
-    /* set number of items to dialogtemplate */
-    p->cdit = (WORD)itemCount;
+    // Set the number of dialog items field in the dialog template.
+    p->cdit = (WORD)pcdd->count;
 
     EnterCriticalSection(&crit_sec);
 
     // InstallNecessaryStuff() can not fail for a UserDialog.
     InstallNecessaryStuff(dlgAdm, NULL);
 
-    // Note: autoDetect is never on for a UserDialog dialog.  If autoDetect is
-    // on, then each of the addXXX() automatically connects the control.  So,
-    // autoDetect would just be redundent.
     LoopThreadArgs threadArgs;
     threadArgs.dlgTemplate = p;
     threadArgs.dlgAdmin = dlgAdm;
@@ -1064,9 +1252,12 @@ RexxMethod6(logical_t, dyndlg_startParentDialog, uint32_t, itemCount, POINTERSTR
     LeaveCriticalSection(&crit_sec);
 
     // Free the memory allocated for template.
-    safeLocalFree(p);
+    LocalFree(p);
+    pcdd->base = NULL;
+    pcdd->active = NULL;
+    pcdd->count = 0;
 
-    if ( dlgAdm )
+    if ( dlgAdm )   // TODO not sure why this check was done in the original code?  dlgAdm can not be null at this point.
     {
         if ( dlgAdm->TheDlg )
         {
@@ -1099,9 +1290,7 @@ RexxMethod6(logical_t, dyndlg_startParentDialog, uint32_t, itemCount, POINTERSTR
                 }
             }
 
-            // TODO for now we need to convert hDlg back to a Rexx object. Plus, need to figure
-            // out what struct we have and what to use here.
-            setDlgHandle(context, pcdd->pcpbd, pointer2string(context, dlgAdm->TheDlg));
+            setDlgHandle(context, pcdd->pcpbd, dlgAdm->TheDlg);
             return TRUE;
         }
 
@@ -1205,11 +1394,101 @@ done_out:
 }
 
 
+/** DynamicDialog::stop()  [private]
+ */
 RexxMethod0(RexxObjectPtr, dyndlg_stop)
 {
     stopDialog(NULL);
     return NULLOBJECT;
 }
+
+
+/** DynamicDialog::stopDynamic()   [private]
+ *
+ *  Sets the dialog template pointers back to null and the dialog item count to
+ *  0.
+ *
+ *  This method is probably no longer needed.  Before the conversion to the C++
+ *  APIs, I believe it was used as a sort of fail-safe method to ensure the base
+ *  pointer attribute was not used after it was freed.  This attribute is now
+ *  set to null when it is freed, making this method redundent.
+ */
+RexxMethod1(RexxObjectPtr, dyndlg_stopDynamic_pvt, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+
+    if ( pcdd->base != NULL )
+    {
+        // TODO remove this printf before release.
+        printf("DynamicDialog::stopDynamic() base pointer not null! base=%p\n", pcdd->base);
+        LocalFree(pcdd->base);
+    }
+
+    pcdd->base = NULL;
+    pcdd->active = NULL;
+    pcdd->count = 0;
+
+    return TheZeroObj;
+}
+
+
+/**
+ *  Methods for the .CategoryDialog class.
+ */
+#define CATEGORYDIALOG_CLASS  "CategoryDialog"
+
+
+/** CategoryDialog::createCategoryDialog()
+ *
+ *  Creates a child dialog for a page of the category dialog, not the top-level
+ *  parent category dialog.
+ *
+ *
+ */
+RexxMethod8(logical_t, catdlg_createCategoryDialog, int32_t, x, int32_t, y, uint32_t, cx, uint32_t, cy,
+            CSTRING, fontName, uint32_t, fontSize, uint32_t, expected, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+
+    uint32_t style = DS_SETFONT | WS_CHILD;
+
+#ifdef USE_DS_CONTROL
+    sytle |= DS_CONTROL;
+#endif
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    pCDynamicDialog pcdd = (pCDynamicDialog)c->ObjectToCSelf(pcpbd->rexxSelf, TheDynamicDialogClass);
+
+    if ( strlen(fontName) == 0 )
+    {
+        fontName = pcpbd->fontName;
+    }
+    if ( fontSize == 0 )
+    {
+        fontSize = pcpbd->fontSize;
+    }
+
+    WORD *p;
+    WORD *pBase;
+    if ( ! startDialogTemplate(context, &pBase, &p, expected, x, y, cx, cy, NULL, NULL, fontName, fontSize, style) )
+    {
+        return FALSE;
+    }
+
+    pcdd->active = p;
+
+    //  self~catalog['base'][self~catalog['category']] = base
+    RexxDirectoryObject catalog = (RexxDirectoryObject)c->SendMessage0(pcpbd->rexxSelf, "CATALOG");
+    RexxArrayObject     bases   = (RexxArrayObject)c->DirectoryAt(catalog, "base");
+    RexxObjectPtr       rxPageID = c->DirectoryAt(catalog, "category");
+
+    size_t i;
+    c->StringSize (rxPageID, &i);
+    c->ArrayPut(bases, pointer2string(context, pBase), i);
+
+    return TRUE;
+}
+
 
 
 extern BOOL SHIFTkey = FALSE;

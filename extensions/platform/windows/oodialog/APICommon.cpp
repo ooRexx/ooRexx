@@ -207,6 +207,26 @@ void stringTooLongException(RexxThreadContext *c, int pos, size_t len, size_t re
     userDefinedMsgException(c, buffer);
 }
 
+/**
+ * Argument <argPos> must be a whole number greater than <min>; found <actual>
+ *
+ * Argument 10 must be a whole number greater than 5; found 0
+ *
+ * Raises 88.900
+ *
+ * @param c        Thread context we are executing in.
+ * @param pos      Argumet position
+ * @param min      Minimum - 1
+ * @param actual   Actual Rexx object
+ */
+void numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectPtr actual)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "Argument %d must be a whole number greater than %d; actual %s",
+              pos, min, c->ObjectToStringValue(actual));
+    userDefinedMsgException(c, buffer);
+}
+
 void wrongObjInArrayException(RexxThreadContext *c, int argPos, size_t index, CSTRING obj)
 {
     TCHAR buffer[256];

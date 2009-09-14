@@ -233,27 +233,31 @@
          self~addRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax, newstyle || " CAT")
    end
 
-   self~activePtr = 0
-   if \ self~startParentDialog(self~dialogItemCount, self~basePtr, 0, .false) then return 0
+   if \ self~startParentDialog(0, .false) then return 0
 
    do i = 1 to self~catalog['count']
-      self~dialogItemCount = 0
       self~catalog['category'] = i
       p = self~catalog['page']
-      self~CreateCategoryDialog(p['x'], p['y'], p['w'], p['h'],p['font'], p['fsize'], p['style'] || " CHILD HIDDEN", p['expected'])
+
+      -- Start the dialog template for this page.  (Ignore an error, an exception will be raised)
+      self~CreateCategoryDialog(p['x'], p['y'], p['w'], p['h'],p['font'], p['fsize'], p['expected'])
+
+      -- Invoke the user defined method with the same name as the page name.  This is where the
+      -- dialog control items for this page are defined.
       self~send(self~catalog['names'][i]~space(0))
-      self~activePtr = 0
-      hChildDlg = self~startChildDialog(self~dialogItemCount, self~catalog['base'][i], self~dlgHandle, i)
+
+      -- Create the underlying Windows dialog.
+      hChildDlg = self~startChildDialog(self~catalog['base'][i], i)
+      self~catalog['base'][i] = 0
       self~catalog['handles'][i] = hChildDlg
    end
 
-   /* This method returns the current page */
-
+-- This method returns the current page index
 ::method CurrentCategory unguarded
    return self~catalog['category']
 
-   /* This method adds controls to the base window of a 'CategoryDialog' */
-
+-- This method adds controls to CategoryDialog dialog itself.  The dialog that is the parent to
+-- the child dialogs that make up the pages of the CategoryDialog.
 ::method CategoryPage protected
 
    size = self~getTextSizeDlg("Hg")
@@ -283,28 +287,7 @@
    end
    self~addBlackFrame(0, self~sizeY - 20, self~sizeX, 1)
 
-   /* */
-
-::method CreateCategoryDialog protected
-   use arg x, y, cx, cy, fontName, fontSize, options = "", expected = 200
-
-   if expected > 1 then expected = 200
-   options = options~translate
-
-   if arg(8, "O") | fontName == "" then fontName = self~fontName
-   if arg(9, "O") | fontSize = 0 then fontSize = self~fontSize
-
-   -- Temp until create() is implemented in the C++ API.
-   if arg(8, "E") | arg(9, "E") then self~setDlgFont(fontName, fontSize)
-
-   ret = UsrDefineDialog(x, y, cx, cy, "", "", fontName, fontSize, options, expected)
-
-   parse var ret base Ptr
-   self~catalog['base'][self~catalog['category']] = base
-   self~activePtr = Ptr
-   return Ptr
-
-   /* */
+::method CreateCategoryDialog private external "LIBRARY oodialog catdlg_createCategoryDialog"
 
 ::method initDialog protected
    /* set the mark to the first radio button */
