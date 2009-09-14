@@ -361,8 +361,48 @@ int32_t checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self)
 
 int32_t resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self)
 {
-    uint32_t id;
+    uint32_t id = (uint32_t)-1;
     oodSafeResolveID(&id, c, self, rxID, -1, 1);
+    return (int)id;
+}
+
+/**
+ *  Resolves a resource ID used for the application icon to its numeric value.
+ *
+ *  This is the implementation for ResourceUtils::resolveIconID() which is
+ *  invoked to resolve the application icon IDs.  These IDs are special cased:
+ *
+ *  1.) -1, (a symbolic ID did not resolve) is changed to 0.  A 0 for the ID
+ *  tells the underlying code to use the default application icon.
+ *
+ *  2.) IDs from 1 to 4 have 10 added to them.  When the ability to use an
+ *  application icon was first added to ooDialog, the internal ooDialog icon
+ *  resources, which are available for the programmer to use, were documented as
+ *  having IDs of 1 through 4.  Only the symbolic ID should have been
+ *  documented, so that actual numeric ID can be changed without breaking any
+ *  existing code. The actual resource IDs have been changed to 11 through 14
+ *  and we need to adjust for that.
+ *
+ * @param c         Method context we are operating in.
+ * @param rxIconID  Resource ID, which may be symbolic
+ * @param self      The self object of the method context.
+ *
+ * @return int32_t
+ */
+int32_t resolveIconID(RexxMethodContext *c, RexxObjectPtr rxIconID, RexxObjectPtr self)
+{
+    uint32_t id = (uint32_t)-1;
+    oodSafeResolveID(&id, c, self, rxIconID, -1, 1);
+
+    if ( (int)id == -1 )
+    {
+        id = 0;
+    }
+    else if ( id >= 1 && id <= 4 )
+    {
+        id += 10;
+    }
+
     return (int)id;
 }
 

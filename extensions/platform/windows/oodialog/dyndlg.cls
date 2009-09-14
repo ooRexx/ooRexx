@@ -60,9 +60,6 @@
 ::method stop private external "LIBRARY oodialog dyndlg_stop"
 
 ::method create external "LIBRARY oodialog dyndlg_create"
-::method startParentDialog external "LIBRARY oodialog dyndlg_startParentDialog"
-::method startChildDialog external "LIBRARY oodialog dyndlg_startChildDialog"
-
 ::method createCenter
    arga = arg(1,"A")
    newarg = .array~new(arg()+2)
@@ -74,6 +71,11 @@
    newarg[1] = 0
    newarg[2] = 0
    forward message "create" Arguments (newarg)
+
+::method startParentDialog external "LIBRARY oodialog dyndlg_startParentDialog"
+::method startChildDialog external "LIBRARY oodialog dyndlg_startChildDialog"
+
+::method itemAdd private external "LIBRARY oodialog dyndlg_itemAdd_pvt"
 
 
    /* This method is provided to be used in any subclass of 'UserDialog' */
@@ -468,25 +470,25 @@
                self~addScrollBar(id, x, y, w, h, self~internGetRCStyle(style, "SB"))
 
             when class = 'WC_TREEVIEW' | class = '"SYSTREEVIEW32"' then
-               self~AddTreeControl(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "TREE"))
+               self~AddTreeControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "TREE"))
 
             when class = 'WC_LISTVIEW' | class = '"SYSLISTVIEW32"' then
-               self~AddListControl(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "LIST"))
+               self~AddListControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "LIST"))
 
             when class = 'PROGRESS_CLASS' | class = '"MSCTLS_PROGRESS32"' then
-               self~AddProgressBar(id, x, y, w, h, self~InternGetNewCtrlStyle(style, "PROGRESS"))
+               self~AddProgressBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "PROGRESS"))
 
             when class = 'TRACKBAR_CLASS' | class = '"MSCTLS_TRACKBAR32"' then
-               self~AddSliderControl(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "SLIDER"))
+               self~AddSliderControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "SLIDER"))
 
             when class = 'WC_TABCONTROL' | class = '"SYSTABCONTROL32"' then
-               self~AddTabControl(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "TAB"))
+               self~AddTabControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "TAB"))
 
             when class = 'DATETIMEPICK_CLASS' then
-               self~AddDateTimePicker(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "DTP"))
+               self~AddDateTimePicker(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "DTP"))
 
             when class = 'MONTHCAL_CLASS' then
-               self~AddMonthCalendar(id, name, x, y, w, h, self~InternGetNewCtrlStyle(style, "MONTH"))
+               self~AddMonthCalendar(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "MONTH"))
 
             otherwise do
                self~errorFile(f, s)
@@ -560,21 +562,6 @@
    f~close
    self~ProcessingLoad = 0
    return 0
-
-::method itemAdd
-   use arg id, staticId
-   if self~activePtr = 0 then return -2
-   if arg(2,'o') = 1 then do
-       id = self~checkID(id)
-       if id = -1 then return -1
-   end
-   else do
-       if staticId = 1 then id = self~checkID(id)
-       else id = self~getStaticID
-   end
-   self~dialogItemCount += 1
-   return id
-
 
    /* This method adds a push button to the dialog and connect it with */
    /* a message that will be rised if the butten is pushed. */
@@ -814,7 +801,7 @@
    if nob = 0 then my = y + oldy; else my = y
    newopts = opts~changestr("NOBORDER","")
    if cx \= 0 then len = cx-20
-   if arg(7,'o') = 1 then idstat = self~getStaticID(idstat)
+   if arg(7,'o') = 1 then idstat = self~getStaticID
 
    i = 0
    do while rb \= ""
@@ -851,7 +838,7 @@
       if cy = 0 then cy = size~height + 4
       if cx1 = 0 then cx1 = size~width + 4
    end
-   if arg(10,'o') = 1 then idstat = self~getStaticID(idstat)
+   if arg(10,'o') = 1 then idstat = self~getStaticID
    opts = self~getDefaultOpts(opts)
    ret = self~addText(x, y+2, cx1, cy, text, opts, idstat)
    if ret == 0 then ret = self~addEntryLine(id, fname, x+cx1+1, y, cx2, cy, opts)
@@ -876,7 +863,7 @@
       parse var inp rb inp
    end
    if cx1 = 0 then cx1 = ll+4
-   if arg(8,'o') = 1 then idstat = self~getStaticID(idstat)
+   if arg(8,'o') = 1 then idstat = self~getStaticID
    is = idstat
 
    s = self~getTextSizeDlg("Tg")
@@ -906,7 +893,7 @@
    s = self~getTextSizeDlg(text)
    cy = s~height + 4
    if cx1 = 0 then cx1 = s~width + 4
-   if arg(10,'o') = 1 then idstat = self~getStaticID(idstat)
+   if arg(10,'o') = 1 then idstat = self~getStaticID
    opts = self~getDefaultOpts(opts)
    ret = self~addText(x, y, cx1, cy, text, opts, idstat)
    if ret == 0 then return self~addComboBox(id, attname, x+cx1+2, y, cx2, cy*clines, opts)
@@ -929,7 +916,7 @@
    end
    if cx1 = 0 then cx1 = ll+4
 
-   if idstat = "IDSTAT" then idstat = self~getStaticID(idstat)
+   if idstat = "IDSTAT" then idstat = self~getStaticID
    is = idstat
    s = self~getTextSizeDlg("Tg")
    stepy = s~height
@@ -975,7 +962,7 @@
    end
    if var("max") = 0 | max = 0 then max = count
    if cxx = 0 & max \= 1 then cx = ll+20; else cx = cxx
-   if arg(8, 'o') = 1 then idstat = self~getStaticID(idstat)
+   if arg(8, 'o') = 1 then idstat = self~getStaticID
    s = self~getTextSizeDlg("Tg")
    stepx = s~width
    oldy = s~height
@@ -1050,19 +1037,19 @@
 ::method addOkCancelLeftTop
    return self~addButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
 
+::method addIconFile private external "LIBRARY oodialog dyndlg_addIconFile_pvt"
 ::method addIcon
    use strict arg id, fileName
    return self~addIconFile(id, fileName~strip~strip('B', '"'))
 
-::method addIconFile private external "LIBRARY oodialog dyndlg_addIconFile_pvt"
 
-::method getDefaultOpts protected
+::method getDefaultOpts private
    use strict arg opts
-   if opts == "" | opts == .NIL | opts == "OPTS" | opts == "OPTIONS" then return ""
+   if opts == "" | opts == .nil | opts == "OPTS" | opts == "OPTIONS" then return ""
    else return opts~translate
 
 
-::method getStaticID protected
+::method getStaticID private
    return -1
 
 
@@ -1082,4 +1069,186 @@
    return self~dlgHandle
 
 ::method stopDynamic private external "LIBRARY oodialog dyndlg_stopDynamic_pvt"
+
+
+::method getNamedCtrlStyle private
+   use arg style, kind
+   ret = ""
+   if style~wordpos("NOT WS_VISIBLE") > 0 then ret = "HIDDEN"
+   else if style~wordpos("WS_VISIBLE") > 0 then ret = "VISIBLE"
+   if style~wordpos("WS_DISABLED") > 0 & style~wordpos("NOT WS_DISABLED") == 0 then ret = ret || " DISABLED"
+   if kind = "TREE" then do
+      if style~wordpos("TVS_DISABLEDRAGDROP") > 0 then ret = ret || " NODRAG"
+      if style~wordpos("TVS_EDITLABELS") > 0 then ret = ret || " EDIT"
+      if style~wordpos("TVS_HASBUTTONS") > 0 then ret = ret || " BUTTONS"
+      if style~wordpos("TVS_HASLINES") > 0 then ret = ret || " LINES"
+      if style~wordpos("TVS_LINESATROOT") > 0 then ret = ret || " ATROOT"
+      if style~wordpos("TVS_SHOWSELALWAYS") > 0 then ret = ret || " SHOWSELALWAYS"
+      if style~wordpos("WS_BORDER") = 0 then ret = ret || " NOBORDER"
+   end
+   else if kind = "LIST" then do
+      if style~wordpos("LVS_EDITLABELS") > 0 then ret = ret || " EDIT"
+      if style~wordpos("LVS_SHOWSELALWAYS") > 0 then ret = ret || " SHOWSELALWAYS"
+      if style~wordpos("LVS_ALIGNLEFT") > 0 then ret = ret || " ALIGNLEFT"
+      if style~wordpos("LVS_ALIGNTOP") > 0 then ret = ret || " ALIGNTOP"
+      if style~wordpos("LVS_AUTOARRANGE") > 0 then ret = ret || " AUTOARRANGE"
+      if style~wordpos("LVS_ICON") > 0 then ret = ret || " ICON"
+      if style~wordpos("LVS_SMALLICON") > 0 then ret = ret || " SMALLICON"
+      if style~wordpos("LVS_LIST") > 0 then ret = ret || " LIST"
+      if style~wordpos("LVS_REPORT") > 0 then ret = ret || " REPORT"
+      if style~wordpos("LVS_NOCOLUMNHEADER") > 0 then ret = ret || " NOHEADER"
+      if style~wordpos("LVS_NOLABELWRAP") > 0 then ret = ret || " NOWRAP"
+      if style~wordpos("LVS_NOSCROLL") > 0 then ret = ret || " NOSCROLL"
+      if style~wordpos("LVS_NOSORTHEADER") > 0 then ret = ret || " NOSORTHEADER"
+      if style~wordpos("LVS_SHAREIMAGELISTS") > 0 then ret = ret || " SHAREIMAGES"
+      if style~wordpos("LVS_SINGLESEL") > 0 then ret = ret || " SINGLESEL"
+      if style~wordpos("LVS_SORTASCENDING") > 0 then ret = ret || " ASCENDING"
+      if style~wordpos("LVS_SORTDESCENDING") > 0 then ret = ret || " DESCENDING"
+      if style~wordpos("WS_BORDER") = 0 then ret = ret || " NOBORDER"
+   end
+   else if kind = "SLIDER" then do
+       if style~wordpos("TBS_AUTOTICKS") > 0 then ret = ret || " AUTOTICKS"
+       if style~wordpos("TBS_NOTICKS") > 0 then ret = ret || " NOTICKS"
+       if style~wordpos("TBS_VERT") > 0 then ret = ret || " VERTICAL"
+       if style~wordpos("TBS_HORZ") > 0 then ret = ret || " HORIZONTAL"
+       if style~wordpos("TBS_TOP") > 0 then ret = ret || " TOP"
+       if style~wordpos("TBS_BOTTOM") > 0 then ret = ret || " BOTTOM"
+       if style~wordpos("TBS_LEFT") > 0 then ret = ret || " LEFT"
+       if style~wordpos("TBS_RIGHT") > 0 then ret = ret || " RIGHT"
+       if style~wordpos("TBS_BOTH") > 0 then ret = ret || " BOTH"
+       if style~wordpos("TBS_ENABLESELRANGE") > 0 then ret = ret || " ENABLESELRANGE"
+       if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+   end
+   else if kind = "TAB" then do
+        if style~wordpos("WS_GROUP") > 0 then ret = ret || " GROUP"
+        if style~wordpos("TCS_BUTTONS") > 0 then ret = ret || " BUTTONS"
+        if style~wordpos("TCS_FIXEDWIDTH") > 0 then ret = ret || " FIXED"
+        if style~wordpos("TCS_FOCUSNEVER") > 0 then ret = ret || " FOCUSNEVER"
+        if style~wordpos("TCS_FOCUSONBUTTONDOWN") > 0 then ret = ret || " FOCUSONDOWN"
+        if style~wordpos("TCS_FORCEICONLEFT") > 0 then ret = ret || " ICONLEFT"
+        if style~wordpos("TCS_FORCELABELLEFT") > 0 then ret = ret || " LABELLEFT"
+        if style~wordpos("TCS_MULTILINE") > 0 then ret = ret || " MULTILINE"
+        if style~wordpos("TCS_RIGHTJUSTIFY") > 0 then ret = ret || " ALIGNRIGHT"
+        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+   end
+   else if kind = "PROGRESS" then do
+        if style~wordpos("PBS_VERTICAL") > 0 then ret = ret || " VERTICAL"
+        if style~wordpos("PBS_SMOOTH") > 0 then ret = ret || " SMOOTH"
+        if style~wordpos("PBS_MARQUEE") > 0 then ret = ret || " MARQUEE"
+        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+        if style~wordpos("WS_TABSTOP") > 0 then ret = ret || " TAB"
+   end
+   else if kind = "DTP" then do
+        if style~wordpos("DTS_APPCANPARSE") > 0 then ret = ret || " PARSE"
+        if style~wordpos("DTS_RIGHTALIGN;") > 0 then ret = ret || " RIGHT"
+        if style~wordpos("DTS_SHOWNONE;  ") > 0 then ret = ret || " NONE"
+        if style~wordpos("DTS_UPDOWN;    ") > 0 then ret = ret || " UPDOWN"
+        if style~wordpos("DTS_LONGDATEFORMAT") > 0 then ret = ret || " LONG"
+        if style~wordpos("DTS_SHORTDATEFORMAT") > 0 then ret = ret || " SHORT"
+        if style~wordpos("DTS_SHORTDATECENTURYFORMAT") > 0 then ret = ret || " CENTURY"
+        if style~wordpos("DTS_TIMEFORMAT") > 0 then ret = ret || " TIME"
+        if style~wordpos("WS_BORDER") > 0 then ret = ret || " BORDER"
+   end
+   else if kind = "MONTH" then do
+        if style~wordpos("MCS_DAYSTATE")  > 0 then ret = ret || " DAYSTATE"
+        if style~wordpos("MCS_MULTISELECT")  > 0 then ret = ret || " MULTI"
+        if style~wordpos("MCS_NOTODAY")  > 0 then ret = ret || " NOTODAY"
+        if style~wordpos("MCS_NOTODAYCIRCLE")  > 0 then ret = ret || " NOCIRCLE"
+        if style~wordpos("MCS_WEEKNUMBERS")  > 0 then ret = ret || " WEEKNUMBERS"
+        if style~wordpos("WS_BORDER")  > 0 then ret = ret || " BORDER"
+   end
+   if style~wordpos("WS_VSCROLL") > 0 then ret = ret || " VSCROLL"
+   if style~wordpos("WS_HSCROLL") > 0 then ret = ret || " HSCROLL"
+   if style~wordpos("WS_TABSTOP") = 0 then ret = ret || " NOTAB"
+   return ret
+
+
+::method addTreeControl
+   use arg id, attname, x, y, cx, cy, opts
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if arg(2,'o') = 1 then attname = "DATA"id
+   opts = self~getDefaultOpts(opts)
+   if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
+   self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
+   if self~autoDetect then do
+       return self~ConnectTreeControl(symbid, attname)
+   end
+   return 0
+
+::method addListControl
+   use arg id, attname, x, y, cx, cy, opts
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if arg(2,'o') = 1 then attname = "DATA"id
+   opts = self~getDefaultOpts(opts)
+   self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
+   if self~autoDetect then do
+       return self~ConnectListControl(symbid, attname)
+   end
+   return 0
+
+::method addProgressBar
+   use arg id, x, y, cx, cy, opts
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   opts = self~getDefaultOpts(opts)
+   self~activePtr = UsrAddNewCtrl("PROGRESS", self~activePtr, id, x, y, cx, cy, opts)
+   return 0
+
+::method addSliderControl
+   use arg id, attname, x, y, cx, cy, opts
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if arg(2,'o') = 1 then attname = "DATA"id
+   opts = self~getDefaultOpts(opts)
+   self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
+   if self~autoDetect then do
+       return self~ConnectSliderControl(symbid, attname)
+   end
+   return 0
+
+::method addTabControl
+   use arg id, attname, x, y, cx, cy, opts
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if arg(2,'o') = 1 then attname = "DATA"id
+   opts = self~getDefaultOpts(opts)
+   self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
+   if opts~wordpos("CAT") = 0 & self~autoDetect then do
+       return self~ConnectTabControl(symbid, attname)
+   end
+   return 0
+
+::method addDateTimePicker
+   use strict arg id, attributeName = "", x, y, cx, cy, opts = ""
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if attributeName = "" then attributeName = "DATA"id
+   opts = self~getDefaultOpts(opts)
+   self~activePtr = UsrAddNewCtrl("DTP", self~activePtr, id, x, y, cx, cy, opts)
+   if self~autoDetect then do
+      return self~connectDateTimePicker(symbid, attributeName)
+   end
+   return 0
+
+::method addMonthCalendar
+   use strict arg id, attributeName = "", x, y, cx, cy, opts
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if attributeName = "" then attributeName = "DATA"id
+   opts = self~getDefaultOpts(opts)
+   self~activePtr = UsrAddNewCtrl("MONTH", self~activePtr, id, x, y, cx, cy, opts)
+   if self~autoDetect then do
+      return self~connectMonthCalendar(symbid, attributeName)
+   end
+   return 0
+
 

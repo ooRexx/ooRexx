@@ -1335,6 +1335,11 @@ RexxMethod2(int32_t, rsrcUtils_resolveResourceID, RexxObjectPtr, rxID, OSELF, se
     return resolveResourceID(context, rxID, self);
 }
 
+RexxMethod2(int32_t, rsrcUtils_resolveIconID_pvt, RexxObjectPtr, rxID, OSELF, self)
+{
+    return resolveIconID(context, rxID, self);
+}
+
 /**
  *  Methods for the .Window class.
  */
@@ -2084,10 +2089,10 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
 }
 
 
-RexxMethod5(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
-            OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self)
+RexxMethod6(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
+            OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self, CSELF, pCSelf)
 {
-    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
     if ( pcpbd->dlgAdm == NULL )
     {
         return TheOneObj;
@@ -2116,7 +2121,7 @@ RexxMethod5(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL
         return TheOneObj;
     }
 
-    // Category is 0 for PlainBaseDialog and AdvancedControls.
+    // Category is 0 for all non-category dialogs;
     uint32_t category = 0;
 
     if ( context->IsOfType(self, "CATEGORYDIALOG") )

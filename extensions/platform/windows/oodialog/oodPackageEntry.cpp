@@ -178,6 +178,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_mapPixel2Du_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
 
+REXX_METHOD_PROTOTYPE(rsrcUtils_resolveIconID_pvt);
 REXX_METHOD_PROTOTYPE(rsrcUtils_resolveResourceID);
 REXX_METHOD_PROTOTYPE(rsrcUtils_idError);
 REXX_METHOD_PROTOTYPE(rsrcUtils_checkID);
@@ -250,6 +251,7 @@ REXX_METHOD_PROTOTYPE(dyndlg_create);
 REXX_METHOD_PROTOTYPE(dyndlg_startParentDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_startChildDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_addIconFile_pvt);
+REXX_METHOD_PROTOTYPE(dyndlg_itemAdd_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
 REXX_METHOD_PROTOTYPE(dyndlg_stopDynamic_pvt);
 
@@ -493,6 +495,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_handleToPointer_cls,  dlgutil_handleToPointer_cls),
     REXX_METHOD(dlgutil_test_cls,             dlgutil_test_cls),
 
+    REXX_METHOD(rsrcUtils_resolveIconID_pvt,  rsrcUtils_resolveIconID_pvt),
     REXX_METHOD(rsrcUtils_resolveResourceID,  rsrcUtils_resolveResourceID),
     REXX_METHOD(rsrcUtils_idError,            rsrcUtils_idError),
     REXX_METHOD(rsrcUtils_checkID,            rsrcUtils_checkID),
@@ -543,8 +546,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getTextSizeDlg,          pbdlg_getTextSizeDlg),
     REXX_METHOD(pbdlg_unInit,                  pbdlg_unInit),
 
-    REXX_METHOD(generic_connectControl,       generic_connectControl),
     REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
+    REXX_METHOD(generic_connectControl,       generic_connectControl),
 
     REXX_METHOD(userdlg_init,                 userdlg_init),
 
@@ -562,6 +565,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_startParentDialog,     dyndlg_startParentDialog),
     REXX_METHOD(dyndlg_startChildDialog,      dyndlg_startChildDialog),
     REXX_METHOD(dyndlg_addIconFile_pvt,       dyndlg_addIconFile_pvt),
+    REXX_METHOD(dyndlg_itemAdd_pvt,           dyndlg_itemAdd_pvt),
     REXX_METHOD(dyndlg_stop,                  dyndlg_stop),
     REXX_METHOD(dyndlg_stopDynamic_pvt,       dyndlg_stopDynamic_pvt),
 

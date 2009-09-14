@@ -169,6 +169,7 @@ extern bool       oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPt
 extern int32_t    checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    idError(RexxMethodContext *c, RexxObjectPtr rxID);
 extern int32_t    resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
+extern int32_t    resolveIconID(RexxMethodContext *c, RexxObjectPtr rxIconID, RexxObjectPtr self);
 
 extern DWORD      oodGetSysErrCode(RexxThreadContext *);
 extern void       oodSetSysErrCode(RexxThreadContext *, DWORD);

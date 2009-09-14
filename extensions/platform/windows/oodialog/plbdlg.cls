@@ -228,10 +228,11 @@
    self~processingLoad = 0
    ret = errorDialog("Error reading resource file:" f "("s")")
 
-::method checkID external "LIBRARY oodialog rsrcUtils_checkID"
 ::method idError private external "LIBRARY oodialog rsrcUtils_idError"
+::method resolveIconID private external "LIBRARY oodialog rsrcUtils_resolveIconID_pvt"
 ::method resolveSymbolicId unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
 ::method resolveResourceID unguarded external "LIBRARY oodialog rsrcUtils_resolveResourceID"
+::method checkID external "LIBRARY oodialog rsrcUtils_checkID"
 
 /**
  * Return the symbolic ID from the ConstDir that matches the numeric ID.
@@ -244,14 +245,6 @@
   symbol = self~constDir~index(numericID)
   if symbol == .nil then return -1
   else return symbol
-
-::method resolveIconID private
-  use strict arg icon
-
-  if \ icon~Datatype('W') then icon = self~resolveSymbolicId(icon)
-  if icon = -1 then icon = 0
-  else if icon >= 1, icon <= 4 then icon += 10
-  return icon
 
 ::method mergeSymbols
   use strict arg otherSymbolSrc
@@ -511,13 +504,20 @@
 /* and the dialog fields will be assigned in the same order they are  */
 /* called */
 
-::method ConnectEntryLine external "LIBRARY oodialog generic_connectControl"
-::method ConnectComboBox external "LIBRARY oodialog generic_connectControl"
-::method ConnectCheckBox external "LIBRARY oodialog generic_connectControl"
-::method ConnectRadioButton external "LIBRARY oodialog generic_connectControl"
-::method ConnectListBox external "LIBRARY oodialog generic_connectControl"
-::method ConnectMultiListBox external "LIBRARY oodialog generic_connectControl"
-::method ConnectSeparator external "LIBRARY oodialog generic_connectControl"
+::method connectEntryLine external "LIBRARY oodialog generic_connectControl"
+::method connectComboBox external "LIBRARY oodialog generic_connectControl"
+::method connectCheckBox external "LIBRARY oodialog generic_connectControl"
+::method connectRadioButton external "LIBRARY oodialog generic_connectControl"
+::method connectListBox external "LIBRARY oodialog generic_connectControl"
+::method connectMultiListBox external "LIBRARY oodialog generic_connectControl"
+::method connectSeparator external "LIBRARY oodialog generic_connectControl"
+
+::method connectTreeControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectListControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectSliderControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectTabControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectDateTimePicker unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectMonthCalendar unguarded external "LIBRARY oodialog generic_connectControl"
 
 ::method AddAttribute protected
    use arg id, attributeName

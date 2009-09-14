@@ -1394,6 +1394,81 @@ done_out:
 }
 
 
+/** DynamicDialog::itemAdd()  [private]
+ *
+ *  Provides a central function to do several needed things for each potential
+ *  dialog control to be added to the dialog template.
+ *
+ *  1.) Checks that template is still valid and returns -2 if not.
+ *
+ *  2.) If the control to be added must have a valid resource ID, resolves the
+ *  ID  and returns -1 if the ID can not be resolved.
+ *
+ *  3.) If the control to be added is one that often uses the static ID (-1),
+ *  resolves the resource ID, if one was specified, but uses the static ID if
+ *  the specified ID does not resolve.  If the resource ID was not specified,
+ *  just uses the static ID.
+ *
+ *  4.) After step 3, increments the dialog item count and returns the resource
+ *  ID to use when adding the control.
+ *
+ *  During the conversion to the C++ APIs, this method is needed.  Once the
+ *  conversion is finished, it can probaly go away.
+ */
+int32_t itemAdd(RexxMethodContext *c, pCDynamicDialog pcdd, RexxObjectPtr rxID, bool acceptStaticID, int shortCutID)
+{
+    // For normal dialogs, the base pointer is of course valid, for category
+    // dialogs it could already have been set to NULL.  The active pointer is
+    // what must be checked.
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id;
+    if ( ! acceptStaticID )
+    {
+        // checkID() will put up an error message box for any rxID it can not
+        // resolve.  But, it will resolve a static ID and return -1.  The
+        // control being added can not use a static ID, so we return -1.
+        id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
+        if ( id == -1 )
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        // The control being added can use a static ID, so we do not want an
+        // error message box put up if it can not be resolved, we just want to
+        // go with -1 if it does not resolve.
+        if ( shortCutID == -1 )
+        {
+            id = -1;
+        }
+        else
+        {
+            id = resolveResourceID(c, rxID, pcdd->pcpbd->rexxSelf);
+        }
+    }
+
+    pcdd->count++;
+    return id;
+}
+RexxMethod3(int32_t, dyndlg_itemAdd_pvt, RexxObjectPtr, rxID, OPTIONAL_logical_t, staticIDSpecified, CSELF, pCSelf)
+{
+    if ( argumentExists(2) )
+    {
+        if ( ! staticIDSpecified )
+        {
+            return itemAdd(context, (pCDynamicDialog)pCSelf, rxID, true, -1);
+        }
+        return itemAdd(context, (pCDynamicDialog)pCSelf, rxID, true, 0);
+    }
+    return itemAdd(context, (pCDynamicDialog)pCSelf, rxID, false, 0);
+}
+
+
 /** DynamicDialog::stop()  [private]
  */
 RexxMethod0(RexxObjectPtr, dyndlg_stop)

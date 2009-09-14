@@ -399,7 +399,6 @@
    self~PageHasChanged(oldPage, NewPage)
    return NewPage
 
-
 ::method PageHasChanged unguarded
    use arg Oldpage, NewPage
    return
@@ -411,20 +410,6 @@
 ::method NextPage unguarded
    oldPage = self~CurrentCategory
    if oldPage < self~catalog['count'] then self~ChangePage(oldPage+1)
-
-::method ConnectEntryLine external "LIBRARY oodialog generic_connectControl"
-::method ConnectComboBox external "LIBRARY oodialog generic_connectControl"
-::method ConnectCheckBox external "LIBRARY oodialog generic_connectControl"
-::method ConnectRadioButton external "LIBRARY oodialog generic_connectControl"
-::method ConnectListBox external "LIBRARY oodialog generic_connectControl"
-::method ConnectMultiListBox external "LIBRARY oodialog generic_connectControl"
-::method ConnectSeparator external "LIBRARY oodialog generic_connectControl"
-::method ConnectTreeControl external "LIBRARY oodialog generic_connectControl"
-::method ConnectListControl external "LIBRARY oodialog generic_connectControl"
-::method ConnectSliderControl external "LIBRARY oodialog generic_connectControl"
-::method ConnectTabControl external "LIBRARY oodialog generic_connectControl"
-::method connectDateTimePicker unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectMonthCalendar unguarded external "LIBRARY oodialog generic_connectControl"
 
 ::method BoxMessage unguarded private
    use arg category, id, msg, wP, lP
@@ -553,6 +538,21 @@
    return self~InsertCategoryListEntry(id, item, data, category)
 
 ::method SetCategoryListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
+
+::method connectEntryLine external "LIBRARY oodialog generic_connectControl"
+::method connectComboBox external "LIBRARY oodialog generic_connectControl"
+::method connectCheckBox external "LIBRARY oodialog generic_connectControl"
+::method connectRadioButton external "LIBRARY oodialog generic_connectControl"
+::method connectListBox external "LIBRARY oodialog generic_connectControl"
+::method connectMultiListBox external "LIBRARY oodialog generic_connectControl"
+::method connectSeparator external "LIBRARY oodialog generic_connectControl"
+
+::method connectTreeControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectListControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectSliderControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectTabControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectDateTimePicker unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectMonthCalendar unguarded external "LIBRARY oodialog generic_connectControl"
 
 
 ::method CategoryListAddDirectory unguarded
