@@ -79,12 +79,12 @@ This demo incorporates the following "features of ooRexx 3.2
         option.9  = 'Show an AskDialog - No button as the default'
         option.10 = 'Show a FileNameDialog'
         option.11 = 'Retrieve the handle to a window'
-        option.12 = 'Use ScreenSize To Return Screen Resolution'
+        option.12 = 'Use the .DlgUtil Class To Return Screen Resolution'
         option.13 = 'A Standard Timed Message (5 Seconds)'
         option.14 = 'An unTimed Message'
         option.15 = 'Stop The unTimed Message'
         option.16 = 'An Early Reply Timed Message'
-        option.17 = 'Query System Metrics'
+        option.17 = 'Use the .DlgUtil Class To Query System Metrics'
 
         max = 17
         ssdlg = .SingleSelection~new('Select A Demonstration','Public Routines Demonstration',option.,preselect,,max%2+1)
@@ -93,7 +93,7 @@ This demo incorporates the following "features of ooRexx 3.2
             do
                 preselect = op + 1
                 if preselect > max then preselect = 1
-                call ('OPTION'op)
+                call ('OPTION'op) ssdlg
             end
     end
 exit
@@ -251,11 +251,20 @@ Option11:
 return
 ----------------------------------------------------------------------------------------------------------------
 Option12:
-    ss = ScreenSize()
-    msg = 'Width In Dialog Units.:' ss[1]||.endOfLine||-
-          'Height In Dialog Units.:' ss[2]||.endOfLine||-
-          'Width In Pixels.:' ss[3]||.endOfLine||-
-          'Height In Pixels.:' ss[4]
+    use arg self
+
+    -- Dialog units only have meaning in relation to a specfic dialog because the units are dependent on the
+    -- font used by the dialog.  The screenSize() method of the .DlgUtil can accurately calculate the dialog
+    -- unit values for any dialog, if passed a reference to the dialog.
+
+    ss = .DlgUtil~screenSize('B', self)
+    tab = '09'x
+    msg = 'Dialog units are expressed as dialog units' || .endOfLine           ||-
+          'of' self 'dialog'                           || .endOfLine~copies(3) || -
+          'Width In Dialog Units: '  || tab || ss[1]   || .endOfLine ||-
+          'Height In Dialog Units:'  || tab || ss[2]   || .endOfLine ||-
+          'Width In Pixels: ' || tab || tab || ss[3]   || .endOfLine ||-
+          'Height In Pixels:' || tab || tab || ss[4]
     call InfoDialog msg
 return
 ----------------------------------------------------------------------------------------------------------------
@@ -282,13 +291,15 @@ return
 Option16:
 -- Total time will be the duration of the MSSleep - The TimeMessage will last only half the total duration
 --    call time 'r'
-    start_timeT = time('t')
+    startTime = time()
+    startTs = .TimeSpan~new(time('F'))
     msg = 'Processing Occurring - Please Wait - Processing Will Take Longer Than This Message'
     ret = timedMessage(msg,'A TimedMessage Early Reply', 5000, .true)
     ret = MSSleep(10000)
-    end_timeT = time('t')
-    call infoDialog 'Start TimeT..:' start_timeT '- End TimeT..:' end_timeT '- Duration..:' end_TimeT - start_TimeT 'Seconds'
---    call infoDialog 'Total Elasped Time..:' time('e')~trunc 'Seconds'
+    endTime = time()
+    endTS = .TimeSpan~new(time('F'))
+    msg = 'Start Time:' startTime '- End Time:' endTime '- Duration:' (endTS - startTS)~string~right(9)~strip('T', '0') 'Seconds'
+    call infoDialog msg
 return
 ----------------------------------------------------------------------------------------------------------------
 
@@ -308,9 +319,9 @@ Option17:
   SM_CMOUSEBUTTONS     = 43
   SM_MOUSEWHEELPRESENT = 19
 
-  countMonitors = SystemMetrics(SM_CMONITORS)
-  countMouseButtons = SystemMetrics(SM_CMOUSEBUTTONS)
-  haveMouseWheel = SystemMetrics(SM_MOUSEWHEELPRESENT)
+  countMonitors = .DlgUtil~getSystemMetrics(SM_CMONITORS)
+  countMouseButtons = .DlgUtil~getSystemMetrics(SM_CMOUSEBUTTONS)
+  haveMouseWheel = .DlgUtil~getSystemMetrics(SM_MOUSEWHEELPRESENT)
 
   if countMonitors <> -1 then
       l1 = "Attached Monitors:" tab || countMonitors"."      ||.endOfLine
@@ -346,10 +357,10 @@ Option17:
   SM_CYHSCROLL =  3
   SM_CYMENU    = 15
 
-  l5 = "Height of single line menu bar in pixels:"  tab SystemMetrics(SM_CYMENU)    || ".   " ||.endOfLine
-  l6 = "Width of title bar button in pixels:"       tab SystemMetrics(SM_CXSIZE)    || ".   " ||.endOfLine
-  l7 = "Width of vertical scroll bar in pixels:"    tab SystemMetrics(SM_CXVSCROLL) || ".   " ||.endOfLine
-  l8 = "Height of horizontal scroll bar in pixels:" tab SystemMetrics(SM_CYHSCROLL) || ".   " ||.endOfLine
+  l5 = "Height of single line menu bar in pixels:"  tab .DlgUtil~getSystemMetrics(SM_CYMENU)    || ".   " ||.endOfLine
+  l6 = "Width of title bar button in pixels:"       tab .DlgUtil~getSystemMetrics(SM_CXSIZE)    || ".   " ||.endOfLine
+  l7 = "Width of vertical scroll bar in pixels:"    tab .DlgUtil~getSystemMetrics(SM_CXVSCROLL) || ".   " ||.endOfLine
+  l8 = "Height of horizontal scroll bar in pixels:" tab .DlgUtil~getSystemMetrics(SM_CYHSCROLL) || ".   " ||.endOfLine
 
   msg = l1 || l2 || l3 || l4 || l5 || l6 || l7 || l8
   j = infoDialog(msg)
