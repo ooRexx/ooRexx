@@ -1026,16 +1026,16 @@
 
 
 ::method addOkCancelRightBottom
-   return self~addButtonGroup(self~sizeX-95, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
+   return self~addButtonGroup(self~sizeX-95, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method addOkCancelLeftBottom
-   return self~addButtonGroup(5, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
+   return self~addButtonGroup(5, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method addOkCancelRightTop
-   return self~addButtonGroup(self~sizeX-45, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
+   return self~addButtonGroup(self~sizeX-45, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, " DEFAULT")
 
 ::method addOkCancelLeftTop
-   return self~addButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "FIX DEFAULT")
+   return self~addButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "DEFAULT")
 
 ::method addIconFile private external "LIBRARY oodialog dyndlg_addIconFile_pvt"
 ::method addIcon

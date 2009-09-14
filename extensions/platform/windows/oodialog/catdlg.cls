@@ -275,15 +275,15 @@
    if (self~catalog['page']['btnwidth'] > 0) then
    do
       self~addButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
-         self~sizeY - 15,self~catalog['page']['btnwidth'],, "&Ok 1 OK &Cancel 2 CANCEL", 1, "FIX DEFAULT")
+         self~sizeY - 15,self~catalog['page']['btnwidth'],, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
       if self~Wizard = 1 then
          self~addButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
-                             ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
+                             ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
    else do
       self~addOkCancelRightBottom
       if self~Wizard = 1 then
-         self~addButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "FIX")
+         self~addButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
    self~addBlackFrame(0, self~sizeY - 20, self~sizeX, 1)
 
@@ -323,10 +323,7 @@
    use arg options
    if self~catalog['category'] = 0 then
    do
-      if arg(1,"o") = 1 | options = "OPTIONS" | options = .nil then options = "FIX";
-      else do
-          if options~wordpos("FIX") = 0 then options = options || " FIX"
-      end
+      if arg(1,"o") = 1 | options = "OPTIONS" | options = .nil then options = "";
    end
    else if arg(1,"o") = 1 | options = "OPTIONS" | options = .nil then options = ""
    return options~translate
