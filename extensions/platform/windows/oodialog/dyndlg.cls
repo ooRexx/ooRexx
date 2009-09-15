@@ -105,7 +105,7 @@
    return ret
 
 
-::method internGetRCStyle
+::method getRCStyle private
    use arg style, kind, spec_kind
    ret = ""
    if style~wordpos("NOT WS_VISIBLE") > 0 then ret = "HIDDEN"
@@ -222,11 +222,11 @@
    return ret
 
 
-::method internAddRCButton
+::method addRCButton private
    use arg id, x, y, w, h, name, style, lOpts
    id = self~checkID(id)
    if id < 0 then return
-   opts = self~internGetRCStyle(style, "BTN")
+   opts = self~getRCStyle(style, "BTN")
    self~dialogItemCount += 1
    self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, w, h, name, opts)
    if lOpts~wordpos("CONNECTBUTTONS") > 0 then do
@@ -235,9 +235,9 @@
    end
 
 
-::method internAddRC_RBCB
+::method addRC_RBCB private
    use arg id, x, y, w, h, name, style, lOpts, kind
-   opts = self~internGetRCStyle(style, "BTN", kind)
+   opts = self~getRCStyle(style, "BTN", kind)
    if (kind = "R" & lOpts~wordpos("CONNECTRADIOS") > 0) | lOpts~wordpos("CONNECTCHECKS") > 0 then
    do
       self~ConnectControl(id, "ID"||name~space(0)~changestr('&','')~changestr(':',''))
@@ -317,7 +317,7 @@
    parse var s prev dlg.style
    dlg.style = dlg.style~translate(" ", "|")
 
-   internopts = internopts || self~internGetRCStyle(dlg.style, "DLG")
+   internopts = internopts || self~getRCStyle(dlg.style, "DLG")
 
    s = f~linein; fl = fl -1
    do while s~wordpos("CAPTION ") = 0 & s~wordpos("FONT ") = 0 & fl > 0
@@ -407,18 +407,18 @@
          select
             when class = '"BUTTON"' then do
                if style~wordpos("BS_AUTORADIOBUTTON") > 0 | style~wordpos("BS_RADIOBUTTON") > 0 then
-                  self~internAddRC_RBCB(id, x, y, w, h, name, style, loadOptions, "R")
+                  self~addRC_RBCB(id, x, y, w, h, name, style, loadOptions, "R")
                else if style~wordpos("BS_AUTOCHECKBOX") > 0 | style~wordpos("BS_CHECKBOX") > 0 then
-                  self~internAddRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
+                  self~addRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
                else if style~wordpos("BS_GROUPBOX") > 0 then
-                  self~addGroupBox(x, y, w, h, name, self~internGetRCStyle(style, "GB"), id)
+                  self~addGroupBox(x, y, w, h, name, self~getRCStyle(style, "GB"), id)
                else if style~pos("BS_OWNERDRAW") = 0 & style~wordpos("BS_AUTO3STATE") > 0 then  /* if 3state is not ownerdrawn */
-                  self~internAddRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
-               else self~internAddRCButton(id, x, y, w, h, name, style, loadOptions)
+                  self~addRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
+               else self~addRCButton(id, x, y, w, h, name, style, loadOptions)
             end
 
             when class = '"STATIC"' | class = WC_STATIC then do
-               opts = self~internGetRCStyle(style, "ST")
+               opts = self~getRCStyle(style, "ST")
                select
                   when style~wordpos("SS_LEFT") > 0 then
                      self~addText(x, y, w, h, name, opts, id)
@@ -460,16 +460,16 @@
                end
             end
             when class = '"EDIT"' then
-               self~addEntryLine(id, name, x, y, w, h, self~internGetRCStyle(style, "EDIT"))
+               self~addEntryLine(id, name, x, y, w, h, self~getRCStyle(style, "EDIT"))
 
             when class = '"COMBOBOX"' then
-               self~addComboBox(id, name, x, y, w, h, self~internGetRCStyle(style, "CB"))
+               self~addComboBox(id, name, x, y, w, h, self~getRCStyle(style, "CB"))
 
             when class = '"LISTBOX"' then
-               self~addListBox(id, name, x, y, w, h, self~internGetRCStyle(style, "LB"))
+               self~addListBox(id, name, x, y, w, h, self~getRCStyle(style, "LB"))
 
             when class = '"SCROLLBAR"' then
-               self~addScrollBar(id, x, y, w, h, self~internGetRCStyle(style, "SB"))
+               self~addScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
 
             when class = 'WC_TREEVIEW' | class = '"SYSTREEVIEW32"' then
                self~AddTreeControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "TREE"))
@@ -510,15 +510,15 @@
             when type = "DEFPUSHBUTTON" | type = "PUSHBUTTON" then
             do
                if type~left(3) = ("DEF") then style = style || " | BS_DEFPUSHBUTTON"
-               self~internAddRCButton(id, x, y, w, h, name, style, loadOptions)
+               self~addRCButton(id, x, y, w, h, name, style, loadOptions)
             end
 
             when type = "EDITTEXT" then
-               self~addEntryLine(id, name, x, y, w, h, self~internGetRCStyle(style, "EDIT"))
+               self~addEntryLine(id, name, x, y, w, h, self~getRCStyle(style, "EDIT"))
 
             when type = "LTEXT" | type = "CTEXT" | type = "RTEXT" then
             do
-               opts = self~internGetRCStyle(style, "ST")
+               opts = self~getRCStyle(style, "ST")
                if type = "CTEXT" then opts = opts || " CENTER";
                else if type = "RTEXT" then opts = opts || " RIGHT";
                else if style~wordpos("SS_LEFTNOWORDWRAP") > 0 then opts = opts || " LEFTNOWRAP";
@@ -526,33 +526,33 @@
             end
 
             when type = "ICON" then do
-               opts = self~internGetRCStyle(style, "ST")
+               opts = self~getRCStyle(style, "ST")
                self~addImage(id, x, y, w, h, "ICON " || opts)
             end
 
             when type = "GROUPBOX" then
-               self~addGroupBox(x, y, w, h, name, self~internGetRCStyle(style, "GB"), id)
+               self~addGroupBox(x, y, w, h, name, self~getRCStyle(style, "GB"), id)
 
             when type = "COMBOBOX" then
-               self~addComboBox(id, name, x, y, w, h, self~internGetRCStyle(style, "CB"))
+               self~addComboBox(id, name, x, y, w, h, self~getRCStyle(style, "CB"))
 
             when type = "LISTBOX" then
-               self~addListBox(id, name, x, y, w, h, self~internGetRCStyle(style, "LB"))
+               self~addListBox(id, name, x, y, w, h, self~getRCStyle(style, "LB"))
 
             when type = "SCROLLBAR" then
-               self~addScrollBar(id, x, y, w, h, self~internGetRCStyle(style, "SB"))
+               self~addScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
 
             when type = "AUTORADIOBUTTON" | type = "RADIOBUTTON" then
-               self~internAddRC_RBCB(id, x, y, w, h, name, style, loadOptions, "R")
+               self~addRC_RBCB(id, x, y, w, h, name, style, loadOptions, "R")
 
             when type = "AUTOCHECKBOX" | type = "CHECKBOX" then
-               self~internAddRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
+               self~addRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
 
             when type = "AUTO3STATE" then
                if style~pos("BS_OWNERDRAW") > 0 then   /* sometimes AUTO3STATE is used for an owner draw button */
-                   self~internAddRCButton(id, x, y, w, h, name, style, loadOptions, "C")  /* if so, treat as normal button */
+                   self~addRCButton(id, x, y, w, h, name, style, loadOptions, "C")  /* if so, treat as normal button */
                else  /* otherwise (not owner drawn) treat as 3state */
-                   self~internAddRC_RBCB(id, x, y, w, h, name, style || " | BS_AUTO3STATE", loadOptions, "C")
+                   self~addRC_RBCB(id, x, y, w, h, name, style || " | BS_AUTO3STATE", loadOptions, "C")
 
             otherwise do
                self~errorFile(f, s)
