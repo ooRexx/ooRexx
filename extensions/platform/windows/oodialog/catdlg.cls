@@ -317,16 +317,6 @@
 ::method InitCategories protected
    return
 
-   /* */
-
-::method getDefaultOpts protected
-   use arg options
-   if self~catalog['category'] = 0 then
-   do
-      if arg(1,"o") = 1 | options = "OPTIONS" | options = .nil then options = "";
-   end
-   else if arg(1,"o") = 1 | options = "OPTIONS" | options = .nil then options = ""
-   return options~translate
 
    /* This method returs the currently selected page. Return value 1 means */
    /* the first page is selected. */

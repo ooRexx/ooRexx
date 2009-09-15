@@ -45,6 +45,8 @@
 
 ::class 'DynamicDialog' Mixinclass Object public
 
+::constant STATIC_ID  -1
+
 ::method init class external "LIBRARY oodialog dyndlg_init_cls"
 
 ::attribute basePtr get private external "LIBRARY oodialog dyndlg_getBasePtr"
@@ -571,7 +573,7 @@
    use strict arg id, x, y, cx, cy, text = "", msgToRise = "", options = ""
    id = self~itemAdd(id)
    if id < 0 then return id
-   options = self~getDefaultOpts(options)
+   options = options~translate
    self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, cx, cy, text, options)
    if arg(7, 'O') then return 0
 
@@ -580,10 +582,10 @@
    else return 1
 
 ::method addGroupBox
-   use arg x, y, cx, cy, text = "", opts, id
+   use arg x, y, cx, cy, text = "", opts = "", id
    id = self~itemAdd(id, \(arg(7,"o") | id = "ID"))
    if id = -2 then return id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddControl("GB",self~activePtr, x, y, cx, cy, opts, text, id)
    return 0
 
@@ -591,7 +593,7 @@
 ::method addStatic
    use strict arg id = (-1), x, y, cx = 0, cy = 0, opts = "TEXT", text = ""
    argA = .array~new
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    argA[1] = x
    argA[2] = y
    argA[3] = cx
@@ -606,15 +608,15 @@
         forward message "addImage"
      end
 
-     when opts~wordpos("WHITERECT") > 0 then return self~internAddStatic(argA, 0)
-     when opts~wordpos("GRAYRECT") > 0 then return self~internAddStatic(argA, 1)
-     when opts~wordpos("BLACKRECT") > 0 then return self~internAddStatic(argA, 2)
-     when opts~wordpos("WHITEFRAME") > 0 then return self~internAddStatic(argA, 3)
-     when opts~wordpos("GRAYFRAME") > 0 then return self~internAddStatic(argA, 4)
-     when opts~wordpos("BLACKFRAME") > 0 then return self~internAddStatic(argA, 5)
-     when opts~wordpos("ETCHED") > 0 then return self~internAddStatic(argA, 6)
-     when opts~wordpos("HORZ") > 0 then return self~internAddStatic(argA, 7)
-     when opts~wordpos("VERT") > 0 then return self~internAddStatic(argA, 8)
+     when opts~wordpos("WHITERECT") > 0 then return self~addSimpleStatic(argA, 0)
+     when opts~wordpos("GRAYRECT") > 0 then return self~addSimpleStatic(argA, 1)
+     when opts~wordpos("BLACKRECT") > 0 then return self~addSimpleStatic(argA, 2)
+     when opts~wordpos("WHITEFRAME") > 0 then return self~addSimpleStatic(argA, 3)
+     when opts~wordpos("GRAYFRAME") > 0 then return self~addSimpleStatic(argA, 4)
+     when opts~wordpos("BLACKFRAME") > 0 then return self~addSimpleStatic(argA, 5)
+     when opts~wordpos("ETCHED") > 0 then return self~addSimpleStatic(argA, 6)
+     when opts~wordpos("HORZ") > 0 then return self~addSimpleStatic(argA, 7)
+     when opts~wordpos("VERT") > 0 then return self~addSimpleStatic(argA, 8)
 
      otherwise return self~addText(x, y, cx, cy, text, opts, id)
    end
@@ -624,7 +626,7 @@
    use strict arg id, x, y, cx, cy, options = ""
    id = self~itemAdd(id)
    if id < 0 then return id
-   options = self~getDefaultOpts(options)
+   options = options~translate
    self~activePtr = UsrAddControl("IMG", self~activePtr, id, x, y, cx, cy, options)
    return 0
 
@@ -638,47 +640,48 @@
    end
    id = self~itemAdd(id, 1)
    if id = -2 then return id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddControl("TXT", self~activePtr, x, y, cx, cy, opts, text, id)
    return 0
 
 ::method addWhiteRect
-   return self~internAddStatic(arg(1,"A"), 0)
+   return self~addSimpleStatic(arg(1,"A"), 0)
 
 ::method addGrayRect
-   return self~internAddStatic(arg(1,"A"), 1)
+   return self~addSimpleStatic(arg(1,"A"), 1)
 
 ::method addBlackRect
-   return self~internAddStatic(arg(1,"A"), 2)
+   return self~addSimpleStatic(arg(1,"A"), 2)
 
 ::method addWhiteFrame
-   return self~internAddStatic(arg(1,"A"), 3)
+   return self~addSimpleStatic(arg(1,"A"), 3)
 
 ::method addGrayFrame
-   return self~internAddStatic(arg(1,"A"), 4)
+   return self~addSimpleStatic(arg(1,"A"), 4)
 
 ::method addBlackFrame
-   return self~internAddStatic(arg(1,"A"), 5)
+   return self~addSimpleStatic(arg(1,"A"), 5)
 
 ::method addEtchedFrame
-   return self~internAddStatic(arg(1,"A"), 6)
+   return self~addSimpleStatic(arg(1,"A"), 6)
 
 ::method addEtchedHorizontal
-   return self~internAddStatic(arg(1,"A"), 7)
+   return self~addSimpleStatic(arg(1,"A"), 7)
 
 ::method addEtchedVertical
-   return self~internAddStatic(arg(1,"A"), 8)
+   return self~addSimpleStatic(arg(1,"A"), 8)
 
-::method internAddStatic private
+::method addSimpleStatic private
    use arg arga, type
    if arga~hasindex(6) = 0 then id = self~itemAdd(-1, 0); else id = self~itemAdd(arga[6],1)
    if id = -2 then return id
-   opts = self~getDefaultOpts(arga[5])
+   if arga~hasindex(5) = 0 then arga[5] = ""
+   opts = arga[5]~translate
    self~activePtr = UsrAddControl("FRM", self~activePtr, arga[1], arga[2], arga[3], arga[4], type, opts, id)
    return 0
 
 ::method addEntryLine
-   use arg id, fname, x, y, cx, cy, opts
+   use arg id, fname, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
@@ -688,7 +691,7 @@
       size = self~getTextSizeDlg("Tg")
       cy = size~height + 4
    end
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddControl("EL", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then return self~ConnectEntryLine(symbid, fname)
    else return 0
@@ -702,12 +705,12 @@
 
 
 ::method addListBox
-   use arg id, fname, x, y, cx, cy, opts
+   use arg id, fname, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then fname = "DATA"id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddControl("LB", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
       if opts~wordpos("MULTI") > 0 then ret = self~ConnectMultiListBox(symbid, fname)
@@ -717,19 +720,19 @@
 
 
 ::method addComboBox
-   use arg id, fname, x, y, cx, cy, opts
+   use arg id, fname, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then fname = "DATA"id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddControl("CB", self~activePtr, id, x, y, cx, cy, opts)
    if opts~wordpos("CAT") = 0 & self~autoDetect then return self~ConnectComboBox(symbid, fname, opts)
    else return 0
 
 
 ::method addCheckBox
-   use arg id, fname, x, y, cx, cy, text, opts
+   use arg id, fname, x, y, cx, cy, text, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
@@ -741,14 +744,14 @@
       if cx = 0 then cx = size~width + 12
       if cy = 0 then cy = size~height
    end
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddControl("CH", self~activePtr, id, x, y, cx, cy, text, opts)
    if self~autoDetect then return self~ConnectCheckBox(symbid, fname)
    else return 0
 
 
 ::method addRadioButton
-   use arg id, fname, x, y, cx, cy, text, opts
+   use arg id, fname, x, y, cx, cy, text, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
@@ -760,33 +763,35 @@
       if cx=0 then cx=size~width + 12
       if cy=0 then cy=size~height
    end
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddControl("RB", self~activePtr, id, x, y, cx, cy, text, opts)
    if opts~wordpos("CAT") = 0 & self~autoDetect then return self~ConnectRadioButton(symbid, fname)
    else return 0
 
 
 ::method addScrollBar
-   use arg id, x, y, cx, cy, opts
+   use arg id, x, y, cx, cy, opts = ""
    id = self~itemAdd(id)
    if id < 0 then return id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddControl("SB", self~activePtr, id, x, y, cx, cy, opts)
    return 0
 
 
 ::method addRadioGroup
    arr = arg(1,"A")
+   if \ arr~hasindex(6) then arr[6] = ""
    arr[8] = "R"
-   forward message "internAddRBCBGroup" Arguments (arr)
+   forward message "addRBCBGroup" Arguments (arr)
 
 ::method addCheckGroup
    arr = arg(1,"A")
+   if \ arr~hasindex(6) then arr[6] = ""
    arr[8] = "C"
-   forward message "internAddRBCBGroup" Arguments (arr)
+   forward message "addRBCBGroup" Arguments (arr)
 
-::method internAddRBCBGroup
-   use arg startid, x, y, cx, inp, opts, idstat, kind
+::method addRBCBGroup private
+   use arg startid, x, y, cx, inp, opts = "", idstat, kind
 
    if self~activePtr = 0 then return -2
    if self~checkID(startid) = -1 then return
@@ -796,12 +801,12 @@
    len = size~width
    stepy = size~height
    lastlen = len; oldy = stepy; stepy = trunc(stepy * 1.5)
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    nob = opts~wordpos("NOBORDER")
    if nob = 0 then my = y + oldy; else my = y
    newopts = opts~changestr("NOBORDER","")
    if cx \= 0 then len = cx-20
-   if arg(7,'o') = 1 then idstat = self~getStaticID
+   if arg(7,'o') = 1 then idstat = self~STATIC_ID
 
    i = 0
    do while rb \= ""
@@ -827,7 +832,7 @@
 
 
 ::method addInput
-   use arg id, fname, x, y, cx1, cx2, cy, text, opts, idstat
+   use arg id, fname, x, y, cx1, cx2, cy, text, opts = "", idstat
    if self~activePtr = 0 then return -2
    if self~checkID(id) = -1 then return
    if arg(2,'o') = 1 then fname = text
@@ -838,15 +843,15 @@
       if cy = 0 then cy = size~height + 4
       if cx1 = 0 then cx1 = size~width + 4
    end
-   if arg(10,'o') = 1 then idstat = self~getStaticID
-   opts = self~getDefaultOpts(opts)
+   if arg(10,'o') = 1 then idstat = self~STATIC_ID
+   opts = opts~translate
    ret = self~addText(x, y+2, cx1, cy, text, opts, idstat)
    if ret == 0 then ret = self~addEntryLine(id, fname, x+cx1+1, y, cx2, cy, opts)
    return ret
 
 
 ::method addInputGroup
-   use arg startid, x, y, cx1, cx2, inp, opts, idstat
+   use arg startid, x, y, cx1, cx2, inp, opts = "", idstat
    parse var inp rb inp
 
    if self~activePtr = 0 then return -2
@@ -863,12 +868,12 @@
       parse var inp rb inp
    end
    if cx1 = 0 then cx1 = ll+4
-   if arg(8,'o') = 1 then idstat = self~getStaticID
+   if arg(8,'o') = 1 then idstat = self~STATIC_ID
    is = idstat
 
    s = self~getTextSizeDlg("Tg")
    stepy = s~height
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    nob = opts~wordpos("NOBORDER")
    if nob = 0 then my = y + trunc(stepy * 1.25); else my = y
    newopts = opts~changestr("NOBORDER", "")
@@ -882,7 +887,7 @@
 
 
 ::method addComboInput
-   use arg id, attname, x, y, cx1, cx2, clines, text, opts, idstat
+   use arg id, attname, x, y, cx1, cx2, clines, text, opts = "", idstat
 
    if self~activePtr = 0 then return -2
    if self~checkID(id) = -1 then return
@@ -893,15 +898,15 @@
    s = self~getTextSizeDlg(text)
    cy = s~height + 4
    if cx1 = 0 then cx1 = s~width + 4
-   if arg(10,'o') = 1 then idstat = self~getStaticID
-   opts = self~getDefaultOpts(opts)
+   if arg(10,'o') = 1 then idstat = self~STATIC_ID
+   opts = opts~translate
    ret = self~addText(x, y, cx1, cy, text, opts, idstat)
    if ret == 0 then return self~addComboBox(id, attname, x+cx1+2, y, cx2, cy*clines, opts)
    else return 0
 
 
 ::method addInputStem
-   use arg startid, x, y, cx1, cx2, inp., opts, idstat
+   use arg startid, x, y, cx1, cx2, inp., opts = "", idstat
 
    if self~activePtr = 0 then return -2
    if self~checkID(startid)= -1 then return
@@ -916,12 +921,12 @@
    end
    if cx1 = 0 then cx1 = ll+4
 
-   if idstat = "IDSTAT" then idstat = self~getStaticID
+   if idstat = "IDSTAT" then idstat = self~STATIC_ID
    is = idstat
    s = self~getTextSizeDlg("Tg")
    stepy = s~height
 
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    nob = opts~wordpos("NOBORDER")
    if nob = 0 then my = y + trunc(stepy * 1.25); else my = y
    newopts = opts~changestr("NOBORDER", "")
@@ -937,15 +942,17 @@
 ::method addCheckBoxStem
    arr = arg(1,"A")
    arr[11] = "C"
-   forward message "internAddRBCBStem" Arguments (arr)
+   if \ arr~hasindex(7) then arr[7] = ""
+   forward message "addRBCBStem" Arguments (arr)
 
 ::method addRadioStem
    arr = arg(1,"A")
    arr[11] = "R"
-   forward message "internAddRBCBStem" Arguments (arr)
+   if \ arr~hasindex(7) then arr[7] = ""
+   forward message "addRBCBStem" Arguments (arr)
 
-::method internAddRBCBStem private
-   use arg startid, x, y, cxx, inp., max, opts, idstat, fn, fs, kind
+::method addRBCBStem private
+   use arg startid, x, y, cxx, inp., max, opts = "", idstat, fn, fs, kind
    -- Note that font name and font size (fn, fs) are no longer used.  They are
    -- here for backwards compatibility.
 
@@ -962,12 +969,12 @@
    end
    if var("max") = 0 | max = 0 then max = count
    if cxx = 0 & max \= 1 then cx = ll+20; else cx = cxx
-   if arg(8, 'o') = 1 then idstat = self~getStaticID
+   if arg(8, 'o') = 1 then idstat = self~STATIC_ID
    s = self~getTextSizeDlg("Tg")
    stepx = s~width
    oldy = s~height
    mx = 0; highy = 0
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    nob = opts~wordpos("NOBORDER")
    if nob = 0 then do
       stepy = trunc(oldy * 1.5)
@@ -1002,7 +1009,7 @@
 
 
 ::method addButtonGroup
-   use arg x, y, cx, cy, inp, bottom, opts
+   use arg x, y, cx, cy, inp, bottom, opts = ""
    parse var inp bt bid bfnk newinp
 
    if self~activePtr = 0 then return -2
@@ -1010,7 +1017,7 @@
    if cx = 0 | arg(3,"o") = 1 then cx = 40
    if cy = 0 | arg(4,"o") = 1 then cy = 12
 
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    do while bt \= ""
       if bt~pos("'") > 0 then parse var inp "'"bt"'" bid bfnk newinp
       else if bt~pos('"') > 0 then parse var inp '"'bt'"' bid bfnk newinp
@@ -1041,17 +1048,6 @@
 ::method addIcon
    use strict arg id, fileName
    return self~addIconFile(id, fileName~strip~strip('B', '"'))
-
-
-::method getDefaultOpts private
-   use strict arg opts
-   if opts == "" | opts == .nil | opts == "OPTS" | opts == "OPTIONS" then return ""
-   else return opts~translate
-
-
-::method getStaticID private
-   return -1
-
 
 ::method startIt
    use arg icon = 0, modeless = .false
@@ -1164,12 +1160,12 @@
 
 
 ::method addTreeControl
-   use arg id, attname, x, y, cx, cy, opts
+   use arg id, attname, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then attname = "DATA"id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
    self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
@@ -1178,12 +1174,12 @@
    return 0
 
 ::method addListControl
-   use arg id, attname, x, y, cx, cy, opts
+   use arg id, attname, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then attname = "DATA"id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
        return self~ConnectListControl(symbid, attname)
@@ -1191,21 +1187,21 @@
    return 0
 
 ::method addProgressBar
-   use arg id, x, y, cx, cy, opts
+   use arg id, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddNewCtrl("PROGRESS", self~activePtr, id, x, y, cx, cy, opts)
    return 0
 
 ::method addSliderControl
-   use arg id, attname, x, y, cx, cy, opts
+   use arg id, attname, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then attname = "DATA"id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
        return self~ConnectSliderControl(symbid, attname)
@@ -1213,12 +1209,12 @@
    return 0
 
 ::method addTabControl
-   use arg id, attname, x, y, cx, cy, opts
+   use arg id, attname, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
    if arg(2,'o') = 1 then attname = "DATA"id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
    if opts~wordpos("CAT") = 0 & self~autoDetect then do
        return self~ConnectTabControl(symbid, attname)
@@ -1231,7 +1227,7 @@
    id = self~itemAdd(id)
    if id < 0 then return id
    if attributeName = "" then attributeName = "DATA"id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddNewCtrl("DTP", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
       return self~connectDateTimePicker(symbid, attributeName)
@@ -1239,12 +1235,12 @@
    return 0
 
 ::method addMonthCalendar
-   use strict arg id, attributeName = "", x, y, cx, cy, opts
+   use strict arg id, attributeName = "", x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
    if attributeName = "" then attributeName = "DATA"id
-   opts = self~getDefaultOpts(opts)
+   opts = opts~translate
    self~activePtr = UsrAddNewCtrl("MONTH", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
       return self~connectMonthCalendar(symbid, attributeName)

@@ -392,11 +392,11 @@
 -- is pushed.  The empty string signals the implementing code to skip adding a
 -- method to the message table.
 ::method addBitmapButton
-   use arg id, x, y, cx = 0, cy = 0, text = "", fnk = "", bmp, focus = "", sel = "", disabl = "", opts
+   use arg id, x, y, cx = 0, cy = 0, text = "", fnk = "", bmp, focus = "", sel = "", disabl = "", opts = ""
    if self~activePtr = 0 then return -2
    id = self~checkID(id)
    if  id = -1 then return
-   opts = self~getDefaultOpts(opts) || " OWNER"
+   opts = opts~translate || " OWNER"
    if focus = "" & sel = "" & opts~wordpos("FRAME") = 0 & opts~wordpos("TAB") = 0 then opts = opts || " NOTAB"
 
    self~dialogItemCount += 1
