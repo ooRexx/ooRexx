@@ -91,7 +91,7 @@
    self~loadapp("oovideo.rex")
 
 ::method pet
-   self~loadapp("oopet.rex")
+   self~loadapp("oopet.rex", 3000)
 
 ::method phil
    self~loadapp("oophil.rex")
@@ -100,13 +100,13 @@
    self~loadapp("oowalker.rex")
 
 ::method bandit
-   self~loadapp("oobandit.rex")
+   self~loadapp("oobandit.rex", 3300)
 
 ::method graphd
-   self~loadapp("oograph.rex")
+   self~loadapp("oograph.rex", 3000)
 
 ::method user
-   self~loadapp("oostddlg.rex")
+   self~loadapp("oostddlg.rex", 2800)
 
 ::method category
    self~loadapp("ooticket.rex")
@@ -140,9 +140,9 @@
    return 0
 
 ::method loadapp
-   use arg appname
+   use arg appname, pauseTime = 2000
    ret = Play("start.wav", "yes")
-   d = .TimedMessage~new("Application will be started, please wait","Samples", 1000)
+   d = .TimedMessage~new("Application will be started, please wait","Samples", pauseTime)
    d~execute
    /* save current directory */
    curDir = Directory()
