@@ -222,19 +222,6 @@
    return ret
 
 
-::method addRCButton private
-   use arg id, x, y, w, h, name, style, lOpts
-   id = self~checkID(id)
-   if id < 0 then return
-   opts = self~getRCStyle(style, "BTN")
-   self~dialogItemCount += 1
-   self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, w, h, name, opts)
-   if lOpts~wordpos("CONNECTBUTTONS") > 0 then do
-      methName = name~space(0)~changestr('&','')~changestr(':','')~strip
-      if methName \== "" then self~ConnectButton(id, methName)
-   end
-
-
 ::method addRC_RBCB private
    use arg id, x, y, w, h, name, style, lOpts, kind
    opts = self~getRCStyle(style, "BTN", kind)
@@ -414,7 +401,9 @@
                   self~addGroupBox(x, y, w, h, name, self~getRCStyle(style, "GB"), id)
                else if style~pos("BS_OWNERDRAW") = 0 & style~wordpos("BS_AUTO3STATE") > 0 then  /* if 3state is not ownerdrawn */
                   self~addRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
-               else self~addRCButton(id, x, y, w, h, name, style, loadOptions)
+               else do
+                  self~addButton(id, x, y, w, h, name, , self~getRCStyle(style, "BTN"), loadOptions)
+               end
             end
 
             when class = '"STATIC"' | class = WC_STATIC then do
@@ -510,7 +499,7 @@
             when type = "DEFPUSHBUTTON" | type = "PUSHBUTTON" then
             do
                if type~left(3) = ("DEF") then style = style || " | BS_DEFPUSHBUTTON"
-               self~addRCButton(id, x, y, w, h, name, style, loadOptions)
+               self~addButton(id, x, y, w, h, name, , self~getRCStyle(style, "BTN"), loadOptions)
             end
 
             when type = "EDITTEXT" then
@@ -548,12 +537,17 @@
             when type = "AUTOCHECKBOX" | type = "CHECKBOX" then
                self~addRC_RBCB(id, x, y, w, h, name, style, loadOptions, "C")
 
-            when type = "AUTO3STATE" then
-               if style~pos("BS_OWNERDRAW") > 0 then   /* sometimes AUTO3STATE is used for an owner draw button */
-                   self~addRCButton(id, x, y, w, h, name, style, loadOptions, "C")  /* if so, treat as normal button */
-               else  /* otherwise (not owner drawn) treat as 3state */
+            when type = "AUTO3STATE" then do
+               -- Sometimes AUTO3STATE is used for an owner draw button.
+               if style~pos("BS_OWNERDRAW") > 0 then do
+                   -- With the owner draw flag, treat as a regular button.
+                  self~addButton(id, x, y, w, h, name, , self~getRCStyle(style, "BTN"), loadOptions)
+               end
+               else do
+                   -- Otherwise, (no owner draw flag,) treat as 3state.
                    self~addRC_RBCB(id, x, y, w, h, name, style || " | BS_AUTO3STATE", loadOptions, "C")
-
+               end
+            end
             otherwise do
                self~errorFile(f, s)
                return 1
@@ -565,21 +559,23 @@
    self~ProcessingLoad = 0
    return 0
 
-   /* This method adds a push button to the dialog and connect it with */
-   /* a message that will be rised if the butten is pushed. */
-   /* argument 'options' can be one of: */
+::method addButton external "LIBRARY oodialog dyndlg_addButton"
 
-::method addButton
-   use strict arg id, x, y, cx, cy, text = "", msgToRise = "", options = ""
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   options = options~translate
-   self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, cx, cy, text, options)
-   if arg(7, 'O') then return 0
+-- This method adds a bitmap button and optionally connects a method with to the
+-- button.  The given bitmap(s) will be drawn on the face of the button to
+-- indicate the different button states.  The optional msgToRaise arg can be the
+-- name of a method to invoke when the button is pushed.  The empty string
+-- signals the implementing code to skip adding a method to the message table
+-- and just add the bitmaps.
+::method addBitmapButton
+   use arg id, x, y, cx = 0, cy = 0, text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = "", opts = ""
+   if \ self~hasMethod('CONNECTBITMAPBUTTON') then return -3
+   opts = opts~translate || " OWNER"
+   if focus = "" & sel = "" & opts~wordpos("FRAME") = 0 & opts~wordpos("TAB") = 0 then opts = opts || " NOTAB"
+   ret = self~addButton(id, x, y, cx, cy, text, , opts)
+   if ret <> 0 then return ret
+   return self~connectBitmapButton(id, msgToRaise~space(0), bmp, focus, sel, disabl, opts)
 
-   methName = msgToRise~space(0)
-   if methName \== '' then return self~connectButton(id, methName)
-   else return 1
 
 ::method addGroupBox
    use arg x, y, cx, cy, text = "", opts = "", id

@@ -386,23 +386,6 @@
    use arg hBitmap
    return LoadRemoveBitmap(self~adm, hBitmap, "REMOVE")
 
--- This method adds a bitmap button and optionally connects a method with a push
--- button.  The given bitmap(s) will be shown instead of a push button.  The
--- optional msgToRise arg can be the name of a method to invoke when the button
--- is pushed.  The empty string signals the implementing code to skip adding a
--- method to the message table.
-::method addBitmapButton
-   use arg id, x, y, cx = 0, cy = 0, text = "", fnk = "", bmp, focus = "", sel = "", disabl = "", opts = ""
-   if self~activePtr = 0 then return -2
-   id = self~checkID(id)
-   if  id = -1 then return
-   opts = opts~translate || " OWNER"
-   if focus = "" & sel = "" & opts~wordpos("FRAME") = 0 & opts~wordpos("TAB") = 0 then opts = opts || " NOTAB"
-
-   self~dialogItemCount += 1
-   self~activePtr = UsrAddControl("BUT", self~activePtr, id, x, y, cx, cy, text, opts)
-   return self~connectBitmapButton(id, fnk~space(0), bmp, focus, sel, disabl, opts)
-
 
 -- The only way to get the bitmaps into the bitmap table is through this method.
 -- Therefore, we have to allow an omitted msgToRise.  If msgToRise == "", then

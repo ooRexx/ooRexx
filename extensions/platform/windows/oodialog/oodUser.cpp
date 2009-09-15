@@ -49,6 +49,7 @@
 #include <stdio.h>
 #include <dlgs.h>
 #include <commctrl.h>
+#include <shlwapi.h>
 #ifdef __CTL3D
 #include <ctl3d.h>
 #endif
@@ -307,7 +308,7 @@ static inline logical_t illegalBuffer(void)
 }
 
 
-void UAddControl(WORD **p, SHORT kind, INT id, INT x, INT y, INT cx, INT cy, const char * txt, ULONG lStyle)
+void addToDialogTemplate(WORD **p, SHORT kind, INT id, INT x, INT y, INT cx, INT cy, const char * txt, ULONG lStyle)
 {
    int   nchar;
 
@@ -398,6 +399,33 @@ void UAddNamedControl(WORD **p, CHAR * className, INT id, INT x, INT y, INT cx, 
    (*p) = lpwAlign (*p);
 }
 
+uint32_t getCommonWindowStyles(CSTRING opts, bool defaultBorder, bool defaultTab)
+{
+    uint32_t style = 0;
+
+    if ( StrStrI(opts, "HIDDEN"  ) == NULL ) style |= WS_VISIBLE;
+    if ( StrStrI(opts, "GROUP"   ) != NULL ) style |= WS_GROUP;
+    if ( StrStrI(opts, "DISABLED") != NULL ) style |= WS_DISABLED;
+
+    if ( defaultBorder )
+    {
+        if ( StrStrI(opts, "NOBORDER") == NULL ) style |= WS_BORDER;
+    }
+    else
+    {
+        if ( StrStrI(opts, "BORDER")   != NULL ) style |= WS_BORDER;
+    }
+
+    if ( defaultTab )
+    {
+        if ( StrStrI(opts, "NOTAB") == NULL ) style |= WS_TABSTOP;
+    }
+    else
+    {
+        if ( StrStrI(opts, "TAB")   != NULL ) style |= WS_TABSTOP;
+    }
+    return style;
+}
 
 size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
@@ -408,11 +436,11 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
 
    CHECKARGL(1);
 
-   if (!strcmp(argv[0].strptr,"BUT") || !strcmp(argv[0].strptr,"CH") || !strcmp(argv[0].strptr,"RB"))
+   if ( !strcmp(argv[0].strptr,"CH") || !strcmp(argv[0].strptr,"RB") )
    {
        CHECKARG(9);
 
-       /* UsrAddControl("BUT", self~activePtr, id, x, y, w, h, name, opts) */
+       /* UsrAddControl("CH", self~activePtr, id, x, y, w, h, name, opts) */
        for ( i = 0; i < 5; i++ )
        {
            buffer[i] = atoi(argv[i+2].strptr);
@@ -475,7 +503,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (!strstr(argv[8].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
 
        /*                       id         x           y         cx          cy  */
-       UAddControl(&p, 0x0080, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
+       addToDialogTemplate(&p, 0x0080, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"GB"))  // A groupbox is actually a button.
    {
@@ -505,7 +533,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                      id      x         y        cx        cy  */
-       UAddControl(&p, 0x0080, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
+       addToDialogTemplate(&p, 0x0080, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"EL"))
    {
@@ -547,7 +575,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
 
        /*                         id          x       y          cx           cy  */
-       UAddControl(&p, 0x0081, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
+       addToDialogTemplate(&p, 0x0081, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"LB"))
    {
@@ -579,7 +607,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
 
        /*                         id       x          y            cx        cy  */
-       UAddControl(&p, 0x0083, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
+       addToDialogTemplate(&p, 0x0083, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"CB"))
    {
@@ -608,7 +636,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
 
        /*                         id       x          y            cx        cy  */
-       UAddControl(&p, 0x0085, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
+       addToDialogTemplate(&p, 0x0085, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"TXT"))
    {
@@ -651,7 +679,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                      id      x         y         cx       cy  */
-       UAddControl(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
+       addToDialogTemplate(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"FRM"))
    {
@@ -690,7 +718,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                     id    x           y          cx         cy  */
-       UAddControl(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], NULL, lStyle);
+       addToDialogTemplate(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], NULL, lStyle);
    }
    else if (!strcmp(argv[0].strptr,"IMG"))
    {
@@ -723,7 +751,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                      id           x          y          cx         cy       text  */
-       UAddControl(&p, 0x0082, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], "", lStyle);
+       addToDialogTemplate(&p, 0x0082, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], "", lStyle);
    }
    else if (!strcmp(argv[0].strptr,"SB"))
    {
@@ -747,7 +775,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
 
        /*                         id       x          y            cx        cy  */
-       UAddControl(&p, 0x0084, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
+       addToDialogTemplate(&p, 0x0084, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
 
    RETPTR(p);
@@ -972,6 +1000,13 @@ RexxMethod4(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
 #define DYNAMICDIALOG_CLASS  "DynamicDialog"
 
 
+#define ButtonAtom           0x0080
+#define EditAtom             0x0081
+#define StaticAtom           0x0082
+#define ListBoxAtom          0x0083
+#define ScrollBarAtom        0x0084
+#define ComboBoxAtom         0x0085
+
 
 RexxMethod1(RexxObjectPtr, dyndlg_init_cls, OSELF, self)
 {
@@ -1123,83 +1158,6 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
     return pcdd->active != NULL;
 }
 
-/** DynamicDialog::startChildDialog()
- *
- *  Creates the underlying Windows child dialog.
- *
- *  Child dialogs are the dialogs used for the pages in a CategoryDialog, or its
- *  subclass the PropertySheet dialog.  The parent window / dialog for the child
- *  dialog is always the category or propert sheet dialog.  At this time, there
- *  is no corresponding Rexx object for child dialogs.
- *
- *  @param  basePtr     Pointer to the in-memory dialog template for the child
- *                      dialog.
- *  @param  childIndex  The index number of the child.  This corresponds to the
- *                      page number the child is used in.  I.e., the child at
- *                      index 1 is the dialog for the first page of the category
- *                      or property sheet dialog, index 2 is the second page,
- *                      etc..
- *
- *  @return  The handle of the underlying Windows dialog, 0 on error.
- *
- *  @remarks  The child dialog needs to be created in the window procedure
- *            thread of the parent.  SendMessage() is used to send a user
- *            message to the message loop thread.  The child dialog is then
- *            created in that thread and the dialog handle returned.  On error,
- *            the returned handle will be NULL.
- *
- *            The basePtr is sent from the CategoryDialog code where it is
- *            stored as such: self~catalog['base'][i] where 'i' is the index of
- *            the child dialog.  This index is sent to us as childIndex.  After
- *            freeing the base pointer, we are relying on the category dialog
- *            code setting self~catalog['base'][i] back to 0.
- *
- *            We could eliminate the basePtr arg altogether and retrieve the
- *            pointer using the childIndex arg.  And, we could also set the
- *            value of self~catalog['base'][i] ourselfs.  TODO, this would make
- *            things more self-contained.
- *
- */
-RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint32_t, childIndex, CSELF, pCSelf)
-{
-    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
-    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
-
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-    if ( dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
-        return TheZeroObj;
-    }
-
-    DLGTEMPLATE *p = (DLGTEMPLATE *)basePtr;
-    if ( p == NULL )
-    {
-        illegalBuffer();
-        return TheZeroObj;
-    }
-
-    // Set the field for the number of dialog controls in the dialog template.
-    p->cdit = (WORD)pcdd->count;
-
-    HWND hChild = (HWND)SendMessage(pcpbd->hDlg, WM_USER_CREATECHILD, 0, (LPARAM)p);
-
-    // Free the memory allocated for template.
-    LocalFree(p);
-    pcdd->active = NULL;
-    pcdd->count = 0;
-
-    // The child dialog may not have been created.
-    if ( hChild == NULL )
-    {
-        return TheZeroObj;
-    }
-
-    dlgAdm->ChildDlg[childIndex] = hChild;
-    return pointer2string(context, hChild);
-}
-
-
 /** DyamicDialog::startParentDialog()
  *
  *  Creates the underlying Windows dialog for a user dialog (or one of its
@@ -1312,6 +1270,202 @@ RexxMethod3(logical_t, dyndlg_startParentDialog, uint32_t, iconID, logical_t, mo
     }
     return FALSE;
 }
+
+/** DynamicDialog::startChildDialog()
+ *
+ *  Creates the underlying Windows child dialog.
+ *
+ *  Child dialogs are the dialogs used for the pages in a CategoryDialog, or its
+ *  subclass the PropertySheet dialog.  The parent window / dialog for the child
+ *  dialog is always the category or propert sheet dialog.  At this time, there
+ *  is no corresponding Rexx object for child dialogs.
+ *
+ *  @param  basePtr     Pointer to the in-memory dialog template for the child
+ *                      dialog.
+ *  @param  childIndex  The index number of the child.  This corresponds to the
+ *                      page number the child is used in.  I.e., the child at
+ *                      index 1 is the dialog for the first page of the category
+ *                      or property sheet dialog, index 2 is the second page,
+ *                      etc..
+ *
+ *  @return  The handle of the underlying Windows dialog, 0 on error.
+ *
+ *  @remarks  The child dialog needs to be created in the window procedure
+ *            thread of the parent.  SendMessage() is used to send a user
+ *            message to the message loop thread.  The child dialog is then
+ *            created in that thread and the dialog handle returned.  On error,
+ *            the returned handle will be NULL.
+ *
+ *            The basePtr is sent from the CategoryDialog code where it is
+ *            stored as such: self~catalog['base'][i] where 'i' is the index of
+ *            the child dialog.  This index is sent to us as childIndex.  After
+ *            freeing the base pointer, we are relying on the category dialog
+ *            code setting self~catalog['base'][i] back to 0.
+ *
+ *            We could eliminate the basePtr arg altogether and retrieve the
+ *            pointer using the childIndex arg.  And, we could also set the
+ *            value of self~catalog['base'][i] ourselfs.  TODO, this would make
+ *            things more self-contained.
+ *
+ */
+RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint32_t, childIndex, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
+        return TheZeroObj;
+    }
+
+    DLGTEMPLATE *p = (DLGTEMPLATE *)basePtr;
+    if ( p == NULL )
+    {
+        illegalBuffer();
+        return TheZeroObj;
+    }
+
+    // Set the field for the number of dialog controls in the dialog template.
+    p->cdit = (WORD)pcdd->count;
+
+    HWND hChild = (HWND)SendMessage(pcpbd->hDlg, WM_USER_CREATECHILD, 0, (LPARAM)p);
+
+    // Free the memory allocated for template.
+    LocalFree(p);
+    pcdd->active = NULL;
+    pcdd->count = 0;
+
+    // The child dialog may not have been created.
+    if ( hChild == NULL )
+    {
+        return TheZeroObj;
+    }
+
+    dlgAdm->ChildDlg[childIndex] = hChild;
+    return pointer2string(context, hChild);
+}
+
+// use strict arg id, x, y, cx, cy, text = "", msgToRise = "", options = ""
+
+RexxMethod10(int32_t, dyndlg_addButton, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, label, OPTIONAL_CSTRING, msgToRaise, OPTIONAL_CSTRING, opts,
+            OPTIONAL_CSTRING, loadOptions, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    DIALOGADMIN * dlgAdm = pcdd->pcpbd->dlgAdm;
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(context->threadContext, pcdd->rexxSelf);
+        return -2;
+    }
+
+
+    uint32_t id = checkID(context, rxID, pcdd->pcpbd->rexxSelf);
+    if ( id == -1 )
+    {
+        return -1;
+    }
+
+    if ( argumentOmitted(6) )
+    {
+        label = "";
+    }
+    if ( argumentOmitted(8) )
+    {
+        opts = "";
+    }
+
+    uint32_t  style = WS_CHILD;
+    WORD     *p     = (WORD *)pcdd->active;
+
+    style |= getCommonWindowStyles(opts, false, true);
+
+    if (StrStrI(opts,"DEFAULT")) style |= BS_DEFPUSHBUTTON; else style |= BS_PUSHBUTTON;
+
+    if ( StrStrI(opts, "OWNER")     != NULL ) style |= BS_OWNERDRAW;
+    if ( StrStrI(opts, "BITMAP")    != NULL ) style |= BS_BITMAP;
+    if ( StrStrI(opts, "ICON")      != NULL ) style |= BS_ICON;
+    if ( StrStrI(opts, "HCENTER")   != NULL ) style |= BS_CENTER;
+    if ( StrStrI(opts, "TOP")       != NULL ) style |= BS_TOP;
+    if ( StrStrI(opts, "BOTTOM")    != NULL ) style |= BS_BOTTOM;
+    if ( StrStrI(opts, "VCENTER")   != NULL ) style |= BS_VCENTER;
+    if ( StrStrI(opts, "PUSHLIKE")  != NULL ) style |= BS_PUSHLIKE;
+    if ( StrStrI(opts, "MULTILINE") != NULL ) style |= BS_MULTILINE;
+    if ( StrStrI(opts, "NOTIFY")    != NULL ) style |= BS_NOTIFY;
+    if ( StrStrI(opts, "FLAT")      != NULL ) style |= BS_FLAT;
+
+    const char *pLonger = StrStrI(opts, "LEFTTEXT");
+    const char *pShorter = StrStrI(opts, "LEFT");
+    if ( pLonger )
+    {
+        style |= BS_LEFTTEXT;
+        if ( pShorter != NULL && pShorter != pLonger )
+        {
+            style |= BS_LEFT;
+        }
+    }
+    else if ( pShorter )
+    {
+        style |= BS_LEFT;
+    }
+
+    pLonger = StrStrI(opts,"RIGHTBUTTON");
+    pShorter = StrStrI(opts,"RIGHT");
+    if ( pLonger )
+    {
+        style |= BS_RIGHTBUTTON;
+        if ( pShorter != NULL && pShorter != pLonger )
+        {
+            style |= BS_RIGHT;
+        }
+    }
+    else if ( pShorter )
+    {
+        style |= BS_RIGHT;
+    }
+
+    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, label, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    if ( id < 3 || id == 9 )
+    {
+        return 0;
+    }
+
+    CSTRING methName = NULL;
+    int32_t result   = 0;
+
+    if ( argumentExists(9)   )
+    {
+        if ( StrStrI(opts, "CONNECTBUTTONS") != NULL )
+        {
+            methName = strdup_2methodName(label);
+        }
+    }
+    else if ( argumentExists(7) )
+    {
+        methName = strdup_nospace(msgToRaise);
+    }
+
+    if ( methName != NULL && strlen(methName) != 0 )
+    {
+        result = AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id, 0x0000FFFF, 0, 0, methName, 0) ? 0 : 1;
+    }
+
+    safeFree((void *)methName);
+    return result;
+}
+
 
 /** DynamicDialog::addIconFile  [private]
  *

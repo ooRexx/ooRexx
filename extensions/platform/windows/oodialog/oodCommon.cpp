@@ -594,6 +594,40 @@ char *strdupupr(const char *str)
 }
 
 /**
+ * Returns a copy of the string with all space removed.
+ *
+ * @param str   The string to copy and remove spaces.
+ *
+ * @return      A pointer to a new string, or null on a memory allocation
+ *              failure.
+ *
+ * @note        The caller is responsible for freeing the returned string.
+ */
+char *strdup_nospace(const char *str)
+{
+    char *retStr = NULL;
+    if ( str )
+    {
+        size_t l = strlen(str);
+        retStr = (char *)malloc(l + 1);
+        if ( retStr )
+        {
+            char *p;
+            for ( p = retStr; *str; ++str )
+            {
+                if ( *str == ' ' || *str == '\t' )
+                {
+                    continue;
+                }
+                *p++ = *str;
+            }
+            *p = '\0';
+        }
+    }
+    return retStr;
+}
+
+/**
  * Returns an upper-cased copy of the string with all space removed.
  *
  * @param str   The string to copy and upper case.
@@ -636,7 +670,7 @@ char *strdupupr_nospace(const char *str)
 
 /**
  * Returns a copy of the string that is suitable for an ooRexx method name. All
- * space, tab, ampersand, and '+' characters are removed.  In addition it
+ * space, tab, ampersand, ':', and '+' characters are removed.  In addition it
  * removes any trailing ... from the string.  Upper-casing the characters is
  * skipped, because this should not matter.
  *
@@ -659,7 +693,7 @@ char *strdup_2methodName(const char *str)
             char *p;
             for ( p = retStr; *str; ++str )
             {
-                if ( *str == ' '|| *str == '\t' || *str == '&' || *str == '+' )
+                if ( *str == ' '|| *str == '\t' || *str == '&' || *str == '+' || *str == ':' )
                 {
                     continue;
                 }

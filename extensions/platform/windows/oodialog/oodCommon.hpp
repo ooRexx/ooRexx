@@ -155,6 +155,7 @@ extern RexxStringObject pointer2string(RexxThreadContext *c, void *pointer);
 extern LONG             HandleError(PRXSTRING r, CHAR * text);
 extern char *           strdupupr(const char *str);
 extern char *           strdupupr_nospace(const char *str);
+extern char *           strdup_nospace(const char *str);
 extern char *           strdup_2methodName(const char *str);
 extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
