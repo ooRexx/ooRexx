@@ -36,7 +36,7 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 /******************************************************************************/
-/* REXX Kernel                                                  Token.hpp  */
+/* REXX Kernel                                                                */
 /*                                                                            */
 /* Primitive Translator Token Class Definitions                               */
 /*                                                                            */
@@ -391,7 +391,7 @@ class RexxToken : public RexxInternalObject {
   inline void  operator delete(void *) { ; }
   inline void  operator delete(void *, void *) { ; }
 
-  RexxToken(int, int, RexxString *, SourceLocation &);;
+  RexxToken(int, int, RexxString *, SourceLocation &);
   inline RexxToken(RESTORETYPE restoreType) { ; };
   void       live(size_t);
   void       liveGeneral(int reason);
