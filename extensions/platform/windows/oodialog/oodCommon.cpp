@@ -347,7 +347,8 @@ int32_t idError(RexxMethodContext *c, RexxObjectPtr rxID)
  *              resource ID.
  * @param self  The Rexx object that has inherited ResourceUtils.
  *
- * @return The numeric resource ID value.
+ * @return The numeric resource ID value.  -1 is a valid return for IDC_STATIC,
+ *         less than -1 means an error dialog was put up.
  */
 int32_t checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self)
 {

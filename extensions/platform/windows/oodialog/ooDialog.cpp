@@ -1558,9 +1558,9 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     // can not be full at this point, we are just starting out.  A memory
     // allocation failure, which is highly unlikely, will just be ignored.  If
     // this ooRexx process is out of memory, that will quickly show up.
-    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDOK,     (ULONG_PTR)SIZE_MAX, 0, 0, "OK", 0);
-    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDCANCEL, (ULONG_PTR)SIZE_MAX, 0, 0, "Cancel", 0);
-    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDHELP,   (ULONG_PTR)SIZE_MAX, 0, 0, "Help", 0);
+    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDOK,     UINTPTR_MAX, 0, 0, "OK", 0);
+    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDCANCEL, UINTPTR_MAX, 0, 0, "Cancel", 0);
+    AddTheMessage(dlgAdm, WM_COMMAND, 0xFFFFFFFF, IDHELP,   UINTPTR_MAX, 0, 0, "Help", 0);
 
     // Set our default font to the PlainBaseDialog class default font.
     pCPlainBaseDialogClass pcpbdc = getPBDClass_CSelf(c);

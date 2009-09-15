@@ -559,7 +559,9 @@
    self~ProcessingLoad = 0
    return 0
 
-::method addButton external "LIBRARY oodialog dyndlg_addButton"
+::method addPushButton external "LIBRARY oodialog dyndlg_addPushButton"
+::method addButton external "LIBRARY oodialog dyndlg_addPushButton"
+::method addGroupBox external "LIBRARY oodialog dyndlg_addGroupBox"
 
 -- This method adds a bitmap button and optionally connects a method with to the
 -- button.  The given bitmap(s) will be drawn on the face of the button to
@@ -575,15 +577,6 @@
    ret = self~addButton(id, x, y, cx, cy, text, , opts)
    if ret <> 0 then return ret
    return self~connectBitmapButton(id, msgToRaise~space(0), bmp, focus, sel, disabl, opts)
-
-
-::method addGroupBox
-   use arg x, y, cx, cy, text = "", opts = "", id
-   id = self~itemAdd(id, \(arg(7,"o") | id = "ID"))
-   if id = -2 then return id
-   opts = opts~translate
-   self~activePtr = UsrAddControl("GB",self~activePtr, x, y, cx, cy, opts, text, id)
-   return 0
 
 
 ::method addStatic
@@ -787,10 +780,11 @@
    forward message "addRBCBGroup" Arguments (arr)
 
 ::method addRBCBGroup private
-   use arg startid, x, y, cx, inp, opts = "", idstat, kind
+   use arg startid, x, y, cx, inp, opts = "", idstat = (self~STATIC_ID), kind
 
    if self~activePtr = 0 then return -2
-   if self~checkID(startid) = -1 then return
+   startid = self~checkID(startid)
+   if startid < 0 then return startid
    if arg(4, 'o') = 1 then cx = 0
    parse var inp rb inp
    size = self~getTextSizeDlg(rb)
@@ -802,7 +796,6 @@
    if nob = 0 then my = y + oldy; else my = y
    newopts = opts~changestr("NOBORDER","")
    if cx \= 0 then len = cx-20
-   if arg(7,'o') = 1 then idstat = self~STATIC_ID
 
    i = 0
    do while rb \= ""
@@ -823,14 +816,15 @@
    end
    if cx \= 0 then LastLen = cx-20
    size = .Size~new(lastlen+20, my-y+trunc(oldy / 2))
-   if nob = 0 then self~addGroupBox(x,y,size~width,size~height,"", newopts, idstat)
+   if nob = 0 then self~addGroupBox(x, y, size~width, size~height, "", newopts, idstat)
    return size
 
 
 ::method addInput
-   use arg id, fname, x, y, cx1, cx2, cy, text, opts = "", idstat
+   use arg id, fname, x, y, cx1, cx2, cy, text, opts = "", idstat = (self~STATIC_ID)
    if self~activePtr = 0 then return -2
-   if self~checkID(id) = -1 then return
+   id = self~checkID(id)
+   if id < 0 then return id
    if arg(2,'o') = 1 then fname = text
    if arg(5, 'o') = 1 then cx1 = 0
    if arg(7, 'o') = 1 then cy = 0
@@ -839,7 +833,6 @@
       if cy = 0 then cy = size~height + 4
       if cx1 = 0 then cx1 = size~width + 4
    end
-   if arg(10,'o') = 1 then idstat = self~STATIC_ID
    opts = opts~translate
    ret = self~addText(x, y+2, cx1, cy, text, opts, idstat)
    if ret == 0 then ret = self~addEntryLine(id, fname, x+cx1+1, y, cx2, cy, opts)
@@ -847,11 +840,12 @@
 
 
 ::method addInputGroup
-   use arg startid, x, y, cx1, cx2, inp, opts = "", idstat
+   use arg startid, x, y, cx1, cx2, inp, opts = "", idstat = (self~STATIC_ID)
    parse var inp rb inp
 
    if self~activePtr = 0 then return -2
-   if self~checkID(startid) = -1 then return
+   startid = self~checkID(startid)
+   if startid < 0 then return startid
    if arg(4, 'o') = 1 then cx1 = 0
    count = 0; ll = 0
    do while rb \= ""
@@ -864,7 +858,6 @@
       parse var inp rb inp
    end
    if cx1 = 0 then cx1 = ll+4
-   if arg(8,'o') = 1 then idstat = self~STATIC_ID
    is = idstat
 
    s = self~getTextSizeDlg("Tg")
@@ -878,15 +871,16 @@
       if is \= -1 then is = is + 1
       my = my + trunc(stepy * 2.25)
    end
-   if nob = 0 then return self~addGroupBox(x,y,cx1+cx2,my-y,"", newopts, is)
+   if nob = 0 then return self~addGroupBox(x, y, cx1+cx2, my-y, "", newopts, is)
    else return 0
 
 
 ::method addComboInput
-   use arg id, attname, x, y, cx1, cx2, clines, text, opts = "", idstat
+   use arg id, attname, x, y, cx1, cx2, clines, text, opts = "", idstat = (self~STATIC_ID)
 
    if self~activePtr = 0 then return -2
-   if self~checkID(id) = -1 then return
+   id = self~checkID(id)
+   if id < 0 then return id
    if arg(2, 'o') = 1 then attname = text
    if arg(5, 'o') = 1 then cx1 = 0
    if arg(7, 'o') = 1 then clines = 5
@@ -894,18 +888,18 @@
    s = self~getTextSizeDlg(text)
    cy = s~height + 4
    if cx1 = 0 then cx1 = s~width + 4
-   if arg(10,'o') = 1 then idstat = self~STATIC_ID
    opts = opts~translate
    ret = self~addText(x, y, cx1, cy, text, opts, idstat)
    if ret == 0 then return self~addComboBox(id, attname, x+cx1+2, y, cx2, cy*clines, opts)
-   else return 0
+   else return ret
 
 
 ::method addInputStem
-   use arg startid, x, y, cx1, cx2, inp., opts = "", idstat
+   use arg startid, x, y, cx1, cx2, inp., opts = "", idstat = (self~STATIC_ID)
 
    if self~activePtr = 0 then return -2
-   if self~checkID(startid)= -1 then return
+   startid = self~checkID(startid)
+   if startid < 0 then return startid
    if arg(4, 'o') = 1 then cx1 = 0
    count = 0; ll = 0
    do while var("inp."count+1) = 1
@@ -917,7 +911,6 @@
    end
    if cx1 = 0 then cx1 = ll+4
 
-   if idstat = "IDSTAT" then idstat = self~STATIC_ID
    is = idstat
    s = self~getTextSizeDlg("Tg")
    stepy = s~height
@@ -931,7 +924,7 @@
       if is \= -1 then is = is + 2
       my = my + trunc(stepy * 2.25)
    end
-   if nob = 0 then return self~addGroupBox(x,y,cx1+cx2,my-y,"", newopts, is)
+   if nob = 0 then return self~addGroupBox(x, y, cx1+cx2, my-y, "", newopts, is)
    else return 0
 
 
@@ -953,7 +946,8 @@
    -- here for backwards compatibility.
 
    if self~activePtr = 0 then return -2
-   if self~checkID(startid) = -1 then return
+   startid = self~checkID(startid)
+   if startid < 0 then return
    if arg(4, 'o') = 1 then cxx = 0
    count = 0; ll = 0
    do while var("inp."count+1) = 1
@@ -1000,7 +994,7 @@
       my = my + stepy
    end
    if highy = 0 then highy = my
-   if nob = 0 then return self~addGroupBox(x,y,mx+cx, highy-y+(stepy % 2),"", newopts, idstat)
+   if nob = 0 then return self~addGroupBox(x, y, mx+cx, highy-y+(stepy % 2), "", newopts, idstat)
    else return 0
 
 

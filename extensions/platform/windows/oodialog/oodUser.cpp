@@ -505,36 +505,6 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                       id         x           y         cx          cy  */
        addToDialogTemplate(&p, 0x0080, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
    }
-   else if (!strcmp(argv[0].strptr,"GB"))  // A groupbox is actually a button.
-   {
-       CHECKARGL(8);
-
-       /* UsrAddControl("GB",self~activePtr, x, y, cx, cy, opts, text, id) */
-       for ( i = 0; i < 4; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       if (argc > 8)
-          i = atoi(argv[8].strptr);
-       else i = -1;
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       // We support right or left aligned text.  By default the alignment is
-       // left so we only need to check for the RIGHT key word.
-
-       lStyle = WS_CHILD | BS_GROUPBOX;
-       if (strstr(argv[6].strptr,"RIGHT")) lStyle |= BS_RIGHT;
-       if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
-
-       /*                      id      x         y        cx        cy  */
-       addToDialogTemplate(&p, 0x0080, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
-   }
    else if (!strcmp(argv[0].strptr,"EL"))
    {
        CHECKARG(8);
@@ -1347,9 +1317,11 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
     return pointer2string(context, hChild);
 }
 
-// use strict arg id, x, y, cx, cy, text = "", msgToRise = "", options = ""
 
-RexxMethod10(int32_t, dyndlg_addButton, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+/** DynamicDialog::addButton()
+ *
+ */
+RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
             OPTIONAL_CSTRING, label, OPTIONAL_CSTRING, msgToRaise, OPTIONAL_CSTRING, opts,
             OPTIONAL_CSTRING, loadOptions, CSELF, pCSelf)
 {
@@ -1369,8 +1341,8 @@ RexxMethod10(int32_t, dyndlg_addButton, RexxObjectPtr, rxID, int, x, int, y, uin
     }
 
 
-    uint32_t id = checkID(context, rxID, pcdd->pcpbd->rexxSelf);
-    if ( id == -1 )
+    int32_t id = checkID(context, rxID, pcdd->pcpbd->rexxSelf);
+    if ( id < 1 )
     {
         return -1;
     }
@@ -1459,11 +1431,60 @@ RexxMethod10(int32_t, dyndlg_addButton, RexxObjectPtr, rxID, int, x, int, y, uin
 
     if ( methName != NULL && strlen(methName) != 0 )
     {
-        result = AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id, 0x0000FFFF, 0, 0, methName, 0) ? 0 : 1;
+        result = AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id, UINTPTR_MAX, 0, 0, methName, 0) ? 0 : 1;
     }
 
     safeFree((void *)methName);
     return result;
+}
+
+
+/** DynamicDialog::addGroupBox()
+ *
+ */
+RexxMethod8(int32_t, dyndlg_addGroupBox, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, text, OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxID, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id = IDC_STATIC;
+    if ( argumentExists(7) )
+    {
+        id = checkID(context, rxID, pcdd->pcpbd->rexxSelf);
+        if ( id < IDC_STATIC )
+        {
+            return -1;
+        }
+    }
+
+    if ( argumentOmitted(5) )
+    {
+        text = "";
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+
+    // For a groupbox, we support right or left aligned text.  By default the
+    // alignment is left so we only need to check for the RIGHT key word.
+
+    uint32_t  style = WS_CHILD | BS_GROUPBOX;
+    style |= getCommonWindowStyles(opts, false, false);
+    if ( StrStrI(opts, "RIGHT") != NULL ) style |= BS_RIGHT;
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, text, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    return 0;
 }
 
 
@@ -1586,7 +1607,7 @@ int32_t itemAdd(RexxMethodContext *c, pCDynamicDialog pcdd, RexxObjectPtr rxID, 
         // resolve.  But, it will resolve a static ID and return -1.  The
         // control being added can not use a static ID, so we return -1.
         id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
-        if ( id == -1 )
+        if ( id < 1 )
         {
             return -1;
         }

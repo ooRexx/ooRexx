@@ -250,7 +250,8 @@ REXX_METHOD_PROTOTYPE(dyndlg_dynamicInit);
 REXX_METHOD_PROTOTYPE(dyndlg_create);
 REXX_METHOD_PROTOTYPE(dyndlg_startParentDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_startChildDialog);
-REXX_METHOD_PROTOTYPE(dyndlg_addButton);
+REXX_METHOD_PROTOTYPE(dyndlg_addPushButton);
+REXX_METHOD_PROTOTYPE(dyndlg_addGroupBox);
 REXX_METHOD_PROTOTYPE(dyndlg_addIconFile_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_itemAdd_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
@@ -565,7 +566,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_create,                dyndlg_create),
     REXX_METHOD(dyndlg_startParentDialog,     dyndlg_startParentDialog),
     REXX_METHOD(dyndlg_startChildDialog,      dyndlg_startChildDialog),
-    REXX_METHOD(dyndlg_addButton,             dyndlg_addButton),
+    REXX_METHOD(dyndlg_addPushButton,         dyndlg_addPushButton),
+    REXX_METHOD(dyndlg_addGroupBox,           dyndlg_addGroupBox),
     REXX_METHOD(dyndlg_addIconFile_pvt,       dyndlg_addIconFile_pvt),
     REXX_METHOD(dyndlg_itemAdd_pvt,           dyndlg_itemAdd_pvt),
     REXX_METHOD(dyndlg_stop,                  dyndlg_stop),
