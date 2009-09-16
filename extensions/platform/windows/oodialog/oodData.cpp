@@ -873,10 +873,10 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
  * It could be that the original developers had some future use in mind for this
  * field that never got implemented.
  *
- * The pre 4.1.0 code also had "get" and "set" functions beside the "add"
- * function.  The set function was not used anywhere in the code.  Set was used
- * to change the value of an existing data table entry.  Since there does not
- * seem to be any purpose to that, the function was dropped.
+ * The pre 4.1.0 code also had "get" and "set" data table functions beside the
+ * "add" function.  The set function was not used anywhere in the code.  Set was
+ * used to change the value of an existing data table entry.  Since there does
+ * not seem to be any purpose to that, the function was dropped.
  *
  * The get function returned the values of a single data table entry.  But it
  * was only used in one place, in a loop to get all entries.  And only the ID
@@ -885,29 +885,21 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
  *
  * @param c
  * @param dlgAdm
- * @param rxID     The resource ID of the control.  This has already been
- *                 resolved to a numeric id by the caller, but, it has not been
- *                 checked to see if it is -1 yet.
+ * @param id      The resource ID of the control.
  * @param typ
  * @param category
  *
- * @return 0 on succes, -1 for a bad resource ID, and 1 for error.
+ * @return 0 on succes, and 1 for error.
  */
-RexxObjectPtr addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, RexxObjectPtr rxID, uint32_t typ, uint32_t category)
+uint32_t addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, int id, uint32_t typ, uint32_t category)
 {
-    int id;
-    if ( ! c->Int32(rxID, &id) || id == -1 )
-    {
-        return TheNegativeOneObj;
-    }
-
     if ( dlgAdm->DataTab == NULL )
     {
         dlgAdm->DataTab = (DATATABLEENTRY *)LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
         if ( !dlgAdm->DataTab )
         {
             outOfMemoryException(c->threadContext);
-            return TheOneObj;
+            return 1;
         }
         dlgAdm->DT_size = 0;
     }
@@ -918,13 +910,13 @@ RexxObjectPtr addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, RexxObje
         dlgAdm->DataTab[dlgAdm->DT_size].typ = typ;
         dlgAdm->DataTab[dlgAdm->DT_size].category = category;
         dlgAdm->DT_size ++;
-        return TheZeroObj;
+        return 0;
     }
 
     MessageBox(0, "Dialog data items have exceeded the maximum number of\n"
                "allocated table entries. No data item can be added.",
                "Error", MB_OK | MB_ICONHAND);
-    return TheOneObj;
+    return 1;
 }
 
 /**

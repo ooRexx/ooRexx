@@ -656,8 +656,8 @@ bool textSizeFromWindow(RexxMethodContext *context, CSTRING text, SIZE *size, HW
  *
  * @return RexxObjectPtr
  */
-RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING fontName, uint32_t fontSize,
-                          HWND hwndFontSrc, RexxObjectPtr dlgObj)
+bool getTextSize(RexxMethodContext *context, CSTRING text, CSTRING fontName, uint32_t fontSize,
+                 HWND hwndFontSrc, RexxObjectPtr dlgObj, PSIZE textSize)
 {
     pCPlainBaseDialog pcpbd = dlgToCSelf(context, dlgObj);
 
@@ -668,21 +668,19 @@ RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING font
     // both hwndFontSrc and hwndDlg are null, that's okay, we can use null.
     HWND hwndForDC = (hwndFontSrc != NULL ? hwndFontSrc : hwndDlg);
 
-    SIZE textSize = {0};
-
     // If either the font name or the font source window handle were specified,
     // we calculate the text size in pixels now.  The normal case is that the
     // font is coming from the dialog object.
     if ( fontName != NULL )
     {
-        if ( ! textSizeIndirect(context, text, fontName, fontSize, &textSize, hwndForDC) )
+        if ( ! textSizeIndirect(context, text, fontName, fontSize, textSize, hwndForDC) )
         {
             goto error_out;
         }
     }
     else if ( hwndFontSrc != NULL )
     {
-        if ( ! textSizeFromWindow(context, text, &textSize, hwndFontSrc) )
+        if ( ! textSizeFromWindow(context, text, textSize, hwndFontSrc) )
         {
             goto error_out;
         }
@@ -732,13 +730,13 @@ RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING font
     // Check if the pixel text size has been determined above.  The normal case
     // will be that it has not.  The normal case is that the size is determined
     // here using the DC with the dialog font selected into it.
-    if ( textSize.cx == 0 )
+    if ( textSize->cx == 0 )
     {
-        GetTextExtentPoint32(hdc, text, (int)strlen(text), &textSize);
+        GetTextExtentPoint32(hdc, text, (int)strlen(text), textSize);
     }
 
     // Now, convert the pixel size to dialog unit size, and clean up.
-    screenToDlgUnit(hdc, (POINT *)&textSize);
+    screenToDlgUnit(hdc, (POINT *)textSize);
 
     SelectObject(hdc, hOldFont);
     ReleaseDC(hwndForDC, hdc);
@@ -748,10 +746,10 @@ RexxObjectPtr getTextSize(RexxMethodContext *context, CSTRING text, CSTRING font
         DeleteObject(dlgFont);
     }
 
-    return rxNewSize(context, textSize.cx, textSize.cy);
+    return true;
 
 error_out:
-    return NULLOBJECT;
+    return false;
 }
 
 

@@ -1529,6 +1529,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
 
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)context->BufferData(cselfBuffer);
 
+    pcpbd->autoDetect = TRUE;
     pcpbd->wndBase = pWB;
     pcpbd->rexxSelf = self;
     pcpbd->hDlg = NULL;
@@ -1633,6 +1634,20 @@ RexxMethod1(RexxObjectPtr, pbdlg_unInit, CSELF, pCSelf)
     context->SetObjectVariable("ADM", TheZeroObj);
 
     return TheZeroObj;
+}
+
+/** PlainBaseDialog::autoDetect  [attribute get]
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_getAutoDetect, CSELF, pCSelf)
+{
+    return ( ((pCPlainBaseDialog)pCSelf)->autoDetect ? TheTrueObj : TheFalseObj );
+}
+/** PlainBaseDialog::autoDetect  [attribute set]
+ */
+RexxMethod2(CSTRING, pbdlg_setAutoDetect, logical_t, on, CSELF, pCSelf)
+{
+    ((pCPlainBaseDialog)pCSelf)->autoDetect = on;
+    return NULLOBJECT;
 }
 
 /** PlainBaseDialog::fontName  [attribute get]
@@ -2085,7 +2100,12 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
         hwndSrc = (HWND)hwndFontSrc;
     }
 
-    return getTextSize(context, text, fontName, fontSize, hwndSrc, self);
+    SIZE textSize = {0};
+    if ( getTextSize(context, text, fontName, fontSize, hwndSrc, self, &textSize) )
+    {
+        return rxNewSize(context, textSize.cx, textSize.cy);
+    }
+    return NULLOBJECT;
 }
 
 
@@ -2099,6 +2119,12 @@ RexxMethod6(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL
     }
     // result will be the resolved resource ID, which may be -1 on error.
     RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
+
+    int id;
+    if ( ! context->Int32(result, &id) || id == -1 )
+    {
+        return TheNegativeOneObj;
+    }
 
     // TODO these numbers need to be mapped to the oodControl_t enum.
     uint32_t typ;
@@ -2132,7 +2158,7 @@ RexxMethod6(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL
         context->UnsignedInt32(rxPageID, &category);
     }
 
-    return addToDataTable(context, pcpbd->dlgAdm, result, typ, category);
+    return ( addToDataTable(context, pcpbd->dlgAdm, id, typ, category) == 0 ? TheZeroObj : TheOneObj );
 }
 
 

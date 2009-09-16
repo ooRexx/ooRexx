@@ -56,6 +56,7 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodData.hpp"
+#include "oodText.hpp"
 #include "oodResourceIDs.hpp"
 
 //#define USE_DS_CONTROL
@@ -312,9 +313,9 @@ void addToDialogTemplate(WORD **p, SHORT kind, INT id, INT x, INT y, INT cx, INT
 {
    int   nchar;
 
-   **p = LOWORD (lStyle);
+   **p = LOWORD(lStyle);
    (*p)++;
-   **p = HIWORD (lStyle);
+   **p = HIWORD(lStyle);
    (*p)++;
    **p = 0;          // LOWORD (lExtendedStyle)
    (*p)++;
@@ -359,9 +360,9 @@ void UAddNamedControl(WORD **p, CHAR * className, INT id, INT x, INT y, INT cx, 
 {
    int   nchar;
 
-   **p = LOWORD (lStyle);
+   **p = LOWORD(lStyle);
    (*p)++;
-   **p = HIWORD (lStyle);
+   **p = HIWORD(lStyle);
    (*p)++;
    **p = 0;          // LOWORD (lExtendedStyle)
    (*p)++;
@@ -399,34 +400,6 @@ void UAddNamedControl(WORD **p, CHAR * className, INT id, INT x, INT y, INT cx, 
    (*p) = lpwAlign (*p);
 }
 
-uint32_t getCommonWindowStyles(CSTRING opts, bool defaultBorder, bool defaultTab)
-{
-    uint32_t style = 0;
-
-    if ( StrStrI(opts, "HIDDEN"  ) == NULL ) style |= WS_VISIBLE;
-    if ( StrStrI(opts, "GROUP"   ) != NULL ) style |= WS_GROUP;
-    if ( StrStrI(opts, "DISABLED") != NULL ) style |= WS_DISABLED;
-
-    if ( defaultBorder )
-    {
-        if ( StrStrI(opts, "NOBORDER") == NULL ) style |= WS_BORDER;
-    }
-    else
-    {
-        if ( StrStrI(opts, "BORDER")   != NULL ) style |= WS_BORDER;
-    }
-
-    if ( defaultTab )
-    {
-        if ( StrStrI(opts, "NOTAB") == NULL ) style |= WS_TABSTOP;
-    }
-    else
-    {
-        if ( StrStrI(opts, "TAB")   != NULL ) style |= WS_TABSTOP;
-    }
-    return style;
-}
-
 size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    INT buffer[5];
@@ -436,76 +409,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
 
    CHECKARGL(1);
 
-   if ( !strcmp(argv[0].strptr,"CH") || !strcmp(argv[0].strptr,"RB") )
-   {
-       CHECKARG(9);
-
-       /* UsrAddControl("CH", self~activePtr, id, x, y, w, h, name, opts) */
-       for ( i = 0; i < 5; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       lStyle = WS_CHILD;
-       if (strstr(argv[8].strptr,"3STATE")) lStyle |= BS_AUTO3STATE; else
-       if (!strcmp(argv[0].strptr,"CH")) lStyle |= BS_AUTOCHECKBOX; else
-       if (!strcmp(argv[0].strptr,"RB")) lStyle |= BS_AUTORADIOBUTTON; else
-       if (strstr(argv[8].strptr,"DEFAULT")) lStyle |= BS_DEFPUSHBUTTON; else lStyle |= BS_PUSHBUTTON;
-
-       if (strstr(argv[8].strptr,"OWNER")) lStyle |= BS_OWNERDRAW;
-       if (strstr(argv[8].strptr,"BITMAP")) lStyle |= BS_BITMAP;
-       if (strstr(argv[8].strptr,"ICON")) lStyle |= BS_ICON;
-       if (strstr(argv[8].strptr,"HCENTER")) lStyle |= BS_CENTER;
-       if (strstr(argv[8].strptr,"TOP")) lStyle |= BS_TOP;
-       if (strstr(argv[8].strptr,"BOTTOM")) lStyle |= BS_BOTTOM;
-       if (strstr(argv[8].strptr,"VCENTER")) lStyle |= BS_VCENTER;
-       if (strstr(argv[8].strptr,"PUSHLIKE")) lStyle |= BS_PUSHLIKE;
-       if (strstr(argv[8].strptr,"MULTILINE")) lStyle |= BS_MULTILINE;
-       if (strstr(argv[8].strptr,"NOTIFY")) lStyle |= BS_NOTIFY;
-       if (strstr(argv[8].strptr,"FLAT")) lStyle |= BS_FLAT;
-
-       const char *pLonger = strstr(argv[8].strptr,"LEFTTEXT");
-       const char *pShorter = strstr(argv[8].strptr,"LEFT");
-       if ( pLonger )
-       {
-           lStyle |= BS_LEFTTEXT;
-           if ( pShorter != NULL && pShorter != pLonger )
-           {
-               lStyle |= BS_LEFT;
-           }
-       }
-       else if ( pShorter )
-       {
-           lStyle |= BS_LEFT;
-       }
-
-       pLonger = strstr(argv[8].strptr,"RIGHTBUTTON");
-       pShorter = strstr(argv[8].strptr,"RIGHT");
-       if ( pLonger )
-       {
-           lStyle |= BS_RIGHTBUTTON;
-           if ( pShorter != NULL && pShorter != pLonger )
-           {
-               lStyle |= BS_RIGHT;
-           }
-       }
-       else if ( pShorter )
-       {
-           lStyle |= BS_RIGHT;
-       }
-
-       if (!strstr(argv[8].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[8].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[8].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[8].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (!strstr(argv[8].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
-
-       /*                       id         x           y         cx          cy  */
-       addToDialogTemplate(&p, 0x0080, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], argv[7].strptr, lStyle);
-   }
-   else if (!strcmp(argv[0].strptr,"EL"))
+   if ( !strcmp(argv[0].strptr,"EL") )
    {
        CHECKARG(8);
 
@@ -978,6 +882,59 @@ RexxMethod4(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
 #define ComboBoxAtom         0x0085
 
 
+uint32_t getCommonWindowStyles(CSTRING opts, bool defaultBorder, bool defaultTab)
+{
+    uint32_t style = 0;
+
+    if ( StrStrI(opts, "HIDDEN"  ) == NULL ) style |= WS_VISIBLE;
+    if ( StrStrI(opts, "GROUP"   ) != NULL ) style |= WS_GROUP;
+    if ( StrStrI(opts, "DISABLED") != NULL ) style |= WS_DISABLED;
+
+    if ( defaultBorder )
+    {
+        if ( StrStrI(opts, "NOBORDER") == NULL ) style |= WS_BORDER;
+    }
+    else
+    {
+        if ( StrStrI(opts, "BORDER")   != NULL ) style |= WS_BORDER;
+    }
+
+    if ( defaultTab )
+    {
+        if ( StrStrI(opts, "NOTAB") == NULL ) style |= WS_TABSTOP;
+    }
+    else
+    {
+        if ( StrStrI(opts, "TAB")   != NULL ) style |= WS_TABSTOP;
+    }
+    return style;
+}
+
+
+uint32_t getCommonButtonStyles(uint32_t style, CSTRING opts)
+{
+    style |= getCommonWindowStyles(opts, false, true);
+
+    if ( StrStrI(opts, "OWNER")     != NULL ) style |= BS_OWNERDRAW;
+    if ( StrStrI(opts, "BITMAP")    != NULL ) style |= BS_BITMAP;
+    if ( StrStrI(opts, "ICON")      != NULL ) style |= BS_ICON;
+    if ( StrStrI(opts, "HCENTER")   != NULL ) style |= BS_CENTER;
+    if ( StrStrI(opts, "TOP")       != NULL ) style |= BS_TOP;
+    if ( StrStrI(opts, "BOTTOM")    != NULL ) style |= BS_BOTTOM;
+    if ( StrStrI(opts, "VCENTER")   != NULL ) style |= BS_VCENTER;
+    if ( StrStrI(opts, "PUSHLIKE")  != NULL ) style |= BS_PUSHLIKE;
+    if ( StrStrI(opts, "MULTILINE") != NULL ) style |= BS_MULTILINE;
+    if ( StrStrI(opts, "NOTIFY")    != NULL ) style |= BS_NOTIFY;
+    if ( StrStrI(opts, "FLAT")      != NULL ) style |= BS_FLAT;
+    if ( StrStrI(opts, "LTEXT")     != NULL ) style |= BS_LEFTTEXT;
+    if ( StrStrI(opts, "LEFT")      != NULL ) style |= BS_LEFT;
+    if ( StrStrI(opts, "RBUTTON")   != NULL ) style |= BS_RIGHTBUTTON;
+    if ( StrStrI(opts, "RIGHT")     != NULL ) style |= BS_RIGHT;
+
+    return style;
+}
+
+
 RexxMethod1(RexxObjectPtr, dyndlg_init_cls, OSELF, self)
 {
     TheDynamicDialogClass = (RexxClassObject)self;
@@ -1318,7 +1275,7 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
 }
 
 
-/** DynamicDialog::addButton()
+/** DynamicDialog::addPushButton() / DynamicDialog::addButton()
  *
  */
 RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
@@ -1356,55 +1313,12 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
         opts = "";
     }
 
-    uint32_t  style = WS_CHILD;
-    WORD     *p     = (WORD *)pcdd->active;
-
-    style |= getCommonWindowStyles(opts, false, true);
-
+    uint32_t style = WS_CHILD;
     if (StrStrI(opts,"DEFAULT")) style |= BS_DEFPUSHBUTTON; else style |= BS_PUSHBUTTON;
 
-    if ( StrStrI(opts, "OWNER")     != NULL ) style |= BS_OWNERDRAW;
-    if ( StrStrI(opts, "BITMAP")    != NULL ) style |= BS_BITMAP;
-    if ( StrStrI(opts, "ICON")      != NULL ) style |= BS_ICON;
-    if ( StrStrI(opts, "HCENTER")   != NULL ) style |= BS_CENTER;
-    if ( StrStrI(opts, "TOP")       != NULL ) style |= BS_TOP;
-    if ( StrStrI(opts, "BOTTOM")    != NULL ) style |= BS_BOTTOM;
-    if ( StrStrI(opts, "VCENTER")   != NULL ) style |= BS_VCENTER;
-    if ( StrStrI(opts, "PUSHLIKE")  != NULL ) style |= BS_PUSHLIKE;
-    if ( StrStrI(opts, "MULTILINE") != NULL ) style |= BS_MULTILINE;
-    if ( StrStrI(opts, "NOTIFY")    != NULL ) style |= BS_NOTIFY;
-    if ( StrStrI(opts, "FLAT")      != NULL ) style |= BS_FLAT;
+    style = getCommonButtonStyles(style, opts);
 
-    const char *pLonger = StrStrI(opts, "LEFTTEXT");
-    const char *pShorter = StrStrI(opts, "LEFT");
-    if ( pLonger )
-    {
-        style |= BS_LEFTTEXT;
-        if ( pShorter != NULL && pShorter != pLonger )
-        {
-            style |= BS_LEFT;
-        }
-    }
-    else if ( pShorter )
-    {
-        style |= BS_LEFT;
-    }
-
-    pLonger = StrStrI(opts,"RIGHTBUTTON");
-    pShorter = StrStrI(opts,"RIGHT");
-    if ( pLonger )
-    {
-        style |= BS_RIGHTBUTTON;
-        if ( pShorter != NULL && pShorter != pLonger )
-        {
-            style |= BS_RIGHT;
-        }
-    }
-    else if ( pShorter )
-    {
-        style |= BS_RIGHT;
-    }
-
+    WORD *p = (WORD *)pcdd->active;
     addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, label, style);
     pcdd->active = p;
     pcdd->count++;
@@ -1417,12 +1331,9 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
     CSTRING methName = NULL;
     int32_t result   = 0;
 
-    if ( argumentExists(9)   )
+    if ( argumentExists(9)  && StrStrI(loadOptions, "CONNECTBUTTONS") != NULL )
     {
-        if ( StrStrI(opts, "CONNECTBUTTONS") != NULL )
-        {
-            methName = strdup_2methodName(label);
-        }
+        methName = strdup_2methodName(label);
     }
     else if ( argumentExists(7) )
     {
@@ -1435,6 +1346,127 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
     }
 
     safeFree((void *)methName);
+    return result;
+}
+
+
+/** DynamicDialog::addRadioButton() / DynamicDialog::addCheckBox()
+ *
+ *
+ *  @remarks  The code for both addRadioButton() and addCheckBox() is so
+ *            parallel it just doesn't make sense to have 2 separate native
+ *            methods.
+ */
+RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName,
+             int, x, int, y, OPTIONAL_uint32_t, cx, OPTIONAL_uint32_t, cy,
+             CSTRING, label, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, loadOptions, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id = checkID(context, rxID, pcpbd->rexxSelf);
+    if ( id < 1 )
+    {
+        return -1;
+    }
+
+    bool isRadioButton = stricmp("addRadioButton", c->GetMessageName()) == 0;
+
+    if ( argumentOmitted(2) )
+    {
+        attributeName = label;
+    }
+
+    if ( argumentOmitted(5) || argumentOmitted(6) )
+    {
+        SIZE textSize = {0};
+        if ( ! getTextSize(context, label, pcpbd->fontName, pcpbd->fontSize, NULL, pcpbd->rexxSelf, &textSize) )
+        {
+            // An exception is raised.
+            return -2;
+        }
+        if ( cx == 0 )
+        {
+            // The magic number 12 comes from old ooDialog Rexx code, is it good?
+            cx = textSize.cx + 12;
+        }
+        if ( cy == 0 )
+        {
+            cy = textSize.cy;
+        }
+    }
+
+    if ( argumentOmitted(8) )
+    {
+        opts = "";
+    }
+
+    uint32_t style = WS_CHILD;
+    if ( isRadioButton )
+    {
+        style |= BS_AUTORADIOBUTTON;
+    }
+    else
+    {
+        style |= (StrStrI(opts, "3STATE") != NULL ? BS_AUTO3STATE : BS_AUTOCHECKBOX);
+    }
+    style = getCommonButtonStyles(style, opts);
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, label, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    int32_t result = 0;
+
+    DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
+        return -2;
+    }
+
+    if ( argumentExists(9) && (StrStrI(loadOptions, "CONNECTRADIOS") != NULL || StrStrI(loadOptions, "CONNECTCHECKS") != NULL))
+    {
+        CSTRING methName = strdup_2methodName(label);
+        if ( methName == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            return -2;
+        }
+
+        char *finalName = (char *)malloc(strlen(methName) + 3);
+        if ( finalName == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            return -2;
+        }
+        strcpy(finalName, "ID");
+        strcat(finalName, methName);
+
+        result = AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id, UINTPTR_MAX, 0, 0, finalName, 0) ? 0 : 1;
+        free((void *)methName);
+        free((void *)finalName);
+    }
+
+    /*
+     * If auto detect is on and this is not coming from a category dialog,  We
+     * need to essentialy do a connectRadioButton() or connectCheckBox(). We
+     * don't check the return from addAttribute() because we already know that
+     * rxID will resolve okay.
+     */
+    if ( StrStrI(opts, "CAT") == NULL && pcpbd->autoDetect )
+    {
+        c->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, c->String(attributeName));
+        result = addToDataTable(context, dlgAdm, id, isRadioButton ? 2 : 1, 0);
+    }
     return result;
 }
 

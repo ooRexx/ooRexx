@@ -108,11 +108,12 @@ typedef CPlainBaseDialogClass *pCPlainBaseDialogClass;
 /* Struct for the PlainBaseDialog object CSelf. */
 typedef struct _pbdCSelf {
     char           fontName[MAX_DEFAULT_FONTNAME];
-    uint32_t       fontSize;
     pCWindowBase   wndBase;
     RexxObjectPtr  rexxSelf;
     HWND           hDlg;
     DIALOGADMIN    *dlgAdm;
+    logical_t      autoDetect;
+    uint32_t       fontSize;
 } CPlainBaseDialog;
 typedef CPlainBaseDialog *pCPlainBaseDialog;
 

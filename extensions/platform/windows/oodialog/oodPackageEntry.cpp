@@ -218,6 +218,8 @@ REXX_METHOD_PROTOTYPE(pbdlg_getFontSize_cls);
 REXX_METHOD_PROTOTYPE(pbdlg_init);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontName);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontSize);
+REXX_METHOD_PROTOTYPE(pbdlg_getAutoDetect);
+REXX_METHOD_PROTOTYPE(pbdlg_setAutoDetect);
 REXX_METHOD_PROTOTYPE(pbdlg_setDlgFont);
 REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
@@ -251,6 +253,7 @@ REXX_METHOD_PROTOTYPE(dyndlg_create);
 REXX_METHOD_PROTOTYPE(dyndlg_startParentDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_startChildDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_addPushButton);
+REXX_METHOD_PROTOTYPE(dyndlg_addRadioButton);
 REXX_METHOD_PROTOTYPE(dyndlg_addGroupBox);
 REXX_METHOD_PROTOTYPE(dyndlg_addIconFile_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_itemAdd_pvt);
@@ -535,6 +538,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getFontName,             pbdlg_getFontName),
     REXX_METHOD(pbdlg_getFontSize,             pbdlg_getFontSize),
     REXX_METHOD(pbdlg_setDlgFont,              pbdlg_setDlgFont),
+    REXX_METHOD(pbdlg_getAutoDetect,           pbdlg_getAutoDetect),
+    REXX_METHOD(pbdlg_setAutoDetect,           pbdlg_setAutoDetect),
     REXX_METHOD(pbdlg_getDlgHandle,            pbdlg_getDlgHandle),
     REXX_METHOD(pbdlg_get,                     pbdlg_get),
     REXX_METHOD(pbdlg_isDialogActive,          pbdlg_isDialogActive),
@@ -567,6 +572,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_startParentDialog,     dyndlg_startParentDialog),
     REXX_METHOD(dyndlg_startChildDialog,      dyndlg_startChildDialog),
     REXX_METHOD(dyndlg_addPushButton,         dyndlg_addPushButton),
+    REXX_METHOD(dyndlg_addRadioButton,        dyndlg_addRadioButton),
     REXX_METHOD(dyndlg_addGroupBox,           dyndlg_addGroupBox),
     REXX_METHOD(dyndlg_addIconFile_pvt,       dyndlg_addIconFile_pvt),
     REXX_METHOD(dyndlg_itemAdd_pvt,           dyndlg_itemAdd_pvt),

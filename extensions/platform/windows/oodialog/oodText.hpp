@@ -38,15 +38,15 @@
 #ifndef oodText_Included
 #define oodText_Included
 
-extern RexxObjectPtr getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t, HWND, RexxObjectPtr);
-extern bool          textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SIZE *, HWND);
-extern bool          textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
-extern bool          getTextExtent(HFONT, HDC, CSTRING, SIZE *);
-extern bool          screenToDlgUnit(HWND hwnd, POINT *point);
-extern void          screenToDlgUnit(HDC hdc, POINT *point);
-extern HFONT         createFontFromName(int logicalPixelsY, CSTRING name, uint32_t size);
-extern HFONT         createFontFromName(CSTRING name, uint32_t size);
-extern bool          mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p);
+extern bool  getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t, HWND, RexxObjectPtr, PSIZE);
+extern bool  textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SIZE *, HWND);
+extern bool  textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);
+extern bool  getTextExtent(HFONT, HDC, CSTRING, SIZE *);
+extern bool  screenToDlgUnit(HWND hwnd, POINT *point);
+extern void  screenToDlgUnit(HDC hdc, POINT *point);
+extern HFONT createFontFromName(int logicalPixelsY, CSTRING name, uint32_t size);
+extern HFONT createFontFromName(CSTRING name, uint32_t size);
+extern bool  mapPixelToDu(RexxMethodContext *c, RexxObjectPtr dlg, PPOINT p);
 
 inline void du2pixel(POINT *point, int baseUnitX, int baseUnitY)
 {

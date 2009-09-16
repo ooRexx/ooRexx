@@ -172,9 +172,11 @@
 ::method parseIncludeFile
   use strict arg hFile
 
-  -- TODO Revisit. Should a syntax condition be raised if the file is not found or readable?
-  hFile = SysSearchPath("PATH", hFile)
-  if hFile == "" then return .false
+  if \ SysIsFile(hFile) then do
+    -- TODO Revisit. Should a syntax condition be raised if the file is not found or readable?
+    hFile = SysSearchPath("PATH", hFile)
+    if hFile == "" then return .false
+  end
 
   f = .stream~new(hFile)
   f~open(read)
@@ -284,7 +286,10 @@
 --
 ::attribute adm get
 
-::attribute autoDetect              -- Automatic data field detection on/off
+-- Automatic data field detection on/off
+::attribute autoDetect get external "LIBRARY oodialog pbdlg_getAutoDetect"
+::attribute autoDetect set external "LIBRARY oodialog pbdlg_setAutoDetect"
+
 ::attribute dataConnection private  -- store connections between ids and class attributes
 ::attribute useStem private         -- flag whether to use a stem to set/get data or not
 ::attribute finished                -- finsished state of dialog, not a logical, can be 0, 1, or 2
@@ -449,7 +454,7 @@
    use strict arg id, msgToRise
    if \ id~dataType("N") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
-   if id < 3 | id = 9 then return .true
+   if id < 3 | id = 9 then return 0
    return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0xFFFFFFFF, 0, 0)
 
 ::method connectControl
@@ -519,7 +524,7 @@
 ::method connectDateTimePicker unguarded external "LIBRARY oodialog generic_connectControl"
 ::method connectMonthCalendar unguarded external "LIBRARY oodialog generic_connectControl"
 
-::method AddAttribute protected
+::method addAttribute protected
    use arg id, attributeName
    if arg(2,'o') = 1 then attributeName = "DATA"id~space(0)
    if id~DataType("N") = 0 then do

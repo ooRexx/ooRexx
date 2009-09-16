@@ -214,7 +214,12 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
         }
     }
 
-    return getTextSize(context, text, fontName, fontSize, hwndSrc, ((pCDialogControl)pCSelf)->oDlg);
+    SIZE textSize = {0};
+    if ( getTextSize(context, text, fontName, fontSize, hwndSrc, ((pCDialogControl)pCSelf)->oDlg, &textSize) )
+    {
+        return rxNewSize(context, textSize.cx, textSize.cy);
+    }
+    return NULLOBJECT;
 }
 
 
