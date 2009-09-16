@@ -627,30 +627,6 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                      id           x          y          cx         cy       text  */
        addToDialogTemplate(&p, 0x0082, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], "", lStyle);
    }
-   else if (!strcmp(argv[0].strptr,"SB"))
-   {
-       CHECKARG(8);
-
-       for ( i = 0; i < 5; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       lStyle = WS_CHILD;
-       if (strstr(argv[7].strptr,"HORIZONTAL")) lStyle |= SBS_HORZ; else lStyle |= SBS_VERT;
-       if (strstr(argv[7].strptr,"TOPLEFT")) lStyle |= SBS_TOPALIGN;
-       if (strstr(argv[7].strptr,"BOTTOMRIGHT")) lStyle |= SBS_BOTTOMALIGN;
-       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
-
-       /*                         id       x          y            cx        cy  */
-       addToDialogTemplate(&p, 0x0084, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-   }
 
    RETPTR(p);
 }
@@ -1282,8 +1258,6 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
             OPTIONAL_CSTRING, label, OPTIONAL_CSTRING, msgToRaise, OPTIONAL_CSTRING, opts,
             OPTIONAL_CSTRING, loadOptions, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
-
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
     if ( pcdd->active == NULL )
     {
@@ -1314,8 +1288,7 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
     }
 
     uint32_t style = WS_CHILD;
-    if (StrStrI(opts,"DEFAULT")) style |= BS_DEFPUSHBUTTON; else style |= BS_PUSHBUTTON;
-
+    style |= ( StrStrI(opts, "DEFAULT") != NULL ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON );
     style = getCommonButtonStyles(style, opts);
 
     WORD *p = (WORD *)pcdd->active;
@@ -1361,8 +1334,6 @@ RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRI
              int, x, int, y, OPTIONAL_uint32_t, cx, OPTIONAL_uint32_t, cy,
              CSTRING, label, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, loadOptions, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
-
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
     pCPlainBaseDialog pcpbd = pcdd->pcpbd;
 
@@ -1377,13 +1348,12 @@ RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRI
         return -1;
     }
 
-    bool isRadioButton = stricmp("addRadioButton", c->GetMessageName()) == 0;
+    bool isRadioButton = stricmp("addRadioButton", context->GetMessageName()) == 0;
 
     if ( argumentOmitted(2) )
     {
         attributeName = label;
     }
-
     if ( argumentOmitted(5) || argumentOmitted(6) )
     {
         SIZE textSize = {0};
@@ -1402,7 +1372,6 @@ RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRI
             cy = textSize.cy;
         }
     }
-
     if ( argumentOmitted(8) )
     {
         opts = "";
@@ -1415,7 +1384,7 @@ RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRI
     }
     else
     {
-        style |= (StrStrI(opts, "3STATE") != NULL ? BS_AUTO3STATE : BS_AUTOCHECKBOX);
+        style |= ( StrStrI(opts, "3STATE") != NULL ? BS_AUTO3STATE : BS_AUTOCHECKBOX );
     }
     style = getCommonButtonStyles(style, opts);
 
@@ -1433,7 +1402,7 @@ RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRI
         return -2;
     }
 
-    if ( argumentExists(9) && (StrStrI(loadOptions, "CONNECTRADIOS") != NULL || StrStrI(loadOptions, "CONNECTCHECKS") != NULL))
+    if ( argumentExists(9) && (StrStrI(loadOptions, "CONNECTRADIOS") != NULL || StrStrI(loadOptions, "CONNECTCHECKS") != NULL) )
     {
         CSTRING methName = strdup_2methodName(label);
         if ( methName == NULL )
@@ -1464,7 +1433,7 @@ RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRI
      */
     if ( StrStrI(opts, "CAT") == NULL && pcpbd->autoDetect )
     {
-        c->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, c->String(attributeName));
+        context->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, context->String(attributeName));
         result = addToDataTable(context, dlgAdm, id, isRadioButton ? 2 : 1, 0);
     }
     return result;
@@ -1477,8 +1446,6 @@ RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRI
 RexxMethod8(int32_t, dyndlg_addGroupBox, int, x, int, y, uint32_t, cx, uint32_t, cy,
             OPTIONAL_CSTRING, text, OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxID, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
-
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
     if ( pcdd->active == NULL )
     {
@@ -1494,7 +1461,6 @@ RexxMethod8(int32_t, dyndlg_addGroupBox, int, x, int, y, uint32_t, cx, uint32_t,
             return -1;
         }
     }
-
     if ( argumentOmitted(5) )
     {
         text = "";
@@ -1509,13 +1475,52 @@ RexxMethod8(int32_t, dyndlg_addGroupBox, int, x, int, y, uint32_t, cx, uint32_t,
 
     uint32_t  style = WS_CHILD | BS_GROUPBOX;
     style |= getCommonWindowStyles(opts, false, false);
-    if ( StrStrI(opts, "RIGHT") != NULL ) style |= BS_RIGHT;
+    if ( StrStrI(opts, "RIGHT") != NULL )
+    {
+        style |= BS_RIGHT;
+    }
 
     WORD *p = (WORD *)pcdd->active;
     addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, text, style);
     pcdd->active = p;
     pcdd->count++;
+    return 0;
+}
 
+
+/** DynamicDialog::addScrollBar()
+ *
+ */
+RexxMethod7(int32_t, dyndlg_addScrollBar, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, opts, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id = checkID(context, rxID, pcdd->pcpbd->rexxSelf);
+    if ( id < 1 )
+    {
+        return -1;
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+
+    uint32_t style = WS_CHILD;
+    style |= getCommonWindowStyles(opts, false, false);
+    style |= ( StrStrI(opts, "HORIZONTAL") != NULL ? SBS_HORZ : SBS_VERT );
+
+    if ( StrStrI(opts, "TOPLEFT")    != NULL ) style |= SBS_TOPALIGN;
+    if ( StrStrI(opts, "BOTTOMRIGH") != NULL ) style |= SBS_BOTTOMALIGN;
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, ScrollBarAtom, id, x, y, cx, cy, NULL, style);
+    pcdd->active = p;
+    pcdd->count++;
     return 0;
 }
 

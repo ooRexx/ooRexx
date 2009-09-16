@@ -551,6 +551,7 @@
 ::method addCheckBox external "LIBRARY oodialog dyndlg_addRadioButton"
 ::method addPushButton external "LIBRARY oodialog dyndlg_addPushButton"
 ::method addButton external "LIBRARY oodialog dyndlg_addPushButton"
+::method addScrollBar external "LIBRARY oodialog dyndlg_addScrollBar"
 
 -- The optional msgToRaise arg can be the name of a method to invoke when the
 -- button is pushed.  The empty string  signals the implementing code to skip
@@ -705,15 +706,6 @@
    if opts~wordpos("CAT") = 0 & self~autoDetect then return self~ConnectComboBox(symbid, fname, opts)
    else return 0
 
-
-
-::method addScrollBar
-   use arg id, x, y, cx, cy, opts = ""
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   opts = opts~translate
-   self~activePtr = UsrAddControl("SB", self~activePtr, id, x, y, cx, cy, opts)
-   return 0
 
 
 ::method addRadioGroup
