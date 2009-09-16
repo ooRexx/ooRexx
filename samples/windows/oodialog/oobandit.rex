@@ -115,7 +115,7 @@
    ret = play("WHISTLE.WAV")
    do cycle = maxcycle by -1 to 1 until self~finished
       if self~checkspeed = 0 then leave
-      sleep = max(1, min(100,self~speed/2) )
+      sleep = format(max(1, min(100,self~speed/2)), , 0)
       do j = 1 to self~speed/sleep
 	 if self~Finished = 0 then do
             self~HandleMessages
