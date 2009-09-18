@@ -178,11 +178,11 @@
    self~connectList(41,"FilmClick")
 
    if .DlgUtil~comCtl32Version < 6 then do
-      self~addBitmapButton(45, 13, 87, 102, 40, "Get the Ticket", 'printTicket', -
-                           "bmp\ticket.bmp",,,, "FRAME USEPAL STRETCH GROUP")
+      self~createBitmapButton(45, 13, 87, 102, 40, "FRAME USEPAL STRETCH GROUP", "Get the Ticket", -
+                              'printTicket', "bmp\ticket.bmp")
    end
    else do
-      self~addButton(45, 13, 87, 102, 40, "", 'printTicket', "GROUP")
+      self~createPushButton(45, 13, 87, 102, 40, "GROUP", "", 'printTicket')
    end
 
 ::method InitTicket

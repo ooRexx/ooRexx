@@ -2128,17 +2128,21 @@ RexxMethod6(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL
 
     // TODO these numbers need to be mapped to the oodControl_t enum.
     uint32_t typ;
-    if ( strcmp("CONNECTENTRYLINE", msgName) == 0 )           {typ =    0;}
+    if ( strcmp("CONNECTEDIT", msgName) == 0 )                {typ =    0;}
+    else if ( strcmp("CONNECTENTRYLINE", msgName) == 0 )      {typ =    0;}
     else if ( strcmp("CONNECTCOMBOBOX", msgName) == 0 )       {typ = (opts != NULL && StrStrI(opts, "LIST") != NULL) ? 5 : 0;}
     else if ( strcmp("CONNECTCHECKBOX", msgName) == 0 )       {typ =    1;}
     else if ( strcmp("CONNECTRADIOBUTTON", msgName) == 0 )    {typ =    2;}
     else if ( strcmp("CONNECTLISTBOX", msgName) == 0 )        {typ =    3;}
     else if ( strcmp("CONNECTMULTILISTBOX", msgName) == 0 )   {typ =    4;}
     else if ( strcmp("CONNECTSEPARATOR", msgName) == 0 )      {typ =  999;}
-    else if ( strcmp("CONNECTMULTILISTBOX", msgName) == 0 )   {typ =    4;}
+    else if ( strcmp("CONNECTTREEVIEW", msgName) == 0 )       {typ =    6;}
     else if ( strcmp("CONNECTTREECONTROL", msgName) == 0 )    {typ =    6;}
+    else if ( strcmp("CONNECTLISTVIEW", msgName) == 0 )       {typ =    7;}
     else if ( strcmp("CONNECTLISTCONTROL", msgName) == 0 )    {typ =    7;}
+    else if ( strcmp("CONNECTTRACKBAR", msgName) == 0 )       {typ =    8;}
     else if ( strcmp("CONNECTSLIDERCONTROL", msgName) == 0 )  {typ =    8;}
+    else if ( strcmp("CONNECTTAB", msgName) == 0 )            {typ =    9;}
     else if ( strcmp("CONNECTTABCONTROL", msgName) == 0 )     {typ =    9;}
     else if ( strcmp("CONNECTDATETIMEPICKER", msgName) == 0 ) {typ =   10;}
     else if ( strcmp("CONNECTMONTHCALENDAR", msgName) == 0 )  {typ =   11;}

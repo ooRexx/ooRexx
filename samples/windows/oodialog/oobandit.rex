@@ -93,9 +93,9 @@
    self~addEntryLine(1200,,110,9,35,11)
    self~addText(175,10,60,10,"$$$  Jackpot")
    jackx = 20*self~factorx; jacky = 20*self~factory
-   self~addBitmapButton(1201,10, 30,75,90, "",,bmp.1,,,,"INMEMORY STRETCH USEPAL")
-   self~addBitmapButton(1202,90, 30,75,90, "",,bmp.1,,,,"INMEMORY STRETCH")
-   self~addBitmapButton(1203,170,30,75,90, "",,bmp.1,,,,"INMEMORY STRETCH")
+   self~createBitmapButton(1201,10, 30,75,90,"INMEMORY STRETCH USEPAL", , , bmp.1)
+   self~createBitmapButton(1202,90, 30,75,90,"INMEMORY STRETCH", , , bmp.1)
+   self~createBitmapButton(1203,170,30,75,90,"INMEMORY STRETCH", , , bmp.1)
    self~addButtonGroup(10,125,34,12,"&Stop 1 OK &Cancel 2 Cancel",1,"DEFAULT")
    self~addText(105,126,40,9,'Speed (ms):','RIGHT')
    self~addEntryLine(1205,'speed',150,125,15,12)

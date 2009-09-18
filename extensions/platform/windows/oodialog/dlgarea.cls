@@ -72,11 +72,11 @@
 /*                                                                           */
 /*  so to add a button 80% across your margined dialog for the remainder     */
 /*  a = .DlgArea~new(10,10,150,110,5)                                        */
-/*  self~AddButton(a~x(80%),10,a~w(20%),a~h(10%),'Text','Method')            */
+/*  self~createPushButton(a~x(80%),10,a~w(20%),a~h(10%), ,'Text','Method')   */
 /*    or not using percentages is equivalent to                              */
-/*  self~AddButton(a~x(112),10,a~w * 0.2,a~h(10),'Text','Method')            */
+/*  self~createPushButton(a~x(112),10,a~w * 0.2,a~h(10), ,'Text','Method')   */
 /*    or not using the object would be equivalent to                         */
-/*  self~AddButton(117,10,28,10,'Text','Method')                             */
+/*  self~createPushButton(117, 10, 28, 10, , 'Text','Method')                */
 /*                                                                           */
 /* ------------------------------------------------------------------------- */
 /*               :                                  ^                        */

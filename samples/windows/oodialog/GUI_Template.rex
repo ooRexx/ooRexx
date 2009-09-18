@@ -175,14 +175,11 @@ exit -1
 /*                                                                           */
 /* If you are going to use any of these methods:                             */
 /*                                                                           */
-/* ADDLISTCONTROL           CONNECTLISTCONTROL        GETLISTCONTROL         */
-/* ADDSLIDERCONTROL         CONNECTSLIDERCONTROL      GETSLIDERCONTROL       */
-/* ADDTABCONTROL                                      GETTABCONTROL          */
-/* ADDTREECONTROL           CONNECTTREECONTROL        GETTREECONTROL         */
-/* ADDPROGRESSBAR                                     GETPROGRESSBAR         */
-/* GETCOMBOBOX              GETLISTBOX                GETCHECKCONTROL        */
-/* GETRADIOCONTROL          GETBUTTONCONTROL          GETEDITCONTROL         */
-/* GETSTATICCONTROL         GETSCROLLBAR                                     */
+/* GETCOMBOBOX              GETSCROLLBAR              GETTREECONTROL         */
+/* GETRADIOCONTROL          GETLISTCONTROL            GETPROGRESSBAR         */
+/* GETSTATICCONTROL         GETSLIDERCONTROL          GETCHECKCONTROL        */
+/* GETLISTBOX               GETTABCONTROL             GETEDITCONTROL         */
+/* GETBUTTONCONTROL                                                          */
 /*                                                                           */
 /* Then you must add INHERIT ADVANCEDCONTROLS to the class directive above   */
 /*                                                                           */
@@ -271,12 +268,12 @@ exit -1
                         /* Dialog Height is available to us as self~SizeY    */
                         /* ------------------------------------------------- */
 
-   self~AddButton( 1,Self~SizeX-60 ,Self~SizeY-20,50,15,'OK','Ok','DEFAULT')
-   self~AddButton( 2,Self~SizeX-120,Self~SizeY-20,50,15,'Cancel','Cancel')
+   self~createPushButton( 1,Self~SizeX-60 ,Self~SizeY-20,50,15,'DEFAULT','OK','Ok')
+   self~createPushButton( 2,Self~SizeX-120,Self~SizeY-20,50,15,,'Cancel','Cancel')
 
 /* examples to cut & paste:                                                  */
-/* self~addButton(id,x,y,cx,cy,'text','method','options')                    */
-/* self~AddCheckBox(id,'attribute',x,y,cx,cy,text,'options')                 */
+/* self~createPushButton(id,x,y,cx,cy,'options','text','method')             */
+/* self~createCheckBox(id,'attribute',x,y,cx,cy,'options',text)              */
 /* self~AddComboBox(id,'attribute',x,y,cx,cy,'options')                      */
 /* self~AddEntryLine(id,'attribute',x,y,cx,cy,'options')                     */
 /* self~AddListControl(id,'attribute',x,y,cx,cy,'options')                   */

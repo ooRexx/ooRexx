@@ -131,7 +131,7 @@ return
 
 ::method CategoryPage
   forward class (super) continue /* call parent constructor */
-  self~AddButton(201,160,185,60,12,"Add")
+  self~createPushButton(201,160,185,60,12,,"Add")
 
 /* initialize first category page */
 ::method List

@@ -526,6 +526,7 @@
 
 ::method SetCategoryListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
 
+::method connectEdit external "LIBRARY oodialog generic_connectControl"
 ::method connectEntryLine external "LIBRARY oodialog generic_connectControl"
 ::method connectComboBox external "LIBRARY oodialog generic_connectControl"
 ::method connectCheckBox external "LIBRARY oodialog generic_connectControl"
@@ -534,9 +535,13 @@
 ::method connectMultiListBox external "LIBRARY oodialog generic_connectControl"
 ::method connectSeparator external "LIBRARY oodialog generic_connectControl"
 
+::method connectTreeView unguarded external "LIBRARY oodialog generic_connectControl"
 ::method connectTreeControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectListView unguarded external "LIBRARY oodialog generic_connectControl"
 ::method connectListControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectTrackBar unguarded external "LIBRARY oodialog generic_connectControl"
 ::method connectSliderControl unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectTab unguarded external "LIBRARY oodialog generic_connectControl"
 ::method connectTabControl unguarded external "LIBRARY oodialog generic_connectControl"
 ::method connectDateTimePicker unguarded external "LIBRARY oodialog generic_connectControl"
 ::method connectMonthCalendar unguarded external "LIBRARY oodialog generic_connectControl"

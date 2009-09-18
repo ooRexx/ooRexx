@@ -86,14 +86,14 @@
    -- scrolling from the right to the left, the 101 button, and from the bottom to the top,
    -- the 102 button.
 
-   self~AddBitmapButton(101,1,10,self~SizeX-1, 130 / self~FactorY,,,"bmp\install.bmp",,,,"USEPAL")
-   self~AddBitmapButton(102,20,but2pos,self~SizeX - 20,but2size,,,"bmp\install2.bmp")
+   self~createBitmapButton(101, 1, 10, self~SizeX-1, 130 / self~FactorY, "USEPAL", , , "bmp\install.bmp")
+   self~createBitmapButton(102, 20, but2pos, self~SizeX - 20 ,but2size, , , , "bmp\install2.bmp")
    self~DisplaceBitmap(101,self~SizeX * self~FactorX+10, 0)
    self~DisplaceBitmap(102, -450, 100)
 
    -- Add the other controls.
    self~AddWhiteFrame(10, self~SizeY - 52, self~SizeX-20, 28,"HIDDEN", 203)
-   self~AddButton(103,12, self~SizeY - 50, self~SizeX-24, 24,,,"OWNER NOTAB")
+   self~createPushButton(103,12, self~SizeY - 50, self~SizeX-24, 24,"OWNER NOTAB")
    self~AddButtonGroup(self~SizeX-220, self~SizeY - 18,60,12, ,
             "&Bitmap-Viewer 111 BmpView &Draw-Color-Demo 112 OODraw &Cancel 2 CANCEL", 1, "DEFAULT")
 

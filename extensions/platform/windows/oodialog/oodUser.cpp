@@ -1251,12 +1251,44 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
 }
 
 
-/** DynamicDialog::addPushButton() / DynamicDialog::addButton()
+/** DynamicDialog::addButton()
+ *  [deprecated] forward to createPushButton()
+ */
+RexxMethod10(RexxObjectPtr, dyndlg_addButton, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, label, OPTIONAL_CSTRING, msgToRaise, OPTIONAL_CSTRING, opts,
+            OPTIONAL_CSTRING, loadOptions, ARGLIST, args)
+{
+    RexxArrayObject newArgs = context->NewArray(9);
+
+    for ( int i = 1; i <= 5; i++ )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, i), i);
+    }
+    if ( argumentExists(6) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 7);
+    }
+    if ( argumentExists(7) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 8);
+    }
+    if ( argumentExists(8) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 8), 6);
+    }
+    if ( argumentExists(9) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 9), 9);
+    }
+    return context->ForwardMessage(NULL, "createPushButton", NULL, newArgs);
+}
+
+/** DynamicDialog::createPushButton()
  *
  */
-RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
-            OPTIONAL_CSTRING, label, OPTIONAL_CSTRING, msgToRaise, OPTIONAL_CSTRING, opts,
-            OPTIONAL_CSTRING, loadOptions, CSELF, pCSelf)
+RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+             OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, label, OPTIONAL_CSTRING, msgToRaise, OPTIONAL_CSTRING, loadOptions,
+             CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
     if ( pcdd->active == NULL )
@@ -1271,7 +1303,6 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
         return -2;
     }
 
-
     int32_t id = checkID(context, rxID, pcdd->pcpbd->rexxSelf);
     if ( id < 1 )
     {
@@ -1280,11 +1311,11 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
 
     if ( argumentOmitted(6) )
     {
-        label = "";
-    }
-    if ( argumentOmitted(8) )
-    {
         opts = "";
+    }
+    if ( argumentOmitted(7) )
+    {
+        label = "";
     }
 
     uint32_t style = WS_CHILD;
@@ -1296,7 +1327,7 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
     pcdd->active = p;
     pcdd->count++;
 
-    if ( id < 3 || id == 9 )
+    if ( id < IDCANCEL || id == IDHELP )
     {
         return 0;
     }
@@ -1308,7 +1339,7 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
     {
         methName = strdup_2methodName(label);
     }
-    else if ( argumentExists(7) )
+    else if ( argumentExists(8) )
     {
         methName = strdup_nospace(msgToRaise);
     }
@@ -1325,14 +1356,245 @@ RexxMethod10(int32_t, dyndlg_addPushButton, RexxObjectPtr, rxID, int, x, int, y,
 
 /** DynamicDialog::addRadioButton() / DynamicDialog::addCheckBox()
  *
+ *  [deprecated forward to createRadioButton]
+ */
+RexxMethod10(RexxObjectPtr, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName,
+             int, x, int, y, OPTIONAL_uint32_t, cx, OPTIONAL_uint32_t, cy,
+             CSTRING, label, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, loadOptions, ARGLIST, args)
+{
+    RexxArrayObject newArgs = context->NewArray(9);
+
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 1), 1);
+    if ( argumentExists(2) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 2), 8);
+    }
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 3), 2);
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 4), 3);
+    if ( argumentExists(5) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 5), 4);
+    }
+    if ( argumentExists(6) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 5);
+    }
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 7), 7);
+    if ( argumentExists(8) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 8), 6);
+    }
+    if ( argumentExists(9) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 9), 9);
+    }
+    return context->ForwardMessage(NULL, "createRadioButton", NULL, newArgs);
+}
+
+/** DynamicDialog::createRadioButton() / DynamicDialog::createCheckBox()
  *
- *  @remarks  The code for both addRadioButton() and addCheckBox() is so
+ *  @remarks  The code for both createRadioButton() and createCheckBox() is so
  *            parallel it just doesn't make sense to have 2 separate native
  *            methods.
  */
-RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName,
-             int, x, int, y, OPTIONAL_uint32_t, cx, OPTIONAL_uint32_t, cy,
-             CSTRING, label, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, loadOptions, CSELF, pCSelf)
+RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int, y,
+             OPTIONAL_uint32_t, cx, OPTIONAL_uint32_t, cy, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, label,
+             OPTIONAL_CSTRING, attributeName, OPTIONAL_CSTRING, loadOptions, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id = checkID(context, rxID, pcpbd->rexxSelf);
+    if ( id < 1 )
+    {
+        return -1;
+    }
+
+    bool isRadioButton = stricmp("createRadioButton", context->GetMessageName()) == 0;
+
+    if ( argumentOmitted(7) )
+    {
+        label = "";
+    }
+    if ( argumentOmitted(4) || argumentOmitted(5) )
+    {
+        SIZE textSize = {0};
+        char *tempText = ( *label == '\0' ? "Tig" : label );
+
+        if ( ! getTextSize(context, label, pcpbd->fontName, pcpbd->fontSize, NULL, pcpbd->rexxSelf, &textSize) )
+        {
+            // An exception is raised.
+            return -2;
+        }
+        if ( cx == 0 )
+        {
+            // The magic number 12 comes from old ooDialog Rexx code, is it good?
+            cx = textSize.cx + 12;
+        }
+        if ( cy == 0 )
+        {
+            cy = textSize.cy;
+        }
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+    if ( argumentOmitted(8) )
+    {
+        attributeName = label;
+    }
+
+    uint32_t style = WS_CHILD;
+    if ( isRadioButton )
+    {
+        style |= BS_AUTORADIOBUTTON;
+    }
+    else
+    {
+        style |= ( StrStrI(opts, "3STATE") != NULL ? BS_AUTO3STATE : BS_AUTOCHECKBOX );
+    }
+    style = getCommonButtonStyles(style, opts);
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, label, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    int32_t result = 0;
+
+    DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
+        return -2;
+    }
+
+    if ( argumentExists(9) && (StrStrI(loadOptions, "CONNECTRADIOS") != NULL || StrStrI(loadOptions, "CONNECTCHECKS") != NULL) )
+    {
+        CSTRING methName = strdup_2methodName(label);
+        if ( methName == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            return -2;
+        }
+
+        char *finalName = (char *)malloc(strlen(methName) + 3);
+        if ( finalName == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            return -2;
+        }
+        strcpy(finalName, "ID");
+        strcat(finalName, methName);
+
+        result = AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id, UINTPTR_MAX, 0, 0, finalName, 0) ? 0 : 1;
+        free((void *)methName);
+        free((void *)finalName);
+    }
+
+    /*
+     * If auto detect is on and this is not coming from a category dialog,  We
+     * need to essentialy do a connectRadioButton() or connectCheckBox(). We
+     * don't check the return from addAttribute() because we already know that
+     * rxID will resolve okay.
+     */
+    if ( StrStrI(opts, "CAT") == NULL && pcpbd->autoDetect )
+    {
+        context->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, context->String(attributeName));
+        result = addToDataTable(context, dlgAdm, id, isRadioButton ? 2 : 1, 0);
+    }
+    return result;
+}
+
+
+RexxMethod8(RexxObjectPtr, dyndlg_addGroupBox, int, x, int, y, uint32_t, cx, uint32_t, cy, OPTIONAL_CSTRING, text,
+            OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxID, ARGLIST, args)
+{
+    RexxArrayObject newArgs = context->NewArray(7);
+
+    for ( int i = 1; i <= 4; i++ )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, i), i + 1);
+    }
+    if ( argumentExists(5) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 5), 7);
+    }
+    if ( argumentExists(6) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 6);
+    }
+    if ( argumentExists(7) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 1);
+    }
+    return context->ForwardMessage(NULL, "createGroupBox", NULL, newArgs);
+}
+
+/** DynamicDialog::createGroupBox()
+ *
+ */
+RexxMethod8(int32_t, dyndlg_createGroupBox, OPTIONAL_RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, text, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id = IDC_STATIC;
+    if ( argumentExists(1) )
+    {
+        id = checkID(context, rxID, pcdd->pcpbd->rexxSelf);
+        if ( id < IDC_STATIC )
+        {
+            return -1;
+        }
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+    if ( argumentOmitted(7) )
+    {
+        text = "";
+    }
+
+    // For a groupbox, we support right or left aligned text.  By default the
+    // alignment is left so we only need to check for the RIGHT key word.
+
+    uint32_t  style = WS_CHILD | BS_GROUPBOX;
+    style |= getCommonWindowStyles(opts, false, false);
+    if ( StrStrI(opts, "RIGHT") != NULL )
+    {
+        style |= BS_RIGHT;
+    }
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, text, style);
+    pcdd->active = p;
+    pcdd->count++;
+    return 0;
+}
+
+
+/** DynamicDialog::addEdit() / DynamicDialog::addEntryLine()
+ *
+ *
+ *  @remarks  addEntryLine() is the old name for an edit control and should be
+ *            deprecated.  addEdit() is the correct method to add an edit
+ *            control, they both map to this native method.
+ */
+#if 0
+RexxMethod8(int32_t, dyndlg_addEdit, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName, int, x, int, y,
+             uint32_t, cx, OPTIONAL_uint32_t, cy, OPTIONAL_CSTRING, opts, CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
     pCPlainBaseDialog pcpbd = pcdd->pcpbd;
@@ -1438,60 +1700,13 @@ RexxMethod10(int32_t, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRI
     }
     return result;
 }
+#endif
 
 
-/** DynamicDialog::addGroupBox()
+/** DynamicDialog::createScrollBar()
  *
  */
-RexxMethod8(int32_t, dyndlg_addGroupBox, int, x, int, y, uint32_t, cx, uint32_t, cy,
-            OPTIONAL_CSTRING, text, OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxID, CSELF, pCSelf)
-{
-    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
-    if ( pcdd->active == NULL )
-    {
-        return -2;
-    }
-
-    int32_t id = IDC_STATIC;
-    if ( argumentExists(7) )
-    {
-        id = checkID(context, rxID, pcdd->pcpbd->rexxSelf);
-        if ( id < IDC_STATIC )
-        {
-            return -1;
-        }
-    }
-    if ( argumentOmitted(5) )
-    {
-        text = "";
-    }
-    if ( argumentOmitted(6) )
-    {
-        opts = "";
-    }
-
-    // For a groupbox, we support right or left aligned text.  By default the
-    // alignment is left so we only need to check for the RIGHT key word.
-
-    uint32_t  style = WS_CHILD | BS_GROUPBOX;
-    style |= getCommonWindowStyles(opts, false, false);
-    if ( StrStrI(opts, "RIGHT") != NULL )
-    {
-        style |= BS_RIGHT;
-    }
-
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, text, style);
-    pcdd->active = p;
-    pcdd->count++;
-    return 0;
-}
-
-
-/** DynamicDialog::addScrollBar()
- *
- */
-RexxMethod7(int32_t, dyndlg_addScrollBar, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+RexxMethod7(int32_t, dyndlg_createScrollBar, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
             OPTIONAL_CSTRING, opts, CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;

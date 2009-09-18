@@ -71,16 +71,16 @@
 
 ::method DefineDialog
    self~DefineDialog:super
-   self~addButton(100,0,0,200,200,'',,"DISABLED NOTAB")  /* draw button */
-   self~addButton(11,5,  205,55,12,"&Rectangles","brushRectangles")
-   self~addButton(12,62, 205,55,12,"&Pen Rectangles","penRectangles")
-   self~addButton(13,119,205,36,12,"Pi&xels","pixels")
-   self~addButton(14,5,  220,36,12,"S&tar","starLines")
-   self~addButton(15,43, 220,36,12,"&Lines","randomLines")
-   self~addButton(16,81, 220,36,12,"&Squares","randomSquares")
-   self~addButton(17,119,220,36,12,"&Ellipses","circleEllipses")
-   self~addButton(1, 160,205,35,12,"&Interrupt","OK","DEFAULT")
-   self~addButton(2, 160,220,35,12,"&Cancel","Cancel")
+   self~createPushButton(100, 0,0,200,200, "DISABLED NOTAB")  /* draw button */
+   self~createPushButton(11,5,  205,55,12, ,"&Rectangles","brushRectangles")
+   self~createPushButton(12,62, 205,55,12, ,"&Pen Rectangles","penRectangles")
+   self~createPushButton(13,119,205,36,12, ,"Pi&xels","pixels")
+   self~createPushButton(14,5,  220,36,12, ,"S&tar","starLines")
+   self~createPushButton(15,43, 220,36,12, ,"&Lines","randomLines")
+   self~createPushButton(16,81, 220,36,12, ,"&Squares","randomSquares")
+   self~createPushButton(17,119,220,36,12, ,"&Ellipses","circleEllipses")
+   self~createPushButton(1, 160,205,35,12, "DEFAULT","&Interrupt","OK")
+   self~createPushButton(2, 160,220,35,12, ,"&Cancel","Cancel")
    do i=5 to 49
       self~addBlackRect(2*i,2*i,200-4*i,200-4*i,"BORDER")
    end

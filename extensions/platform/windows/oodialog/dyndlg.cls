@@ -379,17 +379,17 @@
          select
             when class = '"BUTTON"' then do
                if style~wordpos("BS_AUTORADIOBUTTON") > 0 | style~wordpos("BS_RADIOBUTTON") > 0 then
-                  self~addRadioButton(id, , x, y, w, h, name, self~getRCStyle(style, "BTN", "R"), loadOptions)
+                  self~createRadioButton(id, x, y, w, h, self~getRCStyle(style, "BTN", "R"), name, , loadOptions)
                else if style~wordpos("BS_AUTOCHECKBOX") > 0 | style~wordpos("BS_CHECKBOX") > 0 then
-                  self~addCheckBox(id, , x, y, w, h, name, self~getRCStyle(style, "BTN"), loadOptions)
+                  self~createCheckBox(id, x, y, w, h, self~getRCStyle(style, "BTN"), name, , loadOptions)
                else if style~wordpos("BS_GROUPBOX") > 0 then
-                  self~addGroupBox(x, y, w, h, name, self~getRCStyle(style, "GB"), id)
+                  self~createGroupBox(id, x, y, w, h, self~getRCStyle(style, "GB"), name)
                else if style~pos("BS_OWNERDRAW") = 0 & style~wordpos("BS_AUTO3STATE") > 0 then do
                   -- If not the owner draw flag and the 3state flag, it is a checkbox.
-                  self~addCheckBox(id, , x, y, w, h, name, self~getRCStyle(style, "BTN"), loadOptions)
+                  self~createCheckBox(id, x, y, w, h, self~getRCStyle(style, "BTN"), name, , loadOptions)
                end
                else do
-                  self~addButton(id, x, y, w, h, name, , self~getRCStyle(style, "BTN"), loadOptions)
+                  self~createPushButton(id, x, y, w, h, self~getRCStyle(style, "BTN"), name, , loadOptions)
                end
             end
 
@@ -445,7 +445,7 @@
                self~addListBox(id, name, x, y, w, h, self~getRCStyle(style, "LB"))
 
             when class = '"SCROLLBAR"' then
-               self~addScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
+               self~createScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
 
             when class = 'WC_TREEVIEW' | class = '"SYSTREEVIEW32"' then
                self~AddTreeControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "TREE"))
@@ -486,7 +486,7 @@
             when type = "DEFPUSHBUTTON" | type = "PUSHBUTTON" then
             do
                if type~left(3) = ("DEF") then style = style || " | BS_DEFPUSHBUTTON"
-               self~addButton(id, x, y, w, h, name, , self~getRCStyle(style, "BTN"), loadOptions)
+               self~createPushButton(id, x, y, w, h, self~getRCStyle(style, "BTN"), name, , loadOptions)
             end
 
             when type = "EDITTEXT" then
@@ -507,7 +507,7 @@
             end
 
             when type = "GROUPBOX" then
-               self~addGroupBox(x, y, w, h, name, self~getRCStyle(style, "GB"), id)
+               self~createGroupBox(id, x, y, w, h, self~getRCStyle(style, "GB"), name)
 
             when type = "COMBOBOX" then
                self~addComboBox(id, name, x, y, w, h, self~getRCStyle(style, "CB"))
@@ -516,23 +516,23 @@
                self~addListBox(id, name, x, y, w, h, self~getRCStyle(style, "LB"))
 
             when type = "SCROLLBAR" then
-               self~addScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
+               self~createScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
 
             when type = "AUTORADIOBUTTON" | type = "RADIOBUTTON" then
-               self~addRadioButton(id, , x, y, w, h, name, self~getRCStyle(style, "BTN", "R"), loadOptions)
+               self~createRadioButton(id, x, y, w, h, self~getRCStyle(style, "BTN", "R"), name, , loadOptions)
 
             when type = "AUTOCHECKBOX" | type = "CHECKBOX" then
-               self~addCheckBox(id, , x, y, w, h, name, self~getRCStyle(style, "BTN"), loadOptions)
+               self~createCheckBox(id, x, y, w, h, self~getRCStyle(style, "BTN"), name, , loadOptions)
 
             when type = "AUTO3STATE" then do
                -- Sometimes AUTO3STATE is used for an owner draw button.
                if style~pos("BS_OWNERDRAW") > 0 then do
                    -- With the owner draw flag, treat as a regular button.
-                  self~addButton(id, x, y, w, h, name, , self~getRCStyle(style, "BTN"), loadOptions)
+                  self~createPushButton(id, x, y, w, h, self~getRCStyle(style, "BTN"), name, , loadOptions)
                end
                else do
                    -- Otherwise, (no owner draw flag,) treat as 3state.
-                   self~addCheckBox(id, , x, y, w, h, name, self~getRCStyle(style, "BTN") || " | BS_AUTO3STATE", loadOptions)
+                   self~createCheckBox(id, x, y, w, h, self~getRCStyle(style, "BTN") || " | BS_AUTO3STATE", name, , loadOptions)
                end
             end
             otherwise do
@@ -546,25 +546,35 @@
    self~ProcessingLoad = 0
    return 0
 
-::method addGroupBox external "LIBRARY oodialog dyndlg_addGroupBox"
+::method createGroupBox external "LIBRARY oodialog dyndlg_createGroupBox"
+
+::method createRadioButton external "LIBRARY oodialog dyndlg_createRadioButton"
 ::method addRadioButton external "LIBRARY oodialog dyndlg_addRadioButton"
+
+::method createCheckBox external "LIBRARY oodialog dyndlg_createRadioButton"
 ::method addCheckBox external "LIBRARY oodialog dyndlg_addRadioButton"
-::method addPushButton external "LIBRARY oodialog dyndlg_addPushButton"
-::method addButton external "LIBRARY oodialog dyndlg_addPushButton"
-::method addScrollBar external "LIBRARY oodialog dyndlg_addScrollBar"
+
+::method createPushButton external "LIBRARY oodialog dyndlg_createPushButton"
+::method addButton external "LIBRARY oodialog dyndlg_addButton"
+
+::method createScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
+::method addScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
 
 -- The optional msgToRaise arg can be the name of a method to invoke when the
 -- button is pushed.  The empty string  signals the implementing code to skip
 -- adding a method to the message table and just add the bitmaps.
-::method addBitmapButton
-   use arg id, x, y, cx = 0, cy = 0, text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = "", opts = ""
+::method createBitmapButton
+   use strict arg id, x, y, cx = 0, cy = 0, opts = "", text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = ""
    if \ self~hasMethod('CONNECTBITMAPBUTTON') then return -3
    opts = opts~translate || " OWNER"
    if focus = "" & sel = "" & opts~wordpos("FRAME") = 0 & opts~wordpos("TAB") = 0 then opts = opts || " NOTAB"
-   ret = self~addButton(id, x, y, cx, cy, text, , opts)
+   ret = self~createPushButton(id, x, y, cx, cy, opts, text)
    if ret <> 0 then return ret
    return self~connectBitmapButton(id, msgToRaise~space(0), bmp, focus, sel, disabl, opts)
 
+::method addBitmapButton
+   use strict arg id, x, y, cx = 0, cy = 0, text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = "", opts = ""
+   return self~createBitmapButton(id, x, y, cx, cy, opts, text, msgToRaise, bmp, focus, sel, disabl)
 
 ::method addStatic
    use strict arg id = (-1), x, y, cx = 0, cy = 0, opts = "TEXT", text = ""
@@ -669,7 +679,7 @@
    end
    opts = opts~translate
    self~activePtr = UsrAddControl("EL", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then return self~ConnectEntryLine(symbid, fname)
+   if self~autoDetect then return self~connectEdit(symbid, fname)
    else return 0
 
 
@@ -741,11 +751,11 @@
    i = 0
    do while rb \= ""
       if kind = "R" then do
-          if i = 0 then self~addRadioButton(startid + i, , x + 4, my, len + 12, stepy, rb, newopts || " GROUP")
-          else self~addRadioButton(startid + i, , x + 4, my, len + 12, stepy, rb, newopts)
+          if i = 0 then self~createRadioButton(startid + i, x + 4, my, len + 12, stepy, newopts || " GROUP", rb)
+          else self~createRadioButton(startid + i, x + 4, my, len + 12, stepy, newopts, rb)
       end
       else do
-          self~addCheckBox(startid + i, , x + 4, my, len + 12, stepy, rb, newopts)
+          self~createCheckBox(startid + i, x + 4, my, len + 12, stepy, newopts, rb)
       end
       my = my + stepy; i = i + 1
       parse var inp rb inp
@@ -757,7 +767,7 @@
    end
    if cx \= 0 then LastLen = cx-20
    size = .Size~new(lastlen+20, my-y+trunc(oldy / 2))
-   if nob = 0 then self~addGroupBox(x, y, size~width, size~height, "", newopts, idstat)
+   if nob = 0 then self~createGroupBox(idstat, x, y, size~width, size~height, newopts, "")
    return size
 
 
@@ -812,7 +822,7 @@
       if is \= -1 then is = is + 1
       my = my + trunc(stepy * 2.25)
    end
-   if nob = 0 then return self~addGroupBox(x, y, cx1+cx2, my-y, "", newopts, is)
+   if nob = 0 then return self~createGroupBox(is, x, y, cx1+cx2, my-y, newopts, "")
    else return 0
 
 
@@ -865,7 +875,7 @@
       if is \= -1 then is = is + 2
       my = my + trunc(stepy * 2.25)
    end
-   if nob = 0 then return self~addGroupBox(x, y, cx1+cx2, my-y, "", newopts, is)
+   if nob = 0 then return self~createGroupBox(is, x, y, cx1+cx2, my-y, newopts, "")
    else return 0
 
 
@@ -929,15 +939,15 @@
       end
       if kind = "R" then do
          if i = 1 then tmpopts = newopts || " GROUP"; else tmpopts = newopts
-         self~addRadioButton(startid + i - 1, , x + mx + 4, my, cx - 8, stepy, inp.i, tmpopts)
+         self~createRadioButton(startid + i - 1, x + mx + 4, my, cx - 8, stepy, tmpopts, inp.i)
       end
       else do
-         self~addCheckBox(startid + i -1, , x + mx + 4, my, cx - 8, stepy, inp.i, newopts)
+         self~createCheckBox(startid + i - 1, x + mx + 4, my, cx - 8, stepy, newopts, inp.i)
       end
       my = my + stepy
    end
    if highy = 0 then highy = my
-   if nob = 0 then return self~addGroupBox(x, y, mx+cx, highy-y+(stepy % 2), "", newopts, idstat)
+   if nob = 0 then return self~createGroupBox(idstat, x, y, mx+cx, highy-y+(stepy % 2), newopts, "")
    else return 0
 
 
@@ -955,7 +965,7 @@
       if bt~pos("'") > 0 then parse var inp "'"bt"'" bid bfnk newinp
       else if bt~pos('"') > 0 then parse var inp '"'bt'"' bid bfnk newinp
       if bfnk = 0 then bfnk = ""
-      self~AddButton(bid, x, y, cx, cy, bt, bfnk, opts)
+      self~createPushButton(bid, x, y, cx, cy, opts, bt, bfnk)
       n = opts~wordpos("DEFAULT")
       if n \= 0 then opts = opts~delword(n,1)
       if bottom = 0 then y = y + trunc(cy * 1.5); else x = x + trunc(cx * 1.25)
@@ -1102,7 +1112,7 @@
    if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
    self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
-       return self~ConnectTreeControl(symbid, attname)
+       return self~connectTreeView(symbid, attname)
    end
    return 0
 
@@ -1115,7 +1125,7 @@
    opts = opts~translate
    self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
-       return self~ConnectListControl(symbid, attname)
+       return self~connectListView(symbid, attname)
    end
    return 0
 
@@ -1137,7 +1147,7 @@
    opts = opts~translate
    self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
-       return self~ConnectSliderControl(symbid, attname)
+       return self~connectTrackBar(symbid, attname)
    end
    return 0
 
@@ -1150,7 +1160,7 @@
    opts = opts~translate
    self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
    if opts~wordpos("CAT") = 0 & self~autoDetect then do
-       return self~ConnectTabControl(symbid, attname)
+       return self~connectTab(symbid, attname)
    end
    return 0
 
@@ -1181,3 +1191,6 @@
    return 0
 
 
+--::method addGroupBox external "LIBRARY oodialog dyndlg_addGroupBox"
+
+::method addGroupBox external "LIBRARY oodialog dyndlg_addGroupBox"
