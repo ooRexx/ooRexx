@@ -123,8 +123,8 @@ exit
     self~addEntryLine(16,'error_data',ed~x,ed~y,ed~w,ed~h,'notab readonly multiline hscroll vscroll')
 
 ---------- Run & Exit buttons for easier execution
-    self~createPushButton(80,ed~x     ,ed~y + ed~h + 2,35,10,,'&Run','RunIt')
-    self~createPushButton(81,ed~x + 40,ed~y + ed~h + 2,35,10,,'E&xit','Cancel')
+    self~AddButton(80,ed~x     ,ed~y + ed~h + 2,35,10,'&Run','RunIt')
+    self~AddButton(81,ed~x + 40,ed~y + ed~h + 2,35,10,'E&xit','Cancel')
 
 ----------
     self~createMenu
@@ -195,11 +195,11 @@ exit
     say_input    = self~getEditControl(14)
     result_input = self~getEditControl(15)
     errors_input = self~getEditControl(16)
-    args_title   = self~getEditControl(17)
-    code_title   = self~getEditControl(18)
-    say_title    = self~getEditControl(19)
-    result_title = self~getEditControl(20)
-    errors_title = self~getEditControl(21)
+    args_title   = self~getStaticControl(17)
+    code_title   = self~getStaticControl(18)
+    say_title    = self~getStaticControl(19)
+    result_title = self~getStaticControl(20)
+    errors_title = self~getStaticControl(21)
 
     -- Set the color of the titles
     args_title  ~setColor(5,10)
@@ -861,12 +861,12 @@ return 0
     dt = .dlgArea~new(h~x,ad~y + ad~h,h~w,10)
     self~addText(dt~x,dt~y,dt~w,dt~h,'Documentation','CENTER',24)
     dd = .dlgArea~new(h~x,dt~y + dt~h,h~w,10)
-    self~createPushButton(25,dd~x,dd~y,dd~w,10,,'&PDF','Help')
+    self~AddButton(25,dd~x,dd~y,dd~w,10,'&PDF','Help')
 
 ::method InitDialog
-    v_title = self~getEditControl(20)
-    a_title = self~getEditControl(22)
-    d_title = self~getEditControl(24)
+    v_title = self~getStaticControl(20)
+    a_title = self~getStaticControl(22)
+    d_title = self~getStaticControl(24)
 
     v_title~setColor(5,10)
     a_title~setColor(5,10)
@@ -928,9 +928,9 @@ return 0
     self~addText(dd~x,dd~y,dd~w,dd~h,.silent,'CENTER',23)
 
 ::method InitDialog
-    v_title = self~getEditControl(20)
-    a_title = self~getEditControl(22)
-    d_title = self~getEditControl(24)
+    v_title = self~getStaticControl(20)
+    a_title = self~getStaticControl(22)
+    d_title = self~getStaticControl(24)
 
     v_title~setColor(14,0)
     a_title~setColor(14,0)

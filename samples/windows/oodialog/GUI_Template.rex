@@ -275,7 +275,7 @@ exit -1
 /* self~createPushButton(id,x,y,cx,cy,'options','text','method')             */
 /* self~createCheckBox(id,'attribute',x,y,cx,cy,'options',text)              */
 /* self~AddComboBox(id,'attribute',x,y,cx,cy,'options')                      */
-/* self~AddEntryLine(id,'attribute',x,y,cx,cy,'options')                     */
+/* self~createEdit(id,x,y,cx,cy,'options','attribute')                       */
 /* self~AddListControl(id,'attribute',x,y,cx,cy,'options')                   */
 /* self~AddTreeControl(id,'attribute',x,y,cx,cy,'options')                   */
 /* self~addText(x,y,cx,cy,'text','options',id)                               */

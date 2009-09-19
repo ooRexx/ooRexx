@@ -409,49 +409,7 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
 
    CHECKARGL(1);
 
-   if ( !strcmp(argv[0].strptr,"EL") )
-   {
-       CHECKARG(8);
-
-       /* UsrAddControl("EL", self~activePtr, id, x, y, cx, cy, opts) */
-       for ( i = 0; i < 5; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       lStyle = WS_CHILD;
-       if (strstr(argv[7].strptr,"PASSWORD")) lStyle |= ES_PASSWORD;
-       if (strstr(argv[7].strptr,"MULTILINE"))
-       {
-           lStyle |= ES_MULTILINE;
-           if (!strstr(argv[7].strptr,"NOWANTRETURN")) lStyle |= ES_WANTRETURN;
-           if (!strstr(argv[7].strptr,"HIDESELECTION")) lStyle |= ES_NOHIDESEL;
-       }
-       if (strstr(argv[7].strptr,"AUTOSCROLLH")) lStyle |= ES_AUTOHSCROLL;
-       if (strstr(argv[7].strptr,"AUTOSCROLLV")) lStyle |= ES_AUTOVSCROLL;
-       if (strstr(argv[7].strptr,"HSCROLL")) lStyle |= WS_HSCROLL;
-       if (strstr(argv[7].strptr,"VSCROLL")) lStyle |= WS_VSCROLL;
-       if (strstr(argv[7].strptr,"READONLY")) lStyle |= ES_READONLY;
-       if (strstr(argv[7].strptr,"KEEPSELECTION")) lStyle |= ES_NOHIDESEL;
-       if (strstr(argv[7].strptr,"CENTER")) lStyle |= ES_CENTER;
-       else if (strstr(argv[7].strptr,"RIGHT")) lStyle |= ES_RIGHT;
-       else lStyle |= ES_LEFT;
-       if (strstr(argv[7].strptr,"UPPER")) lStyle |= ES_UPPERCASE;
-       if (strstr(argv[7].strptr,"LOWER")) lStyle |= ES_LOWERCASE;
-       if (strstr(argv[7].strptr,"NUMBER")) lStyle |= ES_NUMBER;
-       if (strstr(argv[7].strptr,"OEM")) lStyle |= ES_OEMCONVERT;
-       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (!strstr(argv[7].strptr,"NOBORDER")) lStyle |= WS_BORDER;
-       if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
-
-       /*                         id          x       y          cx           cy  */
-       addToDialogTemplate(&p, 0x0081, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-   }
-   else if (!strcmp(argv[0].strptr,"LB"))
+   if (!strcmp(argv[0].strptr,"LB"))
    {
        CHECKARG(8);
 
@@ -1585,16 +1543,43 @@ RexxMethod8(int32_t, dyndlg_createGroupBox, OPTIONAL_RexxObjectPtr, rxID, int, x
 }
 
 
-/** DynamicDialog::addEdit() / DynamicDialog::addEntryLine()
- *
- *
- *  @remarks  addEntryLine() is the old name for an edit control and should be
- *            deprecated.  addEdit() is the correct method to add an edit
- *            control, they both map to this native method.
+/** DynamicDialog::addEntryLine  [deprecated forward to createEdit]
  */
-#if 0
-RexxMethod8(int32_t, dyndlg_addEdit, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName, int, x, int, y,
-             uint32_t, cx, OPTIONAL_uint32_t, cy, OPTIONAL_CSTRING, opts, CSELF, pCSelf)
+RexxMethod8(RexxObjectPtr, dyndlg_addEntryLine, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName, int, x, int, y,
+             uint32_t, cx, OPTIONAL_uint32_t, cy, OPTIONAL_CSTRING, opts, ARGLIST, args)
+{
+    RexxArrayObject newArgs = context->NewArray(7);
+
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 1), 1);
+    if ( argumentExists(2) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 2), 7);
+    }
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 3), 2);
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 4), 3);
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 5), 4);
+    if ( argumentExists(6) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 5);
+    }
+    if ( argumentExists(7) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 6);
+    }
+
+    const char *msgName = "createEdit";
+    if ( strcmp("ADDPASSWORDLINE", context->GetMessageName()) == NULL )
+    {
+        msgName = "createPasswordEdit";
+    }
+    return context->ForwardMessage(NULL, msgName, NULL, newArgs);
+}
+
+/** DynamicDialog::createEdit()
+ *
+ */
+RexxMethod8(int32_t, dyndlg_createEdit, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, OPTIONAL_uint32_t, cy,
+            OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, attributeName, CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
     pCPlainBaseDialog pcpbd = pcdd->pcpbd;
@@ -1610,29 +1595,17 @@ RexxMethod8(int32_t, dyndlg_addEdit, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attr
         return -1;
     }
 
-    bool isRadioButton = stricmp("addRadioButton", context->GetMessageName()) == 0;
-
-    if ( argumentOmitted(2) )
-    {
-        attributeName = label;
-    }
-    if ( argumentOmitted(5) || argumentOmitted(6) )
+    // If the user does not specify a height for the edit control, we calculate
+    // it and add a border of 2 dialog units.
+    if ( argumentOmitted(5) )
     {
         SIZE textSize = {0};
-        if ( ! getTextSize(context, label, pcpbd->fontName, pcpbd->fontSize, NULL, pcpbd->rexxSelf, &textSize) )
+        if ( ! getTextSize(context, "Tg", pcpbd->fontName, pcpbd->fontSize, NULL, pcpbd->rexxSelf, &textSize) )
         {
             // An exception is raised.
             return -2;
         }
-        if ( cx == 0 )
-        {
-            // The magic number 12 comes from old ooDialog Rexx code, is it good?
-            cx = textSize.cx + 12;
-        }
-        if ( cy == 0 )
-        {
-            cy = textSize.cy;
-        }
+        cy = textSize.cy + 4;
     }
     if ( argumentOmitted(8) )
     {
@@ -1640,67 +1613,69 @@ RexxMethod8(int32_t, dyndlg_addEdit, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attr
     }
 
     uint32_t style = WS_CHILD;
-    if ( isRadioButton )
+    style |= getCommonWindowStyles(opts, true, true);
+
+    if ( StrStrI(opts,"MULTILINE") )
     {
-        style |= BS_AUTORADIOBUTTON;
+        style |= ES_MULTILINE;
+        if ( StrStrI(opts, "NOWANTRETURN")  == NULL ) style |= ES_WANTRETURN;
+        if ( StrStrI(opts, "HIDESELECTION") == NULL ) style |= ES_NOHIDESEL;
+    }
+
+    if ( StrStrI(opts, "CENTER") )
+    {
+        style |= ES_CENTER;
     }
     else
     {
-        style |= ( StrStrI(opts, "3STATE") != NULL ? BS_AUTO3STATE : BS_AUTOCHECKBOX );
+        style |= ( StrStrI(opts, "RIGHT") != NULL ? ES_RIGHT : ES_LEFT );
     }
-    style = getCommonButtonStyles(style, opts);
+
+    if ( StrStrI(opts, "PASSWORD"     ) != NULL ) style |= ES_PASSWORD;
+    if ( StrStrI(opts, "AUTOSCROLLH"  ) != NULL ) style |= ES_AUTOHSCROLL;
+    if ( StrStrI(opts, "AUTOSCROLLV"  ) != NULL ) style |= ES_AUTOVSCROLL;
+    if ( StrStrI(opts, "HSCROLL"      ) != NULL ) style |= WS_HSCROLL;
+    if ( StrStrI(opts, "VSCROLL"      ) != NULL ) style |= WS_VSCROLL;
+    if ( StrStrI(opts, "READONLY"     ) != NULL ) style |= ES_READONLY;
+    if ( StrStrI(opts, "KEEPSELECTION") != NULL ) style |= ES_NOHIDESEL;
+    if ( StrStrI(opts, "UPPER"        ) != NULL ) style |= ES_UPPERCASE;
+    if ( StrStrI(opts, "LOWER"        ) != NULL ) style |= ES_LOWERCASE;
+    if ( StrStrI(opts, "NUMBER"       ) != NULL ) style |= ES_NUMBER;
+    if ( StrStrI(opts, "OEM"          ) != NULL ) style |= ES_OEMCONVERT;
+
+    if ( strcmp("CREATEPASSWORDEDIT", context->GetMessageName()) == NULL )
+    {
+        style |= ES_PASSWORD;
+    }
 
     WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, label, style);
+    addToDialogTemplate(&p, EditAtom, id, x, y, cx, cy, NULL, style);
     pcdd->active = p;
     pcdd->count++;
 
     int32_t result = 0;
 
-    DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
-    if ( dlgAdm == NULL )
+    // Connect the data attribute if we need to.
+    if ( pcpbd->autoDetect )
     {
-        failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
-        return -2;
-    }
-
-    if ( argumentExists(9) && (StrStrI(loadOptions, "CONNECTRADIOS") != NULL || StrStrI(loadOptions, "CONNECTCHECKS") != NULL) )
-    {
-        CSTRING methName = strdup_2methodName(label);
-        if ( methName == NULL )
+        DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
+        if ( dlgAdm == NULL )
         {
-            outOfMemoryException(context->threadContext);
+            failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
             return -2;
         }
 
-        char *finalName = (char *)malloc(strlen(methName) + 3);
-        if ( finalName == NULL )
+        char buf[64];
+        if ( argumentOmitted(7) )
         {
-            outOfMemoryException(context->threadContext);
-            return -2;
+            _snprintf(buf, sizeof(buf), "DATA%d", id);
+            attributeName = buf;
         }
-        strcpy(finalName, "ID");
-        strcat(finalName, methName);
-
-        result = AddTheMessage(dlgAdm, WM_COMMAND, UINT32_MAX, id, UINTPTR_MAX, 0, 0, finalName, 0) ? 0 : 1;
-        free((void *)methName);
-        free((void *)finalName);
-    }
-
-    /*
-     * If auto detect is on and this is not coming from a category dialog,  We
-     * need to essentialy do a connectRadioButton() or connectCheckBox(). We
-     * don't check the return from addAttribute() because we already know that
-     * rxID will resolve okay.
-     */
-    if ( StrStrI(opts, "CAT") == NULL && pcpbd->autoDetect )
-    {
         context->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, context->String(attributeName));
-        result = addToDataTable(context, dlgAdm, id, isRadioButton ? 2 : 1, 0);
+        result = addToDataTable(context, dlgAdm, id, 0, 0);
     }
     return result;
 }
-#endif
 
 
 /** DynamicDialog::createScrollBar()

@@ -79,10 +79,9 @@
 
 ::method itemAdd private external "LIBRARY oodialog dyndlg_itemAdd_pvt"
 
-
-   /* This method is provided to be used in any subclass of 'UserDialog' */
-
-::method defineDialog protected
+-- This method should be over-ridden in subclasses and provides the opportunity for the subclass to
+-- add dialog controls to the dialog template.
+::method defineDialog private
    return 0
 
 
@@ -318,7 +317,6 @@
    if self~create(dlg.x, dlg.y, dlg.w, dlg.h, dlg.title, internopts,, dlg.font, dlg.fsize, expected) then return 0
    else return 1
 
-
 -- This method creates the dialog's controls from a resource script file. It is usuall called by the load() method.
 -- Although its return was not documented prior to 4.1.0, it has returned 0 for success and non-zero for failure.
 ::method loadItems protected
@@ -436,7 +434,7 @@
                end
             end
             when class = '"EDIT"' then
-               self~addEntryLine(id, name, x, y, w, h, self~getRCStyle(style, "EDIT"))
+               self~createEdit(id, x, y, w, h, self~getRCStyle(style, "EDIT"), name)
 
             when class = '"COMBOBOX"' then
                self~addComboBox(id, name, x, y, w, h, self~getRCStyle(style, "CB"))
@@ -483,17 +481,15 @@
          extStyle = extStyle~translate(" ", "|")
 
          select
-            when type = "DEFPUSHBUTTON" | type = "PUSHBUTTON" then
-            do
+            when type = "DEFPUSHBUTTON" | type = "PUSHBUTTON" then do
                if type~left(3) = ("DEF") then style = style || " | BS_DEFPUSHBUTTON"
                self~createPushButton(id, x, y, w, h, self~getRCStyle(style, "BTN"), name, , loadOptions)
             end
 
             when type = "EDITTEXT" then
-               self~addEntryLine(id, name, x, y, w, h, self~getRCStyle(style, "EDIT"))
+               self~createEdit(id, x, y, w, h, self~getRCStyle(style, "EDIT"), name)
 
-            when type = "LTEXT" | type = "CTEXT" | type = "RTEXT" then
-            do
+            when type = "LTEXT" | type = "CTEXT" | type = "RTEXT" then do
                opts = self~getRCStyle(style, "ST")
                if type = "CTEXT" then opts = opts || " CENTER";
                else if type = "RTEXT" then opts = opts || " RIGHT";
@@ -547,18 +543,12 @@
    return 0
 
 ::method createGroupBox external "LIBRARY oodialog dyndlg_createGroupBox"
-
 ::method createRadioButton external "LIBRARY oodialog dyndlg_createRadioButton"
-::method addRadioButton external "LIBRARY oodialog dyndlg_addRadioButton"
-
 ::method createCheckBox external "LIBRARY oodialog dyndlg_createRadioButton"
-::method addCheckBox external "LIBRARY oodialog dyndlg_addRadioButton"
-
 ::method createPushButton external "LIBRARY oodialog dyndlg_createPushButton"
-::method addButton external "LIBRARY oodialog dyndlg_addButton"
-
+::method createEdit external "LIBRARY oodialog dyndlg_createEdit"
+::method createPasswordEdit external "LIBRARY oodialog dyndlg_createEdit"
 ::method createScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
-::method addScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
 
 -- The optional msgToRaise arg can be the name of a method to invoke when the
 -- button is pushed.  The empty string  signals the implementing code to skip
@@ -572,9 +562,6 @@
    if ret <> 0 then return ret
    return self~connectBitmapButton(id, msgToRaise~space(0), bmp, focus, sel, disabl, opts)
 
-::method addBitmapButton
-   use strict arg id, x, y, cx = 0, cy = 0, text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = "", opts = ""
-   return self~createBitmapButton(id, x, y, cx, cy, opts, text, msgToRaise, bmp, focus, sel, disabl)
 
 ::method addStatic
    use strict arg id = (-1), x, y, cx = 0, cy = 0, opts = "TEXT", text = ""
@@ -665,30 +652,6 @@
    opts = arga[5]~translate
    self~activePtr = UsrAddControl("FRM", self~activePtr, arga[1], arga[2], arga[3], arga[4], type, opts, id)
    return 0
-
-::method addEntryLine
-   use arg id, fname, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if arg(2,'o') = 1 then fname = "DATA"id
-   if arg(6,'o') = 1 then cy = 0
-   if cy = 0 then do
-      size = self~getTextSizeDlg("Tg")
-      cy = size~height + 4
-   end
-   opts = opts~translate
-   self~activePtr = UsrAddControl("EL", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then return self~connectEdit(symbid, fname)
-   else return 0
-
-
-::method addPasswordLine
-   newarg = arg(1, 'A')
-   if arg(7,'o') = 1 then newarg[7] = ""
-   newarg[7] = newarg[7] || " PASSWORD"
-   forward message "addEntryLine" Arguments (newarg)
-
 
 ::method addListBox
    use arg id, fname, x, y, cx, cy, opts = ""
@@ -786,7 +749,7 @@
    end
    opts = opts~translate
    ret = self~addText(x, y+2, cx1, cy, text, opts, idstat)
-   if ret == 0 then ret = self~addEntryLine(id, fname, x+cx1+1, y, cx2, cy, opts)
+   if ret == 0 then ret = self~createEdit(id, x+cx1+1, y, cx2, cy, opts, fname)
    return ret
 
 
@@ -1191,6 +1154,15 @@
    return 0
 
 
---::method addGroupBox external "LIBRARY oodialog dyndlg_addGroupBox"
-
 ::method addGroupBox external "LIBRARY oodialog dyndlg_addGroupBox"
+::method addRadioButton external "LIBRARY oodialog dyndlg_addRadioButton"
+::method addCheckBox external "LIBRARY oodialog dyndlg_addRadioButton"
+::method addButton external "LIBRARY oodialog dyndlg_addButton"
+::method addScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
+::method addEntryLine external "LIBRARY oodialog dyndlg_addEntryLine"
+::method addPasswordLine external "LIBRARY oodialog dyndlg_addEntryLine"
+
+::method addBitmapButton
+   use strict arg id, x, y, cx = 0, cy = 0, text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = "", opts = ""
+   return self~createBitmapButton(id, x, y, cx, cy, opts, text, msgToRaise, bmp, focus, sel, disabl)
+

@@ -101,7 +101,7 @@
 
 ::method AddLine
    use arg x, y, l
-   self~addEntryLine(101,"DATA", x, y, l)
+   self~createEdit(101, x, y, l, , , "DATA")
 
 
 ::method execute
@@ -127,7 +127,7 @@
 
 ::method AddLine
    use arg x, y, l
-   self~addPasswordLine(101, "DATA", x, y, l)
+   self~createPasswordEdit(101, x, y, l, , , "DATA")
 
 
 /* This class is an InputBox dialog which entry line allows only numerical data */

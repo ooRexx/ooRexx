@@ -90,7 +90,7 @@
    self~addBlackFrame(107,7,41,16,"BORDER")
    self~addBlackFrame(108,8,39,14,"BORDER")
    self~addText(40,10,60,10,"Jackpot  $$$")
-   self~addEntryLine(1200,,110,9,35,11)
+   self~createEdit(1200,110,9,35,11)
    self~addText(175,10,60,10,"$$$  Jackpot")
    jackx = 20*self~factorx; jacky = 20*self~factory
    self~createBitmapButton(1201,10, 30,75,90,"INMEMORY STRETCH USEPAL", , , bmp.1)
@@ -98,7 +98,7 @@
    self~createBitmapButton(1203,170,30,75,90,"INMEMORY STRETCH", , , bmp.1)
    self~addButtonGroup(10,125,34,12,"&Stop 1 OK &Cancel 2 Cancel",1,"DEFAULT")
    self~addText(105,126,40,9,'Speed (ms):','RIGHT')
-   self~addEntryLine(1205,'speed',150,125,15,12)
+   self~createEdit(1205,150,125,15,12, , 'speed')
    self~addText(168,126,15,9,'Fast','RIGHT')
    self~addText(230,126,15,9,'Slow','LEFT')
    self~addScrollBar(1206,188,125,40,12,"HORIZONTAL")

@@ -70,14 +70,14 @@ b=.dlgArea~new(u~x('70%'),u~y       ,u~wr      ,u~hr      )   /* button area */
 self~AddEntryLine(12,'text',e~x,e~y,e~w,e~h,'multiline')
 self~AddText(s~x,s~y,s~w,s~h,'Status info appears here',,11)
 
-self~createPushButton(13,b~x,b~y('00%'),b~w,b~h('9%'),,'Button' 0,'Button'||0)
-self~createPushButton(14,b~x,b~y('10%'),b~w,b~h('9%'),,'Button' 1,'Button'||1)
-self~createPushButton(15,b~x,b~y('20%'),b~w,b~h('9%'),,'Button' 2,'Button'||2)
-self~createPushButton(16,b~x,b~y('30%'),b~w,b~h('9%'),,'Button' 3,'Button'||3)
-self~createPushButton(17,b~x,b~y('40%'),b~w,b~h('9%'),,'Button' 4,'Button'||4)
-self~createPushButton(18,b~x,b~y('50%'),b~w,b~h('9%'),,'Button' 5,'Button'||5)
-self~createPushButton(19,b~x,b~y('60%'),b~w,b~h('9%'),,'Button' 6,'Button'||6)
-self~createPushButton( 1,b~x,b~y('90%'),b~w,b~h('9%'),'DEFAULT','Ok','Ok')
+self~addButton(13,b~x,b~y('00%'),b~w,b~h('9%'),'Button' 0,'Button'||0)
+self~addButton(14,b~x,b~y('10%'),b~w,b~h('9%'),'Button' 1,'Button'||1)
+self~addButton(15,b~x,b~y('20%'),b~w,b~h('9%'),'Button' 2,'Button'||2)
+self~addButton(16,b~x,b~y('30%'),b~w,b~h('9%'),'Button' 3,'Button'||3)
+self~addButton(17,b~x,b~y('40%'),b~w,b~h('9%'),'Button' 4,'Button'||4)
+self~addButton(18,b~x,b~y('50%'),b~w,b~h('9%'),'Button' 5,'Button'||5)
+self~addButton(19,b~x,b~y('60%'),b~w,b~h('9%'),'Button' 6,'Button'||6)
+self~AddButton( 1,b~x,b~y('90%'),b~w,b~h('9%'),'Ok','Ok','DEFAULT')
 
 /* ------------------------------------------------------------------------- */
 ::method OnResize
