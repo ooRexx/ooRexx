@@ -200,7 +200,7 @@ classesHeaders = $(build_classes_dir)/ArrayClass.hpp \
                  $(build_classes_dir)/TableClass.hpp \
                  $(build_classes_dir)/WeakReferenceClass.hpp \
                  $(build_classes_dir)/StackFrameClass.hpp \
-                 $(build_classes_dir)/ExceptionClass.hpp \
+                 $(build_classes_dir)/ExceptionClass.hpp
 classesSupportHeaders = $(build_classes_support_dir)/ProgramMetaData.hpp \
                         $(build_classes_support_dir)/RexxCollection.hpp \
                         $(build_classes_support_dir)/RexxCompoundElement.hpp \
