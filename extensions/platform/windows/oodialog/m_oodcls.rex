@@ -35,8 +35,16 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+/* Purpose: Builds the three CLS files for OODIALOG:                          */
+/*   OODPLAIN, OODIALOG, OODWIN32                                             */
 use arg outdir
-if arg() = 0 then outdir = value("OR_OUTDIR","","ENVIRONMENT")
+if arg() = 0 then do
+  outdir = value("OR_OUTDIR","","ENVIRONMENT")
+  if outdir \== "" & outdir~right(1) \== '\' then outdir ||= '\'
+end
+else do
+  if outdir~right(1) \== '\' then outdir ||= '\'
+end
 parse source . . progname
 inpdir = left(progname, progname~lastpos("\"))
 p = time('R')
@@ -60,7 +68,7 @@ Arrax[3] = .CheckArray~of("ADVCTRL.CLS", "STDEXT.CLS", "MSGEXT.CLS", "PROPSHT.CL
 i = 0
 do j over Arrax
     i += 1
-    NewFile = .stream~new(outname[i] || ".CLS")
+    NewFile = .stream~new(outdir || outname[i] || ".CLS")
     if NewFile~open("WRITE REPLACE") \= "READY:" then leave
     NewFile~lineout("/"||"*"~copies(78)||"/")
     NewFile~lineout("/*"||" "~copies(76)||"*/")
