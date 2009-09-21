@@ -264,9 +264,9 @@
    textHeight = size~height
 
    if self~catstyle~wordpos("TOPLINE") > 0 then
-      self~addBlackFrame(0, 2, self~sizeX, textHeight + (self~caty+2))
+      self~createBlackFrame(-1, 0, 2, self~sizeX, textHeight + (self~caty+2))
    else if self~catstyle~wordpos("DROPDOWN") > 0 then
-      self~addBlackFrame(0, 2, self~sizeX, textHeight + (self~caty*2)+1)
+      self~createBlackFrame(-1, 0, 2, self~sizeX, textHeight + (self~caty*2)+1)
 
    lbtext = self~catalog['page']['leftbtntext']
    rbtext = self~catalog['page']['rightbtntext']
@@ -274,18 +274,18 @@
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
    if (self~catalog['page']['btnwidth'] > 0) then
    do
-      self~addButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
+      self~createButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
          self~sizeY - 15,self~catalog['page']['btnwidth'],, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
       if self~Wizard = 1 then
-         self~addButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
+         self~createButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
                              ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
    else do
       self~addOkCancelRightBottom
       if self~Wizard = 1 then
-         self~addButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
+         self~createButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
-   self~addBlackFrame(0, self~sizeY - 20, self~sizeX, 1)
+   self~createBlackFrame(-1, 0, self~sizeY - 20, self~sizeX, 1)
 
 ::method CreateCategoryDialog private external "LIBRARY oodialog catdlg_createCategoryDialog"
 

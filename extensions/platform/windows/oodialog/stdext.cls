@@ -62,7 +62,7 @@
    if self~initCode = 0 then self~Popup
 
 ::method defineDialog
-   self~addText(10,10,self~dims["sx"]+2,self~dims["sy"], self~msg,, 100)
+   self~createStaticText(100, 10, 10, self~dims["sx"]+2, self~dims["sy"], , self~msg)
 
 ::method initAutoDetection
    self~noAutoDetection
@@ -120,50 +120,50 @@
 
 ::class 'ProgressIndicator' subclass StateIndicator public inherit AdvancedControls
 
-::method LowValue attribute
-::method HighValue attribute
-::method IncStep attribute
+::method lowValue attribute
+::method highValue attribute
+::method incStep attribute
 
    /* The class' constructor */
 ::method init
    use arg message, title, low, high, step, fixedx
    if arg(6,'o') = 1 then fixedx = 0
-   if arg(3,'o') = 1 then self~LowValue = 0; else self~LowValue = low
-   if arg(4,'o') = 1 then self~HighValue = 100; else self~HighValue = high
-   if arg(5,'o') = 1 then self~IncStep = 10; else self~IncStep = step
+   if arg(3,'o') = 1 then self~lowValue = 0; else self~lowValue = low
+   if arg(4,'o') = 1 then self~highValue = 100; else self~highValue = high
+   if arg(5,'o') = 1 then self~incStep = 10; else self~incStep = step
    self~init:super(message, title, fixedx)
 
 ::method initDialog
-   pb = self~GetProgressBar(101)
+   pb = self~getProgressBar(101)
    if pb \= .nil then do
-       pb~SetRange(self~LowValue, self~HighValue)
-       pb~SetPos(self~LowValue)
-       pb~SetStep(self~IncStep)
+       pb~setRange(self~lowValue, self~highValue)
+       pb~setPos(self~lowValue)
+       pb~setStep(self~incStep)
    end
 
 ::method defineDialog
-   self~AddProgressBar(101,5,5, self~sizex-10,14)
-   self~addText(10,25,self~dims["sx"]+2,self~dims["sy"], self~msg,, 100)
+   self~addProgressBar(101,5,5, self~sizex-10,14)
+   self~createStaticText(100, 10, 25, self~dims["sx"]+2,self~dims["sy"], , self~msg)
 
 
-::method CalcSize
-   self~CalcSize:super
+::method calcSize
+   self~calcSize:super
    self~dims["cy"] = self~dims["cy"]+10  /* 15 more for the progress bar */
    scrSize = screenSize()
    self~dims["x"] = trunc((scrSize[1]-self~dims["cx"]) /2)
    self~dims["y"] = trunc((scrSize[2] - self~dims["cy"] - 20) /2)
 
-::method "Progress="
+::method "progress="
    use arg newpos
-   self~GetProgressBar(101)~SetPos(newpos)
+   self~getProgressBar(101)~setPos(newpos)
 
-::method Increase
-   if arg(1,'e') = 1 then self~GetProgressBar(101)~Step(arg(1))
-   else self~GetProgressBar(101)~Step
+::method increase
+   if arg(1,'e') = 1 then self~getProgressBar(101)~step(arg(1))
+   else self~getProgressBar(101)~step
 
-::method Complete
-   self~GetProgressBar(101)~SetPos(self~HighValue)
+::method complete
+   self~getProgressBar(101)~setPos(self~highValue)
 
-::method "Message="
+::method "message="
    forward class (super) continue
-   self~ResizeItem(101,  self~sizex-10, 14)
+   self~resizeItem(101,  self~sizex-10, 14)

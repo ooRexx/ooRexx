@@ -82,10 +82,10 @@
    self~createPushButton(1, 160,205,35,12, "DEFAULT","&Interrupt","OK")
    self~createPushButton(2, 160,220,35,12, ,"&Cancel","Cancel")
    do i=5 to 49
-      self~addBlackRect(2*i,2*i,200-4*i,200-4*i,"BORDER")
+      self~createBlackRect(-1, 2*i, 2*i, 200-4*i, 200-4*i, "BORDER")
    end
    do i=51 to 99
-      self~addWhiteRect(i+25,i+25,200-2*i,200-2*i,"BORDER")
+      self~createWhiteRect(-1, i+25, i+25, 200-2*i, 200-2*i, "BORDER")
    end
 
 ::method Run

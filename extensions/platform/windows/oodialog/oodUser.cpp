@@ -470,121 +470,6 @@ size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING 
        /*                         id       x          y            cx        cy  */
        addToDialogTemplate(&p, 0x0085, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
    }
-   else if (!strcmp(argv[0].strptr,"TXT"))
-   {
-       CHECKARGL(8);
-
-       /* UsrAddControl("TXT", self~activePtr, x, y, cx, cy, opts, text, id) */
-       for ( i = 0; i < 4; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       if (argc > 8)
-          i = atoi(argv[8].strptr);
-       else i = -1;
-
-       lStyle = WS_CHILD;
-       if (strstr(argv[6].strptr,"CENTER")) lStyle |= SS_CENTER;
-       else if (strstr(argv[6].strptr,"RIGHT")) lStyle |= SS_RIGHT;
-       else if (strstr(argv[6].strptr,"SIMPLE")) lStyle |= SS_SIMPLE;
-       else if (strstr(argv[6].strptr,"LEFTNOWRAP")) lStyle |= SS_LEFTNOWORDWRAP;
-       else lStyle |= SS_LEFT;
-
-       // Used to center text vertically.
-       if (strstr(argv[6].strptr,"CENTERIMAGE")) lStyle |= SS_CENTERIMAGE;
-
-       if (strstr(argv[6].strptr,"NOTIFY")) lStyle |= SS_NOTIFY;
-       if (strstr(argv[6].strptr,"SUNKEN")) lStyle |= SS_SUNKEN;
-       if (strstr(argv[6].strptr,"EDITCONTROL")) lStyle |= SS_EDITCONTROL;
-       if (strstr(argv[6].strptr,"ENDELLIPSIS")) lStyle |= SS_ENDELLIPSIS;
-       if (strstr(argv[6].strptr,"NOPREFIX")) lStyle |= SS_NOPREFIX;
-       if (strstr(argv[6].strptr,"PATHELLIPSIS")) lStyle |= SS_PATHELLIPSIS;
-       if (strstr(argv[6].strptr,"WORDELLIPSIS")) lStyle |= SS_WORDELLIPSIS;
-
-       if (!strstr(argv[6].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[6].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[6].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[6].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[6].strptr,"TAB")) lStyle |= WS_TABSTOP;
-
-       /*                      id      x         y         cx       cy  */
-       addToDialogTemplate(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], argv[7].strptr, lStyle);
-   }
-   else if (!strcmp(argv[0].strptr,"FRM"))
-   {
-       CHECKARGL(8);
-
-       for ( i = 0; i < 5; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       if (argc > 8)
-          i = atoi(argv[8].strptr);
-       else i = -1;
-
-       lStyle = WS_CHILD;
-
-       if (buffer[4] == 0) lStyle |= SS_WHITERECT; else
-       if (buffer[4] == 1) lStyle |= SS_GRAYRECT; else
-       if (buffer[4] == 2) lStyle |= SS_BLACKRECT; else
-       if (buffer[4] == 3) lStyle |= SS_WHITEFRAME; else
-       if (buffer[4] == 4) lStyle |= SS_GRAYFRAME; else
-       if (buffer[4] == 5) lStyle  |= SS_BLACKFRAME ; else
-       if (buffer[4] == 6) lStyle  |= SS_ETCHEDFRAME ; else
-       if (buffer[4] == 7) lStyle  |= SS_ETCHEDHORZ ; else
-       lStyle |= SS_ETCHEDVERT;
-
-       if (strstr(argv[7].strptr,"NOTIFY")) lStyle |= SS_NOTIFY;
-       if (strstr(argv[7].strptr,"SUNKEN")) lStyle |= SS_SUNKEN;
-
-       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
-
-       /*                     id    x           y          cx         cy  */
-       addToDialogTemplate(&p, 0x0082, i, buffer[0], buffer[1], buffer[2], buffer[3], NULL, lStyle);
-   }
-   else if (!strcmp(argv[0].strptr,"IMG"))
-   {
-       CHECKARGL(8);
-
-       for ( i = 0; i < 5; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       lStyle = WS_CHILD;
-       if (strstr(argv[7].strptr,"METAFILE")) lStyle |= SS_ENHMETAFILE;
-       else if (strstr(argv[7].strptr,"BITMAP")) lStyle |= SS_BITMAP;
-       else lStyle |= SS_ICON;
-
-       if (strstr(argv[7].strptr,"NOTIFY")) lStyle |= SS_NOTIFY;
-       if (strstr(argv[7].strptr,"CENTERIMAGE")) lStyle |= SS_CENTERIMAGE;
-       if (strstr(argv[7].strptr,"RIGHTJUST")) lStyle |= SS_RIGHTJUST;
-       if (strstr(argv[7].strptr,"SUNKEN")) lStyle |= SS_SUNKEN;
-
-       if (strstr(argv[7].strptr,"SIZECONTROL")) lStyle |= SS_REALSIZECONTROL; else
-       if (strstr(argv[7].strptr,"SIZEIMAGE")) lStyle |= SS_REALSIZEIMAGE;
-
-       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
-
-       /*                      id           x          y          cx         cy       text  */
-       addToDialogTemplate(&p, 0x0082, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], "", lStyle);
-   }
 
    RETPTR(p);
 }
@@ -1206,6 +1091,279 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
 
     dlgAdm->ChildDlg[childIndex] = hChild;
     return pointer2string(context, hChild);
+}
+
+
+int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
+                         CSTRING opts, CSTRING text, pCDynamicDialog pcdd)
+{
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+    int32_t id = IDC_STATIC;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
+    if ( id < IDC_STATIC )
+    {
+        return -1;
+    }
+
+    if ( cx == 0 || cy == 0 )
+    {
+        SIZE textSize = {0};
+        char *tempText = ( *text == '\0' ? "Tg" : text );
+
+        if ( ! getTextSize(c, text, pcpbd->fontName, pcpbd->fontSize, NULL, pcpbd->rexxSelf, &textSize) )
+        {
+            // An exception is raised.
+            return -2;
+        }
+        if ( cx == 0 )
+        {
+            // The magic number 2 comes from old ooDialog Rexx code, is it good?
+            cx = textSize.cx + 2;
+        }
+        if ( cy == 0 )
+        {
+            cy = textSize.cy;
+        }
+    }
+
+    uint32_t style = WS_CHILD | SS_LEFT;
+    style |= getCommonWindowStyles(opts, false, false);
+
+    if ( *opts != '\0' )
+    {
+        if ( StrStrI(opts, "CENTER" ) != NULL ) style |= SS_CENTER;
+        else if ( StrStrI(opts, "RIGHT"     ) != NULL ) style |= SS_RIGHT;
+        else if ( StrStrI(opts, "SIMPLE"    ) != NULL ) style |= SS_SIMPLE;
+        else if ( StrStrI(opts, "LEFTNOWRAP") != NULL ) style |= SS_LEFTNOWORDWRAP;
+
+        // Used to center text vertically.
+        if ( StrStrI(opts, "CENTERIMAGE") != NULL ) style |= SS_CENTERIMAGE;
+
+        if ( StrStrI(opts, "NOTIFY"      ) != NULL ) style |= SS_NOTIFY;
+        if ( StrStrI(opts, "SUNKEN"      ) != NULL ) style |= SS_SUNKEN;
+        if ( StrStrI(opts, "EDITCONTROL" ) != NULL ) style |= SS_EDITCONTROL;
+        if ( StrStrI(opts, "ENDELLIPSIS" ) != NULL ) style |= SS_ENDELLIPSIS;
+        if ( StrStrI(opts, "NOPREFIX"    ) != NULL ) style |= SS_NOPREFIX;
+        if ( StrStrI(opts, "PATHELLIPSIS") != NULL ) style |= SS_PATHELLIPSIS;
+        if ( StrStrI(opts, "WORDELLIPSIS") != NULL ) style |= SS_WORDELLIPSIS;
+    }
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, StaticAtom, id, x, y, cx, cy, text, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    return 0;
+}
+
+
+int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
+                         CSTRING opts, pCDynamicDialog pcdd)
+{
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    uint32_t id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
+    if ( id < 0 )
+    {
+        return id;
+    }
+
+    uint32_t style = WS_CHILD;
+    style |= getCommonWindowStyles(opts, false, false);
+
+    if ( StrStrI(opts, "METAFILE" ) != NULL ) style |= SS_ENHMETAFILE;
+    else if ( StrStrI(opts, "BITMAP" ) != NULL ) style |= SS_BITMAP;
+    else style |= SS_ICON;
+
+    if ( StrStrI(opts, "NOTIFY"      )  != NULL ) style |= SS_NOTIFY;
+    if ( StrStrI(opts, "SUNKEN"      )  != NULL ) style |= SS_SUNKEN;
+    if ( StrStrI(opts, "CENTERIMAGE" )  != NULL ) style |= SS_CENTERIMAGE;
+    if ( StrStrI(opts, "RIGHTJUST"    ) != NULL ) style |= SS_RIGHTJUST;
+    if ( StrStrI(opts, "SIZECONTROL" )  != NULL ) style |= SS_REALSIZECONTROL;
+    if ( StrStrI(opts, "SIZEIMGE"    )  != NULL ) style |= SS_REALSIZEIMAGE;
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, StaticAtom, id, x, y, cx, cy, NULL, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    return 0;
+}
+
+
+int32_t createStaticFrame(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
+                         CSTRING opts, CSTRING type, uint32_t frameStyle, pCDynamicDialog pcdd)
+{
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+    int32_t id = IDC_STATIC;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
+    if ( id < IDC_STATIC )
+    {
+        return id;
+    }
+
+    uint32_t style = WS_CHILD;
+    style |= getCommonWindowStyles(opts, false, false);
+
+    if ( type == NULL )
+    {
+        style |= frameStyle;
+    }
+    else
+    {
+        if ( strcmp(type, "WHITERECT") == 0 ) style |= SS_WHITERECT;
+        else if ( strcmp(type, "GRAYRECT"       ) == 0 ) style |= SS_GRAYRECT;
+        else if ( strcmp(type, "BLACKRECT"      ) == 0 ) style |= SS_BLACKRECT;
+        else if ( strcmp(type, "WHITEFRAME"     ) == 0 ) style |= SS_WHITEFRAME;
+        else if ( strcmp(type, "GRAYFRAME"      ) == 0 ) style |= SS_GRAYFRAME;
+        else if ( strcmp(type, "BLACKFRAME"     ) == 0 ) style |= SS_BLACKFRAME;
+        else if ( strcmp(type, "ETCHEDFRAME"    ) == 0 ) style |= SS_ETCHEDFRAME;
+        else if ( strcmp(type, "ETCHEDHORZONTAL") == 0 ) style |= SS_ETCHEDHORZ;
+        else if ( strcmp(type, "ETCHEDVERTICAL" ) == 0 ) style |= SS_ETCHEDVERT;
+        else if ( strcmp(type, "STATICFRAME"    ) == 0 )
+        {
+            if ( StrStrI(type, "WHITERECT") != NULL ) style |= SS_WHITERECT;
+            else if ( StrStrI(type, "GRAYRECT"  ) != NULL ) style |= SS_GRAYRECT;
+            else if ( StrStrI(type, "BLACKRECT" ) != NULL ) style |= SS_BLACKRECT;
+            else if ( StrStrI(type, "WHITEFRAME") != NULL ) style |= SS_WHITEFRAME;
+            else if ( StrStrI(type, "GRAYFRAME" ) != NULL ) style |= SS_GRAYFRAME;
+            else if ( StrStrI(type, "BLACKFRAME") != NULL ) style |= SS_BLACKFRAME;
+            else if ( StrStrI(type, "ETCHED"    ) != NULL ) style |= SS_ETCHEDFRAME;
+            else if ( StrStrI(type, "HORZ"      ) != NULL ) style |= SS_ETCHEDHORZ;
+            else if ( StrStrI(type, "VERT"       ) != NULL ) style |= SS_ETCHEDVERT;
+        }
+    }
+
+    if ( StrStrI(opts, "NOTIFY") != NULL ) style |= SS_NOTIFY;
+    if ( StrStrI(opts, "SUNKEN") != NULL ) style |= SS_SUNKEN;
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, StaticAtom, id, x, y, cx, cy, NULL, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    return 0;
+}
+
+
+/** DynamicDialog::createStatic()
+ *
+ */
+RexxMethod8(int32_t, dyndlg_createStatic, OPTIONAL_RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, text, CSELF, pCSelf)
+{
+    if ( argumentOmitted(1) )
+    {
+        rxID = TheNegativeOneObj;
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "TEXT";
+    }
+    if ( argumentOmitted(7) )
+    {
+        text = "";
+    }
+
+    if ( StrStrI(opts, "TEXT") != NULL )
+    {
+        return createStaticText(context, rxID, x, y, cx, cy, opts, text, (pCDynamicDialog)pCSelf);
+    }
+
+    if ( StrStrI(opts, "BITMAP") != NULL || StrStrI(opts, "METAFILE") != NULL || StrStrI(opts, "ICON") != NULL )
+    {
+        return createStaticImage(context, rxID, x, y, cx, cy, opts, (pCDynamicDialog)pCSelf);
+    }
+
+    uint32_t frameStyle = 0;
+    if ( StrStrI(opts, "WHITERECT") != NULL ) frameStyle = SS_WHITERECT;
+    else if ( StrStrI(opts, "GRAYRECT"  ) != NULL ) frameStyle = SS_GRAYRECT;
+    else if ( StrStrI(opts, "BLACKRECT" ) != NULL ) frameStyle = SS_BLACKRECT;
+    else if ( StrStrI(opts, "WHITEFRAME") != NULL ) frameStyle = SS_WHITEFRAME;
+    else if ( StrStrI(opts, "GRAYFRAME" ) != NULL ) frameStyle = SS_GRAYFRAME;
+    else if ( StrStrI(opts, "BLACKFRAME") != NULL ) frameStyle = SS_BLACKFRAME;
+    else if ( StrStrI(opts, "ETCHED"    ) != NULL ) frameStyle = SS_ETCHEDFRAME;
+    else if ( StrStrI(opts, "HORZ"      ) != NULL ) frameStyle = SS_ETCHEDHORZ;
+    else if ( StrStrI(opts, "VERT"      ) != NULL ) frameStyle = SS_ETCHEDVERT;
+
+    if ( frameStyle != 0 )
+    {
+        return createStaticFrame(context, rxID, x, y, cx, cy, opts, NULL, frameStyle, (pCDynamicDialog)pCSelf);
+    }
+
+    return createStaticText(context, rxID, x, y, cx, cy, opts, text, (pCDynamicDialog)pCSelf);
+}
+
+
+/** DynamicDialog::createStaticText()
+ *
+ */
+RexxMethod8(int32_t, dyndlg_createStaticText, OPTIONAL_RexxObjectPtr, rxID,
+            int, x, int, y, OPTIONAL_uint32_t, cx, OPTIONAL_uint32_t, cy,
+            OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, text, CSELF, pCSelf)
+{
+    if ( argumentOmitted(1) )
+    {
+        rxID = TheNegativeOneObj;
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+    if ( argumentOmitted(7) )
+    {
+        text = "";
+    }
+    return createStaticText(context, rxID, x, y, cx, cy, opts, text, (pCDynamicDialog)pCSelf);
+}
+
+
+/** DynamicDialog::createStaticImage()
+ *
+ */
+RexxMethod7(int32_t, dyndlg_createStaticImage, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, opts, CSELF, pCSelf)
+{
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+    return createStaticImage(context, rxID, x, y, cx, cy, opts, (pCDynamicDialog)pCSelf);
+}
+
+
+/** DynamicDialog::createStaticFrame()
+ *
+ */
+RexxMethod8(int32_t, dyndlg_createStaticFrame, OPTIONAL_RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, opts, NAME, msgName, CSELF, pCSelf)
+{
+    if ( argumentOmitted(1) )
+    {
+        rxID = TheNegativeOneObj;
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+    return createStaticFrame(context, rxID, x, y, cx, cy, opts, msgName + 6, 0, (pCDynamicDialog)pCSelf);
 }
 
 

@@ -86,22 +86,22 @@
    bmp.6 = self~LoadBitmap("bmp\moose.bmp")
    bmp.7 = self~LoadBitmap("bmp\rhinoce.bmp")
    bmp.8 = self~LoadBitmap("bmp\goat.bmp")
-   self~addBlackFrame(10,5,235,20,"BORDER") /* jackpot line */
-   self~addBlackFrame(107,7,41,16,"BORDER")
-   self~addBlackFrame(108,8,39,14,"BORDER")
-   self~addText(40,10,60,10,"Jackpot  $$$")
-   self~createEdit(1200,110,9,35,11)
-   self~addText(175,10,60,10,"$$$  Jackpot")
+   self~createBlackFrame(-1, 10, 5, 235, 20, "BORDER") /* jackpot line */
+   self~createBlackFrame(-1, 107, 7, 41, 16, "BORDER")
+   self~createBlackFrame(-1, 108, 8, 39, 14, "BORDER")
+   self~createStaticText(-1, 40, 10, 60, 10, , "Jackpot  $$$")
+   self~createEdit(1200, 110, 9, 35, 11)
+   self~createStaticText(-1, 175, 10, 60, 10, , "$$$  Jackpot")
    jackx = 20*self~factorx; jacky = 20*self~factory
    self~createBitmapButton(1201,10, 30,75,90,"INMEMORY STRETCH USEPAL", , , bmp.1)
    self~createBitmapButton(1202,90, 30,75,90,"INMEMORY STRETCH", , , bmp.1)
    self~createBitmapButton(1203,170,30,75,90,"INMEMORY STRETCH", , , bmp.1)
-   self~addButtonGroup(10,125,34,12,"&Stop 1 OK &Cancel 2 Cancel",1,"DEFAULT")
-   self~addText(105,126,40,9,'Speed (ms):','RIGHT')
-   self~createEdit(1205,150,125,15,12, , 'speed')
-   self~addText(168,126,15,9,'Fast','RIGHT')
-   self~addText(230,126,15,9,'Slow','LEFT')
-   self~addScrollBar(1206,188,125,40,12,"HORIZONTAL")
+   self~createButtonGroup(10,125,34,12,"&Stop 1 OK &Cancel 2 Cancel",1,"DEFAULT")
+   self~createStaticText(-1, 105, 126, 40, 9, , 'Speed (ms):','RIGHT')
+   self~createEdit(1205, 150, 125, 15, 12, , 'speed')
+   self~createStaticText(-1, 168, 126, 15, 9, , 'Fast','RIGHT')
+   self~createStaticText(-1, 230, 126, 15, 9, , 'Slow','LEFT')
+   self~createScrollBar(1206, 188, 125, 40, 12, "HORIZONTAL")
    self~speed = speedx
 
 ::method InitDialog

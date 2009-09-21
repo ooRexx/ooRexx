@@ -305,13 +305,13 @@
  */
 ::class 'BaseDialog' public subclass PlainBaseDialog inherit DialogExtensions WindowExtensions
 
-::method scrollNow attribute   -- Indicator whether or not scrolling is active
+::attribute scrollNow     -- Indicator whether or not scrolling is active
 
 ::method init
    forward class (super) continue
    if result <> 0 then return result
 
-   self~scrollNow = 0   -- a kind of semaphore to handle multiple text scrolling
+   self~scrollNow = 0     -- a kind of semaphore to handle multiple text scrolling
    self~bkgBitmap = 0     -- no background bitmap
    self~bkgBrushBmp = 0   -- no background bitmap
    self~menuBar = .nil

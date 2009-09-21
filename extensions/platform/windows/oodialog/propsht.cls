@@ -113,9 +113,9 @@
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
    if (p['btnwidth'] > 0) then bw = p['btnwidth']; else bw = 35
 
-   self~addButtonGroup(p['w']+p['x']+2-bw*2.25, self~sizeY - 15, bw, , "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+   self~createButtonGroup(p['w']+p['x']+2-bw*2.25, self~sizeY - 15, bw, , "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
    if self~wizard then do
-      self~addButtonGroup(p['x']-2,self~sizeY - 15, bw, , lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
+      self~createButtonGroup(p['x']-2,self~sizeY - 15, bw, , lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
 
 

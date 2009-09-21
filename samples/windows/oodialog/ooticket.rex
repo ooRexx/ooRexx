@@ -155,15 +155,15 @@
    cinema.5 = "&Premiere Black + White Movies Monterey"
    cinema.6 = "&Broadway Cinema San Francisco"
    self~AddCheckBoxStem(51, 25, 10, 0, cinema., 6)
-   self~AddText(10,self~SizeY - 65,0,0,"Make your choice of one or more cinemas you prefer")
-   self~AddBlackFrame(1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
+   self~createStaticText(-1, 10, self~SizeY - 65, 0, 0, , "Make your choice of one or more cinemas you prefer")
+   self~createBlackFrame(-1, 1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
 
 ::method Days                                        /* page 3 */
    expose daynames
-   self~AddText(10,self~SizeY - 65,0,0,"Please select the day you like most")
+   self~createStaticText(-1, 10, self~SizeY - 65, 0, 0, , "Please select the day you like most")
    self~AddRadioGroup(31, 5, 5,0, "&Monday &Tuesday &Wednesday T&hursday &Friday &Saturday S&unday")
-   self~AddBlackFrame(1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
-   self~addImage(145, 73, 10, 125, 100, "BITMAP SIZEIMAGE CENTERIMAGE")
+   self~createBlackFrame(-1, 1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
+   self~createStaticImage(145, 73, 10, 125, 100, "BITMAP SIZEIMAGE CENTERIMAGE")
    daynames = .array~of('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
 
 ::method InitDays

@@ -67,8 +67,8 @@ e=.dlgArea~new(u~x       ,u~y       ,u~w('70%'),u~h('90%'))   /* edit   area */
 s=.dlgArea~new(u~x       ,u~y('90%'),u~w('70%'),u~hr      )   /* status area */
 b=.dlgArea~new(u~x('70%'),u~y       ,u~wr      ,u~hr      )   /* button area */
 
-self~AddEntryLine(12,'text',e~x,e~y,e~w,e~h,'multiline')
-self~AddText(s~x,s~y,s~w,s~h,'Status info appears here',,11)
+self~addEntryLine(12,'text',e~x,e~y,e~w,e~h,'multiline')
+self~addText(s~x,s~y,s~w,s~h,'Status info appears here',,11)
 
 self~addButton(13,b~x,b~y('00%'),b~w,b~h('9%'),'Button' 0,'Button'||0)
 self~addButton(14,b~x,b~y('10%'),b~w,b~h('9%'),'Button' 1,'Button'||1)
@@ -77,19 +77,18 @@ self~addButton(16,b~x,b~y('30%'),b~w,b~h('9%'),'Button' 3,'Button'||3)
 self~addButton(17,b~x,b~y('40%'),b~w,b~h('9%'),'Button' 4,'Button'||4)
 self~addButton(18,b~x,b~y('50%'),b~w,b~h('9%'),'Button' 5,'Button'||5)
 self~addButton(19,b~x,b~y('60%'),b~w,b~h('9%'),'Button' 6,'Button'||6)
-self~AddButton( 1,b~x,b~y('90%'),b~w,b~h('9%'),'Ok','Ok','DEFAULT')
+self~addButton( 1,b~x,b~y('90%'),b~w,b~h('9%'),'Ok','Ok','DEFAULT')
 
 /* ------------------------------------------------------------------------- */
-::method OnResize
+::method onResize
 /* ------------------------------------------------------------------------- */
 expose u
 use arg dummy,sizeinfo
                                  /* wait for last size event msg then resize */
-if self~PeekDialogMessage~left(8) \= "OnResize" then u~resize(self,sizeinfo)
+if self~peekDialogMessage~left(8) \= "onResize" then u~resize(self,sizeinfo)
 
 /* ------------------------------------------------------------------------- */
 ::method Unknown
 /* ------------------------------------------------------------------------- */
 use arg msgname, args
-StatusLine = Self~GetStaticControl(11)
-StatusLine~SetTitle('You Pressed' msgname)
+self~getStaticControl(11)~setText('You Pressed' msgname)

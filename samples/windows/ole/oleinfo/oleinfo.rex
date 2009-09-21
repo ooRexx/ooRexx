@@ -512,7 +512,7 @@ callFailed:
 
   do i = 1 to params.0
     self~createEdit(300+i, 64, -5+(13*i), 128, 11, "AUTOSCROLLH", "Param"i)
-    self~AddText(8,-5+(13*i),56,11,params.i.!NAME)
+    self~createStaticText(-1, 8, -5+(13*i), 56, 11, , params.i.!NAME)
   end
   self~addOkCancelRightBottom
 

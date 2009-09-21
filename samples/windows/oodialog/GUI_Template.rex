@@ -278,7 +278,7 @@ exit -1
 /* self~createEdit(id,x,y,cx,cy,'options','attribute')                       */
 /* self~AddListControl(id,'attribute',x,y,cx,cy,'options')                   */
 /* self~AddTreeControl(id,'attribute',x,y,cx,cy,'options')                   */
-/* self~addText(x,y,cx,cy,'text','options',id)                               */
+/* self~addStaticText(id, x,y,cx,cy,'options','text')                        */
 /* self~Add[Black|White|Gray]Rect,x,y,cx,cy,'options',id)                    */
 /* etc. etc. ...                                                             */
 /* other controls should have unique ids over 10 (or -1 for static text)     */

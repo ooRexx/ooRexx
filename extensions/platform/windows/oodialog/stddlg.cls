@@ -57,7 +57,7 @@
 
 ::method defineDialog
    expose message sx sy
-   self~addText(10,10,sx+2,sy, message)
+   self~createStaticText(-1, 10, 10, sx+2, sy, , message)
 
 ::method initAutoDetection
    self~noAutoDetection
@@ -95,9 +95,9 @@
 ::method defineDialog
    expose message size dlgy
    if size = 0 then size = self~sx
-   self~addText(10,10, self~sx+2, self~sy, message)
+   self~createStaticText(-1, 10, 10, self~sx+2, self~sy, , message)
    self~AddLine(10, self~sy+4+10, size)
-   self~addButtonGroup(self~sx-80, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+   self~createButtonGroup(self~sx-80, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method AddLine
    use arg x, y, l
@@ -158,9 +158,9 @@
 
 ::method defineDialog
    expose message sx sy len dlgx dlgy entries. maxlen
-   self~addText(10,10, sx+2, sy, message)
+   self~createStaticText(-1, 10, 10, sx+2, sy, , message)
    self~addInputStem(101, 10, sy+4+10, maxlen+4, len, entries.)
-   self~addButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+   self~createButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method execute
    expose message title sx sy datas. dlgx dlgy len entries. maxlen
@@ -216,9 +216,9 @@
 
 ::method defineDialog
    expose message sx sy lenx leny dlgx dlgy
-   self~addText(10,10, sx+2, sy, message)
+   self~createStaticText(-1, 10, 10, sx+2, sy, , message)
    self~addListBox(101, "DATA", 10, sy+4+10, lenx, leny+4)
-   self~addButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+   self~createButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method initDialog
    expose count input.
@@ -267,9 +267,9 @@
 
 
 ::method defineDialog
-   self~addText(10,10, self~sx+2, self~sy, self~message)
+   self~createStaticText(-1, 10, 10, self~sx+2, self~sy, , self~message)
    self~addListBox(101, "DATA", 10, self~sy+4+10, self~lenx, self~leny+4, "MULTI VSCROLL TABULATORS")
-   self~addButtonGroup(self~dlgx-100, self~dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+   self~createButtonGroup(self~dlgx-100, self~dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 
 /* This class is a dialog with a group of one or more check boxes. */
@@ -288,9 +288,9 @@
 
 ::method defineDialog
    expose message sx sy len dlgx dlgy entries. placex max
-   self~addText(10,10, sx+2, sy, message)
+   self~createStaticText(-1, 10, 10, sx+2, sy, , message)
    self~addCheckBoxStem(101, placex, sy+4+10, len, entries., max)
-   self~addButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+   self~createButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method execute
    expose message title sx sy datas. dlgx dlgy len entries. placex max
@@ -340,9 +340,9 @@
 
 ::method defineDialog
    expose message sx sy len dlgx dlgy entries. placex max
-   self~addText(10,10, sx+2, sy, message)
+   self~createStaticText(-1, 10, 10, sx+2, sy, , message)
    self~addRadioStem(101, placex, sy+4+10, len, entries., max)
-   self~addButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+   self~createButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method execute
    expose message title sx sy datas. dlgx dlgy len entries. placex prev max

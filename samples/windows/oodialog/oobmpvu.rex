@@ -48,7 +48,7 @@
  mydir = directory(mydir)                        /* current is "my"   */
  b.101 = ''
  d = .BmpDialog~new(b.)
- d~CreateCenter(300, 200, "Bitmap Viewer")
+ d~createCenter(300, 200, "Bitmap Viewer")
  d~execute("SHOWTOP")
  d~deinstall
  ret = directory(curdir)
@@ -60,44 +60,44 @@
 
 /*-------------------------------- dialog class ----------------------*/
 
-::class BmpDialog subclass UserDialog
+::class 'BmpDialog' subclass UserDialog
 
-::method DefineDialog
+::method defineDialog
    ret = directory("bmp")
-   self~AddText(10,10,,, "&Filename: ")
-   self~AddComboBox(101,"Filename",60,10,130,80,"VSCROLL")
-   self~ConnectList(101,"FileSelected")
+   self~createStaticText(-1, 10, 10, , , , "&Filename: ")
+   self~addComboBox(101,"Filename",60,10,130,80,"VSCROLL")
+   self~connectList(101,"FileSelected")
    self~createBitmapButton(102, 13, 33, self~SizeX - 26, self~SizeY - 30 - 36, , , , "blank.bmp")
-   self~AddButtonGroup(100, self~sizeY - 18,,, "&Show 1 OK &Cancel 2 CANCEL", 1)
-   self~AddBlackFrame(10,30,self~SizeX - 20, self~SizeY - 30 - 30)
+   self~createButtonGroup(100, self~sizeY - 18,,, "&Show 1 OK &Cancel 2 CANCEL", 1)
+   self~createBlackFrame(-1, 10, 30, self~SizeX - 20, self~SizeY - 30 - 30)
 
-::method InitDialog
-   self~AddComboEntry(101, "...")
-   self~ComboAddDirectory(101, "*.bmp", "READWRITE")
-   self~ComboAddDirectory(101, "*.dib", "READWRITE")
+::method initDialog
+   self~addComboEntry(101, "...")
+   self~comboAddDirectory(101, "*.bmp", "READWRITE")
+   self~comboAddDirectory(101, "*.dib", "READWRITE")
 
-::method FileSelected                        /* drop-down selection */
+::method fileSelected                        /* drop-down selection */
    self~getData
-   if self~Filename = "..." then self~OK
-   else self~ShowBitmap
+   if self~filename = "..." then self~OK
+   else self~showBitmap
 
 ::method OK                                  /* show button */
-   self~GetData
-   if self~Filename = "..." then
+   self~getData
+   if self~filename = "..." then
    do
-      self~Filename = fileNameDialog("*.*", self~DlgHandle)
-      if self~Filename \= "0" then
+      self~filename = fileNameDialog("*.*", self~DlgHandle)
+      if self~filename \= "0" then
       do
-         self~ComboDrop(101)
-         self~AddComboEntry(101, "...")
-         self~ComboAddDirectory(101, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.bmp", "READWRITE")
-         self~ComboAddDirectory(101, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.dib", "READWRITE")
+         self~comboDrop(101)
+         self~addComboEntry(101, "...")
+         self~comboAddDirectory(101, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.bmp", "READWRITE")
+         self~comboAddDirectory(101, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.dib", "READWRITE")
          self~setAttrib("Filename")
       end
    end
-   self~ShowBitmap
+   self~showBitmap
    return 0
 
-::method ShowBitmap                          /* draw the bitmap */
-   self~ChangeBitmapButton(102,0)
-   self~ChangeBitmapButton(102,self~Filename,,,,"USEPAL")
+::method showBitmap                          /* draw the bitmap */
+   self~changeBitmapButton(102,0)
+   self~changeBitmapButton(102,self~filename,,,,"USEPAL")

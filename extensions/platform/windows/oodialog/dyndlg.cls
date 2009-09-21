@@ -395,39 +395,39 @@
                opts = self~getRCStyle(style, "ST")
                select
                   when style~wordpos("SS_LEFT") > 0 then
-                     self~addText(x, y, w, h, name, opts, id)
+                     self~createStaticText(id, x, y, w, h, opts, name)
                   when style~wordpos("SS_RIGHT") > 0 then
-                     self~addText(x, y, w, h, name, opts || " RIGHT", id)
+                     self~createStaticText(id, x, y, w, h, opts || " RIGHT", name)
                   when style~wordpos("SS_CENTER") > 0 then
-                     self~addText(x, y, w, h, name, opts || " CENTER", id)
+                     self~createStaticText(id, x, y, w, h, opts || " CENTER", name)
                   when style~wordpos("SS_SIMPLE") > 0 then
-                     self~addText(x, y, w, h, name, opts || " SIMPLE", id)
+                     self~createStaticText(id, x, y, w, h, opts || " SIMPLE", name)
                   when style~wordpos("SS_LEFTNOWORDWRAP") > 0 then
-                     self~addText(x, y, w, h, name, opts || " LEFTNOWRAP", id)
+                     self~createStaticText(id, x, y, w, h, opts || " LEFTNOWRAP", name)
                   when style~wordpos("SS_WHITERECT") > 0 then
-                     self~addWhiteRect(x, y, w, h, opts, id)
+                     self~createWhiteRect(id, x, y, w, h, opts)
                   when style~wordpos("SS_GRAYRECT") > 0 then
-                     self~addGrayRect(x, y, w, h, opts, id)
+                     self~createGrayRect(id, x, y, w, h, opts)
                   when style~wordpos("SS_BLACKRECT") > 0 then
-                     self~addBlackRect(x, y, w, h, opts, id)
+                     self~createBlackRect(id, x, y, w, h, opts)
                   when style~wordpos("SS_WHITEFRAME") > 0 then
-                     self~addWhiteFrame(x, y, w, h, opts, id)
+                     self~createWhiteFrame(id, x, y, w, h, opts)
                   when style~wordpos("SS_GRAYFRAME") > 0 then
-                     self~addGrayFrame(x, y, w, h, opts, id)
+                     self~createGrayFrame(id, x, y, w, h, opts)
                   when style~wordpos("SS_BLACKFRAME") > 0 then
-                     self~addBlackFrame(x, y, w, h, opts, id)
+                     self~createBlackFrame(id, x, y, w, h, opts)
                   when style~wordpos("SS_ETCHEDFRAME") > 0 then
-                     self~addEtchedFrame(x, y, w, h, opts, id)
+                     self~createEtchedFrame(id, x, y, w, h, opts)
                   when style~wordpos("SS_ETCHEDHORZ") > 0 then
-                     self~addEtchedHorizontal(x, y, w, h, opts, id)
+                     self~createEtchedHorizontal(id, x, y, w, h, opts)
                   when style~wordpos("SS_ETCHEDVERT") > 0 then
-                     self~addEtchedVertical(x, y, w, h, opts, id)
+                     self~createEtchedVertical(id, x, y, w, h, opts)
                   when style~wordpos("SS_BITMAP") > 0 then
-                     self~addImage(id, x, y, w, h, "BITMAP " || opts)
+                     self~createStaticImage(id, x, y, w, h, "BITMAP " || opts)
                   when style~wordpos("SS_ENHMETAFILE") > 0 then
-                     self~addImage(id, x, y, w, h, "METAFILE " || opts)
+                     self~createStaticImage(id, x, y, w, h, "METAFILE " || opts)
                   when style~wordpos("SS_ICON") > 0 then
-                     self~addImage(id, x, y, w, h, "ICON " || opts)
+                     self~createStaticImage(id, x, y, w, h, "ICON " || opts)
                   otherwise
                       ret = errorDialog("Static item ignored due to unknown static style option in:" || -
                                          '0d0a'x || f "("s")")
@@ -494,12 +494,12 @@
                if type = "CTEXT" then opts = opts || " CENTER";
                else if type = "RTEXT" then opts = opts || " RIGHT";
                else if style~wordpos("SS_LEFTNOWORDWRAP") > 0 then opts = opts || " LEFTNOWRAP";
-               self~addText(x, y, w, h, name, opts, id)
+               self~createStaticText(id, x, y, w, h, opts, name)
             end
 
             when type = "ICON" then do
                opts = self~getRCStyle(style, "ST")
-               self~addImage(id, x, y, w, h, "ICON " || opts)
+               self~createStaticImage(id, x, y, w, h, "ICON " || opts)
             end
 
             when type = "GROUPBOX" then
@@ -563,95 +563,18 @@
    return self~connectBitmapButton(id, msgToRaise~space(0), bmp, focus, sel, disabl, opts)
 
 
-::method addStatic
-   use strict arg id = (-1), x, y, cx = 0, cy = 0, opts = "TEXT", text = ""
-   argA = .array~new
-   opts = opts~translate
-   argA[1] = x
-   argA[2] = y
-   argA[3] = cx
-   argA[4] = cy
-   argA[5] = opts
-   argA[6] = id
-
-   select
-     when opts~wordpos("TEXT") > 0 then return self~addText(x, y, cx, cy, text, opts, id)
-
-     when opts~wordpos("BITMAP") > 0 | opts~wordpos("METAFILE") > 0 | opts~wordpos("ICON") > 0 then do
-        forward message "addImage"
-     end
-
-     when opts~wordpos("WHITERECT") > 0 then return self~addSimpleStatic(argA, 0)
-     when opts~wordpos("GRAYRECT") > 0 then return self~addSimpleStatic(argA, 1)
-     when opts~wordpos("BLACKRECT") > 0 then return self~addSimpleStatic(argA, 2)
-     when opts~wordpos("WHITEFRAME") > 0 then return self~addSimpleStatic(argA, 3)
-     when opts~wordpos("GRAYFRAME") > 0 then return self~addSimpleStatic(argA, 4)
-     when opts~wordpos("BLACKFRAME") > 0 then return self~addSimpleStatic(argA, 5)
-     when opts~wordpos("ETCHED") > 0 then return self~addSimpleStatic(argA, 6)
-     when opts~wordpos("HORZ") > 0 then return self~addSimpleStatic(argA, 7)
-     when opts~wordpos("VERT") > 0 then return self~addSimpleStatic(argA, 8)
-
-     otherwise return self~addText(x, y, cx, cy, text, opts, id)
-   end
-   -- End select
-
-::method addImage
-   use strict arg id, x, y, cx, cy, options = ""
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   options = options~translate
-   self~activePtr = UsrAddControl("IMG", self~activePtr, id, x, y, cx, cy, options)
-   return 0
-
-::method addText
-   use arg x, y, cx = 0, cy = 0, text = "", opts = "", id = (-1)
-
-   if cx = 0 | cy = 0 then do
-      size = self~getTextSizeDlg(text)
-      if cx = 0 then cx = size~width + 2
-      if cy = 0 then cy = size~height
-   end
-   id = self~itemAdd(id, 1)
-   if id = -2 then return id
-   opts = opts~translate
-   self~activePtr = UsrAddControl("TXT", self~activePtr, x, y, cx, cy, opts, text, id)
-   return 0
-
-::method addWhiteRect
-   return self~addSimpleStatic(arg(1,"A"), 0)
-
-::method addGrayRect
-   return self~addSimpleStatic(arg(1,"A"), 1)
-
-::method addBlackRect
-   return self~addSimpleStatic(arg(1,"A"), 2)
-
-::method addWhiteFrame
-   return self~addSimpleStatic(arg(1,"A"), 3)
-
-::method addGrayFrame
-   return self~addSimpleStatic(arg(1,"A"), 4)
-
-::method addBlackFrame
-   return self~addSimpleStatic(arg(1,"A"), 5)
-
-::method addEtchedFrame
-   return self~addSimpleStatic(arg(1,"A"), 6)
-
-::method addEtchedHorizontal
-   return self~addSimpleStatic(arg(1,"A"), 7)
-
-::method addEtchedVertical
-   return self~addSimpleStatic(arg(1,"A"), 8)
-
-::method addSimpleStatic private
-   use arg arga, type
-   if arga~hasindex(6) = 0 then id = self~itemAdd(-1, 0); else id = self~itemAdd(arga[6],1)
-   if id = -2 then return id
-   if arga~hasindex(5) = 0 then arga[5] = ""
-   opts = arga[5]~translate
-   self~activePtr = UsrAddControl("FRM", self~activePtr, arga[1], arga[2], arga[3], arga[4], type, opts, id)
-   return 0
+::method createStatic external "LIBRARY oodialog dyndlg_createStatic"
+::method createStaticText external "LIBRARY oodialog dyndlg_createStaticText"
+::method createStaticImage external "LIBRARY oodialog dyndlg_createStaticImage"
+::method createStaticFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createWhiteRect external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createGrayRect external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createBlackRect external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createWhiteFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createGrayFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createBlackFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createEtchedHorizontal external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createEtchedVertical external "LIBRARY oodialog dyndlg_createStaticFrame"
 
 ::method addListBox
    use arg id, fname, x, y, cx, cy, opts = ""
@@ -748,7 +671,7 @@
       if cx1 = 0 then cx1 = size~width + 4
    end
    opts = opts~translate
-   ret = self~addText(x, y+2, cx1, cy, text, opts, idstat)
+   ret = self~createStaticText(idstat, x, y+2, cx1, cy, opts, text)
    if ret == 0 then ret = self~createEdit(id, x+cx1+1, y, cx2, cy, opts, fname)
    return ret
 
@@ -803,7 +726,7 @@
    cy = s~height + 4
    if cx1 = 0 then cx1 = s~width + 4
    opts = opts~translate
-   ret = self~addText(x, y, cx1, cy, text, opts, idstat)
+   ret = self~createStaticText(idstat, x, y, cx1, cy, opts, text)
    if ret == 0 then return self~addComboBox(id, attname, x+cx1+2, y, cx2, cy*clines, opts)
    else return ret
 
@@ -914,7 +837,7 @@
    else return 0
 
 
-::method addButtonGroup
+::method createButtonGroup
    use arg x, y, cx, cy, inp, bottom, opts = ""
    parse var inp bt bid bfnk newinp
 
@@ -938,17 +861,17 @@
    return 0
 
 
-::method addOkCancelRightBottom
-   return self~addButtonGroup(self~sizeX-95, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+::method createOkCancelRightBottom
+   return self~createButtonGroup(self~sizeX-95, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
-::method addOkCancelLeftBottom
-   return self~addButtonGroup(5, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
+::method createOkCancelLeftBottom
+   return self~createButtonGroup(5, self~sizeY - 15,,, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
-::method addOkCancelRightTop
-   return self~addButtonGroup(self~sizeX-45, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, " DEFAULT")
+::method createOkCancelRightTop
+   return self~createButtonGroup(self~sizeX-45, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, " DEFAULT")
 
-::method addOkCancelLeftTop
-   return self~addButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "DEFAULT")
+::method createOkCancelLeftTop
+   return self~createButtonGroup(5, 5,,, "&Ok 1 OK &Cancel 2 CANCEL", 0, "DEFAULT")
 
 ::method addIconFile private external "LIBRARY oodialog dyndlg_addIconFile_pvt"
 ::method addIcon
@@ -1165,4 +1088,62 @@
 ::method addBitmapButton
    use strict arg id, x, y, cx = 0, cy = 0, text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = "", opts = ""
    return self~createBitmapButton(id, x, y, cx, cy, opts, text, msgToRaise, bmp, focus, sel, disabl)
+
+::method addStatic external "LIBRARY oodialog dyndlg_createStatic"
+::method addImage external "LIBRARY oodialog dyndlg_createStaticImage"
+
+::method addText
+   use strict arg x, y, cx = 0, cy = 0, text = "", opts = "", id = (-1)
+   return self~createStaticText(id, x, y, cx, cy, opts, text)
+
+::method addWhiteRect
+   use strict arg x, y, cx, cy, opts = "", id = (-1)
+   return self~createWhiteRect(id, x, y, cx, cy, opts)
+
+::method addGrayRect
+   use strict arg x, y, cx, cy, opts = "", id = (-1)
+   return self~createRectRect(id, x, y, cx, cy, opts)
+
+::method addBlackRect
+   use strict arg x, y, cx, cy, opts = "", id = (-1)
+   return self~createBlackRect(id, x, y, cx, cy, opts)
+
+::method addWhiteFrame
+   use strict arg x, y, cx, cy, opts = "", id = (-1)
+   return self~createWhiteFrame(id, x, y, cx, cy, opts)
+
+::method addGrayFrame
+   use strict arg x, y, cx, cy, opts = "", id = (-1)
+   return self~createGrayFrame(id, x, y, cx, cy, opts)
+
+::method addBlackFrame
+   use strict arg x, y, cx, cy, opts = "", id = (-1)
+   return self~createBlackFrame(id, x, y, cx, cy, opts)
+
+::method addEtchedFrame
+   use strict arg x, y, cx, cy, opts = "", id = (-1)
+   return self~createEtchedFrame(id, x, y, cx, cy, opts)
+
+::method addEtchedHorizontal
+   use strict arg x, y, cx, cy, opts = "", id = (-1)
+   return self~createEtchedHorizontal(id, x, y, cx, cy, opts)
+
+::method addEtchedVertical
+   use strict arg x, y, cx, cy, opts = "", id = (-1)
+   return self~createEtchedVertical(id, x, y, cx, cy, opts)
+
+::method addButtonGroup
+  forward message "createButtonGroup"
+
+::method addOkCancelRightBottom
+   forward message 'createOkCancelRighBottom'
+
+::method addOkCancelLeftBottom
+   forward message 'createOkCancelLeftBottom'
+
+::method addOkCancelRightTop
+   forward message 'createOkCancelRightTop'
+
+::method addOkCancelLeftTop
+   forward message 'createOkCancelLeftTop'
 

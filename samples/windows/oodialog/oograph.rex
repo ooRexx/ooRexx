@@ -67,12 +67,12 @@
 
 /*-------------------------------- dialog class ----------------------*/
 
-::class GraphDialog subclass UserDialog
+::class 'GraphDialog' subclass UserDialog
 
-::method DefineDialog
+::method defineDialog
    expose but2size
-   but2pos  = 160 / self~FactorY
-   but2size = 300 / self~FactorY
+   but2pos  = 160 / self~factorY
+   but2size = 300 / self~factorY
 
    -- The two bitmap buttons are created larger than they need to be.  In particular,
    -- The 102 button height is much larger, it covers most of the lower part of the
@@ -92,9 +92,9 @@
    self~DisplaceBitmap(102, -450, 100)
 
    -- Add the other controls.
-   self~AddWhiteFrame(10, self~SizeY - 52, self~SizeX-20, 28,"HIDDEN", 203)
-   self~createPushButton(103,12, self~SizeY - 50, self~SizeX-24, 24,"OWNER NOTAB")
-   self~AddButtonGroup(self~SizeX-220, self~SizeY - 18,60,12, ,
+   self~createWhiteFrame(203, 10, self~SizeY - 52, self~SizeX-20, 28, "HIDDEN")
+   self~createPushButton(103, 12, self~SizeY - 50, self~SizeX-24, 24, "OWNER NOTAB")
+   self~createButtonGroup(self~SizeX-220, self~SizeY - 18,60,12, ,
             "&Bitmap-Viewer 111 BmpView &Draw-Color-Demo 112 OODraw &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method initDialog

@@ -252,15 +252,19 @@ REXX_METHOD_PROTOTYPE(dyndlg_dynamicInit);
 REXX_METHOD_PROTOTYPE(dyndlg_create);
 REXX_METHOD_PROTOTYPE(dyndlg_startParentDialog);
 REXX_METHOD_PROTOTYPE(dyndlg_startChildDialog);
+REXX_METHOD_PROTOTYPE(dyndlg_createStatic);
+REXX_METHOD_PROTOTYPE(dyndlg_createStaticText);
+REXX_METHOD_PROTOTYPE(dyndlg_createStaticImage);
+REXX_METHOD_PROTOTYPE(dyndlg_createStaticFrame);
 REXX_METHOD_PROTOTYPE(dyndlg_createPushButton);
-REXX_METHOD_PROTOTYPE(dyndlg_addButton);
 REXX_METHOD_PROTOTYPE(dyndlg_createRadioButton);
-REXX_METHOD_PROTOTYPE(dyndlg_addRadioButton);
 REXX_METHOD_PROTOTYPE(dyndlg_createGroupBox);
-REXX_METHOD_PROTOTYPE(dyndlg_addGroupBox);
 REXX_METHOD_PROTOTYPE(dyndlg_createEdit);
-REXX_METHOD_PROTOTYPE(dyndlg_addEntryLine);
 REXX_METHOD_PROTOTYPE(dyndlg_createScrollBar);
+REXX_METHOD_PROTOTYPE(dyndlg_addButton);
+REXX_METHOD_PROTOTYPE(dyndlg_addRadioButton);
+REXX_METHOD_PROTOTYPE(dyndlg_addGroupBox);
+REXX_METHOD_PROTOTYPE(dyndlg_addEntryLine);
 REXX_METHOD_PROTOTYPE(dyndlg_addIconFile_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_itemAdd_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
@@ -575,6 +579,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_setDialogItemCount,    dyndlg_setDialogItemCount),
     REXX_METHOD(dyndlg_dynamicInit,           dyndlg_dynamicInit),
     REXX_METHOD(dyndlg_create,                dyndlg_create),
+    REXX_METHOD(dyndlg_createStatic,          dyndlg_createStatic),
+    REXX_METHOD(dyndlg_createStaticText,      dyndlg_createStaticText),
+    REXX_METHOD(dyndlg_createStaticImage,     dyndlg_createStaticImage),
+    REXX_METHOD(dyndlg_createStaticFrame,     dyndlg_createStaticFrame),
     REXX_METHOD(dyndlg_createPushButton,      dyndlg_createPushButton),
     REXX_METHOD(dyndlg_addButton,             dyndlg_addButton),
     REXX_METHOD(dyndlg_createRadioButton,     dyndlg_createRadioButton),
