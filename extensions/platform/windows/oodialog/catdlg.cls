@@ -207,19 +207,18 @@
 
    self~CategoryPage
 
-   if m > 0 then
-   do
+   if m > 0 then do
       if self~catmax = 0 then self~catmax = 5
-          if self~catalog['count'] < self~catmax then self~catmax = self~catalog['count']
+      if self~catalog['count'] < self~catmax then self~catmax = self~catalog['count']
       if self~catmax < self~catalog['count'] then
            if self~catlabel='' then
-                self~addComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),,
+                self~createComboBox(9001, self~catX, self~caty, self~catcx, (self~catmax+1)*(textHeight+4), -
                                  self~catstyle~delword(m, 1) || " CAT VSCROLL")
            else self~addComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
                                    self~catlabel, self~catstyle~delword(m, 1) || " CAT VSCROLL")
       else if self~catlabel='' then
-                self~addComboBox(9001,,self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),,
-                                 self~catstyle~delword(m, 1) || " CAT")
+                self~createComboBox(9001, self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),    -
+                                    self~catstyle~delword(m, 1) || " CAT")
            else self~addComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
                                    self~catlabel, self~catstyle~delword(m, 1) || " CAT")
    end

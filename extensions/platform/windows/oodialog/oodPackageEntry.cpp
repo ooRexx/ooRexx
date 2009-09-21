@@ -114,7 +114,6 @@ REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleListCtrlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleControlEx);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleOtherNewCtrls);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DumpAdmin);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddControl);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(UsrAddNewCtrl);
 
 REXX_TYPED_ROUTINE_PROTOTYPE(getDlgMsg);
@@ -150,7 +149,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(HandleControlEx,      HandleControlEx),
     REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
     REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),
-    REXX_CLASSIC_ROUTINE(UsrAddControl,        UsrAddControl),
     REXX_CLASSIC_ROUTINE(UsrAddNewCtrl,        UsrAddNewCtrl),
 
     REXX_TYPED_ROUTINE(getDlgMsg,              getDlgMsg),
@@ -261,10 +259,13 @@ REXX_METHOD_PROTOTYPE(dyndlg_createRadioButton);
 REXX_METHOD_PROTOTYPE(dyndlg_createGroupBox);
 REXX_METHOD_PROTOTYPE(dyndlg_createEdit);
 REXX_METHOD_PROTOTYPE(dyndlg_createScrollBar);
+REXX_METHOD_PROTOTYPE(dyndlg_createListBox);
+REXX_METHOD_PROTOTYPE(dyndlg_createComboBox);
 REXX_METHOD_PROTOTYPE(dyndlg_addButton);
 REXX_METHOD_PROTOTYPE(dyndlg_addRadioButton);
 REXX_METHOD_PROTOTYPE(dyndlg_addGroupBox);
 REXX_METHOD_PROTOTYPE(dyndlg_addEntryLine);
+REXX_METHOD_PROTOTYPE(dyndlg_addMethod);
 REXX_METHOD_PROTOTYPE(dyndlg_addIconFile_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_itemAdd_pvt);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
@@ -584,14 +585,17 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_createStaticImage,     dyndlg_createStaticImage),
     REXX_METHOD(dyndlg_createStaticFrame,     dyndlg_createStaticFrame),
     REXX_METHOD(dyndlg_createPushButton,      dyndlg_createPushButton),
-    REXX_METHOD(dyndlg_addButton,             dyndlg_addButton),
     REXX_METHOD(dyndlg_createRadioButton,     dyndlg_createRadioButton),
-    REXX_METHOD(dyndlg_addRadioButton,        dyndlg_addRadioButton),
     REXX_METHOD(dyndlg_createGroupBox,        dyndlg_createGroupBox),
-    REXX_METHOD(dyndlg_addGroupBox,           dyndlg_addGroupBox),
-    REXX_METHOD(dyndlg_createScrollBar,       dyndlg_createScrollBar),
     REXX_METHOD(dyndlg_createEdit,            dyndlg_createEdit),
+    REXX_METHOD(dyndlg_createScrollBar,       dyndlg_createScrollBar),
+    REXX_METHOD(dyndlg_createListBox,         dyndlg_createListBox),
+    REXX_METHOD(dyndlg_createComboBox,        dyndlg_createComboBox),
+    REXX_METHOD(dyndlg_addButton,             dyndlg_addButton),
+    REXX_METHOD(dyndlg_addRadioButton,        dyndlg_addRadioButton),
+    REXX_METHOD(dyndlg_addGroupBox,           dyndlg_addGroupBox),
     REXX_METHOD(dyndlg_addEntryLine,          dyndlg_addEntryLine),
+    REXX_METHOD(dyndlg_addMethod,             dyndlg_addMethod),
     REXX_METHOD(dyndlg_addIconFile_pvt,       dyndlg_addIconFile_pvt),
     REXX_METHOD(dyndlg_itemAdd_pvt,           dyndlg_itemAdd_pvt),
     REXX_METHOD(dyndlg_startParentDialog,     dyndlg_startParentDialog),

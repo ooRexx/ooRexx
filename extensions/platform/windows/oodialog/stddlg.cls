@@ -217,7 +217,7 @@
 ::method defineDialog
    expose message sx sy lenx leny dlgx dlgy
    self~createStaticText(-1, 10, 10, sx+2, sy, , message)
-   self~addListBox(101, "DATA", 10, sy+4+10, lenx, leny+4)
+   self~createListBox(101, 10, sy+4+10, lenx, leny+4, "DATA")
    self~createButtonGroup(dlgx-100, dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method initDialog
@@ -268,7 +268,7 @@
 
 ::method defineDialog
    self~createStaticText(-1, 10, 10, self~sx+2, self~sy, , self~message)
-   self~addListBox(101, "DATA", 10, self~sy+4+10, self~lenx, self~leny+4, "MULTI VSCROLL TABULATORS")
+   self~createListBox(101, 10, self~sy+4+10, self~lenx, self~leny+4, "MULTI VSCROLL TABULATORS", "DATA")
    self~createButtonGroup(self~dlgx-100, self~dlgy - 18, 0, 0, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
 
 

@@ -400,81 +400,6 @@ void UAddNamedControl(WORD **p, CHAR * className, INT id, INT x, INT y, INT cx, 
    (*p) = lpwAlign (*p);
 }
 
-size_t RexxEntry UsrAddControl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   INT buffer[5];
-   ULONG lStyle;
-   WORD *p = NULL;
-   int i;
-
-   CHECKARGL(1);
-
-   if (!strcmp(argv[0].strptr,"LB"))
-   {
-       CHECKARG(8);
-
-       for ( i = 0; i < 5; i++ )
-       {
-           buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       lStyle = WS_CHILD;
-       if (strstr(argv[7].strptr,"COLUMNS")) lStyle |= LBS_USETABSTOPS;
-       if (strstr(argv[7].strptr,"VSCROLL")) lStyle |= WS_VSCROLL;
-       if (strstr(argv[7].strptr,"HSCROLL")) lStyle |= WS_HSCROLL;
-       if (strstr(argv[7].strptr,"SORT")) lStyle |= LBS_STANDARD;
-       if (strstr(argv[7].strptr,"NOTIFY")) lStyle |= LBS_NOTIFY;
-       if (strstr(argv[7].strptr,"MULTI")) lStyle |= LBS_MULTIPLESEL;
-       if (strstr(argv[7].strptr,"MCOLUMN")) lStyle |= LBS_MULTICOLUMN;
-       if (strstr(argv[7].strptr,"PARTIAL")) lStyle |= LBS_NOINTEGRALHEIGHT;
-       if (strstr(argv[7].strptr,"SBALWAYS")) lStyle |= LBS_DISABLENOSCROLL;
-       if (strstr(argv[7].strptr,"KEYINPUT")) lStyle |= LBS_WANTKEYBOARDINPUT;
-       if (strstr(argv[7].strptr,"EXTSEL")) lStyle |= LBS_EXTENDEDSEL;
-       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (!strstr(argv[7].strptr,"NOBORDER")) lStyle |= WS_BORDER;
-       if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
-
-       /*                         id       x          y            cx        cy  */
-       addToDialogTemplate(&p, 0x0083, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-   }
-   else if (!strcmp(argv[0].strptr,"CB"))
-   {
-       CHECKARG(8);
-
-       for ( i = 0; i < 5; i++)
-       {
-         buffer[i] = atoi(argv[i+2].strptr);
-       }
-
-       p = (WORD *)GET_POINTER(argv[1]);
-
-       lStyle = WS_CHILD;
-
-       if (!strstr(argv[7].strptr,"NOHSCROLL")) lStyle |= CBS_AUTOHSCROLL;
-       if (strstr(argv[7].strptr,"VSCROLL")) lStyle |= WS_VSCROLL;
-       if (strstr(argv[7].strptr,"SORT")) lStyle |= CBS_SORT;
-       if (strstr(argv[7].strptr,"SIMPLE")) lStyle |= CBS_SIMPLE;
-       else if (strstr(argv[7].strptr,"LIST")) lStyle |= CBS_DROPDOWNLIST;
-       else lStyle |= CBS_DROPDOWN;
-       if (strstr(argv[7].strptr,"PARTIAL")) lStyle |= CBS_NOINTEGRALHEIGHT;
-       if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-       if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-       if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-       if (!strstr(argv[7].strptr,"NOBORDER")) lStyle |= WS_BORDER;
-       if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
-
-       /*                         id       x          y            cx        cy  */
-       addToDialogTemplate(&p, 0x0085, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-   }
-
-   RETPTR(p);
-}
-
-
 
 /******************* New 32 Controls ***********************************/
 
@@ -1367,38 +1292,6 @@ RexxMethod8(int32_t, dyndlg_createStaticFrame, OPTIONAL_RexxObjectPtr, rxID, int
 }
 
 
-/** DynamicDialog::addButton()
- *  [deprecated] forward to createPushButton()
- */
-RexxMethod10(RexxObjectPtr, dyndlg_addButton, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
-            OPTIONAL_CSTRING, label, OPTIONAL_CSTRING, msgToRaise, OPTIONAL_CSTRING, opts,
-            OPTIONAL_CSTRING, loadOptions, ARGLIST, args)
-{
-    RexxArrayObject newArgs = context->NewArray(9);
-
-    for ( int i = 1; i <= 5; i++ )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, i), i);
-    }
-    if ( argumentExists(6) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 7);
-    }
-    if ( argumentExists(7) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 8);
-    }
-    if ( argumentExists(8) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 8), 6);
-    }
-    if ( argumentExists(9) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 9), 9);
-    }
-    return context->ForwardMessage(NULL, "createPushButton", NULL, newArgs);
-}
-
 /** DynamicDialog::createPushButton()
  *
  */
@@ -1469,43 +1362,6 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
     return result;
 }
 
-
-/** DynamicDialog::addRadioButton() / DynamicDialog::addCheckBox()
- *
- *  [deprecated forward to createRadioButton]
- */
-RexxMethod10(RexxObjectPtr, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName,
-             int, x, int, y, OPTIONAL_uint32_t, cx, OPTIONAL_uint32_t, cy,
-             CSTRING, label, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, loadOptions, ARGLIST, args)
-{
-    RexxArrayObject newArgs = context->NewArray(9);
-
-    context->ArrayPut(newArgs,     context->ArrayAt(args, 1), 1);
-    if ( argumentExists(2) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 2), 8);
-    }
-    context->ArrayPut(newArgs,     context->ArrayAt(args, 3), 2);
-    context->ArrayPut(newArgs,     context->ArrayAt(args, 4), 3);
-    if ( argumentExists(5) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 5), 4);
-    }
-    if ( argumentExists(6) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 5);
-    }
-    context->ArrayPut(newArgs,     context->ArrayAt(args, 7), 7);
-    if ( argumentExists(8) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 8), 6);
-    }
-    if ( argumentExists(9) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 9), 9);
-    }
-    return context->ForwardMessage(NULL, "createRadioButton", NULL, newArgs);
-}
 
 /** DynamicDialog::createRadioButton() / DynamicDialog::createCheckBox()
  *
@@ -1629,30 +1485,6 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
 }
 
 
-RexxMethod8(RexxObjectPtr, dyndlg_addGroupBox, int, x, int, y, uint32_t, cx, uint32_t, cy, OPTIONAL_CSTRING, text,
-            OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxID, ARGLIST, args)
-{
-    RexxArrayObject newArgs = context->NewArray(7);
-
-    for ( int i = 1; i <= 4; i++ )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, i), i + 1);
-    }
-    if ( argumentExists(5) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 5), 7);
-    }
-    if ( argumentExists(6) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 6);
-    }
-    if ( argumentExists(7) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 1);
-    }
-    return context->ForwardMessage(NULL, "createGroupBox", NULL, newArgs);
-}
-
 /** DynamicDialog::createGroupBox()
  *
  */
@@ -1700,38 +1532,6 @@ RexxMethod8(int32_t, dyndlg_createGroupBox, OPTIONAL_RexxObjectPtr, rxID, int, x
     return 0;
 }
 
-
-/** DynamicDialog::addEntryLine  [deprecated forward to createEdit]
- */
-RexxMethod8(RexxObjectPtr, dyndlg_addEntryLine, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName, int, x, int, y,
-             uint32_t, cx, OPTIONAL_uint32_t, cy, OPTIONAL_CSTRING, opts, ARGLIST, args)
-{
-    RexxArrayObject newArgs = context->NewArray(7);
-
-    context->ArrayPut(newArgs,     context->ArrayAt(args, 1), 1);
-    if ( argumentExists(2) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 2), 7);
-    }
-    context->ArrayPut(newArgs,     context->ArrayAt(args, 3), 2);
-    context->ArrayPut(newArgs,     context->ArrayAt(args, 4), 3);
-    context->ArrayPut(newArgs,     context->ArrayAt(args, 5), 4);
-    if ( argumentExists(6) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 5);
-    }
-    if ( argumentExists(7) )
-    {
-        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 6);
-    }
-
-    const char *msgName = "createEdit";
-    if ( strcmp("ADDPASSWORDLINE", context->GetMessageName()) == NULL )
-    {
-        msgName = "createPasswordEdit";
-    }
-    return context->ForwardMessage(NULL, msgName, NULL, newArgs);
-}
 
 /** DynamicDialog::createEdit()
  *
@@ -1801,7 +1601,7 @@ RexxMethod8(int32_t, dyndlg_createEdit, RexxObjectPtr, rxID, int, x, int, y, uin
     if ( StrStrI(opts, "NUMBER"       ) != NULL ) style |= ES_NUMBER;
     if ( StrStrI(opts, "OEM"          ) != NULL ) style |= ES_OEMCONVERT;
 
-    if ( strcmp("CREATEPASSWORDEDIT", context->GetMessageName()) == NULL )
+    if ( strcmp("CREATEPASSWORDEDIT", context->GetMessageName()) == 0 )
     {
         style |= ES_PASSWORD;
     }
@@ -1872,6 +1672,316 @@ RexxMethod7(int32_t, dyndlg_createScrollBar, RexxObjectPtr, rxID, int, x, int, y
     return 0;
 }
 
+
+/** DynamicDialog::createListBox()
+ *
+ */
+RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, attributeName, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id = checkID(context, rxID, pcpbd->rexxSelf);
+    if ( id < 1 )
+    {
+        return -1;
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+
+    bool isMulti = false;
+    uint32_t style = WS_CHILD;
+    style |= getCommonWindowStyles(opts, true, true);
+
+    if ( StrStrI(opts, "COLUMNS" ) != NULL ) style |= LBS_USETABSTOPS;
+    if ( StrStrI(opts, "VSCROLL" ) != NULL ) style |= WS_VSCROLL;
+    if ( StrStrI(opts, "HSCROLL" ) != NULL ) style |= WS_HSCROLL;
+    if ( StrStrI(opts, "SORT"    ) != NULL ) style |= LBS_STANDARD;
+    if ( StrStrI(opts, "NOTIFY"  ) != NULL ) style |= LBS_NOTIFY;
+    if ( StrStrI(opts, "MULTI"   ) != NULL ) {style |= LBS_MULTIPLESEL; isMulti = true;}
+    if ( StrStrI(opts, "MCOLUMN" ) != NULL ) style |= LBS_MULTICOLUMN;
+    if ( StrStrI(opts, "PARTIAL" ) != NULL ) style |= LBS_NOINTEGRALHEIGHT;
+    if ( StrStrI(opts, "SBALWAYS") != NULL ) style |= LBS_DISABLENOSCROLL;
+    if ( StrStrI(opts, "KEYINPUT") != NULL ) style |= LBS_WANTKEYBOARDINPUT;
+    if ( StrStrI(opts, "EXTSEL"  ) != NULL ) style |= LBS_EXTENDEDSEL;
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, ListBoxAtom, id, x, y, cx, cy, NULL, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    int32_t result = 0;
+
+    // Connect the data attribute if we need to.
+    if ( pcpbd->autoDetect )
+    {
+        DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
+        if ( dlgAdm == NULL )
+        {
+            failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
+            return -2;
+        }
+
+        char buf[64];
+        if ( argumentOmitted(7) )
+        {
+            _snprintf(buf, sizeof(buf), "DATA%d", id);
+            attributeName = buf;
+        }
+        context->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, context->String(attributeName));
+
+        if ( isMulti )
+        {
+            result = addToDataTable(context, dlgAdm, id, 4, 0);
+        }
+        else
+        {
+            result = addToDataTable(context, dlgAdm, id, 3, 0);
+        }
+    }
+    return result;
+}
+
+
+/** DynamicDialog::createComboBox()
+ *
+ */
+RexxMethod8(int32_t, dyndlg_createComboBox, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, attributeName, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id = checkID(context, rxID, pcpbd->rexxSelf);
+    if ( id < 1 )
+    {
+        return -1;
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+
+    bool isMulti = false;
+    uint32_t style = WS_CHILD;
+    style |= getCommonWindowStyles(opts, true, true);
+
+    if ( StrStrI(opts,"SIMPLE") ) style |= CBS_SIMPLE;
+    else if ( StrStrI(opts,"LIST") ) {style |= CBS_DROPDOWNLIST; isMulti = true;}
+    else style |= CBS_DROPDOWN;
+
+    if ( StrStrI(opts, "NOHSCROLL" ) == NULL ) style |= CBS_AUTOHSCROLL;
+    if ( StrStrI(opts, "VSCROLL"   ) != NULL ) style |= WS_VSCROLL;
+    if ( StrStrI(opts, "SORT"      ) != NULL ) style |= CBS_SORT;
+    if ( StrStrI(opts, "PARTIAL"   ) != NULL ) style |= CBS_NOINTEGRALHEIGHT;
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, ComboBoxAtom, id, x, y, cx, cy, NULL, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    int32_t result = 0;
+
+    // Connect the data attribute if we need to.
+    if ( StrStrI(opts, "CAT") == NULL && pcpbd->autoDetect )
+    {
+        DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
+        if ( dlgAdm == NULL )
+        {
+            failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
+            return -2;
+        }
+
+        char buf[64];
+        if ( argumentOmitted(7) )
+        {
+            _snprintf(buf, sizeof(buf), "DATA%d", id);
+            attributeName = buf;
+        }
+        context->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, context->String(attributeName));
+
+        if ( isMulti )
+        {
+            result = addToDataTable(context, dlgAdm, id, 5, 0);
+        }
+        else
+        {
+            result = addToDataTable(context, dlgAdm, id, 0, 0);
+        }
+
+    }
+    return result;
+}
+
+
+/** DynamicDialog::addButton()
+ *  [deprecated] forward to createPushButton()
+ */
+RexxMethod10(RexxObjectPtr, dyndlg_addButton, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, label, OPTIONAL_CSTRING, msgToRaise, OPTIONAL_CSTRING, opts,
+            OPTIONAL_CSTRING, loadOptions, ARGLIST, args)
+{
+    RexxArrayObject newArgs = context->NewArray(9);
+
+    for ( int i = 1; i <= 5; i++ )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, i), i);
+    }
+    if ( argumentExists(6) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 7);
+    }
+    if ( argumentExists(7) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 8);
+    }
+    if ( argumentExists(8) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 8), 6);
+    }
+    if ( argumentExists(9) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 9), 9);
+    }
+    return context->ForwardMessage(NULL, "createPushButton", NULL, newArgs);
+}
+
+/** DynamicDialog::addRadioButton() / DynamicDialog::addCheckBox()
+ *
+ *  [deprecated forward to createRadioButton]
+ */
+RexxMethod10(RexxObjectPtr, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName,
+             int, x, int, y, OPTIONAL_uint32_t, cx, OPTIONAL_uint32_t, cy,
+             CSTRING, label, OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, loadOptions, ARGLIST, args)
+{
+    RexxArrayObject newArgs = context->NewArray(9);
+
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 1), 1);
+    if ( argumentExists(2) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 2), 8);
+    }
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 3), 2);
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 4), 3);
+    if ( argumentExists(5) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 5), 4);
+    }
+    if ( argumentExists(6) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 5);
+    }
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 7), 7);
+    if ( argumentExists(8) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 8), 6);
+    }
+    if ( argumentExists(9) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 9), 9);
+    }
+    return context->ForwardMessage(NULL, "createRadioButton", NULL, newArgs);
+}
+
+RexxMethod8(RexxObjectPtr, dyndlg_addGroupBox, int, x, int, y, uint32_t, cx, uint32_t, cy, OPTIONAL_CSTRING, text,
+            OPTIONAL_CSTRING, opts, OPTIONAL_RexxObjectPtr, rxID, ARGLIST, args)
+{
+    RexxArrayObject newArgs = context->NewArray(7);
+
+    for ( int i = 1; i <= 4; i++ )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, i), i + 1);
+    }
+    if ( argumentExists(5) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 5), 7);
+    }
+    if ( argumentExists(6) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 6);
+    }
+    if ( argumentExists(7) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 1);
+    }
+    return context->ForwardMessage(NULL, "createGroupBox", NULL, newArgs);
+}
+
+/** DynamicDialog::addEntryLine  [deprecated forward to createEdit]
+ */
+RexxMethod8(RexxObjectPtr, dyndlg_addEntryLine, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName, int, x, int, y,
+             uint32_t, cx, OPTIONAL_uint32_t, cy, OPTIONAL_CSTRING, opts, ARGLIST, args)
+{
+    RexxArrayObject newArgs = context->NewArray(7);
+
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 1), 1);
+    if ( argumentExists(2) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 2), 7);
+    }
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 3), 2);
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 4), 3);
+    context->ArrayPut(newArgs,     context->ArrayAt(args, 5), 4);
+    if ( argumentExists(6) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 6), 5);
+    }
+    if ( argumentExists(7) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 6);
+    }
+
+    const char *msgName = "createEdit";
+    if ( strcmp("ADDPASSWORDLINE", context->GetMessageName()) == 0 )
+    {
+        msgName = "createPasswordEdit";
+    }
+    return context->ForwardMessage(NULL, msgName, NULL, newArgs);
+}
+
+/** DynamicDialog::addMethod()  [deprecated forward to appropriate createMethod]
+ */
+RexxMethod9(RexxObjectPtr, dyndlg_addMethod, RexxObjectPtr, rxID, OPTIONAL_CSTRING, attributeName, int, x, int, y,
+             uint32_t, cx, uint32_t, cy, OPTIONAL_CSTRING, opts, NAME, msgName, ARGLIST, args)
+{
+    RexxArrayObject newArgs = context->NewArray(7);
+
+    context->ArrayPut(newArgs, context->ArrayAt(args, 1), 1);
+    if ( argumentExists(2) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 2), 7);
+    }
+    for ( int i = 3; i <= 7; i++)
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, i), i - 1);
+    }
+    if ( argumentExists(7) )
+    {
+        context->ArrayPut(newArgs, context->ArrayAt(args, 7), 6);
+    }
+
+    if ( strcmp("ADDLISTBOX", msgName) == 0 ) msgName = "createListBox";
+    else if ( strcmp("ADDCOMBOBOX",      msgName) == 0 ) msgName = "createComboBox";
+    else if ( strcmp("ADDTREECONTROL",   msgName) == 0 ) msgName = "createTreeView";
+    else if ( strcmp("ADDLISTCONTROL",   msgName) == 0 ) msgName = "createListView";
+    else if ( strcmp("ADDSLIDERCONTROL", msgName) == 0 ) msgName = "createTrackBar";
+    else if ( strcmp("ADDTABCONTROL",    msgName) == 0 ) msgName = "createTab";
+
+    return context->ForwardMessage(NULL, msgName, NULL, newArgs);
+}
 
 /** DynamicDialog::addIconFile  [private]
  *

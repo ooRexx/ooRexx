@@ -118,6 +118,7 @@ mon.5 = "May"      ;mon.6 = "June"     ; mon.7 = "July"    ; mon.8 = "August"
 mon.9 = "September";mon.10= "October"  ; mon.11= "November"; mon.12= "December"
 
 d = .SingleSelection~new("This is a single selection dialog","Single Selection",mon.,6,,6)
+d~focusItem(106)
 s = d~execute
 if s>0 then say "Your SingleSelection data:" mon.s
 

@@ -65,7 +65,7 @@
 ::method defineDialog
    ret = directory("bmp")
    self~createStaticText(-1, 10, 10, , , , "&Filename: ")
-   self~addComboBox(101,"Filename",60,10,130,80,"VSCROLL")
+   self~createComboBox(101, 60, 10, 130, 80, "VSCROLL", "Filename")
    self~connectList(101,"FileSelected")
    self~createBitmapButton(102, 13, 33, self~SizeX - 26, self~SizeY - 30 - 36, , , , "blank.bmp")
    self~createButtonGroup(100, self~sizeY - 18,,, "&Show 1 OK &Cancel 2 CANCEL", 1)

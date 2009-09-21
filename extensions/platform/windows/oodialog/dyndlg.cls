@@ -437,10 +437,10 @@
                self~createEdit(id, x, y, w, h, self~getRCStyle(style, "EDIT"), name)
 
             when class = '"COMBOBOX"' then
-               self~addComboBox(id, name, x, y, w, h, self~getRCStyle(style, "CB"))
+               self~createComboBox(id, x, y, w, h, self~getRCStyle(style, "CB"), name)
 
             when class = '"LISTBOX"' then
-               self~addListBox(id, name, x, y, w, h, self~getRCStyle(style, "LB"))
+               self~createListBox(id, x, y, w, h, self~getRCStyle(style, "LB"), name)
 
             when class = '"SCROLLBAR"' then
                self~createScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
@@ -506,10 +506,10 @@
                self~createGroupBox(id, x, y, w, h, self~getRCStyle(style, "GB"), name)
 
             when type = "COMBOBOX" then
-               self~addComboBox(id, name, x, y, w, h, self~getRCStyle(style, "CB"))
+               self~createComboBox(id, x, y, w, h, self~getRCStyle(style, "CB"), name)
 
             when type = "LISTBOX" then
-               self~addListBox(id, name, x, y, w, h, self~getRCStyle(style, "LB"))
+               self~createListBox(id, x, y, w, h, self~getRCStyle(style, "LB"), name)
 
             when type = "SCROLLBAR" then
                self~createScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
@@ -575,33 +575,97 @@
 ::method createBlackFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
 ::method createEtchedHorizontal external "LIBRARY oodialog dyndlg_createStaticFrame"
 ::method createEtchedVertical external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createListBox external "LIBRARY oodialog dyndlg_createListBox"
+::method createComboBox external "LIBRARY oodialog dyndlg_createComboBox"
 
-::method addListBox
-   use arg id, fname, x, y, cx, cy, opts = ""
+
+::method addTreeControl
+   use arg id, attname, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
-   if arg(2,'o') = 1 then fname = "DATA"id
+   if arg(2,'o') = 1 then attname = "DATA"id
    opts = opts~translate
-   self~activePtr = UsrAddControl("LB", self~activePtr, id, x, y, cx, cy, opts)
+   if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
+   self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
    if self~autoDetect then do
-      if opts~wordpos("MULTI") > 0 then ret = self~ConnectMultiListBox(symbid, fname)
-      else ret = self~ConnectListBox(symbid, fname)
+       return self~connectTreeView(symbid, attname)
    end
-   return ret
+   return 0
 
-
-::method addComboBox
-   use arg id, fname, x, y, cx, cy, opts = ""
+::method addListControl
+   use arg id, attname, x, y, cx, cy, opts = ""
    symbid = id
    id = self~itemAdd(id)
    if id < 0 then return id
-   if arg(2,'o') = 1 then fname = "DATA"id
+   if arg(2,'o') = 1 then attname = "DATA"id
    opts = opts~translate
-   self~activePtr = UsrAddControl("CB", self~activePtr, id, x, y, cx, cy, opts)
-   if opts~wordpos("CAT") = 0 & self~autoDetect then return self~ConnectComboBox(symbid, fname, opts)
-   else return 0
+   self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
+   if self~autoDetect then do
+       return self~connectListView(symbid, attname)
+   end
+   return 0
 
+::method addProgressBar
+   use arg id, x, y, cx, cy, opts = ""
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   opts = opts~translate
+   self~activePtr = UsrAddNewCtrl("PROGRESS", self~activePtr, id, x, y, cx, cy, opts)
+   return 0
+
+::method addSliderControl
+   use arg id, attname, x, y, cx, cy, opts = ""
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if arg(2,'o') = 1 then attname = "DATA"id
+   opts = opts~translate
+   self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
+   if self~autoDetect then do
+       return self~connectTrackBar(symbid, attname)
+   end
+   return 0
+
+::method addTabControl
+   use arg id, attname, x, y, cx, cy, opts = ""
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if arg(2,'o') = 1 then attname = "DATA"id
+   opts = opts~translate
+   self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
+   if opts~wordpos("CAT") = 0 & self~autoDetect then do
+       return self~connectTab(symbid, attname)
+   end
+   return 0
+
+::method createDateTimePicker
+   use strict arg id, attributeName = "", x, y, cx, cy, opts = ""
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if attributeName = "" then attributeName = "DATA"id
+   opts = opts~translate
+   self~activePtr = UsrAddNewCtrl("DTP", self~activePtr, id, x, y, cx, cy, opts)
+   if self~autoDetect then do
+      return self~connectDateTimePicker(symbid, attributeName)
+   end
+   return 0
+
+::method createMonthCalendar
+   use strict arg id, attributeName = "", x, y, cx, cy, opts = ""
+   symbid = id
+   id = self~itemAdd(id)
+   if id < 0 then return id
+   if attributeName = "" then attributeName = "DATA"id
+   opts = opts~translate
+   self~activePtr = UsrAddNewCtrl("MONTH", self~activePtr, id, x, y, cx, cy, opts)
+   if self~autoDetect then do
+      return self~connectMonthCalendar(symbid, attributeName)
+   end
+   return 0
 
 
 ::method addRadioGroup
@@ -727,7 +791,7 @@
    if cx1 = 0 then cx1 = s~width + 4
    opts = opts~translate
    ret = self~createStaticText(idstat, x, y, cx1, cy, opts, text)
-   if ret == 0 then return self~addComboBox(id, attname, x+cx1+2, y, cx2, cy*clines, opts)
+   if ret == 0 then return self~createComboBox(id, x+cx1+2, y, cx2, cy*clines, opts, attname)
    else return ret
 
 
@@ -988,94 +1052,6 @@
    return ret
 
 
-::method addTreeControl
-   use arg id, attname, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if arg(2,'o') = 1 then attname = "DATA"id
-   opts = opts~translate
-   if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
-   self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-       return self~connectTreeView(symbid, attname)
-   end
-   return 0
-
-::method addListControl
-   use arg id, attname, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if arg(2,'o') = 1 then attname = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-       return self~connectListView(symbid, attname)
-   end
-   return 0
-
-::method addProgressBar
-   use arg id, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("PROGRESS", self~activePtr, id, x, y, cx, cy, opts)
-   return 0
-
-::method addSliderControl
-   use arg id, attname, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if arg(2,'o') = 1 then attname = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-       return self~connectTrackBar(symbid, attname)
-   end
-   return 0
-
-::method addTabControl
-   use arg id, attname, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if arg(2,'o') = 1 then attname = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
-   if opts~wordpos("CAT") = 0 & self~autoDetect then do
-       return self~connectTab(symbid, attname)
-   end
-   return 0
-
-::method addDateTimePicker
-   use strict arg id, attributeName = "", x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if attributeName = "" then attributeName = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("DTP", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-      return self~connectDateTimePicker(symbid, attributeName)
-   end
-   return 0
-
-::method addMonthCalendar
-   use strict arg id, attributeName = "", x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if attributeName = "" then attributeName = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("MONTH", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-      return self~connectMonthCalendar(symbid, attributeName)
-   end
-   return 0
-
 
 ::method addGroupBox external "LIBRARY oodialog dyndlg_addGroupBox"
 ::method addRadioButton external "LIBRARY oodialog dyndlg_addRadioButton"
@@ -1084,13 +1060,15 @@
 ::method addScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
 ::method addEntryLine external "LIBRARY oodialog dyndlg_addEntryLine"
 ::method addPasswordLine external "LIBRARY oodialog dyndlg_addEntryLine"
+::method addListBox external "LIBRARY oodialog dyndlg_addMethod"
+::method addComboBox external "LIBRARY oodialog dyndlg_addMethod"
+::method addStatic external "LIBRARY oodialog dyndlg_createStatic"
+::method addImage external "LIBRARY oodialog dyndlg_createStaticImage"
+
 
 ::method addBitmapButton
    use strict arg id, x, y, cx = 0, cy = 0, text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = "", opts = ""
    return self~createBitmapButton(id, x, y, cx, cy, opts, text, msgToRaise, bmp, focus, sel, disabl)
-
-::method addStatic external "LIBRARY oodialog dyndlg_createStatic"
-::method addImage external "LIBRARY oodialog dyndlg_createStaticImage"
 
 ::method addText
    use strict arg x, y, cx = 0, cy = 0, text = "", opts = "", id = (-1)

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2006-2008 Rexx Language Association. All rights reserved.    */
+/* Copyright (c) 2006-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
@@ -104,7 +104,7 @@ MyDialog~Execute('ShowTop')     /* Create, show and run the Windows Object   */
                         /* pressed.  ie: MyDialog~Attribute                  */
                         /* ------------------------------------------------- */
 
-MyDialog~DeInstall              /* Clear Up                                  */
+MyDialog~DeInstall              /* Clean Up                                  */
 
                         /* ------------------------------------------------- */
                         /* Code that you want to execute after the Dialog    */
@@ -214,24 +214,24 @@ exit -1
 
 /* ------------------------------------------------------------------------- */
 /* The init method is called when the dialog is instantiated (by ~new above) */
-::method Init
+::method init
 /* ------------------------------------------------------------------------- */
 /* expose a.  */                /* Give these variables scope of the Object  */
 /* use arg a. */                /* Uncomment if you passed a. as a stem      */
 
 /*if you do not want to define initial values with a. do not pass it to super*/
 /* otherwise rogue default values may appear in your dialog                  */
-  self~Init:super /*(a.)*/      /* we call the Super Class (userdialog)      */
+  self~init:super /*(a.)*/      /* we call the Super Class (userdialog)      */
   width=300 ; height=200        /* Set the Width and height of dialog        */
 
                                 /* Now we create the Windows Object          */
-  rc=self~CreateCenter(width,height,'This text appears in the Dialog Title',,,,
+  rc=self~createCenter(width,height,'This text appears in the Dialog Title',,,,
                                     'MS Sans Serif',8)
   /* The above line creates a dialog in the centre of the screen, if you     */
   /* Would rather specify values for x & y use the line below instead        */
   /* rc=self~Create(x,y,width,height,Title)                                  */
 
-  self~InitCode=(rc=0)
+  self~initCode=(rc=0)
                         /* ------------------------------------------------- */
                         /* Here we can initialise any attributes of our      */
                         /* dialog.                                           */
@@ -243,61 +243,61 @@ exit -1
                         /* i.e.: self~ConnectListNotify(id,"Changed",,       */
                         /*                            "ItemSelectedMethod")  */
                         /*                                                   */
-                        /* NB: Many AddDialog Methods (which appear in the   */
+                        /* NB: Many createXXX Methods (which appear in the   */
                         /* DefineDialog method below) also provide a way to  */
                         /* define connections.                               */
                         /* ------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
-::method DefineDialog
+::method defineDialog
 /* ------------------------------------------------------------------------- */
 /* This is where we lay out the controls (widgets) in our dialog             */
-/* Refer to the OODialog manual for the Add methods and their parameters     */
+/* Refer to the OODialog manual for the create methods and their parameters  */
 /* ------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
-/* dlgArea is a class of imaginary rectangles with an inner margin that allow*/
-/* you to reference coordinates within them by dialog units or percentage    */
-/* download dlgArea.cls from www.sahananda.fwbo.net/rexx                     */
+/* DlgArea is a class of imaginary rectangles with an inner margin that      */
+/* allows you to reference coordinates within them by dialog units or        */
+/* percentages.                                                              */
 /* ------------------------------------------------------------------------- */
-/* u = .dlgAreaU~new(self) -- Whole dialog           */
-/* a = .dlgArea~new(u~x(''),u~y(''),u~w(''),u~h('')) */
+/* u = .DlgAreaU~new(self) -- Whole dialog           */
+/* a = .DlgArea~new(u~x(''),u~y(''),u~w(''),u~h('')) */
 
                         /* ------------------------------------------------- */
                         /* Here we add the control objects to our dialog     */
-                        /* Dialog Width  is available to us as self~SizeX &  */
-                        /* Dialog Height is available to us as self~SizeY    */
+                        /* Dialog Width  is available to us as self~sizeX &  */
+                        /* Dialog Height is available to us as self~sizeY    */
                         /* ------------------------------------------------- */
 
-   self~createPushButton( 1,Self~SizeX-60 ,Self~SizeY-20,50,15,'DEFAULT','OK','Ok')
-   self~createPushButton( 2,Self~SizeX-120,Self~SizeY-20,50,15,,'Cancel','Cancel')
+   self~createPushButton( 1,self~sizeX-60 ,self~sizeY-20,50,15,'DEFAULT','OK','Ok')
+   self~createPushButton( 2,self~sizeX-120,self~sizeY-20,50,15,,'Cancel','Cancel')
 
 /* examples to cut & paste:                                                  */
 /* self~createPushButton(id,x,y,cx,cy,'options','text','method')             */
-/* self~createCheckBox(id,'attribute',x,y,cx,cy,'options',text)              */
-/* self~AddComboBox(id,'attribute',x,y,cx,cy,'options')                      */
+/* self~createCheckBox(id,x,y,cx,cy,'options',text,'attribute')              */
+/* self~createComboBox(id,x,y,cx,cy,'options','attribute')                   */
 /* self~createEdit(id,x,y,cx,cy,'options','attribute')                       */
-/* self~AddListControl(id,'attribute',x,y,cx,cy,'options')                   */
-/* self~AddTreeControl(id,'attribute',x,y,cx,cy,'options')                   */
-/* self~addStaticText(id, x,y,cx,cy,'options','text')                        */
-/* self~Add[Black|White|Gray]Rect,x,y,cx,cy,'options',id)                    */
+/* self~createListView(id,x,y,cx,cy,'options','attribute')                   */
+/* self~createTreeView(id,x,y,cx,cy,'options','attribute')                   */
+/* self~createStaticText(id, x,y,cx,cy,'options','text')                     */
+/* self~create[Black|White|Gray]Rect,x,y,cx,cy,'options',id)                 */
 /* etc. etc. ...                                                             */
 /* other controls should have unique ids over 10 (or -1 for static text)     */
 
                         /* ------------------------------------------------- */
-                        /* You can add a menu here using Self~AddMenuItem &  */
-                        /* Self~AddMenuSeperator.                            */
-                        /* To display it add a call to SetMenu in the        */
-                        /* InitDialog method                                 */
+                        /* You can add a menu here using self~addMenuItem &  */
+                        /* self~addMenuSeperator.                            */
+                        /* To display it add a call to setMenu in the        */
+                        /* initDialog method                                 */
                         /* ------------------------------------------------- */
 
 /* self~AddPopupMenu('name','options')                                       */
 /* self~AddMenuItem('text',id,'options','method')                            */
 /* self~AddMenuSeperator                                                     */
 /* ------------------------------------------------------------------------- */
-::method InitDialog
+::method initDialog
 /* ------------------------------------------------------------------------- */
 /* If you have no need to initialise/populate items delete this method       */
-  self~InitDialog:super
+  self~initDialog:super
                         /* ------------------------------------------------- */
                         /* Here we can populate list boxes etc.              */
                         /* ------------------------------------------------- */
@@ -325,7 +325,7 @@ exit -1
                         /* ------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
-::method Run
+::method run
 /* ------------------------------------------------------------------------- */
 /* If you do not need to add processing to this class you can delete it      */
 
@@ -341,10 +341,10 @@ exit -1
                         /* ------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
-::method Ok
+::method ok
 /* ------------------------------------------------------------------------- */
 /* If you do not need to add processing to this class you can delete it      */
-  self~OK:super                 /* call Self~Validate, set self~InitCode to 1*/
+  self~oK:super                 /* call Self~Validate, set self~InitCode to 1*/
 
                         /* ------------------------------------------------- */
                         /* add code for closing with OK here                 */
@@ -354,10 +354,10 @@ exit -1
 
 return self~finished
 /* ------------------------------------------------------------------------- */
-::method Cancel
+::method cancel
 /* ------------------------------------------------------------------------- */
 /* If you do not need to add processing to this class you can delete it      */
-  self~Cancel:super             /*call Self~Validate, set self~InitCode to 2 */
+  self~cancel:super             /*call Self~Validate, set self~InitCode to 2 */
 
                         /* ------------------------------------------------- */
                         /* add code for closing with cancel here             */
@@ -366,7 +366,7 @@ return self~finished
                         /* ------------------------------------------------- */
 return self~finished
 /* ------------------------------------------------------------------------- */
-::method Validate
+::method validate
 /* ------------------------------------------------------------------------- */
 /* This is called by the OK:Super Method.  Returning 0 stops dialog closing. */
 /* If you do not need this method - delete it.                               */

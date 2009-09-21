@@ -97,10 +97,10 @@
    self~createBitmapButton(1202,90, 30,75,90,"INMEMORY STRETCH", , , bmp.1)
    self~createBitmapButton(1203,170,30,75,90,"INMEMORY STRETCH", , , bmp.1)
    self~createButtonGroup(10,125,34,12,"&Stop 1 OK &Cancel 2 Cancel",1,"DEFAULT")
-   self~createStaticText(-1, 105, 126, 40, 9, , 'Speed (ms):','RIGHT')
+   self~createStaticText(-1, 105, 126, 40, 9, 'RIGHT', 'Speed (ms):')
    self~createEdit(1205, 150, 125, 15, 12, , 'speed')
-   self~createStaticText(-1, 168, 126, 15, 9, , 'Fast','RIGHT')
-   self~createStaticText(-1, 230, 126, 15, 9, , 'Slow','LEFT')
+   self~createStaticText(-1, 168, 126, 15, 9, 'RIGHT', 'Fast')
+   self~createStaticText(-1, 230, 126, 15, 9, 'LEFT', 'Slow')
    self~createScrollBar(1206, 188, 125, 40, 12, "HORIZONTAL")
    self~speed = speedx
 
