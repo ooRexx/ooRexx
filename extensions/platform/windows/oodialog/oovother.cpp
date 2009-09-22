@@ -46,13 +46,13 @@
 #include <commctrl.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodControl.hpp"
 #include "oodData.hpp"
 #include "oodText.hpp"
 
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 WORD NumDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 extern LPBITMAPINFO LoadDIB(const char *szFile);
-extern LONG EvaluateListStyle(const char * styledesc);
 extern BOOL AddDialogMessage(CHAR *, CHAR *);
 extern LONG setKeyPressData(KEYPRESSDATA *, CONSTRXSTRING, CONSTRXSTRING, const char *);
 extern UINT seekKeyPressMethod(KEYPRESSDATA *, const char *);
@@ -1593,20 +1593,20 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
        else
        if (!strcmp(argv[1].strptr,"SETSTYLE"))
        {
-           LONG lStyle;
+           uint32_t style;
            CHECKARG(5);
 
-           lStyle = GetWindowLong(h, GWL_STYLE);
-           if (!lStyle) RETC(0);
+           style = (uint32_t)GetWindowLong(h, GWL_STYLE);
+           if ( style == 0 ) RETC(0);
            if (argv[3].strptr[0] == 'A')
            {
-               lStyle |= EvaluateListStyle(argv[4].strptr);
-               RETVAL(SetWindowLong(h, GWL_STYLE, lStyle));
+               style = listViewStyle(argv[4].strptr, style);
+               RETVAL(SetWindowLong(h, GWL_STYLE, style));
            }
            else if (argv[3].strptr[0] == 'R')
            {
-               lStyle &=~EvaluateListStyle(argv[4].strptr);
-               RETVAL(SetWindowLong(h, GWL_STYLE, lStyle));
+               style &= ~listViewStyle(argv[4].strptr, 0);
+               RETVAL(SetWindowLong(h, GWL_STYLE, style));
            }
        }
    }

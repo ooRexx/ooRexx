@@ -446,25 +446,25 @@
                self~createScrollBar(id, x, y, w, h, self~getRCStyle(style, "SB"))
 
             when class = 'WC_TREEVIEW' | class = '"SYSTREEVIEW32"' then
-               self~AddTreeControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "TREE"))
+               self~createTreeView(id, x, y, w, h, self~getNamedCtrlStyle(style, "TREE"), name)
 
             when class = 'WC_LISTVIEW' | class = '"SYSLISTVIEW32"' then
-               self~AddListControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "LIST"))
+               self~createListView(id, x, y, w, h, self~getNamedCtrlStyle(style, "LIST"), name)
 
             when class = 'PROGRESS_CLASS' | class = '"MSCTLS_PROGRESS32"' then
-               self~AddProgressBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "PROGRESS"))
+               self~createProgressBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "PROGRESS"))
 
             when class = 'TRACKBAR_CLASS' | class = '"MSCTLS_TRACKBAR32"' then
-               self~AddSliderControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "SLIDER"))
+               self~createTrackBar(id, x, y, w, h, self~getNamedCtrlStyle(style, "SLIDER"), name)
 
             when class = 'WC_TABCONTROL' | class = '"SYSTABCONTROL32"' then
-               self~AddTabControl(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "TAB"))
+               self~createTab(id, x, y, w, h, self~getNamedCtrlStyle(style, "TAB"), name)
 
             when class = 'DATETIMEPICK_CLASS' then
-               self~AddDateTimePicker(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "DTP"))
+               self~createDateTimePicker(id, x, y, w, h, self~getNamedCtrlStyle(style, "DTP"), name)
 
             when class = 'MONTHCAL_CLASS' then
-               self~AddMonthCalendar(id, name, x, y, w, h, self~getNamedCtrlStyle(style, "MONTH"))
+               self~createMonthCalendar(id, x, y, w, h, self~getNamedCtrlStyle(style, "MONTH"), name)
 
             otherwise do
                self~errorFile(f, s)
@@ -542,13 +542,23 @@
    self~ProcessingLoad = 0
    return 0
 
-::method createGroupBox external "LIBRARY oodialog dyndlg_createGroupBox"
+::method createStatic external "LIBRARY oodialog dyndlg_createStatic"
+::method createStaticText external "LIBRARY oodialog dyndlg_createStaticText"
+::method createStaticImage external "LIBRARY oodialog dyndlg_createStaticImage"
+::method createStaticFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createWhiteRect external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createGrayRect external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createBlackRect external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createWhiteFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createGrayFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createBlackFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createEtchedHorizontal external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createEtchedVertical external "LIBRARY oodialog dyndlg_createStaticFrame"
+
+::method createPushButton external "LIBRARY oodialog dyndlg_createPushButton"
 ::method createRadioButton external "LIBRARY oodialog dyndlg_createRadioButton"
 ::method createCheckBox external "LIBRARY oodialog dyndlg_createRadioButton"
-::method createPushButton external "LIBRARY oodialog dyndlg_createPushButton"
-::method createEdit external "LIBRARY oodialog dyndlg_createEdit"
-::method createPasswordEdit external "LIBRARY oodialog dyndlg_createEdit"
-::method createScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
+::method createGroupBox external "LIBRARY oodialog dyndlg_createGroupBox"
 
 -- The optional msgToRaise arg can be the name of a method to invoke when the
 -- button is pushed.  The empty string  signals the implementing code to skip
@@ -563,110 +573,18 @@
    return self~connectBitmapButton(id, msgToRaise~space(0), bmp, focus, sel, disabl, opts)
 
 
-::method createStatic external "LIBRARY oodialog dyndlg_createStatic"
-::method createStaticText external "LIBRARY oodialog dyndlg_createStaticText"
-::method createStaticImage external "LIBRARY oodialog dyndlg_createStaticImage"
-::method createStaticFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
-::method createWhiteRect external "LIBRARY oodialog dyndlg_createStaticFrame"
-::method createGrayRect external "LIBRARY oodialog dyndlg_createStaticFrame"
-::method createBlackRect external "LIBRARY oodialog dyndlg_createStaticFrame"
-::method createWhiteFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
-::method createGrayFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
-::method createBlackFrame external "LIBRARY oodialog dyndlg_createStaticFrame"
-::method createEtchedHorizontal external "LIBRARY oodialog dyndlg_createStaticFrame"
-::method createEtchedVertical external "LIBRARY oodialog dyndlg_createStaticFrame"
+::method createEdit external "LIBRARY oodialog dyndlg_createEdit"
+::method createPasswordEdit external "LIBRARY oodialog dyndlg_createEdit"
+::method createScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
 ::method createListBox external "LIBRARY oodialog dyndlg_createListBox"
 ::method createComboBox external "LIBRARY oodialog dyndlg_createComboBox"
-
-
-::method addTreeControl
-   use arg id, attname, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if arg(2,'o') = 1 then attname = "DATA"id
-   opts = opts~translate
-   if opts = "ALL" then opts = "LINES VSCROLL HSCROLL EDIT BUTTONS ATROOT SHOWSELALWAYS"
-   self~activePtr = UsrAddNewCtrl("TREE", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-       return self~connectTreeView(symbid, attname)
-   end
-   return 0
-
-::method addListControl
-   use arg id, attname, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if arg(2,'o') = 1 then attname = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("LIST", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-       return self~connectListView(symbid, attname)
-   end
-   return 0
-
-::method addProgressBar
-   use arg id, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("PROGRESS", self~activePtr, id, x, y, cx, cy, opts)
-   return 0
-
-::method addSliderControl
-   use arg id, attname, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if arg(2,'o') = 1 then attname = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("SLIDER", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-       return self~connectTrackBar(symbid, attname)
-   end
-   return 0
-
-::method addTabControl
-   use arg id, attname, x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if arg(2,'o') = 1 then attname = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("TAB", self~activePtr, id, x, y, cx, cy, opts)
-   if opts~wordpos("CAT") = 0 & self~autoDetect then do
-       return self~connectTab(symbid, attname)
-   end
-   return 0
-
-::method createDateTimePicker
-   use strict arg id, attributeName = "", x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if attributeName = "" then attributeName = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("DTP", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-      return self~connectDateTimePicker(symbid, attributeName)
-   end
-   return 0
-
-::method createMonthCalendar
-   use strict arg id, attributeName = "", x, y, cx, cy, opts = ""
-   symbid = id
-   id = self~itemAdd(id)
-   if id < 0 then return id
-   if attributeName = "" then attributeName = "DATA"id
-   opts = opts~translate
-   self~activePtr = UsrAddNewCtrl("MONTH", self~activePtr, id, x, y, cx, cy, opts)
-   if self~autoDetect then do
-      return self~connectMonthCalendar(symbid, attributeName)
-   end
-   return 0
-
+::method createTreeView external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createListView external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createProgressBar external "LIBRARY oodialog dyndlg_createProgressBar"
+::method createTrackBar external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createTab external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createDateTimePicker external "LIBRARY oodialog dyndlg_createNamedControl"
+::method createMonthCalendar external "LIBRARY oodialog dyndlg_createNamedControl"
 
 ::method addRadioGroup
    arr = arg(1,"A")
@@ -1053,18 +971,22 @@
 
 
 
-::method addGroupBox external "LIBRARY oodialog dyndlg_addGroupBox"
+::method addStatic external "LIBRARY oodialog dyndlg_createStatic"
+::method addImage external "LIBRARY oodialog dyndlg_createStaticImage"
+::method addButton external "LIBRARY oodialog dyndlg_addButton"
 ::method addRadioButton external "LIBRARY oodialog dyndlg_addRadioButton"
 ::method addCheckBox external "LIBRARY oodialog dyndlg_addRadioButton"
-::method addButton external "LIBRARY oodialog dyndlg_addButton"
+::method addGroupBox external "LIBRARY oodialog dyndlg_addGroupBox"
 ::method addScrollBar external "LIBRARY oodialog dyndlg_createScrollBar"
 ::method addEntryLine external "LIBRARY oodialog dyndlg_addEntryLine"
 ::method addPasswordLine external "LIBRARY oodialog dyndlg_addEntryLine"
 ::method addListBox external "LIBRARY oodialog dyndlg_addMethod"
 ::method addComboBox external "LIBRARY oodialog dyndlg_addMethod"
-::method addStatic external "LIBRARY oodialog dyndlg_createStatic"
-::method addImage external "LIBRARY oodialog dyndlg_createStaticImage"
-
+::method addTreeControl external "LIBRARY oodialog dyndlg_addMethod"
+::method addListControl external "LIBRARY oodialog dyndlg_addMethod"
+::method addProgressBar external "LIBRARY oodialog dyndlg_createProgressBar"
+::method addSliderControl external "LIBRARY oodialog dyndlg_addMethod"
+::method addTabControl external "LIBRARY oodialog dyndlg_addMethod"
 
 ::method addBitmapButton
    use strict arg id, x, y, cx = 0, cy = 0, text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = "", opts = ""

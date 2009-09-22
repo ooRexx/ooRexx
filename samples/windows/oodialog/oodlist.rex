@@ -136,25 +136,25 @@ return
 /* initialize first category page */
 ::method List
   expose ID_List
-  self~AddListControl( ID_List, , 5, 5, 370, 170, "LIST") /* Add a simple list to the first category page */
+  self~createListView( ID_List, 5, 5, 370, 170, "LIST") /* Add a simple list to the first category page */
 
 /* initialize second category page */
 ::method Report
   expose ID_Rep
-  self~AddListControl( ID_Rep, , 5, 5, 370, 180, "REPORT") /* Add a report list to the second category page */
+  self~createListView( ID_Rep, 5, 5, 370, 180, "REPORT") /* Add a report list to the second category page */
   self~ConnectListNotify(ID_Rep,"ColumnClick")  /* connect click on a column header with OnColumnClick */
   self~ConnectListNotify(ID_Rep,"Activate")     /* connect double-click on a list item with OnActivate */
 
 /* initialize third category page */
 ::method Icon
   expose ID_Ic
-  self~AddListControl( ID_Ic, , 5, 5, 370, 140, "ICON") /* Add a icon list to the third category page */
+  self~createListView( ID_Ic, 5, 5, 370, 140, "ICON") /* Add a icon list to the third category page */
 
 
 /* initialize fourth category page */
 ::method SmallIcon
   expose ID_SIc
-  self~AddListControl( ID_SIc, , 5, 5, 370, 140, "SMALLICON") /* Add a small icon list to the fourth category page */
+  self~createListView( ID_SIc, 5, 5, 370, 140, "SMALLICON") /* Add a small icon list to the fourth category page */
 
 
 /* initialize list control on first category page */

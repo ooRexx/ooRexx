@@ -72,6 +72,9 @@ OODTEXT_SOURCEF = $(OR_OUTDIR)\oodControl.cpp $(OR_OUTDIR)\ooDialog.cpp $(OR_OUT
 # All Source files that include oodData.hpp
 OODDATA_SOURCEF = $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oodUser.obj
 
+# All Source files that include oodControl.hpp
+OODCONTROL_SOURCEF = $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodUser.obj $(OR_OUTDIR)\oovother.obj
+
 .c{$(OR_OUTDIR)}.obj:
     $(C) $(OPTIONS)  /DINCL_32  -c $(@B).c /Fo$(OR_OUTDIR)\$(@B).obj
 
@@ -116,4 +119,5 @@ $(COMMON_SOURCEF) : oodCommon.hpp
 $(APICOMMON_SOURCEF) : APICommon.hpp
 $(OODTEXT_SOURCEF) : oodText.hpp
 $(OODDATA_SOURCEF) : oodData.hpp
+$(OODCONTROL_SOURCEF) : oodControl.hpp
 $(OR_OUTDIR)\oodMenu.obj : oodMenu.hpp

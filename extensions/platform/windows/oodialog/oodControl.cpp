@@ -45,10 +45,13 @@
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <stdio.h>
+#include <commctrl.h>
+#include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodText.hpp"
 #include "oodData.hpp"
+#include "oodControl.hpp"
 
 typedef struct newControlParams {
    HWND           hwnd;
@@ -57,6 +60,164 @@ typedef struct newControlParams {
    RexxObjectPtr  parentDlg;
 } NEWCONTROLPARAMS;
 typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
+
+
+uint32_t listViewStyle(CSTRING opts, uint32_t style)
+{
+    if ( StrStrI(opts, "VSCROLL"      ) != NULL ) style |= WS_VSCROLL;
+    if ( StrStrI(opts, "HSCROLL"      ) != NULL ) style |= WS_HSCROLL;
+    if ( StrStrI(opts, "EDIT"         ) != NULL ) style |= LVS_EDITLABELS;
+    if ( StrStrI(opts, "SHOWSELALWAYS") != NULL ) style |= LVS_SHOWSELALWAYS;
+    if ( StrStrI(opts, "ALIGNLEFT"    ) != NULL ) style |= LVS_ALIGNLEFT;
+    if ( StrStrI(opts, "ALIGNTOP"     ) != NULL ) style |= LVS_ALIGNTOP;
+    if ( StrStrI(opts, "AUTOARRANGE"  ) != NULL ) style |= LVS_AUTOARRANGE;
+    if ( StrStrI(opts, "ICON"         ) != NULL ) style |= LVS_ICON;
+    if ( StrStrI(opts, "SMALLICON"    ) != NULL ) style |= LVS_SMALLICON;
+    if ( StrStrI(opts, "LIST"         ) != NULL ) style |= LVS_LIST;
+    if ( StrStrI(opts, "REPORT"       ) != NULL ) style |= LVS_REPORT;
+    if ( StrStrI(opts, "NOHEADER"     ) != NULL ) style |= LVS_NOCOLUMNHEADER;
+    if ( StrStrI(opts, "NOWRAP"       ) != NULL ) style |= LVS_NOLABELWRAP;
+    if ( StrStrI(opts, "NOSCROLL"     ) != NULL ) style |= LVS_NOSCROLL;
+    if ( StrStrI(opts, "NOSORTHEADER" ) != NULL ) style |= LVS_NOSORTHEADER;
+    if ( StrStrI(opts, "SHAREIMAGES"  ) != NULL ) style |= LVS_SHAREIMAGELISTS;
+    if ( StrStrI(opts, "SINGLESEL"    ) != NULL ) style |= LVS_SINGLESEL;
+    if ( StrStrI(opts, "ASCENDING"    ) != NULL ) style |= LVS_SORTASCENDING;
+    if ( StrStrI(opts, "DESCENDING"   ) != NULL ) style |= LVS_SORTDESCENDING;
+    return style;
+}
+
+
+TCHAR *controlType2winName(oodControl_t control)
+{
+    switch ( control )
+    {
+        case winStatic :               return WC_STATIC;
+        case winButton :               return WC_BUTTON;
+        case winRadioButton :          return WC_BUTTON;
+        case winCheckBox :             return WC_BUTTON;
+        case winGroupBox :             return WC_BUTTON;
+        case winEdit :                 return WC_EDIT;
+        case winListBox :              return WC_LISTBOX;
+        case winSingleSelectListBox :  return WC_LISTBOX;
+        case winComboBox :             return WC_COMBOBOX;
+        case winSimpleComboBox :       return WC_COMBOBOX;
+        case winScrollBar :            return WC_SCROLLBAR;
+        case winTreeView :             return WC_TREEVIEW;
+        case winListView :             return WC_LISTVIEW;
+        case winTab :                  return WC_TABCONTROL;
+        case winProgressBar :          return PROGRESS_CLASS;
+        case winTrackBar :             return TRACKBAR_CLASS;
+        case winMonthCalendar :        return MONTHCAL_CLASS;
+        case winDateTimePicker :       return DATETIMEPICK_CLASS;
+        default :                      return "";
+    }
+}
+
+/**
+ * Determine if a dialog control belongs to the specified dialog control class.
+ *
+ * @param hControl   Handle to the control.
+ * @param control    One of the oodControl types specifying the class to check
+ *                   for.
+ *
+ * @return True if the dialog control is the type specified, otherwise false.
+ */
+bool checkControlClass(HWND hControl, oodControl_t control)
+{
+    TCHAR buf[64];
+    TCHAR *pClass = controlType2winName(control);
+
+    if ( ! RealGetWindowClass(hControl, buf, sizeof(buf)) || strcmp(buf, pClass) != 0 )
+    {
+        return false;
+    }
+
+    if ( control == winCheckBox || control == winRadioButton || control == winGroupBox )
+    {
+        BUTTONTYPE type = getButtonInfo(hControl, NULL, NULL);
+        switch ( control )
+        {
+            case winCheckBox :
+                if ( type != check )
+                {
+                    return false;
+                }
+                break;
+            case winRadioButton :
+                if ( type != radio )
+                {
+                    return false;
+                }
+                break;
+            case winGroupBox :
+                if ( type != group )
+                {
+                    return false;
+                }
+                break;
+        }
+    }
+    return true;
+}
+
+
+oodControl_t oodName2controlType(CSTRING name)
+{
+    if (      strcmp(name, "STATICCONTROL" ) == 0 ) return winStatic;
+    else if ( strcmp(name, "BUTTONCONTROL" ) == 0 ) return winButton;
+    else if ( strcmp(name, "RADIOCONTROL"  ) == 0 ) return winRadioButton;
+    else if ( strcmp(name, "CHECKCONTROL"  ) == 0 ) return winCheckBox;
+    else if ( strcmp(name, "GROUPBOX"      ) == 0 ) return winGroupBox;
+    else if ( strcmp(name, "EDITCONTROL"   ) == 0 ) return winEdit;
+    else if ( strcmp(name, "EDIT"          ) == 0 ) return winEdit;
+    else if ( strcmp(name, "LISTBOX"       ) == 0 ) return winListBox;
+    else if ( strcmp(name, "COMBOBOX"      ) == 0 ) return winComboBox;
+    else if ( strcmp(name, "SCROLLBAR"     ) == 0 ) return winScrollBar;
+    else if ( strcmp(name, "PROGRESSBAR"   ) == 0 ) return winProgressBar;
+    else if ( strcmp(name, "SLIDERCONTROL" ) == 0 ) return winTrackBar;
+    else if ( strcmp(name, "TRACKBAR"      ) == 0 ) return winTrackBar;
+    else if ( strcmp(name, "TREECONTROL"   ) == 0 ) return winTreeView;
+    else if ( strcmp(name, "TREEVIEW"      ) == 0 ) return winTreeView;
+    else if ( strcmp(name, "LISTCONTROL"   ) == 0 ) return winListView;
+    else if ( strcmp(name, "LISTVIEW"      ) == 0 ) return winListView;
+    else if ( strcmp(name, "TABCONTROL"    ) == 0 ) return winTab;
+    else if ( strcmp(name, "TAB"           ) == 0 ) return winTab;
+    else if ( strcmp(name, "MONTHCALENDAR" ) == 0 ) return winMonthCalendar;
+    else if ( strcmp(name, "DATETIMEPICKER") == 0 ) return winDateTimePicker;
+    else return winUnknown;
+
+
+}
+
+RexxClassObject getControlClass(RexxMethodContext *c, CSTRING className, oodControl_t *controlType)
+{
+    RexxClassObject controlClass = NULLOBJECT;
+    oodControl_t ctrl = oodName2controlType(className);
+
+    if ( ctrl == winUnknown )
+    {
+        goto done_out;
+    }
+    else if ( ctrl == winRadioButton )
+    {
+        className = "RADIOBUTTON";
+    }
+    else if ( ctrl == winCheckBox )
+    {
+        className = "CHECKBOX";
+    }
+
+    controlClass = rxGetContextClass(c, className);
+    if ( controlClass == NULLOBJECT )
+    {
+        // An exception has been raised, which we don't want.  So, clear it.
+        c->ClearCondition();
+    }
+
+done_out:
+    *controlType = ctrl;
+    return controlClass;
+}
 
 
 /**
@@ -228,120 +389,6 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
  */
 #define ADVANCEDCONTROLS_CLASS        "AdvancedControls"
 #define ADVCTRLCONTROLBAG_ATTRIBUTE   "!advCtrlDlgControlBag"
-
-
-/**
- * Given a CategoryDialog, retrieves the dialog handle corresponding to the
- * given page ID.
- *
- * Note that it is expected that this function will be called from native
- * methods where the pageID argument is possibly omitted in the Rexx method.
- * The original implementation of ooDialog had a convention, if the category
- * number is 0 it is meant to be a control in the main dialog.  If it is omitted
- * and the dialog is a category dialog, it is meant to be a control in the
- * current category page.  Because of this, we need to know if the pageID
- * argument was omitted in order to evalute things correctly.
- *
- * @param c            Method context we are operating under.
- *
- * @param categoryDlg  The CategoryDialog object.
- *
- * @param pageID       [in / out]  The page ID of the category dialog.  This
- *                     argument is unchanged on return if a lookup of the active
- *                     page is not done.  When the active page is looked, the
- *                     looked up page ID is returned here.
- *
- * @param hDlg         [in / out]  The handle of the page dialog is returned
- *                     here, on success.  Its value on entry is ignored.
- *
- * @return  True if no error, otherwise false.
- *
- * @assumes the caller has already checked that categoryDlg is in fact a
- *          category dialog object.
- *
- * @remarks  The 'CATALOG' attribute is set to a directory, the 'handles', and
- *           'category' entries are added in the init() method of a
- *           CategoryDialog. They must be there or ooRexx is broken. So, no
- *           check for NULLOBJECT is done for them.  Note that the indexes of
- *           the CATALOG directory are all lower case.
- */
-bool getCategoryHDlg(RexxMethodContext *c, RexxObjectPtr categoryDlg, uint32_t *pageID, HWND *hDlg, bool idArgExists)
-{
-    bool result = false;
-
-    if ( idArgExists && *pageID == 0 )
-    {
-        *hDlg = rxGetWindowHandle(c, categoryDlg);
-        if ( *hDlg != NULL )
-        {
-            result = true;
-        }
-        goto done_out;
-    }
-
-    RexxDirectoryObject catalog = (RexxDirectoryObject)c->SendMessage0(categoryDlg, "CATALOG");
-    RexxArrayObject handles = (RexxArrayObject)c->DirectoryAt(catalog, "handles");
-
-    if ( *pageID == 0 )
-    {
-        // Look up the active page number.
-        RexxObjectPtr rxPageID = c->DirectoryAt(catalog, "category");
-
-        if ( ! c->UnsignedInt32(rxPageID, pageID) )
-        {
-            // TODO an exception is probably needed.
-            goto done_out;
-        }
-    }
-    RexxObjectPtr rxHwnd = c->ArrayAt(handles, *pageID);
-    if ( rxHwnd != NULLOBJECT )
-    {
-        *hDlg = (HWND)string2pointer(c->ObjectToStringValue(rxHwnd));
-        result = true;
-    }
-
-done_out:
-    return result;
-}
-
-RexxClassObject getControlClass(RexxMethodContext *c, CSTRING className, oodControl_t *controlType)
-{
-    oodControl_t ctrl = winUnknown;
-    RexxClassObject controlClass = NULLOBJECT;
-
-    if ( strcmp(className, "STATICCONTROL" ) == 0 ) { ctrl = winStatic; }
-    else if ( strcmp(className, "BUTTONCONTROL" ) == 0 ) { ctrl = winButton; }
-    else if ( strcmp(className, "TREECONTROL"   ) == 0 ) { ctrl = winTreeView; }
-    else if ( strcmp(className, "LISTCONTROL"   ) == 0 ) { ctrl = winListView; }
-    else if ( strcmp(className, "TABCONTROL"    ) == 0 ) { ctrl = winTab; }
-    else if ( strcmp(className, "EDITCONTROL"   ) == 0 ) { ctrl = winEdit; }
-    else if ( strcmp(className, "RADIOCONTROL"  ) == 0 ) { ctrl = winRadioButton; className = "RADIOBUTTON"; }
-    else if ( strcmp(className, "CHECKCONTROL"  ) == 0 ) { ctrl = winCheckBox; className = "CHECKBOX"; }
-    else if ( strcmp(className, "GROUPBOX"      ) == 0 ) { ctrl = winGroupBox; }
-    else if ( strcmp(className, "LISTBOX"       ) == 0 ) { ctrl = winListBox; }
-    else if ( strcmp(className, "COMBOBOX"      ) == 0 ) { ctrl = winComboBox; }
-    else if ( strcmp(className, "SCROLLBAR"     ) == 0 ) { ctrl = winScrollBar; }
-    else if ( strcmp(className, "PROGRESSBAR"   ) == 0 ) { ctrl = winProgressBar; }
-    else if ( strcmp(className, "SLIDERCONTROL" ) == 0 ) { ctrl = winTrackBar; }
-    else if ( strcmp(className, "MONTHCALENDAR" ) == 0 ) { ctrl = winMonthCalendar; }
-    else if ( strcmp(className, "DATETIMEPICKER") == 0 ) { ctrl = winDateTimePicker; }
-
-    if ( ctrl == winUnknown )
-    {
-        goto done_out;
-    }
-
-    controlClass = rxGetContextClass(c, className);
-    if ( controlClass == NULLOBJECT )
-    {
-        // An exception has been raised, which we don't want.  So, clear it.
-        c->ClearCondition();
-    }
-
-done_out:
-    *controlType = ctrl;
-    return controlClass;
-}
 
 
 /** AdvancedControls::getXXXControl()

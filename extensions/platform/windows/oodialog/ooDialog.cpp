@@ -2151,17 +2151,7 @@ RexxMethod6(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL
         return TheOneObj;
     }
 
-    // Category is 0 for all non-category dialogs;
-    uint32_t category = 0;
-
-    if ( context->IsOfType(self, "CATEGORYDIALOG") )
-    {
-        // Figure out the category number.  There should be no way things fail.
-        RexxDirectoryObject catalog = (RexxDirectoryObject)context->SendMessage0(self, "CATALOG");
-        RexxObjectPtr rxPageID = context->DirectoryAt(catalog, "category");
-        context->UnsignedInt32(rxPageID, &category);
-    }
-
+    uint32_t category = getCategoryNumber(context, self);
     return ( addToDataTable(context, pcpbd->dlgAdm, id, typ, category) == 0 ? TheZeroObj : TheOneObj );
 }
 

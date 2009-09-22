@@ -142,7 +142,7 @@
    end
 
 ::method defineDialog
-   self~addProgressBar(101,5,5, self~sizex-10,14)
+   self~createProgressBar(101, 5, 5, self~sizex-10, 14)
    self~createStaticText(100, 10, 25, self~dims["sx"]+2,self~dims["sy"], , self~msg)
 
 

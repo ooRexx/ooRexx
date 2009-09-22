@@ -83,7 +83,7 @@
    self~categoryPage
 
    p = self~catalog['page']
-   self~addTabControl(9001,,p['x'], p['y'], p['w'], p['h'],self~catStyle || " CAT CLIPSIBLINGS")
+   self~createTab(9001, p['x'], p['y'], p['w'], p['h'], self~catStyle || " CAT CLIPSIBLINGS")
 
    if \ self~startParentDialog(0, .false) then return 0
 

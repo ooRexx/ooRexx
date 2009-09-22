@@ -57,15 +57,13 @@
 #include "oodCommon.hpp"
 #include "oodData.hpp"
 #include "oodText.hpp"
+#include "oodControl.hpp"
 #include "oodResourceIDs.hpp"
 
 //#define USE_DS_CONTROL
 
 #ifndef USE_DS_CONTROL
-BOOL IsNestedDialogMessage(
-    DIALOGADMIN * dlgAdm,
-    LPMSG  lpmsg    // address of structure with message
-   );
+BOOL IsNestedDialogMessage(DIALOGADMIN * dlgAdm, LPMSG lpmsg);
 #endif
 
 
@@ -77,24 +75,10 @@ public:
     bool        *release;
 };
 
-/****************************************************************************************************
-
-           Part for user defined Dialogs
-
-****************************************************************************************************/
-
-
-LPWORD lpwAlign (LPWORD lpIn)
-{
-  ULONG_PTR ul;
-
-  ul = (ULONG_PTR)lpIn;
-  ul +=3;
-  ul >>=2;
-  ul <<=2;
-  return (LPWORD)ul;
-}
-
+#define DEFAULT_EXPECTED_DIALOG_ITEMS   200
+#define FONT_NAME_ARG_POS                 8
+#define FONT_SIZE_ARG_POS                 9
+#define EXPECTED_ITEM_COUNT_ARG_POS      10
 
 int nCopyAnsiToWideChar (LPWORD lpWCStr, const char *lpAnsiIn)
 {
@@ -115,7 +99,7 @@ bool startDialogTemplate(RexxMethodContext *c, WORD **ppTemplate, WORD **p, uint
 {
     int   nchar;
 
-    *ppTemplate = *p = (PWORD) LocalAlloc(LPTR, (count+3)*256);
+    *ppTemplate = *p = (PWORD)LocalAlloc(LPTR, (count+3)*256);
     if ( p == NULL )
     {
         outOfMemoryException(c->threadContext);
@@ -123,9 +107,9 @@ bool startDialogTemplate(RexxMethodContext *c, WORD **ppTemplate, WORD **p, uint
     }
 
     /* start to fill in the dlgtemplate information.  addressing by WORDs */
-    **p = LOWORD (lStyle);
+    **p = LOWORD(lStyle);
     (*p)++;
-    **p = HIWORD (lStyle);
+    **p = HIWORD(lStyle);
     (*p)++;
     **p = 0;          // LOWORD (lExtendedStyle)
     (*p)++;
@@ -150,7 +134,7 @@ bool startDialogTemplate(RexxMethodContext *c, WORD **ppTemplate, WORD **p, uint
     /* copy the class of the dialog. currently dlgClass is always null */
     if ( !(lStyle & WS_CHILD) && (dlgClass) )
     {
-        nchar = nCopyAnsiToWideChar (*p, TEXT(dlgClass));
+        nchar = nCopyAnsiToWideChar(*p, TEXT(dlgClass));
         (*p) += nchar;
     }
     else
@@ -161,7 +145,7 @@ bool startDialogTemplate(RexxMethodContext *c, WORD **ppTemplate, WORD **p, uint
     /* copy the title of the dialog */
     if ( title )
     {
-        nchar = nCopyAnsiToWideChar (*p, TEXT(title));
+        nchar = nCopyAnsiToWideChar(*p, TEXT(title));
         (*p) += nchar;
     }
     else
@@ -175,18 +159,13 @@ bool startDialogTemplate(RexxMethodContext *c, WORD **ppTemplate, WORD **p, uint
      */
     **p = fontsize;   // fontsize
     (*p)++;
-    nchar = nCopyAnsiToWideChar (*p, TEXT(fontname));
+    nchar = nCopyAnsiToWideChar(*p, TEXT(fontname));
     (*p) += nchar;
 
     /* make sure the first item starts on a DWORD boundary */
-    (*p) = lpwAlign (*p);
+    (*p) = lpwAlign(*p);
     return true;
 }
-
-#define DEFAULT_EXPECTED_DIALOG_ITEMS   200
-#define FONT_NAME_ARG_POS                 8
-#define FONT_SIZE_ARG_POS                 9
-#define EXPECTED_ITEM_COUNT_ARG_POS      10
 
 /**
  * Ensures the font name and font size for a dialog are correct, based on the
@@ -309,7 +288,8 @@ static inline logical_t illegalBuffer(void)
 }
 
 
-void addToDialogTemplate(WORD **p, SHORT kind, INT id, INT x, INT y, INT cx, INT cy, const char * txt, ULONG lStyle)
+void addToDialogTemplate(WORD **p, SHORT kind, const char *className, int id, int x, int y, int cx, int cy,
+                         const char * txt, uint32_t lStyle)
 {
    int   nchar;
 
@@ -321,9 +301,9 @@ void addToDialogTemplate(WORD **p, SHORT kind, INT id, INT x, INT y, INT cx, INT
    (*p)++;
    **p = 0;          // HIWORD (lExtendedStyle)
    (*p)++;
-   **p = x;         // x
+   **p = x;          // x
    (*p)++;
-   **p = y;         // y
+   **p = y;          // y
    (*p)++;
    **p = cx;         // cx
    (*p)++;
@@ -332,14 +312,22 @@ void addToDialogTemplate(WORD **p, SHORT kind, INT id, INT x, INT y, INT cx, INT
    **p = id;         // ID
    (*p)++;
 
-   **p = (WORD)0xffff;
-   (*p)++;
-   **p = (WORD)kind;
-   (*p)++;
-
-   if (txt)
+   if ( className == NULL )
    {
-      nchar = nCopyAnsiToWideChar (*p, TEXT(txt));
+       **p = (WORD)0xffff;
+       (*p)++;
+       **p = (WORD)kind;
+       (*p)++;
+   }
+   else
+   {
+       nchar = nCopyAnsiToWideChar(*p, TEXT(className));
+       (*p) += nchar;
+   }
+
+   if ( txt != NULL )
+   {
+      nchar = nCopyAnsiToWideChar(*p, TEXT(txt));
       (*p) += nchar;
    }
    else
@@ -352,231 +340,7 @@ void addToDialogTemplate(WORD **p, SHORT kind, INT id, INT x, INT y, INT cx, INT
    (*p)++;
 
    /* make sure the next item starts on a DWORD boundary */
-   (*p) = lpwAlign (*p);
-}
-
-
-void UAddNamedControl(WORD **p, CHAR * className, INT id, INT x, INT y, INT cx, INT cy, CHAR * txt, ULONG lStyle)
-{
-   int   nchar;
-
-   **p = LOWORD(lStyle);
-   (*p)++;
-   **p = HIWORD(lStyle);
-   (*p)++;
-   **p = 0;          // LOWORD (lExtendedStyle)
-   (*p)++;
-   **p = 0;          // HIWORD (lExtendedStyle)
-   (*p)++;
-   **p = x;         // x
-   (*p)++;
-   **p = y;         // y
-   (*p)++;
-   **p = cx;         // cx
-   (*p)++;
-   **p = cy;         // cy
-   (*p)++;
-   **p = id;         // ID
-   (*p)++;
-
-   nchar = nCopyAnsiToWideChar (*p, TEXT(className));
-   (*p) += nchar;
-
-   if (txt)
-   {
-      nchar = nCopyAnsiToWideChar (*p, TEXT(txt));
-      (*p) += nchar;
-   }
-   else
-   {
-     **p = 0;
-    (*p)++;
-   }
-
-   **p = 0;  // advance pointer over nExtraStuff WORD
-   (*p)++;
-
-   /* make sure the next item starts on a DWORD boundary */
-   (*p) = lpwAlign (*p);
-}
-
-
-/******************* New 32 Controls ***********************************/
-
-
-LONG EvaluateListStyle(const char * styledesc)
-{
-    LONG lStyle = 0;
-
-    if (!strstr(styledesc,"NOBORDER")) lStyle |= WS_BORDER;
-    if (!strstr(styledesc,"NOTAB")) lStyle |= WS_TABSTOP;
-    if (strstr(styledesc,"VSCROLL")) lStyle |= WS_VSCROLL;
-    if (strstr(styledesc,"HSCROLL")) lStyle |= WS_HSCROLL;
-    if (strstr(styledesc,"EDIT")) lStyle |= LVS_EDITLABELS;
-    if (strstr(styledesc,"SHOWSELALWAYS")) lStyle |= LVS_SHOWSELALWAYS;
-    if (strstr(styledesc,"ALIGNLEFT")) lStyle |= LVS_ALIGNLEFT;
-    if (strstr(styledesc,"ALIGNTOP")) lStyle |= LVS_ALIGNTOP;
-    if (strstr(styledesc,"AUTOARRANGE")) lStyle |= LVS_AUTOARRANGE;
-    if (strstr(styledesc,"ICON")) lStyle |= LVS_ICON;
-    if (strstr(styledesc,"SMALLICON")) lStyle |= LVS_SMALLICON;
-    if (strstr(styledesc,"LIST")) lStyle |= LVS_LIST;
-    if (strstr(styledesc,"REPORT")) lStyle |= LVS_REPORT;
-    if (strstr(styledesc,"NOHEADER")) lStyle |= LVS_NOCOLUMNHEADER;
-    if (strstr(styledesc,"NOWRAP")) lStyle |= LVS_NOLABELWRAP;
-    if (strstr(styledesc,"NOSCROLL")) lStyle |= LVS_NOSCROLL;
-    if (strstr(styledesc,"NOSORTHEADER")) lStyle |= LVS_NOSORTHEADER;
-    if (strstr(styledesc,"SHAREIMAGES")) lStyle |= LVS_SHAREIMAGELISTS;
-    if (strstr(styledesc,"SINGLESEL")) lStyle |= LVS_SINGLESEL;
-    if (strstr(styledesc,"ASCENDING")) lStyle |= LVS_SORTASCENDING;
-    if (strstr(styledesc,"DESCENDING")) lStyle |= LVS_SORTDESCENDING;
-    return lStyle;
-}
-
-size_t RexxEntry UsrAddNewCtrl(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   INT buffer[5];
-   ULONG lStyle;
-   WORD *p;
-   int i;
-
-   CHECKARG(8);
-
-   for ( i = 0; i < 5; i++ )
-   {
-       buffer[i] = atoi(argv[i+2].strptr);
-   }
-
-   p = (WORD *)GET_POINTER(argv[1]);
-
-   lStyle = WS_CHILD;
-   if (!strstr(argv[7].strptr,"HIDDEN")) lStyle |= WS_VISIBLE;
-   if (strstr(argv[7].strptr,"GROUP")) lStyle |= WS_GROUP;
-   if (strstr(argv[7].strptr,"DISABLED")) lStyle |= WS_DISABLED;
-
-   if (!strcmp(argv[0].strptr,"TREE"))
-   {
-       if (!strstr(argv[7].strptr,"NOBORDER")) lStyle |= WS_BORDER;
-       if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
-       if (strstr(argv[7].strptr,"VSCROLL")) lStyle |= WS_VSCROLL;
-       if (strstr(argv[7].strptr,"HSCROLL")) lStyle |= WS_HSCROLL;
-       if (strstr(argv[7].strptr,"NODRAG")) lStyle |= TVS_DISABLEDRAGDROP;
-       if (strstr(argv[7].strptr,"EDIT")) lStyle |= TVS_EDITLABELS;
-       if (strstr(argv[7].strptr,"BUTTONS")) lStyle |= TVS_HASBUTTONS;
-       if (strstr(argv[7].strptr,"LINES")) lStyle |= TVS_HASLINES;
-       if (strstr(argv[7].strptr,"ATROOT")) lStyle |= TVS_LINESATROOT;
-       if (strstr(argv[7].strptr,"SHOWSELALWAYS")) lStyle |= TVS_SHOWSELALWAYS;
-        /*                                   id       x          y            cx        cy  */
-       UAddNamedControl(&p, WC_TREEVIEW, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-       RETPTR(p)
-   }
-   else if (!strcmp(argv[0].strptr,"LIST"))
-   {
-       lStyle |= EvaluateListStyle(argv[7].strptr);
-        /*                                   id       x          y            cx        cy  */
-       UAddNamedControl(&p, WC_LISTVIEW, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-       RETPTR(p)
-   }
-   else if (!strcmp(argv[0].strptr,"PROGRESS"))
-   {
-       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (strstr(argv[7].strptr,"TAB")) lStyle |= WS_TABSTOP;
-       if (strstr(argv[7].strptr,"VERTICAL")) lStyle |= PBS_VERTICAL;
-       if (strstr(argv[7].strptr,"SMOOTH")) lStyle |= PBS_SMOOTH;
-
-       if (strstr(argv[7].strptr,"MARQUEE") && ComCtl32Version >= COMCTL32_6_0) lStyle |= PBS_MARQUEE;
-
-        /*                                     id       x          y            cx        cy  */
-       UAddNamedControl(&p, PROGRESS_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-       RETPTR(p)
-   }
-   else if (!strcmp(argv[0].strptr,"SLIDER"))
-   {
-       if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
-       if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
-       if (strstr(argv[7].strptr,"AUTOTICKS")) lStyle |= TBS_AUTOTICKS;
-       if (strstr(argv[7].strptr,"NOTICKS")) lStyle |= TBS_NOTICKS;
-       if (strstr(argv[7].strptr,"VERTICAL")) lStyle |= TBS_VERT;
-       if (strstr(argv[7].strptr,"HORIZONTAL")) lStyle |= TBS_HORZ;
-       if (strstr(argv[7].strptr,"TOP")) lStyle |= TBS_TOP;
-       if (strstr(argv[7].strptr,"BOTTOM")) lStyle |= TBS_BOTTOM;
-       if (strstr(argv[7].strptr,"LEFT")) lStyle |= TBS_LEFT;
-       if (strstr(argv[7].strptr,"RIGHT")) lStyle |= TBS_RIGHT;
-       if (strstr(argv[7].strptr,"BOTH")) lStyle |= TBS_BOTH;
-       if (strstr(argv[7].strptr,"ENABLESELRANGE")) lStyle |= TBS_ENABLESELRANGE;
-        /*                                   id       x          y            cx        cy  */
-       UAddNamedControl(&p, TRACKBAR_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-       RETPTR(p)
-   }
-   else if (!strcmp(argv[0].strptr,"TAB"))
-   {
-        if (strstr(argv[7].strptr,"BORDER")) lStyle |= WS_BORDER;
-        if (!strstr(argv[7].strptr,"NOTAB")) lStyle |= WS_TABSTOP;
-        if (strstr(argv[7].strptr,"BUTTONS")) lStyle |= TCS_BUTTONS;
-        else lStyle |= TCS_TABS;
-        if (strstr(argv[7].strptr,"FIXED")) lStyle |= TCS_FIXEDWIDTH;
-        if (strstr(argv[7].strptr,"FOCUSNEVER")) lStyle |= TCS_FOCUSNEVER;
-        if (strstr(argv[7].strptr,"FOCUSONDOWN")) lStyle |= TCS_FOCUSONBUTTONDOWN;
-        if (strstr(argv[7].strptr,"ICONLEFT")) lStyle |= TCS_FORCEICONLEFT;
-        if (strstr(argv[7].strptr,"LABELLEFT")) lStyle |= TCS_FORCELABELLEFT;
-        if (strstr(argv[7].strptr,"MULTILINE")) lStyle |= TCS_MULTILINE;
-        else lStyle |= TCS_SINGLELINE;
-        if (strstr(argv[7].strptr,"ALIGNRIGHT")) lStyle |= TCS_RIGHTJUSTIFY;
-        if (strstr(argv[7].strptr,"CLIPSIBLINGS")) lStyle |= WS_CLIPSIBLINGS;  /* used for property sheet to prevent wrong display */
-
-        /*                                   id       x          y            cx        cy  */
-        UAddNamedControl(&p, WC_TABCONTROL, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-        RETPTR(p)
-   }
-   else if (!strcmp(argv[0].strptr,"DTP"))  /* Date and Time Picker control */
-   {
-        if (strstr(argv[7].strptr, "BORDER")) lStyle |= WS_BORDER;
-        if (!strstr(argv[7].strptr, "NOTAB")) lStyle |= WS_TABSTOP;
-        if (strstr(argv[7].strptr, "PARSE"))  lStyle |= DTS_APPCANPARSE;
-        if (strstr(argv[7].strptr, "RIGHT"))  lStyle |= DTS_RIGHTALIGN;
-        if (strstr(argv[7].strptr, "NONE"))   lStyle |= DTS_SHOWNONE;
-        if (strstr(argv[7].strptr, "UPDOWN")) lStyle |= DTS_UPDOWN;
-
-        if (strstr(argv[7].strptr, "LONG"))
-        {
-            lStyle |= DTS_LONGDATEFORMAT;
-        }
-        else if (strstr(argv[7].strptr, "SHORT"))
-        {
-            lStyle |= DTS_SHORTDATEFORMAT;
-        }
-        else if (strstr(argv[7].strptr, "CENTURY") && (ComCtl32Version >= COMCTL32_5_8))
-        {
-            lStyle |= DTS_SHORTDATECENTURYFORMAT;
-        }
-        else if (strstr(argv[7].strptr, "TIME"))
-        {
-            lStyle |= DTS_TIMEFORMAT;
-        }
-        else
-        {
-            lStyle |= DTS_TIMEFORMAT;
-        }
-
-        /*                                       id         x          y            cx        cy  */
-        UAddNamedControl(&p, DATETIMEPICK_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-        RETPTR(p)
-   }
-   else if (!strcmp(argv[0].strptr,"MONTH"))  /* Month Calendar control */
-   {
-        if (strstr(argv[7].strptr, "BORDER"))      lStyle |= WS_BORDER;
-        if (!strstr(argv[7].strptr, "NOTAB"))      lStyle |= WS_TABSTOP;
-        if (strstr(argv[7].strptr, "DAYSTATE"))    lStyle |= MCS_DAYSTATE;
-        if (strstr(argv[7].strptr, "MULTI"))       lStyle |= MCS_MULTISELECT;
-        if (strstr(argv[7].strptr, "NOTODAY"))     lStyle |= MCS_NOTODAY;
-        if (strstr(argv[7].strptr, "NOCIRCLE"))    lStyle |= MCS_NOTODAYCIRCLE;
-        if (strstr(argv[7].strptr, "WEEKNUMBERS")) lStyle |= MCS_WEEKNUMBERS;
-
-        /*                                   id         x          y            cx        cy  */
-        UAddNamedControl(&p, MONTHCAL_CLASS, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], NULL, lStyle);
-        RETPTR(p)
-   }
-
-   RETC(0);
+   (*p) = lpwAlign(*p);
 }
 
 
@@ -616,14 +380,6 @@ RexxMethod4(RexxObjectPtr, userdlg_init, OPTIONAL_RexxObjectPtr, dlgData, OPTION
  *  Methods for the .DynamicDialog class.
  */
 #define DYNAMICDIALOG_CLASS  "DynamicDialog"
-
-
-#define ButtonAtom           0x0080
-#define EditAtom             0x0081
-#define StaticAtom           0x0082
-#define ListBoxAtom          0x0083
-#define ScrollBarAtom        0x0084
-#define ComboBoxAtom         0x0085
 
 
 uint32_t getCommonWindowStyles(CSTRING opts, bool defaultBorder, bool defaultTab)
@@ -676,6 +432,356 @@ uint32_t getCommonButtonStyles(uint32_t style, CSTRING opts)
     if ( StrStrI(opts, "RIGHT")     != NULL ) style |= BS_RIGHT;
 
     return style;
+}
+
+
+uint32_t treeViewStyle(CSTRING opts, uint32_t style)
+{
+    if ( StrStrI(opts,"ALL") != NULL )
+    {
+        style |=  TVS_HASLINES | WS_VSCROLL | WS_HSCROLL | TVS_EDITLABELS | TVS_HASBUTTONS |
+                  TVS_LINESATROOT | TVS_SHOWSELALWAYS;
+        return style;
+    }
+
+    if ( StrStrI(opts, "VSCROLL"      ) != NULL ) style |= WS_VSCROLL;
+    if ( StrStrI(opts, "HSCROLL"      ) != NULL ) style |= WS_HSCROLL;
+    if ( StrStrI(opts, "NODRAG"       ) != NULL ) style |= TVS_DISABLEDRAGDROP;
+    if ( StrStrI(opts, "EDIT"         ) != NULL ) style |= TVS_EDITLABELS;
+    if ( StrStrI(opts, "BUTTONS"      ) != NULL ) style |= TVS_HASBUTTONS;
+    if ( StrStrI(opts, "LINES"        ) != NULL ) style |= TVS_HASLINES;
+    if ( StrStrI(opts, "ATROOT"       ) != NULL ) style |= TVS_LINESATROOT;
+    if ( StrStrI(opts, "SHOWSELALWAYS") != NULL ) style |= TVS_SHOWSELALWAYS;
+    return style;
+}
+
+
+uint32_t progressBarStyle(CSTRING opts, uint32_t style)
+{
+    if ( StrStrI(opts, "VERTICAL") != NULL ) style |= PBS_VERTICAL;
+    if ( StrStrI(opts, "SMOOTH"  ) != NULL ) style |= PBS_SMOOTH;
+
+    if ( StrStrI(opts, "MARQUEE") != NULL  && ComCtl32Version >= COMCTL32_6_0 ) style |= PBS_MARQUEE;
+    return style;
+}
+
+
+uint32_t trackBarStyle(CSTRING opts, uint32_t style)
+{
+    if ( StrStrI(opts, "AUTOTICKS"     ) != NULL ) style |= TBS_AUTOTICKS;
+    if ( StrStrI(opts, "NOTICKS"       ) != NULL ) style |= TBS_NOTICKS;
+    if ( StrStrI(opts, "VERTICAL"      ) != NULL ) style |= TBS_VERT;
+    if ( StrStrI(opts, "HORIZONTAL"    ) != NULL ) style |= TBS_HORZ;
+    if ( StrStrI(opts, "TOP"           ) != NULL ) style |= TBS_TOP;
+    if ( StrStrI(opts, "BOTTOM"        ) != NULL ) style |= TBS_BOTTOM;
+    if ( StrStrI(opts, "LEFT"          ) != NULL ) style |= TBS_LEFT;
+    if ( StrStrI(opts, "RIGHT"         ) != NULL ) style |= TBS_RIGHT;
+    if ( StrStrI(opts, "BOTH"          ) != NULL ) style |= TBS_BOTH;
+    if ( StrStrI(opts, "ENABLESELRANGE") != NULL ) style |= TBS_ENABLESELRANGE;
+    return style;
+}
+
+
+uint32_t tabStyle(CSTRING opts, uint32_t style)
+{
+    style |= (StrStrI(opts, "BUTTONS")   != NULL ? TCS_BUTTONS   : TCS_TABS);
+    style |= (StrStrI(opts, "MULTILINE") != NULL ? TCS_MULTILINE : TCS_SINGLELINE);
+
+    if ( StrStrI(opts, "FIXED"       ) != NULL ) style |= TCS_FIXEDWIDTH;
+    if ( StrStrI(opts, "FOCUSNEVER"  ) != NULL ) style |= TCS_FOCUSNEVER;
+    if ( StrStrI(opts, "FOCUSONDOWN" ) != NULL ) style |= TCS_FOCUSONBUTTONDOWN;
+    if ( StrStrI(opts, "ICONLEFT"    ) != NULL ) style |= TCS_FORCEICONLEFT;
+    if ( StrStrI(opts, "LABELLEFT"   ) != NULL ) style |= TCS_FORCELABELLEFT;
+    if ( StrStrI(opts, "ALIGNRIGHT"  ) != NULL ) style |= TCS_RIGHTJUSTIFY;
+    if ( StrStrI(opts, "CLIPSIBLINGS") != NULL ) style |= WS_CLIPSIBLINGS;
+    return style;
+}
+
+
+uint32_t dateTimePickerStyle(CSTRING opts, uint32_t style)
+{
+    if ( StrStrI(opts, "LONG") != NULL )
+    {
+        style |= DTS_LONGDATEFORMAT;
+    }
+    else if ( StrStrI(opts, "SHORT") != NULL )
+    {
+        style |= DTS_SHORTDATEFORMAT;
+    }
+    else if ( StrStrI(opts, "CENTURY") != NULL  && ComCtl32Version >= COMCTL32_5_8 )
+    {
+        style |= DTS_SHORTDATECENTURYFORMAT;
+    }
+    else if ( StrStrI(opts, "TIME") != NULL )
+    {
+        style |= DTS_TIMEFORMAT;
+    }
+    else
+    {
+        style |= DTS_TIMEFORMAT;
+    }
+
+    if ( StrStrI(opts, "PARSE" ) != NULL ) style |= DTS_APPCANPARSE;
+    if ( StrStrI(opts, "RIGHT" ) != NULL ) style |= DTS_RIGHTALIGN;
+    if ( StrStrI(opts, "NONE"  ) != NULL ) style |= DTS_SHOWNONE;
+    if ( StrStrI(opts, "UPDOWN") != NULL ) style |= DTS_UPDOWN;
+    return style;
+}
+
+
+uint32_t monthCalendarStyle(CSTRING opts, uint32_t style)
+{
+    if ( StrStrI(opts, "DAYSTATE"   ) != NULL ) style |= MCS_DAYSTATE;
+    if ( StrStrI(opts, "MULTI"      ) != NULL ) style |= MCS_MULTISELECT;
+    if ( StrStrI(opts, "NOTODAY"    ) != NULL ) style |= MCS_NOTODAY;
+    if ( StrStrI(opts, "NOCIRCLE"   ) != NULL ) style |= MCS_NOTODAYCIRCLE;
+    if ( StrStrI(opts, "WEEKNUMBERS") != NULL ) style |= MCS_WEEKNUMBERS;
+    return style;
+
+}
+
+
+uint32_t getControlStyle(oodControl_t ctrl, CSTRING opts)
+{
+    uint32_t style = WS_CHILD;
+
+    switch ( ctrl )
+    {
+        case winListView :
+            style |= getCommonWindowStyles(opts, true, true);
+            style = listViewStyle(opts, style);
+            break;
+
+        case winTreeView :
+            style |= getCommonWindowStyles(opts, true, true);
+            style = treeViewStyle(opts, style);
+            break;
+
+        case winProgressBar :
+            style |= getCommonWindowStyles(opts, false, false);
+            style = progressBarStyle(opts, style);
+            break;
+
+        case winTrackBar :
+            style |= getCommonWindowStyles(opts, false, true);
+            style = trackBarStyle(opts, style);
+            break;
+
+        case winTab :
+            style |= getCommonWindowStyles(opts, false, true);
+            style = tabStyle(opts, style);
+            break;
+
+        case winDateTimePicker :
+            style |= getCommonWindowStyles(opts, false, true);
+            style = dateTimePickerStyle(opts, style);
+            break;
+
+        case winMonthCalendar :
+            style |= getCommonWindowStyles(opts, false, true);
+            style = monthCalendarStyle(opts, style);
+            break;
+
+        default :
+            // Can not happen.
+            break;
+
+    }
+    return style;
+}
+
+
+int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
+                         CSTRING opts, CSTRING text, pCDynamicDialog pcdd)
+{
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+    int32_t id = IDC_STATIC;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
+    if ( id < IDC_STATIC )
+    {
+        return -1;
+    }
+
+    if ( cx == 0 || cy == 0 )
+    {
+        SIZE textSize = {0};
+        char *tempText = ( *text == '\0' ? "Tg" : text );
+
+        if ( ! getTextSize(c, text, pcpbd->fontName, pcpbd->fontSize, NULL, pcpbd->rexxSelf, &textSize) )
+        {
+            // An exception is raised.
+            return -2;
+        }
+        if ( cx == 0 )
+        {
+            // The magic number 2 comes from old ooDialog Rexx code, is it good?
+            cx = textSize.cx + 2;
+        }
+        if ( cy == 0 )
+        {
+            cy = textSize.cy;
+        }
+    }
+
+    uint32_t style = WS_CHILD | SS_LEFT;
+    style |= getCommonWindowStyles(opts, false, false);
+
+    if ( *opts != '\0' )
+    {
+        if ( StrStrI(opts, "CENTER" ) != NULL ) style |= SS_CENTER;
+        else if ( StrStrI(opts, "RIGHT"     ) != NULL ) style |= SS_RIGHT;
+        else if ( StrStrI(opts, "SIMPLE"    ) != NULL ) style |= SS_SIMPLE;
+        else if ( StrStrI(opts, "LEFTNOWRAP") != NULL ) style |= SS_LEFTNOWORDWRAP;
+
+        // Used to center text vertically.
+        if ( StrStrI(opts, "CENTERIMAGE") != NULL ) style |= SS_CENTERIMAGE;
+
+        if ( StrStrI(opts, "NOTIFY"      ) != NULL ) style |= SS_NOTIFY;
+        if ( StrStrI(opts, "SUNKEN"      ) != NULL ) style |= SS_SUNKEN;
+        if ( StrStrI(opts, "EDITCONTROL" ) != NULL ) style |= SS_EDITCONTROL;
+        if ( StrStrI(opts, "ENDELLIPSIS" ) != NULL ) style |= SS_ENDELLIPSIS;
+        if ( StrStrI(opts, "NOPREFIX"    ) != NULL ) style |= SS_NOPREFIX;
+        if ( StrStrI(opts, "PATHELLIPSIS") != NULL ) style |= SS_PATHELLIPSIS;
+        if ( StrStrI(opts, "WORDELLIPSIS") != NULL ) style |= SS_WORDELLIPSIS;
+    }
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, StaticAtom, NULL, id, x, y, cx, cy, text, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    return 0;
+}
+
+
+int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
+                         CSTRING opts, pCDynamicDialog pcdd)
+{
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    uint32_t id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
+    if ( id < 0 )
+    {
+        return id;
+    }
+
+    uint32_t style = WS_CHILD;
+    style |= getCommonWindowStyles(opts, false, false);
+
+    if ( StrStrI(opts, "METAFILE" ) != NULL ) style |= SS_ENHMETAFILE;
+    else if ( StrStrI(opts, "BITMAP" ) != NULL ) style |= SS_BITMAP;
+    else style |= SS_ICON;
+
+    if ( StrStrI(opts, "NOTIFY"      )  != NULL ) style |= SS_NOTIFY;
+    if ( StrStrI(opts, "SUNKEN"      )  != NULL ) style |= SS_SUNKEN;
+    if ( StrStrI(opts, "CENTERIMAGE" )  != NULL ) style |= SS_CENTERIMAGE;
+    if ( StrStrI(opts, "RIGHTJUST"    ) != NULL ) style |= SS_RIGHTJUST;
+    if ( StrStrI(opts, "SIZECONTROL" )  != NULL ) style |= SS_REALSIZECONTROL;
+    if ( StrStrI(opts, "SIZEIMGE"    )  != NULL ) style |= SS_REALSIZEIMAGE;
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, StaticAtom, NULL, id, x, y, cx, cy, NULL, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    return 0;
+}
+
+
+int32_t createStaticFrame(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
+                         CSTRING opts, CSTRING type, uint32_t frameStyle, pCDynamicDialog pcdd)
+{
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+    int32_t id = IDC_STATIC;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
+    if ( id < IDC_STATIC )
+    {
+        return id;
+    }
+
+    uint32_t style = WS_CHILD;
+    style |= getCommonWindowStyles(opts, false, false);
+
+    if ( type == NULL )
+    {
+        style |= frameStyle;
+    }
+    else
+    {
+        if ( strcmp(type, "WHITERECT") == 0 ) style |= SS_WHITERECT;
+        else if ( strcmp(type, "GRAYRECT"       ) == 0 ) style |= SS_GRAYRECT;
+        else if ( strcmp(type, "BLACKRECT"      ) == 0 ) style |= SS_BLACKRECT;
+        else if ( strcmp(type, "WHITEFRAME"     ) == 0 ) style |= SS_WHITEFRAME;
+        else if ( strcmp(type, "GRAYFRAME"      ) == 0 ) style |= SS_GRAYFRAME;
+        else if ( strcmp(type, "BLACKFRAME"     ) == 0 ) style |= SS_BLACKFRAME;
+        else if ( strcmp(type, "ETCHEDFRAME"    ) == 0 ) style |= SS_ETCHEDFRAME;
+        else if ( strcmp(type, "ETCHEDHORZONTAL") == 0 ) style |= SS_ETCHEDHORZ;
+        else if ( strcmp(type, "ETCHEDVERTICAL" ) == 0 ) style |= SS_ETCHEDVERT;
+        else if ( strcmp(type, "STATICFRAME"    ) == 0 )
+        {
+            if ( StrStrI(opts, "WHITERECT") != NULL ) style |= SS_WHITERECT;
+            else if ( StrStrI(opts, "GRAYRECT"  ) != NULL ) style |= SS_GRAYRECT;
+            else if ( StrStrI(opts, "BLACKRECT" ) != NULL ) style |= SS_BLACKRECT;
+            else if ( StrStrI(opts, "WHITEFRAME") != NULL ) style |= SS_WHITEFRAME;
+            else if ( StrStrI(opts, "GRAYFRAME" ) != NULL ) style |= SS_GRAYFRAME;
+            else if ( StrStrI(opts, "BLACKFRAME") != NULL ) style |= SS_BLACKFRAME;
+            else if ( StrStrI(opts, "ETCHED"    ) != NULL ) style |= SS_ETCHEDFRAME;
+            else if ( StrStrI(opts, "HORZ"      ) != NULL ) style |= SS_ETCHEDHORZ;
+            else if ( StrStrI(opts, "VERT"      ) != NULL ) style |= SS_ETCHEDVERT;
+        }
+    }
+
+    if ( StrStrI(opts, "NOTIFY") != NULL ) style |= SS_NOTIFY;
+    if ( StrStrI(opts, "SUNKEN") != NULL ) style |= SS_SUNKEN;
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, StaticAtom, NULL, id, x, y, cx, cy, NULL, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    return 0;
+}
+
+
+int32_t connectCreatedControl(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID, int32_t id,
+                              CSTRING attributeName, oodControl_t ctrl)
+{
+    DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
+    if ( dlgAdm == NULL )
+    {
+        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
+        return -2;
+    }
+
+    char buf[64];
+    if ( attributeName == NULL )
+    {
+        _snprintf(buf, sizeof(buf), "DATA%d", id);
+        attributeName = buf;
+    }
+
+    uint32_t category = getCategoryNumber(c, pcpbd->rexxSelf);
+
+    c->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, c->String(attributeName));
+
+    return addToDataTable(c, dlgAdm, id, ctrl, category);
 }
 
 
@@ -761,7 +867,7 @@ done_out:
  * @return True on success, false if an exception has been raised.
  *
  * @remarks  It is important to remember that when a "Child" dialog is being
- *           created, there is n9 backing Rexx dialog object.  Child dialogs are
+ *           created, there is no backing Rexx dialog object.  Child dialogs are
  *           created for the 'category' pages of a CategoryDialog or its
  *           subclasses.
  */
@@ -1019,175 +1125,6 @@ RexxMethod3(RexxObjectPtr, dyndlg_startChildDialog, POINTERSTRING, basePtr, uint
 }
 
 
-int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
-                         CSTRING opts, CSTRING text, pCDynamicDialog pcdd)
-{
-    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
-    int32_t id = IDC_STATIC;
-
-    if ( pcdd->active == NULL )
-    {
-        return -2;
-    }
-
-    id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
-    if ( id < IDC_STATIC )
-    {
-        return -1;
-    }
-
-    if ( cx == 0 || cy == 0 )
-    {
-        SIZE textSize = {0};
-        char *tempText = ( *text == '\0' ? "Tg" : text );
-
-        if ( ! getTextSize(c, text, pcpbd->fontName, pcpbd->fontSize, NULL, pcpbd->rexxSelf, &textSize) )
-        {
-            // An exception is raised.
-            return -2;
-        }
-        if ( cx == 0 )
-        {
-            // The magic number 2 comes from old ooDialog Rexx code, is it good?
-            cx = textSize.cx + 2;
-        }
-        if ( cy == 0 )
-        {
-            cy = textSize.cy;
-        }
-    }
-
-    uint32_t style = WS_CHILD | SS_LEFT;
-    style |= getCommonWindowStyles(opts, false, false);
-
-    if ( *opts != '\0' )
-    {
-        if ( StrStrI(opts, "CENTER" ) != NULL ) style |= SS_CENTER;
-        else if ( StrStrI(opts, "RIGHT"     ) != NULL ) style |= SS_RIGHT;
-        else if ( StrStrI(opts, "SIMPLE"    ) != NULL ) style |= SS_SIMPLE;
-        else if ( StrStrI(opts, "LEFTNOWRAP") != NULL ) style |= SS_LEFTNOWORDWRAP;
-
-        // Used to center text vertically.
-        if ( StrStrI(opts, "CENTERIMAGE") != NULL ) style |= SS_CENTERIMAGE;
-
-        if ( StrStrI(opts, "NOTIFY"      ) != NULL ) style |= SS_NOTIFY;
-        if ( StrStrI(opts, "SUNKEN"      ) != NULL ) style |= SS_SUNKEN;
-        if ( StrStrI(opts, "EDITCONTROL" ) != NULL ) style |= SS_EDITCONTROL;
-        if ( StrStrI(opts, "ENDELLIPSIS" ) != NULL ) style |= SS_ENDELLIPSIS;
-        if ( StrStrI(opts, "NOPREFIX"    ) != NULL ) style |= SS_NOPREFIX;
-        if ( StrStrI(opts, "PATHELLIPSIS") != NULL ) style |= SS_PATHELLIPSIS;
-        if ( StrStrI(opts, "WORDELLIPSIS") != NULL ) style |= SS_WORDELLIPSIS;
-    }
-
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, StaticAtom, id, x, y, cx, cy, text, style);
-    pcdd->active = p;
-    pcdd->count++;
-
-    return 0;
-}
-
-
-int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
-                         CSTRING opts, pCDynamicDialog pcdd)
-{
-    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
-
-    if ( pcdd->active == NULL )
-    {
-        return -2;
-    }
-
-    uint32_t id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
-    if ( id < 0 )
-    {
-        return id;
-    }
-
-    uint32_t style = WS_CHILD;
-    style |= getCommonWindowStyles(opts, false, false);
-
-    if ( StrStrI(opts, "METAFILE" ) != NULL ) style |= SS_ENHMETAFILE;
-    else if ( StrStrI(opts, "BITMAP" ) != NULL ) style |= SS_BITMAP;
-    else style |= SS_ICON;
-
-    if ( StrStrI(opts, "NOTIFY"      )  != NULL ) style |= SS_NOTIFY;
-    if ( StrStrI(opts, "SUNKEN"      )  != NULL ) style |= SS_SUNKEN;
-    if ( StrStrI(opts, "CENTERIMAGE" )  != NULL ) style |= SS_CENTERIMAGE;
-    if ( StrStrI(opts, "RIGHTJUST"    ) != NULL ) style |= SS_RIGHTJUST;
-    if ( StrStrI(opts, "SIZECONTROL" )  != NULL ) style |= SS_REALSIZECONTROL;
-    if ( StrStrI(opts, "SIZEIMGE"    )  != NULL ) style |= SS_REALSIZEIMAGE;
-
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, StaticAtom, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
-
-    return 0;
-}
-
-
-int32_t createStaticFrame(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y, uint32_t cx, uint32_t cy,
-                         CSTRING opts, CSTRING type, uint32_t frameStyle, pCDynamicDialog pcdd)
-{
-    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
-    int32_t id = IDC_STATIC;
-
-    if ( pcdd->active == NULL )
-    {
-        return -2;
-    }
-
-    id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
-    if ( id < IDC_STATIC )
-    {
-        return id;
-    }
-
-    uint32_t style = WS_CHILD;
-    style |= getCommonWindowStyles(opts, false, false);
-
-    if ( type == NULL )
-    {
-        style |= frameStyle;
-    }
-    else
-    {
-        if ( strcmp(type, "WHITERECT") == 0 ) style |= SS_WHITERECT;
-        else if ( strcmp(type, "GRAYRECT"       ) == 0 ) style |= SS_GRAYRECT;
-        else if ( strcmp(type, "BLACKRECT"      ) == 0 ) style |= SS_BLACKRECT;
-        else if ( strcmp(type, "WHITEFRAME"     ) == 0 ) style |= SS_WHITEFRAME;
-        else if ( strcmp(type, "GRAYFRAME"      ) == 0 ) style |= SS_GRAYFRAME;
-        else if ( strcmp(type, "BLACKFRAME"     ) == 0 ) style |= SS_BLACKFRAME;
-        else if ( strcmp(type, "ETCHEDFRAME"    ) == 0 ) style |= SS_ETCHEDFRAME;
-        else if ( strcmp(type, "ETCHEDHORZONTAL") == 0 ) style |= SS_ETCHEDHORZ;
-        else if ( strcmp(type, "ETCHEDVERTICAL" ) == 0 ) style |= SS_ETCHEDVERT;
-        else if ( strcmp(type, "STATICFRAME"    ) == 0 )
-        {
-            if ( StrStrI(type, "WHITERECT") != NULL ) style |= SS_WHITERECT;
-            else if ( StrStrI(type, "GRAYRECT"  ) != NULL ) style |= SS_GRAYRECT;
-            else if ( StrStrI(type, "BLACKRECT" ) != NULL ) style |= SS_BLACKRECT;
-            else if ( StrStrI(type, "WHITEFRAME") != NULL ) style |= SS_WHITEFRAME;
-            else if ( StrStrI(type, "GRAYFRAME" ) != NULL ) style |= SS_GRAYFRAME;
-            else if ( StrStrI(type, "BLACKFRAME") != NULL ) style |= SS_BLACKFRAME;
-            else if ( StrStrI(type, "ETCHED"    ) != NULL ) style |= SS_ETCHEDFRAME;
-            else if ( StrStrI(type, "HORZ"      ) != NULL ) style |= SS_ETCHEDHORZ;
-            else if ( StrStrI(type, "VERT"       ) != NULL ) style |= SS_ETCHEDVERT;
-        }
-    }
-
-    if ( StrStrI(opts, "NOTIFY") != NULL ) style |= SS_NOTIFY;
-    if ( StrStrI(opts, "SUNKEN") != NULL ) style |= SS_SUNKEN;
-
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, StaticAtom, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
-
-    return 0;
-}
-
-
 /** DynamicDialog::createStatic()
  *
  */
@@ -1332,7 +1269,7 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
     style = getCommonButtonStyles(style, opts);
 
     WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, label, style);
+    addToDialogTemplate(&p, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
     pcdd->active = p;
     pcdd->count++;
 
@@ -1386,9 +1323,6 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
     {
         return -1;
     }
-
-    bool isRadioButton = stricmp("createRadioButton", context->GetMessageName()) == 0;
-
     if ( argumentOmitted(7) )
     {
         label = "";
@@ -1422,8 +1356,14 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
         attributeName = label;
     }
 
+    oodControl_t ctrl = winCheckBox;
+    if ( strcmp("CREATERADIOBUTTON", context->GetMessageName()) == 0 )
+    {
+        ctrl = winRadioButton;
+    }
+
     uint32_t style = WS_CHILD;
-    if ( isRadioButton )
+    if ( ctrl == winRadioButton )
     {
         style |= BS_AUTORADIOBUTTON;
     }
@@ -1434,7 +1374,7 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
     style = getCommonButtonStyles(style, opts);
 
     WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, label, style);
+    addToDialogTemplate(&p, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
     pcdd->active = p;
     pcdd->count++;
 
@@ -1470,16 +1410,10 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
         free((void *)finalName);
     }
 
-    /*
-     * If auto detect is on and this is not coming from a category dialog,  We
-     * need to essentialy do a connectRadioButton() or connectCheckBox(). We
-     * don't check the return from addAttribute() because we already know that
-     * rxID will resolve okay.
-     */
-    if ( StrStrI(opts, "CAT") == NULL && pcpbd->autoDetect )
+    // Connect the data attribute if we need to.
+    if ( result == 0 && pcpbd->autoDetect && StrStrI(opts, "CAT") == NULL )
     {
-        context->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, context->String(attributeName));
-        result = addToDataTable(context, dlgAdm, id, isRadioButton ? 2 : 1, 0);
+        result = connectCreatedControl(context, pcpbd, rxID, id, attributeName, ctrl);
     }
     return result;
 }
@@ -1526,7 +1460,7 @@ RexxMethod8(int32_t, dyndlg_createGroupBox, OPTIONAL_RexxObjectPtr, rxID, int, x
     }
 
     WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ButtonAtom, id, x, y, cx, cy, text, style);
+    addToDialogTemplate(&p, ButtonAtom, NULL, id, x, y, cx, cy, text, style);
     pcdd->active = p;
     pcdd->count++;
     return 0;
@@ -1607,7 +1541,7 @@ RexxMethod8(int32_t, dyndlg_createEdit, RexxObjectPtr, rxID, int, x, int, y, uin
     }
 
     WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, EditAtom, id, x, y, cx, cy, NULL, style);
+    addToDialogTemplate(&p, EditAtom, NULL, id, x, y, cx, cy, NULL, style);
     pcdd->active = p;
     pcdd->count++;
 
@@ -1616,21 +1550,7 @@ RexxMethod8(int32_t, dyndlg_createEdit, RexxObjectPtr, rxID, int, x, int, y, uin
     // Connect the data attribute if we need to.
     if ( pcpbd->autoDetect )
     {
-        DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
-        if ( dlgAdm == NULL )
-        {
-            failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
-            return -2;
-        }
-
-        char buf[64];
-        if ( argumentOmitted(7) )
-        {
-            _snprintf(buf, sizeof(buf), "DATA%d", id);
-            attributeName = buf;
-        }
-        context->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, context->String(attributeName));
-        result = addToDataTable(context, dlgAdm, id, 0, 0);
+        result = connectCreatedControl(context, pcpbd, rxID, id, attributeName, winEdit);
     }
     return result;
 }
@@ -1666,7 +1586,7 @@ RexxMethod7(int32_t, dyndlg_createScrollBar, RexxObjectPtr, rxID, int, x, int, y
     if ( StrStrI(opts, "BOTTOMRIGH") != NULL ) style |= SBS_BOTTOMALIGN;
 
     WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ScrollBarAtom, id, x, y, cx, cy, NULL, style);
+    addToDialogTemplate(&p, ScrollBarAtom, NULL, id, x, y, cx, cy, NULL, style);
     pcdd->active = p;
     pcdd->count++;
     return 0;
@@ -1697,7 +1617,11 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
         opts = "";
     }
 
-    bool isMulti = false;
+    // TODO right now the data table connection expects 0 (winEdit == 0) for a
+    // single select list box and 4 (winListBox == 5) for a multi-select list
+    // box. So we are faking it here.  Need to fix the data table.
+    oodControl_t ctrl = winEdit;
+
     uint32_t style = WS_CHILD;
     style |= getCommonWindowStyles(opts, true, true);
 
@@ -1706,7 +1630,7 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
     if ( StrStrI(opts, "HSCROLL" ) != NULL ) style |= WS_HSCROLL;
     if ( StrStrI(opts, "SORT"    ) != NULL ) style |= LBS_STANDARD;
     if ( StrStrI(opts, "NOTIFY"  ) != NULL ) style |= LBS_NOTIFY;
-    if ( StrStrI(opts, "MULTI"   ) != NULL ) {style |= LBS_MULTIPLESEL; isMulti = true;}
+    if ( StrStrI(opts, "MULTI"   ) != NULL ) {style |= LBS_MULTIPLESEL; ctrl = winListBox;}
     if ( StrStrI(opts, "MCOLUMN" ) != NULL ) style |= LBS_MULTICOLUMN;
     if ( StrStrI(opts, "PARTIAL" ) != NULL ) style |= LBS_NOINTEGRALHEIGHT;
     if ( StrStrI(opts, "SBALWAYS") != NULL ) style |= LBS_DISABLENOSCROLL;
@@ -1714,7 +1638,7 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
     if ( StrStrI(opts, "EXTSEL"  ) != NULL ) style |= LBS_EXTENDEDSEL;
 
     WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ListBoxAtom, id, x, y, cx, cy, NULL, style);
+    addToDialogTemplate(&p, ListBoxAtom, NULL, id, x, y, cx, cy, NULL, style);
     pcdd->active = p;
     pcdd->count++;
 
@@ -1723,29 +1647,7 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
     // Connect the data attribute if we need to.
     if ( pcpbd->autoDetect )
     {
-        DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
-        if ( dlgAdm == NULL )
-        {
-            failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
-            return -2;
-        }
-
-        char buf[64];
-        if ( argumentOmitted(7) )
-        {
-            _snprintf(buf, sizeof(buf), "DATA%d", id);
-            attributeName = buf;
-        }
-        context->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, context->String(attributeName));
-
-        if ( isMulti )
-        {
-            result = addToDataTable(context, dlgAdm, id, 4, 0);
-        }
-        else
-        {
-            result = addToDataTable(context, dlgAdm, id, 3, 0);
-        }
+        result = connectCreatedControl(context, pcpbd, rxID, id, attributeName, ctrl);
     }
     return result;
 }
@@ -1775,12 +1677,16 @@ RexxMethod8(int32_t, dyndlg_createComboBox, RexxObjectPtr, rxID, int, x, int, y,
         opts = "";
     }
 
-    bool isMulti = false;
+    // TODO right now the data table connection expects 0 (winEdit == 0) for a
+    // simple or drop down combo box and 5 (winComboBox == 5) for drop down list
+    // combo box.  So we are faking it here.  Need to fix the data table.
+    oodControl_t ctrl = winEdit;
+
     uint32_t style = WS_CHILD;
     style |= getCommonWindowStyles(opts, true, true);
 
     if ( StrStrI(opts,"SIMPLE") ) style |= CBS_SIMPLE;
-    else if ( StrStrI(opts,"LIST") ) {style |= CBS_DROPDOWNLIST; isMulti = true;}
+    else if ( StrStrI(opts,"LIST") ) {style |= CBS_DROPDOWNLIST; ctrl = winComboBox;}
     else style |= CBS_DROPDOWN;
 
     if ( StrStrI(opts, "NOHSCROLL" ) == NULL ) style |= CBS_AUTOHSCROLL;
@@ -1789,43 +1695,109 @@ RexxMethod8(int32_t, dyndlg_createComboBox, RexxObjectPtr, rxID, int, x, int, y,
     if ( StrStrI(opts, "PARTIAL"   ) != NULL ) style |= CBS_NOINTEGRALHEIGHT;
 
     WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ComboBoxAtom, id, x, y, cx, cy, NULL, style);
+    addToDialogTemplate(&p, ComboBoxAtom, NULL, id, x, y, cx, cy, NULL, style);
     pcdd->active = p;
     pcdd->count++;
 
     int32_t result = 0;
 
     // Connect the data attribute if we need to.
-    if ( StrStrI(opts, "CAT") == NULL && pcpbd->autoDetect )
+    if ( pcpbd->autoDetect && StrStrI(opts, "CAT") == NULL )
     {
-        DIALOGADMIN * dlgAdm = pcpbd->dlgAdm;
-        if ( dlgAdm == NULL )
-        {
-            failedToRetrieveDlgAdmException(context->threadContext, pcpbd->rexxSelf);
-            return -2;
-        }
-
-        char buf[64];
-        if ( argumentOmitted(7) )
-        {
-            _snprintf(buf, sizeof(buf), "DATA%d", id);
-            attributeName = buf;
-        }
-        context->SendMessage2(pcpbd->rexxSelf, "ADDATTRIBUTE", rxID, context->String(attributeName));
-
-        if ( isMulti )
-        {
-            result = addToDataTable(context, dlgAdm, id, 5, 0);
-        }
-        else
-        {
-            result = addToDataTable(context, dlgAdm, id, 0, 0);
-        }
-
+        result = connectCreatedControl(context, pcpbd, rxID, id, attributeName, ctrl);
     }
     return result;
 }
 
+/** DynamicDialog::createProgressBar()
+ *
+ */
+RexxMethod7(int32_t, dyndlg_createProgressBar, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, opts, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id = checkID(context, rxID, pcpbd->rexxSelf);
+    if ( id < 1 )
+    {
+        return -1;
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+
+    uint32_t style = getControlStyle(winProgressBar, opts);
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, 0, PROGRESS_CLASS, id, x, y, cx, cy, NULL, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    return 0;
+}
+
+
+/** DynamicDialog::createNamedControl()
+ *
+ */
+RexxMethod9(int32_t, dyndlg_createNamedControl, RexxObjectPtr, rxID, int, x, int, y, uint32_t, cx, uint32_t, cy,
+            OPTIONAL_CSTRING, opts, OPTIONAL_CSTRING, attributeName, NAME, msgName, CSELF, pCSelf)
+{
+    pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
+    pCPlainBaseDialog pcpbd = pcdd->pcpbd;
+
+    if ( pcdd->active == NULL )
+    {
+        return -2;
+    }
+
+    int32_t id = checkID(context, rxID, pcpbd->rexxSelf);
+    if ( id < 1 )
+    {
+        return -1;
+    }
+    if ( argumentOmitted(6) )
+    {
+        opts = "";
+    }
+
+    oodControl_t ctrl = oodName2controlType(msgName + 6);
+    CSTRING windowClass = controlType2winName(ctrl);
+    if ( *windowClass == '\0' )
+    {
+        // This really should not be possible, but it would be hard to track
+        // down the problem if it did happen.  So, we will raise an exception.
+        // TODO remove this after testing.
+        ooDialogInternalException(context, __FUNCTION__, __LINE__, __DATE__, __FILE__);
+        return -1;
+    }
+
+    uint32_t style = getControlStyle(ctrl, opts);
+
+    WORD *p = (WORD *)pcdd->active;
+    addToDialogTemplate(&p, 0, windowClass, id, x, y, cx, cy, NULL, style);
+    pcdd->active = p;
+    pcdd->count++;
+
+    int32_t result = 0;
+
+    // Connect the data attribute if we need to.
+    if ( pcpbd->autoDetect )
+    {
+        if ( ! (ctrl == winTab && StrStrI(opts, "CAT") != NULL) )
+        {
+            result = connectCreatedControl(context, pcpbd, rxID, id, attributeName, ctrl);
+        }
+    }
+    return result;
+}
 
 /** DynamicDialog::addButton()
  *  [deprecated] forward to createPushButton()
@@ -2182,6 +2154,111 @@ RexxMethod1(RexxObjectPtr, dyndlg_stopDynamic_pvt, CSELF, pCSelf)
  */
 #define CATEGORYDIALOG_CLASS  "CategoryDialog"
 
+
+/**
+ * Given a CategoryDialog, retrieves the dialog handle corresponding to the
+ * given page ID.
+ *
+ * Note that it is expected that this function will be called from native
+ * methods where the pageID argument is possibly omitted in the Rexx method. The
+ * category number of 0, is the main dialog, the parent dialog of a
+ * CategoryDialog. The original implementation of ooDialog had a convention, if
+ * the category number is is omitted and the dialog is a category dialog, the
+ * category number should be the category number of the current category page.
+ * Because of this, we need to know if the pageID argument was omitted in order
+ * to evalute things correctly.
+ *
+ * @param c            Method context we are operating under.
+ *
+ * @param categoryDlg  The CategoryDialog object.
+ *
+ * @param pageID       [in / out]  The page ID of the category dialog.  This
+ *                     argument is unchanged on return if a lookup of the active
+ *                     page is not done.  When the active page is looked up, the
+ *                     resolved page ID is returned here.
+ *
+ * @param hDlg         [in / out]  The handle of the page dialog is returned
+ *                     here, on success.  Its value on entry is ignored.
+ *
+ * @return  True if no error, otherwise false.
+ *
+ * @assumes The caller has already checked that categoryDlg is in fact a
+ *          category dialog object.
+ *
+ * @remarks  In the init() method of a CategoryDialog, the 'CATALOG' attribute
+ *           is set to a directory, and the 'handles', and 'category' entries
+ *           are added. They must be there or ooRexx is broken. So, no check for
+ *           NULLOBJECT is done for them. Note that the indexes of the CATALOG
+ *           directory are all lower case.
+ */
+bool getCategoryHDlg(RexxMethodContext *c, RexxObjectPtr categoryDlg, uint32_t *pageID, HWND *hDlg, bool idArgExists)
+{
+    bool result = false;
+
+    if ( idArgExists && *pageID == 0 )
+    {
+        *hDlg = rxGetWindowHandle(c, categoryDlg);
+        if ( *hDlg != NULL )
+        {
+            result = true;
+        }
+        goto done_out;
+    }
+
+    RexxDirectoryObject catalog = (RexxDirectoryObject)c->SendMessage0(categoryDlg, "CATALOG");
+    RexxArrayObject handles = (RexxArrayObject)c->DirectoryAt(catalog, "handles");
+
+    if ( *pageID == 0 )
+    {
+        // Look up the active page number.
+        RexxObjectPtr rxPageID = c->DirectoryAt(catalog, "category");
+
+        if ( ! c->UnsignedInt32(rxPageID, pageID) )
+        {
+            // TODO an exception is probably needed.
+            goto done_out;
+        }
+    }
+    RexxObjectPtr rxHwnd = c->ArrayAt(handles, *pageID);
+    if ( rxHwnd != NULLOBJECT )
+    {
+        *hDlg = (HWND)string2pointer(c->ObjectToStringValue(rxHwnd));
+        result = true;
+    }
+
+done_out:
+    return result;
+}
+
+
+/**
+ * Gets the current 'category page number' for a dialog.  By definition this is
+ * 0 if the dialog is not a CategoryDialog.
+ *
+ * This is used for things like the data connection table where it is necessary
+ * to identify which 'page' a dialog control is in.
+ *
+ * @param c        Method context we are operating in.
+ * @param oodDlg   ooDialog dialog object.
+ *
+ * @return The page number of the currently active dialog.  For
+ *         non-CategoryDialogs, this will always be 0.
+ */
+uint32_t getCategoryNumber(RexxMethodContext *c, RexxObjectPtr oodDlg)
+{
+    // The 'category' number is 0 for all non-category dialogs;
+    uint32_t category = 0;
+
+    if ( c->IsOfType(oodDlg, "CATEGORYDIALOG") )
+    {
+        // Figure out the category number.  Since this *is* a category dialog,
+        // there should be no way things could fail.
+        RexxDirectoryObject catalog = (RexxDirectoryObject)c->SendMessage0(oodDlg, "CATALOG");
+        RexxObjectPtr rxPageID = c->DirectoryAt(catalog, "category");
+        c->UnsignedInt32(rxPageID, &category);
+    }
+    return category;
+}
 
 /** CategoryDialog::createCategoryDialog()
  *

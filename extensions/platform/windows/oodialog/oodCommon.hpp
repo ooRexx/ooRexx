@@ -76,15 +76,6 @@ typedef enum
     oodListBox,         oodProgressBar,    oodUnknown
 } oodClass_t;
 
-// Enum for the type of Windows dialog control.  Note that a track bar is a
-// SliderControl in ooDiaolg. ;-(
-typedef enum
-{
-    winStatic, winButton, winTreeView, winListView, winTab, winEdit, winRadioButton, winCheckBox,
-    winGroupBox, winListBox, winComboBox, winScrollBar, winProgressBar, winTrackBar, winMonthCalendar,
-    winDateTimePicker, winUnknown
-} oodControl_t;
-
 /* Struct for the WindowBase object CSelf. */
 typedef struct _wbCSelf {
     HWND              hwnd;
@@ -160,8 +151,7 @@ extern char *           strdup_nospace(const char *str);
 extern char *           strdup_2methodName(const char *str);
 extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
-extern LPWORD lpwAlign(LPWORD lpIn);
-extern BOOL   AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
+extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
 extern void       ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
 extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
@@ -186,11 +176,14 @@ extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
 
 extern bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj);
 
+// These functions are defined in oodUser.cpp.
+extern bool     getCategoryHDlg(RexxMethodContext *, RexxObjectPtr, uint32_t *, HWND *, bool);
+extern uint32_t getCategoryNumber(RexxMethodContext *, RexxObjectPtr);
+
 // TODO move to APICommon when ooDialog is converted to use .Pointer instead of
 // pointer strings.
 extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 
-extern bool        checkControlClass(HWND, oodControl_t);
 extern bool        requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
 extern const char *comctl32VersionPart(DWORD id, DWORD type);
 
@@ -254,6 +247,17 @@ inline HWND rxGetWindowHandle(RexxMethodContext * context, RexxObjectPtr windowO
 {
     return (HWND)rxGetPointerAttribute(context, windowObject, "HWND");
 }
+
+
+inline LPWORD lpwAlign(LPWORD lpIn)
+{
+  ULONG_PTR ul = (ULONG_PTR)lpIn;
+  ul +=3;
+  ul >>=2;
+  ul <<=2;
+  return (LPWORD)ul;
+}
+
 
 /**
  * Returns the first character of the message name that invoked the current
