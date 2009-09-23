@@ -456,7 +456,7 @@ RexxObjectPtr RexxEntry CallRoutine(RexxThreadContext *c, RexxRoutineObject r, R
     {
         CallRoutineDispatcher dispatcher((RoutineClass *)r, (RexxArray *)a);
         context.activity->run(dispatcher);
-        return (RexxObjectPtr)dispatcher.result;
+        return (RexxObjectPtr)context.ret(dispatcher.result);
     }
     catch (RexxNativeActivation *)
     {
@@ -472,7 +472,7 @@ RexxObjectPtr RexxEntry CallProgram(RexxThreadContext *c, const char * p, RexxAr
     {
         CallProgramDispatcher dispatcher(p, (RexxArray *)a);
         context.activity->run(dispatcher);
-        return (RexxObjectPtr)dispatcher.result;
+        return (RexxObjectPtr)context.ret(dispatcher.result);
     }
     catch (RexxNativeActivation *)
     {
