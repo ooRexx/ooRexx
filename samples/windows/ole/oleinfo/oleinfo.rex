@@ -145,9 +145,9 @@ callFailed:
 
   /* Method Ok will be called if enter is pressed in dialog */
 ::method Ok
-  entryLine = self~GetComboBox(100)
-  if entryLine \= .nil then do
-    OLEID = entryLine~Title          /* get ProgID or ClassID of OLE Object */
+  cb = self~GetComboBox(100)
+  if cb \= .nil then do
+    OLEID = cb~Title          /* get ProgID or ClassID of OLE Object */
     if OLEID \= self~currentObjectName then do
       call createObject self, OLEID
       if self~currentObject \= .nil then do
@@ -156,7 +156,7 @@ callFailed:
       end
       else do
         call RxMessageBox "Could not create OLE object", "Error", "OK", "EXCLAMATION"
-        entryLine~title = self~currentObjectName
+        cb~title = self~currentObjectName
       end
     end
   end
@@ -218,11 +218,14 @@ callFailed:
   self~Cursor_Arrow
 
 
+  picked = ""
   temp = .RegistryDialog~new(,cache)
   if temp~InitCode = 0 then do
     rc = temp~execute("SHOWTOP")
     if rc =1 then do
-      self~GetEditControl(100)~title=temp~data200
+      combo = self~GetComboBox(100)
+      combo~title = temp~data200
+      picked = combo~title
       self~ok
     end
     temp~deinstall
@@ -233,6 +236,7 @@ callFailed:
     do i over cache
       cb~add(i)
     end
+    if picked \== "" then cb~title = picked
   end
 
   /* extract ProgID from registry */
