@@ -1036,7 +1036,7 @@
   forward message "createButtonGroup"
 
 ::method addOkCancelRightBottom
-   forward message 'createOkCancelRighBottom'
+   forward message 'createOkCancelRightBottom'
 
 ::method addOkCancelLeftBottom
    forward message 'createOkCancelLeftBottom'

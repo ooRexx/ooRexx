@@ -1617,10 +1617,11 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
         opts = "";
     }
 
-    // TODO right now the data table connection expects 0 (winEdit == 0) for a
-    // single select list box and 4 (winListBox == 5) for a multi-select list
-    // box. So we are faking it here.  Need to fix the data table.
-    oodControl_t ctrl = winEdit;
+    // TODO right now the data table connection expects 3 (temp enum of
+    // winSingleSelectListBox) for a single select list box and 4 (winListBox ==
+    // 5) for a multi-select list box. So we are faking it here.  Need to fix
+    // the data table.
+    oodControl_t ctrl = winSingleSelectListBox;
 
     uint32_t style = WS_CHILD;
     style |= getCommonWindowStyles(opts, true, true);

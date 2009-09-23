@@ -45,6 +45,7 @@ typedef enum
     winEdit                =  0,
     winCheckBox            =  1,
     winRadioButton         =  2,
+    winSingleSelectListBox =  3,
     winListBox             =  4,
     winComboBox            =  5,
     winTreeView            =  6,
@@ -59,9 +60,8 @@ typedef enum
     winScrollBar           = 23,
     winProgressBar         = 24,
 
-    // Special values used by the data table connection
+    // Special values used by the data table connection, winSingleSelectListBox is also one.
     winSimpleComboBox      = 40,
-    winSingleSelectListBox = 41,
     winNotAControl         = 42,
 
     winUnknown             = 55
