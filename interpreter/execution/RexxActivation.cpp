@@ -2593,7 +2593,7 @@ RexxObject *RexxActivation::externalCall(RexxString *target, size_t _argcount, R
 
     // Step 1:  Check the global functions directory
     // this is actually considered part of the built-in functions, but these are
-    // written in ooRexx.
+    // written in ooRexx.  The names are also case sensitive
     RoutineClass *routine = (RoutineClass *)TheFunctionsDirectory->get(target);
     if (routine != OREF_NULL)        /* not found yet?                    */
     {

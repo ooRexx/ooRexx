@@ -1475,14 +1475,18 @@ RoutineClass *RexxSource::findPublicRoutine(RexxString *name)
  */
 RoutineClass *RexxSource::findRoutine(RexxString *routineName)
 {
-    RoutineClass *routineObject = findLocalRoutine(routineName);
+    // These lookups are case insensive, so the table are all created using the opper
+    // case names.  Use it once and reuse it.
+    RexxString *upperName = routineName->upper();
+    ProtectedObject p1(upperName);
+    RoutineClass *routineObject = findLocalRoutine(upperName);
     if (routineObject != OREF_NULL)
     {
         return routineObject;
     }
 
     // now try for one pulled in from ::REQUIRES objects
-    return findPublicRoutine(routineName);
+    return findPublicRoutine(upperName);
 }
 
 
