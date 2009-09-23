@@ -602,11 +602,10 @@ RexxRoutine1(RexxObjectPtr, RxCalcPi, OPTIONAL_uint32_t, precision)
 /********************************************************************/
 /* Functions:           RxCalcArcSin(), RxCalcArcCos(), RxCalcArcTan()*/
 /* Description:         Returns angle from trigonometric value.     */
-/* Input:               Angle in radian or degree or grade          */
+/* Input:               a number                                    */
 /* Output:              Angle for matching trigonometric value.     */
-/*                      Returns 0 if the function executed OK,      */
-/*                      -1 otherwise.  The interpreter will fail    */
-/*                      if the function returns a negative result.  */
+/*                      Returns nan if the first argument is out    */
+/*                      of range, e.g., RxCalcSin(1.1) -> nan       */   
 /* Notes:                                                           */
 /*   These routines take one to three parameters.                   */
 /*   The form of the call is:                                       */
