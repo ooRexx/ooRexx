@@ -5956,6 +5956,7 @@ PackageClass *RexxSource::loadRequires(RexxActivity *activity, RexxString *targe
     // get a fully resolved name for this....we might locate this under either name, but the
     // fully resolved name is generated from this source file context.
     RexxString *fullName = resolveProgramName(activity, target);
+    ProtectedObject p(fullName);
 
     // if we've already loaded this in this instance, just return it.
     PackageClass *packageInstance = instance->loadRequires(activity, target, fullName);
