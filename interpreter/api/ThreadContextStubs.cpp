@@ -305,7 +305,7 @@ RexxPackageObject RexxEntry LoadPackageFromData(RexxThreadContext *c, CSTRING n,
     ApiContext context(c);
     try
     {
-        return (RexxPackageObject)context.activity->getInstance()->loadRequires(context.activity, new_string(n), d, l);
+        return (RexxPackageObject)context.ret(context.activity->getInstance()->loadRequires(context.activity, new_string(n), d, l));
     }
     catch (RexxNativeActivation *)
     {
@@ -547,7 +547,7 @@ RexxPackageObject RexxEntry GetRoutinePackage(RexxThreadContext *c, RexxRoutineO
     try
     {
         // convert the name to a string instance, and check the environments.
-        return (RexxPackageObject)((RoutineClass *)o)->getPackage();
+        return (RexxPackageObject)context.ret(((RoutineClass *)o)->getPackage());
     }
     catch (RexxNativeActivation *)
     {
@@ -562,7 +562,7 @@ RexxPackageObject RexxEntry GetMethodPackage(RexxThreadContext *c, RexxMethodObj
     try
     {
         // convert the name to a string instance, and check the environments.
-        return (RexxPackageObject)((RexxMethod *)o)->getPackage();
+        return (RexxPackageObject)context.ret(((RexxMethod *)o)->getPackage());
     }
     catch (RexxNativeActivation *)
     {
@@ -1773,7 +1773,7 @@ RexxDirectoryObject RexxEntry GetConditionInfo(RexxThreadContext *c)
     ApiContext context(c);
     try
     {
-        return (RexxDirectoryObject)context.context->getConditionInfo();
+        return (RexxDirectoryObject)context.ret(context.context->getConditionInfo());
     }
     catch (RexxNativeActivation *)
     {
