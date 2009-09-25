@@ -1478,14 +1478,6 @@ void RexxActivity::popStackFrame(bool  reply)
     {
         // update the frame information.
         updateFrameMarkers();
-
-        // if this is not a reply operation and the frame we just removed is
-        // a Rexx activation, we can just cache this.
-        if (!reply)
-        {
-            /* add this to the cache             */
-            ActivityManager::cacheActivation(poppedStackFrame);
-        }
     }
 }
 
@@ -1494,9 +1486,6 @@ void RexxActivity::cleanupStackFrame(RexxActivationBase *poppedStackFrame)
 {
     // make sure this frame is terminated first
     poppedStackFrame->termination();
-
-    /* add this to the cache             */
-    ActivityManager::cacheActivation(poppedStackFrame);
 }
 
 

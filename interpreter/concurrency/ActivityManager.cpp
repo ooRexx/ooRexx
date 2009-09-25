@@ -59,18 +59,6 @@ RexxList *ActivityManager::availableActivities = OREF_NULL;
 // table of all activities
 RexxList *ActivityManager::allActivities = OREF_NULL;
 
-// the activation Cache
-RexxStack *ActivityManager::activations = OREF_NULL;
-
-// size of the activation cache
-size_t ActivityManager::activationCacheSize = 0;
-
-// the native activation Cache
-RexxStack *ActivityManager::nativeActivations = OREF_NULL;
-
-// size of the activation cache
-size_t ActivityManager::nativeActivationCacheSize = 0;
-
 // this is the head of the waiting activity chain
 RexxActivity * volatile ActivityManager::firstWaitingActivity = OREF_NULL;
 
@@ -89,14 +77,6 @@ SysMutex ActivityManager::kernelSemaphore;
 // the termination complete semaphore
 SysSemaphore ActivityManager::terminationSem;
 
-const size_t ACTIVATION_CACHE_SIZE = 10;
-
-// we tend not to go as deep with nested native activations, so
-// this number does not need to be the same as as the activation
-// cache
-const size_t NATIVE_ACTIVATION_CACHE_SIZE = 5;
-
-
 /**
  * Initialize the activity manager when the interpreter starts up.
  */
@@ -104,27 +84,6 @@ void ActivityManager::init()
 {
     availableActivities = new_list();
     allActivities = new_list();
-    activations = new (ACTIVATION_CACHE_SIZE, false) RexxStack(ACTIVATION_CACHE_SIZE);
-
-    // now initialize both activation caches with empty references.  This generally
-    // keeps the cached items from fragmenting the object heap because they are
-    // longer lived.
-    size_t i;
-    for (i = 0; i < ACTIVATION_CACHE_SIZE; i++)
-    {
-        // push a dummy activation on the stack
-        activations->push((RexxObject *)new RexxActivation());
-    }
-    activationCacheSize = ACTIVATION_CACHE_SIZE;
-
-    nativeActivations = new (NATIVE_ACTIVATION_CACHE_SIZE, false) RexxStack(NATIVE_ACTIVATION_CACHE_SIZE);
-    for (i = 0; i < NATIVE_ACTIVATION_CACHE_SIZE; i++)
-    {
-        // push a dummy activation on the stack
-        nativeActivations->push((RexxObject *)new RexxNativeActivation());
-    }
-    nativeActivationCacheSize = NATIVE_ACTIVATION_CACHE_SIZE;
-
     currentActivity = OREF_NULL;
 }
 
@@ -141,8 +100,6 @@ void ActivityManager::live(size_t liveMark)
 {
   memory_mark(availableActivities);
   memory_mark(allActivities);
-  memory_mark(activations);
-  memory_mark(nativeActivations);
   memory_mark(firstWaitingActivity);
   memory_mark(lastWaitingActivity);
 }
@@ -161,8 +118,6 @@ void ActivityManager::liveGeneral(int reason)
   {
       memory_mark_general(availableActivities);
       memory_mark_general(allActivities);
-      memory_mark_general(activations);
-      memory_mark_general(nativeActivations);
       memory_mark_general(firstWaitingActivity);
       memory_mark_general(lastWaitingActivity);
   }
@@ -324,24 +279,9 @@ void ActivityManager::shutdown()
  */
 RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RoutineClass *routine, RexxCode *code, RexxString *calltype, RexxString *environment, int context)
 {
-
-    if (activationCacheSize != 0)  /* have a cached entry?              */
-    {
-        activationCacheSize--;       /* remove an entry from the count    */
-                                           /* get the top cached entry          */
-        RexxActivation *resultActivation = (RexxActivation *)activations->stackTop();
-        /* reactivate this                   */
-        resultActivation->setHasReferences();
-        resultActivation = new (resultActivation) RexxActivation(activity, routine, code, calltype, environment, context);
-        activations->pop();          /* Remove reused activation from stac*/
-        return resultActivation;
-
-    }
-    else                                 /* need to create a new one          */
-    {
-        /* Create new Activation.            */
-        return new RexxActivation(activity, routine, code, calltype, environment, context);
-    }
+    // in heavily multithreaded environments, the activation cache is a source for race conditions
+    // that can lead to crashes.  Just unconditionally create a new actvation
+    return new RexxActivation(activity, routine, code, calltype, environment, context);
 }
 
 
@@ -359,24 +299,9 @@ RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RoutineCl
  */
 RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxActivation *parent, RexxCode *code, int context)
 {
-
-    if (activationCacheSize != 0)  /* have a cached entry?              */
-    {
-        activationCacheSize--;       /* remove an entry from the count    */
-                                           /* get the top cached entry          */
-        RexxActivation *resultActivation = (RexxActivation *)activations->stackTop();
-        /* reactivate this                   */
-        resultActivation->setHasReferences();
-        resultActivation = new (resultActivation) RexxActivation(activity, parent, code, context);
-        activations->pop();          /* Remove reused activation from stac*/
-        return resultActivation;
-
-    }
-    else                                 /* need to create a new one          */
-    {
-        /* Create new Activation.            */
-        return new RexxActivation(activity, parent, code, context);
-    }
+    // in heavily multithreaded environments, the activation cache is a source for race conditions
+    // that can lead to crashes.  Just unconditionally create a new actvation
+    return new RexxActivation(activity, parent, code, context);
 }
 
 
@@ -392,24 +317,9 @@ RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxActiv
  */
 RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxMethod *method, RexxCode *code)
 {
-
-    if (activationCacheSize != 0)  /* have a cached entry?              */
-    {
-        activationCacheSize--;       /* remove an entry from the count    */
-                                           /* get the top cached entry          */
-        RexxActivation *resultActivation = (RexxActivation *)activations->stackTop();
-        /* reactivate this                   */
-        resultActivation->setHasReferences();
-        resultActivation = new (resultActivation) RexxActivation(activity, method, code);
-        activations->pop();          /* Remove reused activation from stac*/
-        return resultActivation;
-
-    }
-    else                                 /* need to create a new one          */
-    {
-        /* Create new Activation.            */
-        return new RexxActivation(activity, method, code);
-    }
+    // in heavily multithreaded environments, the activation cache is a source for race conditions
+    // that can lead to crashes.  Just unconditionally create a new actvation
+    return new RexxActivation(activity, method, code);
 }
 
 
@@ -423,23 +333,9 @@ RexxActivation *ActivityManager::newActivation(RexxActivity *activity, RexxMetho
  */
 RexxNativeActivation *ActivityManager::newNativeActivation(RexxActivity *activity, RexxActivation *parent)
 {
-    if (nativeActivationCacheSize != 0)  /* have a cached entry?              */
-    {
-        nativeActivationCacheSize--;       /* remove an entry from the count    */
-                                           /* get the top cached entry          */
-        RexxNativeActivation *resultActivation = (RexxNativeActivation *)nativeActivations->stackTop();
-        /* reactivate this                   */
-        resultActivation->setHasReferences();
-        resultActivation = new (resultActivation) RexxNativeActivation(activity, parent);
-        nativeActivations->pop();          /* Remove reused activation from stac*/
-        return resultActivation;
-
-    }
-    else                                 /* need to create a new one          */
-    {
-        /* Create new Activation.            */
-        return new RexxNativeActivation(activity, parent);
-    }
+    // in heavily multithreaded environments, the activation cache is a source for race conditions
+    // that can lead to crashes.  Just unconditionally create a new actvation
+    return new RexxNativeActivation(activity, parent);
 }
 
 
@@ -452,61 +348,9 @@ RexxNativeActivation *ActivityManager::newNativeActivation(RexxActivity *activit
  */
 RexxNativeActivation *ActivityManager::newNativeActivation(RexxActivity *activity)
 {
-    if (nativeActivationCacheSize != 0)  /* have a cached entry?              */
-    {
-        nativeActivationCacheSize--;       /* remove an entry from the count    */
-                                           /* get the top cached entry          */
-        RexxNativeActivation *resultActivation = (RexxNativeActivation *)nativeActivations->stackTop();
-        /* reactivate this                   */
-        resultActivation->setHasReferences();
-        resultActivation = new (resultActivation) RexxNativeActivation(activity);
-        nativeActivations->pop();          /* Remove reused activation from stac*/
-        return resultActivation;
-
-    }
-    else                                 /* need to create a new one          */
-    {
-        /* Create new Activation.            */
-        return new RexxNativeActivation(activity);
-    }
-}
-
-
-/**
- * Add a popped activation back to the cache.
- *
- * @param activation The activation to add.
- */
-void ActivityManager::cacheActivation(RexxActivationBase *activation)
-{
-
-    // if this is not a reply operation and the frame we just removed is
-    // a Rexx activation, we can just cache this.
-    if (isOfClass(Activation, activation))
-    {
-        /* still room in the cache?          */
-        if (activationCacheSize < ACTIVATION_CACHE_SIZE)
-        {
-            /* free everything for reclamation   */
-            activation->setHasNoReferences();
-            activationCacheSize++;       /* add the this to the count         */
-                                               /* and add the activation            */
-            activations->push((RexxObject *)activation);
-        }
-    }
-    else
-    {
-        /* still room in the cache?          */
-        if (nativeActivationCacheSize < NATIVE_ACTIVATION_CACHE_SIZE)
-        {
-            /* free everything for reclamation   */
-            activation->setHasNoReferences();
-            nativeActivationCacheSize++;       /* add the this to the count         */
-                                               /* and add the activation            */
-            nativeActivations->push((RexxObject *)activation);
-        }
-
-    }
+    // in heavily multithreaded environments, the activation cache is a source for race conditions
+    // that can lead to crashes.  Just unconditionally create a new actvation
+    return new RexxNativeActivation(activity);
 }
 
 
