@@ -2170,6 +2170,33 @@ RexxVariableDictionary * RexxObject::getObjectVariables(
     return dictionary;                   /* return the correct ovd            */
 }
 
+/**
+ * Obtain a guard lock on the target object at the given scope.
+ *
+ * @param activity The activity we're running on.
+ * @param scope    The scope that needs to be locked.
+ */
+void RexxObject::guardOn(RexxActivity *activity, RexxObject *scope)
+{
+    RexxVariableDictionary *vdict = getObjectVariables(scope);
+    vdict->reserve(activity);
+}
+
+
+/**
+ * Release a guard lock on the target object at the given scope.
+ *
+ * @param activity The activity we're running on.
+ * @param scope    The scope that needs to be released.
+ */
+void RexxObject::guardOff(RexxActivity *activity, RexxObject *scope)
+{
+    RexxVariableDictionary *vdict = getObjectVariables(scope);
+    vdict->release(activity);
+}
+
+
+
 const char *RexxObject::idString(void)
 /******************************************************************************/
 /* Function:  Return a pointer to the object's string value                   */

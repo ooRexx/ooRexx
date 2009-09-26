@@ -64,6 +64,7 @@
   class ProtectedObject;
   class SecurityManager;
   class BaseExecutable;
+  class RexxActivity;
 
 
   enum
@@ -471,6 +472,8 @@ class RexxObject : public RexxInternalObject {
      RexxString  *id();
      RexxMethod  *methodLookup(RexxString *name );
      RexxVariableDictionary *getObjectVariables(RexxObject *);
+     void guardOn(RexxActivity *activity, RexxObject *scope);
+     void guardOff(RexxActivity *activity, RexxObject *scope);
      RexxObject  *equal(RexxObject *);
      RexxObject  *notEqual(RexxObject *other);
      RexxObject  *strictEqual(RexxObject *);
@@ -599,5 +602,29 @@ protected:
     RexxActivationBase *previous;
     BaseExecutable     *executable;
 
+};
+
+
+/**
+ * Block guard lock on an object instance.
+ */
+class GuardLock
+{
+public:
+    inline GuardLock(RexxActivity *a, RexxObject *o, RexxObject *s) : activity(a), target(o), scope(s)
+    {
+        // just acquire the scope
+        target->guardOn(activity, scope);
+    }
+
+    inline ~GuardLock()
+    {
+        target->guardOff(activity, scope);
+    }
+
+private:
+    RexxActivity *activity;  // the activity we're running on
+    RexxObject *target;      // the target object for the lock
+    RexxObject *scope;       // the scope of the required guard lock
 };
 #endif

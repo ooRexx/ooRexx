@@ -822,7 +822,7 @@ CommandHandler *InterpreterInstance::resolveCommandHandler(RexxString *name)
  * @return The loaded requires file, or OREF_NULL if this instance
  *         has not used the file yet.
  */
-PackageClass *InterpreterInstance::getRequiresFile(RexxString *name)
+PackageClass *InterpreterInstance::getRequiresFile(RexxActivity *activity, RexxString *name)
 {
     WeakReference *ref = (WeakReference *)requiresFiles->get(name);
     if (ref != OREF_NULL)
@@ -830,6 +830,9 @@ PackageClass *InterpreterInstance::getRequiresFile(RexxString *name)
         PackageClass *resolved = (PackageClass *)ref->get();
         if (resolved != OREF_NULL)
         {
+            // get the guard lock on this...this will ensure that
+            // the initializer is run before we grab this from the cache
+            GuardLock lock(activity, resolved, ThePackageClass);
             return resolved;
         }
         // this was garbage collected, remove it from the table
@@ -889,7 +892,7 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
 {
 
     // if we've already loaded this in this instance, just return it.
-    PackageClass *package = getRequiresFile(shortName);
+    PackageClass *package = getRequiresFile(activity, shortName);
     if (package != OREF_NULL)
     {
         return package;
@@ -899,7 +902,7 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
     if (fullName != OREF_NULL)
     {
         // if we've already loaded this in this instance, just return it.
-        package = getRequiresFile(fullName);
+        package = getRequiresFile(activity, fullName);
         if (package != OREF_NULL)
         {
             // add this to the cache using the short name, since they resolve to the same
@@ -919,6 +922,8 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
     }
 
     package = requiresFile->getPackage();
+    // make sure we lock this package until we finish running the requires.
+    GuardLock lock(activity, package, ThePackageClass);
     // add this to the instance cache too, under both the long
     // name and the fullName (if it was resolved)
     addRequiresFile(shortName, fullName, package);
@@ -941,7 +946,7 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
 PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, RexxArray *source)
 {
     // if we've already loaded this in this instance, just return it.
-    PackageClass *package = getRequiresFile(shortName);
+    PackageClass *package = getRequiresFile(activity, shortName);
     if (package != OREF_NULL)
     {
         return package;
@@ -958,6 +963,8 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
     }
 
     package = requiresFile->getPackage();
+    // make sure we lock this package until we finish running the requires.
+    GuardLock lock(activity, package, ThePackageClass);
     // add this to the instance cache too, under both the long
     // name and the fullName (if it was resolved)
     addRequiresFile(shortName, OREF_NULL, package);
@@ -982,7 +989,7 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
 PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxString *shortName, const char *data, size_t length)
 {
     // if we've already loaded this in this instance, just return it.
-    PackageClass *package = getRequiresFile(shortName);
+    PackageClass *package = getRequiresFile(activity, shortName);
     if (package != OREF_NULL)
     {
         return package;
@@ -999,6 +1006,8 @@ PackageClass *InterpreterInstance::loadRequires(RexxActivity *activity, RexxStri
     }
 
     package = requiresFile->getPackage();
+    // make sure we lock this package until we finish running the requires.
+    GuardLock lock(activity, package, ThePackageClass);
     // add this to the instance cache too, under both the long
     // name and the fullName (if it was resolved)
     addRequiresFile(shortName, OREF_NULL, package);
