@@ -161,7 +161,7 @@
 ::method Days                                        /* page 3 */
    expose daynames
    self~createStaticText(-1, 10, self~SizeY - 65, 0, 0, , "Please select the day you like most")
-   self~AddRadioGroup(31, 5, 5,0, "&Monday &Tuesday &Wednesday T&hursday &Friday &Saturday S&unday")
+   self~AddRadioGroup(1031, 5, 5,0, "&Monday &Tuesday &Wednesday T&hursday &Friday &Saturday S&unday")
    self~createBlackFrame(-1, 1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
    self~createStaticImage(145, 73, 10, 125, 100, "BITMAP SIZEIMAGE CENTERIMAGE")
    daynames = .array~of('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
@@ -248,8 +248,11 @@
    self~setListBoxDataPage(31,'1',1)
    self~MovieClick
    today = date('W')       /* set today on page 3 - days */
-   do id=31 to 37
-      if today = daynames[id-30] then self~setRadioButtonDataPage(id,1,3)
+   do id=1031 to 1037
+      if today = daynames[id-1030] then do
+         self~setRadioButtonDataPage(id,1,3)
+         leave
+      end
    end
    self~run:super
 
@@ -298,7 +301,7 @@
       end
       self~setStaticDataPage(44, selectedCinema, 4)
    /* days */
-      do id=31 to 37
+      do id=1031 to 1037
          if self~getRadioButtonDataPage(id,3) then leave
       end
       today = date('W')
