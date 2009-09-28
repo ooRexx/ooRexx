@@ -52,10 +52,21 @@
 
 
 /**
- * Defines and structs for the DlgUtil class.
+ * Defines, structs, and methods for the DlgUtil class.
  */
-#define DLGUTILCLASS                 ".DlgUtil"
+#define DLGUTIL_CLASS      "DlgUtil"
 
+/**
+ * Do not include ICC_STANDARD_CLASSES.  Some versions of Windows XP have a bug
+ * that causes InitCommonControlsEx() to fail when that flag is used.  The flag
+ * itself is not needed under any version of Windows.
+ *
+ * Note: These flags are valid under any supported CommCtrl32 version.  But, as
+ * ooDialog adds support for more dialog controls, it may become necessary to
+ * check the CommCtrl32 version and have a different set of flags for certain
+ * versions.
+ */
+#define INITCOMMONCONTROLS_CLASS_FLAGS    ICC_WIN95_CLASSES | ICC_DATE_CLASSES
 
 const char *comctl32VersionPart(DWORD id, DWORD type)
 {
@@ -173,11 +184,6 @@ const char *comctl32VersionPart(DWORD id, DWORD type)
     }
     return part;
 }
-
-/**
- * Methods for the .DlgUtil class.
- */
-#define DLG_UTIL_CLASS  "DlgUtil"
 
 /**
  * Determines the version of comctl32.dll and compares it against a minimum
@@ -340,8 +346,7 @@ RexxMethod0(logical_t, dlgutil_init_cls)
         return false;
     }
 
-    if ( ! initCommonControls(context, ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES | ICC_DATE_CLASSES,
-                              "ooDialog", COMCTL_ERR_TITLE) )
+    if ( ! initCommonControls(context, INITCOMMONCONTROLS_CLASS_FLAGS, "ooDialog", COMCTL_ERR_TITLE) )
     {
         ComCtl32Version = 0;
         return false;
