@@ -130,15 +130,15 @@ CleanUp:
 
 ::method Add
     self~Employees[self~Emp_count] = .directory~new
-    self~Employees[self~Emp_count]['NAME'] = self~GetValue(21)
-    self~Employees[self~Emp_count]['CITY'] = self~GetValue(22)
-    self~Employees[self~Emp_count]['PROFESSION'] = self~GetValue(23)
-    if self~GetValue(31) = 1 then sex = 1; else sex = 2
+    self~Employees[self~Emp_count]['NAME'] = self~getControlData(21)
+    self~Employees[self~Emp_count]['CITY'] = self~getControlData(22)
+    self~Employees[self~Emp_count]['PROFESSION'] = self~getControlData(23)
+    if self~getControlData(31) = 1 then sex = 1; else sex = 2
     self~Employees[self~Emp_count]['SEX'] = sex
-    self~Employees[self~Emp_count]['MARRIED'] = self~GetValue(41)
+    self~Employees[self~Emp_count]['MARRIED'] = self~getControlData(41)
     self~Emp_count = self~Emp_count +1
     self~Emp_current = self~Emp_count
-    self~SetValue(21, "");
+    self~setControlData(21, "");
     self~SetSBRange(11, 1, self~Emp_count)
     self~SetSBPos(11, self~Emp_count)
     self~EnableItem(11)
@@ -147,14 +147,14 @@ CleanUp:
 
 
 ::method Set
-    self~SetValue(21, self~Employees[self~Emp_current]['NAME'])
-    self~SetValue(22, self~Employees[self~Emp_current]['CITY'])
-    self~SetValue(23, self~Employees[self~Emp_current]['PROFESSION'])
+    self~setControlData(21, self~Employees[self~Emp_current]['NAME'])
+    self~setControlData(22, self~Employees[self~Emp_current]['CITY'])
+    self~setControlData(23, self~Employees[self~Emp_current]['PROFESSION'])
     if self~Employees[self~Emp_current]['SEX'] = 1 then do
-       self~SetValue(31, 1);self~SetValue(32, 0); end
+       self~setControlData(31, 1);self~setControlData(32, 0); end
     else do
-       self~SetValue(31, 0);self~SetValue(32, 1); end
-    self~SetValue(41, self~Employees[self~Emp_current]['MARRIED'])
+       self~setControlData(31, 0);self~setControlData(32, 1); end
+    self~setControlData(41, self~Employees[self~Emp_current]['MARRIED'])
 
 ::method Emp_Previous
    if self~Emp_count = 1 then return

@@ -150,13 +150,13 @@
 
 ::method checkspeed
    expose minspeed maxspeed cycle initpot jackx jacky
-   self~getAttrib('speed')
+   self~getControlDataAttribute('speed')
    if self~speed < minspeed then self~speed = minspeed
    if self~speed > maxspeed then self~speed = maxspeed
-   self~setAttrib('speed')
+   self~setControlDataAttribute('speed')
    jackpot = trunc(cycle * initpot / self~speed)
    /*self~write(jackx,jacky,"Jackpot $$$" right(jackpot,6,'_'),"Arial",24,'BOLD')*/
-   self~setEntryLine(1200,right(jackpot,9))
+   self~setEditData(1200,right(jackpot,9))
    return jackpot
 
 ::method OK
@@ -168,12 +168,12 @@
       do i=40 by 20 to 120
          self~write(i*self~factorx,i*self~factory,"Congratulations...","Arial",14,'BOLD')
       end
-      money = strip(self~getEntryLine(1200))
+      money = strip(self~getEditData(1200))
       self~write(10*self~factorx+5,75*self~factory,"You won the jackpot:" money,"Arial",18,'BOLD')
       do i=1 to min(money%500 + 1,10)
          ret = play("jackpot.wav")
          money = max(0,money - 500)
-         self~setEntryLine(1200,right(money,9))
+         self~setEditData(1200,right(money,9))
       end
       call msSleep 1000
       return self~cancel

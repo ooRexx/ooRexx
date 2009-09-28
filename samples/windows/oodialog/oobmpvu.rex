@@ -92,7 +92,7 @@
          self~addComboEntry(101, "...")
          self~comboAddDirectory(101, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.bmp", "READWRITE")
          self~comboAddDirectory(101, filespec("drive", self~Filename) || filespec("path", self~Filename) || "*.dib", "READWRITE")
-         self~setAttrib("Filename")
+         self~setControlDataAttribute("Filename")
       end
    end
    self~showBitmap

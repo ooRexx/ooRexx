@@ -970,7 +970,7 @@
    return ret
 
 
-
+-- DEPRECATED (to end of file.)
 ::method addStatic external "LIBRARY oodialog dyndlg_createStatic"
 ::method addImage external "LIBRARY oodialog dyndlg_createStaticImage"
 ::method addButton external "LIBRARY oodialog dyndlg_addButton"

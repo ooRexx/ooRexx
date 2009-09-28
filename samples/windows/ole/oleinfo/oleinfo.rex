@@ -350,8 +350,8 @@ callFailed:
   if j < 1 then return                              /* return if nothing was selected */
   i = indexStem.j
 
-  types = self~GetCheckBox(107)
-  flags = self~GetCheckBox(108)
+  types = self~getCheckBoxData(107)
+  flags = self~getCheckBoxData(108)
 
   if i > methods.0 then do
     workstem. = events.
@@ -360,7 +360,7 @@ callFailed:
   end
   else do
     workstem. = methods.
-    memberID = self~GetCheckBox(109)
+    memberID = self~getCheckBoxData(109)
     /* show member ID? */
     if memberID \= 0 then
       infostring = "['"||workstem.i.!MEMID||"'x] "

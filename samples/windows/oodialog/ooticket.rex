@@ -232,9 +232,9 @@
 ::method MovieClick
    expose sel.
    f = self~getCurrentCategoryListIndex(31,1)
-   self~setCategoryEntryLine(32,sel.f.32,1)
-   self~setCategoryEntryLine(33,sel.f.33,1)
-   self~setCategoryEntryLine(34,sel.f.34,1)
+   self~setEditDataPage(32,sel.f.32,1)
+   self~setEditDataPage(33,sel.f.33,1)
+   self~setEditDataPage(34,sel.f.34,1)
    self~CategoryComboDrop(35,1)
    txt = sel.f.35
    do until txt = ''
@@ -245,11 +245,11 @@
 
 ::method run
    expose films daynames today
-   self~setCategoryMultiList(31,'1',1)
+   self~setListBoxDataPage(31,'1',1)
    self~MovieClick
    today = date('W')       /* set today on page 3 - days */
    do id=31 to 37
-      if today = daynames[id-30] then self~setCategoryRadioButton(id,1,3)
+      if today = daynames[id-30] then self~setRadioButtonDataPage(id,1,3)
    end
    self~run:super
 
@@ -270,16 +270,16 @@
    if NewPage \= 4 then return
    /* films */
       self~categoryComboDrop(41, 4)
-      Lines = self~getCategoryValue(31, 1)
+      Lines = self~getControlDataPage(31, 1)
       if Lines = '' then do
               self~addCategoryComboEntry(41,"==> No movie was selected",4)
               self~setCurrentCategoryComboIndex(41,1,4)
-           end
+      end
       else do
            do i = 1 to words(Lines)
                self~addCategoryComboEntry(41, films[word(Lines,i)] ,4)
            end
-           self~setCategoryComboLine(41, films[word( Lines,random(1,words(Lines)) )] ,4)
+           self~setComboBoxDataPage(41, films[word( Lines,random(1,words(Lines)) )] ,4)
       end
       self~FilmClick
 
@@ -287,35 +287,35 @@
    expose cinema. daynames selectedCinema
    /* cinemas */
       selectedCinema = "==> No cinema was selected"
-      self~setCategoryStaticText(44, , 4)
+      self~setStaticDataPage(44, "", 4)
       ic = random(1,6)
       do i=ic to ic+5
          id = i // 6 + 1
-         if self~getCategoryCheckBox(50+id,2) then do
+         if self~getCheckBoxDataPage(50+id,2) then do
             selectedCinema = cinema.id
             leave
          end
       end
-      self~setCategoryStaticText(44, selectedCinema, 4)
+      self~setStaticDataPage(44, selectedCinema, 4)
    /* days */
       do id=31 to 37
-         if self~getCategoryRadioButton(id,3) then leave
+         if self~getRadioButtonDataPage(id,3) then leave
       end
       today = date('W')
       if id == 38 then
-           self~setCategoryStaticText(42, "==> No day selected", 4)
+           self~setStaticDataPage(42, "==> No day selected", 4)
       else if today = daynames[id-30] then
-           self~setCategoryStaticText(42, "Today" daynames[id-30], 4)
+           self~setStaticDataPage(42, "Today" daynames[id-30], 4)
       else
-           self~setCategoryStaticText(42, "Next" daynames[id-30], 4)
+           self~setStaticDataPage(42, "Next" daynames[id-30], 4)
    /* time */
       id = random(1,4) + 45
-      self~setCategoryRadioButton(id,1,4)
+      self~setRadioButtonDataPage(id,1,4)
 
 ::method printTicket
-   selectedFilm   = self~getCategoryComboLine(41,4)
-   selectedCinema = self~getCategoryValue(44,4)
-   selectedDay    = self~getCategoryValue(42, 4)
+   selectedFilm   = self~getComboBoxDataPage(41,4)
+   selectedCinema = self~getControlDataPage(44,4)
+   selectedDay    = self~getControlDataPage(42, 4)
 
    noFilm = selectedFilm~left(3) = '==>'
    noCine = selectedCinema~left(3) = '==>'

@@ -1617,12 +1617,6 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
         opts = "";
     }
 
-    // TODO right now the data table connection expects 3 (temp enum of
-    // winSingleSelectListBox) for a single select list box and 4 (winListBox ==
-    // 5) for a multi-select list box. So we are faking it here.  Need to fix
-    // the data table.
-    oodControl_t ctrl = winSingleSelectListBox;
-
     uint32_t style = WS_CHILD;
     style |= getCommonWindowStyles(opts, true, true);
 
@@ -1631,7 +1625,7 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
     if ( StrStrI(opts, "HSCROLL" ) != NULL ) style |= WS_HSCROLL;
     if ( StrStrI(opts, "SORT"    ) != NULL ) style |= LBS_STANDARD;
     if ( StrStrI(opts, "NOTIFY"  ) != NULL ) style |= LBS_NOTIFY;
-    if ( StrStrI(opts, "MULTI"   ) != NULL ) {style |= LBS_MULTIPLESEL; ctrl = winListBox;}
+    if ( StrStrI(opts, "MULTI"   ) != NULL ) style |= LBS_MULTIPLESEL;
     if ( StrStrI(opts, "MCOLUMN" ) != NULL ) style |= LBS_MULTICOLUMN;
     if ( StrStrI(opts, "PARTIAL" ) != NULL ) style |= LBS_NOINTEGRALHEIGHT;
     if ( StrStrI(opts, "SBALWAYS") != NULL ) style |= LBS_DISABLENOSCROLL;
@@ -1648,7 +1642,7 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
     // Connect the data attribute if we need to.
     if ( pcpbd->autoDetect )
     {
-        result = connectCreatedControl(context, pcpbd, rxID, id, attributeName, ctrl);
+        result = connectCreatedControl(context, pcpbd, rxID, id, attributeName, winListBox);
     }
     return result;
 }
@@ -1678,17 +1672,12 @@ RexxMethod8(int32_t, dyndlg_createComboBox, RexxObjectPtr, rxID, int, x, int, y,
         opts = "";
     }
 
-    // TODO right now the data table connection expects 0 (winEdit == 0) for a
-    // simple or drop down combo box and 5 (winComboBox == 5) for drop down list
-    // combo box.  So we are faking it here.  Need to fix the data table.
-    oodControl_t ctrl = winEdit;
-
     uint32_t style = WS_CHILD;
     style |= getCommonWindowStyles(opts, true, true);
 
-    if ( StrStrI(opts,"SIMPLE") ) style |= CBS_SIMPLE;
-    else if ( StrStrI(opts,"LIST") ) {style |= CBS_DROPDOWNLIST; ctrl = winComboBox;}
-    else style |= CBS_DROPDOWN;
+    if ( StrStrI(opts,"SIMPLE") )    style |= CBS_SIMPLE;
+    else if ( StrStrI(opts,"LIST") ) style |= CBS_DROPDOWNLIST;
+    else                             style |= CBS_DROPDOWN;
 
     if ( StrStrI(opts, "NOHSCROLL" ) == NULL ) style |= CBS_AUTOHSCROLL;
     if ( StrStrI(opts, "VSCROLL"   ) != NULL ) style |= WS_VSCROLL;
@@ -1705,7 +1694,7 @@ RexxMethod8(int32_t, dyndlg_createComboBox, RexxObjectPtr, rxID, int, x, int, y,
     // Connect the data attribute if we need to.
     if ( pcpbd->autoDetect && StrStrI(opts, "CAT") == NULL )
     {
-        result = connectCreatedControl(context, pcpbd, rxID, id, attributeName, ctrl);
+        result = connectCreatedControl(context, pcpbd, rxID, id, attributeName, winComboBox);
     }
     return result;
 }
@@ -1866,7 +1855,13 @@ RexxMethod10(RexxObjectPtr, dyndlg_addRadioButton, RexxObjectPtr, rxID, OPTIONAL
     {
         context->ArrayPut(newArgs, context->ArrayAt(args, 9), 9);
     }
-    return context->ForwardMessage(NULL, "createRadioButton", NULL, newArgs);
+
+    CSTRING msgName = "CREATECHECKBOX";
+    if ( strcmp("ADDRADIOBUTTON", context->GetMessageName()) == 0 )
+    {
+        msgName = "CREATERADIOBUTTON";
+    }
+    return context->ForwardMessage(NULL, msgName, NULL, newArgs);
 }
 
 RexxMethod8(RexxObjectPtr, dyndlg_addGroupBox, int, x, int, y, uint32_t, cx, uint32_t, cy, OPTIONAL_CSTRING, text,
@@ -2156,6 +2151,36 @@ RexxMethod1(RexxObjectPtr, dyndlg_stopDynamic_pvt, CSELF, pCSelf)
 #define CATEGORYDIALOG_CLASS  "CategoryDialog"
 
 
+bool getHwndCategoryPage(RexxMethodContext *c, RexxObjectPtr categoryDlg, uint32_t *pageID, HWND *hDlg)
+{
+    bool result = false;
+
+    RexxDirectoryObject catalog = (RexxDirectoryObject)c->SendMessage0(categoryDlg, "CATALOG");
+    RexxArrayObject handles = (RexxArrayObject)c->DirectoryAt(catalog, "handles");
+
+    if ( *pageID == 0 )
+    {
+        // Look up the active page number.
+        RexxObjectPtr rxPageID = c->DirectoryAt(catalog, "category");
+
+        if ( ! c->UnsignedInt32(rxPageID, pageID) )
+        {
+            // TODO an exception is probably needed.
+            goto done_out;
+        }
+    }
+    RexxObjectPtr rxHwnd = c->ArrayAt(handles, *pageID);
+    if ( rxHwnd != NULLOBJECT )
+    {
+        *hDlg = (HWND)string2pointer(c->ObjectToStringValue(rxHwnd));
+        result = true;
+    }
+
+done_out:
+    return result;
+}
+
+
 /**
  * Given a CategoryDialog, retrieves the dialog handle corresponding to the
  * given page ID.
@@ -2206,31 +2231,11 @@ bool getCategoryHDlg(RexxMethodContext *c, RexxObjectPtr categoryDlg, uint32_t *
         goto done_out;
     }
 
-    RexxDirectoryObject catalog = (RexxDirectoryObject)c->SendMessage0(categoryDlg, "CATALOG");
-    RexxArrayObject handles = (RexxArrayObject)c->DirectoryAt(catalog, "handles");
-
-    if ( *pageID == 0 )
-    {
-        // Look up the active page number.
-        RexxObjectPtr rxPageID = c->DirectoryAt(catalog, "category");
-
-        if ( ! c->UnsignedInt32(rxPageID, pageID) )
-        {
-            // TODO an exception is probably needed.
-            goto done_out;
-        }
-    }
-    RexxObjectPtr rxHwnd = c->ArrayAt(handles, *pageID);
-    if ( rxHwnd != NULLOBJECT )
-    {
-        *hDlg = (HWND)string2pointer(c->ObjectToStringValue(rxHwnd));
-        result = true;
-    }
+    result = getHwndCategoryPage(c, categoryDlg, pageID, hDlg);
 
 done_out:
     return result;
 }
-
 
 /**
  * Gets the current 'category page number' for a dialog.  By definition this is
@@ -2254,8 +2259,7 @@ uint32_t getCategoryNumber(RexxMethodContext *c, RexxObjectPtr oodDlg)
     {
         // Figure out the category number.  Since this *is* a category dialog,
         // there should be no way things could fail.
-        RexxDirectoryObject catalog = (RexxDirectoryObject)c->SendMessage0(oodDlg, "CATALOG");
-        RexxObjectPtr rxPageID = c->DirectoryAt(catalog, "category");
+        RexxObjectPtr rxPageID = c->SendMessage0(oodDlg, "CURRENTCATEGORY");
         c->UnsignedInt32(rxPageID, &category);
     }
     return category;
@@ -2306,10 +2310,106 @@ RexxMethod8(logical_t, catdlg_createCategoryDialog, int32_t, x, int32_t, y, uint
     RexxObjectPtr       rxPageID = c->DirectoryAt(catalog, "category");
 
     size_t i;
-    c->StringSize (rxPageID, &i);
+    c->StringSize(rxPageID, &i);
     c->ArrayPut(bases, pointer2string(context, pBase), i);
 
     return TRUE;
+}
+
+
+/** CategoryDialog::getControlDataPage()
+ *
+ *  Gets the 'data' from a single dialog control on a category page.
+ *
+ *  The original ooDialog implementation seemed to use the abstraction that the
+ *  state of a dialog control was its 'data' and this abstraction influenced the
+ *  naming of many of the instance methods.  I.e., getData() setData().
+ *
+ *  The method getControlDataPage() is, in the Rexx code, a general purpose
+ *  method that replaces getCategoryValue() after 4.0.0.  getCategoryValue()
+ *  forwards to getControlDataPage().  The old doc:
+ *
+ *  "The getValue method gets the value of a dialog item, regardless of its
+ *  type. The item must have been connected before."
+ *
+ *  @param  rxID  The resource ID of control.
+ *
+ *  @return  The 'data' value of the dialog control.  This of course varies
+ *           depending on the type of the dialog control.
+ *
+ *  @remarks  The control type is determined by the invoking method name.  When
+ *            the general purpose getControlDataPage + 3 name is passed to
+ *            oodName2controlType() it won't resolve and winUnknown will be
+ *            returned.  This is the value that signals getControlDataPage() to
+ *            do a data table look up by resource ID.  Otherwise, methods like
+ *            getEditDataPage() getListBoxDataPage() etc., resolve to the proper
+ *            dialog control type.  Edit, ListBox, etc..
+ */
+RexxMethod4(RexxObjectPtr, catdlg_getControlDataPage, RexxObjectPtr, rxID,  OPTIONAL_uint32_t, pageID,
+            NAME, msgName, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(context, pcpbd);
+        return TheNegativeOneObj;
+    }
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    HWND hDlg;
+    if ( ! getHwndCategoryPage(context, pcpbd->rexxSelf, &pageID, &hDlg) )
+    {
+        return TheNegativeOneObj;
+    }
+
+    oodControl_t ctrlType = oodName2controlType(msgName + 3);
+
+    return getControlData(context, pcpbd, id, hDlg, ctrlType);
+}
+
+
+/** CategoryDialog::setControlDataPage()
+ *
+ *  Sets the 'data' for a single dialog control on a category page.
+ *
+ *  @param  rxID    The resource ID of control.
+ *  @param  pageID  The ID (number) of the page the control is on.  If this
+ *                  argument is omitted, the current category page is assummed.
+ *
+ *  @return  0 for succes, -1 for a resource ID error, and 1 for other errors.
+ *
+ *  @see catdlg_getControlDataPage()
+ */
+RexxMethod5(int32_t, catdlg_setControlDataPage, RexxObjectPtr, rxID, CSTRING, data,  OPTIONAL_uint32_t, pageID,
+            NAME, msgName, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(context, pcpbd);
+        return -1;
+    }
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return -1;
+    }
+
+    HWND hDlg;
+    if ( ! getHwndCategoryPage(context, pcpbd->rexxSelf, &pageID, &hDlg) )
+    {
+        return -1;
+    }
+
+    oodControl_t ctrlType = oodName2controlType(msgName + 3);
+
+    return setControlData(context, pcpbd, id, data, hDlg, ctrlType);
 }
 
 

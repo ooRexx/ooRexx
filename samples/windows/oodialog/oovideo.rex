@@ -123,7 +123,7 @@
    return 0
 
 ::method Validate
-   tst = self~GetValue(1001)
+   tst = self~getControlData(1001)
    if tst <> "" then do
       call Play "wav\take.wav"
       return 1

@@ -159,6 +159,7 @@
    if id = -1 then return -1
    return HandleScrollBar("GP",self~getItem(id))
 
+-- TODO connectScrollBarEvent
 ::method connectScrollBar
    use arg id, progUp, progDn, progPos, min, max, pos, progPgUp, progPgDn, progTop, progBottom, progTrack, progEndSc
 
@@ -210,7 +211,7 @@
 ::method CombineELwithSB
    use arg elid, sbid, step, poscode
 
-   pos = self~GetEntryLine(elid)
+   pos = self~getEditData(elid)
    parse value self~GetSBRange(sbid) with min max
    if pos~DataType("N") = 0 then return
 
@@ -231,7 +232,7 @@
       pos = .DlgUtil~hiWord(poscode)
    end
    self~SetSBPos(sbid, pos)
-   self~SetEntryLine(elid,pos)
+   self~setEditData(elid,pos)
    return 0
 
 

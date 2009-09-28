@@ -40,10 +40,10 @@
 
 extern uint32_t        setDlgDataFromStem(RexxMethodContext *, pCPlainBaseDialog, RexxStemObject);
 extern uint32_t        putDlgDataInStem(RexxMethodContext *, pCPlainBaseDialog, RexxStemObject);
-extern RexxObjectPtr   internalGetItemData(RexxMethodContext *, pCPlainBaseDialog, uint32_t, HWND, int);
-extern uint32_t        internalSetItemData(RexxMethodContext *, pCPlainBaseDialog, uint32_t, CSTRING, HWND, int);
-extern uint32_t        addToDataTable(RexxMethodContext *, DIALOGADMIN *, int, uint32_t, uint32_t);
+extern RexxObjectPtr   getControlData(RexxMethodContext *, pCPlainBaseDialog, uint32_t, HWND, oodControl_t);
+extern int32_t         setControlData(RexxMethodContext *, pCPlainBaseDialog, uint32_t, CSTRING, HWND, oodControl_t);
+extern uint32_t        addToDataTable(RexxMethodContext *, DIALOGADMIN *, int, oodControl_t, uint32_t);
 extern RexxArrayObject getDataTableIDs(RexxMethodContext *, pCPlainBaseDialog, RexxObjectPtr);
-extern bool            DataAutodetection(DIALOGADMIN *);
+extern bool            doDataAutoDetection(RexxMethodContext *, DIALOGADMIN *);
 
 #endif

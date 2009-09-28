@@ -225,7 +225,7 @@
    do i = 1 to count
       self~AddListEntry(101, input.i)
    end
-   self~SetListLine(101, "")
+   self~setListBoxData(101, "")
 
 
    /* after execution it will return the value of the selected item */

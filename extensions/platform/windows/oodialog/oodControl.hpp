@@ -39,39 +39,13 @@
 #ifndef oodControl_Included
 #define oodControl_Included
 
-// Enum for the type of Windows dialog control.
-typedef enum
-{
-    winEdit                =  0,
-    winCheckBox            =  1,
-    winRadioButton         =  2,
-    winSingleSelectListBox =  3,
-    winListBox             =  4,
-    winComboBox            =  5,
-    winTreeView            =  6,
-    winListView            =  7,
-    winTrackBar            =  8,
-    winTab                 =  9,
-    winDateTimePicker      = 10,
-    winMonthCalendar       = 11,
-    winStatic              = 20,
-    winButton              = 21,
-    winGroupBox            = 22,
-    winScrollBar           = 23,
-    winProgressBar         = 24,
-
-    // Special values used by the data table connection, winSingleSelectListBox is also one.
-    winSimpleComboBox      = 40,
-    winNotAControl         = 42,
-
-    winUnknown             = 55
-} oodControl_t;
-
-
 extern uint32_t      listViewStyle(CSTRING opts, uint32_t style);
-extern TCHAR        *controlType2winName(oodControl_t control);
-extern bool          checkControlClass(HWND, oodControl_t);
-extern oodControl_t  oodName2controlType(CSTRING name);
+
+extern oodControl_t   control2controlType(HWND hControl);
+extern oodControl_t   winName2controlType(const char *className);
+extern const char    *controlType2winName(oodControl_t control);
+extern oodControl_t   oodName2controlType(CSTRING name);
+extern bool           isControlMatch(HWND, oodControl_t);
 
 
 #define ButtonAtom           0x0080

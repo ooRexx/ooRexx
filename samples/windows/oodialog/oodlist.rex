@@ -340,7 +340,7 @@ return
 
 /* check that at least the last name was entered */
 ::method Validate
-  if self~GetEntryLine(ID_LNAME) \= "" then
+  if self~getEditData(ID_LNAME) \= "" then
     return 1
   else
   do

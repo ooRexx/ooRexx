@@ -343,9 +343,9 @@
    icon = self~resolveIconId(icon)
    if sleeptime~Datatype('N') = 0 then sleeptime = 0   /* default is no sleep for execute */
    if arg(4, 'o') = 1 then nomodal = 0
-   if self~startIt(icon, nomodal) \= 0 then
-   do
-      if self~useStem then self~SetDataStem(dlgData.); else self~SetData
+   if self~startIt(icon, nomodal) \= 0 then do
+      if self~useStem then self~SetDataStem(dlgData.)
+      else self~SetData
       self~show(sh)
       do while self~automaticMethods~Items > 0
          p = self~automaticMethods~pull
@@ -357,14 +357,17 @@
       self~run(sleeptime)
       if self~initCode = 1 then do
          if self~useStem then self~GetDataStem(dlgData.)
-             self~GetData
+         self~GetData
       end
       if self~adm \= 0 then self~stopit
       return self~initCode
    end
-   else self~stopit
+   else do
+      self~stopit
+   end
    return 0
 
+::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
 ::method stopIt external "LIBRARY oodialog pbdlg_stopIt"
 ::method finalStopIt private
    use arg caller
@@ -403,10 +406,9 @@
 
 ::method get unguarded external "LIBRARY oodialog pbdlg_get"
 ::method getSelf unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
-::method isDialogActive unguarded external "LIBRARY oodialog pbdlg_isDialogActive"
 ::method getItem unguarded external "LIBRARY oodialog pbdlg_getItem"
 
-::method GetControlID unguarded
+::method getControlID unguarded
    use strict arg hWnd
    return WinAPI32Func("G", "ID", hWnd)
 
@@ -444,6 +446,21 @@
 ::method EnsureVisible unguarded
    return SendWinMsg("ANY", self~dlgHandle, "0x0402", 0, 0)
 
+   /* This method changes the title of a window */
+
+::method SetWindowTitle unguarded
+   use arg hwnd, text
+   return Wnd_Desktop("SETTXT", hwnd, text)
+
+::method WindowTitle unguarded
+   use arg handle
+   return Wnd_Desktop("TXT", handle)
+
+   /* This method returns the title of the item 'id'  */
+::method ItemTitle unguarded
+   use arg id
+   return Wnd_Desktop("TXT", self~getItem(id))
+
 
 -- Connect WM_HELP messages (F1) to a method.
 ::method connectHelp
@@ -463,6 +480,7 @@
    if id = -1 then return -1
    return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0x0000FFFF, 0,0)
 
+-- This is the LBN_SELCHANGE message
 ::method connectList
    use strict arg id, msgToRise
    if \ id~dataType("N") then id = self~resolveSymbolicId(id)
@@ -504,32 +522,29 @@
    if \ ret~datatype('O') then return .false
    else return ret
 
-/* The following methods are to connect an item of the data stem with */
-/* a data field of the dialog. The data stem will start with number 1 */
-/* and the dialog fields will be assigned in the same order they are  */
-/* called */
 
-::method connectEdit external "LIBRARY oodialog generic_connectControl"
-::method connectEntryLine external "LIBRARY oodialog generic_connectControl"
-::method connectComboBox external "LIBRARY oodialog generic_connectControl"
-::method connectCheckBox external "LIBRARY oodialog generic_connectControl"
-::method connectRadioButton external "LIBRARY oodialog generic_connectControl"
-::method connectListBox external "LIBRARY oodialog generic_connectControl"
-::method connectMultiListBox external "LIBRARY oodialog generic_connectControl"
-::method connectSeparator external "LIBRARY oodialog generic_connectControl"
+/* The following methods 'connect' a Windows dialog control with a 'data' attribute of the Rexx
+ * dialog object.  For each dialog control an attribute of the dialog object is created and an
+ * entry is added to the data table to 'connect' the control and the attribute.  When auto detection
+ * is on the 'data' (which is the value of the attribute) attribute is used to set the state of the
+ * control on start up of the dialog.  Likewise, when the windows dialog is closed, the 'data' (the state)
+ * of the control is used to set the value of the attribute.
+ */
 
-::method connectTreeView unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectTreeControl unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectListView unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectListControl unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectTrackBar unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectSliderControl unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectTab unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectTabControl unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectDateTimePicker unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectMonthCalendar unguarded external "LIBRARY oodialog generic_connectControl"
+::method connectCheckBox unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectRadioButton unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectEdit unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectComboBox unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectListBox unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectTreeView unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectListView unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectTrackBar unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectTab unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectDateTimePicker unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectMonthCalendar unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectSeparator unguarded external "LIBRARY oodialog pbdlg_connectControl"
 
-::method addAttribute protected
+::method addAttribute private
    use arg id, attributeName
    if arg(2,'o') = 1 then attributeName = "DATA"id~space(0)
    if id~DataType("N") = 0 then do
@@ -551,75 +566,53 @@
    return id
 
 
-   /* This method changes the title of a window */
-
-::method SetWindowTitle unguarded
-   use arg hwnd, text
-   return Wnd_Desktop("SETTXT", hwnd, text)
-
-::method WindowTitle unguarded
-   use arg handle
-   return Wnd_Desktop("TXT", handle)
-
-   /* This method returns the title of the item 'id'  */
-::method ItemTitle unguarded
-   use arg id
-   return Wnd_Desktop("TXT", self~getItem(id))
-
-   /* This changes the text of a static text control */
-
-::method SetStaticText unguarded
-   use arg id, data
-   return self~internalSetItemData(id, data, , 0)
-
 ::method setDlgDataFromStem private unguarded external "LIBRARY oodialog pbdlg_setDlgDataFromStem_pvt"
 ::method putDlgDataInStem private unguarded external "LIBRARY oodialog pbdlg_putDlgDataInStem_pvt"
 
-   /* This method loads the data attributes into the dialog */
-::method SetData unguarded
-   i = self~dataConnection~First
-   do while (i \= .NIL)
-      s = "self~" || self~dataConnection[i]
-      s = "InternDlgData."i || " = " || s
-      interpret(s)
-      i = self~dataConnection~Next(i)
+-- This method sets the 'data' of all the connected dialog controls using the value of the associated attribute.
+-- The Windows dialog controls are associated with with a data attribute of the Rexx dialog object through the
+-- connectXXX methods.  connectListBox(), connectComboBox(), etc..
+::method setData unguarded
+   id = self~dataConnection~first
+   do while (id \= .nil)
+      data = self~send(self~dataConnection[id])
+      InternDlgData.id = data
+      id = self~dataConnection~next(id)
    end
    return self~setDlgDataFromStem(InternDlgData.)
 
-   /* This method receives data from dialog and copies them to the */
-   /* associated attributes */
 
-::method GetData unguarded
+-- This method gets the 'data' of all the connected dialog controls and uses that data to set the value of the
+-- associated attribute.  See comment above for setData()
+::method getData unguarded
    self~putDlgDataInStem(InternDlgData.)
 
-   i = self~dataConnection~First
-   do while (i \= .NIL)
-      s = "self~" || self~dataConnection[i]
-      s = s ||"= InternDlgData."i
-      interpret(s)
-      i = self~dataConnection~Next(i)
+   id = self~dataConnection~first
+   do while (id \= .nil)
+      self~sendWith(self~dataConnection[id]'=', .array~of(InternDlgData.id))
+      id = self~dataConnection~next(id)
    end
 
 
-   /* This method returns an array that is filled with all the dialog  */
-   /* item's data */
+-- The method returns an array that contains the value of each of the attributes associated with a dialog
+-- control.  MM What good is this, you don't know which control is associated with each of the 'data' pieces?
+::method makeArray unguarded
 
-::method MakeArray unguarded
-
-   a = .Array~new(self~dataConnection~items)
-   i = self~dataConnection~First
-   do j=1 while (i \= .NIL)
-      cml="a["j"]=self~"self~dataConnection~at(i)
-      interpret( cml )
-      i = self~dataConnection~Next(i)
+   a = .array~new(self~dataConnection~items)
+   id = self~dataConnection~first
+   do j = 1 while (id \= .nil)
+      attributeName = self~dataConnection~at(id)
+      data = self~send(attributeName)
+      a[j] = data
+      id = self~dataConnection~next(id)
    end
    return a
 
 
-  /* This method sets all windows controls to the value of the given */
-  /* 'dataStem' stem variable */
-
-::method SetDataStem protected unguarded
+-- This method sets the 'data' of each of the connected dialog controls using the values of the specified stem.
+-- Each index of the stem should be the resource ID of a connected dialog control and the value at that index is
+-- the 'data' to set the control with.
+::method setDataStem unguarded
    use arg dataStem.
    if dataStem.~items == 0 then return 1
    do k over dataStem.
@@ -630,10 +623,12 @@
    end
    return self~setDlgDataFromStem(InternDlgData.)
 
-   /* This method gets the values of all the dialog's windows controls */
-   /* and copies them to 'dataStem'. */
 
-::method GetDataStem protected unguarded
+-- This method gets the 'data' of all of the connected dialog controls and sets the indexes of the specified
+-- stem with the 'data'.  The resource ID of each dialog control is used as an index and the 'data' of that
+-- dialog control is set as the value.  In addition, if the numeric resource ID has a matching symbolic ID in
+-- the constDir, then the symbolic ID is used as a second index and set with the 'data' of the the dialog control.
+::method getDataStem unguarded
    use arg dataStem.
    self~putDlgDataInStem(InternDlgData.)
    do k over InternDlgData.
@@ -641,6 +636,113 @@
       symbolicID = self~resolveNumericID(k)
       if symbolicID \== -1 then dataStem.symbolicID = InternDlgData.k
    end
+
+
+-- The following methods are used to get the 'data' from a single dialog control
+
+-- This method gets the 'data' of a dialog control. You don't have to know what kind of control it is
+-- if it has been 'connected' previously, i.e. connectTreeView(), connectTab(), etc..
+::method getControlData unguarded external "LIBRARY oodialog plbdlg_getControlData"
+::method getCheckBoxData unguarded external "LIBRARY oodialog plbdlg_getControlData"
+::method getRadioButtonData unguarded external "LIBRARY oodialog plbdlg_getControlData"
+::method getEditData unguarded external "LIBRARY oodialog plbdlg_getControlData"
+::method getListBoxData unguarded external "LIBRARY oodialog plbdlg_getControlData"
+::method getComboBoxData unguarded external "LIBRARY oodialog plbdlg_getControlData"
+
+-- This method gets the 'data' of a dialog control and uses that data to set the value of the attribute
+-- associated with the dialog control through one of the connectXXX methods.  I.e., connectEdit(),
+-- connectListBox(), etc..  It returns nothing to the caller, the action is setting the value of the
+-- associated attribute.
+::method getControlDataAttribute unguarded
+   use strict arg attributeName
+   id = self~dataConnection~First
+   do while (id \= .nil)
+      if self~dataConnection[id] = attributeName~space(0) then do
+         data = self~getControlData(id)
+         self~sendWith(attributeName'=', .array~of(data))
+         return
+      end
+      id = self~dataConnection~next(id)
+   end
+
+
+-- The following methods are used to set the 'data' of a single dialog item
+
+-- This method sets the 'data' of a dialog control. You don't have to know what kind of control it is
+-- if it has been 'connected' previously, i.e. connectTreeView(), connectTab(), etc..
+::method setControlData unguarded external "LIBRARY oodialog pbdlg_setControlData"
+
+::method setStaticData unguarded external "LIBRARY oodialog pbdlg_setControlData"
+::method setCheckBoxData unguarded external "LIBRARY oodialog pbdlg_setControlData"
+::method setRadioButtonData unguarded external "LIBRARY oodialog pbdlg_setControlData"
+::method setEditData unguarded external "LIBRARY oodialog pbdlg_setControlData"
+::method setListBoxData unguarded external "LIBRARY oodialog pbdlg_setControlData"
+::method setComboBoxData unguarded external "LIBRARY oodialog pbdlg_setControlData"
+
+-- This method sets the 'data' of a dialog control using the value of the attribute associated with
+-- the dialog control through one of the connectXXX methods.  I.e., connectEdit(), connectListBox()
+::method setControlDataAttribute unguarded
+   use strict arg attributeName
+   id = self~dataConnection~first
+   do while (id \= .nil)
+      if self~dataConnection[id] = attributeName~space(0) then do
+         data = self~send(attributeName)
+         return self~setControlData(id, data)
+      end
+      id = self~dataConnection~next(id)
+   end
+
+-- DEPRECATED
+::method connectEntryLine unguarded
+   forward message 'connectEdit'
+::method connectMultiListBox unguarded
+   forward message 'connectListBox'
+::method connectTreeControl unguarded
+   forward message 'connectTreeView'
+::method connectListControl unguarded
+   forward message 'connectListView'
+::method connectSliderControl unguarded
+   forward message 'connectTrackBar'
+::method connectTabControl unguarded
+   forward message 'connectTab'
+
+::method getEntryLine unguarded
+   forward message 'getEditData'
+::method getListLine unguarded
+   forward message 'getListBoxData'
+::method getComboLine unguarded
+   forward message 'getComboBoxData'
+::method getCheckBox unguarded
+   forward message 'getCheckBoxData'
+::method getRadioButton unguarded
+   forward message 'getRadioButtonData'
+::method getMultiList unguarded
+   forward message 'getListBoxData'
+::method getValue unguarded
+   forward message 'getControlData'
+::method getAttrib unguarded
+   forward message 'getControlDataAttribute'
+
+::method setStaticText unguarded
+   forward message 'setStaticData'
+::method setEntryLine unguarded
+   forward message 'setEditData'
+::method setListLine unguarded
+   forward message 'setListBoxData'
+::method setComboLine unguarded
+   forward message 'setComboBoxData'
+::method setCheckBox unguarded
+   forward message 'setCheckBoxData'
+::method setRadioButton unguarded
+   forward message 'setRadioButtonData'
+::method setMultiList unguarded
+   forward message 'setListBoxData'
+::method setValue unguarded
+   forward message 'setControlData'
+::method setAttrib unguarded
+   forward message 'setControlDataAttribute'
+
+
 
 
 ::method BoxMessage unguarded private
@@ -841,136 +943,6 @@
 ::method ListDrop unguarded
    use arg id
    return self~BoxMessage(id, 0x00000184, 0, 0)
-
-
-/* The following methods are to get the data entry from a single */
-/*   dialog item */
-
-::method internalGetItemData private unguarded external "LIBRARY oodialog pbdlg_internalGetItemData_pvt"
-
-   /* Returns the content of the entry line control with id 'id' */
-::method GetEntryLine unguarded
-   use arg id
-   return self~internalGetItemData(id, , 0)
-
-   /* Returns the content of the currently selected item in a list box */
-::method GetListLine unguarded
-   use arg id
-   return self~internalGetItemData(id, , 3)
-
-   /* Returns the content of the currently selected item in a combo box */
-::method GetComboLine unguarded
-   use arg id
-   return self~internalGetItemData(id, , 0)
-
-   /* Returns 1 if the check box 'id' is selected, that is it has a check */
-   /* mark. Otherwise it returns 0 */
-::method GetCheckBox unguarded
-   use arg id
-   return self~internalGetItemData(id, , 1)
-
-   /* Returns 1 if the radio button 'id' is selected, otherwise it returns 0 */
-::method GetRadioButton unguarded
-   use arg id
-   return self~internalGetItemData(id, , 2)
-
-   /* This method can be applied to a multiple choice list box. */
-   /* It returns a string containing all the selected items' index. */
-   /* The numbers are seperated by spaces. You can parse it using 'parse var' */
-::method GetMultiList unguarded
-   use arg id
-   return self~internalGetItemData(id, , 4)
-
-   /* This method gets the value of a dialog item. You don't have to know */
-   /* what kind of item it is when it has been connected before */
-::method GetValue unguarded
-    use arg id
-    return self~internalGetItemData(id)
-
-   /* Sets 'attributeName' with the value of the associated dialog field. */
-   /* Returns  nothing! */
-::method GetAttrib unguarded
-   use arg attributeName
-   i = self~dataConnection~First
-   do while (i \= .NIL)
-      if self~dataConnection[i] = attributeName~space(0) then
-      do
-         s = "self~"attributeName"= self~GetValue("i")"
-         interpret(s)
-         return
-      end
-      i = self~dataConnection~Next(i)
-   end
-
-
- /* The following methods are to set the data entry of a single */
- /* dialog item */
-
-::method internalSetItemData private unguarded external "LIBRARY oodialog pbdlg_internalSetItemData_pvt"
-
-   /* Puts 'dataString' into the entry line control 'id' */
-
-::method SetEntryLine unguarded
-   use arg id, data
-   return self~internalSetItemData(id, data, , 0)
-
-   /* Puts 'dataString' into the list box 'id' */
-
-::method SetListLine unguarded
-   use arg id, data
-   return self~internalSetItemData(id, data, , 3)
-
-   /* Puts 'dataString' into the combo box 'id' */
-
-::method SetComboLine unguarded
-   use arg id, data
-   return self~internalSetItemData(id, data, , 0)
-
-   /* Puts a check mark to the check box if 'data' equals 1 */
-   /* and remove the check mark if 'data' equals 0 */
-
-::method SetCheckBox unguarded
-   use arg id, data
-   return self~internalSetItemData(id, data, , 1)
-
-   /* Checks the radio button if 'data' equals 1 */
-   /* and unchecks it if 'data' equals 0 */
-
-::method SetRadioButton unguarded
-   use arg id, data
-   return self~internalSetItemData(id, data, , 2)
-
-   /* Use this method to select one ore more lines in a multiple choice */
-   /* list box. Provide the index of all lines you want to select */
-   /* (seperated by blanks) in argument 'data'. */
-
-::method SetMultiList unguarded
-   use arg id, data
-   return self~internalSetItemData(id, data, , 4)
-
-   /* This method sets the value of a dialog item. You don't have */
-   /* to know what kind of item it is if it has been connected before */
-
-::method SetValue unguarded
-   use arg id, data
-   return self~internalSetItemData(id, data)
-
-   /* Put the value of 'attributeName' into the associated dialog field */
-
-::method SetAttrib unguarded
-   use arg attributeName
-   i = self~dataConnection~First
-   do while (i \= .NIL)
-      if self~dataConnection[i] = attributeName~space(0) then
-      do
-         s = "self~SetValue("i", self~"attributeName")"
-         interpret(s)
-         return
-      end
-      i = self~dataConnection~Next(i)
-   end
-
-
 
    /* This method will handle one dialog message synchronously */
 

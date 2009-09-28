@@ -153,7 +153,10 @@ extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
 extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
-extern void       ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
+extern void ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
+extern void noWindowsDialogException(RexxMethodContext *c, pCPlainBaseDialog pcpbd);
+extern inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
+
 extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
 extern uint32_t   oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
 extern bool       oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
@@ -200,8 +203,6 @@ extern BUTTONTYPE getButtonInfo(HWND, PBUTTONSUBTYPE, DWORD *);
 #define GET_HANDLE(p) string2pointer(p)
 #define GET_HWND(p)   ((HWND)string2pointer(p))
 #define GET_POINTER(p) string2pointer(p)
-
-inline void failedToRetrieveDlgAdmException(RexxThreadContext *, RexxObjectPtr);
 
 inline void *string2pointer(CONSTRXSTRING *string) { return string2pointer(string->strptr); }
 inline void *string2pointer(CONSTRXSTRING &string) { return string2pointer(string.strptr); }

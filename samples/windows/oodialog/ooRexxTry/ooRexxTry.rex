@@ -838,8 +838,8 @@ return 0
 ::class help_dialog subclass userdialog inherit AdvancedControls MessageExtensions
 ::method Init
     self~init:super
-    lp = .dx + (.dw / 2) - 50
-    tp = .dy + (.dh / 2) - 30
+    lp = (.dx + (.dw / 2) - 50)~format( , 0)
+    tp = (.dy + (.dh / 2) - 30)~format( , 0)
     rc = self~Create(lp,tp,100,60,.title)
     self~InitCode = (rc=0)
 
@@ -902,8 +902,8 @@ return 0
 ::class settings_dialog subclass userdialog inherit AdvancedControls MessageExtensions
 ::method Init
     self~init:super
-    lp = .dx + (.dw / 2) - 50
-    tp = .dy + (.dh / 2) - 30
+    lp = (.dx + (.dw / 2) - 50)~format( , 0)
+    tp = (.dy + (.dh / 2) - 30)~format( , 0)
     rc = self~Create(lp,tp,100,60,.title)
     self~InitCode = (rc=0)
 

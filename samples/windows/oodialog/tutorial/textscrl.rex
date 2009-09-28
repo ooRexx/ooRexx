@@ -60,22 +60,22 @@ CleanUp:
 
 ::requires "OODIALOG.CLS"
 
-::class MyDialogClass subclass UserDialog
+::class 'MyDialogClass' subclass UserDialog
 
-::method Init
+::method init
     ret = self~init:super;
-    if ret = 0 then ret = self~Load("Textscrl.RC", 100)
+    if ret = 0 then ret = self~load("Textscrl.RC", 100)
     if ret = 0 then do
-        self~fontname = "Arial"
+        self~data13 = "Arial"
         self~text = "This is a scrolling text demonstration"
-        self~fontsize = 24
-        self~ConnectButton(11, "Display")
+        self~data14 = 24
+        self~connectButton(11, "Display")
     end
-    self~InitCode = ret
+    self~initCode = ret
     return ret
 
 
-::method Display
-    self~GetData
-    self~ScrollInButton(10, self~text, self~fontname, self~fontsize, "BOLD")
+::method display
+    self~getData
+    self~scrollInButton(10, self~text, self~data13, self~data14, "BOLD")
 

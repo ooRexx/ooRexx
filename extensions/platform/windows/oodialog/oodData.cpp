@@ -64,9 +64,10 @@
 
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodControl.hpp"
 #include "oodData.hpp"
 
-static inline int searchDataTable(DIALOGADMIN *dlgAdm, uint32_t id)
+static inline oodControl_t searchDataTable(DIALOGADMIN *dlgAdm, uint32_t id)
 {
     if ( dlgAdm->DataTab != NULL )
     {
@@ -77,10 +78,10 @@ static inline int searchDataTable(DIALOGADMIN *dlgAdm, uint32_t id)
         }
         if ( ndx < dlgAdm->DT_size )
         {
-            return dlgAdm->DataTab[ndx].typ;
+            return dlgAdm->DataTab[ndx].type;
         }
     }
-    return -1;
+    return winUnknown;
 }
 
 /* The assumption is that if UnsignedInt32() fails, number remains unchanged. */
@@ -91,21 +92,57 @@ static inline uint32_t dlgDataToNumber(RexxMethodContext *c, RexxObjectPtr data)
     return number;
 }
 
-/*
- * The manualCheckRadioButton() function is used to check one radio button
- * within a WS_GROUP group and uncheck all the others.
- */
+/* Determine if a combo box is a drop down list combo box.  */
+inline bool isDropDownList(HWND hDlg, uint32_t id)
+{
+    return ((GetWindowLong(GetDlgItem(hDlg, id), GWL_STYLE) & CBS_DROPDOWNLIST) == CBS_DROPDOWNLIST);
+}
 
+/* Determine if a list box is a single selection list box.  */
+inline bool isSingleSelectionListBox(HWND hDlg, uint32_t id)
+{
+    return ((GetWindowLong(GetDlgItem(hDlg, id), GWL_STYLE) & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)) == 0);
+}
+
+/* Is the control type one used with a data attribute. */
+inline bool isDataAttributeControl(oodControl_t control)
+{
+    switch ( control )
+    {
+        case winEdit :
+        case winCheckBox :
+        case winRadioButton :
+        case winComboBox :
+        case winListBox :
+        case winTreeView :
+        case winListView :
+        case winTrackBar :
+        case winTab :
+        case winDateTimePicker :
+        case winMonthCalendar :
+            return true;
+
+        default :
+            return false;
+    }
+}
+
+/* Does the item in the data table have the WS_GROUP style. */
 static inline bool hasGroupStyle(HWND hwnd, DIALOGADMIN *dlgAdm, uint32_t index)
 {
     return ((GetWindowLong(GetDlgItem(hwnd, dlgAdm->DataTab[index + 1].id), GWL_STYLE) & WS_GROUP) == WS_GROUP);
 }
 
+/* Is control 1 in the same dialog as control 2. Needed for CategoryDialogs. */
 static inline bool isInSameDlg(DIALOGADMIN *dlgAdm, uint32_t control1, uint32_t control2)
 {
     return (dlgAdm->DataTab[control1].category == dlgAdm->DataTab[control2].category);
 }
 
+/*
+ * The manualCheckRadioButton() function is used to check one radio button
+ * within a WS_GROUP group and uncheck all the others.
+ */
 static bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULONG value)
 {
    LONG beg, en, ndx, i;
@@ -127,7 +164,7 @@ static bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULON
        // Not found.
        return false;
    }
-   if ( dlgAdm->DataTab[ndx].typ != 2 )
+   if ( dlgAdm->DataTab[ndx].type != winRadioButton )
    {
        // The one to check is not a radio button.
        return false;
@@ -155,7 +192,7 @@ static bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULON
    ordered = true;
    for ( i = beg; i < en; i++ )
    {
-       if ( dlgAdm->DataTab[i].id >= dlgAdm->DataTab[i+1].id || dlgAdm->DataTab[i].typ != 2 )
+       if ( dlgAdm->DataTab[i].id >= dlgAdm->DataTab[i+1].id || dlgAdm->DataTab[i].type != winRadioButton )
        {
            ordered = false;
            break;
@@ -172,7 +209,7 @@ static bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULON
        // Uncheck all radio buttons ...
        for ( i = beg; i <= en; i++ )
        {
-           if ( dlgAdm->DataTab[i].typ == 2 )
+           if ( dlgAdm->DataTab[i].type == winRadioButton )
            {
                CheckDlgButton(hW, dlgAdm->DataTab[i].id, 0);
            }
@@ -184,117 +221,180 @@ static bool manualCheckRadioButton(DIALOGADMIN * dlgAdm, HWND hW, ULONG id, ULON
 }
 
 
-static void getMultiListBoxSelections(HWND hW, ULONG id, char * data)
+static bool getMultiListBoxSelections(HWND hDlg, uint32_t id, char * data)
 {
-    INT sel[1500];
-    CHAR buffer[NR_BUFFER];
-    LRESULT i;
+    int sel[1500];
+    char buffer[NR_BUFFER];
 
-    /* 1500 elements should not be a problem because data is 8 KB (1500 * approx. 5 Byte < 8 KB) */
-    i = SendDlgItemMessage(hW, id, LB_GETSELITEMS, 1500, (LPARAM)sel);
     data[0] = '\0';
-    if (i == LB_ERR)
+
+    // 1500 elements should not be a problem because the data buffer size is 8
+    // KB and 1500 times approximately 5 Bytes is less than 8 KB.
+    LRESULT result = SendDlgItemMessage(hDlg, id, LB_GETSELITEMS, 1500, (LPARAM)sel);
+    if ( result == LB_ERR )
     {
-        return;
+        return false;
     }
-    for (LRESULT j=0; j < i; j++)
+    for ( LRESULT j = 0; j < result; j++ )
     {
         strcat(data, itoa(sel[j]+1, buffer, 10));
         strcat(data, " ");
-    }
-}
-
-
-static bool setMultiListBoxSelections(HWND hW, ULONG id, const char * data)
-{
-    CHAR buffer[NR_BUFFER];
-    const char * p;
-
-    p = data;
-
-    LRESULT i = SendDlgItemMessage(hW, id, LB_GETCOUNT, (WPARAM) 0, (LPARAM) 0);
-    for (LRESULT j=0; j<i; j++)
-    {
-        SendDlgItemMessage(hW, id, LB_SETSEL, (WPARAM) FALSE, (LPARAM) j);
-    }
-
-    i = 0;
-    while ((p) && (*p))
-    {
-        buffer[0] = '\0';
-        size_t j = 0;
-        while (p && (j<NR_BUFFER) && (*p != ' ') && (*p != '\0')) buffer[j++] = *p++;
-        buffer[j] = '\0';
-        if (atoi(buffer) > 0)
-        {
-            i = SendDlgItemMessage(hW, id, LB_SETSEL, TRUE, (LPARAM)atoi(buffer)-1);
-            if (i == LB_ERR) return false;
-        }
-        if (*p) p++;
     }
     return true;
 }
 
 
-static int getListBoxData(HWND hwnd, uint32_t itemID, char *data)
+static bool setMultiListBoxSelections(HWND hDlg, ULONG id, const char * data)
 {
-    int i = (int)SendDlgItemMessage(hwnd, itemID, LB_GETCURSEL, 0, 0);
-    if ( i != LB_ERR && (SendDlgItemMessage(hwnd, itemID, LB_GETTEXTLEN, i, 0) < DATA_BUFFER) )
+    char buffer[NR_BUFFER];
+    const char * p = data;
+
+    // First set all items to not selected.
+    LRESULT i = SendDlgItemMessage(hDlg, id, LB_GETCOUNT, 0, 0);
+    for ( LRESULT j = 0; j < i; j++ )
     {
-        return (int)SendDlgItemMessage(hwnd, itemID, LB_GETTEXT, i, (LPARAM)data);
+        SendDlgItemMessage(hDlg, id, LB_SETSEL, (WPARAM)FALSE, (LPARAM)j);
     }
-    return i;                                                                                                                               \
+
+    // Now set the items passed to us as selected.
+    while ( (p) && (*p) )
+    {
+        buffer[0] = '\0';
+        size_t j = 0;
+        while ( p && (j < NR_BUFFER) && (*p != ' ') && (*p != '\0') )
+        {
+            buffer[j++] = *p++;
+        }
+        buffer[j] = '\0';
+
+        if ( atoi(buffer) > 0 )
+        {
+            if ( SendDlgItemMessage(hDlg, id, LB_SETSEL, TRUE, (LPARAM)atoi(buffer) - 1) == LB_ERR )
+            {
+                return false;
+            }
+        }
+        if ( *p )
+        {
+            p++;
+        }
+    }
+    return true;
 }
 
-static uint32_t setListBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
+
+static bool getListBoxData(HWND hwnd, uint32_t itemID, char *data)
 {
-    int i = (int)SendDlgItemMessage(hwnd, itemID, LB_FINDSTRING, 0, (LPARAM)itemText);
-    if ( i != LB_ERR)
-    {                                                                                                                                  \
-       i = (int)SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, i, 0);
-       if ( i == LB_ERR )
-       {                                                                                                                            \
-           SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, 0, 0);
-       }
-    }                                                                                                                                   \
+    if ( isSingleSelectionListBox(hwnd, itemID) )
+    {
+        LRESULT result = SendDlgItemMessage(hwnd, itemID, LB_GETCURSEL, 0, 0);
+        if ( result != LB_ERR && (SendDlgItemMessage(hwnd, itemID, LB_GETTEXTLEN, result, 0) < DATA_BUFFER) )
+        {
+            result = SendDlgItemMessage(hwnd, itemID, LB_GETTEXT, result, (LPARAM)data);
+        }
+        return (result != LB_ERR);
+    }
     else
     {
-        SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, 0, 0);
+        return getMultiListBoxSelections(hwnd, itemID, data);
     }
-    return 0;
 }
 
-/*
- * The following functions are to get the value of a combo box that has the
- * CBS_DROPDOWNLIST flag enabled and behaves like a list box.
- */
-
-static int getComboBoxData(HWND hwnd, uint32_t itemID, char *data)
+static bool setListBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
 {
-    int i = (int)SendDlgItemMessage(hwnd, itemID, CB_GETCURSEL, 0, 0);
-    if ( i != LB_ERR && (SendDlgItemMessage(hwnd, itemID, CB_GETLBTEXTLEN, i, 0) < DATA_BUFFER) )
+    if ( isSingleSelectionListBox(hwnd, itemID) )
     {
-        return (int)SendDlgItemMessage(hwnd, itemID, CB_GETLBTEXT, i, (LPARAM)data);
+        LRESULT result = SendDlgItemMessage(hwnd, itemID, LB_FINDSTRING, 0, (LPARAM)itemText);
+        if ( result != LB_ERR)
+        {
+           result = SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, result, 0);
+        }
+        if ( result == LB_ERR )
+        {
+            SendDlgItemMessage(hwnd, itemID, LB_SETCURSEL, 0, 0);
+        }
+        return result != LB_ERR;
     }
-    return i;                                                                                                                                      \
+    else
+    {
+        return setMultiListBoxSelections(hwnd, itemID, itemText);
+    }
 }
 
+/**
+ * Gets the text in the selection field of a combo box.
+ *
+ * For drop down list combo boxes, this is the same as the current selection.
+ *
+ * However, for simple and drop down combo boxes, the text could be text the
+ * user typed in and there may be no current selection.
+ *
+ * @param hwnd    Window handle of the dialog.
+ * @param itemID  Resource ID of the combo box.
+ * @param data    Buffer to return the text in.
+ *
+ * @return True on success, otherwise false.
+ *
+ * @remarks The text in the selection field could be the empty string and / or
+ *          there might not be a current selection.  In these cases false is
+ *          returned and the caller returns the empty string to Rexx.  The empty
+ *          string is the 'correct' result in these cases.
+ */
+static bool getComboBoxData(HWND hwnd, uint32_t itemID, char *data)
+{
+    LRESULT result = 0;
+
+    if ( isDropDownList(hwnd, itemID) )
+    {
+        result = SendDlgItemMessage(hwnd, itemID, CB_GETCURSEL, 0, 0);
+        if ( result != CB_ERR && (SendDlgItemMessage(hwnd, itemID, CB_GETLBTEXTLEN, result, 0) < DATA_BUFFER) )
+        {
+            result = SendDlgItemMessage(hwnd, itemID, CB_GETLBTEXT, result, (LPARAM)data);
+        }
+    }
+    else
+    {
+        if ( GetDlgItemText(hwnd, itemID, data, (DATA_BUFFER-1)) == 0 )
+        {
+            result = CB_ERR;
+        }
+    }
+    return result != CB_ERR;
+}
+
+/**
+ * Sets the text in the selection field of a combo box.
+ *
+ * For drop down list combo boxes this is the same as the current selection.
+ *
+ * However, since simple and drop down combo boxes can have text that the user
+ * types in, that is not one of the list items, for these combo boxes the text
+ * is just set.
+ *
+ * @param hwnd      Dialog window handle.
+ * @param itemID    Combo box resource id.
+ * @param itemText  The text to set.
+ *
+ * @return 0 on success, otherwise 1.
+ */
 static uint32_t setComboBoxData(HWND hwnd, uint32_t itemID, CSTRING itemText)
 {
-    int index = (int)SendDlgItemMessage(hwnd, itemID, CB_FINDSTRING, 0, (LPARAM)itemText);
-    if ( index != LB_ERR )
-    {                                                                                                                                  \
-        index = (int)SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, index, 0);
-        if ( index == CB_ERR )
-        {                                                                                                                            \
-            SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, 0, 0);
-        }
-    }                                                                                                                                   \
-    else
+    if ( isDropDownList(hwnd, itemID) )
     {
-        SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, 0, 0);
+        LRESULT index = SendDlgItemMessage(hwnd, itemID, CB_FINDSTRING, 0, (LPARAM)itemText);
+        if ( index != LB_ERR )
+        {
+            index = SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, index, 0);
+        }
+        if ( index == CB_ERR )
+        {
+            SendDlgItemMessage(hwnd, itemID, CB_SETCURSEL, 0, 0);
+            return 1;
+        }
+        return 0;
     }
-    return 0;
+
+    return (SetDlgItemText(hwnd, itemID, itemText) ? 0 : 1);
 }
 
 
@@ -320,7 +420,7 @@ static bool setMonthCalendarData(HWND hDlg, const char *data, int ctrlID)
 }
 
 
-static bool getTreeData(HWND hW, char * ldat, INT item)
+static bool getTreeViewData(HWND hW, char * ldat, INT item)
 {
    TV_ITEM tvi;
    tvi.hItem = TreeView_GetNextItem(GetDlgItem(hW, item), NULL, TVGN_CARET);
@@ -335,7 +435,7 @@ static bool getTreeData(HWND hW, char * ldat, INT item)
 }
 
 // TODO this seems like it might be missing a return true.
-static bool setTreeData(HWND hW, const char * ldat, INT item)
+static bool setTreeViewData(HWND hW, const char * ldat, INT item)
 {
    TV_ITEM tvi;
    CHAR data[DATA_BUFFER];
@@ -376,7 +476,7 @@ static bool setTreeData(HWND hW, const char * ldat, INT item)
 }
 
 
-static bool getListData(HWND hW, char * ldat, INT item)
+static bool getListViewData(HWND hW, char * ldat, INT item)
 {
    LONG it = -1, cnt, j;
    CHAR buffer[NR_BUFFER];
@@ -402,7 +502,7 @@ static bool getListData(HWND hW, char * ldat, INT item)
 }
 
 
-static bool setListData(HWND hW, const char * ldat, INT item)
+static bool setListViewData(HWND hW, const char * ldat, INT item)
 {
    INT i, j;
    CHAR buffer[NR_BUFFER];
@@ -428,37 +528,40 @@ static bool setListData(HWND hW, const char * ldat, INT item)
 }
 
 
-static bool getSliderData(HWND hW, char * ldat, INT item)
+static bool getTrackBarData(HWND hW, char * ldat, INT item)
 {
    ltoa((long)SendMessage(GetDlgItem(hW, item), TBM_GETPOS, 0,0), ldat, 10);
    return true;
 }
 
 
-static bool setSliderData(HWND hW, const char * ldat, INT item)
+static bool setTrackBarData(HWND hW, const char * ldat, INT item)
 {
    SendMessage(GetDlgItem(hW, item), TBM_SETPOS, TRUE, atol(ldat));
    return true;
 }
 
 
-static bool getTabCtrlData(HWND hW, char * ldat, INT item)
+static bool getTabData(HWND hW, char * ldat, INT item)
 {
    TC_ITEM tab;
    LONG cur;
    HWND iw = GetDlgItem(hW, item);
 
    cur = TabCtrl_GetCurSel(iw);
-   if (cur == -1) return FALSE;
+   if ( cur == -1 )
+   {
+       return false;
+   }
 
    tab.mask = TCIF_TEXT;
    tab.pszText = ldat;
-   tab.cchTextMax = DATA_BUFFER-1;
+   tab.cchTextMax = DATA_BUFFER - 1;
    return TabCtrl_GetItem(iw, cur, &tab) ? true : false;
 }
 
 
-static bool setTabCtrlDatas(HWND hW, const char * ldat, INT item)
+static bool setTabData(HWND hW, const char * ldat, INT item)
 {
    TC_ITEM tab;
    LONG cnt, i = 0;
@@ -466,15 +569,21 @@ static bool setTabCtrlDatas(HWND hW, const char * ldat, INT item)
    HWND iw = GetDlgItem(hW, item);
 
    cnt = TabCtrl_GetItemCount(iw);
-   if (!cnt) return false;
+   if ( cnt == 0 )
+   {
+       return false;
+   }
 
-   while (i<cnt)
+   while ( i < cnt )
    {
        tab.mask = TCIF_TEXT;
        tab.pszText = data;
-       tab.cchTextMax = DATA_BUFFER-1;
-       if (!TabCtrl_GetItem(iw, i, &tab)) return false;
-       if (!stricmp(tab.pszText, ldat))
+       tab.cchTextMax = DATA_BUFFER - 1;
+       if ( ! TabCtrl_GetItem(iw, i, &tab) )
+       {
+           return false;
+       }
+       if ( stricmp(tab.pszText, ldat) == 0 )
        {
            return (TabCtrl_SetCurSel(iw, i) == -1 ? false : true);
        }
@@ -484,27 +593,16 @@ static bool setTabCtrlDatas(HWND hW, const char * ldat, INT item)
 }
 
 
-RexxObjectPtr internalGetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t id, HWND hDlg, int ctrlType)
+RexxObjectPtr getControlData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t id, HWND hDlg, oodControl_t ctrlType)
 {
-    if ( pcpbd->dlgAdm == NULL || pcpbd->hDlg == NULL )
-    {
-        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return 0;
-    }
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
 
-    DIALOGADMIN *dlgAdm = seekDlgAdm(pcpbd->hDlg);
-    if ( dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return 0;
-    }
-
-    if ( ctrlType == -1 )
+    if ( ctrlType == winUnknown )
     {
         ctrlType = searchDataTable(dlgAdm, id);
-        if ( ctrlType == -1 )
+        if ( ctrlType == winUnknown )
         {
-            ctrlType = 0;
+            ctrlType = winEdit;
         }
     }
 
@@ -514,62 +612,67 @@ RexxObjectPtr internalGetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd,
 
     switch ( ctrlType )
     {
-        case 0:
-        {
+        case winEdit:
+        case winStatic:
             // We don't check for errors, result will end up being the "right"
             // thing and we just return it.
             rxGetWindowText(c, GetDlgItem(hDlg, id), &result);
             return result;
-        }
-        case 1:
-        case 2:
+
+        case winRadioButton:
+        case winCheckBox:
             return c->UnsignedInt32(IsDlgButtonChecked(hDlg, id));
-        case 3:
-            if ( getListBoxData(hDlg, id, data) == LB_ERR )
+
+        case winListBox:
+            if ( ! getListBoxData(hDlg, id, data) )
             {
                 return result;
             }
             break;
-        case 4:
-            getMultiListBoxSelections(hDlg, id, data);
-            break;
-        case 5:
-            if ( getComboBoxData(hDlg, id, data) == CB_ERR )
+
+        case winComboBox:
+            if ( ! getComboBoxData(hDlg, id, data) )
             {
                 return result;
             }
             break;
-        case 6:
-            if ( ! getTreeData(hDlg, data, id) )
+
+        case winTreeView:
+            if ( ! getTreeViewData(hDlg, data, id) )
             {
                 return result;
             }
             break;
-        case 7:
-            if ( ! getListData(hDlg, data, id) )
+
+        case winListView:
+            if ( ! getListViewData(hDlg, data, id) )
             {
                 return result;
             }
             break;
-        case 8:
-            if ( ! getSliderData(hDlg, data, id) )
+
+        case winTrackBar:
+            if ( ! getTrackBarData(hDlg, data, id) )
             {
                 return result;
             }
             break;
-        case 9:
-            if ( ! getTabCtrlData(hDlg, data, id) )
+
+        case winTab:
+            if ( ! getTabData(hDlg, data, id) )
             {
                 return result;
             }
             break;
-        case 10:
+
+        case winDateTimePicker:
             if ( ! getDateTimeData(hDlg, data, id) )
             {
                 return result;
             }
             break;
-        case 11:
+
+        case winMonthCalendar:
             if ( ! getMonthCalendarData(hDlg, data, id) )
             {
                 return result;
@@ -583,57 +686,84 @@ RexxObjectPtr internalGetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd,
     return c->String(data);
 }
 
-
-uint32_t internalSetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t id, CSTRING data,
-                             HWND hDlg, int ctrlType)
+/**
+ * Retrieves the dialog administration block
+ *
+ *           TODO THIS FUNCTION MUST BE RETHOUGHT.
+ *  The original code needed to find the correct admin block from classic
+ *  external functions, which had limited information available to them.  Now,
+ *  the admin block is placed in the CSelf of each dialog object.  There can be
+ *  no mistake about which admin block goes with which dialog object.
+ *
+ * @param c
+ * @param pcpbd
+ *
+ * @return DIALOGADMIN*
+ */
+DIALOGADMIN *getDialogAdminBlock(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
 {
     if ( pcpbd->dlgAdm == NULL || pcpbd->hDlg == NULL )
     {
         failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return 0;
+        return NULL;
     }
 
     DIALOGADMIN *dlgAdm = seekDlgAdm(pcpbd->hDlg);
     if ( dlgAdm == NULL )
     {
         failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return 0;
+        return NULL;
     }
+    return dlgAdm;
+}
 
-    if ( ctrlType == -1 )
+/**
+ *
+ * @param c
+ * @param pcpbd
+ * @param id
+ * @param data
+ * @param hDlg
+ * @param ctrlType
+ *
+ * @return uint32_t
+ */
+int32_t setControlData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint32_t id, CSTRING data,
+                       HWND hDlg, oodControl_t ctrlType)
+{
+    if ( ctrlType == winUnknown )
     {
-        ctrlType = searchDataTable(dlgAdm, id);
-        if ( ctrlType == -1 )
+        ctrlType = searchDataTable(pcpbd->dlgAdm, id);
+        if ( ctrlType == winUnknown )
         {
-            ctrlType = 0;
+            ctrlType = winEdit;
         }
     }
 
     switch ( ctrlType )
     {
-        case 0:
+        case winEdit:
+        case winStatic:
             return (SetDlgItemText(hDlg, id, data) ? 0 : 1);
-        case 1:
+        case winCheckBox:
             return (CheckDlgButton(hDlg, id, atoi(data)) ? 0 : 1);
-        case 2:
-            return (manualCheckRadioButton(dlgAdm, hDlg, id, atoi(data)) ? 0 : 1);
-        case 3:
-            return setListBoxData(hDlg, id, data);
-        case 4:
-            return (setMultiListBoxSelections(hDlg, id, data) ? 0 : 1);
-        case 5:
+        case winRadioButton:
+            return (manualCheckRadioButton(pcpbd->dlgAdm, hDlg, id, atoi(data)) ? 0 : 1);
+        case winListBox:
+            return (setListBoxData(hDlg, id, data) ? 0 : 1);
+        case winComboBox:
             return setComboBoxData(hDlg, id, data);
-        case 6:
-            return (setTreeData(hDlg, data, id) ? 0 : 1);
-        case 7:
-            return (setListData(hDlg, data, id) ? 0 : 1);
-        case 8:
-            return (setSliderData(hDlg, data, id) ? 0 : 1);
-        case 9:
-            return (setTabCtrlDatas(hDlg, data, id) ? 0 : 1);
-        case 10:
+        case winTreeView:
+            return (setTreeViewData(hDlg, data, id) ? 0 : 1);
+        case winListView:
+            return (setListViewData(hDlg, data, id) ? 0 : 1);
+        case winTrackBar:
+            return (setTrackBarData(hDlg, data, id) ? 0 : 1);
+        case winTab:
+            return (setTabData(hDlg, data, id) ? 0 : 1);
+        case winDateTimePicker:
             return (setDateTimeData(hDlg, data, id) ? 0 : 1);
-        case 11:
+        case winMonthCalendar:
             return (setMonthCalendarData(hDlg, data, id) ? 0 : 1);
         default:
             return 1;
@@ -642,8 +772,7 @@ uint32_t internalSetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint
 
 
 /**
- * The implementation for PlainBaseDialog::setDlgDataFromStem() which is a private
- * method.
+ * The implementation for PlainBaseDialog::setDlgDataFromStem().
  *
  * @param c              Method context we are operating in.
  * @param pcpbd          Pointer to the PlainBaseDialog CSelf.
@@ -653,33 +782,23 @@ uint32_t internalSetItemData(RexxMethodContext *c, pCPlainBaseDialog pcpbd, uint
  */
 uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStemObject internDlgData)
 {
-    // TODO  Since this is an implementation of a private mehtod, these error
-    // conditions should be impossible.  But, while converting from the old APIs
-    // to the new APIs, the following checks exactly mimic the old code.  Once
-    // things are fully converted, it should be sufficient to just check that
-    // hDlg is not null.
-    if ( pcpbd->dlgAdm == NULL || pcpbd->hDlg == NULL )
+    if ( pcpbd->hDlg == NULL )
     {
-        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return 0;
+        noWindowsDialogException(c, pcpbd);
+        return 1;
     }
 
-    DIALOGADMIN *dlgAdm = seekDlgAdm(pcpbd->hDlg);
-    if ( dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return 0;
-    }
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
 
     size_t j;
     HWND hwnd;
     uint32_t itemID;
     RexxObjectPtr dataObj;
-    USHORT controlType;
+    oodControl_t controlType;
 
     for ( j = 0; j < dlgAdm->DT_size; j++ )
     {
-        if ( dlgAdm->DataTab[j].typ == 999 )
+        if ( dlgAdm->DataTab[j].type == winNotAControl )
         {
             // See the connectSeparator() method and the manualCheckRadioButton
             // above. Used to separate two groups of radio buttons, there is no
@@ -689,7 +808,7 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
 
         hwnd        = dlgAdm->ChildDlg[dlgAdm->DataTab[j].category];
         itemID      = dlgAdm->DataTab[j].id;
-        controlType = dlgAdm->DataTab[j].typ;
+        controlType = dlgAdm->DataTab[j].type;
 
         dataObj = c->GetStemArrayElement(internDlgData, itemID);
         if ( dataObj == NULLOBJECT )
@@ -700,45 +819,49 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
             dataObj = c->NullString();
         }
 
-        if ( controlType == 0 )
+        if ( controlType == winEdit || controlType == winStatic )
         {
             SetDlgItemText(hwnd, itemID, c->ObjectToStringValue(dataObj));
         }
-        else if ( controlType == 1 )
+        else if ( controlType == winCheckBox )
         {
             CheckDlgButton(hwnd, itemID, dlgDataToNumber(c, dataObj));
         }
-        else if ( controlType == 2 )
+        else if ( controlType == winRadioButton )
         {
             manualCheckRadioButton(dlgAdm, hwnd, itemID, dlgDataToNumber(c, dataObj));
         }
-        else if ( controlType == 3 )
+        else if ( controlType == winListBox )
         {
             setListBoxData(hwnd, itemID, c->ObjectToStringValue(dataObj));
         }
-        else if ( controlType == 4 )
-        {
-            setMultiListBoxSelections(hwnd, itemID, c->ObjectToStringValue(dataObj));
-        }
-        else if ( controlType == 5 )
+        else if ( controlType == winComboBox )
         {
             setComboBoxData(hwnd, itemID, c->ObjectToStringValue(dataObj));
         }
-        else if ( controlType == 6 )
+        else if ( controlType == winTreeView )
         {
-            setTreeData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+            setTreeViewData(hwnd, c->ObjectToStringValue(dataObj), itemID);
         }
-        else if ( controlType == 7 )
+        else if ( controlType == winListView )
         {
-            setListData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+            setListViewData(hwnd, c->ObjectToStringValue(dataObj), itemID);
         }
-        else if ( controlType == 8 )
+        else if ( controlType == winTrackBar )
         {
-            setSliderData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+            setTrackBarData(hwnd, c->ObjectToStringValue(dataObj), itemID);
         }
-        else if ( controlType == 9 )
+        else if ( controlType == winTab )
         {
-            setTabCtrlDatas(hwnd, c->ObjectToStringValue(dataObj), itemID);
+            setTabData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+        }
+        else if ( controlType == winDateTimePicker )
+        {
+            setDateTimeData(hwnd, c->ObjectToStringValue(dataObj), itemID);
+        }
+        else if ( controlType == winMonthCalendar )
+        {
+            setMonthCalendarData(hwnd, c->ObjectToStringValue(dataObj), itemID);
         }
     }
     return 0;
@@ -748,28 +871,23 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
 
 uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxStemObject internDlgData)
 {
-    if ( pcpbd->dlgAdm == NULL || pcpbd->hDlg == NULL )
+    if ( pcpbd->hDlg == NULL )
     {
-        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return 0;
+        noWindowsDialogException(c, pcpbd);
+        return 1;
     }
 
-    DIALOGADMIN *dlgAdm = seekDlgAdm(pcpbd->hDlg);
-    if ( dlgAdm == NULL )
-    {
-        failedToRetrieveDlgAdmException(c->threadContext, pcpbd->rexxSelf);
-        return 0;
-    }
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
 
     size_t j;
-    CHAR data[DATA_BUFFER];
+    char data[DATA_BUFFER];
     HWND hwnd;
     uint32_t itemID;
-    USHORT controlType;
+    oodControl_t controlType;
 
     for ( j = 0; j < dlgAdm->DT_size; j++ )
     {
-        if ( dlgAdm->DataTab[j].typ == 999 )
+        if ( dlgAdm->DataTab[j].type == winNotAControl )
         {
             // See the connectSeparator() method and the manualCheckRadioButton
             // above. Used to separate two groups of radio buttons, there is no
@@ -781,59 +899,69 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
 
         hwnd =        dlgAdm->ChildDlg[dlgAdm->DataTab[j].category];
         itemID =      dlgAdm->DataTab[j].id;
-        controlType = dlgAdm->DataTab[j].typ;
+        controlType = dlgAdm->DataTab[j].type;
 
-        if ( controlType == 0 )
+        if ( controlType == winEdit || controlType == winStatic )
         {
             GetDlgItemText(hwnd, itemID, data, (DATA_BUFFER-1));
         }
-        else if ( controlType == 2 || controlType == 1 )
+        else if ( controlType == winCheckBox || controlType == winRadioButton )
         {
             c->SetStemArrayElement(internDlgData, itemID, c->UnsignedInt32(IsDlgButtonChecked(hwnd, itemID)));
             continue;
         }
-        else if ( controlType == 3 )
+        else if ( controlType == winListBox )
         {
-            if ( getListBoxData(hwnd, itemID, data) == LB_ERR )
+            if ( ! getListBoxData(hwnd, itemID, data) )
             {
                 data[0] = '\0';
             }
         }
-        else if ( controlType == 4 )
+        else if ( controlType == winComboBox )
         {
-            getMultiListBoxSelections(hwnd, itemID, data);
-        }
-        else if ( controlType == 5 )
-        {
-            if ( getComboBoxData(hwnd, itemID, data) == LB_ERR )
+            if ( ! getComboBoxData(hwnd, itemID, data) )
             {
                 data[0] = '\0';
             }
         }
-        else if ( controlType == 6 )
+        else if ( controlType == winTreeView )
         {
-            if ( ! getTreeData(hwnd, data, itemID) )
+            if ( ! getTreeViewData(hwnd, data, itemID) )
             {
                 data[0] = '\0';
             }
         }
-        else if ( controlType == 7 )
+        else if ( controlType == winListView )
         {
-            if ( ! getListData(hwnd, data, itemID) )
+            if ( ! getListViewData(hwnd, data, itemID) )
             {
                 data[0] = '\0';
             }
         }
-        else if ( controlType == 8 )
+        else if ( controlType == winTrackBar )
         {
-            if ( ! getSliderData(hwnd, data, itemID) )
+            if ( ! getTrackBarData(hwnd, data, itemID) )
             {
                 data[0] = '\0';
             }
         }
-        else if ( controlType == 9 )
+        else if ( controlType == winTab )
         {
-            if ( ! getTabCtrlData(hwnd, data, itemID) )
+            if ( ! getTabData(hwnd, data, itemID) )
+            {
+                data[0] = '\0';
+            }
+        }
+        else if ( controlType == winDateTimePicker )
+        {
+            if ( ! getDateTimeData(hwnd, data, itemID) )
+            {
+                data[0] = '\0';
+            }
+        }
+        else if ( controlType == winMonthCalendar )
+        {
+            if ( ! getMonthCalendarData(hwnd, data, itemID) )
             {
                 data[0] = '\0';
             }
@@ -886,12 +1014,12 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
  * @param c
  * @param dlgAdm
  * @param id      The resource ID of the control.
- * @param typ
+ * @param type
  * @param category
  *
  * @return 0 on succes, and 1 for error.
  */
-uint32_t addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, int id, uint32_t typ, uint32_t category)
+uint32_t addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, int id, oodControl_t type, uint32_t category)
 {
     if ( dlgAdm->DataTab == NULL )
     {
@@ -907,7 +1035,7 @@ uint32_t addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, int id, uint3
     if ( dlgAdm->DT_size < MAX_DT_ENTRIES )
     {
         dlgAdm->DataTab[dlgAdm->DT_size].id = id;
-        dlgAdm->DataTab[dlgAdm->DT_size].typ = typ;
+        dlgAdm->DataTab[dlgAdm->DT_size].type = type;
         dlgAdm->DataTab[dlgAdm->DT_size].category = category;
         dlgAdm->DT_size ++;
         return 0;
@@ -922,9 +1050,9 @@ uint32_t addToDataTable(RexxMethodContext *c, DIALOGADMIN *dlgAdm, int id, uint3
 /**
  * Return an array containing, in order, the resource ID of each table entry.
  *
- * @param c
- * @param pcpbd
- * @param self
+ * @param c      Method context we are operating in.
+ * @param pcpbd  Pointer to the PlainBaseDialog CSelf.
+ * @param self   The Rexx dialog object.
  *
  * @return An array containing all the resource IDs in the data table.
  */
@@ -938,102 +1066,60 @@ RexxArrayObject getDataTableIDs(RexxMethodContext *c, pCPlainBaseDialog pcpbd, R
 
     uint32_t count = pcpbd->dlgAdm->DT_size;
     RexxArrayObject result = c->NewArray(count);
-    for ( size_t i = 0; i < count; i++ )
+    for ( uint32_t i = 0; i < count; i++ )
     {
         c->ArrayPut(result, c->UnsignedInt32(pcpbd->dlgAdm->DataTab[i].id), i + 1);
     }
     return result;
 }
 
-/* search for all the child windows in the dialog and add them to the data list */
-bool DataAutodetection(DIALOGADMIN * dlgAdm)
+
+/**
+ * Searches all the child windows in a dialog and adds a data table entry for
+ * each dialog control that is applicable.
+ *
+ * This is done when 'auto detection' is set on (the default) by the Rexx
+ * programmer. This function is called when a dialog is created from a resource
+ * DLL, i.e. the dialog template is a compiled binary.  In UserDialogs (and
+ * subclasses) the data table entry is done for each createXXX() method when the
+ * dialog control is added to the in-memory template.
+ *
+ * @param c       RexxMethodContext pointer.  Only used for an out of memory
+ *                exception when an item is added to the data table.
+ * @param dlgAdm  Dialog Admin block for the dialog.
+ *
+ * @return True on success, false on failure.  The only failure here is an out
+ *         of memory problem or the data table is full.
+ */
+bool doDataAutoDetection(RexxMethodContext *c, DIALOGADMIN * dlgAdm)
 {
     HWND parent, current, next;
-    LONG style;
-    CHAR classname[64];
-    INT itemtoadd;
+    oodControl_t itemToAdd;
 
     parent = dlgAdm->TheDlg;
     current = parent;
     next = GetTopWindow(current);
-    while ((next) && ((HWND)getWindowPtr(next, GWLP_HWNDPARENT) == parent))
+
+    while ( next && ((HWND)getWindowPtr(next, GWLP_HWNDPARENT) == parent) )
     {
        current = next;
+       itemToAdd = winNotAControl;
 
-       itemtoadd = -1;
-       style = GetWindowLong(current, GWL_STYLE);
-       if (GetClassName(current, classname, 64))
+       if ( (GetWindowLong(current, GWL_STYLE) & WS_VISIBLE) != 0 )
        {
-           strcpy(classname, strupr(classname));
-           if ((!strcmp(classname, "EDIT")) && (style & WS_VISIBLE))
-              itemtoadd = 0;
-           else
-           if ((!strcmp(classname, "COMBOBOX")) && (style & WS_VISIBLE) && (style & CBS_DROPDOWNLIST))
-              itemtoadd = 5;
-           else
-           if ((!strcmp(classname, "COMBOBOX")) && (style & WS_VISIBLE))
-              itemtoadd = 0;
-           else
-           if ((!strcmp(classname, "BUTTON")) && (style & WS_VISIBLE)
-           && (((style & 0x0000000F) == BS_CHECKBOX) || ((style & 0x0000000F) == BS_AUTOCHECKBOX)))
-              itemtoadd = 1;
-           else
-           if ((!strcmp(classname, "BUTTON")) && (style & WS_VISIBLE)
-           && (((style & 0x0000000F) == BS_RADIOBUTTON) || ((style & 0x0000000F) == BS_AUTORADIOBUTTON)))
-              itemtoadd = 2;
-           else
-           if ((!strcmp(classname, "LISTBOX")) && (style & WS_VISIBLE) && (style & LBS_MULTIPLESEL))
-              itemtoadd = 4;
-           else
-           if ((!strcmp(classname, "LISTBOX")) && (style & WS_VISIBLE))
-              itemtoadd = 3;
-           else
-           if ((!strcmp(classname, WC_TREEVIEW)) && (style & WS_VISIBLE))
-              itemtoadd = 6;
-           else
-           if ((!strcmp(classname, WC_LISTVIEW)) && (style & WS_VISIBLE))
-              itemtoadd = 7;
-           else
-           if ((!strcmp(classname, TRACKBAR_CLASS)) && (style & WS_VISIBLE))
-              itemtoadd = 8;
-           else
-           if ((!strcmp(classname, WC_TABCONTROL)) && (style & WS_VISIBLE))
-              itemtoadd = 9;
-           else
-           if ((!strcmp(classname, DATETIMEPICK_CLASS)) && (style & WS_VISIBLE))
-              itemtoadd = 10;
-           else
-           if ((!strcmp(classname, MONTHCAL_CLASS)) && (style & WS_VISIBLE))
-              itemtoadd = 11;
+           itemToAdd = control2controlType(current);
+           if ( ! isDataAttributeControl(itemToAdd) )
+           {
+               itemToAdd = winNotAControl;
+           }
        }
 
-       if (itemtoadd >= 0)
+       if ( itemToAdd != winNotAControl )
        {
-          if (!dlgAdm->DataTab)
-          {
-              dlgAdm->DataTab = (DATATABLEENTRY *)LocalAlloc(LPTR, sizeof(DATATABLEENTRY) * MAX_DT_ENTRIES);
-              if (!dlgAdm->DataTab)
-              {
-                   MessageBox(0,"No memory available","Error",MB_OK | MB_ICONHAND);
-                   return false;
-              }
-              dlgAdm->DT_size = 0;
-          }
-          if (dlgAdm->DT_size < MAX_DT_ENTRIES)
-          {
-              dlgAdm->DataTab[dlgAdm->DT_size].id = GetWindowLong(current, GWL_ID);
-              dlgAdm->DataTab[dlgAdm->DT_size].typ = itemtoadd;
-              dlgAdm->DataTab[dlgAdm->DT_size].category = 0;
-              dlgAdm->DT_size ++;
-          }
-          else
-          {
-              MessageBox(0, "Dialog data items have exceeded the maximum\n"
-                            "number of allocated table entries. Data\n"
-                            "autodetection has failed.",
-                         "Error",MB_OK | MB_ICONHAND);
-              return false;
-          }
+           if ( addToDataTable(c, dlgAdm, GetWindowLong(current, GWL_ID), itemToAdd, 0) == 1 )
+           {
+               return false;
+           }
        }
        next = GetNextWindow(current, GW_HWNDNEXT);
     }

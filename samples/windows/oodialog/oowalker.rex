@@ -78,6 +78,14 @@
       bitmaps[i] = self~LoadBitmap("bmp\wlkfig"i".bmp")
    end
 
+::method doDataStemGet unguarded
+  use strict arg data.
+  self~getDataStem(data.)
+
+::method doDataStemSet unguarded
+  use strict arg data.
+  self~setDataStem(data.)
+
 ::method Run
    expose bitmaps
                   /* call animation class and pass array with bitmaps */
@@ -104,7 +112,8 @@
    xdanger = 300; ydanger = 70
    do until(self~stopped = 1) | (self~ParentStopped = 1)
       self~moveseq
-      self~ParentDlg~getdatastem(data.)
+      self~parentDlg~doDataStemGet(data.)
+      --self~parentDlg~getdatastem(data.)
       do k over data.
          if data.k~datatype('N') = 0 then data.k = 0
       end
@@ -131,7 +140,7 @@
    s.movey = -s.movey
    self~setsprite(s.)
    self~filldata(data.)
-   self~ParentDlg~setdatastem(data.)
+   self~parentDlg~doDataStemSet(data.)
    return 0
 
 ::method hittop
@@ -141,7 +150,7 @@
    s.movey = -s.movey
    self~setsprite(s.)
    self~filldata(data.)
-   self~ParentDlg~setdatastem(data.)
+   self~parentDlg~doDataStemSet(data.)
    return 0
 
 ::method filldata

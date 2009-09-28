@@ -77,9 +77,26 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
     c->RaiseException1(Rexx_Error_Interpretation_user_defined, c->String(buf));
 }
 
-inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
+//
+
+/**
+ *  93.900
+ *  Error 93 - Incorrect call to method
+ *        The specified method, built-in function, or external routine exists,
+ *        but you used it incorrectly.
+ *
+ *  The connectEdit method can not be invoked on a StyleDlg when the Windows
+ *  dialog does not exist.
+ *
+ * @param c
+ * @param pcpbd
+ */
+void noWindowsDialogException(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
 {
-    failedToRetrieveException(c, "dialog administration block", source);
+    TCHAR buf[512];
+    _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the Windows dialog does not exist.",
+              c->GetMessageName(), c->ObjectToStringValue(pcpbd->rexxSelf));
+    c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
 }
 
 bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum)
@@ -92,6 +109,12 @@ bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName,
         return false;
     }
     return true;
+}
+
+
+inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source)
+{
+    failedToRetrieveException(c, "dialog administration block", source);
 }
 
 

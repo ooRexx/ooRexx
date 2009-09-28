@@ -69,7 +69,6 @@ extern void wrongObjInDirectoryException(RexxThreadContext *c, int argPos, CSTRI
 extern void executionErrorException(RexxThreadContext *c, CSTRING msg);
 extern void doOverException(RexxThreadContext *c, RexxObjectPtr obj);
 extern void failedToRetrieveException(RexxThreadContext *c, CSTRING item, RexxObjectPtr source);
-extern void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
 extern void missingIndexInDirectoryException(RexxThreadContext *c, int argPos, CSTRING index);
 extern void emptyArrayException(RexxThreadContext *c, int argPos);
 extern void nullObjectException(RexxThreadContext *c, CSTRING name, int pos);

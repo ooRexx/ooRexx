@@ -73,7 +73,7 @@ dlg~deinstall
                      "Profession:" self~Profession
 
 ::method Validate
-    if self~GetValue(21)~strip = "" then
+    if self~getControlData(21)~strip = "" then
     do
         call infoDialog "An unnamed employee is not accepted!"
         return 0       /* dialog annot be closed */

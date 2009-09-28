@@ -818,7 +818,7 @@ size_t RexxEntry HandleControlEx(
      */
     if ( argv[2].strptr[0] == 'E' )      /* Edit control function */
     {
-        if ( ! checkControlClass(hCtrl, winEdit) )
+        if ( ! isControlMatch(hCtrl, winEdit) )
             RETVAL(-1)
 
         if ( !strcmp(argv[3].strptr, "MSG") ) /* Send an edit message (EM_*) */
@@ -4573,7 +4573,7 @@ RexxMethod2(RexxObjectPtr, bc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
     }
     WPARAM wParam = (type == IMAGE_BITMAP) ? IMAGE_BITMAP : IMAGE_ICON;
 
-    return oodGetImageAttribute(context, self, BUTTONIMAGE_ATTRIBUTE, BM_GETIMAGE, wParam, type, winButton);
+    return oodGetImageAttribute(context, self, BUTTONIMAGE_ATTRIBUTE, BM_GETIMAGE, wParam, type, winPushButton);
 }
 
 /** ButtonControl::setImage()
@@ -4614,7 +4614,7 @@ RexxMethod2(RexxObjectPtr, bc_setImage, RexxObjectPtr, rxNewImage, OSELF, self)
     HWND hwnd = rxGetWindowHandle(context, self);
     HANDLE oldHandle = (HANDLE)SendMessage(hwnd, BM_SETIMAGE, (WPARAM)type, (LPARAM)hImage);
 
-    result = oodSetImageAttribute(context, BUTTONIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, winButton);
+    result = oodSetImageAttribute(context, BUTTONIMAGE_ATTRIBUTE, rxNewImage, hwnd, oldHandle, -1, winPushButton);
 
 out:
     return result;
@@ -5432,7 +5432,7 @@ RexxObjectPtr rxNewImageFromControl(RexxMethodContext *c, HWND hwnd, HANDLE hIma
                 }
                 break;
 
-            case winButton :
+            case winPushButton :
                 switch ( style & BS_IMAGEMASK )
                 {
                     case BS_BITMAP :

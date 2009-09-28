@@ -112,7 +112,7 @@
        parse value self~GetWindowRect(self~dlgHandle) with l t r b
        if self~dims["cy"] > (b-t) / self~factorY then self~Resize(self~dims["cx"], self~dims["cy"], "NORMAL")
    end
-   self~SetStaticText(100, message)
+   self~setStaticData(100, message)
    if self~XExt = 0 then self~Move(self~dims["x"], self~dims["y"], "NORMAL")
 
 

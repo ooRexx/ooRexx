@@ -46,22 +46,70 @@
 ::class 'AdvancedControls' Mixinclass Object public
 
 ::method putControl private unguarded external "LIBRARY oodialog advCtrl_putControl_pvt"
-::method getStaticControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getButtonControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getTreeControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getListControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getTabControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getEditControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getRadioControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getCheckControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getGroupBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getListBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getComboBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getScrollBar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getProgressBar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getSliderControl unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getMonthCalendar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getDateTimePicker unguarded external "LIBRARY oodialog advCtrl_getControl"
+
+::method newStatic unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getStaticControl unguarded
+   forward message 'newStatic'
+
+::method newPushButton unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getButtonControl unguarded
+   forward message 'newPushButton'
+
+::method newRadioButton unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getRadioControl unguarded
+   forward message 'newRadioButton'
+
+::method newCheckBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getCheckControl unguarded
+   forward message 'newCheckBox'
+
+::method newGroupBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getGroupBox unguarded
+   forward message 'newGroupBox'
+
+::method newEdit unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getEditControl unguarded
+   forward message 'newEdit'
+
+::method newComboBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getComboBox unguarded
+   forward message 'newComboBox'
+
+::method newListBox unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getListBox unguarded
+   forward message 'newListBox'
+
+::method newScrollBar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getScrollBar unguarded
+   forward message 'newScrollBar'
+
+::method newTreeView unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getTreeControl unguarded
+   forward message 'newTreeView'
+
+::method newListView unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getListControl unguarded
+   forward message 'newListView'
+
+::method newTab unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getTabControl unguarded
+   forward message 'newTab'
+
+::method newProgressBar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getProgressBar unguarded
+   forward message 'newProgressBar'
+
+::method newTrackBar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getSliderControl unguarded
+   forward message 'newTrackBar'
+
+::method newMonthCalendar unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getMonthCalendar unguarded
+   forward message 'newMonthCalendar'
+
+::method newDateTimePicker unguarded external "LIBRARY oodialog advCtrl_getControl"
+::method getDateTimePicker unguarded
+   forward message 'newDateTimePicker'
 
 ::method test unguarded external "LIBRARY oodialog advCtrl_test"
 
@@ -139,12 +187,15 @@
    use arg left, top, right, bottom
    return WindowRect("CLR", self~oDlg~adm, self~hwnd,left,top,right,bottom)
 
-::method value unguarded
-    return self~oDlg~internalGetItemData(self~Id, self~hDlg)
+::method value unguarded  -- TODO this method won't work if this control is on a category page.
+                          -- Implement in native code
+    --return self~oDlg~getControlData(self~id, self~hDlg)
+    return self~oDlg~getControlData(self~id)
 
-::method "value=" unguarded
-    use arg data
-    self~oDlg~internalSetItemData(self~Id, data, self~hDlg)
+::method "value=" unguarded  -- TODO same as a above
+    use strict arg data
+    --self~oDlg~setControlData(self~Id, data, self~hDlg)
+    self~oDlg~setControlData(self~Id, data)
 
 ::method captureMouse
    return Wnd_Desktop("CAP", self~hDlg, self~hwnd)
@@ -1404,6 +1455,8 @@
 
 ::class 'ListBox' subclass DialogControl public
 
+::method getText external "LIBRARY oodialog lb_getText"
+
 ::method Add
    use arg data
    if arg(1,'o') = 1 then return -1
@@ -1491,11 +1544,6 @@
 ::method GetFirstVisible
    return self~Message2Parent(0x0000018E, 0, 0) + 1
 
-::method GetText
-   use arg ndx
-   len = SendWinMsg("DLG", self~hDlg, self~id, 0x0000018A, ndx-1,0)
-   if len <= 0 then return ""
-   else return SendWinMsg("PTR", self~hDlg, self~id, 0x00000189, ndx-1,"G" || len+1)
 
 ::method Modify
    use arg index, dataString

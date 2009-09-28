@@ -145,6 +145,34 @@ typedef enum
     ReplyTrue     = 2,    // Message matched and handled return TRUE to the system
 } MsgReplyType;
 
+
+// Enum for the type of Windows dialog control.
+typedef enum
+{
+    winStatic              =  1,
+    winPushButton          =  2,
+    winCheckBox            =  3,
+    winRadioButton         =  4,
+    winGroupBox            =  5,
+    winEdit                =  6,
+    winComboBox            =  7,
+    winListBox             =  8,
+    winScrollBar           =  9,
+    winTreeView            = 10,
+    winListView            = 11,
+    winTrackBar            = 12,
+    winProgressBar         = 13,
+    winTab                 = 14,
+    winDateTimePicker      = 15,
+    winMonthCalendar       = 16,
+
+    // A special value used by the data table / data table connection functions.
+    winNotAControl         = 42,
+
+    winUnknown             = 55
+} oodControl_t;
+
+
 /* macros to check the number of arguments */
 #define CHECKARG(argexpct) { \
    if (argc != argexpct) \
@@ -291,9 +319,9 @@ typedef struct {
 } MESSAGETABLEENTRY;
 
 typedef struct {
-   ULONG id;
-   USHORT typ;
-   USHORT category;
+    oodControl_t  type;
+    uint32_t      id;
+    uint32_t      category;
 } DATATABLEENTRY;
 
 typedef struct {

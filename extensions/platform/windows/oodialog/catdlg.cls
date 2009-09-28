@@ -280,40 +280,40 @@
                              ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
    else do
-      self~addOkCancelRightBottom
+      self~createOkCancelRightBottom
       if self~Wizard = 1 then
          self~createButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
    self~createBlackFrame(-1, 0, self~sizeY - 20, self~sizeX, 1)
 
-::method CreateCategoryDialog private external "LIBRARY oodialog catdlg_createCategoryDialog"
+::method createCategoryDialog private external "LIBRARY oodialog catdlg_createCategoryDialog"
 
 ::method initDialog protected
    /* set the mark to the first radio button */
-   if self~catstyle~wordpos('DROPDOWN') > 0 then
-   do
+   if self~catstyle~wordpos('DROPDOWN') > 0 then do
       do i = 1 to self~catalog['count']
-         self~AddComboEntry(9001, self~catalog['names'][i])
+         self~addComboEntry(9001, self~catalog['names'][i])
       end
-      self~SetComboLine(9001, self~catalog['names'][1])
+      self~setComboBoxData(9001, self~catalog['names'][1])
    end
-   else self~SendMessageToItem(9001,"0x000000F1",1,0)
-   if self~Wizard = 1 then self~DisableItem(11)
+   else self~sendMessageToItem(9001,"0x000000F1",1,0)
+   if self~wizard then self~disableItem(11)
 
    /* call InitXXX for each category if such a method exists */
    do i = 1 to self~catalog['count']
       self~catalog['category'] = i
-      msg = "Init" || self~catalog['names'][i]~space(0)
-      if self~HasMethod(msg) = 1 then interpret("self~"||msg)   /* does user class provide the Init method? If so call it */
+      msg = "init" || self~catalog['names'][i]~space(0)
+      -- Does user class provide the initXXX method? If so invoke it.
+      if self~hasMethod(msg) then self~send(msg)
    end
 
    /* activate first page */
    self~catalog['category'] = 1
-   self~ShowWindow(self~catalog['handles'][self~catalog['category']])
+   self~showWindow(self~catalog['handles'][self~catalog['category']])
 
    /* */
 
-::method InitCategories protected
+::method initCategories protected
    return
 
 
@@ -321,21 +321,20 @@
    /* the first page is selected. */
 
 ::method GetSelectedPage unguarded
-   if self~catstyle~wordpos('DROPDOWN') = 0 then
-   do
+   if self~catstyle~wordpos('DROPDOWN') = 0 then do
       np = 9001
-      do while self~GetRadioButton(np) = 0 & np < (9001 + self~catalog['count'])
+      do while self~getRadioButtonData(np) = 0 & np < (9001 + self~catalog['count'])
          np = np + 1
       end
    end
    else do
-      cur = self~GetComboLine(9001)
+      cur = self~getComboBoxData(9001)
       np = 1
       do while np <= ( self~catalog['count']) & cur \= self~catalog['names'][np]
          np = np + 1
       end
-          if np > self~catalog['count'] then return 0
-          np = np + 9000
+      if np > self~catalog['count'] then return 0
+      np = np + 9000
    end
    return np-9000
 
@@ -359,23 +358,20 @@
       end
       else self~SetCurrentComboIndex(9001, NewPage)
    end
-   if (NewPage = self~catalog['category']) |,
-      (NewPage < 1 | NewPage> self~catalog['count']) then return 0
+   if (NewPage = self~catalog['category']) | (NewPage < 1 | NewPage> self~catalog['count']) then return 0
+
    self~HideWindowFast(self~catalog['handles'][self~catalog['category']])
    self~catalog['category'] = NewPage
-   if self~Wizard = 1 then
-   do
-      if NewPage = 1 then
-      do
+   if self~Wizard = 1 then do
+      if NewPage = 1 then do
          self~DisableItem(11)
          self~EnableItem(12)
-      end; else
-      if NewPage = self~catalog['count'] then
-      do
+      end
+      else if NewPage = self~catalog['count'] then do
          self~EnableItem(11)
          self~DisableItem(12)
-      end; else
-      do
+      end
+      else do
          self~EnableItem(11)
          self~EnableItem(12)
       end
@@ -525,26 +521,6 @@
 
 ::method SetCategoryListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
 
-::method connectEdit external "LIBRARY oodialog generic_connectControl"
-::method connectEntryLine external "LIBRARY oodialog generic_connectControl"
-::method connectComboBox external "LIBRARY oodialog generic_connectControl"
-::method connectCheckBox external "LIBRARY oodialog generic_connectControl"
-::method connectRadioButton external "LIBRARY oodialog generic_connectControl"
-::method connectListBox external "LIBRARY oodialog generic_connectControl"
-::method connectMultiListBox external "LIBRARY oodialog generic_connectControl"
-::method connectSeparator external "LIBRARY oodialog generic_connectControl"
-
-::method connectTreeView unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectTreeControl unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectListView unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectListControl unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectTrackBar unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectSliderControl unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectTab unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectTabControl unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectDateTimePicker unguarded external "LIBRARY oodialog generic_connectControl"
-::method connectMonthCalendar unguarded external "LIBRARY oodialog generic_connectControl"
-
 
 ::method CategoryListAddDirectory unguarded
    use arg id, drvpath, fattr, category
@@ -563,109 +539,86 @@
    return self~BoxMessage(category, id, 0x00000184, 0, 0)
 
 
-::method GetCategoryEntryLine unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalGetItemData(id, self~catalog['handles'][category], 0)
+-- The following methods are to set or get the 'data' of a single dialog control on one of
+-- the category pages of the CategroyDialog.  It is  necessary to know the category page number
+-- of the dialog control in order for to correctly identify the control.  If the page number
+-- argument is omitted, it is assumed the page number is the current page number.
 
-::method GetCategoryListLine unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalGetItemData(id, self~catalog['handles'][category], 3)
+::method getControlDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getCheckBoxDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getRadioButtonDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getEditDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getListBoxDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
+::method getComboBoxDataPage unguarded external "LIBRARY oodialog catdlg_getControlDataPage"
 
-::method GetCategoryComboLine unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalGetItemData(id, self~catalog['handles'][category], 0)
+::method setControlDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setStaticDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setCheckBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setRadioButtonDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setEditDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setListBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
+::method setComboBoxDataPage unguarded external "LIBRARY oodialog catdlg_setControlDataPage"
 
-::method GetCategoryCheckBox unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalGetItemData(id, self~catalog['handles'][category], 1)
-
-::method GetCategoryRadioButton unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalGetItemData(id, self~catalog['handles'][category], 2)
-
-::method GetCategoryMultiList unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalGetItemData(id, self~catalog['handles'][category], 4)
-
-::method GetCategoryValue unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalGetItemData(id, self~catalog['handles'][category])
-
-::method GetCategoryAttrib unguarded
-   use arg aname, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   i = self~dataConnection~First
-   do while (i \= .NIL)
-      if self~dataConnection[i] = aname then
-      do
-         s = "self~"aname"= self~GetValue("i", category)"
-         interpret(s)
+::method getControlDataAttribute unguarded
+   use arg attributeName, category
+   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+   id = self~dataConnection~first
+   do while (id \= .nil)
+      if self~dataConnection[id] = attributeName then do
+         data = self~getControlData(id, category)
+         self~sendWith(attributeName'=', .array~of(data))
          return
       end
       i = self~dataConnection~Next(i)
    end
 
-
-::method SetCategoryStaticText unguarded
-   use arg id, data, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalSetItemData(id, data, self~catalog['handles'][category], 0)
-
-::method SetCategoryEntryLine unguarded
-   use arg id, data, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalSetItemData(id, data, self~catalog['handles'][category], 0)
-
-::method SetCategoryListLine unguarded
-   use arg id, data, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalSetItemData(id, data, self~catalog['handles'][category], 3)
-
-::method SetCategoryComboLine unguarded
-   use arg id, data, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalSetItemData(id, data, self~catalog['handles'][category], 0)
-
-::method SetCategoryCheckBox unguarded
-   use arg id, data, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalSetItemData(id, data, self~catalog['handles'][category], 1)
-
-::method SetCategoryRadioButton unguarded
-   use arg id, data, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalSetItemData(id, data, self~catalog['handles'][category], 2)
-
-::method SetCategoryMultiList unguarded
-   use arg id, data, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalSetItemData(id, data, self~catalog['handles'][category], 4)
-
-::method SetCategoryValue unguarded
-   use arg id, data, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return self~internalSetItemData(id, data, self~catalog['handles'][category])
-
-::method SetCategoryAttrib unguarded
-   use arg aname, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   i = self~dataConnection~First
-   do while (i \= .NIL)
-      if self~dataConnection[i] = aname then
-      do
-         s = "self~SetCategoryValue("i", self~"aname", category)"
-         interpret(s)
-         return
+::method setControlDataAttribute unguarded
+   use arg attributeName, category
+   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current category page */
+   id = self~dataConnection~first
+   do while (id \= .nil)
+      if self~dataConnection[id] = attributeName then do
+         data = self~send(attributeName)
+         return self~setControlData(id, data, category)
       end
-      i = self~dataConnection~Next(i)
+      id = self~dataConnection~next(id)
    end
+
+-- DEPRECATED
+::method getCategoryEntryLine unguarded
+   forward message 'getEditDataPage'
+::method getCategoryListLine unguarded
+   forward message 'getListBoxDataPage'
+::method getCategoryComboLine unguarded
+   forward message 'getComboBoxDataPage'
+::method getCategoryCheckBox unguarded
+   forward message 'getCheckBoxDataPage'
+::method getCategoryRadioButton unguarded
+   forward message 'getRadioButtonDataPage'
+::method getCategoryMultiList unguarded
+   forward message 'getListBoxDataPage'
+::method getCategoryValue unguarded
+   forward message 'getControlDataPage'
+::method getCategoryAttrib unguarded
+   forward message 'getControlDataAttribute'
+::method setCategoryStaticText unguarded
+   forward message 'setStaticDataPage'
+::method setCategoryEntryLine unguarded
+   forward message 'setEditDataPage'
+::method setCategoryListLine unguarded
+   forward message 'setListBoxDataPage'
+::method setCategoryComboLine unguarded
+   forward message 'setComboBoxDataPage'
+::method setCategoryCheckBox unguarded
+   forward message 'setCheckBoxDataPage'
+::method setCategoryRadioButton unguarded
+   forward message 'setRadioButtonDataPage'
+::method setCategoryMultiList unguarded
+   forward message 'setListBoxDataPage'
+::method setCategoryValue unguarded
+   forward message 'setControlDataPage'
+::method setCategoryAttrib unguarded
+   forward message 'setControlDataAttribute'
 
 
 ::method EnableCategoryItem unguarded

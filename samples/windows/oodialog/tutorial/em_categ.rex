@@ -109,33 +109,33 @@
     self~GetData
     if self~Male = 1 then title = "Mr."; else title = "Ms."
     if self~Married = 1 then addition = " (married) "; else addition = ""
-    call infoDialog title self~Name addition || "A"x || "City:" self~City || "A"x || "Profession:" self~Profession)
+    call infoDialog title self~Name addition || "A"x || "City:" self~City || "A"x || "Profession:" self~Profession
 
 ::method Add
     self~Employees[self~Emp_count] = .directory~new
-    self~Employees[self~Emp_count]['NAME'] = self~GetCategoryValue(21, 1)
-    self~Employees[self~Emp_count]['CITY'] = self~GetCategoryValue(22, 1)
-    self~Employees[self~Emp_count]['PROFESSION'] = self~GetCategoryValue(23, 1)
+    self~Employees[self~Emp_count]['NAME'] = self~getControlDataPage(21, 1)
+    self~Employees[self~Emp_count]['CITY'] = self~getControlDataPage(22, 1)
+    self~Employees[self~Emp_count]['PROFESSION'] = self~getControlDataPage(23, 1)
     if self~GetCategoryValue(31, 1) = 1 then sex = 1; else sex = 2
     self~Employees[self~Emp_count]['SEX'] = sex
-    self~Employees[self~Emp_count]['MARRIED'] = self~GetCategoryValue(41, 1)
+    self~Employees[self~Emp_count]['MARRIED'] = self~getControlDataPage(41, 1)
     self~Emp_count = self~Emp_count +1
     self~Emp_current = self~Emp_count
-    self~SetCategoryValue(21, "", 1);
+    self~setControlDataPage(21, "", 1);
     self~SetSBRange(44, 1, self~Emp_count)
     self~SetSBPos(44, self~Emp_count)
     self~EnableCategoryItem(44, 1)
 
 
 ::method Set
-    self~SetCategoryValue(21, self~Employees[self~Emp_current]['NAME'], 1)
-    self~SetCategoryValue(22, self~Employees[self~Emp_current]['CITY'], 1)
-    self~SetCategoryValue(23, self~Employees[self~Emp_current]['PROFESSION'], 1)
+    self~setControlDataPage(21, self~Employees[self~Emp_current]['NAME'], 1)
+    self~setControlDataPage(22, self~Employees[self~Emp_current]['CITY'], 1)
+    self~setControlDataPage(23, self~Employees[self~Emp_current]['PROFESSION'], 1)
     if self~Employees[self~Emp_current]['SEX'] = 1 then do
-       self~SetCategoryValue(31, 1, 1);self~SetCategoryValue(32, 0, 1); end
+       self~setControlDataPage(31, 1, 1);self~setControlDataPage(32, 0, 1); end
     else do
-       self~SetCategoryValue(31, 0, 1);self~SetCategoryValue(32, 1, 1); end
-    self~SetCategoryValue(41, self~Employees[self~Emp_current]['MARRIED'], 1)
+       self~setControlDataPage(31, 0, 1);self~setControlDataPage(32, 1, 1); end
+    self~setControlDataPage(41, self~Employees[self~Emp_current]['MARRIED'], 1)
 
 ::method Emp_Previous
    if self~Emp_count = 1 then return

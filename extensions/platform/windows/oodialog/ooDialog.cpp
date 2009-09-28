@@ -44,6 +44,7 @@
 #include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodControl.hpp"
 #include "oodText.hpp"
 #include "oodData.hpp"
 #include "oodResourceIDs.hpp"
@@ -73,10 +74,11 @@ static HICON GetIconForID(DIALOGADMIN *, UINT, UINT, int, int);
 class LoopThreadArgs
 {
 public:
+    RexxMethodContext *context;  // Used for data autodetection only.
     DIALOGADMIN *dlgAdmin;
     uint32_t resourceId;
     bool autoDetect;
-    bool *release;           // used for a return value
+    bool *release;               // Used for a return value
 };
 
 
@@ -585,8 +587,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
 
     LoopThreadArgs *args = (LoopThreadArgs *)arg;
 
-
-    dlgAdm = args->dlgAdmin;        /*  thread local admin pointer from startDialog() */
+    dlgAdm = args->dlgAdmin;
     dlgAdm->TheDlg = CreateDialogParam(dlgAdm->TheInstance, MAKEINTRESOURCE(args->resourceId), 0, (DLGPROC)RexxDlgProc, dlgAdm->Use3DControls);  /* pass 3D flag to WM_INITDIALOG */
     dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
 
@@ -595,7 +596,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
     {
         if ( args->autoDetect )
         {
-            if ( ! DataAutodetection(dlgAdm) )
+            if ( ! doDataAutoDetection(args->context, dlgAdm) )
             {
                 dlgAdm->TheThread = NULL;
                 return 0;
@@ -605,7 +606,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
         *release = true;  /* Release wait in startDialog()  */
         do
         {
-            if (GetMessage(&msg,NULL, 0,0))
+            if ( GetMessage(&msg,NULL, 0,0) )
             {
                 if ( ! IsDialogMessage(dlgAdm->TheDlg, &msg) )
                 {
@@ -619,7 +620,7 @@ DWORD WINAPI WindowLoopThread(void *arg)
         *release = true;
     }
     EnterCriticalSection(&crit_sec);
-    if (dialogInAdminTable(dlgAdm))
+    if ( dialogInAdminTable(dlgAdm) )
     {
         ret = DelDialog(dlgAdm);
         dlgAdm->TheThread = NULL;
@@ -1751,101 +1752,18 @@ RexxMethod3(RexxObjectPtr, pbdlg_setDlgFont, CSTRING, fontName, OPTIONAL_uint32_
 }
 
 
-/** PlainBaseDialog::isDialogActive()
+/** PlainBaseDialog::getItem()
  *
- *  Tests if the Windows dialog is still active.
+ *  Gets the window handle of a dialog control.
  *
- *  @return  True if the underlying Windows dialog is active, otherwise false.
+ *  @param  rxID  The resource ID of the control, which may be numeric or
+ *                symbolic.
+ *  @param  _hDlg [optional]  The window handle of the dialog the control
+ *                belongs to.  If omitted, the handle of this dialog is used.
  *
- *  @remarks  The original ooDialog code checked if the dlgAdm was still in the
- *            DialogAdmin table.  ??  This would be true for a dialog in a
- *            CategoryDialog, if the dialog was the active child, and false if
- *            it was a good dialog, but for one of the other pages.  That may
- *            have been the point of the method.
- *
- *            Since the DialogTable will be going away, this method will need to
- *            be re-thought.
+ *  @return The window handle of the specified dialog control on success. -1 if
+ *          the ID can not be resolved.  A null handle there is no such control.
  */
-RexxMethod1(logical_t, pbdlg_isDialogActive, CSELF, pCSelf)
-{
-    return seekDlgAdm(((pCPlainBaseDialog)pCSelf)->hDlg) != NULL;
-}
-
-
-RexxMethod2(uint32_t, pbdlg_setDlgDataFromStem_pvt, RexxStemObject, internDlgData, CSELF, pCSelf)
-{
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-    return setDlgDataFromStem(context, pcpbd, internDlgData);
-}
-
-
-RexxMethod2(uint32_t, pbdlg_putDlgDataInStem_pvt, RexxStemObject, internDlgData, CSELF, pCSelf)
-{
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-    return putDlgDataInStem(context, pcpbd, internDlgData);
-}
-
-
-RexxMethod4(RexxObjectPtr, pbdlg_internalGetItemData_pvt, RexxObjectPtr, rxID, OPTIONAL_RexxStringObject, _hDlg,
-            OPTIONAL_int, ctrlType, CSELF, pCSelf)
-{
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
-    {
-        return TheNegativeOneObj;
-    }
-
-    HWND hDlg;
-    if ( argumentOmitted(2) )
-    {
-        hDlg = pcpbd->hDlg;
-    }
-    else
-    {
-        hDlg = (HWND)string2pointer(context, _hDlg);
-    }
-
-    if ( argumentOmitted(3) )
-    {
-        ctrlType = -1;
-    }
-
-    return internalGetItemData(context, pcpbd, id, hDlg, ctrlType);
-}
-
-
-RexxMethod5(uint32_t, pbdlg_internalSetItemData_pvt, RexxObjectPtr, rxID, CSTRING, data, OPTIONAL_RexxStringObject, _hDlg,
-            OPTIONAL_int, ctrlType, CSELF, pCSelf)
-{
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
-    {
-        return -1;
-    }
-
-    HWND hDlg;
-    if ( argumentOmitted(3) )
-    {
-        hDlg = pcpbd->hDlg;
-    }
-    else
-    {
-        hDlg = (HWND)string2pointer(context, _hDlg);
-    }
-
-    if ( argumentOmitted(4) )
-    {
-        ctrlType = -1;
-    }
-
-    return internalSetItemData(context, pcpbd, id, data, hDlg, ctrlType);
-}
-
-
 RexxMethod3(RexxObjectPtr, pbdlg_getItem, RexxObjectPtr, rxID, OPTIONAL_RexxStringObject, _hDlg, CSELF, pCSelf)
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
@@ -1867,6 +1785,183 @@ RexxMethod3(RexxObjectPtr, pbdlg_getItem, RexxObjectPtr, rxID, OPTIONAL_RexxStri
     }
     return pointer2string(context, GetDlgItem(hDlg, id));
 }
+
+/** PlainBaseDialog::isDialogActive()
+ *
+ *  Tests if the Windows dialog is still active.
+ *
+ *  @return  True if the underlying Windows dialog is active, otherwise false.
+ *
+ *  @remarks  The original ooDialog code checked if the dlgAdm was still in the
+ *            DialogAdmin table.  ??  This would be true for a dialog in a
+ *            CategoryDialog, if the dialog was the active child, and false if
+ *            it was a good dialog, but for one of the other pages.  That may
+ *            have been the point of the method.
+ *
+ *            Since the DialogTable will be going away, this method will need to
+ *            be re-thought.
+ */
+RexxMethod1(logical_t, pbdlg_isDialogActive, CSELF, pCSelf)
+{
+    return seekDlgAdm(((pCPlainBaseDialog)pCSelf)->hDlg) != NULL;
+}
+
+
+/** PlainBaseDialog::connectControl()
+ *
+ *  Connects a windows dialog control with a 'data' attribute of the Rexx dialog
+ *  object.  The attribute is added to the Rexx object and an entry is made in
+ *  the data table using the control's resource ID.
+ *
+ *  @param  rxID           The resource ID of the control, can be numeric or
+ *                         symbolic.
+ *  @param  attributeName  [optional]  The name of the attribute to be added.
+ *                         If omitted, the addAttribute() method will design a
+ *                         name from the information available.
+ *  @param  opts           [optional]  Not used, but must be present for
+ *                         backwards compatibility.  Was only used in
+ *                         connectComboBox() to distinguish between types of
+ *                         combo boxes.  That functionality has been moved to
+ *                         the native code.
+ *
+ *  @remarks  The control type is determined by the invoking Rexx method name.
+ *            oodName2control() special cases connectSeparator to
+ *            winNotAControl.  winNotAControls is what is expected by the data
+ *            table code.
+ *
+ */
+RexxMethod6(RexxObjectPtr, pbdlg_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
+            OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd->dlgAdm == NULL )
+    {
+        return TheOneObj;
+    }
+    // result will be the resolved resource ID, which may be -1 on error.
+    RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
+
+    int id;
+    if ( ! context->Int32(result, &id) || id == -1 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    oodControl_t type = oodName2controlType(msgName + 7);
+
+    uint32_t category = getCategoryNumber(context, self);
+    return ( addToDataTable(context, pcpbd->dlgAdm, id, type, category) == 0 ? TheZeroObj : TheOneObj );
+}
+
+
+RexxMethod2(uint32_t, pbdlg_setDlgDataFromStem_pvt, RexxStemObject, internDlgData, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    return setDlgDataFromStem(context, pcpbd, internDlgData);
+}
+
+
+RexxMethod2(uint32_t, pbdlg_putDlgDataInStem_pvt, RexxStemObject, internDlgData, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    return putDlgDataInStem(context, pcpbd, internDlgData);
+}
+
+
+/** PlainBaseDialog::getControlData()
+ *
+ *  Gets the 'data' from a single dialog control.
+ *
+ *  The original ooDialog implementation seemed to use the abstraction that the
+ *  state of a dialog control was its 'data' and this abstraction influenced the
+ *  naming of many of the instance methods.  I.e., getData() setData().
+ *
+ *  The method getControlData() is, in the Rexx code, a general purpose method
+ *  that replaces getValue() after 4.0.0.  getValue() forwards to
+ *  getControlData().  The old doc:
+ *
+ *  "The getValue method gets the value of a dialog item, regardless of its
+ *  type. The item must have been connected before."
+ *
+ *  @param  rxID  The reosource ID of control.
+ *
+ *  @return  The 'data' value of the dialog control.  This of course varies
+ *           depending on the type of the dialog control.
+ *
+ *  @remarks  The control type is determined by the invoking method name.  When
+ *            the general purpose GETCONTROLDATA + 3 name is passed to
+ *            oodName2controlType() it won't resolve and winUnknown will be
+ *            returned.  This is the value that signals getControlData() to do a
+ *            data table look up by resource ID.
+ */
+RexxMethod3(RexxObjectPtr, plbdlg_getControlData, RexxObjectPtr, rxID, NAME, msgName, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(context, pcpbd);
+        return TheNegativeOneObj;
+    }
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    oodControl_t ctrlType = oodName2controlType(msgName + 3);
+
+    return getControlData(context, pcpbd, id, pcpbd->hDlg, ctrlType);
+}
+
+
+/** PlainBaseDialog::setControlData()
+ *
+ *  Sets the 'data' for a single dialog control.
+ *
+ *  The original ooDialog implementation seemed to use the abstraction that the
+ *  state of a dialog control was its 'data' and this abstraction influenced the
+ *  naming of many of the instance methods.  I.e., getData() setData().
+ *
+ *  The method setControlData() is, in the Rexx code, a general purpose method
+ *  that replaces setValue() after 4.0.0.  setValue() forwards to
+ *  setControlData().  The old doc:
+ *
+ *  "The setValue() method sets the value of a dialog item. You do not have to
+ *  know what kind of item it is. The dialog item must have been connected
+ *  before."
+ *
+ *  @param  rxID  The reosource ID of control.
+ *  @param  data  The 'data' to set the control with.
+ *
+ *  @return  0 for success, 1 for error, -1 for bad resource ID.
+ *
+ *  @remarks  The control type is determined by the invoking method name.  When
+ *            the general purpose SETCONTROLDATA + 3 name is passed to
+ *            oodName2controlType() it won't resolve and winUnknown will be
+ *            returned.  This is the value that signals setControlData() to do a
+ *            data table look up by resource ID.
+ */
+RexxMethod4(int32_t, pbdlg_setControlData, RexxObjectPtr, rxID, CSTRING, data, NAME, msgName, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(context, pcpbd);
+        return -1;
+    }
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return -1;
+    }
+
+    oodControl_t ctrlType = oodName2controlType(msgName + 3);
+
+    return setControlData(context, pcpbd, id, data, pcpbd->hDlg, ctrlType);
+}
+
 
 RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf)
 {
@@ -2109,53 +2204,6 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
 }
 
 
-RexxMethod6(RexxObjectPtr, generic_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
-            OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self, CSELF, pCSelf)
-{
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-    if ( pcpbd->dlgAdm == NULL )
-    {
-        return TheOneObj;
-    }
-    // result will be the resolved resource ID, which may be -1 on error.
-    RexxObjectPtr result = context->ForwardMessage(NULLOBJECT, "ADDATTRIBUTE", NULLOBJECT, NULLOBJECT);
-
-    int id;
-    if ( ! context->Int32(result, &id) || id == -1 )
-    {
-        return TheNegativeOneObj;
-    }
-
-    // TODO these numbers need to be mapped to the oodControl_t enum.
-    uint32_t typ;
-    if ( strcmp("CONNECTEDIT", msgName) == 0 )                {typ =    0;}
-    else if ( strcmp("CONNECTENTRYLINE", msgName) == 0 )      {typ =    0;}
-    else if ( strcmp("CONNECTCOMBOBOX", msgName) == 0 )       {typ = (opts != NULL && StrStrI(opts, "LIST") != NULL) ? 5 : 0;}
-    else if ( strcmp("CONNECTCHECKBOX", msgName) == 0 )       {typ =    1;}
-    else if ( strcmp("CONNECTRADIOBUTTON", msgName) == 0 )    {typ =    2;}
-    else if ( strcmp("CONNECTLISTBOX", msgName) == 0 )        {typ =    3;}
-    else if ( strcmp("CONNECTMULTILISTBOX", msgName) == 0 )   {typ =    4;}
-    else if ( strcmp("CONNECTSEPARATOR", msgName) == 0 )      {typ =  999;}
-    else if ( strcmp("CONNECTTREEVIEW", msgName) == 0 )       {typ =    6;}
-    else if ( strcmp("CONNECTTREECONTROL", msgName) == 0 )    {typ =    6;}
-    else if ( strcmp("CONNECTLISTVIEW", msgName) == 0 )       {typ =    7;}
-    else if ( strcmp("CONNECTLISTCONTROL", msgName) == 0 )    {typ =    7;}
-    else if ( strcmp("CONNECTTRACKBAR", msgName) == 0 )       {typ =    8;}
-    else if ( strcmp("CONNECTSLIDERCONTROL", msgName) == 0 )  {typ =    8;}
-    else if ( strcmp("CONNECTTAB", msgName) == 0 )            {typ =    9;}
-    else if ( strcmp("CONNECTTABCONTROL", msgName) == 0 )     {typ =    9;}
-    else if ( strcmp("CONNECTDATETIMEPICKER", msgName) == 0 ) {typ =   10;}
-    else if ( strcmp("CONNECTMONTHCALENDAR", msgName) == 0 )  {typ =   11;}
-    else
-    {
-        return TheOneObj;
-    }
-
-    uint32_t category = getCategoryNumber(context, self);
-    return ( addToDataTable(context, pcpbd->dlgAdm, id, typ, category) == 0 ? TheZeroObj : TheOneObj );
-}
-
-
 /**
  *  Methods for the .ResDialog class.
  */
@@ -2237,6 +2285,7 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
     }
 
     LoopThreadArgs threadArgs;
+    threadArgs.context = context;
     threadArgs.dlgAdmin = dlgAdm;
     threadArgs.resourceId = dlgID;
     threadArgs.autoDetect = autoDetect ? true : false;
@@ -3058,7 +3107,7 @@ size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *arg
        {
            itoa(dlgAdm->DataTab[i].id, data, 10);
            if (!SetRexxStem(buffer, i+1, "ID", data))  { RETERR; }
-           itoa(dlgAdm->DataTab[i].typ, data, 10);
+           itoa(dlgAdm->DataTab[i].type, data, 10);
            if (!SetRexxStem(buffer, i+1, "type", data))  { RETERR; }
            itoa(dlgAdm->DataTab[i].category, data, 10);
            if (!SetRexxStem(buffer, i+1, "category", data))  { RETERR; }

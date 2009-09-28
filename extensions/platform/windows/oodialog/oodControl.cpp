@@ -87,20 +87,18 @@ uint32_t listViewStyle(CSTRING opts, uint32_t style)
 }
 
 
-TCHAR *controlType2winName(oodControl_t control)
+const char *controlType2winName(oodControl_t control)
 {
     switch ( control )
     {
         case winStatic :               return WC_STATIC;
-        case winButton :               return WC_BUTTON;
+        case winPushButton :           return WC_BUTTON;
         case winRadioButton :          return WC_BUTTON;
         case winCheckBox :             return WC_BUTTON;
         case winGroupBox :             return WC_BUTTON;
         case winEdit :                 return WC_EDIT;
         case winListBox :              return WC_LISTBOX;
-        case winSingleSelectListBox :  return WC_LISTBOX;
         case winComboBox :             return WC_COMBOBOX;
-        case winSimpleComboBox :       return WC_COMBOBOX;
         case winScrollBar :            return WC_SCROLLBAR;
         case winTreeView :             return WC_TREEVIEW;
         case winListView :             return WC_LISTVIEW;
@@ -113,6 +111,82 @@ TCHAR *controlType2winName(oodControl_t control)
     }
 }
 
+
+const char *controlType2className(oodControl_t control)
+{
+    switch ( control )
+    {
+        case winStatic :               return "STATICCONTROL";
+        case winPushButton :           return "BUTTONCONTROL";
+        case winRadioButton :          return "RADIOBUTTON";
+        case winCheckBox :             return "CHECKBOX";
+        case winGroupBox :             return "GROUPBOX";
+        case winEdit :                 return "EDITCONTROL";
+        case winListBox :              return "LISTBOX";
+        case winComboBox :             return "COMBOBOX";
+        case winScrollBar :            return "SCROLLBAR";
+        case winTreeView :             return "TREECONTROL";
+        case winListView :             return "LISTCONTROL";
+        case winTab :                  return "TABCONTROL";
+        case winProgressBar :          return "PROGRESSBAR";
+        case winTrackBar :             return "SLIDERCONTROL";
+        case winMonthCalendar :        return "MONTHCALENDAR";
+        case winDateTimePicker :       return "DATETIMEPICKER";
+        default :                      return "";
+    }
+}
+
+
+oodControl_t winName2controlType(const char *className)
+{
+    if (      strcmp(className, WC_STATIC         ) == 0 ) return winStatic;
+    else if ( strcmp(className, WC_BUTTON         ) == 0 ) return winPushButton;
+    else if ( strcmp(className, WC_EDIT           ) == 0 ) return winEdit;
+    else if ( strcmp(className, WC_LISTBOX        ) == 0 ) return winListBox;
+    else if ( strcmp(className, WC_COMBOBOX       ) == 0 ) return winComboBox;
+    else if ( strcmp(className, WC_SCROLLBAR      ) == 0 ) return winScrollBar;
+    else if ( strcmp(className, WC_TREEVIEW       ) == 0 ) return winTreeView;
+    else if ( strcmp(className, WC_LISTVIEW       ) == 0 ) return winListView;
+    else if ( strcmp(className, WC_TABCONTROL     ) == 0 ) return winTab;
+    else if ( strcmp(className, PROGRESS_CLASS    ) == 0 ) return winProgressBar;
+    else if ( strcmp(className, TRACKBAR_CLASS    ) == 0 ) return winTrackBar;
+    else if ( strcmp(className, MONTHCAL_CLASS    ) == 0 ) return winMonthCalendar;
+    else if ( strcmp(className, DATETIMEPICK_CLASS) == 0 ) return winDateTimePicker;
+    else
+    {
+        return winUnknown;
+    }
+}
+
+oodControl_t control2controlType(HWND hControl)
+{
+    oodControl_t type = winUnknown;
+
+    TCHAR buf[64];
+    if ( RealGetWindowClass(hControl, buf, sizeof(buf)) )
+    {
+        type = winName2controlType(buf);
+        if ( type == winPushButton )
+        {
+            BUTTONTYPE buttonType = getButtonInfo(hControl, NULL, NULL);
+            if ( buttonType == check )
+            {
+                type = winCheckBox;
+            }
+            else if ( buttonType == radio )
+            {
+                type = winRadioButton;
+            }
+            else if ( buttonType == group )
+            {
+                type = winGroupBox;
+            }
+        }
+    }
+
+    return type;
+}
+
 /**
  * Determine if a dialog control belongs to the specified dialog control class.
  *
@@ -122,10 +196,10 @@ TCHAR *controlType2winName(oodControl_t control)
  *
  * @return True if the dialog control is the type specified, otherwise false.
  */
-bool checkControlClass(HWND hControl, oodControl_t control)
+bool isControlMatch(HWND hControl, oodControl_t control)
 {
-    TCHAR buf[64];
-    TCHAR *pClass = controlType2winName(control);
+    char buf[64];
+    const char *pClass = controlType2winName(control);
 
     if ( ! RealGetWindowClass(hControl, buf, sizeof(buf)) || strcmp(buf, pClass) != 0 )
     {
@@ -160,52 +234,52 @@ bool checkControlClass(HWND hControl, oodControl_t control)
     return true;
 }
 
-
+/**
+ * Resolves a string to the type of windows control it is.  The function only
+ * compares enough letters to determine unequivocally if it matches one of the
+ * supported dialog controls.
+ *
+ * Example:
+ *
+ * CSTRING msgName = "CONNECTEDITDATA";
+ * oodControl_t ctrl = oodName2controlType(msgName + 7);
+ *
+ * @param name   The name to resolve.
+ *
+ * @return The windows control type.  winUnknown is returned for no match and
+ *         the name "separator" is special cased to winNotAControl.  (Separator
+ *         is used along with the data table stuff.)
+ *
+ * @remarks  There are some generic message names such as getControlDataPage
+ *           that need to match to winUnknown.  CO is not sufficient to
+ *           distinguish between comboBox and control.
+ */
 oodControl_t oodName2controlType(CSTRING name)
 {
-    if (      strcmp(name, "STATICCONTROL" ) == 0 ) return winStatic;
-    else if ( strcmp(name, "BUTTONCONTROL" ) == 0 ) return winButton;
-    else if ( strcmp(name, "RADIOCONTROL"  ) == 0 ) return winRadioButton;
-    else if ( strcmp(name, "CHECKCONTROL"  ) == 0 ) return winCheckBox;
-    else if ( strcmp(name, "GROUPBOX"      ) == 0 ) return winGroupBox;
-    else if ( strcmp(name, "EDITCONTROL"   ) == 0 ) return winEdit;
-    else if ( strcmp(name, "EDIT"          ) == 0 ) return winEdit;
-    else if ( strcmp(name, "LISTBOX"       ) == 0 ) return winListBox;
-    else if ( strcmp(name, "COMBOBOX"      ) == 0 ) return winComboBox;
-    else if ( strcmp(name, "SCROLLBAR"     ) == 0 ) return winScrollBar;
-    else if ( strcmp(name, "PROGRESSBAR"   ) == 0 ) return winProgressBar;
-    else if ( strcmp(name, "SLIDERCONTROL" ) == 0 ) return winTrackBar;
-    else if ( strcmp(name, "TRACKBAR"      ) == 0 ) return winTrackBar;
-    else if ( strcmp(name, "TREECONTROL"   ) == 0 ) return winTreeView;
-    else if ( strcmp(name, "TREEVIEW"      ) == 0 ) return winTreeView;
-    else if ( strcmp(name, "LISTCONTROL"   ) == 0 ) return winListView;
-    else if ( strcmp(name, "LISTVIEW"      ) == 0 ) return winListView;
-    else if ( strcmp(name, "TABCONTROL"    ) == 0 ) return winTab;
-    else if ( strcmp(name, "TAB"           ) == 0 ) return winTab;
-    else if ( strcmp(name, "MONTHCALENDAR" ) == 0 ) return winMonthCalendar;
-    else if ( strcmp(name, "DATETIMEPICKER") == 0 ) return winDateTimePicker;
+    if      ( StrCmpN(name, "CHECKBOX", 3      ) == 0 ) return winCheckBox;
+    else if ( StrCmpN(name, "COMBOBOX", 3      ) == 0 ) return winComboBox;
+    else if ( StrCmpN(name, "DATETIMEPICKER", 1) == 0 ) return winDateTimePicker;
+    else if ( StrCmpN(name, "EDIT", 1          ) == 0 ) return winEdit;
+    else if ( StrCmpN(name, "GROUPBOX", 1      ) == 0 ) return winGroupBox;
+    else if ( StrCmpN(name, "LISTBOX", 5       ) == 0 ) return winListBox;
+    else if ( StrCmpN(name, "LISTVIEW", 5      ) == 0 ) return winListView;
+    else if ( StrCmpN(name, "MONTHCALENDAR", 1 ) == 0 ) return winMonthCalendar;
+    else if ( StrCmpN(name, "PROGRESSBAR", 2   ) == 0 ) return winProgressBar;
+    else if ( StrCmpN(name, "PUSHBUTTON", 2    ) == 0 ) return winPushButton;
+    else if ( StrCmpN(name, "RADIOBUTTON", 1   ) == 0 ) return winRadioButton;
+    else if ( StrCmpN(name, "SCROLLBAR", 2     ) == 0 ) return winScrollBar;
+    else if ( StrCmpN(name, "SEPARATOR", 2     ) == 0 ) return winNotAControl;
+    else if ( StrCmpN(name, "STATIC", 2        ) == 0 ) return winStatic;
+    else if ( StrCmpN(name, "TAB", 3           ) == 0 ) return winTab;
+    else if ( StrCmpN(name, "TRACKBAR", 3      ) == 0 ) return winTrackBar;
+    else if ( StrCmpN(name, "TREEVIEW", 3      ) == 0 ) return winTreeView;
     else return winUnknown;
-
-
 }
 
-RexxClassObject getControlClass(RexxMethodContext *c, CSTRING className, oodControl_t *controlType)
+RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlType)
 {
     RexxClassObject controlClass = NULLOBJECT;
-    oodControl_t ctrl = oodName2controlType(className);
-
-    if ( ctrl == winUnknown )
-    {
-        goto done_out;
-    }
-    else if ( ctrl == winRadioButton )
-    {
-        className = "RADIOBUTTON";
-    }
-    else if ( ctrl == winCheckBox )
-    {
-        className = "CHECKBOX";
-    }
+    const char *className = controlType2className(controlType);
 
     controlClass = rxGetContextClass(c, className);
     if ( controlClass == NULLOBJECT )
@@ -213,9 +287,6 @@ RexxClassObject getControlClass(RexxMethodContext *c, CSTRING className, oodCont
         // An exception has been raised, which we don't want.  So, clear it.
         c->ClearCondition();
     }
-
-done_out:
-    *controlType = ctrl;
     return controlClass;
 }
 
@@ -415,7 +486,8 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
  *          checked to see if there is already an instantiated object and if so
  *          returns that object.
  */
-RexxMethod3(RexxObjectPtr, advCtrl_getControl, RexxObjectPtr, rxID, OPTIONAL_uint32_t, categoryPageID, OSELF, self)
+RexxMethod4(RexxObjectPtr, advCtrl_getControl, RexxObjectPtr, rxID, OPTIONAL_uint32_t, categoryPageID,
+            NAME, msgName, OSELF, self)
 {
     RexxMethodContext *c = context;
     RexxObjectPtr result = TheNilObj;
@@ -454,13 +526,8 @@ RexxMethod3(RexxObjectPtr, advCtrl_getControl, RexxObjectPtr, rxID, OPTIONAL_uin
 
     // Check that the underlying Windows control is the control type requested
     // by the programmer.  Return .nil if this is not true.
-    oodControl_t controlType;
-    RexxClassObject controlCls = getControlClass(context, c->GetMessageName() + 3, &controlType);
-    if ( controlCls == NULLOBJECT )
-    {
-        goto out;
-    }
-    if ( ! checkControlClass(hControl, controlType) )
+    oodControl_t controlType = oodName2controlType(msgName + 3);
+    if ( ! isControlMatch(hControl, controlType) )
     {
         goto out;
     }
@@ -482,6 +549,12 @@ RexxMethod3(RexxObjectPtr, advCtrl_getControl, RexxObjectPtr, rxID, OPTIONAL_uin
     if ( pArgs == NULL )
     {
         outOfMemoryException(context->threadContext);
+        goto out;
+    }
+
+    RexxClassObject controlCls = oodClass4controlType(context, controlType);
+    if ( controlCls == NULLOBJECT )
+    {
         goto out;
     }
 
@@ -541,3 +614,48 @@ RexxMethod2(RexxObjectPtr, advCtrl_test, OSELF, self, CSELF, pCSelf)
     }
     return TheNilObj;
 }
+
+
+/**
+ * Methods for the ListBox class.
+ */
+#define LISTBOX_CLASS   "ListBox"
+
+
+/** ListBox::getText()
+ *
+ *  Return the text of the item at the specified index.
+ *
+ *  @param  index  The 1-based item index.  (The underlying list box uses
+ *                 0-based indexes.)
+ *
+ *  @return  The item's text or the empty string on error.
+ */
+RexxMethod2(RexxObjectPtr, lb_getText, uint32_t, index, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+    RexxStringObject result = context->NullString();
+
+    if ( index-- > 0 )
+    {
+        LRESULT l = SendMessage(pcdc->hCtrl, LB_GETTEXTLEN, index, 0);
+        if ( l > 0 )
+        {
+            char *buf = (char *)malloc(l + 1);
+            if ( buf == NULL )
+            {
+                outOfMemoryException(context->threadContext);
+                return result;
+            }
+
+            l = SendMessage(pcdc->hCtrl, LB_GETTEXT, (WPARAM)buf, 0);
+            if ( l > 0 )
+            {
+                result = context->String(buf);
+            }
+            free(buf);
+        }
+    }
+    return result;
+}
+
