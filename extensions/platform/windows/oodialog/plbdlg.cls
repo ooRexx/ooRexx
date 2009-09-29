@@ -36,7 +36,8 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-/* Windows Dialog Interface for Open Object Rexx (ooRexx)
+/**
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
  *
  * The basic dialog class
  *

@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,14 +35,16 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/* Standard Dialog Classes                                                    */
-/*                                                                            */
-/******************************************************************************/
-::requires "USERDLG.CLS"
-::requires "ADVCTRL.CLS"
+
+/**
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
+ *
+ * State / Progress indicator dialog classes.  Not that these classes do not
+ * work well and could benefit from a re-write.
+ */
+
+::requires "userdlg.cls"
+::requires "advctrl.cls"
 
 ::class 'StateIndicator' subclass UserDialog public
 

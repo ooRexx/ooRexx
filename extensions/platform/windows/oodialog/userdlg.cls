@@ -35,16 +35,16 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/* User Dialog Class                                                          */
-/*                                                                            */
-/******************************************************************************/
+
+/**
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
+ *
+ * User Dialog Class.
+ */
+
 /* include the base dialog class */
 ::requires "basedlg.cls"
 ::requires "dyndlg.cls"
-
 
 /* This class extends the 'BaseDialog' class */
 ::class 'UserDialog' subclass BaseDialog public inherit DynamicDialog

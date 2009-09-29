@@ -35,14 +35,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/*                                                                            */
-/* Dynamic Dialog Class                                                       */
-/*                                                                            */
-/******************************************************************************/
 
+/**
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
+ *
+ * The Dynamic Dialog Class.  This class is the foundation for creating a dialog
+ * template in memory.
+ */
 ::class 'DynamicDialog' Mixinclass Object public
 
 ::constant STATIC_ID  -1

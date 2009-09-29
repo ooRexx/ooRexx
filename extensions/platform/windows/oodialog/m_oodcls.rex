@@ -35,8 +35,15 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* Purpose: Builds the three CLS files for OODIALOG:                          */
-/*   OODPLAIN, OODIALOG, OODWIN32                                             */
+
+/**
+ * Purpose: Builds the ooDialog package file: ooDialog.cls from the individual
+ *          *.cls files that make up the implementation code.
+ *
+ * Note that the code for reading the input files assumes that each file starts
+ * with the license / copyright header, which is 36 or 37 lines long.
+ */
+
 use arg outdir
 if arg() = 0 then do
   outdir = value("OR_OUTDIR","","ENVIRONMENT")
@@ -45,99 +52,86 @@ end
 else do
   if outdir~right(1) \== '\' then outdir ||= '\'
 end
+
 parse source . . progname
 inpdir = left(progname, progname~lastpos("\"))
-p = time('R')
--- say '----------------------------------------------------------------'
--- say 'OOdialog build started                  ' time() 'on' date()
--- say '----------------------------------------------------------------'
+
 outname = .array~new(3)
-outname[1] = "OODPLAIN"
-outname[2] = "OODIALOG"
-outname[3] = "OODWIN32"
-UtilName = "OODUTILS.CLS"
-.Local["UtilName"] = UtilName
-Arrax = .Array~new(3)
-Arrax[1] = .CheckArray~of("PLBDLG.CLS", "DYNDLG.CLS", "PLUDLG.CLS", "STDDLG.CLS")
+outname[1] = "oodPlain.cls"
+outname[2] = "oodWin32.cls"
+outname[3] = "ooDialog.cls"
 
-Arrax[2] = .CheckArray~of("DLGEXT.CLS", "BASEDLG.CLS", "RESDLG.CLS", "USERDLG.CLS", "RCDIALOG.CLS", "MENU.CLS", -
-                          "CATDLG.CLS", "ANIBUTTN.CLS", "DLGAREA.CLS")
-
-Arrax[3] = .CheckArray~of("ADVCTRL.CLS", "STDEXT.CLS", "MSGEXT.CLS", "PROPSHT.CLS")
-
-i = 0
-do j over Arrax
-    i += 1
-    NewFile = .stream~new(outdir || outname[i] || ".CLS")
-    if NewFile~open("WRITE REPLACE") \= "READY:" then leave
-    NewFile~lineout("/"||"*"~copies(78)||"/")
-    NewFile~lineout("/*"||" "~copies(76)||"*/")
-    NewFile~lineout("/*"||center(outname[i]||".CLS - OODialog Class Definition File",76)||"*/")
-    NewFile~lineout("/*"||center("Windows Dialog Interface for Open Object REXX",76)||"*/")
-    NewFile~lineout("/*"||" "~copies(76)||"*/")
-    NewFile~lineout("/"||"*"~copies(78)||"/")
-    NewFile~lineout("")
-
-    if i = 1 then do
-       NewFile~lineout("")
-       NewFile~lineout("::requires 'oodialog' LIBRARY")
-       NewFile~lineout("")
-       call ProcessUtils
-    end
-    else do
-       NewFile~lineout('::requires "'outname[i-1]'.CLS"')
-    end
-    do file over j
-       say (inpdir || file)
-       ReadFile = .stream~new(inpdir || File)
-       ReadFile~open("READ")
-       do while ReadFile~lines() > 0
-           s = ReadFile~linein
-           if s~pos('::requires') > 0 then do
-              parse upper value s with . '"' filename '"' .
-              isincl = 0
-              do jj over Arrax
-                  if jj~HasEntry(filename) = 1 then isincl = 1
-              end
-              if isincl = 0 then NewFile~lineout(s)
-          end
-          else NewFile~lineout(s)
-       end
-       ReadFile~close
-    end
-    NewFile~close
+do i = 1 to 2
+  ret = writeStubFile(outdir, outname[i])
+  if ret <> 0 then do
+    say 'Error writing' outname[i] 'aborting.'
+    return 9
+  end
 end
 
+-- Files are in the order they are read and written out. oodutils.cls must be kept first, otherwise
+-- the order should not make any difference.
+srcFiles = .array~of("oodutils.cls", "plbdlg.cls", "dyndlg.cls", "pludlg.cls", "stddlg.cls", "dlgext.cls",   -
+                     "basedlg.cls", "resdlg.cls", "userdlg.cls", "rcdialog.cls", "dialog.cls", "Menu.cls",   -
+                     "catdlg.cls", "anibuttn.cls", "dlgarea.cls", "advctrl.cls", "stdext.cls", "msgext.cls", -
+                     "propsht.cls")
 
--- say '----------------------------------------------------------------'
--- say 'Build ended after: ' time('E') 'sec  ' ' at:' time() 'on' date()
--- say '----------------------------------------------------------------'
--- say
+outFile = .stream~new(outdir || outname[3])
+if outFile~open("WRITE REPLACE") \= "READY:" then return 9
 
-exit
+signal on notready
 
+do i = 1 to 37
+  outFile~lineout(sourceLine(i))
+end
+outFile~lineout("")
+outFile~lineout("::requires 'oodialog' LIBRARY")
+outFile~lineout("")
 
-ProcessUtils:
-    UtilFile = .stream~new(inpdir || UtilName)
-    if UtilFile~open("READ") \= "READY:" then do
-        say "Couldn't process" inpdir || UtilName
-        exit
-    end
-    do while UtilFile~lines > 0
-        s = UtilFile~Linein
-        NewFile~lineout(s)
-    end
-    return
+do inFile over srcFiles
+  inputFile = inpdir || inFile
+  say inputFile
+  readFile = .stream~new(inputFile)
+  readFile~open("READ")
 
-
-::class CheckArray subclass array
-
-::method HasEntry
-  use arg srch
-  do x over self
-     if x = srch then return 1
+  -- Skip the header, with a little leeway.
+  do 35
+    readFile~linein
   end
-  if (srch = .Local["UtilName"]) then return 1
+
+  line = readFile~linein~strip
+  do while line~left(2) == '/*', line~right(2) == '*/', readFile~lines() > 0
+    line = readFile~linein
+  end
+
+  outFile~lineout("")
+
+  do while readFile~lines() > 0
+    line = readFile~linein
+    if line~pos('::requires') > 0 then iterate
+    else outFile~lineout(line)
+  end
+  readFile~close
+end
+outFile~close
+
+return 0
+
+notready:
+  say "Stream I/O error while creating ooDialog.cls"
+return 9
+
+::routine writeStubFile
+  use strict arg outDir, outFileName
+
+  stubFile = .stream~new(outdir || outFileName)
+  if stubFile~open("WRITE REPLACE") \= "READY:" then return 9
+
+  do i = 1 to 37
+    stubFile~lineout(sourceLine(i))
+  end
+  stubFile~lineout("")
+  stubFile~lineout("::requires 'ooDialog.cls'")
+  stubFile~close
+
   return 0
-
-

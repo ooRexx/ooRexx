@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,22 +35,27 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/* Basic Dialog Class                                                         */
-/*                                                                            */
-/******************************************************************************/
 
-
+/**
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
+ *
+ * This module contains the WindowsExtensions mixinclass and the BaseDialog
+ * class.  These two classes form the foundation of all non-trivial dialogs.
+ *
+ * Some classes related to Windows resources are also included here.
+ */
 ::requires "plbdlg.cls"
 ::requires "dlgext.cls"
 
-/******************************************************************************/
-/* The class WindowExtensions implements methods that are common to all windows, */
-/* no matter whether they are dialogs or dialog items. It's an extension to   */
-/* the WindowBase mixin-class                                                 */
-/******************************************************************************/
+/**
+ * The class WindowExtensions implements methods that are common to all windows,
+ * no matter whether they are dialogs or dialog items.  It's an extension to
+ * the WindowBase mixin-class.
+ *
+ * Note that this mixinclass contains many methods that should not be a part of
+ * a dialog control class.  The original comment above, does not seem to have
+ * been followed through on.
+ */
 
 ::class 'WindowExtensions' public MIXINCLASS object
 

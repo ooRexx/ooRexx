@@ -35,16 +35,15 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/* Resource Dialog Class                                                      */
-/*                                                                            */
-/******************************************************************************/
+
+/**
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
+ *
+ * Resource Dialog Class.
+ */
 ::requires "BaseDlg.cls"
 
 ::class 'ResDialog' subclass BaseDialog public
-
 
 ::method init
    expose library resource dlgData.

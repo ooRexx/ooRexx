@@ -130,7 +130,7 @@ inline bool isDataAttributeControl(oodControl_t control)
 /* Does the item in the data table have the WS_GROUP style. */
 static inline bool hasGroupStyle(HWND hwnd, DIALOGADMIN *dlgAdm, uint32_t index)
 {
-    return ((GetWindowLong(GetDlgItem(hwnd, dlgAdm->DataTab[index + 1].id), GWL_STYLE) & WS_GROUP) == WS_GROUP);
+    return ((GetWindowLong(GetDlgItem(hwnd, dlgAdm->DataTab[index].id), GWL_STYLE) & WS_GROUP) == WS_GROUP);
 }
 
 /* Is control 1 in the same dialog as control 2. Needed for CategoryDialogs. */

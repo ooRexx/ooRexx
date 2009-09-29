@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -35,16 +35,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/*                                                                            */
-/* Additional Notification Messages and Notification Handlers                 */
-/*                                                                            */
-/******************************************************************************/
 
+/**
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
+ *
+ * Additional Notification Messages and Notification Handlers.
+ */
 ::class 'MessageExtensions' Mixinclass Object public
-
 
 ::method connectCommonNotify
    use strict arg id, type, msgToRise = ""

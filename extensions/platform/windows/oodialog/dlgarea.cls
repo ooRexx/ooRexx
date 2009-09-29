@@ -1,11 +1,11 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
-/* Copyright (c) 2006 Rexx Language Association. All rights reserved.         */
+/* Copyright (c) 2006-2009 Rexx Language Association. All rights reserved.    */
 /*                                                                            */
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -34,12 +34,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/* Standard Dialog Classes                                                    */
-/*                                                                            */
-/******************************************************************************/
+
+/**
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
+ *
+ * The DlgArea and DlgAreaU classes.
+ */
+
 /* ========================================================================= */
 ::class 'DlgArea' public
 /* ========================================================================= */

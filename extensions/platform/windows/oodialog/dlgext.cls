@@ -35,13 +35,12 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/******************************************************************************/
-/*                                                                            */
-/*       Windows Dialog Interface for Object REXX                             */
-/*                                                                            */
-/* Dialog class extensions                                                    */
-/*                                                                            */
-/******************************************************************************/
+
+/**
+ * Windows Dialog Interface for Open Object Rexx (ooRexx.)
+ *
+ * Dialog class extensions.
+ */
 
 ::class 'DialogExtensions' public MIXINCLASS object
 
