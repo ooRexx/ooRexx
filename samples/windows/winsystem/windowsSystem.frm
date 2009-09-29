@@ -49,7 +49,7 @@
  */
 
 ::requires 'winsystm.cls'
-::requires 'oodwin32.cls'
+::requires "ooDialog.cls"
 
 /** findTheWindow()
  * Uses the WindowsManager to create a WindowObject representing a top-level

@@ -41,7 +41,7 @@ MyDlg~execute('ShowTop')
 MyDlg~DeInstall
 
 exit
-::requires 'OODWIN32.CLS'
+::requires "ooDialog.cls"
 /* ========================================================================= */
 ::class MyDialog Subclass UserDialog Inherit AdvancedControls
 /* ========================================================================= */

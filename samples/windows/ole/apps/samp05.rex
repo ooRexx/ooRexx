@@ -77,4 +77,4 @@ say "Created" WPDoc~Path"\"WPDoc~Name
 WPDoc~Close
 WordProApp~Quit
 
-::REQUIRES OREXXOLE.CLS
+

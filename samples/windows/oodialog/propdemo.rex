@@ -59,7 +59,7 @@
  ret = directory(curdir)    /* switch back to stored directory */
  return
 
-::requires OODWIN32.CLS    /* property sheet is defined in OODialog extension */
+::requires "ooDialog.cls"
 
     /* define subclass of PropertySheet */
 ::class NewControlsDialog subclass PropertySheet

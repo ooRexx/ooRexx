@@ -75,7 +75,7 @@ See documentation for version control
     code~DeInstall                              -- Finished, so deInstall
 exit
 
-::requires 'oodwin32.cls'                       -- Needed for the dialog
+::requires "ooDialog.cls"                       -- Needed for the dialog
 ::requires 'winsystm.cls'                       -- Needed for the Windows clipboard
 
 ::class oort_dialog subclass userdialog inherit AdvancedControls MessageExtensions

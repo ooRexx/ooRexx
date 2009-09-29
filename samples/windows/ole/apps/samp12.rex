@@ -60,7 +60,7 @@ end
 
 exit
 
-::requires "orexxole.cls"
+
 
 /* this class is derived from OLEObject and contains several   */
 /* methods that will be called when certain events take place. */

@@ -369,7 +369,7 @@ return
 ----------------------------------------------------------------------------------------------------------------
 
 -- Requires directive to use the Public Routines
-::requires 'oodplain.cls'
+::requires "ooDialog.cls"
 
 ::class SimpleDialog subclass PlainUserDialog public
 ::method Execute

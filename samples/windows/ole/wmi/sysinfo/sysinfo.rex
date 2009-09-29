@@ -62,10 +62,7 @@ end
 exit
 
 
-
-::requires "OODIALOG.CLS"    /* This file contains the OODIALOG classes */
-::requires "OODWIN32.CLS"    /* advanced Controls */
-::requires "OREXXOLE.CLS"    /* OLE interface */
+::requires "ooDialog.cls"
 
 ::class SystemClass subclass UserDialog inherit AdvancedControls MessageExtensions
 

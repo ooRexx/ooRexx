@@ -56,4 +56,4 @@ say "Just before the default method "
 ReturnValue = Sample~DefaultMethod("A parm");
 ReturnValue = Sample~NamedRoutine("A parm");
 
-::requires "orexxole.cls"
+

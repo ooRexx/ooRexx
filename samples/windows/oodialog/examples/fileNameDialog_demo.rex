@@ -221,5 +221,5 @@ Option7:
         call infoDialog 'You File Will Be Saved As' a_file
 return
 ----------------------------------------------------------------------------------------------------------------
-::requires 'oodplain.cls'
+::requires "ooDialog.cls"
 

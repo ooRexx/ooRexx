@@ -92,7 +92,7 @@ myIE~quit
 
 exit
 
-::REQUIRES "orexxole.cls"
+
 
 /* this class is derived from OLEObject and contains two methods */
 /* that will be called when certain events take place.           */

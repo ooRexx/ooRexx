@@ -92,4 +92,4 @@ dbs~TableDefs~Append(tdf)
 appAccess~quit
 exit
 
-::requires "OREXXOLE.CLS"
+

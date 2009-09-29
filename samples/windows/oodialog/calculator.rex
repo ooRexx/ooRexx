@@ -78,7 +78,7 @@ any:
  * has a requires directive for oodialog.cls, which in turn has a requires
  * directive for oodplain.cls.
  */
-::requires "oodwin32.cls"
+::requires "ooDialog.cls"
 
 /* This requires loads the RxMath functions. */
 ::requires "rxmath" library

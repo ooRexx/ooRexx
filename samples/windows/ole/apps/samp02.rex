@@ -68,5 +68,3 @@ ShortCut~TargetPath = "%WINDIR%\notepad.exe"
 ShortCut~Save
 
 WshShellObj~Popup("Processing of REXX script has finished!")
-
-::REQUIRES OREXXOLE.CLS

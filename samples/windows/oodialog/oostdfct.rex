@@ -110,4 +110,4 @@ say 'Single=' SingleSelection('Select one again', commonTitle,                  
 
 say 'End of standard dialog function demonstration...'
 
-::requires 'OODPLAIN.cls'
+::requires "ooDialog.cls"

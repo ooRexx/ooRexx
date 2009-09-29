@@ -71,4 +71,4 @@ Worksheet~SaveAs( value("TEMP",,ENVIRONMENT)"\demo.xls")
 excelObject~Quit
 exit
 
-::requires "orexxole.cls"
+

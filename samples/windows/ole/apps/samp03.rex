@@ -66,4 +66,4 @@ Do i=0 To Printers~Count/2 - 1
   Say "   Port" Printers[i*2] "is connected to" Printers[i*2 + 1]
 End
 
-::REQUIRES "OREXXOLE.CLS"
+

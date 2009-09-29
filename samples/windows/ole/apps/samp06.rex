@@ -86,4 +86,4 @@ WordProApp~Save
 WordProApp~Close(.False)
 WordProApp~Quit
 
-::REQUIRES "OREXXOLE.CLS"
+

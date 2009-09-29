@@ -180,4 +180,4 @@ else do
 end
 
 ::requires "winsystm.cls" -- required for the registry class
-::requires "OODPLAIN.cls" -- required for the dialog class
+::requires "ooDialog.cls" -- required for the dialog class

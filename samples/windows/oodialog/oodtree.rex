@@ -72,7 +72,7 @@ CleanUp:
    if MyDialog~IsDialogActive then MyDialog~StopIt
 
 
-::requires "OODWIN32.CLS"    /* This file contains the OODIALOG classes */
+::requires "ooDialog.cls"    /* This file contains the OODIALOG classes */
 ::requires "WINSYSTM.CLS"    /* This file contains the Windows classes */
 
 

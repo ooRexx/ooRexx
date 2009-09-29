@@ -56,9 +56,7 @@ end
 
 exit   /* leave program */
 
-::requires "OREXXOLE.CLS"    /* OLE Automation support class            */
-::requires "OODIALOG.CLS"    /* This file contains the OODIALOG classes */
-::requires "OODWIN32.CLS"    /* contains advanced controls              */
+::requires "ooDialog.cls"    /* contains the ooDialog classes           */
 ::requires "WINSYSTM.CLS"    /* used for registry lookup                */
 
 /*****************************************/

@@ -47,7 +47,7 @@ if dlg~InitCode <> 0 then exit
 if dlg~Load("EMPLOYE2.RC", 100) \= 0 then exit
 dlg~Execute("SHOWTOP")
 dlg~deinstall
-::requires "OODPLAIN.CLS"
+::requires "ooDialog.cls"
 
 ::class MyDialogClass subclass PlainUserDialog
 ::method InitDialog

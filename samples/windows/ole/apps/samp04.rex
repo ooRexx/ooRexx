@@ -89,5 +89,3 @@ MailDoc~Save(.False, .False)
 MailDoc~Send(.False, Recipients)
 
 Say "Mail has been sent"
-
-::REQUIRES OREXXOLE.CLS

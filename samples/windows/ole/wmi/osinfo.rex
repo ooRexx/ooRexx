@@ -138,7 +138,7 @@ end
 
 exit
 
-::requires "OREXXOLE.CLS"
+
 
 /* print a header */
 ::routine head

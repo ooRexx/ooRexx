@@ -58,7 +58,7 @@ CleanUp:
    if dlg~IsDialogActive then dlg~StopIt
 
 
-::requires "OODIALOG.CLS"
+::requires "ooDialog.cls"
 
 ::class MyDialogClass subclass UserDialog
 

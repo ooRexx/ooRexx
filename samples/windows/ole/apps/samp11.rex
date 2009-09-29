@@ -71,4 +71,4 @@ Explorer~quit
 say "IBM stocks are at" stockprice"."
 exit
 
-::requires "orexxole.cls"
+

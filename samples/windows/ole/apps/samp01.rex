@@ -66,5 +66,3 @@ myIE~Navigate("http://www.ibm.com/news")
 /* wait for 10 seconds */
 Call SysSleep 10
 myIE~quit
-
-::REQUIRES "OREXXOLE.CLS"

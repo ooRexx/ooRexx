@@ -53,5 +53,5 @@ info~print
 
 exit
 
-::requires "OREXXOLE.CLS"
+
 ::requires "METHINFO.CLS"

@@ -178,4 +178,4 @@ if interface = "CONSOLE" then say msg
 else call InfoDialog msg
 
 ::requires "winsystm.cls" -- required for the registry class
-::requires "OODPLAIN.cls" -- required for the dialog class
+::requires "ooDialog.cls" -- required for the dialog class

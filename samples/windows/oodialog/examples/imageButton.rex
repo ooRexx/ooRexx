@@ -100,7 +100,7 @@ return 0
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   Directives, Classes, or Routines.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-::requires "oodWin32.cls"
+::requires "ooDialog.cls"
 
 ::class 'ImageListDlg' subclass RcDialog inherit AdvancedControls MessageExtensions
 

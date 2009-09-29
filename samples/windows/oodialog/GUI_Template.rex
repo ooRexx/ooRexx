@@ -157,7 +157,7 @@ any:
 
 exit -1
 /* ========================================================================= */
-::requires 'oodwin32.cls'
+::requires "ooDialog.cls"
 /* ::requires 'winsystm.cls'    -- Uncomment if you inherit VirtualKeyCodes  */
 /* ========================================================================= */
 ::class MyDlgClass subclass userdialog

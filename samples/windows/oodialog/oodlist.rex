@@ -65,7 +65,7 @@ dlg~deinstall
 
 return
 
-::requires OODWIN32.CLS    /* property sheet is defined in OODialog extension */
+::requires "ooDialog.cls"
 ::requires "WINSYSTM.CLS"           /* This file contains the Windows classes */
 
 

@@ -53,5 +53,5 @@ if dlg~Execute("SHOWTOP") = 1 then do
     say dlg~Married
 end
 dlg~deinstall
-::requires "OODPLAIN.CLS"
+::requires "ooDialog.cls"
 
