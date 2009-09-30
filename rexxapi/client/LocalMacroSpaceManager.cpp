@@ -404,6 +404,8 @@ RexxReturnCode LocalMacroSpaceManager::saveMacroSpace(const char *target)
             break;
         }
         file.write(message.getMessageData(), message.getMessageDataLength());
+        // explicitly free this since we're going to be reusing the message
+        // instance.
         message.freeMessageData();
     }
     // all done!
@@ -476,6 +478,8 @@ RexxReturnCode LocalMacroSpaceManager::saveMacroSpace(const char *target, const 
             return mapReturnResult(message);
         }
         file.write(message.getMessageData(), message.getMessageDataLength());
+        // release the macro image data
+        message.freeMessageData();
     }
     // all done!
     file.close();

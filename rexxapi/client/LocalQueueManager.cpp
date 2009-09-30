@@ -417,7 +417,7 @@ RexxReturnCode LocalQueueManager::pullFromQueue(const char *name, RXSTRING &data
     message.send();
     if (message.result == QUEUE_ITEM_PULLED)
     {
-        MAKERXSTRING(data, (char *)message.getMessageData(), message.getMessageDataLength());
+        message.transferMessageData(data);
         // if this was a null string, then an empty buffer is sent back.  Allocate a minimal
         // buffer to distinguish between nothing and a null string value
         if (data.strptr == NULL)

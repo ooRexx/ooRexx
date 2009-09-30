@@ -171,9 +171,10 @@ void ServiceMessage::readResult(SysClientStream &pipe)
         required -= actual;
         offset += actual;
     }
-    // the server sets this value to what is required.  This can confuse things on this end, so
-    // automatically set this on so we don't double free the memory.
-    retainMessageData = true;
+    // the server sets this value to what is required required on its end.  We allocated this memory
+    // when we read it in on this end, so mark it for freeing initially.  If it should not
+    // be freed, the sender of the message needs to take ownership.
+    retainMessageData = false;
 
     // handle any errors that the server side might have raised.
     raiseServerError();

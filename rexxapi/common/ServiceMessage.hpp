@@ -337,6 +337,7 @@ public:
     {
         messageData = NULL;
         messageDataLength = 0;
+        retainMessageData = false;
     }
 
     inline void *getMessageData() { return messageData; }
@@ -344,8 +345,13 @@ public:
 
     inline void transferMessageData(RXSTRING &data)
     {
+        // if no data provided, don't copy anything.
+        if (messageDataLength == 0)
+        {
+            messageDataLength = 0;
+        }
         // if provided a buffer, then use it if large enough
-        if (data.strptr != NULL && messageDataLength < data.strlength)
+        else if (data.strptr != NULL && messageDataLength < data.strlength)
         {
             memcpy(data.strptr, messageData, messageDataLength);
             data.strlength = messageDataLength;
@@ -354,12 +360,10 @@ public:
         }
         else
         {
-
             MAKERXSTRING(data, (char *)messageData, messageDataLength);
             // we've given up ownership of this data, so clear out the
             // pointers so we don't try to free
-            messageData = NULL;
-            messageDataLength = 0;
+            clearMessageData();
         }
     }
 
