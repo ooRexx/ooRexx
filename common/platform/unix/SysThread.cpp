@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Kernel                                              SysThread.cpp     */
 /*                                                                            */
-/* Windows implementation of the SysThread class.                             */
+/* Unix implementation of the SysThread class.                                */
 /*                                                                            */
 /******************************************************************************/
 

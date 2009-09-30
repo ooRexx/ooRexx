@@ -38,7 +38,7 @@
 /******************************************************************************/
 /* REXX Kernel                                              SysFile.cpp       */
 /*                                                                            */
-/* Windows implementation of the SysFile class.                               */
+/* Unix implementation of the SysFile class.                                  */
 /*                                                                            */
 /******************************************************************************/
 
