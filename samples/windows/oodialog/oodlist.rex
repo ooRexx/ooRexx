@@ -160,13 +160,13 @@ return
 /* initialize list control on first category page */
 ::method InitList
   expose ID_List
-  curList = self~GetListControl(ID_List)
+  curList = self~newListView(ID_List)
 
 /* initialize report list control on second category page */
 ::method InitReport
   expose ID_Rep smallIcons
 
-  curList = self~GetListControl(ID_Rep)
+  curList = self~newListView(ID_Rep)
   if curList \= .Nil then
   do /* connect bitmap and insert colums */
     curList~setImageList(smallIcons, .Image~toID(LVSIL_SMALL))
@@ -182,7 +182,7 @@ return
 /* initialize icon list control on third category page */
 ::method InitIcon
   expose ID_Ic normalIcons
-  curList = self~GetListControl(ID_Ic)
+  curList = self~newListView(ID_Ic)
   if curList \= .Nil then
   do
     self~ConnectListNotify(ID_Ic,"BEGINDRAG","DefListDragHandler")
@@ -194,7 +194,7 @@ return
 /* initialize small icon list control on second category page */
 ::method InitSmallIcon
   expose ID_SIc smallIcons
-  curList = self~GetListControl(ID_SIc)
+  curList = self~newListView(ID_SIc)
   curList~setImageList(smallIcons, .Image~toID(LVSIL_SMALL))
   self~ConnectListNotify(ID_SIc,"BEGINDRAG","DefListDragHandler") /* connect default drag handler */
 
@@ -203,7 +203,7 @@ return
 ::method OnColumnClick
   expose ID_Rep
   use arg id, column
-  curList = self~GetListControl(ID_Rep)
+  curList = self~newListView(ID_Rep)
   curList~SetColumnWidth(column,curList~ColumnWidth(column)+10)
   info. = curlist~ColumnInfo(column)
   call InfoDialog "Column Title : " info.!Text"d"x,
@@ -214,7 +214,7 @@ return
 /* an item was double clicked (activated in Windows terms.) */
 ::method OnActivate
   use arg id
-  curList = self~GetListControl(id)
+  curList = self~newListView(id)
   if curList == .nil then return
 
   -- Get the index of the item with the focus and the text associated with it
@@ -270,7 +270,7 @@ return
 
   do j = 1 to 4
     ListId = j+100
-    curList = self~GetListControl(ListId,j)
+    curList = self~newListView(ListId,j)
     if Item.Sex = "F" then
       iSex = 1
     else

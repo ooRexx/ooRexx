@@ -136,7 +136,7 @@
    self~init:super(message, title, fixedx)
 
 ::method initDialog
-   pb = self~getProgressBar(101)
+   pb = self~newProgressBar(101)
    if pb \= .nil then do
        pb~setRange(self~lowValue, self~highValue)
        pb~setPos(self~lowValue)
@@ -157,14 +157,14 @@
 
 ::method "progress="
    use arg newpos
-   self~getProgressBar(101)~setPos(newpos)
+   self~newProgressBar(101)~setPos(newpos)
 
 ::method increase
-   if arg(1,'e') = 1 then self~getProgressBar(101)~step(arg(1))
-   else self~getProgressBar(101)~step
+   if arg(1,'e') = 1 then self~newProgressBar(101)~step(arg(1))
+   else self~newProgressBar(101)~step
 
 ::method complete
-   self~getProgressBar(101)~setPos(self~highValue)
+   self~newProgressBar(101)~setPos(self~highValue)
 
 ::method "message="
    forward class (super) continue

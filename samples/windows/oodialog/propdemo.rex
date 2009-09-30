@@ -62,7 +62,7 @@
 ::requires "ooDialog.cls"
 
     /* define subclass of PropertySheet */
-::class NewControlsDialog subclass PropertySheet
+::class 'NewControlsDialog' subclass PropertySheet
 
     /* set the categories: used as tab label, definition method names and inititalization method names */
 ::method InitCategories
@@ -113,8 +113,8 @@
 ::method InitListView
    self~ConnectListNotify(100,"Activate")     /* connect double-click on a list item with OnActivate */
    self~ConnectListNotify(100,"ColumnClick")  /* connect click on a column header with OnColumnClick */
-   lc = self~GetListControl(100,1)            /* Get an object associated with list control 100 in the first page */
-   if lc == .Nil then return
+   lc = self~newListView(100,1)               /* Get an object associated with list control 100 in the first page */
+   if lc == .nil then return
    /* Set the column headers */
    lc~InsertColumn(0,"Symbol", 40)
    lc~InsertColumn(1,"Quote", 50)
@@ -152,8 +152,8 @@
 
 ::method InitTreeView
    self~ConnectTreeNotify(100,"BeginDrag","DefTreeDragHandler")   /* support drag and drop (default behaviour) */
-   tc = self~GetTreeControl(100)  /* category specifier is not required in InitXXX methods */
-   if tc == .Nil then return
+   tc = self~newTreeView(100)  /* category specifier is not required in InitXXX methods */
+   if tc == .nil then return
 
    /* set images for the items */
    image = .Image~getImage("bmp\psdemotv.bmp")
@@ -226,30 +226,30 @@
    self~ConnectSliderNotify("VSLIDER3","EndTrack","OnEndTrack")
 
    /* Initialize slider SLIDER1 */
-   curSL = self~GetSliderControl("SLIDER1")
-   if curSL \= .Nil then curSL~SetTickFrequency(10)
+   curSL = self~newTrackBar("SLIDER1")
+   if curSL \= .nil then curSL~SetTickFrequency(10)
 
    /* Initialize slider SLIDER2 */
-   curSL = self~GetSliderControl("SLIDER2")
-   if curSL \= .Nil then do
+   curSL = self~newTrackBar("SLIDER2")
+   if curSL \= .nil then do
      curSL~InitRange(0,200)
      curSL~SetTickFrequency(50)
    end
 
    /* Initialize slider SLIDER3 */
-   curSL = self~GetSliderControl("SLIDER3")
-   if curSL \= .Nil then do
+   curSL = self~newTrackBar("SLIDER3")
+   if curSL \= .nil then do
      curSL~InitSelRange(20,60)
      curSL~SetTickFrequency(10)
    end
 
    /* Initialize slider VSLIDER1 */
-   curSL = self~GetSliderControl("VSLIDER1")
-   if curSL \= .Nil then curSL~SetTickFrequency(10)
+   curSL = self~newTrackBar("VSLIDER1")
+   if curSL \= .nil then curSL~SetTickFrequency(10)
 
    /* Initialize slider VSLIDER2 */
-   curSL = self~GetSliderControl("VSLIDER2")
-   if curSL \= .Nil then do
+   curSL = self~newTrackBar("VSLIDER2")
+   if curSL \= .nil then do
      curSL~InitRange(0,400)
      curSL~SetLineStep(5)
      curSL~SetPageStep(50)
@@ -257,8 +257,8 @@
    end
 
    /* Initialize slider VSLIDER3 */
-   curSL = self~GetSliderControl("VSLIDER3")
-   if curSL \= .Nil then do
+   curSL = self~newTrackBar("VSLIDER3")
+   if curSL \= .nil then do
      curSL~SetTickFrequency(5)
    end
 
@@ -266,10 +266,10 @@
    font1 = self~CreateFont("Arial", 24, "BOLD")
    initarray = .array~of(self~Slider1, self~Slider2, self~Slider3, self~vSlider1, self~vSlider2, self~vSlider3)
    do i = 1 to 6
-       label = self~GetStaticControl(i+300,4)
-       if label \= .Nil then do
-           label~Title=initarray[i]          /* display initial value */
-           if i <4 then label~SetFont(font1) /* use large font for labels associated with horizontal sliders */
+       label = self~newStatic(i+300,4)
+       if label \= .nil then do
+           label~setText(initarray[i])           /* display initial value */
+           if i < 4 then label~setFont(font1)    /* use large font for labels associated with horizontal sliders */
        end
    end
 
@@ -280,8 +280,8 @@
 
    self~ConnectDraw(200,"OnDrawTabRect")    /* sent when the owner-drawn button is to be redrawn */
    self~ConnectTabNotify(100, "SELCHANGE", "OnTabSelChange")    /* sent when another tab is selected */
-   tc = self~GetTabControl(100,5)
-   if tc == .Nil then return
+   tc = self~newTab(100,5)
+   if tc == .nil then return
 
    /* font used to display the color name in the owner-drawn button */
    font2 = self~CreateFont("Arial", 48, "BOLD ITALIC")
@@ -333,15 +333,15 @@
    -- hSlider is the handle to the slider that was moved.  Get its resource ID
    -- and get a SliderControl object using that ID.
    id = self~getControlID(hSlider)
-   sl = self~getSliderControl(id, 4)
+   sl = self~newTrackBar(id, 4)
 
-   label = self~getStaticControl(id + 100, 4)
+   label = self~newStatic(id + 100, 4)
    label~setText(sl~pos)
 
    /* Force the owner-drawn button to be redrawn with the selected color */
 ::method OnTabSelChange
-   but = self~GetButtonControl(200,5)
-   if but == .Nil then return
+   but = self~newPushButton(200,5)
+   if but == .nil then return
    but~update
 
 
@@ -350,10 +350,10 @@
    expose font2 font3 imageList iconsRemoved needWrite
    use arg id
 
-   but = self~GetButtonControl(id,5)
-   if but == .Nil then return
-   tc = self~GetTabControl(100,5)
-   if tc == .Nil then return
+   but = self~newPushButton(id,5)
+   if but == .nil then return
+   tc = self~newTab(100,5)
+   if tc == .nil then return
 
    -- Each time the 'Gray' tab is selected, we remove the tab icons.  Then, when
    -- one of the other tabs is selected we set the  image list back.
@@ -416,9 +416,9 @@
    /* generic method to simulate a process of which the progress is displayed by a progress bar */
 ::method AnimateProgress unguarded
    use arg id, step, iterations, tsleep
-   pb = self~GetProgressBar(id,3)
-   lab = self~GetStaticControl(id+200,3)
-   if pb \= .Nil & lab \= .Nil then do
+   pb = self~newProgressBar(id,3)
+   lab = self~newStatic(id+200,3)
+   if pb \= .nil & lab \= .nil then do
       pb~SetRange(0, iterations*step)
       pb~SetStep(step)
       do i = 1 to iterations
@@ -460,8 +460,8 @@
 
    /* called when an item of report is double-clicked to display a message and focus the next item in the list */
 ::method OnActivate
-   lc = self~GetListControl(100,1)
-   if lc == .Nil then return
+   lc = self~newListView(100,1)
+   if lc == .nil then return
    si = lc~Focused
    order = askDialog("You have selected" lc~ItemText(si)". Do you want to order 50 stocks at" lc~ItemText(si,1) "? ")
    lc~Deselect(si)

@@ -84,7 +84,7 @@ exit
   return InitRet
 
 ::method InitDialog
-  cb = self~GetComboBox(100)
+  cb = self~newComboBox(100)
   if cb \= .nil then do
     cb~add("Win32_BootConfiguration")
     cb~add("Win32_ComputerSystem")
@@ -106,10 +106,10 @@ exit
   return resOK
 
 ::method selectionChange
-  lc = self~GetListBox(101)
+  lc = self~newListBox(101)
   if lc = .nil then return
   lc~DeleteAll
-  component = self~GetComboBox(100)~title
+  component = self~newComboBox(100)~title
 -- Gather data on the current size and position of the dialog
   parse value lc~getPos() with siX siY
   parse value lc~getSize() with siW siH

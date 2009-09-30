@@ -167,7 +167,7 @@
    daynames = .array~of('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
 
 ::method InitDays
-  staticImage = self~getStaticControl(145)
+  staticImage = self~newStatic(145)
   parse value staticImage~getRect with x y x2 y2
   size = .Size~new(x2 - x, y2 - y)
   image = .Image~getImage('bmp\movie.bmp', .Image~toID(IMAGE_BITMAP), size)
@@ -188,7 +188,7 @@
 ::method InitTicket
    if .DlgUtil~comCtl32Version  < 6 then return
 
-   bmpButton = self~getButtonControl(45)
+   bmpButton = self~newPushButton(45)
    parse value bmpButton~getRect with x y x2 y2
 
    size = .Size~new(x2 - x - 10, y2 - y - 10)
@@ -369,8 +369,8 @@
 ::method initDialog
   expose nameCB sizeCB
 
-  nameCB = self~getComboBox(IDC_COMBO_NAME)
-  sizeCB = self~getComboBox(IDC_COMBO_SIZE)
+  nameCB = self~newComboBox(IDC_COMBO_NAME)
+  sizeCB = self~newComboBox(IDC_COMBO_SIZE)
 
   names = .array~of("Default", "Tahoma", "Courier", "MS Sans Serif")
   sizes = .array~of("Default", '8 point', '10 point', '12 point', '16 point')

@@ -175,11 +175,11 @@ exit -1
 /*                                                                           */
 /* If you are going to use any of these methods:                             */
 /*                                                                           */
-/* GETCOMBOBOX              GETSCROLLBAR              GETTREECONTROL         */
-/* GETRADIOCONTROL          GETLISTCONTROL            GETPROGRESSBAR         */
-/* GETSTATICCONTROL         GETSLIDERCONTROL          GETCHECKCONTROL        */
-/* GETLISTBOX               GETTABCONTROL             GETEDITCONTROL         */
-/* GETBUTTONCONTROL                                                          */
+/* newComboBox              newScrollBar              newTreeView         */
+/* newRadioButton          newListView            newProgressBar         */
+/* newStatic         newTrackBar          newCheckBox        */
+/* newListBox               newTab             newEdit         */
+/* newPushButton                                                          */
 /*                                                                           */
 /* Then you must add INHERIT ADVANCEDCONTROLS to the class directive above   */
 /*                                                                           */
@@ -303,7 +303,7 @@ exit -1
                         /* ------------------------------------------------- */
 
 /*  for example:                                                             */
-/*  List = self~GetListControl([id])                                         */
+/*  List = self~newListView([id])                                         */
 /*  if List \= .Nil then do                                                  */
 /*    list~setImageList(imageList, .Image~toID(LVSIL_SMALL))                 */
 /*    list~AddStyle("[Style1 style2...]")                                    */

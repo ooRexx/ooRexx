@@ -117,10 +117,10 @@ return 0
   imagesLoaded = .false
   ctr = 0
 
-  pbPush = self~getButtonControl(IDC_PB_PUSHME)
-  pbView  = self~getButtonControl(IDC_PB_VIEW)
-  pbAdd  = self~getButtonControl(IDC_PB_ADD)
-  stStatus = self~getStaticControl(IDC_ST_STATUS)
+  pbPush = self~newPushButton(IDC_PB_PUSHME)
+  pbView  = self~newPushButton(IDC_PB_VIEW)
+  pbAdd  = self~newPushButton(IDC_PB_ADD)
+  stStatus = self~newStatic(IDC_ST_STATUS)
 
   stStatus~setText("")
 
@@ -384,7 +384,7 @@ return .true
     end
     when ctr == 4 then do
       pbView~enable
-      cancel = self~getButtonControl(IDCANCEL)
+      cancel = self~newPushButton(IDCANCEL)
       cancel~style = "DEFPUSHBUTTON"
       stStatus~setText('View Pictures button now enabled, should not be default push button.')
       ctr = 5

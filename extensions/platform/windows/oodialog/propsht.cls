@@ -123,7 +123,7 @@
    /* this is to correct a redraw problem of a focused list view control that gets reactivated */
    self~addUserMsg(PropSheetActivated, "0x00000006", "0xFFFFFFFF")  /* WM_ACTIVATE */
 
-   tc = self~getTabControl(9001, 0)
+   tc = self~newTab(9001, 0)
    if tc \= .nil then do
       do i = 1 to self~catalog['count']
          tc~insert(,self~catalog['names'][i])
@@ -157,7 +157,7 @@
    end
 
 ::method getSelectedPage unguarded
-   return self~getTabControl(9001, 0)~selectedIndex+1
+   return self~newTab(9001, 0)~selectedIndex+1
 
 
 ::method changePage unguarded
@@ -167,7 +167,7 @@
    /* if ChangePage is called automatically then 2 arguments are passed (WParam and LParam) */
    if arg(2,'o') = 0 | newPage > 9000 then newPage = self~getSelectedPage
    else do
-      self~getTabControl(9001, 0)~selectIndex(newPage-1)
+      self~newTab(9001, 0)~selectIndex(newPage-1)
    end
    if (newPage = self~catalog['category']) |,
       (newPage < 1 | newPage> self~catalog['count']) then return 0

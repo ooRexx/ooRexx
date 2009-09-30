@@ -1031,7 +1031,8 @@ syntax:
    use strict arg msgToRise
    self~addUserMsg(msgToRise, 0x00000215, 0xFFFFFFFF, 0, 0, 0, 0)
 
-::method connectMenuItem   -- Deprecated
+-- DEPRECATED
+::method connectMenuItem
    use strict arg id, msgToRaise
    return .Menu~connectItem(id, msgToRaise, self)
 

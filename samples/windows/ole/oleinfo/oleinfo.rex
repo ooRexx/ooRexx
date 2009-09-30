@@ -132,8 +132,8 @@ callFailed:
   return InitRet
 
 ::method InitDialog
-  self~GetListControl(104)~setImageList(self~getImages, .Image~toID(LVSIL_SMALL))
-  cb = self~GetComboBox(100)
+  self~newListView(104)~setImageList(self~getImages, .Image~toID(LVSIL_SMALL))
+  cb = self~newComboBox(100)
   default = .array~of("InternetExplorer.Application","Excel.Application","Freelance.Application",,
                       "Notes.NotesSession","Lotus123.Workbook","Outlook.Application",,
                       "Word.Application","WordPro.Application","Access.Application")
@@ -143,7 +143,7 @@ callFailed:
 
   /* Method Ok will be called if enter is pressed in dialog */
 ::method Ok
-  cb = self~GetComboBox(100)
+  cb = self~newComboBox(100)
   if cb \= .nil then do
     OLEID = cb~Title          /* get ProgID or ClassID of OLE Object */
     if OLEID \= self~currentObjectName then do
@@ -184,7 +184,7 @@ callFailed:
 
   self~Cursor_Wait
 
-  progressBar = self~GetProgressBar(110)
+  progressBar = self~newProgressBar(110)
   if cache == .nil then do
     cache = .list~new
     registry = .WindowsRegistry~new
@@ -221,14 +221,14 @@ callFailed:
   if temp~InitCode = 0 then do
     rc = temp~execute("SHOWTOP")
     if rc =1 then do
-      combo = self~GetComboBox(100)
+      combo = self~newComboBox(100)
       combo~title = temp~data200
       picked = combo~title
       self~ok
     end
     temp~deinstall
   end
-  cb = self~GetComboBox(100)
+  cb = self~newComboBox(100)
   if cb \= .nil then do
     cb~DeleteAll
     do i over cache
@@ -276,7 +276,7 @@ callFailed:
   /* update the list of methods and events */
 ::method updateView
   expose indexStem. methods. events.
-  lc = self~GetListControl(104)
+  lc = self~newListView(104)
   if lc \= .nil then do
     methods. = self~currentObject~GetKnownMethods   /* retrieve info on methods   */
     if methods. = .nil then do
@@ -289,19 +289,19 @@ callFailed:
 
     lc~DeleteAll                                    /* remove all items from list */
     if var("methods.!LIBNAME") = 1 then
-      self~GetEditControl(101)~title = methods.!LIBNAME
+      self~newEdit(101)~title = methods.!LIBNAME
     else
-      self~GetEditControl(101)~title = "unavailable"
+      self~newEdit(101)~title = "unavailable"
     if var("methods.!LIBDOC") = 1 then
-      self~GetEditControl(102)~title = methods.!LIBDOC
+      self~newEdit(102)~title = methods.!LIBDOC
     else
-      self~GetEditControl(102)~title = "unavailable"
+      self~newEdit(102)~title = "unavailable"
 
     /* collect the indices of the info stem ordered according to their method names */
     indexStem.0 = 0
 
     self~Cursor_Wait
-    pbc = self~GetProgressBar(110)
+    pbc = self~newProgressBar(110)
     if pbc \= .nil then do
       pbc~SetStep(1)
       pbc~SetRange(0,methods.0 + events.0)
@@ -342,7 +342,7 @@ callFailed:
 ::method selectionChange
   expose indexStem. methods. events.
 
-  listbox=self~GetListControl(104)
+  listbox=self~newListView(104)
 
   j = 1 + listbox~Selected
   if j < 1 then return                              /* return if nothing was selected */
@@ -392,10 +392,10 @@ callFailed:
   end
 
   /* set string to dialog */
-  signature = self~GetEditControl(105)
+  signature = self~newEdit(105)
   if signature \= .nil then
     signature~title = infostring
-  desc = self~GetEditControl(106)
+  desc = self~newEdit(106)
   /* show documentation if available */
   if desc \= .nil then do
     interpret 'exists = var("workstem.'i'.!DOC")'
@@ -409,7 +409,7 @@ callFailed:
 ::method selectDoubleClick
   expose indexStem. methods.
 
-  listbox=self~GetListControl(104)
+  listbox=self~newListView(104)
 
   j = 1 + listbox~Selected
   i = indexStem.j
@@ -472,7 +472,7 @@ callFailed:
         if temp~useoleobject \= .nil then do
            self~currentObject = temp~useOLEobject
            self~currentObjectName = "??? (from execution)"
-           self~GetComboBox(100)~title = self~currentObjectName
+           self~newComboBox(100)~title = self~currentObjectName
            self~updateView
         end
         temp~deinstall
@@ -525,7 +525,7 @@ callFailed:
     /* plain out parameters can not be edited */
     if params.i.!FLAGS = "[out]" then do
       interpret "self~Param"i"='.NIL'"
-      self~GetEditControl(300+i)~disable
+      self~newEdit(300+i)~disable
     end
     /* set .true if BOOL expected */
     if params.i.!TYPE = "VT_BOOL" then interpret "self~param"i"='.TRUE'"
@@ -568,7 +568,7 @@ callFailed:
 ::method InitDialog
   expose outarray
 
-  lc = self~GetListBox(401)
+  lc = self~newListBox(401)
 
   if outarray \= .nil then do
     if lc \= .nil then do
@@ -625,7 +625,7 @@ callFailed:
 
 ::method InitDialog
   expose cache
-  lc = self~GetListBox(200)
+  lc = self~newListBox(200)
   if lc \= .nil then do
     do item over cache
       lc~add(item)
@@ -645,7 +645,7 @@ callFailed:
   value = dlg~Execute
   drop dlg
 
-  lb = self~GetListBox(200)
+  lb = self~newListBox(200)
   startindex = lb~selectedindex
   lb~selectindex(lb~find(value,startindex,0))
 

@@ -147,7 +147,7 @@ any:
   /* init method, e.g. SetCurrentComboIndex.              */
 
   expose tl
-  tl = self~GetEditControl(TLine) /* get the EditControl object */
+  tl = self~newEdit(TLine) /* get the EditControl object */
   self~run:super
 
 ::method getLine

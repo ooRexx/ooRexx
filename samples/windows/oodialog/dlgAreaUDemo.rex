@@ -91,4 +91,4 @@ if self~peekDialogMessage~left(8) \= "onResize" then u~resize(self,sizeinfo)
 ::method Unknown
 /* ------------------------------------------------------------------------- */
 use arg msgname, args
-self~getStaticControl(11)~setText('You Pressed' msgname)
+self~newStatic(11)~setText('You Pressed' msgname)

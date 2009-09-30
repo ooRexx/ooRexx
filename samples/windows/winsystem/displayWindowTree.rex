@@ -99,7 +99,7 @@ end
   windows = .array~new
 
   -- If we can't get the list view control, something is wrong.
-  listView = self~getListControl(IDC_LV_WINDOWS)
+  listView = self~newListView(IDC_LV_WINDOWS)
   if listView == .nil then return self~putInErrorState("NOLISTVIEW")
 
   -- The extended list view styles can only be added after the list view control
@@ -273,7 +273,7 @@ end
 
   -- We will try to disable the 'Show' push button.  But, if the dialog is not
   -- working correctly, it could be that this won't work.
-  pb = self~getButtonControl(IDC_PB_SHOW)
+  pb = self~newPushButton(IDC_PB_SHOW)
   if pb <> .nil then pb~disable
 
   return 0

@@ -327,16 +327,16 @@
 
 ::method DefTreeEditStarter
     use arg id, dummy, category
-    if arg(3,'o') = 1 then tc = self~GetTreeControl(id)
-    else tc = self~GetTreeControl(id, category)
+    if arg(3,'o') = 1 then tc = self~newTreeView(id)
+    else tc = self~newTreeView(id, category)
     if tc \= .nil then tc~SubclassEdit
 
 
 ::method DefTreeEditHandler
     use arg id, item, newText, category
     if arg(3,'o') = 1 then return
-    if arg(4,'o') = 1 then tc = self~GetTreeControl(id)
-    else tc = self~GetTreeControl(id, category)
+    if arg(4,'o') = 1 then tc = self~newTreeView(id)
+    else tc = self~newTreeView(id, category)
     if tc \= .nil then do
         tc~Modify(item,newText)
         tc~RestoreEditClass
@@ -344,15 +344,15 @@
 
 ::method DefListEditStarter
     use arg id, dummy, category
-    if arg(3,'o') = 1 then lc = self~GetListControl(id)
-    else lc = self~GetListControl(id, category)
+    if arg(3,'o') = 1 then lc = self~newListView(id)
+    else lc = self~newListView(id, category)
     if lc \= .nil then lc~SubclassEdit
 
 ::method DefListEditHandler
     use arg id, item, newText, category
     if arg(3,'o') = 1 then return
-    if arg(4,'o') = 1 then lc = self~GetListControl(id)
-    else lc = self~GetListControl(id, category)
+    if arg(4,'o') = 1 then lc = self~newListView(id)
+    else lc = self~newListView(id, category)
     if lc \= .nil then do
         lc~Modify(item,0,newText)
         lc~RestoreEditClass
@@ -360,7 +360,7 @@
 
 ::method DefListDragHandler
    use arg id, item, pt
-   lc = self~GetListControl(id)
+   lc = self~newListView(id)
    hc = lc~Cursor_Cross   /* change cursor and store current */
    parse value lc~GetRect with left top right bottom
    parse var pt oldx oldy
@@ -416,7 +416,7 @@
 
 ::method DefTreeDragHandler
    use arg id, item, pt
-   tc = self~GetTreeControl(id)
+   tc = self~newTreeView(id)
    hc = tc~Cursor_Cross   /* change cursor and store current */
    parse value tc~GetRect with left top right bottom
    oldItem = 0

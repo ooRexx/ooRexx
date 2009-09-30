@@ -97,7 +97,7 @@ CleanUp:
   InitDlgRet = self~InitDialog:super
 
   /* Initialize progress bar ID_A */
-  curPB = self~GetProgressBar("ID_A")
+  curPB = self~newProgressBar("ID_A")
   if curPB \= .Nil then do
      curPB~SetRange(0,100)
      curPB~SetStep(50)
@@ -105,7 +105,7 @@ CleanUp:
   end
 
   /* Initialize progress bar ID_B */
-  curPB = self~GetProgressBar("ID_B")
+  curPB = self~newProgressBar("ID_B")
   if curPB \= .Nil then do
      curPB~SetRange(0,100)
      curPB~SetStep(40)
@@ -113,7 +113,7 @@ CleanUp:
   end
 
   /* Initialize progress bar ID_C */
-  curPB = self~GetProgressBar("ID_C")
+  curPB = self~newProgressBar("ID_C")
   if curPB \= .Nil then do
      curPB~SetRange(0,100)
      curPB~SetStep(30)
@@ -121,7 +121,7 @@ CleanUp:
   end
 
   /* Initialize progress bar ID_D */
-  curPB = self~GetProgressBar("ID_D")
+  curPB = self~newProgressBar("ID_D")
   if curPB \= .Nil then do
      curPB~SetRange(0,100)
      curPB~SetStep(20)
@@ -129,7 +129,7 @@ CleanUp:
   end
 
   /* Initialize progress bar ID_E */
-  curPB = self~GetProgressBar("ID_E")
+  curPB = self~newProgressBar("ID_E")
   if curPB \= .Nil then do
      curPB~SetRange(0,100)
      curPB~SetStep(10)
@@ -152,15 +152,15 @@ CleanUp:
   /* Method Ok is connected to item 1 */
 ::method Ok
   /* step each progress bar by the step set with the SetStep method */
-  curPB = self~GetProgressBar("ID_A")
+  curPB = self~newProgressBar("ID_A")
   curPB~Step
-  curPB = self~GetProgressBar("ID_B")
+  curPB = self~newProgressBar("ID_B")
   curPB~Step
-  curPB = self~GetProgressBar("ID_C")
+  curPB = self~newProgressBar("ID_C")
   curPB~Step
-  curPB = self~GetProgressBar("ID_D")
+  curPB = self~newProgressBar("ID_D")
   curPB~Step
-  curPB = self~GetProgressBar("ID_E")
+  curPB = self~newProgressBar("ID_E")
   curPB~Step
   return 0
 

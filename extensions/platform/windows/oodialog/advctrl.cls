@@ -42,79 +42,6 @@
  * Dialog Control Classes.
  */
 
-::class 'AdvancedControls' Mixinclass Object public
-
-::method putControl private unguarded external "LIBRARY oodialog advCtrl_putControl_pvt"
-
-::method newStatic unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getStaticControl unguarded
-   forward message 'newStatic'
-
-::method newPushButton unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getButtonControl unguarded
-   forward message 'newPushButton'
-
-::method newRadioButton unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getRadioControl unguarded
-   forward message 'newRadioButton'
-
-::method newCheckBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getCheckControl unguarded
-   forward message 'newCheckBox'
-
-::method newGroupBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getGroupBox unguarded
-   forward message 'newGroupBox'
-
-::method newEdit unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getEditControl unguarded
-   forward message 'newEdit'
-
-::method newComboBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getComboBox unguarded
-   forward message 'newComboBox'
-
-::method newListBox unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getListBox unguarded
-   forward message 'newListBox'
-
-::method newScrollBar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getScrollBar unguarded
-   forward message 'newScrollBar'
-
-::method newTreeView unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getTreeControl unguarded
-   forward message 'newTreeView'
-
-::method newListView unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getListControl unguarded
-   forward message 'newListView'
-
-::method newTab unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getTabControl unguarded
-   forward message 'newTab'
-
-::method newProgressBar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getProgressBar unguarded
-   forward message 'newProgressBar'
-
-::method newTrackBar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getSliderControl unguarded
-   forward message 'newTrackBar'
-
-::method newMonthCalendar unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getMonthCalendar unguarded
-   forward message 'newMonthCalendar'
-
-::method newDateTimePicker unguarded external "LIBRARY oodialog advCtrl_getControl"
-::method getDateTimePicker unguarded
-   forward message 'newDateTimePicker'
-
-::method test unguarded external "LIBRARY oodialog advCtrl_test"
-
-/***************************************************************************************************************/
-/*                                       Control Classes                                                       */
-/***************************************************************************************************************/
 
 -- Base class for all dialog controls
 ::class 'DialogControl' public inherit WindowBase WindowExtensions
@@ -1753,3 +1680,6 @@
 
 ::attribute usesUnicode external "LIBRARY oodialog _mc_usesUnicode"
 ::attribute date external "LIBRARY oodialog _mc_date"
+
+-- DEPRECATED
+::class 'AdvancedControls' Mixinclass Object public

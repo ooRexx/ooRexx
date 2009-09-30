@@ -459,7 +459,7 @@ return .false
 
   -- Get the tree-view control object and then invoke the addNode() recursive
   -- method to add all the items to the control.
-  tree = self~getTreeControl(IDC_TREE_WINDOWS)
+  tree = self~newTreeView(IDC_TREE_WINDOWS)
   rootNode = self~addNode(tree, "Root", windowTree)
 
   -- Set the title of this dialog, which will contain the window handle for the
@@ -829,7 +829,7 @@ return populatedMenubar
   -- comment if needed.
 
   -- Get the tree-view object, set the first item, expand it.
-  tree = self~getTreeControl(IDC_TREE_MENUS)
+  tree = self~newTreeView(IDC_TREE_MENUS)
 
   if menubar~itemCount == -1 then do
     rootText = rootText "[window does not have a menu]"

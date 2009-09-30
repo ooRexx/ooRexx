@@ -118,7 +118,7 @@ return 0
   -- Get the edit control object and then the text the user entered.  We only
   -- instantiate the edit control object the first time through.
 
-  if \ edit~isA(.EditControl) then edit = self~getEditControl(IDC_EDIT_NAME)
+  if \ edit~isA(.EditControl) then edit = self~newEdit(IDC_EDIT_NAME)
   title = edit~getText~strip
 
   -- Check that the user entered something.

@@ -233,6 +233,10 @@ REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
+REXX_METHOD_PROTOTYPE(baseDlg_newControl);
+REXX_METHOD_PROTOTYPE(baseDlg_putControl_pvt);
+REXX_METHOD_PROTOTYPE(baseDlg_test);
+
 REXX_METHOD_PROTOTYPE(userdlg_init);
 
 REXX_METHOD_PROTOTYPE(catdlg_createCategoryDialog);
@@ -325,10 +329,6 @@ REXX_METHOD_PROTOTYPE(dlgctrl_new_cls);
 REXX_METHOD_PROTOTYPE(dlgctrl_init);
 REXX_METHOD_PROTOTYPE(dlgctrl_unInit);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
-
-REXX_METHOD_PROTOTYPE(advCtrl_getControl);
-REXX_METHOD_PROTOTYPE(advCtrl_putControl_pvt);
-REXX_METHOD_PROTOTYPE(advCtrl_test);
 
 // ListView
 REXX_METHOD_PROTOTYPE(lv_setImageList);
@@ -580,6 +580,10 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
 
+    REXX_METHOD(baseDlg_newControl,           baseDlg_newControl),
+    REXX_METHOD(baseDlg_putControl_pvt,       baseDlg_putControl_pvt),
+    REXX_METHOD(baseDlg_test,                 baseDlg_test),
+
     REXX_METHOD(userdlg_init,                 userdlg_init),
 
     REXX_METHOD(catdlg_createCategoryDialog,  catdlg_createCategoryDialog),
@@ -624,10 +628,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_init,                 dlgctrl_init),
     REXX_METHOD(dlgctrl_unInit,               dlgctrl_unInit),
     REXX_METHOD(dlgctrl_getTextSizeDlg,       dlgctrl_getTextSizeDlg),
-
-    REXX_METHOD(advCtrl_getControl,           advCtrl_getControl),
-    REXX_METHOD(advCtrl_putControl_pvt,       advCtrl_putControl_pvt),
-    REXX_METHOD(advCtrl_test,                 advCtrl_test),
 
     REXX_METHOD(window_init,                  window_init),
     REXX_METHOD(window_unInit,                window_unInit),

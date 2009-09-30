@@ -124,7 +124,7 @@ CleanUp:
 
   InitDlgRet = self~InitDialog:super
 
-  curTree = self~GetTreeControl("IDC_TREE")
+  curTree = self~newTreeView("IDC_TREE")
   if curTree \= .Nil then
   do
     bmpFile  = "bmp\oodtree.bmp"  /* file which contains the icons for selected/not-selected items */
@@ -178,7 +178,7 @@ CleanUp:
 
 /* Method OnSelChanging_IDC_TREE handles notification 'SelChanging' for item IDC_TREE */
 ::method OnSelChanging_IDC_TREE
-  curTree = self~GetTreeControl("IDC_TREE")
+  curTree = self~newTreeView("IDC_TREE")
 
   /* diaplay items which are selected once as bolds */
   curTree~Modify( curtree~selected,,,,"BOLD")
@@ -189,7 +189,7 @@ CleanUp:
 ::method OnExpanding_IDC_TREE
   expose itemFile
   use arg tree, item, what
-  curTree = self~GetTreeControl(tree)
+  curTree = self~newTreeView(tree)
   itemInfo. = curTree~ItemInfo(item)
 
   /* if the special item is selected, load the child items dynamically from a file */
@@ -225,7 +225,7 @@ CleanUp:
 /* Method OnKeyDown_IDC_TREE handles notification 'KeyDown' for item IDC_TREE */
 ::method OnKeyDown_IDC_TREE
   use arg treeId, key
-  curTree = self~GetTreeControl(treeId)
+  curTree = self~newTreeView(treeId)
   /* if DELETE key is pressed, delete the selected item */
   if self~KeyName(key) = "DELETE" then
     curTree~Delete(curTree~Selected)
@@ -239,21 +239,21 @@ CleanUp:
 ::method IDC_PB_NEW
   -- When the new button is pressed, display a dialog that gets the name of the new item
   -- and inserts it into the tree.
-  dlg = .NewTreeItemDlg~new("rc\oodtreeNewItem.rc",  IDD_ADD_TREE_ITEM, self~getTreeControl("IDC_TREE"))
+  dlg = .NewTreeItemDlg~new("rc\oodtreeNewItem.rc",  IDD_ADD_TREE_ITEM, self~newTreeView("IDC_TREE"))
   dlg~execute
 
 
 /* Method IDC_PB_DELETE is connected to item IDC_PB_DELETE */
 ::method IDC_PB_DELETE
   /*delete the selected item */
-  curTree = self~GetTreeControl("IDC_TREE")
+  curTree = self~newTreeView("IDC_TREE")
   curTree~Delete(curTree~Selected)
 
 
 /* Method IDC_PB_EXP_ALL is connected to item IDC_PB_EXP_ALL */
 ::method IDC_PB_EXP_ALL
   /*expand the selected item and all its childs */
-  curTree = self~GetTreeControl("IDC_TREE")
+  curTree = self~newTreeView("IDC_TREE")
   if curTree~Selected = 0 then
     call infoDialog "No item selected !"
   else do
@@ -269,7 +269,7 @@ CleanUp:
 /* Method IDC_PB_COL_ALL is connected to item IDC_PB_COL_ALL */
 ::method IDC_PB_COL_ALL
   /*collapse the selected item and all its childs */
-  curTree = self~GetTreeControl("IDC_TREE")
+  curTree = self~newTreeView("IDC_TREE")
   if curTree~Selected = 0 then
     call infoDialog "No item selected !"
   else do
@@ -285,7 +285,7 @@ CleanUp:
 ::method IDC_PB_INFO
   /* Display the attributes of the selected item */
   use arg tree
-  curTree = self~GetTreeControl("IDC_TREE")
+  curTree = self~newTreeView("IDC_TREE")
   itemInfo. = curTree~ItemInfo(CurTree~Selected)
 
   if itemInfo.!Children = 0 then
@@ -317,9 +317,9 @@ CleanUp:
   selected = treeControl~selected
 
   -- Save a reference to some of the controls we will use repeatedly
-  editControl = self~getEditControl(IDC_EDIT_NAME)
-  childRB = self~getRadioControl(IDC_RB_CHILD)
-  folderChk = self~getCheckControl(IDC_CHK_FOLDER)
+  editControl = self~newEdit(IDC_EDIT_NAME)
+  childRB = self~newRadioButton(IDC_RB_CHILD)
+  folderChk = self~newCheckBox(IDC_CHK_FOLDER)
 
   -- If the selected is the root of the tree, a new item has to be inserted as
   -- a child.  So disable the radio buttons that allow the user to choose to
@@ -327,11 +327,11 @@ CleanUp:
   -- box.
   if selected == treeControl~root then do
     childRB~~check~disable
-    self~getRadioControl(IDC_RB_SIBLING)~disable
+    self~newRadioButton(IDC_RB_SIBLING)~disable
     folderChk~check
   end
   else do
-    self~getRadioControl(IDC_RB_SIBLING)~check
+    self~newRadioButton(IDC_RB_SIBLING)~check
   end
 
   -- Set a visual cue for the edit control.  This will only show when the edit

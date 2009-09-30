@@ -39,13 +39,24 @@
 #ifndef oodControl_Included
 #define oodControl_Included
 
+
+typedef struct newControlParams {
+   HWND           hwnd;
+   uint32_t       id;
+   HWND           hwndDlg;
+   RexxObjectPtr  parentDlg;
+} NEWCONTROLPARAMS;
+typedef NEWCONTROLPARAMS *PNEWCONTROLPARAMS;
+
+
 extern uint32_t      listViewStyle(CSTRING opts, uint32_t style);
 
-extern oodControl_t   control2controlType(HWND hControl);
-extern oodControl_t   winName2controlType(const char *className);
-extern const char    *controlType2winName(oodControl_t control);
-extern oodControl_t   oodName2controlType(CSTRING name);
-extern bool           isControlMatch(HWND, oodControl_t);
+extern RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlType);
+extern oodControl_t    control2controlType(HWND hControl);
+extern oodControl_t    winName2controlType(const char *className);
+extern const char     *controlType2winName(oodControl_t control);
+extern oodControl_t    oodName2controlType(CSTRING name);
+extern bool            isControlMatch(HWND, oodControl_t);
 
 
 #define ButtonAtom           0x0080

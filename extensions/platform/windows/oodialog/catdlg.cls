@@ -152,7 +152,7 @@
    if self~basePtr = 0 then return 0
    if self~catstyle~wordpos('DROPDOWN') = 0 then
       do i = 9001 to (9000 + self~catalog['count'])
-         self~ConnectControl(i, "CHANGEPAGE")
+         self~ConnectButton(i, "CHANGEPAGE")
       end
    else self~ConnectList(9001, "CHANGEPAGE")
 

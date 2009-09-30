@@ -787,6 +787,69 @@ done_out:
 
 
 /**
+ *  Methods for the .ResourceUtils mixin class.
+ */
+#define RESOURCEUTILS_CLASS        "ResourceUtils"
+
+RexxMethod2(int32_t, rsrcUtils_checkID, RexxObjectPtr, rxID, OSELF, self)
+{
+    return checkID(context, rxID, self);
+}
+
+RexxMethod1(int32_t, rsrcUtils_idError, RexxObjectPtr, rxID)
+{
+    return idError(context, rxID);
+}
+
+RexxMethod2(int32_t, rsrcUtils_resolveResourceID, RexxObjectPtr, rxID, OSELF, self)
+{
+    return resolveResourceID(context, rxID, self);
+}
+
+RexxMethod2(int32_t, rsrcUtils_resolveIconID_pvt, RexxObjectPtr, rxID, OSELF, self)
+{
+    return resolveIconID(context, rxID, self);
+}
+
+/**
+ *  Methods for the .Window class.
+ */
+#define WINDOW_CLASS  "Window"
+
+RexxMethod2(RexxObjectPtr, window_init, POINTERSTRING, hwnd, OSELF, self)
+{
+    if ( !IsWindow((HWND)hwnd) )
+    {
+        invalidTypeException(context->threadContext, 1, " window handle");
+    }
+    else
+    {
+        initWindowBase(context, (HWND)hwnd, self, NULL);
+    }
+    return NULLOBJECT;
+}
+
+/** Window::unInit()
+ *
+ *  Release the global reference for CWindowBase::rexxHwnd.
+ *
+ */
+RexxMethod1(RexxObjectPtr, window_unInit, CSELF, pCSelf)
+{
+    if ( pCSelf != NULLOBJECT )
+    {
+        pCWindowBase pcwb = (pCWindowBase)pCSelf;
+        if ( pcwb->rexxHwnd != TheZeroObj )
+        {
+            context->ReleaseGlobalReference(pcwb->rexxHwnd);
+            pcwb->rexxHwnd = TheZeroObj;
+        }
+    }
+    return NULLOBJECT;
+}
+
+
+/**
  * Methods for the ooDialog .Point class.
  */
 #define POINT_CLASS  "Point"

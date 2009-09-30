@@ -190,16 +190,16 @@ exit
     else self~checkMenuItem(66)
 
     -- Get the controls for all dialog elements that will need to be adjusted
-    args_input   = self~getEditControl(12)
-    code_input   = self~getEditControl(13)
-    say_input    = self~getEditControl(14)
-    result_input = self~getEditControl(15)
-    errors_input = self~getEditControl(16)
-    args_title   = self~getStaticControl(17)
-    code_title   = self~getStaticControl(18)
-    say_title    = self~getStaticControl(19)
-    result_title = self~getStaticControl(20)
-    errors_title = self~getStaticControl(21)
+    args_input   = self~newEdit(12)
+    code_input   = self~newEdit(13)
+    say_input    = self~newEdit(14)
+    result_input = self~newEdit(15)
+    errors_input = self~newEdit(16)
+    args_title   = self~newStatic(17)
+    code_title   = self~newStatic(18)
+    say_title    = self~newStatic(19)
+    result_title = self~newStatic(20)
+    errors_title = self~newStatic(21)
 
     -- Set the color of the titles
     args_title  ~setColor(5,10)
@@ -864,9 +864,9 @@ return 0
     self~AddButton(25,dd~x,dd~y,dd~w,10,'&PDF','Help')
 
 ::method InitDialog
-    v_title = self~getStaticControl(20)
-    a_title = self~getStaticControl(22)
-    d_title = self~getStaticControl(24)
+    v_title = self~newStatic(20)
+    a_title = self~newStatic(22)
+    d_title = self~newStatic(24)
 
     v_title~setColor(5,10)
     a_title~setColor(5,10)
@@ -928,9 +928,9 @@ return 0
     self~addText(dd~x,dd~y,dd~w,dd~h,.silent,'CENTER',23)
 
 ::method InitDialog
-    v_title = self~getStaticControl(20)
-    a_title = self~getStaticControl(22)
-    d_title = self~getStaticControl(24)
+    v_title = self~newStatic(20)
+    a_title = self~newStatic(22)
+    d_title = self~newStatic(24)
 
     v_title~setColor(14,0)
     a_title~setColor(14,0)
