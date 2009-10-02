@@ -49,11 +49,10 @@
    expose library resource dlgData.
    use arg library, resource, dlgData., includeFile
 
-   if arg(4, 'E') then ret = self~init:super(library, resource, dlgData., includeFile)
-   else ret = self~init:super(library, resource, dlgData.)
-   if ret \= 0 then return ret
+   forward class (super) continue
+   if result \= 0 then return result
 
-   if \ resource~datatype("N") then resource = self~resolveSymbolicId(resource)
+   if \ resource~datatype("W") then resource = self~resolveSymbolicId(resource)
    if resource < 1 then self~initCode = -1
 
    return self~initCode

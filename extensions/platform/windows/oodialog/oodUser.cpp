@@ -399,9 +399,9 @@ uint32_t getCommonWindowStyles(CSTRING opts, bool defaultBorder, bool defaultTab
 }
 
 
-uint32_t getCommonButtonStyles(uint32_t style, CSTRING opts)
+uint32_t getCommonButtonStyles(uint32_t style, CSTRING opts, oodControl_t button)
 {
-    style |= getCommonWindowStyles(opts, false, true);
+    style |= getCommonWindowStyles(opts, false, button != winRadioButton);
 
     if ( StrStrI(opts, "OWNER")     != NULL ) style |= BS_OWNERDRAW;
     if ( StrStrI(opts, "BITMAP")    != NULL ) style |= BS_BITMAP;
@@ -1243,7 +1243,7 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
 
     uint32_t style = WS_CHILD;
     style |= ( StrStrI(opts, "DEFAULT") != NULL ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON );
-    style = getCommonButtonStyles(style, opts);
+    style = getCommonButtonStyles(style, opts, winPushButton);
 
     addToDialogTemplate(pcdd, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
 
@@ -1345,7 +1345,7 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
     {
         style |= ( StrStrI(opts, "3STATE") != NULL ? BS_AUTO3STATE : BS_AUTOCHECKBOX );
     }
-    style = getCommonButtonStyles(style, opts);
+    style = getCommonButtonStyles(style, opts, ctrl);
 
     addToDialogTemplate(pcdd, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
 
