@@ -475,7 +475,7 @@ done_out:
  * @param dwState
  * @param dwHelpID
  * @param resInfo
- * @param text      Must not be null!  Use the empty string for no text.
+ * @param text      Must not be null, use the empty string.
  *
  * @return bool
  *
@@ -485,10 +485,8 @@ BOOL CppMenu::addTemplateMenuItem(DWORD menuID, DWORD dwType, DWORD dwState, DWO
 {
     WORD *p;
     BOOL  success = TRUE;
-    int   nchar;
-    int   cchWideChar = (int)strlen(text) + 1;
 
-    if ( ! haveTemplateRoom(cchWideChar, (byte *)pCurrentTemplatePos) )
+    if ( ! haveTemplateRoom(strlen(text) + 1, (byte *)pCurrentTemplatePos) )
     {
         executionErrorException(c->threadContext, TEMPLATE_TOO_SMALL_MSG);
         return FALSE;
@@ -509,19 +507,9 @@ BOOL CppMenu::addTemplateMenuItem(DWORD menuID, DWORD dwType, DWORD dwState, DWO
     // The menu item strings must be unicode.  This works correctly for the
     // empty string.  p now points to the position in the template for the
     // string.  If there is no string, then this position still needs to be set
-    // with the wide character null.  MultiByteToWideChar() will convert an
-    // empty string to to that and return a count of 1.
-    nchar = MultiByteToWideChar(CP_ACP, 0, text, -1, (LPWSTR)p, cchWideChar);
-    if ( nchar == 0 )
-    {
-        // Unlikely that this failed, but if it did, just use an empty
-        // string.  The user won't know what it is going on though.
-        *p++ = 0;
-    }
-    else
-    {
-        p += nchar;
-    }
+    // with the wide character null.  addUnicodeText() will handle both the
+    // empty string or text == NULL.
+    p += addUnicodeText(p, text);
 
     // Need to be double word aligned now.
     pCurrentTemplatePos = (DWORD *)lpwAlign(p);
@@ -535,7 +523,6 @@ BOOL CppMenu::addTemplateMenuItem(DWORD menuID, DWORD dwType, DWORD dwState, DWO
 
     return success;
 }
-
 
 void CppMenu::deleteTemplate()
 {

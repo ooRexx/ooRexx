@@ -214,22 +214,22 @@
            if self~catlabel='' then
                 self~createComboBox(9001, self~catX, self~caty, self~catcx, (self~catmax+1)*(textHeight+4), -
                                  self~catstyle~delword(m, 1) || " CAT VSCROLL")
-           else self~addComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
-                                   self~catlabel, self~catstyle~delword(m, 1) || " CAT VSCROLL")
+           else self~createComboBoxInput(9001, self~catX, self~caty, , self~catcx, self~catmax,             -
+                                         self~catlabel, self~catstyle~delword(m, 1) || " CAT VSCROLL")
       else if self~catlabel='' then
                 self~createComboBox(9001, self~catX,self~caty,self~catcx,(self~catmax+1)*(textHeight+4),    -
                                     self~catstyle~delword(m, 1) || " CAT")
-           else self~addComboInput(9001,, self~catX, self~caty,, self~catcx, self~catmax,,
-                                   self~catlabel, self~catstyle~delword(m, 1) || " CAT")
+           else self~createComboBoxInput(9001, self~catX, self~caty, , self~catcx, self~catmax,             -
+                                         self~catlabel, self~catstyle~delword(m, 1) || " CAT")
    end
    else do
       if (n >0) then newstyle = self~catstyle~delword(n, 1)
                 else newstyle = self~catstyle
       if self~catalog['page']['font'] <> "" then
-         self~addRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax,,
+         self~createRadioButtonStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax,,
                            newstyle || " CAT",,self~catalog['page']['font'],self~catalog['page']['fsize'])
       else
-         self~addRadioStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax, newstyle || " CAT")
+         self~createRadioButtonStem(9001, self~catX, self~caty, self~catcx, catnames., self~catmax, newstyle || " CAT")
    end
 
    if \ self~startParentDialog(0, .false) then return 0
@@ -273,16 +273,16 @@
    if rbtext~pos(" ") > 0 then rbtext = '"' || rbtext || '"'
    if (self~catalog['page']['btnwidth'] > 0) then
    do
-      self~createButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
+      self~createPushButtonGroup(self~sizeX-self~catalog['page']['btnwidth']*2-15,,
          self~sizeY - 15,self~catalog['page']['btnwidth'],, "&Ok 1 OK &Cancel 2 CANCEL", 1, "DEFAULT")
       if self~Wizard = 1 then
-         self~createButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
+         self~createPushButtonGroup(5,self~sizeY - 15,self~catalog['page']['btnwidth'],,
                              ,lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
    else do
       self~createOkCancelRightBottom
       if self~Wizard = 1 then
-         self~createButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
+         self~createPushButtonGroup(5, self~sizeY - 15,,, lbtext" 11 PreviousPage" rbtext" 12 NextPage", 1, "")
    end
    self~createBlackFrame(-1, 0, self~sizeY - 20, self~sizeX, 1)
 

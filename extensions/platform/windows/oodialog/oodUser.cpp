@@ -75,97 +75,67 @@ public:
     bool        *release;
 };
 
+/**
+ * Windows message loop for a UserDialog or UserDialog subclass.
+ *
+ * @param args
+ *
+ * @return DWORD WINAPI
+ */
+DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
+{
+    MSG msg;
+    bool *release = args->release;
+    DIALOGADMIN *dlgAdm = args->dlgAdmin;
+
+    dlgAdm->TheDlg = CreateDialogIndirectParam(MyInstance, args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, dlgAdm->Use3DControls);  /* pass 3D flag to WM_INITDIALOG */
+    dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
+
+    if ( dlgAdm->TheDlg )
+    {
+        *release = true;
+
+        while ( GetMessage(&msg,NULL, 0,0) && dialogInAdminTable(dlgAdm) && (!dlgAdm->LeaveDialog) )
+        {
+#ifdef USE_DS_CONTROL
+            if ( dlgAdm && !IsDialogMessage(dlgAdm->TheDlg, &msg)
+                 && !IsDialogMessage(dlgAdm->AktChild, &msg) )
+#else
+            if ( dlgAdm && (!IsNestedDialogMessage(dlgAdm, &msg)) )
+#endif
+                DispatchMessage(&msg);
+        }
+    }
+    else
+    {
+        *release = true;
+    }
+
+    // Need to synchronize here, otherwise dlgAdm might still be in the table
+    // but DelDialog is already running.
+    EnterCriticalSection(&crit_sec);
+    if ( dialogInAdminTable(dlgAdm) )
+    {
+        DelDialog(dlgAdm);
+        dlgAdm->TheThread = NULL;
+    }
+    LeaveCriticalSection(&crit_sec);
+    return 0;
+}
+
+
 #define DEFAULT_EXPECTED_DIALOG_ITEMS   200
 #define FONT_NAME_ARG_POS                 8
 #define FONT_SIZE_ARG_POS                 9
 #define EXPECTED_ITEM_COUNT_ARG_POS      10
 
-int nCopyAnsiToWideChar (LPWORD lpWCStr, const char *lpAnsiIn)
+
+static inline logical_t illegalBuffer(void)
 {
-  int nChar = 0;
-
-  do {
-    *lpWCStr++ = (WORD) (UCHAR) *lpAnsiIn;  /* first convert to UCHAR, otherwise Ü,Ä,... are >65000 */
-    nChar++;
-  } while (*lpAnsiIn++);
-
-  return nChar;
+    MessageBox(0, "Illegal resource buffer", "Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
+    return FALSE;
 }
 
-
-bool startDialogTemplate(RexxMethodContext *c, WORD **ppTemplate, WORD **p, uint32_t count,
-                         INT x, INT y, INT cx, INT cy, const char * dlgClass, const char * title,
-                         const char * fontname, INT fontsize, uint32_t lStyle)
-{
-    int   nchar;
-
-    *ppTemplate = *p = (PWORD)LocalAlloc(LPTR, (count+3)*256);
-    if ( p == NULL )
-    {
-        outOfMemoryException(c->threadContext);
-        return false;
-    }
-
-    /* start to fill in the dlgtemplate information.  addressing by WORDs */
-    **p = LOWORD(lStyle);
-    (*p)++;
-    **p = HIWORD(lStyle);
-    (*p)++;
-    **p = 0;          // LOWORD (lExtendedStyle)
-    (*p)++;
-    **p = 0;          // HIWORD (lExtendedStyle)
-    (*p)++;
-    **p = count;      // NumberOfItems
-    (*p)++;
-    **p = x;          // x
-    (*p)++;
-    **p = y;          // y
-    (*p)++;
-    **p = cx;         // cx
-    (*p)++;
-    **p = cy;         // cy
-    (*p)++;
-    /* copy the menu of the dialog */
-
-    /* no menu */
-    **p = 0;
-    (*p)++;
-
-    /* copy the class of the dialog. currently dlgClass is always null */
-    if ( !(lStyle & WS_CHILD) && (dlgClass) )
-    {
-        nchar = nCopyAnsiToWideChar(*p, TEXT(dlgClass));
-        (*p) += nchar;
-    }
-    else
-    {
-        **p = 0;
-        (*p)++;
-    }
-    /* copy the title of the dialog */
-    if ( title )
-    {
-        nchar = nCopyAnsiToWideChar(*p, TEXT(title));
-        (*p) += nchar;
-    }
-    else
-    {
-        **p = 0;
-        (*p)++;
-    }
-
-    /* add in the wPointSize and szFontName here iff the DS_SETFONT bit on.
-     * currently DS_SETFONT is always set
-     */
-    **p = fontsize;   // fontsize
-    (*p)++;
-    nchar = nCopyAnsiToWideChar(*p, TEXT(fontname));
-    (*p) += nchar;
-
-    /* make sure the first item starts on a DWORD boundary */
-    (*p) = lpwAlign(*p);
-    return true;
-}
 
 /**
  * Ensures the font name and font size for a dialog are correct, based on the
@@ -234,113 +204,131 @@ static uint32_t getExpectedCount(RexxMethodContext *c, RexxArrayObject args)
 
 
 /**
- * Windows message loop for a UserDialog or UserDialog subclass.
+ * Starts the in-memory dialog template.  This uses the older DLGTEMPLTE
+ * structure not the extended (DLGTEMPLATEEX) structure.
  *
- * @param args
+ * @param c
+ * @param ppBase
+ * @param pcdd
+ * @param count
+ * @param x
+ * @param y
+ * @param cx
+ * @param cy
+ * @param dlgClass
+ * @param title
+ * @param fontname
+ * @param fontsize
+ * @param style
  *
- * @return DWORD WINAPI
+ * @return True on success, false on error.
+ *
+ * @note  addUnicodeText() is designed to handle, and do the 'right' thing, for
+ *        both a null pointer and an empty string.  That is why no check for
+ *        null is needed for title, dlgClass, or fontname.
  */
-DWORD WINAPI WindowUsrLoopThread(LoopThreadArgs * args)
+bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDialog pcdd, uint32_t count,
+                         int x, int y, int cx, int cy, const char * dlgClass, const char * title,
+                         const char * fontName, int fontSize, uint32_t style)
 {
-    MSG msg;
-    bool *release = args->release;
-    DIALOGADMIN *dlgAdm = args->dlgAdmin;
-
-    dlgAdm->TheDlg = CreateDialogIndirectParam(MyInstance, args->dlgTemplate, NULL, (DLGPROC)RexxDlgProc, dlgAdm->Use3DControls);  /* pass 3D flag to WM_INITDIALOG */
-    dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
-
-    if ( dlgAdm->TheDlg )
+    WORD *p = (PWORD)LocalAlloc(LPTR, (count+3)*256);
+    if ( p == NULL )
     {
-        *release = true;
+        outOfMemoryException(c->threadContext);
+        return false;
+    }
+    *ppBase = (DLGTEMPLATE *)p;
 
-        while ( GetMessage(&msg,NULL, 0,0) && dialogInAdminTable(dlgAdm) && (!dlgAdm->LeaveDialog) )
-        {
-#ifdef USE_DS_CONTROL
-            if ( dlgAdm && !IsDialogMessage(dlgAdm->TheDlg, &msg)
-                 && !IsDialogMessage(dlgAdm->AktChild, &msg) )
-#else
-            if ( dlgAdm && (!IsNestedDialogMessage(dlgAdm, &msg)) )
-#endif
-                DispatchMessage(&msg);
-        }
-    }
-    else
-    {
-        *release = true;
-    }
+    // Start to fill in the dlgtemplate information.  Addressing is by WORDs.
+    *p++ = LOWORD(style);           // Style (DWORD in size.)
+    *p++ = HIWORD(style);
+    *p++ = 0;                       // Extended Style (DWORD in size.)
+    *p++ = 0;
+    *p++ = count;                   // Number of dialog controls
+    *p++ = x;                       // x
+    *p++ = y;                       // y
+    *p++ = cx;                      // cx
+    *p++ = cy;                      // cy
+    *p++ = 0;                       // Menu
 
-    // Need to synchronize here, otherwise dlgAdm might still be in the table
-    // but DelDialog is already running.
-    EnterCriticalSection(&crit_sec);
-    if ( dialogInAdminTable(dlgAdm) )
-    {
-        DelDialog(dlgAdm);
-        dlgAdm->TheThread = NULL;
-    }
-    LeaveCriticalSection(&crit_sec);
-    return 0;
+    // Copy the class of the dialog.  Really there should be a check that style
+    // does not contain WS_CHILD, but currently dlgClass is always null so this
+    // works.
+    p += addUnicodeText(p, dlgClass);
+
+    // Copy the title of the dialog.
+    p += addUnicodeText(p, title);
+
+    // Add in the wPointSize and szFontName here.  Really this should only be if
+    // the DS_SETFONT bit on. But currently it is always set.
+    *p++ = fontSize;
+    p += addUnicodeText(p, fontName);
+
+    // make sure the first item starts on a DWORD boundary
+    p = lpwAlign(p);
+
+    // Update the active pointer to reflect where we are in the template.
+    pcdd->active = p;
+    return true;
 }
 
-static inline logical_t illegalBuffer(void)
+
+/**
+ *  Adds a dialog control item to the in-memory dialog template.  We are using
+ *  the DLGITEMTEMPLATE structure here, not the extended structure.
+ *
+ * @param pcdd
+ * @param kind
+ * @param className
+ * @param id
+ * @param x
+ * @param y
+ * @param cx
+ * @param cy
+ * @param txt
+ * @param style
+ *
+ * @note  addUnicodeText() is designed to handle, and do the 'right' thing, for
+ *        both a null pointer and an empty string.  That is why no check for
+ *        null is needed for txt.  On the other hand className must be checked
+ *        because that is how we determine if the control is being identified
+ *        by the control atom or by the class name.
+ */
+void addToDialogTemplate(pCDynamicDialog pcdd, SHORT kind, const char *className, int id, int x, int y, int cx, int cy,
+                         const char * txt, uint32_t style)
 {
-    MessageBox(0, "Illegal resource buffer", "Error", MB_OK | MB_ICONHAND | MB_SYSTEMMODAL);
-    return FALSE;
-}
+   WORD *p = (WORD *)pcdd->active;
 
-
-void addToDialogTemplate(WORD **p, SHORT kind, const char *className, int id, int x, int y, int cx, int cy,
-                         const char * txt, uint32_t lStyle)
-{
-   int   nchar;
-
-   **p = LOWORD(lStyle);
-   (*p)++;
-   **p = HIWORD(lStyle);
-   (*p)++;
-   **p = 0;          // LOWORD (lExtendedStyle)
-   (*p)++;
-   **p = 0;          // HIWORD (lExtendedStyle)
-   (*p)++;
-   **p = x;          // x
-   (*p)++;
-   **p = y;          // y
-   (*p)++;
-   **p = cx;         // cx
-   (*p)++;
-   **p = cy;         // cy
-   (*p)++;
-   **p = id;         // ID
-   (*p)++;
+   *p++ = LOWORD(style);
+   *p++ = HIWORD(style);
+   *p++ = 0;          // LOWORD (lExtendedStyle)
+   *p++ = 0;          // HIWORD (lExtendedStyle)
+   *p++ = x;          // x
+   *p++ = y;          // y
+   *p++ = cx;         // cx
+   *p++ = cy;         // cy
+   *p++ = id;         // ID
 
    if ( className == NULL )
    {
-       **p = (WORD)0xffff;
-       (*p)++;
-       **p = (WORD)kind;
-       (*p)++;
+       *p++ = (WORD)0xffff;
+       *p++ = (WORD)kind;
    }
    else
    {
-       nchar = nCopyAnsiToWideChar(*p, TEXT(className));
-       (*p) += nchar;
+       p += addUnicodeText(p, className);
    }
 
-   if ( txt != NULL )
-   {
-      nchar = nCopyAnsiToWideChar(*p, TEXT(txt));
-      (*p) += nchar;
-   }
-   else
-   {
-     **p = 0;
-    (*p)++;
-   }
+   p += addUnicodeText(p, txt);
 
-   **p = 0;  // advance pointer over nExtraStuff WORD
-   (*p)++;
+   *p++ = 0;  // advance pointer over nExtraStuff WORD
 
-   /* make sure the next item starts on a DWORD boundary */
-   (*p) = lpwAlign(*p);
+   // make sure the next item starts on a DWORD boundary
+   p = lpwAlign(p);
+
+   // Update the active pointer and the number of dialog items so far.
+   pcdd->active = p;
+   pcdd->count++;
 }
 
 
@@ -651,11 +639,7 @@ int32_t createStaticText(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y,
         if ( StrStrI(opts, "WORDELLIPSIS") != NULL ) style |= SS_WORDELLIPSIS;
     }
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, StaticAtom, NULL, id, x, y, cx, cy, text, style);
-    pcdd->active = p;
-    pcdd->count++;
-
+    addToDialogTemplate(pcdd, StaticAtom, NULL, id, x, y, cx, cy, text, style);
     return 0;
 }
 
@@ -690,11 +674,7 @@ int32_t createStaticImage(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y
     if ( StrStrI(opts, "SIZECONTROL" )  != NULL ) style |= SS_REALSIZECONTROL;
     if ( StrStrI(opts, "SIZEIMGE"    )  != NULL ) style |= SS_REALSIZEIMAGE;
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, StaticAtom, NULL, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
-
+    addToDialogTemplate(pcdd, StaticAtom, NULL, id, x, y, cx, cy, NULL, style);
     return 0;
 }
 
@@ -751,11 +731,7 @@ int32_t createStaticFrame(RexxMethodContext *c, RexxObjectPtr rxID, int x, int y
     if ( StrStrI(opts, "NOTIFY") != NULL ) style |= SS_NOTIFY;
     if ( StrStrI(opts, "SUNKEN") != NULL ) style |= SS_SUNKEN;
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, StaticAtom, NULL, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
-
+    addToDialogTemplate(pcdd, StaticAtom, NULL, id, x, y, cx, cy, NULL, style);
     return 0;
 }
 
@@ -912,10 +888,12 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
         return FALSE;
     }
 
-    WORD *p;
-    WORD *pBase;
+    // We need to pass in and set the base address separately because the
+    // category diaogs also use startDialogTemplate() and they need to keep
+    // track of the different child dialog base addresses.
+    DLGTEMPLATE *pBase;
 
-    if ( ! startDialogTemplate(context, &pBase, &p, expected, x, y, cx, cy, dlgClass, title,
+    if ( ! startDialogTemplate(context, &pBase, pcdd, expected, x, y, cx, cy, dlgClass, title,
                                pcpbd->fontName, pcpbd->fontSize, style) )
     {
         // TODO an exception has been raised, so I don't think we need to do any
@@ -926,8 +904,7 @@ RexxMethod9(logical_t, dyndlg_create, uint32_t, x, int32_t, y, int32_t, cx, uint
         // what happens if the user traps syntax errors?
         return FALSE;
     }
-    pcdd->base = (DLGTEMPLATE *)pBase;
-    pcdd->active = p;
+    pcdd->base = pBase;
     pcpbd->wndBase->sizeX = cx;
     pcpbd->wndBase->sizeY = cy;
 
@@ -1268,10 +1245,7 @@ RexxMethod10(int32_t, dyndlg_createPushButton, RexxObjectPtr, rxID, int, x, int,
     style |= ( StrStrI(opts, "DEFAULT") != NULL ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON );
     style = getCommonButtonStyles(style, opts);
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
-    pcdd->active = p;
-    pcdd->count++;
+    addToDialogTemplate(pcdd, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
 
     if ( id < IDCANCEL || id == IDHELP )
     {
@@ -1373,10 +1347,7 @@ RexxMethod10(int32_t, dyndlg_createRadioButton, RexxObjectPtr, rxID, int, x, int
     }
     style = getCommonButtonStyles(style, opts);
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
-    pcdd->active = p;
-    pcdd->count++;
+    addToDialogTemplate(pcdd, ButtonAtom, NULL, id, x, y, cx, cy, label, style);
 
     int32_t result = 0;
 
@@ -1459,10 +1430,7 @@ RexxMethod8(int32_t, dyndlg_createGroupBox, OPTIONAL_RexxObjectPtr, rxID, int, x
         style |= BS_RIGHT;
     }
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ButtonAtom, NULL, id, x, y, cx, cy, text, style);
-    pcdd->active = p;
-    pcdd->count++;
+    addToDialogTemplate(pcdd, ButtonAtom, NULL, id, x, y, cx, cy, text, style);
     return 0;
 }
 
@@ -1540,10 +1508,7 @@ RexxMethod8(int32_t, dyndlg_createEdit, RexxObjectPtr, rxID, int, x, int, y, uin
         style |= ES_PASSWORD;
     }
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, EditAtom, NULL, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
+    addToDialogTemplate(pcdd, EditAtom, NULL, id, x, y, cx, cy, NULL, style);
 
     int32_t result = 0;
 
@@ -1585,10 +1550,7 @@ RexxMethod7(int32_t, dyndlg_createScrollBar, RexxObjectPtr, rxID, int, x, int, y
     if ( StrStrI(opts, "TOPLEFT")    != NULL ) style |= SBS_TOPALIGN;
     if ( StrStrI(opts, "BOTTOMRIGH") != NULL ) style |= SBS_BOTTOMALIGN;
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ScrollBarAtom, NULL, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
+    addToDialogTemplate(pcdd, ScrollBarAtom, NULL, id, x, y, cx, cy, NULL, style);
     return 0;
 }
 
@@ -1632,10 +1594,7 @@ RexxMethod8(int32_t, dyndlg_createListBox, RexxObjectPtr, rxID, int, x, int, y, 
     if ( StrStrI(opts, "KEYINPUT") != NULL ) style |= LBS_WANTKEYBOARDINPUT;
     if ( StrStrI(opts, "EXTSEL"  ) != NULL ) style |= LBS_EXTENDEDSEL;
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ListBoxAtom, NULL, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
+    addToDialogTemplate(pcdd, ListBoxAtom, NULL, id, x, y, cx, cy, NULL, style);
 
     int32_t result = 0;
 
@@ -1684,10 +1643,7 @@ RexxMethod8(int32_t, dyndlg_createComboBox, RexxObjectPtr, rxID, int, x, int, y,
     if ( StrStrI(opts, "SORT"      ) != NULL ) style |= CBS_SORT;
     if ( StrStrI(opts, "PARTIAL"   ) != NULL ) style |= CBS_NOINTEGRALHEIGHT;
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, ComboBoxAtom, NULL, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
+    addToDialogTemplate(pcdd, ComboBoxAtom, NULL, id, x, y, cx, cy, NULL, style);
 
     int32_t result = 0;
 
@@ -1725,11 +1681,7 @@ RexxMethod7(int32_t, dyndlg_createProgressBar, RexxObjectPtr, rxID, int, x, int,
 
     uint32_t style = getControlStyle(winProgressBar, opts);
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, 0, PROGRESS_CLASS, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
-
+    addToDialogTemplate(pcdd, 0, PROGRESS_CLASS, id, x, y, cx, cy, NULL, style);
     return 0;
 }
 
@@ -1760,21 +1712,10 @@ RexxMethod9(int32_t, dyndlg_createNamedControl, RexxObjectPtr, rxID, int, x, int
 
     oodControl_t ctrl = oodName2controlType(msgName + 6);
     CSTRING windowClass = controlType2winName(ctrl);
-    if ( *windowClass == '\0' )
-    {
-        // This really should not be possible, but it would be hard to track
-        // down the problem if it did happen.  So, we will raise an exception.
-        // TODO remove this after testing.
-        ooDialogInternalException(context, __FUNCTION__, __LINE__, __DATE__, __FILE__);
-        return -1;
-    }
 
     uint32_t style = getControlStyle(ctrl, opts);
 
-    WORD *p = (WORD *)pcdd->active;
-    addToDialogTemplate(&p, 0, windowClass, id, x, y, cx, cy, NULL, style);
-    pcdd->active = p;
-    pcdd->count++;
+    addToDialogTemplate(pcdd, 0, windowClass, id, x, y, cx, cy, NULL, style);
 
     int32_t result = 0;
 
@@ -1951,12 +1892,27 @@ RexxMethod9(RexxObjectPtr, dyndlg_addMethod, RexxObjectPtr, rxID, OPTIONAL_CSTRI
     return context->ForwardMessage(NULL, msgName, NULL, newArgs);
 }
 
-/** DynamicDialog::addIconFile  [private]
+/** DynamicDialog::addIconResource
  *
- *  Basic implemetation for DyamicDialog::addIcon(resourceID, fileName).
+ *  Adds an icon resource file name to the dialog.  The file name can either
+ *  be added by the programmer or is automatically added when a resource script
+ *  is parsed and contains an ICON resource statement.
  *
+ *  The programmer can then use the icon either as the application icon, or use
+ *  it as an image in her program by using the class method, userIcon() of the
+ *  .Image class.  Both of these methods will load the icon image from the file
+ *  system.
+ *
+ *  @param  rxID      The resource ID for the icon, can be numeric or symbolic.
+ *  @param  fileName  The file name of the icon resource.
+ *
+ *  @return Zero on success, negative one for error.
+ *
+ *  @note  The icons added to the dialog are located by resource ID.  If an icon
+ *         with the same ID is already in the dialog, it is replaced by the icon
+ *         specified.
  */
-RexxMethod3(int32_t, dyndlg_addIconFile_pvt, RexxObjectPtr, rxID, CSTRING, fileName, CSELF, pCSelf)
+RexxMethod3(int32_t, dyndlg_addIconResource, RexxObjectPtr, rxID, CSTRING, fileName, CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
 
@@ -2007,15 +1963,17 @@ RexxMethod3(int32_t, dyndlg_addIconFile_pvt, RexxObjectPtr, rxID, CSTRING, fileN
                 break;
         }
 
-        dlgAdm->IconTab[i].fileName = (PCHAR)LocalAlloc(LPTR, strlen(fileName) + 1);
-        if ( dlgAdm->IconTab[i].fileName == NULL )
+        char *buf = (char *)LocalAlloc(LPTR, strlen(fileName) + 1);
+        if ( buf == NULL )
         {
             outOfMemoryException(context->threadContext);
             goto done_out;
         }
+        strcpy(buf, fileName);
+        StrTrim(buf, " \"'");
 
+        dlgAdm->IconTab[i].fileName = buf;
         dlgAdm->IconTab[i].iconID = iconID;
-        strcpy(dlgAdm->IconTab[i].fileName, fileName);
         if ( i == dlgAdm->IT_size )
         {
             dlgAdm->IT_size++;
@@ -2029,81 +1987,6 @@ RexxMethod3(int32_t, dyndlg_addIconFile_pvt, RexxObjectPtr, rxID, CSTRING, fileN
 
 done_out:
     return rc;
-}
-
-
-/** DynamicDialog::itemAdd()  [private]
- *
- *  Provides a central function to do several needed things for each potential
- *  dialog control to be added to the dialog template.
- *
- *  1.) Checks that template is still valid and returns -2 if not.
- *
- *  2.) If the control to be added must have a valid resource ID, resolves the
- *  ID  and returns -1 if the ID can not be resolved.
- *
- *  3.) If the control to be added is one that often uses the static ID (-1),
- *  resolves the resource ID, if one was specified, but uses the static ID if
- *  the specified ID does not resolve.  If the resource ID was not specified,
- *  just uses the static ID.
- *
- *  4.) After step 3, increments the dialog item count and returns the resource
- *  ID to use when adding the control.
- *
- *  During the conversion to the C++ APIs, this method is needed.  Once the
- *  conversion is finished, it can probaly go away.
- */
-int32_t itemAdd(RexxMethodContext *c, pCDynamicDialog pcdd, RexxObjectPtr rxID, bool acceptStaticID, int shortCutID)
-{
-    // For normal dialogs, the base pointer is of course valid, for category
-    // dialogs it could already have been set to NULL.  The active pointer is
-    // what must be checked.
-    if ( pcdd->active == NULL )
-    {
-        return -2;
-    }
-
-    int32_t id;
-    if ( ! acceptStaticID )
-    {
-        // checkID() will put up an error message box for any rxID it can not
-        // resolve.  But, it will resolve a static ID and return -1.  The
-        // control being added can not use a static ID, so we return -1.
-        id = checkID(c, rxID, pcdd->pcpbd->rexxSelf);
-        if ( id < 1 )
-        {
-            return -1;
-        }
-    }
-    else
-    {
-        // The control being added can use a static ID, so we do not want an
-        // error message box put up if it can not be resolved, we just want to
-        // go with -1 if it does not resolve.
-        if ( shortCutID == -1 )
-        {
-            id = -1;
-        }
-        else
-        {
-            id = resolveResourceID(c, rxID, pcdd->pcpbd->rexxSelf);
-        }
-    }
-
-    pcdd->count++;
-    return id;
-}
-RexxMethod3(int32_t, dyndlg_itemAdd_pvt, RexxObjectPtr, rxID, OPTIONAL_logical_t, staticIDSpecified, CSELF, pCSelf)
-{
-    if ( argumentExists(2) )
-    {
-        if ( ! staticIDSpecified )
-        {
-            return itemAdd(context, (pCDynamicDialog)pCSelf, rxID, true, -1);
-        }
-        return itemAdd(context, (pCDynamicDialog)pCSelf, rxID, true, 0);
-    }
-    return itemAdd(context, (pCDynamicDialog)pCSelf, rxID, false, 0);
 }
 
 
@@ -2295,14 +2178,11 @@ RexxMethod8(logical_t, catdlg_createCategoryDialog, int32_t, x, int32_t, y, uint
         fontSize = pcpbd->fontSize;
     }
 
-    WORD *p;
-    WORD *pBase;
-    if ( ! startDialogTemplate(context, &pBase, &p, expected, x, y, cx, cy, NULL, NULL, fontName, fontSize, style) )
+    DLGTEMPLATE *pBase;
+    if ( ! startDialogTemplate(context, &pBase, pcdd, expected, x, y, cx, cy, NULL, NULL, fontName, fontSize, style) )
     {
         return FALSE;
     }
-
-    pcdd->active = p;
 
     //  self~catalog['base'][self~catalog['category']] = base
     RexxDirectoryObject catalog = (RexxDirectoryObject)c->SendMessage0(pcpbd->rexxSelf, "CATALOG");
@@ -2413,10 +2293,10 @@ RexxMethod5(int32_t, catdlg_setControlDataPage, RexxObjectPtr, rxID, CSTRING, da
 }
 
 
+#ifndef USE_DS_CONTROL
 
 extern BOOL SHIFTkey = FALSE;
 
-#ifndef USE_DS_CONTROL
 BOOL IsNestedDialogMessage(
     DIALOGADMIN * dlgAdm,
     PMSG  lpmsg    // address of structure with message

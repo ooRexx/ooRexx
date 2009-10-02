@@ -272,8 +272,7 @@ REXX_METHOD_PROTOTYPE(dyndlg_addRadioButton);
 REXX_METHOD_PROTOTYPE(dyndlg_addGroupBox);
 REXX_METHOD_PROTOTYPE(dyndlg_addEntryLine);
 REXX_METHOD_PROTOTYPE(dyndlg_addMethod);
-REXX_METHOD_PROTOTYPE(dyndlg_addIconFile_pvt);
-REXX_METHOD_PROTOTYPE(dyndlg_itemAdd_pvt);
+REXX_METHOD_PROTOTYPE(dyndlg_addIconResource);
 REXX_METHOD_PROTOTYPE(dyndlg_stop);
 REXX_METHOD_PROTOTYPE(dyndlg_stopDynamic_pvt);
 
@@ -617,8 +616,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_addGroupBox,           dyndlg_addGroupBox),
     REXX_METHOD(dyndlg_addEntryLine,          dyndlg_addEntryLine),
     REXX_METHOD(dyndlg_addMethod,             dyndlg_addMethod),
-    REXX_METHOD(dyndlg_addIconFile_pvt,       dyndlg_addIconFile_pvt),
-    REXX_METHOD(dyndlg_itemAdd_pvt,           dyndlg_itemAdd_pvt),
+    REXX_METHOD(dyndlg_addIconResource,       dyndlg_addIconResource),
     REXX_METHOD(dyndlg_startParentDialog,     dyndlg_startParentDialog),
     REXX_METHOD(dyndlg_startChildDialog,      dyndlg_startChildDialog),
     REXX_METHOD(dyndlg_stop,                  dyndlg_stop),

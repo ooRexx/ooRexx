@@ -896,3 +896,47 @@ int getKeywordValue(String2Int *cMap, const char * str)
     return -1;
 }
 
+
+/**
+ *  Converts an ANSI character string to a wide (Unicode) character string.
+ *
+ *  This is a convenience function that assumes the caller has passed a buffer
+ *  known to be big enough.
+ *
+ *  It works correctly for the empty string "" and is designed to treat a null
+ *  pointer for text as the empty string.  For both cases, the wide character
+ *  null is copied to the destination buffer and a count of 1 is returned.
+ *
+ * @param dest  Buffer in which to place the converted string.  Must be big
+ *              enough.
+ * @param text  The text to convert.  As explained above, this can be a null
+ *              pointer in which case it is treated as though it is the empty
+ *              string.
+ *
+ * @return The number of wide character values copied to the buffer.  This will
+ *         always be at least one, if an error occurs, the wide character null
+ *         is copied to the destination and 1 is returned.
+ */
+int addUnicodeText(LPWORD dest, const char *text)
+{
+    int count = 1;
+    if ( text == NULL )
+    {
+        *dest = 0;
+    }
+    else
+    {
+        int cchWideChar = (int)strlen(text) + 1;
+
+        count = MultiByteToWideChar(CP_ACP, 0, text, -1, (LPWSTR)dest, cchWideChar);
+        if ( count == 0 )
+        {
+            // Unlikely that this failed, but if it did, treat it as an empty
+            // string.
+            *dest = 0;
+            count++;
+        }
+    }
+    return count;
+}
+

@@ -94,7 +94,7 @@
    -- Add the other controls.
    self~createWhiteFrame(203, 10, self~SizeY - 52, self~SizeX-20, 28, "HIDDEN")
    self~createPushButton(103, 12, self~SizeY - 50, self~SizeX-24, 24, "OWNER NOTAB")
-   self~createButtonGroup(self~SizeX-220, self~SizeY - 18,60,12, ,
+   self~createPushButtonGroup(self~SizeX-220, self~SizeY - 18,60,12, ,
             "&Bitmap-Viewer 111 BmpView &Draw-Color-Demo 112 OODraw &Cancel 2 CANCEL", 1, "DEFAULT")
 
 ::method initDialog

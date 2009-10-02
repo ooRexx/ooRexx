@@ -51,19 +51,16 @@
 
 ::method init external "LIBRARY oodialog userdlg_init"
 
-::method StopIt
+::method stopIt
    forward class (super) continue
    forward message "stopDynamic" continue
    ret = result
-   if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
-   if self~BkgBitmap \= 0 then self~RemoveBitmap(self~BkgBitmap)
+   if self~bkgBrushBmp \= 0 then self~deleteObject(self~bkgBrushBmp)
+   if self~bkgBitmap \= 0 then self~removeBitmap(self~bkgBitmap)
    return ret
 
-/******************************************************************************/
-/* Menu/Action bar.  These methods are deprecated, instead, use the Menu      */
-/* classes directly.                                                          */
-
-::method SetMenu
+-- DEPRECATED menu bar methods.  Use the Menu classes directly.
+::method setMenu
     menuBar = self~menuBar
 
     .local~systemErrorCode = 0
@@ -86,7 +83,7 @@
 
     return menuBar~attachTo(self)
 
-::method CreateMenu
+::method createMenu
     use strict arg count = 100
 
     -- menuBar is either good, or a condition was raised.
@@ -94,7 +91,7 @@
     self~menuBar = menuBar
     return .true;
 
-::method AddPopupMenu
+::method addPopupMenu
     use strict arg name, opt = ""
 
     .local~systemErrorCode = 0
@@ -105,7 +102,7 @@
 
     return self~menuBar~addPopup(0, name, opt, 0)
 
-::method AddMenuItem
+::method addMenuItem
     use strict arg name, id, opt = "", msgToRaise = .nil
 
     .local~systemErrorCode = 0
@@ -117,7 +114,7 @@
     if arg(4, 'O') then return self~menuBar~addItem(id, name, opt)
     else return self~menuBar~addItem(id, name, opt, msgToRaise)
 
-::method AddMenuSeparator
+::method addMenuSeparator
 
     .local~systemErrorCode = 0
     if self~menuBar == .nil then do
@@ -127,7 +124,7 @@
 
     return self~menuBar~addSeparator(0)
 
-::method LoadMenu protected
+::method loadMenu protected
   use strict arg resfile, menuid, loadopts = "", count = 50
 
   connect = .false

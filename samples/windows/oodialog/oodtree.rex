@@ -170,7 +170,7 @@ CleanUp:
 ::method DefineDialog
   result = self~DefineDialog:super
   if result = 0 then do
-     /* Additional dialog items (e.g. AddInputGroup) */
+     /* Additional dialog items (e.g. createEditInputGroup) */
   end
 
 

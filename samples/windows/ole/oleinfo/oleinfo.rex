@@ -516,7 +516,7 @@ callFailed:
     self~createEdit(300+i, 64, -5+(13*i), 128, 11, "AUTOSCROLLH", "Param"i)
     self~createStaticText(-1, 8, -5+(13*i), 56, 11, , params.i.!NAME)
   end
-  self~addOkCancelRightBottom
+  self~createOkCancelRightBottom
 
 ::METHOD InitDialog
   expose params.

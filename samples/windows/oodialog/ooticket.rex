@@ -154,14 +154,14 @@
    cinema.4 = "&Drive-in above Highway 101"
    cinema.5 = "&Premiere Black + White Movies Monterey"
    cinema.6 = "&Broadway Cinema San Francisco"
-   self~AddCheckBoxStem(51, 25, 10, 0, cinema., 6)
+   self~createCheckBoxStem(51, 25, 10, 0, cinema., 6)
    self~createStaticText(-1, 10, self~SizeY - 65, 0, 0, , "Make your choice of one or more cinemas you prefer")
    self~createBlackFrame(-1, 1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
 
 ::method Days                                        /* page 3 */
    expose daynames
    self~createStaticText(-1, 10, self~SizeY - 65, 0, 0, , "Please select the day you like most")
-   self~AddRadioGroup(1031, 5, 5,0, "&Monday &Tuesday &Wednesday T&hursday &Friday &Saturday S&unday")
+   self~createRadioButtonGroup(1031, 5, 5,0, "&Monday &Tuesday &Wednesday T&hursday &Friday &Saturday S&unday")
    self~createBlackFrame(-1, 1, self~SizeY -68, self~catalog['page']['w'] - 2, 14)
    self~createStaticImage(145, 73, 10, 125, 100, "BITMAP SIZEIMAGE CENTERIMAGE")
    daynames = .array~of('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
@@ -305,12 +305,12 @@
          if self~getRadioButtonDataPage(id,3) then leave
       end
       today = date('W')
-      if id == 38 then
+      if id == 1038 then
            self~setStaticDataPage(42, "==> No day selected", 4)
-      else if today = daynames[id-30] then
-           self~setStaticDataPage(42, "Today" daynames[id-30], 4)
+      else if today = daynames[id-1030] then
+           self~setStaticDataPage(42, "Today" daynames[id-1030], 4)
       else
-           self~setStaticDataPage(42, "Next" daynames[id-30], 4)
+           self~setStaticDataPage(42, "Next" daynames[id-1030], 4)
    /* time */
       id = random(1,4) + 45
       self~setRadioButtonDataPage(id,1,4)

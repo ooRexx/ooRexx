@@ -136,11 +136,11 @@ public:
     inline logical_t templateIsComplete() { return isFinal ? TRUE : FALSE; }
     inline void noTempHelpID() { helpID = (uint32_t)-1; }
 
-    // The MENUEX_TEMPLATE_ITEM struct has room for 1 wide charcter, so we don't
-    // count the terminating null in text.
-    inline bool haveTemplateRoom(int cchWideChar, byte *pos)
+    // The MENUEX_TEMPLATE_ITEM struct uses wide charactes so we need to double
+    // the text length.
+    inline bool haveTemplateRoom(size_t textLength, byte *pos)
     {
-        return (pos + MENUEX_TEMPLATE_ITEM_SIZE + (2 * cchWideChar)) <= endOfTemplate;
+        return (pos + MENUEX_TEMPLATE_ITEM_SIZE + (2 * textLength)) <= endOfTemplate;
     }
 
     RexxDirectoryObject autoConnectionStatus();

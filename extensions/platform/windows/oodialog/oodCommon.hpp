@@ -193,6 +193,7 @@ extern const char *comctl32VersionPart(DWORD id, DWORD type);
 extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
 extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hDlg);
 extern int           getKeywordValue(String2Int *cMap, const char * str);
+extern int           addUnicodeText(LPWORD dest, const char *text);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;

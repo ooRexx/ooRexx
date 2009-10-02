@@ -5801,9 +5801,9 @@ out:
 
 /** Image::userIcon()  [class method]
  *
- *  Retrieves a user icon.  A user icon is added through UserDialog::addIcon(),
- *  either by the programmer, or when a *.rc script file is parsed, if the file
- *  has icon resources.
+ *  Retrieves a user icon.  A user icon is added through
+ *  DynamicDialog::addIconResource(), either by the programmer, or when a *.rc
+ *  script file is parsed, if the file has icon resources.
  *
  *  @param  dlg    The UserDialog object that had the icon added.
  *  @param  rxID   The resource ID of the icon, numeric or symbolic
