@@ -2171,6 +2171,12 @@ Output:
       offset = -(tz~left(2) * 60 + tz~right(2))
   end
 
+  -- our standard format uses 6 digits for the fraction,
+  -- but the standard also allows for just 2 or even omitted,
+  -- so pad it out to a long time format
+  parse var time base '.' fraction
+  time = base'.'fraction~left(6, '0')
+
   numeric digits 18
   -- convert this time stamp to local time, then create the date time object
   -- using the adjusted time and offset
@@ -2179,7 +2185,7 @@ Output:
   return self~new(time, offset);
 
   syntax:
-  raise syntax 88.918 array("date", date)
+  raise syntax 88.918 array("date", time)
 
 
 -- Create a DateTime object from Unix Ticks value
