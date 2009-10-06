@@ -100,7 +100,7 @@ callFailed:
 /**************************/
 /* Main Dialog of OLEINFO */
 /**************************/
-::class OLEINFO subclass UserDialog inherit AdvancedControls MessageExtensions
+::class OLEINFO subclass UserDialog
 
 ::method Init
   expose cache
@@ -115,17 +115,16 @@ callFailed:
   end
 
   /* Connect dialog control items to class methods */
-  self~ConnectButton(200,"MyOk")
-  self~ConnectButton(9,"Help")
-  self~ConnectButton(103,"Lookup")
+  self~connectButtonEvent(200, "CLICKED", "MyOk")
+  self~connectButtonEvent(103, "CLICKED", "Lookup")
 
-  self~ConnectComboBoxNotify(100,"SELCHANGE","Ok")
-  self~ConnectListNotify(104,"ACTIVATE","selectDoubleClick")
-  self~ConnectListNotify(104,"CHANGED","selectionChange")
+  self~connectComboBoxEvent(100,"SELCHANGE","Ok")
+  self~connectListViewEvent(104,"ACTIVATE","selectDoubleClick")
+  self~connectListViewEvent(104,"CHANGED","selectionChange")
 
-  self~ConnectButton(107,"selectionChange")
-  self~ConnectButton(108,"selectionChange")
-  self~ConnectButton(109,"selectionChange")
+  self~connectButtonEvent(107, "CLICKED", "selectionChange")
+  self~connectButtonEvent(108, "CLICKED", "selectionChange")
+  self~connectButtonEvent(109, "CLICKED", "selectionChange")
 
   self~currentObject = .nil
   self~currentObjectName = ""
@@ -498,7 +497,7 @@ callFailed:
 /*************************************/
 /* Dialog for invoking an OLE method */
 /*************************************/
-::CLASS invokeDialog SUBCLASS UserDialog INHERIT AdvancedControls
+::CLASS invokeDialog SUBCLASS UserDialog
 
 ::METHOD resultObject ATTRIBUTE     /* takes the result of the invocation */
 
@@ -546,7 +545,7 @@ callFailed:
 /*******************************************************/
 /* Dialog that shows the result of a method invocation */
 /*******************************************************/
-::class ResultDialog subclass UserDialog inherit AdvancedControls
+::class ResultDialog subclass UserDialog
 
 ::method Init
   expose outarray
@@ -557,8 +556,6 @@ callFailed:
      self~InitCode = 1
      return 1
   end
-
-  self~ConnectButton(1,"Ok")
 
   self~data400=rvalue~string
   if self~data400 = "an OLEOBJECT" then self~useOLEobject = rvalue
@@ -602,7 +599,7 @@ callFailed:
 /********************************************************/
 /* Dialog that shows all ProgIDs obtained from Registry */
 /********************************************************/
-::class RegistryDialog subclass UserDialog inherit AdvancedControls
+::class RegistryDialog subclass UserDialog
 
 ::method Init
   expose cache
@@ -614,8 +611,8 @@ callFailed:
      self~InitCode = 1
      return 1
   end
-  self~ConnectListLeftDoubleClick(200,"selectDoubleClick")
-  self~ConnectButton(201,"search")
+  self~connectListBoxEvent(200, "DBLCLK", "selectDoubleClick")
+  self~connectButtonEvent(201, "CLICKED", "search")
 
   return InitRet
 

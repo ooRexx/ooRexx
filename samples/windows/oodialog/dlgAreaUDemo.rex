@@ -43,7 +43,7 @@ MyDlg~DeInstall
 exit
 ::requires "ooDialog.cls"
 /* ========================================================================= */
-::class MyDialog Subclass UserDialog Inherit AdvancedControls
+::class MyDialog Subclass UserDialog
 /* ========================================================================= */
 ::method Init
 /* ------------------------------------------------------------------------- */

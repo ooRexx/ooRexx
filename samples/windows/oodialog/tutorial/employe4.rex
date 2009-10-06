@@ -62,7 +62,7 @@ dlg~deinstall
     self~AddListEntry(23, "Broker")
     self~AddListEntry(23, "Police Man")
     self~AddListEntry(23, "Lawyer")
-    self~ConnectButton(10, "Print")   /* connect button 10 with a method */
+    self~ConnectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
 
 ::method Print
     self~GetData

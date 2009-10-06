@@ -160,8 +160,7 @@ exit -1
 ::requires "ooDialog.cls"
 /* ::requires 'winsystm.cls'    -- Uncomment if you inherit VirtualKeyCodes  */
 /* ========================================================================= */
-::class MyDlgClass subclass userdialog
-/* inherit AdvancedControls MessageExtensions VirtualKeyCodes *//*cut & paste*/
+::class MyDlgClass subclass userdialog --inherit VirtualKeyCodes
 /*                                                                           */
 /* The class directive                                                       */
 /* Rename your object from MyDlgClass to something that makes sense to you   */
@@ -173,42 +172,16 @@ exit -1
 /*                          ----------------------                           */
 /* Multiple inheritance:                                                     */
 /*                                                                           */
-/* If you are going to use any of these methods:                             */
-/*                                                                           */
-/* newComboBox              newScrollBar              newTreeView         */
-/* newRadioButton          newListView            newProgressBar         */
-/* newStatic         newTrackBar          newCheckBox        */
-/* newListBox               newTab             newEdit         */
-/* newPushButton                                                          */
-/*                                                                           */
-/* Then you must add INHERIT ADVANCEDCONTROLS to the class directive above   */
-/*                                                                           */
-/*                          ----------------------                           */
-/*                                                                           */
-/* If you are going to use any of these methods:                             */
-/*                                                                           */
-/* DEFTREEDRAGHANDLER       CONNECTSLIDERNOTIFY       CONNECTEDITNOTIFY      */
-/* DEFLISTDRAGHANDLER       CONNECTTABNOTIFY          CONNECTBUTTONNOTIFY    */
-/* DEFLISTEDITHANDLER       CONNECTSCROLLBARNOTIFY    CONNECTLISTNOTIFY      */
-/* DEFLISTEDITSTARTER       CONNECTCOMBOBOXNOTIFY     CONNECTTREENOTIFY      */
-/* DEFTREEEDITHANDLER       CONNECTLISTBOXNOTIFY      CONNECTCOMMONNOTIFY    */
-/* DEFTREEEDITSTARTER                                                        */
-/*                                                                           */
-/* Then you must add INHERIT MESSAGEEXTENSIONS to the class directive above  */
-/*                                                                           */
-/*                          ----------------------                           */
-/*                                                                           */
 /* If you are going to use either of these methods:                          */
 /*                                                                           */
 /* VCODE                    KEYNAME                                          */
 /*                                                                           */
 /* Then you must add INHERIT VIRTUALKEYCODES to the class directive above    */
+/* Simply remove the "--" comment characters from before 'inherit and un-    */
+/* comment the requires winsystm.cls line.                                   */
 /*                                                                           */
 /*                          ----------------------                           */
 /*                                                                           */
-/* If you inherit more than one mixin class you only need to use the keyword */
-/* INHERIT once.  The order of inheritance is not important in this case.    */
-/* i.e.: INHERIT ADVANCEDCONTROLS MESSAGEEXTENSIONS VIRTUALKEYCODES          */
 /* ------------------------------------------------------------------------- */
 
 
@@ -240,7 +213,7 @@ exit -1
                         /* ------------------------------------------------- */
                         /* Here we can 'connect' dialog item events to       */
                         /* Methods or Attributes.                            */
-                        /* i.e.: self~ConnectListNotify(id,"Changed",,       */
+                        /* i.e.: self~connectListViewEvent(id,"Changed",,       */
                         /*                            "ItemSelectedMethod")  */
                         /*                                                   */
                         /* NB: Many createXXX Methods (which appear in the   */

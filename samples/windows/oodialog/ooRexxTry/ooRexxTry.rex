@@ -78,7 +78,7 @@ exit
 ::requires "ooDialog.cls"                       -- Needed for the dialog
 ::requires 'winsystm.cls'                       -- Needed for the Windows clipboard
 
-::class oort_dialog subclass userdialog inherit AdvancedControls MessageExtensions
+::class oort_dialog subclass userdialog
 ::method Init
     self~init:super
     rc = self~Create(.dx,.dy,.dwidth,.dheight,.title,'ThickFrame MinimizeBox MaximizeBox')
@@ -835,7 +835,7 @@ return 0
 return 0
 
 
-::class help_dialog subclass userdialog inherit AdvancedControls MessageExtensions
+::class help_dialog subclass userdialog
 ::method Init
     self~init:super
     lp = (.dx + (.dw / 2) - 50)~format( , 0)
@@ -899,7 +899,7 @@ return 0
     'start "ooRexxTry Online Documentation"' '"'||helpDoc||'"'
 
 
-::class settings_dialog subclass userdialog inherit AdvancedControls MessageExtensions
+::class settings_dialog subclass userdialog
 ::method Init
     self~init:super
     lp = (.dx + (.dw / 2) - 50)~format( , 0)

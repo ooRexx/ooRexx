@@ -107,7 +107,7 @@
 ::method InitDialog
    expose minspeed maxspeed
    self~InitDialog:super
-   self~connectScrollBar(1206,'FASTER','SLOWER','DRAG',minspeed,maxspeed,self~speed)
+   self~connectEachSBEvent(1206,'FASTER','SLOWER','DRAG',minspeed,maxspeed,self~speed)
 
 ::method Run
    expose x y z bmp. kind3 cycle maxcycle equal misses

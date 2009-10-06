@@ -51,7 +51,7 @@
  */
 ::class 'WindowBase' public mixinclass object
 
-::method init_windowBase external "LIBRARY oodialog wb_init_windowBase"
+::method init_windowBase private external "LIBRARY oodialog wb_init_windowBase"
 
 ::attribute initCode
 
@@ -276,7 +276,7 @@
  *  template comes from a binary resource, a resource script file, or is con-
  *  structed dynamically.
  */
-::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils
+::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils EventNotification
 
 ::method init class external "LIBRARY oodialog pbdlg_init_cls"
 ::method setDefaultFont class external "LIBRARY oodialog pbdlg_setDefaultFont_cls"
@@ -462,68 +462,6 @@
    use arg id
    return Wnd_Desktop("TXT", self~getItem(id))
 
-
--- Connect WM_HELP messages (F1) to a method.
-::method connectHelp
-   use strict arg msgToRise
-   return self~addUserMsg(msgToRise, "0x00000053", "0xFFFFFFFF", 0, 0, 0, 0, 0x00000101)
-
-::method connectButton
-   use strict arg id, msgToRise
-   if \ id~dataType("N") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if id < 3 | id = 9 then return 0
-   return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0xFFFFFFFF, 0, 0)
-
-::method connectControl
-   use strict arg id, msgToRise
-   if \ id~dataType("N") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0x0000FFFF, 0,0)
-
--- This is the LBN_SELCHANGE message
-::method connectList
-   use strict arg id, msgToRise
-   if \ id~dataType("N") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0001'||id~d2x(4), 0xFFFFFFFF, 0, 0)
-
-::method connectListLeftDoubleClick
-   use strict arg id, msgToRise
-   if \ id~dataType("N") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, '0x0002'||id~d2x(4), 0xFFFFFFFF, 0, 0)
-
-::method addUserMsg unguarded external "LIBRARY oodialog pbdlg_addUserMessage"
-
-::method connectFKeyPress unguarded
-   use strict arg msgToRaise
-   if \ msgToRaise~isA(.String) then return -1
-   return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, "FKEYS", "NONE")
-
-::method connectKeyPress unguarded
-   use strict arg msgToRaise, keys, filter = ""
-   if \ msgToRaise~isA(.String) | \ keys~isA(.String) | \ filter~isA(.String) then return -1
-   if filter == "" then return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0))
-   return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0), filter~translate)
-
-::method disconnectKeyPress unguarded
-   use arg msgToRaise
-   if arg(1, 'O') then return WinAPI32Func("K", 'R', self~adm)
-   if \ msgToRaise~isA(.String) then return -1
-   return WinAPI32Func("K", 'R', self~adm, self~dlgHandle, msgToRaise~translate)
-
-::method hasKeyPressConnection unguarded
-   use arg msgToRaise
-   if arg(1, 'O') then ret = WinAPI32Func("K", 'Q', self~adm)
-   else do
-      if \ msgToRaise~isA(.String) then ret = .false
-      else ret = WinAPI32Func("K", 'Q', self~adm, msgToRaise~translate)
-   end
-   if \ ret~datatype('O') then return .false
-   else return ret
-
-
 /* The following methods 'connect' a Windows dialog control with a 'data' attribute of the Rexx
  * dialog object.  For each dialog control an attribute of the dialog object is created and an
  * entry is added to the data table to 'connect' the control and the attribute.  When auto detection
@@ -532,18 +470,18 @@
  * of the control is used to set the value of the attribute.
  */
 
-::method connectCheckBox unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectRadioButton unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectEdit unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectComboBox unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectListBox unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectTreeView unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectListView unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectTrackBar unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectTab unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectDateTimePicker unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectMonthCalendar unguarded external "LIBRARY oodialog pbdlg_connectControl"
-::method connectSeparator unguarded external "LIBRARY oodialog pbdlg_connectControl"
+::method connectCheckBox unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectRadioButton unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectEdit unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectComboBox unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectListBox unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectTreeView unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectListView unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectTrackBar unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectTab unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectDateTimePicker unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectMonthCalendar unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
+::method connectSeparator unguarded external "LIBRARY oodialog pbdlg_connect_ControName"
 
 ::method addAttribute private
    use arg id, attributeName

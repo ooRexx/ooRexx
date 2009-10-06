@@ -74,20 +74,43 @@ CleanUp:
     if ret = 0 then do
         self~Emp_count = 1
         self~Emp_current = 1
-        self~ConnectButton(10, "Print")   /* connect button 10 with a method */
-        self~ConnectButton(12, "Add")     /* connect button 12 with a method */
-        self~ConnectButton(13, "Emp_List")
-        self~ConnectMenuItem(201, "Add")
-        self~ConnectMenuItem(202, "Print")
-        self~ConnectMenuItem(203, "Emp_List")
-        self~ConnectMenuItem(204, "Ok")
-        self~ConnectMenuItem(205, "Cancel")
-        self~ConnectMenuItem(206, "About")
+        self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
+        self~connectButtonEvent(12, "CLICKED", "Add")     /* connect button 12 with a method */
+        self~connectButtonEvent(13, "CLICKED", "Emp_List")
+        self~defineMenu
     end
     self~InitCode = ret
     return ret
 
+::method defineMenu private
+    expose menuBar
+
+    empPopup = .PopupMenu~new(200, self)
+    empPopup~insertItem(204, 204, "&List", "GRAYED")
+    empPopup~insertItem(204, 201, "&Add")
+    empPopup~insertItem(204, 202, "&Print")
+    empPopup~insertSeparator(204, 203)
+
+    ctrlPopup = .PopupMenu~new(210, self)
+    ctrlPopup~insertItem(214, 214, "&About")
+    ctrlPopup~insertItem(214, 211, "E&xit")
+    ctrlPopup~insertItem(214, 212, "&Cancel")
+    ctrlPopup~insertSeparator(214, 213)
+
+    menuBar = .BinaryMenuBar~new(.nil, 300, self)
+    menuBar~insertPopup(210, 210, ctrlPopup, "&Control")
+    menuBar~insertPopup(210, 200, empPopup, "&Employees")
+
+    menuBar~connectSelect(201, "Add", self)
+    menuBar~connectSelect(202, "Print", self)
+    menuBar~connectSelect(204, "Emp_List", self)
+    menuBar~connectSelect(211, "Ok", self)
+    menuBar~connectSelect(212, "Cancel", self)
+    menuBar~connectSelect(214, "About", self)
+
+
 ::method InitDialog
+    expose menuBar
     self~City = "New York"
     self~Male = 1
     self~Female = 0
@@ -100,25 +123,10 @@ CleanUp:
     self~AddListEntry(23, "Broker")
     self~AddListEntry(23, "Police Man")
     self~AddListEntry(23, "Lawyer")
-    self~ConnectScrollBar(11, "Emp_Previous", "Emp_Next")
+    self~connectEachSBEvent(11, "Emp_Previous", "Emp_Next")
     self~DisableItem(11)
     self~DisableItem(13)
-    self~SetMenu
-
-
-::method DefineDialog
-    forward class(super) continue
-    self~CreateMenu
-    self~AddPopupMenu("&Employees")
-    self~AddMenuItem("&Add", 201)
-    self~AddMenuItem("&Print", 202)
-    self~AddMenuSeparator
-    self~AddMenuItem("&List", 203, "GRAYED END")  /* last item in popup */
-    self~AddPopupMenu("&Control", "END")          /* last popup in menu */
-    self~AddMenuItem("E&xit", 204)
-    self~AddMenuItem("Cancel", 205)
-    self~AddMenuSeparator
-    self~AddMenuItem("&About", 206, "END")        /* last item in popup */
+    menuBar~attachTo(self)
 
 
 ::method Print
@@ -129,6 +137,7 @@ CleanUp:
                      "Profession:" self~Profession
 
 ::method Add
+    expose menuBar
     self~Employees[self~Emp_count] = .directory~new
     self~Employees[self~Emp_count]['NAME'] = self~getControlData(21)
     self~Employees[self~Emp_count]['CITY'] = self~getControlData(22)
@@ -143,7 +152,7 @@ CleanUp:
     self~SetSBPos(11, self~Emp_count)
     self~EnableItem(11)
     self~EnableItem(13)
-    self~EnableMenuItem(203)
+    menuBar~enable(204)
 
 
 ::method Set

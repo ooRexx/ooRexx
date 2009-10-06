@@ -72,13 +72,13 @@ CleanUp:
    if MyDialog~IsDialogActive then MyDialog~StopIt
 
 
-::requires "ooDialog.cls"    /* This file contains the OODIALOG classes */
+::requires "ooDialog.cls"    /* This file contains the ooDialog classes */
 ::requires "WINSYSTM.CLS"    /* This file contains the Windows classes */
 
 
 /* ---------------------------- Directives ---------------------------------*/
 
-::class MyDialogClass subclass UserDialog inherit AdvancedControls MessageExtensions VirtualKeyCodes
+::class 'MyDialogClass' subclass UserDialog inherit VirtualKeyCodes
 
 ::method Init
   use arg InitStem.
@@ -93,22 +93,19 @@ CleanUp:
   end
 
   /* Connect dialog control items to class methods */
-  self~ConnectTreeNotify("IDC_TREE","SelChanging","OnSelChanging_IDC_TREE")
-  --self~ConnectTreeNotify("IDC_TREE","SelChanged","OnSelChanged_IDC_TREE")
-  self~ConnectTreeNotify("IDC_TREE","Expanding","OnExpanding_IDC_TREE")
-  --self~ConnectTreeNotify("IDC_TREE","Expanded","OnExpanded_IDC_TREE")
-  self~ConnectTreeNotify("IDC_TREE","DefaultEdit")
-  self~ConnectTreeNotify("IDC_TREE","BEGINDRAG", "DefTreeDragHandler")
-  --self~ConnectTreeNotify("IDC_TREE","Delete","OnDelete_IDC_TREE")
-  self~ConnectTreeNotify("IDC_TREE","KeyDown","OnKeyDown_IDC_TREE")
-  self~ConnectButton("IDC_PB_NEW","IDC_PB_NEW")
-  self~ConnectButton("IDC_PB_DELETE","IDC_PB_DELETE")
-  self~ConnectButton(IDC_PB_EXP_ALL,"IDC_PB_EXP_ALL")
-  self~ConnectButton(IDC_PB_COL_ALL,"IDC_PB_COL_ALL")
-  self~ConnectButton(IDC_PB_INFO,"IDC_PB_INFO")
-  self~ConnectButton(2,"Cancel")
-  self~ConnectButton(9,"Help")
-  self~ConnectButton(1,"OK")
+  self~connectTreeViewEvent("IDC_TREE","SelChanging","OnSelChanging_IDC_TREE")
+  --self~connectTreeViewEvent("IDC_TREE","SelChanged","OnSelChanged_IDC_TREE")
+  self~connectTreeViewEvent("IDC_TREE","Expanding","OnExpanding_IDC_TREE")
+  --self~connectTreeViewEvent("IDC_TREE","Expanded","OnExpanded_IDC_TREE")
+  self~connectTreeViewEvent("IDC_TREE","DefaultEdit")
+  self~connectTreeViewEvent("IDC_TREE","BEGINDRAG", "DefTreeDragHandler")
+  --self~connectTreeViewEvent("IDC_TREE","Delete","OnDelete_IDC_TREE")
+  self~connectTreeViewEvent("IDC_TREE","KeyDown","OnKeyDown_IDC_TREE")
+  self~connectButtonEvent("IDC_PB_NEW", "CLICKED", "IDC_PB_NEW")
+  self~connectButtonEvent("IDC_PB_DELETE", "CLICKED", "IDC_PB_DELETE")
+  self~connectButtonEvent(IDC_PB_EXP_ALL, "CLICKED", "IDC_PB_EXP_ALL")
+  self~connectButtonEvent(IDC_PB_COL_ALL, "CLICKED", "IDC_PB_COL_ALL")
+  self~connectButtonEvent(IDC_PB_INFO, "CLICKED", "IDC_PB_INFO")
 
 
   /* Initial values that are assigned to the object attributes */
@@ -301,7 +298,7 @@ CleanUp:
   call infoDialog "No help available."
   self~Help:super
 
-::class 'NewTreeItemDlg' subclass RcDialog inherit AdvancedControls
+::class 'NewTreeItemDlg' subclass RcDialog
 
 ::method init
   expose treeControl

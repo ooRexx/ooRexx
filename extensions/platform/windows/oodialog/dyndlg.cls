@@ -104,12 +104,12 @@
 -- adding a method to the message table and just add the bitmaps.
 ::method createBitmapButton
    use strict arg id, x, y, cx = 0, cy = 0, opts = "", text = "", msgToRaise = "", bmp, focus = "", sel = "", disabl = ""
-   if \ self~hasMethod('CONNECTBITMAPBUTTON') then return -3
+   if \ self~hasMethod('INSTALLBITMAPBUTTON') then return -3
    opts = opts~translate || " OWNER"
    if focus = "" & sel = "" & opts~wordpos("FRAME") = 0 & opts~wordpos("TAB") = 0 then opts = opts || " NOTAB"
    ret = self~createPushButton(id, x, y, cx, cy, opts, text)
    if ret <> 0 then return ret
-   return self~connectBitmapButton(id, msgToRaise~space(0), bmp, focus, sel, disabl, opts)
+   return self~installBitmapButton(id, msgToRaise~space(0), bmp, focus, sel, disabl, opts)
 
 
 ::method createEdit external "LIBRARY oodialog dyndlg_createEdit"

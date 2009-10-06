@@ -75,9 +75,9 @@ CleanUp:
     if ret = 0 then do
         self~Emp_count = 1
         self~Emp_current = 1
-        self~ConnectButton(10, "Print")   /* connect button 10 with a method */
-        self~ConnectButton(12, "Add")     /* connect button 12 with a method */
-        self~ConnectButton(13, "Emp_List")
+        self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
+        self~connectButtonEvent(12, "CLICKED", "Add")     /* connect button 12 with a method */
+        self~connectButtonEvent(13, "CLICKED", "Emp_List")
         self~ConnectDraw(1, "DrawOK")
     end
     self~InitCode = ret
@@ -97,7 +97,7 @@ CleanUp:
     self~AddListEntry(23, "Broker")
     self~AddListEntry(23, "Police Man")
     self~AddListEntry(23, "Lawyer")
-    self~ConnectScrollBar(11, "Emp_Previous", "Emp_Next")
+    self~connectEachSBEvent(11, "Emp_Previous", "Emp_Next")
     self~DisableItem(11)
     font = self~CreateFont("Script",14,"BOLD")
     self~SetItemFont(1, font)

@@ -73,19 +73,13 @@ any:
     CalcDlg~StopIt
   signal reStart
 
-/* If you use a requires directive for oodwin32.cls, you don't need to use a
- * requires directive for any of the other ooDialog class files.  oodwin32.cls
- * has a requires directive for oodialog.cls, which in turn has a requires
- * directive for oodplain.cls.
- */
 ::requires "ooDialog.cls"
 
 /* This requires loads the RxMath functions. */
 ::requires "rxmath" library
 
 /* The Calculator dialog class */
-/* Advanced controls are required to get the dialog-item objects */
-::class Calculator subclass UserDialog inherit AdvancedControls
+::class Calculator subclass UserDialog
 
 ::method Init
   forward class (super) continue /* call parent constructor */
@@ -97,36 +91,35 @@ any:
   end
 
   /* Connect dialog control items to class methods */
-  self~ConnectButton("BNO1","BNO1")
-  self~ConnectButton("BNO2","BNO2")
-  self~ConnectButton("BNO3","BNO3")
-  self~ConnectButton("BNO4","BNO4")
-  self~ConnectButton("BNO5","BNO5")
-  self~ConnectButton("BNO6","BNO6")
-  self~ConnectButton("BNO7","BNO7")
-  self~ConnectButton("BNO8","BNO8")
-  self~ConnectButton("BNO9","BNO9")
-  self~ConnectButton("BNO0","BNO0")
-  self~ConnectButton("BSIGN","BSIGN")
-  self~ConnectButton("BPOINT","BPOINT")
-  self~ConnectButton("BDIVIDE","BDIVIDE")
-  self~ConnectButton("BTIMES","BTIMES")
-  self~ConnectButton("BMINUS","BMINUS")
-  self~ConnectButton("BPLUS","BPLUS")
-  self~ConnectButton("BSQRT","BSQRT")
-  self~ConnectButton("BLOG","BLOG")
-  self~ConnectButton("BLOG10","BLOG10")
-  self~ConnectButton("BPI","BPI")
-  self~ConnectButton("BBACKSPACE","BBACKSPACE")
-  self~ConnectButton("BCLEAR","BCLEAR")
-  self~ConnectButton("BCALC","BCALC")
-  self~ConnectButton("BSINUS","BSINUS")
-  self~ConnectButton("BCOSINUS","BCOSINUS")
-  self~ConnectButton("BTANGENS","BTANGENS")
-  self~ConnectButton("BARCSIN","BARCSIN")
-  self~ConnectButton("BARCCOS","BARCCOS")
-  self~ConnectButton("BARCTAN","BARCTAN")
-  self~ConnectButton(1,"OK")
+  self~connectButtonEvent("BNO1", "CLICKED", "BNO1")
+  self~connectButtonEvent("BNO2", "CLICKED", "BNO2")
+  self~connectButtonEvent("BNO3", "CLICKED", "BNO3")
+  self~connectButtonEvent("BNO4", "CLICKED", "BNO4")
+  self~connectButtonEvent("BNO5", "CLICKED", "BNO5")
+  self~connectButtonEvent("BNO6", "CLICKED", "BNO6")
+  self~connectButtonEvent("BNO7", "CLICKED", "BNO7")
+  self~connectButtonEvent("BNO8", "CLICKED", "BNO8")
+  self~connectButtonEvent("BNO9", "CLICKED", "BNO9")
+  self~connectButtonEvent("BNO0", "CLICKED", "BNO0")
+  self~connectButtonEvent("BSIGN", "CLICKED", "BSIGN")
+  self~connectButtonEvent("BPOINT", "CLICKED", "BPOINT")
+  self~connectButtonEvent("BDIVIDE", "CLICKED", "BDIVIDE")
+  self~connectButtonEvent("BTIMES", "CLICKED", "BTIMES")
+  self~connectButtonEvent("BMINUS", "CLICKED", "BMINUS")
+  self~connectButtonEvent("BPLUS", "CLICKED", "BPLUS")
+  self~connectButtonEvent("BSQRT", "CLICKED", "BSQRT")
+  self~connectButtonEvent("BLOG", "CLICKED", "BLOG")
+  self~connectButtonEvent("BLOG10", "CLICKED", "BLOG10")
+  self~connectButtonEvent("BPI", "CLICKED", "BPI")
+  self~connectButtonEvent("BBACKSPACE", "CLICKED", "BBACKSPACE")
+  self~connectButtonEvent("BCLEAR", "CLICKED", "BCLEAR")
+  self~connectButtonEvent("BCALC", "CLICKED", "BCALC")
+  self~connectButtonEvent("BSINUS", "CLICKED", "BSINUS")
+  self~connectButtonEvent("BCOSINUS", "CLICKED", "BCOSINUS")
+  self~connectButtonEvent("BTANGENS", "CLICKED", "BTANGENS")
+  self~connectButtonEvent("BARCSIN", "CLICKED", "BARCSIN")
+  self~connectButtonEvent("BARCCOS", "CLICKED", "BARCCOS")
+  self~connectButtonEvent("BARCTAN", "CLICKED", "BARCTAN")
 
   /* Initial values that are assigned to the object attributes */
   self~TLine= '0' /* set text-line to 0 initially */

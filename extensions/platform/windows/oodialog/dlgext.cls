@@ -158,55 +158,6 @@
    if id = -1 then return -1
    return HandleScrollBar("GP",self~getItem(id))
 
--- TODO connectScrollBarEvent
-::method connectScrollBar
-   use arg id, progUp, progDn, progPos, min, max, pos, progPgUp, progPgDn, progTop, progBottom, progTrack, progEndSc
-
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-
-   if arg(5, 'E'), min~datatype('N'), arg(6,'E'), max~datatype('N') then self~setSBRange(id, min, max, 0)
-   if arg(7, 'E'), pos~datatype('N') then self~setSBPos(id, pos, 0)
-
-   hwnd = self~getItem(id)
-   wf = "0x0000FFFF"
-   nf = "0xFFFFFFFF"
-   /* Install hooks for WM_VSCROLL and WM_HSCROLL */
-   self~addUserMsg(progDn, 0x00000114, wf, 0x00000001, wf, hwnd, nf)
-   self~addUserMsg(progUp, 0x00000114, wf, 0x00000000, wf, hwnd, nf)
-   self~addUserMsg(progDn, 0x00000115, wf, 0x00000001, wf, hwnd, nf)
-   self~addUserMsg(progUp, 0x00000115, wf, 0x00000000, wf, hwnd, nf)
-   if arg(4, 'E'), progPos \== "" then do
-      self~addUserMsg(progPos, 0x00000114, wf, 0x00000004, wf, hwnd, nf)
-      self~addUserMsg(progPos, 0x00000115, wf, 0x00000004, wf, hwnd, nf)
-   end
-   if arg(8, 'E'), progPgUp \== "" then do
-      self~addUserMsg(progPgUp, 0x00000114, wf, 0x00000002, wf, hwnd, nf)
-      self~addUserMsg(progPgUp, 0x00000115, wf, 0x00000002, wf, hwnd, nf)
-   end
-   if arg(9, 'E'), progPgDn \== "" then do
-      self~addUserMsg(progPgDn, 0x00000114, wf, 0x00000003, wf, hwnd, nf)
-      self~addUserMsg(progPgDn, 0x00000115, wf, 0x00000003, wf, hwnd, nf)
-   end
-   if arg(10, 'E'), progTop \== "" then do
-      self~addUserMsg(progTop, 0x00000114, wf, 0x00000006, wf, hwnd, nf)
-      self~addUserMsg(progTop, 0x00000115, wf, 0x00000006, wf, hwnd, nf)
-   end
-   if arg(11, 'E'), progBottom \== "" then do
-      self~addUserMsg(progBottom, 0x00000114, wf, 0x00000007, wf, hwnd, nf)
-      self~addUserMsg(progBottom, 0x00000115, wf, 0x00000007, wf, hwnd, nf)
-   end
-   if arg(12, 'E'), progTrack \== "" then do
-      self~addUserMsg(progTrack, 0x00000114, wf, 0x00000005, wf, hwnd, nf)
-      self~addUserMsg(progTrack, 0x00000115, wf, 0x00000005, wf, hwnd, nf)
-   end
-   if arg(13, 'E'), progEndSc \== "" then do
-      self~addUserMsg(progEndSc, 0x00000114, wf, 0x00000008, wf, hwnd, nf)
-      self~addUserMsg(progEndSc, 0x00000115, wf, 0x00000008, wf, hwnd, nf)
-   end
-   return 0
-
-
 ::method CombineELwithSB
    use arg elid, sbid, step, poscode
 
@@ -234,10 +185,6 @@
    self~setEditData(elid,pos)
    return 0
 
-
-::method ConnectAllSBEvents
-   use arg id, prog, min, max, pos
-   return self~ConnectScrollBar(id, prog, prog, prog, min, max, pos, prog, prog, prog, prog)
 
 ::method DetermineSBPosition unguarded
    use arg id, posdata, single, page
@@ -363,44 +310,75 @@
    if arg(2,"o") = 0 then self~automaticMethods~push(MethodName)
    if arg(3,"o") = 0 then self~automaticMethods~push(Parameters)
 
-
-
 /******************************************************************************/
 /* Bitmap extensions */
 
+::method BkgBitmap attribute protected   -- handle to bitmap that will be displayed in the background
+::method BkgBrushBmp attribute protected -- handle to brushbmp that will be displayed in the background
 
-::method BkgBitmap attribute protected  /* handle to bitmap that will be displayed in the background */
-::method BkgBrushBmp attribute protected /* handle to brushbmp that will be displayed in the background */
-
-   /* This method loads a bitmap from file into memory */
-   /* It returns a handle to the bitmap */
-
+-- Load a bitmap from a file into memory and return the bitmap handle.
 ::method LoadBitmap
    use arg bmpFilename, option = ""
    option = option~translate
    return LoadRemoveBitmap(self~adm, bmpFilename, "LOAD" || option)
 
-   /* This method will free a memory bitmap */
-
+-- Free the bitmap memory.
 ::method RemoveBitmap
    use arg hBitmap
    return LoadRemoveBitmap(self~adm, hBitmap, "REMOVE")
 
+-- Set a bitmap as the background brush. The argument option can be:
+--   "USEPAL" : This will use the color palette of the bitmap.
+::method BackgroundBitmap
+   use arg bmpFilename, option = ""
+   option = option~translate
+   self~BkgBitmap = self~LoadBitmap(bmpFilename, option)
+   ret = SetBackground(self~adm, "BMP", self~BkgBitmap)
 
+-- Install a bitmap button.
+--
 -- The only way to get the bitmaps into the bitmap table is through this method.
 -- Therefore, we have to allow an omitted msgToRise.  If msgToRise == "", then
 -- in BmpButton() the function skips adding a method to the message table.
-::method connectBitmapButton
+::method installBitmapButton
    use strict arg id, msgToRise = "", bmpNormal, bmpFocused = "", bmpSelected = "", bmpDisabled = "", styleOptions = ""
    styleOptions = styleOptions~translate
    if \ id~datatype("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return BmpButton(self~adm, "A", msgToRise, id, bmpNormal, bmpFocused, bmpSelected, bmpDisabled, styleOptions);
 
+-- Install an animated button and run it concurrently to the main activity.
+--
+-- The only way to get the bitmap(s) into the bitmap table is through this
+-- method.  Therefore msgToRaise has to be optional.  The empty string will
+-- eventually cause the bitmaps to be added to the bitmap table and the addition
+-- of a method being added to the message table will be skipped.
+::method installAnimatedButton
+   use arg buttonID, msgToRaise = "", autoClass = (.AnimatedButton), bmpFrom, bmpTo = 0, moveX, moveY,   -
+           sizeX, sizeY, delay, xNow = 0, yNow = 0
 
-   /* This method changes the bitmap of a bitmap button */
-   /* possible options are: (see ConnectBitmapButton) */
+   -- Note documentation for bmpfrom, it is *not* a bitmap handle.
+   if arg(5, "o") | \ bmpFrom~datatype("N") then
+       ret = self~installBitmapButton(buttonID, msgToRaise, .local[bmpFrom][1])
+   else
+       ret = self~installBitmapButton(buttonID, msgToRaise, bmpFrom)
 
+   if ret <> 0 then return ret
+
+   if arg(8, "O") then sizeX = self~getBitmapSizeX(buttonID)
+   if arg(9, "O") then sizeY = self~getBitmapSizeY(buttonID)
+
+   self~addAutoStartMethod(autoClass, "RUN", buttonID || "," || bmpFrom ||"," || bmpTo ||"," || moveX    -
+     || "," || moveY || "," || sizeX || "," || sizeY || "," || delay || "," || xNow || "," || yNow)
+
+-- DEPRECATED  TODO don't forget to document name change / deprecated
+::method connectAnimatedButton
+   forward message "INSTALLANIMATEDBUTTON"
+::method connectBitmapButton
+   forward message "INSTALLBITMAPBUTTON"
+
+
+-- Change the bitmap of a bitmap button.
 ::method ChangeBitmapButton unguarded
    use arg id, bmpNormal, bmpFocused = "", bmpSelected = "", bmpDisabled = "", styleOptions = ""
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
@@ -408,249 +386,28 @@
    styleOptions = styleOptions~translate
    return BmpButton(self~adm, "C", id, bmpNormal, bmpFocused, bmpSelected, bmpDisabled, styleOptions);
 
-   /* Sets the position of a bitmap within a button */
-
+-- Set the position of a bitmap within a button.
 ::method DisplaceBitmap unguarded
    use arg id, x, y
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return BmpButton(self~adm, "S", id, x, y)
 
-   /* Gets the position of a bitmap within a button */
-
+-- Get the position of a bitmap within a button.
 ::method GetBmpDisplacement unguarded
    use arg id
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return BmpButton(self~adm, "G", id)
 
-   /* This method will set a bitmap as the background brush. */
-   /* (seems to work only on NT) */
-
+-- Set a bitmap as the background brush.
 ::method TiledBackgroundBitmap
    use arg bmpFilename
    if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
    self~BkgBrushBmp = self~CreateBrush(,bmpFilename)
    ret = SetBackground(self~adm, "BRU", self~BkgBrushBmp)
 
-::method BackgroundColor
-   use arg color
-   if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
-   self~BkgBrushBmp = self~CreateBrush(color)
-   ret = SetBackground(self~adm, "BRU", self~BkgBrushBmp)
-
-   /* This method sets a bitmap as the background brush. */
-   /* (seems to work only on NT) */
-   /* argument option can be: */
-   /*    "USEPAL" : This will use the color palette of the bitmap */
-
-::method BackgroundBitmap
-   use arg bmpFilename, option = ""
-   option = option~translate
-   self~BkgBitmap = self~LoadBitmap(bmpFilename, option)
-   ret = SetBackground(self~adm, "BMP", self~BkgBitmap)
-
-
-::method CreateBrush unguarded
-    use arg color = 1, brushSpecifier = ""
-    if arg() = 0 then return HandleDC_Obj("B")
-    if brushSpecifier == "" then return HandleDC_Obj("B", color)
-    brushSpecifier = brushSpecifier~translate
-    if brushSpecifier = "UPDIAGONAL" | brushSpecifier = "DOWNDIAGONAL" | brushSpecifier = "CROSS" | brushSpecifier = "DIAGCROSS",
-    | brushSpecifier = "HORIZONTAL" | brushSpecifier = "VERTICAL" then return HandleDC_Obj("B", color, brushSpecifier)
-    else return HandleDC_Obj("B", self~adm, color, brushSpecifier)  /* brushSpecifier must be filename or resource ID */
-
-
-::method SetItemSysColor
-   use arg id, colorbk, colorfg
-   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(3,'o') = 1 then
-       return SetBackground(self~adm, "COL", id, colorbk, "", "SYS")
-   else
-       return SetBackground(self~adm, "COL", id, colorbk, colorfg, "SYS")
-
-::method SetItemColor
-   use arg id, colorbk, colorfg
-   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(3,'o') = 1 then
-       return SetBackground(self~adm, "COL", id, colorbk)
-   else
-       return SetBackground(self~adm, "COL", id, colorbk, colorfg)
-
-
-   /* This method scrolls 'text' in the button */
-
-::method ScrollInButton unguarded
-   use arg id, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color
-   hwnd = self~getItem(id)
-   if arg() = 1 then
-      return self~ScrollText(hwnd)
-   else
-      return self~ScrollText(hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
-
-
-   /* This method will scroll text in a window with the given size, font, */
-   /* color. Text will be scrolled from right to left. */
-   /* Call it twice and the scrolling will stop */
-   /* See method WriteToWindow for valid fontStyles */
-
-::method ScrollText unguarded
-   use arg hwnd, text, fontName, fontSize, fontStyle,,
-           displaceY, step, sleep, color
-
-   if arg(3, "o") = 1 | fontName = "FONTNAME" then fontName = "System"
-   if arg(4, "o") = 1 | fontSize = "FONTSIZE" then fontSize = 10
-   if arg(5, "o") = 1 | fontStyle = "FONTSTYLE" then fontStyle = ""
-   if arg(6, "o") = 1 | displaceY = "DISPLACEY" then displaceY = 0
-   if arg(7, "o") = 1 | step = "STEP" then step = 4
-   if arg(8, "o") = 1 | sleep = "SLEEP" then sleep = 10
-   if arg(9, "o") = 1 | color = "COLOR" then color = 0
-
-   if self~ScrollNow = 0 & arg() > 1 then
-   do
-      self~ScrollNow = 1
-      ret = ScrollText(self~adm, hwnd, text, fontName, fontSize, fontStyle,,
-                       displaceY, step, sleep, color)
-   end; else do
-      -- Send the interrupt scroll message, 0x0a02 == WM_USER_INTERRUPTSCROLL
-      ret = SendWinMsg("ANY",self~dlgHandle, "0x0a02", hwnd, 0)
-   end
-   self~ScrollNow = 0
-   return ret
-
-
-
-
-/******************************************************************************/
-/* Graphics and drawing extensions */
-
-   /* Connect WM_DRAWITEM with a method */
-
-::method connectDraw
-  use arg id, msgToRise
-  if arg(2,'O') then msgToRise = "OnDraw"
-  if arg(1,'O') then do
-      return self~addUserMsg(msgToRise, 0x0000002B, 0xFFFFFFFF, 0, 0, 0, 0)
-  end
-  else do
-     if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-     if id = -1 then return -1
-     return self~addUserMsg(msgToRise, 0x0000002B, 0xFFFFFFFF, '0x0000'||id~d2x(4), 0xFFFFFFFF, 0, 0)
-  end
-
-   /* This method draws the given button */
-
-::method DrawButton unguarded
-   use arg id
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return WindowRect("BTN", self~adm, id)
-
-   /* This method erases the draw area of the given button */
-
-::method ClearButtonRect unguarded
-   use arg id
-   hwnd = self~getItem(id)
-   return WindowRect("CLR", self~adm, hwnd)
-
-   /* This method erases the draw area of the given window */
-
-::method ClearWindowRect unguarded
-   use arg hwnd
-   return WindowRect("CLR", self~adm, hwnd)
-
-   /* Clears the whole dialog  */
-::method Clear unguarded
-   parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
-   return WindowRect("CLR", self~adm, self~Hwnd,r.1,r.2,r.3,r.4)
-
-   /* Clears the given rectangle left, top, right, bottom of the given window */
-
-::method ClearRect unguarded
-   use arg hwnd, left, top, right, bottom
-   return WindowRect("CLR", self~adm, hwnd,left,top,right,bottom)
-
-   /* This method redraws the given button */
-
-::method RedrawButton unguarded
-   use arg id, erasebkg
-   hwnd = self~getItem(id)
-   if arg(2, 'o') = 1 then erasebkg = 0
-   return WindowRect("RDW", hwnd, erasebkg)
-
-   /* This method redraws the rectangle of the given window */
-
-::method RedrawWindowRect unguarded
-   use arg hwnd, erasebkg
-   if arg(1, 'o') = 1 then hwnd = self~hwnd
-   if arg(2, 'o') = 1 then erasebkg = 0
-   return WindowRect("RDW", hwnd, erasebkg)
-
-
-   /* This method allows you to write text to a window in the given font, in */
-   /* the given size, and to the given position */
-   /* argument 'fontStyle' can be one or more off: */
-   /*    "THIN"            "UNDERLINE"    */
-   /*    "EXTRALIGHT"      "ITALIC"       */
-   /*    "LIGHT"           "STRIKEOUT"    */
-   /*    "MEDIUM"                */
-   /*    "SEMIBOLD"              */
-   /*    "EXTRABOLD"             */
-   /*    "BOLD"                  */
-   /*    "HEAVY"                 */
-
-::method WriteToWindow unguarded
-   use arg hwnd, xPos, yPos, text, fontName = "System", fontSize = 10, fontStyle = "", fgColor = (-1), bkColor = (-1)
-   fontStyle = fontStyle~translate
-   return WriteText(hwnd, xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor)  /* more than 6 arguments means use font */
-
-
-   /* This method allows you to write text to a button in the given font in */
-   /* the given size to the given position. */
-   /* See method WriteToWindow for valid fontStyles */
-
-::method WriteToButton unguarded
-   argarr = arg(1, "A")
-   argarr[1] = self~getItem(argarr[1])  /* transform first argument into window handle */
-   forward message (WriteToWindow) arguments (argarr)
-
-
-   /* This method moves the rectangle within a button */
-
-::method ScrollButton unguarded
-   use arg id, xPos, yPos, left, top, right, bottom
-   return ScrollTheWindow(self~adm, self~getItem(id), xPos, yPos, left, top, right, bottom, "yes")
-
-
-   /* This method will return the device context of a window */
-
-::method GetWindowDC unguarded
-   use arg hwnd
-   return HandleDC_Obj("G", hwnd)
-
-   /* This method will return the device context of a button */
-
-::method GetButtonDC unguarded
-   use arg id
-   return self~GetWindowDC(self~getItem(id))
-
-   /* This method will free the device context of a window */
-
-::method FreeWindowDC unguarded
-   use arg hwnd, dc
-   return HandleDC_Obj("F", hwnd, dc)
-
-   /* This method will free the device context of a button */
-
-::method FreeButtonDC unguarded
-   use arg id, dc
-   hwnd = self~getItem(id)
-   return self~FreeWindowDC(hwnd, dc)
-
-   /* This method will return the horizontal bitmap extension */
-
+-- Return the horizontal bitmap extension.
 ::method GetBitmapSizeX unguarded
    use arg id
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
@@ -658,8 +415,7 @@
    parse value BmpButton(self~adm, "E", id) with x .
    return x
 
-   /* This method will return the vertical bitmap extension */
-
+-- Return the vertical bitmap extension.
 ::method GetBitmapSizeY unguarded
    use arg id
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
@@ -667,9 +423,7 @@
    parse value BmpButton(self~adm, "E", id) with . y
    return y
 
-   /* This method will draw the bitmap of a button */
-   /* Use this method to move a bitmap or a part of it... */
-
+-- Draw the bitmap of a button.  Use this method to move a bitmap or a part of it...
 ::method DrawBitmap unguarded
    use arg hwnd, id, px, py, srcx, srcy, xlen, ylen
    if arg(3, "o") = 1 then px = 0
@@ -683,9 +437,7 @@
    if arg(1, "o") = 1 then hwnd = self~getItem(id)
    return BmpButton(self~adm, "D", hwnd, id, px, py, srcx, srcy, xlen, ylen)
 
-
-   /* This method will draw the bitmap step by step */
-
+-- Draw the bitmap step by step.
 ::method DimBitmap unguarded
    use arg id, bmp, cx, cy, stepx, stepy, steps
 
@@ -706,9 +458,7 @@
    self~DeleteObject(pen)
    self~FreeButtonDC(id, dc)
 
-   /* This method will scroll a bitmap from one position to an other */
-   /* within a button */
-
+-- Scroll a bitmap from one position to another within a button.
 ::method ScrollBitmapFromTo unguarded
    use arg id, fromX, fromY, toX, toY, stepX, stepY, delay, displace
 
@@ -841,32 +591,306 @@
    self~RedrawButton(id,0)
    return 0
 
-   /* This method will install an animated button and run it concurrently to main */
-   /* activity */
+::method BackgroundColor
+   use arg color
+   if self~BkgBrushBmp \= 0 then self~DeleteObject(self~BkgBrushBmp)
+   self~BkgBrushBmp = self~CreateBrush(color)
+   ret = SetBackground(self~adm, "BRU", self~BkgBrushBmp)
 
--- The only way to get the bitmap(s) into the bitmap table is through this
--- method.  Therefore msgToRise has to be optional.  The empty string will
--- eventually cause the bitmaps to be added to the bitmap table and the addition
--- of a method being added to the message table will be skipped.
-::method connectAnimatedButton
-   use arg buttonEd, msgToRise = "", autoClass = (.AnimatedButton), bmpFrom, bmpTo = 0, moveX, moveY, sizeX, sizeY, -
-           delay, xNow = 0, yNow = 0
+::method CreateBrush unguarded
+    use arg color = 1, brushSpecifier = ""
+    if arg() = 0 then return HandleDC_Obj("B")
+    if brushSpecifier == "" then return HandleDC_Obj("B", color)
+    brushSpecifier = brushSpecifier~translate
+    if brushSpecifier = "UPDIAGONAL" | brushSpecifier = "DOWNDIAGONAL" | brushSpecifier = "CROSS" | brushSpecifier = "DIAGCROSS",
+    | brushSpecifier = "HORIZONTAL" | brushSpecifier = "VERTICAL" then return HandleDC_Obj("B", color, brushSpecifier)
+    else return HandleDC_Obj("B", self~adm, color, brushSpecifier)  /* brushSpecifier must be filename or resource ID */
 
-   -- Note documentation for bmpfrom, it is *not* a bitmap handle.
-   if arg(5, "o") | \ bmpFrom~datatype("N") then
-       ret = self~connectBitmapButton(buttonId, msgToRise, .local[bmpFrom][1])
+
+::method SetItemSysColor
+   use arg id, colorbk, colorfg
+   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
+   if id = -1 then return -1
+   if arg(3,'o') = 1 then
+       return SetBackground(self~adm, "COL", id, colorbk, "", "SYS")
    else
-       ret = self~connectBitmapButton(buttonId, msgToRise, bmpFrom)
+       return SetBackground(self~adm, "COL", id, colorbk, colorfg, "SYS")
 
-   if ret <> 0 then return ret
+::method SetItemColor
+   use arg id, colorbk, colorfg
+   if \ id~DataType("W") then id = self~resolveSymbolicId(id)
+   if id = -1 then return -1
+   if arg(3,'o') = 1 then
+       return SetBackground(self~adm, "COL", id, colorbk)
+   else
+       return SetBackground(self~adm, "COL", id, colorbk, colorfg)
 
-   if arg(8, "O") then sizeX = self~getBitmapSizeX(buttonId)
-   if arg(9, "O") then sizeY = self~getBitmapSizeY(buttonId)
 
-   self~addAutoStartMethod(autoClass, "RUN", buttonId || "," || bmpFrom ||"," || bmpTo ||"," || moveX || ",",
-     || moveY || "," || sizeX || "," || sizeY || "," || delay || "," || xNow || "," || yNow)
+   /* This method scrolls 'text' in the button */
+
+::method ScrollInButton unguarded
+   use arg id, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color
+   hwnd = self~getItem(id)
+   if arg() = 1 then
+      return self~ScrollText(hwnd)
+   else
+      return self~ScrollText(hwnd, text, fontName, fontSize, fontStyle, displaceY, step, sleep, color)
 
 
+   /* This method will scroll text in a window with the given size, font, */
+   /* color. Text will be scrolled from right to left. */
+   /* Call it twice and the scrolling will stop */
+   /* See method WriteToWindow for valid fontStyles */
+
+::method ScrollText unguarded
+   use arg hwnd, text, fontName, fontSize, fontStyle,,
+           displaceY, step, sleep, color
+
+   if arg(3, "o") = 1 | fontName = "FONTNAME" then fontName = "System"
+   if arg(4, "o") = 1 | fontSize = "FONTSIZE" then fontSize = 10
+   if arg(5, "o") = 1 | fontStyle = "FONTSTYLE" then fontStyle = ""
+   if arg(6, "o") = 1 | displaceY = "DISPLACEY" then displaceY = 0
+   if arg(7, "o") = 1 | step = "STEP" then step = 4
+   if arg(8, "o") = 1 | sleep = "SLEEP" then sleep = 10
+   if arg(9, "o") = 1 | color = "COLOR" then color = 0
+
+   if self~ScrollNow = 0 & arg() > 1 then
+   do
+      self~ScrollNow = 1
+      ret = ScrollText(self~adm, hwnd, text, fontName, fontSize, fontStyle,,
+                       displaceY, step, sleep, color)
+   end; else do
+      -- Send the interrupt scroll message, 0x0a02 == WM_USER_INTERRUPTSCROLL
+      ret = SendWinMsg("ANY",self~dlgHandle, "0x0a02", hwnd, 0)
+   end
+   self~ScrollNow = 0
+   return ret
+
+
+
+
+/******************************************************************************/
+/* Graphics and drawing extensions */
+
+   /* This method draws the given button */
+
+::method DrawButton unguarded
+   use arg id
+   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
+   if id = -1 then return -1
+   return WindowRect("BTN", self~adm, id)
+
+   /* This method erases the draw area of the given button */
+
+::method ClearButtonRect unguarded
+   use arg id
+   hwnd = self~getItem(id)
+   return WindowRect("CLR", self~adm, hwnd)
+
+   /* This method erases the draw area of the given window */
+
+::method ClearWindowRect unguarded
+   use arg hwnd
+   return WindowRect("CLR", self~adm, hwnd)
+
+   /* Clears the whole dialog  */
+::method Clear unguarded
+   parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
+   return WindowRect("CLR", self~adm, self~Hwnd,r.1,r.2,r.3,r.4)
+
+   /* Clears the given rectangle left, top, right, bottom of the given window */
+
+::method ClearRect unguarded
+   use arg hwnd, left, top, right, bottom
+   return WindowRect("CLR", self~adm, hwnd,left,top,right,bottom)
+
+   /* This method redraws the given button */
+
+::method RedrawButton unguarded
+   use arg id, erasebkg
+   hwnd = self~getItem(id)
+   if arg(2, 'o') = 1 then erasebkg = 0
+   return WindowRect("RDW", hwnd, erasebkg)
+
+   /* This method redraws the rectangle of the given window */
+
+::method RedrawWindowRect unguarded
+   use arg hwnd, erasebkg
+   if arg(1, 'o') = 1 then hwnd = self~hwnd
+   if arg(2, 'o') = 1 then erasebkg = 0
+   return WindowRect("RDW", hwnd, erasebkg)
+
+
+   /* This method allows you to write text to a window in the given font, in */
+   /* the given size, and to the given position */
+   /* argument 'fontStyle' can be one or more off: */
+   /*    "THIN"            "UNDERLINE"    */
+   /*    "EXTRALIGHT"      "ITALIC"       */
+   /*    "LIGHT"           "STRIKEOUT"    */
+   /*    "MEDIUM"                */
+   /*    "SEMIBOLD"              */
+   /*    "EXTRABOLD"             */
+   /*    "BOLD"                  */
+   /*    "HEAVY"                 */
+
+::method WriteToWindow unguarded
+   use arg hwnd, xPos, yPos, text, fontName = "System", fontSize = 10, fontStyle = "", fgColor = (-1), bkColor = (-1)
+   fontStyle = fontStyle~translate
+   return WriteText(hwnd, xPos, yPos, text, fontName, fontSize, fontStyle, fgColor, bkColor)  /* more than 6 arguments means use font */
+
+
+   /* This method allows you to write text to a button in the given font in */
+   /* the given size to the given position. */
+   /* See method WriteToWindow for valid fontStyles */
+
+::method WriteToButton unguarded
+   argarr = arg(1, "A")
+   argarr[1] = self~getItem(argarr[1])  /* transform first argument into window handle */
+   forward message (WriteToWindow) arguments (argarr)
+
+
+   /* This method moves the rectangle within a button */
+
+::method ScrollButton unguarded
+   use arg id, xPos, yPos, left, top, right, bottom
+   return ScrollTheWindow(self~adm, self~getItem(id), xPos, yPos, left, top, right, bottom, "yes")
+
+
+   /* This method will return the device context of a window */
+
+::method GetWindowDC unguarded
+   use arg hwnd
+   return HandleDC_Obj("G", hwnd)
+
+   /* This method will return the device context of a button */
+
+::method GetButtonDC unguarded
+   use arg id
+   return self~GetWindowDC(self~getItem(id))
+
+   /* This method will free the device context of a window */
+
+::method FreeWindowDC unguarded
+   use arg hwnd, dc
+   return HandleDC_Obj("F", hwnd, dc)
+
+   /* This method will free the device context of a button */
+
+::method FreeButtonDC unguarded
+   use arg id, dc
+   hwnd = self~getItem(id)
+   return self~FreeWindowDC(hwnd, dc)
+
+/******************************************************************************/
+/* New extensions */
+
+::method PeekDialogMessage unguarded
+   return getDlgMsg(self~adm, .true)
+
+::method SetWindowRect unguarded
+   use arg hwnd, x, y, width, high, showOptions = ""
+   showOptions = showOptions~translate
+   return WndShow_Pos("P",hwnd, x, y, width, high, showOptions)
+
+   /* Redraws the given rectangle */
+::method RedrawRect unguarded
+   use arg hwnd, left, top, right, bottom, erasebkg
+   if arg(1,'o') = 1 then hwnd = self~hwnd
+   if arg(6, 'o') = 1 then erasebkg = 0
+   return WindowRect("RDW", hwnd,left,top,right,bottom, erasebkg)
+
+::method RedrawWindow unguarded
+   use arg hwnd
+   return WndShow_Pos("S", hwnd, "REDRAW")
+
+::method GetFocus unguarded
+   return Wnd_Desktop("GETFOC", self~dlgHandle)
+
+::method SetFocus unguarded
+   use arg hwnd
+   return Wnd_Desktop("SETFOC", self~dlgHandle, hwnd)
+
+::method SetFocusToWindow unguarded
+   use arg hwnd
+   return Wnd_Desktop("SETFOC", self~dlgHandle, hwnd, 'F')
+
+::method GetMouseCapture
+   return Wnd_Desktop("CAP", self~dlgHandle, "G")
+
+::method CaptureMouse
+   return Wnd_Desktop("CAP", self~dlgHandle, self~dlgHandle)
+
+::method ReleaseMouseCapture
+   return Wnd_Desktop("CAP", self~dlgHandle, "R")
+
+::method IsMouseButtonDown
+   use arg mb = "LEFT"
+   mb = mb~translate~space(0)
+   if mb = "LEFT" then return Wnd_Desktop("KSTAT", self~dlgHandle,1) /* VK_LBUTTON */
+   if mb = "MIDDLE" then return Wnd_Desktop("KSTAT", self~dlgHandle,4) /* VK_MBUTTON */
+   if mb = "RIGHT" then return Wnd_Desktop("KSTAT", self~dlgHandle,2) /* VK_RBUTTON */
+
+
+::method Dump
+    use arg adm
+    if arg() == 1 then do
+        say "Dump of current dialog administration"
+        say "====================================="
+        call DumpAdmin "ADMDUMP", adm
+        say  "Slot: " admdump.Slot
+        say  "hThread: " admdump.hThread
+        say  "hDialog: " admdump.hDialog
+        say  "hMenu: " admdump.hMenu
+        say  "BkgBrush: " admdump.BkgBrush
+        say  "BkgBitmap: " admdump.BkgBitmap
+        say  "TopMost: " admdump.TopMost
+        say  "CurrentChild: " admdump.CurrentChild
+        say  "DLL: " admdump.Dll
+        say  "Queue: " admdump.queue
+        say  "BmpButtons: " admdump.BmpButtons
+        do i = 1 to admdump.BmpButtons
+            say "    " admdump.BmpTab.i.id "->" admdump.BmpTab.i.normal "," admdump.BmpTab.i.focused "," admdump.BmpTab.i.selected "," admdump.BmpTab.i.disabled
+        end
+        say  "Messages: " admdump.Messages
+        do i = 1 to admdump.Messages
+            say "    " admdump.MsgTab.i.msg "," admdump.MsgTab.i.param1 "," admdump.MsgTab.i.param2 "==>" admdump.MsgTab.i.method
+        end
+        say  "DataItems: " admdump.DataItems
+        do i = 1 to admdump.DataItems
+            say "    " admdump.DataTab.i.id "("admdump.DataTab.i.type","admdump.DataTab.i.category")"
+        end
+        say  "ColorItems: " admdump.ColorItems
+        do i = 1 to admdump.ColorItems
+            say "    " admdump.ColorTab.i.id "(" admdump.ColorTab.i.Foreground "," admdump.ColorTab.i.Background ")"
+        end
+    end
+    else do
+        say "Dump of administration state"
+        say "============================"
+        call DumpAdmin "ADMDUMP"
+        d = Digits()
+        NUMERIC DIGITS 15
+        do i = 1 to admdump.0
+            say  "AdmBlock: " admdump.i.AdmBlock
+            say  "Slot: " admdump.i.Slot
+            say  "hThread: " admdump.i.hThread
+            say  "hDialog: " admdump.i.hDialog
+            if admdump.i.hDialog \=0 then say "Window title:" self~WindowTitle(x2d(admdump.i.hDialog))
+            say  "hMenu: " admdump.i.hMenu
+            say  "BkgBrush: " admdump.i.BkgBrush
+            say  "BkgBitmap: " admdump.i.BkgBitmap
+            say  "TopMost: " admdump.i.TopMost
+            say  "CurrentChild: " admdump.i.CurrentChild
+            say  "DLL: " admdump.i.Dll
+            say  "Queue: " admdump.i.queue
+            say  "BmpButtons: " admdump.i.BmpButtons
+            say  "Messages: " admdump.i.Messages
+            say  "DataItems: " admdump.i.DataItems
+            say  "ColorItems: " admdump.i.ColorItems
+            say "--------------------------"
+        end
+        NUMERIC DIGITS d
+    end
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   These menu bar methods are needed to provide backward compatibility for the
@@ -1011,136 +1035,4 @@ syntax:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*\
   End deprecated menu bar methods.
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/******************************************************************************/
-/* New extensions */
-
-::method connectResize
-   use strict arg msgToRise
-   self~addUserMsg(msgToRise, 0x00000005, 0xFFFFFFFF, 0, 0, 0, 0)
-
-::method connectMove
-   use strict arg msgToRise
-   self~addUserMsg(msgToRise, 0x00000003, 0xFFFFFFFF, 0, 0, 0, 0)
-
-::method connectPosChanged
-   use strict arg msgToRise
-   self~addUserMsg(msgToRise, 0x00000047, 0xFFFFFFFF, 0, 0, 0, 0)
-
-::method connectMouseCapture
-   use strict arg msgToRise
-   self~addUserMsg(msgToRise, 0x00000215, 0xFFFFFFFF, 0, 0, 0, 0)
-
--- DEPRECATED
-::method connectMenuItem
-   use strict arg id, msgToRaise
-   return .Menu~connectItem(id, msgToRaise, self)
-
-::method PeekDialogMessage unguarded
-   return getDlgMsg(self~adm, .true)
-
-::method SetWindowRect unguarded
-   use arg hwnd, x, y, width, high, showOptions = ""
-   showOptions = showOptions~translate
-   return WndShow_Pos("P",hwnd, x, y, width, high, showOptions)
-
-   /* Redraws the given rectangle */
-::method RedrawRect unguarded
-   use arg hwnd, left, top, right, bottom, erasebkg
-   if arg(1,'o') = 1 then hwnd = self~hwnd
-   if arg(6, 'o') = 1 then erasebkg = 0
-   return WindowRect("RDW", hwnd,left,top,right,bottom, erasebkg)
-
-::method RedrawWindow unguarded
-   use arg hwnd
-   return WndShow_Pos("S", hwnd, "REDRAW")
-
-::method GetFocus unguarded
-   return Wnd_Desktop("GETFOC", self~dlgHandle)
-
-::method SetFocus unguarded
-   use arg hwnd
-   return Wnd_Desktop("SETFOC", self~dlgHandle, hwnd)
-
-::method SetFocusToWindow unguarded
-   use arg hwnd
-   return Wnd_Desktop("SETFOC", self~dlgHandle, hwnd, 'F')
-
-::method GetMouseCapture
-   return Wnd_Desktop("CAP", self~dlgHandle, "G")
-
-::method CaptureMouse
-   return Wnd_Desktop("CAP", self~dlgHandle, self~dlgHandle)
-
-::method ReleaseMouseCapture
-   return Wnd_Desktop("CAP", self~dlgHandle, "R")
-
-::method IsMouseButtonDown
-   use arg mb = "LEFT"
-   mb = mb~translate~space(0)
-   if mb = "LEFT" then return Wnd_Desktop("KSTAT", self~dlgHandle,1) /* VK_LBUTTON */
-   if mb = "MIDDLE" then return Wnd_Desktop("KSTAT", self~dlgHandle,4) /* VK_MBUTTON */
-   if mb = "RIGHT" then return Wnd_Desktop("KSTAT", self~dlgHandle,2) /* VK_RBUTTON */
-
-
-::method Dump
-    use arg adm
-    if arg() == 1 then do
-        say "Dump of current dialog administration"
-        say "====================================="
-        call DumpAdmin "ADMDUMP", adm
-        say  "Slot: " admdump.Slot
-        say  "hThread: " admdump.hThread
-        say  "hDialog: " admdump.hDialog
-        say  "hMenu: " admdump.hMenu
-        say  "BkgBrush: " admdump.BkgBrush
-        say  "BkgBitmap: " admdump.BkgBitmap
-        say  "TopMost: " admdump.TopMost
-        say  "CurrentChild: " admdump.CurrentChild
-        say  "DLL: " admdump.Dll
-        say  "Queue: " admdump.queue
-        say  "BmpButtons: " admdump.BmpButtons
-        do i = 1 to admdump.BmpButtons
-            say "    " admdump.BmpTab.i.id "->" admdump.BmpTab.i.normal "," admdump.BmpTab.i.focused "," admdump.BmpTab.i.selected "," admdump.BmpTab.i.disabled
-        end
-        say  "Messages: " admdump.Messages
-        do i = 1 to admdump.Messages
-            say "    " admdump.MsgTab.i.msg "," admdump.MsgTab.i.param1 "," admdump.MsgTab.i.param2 "==>" admdump.MsgTab.i.method
-        end
-        say  "DataItems: " admdump.DataItems
-        do i = 1 to admdump.DataItems
-            say "    " admdump.DataTab.i.id "("admdump.DataTab.i.type","admdump.DataTab.i.category")"
-        end
-        say  "ColorItems: " admdump.ColorItems
-        do i = 1 to admdump.ColorItems
-            say "    " admdump.ColorTab.i.id "(" admdump.ColorTab.i.Foreground "," admdump.ColorTab.i.Background ")"
-        end
-    end
-    else do
-        say "Dump of administration state"
-        say "============================"
-        call DumpAdmin "ADMDUMP"
-        d = Digits()
-        NUMERIC DIGITS 15
-        do i = 1 to admdump.0
-            say  "AdmBlock: " admdump.i.AdmBlock
-            say  "Slot: " admdump.i.Slot
-            say  "hThread: " admdump.i.hThread
-            say  "hDialog: " admdump.i.hDialog
-            if admdump.i.hDialog \=0 then say "Window title:" self~WindowTitle(x2d(admdump.i.hDialog))
-            say  "hMenu: " admdump.i.hMenu
-            say  "BkgBrush: " admdump.i.BkgBrush
-            say  "BkgBitmap: " admdump.i.BkgBitmap
-            say  "TopMost: " admdump.i.TopMost
-            say  "CurrentChild: " admdump.i.CurrentChild
-            say  "DLL: " admdump.i.Dll
-            say  "Queue: " admdump.i.queue
-            say  "BmpButtons: " admdump.i.BmpButtons
-            say  "Messages: " admdump.i.Messages
-            say  "DataItems: " admdump.i.DataItems
-            say  "ColorItems: " admdump.i.ColorItems
-            say "--------------------------"
-        end
-        NUMERIC DIGITS d
-    end
 

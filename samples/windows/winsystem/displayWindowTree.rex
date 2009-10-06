@@ -74,7 +74,7 @@ end
 
 ::requires "windowsSystem.frm"
 
-::class 'WindowListDlg' public subclass RcDialog inherit AdvancedControls MessageExtensions
+::class 'WindowListDlg' public subclass RcDialog
 
 /** initAutoDetection()
  * Prevent ooDialog from fooling with the initialization of our dialog controls.

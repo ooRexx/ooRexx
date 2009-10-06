@@ -60,13 +60,13 @@ CleanUp:
 
 ::requires "ooDialog.cls"
 
-::class MyDialogClass subclass UserDialog
+::class 'MyDialogClass' subclass UserDialog
 
 ::method Init
     ret = self~init:super;
     if ret = 0 then ret = self~Load("Drawings.RC", 100)
-    self~ConnectButton(11, "Circle")
-    self~ConnectButton(12, "MyRectangle")
+    self~connectButtonEvent(11, "CLICKED", "Circle")
+    self~connectButtonEvent(12, "CLICKED", "MyRectangle")
     self~InitCode = ret
     return ret
 

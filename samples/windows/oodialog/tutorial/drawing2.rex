@@ -67,8 +67,8 @@ CleanUp:
 ::method Init
     ret = self~init:super;
     if ret = 0 then ret = self~Load("Drawings.RC", 100)
-    self~ConnectButton(11, "Circle")
-    self~ConnectButton(12, "MyRectangle")
+    self~connectButtonEvent(11, "CLICKED", "Circle")
+    self~connectButtonEvent(12, "CLICKED", "MyRectangle")
     self~GraphicObject = "NONE"
     if ret = 0 then self~ConnectDraw(10, "DrawIt")
     self~InitCode = ret

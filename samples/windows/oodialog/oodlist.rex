@@ -112,7 +112,7 @@ return
   self~UpdateLists(Item.)
 
 
-/* set the categories: used as tab lable, definition method names and inititalization method names */
+/* set the categories: used as tab label, definition method names and inititalization method names */
 ::method InitCategories
   expose ID_LIST ID_Rep ID_Ic ID_SIc
 
@@ -120,7 +120,7 @@ return
   self~catalog['page']['font'] = "Arial"   /* use 9pt Arial for the pages as well */
   self~catalog['page']['btnwidth'] = 60
   self~catalog['page']['btnheight'] = 60
-  self~ConnectButton(201,"OnAddButton")
+  self~connectButtonEvent(201, "CLICKED", "OnAddButton")
 
   ID_List = 101 /* list view       */
   ID_Rep  = 102 /* report view     */
@@ -142,8 +142,8 @@ return
 ::method Report
   expose ID_Rep
   self~createListView( ID_Rep, 5, 5, 370, 180, "REPORT") /* Add a report list to the second category page */
-  self~ConnectListNotify(ID_Rep,"ColumnClick")  /* connect click on a column header with OnColumnClick */
-  self~ConnectListNotify(ID_Rep,"Activate")     /* connect double-click on a list item with OnActivate */
+  self~connectListViewEvent(ID_Rep,"ColumnClick")  /* connect click on a column header with OnColumnClick */
+  self~connectListViewEvent(ID_Rep,"Activate")     /* connect double-click on a list item with OnActivate */
 
 /* initialize third category page */
 ::method Icon
@@ -185,7 +185,7 @@ return
   curList = self~newListView(ID_Ic)
   if curList \= .Nil then
   do
-    self~ConnectListNotify(ID_Ic,"BEGINDRAG","DefListDragHandler")
+    self~connectListViewEvent(ID_Ic,"BEGINDRAG","DefListDragHandler")
     curList~setImageList(normalIcons, .Image~toID(LVSIL_NORMAL))
   end
   else
@@ -196,7 +196,7 @@ return
   expose ID_SIc smallIcons
   curList = self~newListView(ID_SIc)
   curList~setImageList(smallIcons, .Image~toID(LVSIL_SMALL))
-  self~ConnectListNotify(ID_SIc,"BEGINDRAG","DefListDragHandler") /* connect default drag handler */
+  self~connectListViewEvent(ID_SIc,"BEGINDRAG","DefListDragHandler") /* connect default drag handler */
 
 
 /* a column was selected display info about the column */
@@ -311,7 +311,7 @@ return
   end
 
 /* The Address input dialog, invoked when the Add button is selected */
-::class AdrDialogClass subclass UserDialog inherit AdvancedControls
+::class AdrDialogClass subclass UserDialog
 
 ::method Init
   forward class (super) continue
@@ -321,10 +321,6 @@ return
      self~InitCode = 1
      return 1
   end
-
-  /* connect Pk and Cancel button */
-  self~ConnectButton(1,"Ok")
-  self~ConnectButton(2,"Cancel")
 
   /* initialize input fields */
   self~ID_MALE=1

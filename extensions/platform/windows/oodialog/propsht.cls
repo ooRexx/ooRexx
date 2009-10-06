@@ -43,12 +43,11 @@
  */
 ::requires "CatDlg.cls"
 ::requires "AdvCtrl.cls"
-::requires "MsgExt.cls"
 
 /* This class creates and controls a dialog that has more than one panel */
 /* using a tab control to select the single pages */
 
-::class 'PropertySheet' subclass CategoryDialog public inherit MessageExtensions AdvancedControls
+::class 'PropertySheet' subclass CategoryDialog public
 
 ::method init
    argarr = arg(1, "A")
@@ -65,7 +64,7 @@
 
 ::method defineDialog protected
    if self~basePtr = 0 then return 0
-   self~connectTabNotify(9001, "SELCHANGE", "CHANGEPAGE")
+   self~connectTabEvent(9001, "SELCHANGE", "CHANGEPAGE")
 
    do i = 1 to self~catalog['count']
       catnames.i = self~catalog['names'][i]

@@ -152,9 +152,9 @@
    if self~basePtr = 0 then return 0
    if self~catstyle~wordpos('DROPDOWN') = 0 then
       do i = 9001 to (9000 + self~catalog['count'])
-         self~ConnectButton(i, "CHANGEPAGE")
+         self~connectButtonEvent(i, "CLICKED", "CHANGEPAGE")
       end
-   else self~ConnectList(9001, "CHANGEPAGE")
+   else self~connectListBoxEvent(9001, "SELCHANGE", "CHANGEPAGE")
 
    do i = 1 to self~catalog['count']
       catnames.i = self~catalog['names'][i]

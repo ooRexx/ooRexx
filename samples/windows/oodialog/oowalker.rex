@@ -71,7 +71,7 @@
 ::method InitDialog
    expose bitmaps
    self~InitDialog:super
-   self~ConnectBitmapButton(100, '', 0);
+   self~installBitmapButton(100, '', 0);
 
    bitmaps = .array~new(8)       /* load bitmaps from file into array */
    do i= 1 to 8

@@ -73,18 +73,18 @@
 
 ::method initDialog
    self~InitDialog:super
-   self~ConnectBitmapButton(101, "VIDEO",    "bmp\s2arch.bmp"  ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(102, "PET",      "bmp\s2anim.bmp"  ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(103, "PHIL",     "bmp\s2philf.bmp" ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(104, "GRAPHD",   "bmp\s2scroll.bmp",,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(105, "WALKER",   "bmp\s2walker.bmp",,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(106, "BANDIT",   "bmp\s2jack.bmp"  ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(107, "USER",     "bmp\s2input.bmp" ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(108, "CATEGORY", "bmp\s2mov.bmp"   ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(109, "TREE",     "bmp\s2tree.bmp"  ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(110, "LIST",     "bmp\s2list.bmp"  ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(111, "PROGRESS", "bmp\s2prog.bmp"  ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(112, "PROPERTY", "bmp\s2prop.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(101, "VIDEO",    "bmp\s2arch.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(102, "PET",      "bmp\s2anim.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(103, "PHIL",     "bmp\s2philf.bmp" ,,,,"FRAME STRETCH")
+   self~installBitmapButton(104, "GRAPHD",   "bmp\s2scroll.bmp",,,,"FRAME STRETCH")
+   self~installBitmapButton(105, "WALKER",   "bmp\s2walker.bmp",,,,"FRAME STRETCH")
+   self~installBitmapButton(106, "BANDIT",   "bmp\s2jack.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(107, "USER",     "bmp\s2input.bmp" ,,,,"FRAME STRETCH")
+   self~installBitmapButton(108, "CATEGORY", "bmp\s2mov.bmp"   ,,,,"FRAME STRETCH")
+   self~installBitmapButton(109, "TREE",     "bmp\s2tree.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(110, "LIST",     "bmp\s2list.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(111, "PROGRESS", "bmp\s2prog.bmp"  ,,,,"FRAME STRETCH")
+   self~installBitmapButton(112, "PROPERTY", "bmp\s2prop.bmp"  ,,,,"FRAME STRETCH")
    self~BackgroundBitmap("bmp\s2backg.bmp", "USEPAL")
 
 ::method video

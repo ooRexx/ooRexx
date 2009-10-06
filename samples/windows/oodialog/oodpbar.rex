@@ -71,7 +71,7 @@ CleanUp:
 
 /* ---------------------------- Directives ---------------------------------*/
 
-::class MyDialogClass subclass UserDialog inherit AdvancedControls
+::class MyDialogClass subclass UserDialog
 
 ::method Init
   forward class (super) continue /* call parent constructor */
@@ -82,10 +82,9 @@ CleanUp:
      return 1
   end
 
-  /* Connect dialog control items to class methods */
-  self~ConnectButton(1,"Ok")
-  self~ConnectButton(2,"Cancel")
-  self~ConnectButton(9,"Help")
+  /* Connect dialog control items to class methods. Ok, Cancel, and Help are
+   * already connected by the super class init()
+   */
 
   /* Initial values that are assigned to the object attributes */
 

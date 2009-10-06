@@ -68,7 +68,7 @@
 
 ::method InitDialog
    self~InitDialog:super
-   self~ConnectBitmapButton(100, '', 0);
+   self~installBitmapButton(100, '', 0);
 
 ::method Run
                          /* bitmaps have IDs 201-208 in oowalker.dll */

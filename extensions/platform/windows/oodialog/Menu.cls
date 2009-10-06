@@ -49,7 +49,7 @@
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::class 'Menu' public mixinclass Object
 
-::method connectItem class external "LIBRARY oodialog menu_connectItem_cls"
+::method connectSelect class external "LIBRARY oodialog menu_connectSelect_cls"
 
 ::method menuInit private external "LIBRARY oodialog menu_menuInit_pvt"
 
@@ -128,10 +128,10 @@
 ::method itemTextToMethodName external "LIBRARY oodialog menu_itemTextToMethodName"
 ::method setAutoConnection external "LIBRARY oodialog menu_setAutoConnection"
 ::method getAutoConnectStatus external "LIBRARY oodialog menu_getAutoConnectStatus"
-::method connectItem external "LIBRARY oodialog menu_connectItem"
-::method connectAllItems external "LIBRARY oodialog menu_connectAllItems"
-::method connectSomeItems external "LIBRARY oodialog menu_connectSomeItems"
-::method connectWM external "LIBRARY oodialog menu_connectWM"
+::method connectSelect external "LIBRARY oodialog menu_connectSelect"
+::method connectAllSelects external "LIBRARY oodialog menu_connectAllSelects"
+::method connectSomeSelects external "LIBRARY oodialog menu_connectSomeSelects"
+::method connectMenuEvent external "LIBRARY oodialog menu_connectMenuEvent"
 
 ::method test external "LIBRARY oodialog menu_test"
 
@@ -170,9 +170,9 @@
 
 ::method init external "LIBRARY oodialog sysMenu_init"
 ::method revert external "LIBRARY oodialog sysMenu_revert"
-::method connectItem external "LIBRARY oodialog sysMenu_connectItem"
-::method connectAllItems external "LIBRARY oodialog sysMenu_connectAllItems"
-::method connectSomeItems external "LIBRARY oodialog sysMenu_connectSomeItems"
+::method connectSelect external "LIBRARY oodialog sysMenu_connectSelect"
+::method connectAllSelects external "LIBRARY oodialog sysMenu_connectAllSelects"
+::method connectSomeSelects external "LIBRARY oodialog sysMenu_connectSomeSelects"
 
 
 /* class: BinaryMenuBar- - - - - - - - - - - - - - - - - - - - - - - - - - - -*\

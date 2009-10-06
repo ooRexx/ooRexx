@@ -128,7 +128,7 @@
 
 /*-------------------------------- Ticket Dialog ------------------------------*/
 
-::class 'TicketDialog' subclass CategoryDialog inherit AdvancedControls
+::class 'TicketDialog' subclass CategoryDialog
 
 ::method InitDialog
    self~InitDialog:super
@@ -144,7 +144,7 @@
 
 ::method Movies                                      /* page 1 */
    self~loaditems("rc\movies.rc")
-   self~connectList(31,"MovieClick")
+   self~connectListBoxEvent(31, "SELCHANGE", "MovieClick")
 
 ::method Cinemas                                     /* page 2 */
    expose cinema.
@@ -175,7 +175,7 @@
 
 ::method Ticket                                      /* page 4 */
    self~loaditems("rc\ticket.rc")
-   self~connectList(41,"FilmClick")
+   self~connectListBoxEvent(41, "SELCHANGE", "FilmClick")
 
    if .DlgUtil~comCtl32Version < 6 then do
       self~createBitmapButton(45, 13, 87, 102, 40, "FRAME USEPAL STRETCH GROUP", "Get the Ticket", -
@@ -361,7 +361,7 @@
   .PlainBaseDialog~setDefaultFont(oldFont~name, oldFont~size)
   return oldFont
 
-::class 'FontPicker' subclass RcDialog inherit AdvancedControls MessageExtensions
+::class 'FontPicker' subclass RcDialog
 
 ::method initAutoDetection
    self~noAutoDetection

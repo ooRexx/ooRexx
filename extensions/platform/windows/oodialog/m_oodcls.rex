@@ -71,10 +71,10 @@ end
 
 -- Files are in the order they are read and written out. oodutils.cls must be kept first, otherwise
 -- the order should not make any difference.
-srcFiles = .array~of("oodutils.cls", "plbdlg.cls", "dyndlg.cls", "pludlg.cls", "stddlg.cls", "dlgext.cls",   -
-                     "basedlg.cls", "resdlg.cls", "userdlg.cls", "rcdialog.cls", "dialog.cls", "Menu.cls",   -
-                     "catdlg.cls", "anibuttn.cls", "dlgarea.cls", "advctrl.cls", "stdext.cls", "msgext.cls", -
-                     "propsht.cls")
+srcFiles = .array~of("oodutils.cls", "plbdlg.cls", "EventNotification.cls", "dyndlg.cls", "pludlg.cls",      -
+                     "stddlg.cls", "dlgext.cls", "basedlg.cls", "resdlg.cls", "userdlg.cls", "rcdialog.cls", -
+                     "dialog.cls", "Menu.cls", "catdlg.cls", "anibuttn.cls", "dlgarea.cls", "advctrl.cls",   -
+                     "stdext.cls", "msgext.cls", "propsht.cls")
 
 outFile = .stream~new(outdir || outname[3])
 if outFile~open("WRITE REPLACE") \= "READY:" then return 9

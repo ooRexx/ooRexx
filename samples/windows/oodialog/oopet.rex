@@ -74,14 +74,14 @@
    expose correct beenhelped
    self~InitDialog:super
    call Play "guess.wav", yes
-   self~ConnectBitmapButton(2001, "IDRHINO",     "bmp\rhinoce.bmp" ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(2002, "IDTIGER",     "bmp\tiger.bmp"   ,,,,"FRAME USEPAL STRETCH")
-   self~ConnectBitmapButton(2003, "IDELEPH",     "bmp\eleph2.bmp"  ,,,,"FRAME STRETCH" )
-   self~ConnectBitmapButton(2004, "IDMOOSE",     "bmp\moose.bmp"   ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(2005, "IDGOAT",      "bmp\goat.bmp"    ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(2006, "IDCHIHUAHUA", "bmp\chihuahu.bmp",,"bmp\kanguru.bmp",,"FRAME STRETCH")
-   self~ConnectBitmapButton(2007, "IDSEA",       "bmp\sealion.bmp" ,,,,"FRAME STRETCH")
-   self~ConnectBitmapButton(2008, "IDHORSE",     "bmp\horse.bmp"   ,,,,"FRAME STRETCH")
+   self~installBitmapButton(2001, "IDRHINO",     "bmp\rhinoce.bmp" ,,,,"FRAME STRETCH")
+   self~installBitmapButton(2002, "IDTIGER",     "bmp\tiger.bmp"   ,,,,"FRAME USEPAL STRETCH")
+   self~installBitmapButton(2003, "IDELEPH",     "bmp\eleph2.bmp"  ,,,,"FRAME STRETCH" )
+   self~installBitmapButton(2004, "IDMOOSE",     "bmp\moose.bmp"   ,,,,"FRAME STRETCH")
+   self~installBitmapButton(2005, "IDGOAT",      "bmp\goat.bmp"    ,,,,"FRAME STRETCH")
+   self~installBitmapButton(2006, "IDCHIHUAHUA", "bmp\chihuahu.bmp",,"bmp\kanguru.bmp",,"FRAME STRETCH")
+   self~installBitmapButton(2007, "IDSEA",       "bmp\sealion.bmp" ,,,,"FRAME STRETCH")
+   self~installBitmapButton(2008, "IDHORSE",     "bmp\horse.bmp"   ,,,,"FRAME STRETCH")
    correct = .array~of("rhinoceros","tiger","elephant","moose","goat","chihuahua","seal", "horse")
    beenhelped = 0
 

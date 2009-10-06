@@ -204,6 +204,9 @@ REXX_METHOD_PROTOTYPE(wb_getText);
 REXX_METHOD_PROTOTYPE(wb_setText);
 REXX_METHOD_PROTOTYPE(wb_getWindowLong_pvt);
 
+REXX_METHOD_PROTOTYPE(en_addUserMessage);
+REXX_METHOD_PROTOTYPE(en_init_eventNotification);
+
 REXX_METHOD_PROTOTYPE(window_init);
 REXX_METHOD_PROTOTYPE(window_unInit);
 
@@ -222,13 +225,12 @@ REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
 REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
 REXX_METHOD_PROTOTYPE(pbdlg_getItem);
-REXX_METHOD_PROTOTYPE(pbdlg_connectControl);
+REXX_METHOD_PROTOTYPE(pbdlg_connect_ControName);
 REXX_METHOD_PROTOTYPE(pbdlg_setDlgDataFromStem_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_putDlgDataInStem_pvt);
 REXX_METHOD_PROTOTYPE(plbdlg_getControlData);
 REXX_METHOD_PROTOTYPE(pbdlg_setControlData);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
-REXX_METHOD_PROTOTYPE(pbdlg_addUserMessage);
 REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
@@ -427,7 +429,7 @@ REXX_METHOD_PROTOTYPE(size_setCY);
 
 // Menu classes methods
 REXX_METHOD_PROTOTYPE(menu_menuInit_pvt);
-REXX_METHOD_PROTOTYPE(menu_connectItem_cls);
+REXX_METHOD_PROTOTYPE(menu_connectSelect_cls);
 REXX_METHOD_PROTOTYPE(menu_getHMenu);
 REXX_METHOD_PROTOTYPE(menu_wID);
 REXX_METHOD_PROTOTYPE(menu_isValidItemID);
@@ -470,10 +472,10 @@ REXX_METHOD_PROTOTYPE(menu_setText);
 REXX_METHOD_PROTOTYPE(menu_getText);
 REXX_METHOD_PROTOTYPE(menu_setAutoConnection);
 REXX_METHOD_PROTOTYPE(menu_getAutoConnectStatus);
-REXX_METHOD_PROTOTYPE(menu_connectWM);
-REXX_METHOD_PROTOTYPE(menu_connectItem);
-REXX_METHOD_PROTOTYPE(menu_connectAllItems);
-REXX_METHOD_PROTOTYPE(menu_connectSomeItems);
+REXX_METHOD_PROTOTYPE(menu_connectMenuEvent);
+REXX_METHOD_PROTOTYPE(menu_connectSelect);
+REXX_METHOD_PROTOTYPE(menu_connectAllSelects);
+REXX_METHOD_PROTOTYPE(menu_connectSomeSelects);
 REXX_METHOD_PROTOTYPE(menu_itemTextToMethodName);
 REXX_METHOD_PROTOTYPE(menu_test);
 
@@ -486,9 +488,9 @@ REXX_METHOD_PROTOTYPE(binMenu_init);
 
 REXX_METHOD_PROTOTYPE(sysMenu_init);
 REXX_METHOD_PROTOTYPE(sysMenu_revert);
-REXX_METHOD_PROTOTYPE(sysMenu_connectItem);
-REXX_METHOD_PROTOTYPE(sysMenu_connectAllItems);
-REXX_METHOD_PROTOTYPE(sysMenu_connectSomeItems);
+REXX_METHOD_PROTOTYPE(sysMenu_connectSelect);
+REXX_METHOD_PROTOTYPE(sysMenu_connectAllSelects);
+REXX_METHOD_PROTOTYPE(sysMenu_connectSomeSelects);
 
 REXX_METHOD_PROTOTYPE(popMenu_connectContextMenu_cls);
 REXX_METHOD_PROTOTYPE(popMenu_init);
@@ -553,6 +555,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_setText,                   wb_setText),
     REXX_METHOD(wb_getWindowLong_pvt,         wb_getWindowLong_pvt),
 
+    REXX_METHOD(en_init_eventNotification,   en_init_eventNotification),
+    REXX_METHOD(en_addUserMessage,           en_addUserMessage),
+
     REXX_METHOD(pbdlg_init_cls,                pbdlg_init_cls),
     REXX_METHOD(pbdlg_setDefaultFont_cls,      pbdlg_setDefaultFont_cls),
     REXX_METHOD(pbdlg_getFontName_cls,         pbdlg_getFontName_cls),
@@ -566,14 +571,13 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getDlgHandle,            pbdlg_getDlgHandle),
     REXX_METHOD(pbdlg_get,                     pbdlg_get),
     REXX_METHOD(pbdlg_isDialogActive,          pbdlg_isDialogActive),
-    REXX_METHOD(pbdlg_connectControl,          pbdlg_connectControl),
+    REXX_METHOD(pbdlg_connect_ControName,      pbdlg_connect_ControName),
     REXX_METHOD(pbdlg_setDlgDataFromStem_pvt,  pbdlg_setDlgDataFromStem_pvt),
     REXX_METHOD(pbdlg_putDlgDataInStem_pvt,    pbdlg_putDlgDataInStem_pvt),
     REXX_METHOD(plbdlg_getControlData,         plbdlg_getControlData),
     REXX_METHOD(pbdlg_setControlData,          pbdlg_setControlData),
     REXX_METHOD(pbdlg_getItem,                 pbdlg_getItem),
     REXX_METHOD(pbdlg_stopIt,                  pbdlg_stopIt),
-    REXX_METHOD(pbdlg_addUserMessage,          pbdlg_addUserMessage),
     REXX_METHOD(pbdlg_getTextSizeDlg,          pbdlg_getTextSizeDlg),
     REXX_METHOD(pbdlg_unInit,                  pbdlg_unInit),
 
@@ -764,7 +768,7 @@ RexxMethodEntry oodialog_methods[] = {
 
     // Menu classes methods
     REXX_METHOD(menu_menuInit_pvt,              menu_menuInit_pvt),
-    REXX_METHOD(menu_connectItem_cls,           menu_connectItem_cls),
+    REXX_METHOD(menu_connectSelect_cls,         menu_connectSelect_cls),
     REXX_METHOD(menu_getHMenu,                  menu_getHMenu),
     REXX_METHOD(menu_wID,                       menu_wID),
     REXX_METHOD(menu_isValidItemID,             menu_isValidItemID),
@@ -807,25 +811,25 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(menu_setText,                   menu_setText),
     REXX_METHOD(menu_getAutoConnectStatus,      menu_getAutoConnectStatus),
     REXX_METHOD(menu_setAutoConnection,         menu_setAutoConnection),
-    REXX_METHOD(menu_connectWM,                 menu_connectWM),
-    REXX_METHOD(menu_connectItem,               menu_connectItem),
-    REXX_METHOD(menu_connectSomeItems,          menu_connectSomeItems),
-    REXX_METHOD(menu_connectAllItems,           menu_connectAllItems),
+    REXX_METHOD(menu_connectMenuEvent,          menu_connectMenuEvent),
+    REXX_METHOD(menu_connectSelect,             menu_connectSelect),
+    REXX_METHOD(menu_connectSomeSelects,        menu_connectSomeSelects),
+    REXX_METHOD(menu_connectAllSelects,         menu_connectAllSelects),
     REXX_METHOD(menu_itemTextToMethodName,      menu_itemTextToMethodName),
     REXX_METHOD(menu_test,                      menu_test),
 
-    REXX_METHOD(menuBar_isAttached,      menuBar_isAttached),
-    REXX_METHOD(menuBar_redraw,          menuBar_redraw),
-    REXX_METHOD(menuBar_attachTo,        menuBar_attachTo),
-    REXX_METHOD(menuBar_detach,          menuBar_detach),
+    REXX_METHOD(menuBar_isAttached,             menuBar_isAttached),
+    REXX_METHOD(menuBar_redraw,                 menuBar_redraw),
+    REXX_METHOD(menuBar_attachTo,               menuBar_attachTo),
+    REXX_METHOD(menuBar_detach,                 menuBar_detach),
 
-    REXX_METHOD(binMenu_init,            binMenu_init),
+    REXX_METHOD(binMenu_init,                   binMenu_init),
 
-    REXX_METHOD(sysMenu_init,              sysMenu_init),
-    REXX_METHOD(sysMenu_revert,            sysMenu_revert),
-    REXX_METHOD(sysMenu_connectItem,       sysMenu_connectItem),
-    REXX_METHOD(sysMenu_connectSomeItems,  sysMenu_connectSomeItems),
-    REXX_METHOD(sysMenu_connectAllItems,   sysMenu_connectAllItems),
+    REXX_METHOD(sysMenu_init,                   sysMenu_init),
+    REXX_METHOD(sysMenu_revert,                 sysMenu_revert),
+    REXX_METHOD(sysMenu_connectSelect,          sysMenu_connectSelect),
+    REXX_METHOD(sysMenu_connectSomeSelects,     sysMenu_connectSomeSelects),
+    REXX_METHOD(sysMenu_connectAllSelects,      sysMenu_connectAllSelects),
 
     REXX_METHOD(popMenu_connectContextMenu_cls, popMenu_connectContextMenu_cls),
     REXX_METHOD(popMenu_init,                   popMenu_init),
@@ -835,15 +839,15 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(popMenu_track,                  popMenu_track),
     REXX_METHOD(popMenu_show,                   popMenu_show),
 
-    REXX_METHOD(scriptMenu_init,         scriptMenu_init),
+    REXX_METHOD(scriptMenu_init,                scriptMenu_init),
 
-    REXX_METHOD(userMenu_init,           userMenu_init),
-    REXX_METHOD(userMenu_complete,       userMenu_complete),
+    REXX_METHOD(userMenu_init,                  userMenu_init),
+    REXX_METHOD(userMenu_complete,              userMenu_complete),
 
-    REXX_METHOD(menuTemplate_isComplete,   menuTemplate_isComplete),
-    REXX_METHOD(menuTemplate_addSeparator, menuTemplate_addSeparator),
-    REXX_METHOD(menuTemplate_addItem,      menuTemplate_addItem),
-    REXX_METHOD(menuTemplate_addPopup,     menuTemplate_addPopup),
+    REXX_METHOD(menuTemplate_isComplete,        menuTemplate_isComplete),
+    REXX_METHOD(menuTemplate_addSeparator,      menuTemplate_addSeparator),
+    REXX_METHOD(menuTemplate_addItem,           menuTemplate_addItem),
+    REXX_METHOD(menuTemplate_addPopup,          menuTemplate_addPopup),
 
     REXX_LAST_METHOD()
 };

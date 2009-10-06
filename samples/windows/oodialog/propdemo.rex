@@ -111,8 +111,8 @@
 /* InitProgressBar is not defined because there is no need to initialize teh progress bars */
 
 ::method InitListView
-   self~ConnectListNotify(100,"Activate")     /* connect double-click on a list item with OnActivate */
-   self~ConnectListNotify(100,"ColumnClick")  /* connect click on a column header with OnColumnClick */
+   self~connectListViewEvent(100,"Activate")     /* connect double-click on a list item with OnActivate */
+   self~connectListViewEvent(100,"ColumnClick")  /* connect click on a column header with OnColumnClick */
    lc = self~newListView(100,1)               /* Get an object associated with list control 100 in the first page */
    if lc == .nil then return
    /* Set the column headers */
@@ -151,7 +151,7 @@
 
 
 ::method InitTreeView
-   self~ConnectTreeNotify(100,"BeginDrag","DefTreeDragHandler")   /* support drag and drop (default behaviour) */
+   self~connectTreeViewEvent(100,"BeginDrag","DefTreeDragHandler")   /* support drag and drop (default behaviour) */
    tc = self~newTreeView(100)  /* category specifier is not required in InitXXX methods */
    if tc == .nil then return
 
@@ -218,12 +218,12 @@
 
    /* connect notification that is sent when a slider is moved with OnEndTrack
       which updates the text labels that display the positions */
-   self~ConnectSliderNotify("SLIDER1","EndTrack","OnEndTrack")
-   self~ConnectSliderNotify("SLIDER2","EndTrack","OnEndTrack")
-   self~ConnectSliderNotify("SLIDER3","EndTrack","OnEndTrack")
-   self~ConnectSliderNotify("VSLIDER1","EndTrack","OnEndTrack")
-   self~ConnectSliderNotify("VSLIDER2","EndTrack","OnEndTrack")
-   self~ConnectSliderNotify("VSLIDER3","EndTrack","OnEndTrack")
+   self~connectTrackBarEvent("SLIDER1","EndTrack","OnEndTrack")
+   self~connectTrackBarEvent("SLIDER2","EndTrack","OnEndTrack")
+   self~connectTrackBarEvent("SLIDER3","EndTrack","OnEndTrack")
+   self~connectTrackBarEvent("VSLIDER1","EndTrack","OnEndTrack")
+   self~connectTrackBarEvent("VSLIDER2","EndTrack","OnEndTrack")
+   self~connectTrackBarEvent("VSLIDER3","EndTrack","OnEndTrack")
 
    /* Initialize slider SLIDER1 */
    curSL = self~newTrackBar("SLIDER1")
@@ -279,7 +279,7 @@
    expose font2 font3 imageList iconsRemoved needWrite
 
    self~ConnectDraw(200,"OnDrawTabRect")    /* sent when the owner-drawn button is to be redrawn */
-   self~ConnectTabNotify(100, "SELCHANGE", "OnTabSelChange")    /* sent when another tab is selected */
+   self~connectTabEvent(100, "SELCHANGE", "OnTabSelChange")    /* sent when another tab is selected */
    tc = self~newTab(100,5)
    if tc == .nil then return
 

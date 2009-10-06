@@ -102,17 +102,17 @@ return 0
 \* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 ::requires "ooDialog.cls"
 
-::class 'ImageListDlg' subclass RcDialog inherit AdvancedControls MessageExtensions
+::class 'ImageListDlg' subclass RcDialog
 
 ::method initDialog
   expose pbPush pbView pbAdd stStatus ctr imagesLoaded
 
-  self~connectButton(IDC_PB_PUSHME, "onPushMe")
-  self~connectButton(IDC_PB_VIEW, "onView")
-  self~connectButton(IDC_PB_ADD, "onAdd")
+  self~connectButtonEvent(IDC_PB_PUSHME, "CLICKED", "onPushMe")
+  self~connectButtonEvent(IDC_PB_VIEW, "CLICKED", "onView")
+  self~connectButtonEvent(IDC_PB_ADD, "CLICKED", "onAdd")
 
-  self~connectButtonNotify(IDC_PB_VIEW, "HOTITEM", onHover)
-  self~connectButtonNotify(IDC_PB_ADD, "HOTITEM", onHover)
+  self~connectButtonEvent(IDC_PB_VIEW, "HOTITEM", onHover)
+  self~connectButtonEvent(IDC_PB_ADD, "HOTITEM", onHover)
 
   imagesLoaded = .false
   ctr = 0

@@ -88,6 +88,14 @@ typedef struct _wbCSelf {
 } CWindowBase;
 typedef CWindowBase *pCWindowBase;
 
+/* Struct for the EventNotification object CSelf. */
+typedef struct _enCSelf {
+    RexxObjectPtr  rexxSelf;
+    HWND           hDlg;
+    DIALOGADMIN    *dlgAdm;
+} CEventNotification;
+typedef CEventNotification *pCEventNotification;
+
 // Struct for the PlainBaseDialog class CSelf.
 typedef struct _pbdcCSelf {
     char         fontName[MAX_DEFAULT_FONTNAME];
@@ -98,13 +106,14 @@ typedef CPlainBaseDialogClass *pCPlainBaseDialogClass;
 
 /* Struct for the PlainBaseDialog object CSelf. */
 typedef struct _pbdCSelf {
-    char           fontName[MAX_DEFAULT_FONTNAME];
-    pCWindowBase   wndBase;
-    RexxObjectPtr  rexxSelf;
-    HWND           hDlg;
-    DIALOGADMIN    *dlgAdm;
-    logical_t      autoDetect;
-    uint32_t       fontSize;
+    char                 fontName[MAX_DEFAULT_FONTNAME];
+    pCWindowBase         wndBase;
+    pCEventNotification  enCSelf;
+    RexxObjectPtr        rexxSelf;
+    HWND                 hDlg;
+    DIALOGADMIN          *dlgAdm;
+    logical_t            autoDetect;
+    uint32_t             fontSize;
 } CPlainBaseDialog;
 typedef CPlainBaseDialog *pCPlainBaseDialog;
 
@@ -138,7 +147,6 @@ extern BOOL             GetDialogIcons(DIALOGADMIN *, INT, UINT, PHANDLE, PHANDL
 extern void             rxstrlcpy(CHAR * tar, CONSTRXSTRING &src);
 extern void             rxdatacpy(CHAR * tar, RXSTRING &src);
 extern bool             isYes(const char *s);
-extern bool             IsNo(const char * s);
 extern void *           string2pointer(const char *string);
 extern void *           string2pointer(RexxMethodContext *c, RexxStringObject string);
 extern void             pointer2string(char *, void *pointer);

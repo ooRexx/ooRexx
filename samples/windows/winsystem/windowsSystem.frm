@@ -418,7 +418,7 @@ return .false
  * @note For an example of how to use this class see the showWindowTree()
  *       public routine in this framework.
  */
-::class 'WindowTreeDlg' public subclass RcDialog inherit AdvancedControls MessageExtensions
+::class 'WindowTreeDlg' public subclass RcDialog
 
 /** useTree()
  * Sets the window tree structure for this dialog.  The structure must be set
@@ -535,7 +535,7 @@ return newRoot
  * ooDialog part is only used in the display() method which produces a graphical
  * dislpay of the menu tree.
  */
-::class 'MenuDetailer' public subclass RcDialog inherit AdvancedControls MessageExtensions
+::class 'MenuDetailer' public subclass RcDialog
 
 ::method init
   use strict arg wnd

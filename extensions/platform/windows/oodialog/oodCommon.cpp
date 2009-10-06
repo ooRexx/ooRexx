@@ -573,13 +573,6 @@ void rxdatacpy(CHAR * tar, RXSTRING &src)
    tar[i] = '\0';
 }
 
-/* Slightly stricter than isYes. TODO remove this when YesNoMessage() is
-   fixed. */
-bool IsNo(const char * s)
-{
-   return ( s && (*s == 'N' || *s == 'n') );
-}
-
 /**
  * Returns an upper-cased copy of the string.
  *

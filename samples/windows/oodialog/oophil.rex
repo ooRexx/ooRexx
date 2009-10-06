@@ -134,9 +134,9 @@
    expose msg v. vb.
    msg = .NIL
    self~InitDialog:super
-   self~ConnectScrollBar(107, 'SLEEPDN', 'SLEEPUP',, 0, 1000, 1)
-   self~ConnectScrollBar(108, 'EATDN', 'EATUP',, 0, 1000, 1)
-   self~ConnectScrollBar(109, 'REPDN', 'REPUP',, 0, 1000, 1)
+   self~connectEachSBEvent(107, 'SLEEPDN', 'SLEEPUP',, 0, 1000, 1)
+   self~connectEachSBEvent(108, 'EATDN', 'EATUP',, 0, 1000, 1)
+   self~connectEachSBEvent(109, 'REPDN', 'REPUP',, 0, 1000, 1)
    do i over vb.                               /* bitmaps in memory */
      v.i = self~LoadBitmap(vb.i)
    end
@@ -213,13 +213,13 @@
    self~InitDialog:super
    self~disableItem(1)                          /* stop button      */
    do i = 1 to 5
-      ret = self~ConnectBitmapButton(v.idp  + i,    '', v.bmpphil ,,,,"STRETCH INMEMORY")
-      ret = self~ConnectBitmapButton(v.idf  + i,    '', v.bmpfork ,,,,"STRETCH INMEMORY")
-      ret = self~ConnectBitmapButton(v.idhl + 10*i, '', v.bmpblank,,,,"STRETCH INMEMORY")
-      ret = self~ConnectBitmapButton(v.idhr + 10*i, '', v.bmpblank,,,,"STRETCH INMEMORY")
-      ret = self~ConnectBitmapButton(v.idpc + i,    '', v.bmpblank,,,,"STRETCH INMEMORY")
+      ret = self~installBitmapButton(v.idp  + i,    '', v.bmpphil ,,,,"STRETCH INMEMORY")
+      ret = self~installBitmapButton(v.idf  + i,    '', v.bmpfork ,,,,"STRETCH INMEMORY")
+      ret = self~installBitmapButton(v.idhl + 10*i, '', v.bmpblank,,,,"STRETCH INMEMORY")
+      ret = self~installBitmapButton(v.idhr + 10*i, '', v.bmpblank,,,,"STRETCH INMEMORY")
+      ret = self~installBitmapButton(v.idpc + i,    '', v.bmpblank,,,,"STRETCH INMEMORY")
    end
-   ret    = self~ConnectBitmapButton(v.idcake,      '', v.bmpblank,,,,"STRETCH INMEMORY")
+   ret    = self~installBitmapButton(v.idcake,      '', v.bmpblank,,,,"STRETCH INMEMORY")
 
    f1 = .fork~new(1, self)                      /* create 5 forks   */
    f2 = .fork~new(2, self)

@@ -69,10 +69,17 @@ CleanUp:
         self~data13 = "Arial"
         self~text = "This is a scrolling text demonstration"
         self~data14 = 24
-        self~connectButton(11, "Display")
+        self~connectButtonEvent(11, "CLICKED", "Display")
     end
     self~initCode = ret
     return ret
+
+
+::method initDialog
+
+   -- Set the background color of the button to the backgroud color of a button.
+   COLOR_BTNFACE = 15
+   self~setItemSysColor(10, COLOR_BTNFACE)
 
 
 ::method display

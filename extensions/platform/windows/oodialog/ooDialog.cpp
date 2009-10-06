@@ -1321,23 +1321,6 @@ RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
  */
 #define PLAINBASEDIALOG_CLASS  "PlainBaseDialog"
 
-bool convert2PointerSize(RexxMethodContext *c, RexxObjectPtr obj, uint64_t *number, int argPos)
-{
-    if ( obj == NULLOBJECT )
-    {
-        *number = 0;
-        return true;
-    }
-
-    if ( c->IsPointer(obj) )
-    {
-        *number = (uint64_t)c->PointerValue((RexxPointerObject)obj);
-        return true;
-    }
-
-    return rxStr2Number(c, c->ObjectToStringValue(obj), number, argPos);
-}
-
 int32_t stopDialog(HWND hDlg)
 {
     if ( hDlg != NULL )
@@ -1365,6 +1348,7 @@ RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND h
 {
     pCWindowBase pcwb = pcpbd->wndBase;
     pcpbd->hDlg = hDlg;
+    pcpbd->enCSelf->hDlg = hDlg;
 
     if ( pcpbd->hDlg != NULL )
     {
@@ -1372,7 +1356,8 @@ RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND h
         pcwb->rexxHwnd = c->RequestGlobalReference(pointer2string(c, hDlg));
     }
     else
-    {   pcwb->hwnd = NULL;
+    {
+        pcwb->hwnd = NULL;
         if ( pcwb->rexxHwnd != NULLOBJECT && pcwb->rexxHwnd != TheZeroObj )
         {
             c->ReleaseGlobalReference(pcwb->rexxHwnd);
@@ -1381,6 +1366,24 @@ RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND h
     }
 
     return NULLOBJECT;
+}
+
+bool initEventNotification(RexxMethodContext *c, DIALOGADMIN *dlgAdm, RexxObjectPtr self, pCEventNotification *ppCEN)
+{
+    RexxBufferObject obj = c->NewBuffer(sizeof(CEventNotification));
+    if ( obj == NULLOBJECT )
+    {
+        return false;
+    }
+
+    pCEventNotification pcen = (pCEventNotification)c->BufferData(obj);
+    pcen->dlgAdm = dlgAdm;
+    pcen->hDlg = NULL;
+    pcen->rexxSelf = self;
+
+    c->SendMessage1(self, "INIT_EVENTNOTIFICATION", obj);
+    *ppCEN = pcen;
+    return true;
 }
 
 RexxMethod1(RexxObjectPtr, pbdlg_init_cls, OSELF, self)
@@ -1486,6 +1489,16 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
     {
         goto done_out;
     }
+
+    // Initialize the event notification mixin class.  The only thing that could
+    // fail is getting a buffer from the interpreter kernel.  If that happens an
+    // exceptions is raised and we should not need to do any clean up.
+    pCEventNotification pEN = NULL;
+    if ( ! initEventNotification(context, dlgAdm, self, &pEN) )
+    {
+        goto done_out;
+    }
+    pcpbd->enCSelf = pEN;
 
     result = TheZeroObj;
 
@@ -1744,7 +1757,7 @@ RexxMethod1(logical_t, pbdlg_isDialogActive, CSELF, pCSelf)
 }
 
 
-/** PlainBaseDialog::connectControl()
+/** PlainBaseDialog::connect<ControlName>()
  *
  *  Connects a windows dialog control with a 'data' attribute of the Rexx dialog
  *  object.  The attribute is added to the Rexx object and an entry is made in
@@ -1767,7 +1780,7 @@ RexxMethod1(logical_t, pbdlg_isDialogActive, CSELF, pCSelf)
  *            table code.
  *
  */
-RexxMethod6(RexxObjectPtr, pbdlg_connectControl, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
+RexxMethod6(RexxObjectPtr, pbdlg_connect_ControName, RexxObjectPtr, rxID, OPTIONAL_RexxObjectPtr, attributeName,
             OPTIONAL_CSTRING, opts, NAME, msgName, OSELF, self, CSELF, pCSelf)
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
@@ -1927,149 +1940,6 @@ RexxMethod2(int32_t, pbdlg_stopIt, OPTIONAL_RexxObjectPtr, caller, CSELF, pCSelf
     {
         context->SendMessage1(pcpbd->rexxSelf, "FINALSTOPIT", caller);
     }
-    return result;
-}
-
-/** PlainBaseDialog::addUserMessage()
- *
- *  Adds a message to the message table.
- *
- *  Each entry in the message table connects a Windows event message to a method
- *  in a Rexx dialog.  The fields for the entry consist of the Windows message,
- *  the WPARAM and LPARAM for the message, a filter for the message and its
- *  parameters, and the method name. Using the proper filters for the Windows
- *  message and its parameters allows the mapping of a very specific Windows
- *  event to the named method.
- *
- *  @param  methodName   [required]  The method name to be connected.
- *  @param  wm  [required]  The Windows event message
- *  @param  _wmFilter    [optional]  Filter applied to the Windows message.  If
- *                       omitted the filter is 0xFFFFFFFF.
- *  @param  wp           [optional]  WPARAM for the message
- *  @param  _wpFilter    [optional]  Filter applied to the WPARAM.  If omitted a
- *                       filter of all hex Fs is applied
- *  @param  lp           [optional]  LPARAM for the message.
- *  @param  _lpFilter    [optional]  Filter applied to LPARAM.  If omitted the
- *                       filter is all hex Fs.
- *  @param  -tag         [optional]  A tag that allows a further differentiation
- *                       between messages.  This is an internal mechanism not to
- *                       be documented publicly.
- *
- *  @return  0 on success, 1 on failure.  One possible source of error is the
- *           message table being full.
- *
- *  @remarks  Although it would make more sense to return true on succes and
- *            false on failure, there is too much old code that relies on 0 for
- *            success and 1 for error.
- */
-RexxMethod9(logical_t, pbdlg_addUserMessage, CSTRING, methodName, CSTRING, wm, OPTIONAL_CSTRING, _wmFilter,
-            OPTIONAL_RexxObjectPtr, wp, OPTIONAL_CSTRING, _wpFilter, OPTIONAL_RexxObjectPtr, lp, OPTIONAL_CSTRING, _lpFilter,
-            OPTIONAL_CSTRING, _tag, OSELF, self)
-{
-    RexxMethodContext *c = context;
-    logical_t result = 1;
-
-    DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, self);
-    if ( dlgAdm == NULL )
-    {
-        goto done_out;
-    }
-    if ( *methodName == '\0' )
-    {
-        c->RaiseException1(Rexx_Error_Invalid_argument_null, TheOneObj);
-        goto done_out;
-    }
-
-    uint64_t number;
-
-    UINT winMessage;
-    UINT wmFilter;
-    if ( ! rxStr2Number(context, wm, &number, 2) )
-    {
-        goto done_out;
-    }
-    winMessage = (UINT)number;
-
-    if ( argumentOmitted(3) )
-    {
-        wmFilter = 0xFFFFFFFF;
-    }
-    else
-    {
-        if ( ! rxStr2Number(context, _wmFilter, &number, 3) )
-        {
-            goto done_out;
-        }
-        wmFilter = (UINT)number;
-    }
-
-    WPARAM    wParam;
-    ULONG_PTR wpFilter;
-
-    if ( ! convert2PointerSize(context, wp, &number, 4) )
-    {
-        goto done_out;
-    }
-    wParam = (WPARAM)number;
-
-    if ( argumentOmitted(5) )
-    {
-        wpFilter = 0;
-    }
-    else
-    {
-        if ( ! rxStr2Number(context, _wpFilter, &number, 5) )
-        {
-            goto done_out;
-        }
-        wpFilter = (number == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)number);
-    }
-
-    LPARAM    lParam;
-    ULONG_PTR lpFilter;
-
-    if ( ! convert2PointerSize(context, lp, &number, 6) )
-    {
-        goto done_out;
-    }
-    lParam = (WPARAM)number;
-
-    if ( argumentOmitted(7) )
-    {
-        lpFilter = 0;
-    }
-    else
-    {
-        if ( ! rxStr2Number(context, _lpFilter, &number, 7) )
-        {
-            goto done_out;
-        }
-        lpFilter = (number == 0xFFFFFFFF ? (ULONG_PTR)SIZE_MAX : (ULONG_PTR)number);
-    }
-
-    ULONG tag = 0;
-    if ( argumentExists(8) )
-    {
-        if ( ! rxStr2Number(context, _tag, &number, 8) )
-        {
-            goto done_out;
-        }
-        tag = (ULONG)number;
-    }
-
-    if ( (winMessage | wParam | lParam) == 0 )
-    {
-        userDefinedMsgException(context->threadContext, "The wm, wp, and lp arguements can not all be 0" );
-    }
-    else
-    {
-        if ( AddTheMessage(dlgAdm, winMessage, wmFilter, wParam, wpFilter, lParam, lpFilter, methodName, tag) )
-        {
-            result = 0;
-        }
-    }
-
-done_out:
     return result;
 }
 

@@ -74,14 +74,14 @@
    expose correct beenhelped
    self~InitDialog:super
    call Play "guess.wav", yes
-   self~ConnectBitmapButton(2001, "IDRHINO",     201 ,,   ,,"FRAME")
-   self~ConnectBitmapButton(2002, "IDTIGER",     202 ,,   ,,"FRAME")
-   self~ConnectBitmapButton(2003, "IDELEPH",     203 ,,   ,,"FRAME")
-   self~ConnectBitmapButton(2004, "IDMOOSE",     204 ,,   ,,"FRAME")
-   self~ConnectBitmapButton(2005, "IDGOAT",      205 ,,   ,,"FRAME")
-   self~ConnectBitmapButton(2006, "IDCHIHUAHUA", 206 ,,209,,"FRAME")
-   self~ConnectBitmapButton(2007, "IDSEA",       207 ,,   ,,"FRAME")
-   self~ConnectBitmapButton(2008, "IDHORSE",     208 ,,   ,,"FRAME")
+   self~installBitmapButton(2001, "IDRHINO",     201 ,,   ,,"FRAME")
+   self~installBitmapButton(2002, "IDTIGER",     202 ,,   ,,"FRAME")
+   self~installBitmapButton(2003, "IDELEPH",     203 ,,   ,,"FRAME")
+   self~installBitmapButton(2004, "IDMOOSE",     204 ,,   ,,"FRAME")
+   self~installBitmapButton(2005, "IDGOAT",      205 ,,   ,,"FRAME")
+   self~installBitmapButton(2006, "IDCHIHUAHUA", 206 ,,209,,"FRAME")
+   self~installBitmapButton(2007, "IDSEA",       207 ,,   ,,"FRAME")
+   self~installBitmapButton(2008, "IDHORSE",     208 ,,   ,,"FRAME")
    correct = .array~of("rhinoceros","tiger","elephant","moose","goat","chihuahua","seal", "horse")
    beenhelped = 0
 

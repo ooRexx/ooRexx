@@ -71,8 +71,8 @@ CleanUp:
     if ret = 0 then do
         self~Emp_count = 1
         self~Emp_current = 1
-        self~ConnectButton(10, "Print")   /* connect button 10 with a method */
-        self~ConnectButton(12, "Add")     /* connect button 12 with a method */
+        self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
+        self~connectButtonEvent(12, "CLICKED", "Add")     /* connect button 12 with a method */
     end
     self~InitCode = ret
     return ret

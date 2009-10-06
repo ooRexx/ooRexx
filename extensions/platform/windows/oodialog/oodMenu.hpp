@@ -155,9 +155,9 @@ public:
     BOOL detach(bool skipChecks);
     BOOL destroy();
 
-    logical_t connectAllItems(CSTRING msg, RexxObjectPtr dialog, logical_t handles);
+    logical_t connectAllSelects(CSTRING msg, RexxObjectPtr dialog, logical_t handles);
     logical_t connectItem(RexxObjectPtr rxID, CSTRING methodName, RexxObjectPtr dialog, logical_t handles);
-    logical_t connectSomeItems(RexxObjectPtr, CSTRING, logical_t, RexxObjectPtr, logical_t);
+    logical_t connectSomeSelects(RexxObjectPtr, CSTRING, logical_t, RexxObjectPtr, logical_t);
     logical_t connectMenuMessage(CSTRING, CSTRING, HWND, RexxObjectPtr, logical_t);
     uint32_t string2WM(CSTRING keyWord);
 

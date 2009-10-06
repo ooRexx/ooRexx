@@ -83,7 +83,7 @@
    self~AddCategoryListEntry(23, "Police Man", 1)
    self~AddCategoryListEntry(23, "Lawyer", 1)
 
-   self~ConnectScrollBar(44, "Emp_Previous", "Emp_Next")
+   self~connectEachSBEvent(44, "Emp_Previous", "Emp_Next")
    self~DisableCategoryItem(44, 1)
    self~SetCategoryListTabulators(101, 98, 198, 2)
 
@@ -98,8 +98,8 @@
 
 ::method Input                                      /* page 1 */
    self~loaditems("em_categ.rc", 100)
-   self~ConnectButton(40, "Print")
-   self~ConnectButton(42, "Add")
+   self~connectButtonEvent(40, "CLICKED", "Print")
+   self~connectButtonEvent(42, "CLICKED", "Add")
 
 ::method List                                       /* page 2 */
    self~loaditems("em_categ.rc", 101)

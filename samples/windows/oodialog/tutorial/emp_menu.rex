@@ -67,26 +67,27 @@ CleanUp:
 ::method Emp_current attribute
 
 ::method Init
+    expose menuBar
     ret = self~init:super;
     if ret = 0 then ret = self~Load("EMPLOYE7.RC", 100)
     if ret = 0 then self~Employees = .array~new(10)
     if ret = 0 then do
         self~Emp_count = 1
         self~Emp_current = 1
-        self~ConnectButton(10, "Print")   /* connect button 10 with a method */
-        self~ConnectButton(12, "Add")     /* connect button 12 with a method */
-        self~ConnectButton(13, "Emp_List")
-        if self~LoadMenu("EMPLOYE7.RC", 200) = 0 then do
-            self~ConnectMenuItem(201, "Add")
-            self~ConnectMenuItem(202, "Print")
-            self~ConnectMenuItem(203, "Emp_List")
-            self~ConnectMenuItem(204, "About")
-        end
+        self~connectButtonEvent(10, "CLICKED", "Print")   /* connect button 10 with a method */
+        self~connectButtonEvent(12, "CLICKED", "Add")     /* connect button 12 with a method */
+        self~connectButtonEvent(13, "CLICKED", "Emp_List")
+        menuBar = .ScriptMenuBar~new("EMPLOYE7.RC", 200, self)
+        menuBar~connectSelect(201, "Add", self)
+        menuBar~connectSelect(202, "Print", self)
+        menuBar~connectSelect(203, "Emp_List", self)
+        menuBar~connectSelect(204, "About", self)
     end
     self~InitCode = ret
     return ret
 
 ::method InitDialog
+    expose menuBar
     self~City = "New York"
     self~Male = 1
     self~Female = 0
@@ -99,10 +100,10 @@ CleanUp:
     self~AddListEntry(23, "Broker")
     self~AddListEntry(23, "Police Man")
     self~AddListEntry(23, "Lawyer")
-    self~ConnectScrollBar(11, "Emp_Previous", "Emp_Next")
+    self~connectEachSBEvent(11, "Emp_Previous", "Emp_Next")
     self~DisableItem(11)
     self~DisableItem(13)
-    self~SetMenu
+    menuBar~attachTo(self)
 
 ::method Print
     self~GetData
@@ -111,6 +112,7 @@ CleanUp:
     call infoDialog title self~Name addition || "A"x || "City:" self~City || "A"x || "Profession:" self~Profession
 
 ::method Add
+    expose menuBar
     self~Employees[self~Emp_count] = .directory~new
     self~Employees[self~Emp_count]['NAME'] = self~getControlData(21)
     self~Employees[self~Emp_count]['CITY'] = self~getControlData(22)
@@ -125,7 +127,7 @@ CleanUp:
     self~SetSBPos(11, self~Emp_count)
     self~EnableItem(11)
     self~EnableItem(13)
-    self~EnableMenuItem(203)
+    menuBar~enable(203)
 
 
 ::method Set

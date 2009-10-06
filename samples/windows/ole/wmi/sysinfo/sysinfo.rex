@@ -64,7 +64,7 @@ exit
 
 ::requires "ooDialog.cls"
 
-::class SystemClass subclass UserDialog inherit AdvancedControls MessageExtensions
+::class SystemClass subclass UserDialog
 
 ::method Init
   forward class (super) continue /* call parent constructor */
@@ -76,9 +76,7 @@ exit
   end
 
   /* Connect dialog control items to class methods */
-  self~ConnectButton(1,"Ok")
-
-  self~ConnectComboBoxNotify(100,"SELCHANGE",selectionChange)
+  self~connectComboBoxEvent(100,"SELCHANGE",selectionChange)
 
   /* Add your initialization code here */
   return InitRet

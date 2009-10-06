@@ -120,7 +120,7 @@
 
 
 
-::class 'ProgressIndicator' subclass StateIndicator public inherit AdvancedControls
+::class 'ProgressIndicator' subclass StateIndicator public
 
 ::method lowValue attribute
 ::method highValue attribute
