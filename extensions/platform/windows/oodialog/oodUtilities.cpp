@@ -357,7 +357,9 @@ RexxMethod0(logical_t, dlgutil_init_cls)
     {
         TheDotLocalObj = local;
         TheNegativeOneObj = context->WholeNumber(-1);
+        TheTwoObj = context->WholeNumber(2);
         context->SetObjectVariable("THENEGATIVEONEOBJ", TheNegativeOneObj);
+        context->SetObjectVariable("THENTWOOBJ", TheTwoObj);
         context->DirectoryPut(local, TheNullPtrObj, "NULLHANDLE");
         context->DirectoryPut(local, context->WholeNumberToObject(0), "SYSTEMERRORCODE");
     }

@@ -47,6 +47,7 @@
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodControl.hpp"
+#include "oodMessaging.hpp"
 #include "oodData.hpp"
 #include "oodText.hpp"
 
@@ -54,11 +55,6 @@ extern LONG SetRexxStem(const char * name, INT id, const char * secname, const c
 WORD NumDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 extern LPBITMAPINFO LoadDIB(const char *szFile);
 extern BOOL AddDialogMessage(CHAR *, CHAR *);
-extern LONG setKeyPressData(KEYPRESSDATA *, CONSTRXSTRING, CONSTRXSTRING, const char *);
-extern UINT seekKeyPressMethod(KEYPRESSDATA *, const char *);
-extern void removeKeyPressMethod(KEYPRESSDATA *, UINT);
-extern void processKeyPress(KEYPRESSDATA *, WPARAM, LPARAM, PCHAR);
-extern void freeKeyPressData(KEYPRESSDATA *);
 
 /* Local function prototypes */
 static ULONG SetStyle(HWND, LONG, PRXSTRING);
@@ -181,84 +177,6 @@ LONG_PTR CALLBACK CatchReturnSubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             break;
 
     } /* end switch */
-}
-
-
-/**
- * Subclass procedure for any dialog control.  Reports key press events to
- * ooDialog for those key presses connected to an ooDialog method by the user.
- *
- * All messages are passed on unchanged to the control.
- *
- * processKeyPress() is used to actually decipher the key press data and set
- * up the ooDialog method invocation.  That function documents what is sent on
- * to the ooDialog method.
- */
-LRESULT CALLBACK KeyPressSubclassProc(HWND hwnd, UINT msg, WPARAM wParam,
-  LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
-{
-    KEYPRESSDATA *pKeyData;
-    SUBCLASSDATA *pData = (SUBCLASSDATA *)dwData;
-    if ( ! pData ) return DefSubclassProc(hwnd, msg, wParam, lParam);
-
-    pKeyData = pData->pKeyPressData;
-
-    switch ( msg )
-    {
-        case WM_GETDLGCODE:
-            /* Don't do anything for now. This message has some interesting
-             * uses, perhaps a future enhancement.
-             */
-            break;
-
-        case WM_SYSKEYDOWN :
-            /* Sent when the alt key is down.  We need both WM_SYSKEYDOWN and
-             * WM_KEYDOWN to catch everything that a keyboard hook catches.
-             */
-            if (  pKeyData->key[wParam] && !(lParam & KEY_REALEASE) && !(lParam & KEY_WASDOWN) )
-                processKeyPress(pKeyData, wParam, lParam, pData->pMessageQueue);
-            break;
-
-        case WM_KEYDOWN:
-            /* WM_KEYDOWN will never have KEY_RELEASE set. */
-            if (  pKeyData->key[wParam] && !(lParam & KEY_WASDOWN) )
-                processKeyPress(pKeyData, wParam, lParam, pData->pMessageQueue);
-            break;
-
-        case WM_NCDESTROY:
-            /* The window is being destroyed, remove the subclass, clean up
-             * memory.
-             */
-            RemoveWindowSubclass(hwnd, KeyPressSubclassProc, id);
-            if ( pData )
-                freeSubclassData(pData);
-            break;
-    }
-    return DefSubclassProc(hwnd, msg, wParam, lParam);
-}
-
-/**
- * If there is subclass data, free it.
- */
-static void freeSubclassData(SUBCLASSDATA * pData)
-{
-    if ( pData )
-    {
-        freeKeyPressData(pData->pKeyPressData);
-        LocalFree((void *)pData);
-    }
-}
-
-/**
- * Convenience function to remove the key press subclass procedure and free the
- * associated memory.
- *
- */
-static BOOL removeKeyPressSubclass(SUBCLASSDATA *pData, HWND hDlg, INT id)
-{
-    BOOL success = SendMessage(hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)&KeyPressSubclassProc, (LPARAM)id) != 0;
-    if ( success ) freeSubclassData(pData);
-    return success;
 }
 
 
@@ -978,121 +896,6 @@ size_t RexxEntry HandleControlEx(
             RETPTR(setWindowPtr(hCtrl, GWLP_USERDATA, atol(argv[3].strptr)));
         }
         else RETERR
-    }
-    else if ( argv[2].strptr[0] == 'K' ) /* subclass control for Keypress */
-    {
-        SUBCLASSDATA * pData= NULL;
-
-        /* Requires Common Controls version 6.0 (XP SP 2) */
-        if ( ComCtl32Version < COMCTL32_6_0 ) RETVAL(-4)
-
-        if ( argv[3].strptr[0] == 'Q' )           /* Query if already sub-classed */
-        {
-            BOOL success = GetWindowSubclass(hCtrl, KeyPressSubclassProc, id, (DWORD_PTR *)&pData);
-            if ( ! success ) RETVAL(0)
-            if ( argc == 4 ) RETVAL(1)
-
-            CHECKARGL(5);
-
-            if ( ! pData ) RETVAL(0)
-            RETVAL(seekKeyPressMethod(pData->pKeyPressData, argv[4].strptr) ? 1 : 0);
-        }
-        else if ( argv[3].strptr[0] == 'C' )      /* Connect key press subclass   */
-        {
-            SUBCLASSDATA *pData = NULL;
-            DIALOGADMIN  *dlgAdm;
-            LONG ret = 0;
-            BOOL success = GetWindowSubclass(hCtrl, KeyPressSubclassProc, id, (DWORD_PTR *)&pData);
-
-            CHECKARGL(7);
-
-            dlgAdm = (DIALOGADMIN *)GET_POINTER(argv[4]);
-            if ( ! dlgAdm )  RETVAL(-3)
-
-            if ( argv[5].strlength == 0 || argv[6].strlength == 0 ) return -1;
-
-            /* If the subclass is already installed, just update the data block.
-             * If not installed, then the data block needs to be allocated and
-             * the subclass installed.
-             */
-            if ( pData )
-            {
-                /* If not success something is wrong, just quit. */
-                if ( ! success ) RETVAL(-6)
-                if ( argc > 7 )
-                    ret = setKeyPressData(pData->pKeyPressData, argv[5], argv[6], argv[7].strptr);
-                else
-                    ret = setKeyPressData(pData->pKeyPressData, argv[5], argv[6], NULL);
-                RETVAL(ret)
-            }
-            else
-            {
-                pData = (SUBCLASSDATA *)LocalAlloc(LPTR, sizeof(SUBCLASSDATA));
-                if ( ! pData ) RETVAL(-5)
-
-                pData->pKeyPressData = (KEYPRESSDATA *)LocalAlloc(LPTR, sizeof(KEYPRESSDATA));
-                if ( ! pData->pKeyPressData )
-                {
-                    LocalFree(pData);
-                    RETVAL(-5)
-                }
-
-                pData->hCtrl = hCtrl;
-                pData->uID = id;
-                pData->pMessageQueue = dlgAdm->pMessageQueue;
-
-                if ( argc > 7 )
-                    ret = setKeyPressData(pData->pKeyPressData, argv[5], argv[6], argv[7].strptr);
-                else
-                    ret = setKeyPressData(pData->pKeyPressData, argv[5], argv[6], NULL);
-
-                if ( ret == -5 )
-                {
-                    /* Memory allocation failure.  Clean up and return. */
-                    LocalFree(pData);
-                    RETVAL(ret)
-                }
-
-                RETVAL(! SendMessage(hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pData))
-            }
-        }
-        else if ( argv[3].strptr[0] == 'R' )      /* Remove the subclass */
-        {
-            SUBCLASSDATA * pData = NULL;
-            BOOL success = GetWindowSubclass(hCtrl, KeyPressSubclassProc, id, (DWORD_PTR *)&pData);
-
-            /* If success, the subclass is still installed, otherwise the
-             * subclass has already been removed, (or never existed.)
-             */
-            if ( success )
-            {
-                UINT index;
-                success = FALSE;  /* Reuse the success variable. */
-
-                /* If no method name, remove the whole thing. */
-                if ( argc == 4 ) RETVAL(! removeKeyPressSubclass(pData, hDlg, id))
-
-                CHECKARGL(5)
-
-                index = seekKeyPressMethod(pData->pKeyPressData, argv[4].strptr);
-                if ( ! index ) RETVAL(-1)
-
-                /* If only 1 method left, remove the subclass entirely.
-                 * Otherwise, remove the subclass, fix up the subclass data
-                 * block, then reinstall the subclass.
-                 */
-                if ( pData->pKeyPressData->usedMethods == 1 ) RETVAL(removeKeyPressSubclass(pData, hDlg, id))
-
-                if ( SendMessage(hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)KeyPressSubclassProc, (LPARAM)id) )
-                {
-                    removeKeyPressMethod(pData->pKeyPressData, index);
-                    success = SendMessage(hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pData) != 0;
-                }
-                RETVAL(! success)
-            }
-
-            RETVAL(-2)  /* Subclass procedure is not installed. */
-        }
     }
     RETERR
 }

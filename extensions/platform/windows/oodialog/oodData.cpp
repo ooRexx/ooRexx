@@ -784,7 +784,7 @@ uint32_t setDlgDataFromStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxS
 {
     if ( pcpbd->hDlg == NULL )
     {
-        noWindowsDialogException(c, pcpbd);
+        noWindowsDialogException(c, pcpbd->rexxSelf);
         return 1;
     }
 
@@ -873,7 +873,7 @@ uint32_t putDlgDataInStem(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxSte
 {
     if ( pcpbd->hDlg == NULL )
     {
-        noWindowsDialogException(c, pcpbd);
+        noWindowsDialogException(c, pcpbd->rexxSelf);
         return 1;
     }
 

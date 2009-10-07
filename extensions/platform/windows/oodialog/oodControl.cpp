@@ -49,6 +49,7 @@
 #include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
+#include "oodMessaging.hpp"
 #include "oodText.hpp"
 #include "oodData.hpp"
 #include "oodControl.hpp"
@@ -287,6 +288,173 @@ RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlT
  */
 #define DIALOGCONTROL_CLASS        "DialogControl"
 
+
+/**
+ * If there is subclass data, free it.
+ */
+static void freeSubclassData(SUBCLASSDATA * pData)
+{
+    if ( pData )
+    {
+        freeKeyPressData(pData->pKeyPressData);
+        LocalFree((void *)pData);
+    }
+}
+
+
+/**
+ * Subclass procedure for any dialog control.  Reports key press events to
+ * ooDialog for those key presses connected to an ooDialog method by the user.
+ *
+ * All messages are passed on unchanged to the control.
+ *
+ * processKeyPress() is used to actually decipher the key press data and set
+ * up the ooDialog method invocation.  That function documents what is sent on
+ * to the ooDialog method.
+ */
+LRESULT CALLBACK KeyPressSubclassProc(HWND hwnd, UINT msg, WPARAM wParam,
+  LPARAM lParam, UINT_PTR id, DWORD_PTR dwData)
+{
+    KEYPRESSDATA *pKeyData;
+    SUBCLASSDATA *pData = (SUBCLASSDATA *)dwData;
+    if ( ! pData ) return DefSubclassProc(hwnd, msg, wParam, lParam);
+
+    pKeyData = pData->pKeyPressData;
+
+    switch ( msg )
+    {
+        case WM_GETDLGCODE:
+            /* Don't do anything for now. This message has some interesting
+             * uses, perhaps a future enhancement.
+             */
+            break;
+
+        case WM_SYSKEYDOWN :
+            /* Sent when the alt key is down.  We need both WM_SYSKEYDOWN and
+             * WM_KEYDOWN to catch everything that a keyboard hook catches.
+             */
+            if (  pKeyData->key[wParam] && !(lParam & KEY_REALEASE) && !(lParam & KEY_WASDOWN) )
+            {
+                processKeyPress(pKeyData, wParam, lParam, pData->pMessageQueue);
+            }
+            break;
+
+        case WM_KEYDOWN:
+            /* WM_KEYDOWN will never have KEY_RELEASE set. */
+            if (  pKeyData->key[wParam] && !(lParam & KEY_WASDOWN) )
+            {
+                processKeyPress(pKeyData, wParam, lParam, pData->pMessageQueue);
+            }
+            break;
+
+        case WM_NCDESTROY:
+            /* The window is being destroyed, remove the subclass, clean up
+             * memory.
+             */
+            RemoveWindowSubclass(hwnd, KeyPressSubclassProc, id);
+            if ( pData )
+            {
+                freeSubclassData(pData);
+            }
+            break;
+    }
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
+
+/**
+ * Convenience function to remove the key press subclass procedure and free the
+ * associated memory.
+ *
+ */
+static BOOL removeKeyPressSubclass(SUBCLASSDATA *pData, HWND hDlg, INT id)
+{
+    BOOL success = SendMessage(hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)&KeyPressSubclassProc, (LPARAM)id) != 0;
+    if ( success )
+    {
+        freeSubclassData(pData);
+    }
+    return success;
+}
+
+
+static keyPressErr_t connectKeyPressSubclass(RexxMethodContext *c, CSTRING methodName, CSTRING keys, CSTRING filter,
+                                             pCDialogControl pcdc)
+{
+    keyPressErr_t result = nameErr;
+    if ( ! requiredComCtl32Version(c, c->GetMessageName(), COMCTL32_6_0) )
+    {
+        goto done_out;
+    }
+    if ( *methodName == '\0' )
+    {
+        c->RaiseException1(Rexx_Error_Invalid_argument_null, TheOneObj);
+        goto done_out;
+    }
+    if ( *keys == '\0' )
+    {
+        c->RaiseException1(Rexx_Error_Invalid_argument_null, TheTwoObj);
+        goto done_out;
+    }
+
+    SUBCLASSDATA *pData = NULL;
+    BOOL success = GetWindowSubclass(pcdc->hCtrl, KeyPressSubclassProc, pcdc->id, (DWORD_PTR *)&pData);
+
+    // If pData is null, the subclass is not installed.  The data block needs to
+    // be allocated and then install the subclass.  Otherwise, just update the
+    // data block.
+    if ( pData == NULL )
+    {
+        pData = (SUBCLASSDATA *)LocalAlloc(LPTR, sizeof(SUBCLASSDATA));
+        if ( pData == NULL )
+        {
+            result = memoryErr;
+            goto done_out;
+        }
+
+        pData->pKeyPressData = (KEYPRESSDATA *)LocalAlloc(LPTR, sizeof(KEYPRESSDATA));
+        if ( pData->pKeyPressData == NULL )
+        {
+            LocalFree(pData);
+            result = memoryErr;
+            goto done_out;
+        }
+
+        pCPlainBaseDialog pcpbd = dlgToCSelf(c, pcdc->oDlg);
+
+        pData->hCtrl = pcdc->hCtrl;
+        pData->uID = pcdc->id;
+        pData->pMessageQueue = pcpbd->dlgAdm->pMessageQueue;
+
+        result = setKeyPressData(pData->pKeyPressData, methodName, keys, filter);
+        if ( result == noErr || result == badFilterErr || result == keyMapErr )
+        {
+            if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pData) == 0 )
+            {
+                result = winAPIErr;
+            }
+        }
+        else
+        {
+            LocalFree(pData);
+        }
+    }
+    else
+    {
+        if ( success )
+        {
+            result = setKeyPressData(pData->pKeyPressData, methodName, keys, filter);
+        }
+        else
+        {
+            result = winAPIErr;
+        }
+    }
+
+done_out:
+    return result;
+}
+
+
 /** DialogControl::new()
  *
  *
@@ -384,6 +552,126 @@ RexxMethod1(RexxObjectPtr, dlgctrl_unInit, CSELF, pCSelf)
             pcwb->rexxHwnd = TheZeroObj;
         }
     } return NULLOBJECT;
+}
+
+RexxMethod4(int32_t, dlgctrl_connectKeyPress, CSTRING, methodName, CSTRING, keys, OPTIONAL_CSTRING, filter,
+            CSELF, pCSelf)
+{
+    keyPressErr_t result = connectKeyPressSubclass(context, methodName, keys, filter, (pCDialogControl)pCSelf);
+    if ( result == memoryErr )
+    {
+        outOfMemoryException(context->threadContext);
+    }
+    return -(int32_t)result;
+}
+
+RexxMethod2(int32_t, dlgctrl_connectFKeyPress, CSTRING, methodName, CSELF, pCSelf)
+{
+    keyPressErr_t result = connectKeyPressSubclass(context, methodName, "FKEYS", NULL, (pCDialogControl)pCSelf);
+    if ( result == memoryErr )
+    {
+        outOfMemoryException(context->threadContext);
+    }
+    return -(int32_t)result;
+}
+
+RexxMethod2(int32_t, dlgctrl_disconnectKeyPress, OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
+{
+    char *tmpName = NULL;
+    keyPressErr_t result = winAPIErr;
+
+    if ( ! requiredComCtl32Version(context, context->GetMessageName(), COMCTL32_6_0) )
+    {
+        goto done_out;
+    }
+
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    SUBCLASSDATA *pData = NULL;
+    BOOL success = GetWindowSubclass(pcdc->hCtrl, KeyPressSubclassProc, pcdc->id, (DWORD_PTR *)&pData);
+
+    // If success, the subclass is still installed, otherwise the subclass has
+    // already been removed, (or never existed.)
+    if ( success )
+    {
+        // If no method name, remove the whole thing.
+        if ( argumentOmitted(1) )
+        {
+            result = (removeKeyPressSubclass(pData, pcdc->hDlg, pcdc->id) ? noErr : winAPIErr);
+            goto done_out;
+        }
+
+        // Have a method name, just remove that method from the mapping.
+        tmpName = strdupupr(methodName);
+        if ( tmpName == NULL )
+        {
+            result = memoryErr;
+            goto done_out;
+        }
+
+        success = FALSE;  // Reuse the success variable.
+        uint32_t index = seekKeyPressMethod(pData->pKeyPressData, tmpName);
+        if ( index == 0 )
+        {
+            result = nameErr;
+            goto done_out;
+        }
+
+        // If only 1 method left, remove the subclass entirely.  Otherwise,
+        // remove the subclass, fix up the subclass data block, then reinstall
+        // the subclass.
+        if ( pData->pKeyPressData->usedMethods == 1 )
+        {
+            success = removeKeyPressSubclass(pData, pcdc->hDlg, pcdc->id);
+        }
+        else
+        {
+            if ( SendMessage(pcdc->hDlg, WM_USER_SUBCLASS_REMOVE, (WPARAM)KeyPressSubclassProc, (LPARAM)pcdc->id) )
+            {
+                removeKeyPressMethod(pData->pKeyPressData, index);
+                success = (BOOL)SendMessage(pcdc->hDlg, WM_USER_SUBCLASS, (WPARAM)KeyPressSubclassProc, (LPARAM)pData);
+            }
+        }
+        result = (success ? noErr : winAPIErr);
+    }
+
+done_out:
+    return -(int32_t)result;
+}
+
+RexxMethod2(logical_t, dlgctrl_hasKeyPressConnection, OPTIONAL_CSTRING, methodName, CSELF, pCSelf)
+{
+    if ( ComCtl32Version <  COMCTL32_6_0 )
+    {
+        return FALSE;
+    }
+
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    SUBCLASSDATA *pData = NULL;
+    if ( ! GetWindowSubclass(pcdc->hCtrl, KeyPressSubclassProc, pcdc->id, (DWORD_PTR *)&pData) )
+    {
+        return FALSE;
+    }
+    if ( pData == NULL )
+    {
+        return FALSE;
+    }
+    if ( argumentOmitted(1) )
+    {
+        return TRUE;
+    }
+
+    char *tmpName = strdupupr(methodName);
+    if ( tmpName == NULL )
+    {
+        outOfMemoryException(context->threadContext);
+        return FALSE;
+    }
+
+    BOOL exists = (seekKeyPressMethod(pData->pKeyPressData, tmpName) > 0);
+    free(tmpName);
+    return exists;
 }
 
 /** DialogControl::getTextSizeDlg()

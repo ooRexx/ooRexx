@@ -486,6 +486,7 @@ extern RexxObjectPtr TheTrueObj;
 extern RexxObjectPtr TheFalseObj;
 extern RexxObjectPtr TheNilObj;
 extern RexxObjectPtr TheZeroObj;
+extern RexxObjectPtr TheTwoObj;
 extern RexxObjectPtr TheOneObj;
 extern RexxObjectPtr TheNegativeOneObj;
 extern RexxDirectoryObject TheDotLocalObj;

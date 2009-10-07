@@ -85,42 +85,15 @@
    use strict arg msgToRise
    self~addUserMsg(msgToRise, 0x00000215, 0xFFFFFFFF, 0, 0, 0, 0)
 
--- The following methods map or unmap keyboard events to a method.
-
-::method connectFKeyPress unguarded
-   use strict arg msgToRaise
-   if \ msgToRaise~isA(.String) then return -1
-   return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, "FKEYS", "NONE")
-
-::method connectKeyPress unguarded
-   use strict arg msgToRaise, keys, filter = ""
-   if \ msgToRaise~isA(.String) | \ keys~isA(.String) | \ filter~isA(.String) then return -1
-   if filter == "" then return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0))
-   return WinAPI32Func("K", 'C', self~adm, self~dlgHandle, msgToRaise~translate, keys~space(0), filter~translate)
-
-::method disconnectKeyPress unguarded
-   use arg msgToRaise
-   if arg(1, 'O') then return WinAPI32Func("K", 'R', self~adm)
-   if \ msgToRaise~isA(.String) then return -1
-   return WinAPI32Func("K", 'R', self~adm, self~dlgHandle, msgToRaise~translate)
-
-::method hasKeyPressConnection unguarded
-   use arg msgToRaise
-   if arg(1, 'O') then ret = WinAPI32Func("K", 'Q', self~adm)
-   else do
-      if \ msgToRaise~isA(.String) then ret = .false
-      else ret = WinAPI32Func("K", 'Q', self~adm, msgToRaise~translate)
-   end
-   if \ ret~datatype('O') then return .false
-   else return ret
+-- These methods map or unmap keyboard events to a method, or query if the mapping exists.
+::method connectKeyPress unguarded external "LIBRARY oodialog en_connectKeyPress"
+::method connectFKeyPress unguarded external "LIBRARY oodialog en_connectFKeyPress"
+::method disconnectKeyPress unguarded external "LIBRARY oodialog en_disconnectKeyPress"
+::method hasKeyPressConnection unguarded external "LIBRARY oodialog en_hasKeyPressConnection"
 
 -- The following methods map the notification events of a dialog control to a method.
 
-::method connectCommandEvents
-   use strict arg id, msgToRise
-   if \ id~dataType("W") then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return self~addUserMsg(msgToRise, 0x00000111, 0xFFFFFFFF, id, 0x0000FFFF, 0, 0)
+::method connectCommandEvents external "LIBRARY oodialog en_connectCommandEvents"
 
 ::method connectNotifyEvent
    use strict arg id, type, msgToRise = ""

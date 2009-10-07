@@ -91,11 +91,11 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
  * @param c
  * @param pcpbd
  */
-void noWindowsDialogException(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
+void noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg)
 {
     TCHAR buf[512];
     _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the Windows dialog does not exist.",
-              c->GetMessageName(), c->ObjectToStringValue(pcpbd->rexxSelf));
+              c->GetMessageName(), c->ObjectToStringValue(rxDlg));
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
 }
 

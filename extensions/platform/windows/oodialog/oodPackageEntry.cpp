@@ -61,6 +61,7 @@ RexxPointerObject   TheNullPtrObj = NULLOBJECT;
 RexxDirectoryObject TheDotLocalObj = NULLOBJECT;
 RexxObjectPtr       TheZeroObj = NULLOBJECT;
 RexxObjectPtr       TheOneObj = NULLOBJECT;
+RexxObjectPtr       TheTwoObj = NULLOBJECT;
 RexxObjectPtr       TheNegativeOneObj = NULLOBJECT;
 
 // Initialized in the PlainBaseDialog class init method (pbdlg_init_cls).
@@ -204,8 +205,13 @@ REXX_METHOD_PROTOTYPE(wb_getText);
 REXX_METHOD_PROTOTYPE(wb_setText);
 REXX_METHOD_PROTOTYPE(wb_getWindowLong_pvt);
 
-REXX_METHOD_PROTOTYPE(en_addUserMessage);
 REXX_METHOD_PROTOTYPE(en_init_eventNotification);
+REXX_METHOD_PROTOTYPE(en_connectKeyPress);
+REXX_METHOD_PROTOTYPE(en_connectFKeyPress);
+REXX_METHOD_PROTOTYPE(en_disconnectKeyPress);
+REXX_METHOD_PROTOTYPE(en_hasKeyPressConnection);
+REXX_METHOD_PROTOTYPE(en_connectCommandEvents);
+REXX_METHOD_PROTOTYPE(en_addUserMessage);
 
 REXX_METHOD_PROTOTYPE(window_init);
 REXX_METHOD_PROTOTYPE(window_unInit);
@@ -329,6 +335,10 @@ REXX_METHOD_PROTOTYPE(il_handle);
 REXX_METHOD_PROTOTYPE(dlgctrl_new_cls);
 REXX_METHOD_PROTOTYPE(dlgctrl_init);
 REXX_METHOD_PROTOTYPE(dlgctrl_unInit);
+REXX_METHOD_PROTOTYPE(dlgctrl_connectKeyPress);
+REXX_METHOD_PROTOTYPE(dlgctrl_connectFKeyPress);
+REXX_METHOD_PROTOTYPE(dlgctrl_disconnectKeyPress);
+REXX_METHOD_PROTOTYPE(dlgctrl_hasKeyPressConnection);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
 
 // ListView
@@ -556,6 +566,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_getWindowLong_pvt,         wb_getWindowLong_pvt),
 
     REXX_METHOD(en_init_eventNotification,   en_init_eventNotification),
+    REXX_METHOD(en_connectKeyPress,          en_connectKeyPress),
+    REXX_METHOD(en_connectFKeyPress,         en_connectFKeyPress),
+    REXX_METHOD(en_disconnectKeyPress,       en_disconnectKeyPress),
+    REXX_METHOD(en_hasKeyPressConnection,    en_hasKeyPressConnection),
+    REXX_METHOD(en_connectCommandEvents,     en_connectCommandEvents),
     REXX_METHOD(en_addUserMessage,           en_addUserMessage),
 
     REXX_METHOD(pbdlg_init_cls,                pbdlg_init_cls),
@@ -626,10 +641,14 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dyndlg_stop,                  dyndlg_stop),
     REXX_METHOD(dyndlg_stopDynamic_pvt,       dyndlg_stopDynamic_pvt),
 
-    REXX_METHOD(dlgctrl_new_cls,              dlgctrl_new_cls),
-    REXX_METHOD(dlgctrl_init,                 dlgctrl_init),
-    REXX_METHOD(dlgctrl_unInit,               dlgctrl_unInit),
-    REXX_METHOD(dlgctrl_getTextSizeDlg,       dlgctrl_getTextSizeDlg),
+    REXX_METHOD(dlgctrl_new_cls,                dlgctrl_new_cls),
+    REXX_METHOD(dlgctrl_init,                   dlgctrl_init),
+    REXX_METHOD(dlgctrl_unInit,                 dlgctrl_unInit),
+    REXX_METHOD(dlgctrl_connectKeyPress,        dlgctrl_connectKeyPress),
+    REXX_METHOD(dlgctrl_connectFKeyPress,       dlgctrl_connectFKeyPress),
+    REXX_METHOD(dlgctrl_disconnectKeyPress,     dlgctrl_disconnectKeyPress),
+    REXX_METHOD(dlgctrl_hasKeyPressConnection,  dlgctrl_hasKeyPressConnection),
+    REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
 
     REXX_METHOD(window_init,                  window_init),
     REXX_METHOD(window_unInit,                window_unInit),

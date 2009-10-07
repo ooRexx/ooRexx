@@ -135,32 +135,10 @@
 ::method IsMouseButtonDown
    forward to (self~oDlg)
 
-::method ConnectFKeyPress unguarded
-   use strict arg msgToRaise
-   if \ msgToRaise~isA(.String) then return -1
-   return HandleControlEx(self~hDlg, self~id, 'K', 'C', self~oDlg~adm, msgToRaise~translate, "FKEYS", "NONE")
-
-::method ConnectKeyPress unguarded
-   use strict arg msgToRaise, keys, filter = ""
-   if \ msgToRaise~isA(.String) | \ keys~isA(.String) | \ filter~isA(.String) then return -1
-   if filter == "" then return HandleControlEx(self~hDlg, self~id, 'K', 'C', self~oDlg~adm, msgToRaise~translate, keys~space(0))
-   return HandleControlEx(self~hDlg, self~id, 'K', 'C', self~oDlg~adm, msgToRaise~translate, keys~space(0), filter~translate)
-
-::method DisconnectKeyPress unguarded
-   use arg msgToRaise
-   if arg(1, 'O') then return HandleControlEx(self~hDlg, self~id, 'K', 'R')
-   if \ msgToRaise~isA(.String) then return -1
-   return HandleControlEx(self~hDlg, self~id, 'K', 'R', msgToRaise~translate)
-
-::method HasKeyPressConnection unguarded
-   use arg msgToRaise
-   if arg(1, 'O') then ret = HandleControlEx(self~hDlg, self~id, 'K', 'Q')
-   else do
-      if \ msgToRaise~isA(.String) then ret = .false
-      else ret = HandleControlEx(self~hDlg, self~id, 'K', 'Q', msgToRaise~translate)
-   end
-   if \ ret~datatype('O') then return .false
-   else return ret
+::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
+::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
+::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"
+::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
 
    /* Redraws the given rectangle */
 ::method RedrawRect unguarded

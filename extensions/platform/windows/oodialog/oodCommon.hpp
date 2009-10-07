@@ -162,7 +162,7 @@ extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
 extern void ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
-extern void noWindowsDialogException(RexxMethodContext *c, pCPlainBaseDialog pcpbd);
+extern void noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
 extern inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
 
 extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);

@@ -2231,7 +2231,7 @@ RexxMethod4(RexxObjectPtr, catdlg_getControlDataPage, RexxObjectPtr, rxID,  OPTI
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
     if ( pcpbd->hDlg == NULL )
     {
-        noWindowsDialogException(context, pcpbd);
+        noWindowsDialogException(context, pcpbd->rexxSelf);
         return TheNegativeOneObj;
     }
 
@@ -2271,7 +2271,7 @@ RexxMethod5(int32_t, catdlg_setControlDataPage, RexxObjectPtr, rxID, CSTRING, da
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
     if ( pcpbd->hDlg == NULL )
     {
-        noWindowsDialogException(context, pcpbd);
+        noWindowsDialogException(context, pcpbd->rexxSelf);
         return -1;
     }
 
