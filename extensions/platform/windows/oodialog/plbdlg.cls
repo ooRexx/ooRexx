@@ -270,6 +270,10 @@
   -- End select
   return 0
 
+::class 'Window' public inherit WindowBase
+::method init  external "LIBRARY oodialog window_init"
+::method unInit  external "LIBRARY oodialog window_unInit"
+
 /**
  *  The PlainBaseDialog class is the base class of all ooDialog dialogs.  It
  *  implements those methods that are common to all dialogs, whether the dialog
@@ -409,12 +413,9 @@
 ::method getSelf unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
 ::method getItem unguarded external "LIBRARY oodialog pbdlg_getItem"
 
-::method getControlID unguarded
-   use strict arg hWnd
-   return WinAPI32Func("G", "ID", hWnd)
+::method getControlID unguarded external "LIBRARY oodialog pbdlg_getControlID"
 
-   /* This method shows the dialog */
-
+-- This method shows the dialog
 ::method Show unguarded
    use arg option = "NORMAL"
    if option = "" then option = "NORMAL"; else option = option~translate
@@ -422,23 +423,15 @@
    return WndShow_Pos("S",self~dlgHandle, option)
 
 
-   /* Use this method to make the dialog the front dialog */
-
+-- This method makes the dialog the front dialog.
 ::method ToTheTop unguarded
    return Wnd_Desktop("TOP",self~dlgHandle)
 
 
-::method Minimize unguarded
-   return WndShow_Pos("S",self~dlgHandle, "MIN")
-
-::method Maximize unguarded
-   return WndShow_Pos("S",self~dlgHandle, "MAX")
-
-::method IsMaximized unguarded
-   return WinAPI32Func("G", "WNDSTATE", "Z", self~dlgHandle)
-
-::method IsMinimized unguarded
-   return WinAPI32Func("G", "WNDSTATE", "I", self~dlgHandle)
+::method minimize unguarded external "LIBRARY oodialog pbdlg_doMinMax"
+::method maximize unguarded external "LIBRARY oodialog pbdlg_doMinMax"
+::method isMaximized unguarded external "LIBRARY oodialog pbdlg_doMinMax"
+::method isMinimized unguarded external "LIBRARY oodialog pbdlg_doMinMax"
 
 ::method Restore unguarded
    return WndShow_Pos("S",self~dlgHandle, "RESTORE")
@@ -630,57 +623,6 @@
       end
       id = self~dataConnection~next(id)
    end
-
--- DEPRECATED
-::method connectEntryLine unguarded
-   forward message 'connectEdit'
-::method connectMultiListBox unguarded
-   forward message 'connectListBox'
-::method connectTreeControl unguarded
-   forward message 'connectTreeView'
-::method connectListControl unguarded
-   forward message 'connectListView'
-::method connectSliderControl unguarded
-   forward message 'connectTrackBar'
-::method connectTabControl unguarded
-   forward message 'connectTab'
-
-::method getEntryLine unguarded
-   forward message 'getEditData'
-::method getListLine unguarded
-   forward message 'getListBoxData'
-::method getComboLine unguarded
-   forward message 'getComboBoxData'
-::method getCheckBox unguarded
-   forward message 'getCheckBoxData'
-::method getRadioButton unguarded
-   forward message 'getRadioButtonData'
-::method getMultiList unguarded
-   forward message 'getListBoxData'
-::method getValue unguarded
-   forward message 'getControlData'
-::method getAttrib unguarded
-   forward message 'getControlDataAttribute'
-
-::method setStaticText unguarded
-   forward message 'setStaticData'
-::method setEntryLine unguarded
-   forward message 'setEditData'
-::method setListLine unguarded
-   forward message 'setListBoxData'
-::method setComboLine unguarded
-   forward message 'setComboBoxData'
-::method setCheckBox unguarded
-   forward message 'setCheckBoxData'
-::method setRadioButton unguarded
-   forward message 'setRadioButtonData'
-::method setMultiList unguarded
-   forward message 'setListBoxData'
-::method setValue unguarded
-   forward message 'setControlData'
-::method setAttrib unguarded
-   forward message 'setControlDataAttribute'
-
 
 
 
@@ -972,29 +914,16 @@
 ::method TabToPrevious unguarded
    return Wnd_Desktop("SETFOC", self~dlgHandle, 1, "P")
 
+
+::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
 ::method getTextSize unguarded
   forward message "getTextSizeDlg" continue
   return result~width result~height
 
-::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
+::method setTabStop unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
+::method setGroup unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
 
-
- -- 2 methods to set / remove the WS_TABSTOP / WS_GROUP styles for any control.
-::method SetTabStop unguarded
-   use strict arg id, wantStop = .true
-   if \ id~datatype("W") then id = self~resolveSymbolicId(id)
-   if id == -1 then return -1
-   if \ wantStop~datatype('O')then return -3
-   return HandleControlEx(self~dlgHandle, id, "X", "TAB", wantStop)
-
-::method SetGroup unguarded
-   use strict arg id, wantGroup = .true
-   if \ id~datatype("W") then id = self~resolveSymbolicId(id)
-   if id == -1 then return -1
-   if \ wantGroup~datatype('O')then return -3
-   return HandleControlEx(self~dlgHandle, id, "X", "GROUP", wantGroup)
-
-::method Center unguarded
+::method center unguarded
    use arg showOptions
    if arg(1,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
    parse value self~GetSize with dcx dcy
@@ -1002,20 +931,16 @@
    return WndShow_Pos("P",self~dlgHandle, (s[3] - dcx * self~factorX) %2, (s[4] - dcy * self~factorY) %2, 0, 0,,
                            "NOSIZE "||showOptions)
 
+-- initAutoDetection() is invoked by init() to set the default for automatic data field detection.
+-- Therefore, subclasses can over-ride this method to change the default, which is enabled.
+::method initAutoDetection private
+   self~autoDetection            -- autodetection is enabled by default
 
-   /* This method will be called to get the default setting for the */
-   /* automatic data field detection. If you disable the ADD, you'll */
-   /* have to use the Connect... methods to assign a dialog item */
-   /* to a data stem field */
+::method noAutoDetection
+   self~autoDetect = .false      -- disable autodetection
 
-::method initAutoDetection protected /* autodetection is enabled by default */
-   self~autoDetection
-
-::method noAutoDetection    /* disable autodetection */
-   self~autoDetect = .false
-
-::method autoDetection      /* enable autodetection */
-   self~autoDetect = .true
+::method autoDetection
+   self~autoDetect = .true       -- enable autodetection
 
  /* The following methods are abstract methods that will be called */
  /* whenever the push buttons 1, 2, or 9 will be pressed */
@@ -1024,23 +949,23 @@
  /* execution will be continued */
  /* OK returns 1 if the dialog is going to be destroyed */
 
-::method OK unguarded
-   self~finished = self~Validate
+::method ok unguarded
+   self~finished = self~validate
    self~initCode = 1
    return self~finished
 
  /* If self~finished = 1 the dialog is destroyed, if 0 the dialog */
  /* execution will be continued */
 
-::method Cancel unguarded
+::method cancel unguarded
    self~finished = 1
    if self~finished = 1 then self~initCode = 2
    return self~finished
 
-::method Help unguarded
+::method help unguarded
    return 0
 
-::method Leaving
+::method leaving
    return
 
 /** validate()
@@ -1052,10 +977,56 @@
 ::method validate unguarded
    return 1
 
--- DEPRECATED
+-- DEPRECATED  (to end of file)
 ::method deInstall
   return 0
 
-::class 'Window' public inherit WindowBase
-::method init  external "LIBRARY oodialog window_init"
-::method unInit  external "LIBRARY oodialog window_unInit"
+::method connectEntryLine unguarded
+   forward message 'connectEdit'
+::method connectMultiListBox unguarded
+   forward message 'connectListBox'
+::method connectTreeControl unguarded
+   forward message 'connectTreeView'
+::method connectListControl unguarded
+   forward message 'connectListView'
+::method connectSliderControl unguarded
+   forward message 'connectTrackBar'
+::method connectTabControl unguarded
+   forward message 'connectTab'
+
+::method getEntryLine unguarded
+   forward message 'getEditData'
+::method getListLine unguarded
+   forward message 'getListBoxData'
+::method getComboLine unguarded
+   forward message 'getComboBoxData'
+::method getCheckBox unguarded
+   forward message 'getCheckBoxData'
+::method getRadioButton unguarded
+   forward message 'getRadioButtonData'
+::method getMultiList unguarded
+   forward message 'getListBoxData'
+::method getValue unguarded
+   forward message 'getControlData'
+::method getAttrib unguarded
+   forward message 'getControlDataAttribute'
+
+::method setStaticText unguarded
+   forward message 'setStaticData'
+::method setEntryLine unguarded
+   forward message 'setEditData'
+::method setListLine unguarded
+   forward message 'setListBoxData'
+::method setComboLine unguarded
+   forward message 'setComboBoxData'
+::method setCheckBox unguarded
+   forward message 'setCheckBoxData'
+::method setRadioButton unguarded
+   forward message 'setRadioButtonData'
+::method setMultiList unguarded
+   forward message 'setListBoxData'
+::method setValue unguarded
+   forward message 'setControlData'
+::method setAttrib unguarded
+   forward message 'setControlDataAttribute'
+

@@ -95,15 +95,8 @@
 ::method tabToPrevious unguarded
    return Wnd_Desktop("SETFOC", self~hDlg, 1, "P")
 
-::method tabStop unguarded
-   use arg wantStop = .true
-   if \ wantStop~datatype('O')then return -3
-   return HandleControlEx(self~hDlg, self~id, "X", "TAB", wantStop)
-
-::method group unguarded
-   use arg wantGroup = .true
-   if \ wantGroup~datatype('O')then return -3
-   return HandleControlEx(self~hDlg, self~id, "X", "GROUP", wantGroup)
+::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
+::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 
 ::method clear
    parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
@@ -797,12 +790,12 @@
 ::method AlignTop
    return HandleListCtrl("M", "ARRANGE", self~Hwnd, "TOP")
 
-::Method ItemPos
+::method ItemPos
    use arg item
    if arg(1,'o') = 1 then return -1
    return HandleListCtrl("M", "GETPOS", self~Hwnd, item)
 
-::Method SetItemPos
+::method SetItemPos
    use arg item, x, y
    if arg(1,'o') = 1 then return -1
    if arg(2,'o') = 1 then x = 0
@@ -832,24 +825,24 @@
    if arg(2,'o') = 1 then y = 0
    return HandleListCtrl("M", "SCROLL", self~Hwnd, x, y)
 
-::Method BkColor
+::method BkColor
    return HandleListCtrl("M", "COLOR", self~Hwnd, "GETBK")
 
-::Method "BkColor="
+::method "BkColor="
    use arg color
    call HandleListCtrl "M", "COLOR", self~Hwnd, "SETBK", color
 
-::Method TextColor
+::method TextColor
    return HandleListCtrl("M", "COLOR", self~Hwnd, "GETTXT")
 
-::Method "TextColor="
+::method "TextColor="
    use arg color
    call HandleListCtrl "M", "COLOR", self~Hwnd, "SETTXT", color
 
-::Method TextBkColor
+::method TextBkColor
    return HandleListCtrl("M", "COLOR", self~Hwnd, "GETTXTBK")
 
-::Method "TextBkColor="
+::method "TextBkColor="
    use arg color
    call HandleListCtrl "M", "COLOR", self~Hwnd, "SETTXTBK", color
 
@@ -1096,7 +1089,7 @@
    return HandleOtherNewCtrls("TAB","ADJUST",self~Hwnd, 0, left, top, right, bottom)
 
 
-/**********                                    Old controls                                         ****************************/
+/**********       Old controls                     ****************************/
 
 ::class 'StaticControl' subclass DialogControl public
 
@@ -1106,20 +1099,22 @@
 ::method setImage external "LIBRARY oodialog stc_setImage"
 
 
-/****************************************************** Edit Control Class *********************************************************/
+/************************* Edit Control Class *********************************/
 
 ::class 'EditControl' subclass DialogControl public
 
-::Method Selected
-    return HandleControlEx(self~hDlg, self~id, "E", "MSG", "SEL")
+::method selection external "LIBRARY oodialog e_selection"
+::method selected
+    s = self~selection
+    return s~startChar s~endChar
 
-::Method Select
+::method select
     use arg start, end
     if arg(1,'o') = 1 then start = 1
     if arg(2,'o') = 1 then end = 0
     self~Message2Parent(0x00B1, start-1, end-1)
 
-::Method ScrollCommand
+::method ScrollCommand
     use arg kind, reps
     if arg(1,'o') = 1 then kind = "UP"; else kind = kind~translate
     if arg(2,'o') = 1 then reps = 1
@@ -1133,67 +1128,67 @@
         self~Message2Parent(0x00B5, sb, 0)
     end
 
-::Method LineScroll
+::method LineScroll
     use arg cx, cy
     return \self~Message2Parent(0x00B6, cx, cy)
 
-::Method EnsureCaretVisibility
+::method EnsureCaretVisibility
     return \self~Message2Parent(0x00B7, 0, 0)
 
-::Method IsModified
+::method IsModified
     return self~Message2Parent(0x00B8, 0, 0)
 
-::Method SetModified
+::method SetModified
     use arg bool
     if arg(1,'o') = 1 then bool = 1
     self~Message2Parent(0x00B9, bool, 0)
 
-::Method Lines
+::method Lines
     return self~Message2Parent(0x00BA, 0, 0)
 
-::Method LineIndex
+::method LineIndex
     use arg line
     if arg(1,'o') = 1 then line = 0
     return self~Message2Parent(0x00BB, line-1, 0) +1
 
-::Method LineLength
+::method LineLength
     use arg line
     if arg(1,'o') = 1 then line = -1; else line = line-1
     ndx = self~Message2Parent(0x00BB, line, 0)
     return self~Message2Parent(0x00C1, ndx, 0)
 
-::Method ReplaceSelText
+::method ReplaceSelText
     use arg text
     if arg(1,'o') = 1 then return -1
     self~Message2Parent(0x00C2, 1, "T" || text)
 
-::Method SetLimit
+::method SetLimit
     use arg limit
     self~Message2Parent(0x00C5, limit, 0)
 
-::Method LineFromIndex
+::method LineFromIndex
     use arg ndx
     if arg(1,'o') = 1 then ndx = -1; else ndx = ndx -1
     return self~Message2Parent(0x00C9, ndx, 0) +1
 
-::Method "PasswordChar="
+::method "PasswordChar="
     use arg char
     self~Message2Parent(0x00CC, char~c2d, 0)
 
-::Method PasswordChar
+::method PasswordChar
     char = self~Message2Parent(0x00D2, 0, 0)
     if char \= 0 then return char~d2c
     else return ""
 
-::Method FirstVisibleLine
+::method FirstVisibleLine
     return self~Message2Parent(0x00CE, 0, 0) + 1
 
-::Method SetReadOnly
+::method SetReadOnly
     use arg bool
     if arg(1,'o') = 1 then bool = 1
     return \self~Message2Parent(0x00CF, bool, 0)
 
-::Method SetMargins
+::method SetMargins
     use arg left, right
     flag = 0
     if arg(1,'o') = 1 & arg(2,'o') = 1 then flag = "0xFFFF" /* no arguments = auto margins */
@@ -1203,7 +1198,7 @@
     end
     self~Message2Parent(0x00D3, flag, right*X2D("10000") + left)
 
-::Method Margins
+::method Margins
     marg = self~Message2Parent(0x00D4, 0, 0)
     right = .DlgUtil~hiWord(marg)
     left = .DlgUtil~loWord(marg)
@@ -1219,34 +1214,13 @@
     use arg dlgunits
     self~Message2Parent(0x00CB, 1, "L" || dlgunits)
 
-::method HideBalloon
-    return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP")
-
-::method ShowBalloon
-    use arg title, text, icon
-    if arg(3, 'E') then
-        return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP", title, text, icon~translate)
-    else
-        return HandleControlEx(self~hDlg, self~id, "E", "MSG", "TIP", title, text)
-
-::method SetCue
-    use arg text
-    return HandleControlEx(self~hDlg, self~id, "E", "MSG", "CUE", text)
-
-::method ReplaceStyle  -- Replace
-   use strict arg oldstyle, newstyle
-   return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "R", oldstyle, newstyle)
-
-::method AddStyle      -- Set
-   use strict arg style
-   return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "S", style)
-
-::method RemoveStyle   -- Clear
-   use strict arg style
-   return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "C", style)
-
-::method GetStyle
-   return HandleControlEx(self~hDlg, self~id, "X", "EDIT", "G")
+::method hideBalloon external "LIBRARY oodialog e_hideBallon"
+::method showBalloon external "LIBRARY oodialog e_showBallon"
+::method setCue external "LIBRARY oodialog e_setCue"
+::method replaceStyle external "LIBRARY oodialog e_style"
+::method addStyle external "LIBRARY oodialog e_style"
+::method removeStyle external "LIBRARY oodialog e_style"
+::method getStyle external "LIBRARY oodialog e_style"
 
 /******************* ButtonControl Classes ************************************/
 

@@ -312,21 +312,7 @@
 
 ::attribute scrollNow     -- Indicator whether or not scrolling is active
 
-::method init
-   forward class (super) continue
-   if result <> 0 then return result
-
-   self~scrollNow = 0     -- a kind of semaphore to handle multiple text scrolling
-   self~bkgBitmap = 0     -- no background bitmap
-   self~bkgBrushBmp = 0   -- no background bitmap
-   self~menuBar = .nil
-   self~isLinked = .false
-
-   return 0
-
-
-
-::method putControl private unguarded external "LIBRARY oodialog baseDlg_putControl_pvt"
+::method init external "LIBRARY oodialog baseDlg_init"
 
 ::method newStatic unguarded external "LIBRARY oodialog baseDlg_newControl"
 ::method newPushButton unguarded external "LIBRARY oodialog baseDlg_newControl"
@@ -344,6 +330,7 @@
 ::method newTrackBar unguarded external "LIBRARY oodialog baseDlg_newControl"
 ::method newMonthCalendar unguarded external "LIBRARY oodialog baseDlg_newControl"
 ::method newDateTimePicker unguarded external "LIBRARY oodialog baseDlg_newControl"
+::method putControl private unguarded external "LIBRARY oodialog baseDlg_putControl_pvt"
 
 ::method test unguarded external "LIBRARY oodialog baseDlg_test"
 

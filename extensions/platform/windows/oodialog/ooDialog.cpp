@@ -54,7 +54,6 @@ extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lpara
 extern BOOL DrawBitmapButton(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam, BOOL MsgEnabled);
 extern BOOL DrawBackgroundBmp(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lParam);
 extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-extern BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr);
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 
 static HICON GetIconForID(DIALOGADMIN *, UINT, UINT, int, int);
@@ -1721,6 +1720,94 @@ RexxMethod3(RexxObjectPtr, pbdlg_getItem, RexxObjectPtr, rxID, OPTIONAL_RexxStri
     return pointer2string(context, GetDlgItem(hDlg, id));
 }
 
+RexxMethod1(int32_t, pbdlg_getControlID, CSTRING, hwnd)
+{
+    HWND hCtrl = (HWND)string2pointer(hwnd);
+    int32_t id = -1;
+
+    if ( IsWindow(hCtrl) )
+    {
+        SetLastError(0);
+        id = GetDlgCtrlID(hCtrl);
+        if ( id == 0 )
+        {
+            id = -(int32_t)GetLastError();
+        }
+    }
+    return id == 0 ? -1 : id;
+}
+
+/** PlainBaseDialog::maximize()
+ *  PlainBaseDialog::minimize()
+ *  PlainBaseDialog::isMaximized()
+ *  PlainBaseDialog::isMinimized()
+ *
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_doMinMax, NAME, method, CSELF, pCSelf)
+{
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(context, pcpbd->rexxSelf);
+        return TheFalseObj;
+    }
+
+    if ( *method == 'M' )
+    {
+        uint32_t flag = (method[1] == 'I' ? SW_SHOWMINIMIZED : SW_SHOWMAXIMIZED);
+        return (ShowWindow(pcpbd->hDlg, flag) ? TheZeroObj : TheOneObj);
+    }
+
+    if ( method[3] == 'A' )
+    {
+        // Zoomed is Maximized.
+        return (IsZoomed(pcpbd->hDlg) ? TheTrueObj : TheFalseObj);
+    }
+
+    // Iconic is Minimized.
+    return (IsIconic(pcpbd->hDlg) ? TheTrueObj : TheFalseObj);
+}
+
+
+/** PlainBaseDialog::setTabstop()
+ *  PlainBaseDialog::setGroup()
+ */
+RexxMethod4(RexxObjectPtr, pbdlg_setTabGroup, RexxObjectPtr, rxID, OPTIONAL_logical_t, addStyle, NAME, method, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    if ( pcpbd->hDlg == NULL )
+    {
+        noWindowsDialogException(context, pcpbd->rexxSelf);
+        return TheFalseObj;
+    }
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    if ( argumentOmitted(2) )
+    {
+        addStyle = TRUE;
+    }
+
+    HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
+    uint32_t style = GetWindowLong(hCtrl, GWL_STYLE);
+
+    if ( method[3] == 'T' )
+    {
+        style = (addStyle ? (style | WS_TABSTOP) : (style & ~WS_TABSTOP));
+    }
+    else
+    {
+        style = (addStyle ? (style | WS_GROUP) : (style & ~WS_GROUP));
+    }
+    return setWindowStyle(context, hCtrl, style);
+}
+
 /** PlainBaseDialog::isDialogActive()
  *
  *  Tests if the Windows dialog is still active.
@@ -2001,6 +2088,24 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
  */
 #define BASEDIALOG_CLASS              "BaseDialog"
 #define CONTROLBAG_ATTRIBUTE          "BaseDialogControlBag"
+
+/** BaseDialog::init()
+ */
+RexxMethod3(RexxObjectPtr, baseDlg_init, ARGLIST, args, SUPER, super, OSELF, self)
+{
+    RexxObjectPtr result = context->ForwardMessage(NULL, NULL, super, NULL);
+
+    if ( isInt(0, result, context) )
+    {
+        context->SendMessage1(self, "SCROLLNOW=", TheZeroObj);
+        context->SendMessage1(self, "BKGBITMAP=", TheZeroObj);
+        context->SendMessage1(self, "BKGBRUSHBMP=", TheZeroObj);
+        context->SendMessage1(self, "MENUBAR=", context->Nil());
+        context->SendMessage1(self, "ISLINKED=", TheFalseObj);
+    }
+
+    return result;
+}
 
 
 /** BaseDialog::newXXX()
@@ -2301,70 +2406,6 @@ RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID
 RexxMethod2(RexxArrayObject, resdlg_getDataTableIDs_pvt, CSELF, pCSelf, OSELF, self)
 {
     return getDataTableIDs(context, (pCPlainBaseDialog)pCSelf, self);
-}
-
-
-/**
- * Used to access Win32 API functions not involved with sending window messages
- * to dialogs or dialog controls.  General purpose functions.
- *
- * The parameters sent from ooRexx as an array of RXString:
- *
- * argv[0]  Selects general category.
- *
- * argv[1]  Picks specific function.
- *
- * argv[2] ... argv[n]  Varies depending on the function.
- *
- * Return to ooRexx, in general:
- *  Nothing to generalize as of yet ...
- *
- */
-size_t RexxEntry WinAPI32Func(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-    /* There has to be at least 2 args. */
-    CHECKARGL(2);
-
-    if ( argv[0].strptr[0] == 'G' )         /* Get something                  */
-    {
-        if ( !strcmp(argv[1].strptr, "WNDSTATE") )      /* get Window state      */
-        {
-            HWND hWnd;
-
-            CHECKARGL(4);
-
-            hWnd = GET_HWND(argv[3]);
-            if ( hWnd == 0 || ! IsWindow(hWnd) ) RETERR
-
-            else if ( argv[2].strptr[0] == 'Z' )     /* Zoomed is Maximized */
-            {
-                RETVAL((BOOL)IsZoomed(hWnd));
-            }
-            else if ( argv[2].strptr[0] == 'I' )     /* Iconic is Minimized */
-            {
-                RETVAL((BOOL)IsIconic(hWnd));
-            }
-        }
-        else if ( !strcmp(argv[1].strptr, "ID") )       /* get dialog control ID */
-        {
-            HWND hWnd;
-            INT  id;
-
-            CHECKARGL(3);
-
-            hWnd = GET_HWND(argv[2]);
-            if ( hWnd == 0 || ! IsWindow(hWnd) ) RETVAL(-1)
-
-            SetLastError(0);
-            id = GetDlgCtrlID(hWnd);
-            if ( ! id )
-                id = -(INT)GetLastError();
-
-            RETVAL(id);
-        }
-    }
-
-    RETERR
 }
 
 

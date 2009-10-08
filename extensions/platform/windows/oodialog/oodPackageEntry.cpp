@@ -97,7 +97,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(Wnd_Desktop);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WndShow_Pos);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(WinAPI32Func);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WindowRect);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleScrollBar);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
@@ -131,7 +130,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
     REXX_CLASSIC_ROUTINE(Wnd_Desktop,          Wnd_Desktop),
     REXX_CLASSIC_ROUTINE(WndShow_Pos,          WndShow_Pos),
-    REXX_CLASSIC_ROUTINE(WinAPI32Func,         WinAPI32Func),
     REXX_CLASSIC_ROUTINE(WindowRect,           WindowRect),
     REXX_CLASSIC_ROUTINE(HandleScrollBar,      HandleScrollBar),
     REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),
@@ -146,7 +144,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(HandleTreeCtrl,       HandleTreeCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrl,       HandleListCtrl),
     REXX_CLASSIC_ROUTINE(HandleListCtrlEx,     HandleListCtrlEx),
-    REXX_CLASSIC_ROUTINE(HandleControlEx,      HandleControlEx),
     REXX_CLASSIC_ROUTINE(HandleOtherNewCtrls,  HandleOtherNewCtrls),
     REXX_CLASSIC_ROUTINE(DumpAdmin,            DumpAdmin),
 
@@ -231,6 +228,9 @@ REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
 REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
 REXX_METHOD_PROTOTYPE(pbdlg_getItem);
+REXX_METHOD_PROTOTYPE(pbdlg_getControlID);
+REXX_METHOD_PROTOTYPE(pbdlg_doMinMax);
+REXX_METHOD_PROTOTYPE(pbdlg_setTabGroup);
 REXX_METHOD_PROTOTYPE(pbdlg_connect_ControName);
 REXX_METHOD_PROTOTYPE(pbdlg_setDlgDataFromStem_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_putDlgDataInStem_pvt);
@@ -241,6 +241,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
+REXX_METHOD_PROTOTYPE(baseDlg_init);
 REXX_METHOD_PROTOTYPE(baseDlg_newControl);
 REXX_METHOD_PROTOTYPE(baseDlg_putControl_pvt);
 REXX_METHOD_PROTOTYPE(baseDlg_test);
@@ -339,7 +340,15 @@ REXX_METHOD_PROTOTYPE(dlgctrl_connectKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_connectFKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_disconnectKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_hasKeyPressConnection);
+REXX_METHOD_PROTOTYPE(dlgctrl_tabGroup);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
+
+// Edit
+REXX_METHOD_PROTOTYPE(e_selection);
+REXX_METHOD_PROTOTYPE(e_showBallon);
+REXX_METHOD_PROTOTYPE(e_hideBallon);
+REXX_METHOD_PROTOTYPE(e_setCue);
+REXX_METHOD_PROTOTYPE(e_style);
 
 // ListView
 REXX_METHOD_PROTOTYPE(lv_setImageList);
@@ -592,12 +601,16 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(plbdlg_getControlData,         plbdlg_getControlData),
     REXX_METHOD(pbdlg_setControlData,          pbdlg_setControlData),
     REXX_METHOD(pbdlg_getItem,                 pbdlg_getItem),
+    REXX_METHOD(pbdlg_getControlID,            pbdlg_getControlID),
+    REXX_METHOD(pbdlg_doMinMax,                pbdlg_doMinMax),
+    REXX_METHOD(pbdlg_setTabGroup,             pbdlg_setTabGroup),
     REXX_METHOD(pbdlg_stopIt,                  pbdlg_stopIt),
     REXX_METHOD(pbdlg_getTextSizeDlg,          pbdlg_getTextSizeDlg),
     REXX_METHOD(pbdlg_unInit,                  pbdlg_unInit),
 
     REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
 
+    REXX_METHOD(baseDlg_init,                 baseDlg_init),
     REXX_METHOD(baseDlg_newControl,           baseDlg_newControl),
     REXX_METHOD(baseDlg_putControl_pvt,       baseDlg_putControl_pvt),
     REXX_METHOD(baseDlg_test,                 baseDlg_test),
@@ -648,6 +661,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_connectFKeyPress,       dlgctrl_connectFKeyPress),
     REXX_METHOD(dlgctrl_disconnectKeyPress,     dlgctrl_disconnectKeyPress),
     REXX_METHOD(dlgctrl_hasKeyPressConnection,  dlgctrl_hasKeyPressConnection),
+    REXX_METHOD(dlgctrl_tabGroup,               dlgctrl_tabGroup),
     REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
 
     REXX_METHOD(window_init,                  window_init),
@@ -709,6 +723,12 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_columnWidthEx,         lv_columnWidthEx),      // TODO review method name
     REXX_METHOD(lv_stringWidthEx,         lv_stringWidthEx),      // TODO review method name
     REXX_METHOD(lv_addRowEx,         	  lv_addRowEx),           // TODO review method name
+
+    REXX_METHOD(e_selection,              e_selection),
+    REXX_METHOD(e_style,                  e_style),
+    REXX_METHOD(e_showBallon,             e_showBallon),
+    REXX_METHOD(e_hideBallon,             e_hideBallon),
+    REXX_METHOD(e_setCue,                 e_setCue),
 
     REXX_METHOD(tv_setImageList,          tv_setImageList),
     REXX_METHOD(tv_getImageList,          tv_getImageList),

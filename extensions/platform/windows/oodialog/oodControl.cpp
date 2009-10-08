@@ -674,6 +674,31 @@ RexxMethod2(logical_t, dlgctrl_hasKeyPressConnection, OPTIONAL_CSTRING, methodNa
     return exists;
 }
 
+/** DialogControl::tabstop()
+ *  DialogControl::group()
+ */
+RexxMethod3(RexxObjectPtr, dlgctrl_tabGroup, OPTIONAL_logical_t, addStyle, NAME, method, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+    if ( argumentOmitted(1) )
+    {
+        addStyle = TRUE;
+    }
+    uint32_t style = GetWindowLong(pcdc->hCtrl, GWL_STYLE);
+
+    if ( *method == 'T' )
+    {
+        style = (addStyle ? (style | WS_TABSTOP) : (style & ~WS_TABSTOP));
+    }
+    else
+    {
+        style = (addStyle ? (style | WS_GROUP) : (style & ~WS_GROUP));
+    }
+    return setWindowStyle(context, pcdc->hCtrl, style);
+}
+
 /** DialogControl::getTextSizeDlg()
  *
  *  Gets the size (width and height) in dialog units for any given string.
@@ -731,6 +756,230 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
         return rxNewSize(context, textSize.cx, textSize.cy);
     }
     return NULLOBJECT;
+}
+
+
+/**
+ * Methods for the Edit class.
+ */
+#define EDIT_CLASS   "Edit"
+
+#define BALLON_MAX_TITLE      99
+#define BALLON_MAX_TEXT     1023
+#define QUE_MAX_TEXT         255
+
+/**
+ * Take an edit control's window flags and construct a Rexx string that
+ * represents the control's style.
+ */
+RexxObjectPtr editStyleToString(RexxMethodContext *c, uint32_t style)
+{
+    char buf[512];
+
+    if ( style & WS_VISIBLE ) strcpy(buf, "VISIBLE");
+    else strcpy(buf, "HIDDEN");
+
+    if ( style & WS_TABSTOP ) strcat(buf, " TAB");
+    else strcat(buf, " NOTAB");
+
+    if ( style & WS_DISABLED ) strcat(buf, " DISABLED");
+    else strcat(buf, " ENABLED");
+
+    if ( style & WS_GROUP )       strcat(buf, " GROUP");
+    if ( style & WS_HSCROLL )     strcat(buf, " HSCROLL");
+    if ( style & WS_VSCROLL )     strcat(buf, " VSCROLL");
+    if ( style & ES_PASSWORD )    strcat(buf, " PASSWORD");
+    if ( style & ES_MULTILINE )   strcat(buf, " MULTILINE");
+    if ( style & ES_AUTOHSCROLL ) strcat(buf, " AUTOSCROLLH");
+    if ( style & ES_AUTOVSCROLL ) strcat(buf, " AUTOSCROLLV");
+    if ( style & ES_READONLY )    strcat(buf, " READONLY");
+    if ( style & ES_WANTRETURN )  strcat(buf, " WANTRETURN");
+    if ( style & ES_NOHIDESEL )   strcat(buf, " KEEPSELECTION");
+    if ( style & ES_UPPERCASE )   strcat(buf, " UPPER");
+    if ( style & ES_LOWERCASE )   strcat(buf, " LOWER");
+    if ( style & ES_NUMBER )      strcat(buf, " NUMBER");
+    if ( style & ES_OEMCONVERT )  strcat(buf, " OEM");
+
+    if ( style & ES_RIGHT ) strcat(buf, " RIGHT");
+    else if ( style & ES_CENTER ) strcat(buf, " CENTER");
+    else strcat(buf, " LEFT");
+
+    return c->String(buf);
+}
+
+/**
+ * Parse an edit control style string sent from ooDialog into the corresponding
+ * style flags.
+ *
+ * Note that this is meant to only deal with the styles that can be changed
+ * after the control is created through SetWindowLong.
+ */
+uint32_t parseEditStyle(CSTRING keyWords)
+{
+    uint32_t style = 0;
+
+    if ( StrStrI(keyWords, "UPPER"     ) ) style |= ES_UPPERCASE;
+    if ( StrStrI(keyWords, "LOWER"     ) ) style |= ES_LOWERCASE;
+    if ( StrStrI(keyWords, "NUMBER"    ) ) style |= ES_NUMBER;
+    if ( StrStrI(keyWords, "WANTRETURN") ) style |= ES_WANTRETURN;
+    if ( StrStrI(keyWords, "OEM"       ) ) style |= ES_OEMCONVERT;
+
+    /* Although these styles can be changed by individual ooDialog methods, as
+     * a convenience, allow the programmer to include them when changing
+     * multiple styles at once.
+     */
+    if ( StrStrI(keyWords, "TAB"  ) ) style |= WS_TABSTOP;
+    if ( StrStrI(keyWords, "GROUP") ) style |= WS_GROUP;
+
+    return style;
+}
+
+RexxMethod1(RexxObjectPtr, e_selection, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    uint32_t start, end;
+    SendMessage(pcdc->hCtrl, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+
+    RexxDirectoryObject result = context->NewDirectory();
+    context->DirectoryPut(result, context->UnsignedInt32(++start), "STARTCHAR");
+    context->DirectoryPut(result, context->UnsignedInt32(++end), "ENDCHAR");
+    return result;
+}
+
+
+RexxMethod1(RexxObjectPtr, e_hideBallon, CSELF, pCSelf)
+{
+    if ( ! requiredComCtl32Version(context, context->GetMessageName(), COMCTL32_6_0)  )
+    {
+        return TheOneObj;
+    }
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+    return (Edit_HideBalloonTip(pcdc->hCtrl) ? TheZeroObj : TheOneObj);
+}
+
+
+RexxMethod4(RexxObjectPtr, e_showBallon, CSTRING, title, CSTRING, text, OPTIONAL_CSTRING, icon, CSELF, pCSelf)
+{
+    if ( ! requiredComCtl32Version(context, context->GetMessageName(), COMCTL32_6_0)  )
+    {
+        return TheOneObj;
+    }
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    EDITBALLOONTIP tip;
+    WCHAR wszTitle[128];
+    WCHAR wszText[BALLON_MAX_TEXT + 1];
+
+    // The title string has a limit of 99 characters / text is limited to 1023.
+    if ( strlen(title) > BALLON_MAX_TITLE )
+    {
+        stringTooLongException(context->threadContext, 1, BALLON_MAX_TITLE, strlen(title));
+        return TheOneObj;
+    }
+    if ( strlen(text) > BALLON_MAX_TEXT )
+    {
+        stringTooLongException(context->threadContext, 2, BALLON_MAX_TEXT, strlen(title));
+        return TheOneObj;
+    }
+
+    putUnicodeText((LPWORD)wszTitle, title);
+    putUnicodeText((LPWORD)wszText, text);
+
+    tip.cbStruct = sizeof(tip);
+    tip.pszText = wszText;
+    tip.pszTitle = wszTitle;
+    tip.ttiIcon = TTI_INFO;
+
+    if ( argumentExists(3) )
+    {
+        switch( toupper(*icon) )
+        {
+            case 'E' :
+                tip.ttiIcon = TTI_ERROR;
+                break;
+            case 'N' :
+                tip.ttiIcon = TTI_NONE;
+                break;
+            case 'W' :
+                tip.ttiIcon = TTI_WARNING;
+                break;
+        }
+    }
+    return (Edit_ShowBalloonTip(pcdc->hCtrl, &tip) ? TheZeroObj : TheOneObj);
+}
+
+/* Note that the EM_GETCUEBANNER simply does not work.  At least on XP.  So
+ * the code is removed.  But, it might be worth trying on Vista.
+ */
+
+
+RexxMethod2(RexxObjectPtr, e_setCue, CSTRING, text, CSELF, pCSelf)
+{
+    if ( ! requiredComCtl32Version(context, context->GetMessageName(), COMCTL32_6_0)  )
+    {
+        return TheOneObj;
+    }
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    // The text is limited to 255.
+    WCHAR wszCue[QUE_MAX_TEXT + 1];
+    if ( strlen(text) > QUE_MAX_TEXT )
+    {
+        stringTooLongException(context->threadContext, 1, QUE_MAX_TEXT, strlen(text));
+        return TheOneObj;
+    }
+
+    putUnicodeText((LPWORD)wszCue, text);
+    return (Edit_SetCueBannerText(pcdc->hCtrl, wszCue) ? TheZeroObj : TheOneObj);
+}
+
+
+/** Edit::getStyle()
+ *  Edit::replaceStyle()
+ *  Edit::removeStyle()
+ *  Edit::addStyle()
+ *
+ *  @param  _style1  Style to add for addStyle(), style to remove for
+ *                   removeStyle() and replaceStyle().
+ *  @param  _style2  Style to add for replaceStyle().
+ */
+RexxMethod4(RexxObjectPtr, e_style, OPTIONAL_CSTRING, _style1, OPTIONAL_CSTRING, _style2, NAME, method, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    uint32_t style = GetWindowLong(pcdc->hCtrl, GWL_STYLE);
+    if ( *method == 'G' )
+    {
+        return editStyleToString(context, style);
+    }
+
+    if ( argumentOmitted(1) )
+    {
+        return missingArgException(context->threadContext, 1);
+    }
+
+    uint32_t style1 = parseEditStyle(_style1);
+    if ( *method == 'A' )
+    {
+        style |= style1;
+    }
+    else if ( method[2] == 'M' )
+    {
+        style &= ~style1;
+    }
+    else
+    {
+        if ( argumentOmitted(2) )
+        {
+            return missingArgException(context->threadContext, 2);
+        }
+
+        uint32_t style2 = parseEditStyle(_style2);
+        style = (style & ~style1) | style2;
+    }
+    return setWindowStyle(context, pcdc->hCtrl, style);
 }
 
 

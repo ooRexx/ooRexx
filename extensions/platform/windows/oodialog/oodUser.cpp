@@ -223,7 +223,7 @@ static uint32_t getExpectedCount(RexxMethodContext *c, RexxArrayObject args)
  *
  * @return True on success, false on error.
  *
- * @note  addUnicodeText() is designed to handle, and do the 'right' thing, for
+ * @note  putUnicodeText() is designed to handle, and do the 'right' thing, for
  *        both a null pointer and an empty string.  That is why no check for
  *        null is needed for title, dlgClass, or fontname.
  */
@@ -254,15 +254,15 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDi
     // Copy the class of the dialog.  Really there should be a check that style
     // does not contain WS_CHILD, but currently dlgClass is always null so this
     // works.
-    p += addUnicodeText(p, dlgClass);
+    p += putUnicodeText(p, dlgClass);
 
     // Copy the title of the dialog.
-    p += addUnicodeText(p, title);
+    p += putUnicodeText(p, title);
 
     // Add in the wPointSize and szFontName here.  Really this should only be if
     // the DS_SETFONT bit on. But currently it is always set.
     *p++ = fontSize;
-    p += addUnicodeText(p, fontName);
+    p += putUnicodeText(p, fontName);
 
     // make sure the first item starts on a DWORD boundary
     p = lpwAlign(p);
@@ -288,7 +288,7 @@ bool startDialogTemplate(RexxMethodContext *c, DLGTEMPLATE **ppBase, pCDynamicDi
  * @param txt
  * @param style
  *
- * @note  addUnicodeText() is designed to handle, and do the 'right' thing, for
+ * @note  putUnicodeText() is designed to handle, and do the 'right' thing, for
  *        both a null pointer and an empty string.  That is why no check for
  *        null is needed for txt.  On the other hand className must be checked
  *        because that is how we determine if the control is being identified
@@ -316,10 +316,10 @@ void addToDialogTemplate(pCDynamicDialog pcdd, SHORT kind, const char *className
    }
    else
    {
-       p += addUnicodeText(p, className);
+       p += putUnicodeText(p, className);
    }
 
-   p += addUnicodeText(p, txt);
+   p += putUnicodeText(p, txt);
 
    *p++ = 0;  // advance pointer over nExtraStuff WORD
 

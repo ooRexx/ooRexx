@@ -95,6 +95,24 @@ extern bool            isOfClassType(RexxMethodContext *, RexxObjectPtr, CSTRING
 extern void            dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 
 
+/**
+ *  Missing argument in method; argument 'argument' is required
+ *
+ *  Missing argument in method; argument 2 is required
+ *
+ *  Raises 93.903
+ *
+ * @param c    The thread context we are operating under.
+ * @param pos  The 'argument' position.
+ *
+ * @return NULLOBJECT
+ */
+inline RexxObjectPtr missingArgException(RexxThreadContext *c, int argPos)
+{
+    c->RaiseException1(Rexx_Error_Incorrect_method_noarg, c->WholeNumber(argPos));
+    return NULLOBJECT;
+}
+
 inline RexxObjectPtr rxNewBag(RexxMethodContext *c)
 {
     return rxNewBuiltinObject(c, "BAG");
@@ -109,5 +127,6 @@ inline RexxObjectPtr rxNewQueue(RexxMethodContext *c)
 {
     return rxNewBuiltinObject(c, "QUEUE");
 }
+
 
 #endif

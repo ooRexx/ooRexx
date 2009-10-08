@@ -507,9 +507,9 @@ BOOL CppMenu::addTemplateMenuItem(DWORD menuID, DWORD dwType, DWORD dwState, DWO
     // The menu item strings must be unicode.  This works correctly for the
     // empty string.  p now points to the position in the template for the
     // string.  If there is no string, then this position still needs to be set
-    // with the wide character null.  addUnicodeText() will handle both the
+    // with the wide character null.  putUnicodeText() will handle both the
     // empty string or text == NULL.
-    p += addUnicodeText(p, text);
+    p += putUnicodeText(p, text);
 
     // Need to be double word aligned now.
     pCurrentTemplatePos = (DWORD *)lpwAlign(p);

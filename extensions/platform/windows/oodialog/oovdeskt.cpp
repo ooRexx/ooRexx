@@ -377,8 +377,6 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
             */
            if (strstr(argv[2].strptr, "HIDE")) k = SW_HIDE; else
            if (strstr(argv[2].strptr, "NORMAL") || strstr(argv[2].strptr, "DEFAULT")) k = SW_SHOWNORMAL; else
-           if (strstr(argv[2].strptr, "MIN")) k = SW_SHOWMINIMIZED; else
-           if (strstr(argv[2].strptr, "MAX")) k = SW_SHOWMAXIMIZED; else
            if (strstr(argv[2].strptr, "RESTORE")) k = SW_RESTORE; else
            if (strstr(argv[2].strptr, "INACTIVE")) k = SW_SHOWNA; else
            k = SW_SHOW;

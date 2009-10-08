@@ -891,7 +891,58 @@ int getKeywordValue(String2Int *cMap, const char * str)
 
 
 /**
- *  Converts an ANSI character string to a wide (Unicode) character string.
+ * Sets a window style and returns the old window style, with checks for error.
+ *
+ * @param c       The method context we are operating in.
+ * @param hwnd    Handle of window having its style changed / set.
+ * @param style   The style to be set.
+ *
+ * @return The old style on success, otherwise a number less than 0.
+ *
+ * @remarks  Prior to the introduction of the C++ native API, it was difficult
+ *           to convey system errors back to the Rexx programmer on failure.
+ *           One convention was to return the negated system error code.  With
+ *           the C++ API, it is much better to return negative one and set
+ *           .SystemErrorCode.
+ *
+ *           However, some of the methods using this function were already
+ *           documented as returning the negated system error code.  So, this
+ *           function does both.
+ */
+RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style)
+{
+    oodResetSysErrCode(c->threadContext);
+    SetLastError(0);
+
+    RexxObjectPtr result;
+    style = SetWindowLong(hwnd, GWL_STYLE, style);
+
+    /* SetWindowLong returns 0 on error, or the value of the previous long at
+     * the specified index.  Very unlikely that the last style was 0, but assume
+     * it is possible.  In that case, 0 is only an error if GetLastError does
+     * not return 0.
+     */
+    if ( style == 0 )
+    {
+        result = TheZeroObj;
+        uint32_t rc = GetLastError();
+        if ( rc != 0 )
+        {
+            oodSetSysErrCode(c->threadContext, rc);
+            result = c->WholeNumber(-(wholenumber_t)rc);
+        }
+    }
+    else
+    {
+        result = c->UnsignedInt32(style);
+    }
+    return result;
+}
+
+
+/**
+ *  Converts an ANSI character string to a wide (Unicode) character string and
+ *  puts it in the specified buffer.
  *
  *  This is a convenience function that assumes the caller has passed a buffer
  *  known to be big enough.
@@ -910,7 +961,7 @@ int getKeywordValue(String2Int *cMap, const char * str)
  *         always be at least one, if an error occurs, the wide character null
  *         is copied to the destination and 1 is returned.
  */
-int addUnicodeText(LPWORD dest, const char *text)
+int putUnicodeText(LPWORD dest, const char *text)
 {
     int count = 1;
     if ( text == NULL )
