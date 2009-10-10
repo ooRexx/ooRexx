@@ -257,12 +257,12 @@ any:
 
   say "renaming work files..."
       -- rename original database file name to backup file name
-  cmdText="ren" dbFileName filespec("Name", newBkpFileName)
+  cmdText="ren" '"'dbFileName'"' filespec("Name", newBkpFileName)
   say "DOS command:" pp(cmdText)
   address cmd cmdText               -- use ADDRESS CMD explicitly
 
       -- now rename new compressed file to original databse file name
-  cmdText="ren" compressedName filespec("Name", dbFileName)
+  cmdText="ren" '"'compressedName'"' filespec("Name", dbFileName)
   say "DOS command:" pp(cmdText)
   cmdText                           -- this uses ADDRESS CMD implicitly
   say center(" end of compressAndRepair ", 70, "-")
