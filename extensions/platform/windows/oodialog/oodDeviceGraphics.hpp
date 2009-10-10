@@ -36,15 +36,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-#ifndef oodData_Included
-#define oodData_Included
+#ifndef oodDeviceGraphics_Included
+#define oodDeviceGraphics_Included
 
-extern uint32_t        setDlgDataFromStem(RexxMethodContext *, pCPlainBaseDialog, RexxStemObject);
-extern uint32_t        putDlgDataInStem(RexxMethodContext *, pCPlainBaseDialog, RexxStemObject);
-extern RexxObjectPtr   getControlData(RexxMethodContext *, pCPlainBaseDialog, uint32_t, HWND, oodControl_t);
-extern int32_t         setControlData(RexxMethodContext *, pCPlainBaseDialog, uint32_t, CSTRING, HWND, oodControl_t);
-extern uint32_t        addToDataTable(RexxMethodContext *, DIALOGADMIN *, int, oodControl_t, uint32_t);
-extern RexxArrayObject getDataTableIDs(RexxMethodContext *, pCPlainBaseDialog, RexxObjectPtr);
-extern bool            doDataAutoDetection(RexxMethodContext *, DIALOGADMIN *);
+extern RexxObjectPtr clearRect(RexxMethodContext *c, HWND hwnd, PRECT rect);
 
 #endif

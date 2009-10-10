@@ -161,9 +161,9 @@ extern DIALOGADMIN *    rxGetDlgAdm(RexxMethodContext *, RexxObjectPtr);
 
 extern BOOL AddTheMessage(DIALOGADMIN *, UINT, UINT, WPARAM, ULONG_PTR, LPARAM, ULONG_PTR, CSTRING, ULONG);
 
-extern void ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
-extern void noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
-extern inline void failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
+extern void          ooDialogInternalException(RexxMethodContext *, char *, int, char *, char *);
+extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
+extern inline void   failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
 
 extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
 extern uint32_t   oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
@@ -182,6 +182,7 @@ extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int
 extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
 extern PRECT         rxGetRect(RexxMethodContext *context, RexxObjectPtr r, int argPos);
 extern RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long b);
+extern RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r);
 extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos);
 extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
 
@@ -203,6 +204,9 @@ extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd,
 extern int           getKeywordValue(String2Int *cMap, const char * str);
 extern RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
 extern int           putUnicodeText(LPWORD dest, const char *text);
+extern bool          goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max, size_t *arraySize);
+extern bool          getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, int *);
+extern bool          getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, int *);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;

@@ -3984,7 +3984,7 @@ RexxMethod1(RexxObjectPtr, bc_getTextMargin, OSELF, self)
     RECT r;
     if ( Button_GetTextMargin(hwnd, &r) )
     {
-        result = rxNewRect(context, r.left, r.top, r.right, r.bottom);
+        result = rxNewRect(context, &r);
     }
     return (result == NULL) ? TheNilObj : result;
 }

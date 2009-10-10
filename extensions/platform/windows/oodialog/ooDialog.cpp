@@ -48,6 +48,7 @@
 #include "oodMessaging.hpp"
 #include "oodText.hpp"
 #include "oodData.hpp"
+#include "oodDeviceGraphics.hpp"
 #include "oodResourceIDs.hpp"
 
 extern MsgReplyType SearchMessageTable(ULONG message, WPARAM param, LPARAM lparam, DIALOGADMIN * addressedTo);
@@ -614,25 +615,6 @@ DWORD WINAPI WindowLoopThread(void *arg)
 }
 
 
-size_t RexxEntry GetDialogFactor(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   ULONG u;
-   double x,y;
-   u = GetDialogBaseUnits();
-
-
-   x = LOWORD(u);
-   y = HIWORD(u);
-
-   x = x / 4;
-   y = y / 8;
-
-   sprintf(retstr->strptr, "%4.1f %4.1f", x, y);
-   retstr->strlength = strlen(retstr->strptr);
-   return 0;
-}
-
-
 /**
  * Loads and returns the handles to the regular size and small size icons for
  * the dialog. These icons are used in the title bar of the dialog, on the task
@@ -790,6 +772,22 @@ static HICON GetIconForID(DIALOGADMIN *dlgAdm, UINT id, UINT iconSrc, int cx, in
 static inline HWND getWBWindow(void *pCSelf)
 {
     return ((pCWindowBase)pCSelf)->hwnd;
+}
+
+// TODO, may be okay to use static ?
+uint32_t parseShowOptions(CSTRING options)
+{
+    uint32_t opts = SWP_NOZORDER;
+
+    if ( options != NULL )
+    {
+       if ( StrStrI(options, "NOMOVE"    ) ) opts |= SWP_NOMOVE;
+       if ( StrStrI(options, "NOSIZE"    ) ) opts |= SWP_NOSIZE;
+       if ( StrStrI(options, "HIDEWINDOW") ) opts |= SWP_HIDEWINDOW;
+       if ( StrStrI(options, "SHOWWINDOW") ) opts |= SWP_SHOWWINDOW;
+       if ( StrStrI(options, "NOREDRAW"  ) ) opts |= SWP_NOREDRAW;
+    }
+    return opts;
 }
 
 /**
@@ -1293,6 +1291,292 @@ RexxMethod2(wholenumber_t, wb_setText, CSTRING, text, CSELF, pCSelf)
     }
     return 0;
 }
+
+/** WindowBase::windowRect()
+ *
+ *  Retrieves the dimensions of the bounding rectangle of this window.  The
+ *  dimensions are in screen coordinates that are relative to the upper-left
+ *  corner of the screen.
+ *
+ *  @return  The bounding rectangle of this window.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod1(RexxObjectPtr, wb_windowRect, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    RECT r = {0};
+    if ( GetWindowRect(getWBWindow(pCSelf), &r) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return rxNewRect(context, &r);
+}
+
+
+/** WindowBase::clientRect()
+ *
+ *  Retrieves the coordinates of a window's client area.  The coordinates are in
+ *  pixels.
+ *
+ *  The client coordinates specify the upper-left and lower-right corners of the
+ *  client area. Because client coordinates are relative to the upper-left
+ *  corner of a window's client area, the coordinates of the upper-left corner
+ *  are (0,0).
+ *
+ *  @param  hwnd  [OPTIONAL]  By default, the coordinates are for this window.
+ *                However, the optional hwnd argument can be used to specify
+ *                getting the coordinates for some other window.
+ *
+ *  @return  The coordinates of the client area of the specified window as a
+ *           .Rect object.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, hwnd, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    if ( argumentOmitted(1) )
+    {
+        hwnd = getWBWindow(pCSelf);
+    }
+
+    RECT r = {0};
+    if ( GetClientRect((HWND)hwnd, &r) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return rxNewRect(context, &r);
+}
+
+/** WindowBase::setWindowPos()
+ *
+ *  Changes the size, and position of a child, pop-up, or top-level window.
+ *
+ *  Provides an interface to the Windows API, SetWindowPos().  The inteface is
+ *  incomplete, at this time, as it does not recognize all the allowable flags
+ *  to SetWindowPos.  In particular, it always uses SWP_NOZORDER.
+ *
+ *  By specifying either NOSIZE or NOMOVE options the programmer can only move
+ *  or only resize the window.
+ *
+ *  The arguments needed are as follows:
+ *
+ *  However, the position and size can be specified in a flexiable manner. There
+ *  are 3 forms accepted.
+ *
+ *  Form One:
+ *  @param  rect    The new size and position specified as a .Rect object.  Note
+ *                  that this is a point / size rectangle, not a bounding
+ *                  rectangle. rect.right must specify the "width" of the window
+ *                  and rect.bottom must specify the height of the window. They
+ *                  must *not* specify the bottom left corner of the window.
+ *  @param  flags   [OPTIONAL] Keywords specifying the behavior of the method.
+ *
+ *  Form Two:
+ *  @param  pos     The new upper left corner position for the window, specified
+ *                  as a .Point object.
+ *  @param  size    The new size for the window, specified as a .Size object.
+ *  @param  flags   [OPTIONAL] Keywords specifying the behavior of the method.
+ *
+ *  Form Three:
+ *  @param  x       x coordinate of upper left corner of window, in pixels.
+ *  @param  y       y coordinate of upper left corner of window, in pixels.
+ *  @param  width   Width of window in pixels.
+ *  @param  height  Height of window in pixels.
+ *  @param  flags   [OPTIONAL] Keywords specifying the behavior of the method.
+ *
+ *  @return  0 for success, 1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  Microsoft says: If the SWP_SHOWWINDOW or SWP_HIDEWINDOW flag is
+ *            set, the window cannot be moved or sized.  But, that does not
+ *            appear to be true.
+ */
+RexxMethod2(RexxObjectPtr, wb_setWindowPos, ARGLIST, args, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    oodResetSysErrCode(context->threadContext);
+
+    // A RECT is used to return the values, even though the semantics are not
+    // quite correct.  (right will really be cx and bottom will be cy.)
+    size_t countArgs;
+    int    argsUsed;
+    RECT   rect;
+    if ( ! getRectFromArglist(context, args, &rect, false, 1, 5, &countArgs, &argsUsed) )
+    {
+        return NULLOBJECT;
+    }
+
+    RexxObjectPtr obj;
+    CSTRING options = "";
+    if ( argsUsed == 1 )
+    {
+        if ( countArgs > 2 )
+        {
+            return tooManyArgsException(context->threadContext, 2);
+        }
+        if ( countArgs == 2 )
+        {
+            obj = c->ArrayAt(args, 2);
+            options = c->ObjectToStringValue(obj);
+        }
+    }
+    else if ( argsUsed == 2 )
+    {
+        if ( countArgs > 3 )
+        {
+            return tooManyArgsException(context->threadContext, 3);
+        }
+        if ( countArgs == 3 )
+        {
+            obj = c->ArrayAt(args, 3);
+            options = c->ObjectToStringValue(obj);
+        }
+    }
+    else
+    {
+        if ( countArgs == 5 )
+        {
+            obj = c->ArrayAt(args, 5);
+            options = c->ObjectToStringValue(obj);
+        }
+    }
+
+    uint32_t opts = parseShowOptions(options);
+    if ( SetWindowPos(getWBWindow(pCSelf), NULL, rect.left, rect.top, rect.right, rect.bottom, opts) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+    return TheZeroObj;
+}
+
+/** WindowBase::resizeTo()
+ *  WindowBase::moveTo()
+ *
+ *  Resize to, changes the size of this window.  The new size is specified in
+ *  pixels.
+ *
+ *  Move to, changes the position of this window.  The new position is specified
+ *  as the coordinates of the upper left corner of the window, in pixels.
+ *
+ *  Two forms for the argument list.  For resizeTo(), either the new size, is
+ *  specified as .Size object, or as individual integers.  For moveTo(), the new
+ *  position is specified as either a .Point object or as individual integers.
+ *
+ *  Form One:
+ *  @param  size    The new size is specified using a .Size object.
+ *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
+ *
+ *  @param  point   The new position is specified using a .Point object.
+ *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
+ *
+ *  Form Two:
+ *  @param  cx      The new width of the window.
+ *  @param  cy      The new height of the window.
+ *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
+ *
+ *  @param  x       The x coordinate of the upper left corner of the window.
+ *  @param  y       The y coordinate of the upper left corner of the window.
+ *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
+ *
+ *  @return  0 for success, 1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+    oodResetSysErrCode(context->threadContext);
+
+    // POINT and SIZE structs are binary compatible.  A POINT is used to return
+    // the values, even though the semantics are not quite correct for
+    // resizeTo(). (x will really be cx and y will be cy.)
+    size_t countArgs;
+    int    argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 1, 3, &countArgs, &argsUsed) )
+    {
+        return NULLOBJECT;
+    }
+
+    RexxObjectPtr obj;
+    CSTRING options = "";
+    if ( argsUsed == 1 )
+    {
+        if ( countArgs > 2 )
+        {
+            return tooManyArgsException(context->threadContext, 2);
+        }
+        if ( countArgs == 2 )
+        {
+            obj = c->ArrayAt(args, 2);
+            options = c->ObjectToStringValue(obj);
+        }
+    }
+    else if ( argsUsed == 2 )
+    {
+        if ( countArgs == 3 )
+        {
+            obj = c->ArrayAt(args, 3);
+            options = c->ObjectToStringValue(obj);
+        }
+    }
+
+    uint32_t opts = parseShowOptions(options);
+    RECT r = {0};
+
+    if ( *method == 'R' )
+    {
+        opts |= SWP_NOMOVE;
+        r.right = point.x;
+        r.bottom = point.y;
+    }
+    else
+    {
+        opts |= SWP_NOSIZE;
+        r.left = point.x;
+        r.top = point.y;
+    }
+
+    if ( SetWindowPos(getWBWindow(pCSelf), NULL, r.left, r.top, r.right, r.bottom, opts) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+    return TheZeroObj;
+}
+
+
+/** WindowBase::getRealSize()
+ *  WindowBase::getRealPos()
+ *
+ *  Retrieves the size, or the position, in pixels, of this window
+ *
+ *  @return  The size as a .Size object, or the position as a .Point object.
+ *
+ *  @note  These methods will raise an exception if GetWindowRect() fails.
+ */
+RexxMethod2(RexxObjectPtr, wb_getSizePos, NAME, method, CSELF, pCSelf)
+{
+    RECT r = {0};
+    if ( GetWindowRect(getWBWindow(pCSelf), &r) == 0 )
+    {
+        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetWindowRect");
+        return NULLOBJECT;
+    }
+
+    if ( method[7] == 'S' )
+    {
+        return rxNewSize(context, (r.right - r.left), (r.bottom - r.top));
+    }
+
+    return rxNewPoint(context, r.left, r.top);
+}
+
 
 RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
 {
@@ -2084,6 +2368,89 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
 
 
 /**
+ *  Methods for the .DialogExtensions mixin class.
+ */
+#define DIALOGEXTENSIONS_CLASS        "DialogExtensions"
+
+
+RexxMethod1(RexxObjectPtr, dlgext_clear, OSELF, self)
+{
+    oodResetSysErrCode(context->threadContext);
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+
+    if ( pcpbd->hDlg == NULL )
+    {
+        return noWindowsDialogException(context, self);
+    }
+
+    RECT r = {0};
+    if ( GetClientRect(pcpbd->hDlg, &r) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+
+    return clearRect(context, pcpbd->hDlg, &r);
+}
+
+
+RexxMethod2(RexxObjectPtr, dlgext_clearWindowRect, POINTERSTRING, hwnd, OSELF, self)
+{
+    oodResetSysErrCode(context->threadContext);
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+
+    if ( pcpbd->hDlg == NULL )
+    {
+        return noWindowsDialogException(context, self);
+    }
+
+    RECT r = {0};
+    if ( GetClientRect((HWND)hwnd, &r) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+
+    return clearRect(context, (HWND)hwnd, &r);
+}
+
+
+RexxMethod2(RexxObjectPtr, dlgext_clearControlRect, RexxObjectPtr, rxID, OSELF, self)
+{
+    oodResetSysErrCode(context->threadContext);
+    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
+
+    if ( pcpbd->hDlg == NULL )
+    {
+        return noWindowsDialogException(context, self);
+    }
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return TheNegativeOneObj;
+    }
+    HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
+    if ( hCtrl == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+
+    RECT r = {0};
+    if ( GetClientRect(hCtrl, &r) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+
+    return clearRect(context, hCtrl, &r);
+}
+
+
+
+
+/**
  *  Methods for the .BaseDialog class.
  */
 #define BASEDIALOG_CLASS              "BaseDialog"
@@ -2231,25 +2598,16 @@ RexxMethod2(RexxObjectPtr, baseDlg_putControl_pvt, RexxObjectPtr, control, OSELF
     return TheNilObj;
 }
 
-RexxMethod2(RexxObjectPtr, baseDlg_test, OSELF, self, CSELF, pCSelf)
+RexxMethod3(RexxObjectPtr, baseDlg_test, int, x, CSTRING, y, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;
 
-    void *dlgCSelf = c->ObjectToCSelf(self);
-    pCPlainBaseDialog realDlgCSelf = dlgToCSelf(c, self);
-
-    dbgPrintClassID(context, self);
-    printf("baseDlg_test() self=%p pCSelf=%p ObjectToCSelf(self)=%p ObjectToCSelf(self, self~class)=%p\n",
-           self, pCSelf, dlgCSelf, realDlgCSelf);
-
-    DIALOGADMIN *dlgAdm = rxGetDlgAdm(context, self);
-    printf("dlgAdm=%p\n", dlgAdm);
-    if ( realDlgCSelf != NULL )
-    {
-        pCWindowBase pcwb = ((pCPlainBaseDialog)realDlgCSelf)->wndBase;
-        printf("pcpbd->dlgAdm=%p pcwb hwnd=%p factorX=%f\n", realDlgCSelf->dlgAdm, pcwb->hwnd, pcwb->factorX);
-    }
-    return TheNilObj;
+    /*
+    size_t count = c->ArrayItems(args);
+    size_t size = c->ArraySize(args);
+    printf("Arg count=%d size=%d\n", count, size);
+    */
+    return TheTrueObj;
 }
 
 

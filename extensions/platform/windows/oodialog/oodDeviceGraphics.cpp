@@ -43,6 +43,7 @@
 #include <ctl3d.h>
 #endif
 #include "oodCommon.hpp"
+#include "oodDeviceGraphics.hpp"
 
 
 extern LPBITMAPINFO LoadDIB(const char *szFile);
@@ -75,6 +76,55 @@ BOOL DrawButton(DIALOGADMIN * aDlg, INT id)
 }
 
 
+RexxObjectPtr clearRect(RexxMethodContext *c, HWND hwnd, PRECT rect)
+{
+    oodResetSysErrCode(c->threadContext);
+
+    HDC hDC;
+    HPEN hOldPen, hPen;
+    HBRUSH hOldBrush, hBrush;
+
+    // Note that pre 4.0.0 ooDialog used GetWindowDC() here.  The MS docs
+    // suggest it should only in rare circumstances.  Switched to using GetDC().
+    // GetDC() seems to be the correct API to use.
+    hDC = GetDC(hwnd);
+    if ( hDC == NULL )
+    {
+        goto err_out;
+    }
+
+    hBrush = GetSysColorBrush(COLOR_BTNFACE);
+    if ( hBrush == NULL )
+    {
+        // This can only fail if the color index is incorrect.  The function
+        // does not set last error.
+        goto err_out;
+    }
+
+    hPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
+    if ( hPen == NULL )
+    {
+        goto err_out;
+    }
+
+    hOldPen = (HPEN)SelectObject(hDC, hPen);
+    hOldBrush = (HBRUSH)SelectObject(hDC, hBrush);
+
+    Rectangle(hDC, rect->left, rect->top, rect->right, rect->bottom);
+
+    SelectObject(hDC, hOldBrush);
+    SelectObject(hDC, hOldPen);
+
+    // Delete the pen, but not the brush - it is a system cached object.
+    DeleteObject(hPen);
+    ReleaseDC(hwnd, hDC);
+
+    return TheZeroObj;
+
+err_out:
+    oodSetSysErrCode(c->threadContext);
+    return TheOneObj;
+}
 
 /* Get information about window rectangle, redraw and clear a rectangle */
 
@@ -117,7 +167,7 @@ size_t RexxEntry WindowRect(const char *funcname, size_t argc, CONSTRXSTRING *ar
 
            if (dlgAdm->Use3DControls)
            {
-              hbr = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+              hbr = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));      // Should use GetSysColorBrush()
               hpen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNFACE));
            }
            else

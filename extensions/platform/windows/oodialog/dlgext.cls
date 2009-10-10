@@ -269,8 +269,8 @@
    /* This method returns the size and position of the given button */
 ::method GetButtonRect unguarded
    use arg id
-   ret = self~getItem(id)
-   return WindowRect("GET", ret)
+   hwnd = self~getItem(id)
+   return WindowRect("GET", hwnd)
 
    /* Returns the size and position of the given window */
 
@@ -278,6 +278,9 @@
    use arg hwnd
    return WindowRect("GET",hwnd)
 
+-- TODO resizeItem() and moveItem could be deprecated and forward to resizeControl() and
+-- moveControl().  The new methods would take pixels, the old methods could still use the
+-- incorrect * self~factorX, etc..
    /* This method will resize a dialog item */
 
 ::method ResizeItem unguarded
@@ -294,7 +297,7 @@
    use arg id, xPos, yPos, showOptions = ""
    showOptions = showOptions~translate
    hwnd = self~getItem(id)
-   if h = 0 then return -1
+   if hwnd = 0 then return -1
    return WndShow_Pos("P", hwnd, xPos * self~factorX, yPos * self~factorY, 0, 0,,
                            "NOSIZE "||showOptions)
 
@@ -693,10 +696,7 @@
    use arg hwnd
    return WindowRect("CLR", self~adm, hwnd)
 
-   /* Clears the whole dialog  */
-::method Clear unguarded
-   parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
-   return WindowRect("CLR", self~adm, self~Hwnd,r.1,r.2,r.3,r.4)
+::method clear unguarded external "LIBRARY oodialog dlgext_clear"
 
    /* Clears the given rectangle left, top, right, bottom of the given window */
 
@@ -787,7 +787,7 @@
 ::method PeekDialogMessage unguarded
    return getDlgMsg(self~adm, .true)
 
-::method SetWindowRect unguarded
+::method SetWindowRect unguarded     -- TODO this could be implemented by using a .Window object
    use arg hwnd, x, y, width, high, showOptions = ""
    showOptions = showOptions~translate
    return WndShow_Pos("P",hwnd, x, y, width, high, showOptions)

@@ -509,6 +509,10 @@ RexxMethod1(uint32_t, dlgutil_getSystemMetrics_cls, int32_t, index)
     return GetSystemMetrics(index);
 }
 
+// TODO .DlgUtil~mapSizePxToDu       .DlgUtil~mapRectPxToDu  these 3 (or 2) methods
+// should be added to the PlainBaseDialog class.  Do we really need a method for
+// a .Size object and a .Point object ?  Or, just one method, determine at run
+// time if RexxObjectPtr <arg> is a point, a size, or a rectangle.
 RexxMethod2(logical_t, dlgutil_mapPixel2Du_cls, RexxObjectPtr, dlg, RexxObjectPtr, size)
 {
     SIZE *s = rxGetSize(context, size, 2);
@@ -609,6 +613,29 @@ done_out:
 }
 
 
+/** DlgUtil::screenArea()  [class method]
+ *
+ *  Gets the usable screen area (work area.) on the primary display monitor. The
+ *  work area is the portion of the screen not obscured by the system taskbar or
+ *  by application desktop toolbars.
+ *
+ *  @return  The work area as a .Rect object.
+ *
+ *  @note Sets the .SystemErrorCode.
+ */
+RexxMethod0(RexxObjectPtr, dlgutil_screenArea_cls)
+{
+    oodResetSysErrCode(context->threadContext);
+    RexxMethodContext *c = context;
+    RECT r = {0};
+    if ( ! SystemParametersInfo(SPI_GETWORKAREA, 0, &r, 0) )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+
+    return rxNewRect(context, &r);
+}
+
 /**
  * A temporary utility to convert from a handle that is still being stored in
  * ooDialog in string form ("0xFFFFAAAA") to its actual pointer value.  The
@@ -634,7 +661,7 @@ RexxMethod1(RexxObjectPtr, dlgutil_test_cls, logical_t, fail)
         oodSetSysErrCode(context->threadContext);
     }
 
-    return rxNewRect(context, r.left, r.top, r.right, r.bottom);
+    return rxNewRect(context, &r);
 }
 
 /** ListBox::setTabulators()

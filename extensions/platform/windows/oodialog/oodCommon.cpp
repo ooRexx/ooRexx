@@ -91,12 +91,13 @@ void ooDialogInternalException(RexxMethodContext *c, char *function, int line, c
  * @param c
  * @param pcpbd
  */
-void noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg)
+RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg)
 {
     TCHAR buf[512];
     _snprintf(buf, sizeof(buf), "The %s method can not be invoked on %s when the Windows dialog does not exist.",
               c->GetMessageName(), c->ObjectToStringValue(rxDlg));
     c->RaiseException1(Rexx_Error_Incorrect_method_user_defined, c->String(buf));
+    return NULLOBJECT;
 }
 
 bool requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum)
@@ -787,6 +788,25 @@ RexxObjectPtr rxNewRect(RexxMethodContext *context, long l, long t, long r, long
 }
 
 
+RexxObjectPtr rxNewRect(RexxMethodContext *context, PRECT r)
+{
+    RexxObjectPtr rect = NULL;
+
+    RexxClassObject RectClass = rxGetContextClass(context, "RECT");
+    if ( RectClass != NULL )
+    {
+        RexxArrayObject args = context->NewArray(4);
+        context->ArrayAppend(args, context->WholeNumber(r->left));
+        context->ArrayAppend(args, context->WholeNumber(r->top));
+        context->ArrayAppend(args, context->WholeNumber(r->right));
+        context->ArrayAppend(args, context->WholeNumber(r->bottom));
+
+        rect = context->SendMessage(RectClass, "NEW", args);
+    }
+    return rect;
+}
+
+
 PSIZE rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int argPos)
 {
     if ( requiredClass(context->threadContext, s, "Size", argPos) )
@@ -982,5 +1002,232 @@ int putUnicodeText(LPWORD dest, const char *text)
         }
     }
     return count;
+}
+
+
+/**
+ * Checks that an argument array contains the minimum, and not more than the
+ * maximum, number of arguments.  Raises the appropriate exception if the check
+ * fails.
+ *
+ * In addition the actual size of the argument array is returned.
+ *
+ * @param c         Method context we are operating in.
+ * @param args      Argument array.
+ * @param min       Minimum expected number of arguments.
+ * @param max       Maximum number of arguments allowed.
+ * @param arraySize [out] Size of argument array.
+ *
+ * @return True if the check succeeds, otherwise false.  If false, an exception
+ *         has been raised.
+ */
+bool goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max, size_t *arraySize)
+{
+    *arraySize = c->ArraySize(args);
+    if ( *arraySize > max )
+    {
+        tooManyArgsException(c->threadContext, max);
+        return false;
+    }
+    if ( *arraySize < min )
+    {
+        missingArgException(c->threadContext, min);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Fills in a RECT structure using an argument array passed to a Rexx object
+ * method.
+ *
+ * The purpose is to give the Rexx programmer some flexibility in how they pass
+ * in "rectangle-like" coordinates to a method.
+ *
+ * @param c
+ * @param args
+ * @param rect
+ * @param boundingRect
+ * @param startArg
+ * @param maxArgs
+ * @param arraySize
+ * @param usedArgs
+ *
+ * @return bool
+ */
+bool getRectFromArglist(RexxMethodContext *c, RexxArrayObject args, PRECT rect, bool boundingRect,
+                        int startArg, int maxArgs, size_t *arraySize, int *usedArgs)
+{
+    if ( ! goodMinMaxArgs(c, args, startArg, maxArgs, arraySize) )
+    {
+        goto err_out;
+    }
+
+    RexxObjectPtr obj1 = c->ArrayAt(args, startArg);
+    if ( obj1 == NULLOBJECT )
+    {
+        missingArgException(c->threadContext, startArg);
+        goto err_out;
+    }
+
+    if ( c->IsOfType(obj1, "RECT") )
+    {
+        PRECT r = rxGetRect(c, obj1, startArg);
+        if ( r == NULL )
+        {
+            goto err_out;
+        }
+        CopyRect(rect, r);
+        *usedArgs = 1;
+    }
+    else if ( c->IsOfType(obj1, "POINT") )
+    {
+        PPOINT p = rxGetPoint(c, obj1, startArg);
+        if ( p == NULL )
+        {
+            goto err_out;
+        }
+
+        RexxObjectPtr obj2 = c->ArrayAt(args, startArg + 1);
+        if ( obj2 == NULLOBJECT )
+        {
+            missingArgException(c->threadContext, startArg + 1);
+            goto err_out;
+        }
+
+        PSIZE s = rxGetSize(c, obj2, startArg + 1);
+        if ( p == NULL )
+        {
+            goto err_out;
+        }
+        if ( boundingRect )
+        {
+            SetRect(rect, p->x, p->y, p->x + s->cx, p->y + s->cy);
+        }
+        else
+        {
+            SetRect(rect, p->x, p->y, s->cx, s->cy);
+        }
+        *usedArgs = 2;
+    }
+    else
+    {
+        int x, y, cx, cy;
+
+        if ( ! c->Int32(obj1, &x) )
+        {
+            wrongRangeException(c->threadContext, startArg, INT32_MIN, INT32_MAX, obj1);
+            goto err_out;
+        }
+
+        obj1 = c->ArrayAt(args, startArg + 1);
+        if ( obj1 == NULLOBJECT )
+        {
+            missingArgException(c->threadContext, startArg + 1);
+            goto err_out;
+        }
+        if ( ! c->Int32(obj1, &y) )
+        {
+            wrongRangeException(c->threadContext, startArg + 1, INT32_MIN, INT32_MAX, obj1);
+            goto err_out;
+        }
+
+        obj1 = c->ArrayAt(args, startArg + 2);
+        if ( obj1 == NULLOBJECT )
+        {
+            missingArgException(c->threadContext, startArg + 2);
+            goto err_out;
+        }
+        if ( ! c->Int32(obj1, &cx) )
+        {
+            wrongRangeException(c->threadContext, startArg + 2, INT32_MIN, INT32_MAX, obj1);
+            goto err_out;
+        }
+
+        obj1 = c->ArrayAt(args, startArg + 3);
+        if ( obj1 == NULLOBJECT )
+        {
+            missingArgException(c->threadContext, startArg + 3);
+            goto err_out;
+        }
+        if ( ! c->Int32(obj1, &cy) )
+        {
+            wrongRangeException(c->threadContext, startArg + 3, INT32_MIN, INT32_MAX, obj1);
+            goto err_out;
+        }
+        SetRect(rect, x, y, cx, cy);
+        *usedArgs = 4;
+    }
+    return true;
+
+err_out:
+    return false;
+}
+
+bool getPointFromArglist(RexxMethodContext *c, RexxArrayObject args, PPOINT point, int startArg, int maxArgs,
+                         size_t *arraySize, int *usedArgs)
+{
+    if ( ! goodMinMaxArgs(c, args, startArg, maxArgs, arraySize) )
+    {
+        goto err_out;
+    }
+
+    RexxObjectPtr obj1 = c->ArrayAt(args, startArg);
+    if ( obj1 == NULLOBJECT )
+    {
+        missingArgException(c->threadContext, startArg);
+        goto err_out;
+    }
+
+    if ( c->IsOfType(obj1, "POINT") )
+    {
+        PPOINT p = rxGetPoint(c, obj1, startArg);
+        if ( p == NULL )
+        {
+            goto err_out;
+        }
+        point->x = p->x;
+        point->y = p->y;
+        *usedArgs = 1;
+    }
+    else if ( c->IsOfType(obj1, "SIZE") )
+    {
+        PSIZE s = rxGetSize(c, obj1, startArg);
+        if ( s == NULL )
+        {
+            goto err_out;
+        }
+        point->x = s->cx;
+        point->y = s->cy;
+        *usedArgs = 1;
+    }
+    else
+    {
+        int x, y;
+        if ( ! c->Int32(obj1, &x) )
+        {
+            wrongRangeException(c->threadContext, startArg, INT32_MIN, INT32_MAX, obj1);
+            goto err_out;
+        }
+
+        obj1 = c->ArrayAt(args, startArg + 1);
+        if ( obj1 == NULLOBJECT )
+        {
+            missingArgException(c->threadContext, startArg + 1);
+            goto err_out;
+        }
+        if ( ! c->Int32(obj1, &y) )
+        {
+            wrongRangeException(c->threadContext, startArg + 1, INT32_MIN, INT32_MAX, obj1);
+            goto err_out;
+        }
+        point->x = x;
+        point->y = y;
+        *usedArgs = 2;
+    }
+    return true;
+
+err_out:
+    return false;
 }
 

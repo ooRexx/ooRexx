@@ -320,7 +320,6 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
    RETERR
 }
 
-
 size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
    RECT r;

@@ -106,36 +106,49 @@
 ::method setText unguarded external "LIBRARY oodialog wb_setText"
 ::method getText unguarded external "LIBRARY oodialog wb_getText"
 
-::method Resize unguarded
-   use arg width, hight, showOptions
-   if arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   return WndShow_Pos("P",self~hwnd,0,0,width*self~factorX,hight*self~factorY,"NOMOVE "||showOptions )
+::method setWindowPos unguarded external "LIBRARY oodialog wb_setWindowPos"
+::method resizeTo unguarded external "LIBRARY oodialog wb_resizeMove"
+::method moveTo unguarded external "LIBRARY oodialog wb_resizeMove"
+::method getRealSize unguarded external "LIBRARY oodialog wb_getSizePos"
+::method getRealPos unguarded external "LIBRARY oodialog wb_getSizePos"
 
-::method Move unguarded
-   use arg xPos, yPos, showOptions
-   if arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   return WndShow_Pos("P",self~hwnd, xPos*self~factorX,yPos*self~factorY,0,0,"NOSIZE "||showOptions)
+::method resize unguarded     -- old method, this is not accurate.
+   use strict arg width, height, showOptions = ""
+   p = .Point~new(0, 0)
+   s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
+   return self~setWindowPos(p, s, "NOMOVE " || showOptions);
 
-::method GetSize unguarded
-   parse value Wnd_Desktop("RECT",self~Hwnd) with x y cx cy
-   return (cx - x) % self~factorX || " " || (cy - y) % self~factorY
+::method move unguarded       -- old method, this is not accurate.
+   use strict arg xPos, yPos, showOptions = ""
+   p = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
+   s = .Size~new(0, 0)
+   return self~setWindowPos(p, s, "NOSIZE " || showOptions);
 
-::method GetPos unguarded
-   parse value Wnd_Desktop("RECT",self~Hwnd) with x y cx cy
-   return (x%self~factorX) || " " || (y % self~factorY)
+::method getSize unguarded    -- old method, this is not accurate.
+   forward message "getRealSize" continue
+   size = result
+   return (size~width % self~factorX) || " " || (size~height % self~factorY)
 
-::method GetRect unguarded
-   return WindowRect("GET", self~Hwnd)
+::method getPos unguarded     -- old method, this is not accurate.
+   forward message "getRealPos" continue
+   p = result
+   return (p~x % self~factorX) || " " || (p~y % self~factorY)
 
-::method GetClientRect unguarded
-   use arg hwnd
-   if arg(1,'o') = 1 then hwnd = self~hwnd
-   return WindowRect("GET", hwnd, "CLIENT")
+::method windowRect unguarded external "LIBRARY oodialog wb_windowRect"
+::method getRect unguarded
+   forward message "windowRect" continue
+   rect = result
+   return rect~left rect~top rect~right rect~bottom
 
-::method SetRect unguarded
-   use arg x, y, width, high, showOptions
-   if arg(5,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   return WndShow_Pos("P",self~hwnd, x, y, width, high, showOptions)
+::method clientRect unguarded external "LIBRARY oodialog wb_clientRect"
+::method getClientRect unguarded
+   forward message "clientRect" continue
+   rect = result
+   return rect~left rect~top rect~right rect~bottom
+
+::method setRect unguarded
+   use strict arg x, y, width, height, showOptions = ""
+   return self~setWindowPos(.Point~new(x, y), .Size~new(width, height), showOptions);
 
 ::method SetForegroundWindow unguarded
     use arg hwnd
@@ -412,6 +425,9 @@
 ::method get unguarded external "LIBRARY oodialog pbdlg_get"
 ::method getSelf unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
 ::method getItem unguarded external "LIBRARY oodialog pbdlg_getItem"
+
+-- TODO getItem() could be deprecated and forward to getControl().  getControl would return
+-- a .Pointer; getItem() could check for a null pointer and return 0 in its place.
 
 ::method getControlID unguarded external "LIBRARY oodialog pbdlg_getControlID"
 
@@ -917,8 +933,8 @@
 
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
 ::method getTextSize unguarded
-  forward message "getTextSizeDlg" continue
-  return result~width result~height
+   forward message "getTextSizeDlg" continue
+   return result~width result~height
 
 ::method setTabStop unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
 ::method setGroup unguarded external "LIBRARY oodialog pbdlg_setTabGroup"

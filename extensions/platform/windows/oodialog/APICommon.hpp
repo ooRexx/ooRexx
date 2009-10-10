@@ -74,10 +74,11 @@ extern void emptyArrayException(RexxThreadContext *c, int argPos);
 extern void nullObjectException(RexxThreadContext *c, CSTRING name, int pos);
 extern void nullObjectException(RexxThreadContext *c, CSTRING name);
 extern void nullPointerException(RexxThreadContext *c, int pos);
-extern void wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual);
-extern void wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual);
 extern void wrongArgValueException(RexxThreadContext *c, int pos, const char *list, RexxObjectPtr actual);
 extern void wrongArgValueException(RexxThreadContext *c, int pos, const char *list, const char *actual);
+
+extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual);
+extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual);
 
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 extern bool    rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, wholenumber_t *pNumber);
@@ -96,11 +97,11 @@ extern void            dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
 
 
 /**
- *  Missing argument in method; argument 'argument' is required
+ *  Missing argument; argument 'argument' is required
  *
- *  Missing argument in method; argument 2 is required
+ *  Missing argument; argument 2 is required
  *
- *  Raises 93.903
+ *  Raises 88.901
  *
  * @param c    The thread context we are operating under.
  * @param pos  The 'argument' position.
@@ -109,7 +110,25 @@ extern void            dbgPrintClassID(RexxMethodContext *c, RexxObjectPtr obj);
  */
 inline RexxObjectPtr missingArgException(RexxThreadContext *c, int argPos)
 {
-    c->RaiseException1(Rexx_Error_Incorrect_method_noarg, c->WholeNumber(argPos));
+    c->RaiseException1(Rexx_Error_Invalid_argument_noarg, c->WholeNumber(argPos));
+    return NULLOBJECT;
+}
+
+/**
+ *  Too many arguments in invocation; 'number' expected
+ *
+ *  Too many arguments in invocation; 5 expected
+ *
+ *  Raises 93.903
+ *
+ * @param c    The thread context we are operating under.
+ * @param max  The maximum arguments expected.
+ *
+ * @return NULLOBJECT
+ */
+inline RexxObjectPtr tooManyArgsException(RexxThreadContext *c, int max)
+{
+    c->RaiseException1(Rexx_Error_Invalid_argument_maxarg, c->WholeNumber(max));
     return NULLOBJECT;
 }
 

@@ -350,15 +350,16 @@ void notNonNegativeException(RexxThreadContext *c, int pos, RexxObjectPtr actual
     c->RaiseException2(Rexx_Error_Invalid_argument_nonnegative, c->Int32(pos), actual);
 }
 
-void wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual)
+RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual)
 {
     c->RaiseException(Rexx_Error_Invalid_argument_range,
                       c->ArrayOfFour(c->WholeNumber(pos), c->WholeNumber(min), c->WholeNumber(max), actual));
+    return NULLOBJECT;
 }
 
-void wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual)
+RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual)
 {
-    wrongRangeException(c, pos, min, max, c->WholeNumber(actual));
+    return wrongRangeException(c, pos, min, max, c->WholeNumber(actual));
 }
 
 void wrongArgValueException(RexxThreadContext *c, int pos, const char *list, RexxObjectPtr actual)

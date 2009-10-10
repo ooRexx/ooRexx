@@ -168,6 +168,7 @@ REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_screenSize_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_screenArea_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_mapPixel2Du_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_handleToPointer_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_test_cls);
@@ -200,6 +201,11 @@ REXX_METHOD_PROTOTYPE(wb_redrawClient);
 REXX_METHOD_PROTOTYPE(wb_redraw);
 REXX_METHOD_PROTOTYPE(wb_getText);
 REXX_METHOD_PROTOTYPE(wb_setText);
+REXX_METHOD_PROTOTYPE(wb_setWindowPos);
+REXX_METHOD_PROTOTYPE(wb_resizeMove);
+REXX_METHOD_PROTOTYPE(wb_getSizePos);
+REXX_METHOD_PROTOTYPE(wb_windowRect);
+REXX_METHOD_PROTOTYPE(wb_clientRect);
 REXX_METHOD_PROTOTYPE(wb_getWindowLong_pvt);
 
 REXX_METHOD_PROTOTYPE(en_init_eventNotification);
@@ -240,6 +246,8 @@ REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
 REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
+
+REXX_METHOD_PROTOTYPE(dlgext_clear);
 
 REXX_METHOD_PROTOTYPE(baseDlg_init);
 REXX_METHOD_PROTOTYPE(baseDlg_newControl);
@@ -540,6 +548,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_or_cls,               dlgutil_or_cls),
     REXX_METHOD(dlgutil_mapPixel2Du_cls,      dlgutil_mapPixel2Du_cls),
     REXX_METHOD(dlgutil_screenSize_cls,       dlgutil_screenSize_cls),
+    REXX_METHOD(dlgutil_screenArea_cls,       dlgutil_screenArea_cls),
     REXX_METHOD(dlgutil_getSystemMetrics_cls, dlgutil_getSystemMetrics_cls),
     REXX_METHOD(dlgutil_handleToPointer_cls,  dlgutil_handleToPointer_cls),
     REXX_METHOD(dlgutil_test_cls,             dlgutil_test_cls),
@@ -572,6 +581,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_redraw,                    wb_redraw),
     REXX_METHOD(wb_getText,                   wb_getText),
     REXX_METHOD(wb_setText,                   wb_setText),
+    REXX_METHOD(wb_setWindowPos,              wb_setWindowPos),
+    REXX_METHOD(wb_resizeMove,                wb_resizeMove),
+    REXX_METHOD(wb_getSizePos,                wb_getSizePos),
+    REXX_METHOD(wb_windowRect,                wb_windowRect),
+    REXX_METHOD(wb_clientRect,                wb_clientRect),
     REXX_METHOD(wb_getWindowLong_pvt,         wb_getWindowLong_pvt),
 
     REXX_METHOD(en_init_eventNotification,   en_init_eventNotification),
@@ -609,6 +623,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_unInit,                  pbdlg_unInit),
 
     REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
+
+    REXX_METHOD(dlgext_clear,                 dlgext_clear),
 
     REXX_METHOD(baseDlg_init,                 baseDlg_init),
     REXX_METHOD(baseDlg_newControl,           baseDlg_newControl),
