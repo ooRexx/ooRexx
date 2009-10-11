@@ -111,44 +111,45 @@
 ::method moveTo unguarded external "LIBRARY oodialog wb_resizeMove"
 ::method getRealSize unguarded external "LIBRARY oodialog wb_getSizePos"
 ::method getRealPos unguarded external "LIBRARY oodialog wb_getSizePos"
+::method windowRect unguarded external "LIBRARY oodialog wb_windowRect"
+::method clientRect unguarded external "LIBRARY oodialog wb_clientRect"
+::method clear unguarded external "LIBRARY oodialog wb_clear"
 
-::method resize unguarded     -- old method, this is not accurate.
+-- old method, documented as taking x, y, width, height, showOptions.  But, setWindowPos()
+-- can handle arguments in that format.
+::method setRect unguarded external "LIBRARY oodialog wb_setWindowPos"
+
+::method resize unguarded        -- old method, this is not accurate.
    use strict arg width, height, showOptions = ""
    p = .Point~new(0, 0)
    s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
    return self~setWindowPos(p, s, "NOMOVE " || showOptions);
 
-::method move unguarded       -- old method, this is not accurate.
+::method move unguarded          -- old method, this is not accurate.
    use strict arg xPos, yPos, showOptions = ""
    p = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
    s = .Size~new(0, 0)
    return self~setWindowPos(p, s, "NOSIZE " || showOptions);
 
-::method getSize unguarded    -- old method, this is not accurate.
+::method getSize unguarded       -- old method, this is not accurate.
    forward message "getRealSize" continue
    size = result
    return (size~width % self~factorX) || " " || (size~height % self~factorY)
 
-::method getPos unguarded     -- old method, this is not accurate.
+::method getPos unguarded        -- old method, this is not accurate.
    forward message "getRealPos" continue
    p = result
    return (p~x % self~factorX) || " " || (p~y % self~factorY)
 
-::method windowRect unguarded external "LIBRARY oodialog wb_windowRect"
-::method getRect unguarded
+::method getRect unguarded       -- old method returns coordinates as a string
    forward message "windowRect" continue
    rect = result
    return rect~left rect~top rect~right rect~bottom
 
-::method clientRect unguarded external "LIBRARY oodialog wb_clientRect"
-::method getClientRect unguarded
+::method getClientRect unguarded -- old method returns coordinates as a string
    forward message "clientRect" continue
    rect = result
    return rect~left rect~top rect~right rect~bottom
-
-::method setRect unguarded
-   use strict arg x, y, width, height, showOptions = ""
-   return self~setWindowPos(.Point~new(x, y), .Size~new(width, height), showOptions);
 
 ::method SetForegroundWindow unguarded
     use arg hwnd

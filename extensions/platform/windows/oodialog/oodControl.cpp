@@ -52,6 +52,7 @@
 #include "oodMessaging.hpp"
 #include "oodText.hpp"
 #include "oodData.hpp"
+#include "oodDeviceGraphics.hpp"
 #include "oodControl.hpp"
 
 uint32_t listViewStyle(CSTRING opts, uint32_t style)
@@ -697,6 +698,92 @@ RexxMethod3(RexxObjectPtr, dlgctrl_tabGroup, OPTIONAL_logical_t, addStyle, NAME,
         style = (addStyle ? (style | WS_GROUP) : (style & ~WS_GROUP));
     }
     return setWindowStyle(context, pcdc->hCtrl, style);
+}
+
+/** DialogControl::clearRect()
+ *
+ *  Clears the rectangle specified in this control's client area.
+ *
+ *  @param  The coordinates of the rectangle.
+ *    Form 1:  A .Rect object.
+ *    Form 2:  A .Point object and a .Point object.
+ *    Form 3:  x1, y1, y1, y2
+ *
+ *  @return  0 on success, 1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(RexxObjectPtr, dlgctrl_clearRect, ARGLIST, args, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    RECT r = {0};
+    size_t arraySize;
+    int argsUsed;
+
+    if ( ! getRectFromArglist(context, args, &r, true, 1, 4, &arraySize, &argsUsed) )
+    {
+        return TheOneObj;
+    }
+    if ( argsUsed < arraySize )
+    {
+        return tooManyArgsException(context->threadContext, argsUsed);
+    }
+
+    return clearRect(context, pcdc->hCtrl, &r);
+}
+
+/** DialogControl::redrawRect()
+ *
+ *  Immediately redraws the specified rectangle in this control.
+ *
+ *  @param  The coordinates of the rectangle.
+ *    Form 1:  A .Rect object.
+ *    Form 2:  A .Point object and a .Point object.
+ *    Form 3:  x1, y1, y1, y2
+ *
+ *  @param erase  [OPITONAL]  Whether the background should be erased first.
+ *                The default is false.
+ *
+ *  @return  0 on success, 1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(RexxObjectPtr, dlgctrl_redrawRect, ARGLIST, args, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+
+    bool doErase = false;
+    RECT r = {0};
+    size_t arraySize;
+    int argsUsed;
+
+    if ( ! getRectFromArglist(context, args, &r, true, 1, 5, &arraySize, &argsUsed) )
+    {
+        return TheOneObj;
+    }
+
+    if ( arraySize > argsUsed + 1 )
+    {
+        return tooManyArgsException(context->threadContext, argsUsed + 1);
+    }
+    else if ( arraySize == (argsUsed + 1) )
+    {
+        // The object at argsUsed + 1 has to exist, otherwise arraySize would
+        // equal argsUsed.
+        RexxObjectPtr obj = context->ArrayAt(args, argsUsed + 1);
+
+        logical_t erase;
+        if ( ! context->Logical(obj, &erase) )
+        {
+            return notBooleanException(context->threadContext, argsUsed + 2, obj);
+        }
+        doErase = erase ? true : false;
+    }
+
+    return redrawRect(context, pcdc->hCtrl, &r, doErase);
 }
 
 /** DialogControl::getTextSizeDlg()

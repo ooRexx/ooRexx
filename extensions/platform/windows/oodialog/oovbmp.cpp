@@ -42,13 +42,13 @@
 #include <ctl3d.h>
 #endif
 #include "oodCommon.hpp"
+#include "oodDeviceGraphics.hpp"
 
 extern LPBITMAPINFO LoadDIB(const char *szFile);
 WORD NumDIBColorEntries(LPBITMAPINFO lpBmpInfo);
 HPALETTE CreateDIBPalette(LPBITMAPINFO lpBmpInfo);
 void SetSysPalColors(HPALETTE hPal);
 HPALETTE CopyPalette(HPALETTE hSrcPal);
-extern BOOL DrawButton(DIALOGADMIN *,INT id);
 extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern HWND ScrollingButton;
 extern HWND RedrawScrollingButton;
@@ -404,12 +404,15 @@ BOOL DrawBackgroundBmp(DIALOGADMIN * addr, HWND hDlg, WPARAM wParam, LPARAM lPar
 
 size_t RexxEntry BmpButton(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
-   DEF_ADM;
+   DIALOGADMIN * dlgAdm = NULL;
 
    CHECKARGL(3);
 
-   GET_ADM;
-   if (!dlgAdm) RETERR
+   dlgAdm = (DIALOGADMIN *)string2pointer(&argv[0]);
+   if ( dlgAdm == NULL )
+   {
+       RETERR
+   }
 
    if (argv[1].strptr[0] == 'C')     /* change a bitmap button */
    {
@@ -479,8 +482,15 @@ size_t RexxEntry BmpButton(const char *funcname, size_t argc, CONSTRXSTRING *arg
              SetSysPalColors(dlgAdm->ColorPalette);
           }
 
-          if (!strstr(optb, "NODRAW"))
-              DrawButton(dlgAdm, id);
+          if ( strstr(optb, "NODRAW") == 0 )
+          {
+              HWND hCtrl = GetDlgItem(dlgAdm->TheDlg, id);
+              if ( hCtrl == NULL )
+              {
+                  RETC(1)
+              }
+              drawButton(dlgAdm->TheDlg, hCtrl, id);
+          }
           RETC(0)
        }
        RETC(1)

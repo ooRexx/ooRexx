@@ -79,6 +79,7 @@ extern void wrongArgValueException(RexxThreadContext *c, int pos, const char *li
 
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, RexxObjectPtr actual);
 extern RexxObjectPtr wrongRangeException(RexxThreadContext *c, int pos, int min, int max, int actual);
+extern RexxObjectPtr notBooleanException(RexxThreadContext *c, int pos, RexxObjectPtr actual);
 
 extern CSTRING rxGetStringAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 extern bool    rxGetNumberAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name, wholenumber_t *pNumber);

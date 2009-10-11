@@ -132,12 +132,11 @@
  /* The following Methods are to set/get the behaviour of/from a scrollbar */
  /* You can use scrollbars to connect them with numerical entry fields */
 
-::method SetSBRange unguarded
-   use arg id, min, max, redraw
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   if arg(4, "o") = 1 then redraw = 1
-   return HandleScrollBar("SR", self~getItem(id),min,max, redraw)
+::method setSBRange unguarded
+   use arg id, min, max, redraw = .true
+   sb = self~newScrollBar(id)
+   if sb == .nil then return -1
+   return sb~setRange(min, max, redraw)
 
 ::method GetSBRange unguarded
    use arg id
@@ -266,17 +265,20 @@
    if h = 0 then return -1
    return WndShow_Pos("S",h, "NORMAL FAST")
 
-   /* This method returns the size and position of the given button */
-::method GetButtonRect unguarded
-   use arg id
-   hwnd = self~getItem(id)
-   return WindowRect("GET", hwnd)
+::method handle2Rect unguarded external "LIBRARY oodialog dlgext_handle2Rect"
+::method getControlRect unguarded external "LIBRARY oodialog dlgext_getControlRect"
 
-   /* Returns the size and position of the given window */
+::method getButtonRect unguarded -- old method returns coordinates as a string
+   forward message "getControlRect" continue
+   rect = result
+   if .SystemErrorCode <> 0 then return 1  -- mimic old behavior
+   return rect~left rect~top rect~right rect~bottom
 
-::method GetWindowRect unguarded
-   use arg hwnd
-   return WindowRect("GET",hwnd)
+::method getWindowRect unguarded -- old method returns coordinates as a string
+   forward message "handle2Rect" continue
+   rect = result
+   return rect~left rect~top rect~right rect~bottom
+
 
 -- TODO resizeItem() and moveItem could be deprecated and forward to resizeControl() and
 -- moveControl().  The new methods would take pixels, the old methods could still use the
@@ -675,50 +677,20 @@
 /******************************************************************************/
 /* Graphics and drawing extensions */
 
-   /* This method draws the given button */
+::method drawButton unguarded external "LIBRARY oodialog dlgext_drawButton"
+::method clearRect unguarded external "LIBRARY oodialog dlgext_clearRect"
+::method clearWindowRect unguarded external "LIBRARY oodialog dlgext_clearWindowRect"
+::method clearControlRect unguarded external "LIBRARY oodialog dlgext_clearControlRect"
+::method redrawRect unguarded external "LIBRARY oodialog dlgext_redrawRect"
+::method redrawWindowRect unguarded external "LIBRARY oodialog dlgext_redrawWindowRect"
+::method redrawControl unguarded external "LIBRARY oodialog dlgext_redrawControl"
 
-::method DrawButton unguarded
-   use arg id
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   return WindowRect("BTN", self~adm, id)
+::method clearButtonRect unguarded
+   forward message 'CLEARCONTROLRECT'
 
-   /* This method erases the draw area of the given button */
+::method redrawButton unguarded
+   forward message 'REDRAWCONTROL'
 
-::method ClearButtonRect unguarded
-   use arg id
-   hwnd = self~getItem(id)
-   return WindowRect("CLR", self~adm, hwnd)
-
-   /* This method erases the draw area of the given window */
-
-::method ClearWindowRect unguarded
-   use arg hwnd
-   return WindowRect("CLR", self~adm, hwnd)
-
-::method clear unguarded external "LIBRARY oodialog dlgext_clear"
-
-   /* Clears the given rectangle left, top, right, bottom of the given window */
-
-::method ClearRect unguarded
-   use arg hwnd, left, top, right, bottom
-   return WindowRect("CLR", self~adm, hwnd,left,top,right,bottom)
-
-   /* This method redraws the given button */
-
-::method RedrawButton unguarded
-   use arg id, erasebkg
-   hwnd = self~getItem(id)
-   if arg(2, 'o') = 1 then erasebkg = 0
-   return WindowRect("RDW", hwnd, erasebkg)
-
-   /* This method redraws the rectangle of the given window */
-
-::method RedrawWindowRect unguarded
-   use arg hwnd, erasebkg
-   if arg(1, 'o') = 1 then hwnd = self~hwnd
-   if arg(2, 'o') = 1 then erasebkg = 0
-   return WindowRect("RDW", hwnd, erasebkg)
 
 
    /* This method allows you to write text to a window in the given font, in */
@@ -793,12 +765,6 @@
    return WndShow_Pos("P",hwnd, x, y, width, high, showOptions)
 
    /* Redraws the given rectangle */
-::method RedrawRect unguarded
-   use arg hwnd, left, top, right, bottom, erasebkg
-   if arg(1,'o') = 1 then hwnd = self~hwnd
-   if arg(6, 'o') = 1 then erasebkg = 0
-   return WindowRect("RDW", hwnd,left,top,right,bottom, erasebkg)
-
 ::method RedrawWindow unguarded
    use arg hwnd
    return WndShow_Pos("S", hwnd, "REDRAW")

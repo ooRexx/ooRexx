@@ -97,7 +97,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(Wnd_Desktop);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(WndShow_Pos);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(WindowRect);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleScrollBar);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DCDraw);
@@ -130,7 +129,6 @@ RexxRoutineEntry oodialog_functions[] =
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
     REXX_CLASSIC_ROUTINE(Wnd_Desktop,          Wnd_Desktop),
     REXX_CLASSIC_ROUTINE(WndShow_Pos,          WndShow_Pos),
-    REXX_CLASSIC_ROUTINE(WindowRect,           WindowRect),
     REXX_CLASSIC_ROUTINE(HandleScrollBar,      HandleScrollBar),
     REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),
     REXX_CLASSIC_ROUTINE(DCDraw,               DCDraw),
@@ -195,7 +193,6 @@ REXX_METHOD_PROTOTYPE(wb_isEnabled);
 REXX_METHOD_PROTOTYPE(wb_isVisible);
 REXX_METHOD_PROTOTYPE(wb_show);
 REXX_METHOD_PROTOTYPE(wb_showFast);
-REXX_METHOD_PROTOTYPE(wb_update);
 REXX_METHOD_PROTOTYPE(wb_display);
 REXX_METHOD_PROTOTYPE(wb_redrawClient);
 REXX_METHOD_PROTOTYPE(wb_redraw);
@@ -206,6 +203,7 @@ REXX_METHOD_PROTOTYPE(wb_resizeMove);
 REXX_METHOD_PROTOTYPE(wb_getSizePos);
 REXX_METHOD_PROTOTYPE(wb_windowRect);
 REXX_METHOD_PROTOTYPE(wb_clientRect);
+REXX_METHOD_PROTOTYPE(wb_clear);
 REXX_METHOD_PROTOTYPE(wb_getWindowLong_pvt);
 
 REXX_METHOD_PROTOTYPE(en_init_eventNotification);
@@ -247,7 +245,15 @@ REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
-REXX_METHOD_PROTOTYPE(dlgext_clear);
+REXX_METHOD_PROTOTYPE(dlgext_clearWindowRect);
+REXX_METHOD_PROTOTYPE(dlgext_clearControlRect);
+REXX_METHOD_PROTOTYPE(dlgext_clearRect);
+REXX_METHOD_PROTOTYPE(dlgext_handle2Rect);
+REXX_METHOD_PROTOTYPE(dlgext_getControlRect);
+REXX_METHOD_PROTOTYPE(dlgext_redrawRect);
+REXX_METHOD_PROTOTYPE(dlgext_redrawWindowRect);
+REXX_METHOD_PROTOTYPE(dlgext_redrawControl);
+REXX_METHOD_PROTOTYPE(dlgext_drawButton);
 
 REXX_METHOD_PROTOTYPE(baseDlg_init);
 REXX_METHOD_PROTOTYPE(baseDlg_newControl);
@@ -349,6 +355,8 @@ REXX_METHOD_PROTOTYPE(dlgctrl_connectFKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_disconnectKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_hasKeyPressConnection);
 REXX_METHOD_PROTOTYPE(dlgctrl_tabGroup);
+REXX_METHOD_PROTOTYPE(dlgctrl_redrawRect);
+REXX_METHOD_PROTOTYPE(dlgctrl_clearRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
 
 // Edit
@@ -575,7 +583,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_isVisible,                 wb_isVisible),
     REXX_METHOD(wb_show,                      wb_show),
     REXX_METHOD(wb_showFast,                  wb_showFast),
-    REXX_METHOD(wb_update,                    wb_update),
     REXX_METHOD(wb_display,                   wb_display),
     REXX_METHOD(wb_redrawClient,              wb_redrawClient),
     REXX_METHOD(wb_redraw,                    wb_redraw),
@@ -586,6 +593,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_getSizePos,                wb_getSizePos),
     REXX_METHOD(wb_windowRect,                wb_windowRect),
     REXX_METHOD(wb_clientRect,                wb_clientRect),
+    REXX_METHOD(wb_clear,                     wb_clear),
     REXX_METHOD(wb_getWindowLong_pvt,         wb_getWindowLong_pvt),
 
     REXX_METHOD(en_init_eventNotification,   en_init_eventNotification),
@@ -624,7 +632,15 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
 
-    REXX_METHOD(dlgext_clear,                 dlgext_clear),
+    REXX_METHOD(dlgext_clearWindowRect,       dlgext_clearWindowRect),
+    REXX_METHOD(dlgext_clearControlRect,      dlgext_clearControlRect),
+    REXX_METHOD(dlgext_clearRect,             dlgext_clearRect),
+    REXX_METHOD(dlgext_handle2Rect,           dlgext_handle2Rect),
+    REXX_METHOD(dlgext_getControlRect,        dlgext_getControlRect),
+    REXX_METHOD(dlgext_redrawRect,            dlgext_redrawRect),
+    REXX_METHOD(dlgext_redrawWindowRect,      dlgext_redrawWindowRect),
+    REXX_METHOD(dlgext_redrawControl,         dlgext_redrawControl),
+    REXX_METHOD(dlgext_drawButton,            dlgext_drawButton),
 
     REXX_METHOD(baseDlg_init,                 baseDlg_init),
     REXX_METHOD(baseDlg_newControl,           baseDlg_newControl),
@@ -678,6 +694,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_disconnectKeyPress,     dlgctrl_disconnectKeyPress),
     REXX_METHOD(dlgctrl_hasKeyPressConnection,  dlgctrl_hasKeyPressConnection),
     REXX_METHOD(dlgctrl_tabGroup,               dlgctrl_tabGroup),
+    REXX_METHOD(dlgctrl_clearRect,              dlgctrl_clearRect),
+    REXX_METHOD(dlgctrl_redrawRect,             dlgctrl_redrawRect),
     REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
 
     REXX_METHOD(window_init,                  window_init),

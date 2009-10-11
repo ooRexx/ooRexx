@@ -791,31 +791,6 @@ uint32_t parseShowOptions(CSTRING options)
 }
 
 /**
- * Invalidates a rectangle in a window and has the window update.  This should
- * cause the window to immediately repaint the rectangle.
- *
- * @param hwnd              Handle to the window to be redrawn.
- * @param pr                Pointer to a rect structure specifying the area to
- *                          be redrawn.  If this arg is null, the entire client
- *                          area is redrawn.
- * @param eraseBackground   Should the background of the window be redrawn
- *                          during the repaint.
- *
- * @return True on success, otherwise false.
- *
- * @remarks  This is common code for several API methods.
- */
-bool redrawRect(HWND hwnd, PRECT pr, bool eraseBackground)
-{
-    if ( InvalidateRect(hwnd, pr, eraseBackground) )
-    {
-       UpdateWindow(hwnd);
-       return true;
-    }
-    return false;
-}
-
-/**
  * Performs the initialization of the WindowBase mixin class.
  *
  * This is done by creating the cself struct for that class and then sending
@@ -947,7 +922,6 @@ RexxMethod2(RexxObjectPtr, wb_setSizeY, uint32_t, ySize, CSELF, pCSelf) { ((pCWi
 /** WindowBase::pixelX  [attribute]
  *
  *  Returns the width of the window in pixels.  This is a 'get' only attribute.
- *
  */
 RexxMethod1(uint32_t, wb_getPixelX, CSELF, pCSelf)
 {
@@ -965,7 +939,6 @@ RexxMethod1(uint32_t, wb_getPixelX, CSELF, pCSelf)
 /** WindowBase::pixelY  [attribute]
  *
  *  Returns the height of the window in pixels.  This is a 'get' only attribute.
- *
  */
 RexxMethod1(uint32_t, wb_getPixelY, CSELF, pCSelf)
 {
@@ -1114,15 +1087,6 @@ RexxMethod1(logical_t, wb_show, CSELF, pCSelf)
     return showWindow(pCSelf, msgAbbrev(context));
 }
 
-RexxMethod1(uint32_t, wb_update, CSELF, pCSelf)
-{
-    RECT r;
-    HWND hwnd = getWBWindow(pCSelf);
-    GetClientRect(hwnd, &r);
-    InvalidateRect(hwnd, &r, TRUE);
-    return 0;
-}
-
 /** WindowBase::showFast() / WindowBase::hideFast()
  *
  *  Hides or shows the window 'fast'.  What this means is the visible flag is
@@ -1186,27 +1150,28 @@ done_out:
     return ret;
 }
 
-/** WindowsBase::draw() / WindowsBase::redraw() / WindowsBase::update()
+/** WindowsBase::draw() / WindowsBase::redrawClient() / WindowsBase::update()
  *
  *  Causes the entire client area of the the window to be redrawn.
  *
  *  This method maps to the draw(), update() and the redrawClient() methods.
- *  The implementation preserves existing behavior prior to ooRexx 4.0.0.  That
+ *  The implementation preserves existing behavior prior to ooRexx 4.0.1.  That
  *  is: the draw() method takes no argument and always uses false for the erase
  *  background arg. The update() method takes no argument and always uses true
  *  for the erase background arg, The redrawClient() method takes an argument to
  *  set the erase background arg. The argument can be either .true / .false (1
  *  or 0), or yes / no, or ja / nein.
  *
- *  @param  erase  [optional]  Whether the redraw operation should erase the
- *                 window background.  Can be true / false or yes / no.  The
+ *  @param  erase  [optional]  Whether the redrawClient operation should erase
+ *                 the window background.  Can be true / false or yes / no.  The
  *                 default is false.
  *
  *  @return  0 for success, 1 for error.
+ *
+ *  @note  Sets the .SystemErrorCode.
  */
-RexxMethod2(uint32_t, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSelf)
 {
-    RECT r;
     HWND hwnd = getWBWindow(pCSelf);
     char flag = msgAbbrev(context);
     bool doErase;
@@ -1223,9 +1188,7 @@ RexxMethod2(uint32_t, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSelf)
     {
         doErase = isYes(erase);
     }
-
-    GetClientRect(hwnd, &r);
-    return redrawRect(hwnd, &r, doErase) ? 0 : 1;
+    return redrawRect(context, hwnd, NULL, doErase);
 }
 
 /** WindowsBase::redraw()
@@ -1233,10 +1196,19 @@ RexxMethod2(uint32_t, wb_redrawClient, OPTIONAL_CSTRING, erase, CSELF, pCSelf)
  *  Causes the entire window, including frame, to be redrawn.
  *
  *  @return  0 for success, 1 for error.
+ *
+ *  @note  Sets the .SystemErrorCode.
  */
-RexxMethod1(logical_t, wb_redraw, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, wb_redraw, CSELF, pCSelf)
 {
-    return RedrawWindow(getWBWindow(pCSelf), NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN) != 0;
+    oodResetSysErrCode(context->threadContext);
+    if ( RedrawWindow(getWBWindow(pCSelf), NULL, NULL,
+                      RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+    return TheZeroObj;
 }
 
 /** WindowBase::title / WindowBase::getText()
@@ -1252,7 +1224,6 @@ RexxMethod1(logical_t, wb_redraw, CSELF, pCSelf)
  *           failure, the empty string.
  *
  *  @note  Sets the .SystemErrorCode.
- *
  */
 RexxMethod1(RexxStringObject, wb_getText, CSELF, pCSelf)
 {
@@ -1304,14 +1275,7 @@ RexxMethod2(wholenumber_t, wb_setText, CSTRING, text, CSELF, pCSelf)
  */
 RexxMethod1(RexxObjectPtr, wb_windowRect, CSELF, pCSelf)
 {
-    oodResetSysErrCode(context->threadContext);
-
-    RECT r = {0};
-    if ( GetWindowRect(getWBWindow(pCSelf), &r) == 0 )
-    {
-        oodSetSysErrCode(context->threadContext);
-    }
-    return rxNewRect(context, &r);
+    return oodGetWindowRect(context, getWBWindow(pCSelf));
 }
 
 
@@ -1336,17 +1300,13 @@ RexxMethod1(RexxObjectPtr, wb_windowRect, CSELF, pCSelf)
  */
 RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, hwnd, CSELF, pCSelf)
 {
-    oodResetSysErrCode(context->threadContext);
     if ( argumentOmitted(1) )
     {
         hwnd = getWBWindow(pCSelf);
     }
 
     RECT r = {0};
-    if ( GetClientRect((HWND)hwnd, &r) == 0 )
-    {
-        oodSetSysErrCode(context->threadContext);
-    }
+    oodGetClientRect(context, (HWND)hwnd, &r);
     return rxNewRect(context, &r);
 }
 
@@ -1513,6 +1473,8 @@ RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pC
         }
         if ( countArgs == 2 )
         {
+            // The object at index 2 has to exist, otherwise countArgs would
+            // equal 1.
             obj = c->ArrayAt(args, 2);
             options = c->ObjectToStringValue(obj);
         }
@@ -1521,6 +1483,8 @@ RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pC
     {
         if ( countArgs == 3 )
         {
+            // The object at index 3 has to exist, otherwise countArgs would
+            // equal 2.
             obj = c->ArrayAt(args, 3);
             options = c->ObjectToStringValue(obj);
         }
@@ -1558,17 +1522,17 @@ RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pC
  *
  *  @return  The size as a .Size object, or the position as a .Point object.
  *
- *  @note  These methods will raise an exception if GetWindowRect() fails.
+ *  @note  Sets the .SystemErrorCode.
  */
 RexxMethod2(RexxObjectPtr, wb_getSizePos, NAME, method, CSELF, pCSelf)
 {
+    oodResetSysErrCode(context->threadContext);
+
     RECT r = {0};
     if ( GetWindowRect(getWBWindow(pCSelf), &r) == 0 )
     {
-        systemServiceExceptionCode(context->threadContext, API_FAILED_MSG, "GetWindowRect");
-        return NULLOBJECT;
+        oodSetSysErrCode(context->threadContext);
     }
-
     if ( method[7] == 'S' )
     {
         return rxNewSize(context, (r.right - r.left), (r.bottom - r.top));
@@ -1583,6 +1547,45 @@ RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
     return GetWindowLong(getWBWindow(pCSelf), flag);
 }
 
+
+/** WindowBase::clear()
+ *
+ *  'Clears' the dialog's client area by painting the entire area with the
+ *  system color COLOR_BTNFACE brush.  This is the same color as the default
+ *  dialog background color so it has the effect of erasing everything on the
+ *  client area, or 'clearing' it.
+ *
+ *  @return 0 on success, 1 for error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  Prior to 4.0.1, this method was in both the DialogExtensions and
+ *            Dialog class. However, each method simply uses the object's window
+ *            handle so it makes more sense to be a WindowBase method.
+ *
+ *            Note this also: both methods were broken.  They used the window
+ *            rect of the window, not the client rect.  In addition,
+ *            GetWindowDC() was used instead of GetDC().  This has the effect of
+ *            painting in the nonclient area of the window, which normally is
+ *            not done.  Since the methods were broken and the documentation was
+ *            vague, it is not possible to tell what the original intent was.
+ *
+ *            Since clearing the window rect of the dialog erases the title bar,
+ *            and there is no way for the ooDialog programmer to redraw the
+ *            title bar or title bar buttons, the assumption is that the methods
+ *            were intended to clear the client area.
+ */
+RexxMethod1(RexxObjectPtr, wb_clear, CSELF, pCSelf)
+{
+    HWND hwnd = getWBWindow(pCSelf);
+
+    RECT r = {0};
+    if ( oodGetClientRect(context, hwnd, &r) == TheOneObj )
+    {
+        return TheOneObj;
+    }
+    return clearRect(context, hwnd, &r);
+}
 
 /**
  *  Methods for the .PlainBaseDialog class.
@@ -2365,89 +2368,6 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
     }
     return NULLOBJECT;
 }
-
-
-/**
- *  Methods for the .DialogExtensions mixin class.
- */
-#define DIALOGEXTENSIONS_CLASS        "DialogExtensions"
-
-
-RexxMethod1(RexxObjectPtr, dlgext_clear, OSELF, self)
-{
-    oodResetSysErrCode(context->threadContext);
-    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
-
-    if ( pcpbd->hDlg == NULL )
-    {
-        return noWindowsDialogException(context, self);
-    }
-
-    RECT r = {0};
-    if ( GetClientRect(pcpbd->hDlg, &r) == 0 )
-    {
-        oodSetSysErrCode(context->threadContext);
-        return TheOneObj;
-    }
-
-    return clearRect(context, pcpbd->hDlg, &r);
-}
-
-
-RexxMethod2(RexxObjectPtr, dlgext_clearWindowRect, POINTERSTRING, hwnd, OSELF, self)
-{
-    oodResetSysErrCode(context->threadContext);
-    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
-
-    if ( pcpbd->hDlg == NULL )
-    {
-        return noWindowsDialogException(context, self);
-    }
-
-    RECT r = {0};
-    if ( GetClientRect((HWND)hwnd, &r) == 0 )
-    {
-        oodSetSysErrCode(context->threadContext);
-        return TheOneObj;
-    }
-
-    return clearRect(context, (HWND)hwnd, &r);
-}
-
-
-RexxMethod2(RexxObjectPtr, dlgext_clearControlRect, RexxObjectPtr, rxID, OSELF, self)
-{
-    oodResetSysErrCode(context->threadContext);
-    pCPlainBaseDialog pcpbd = dlgToCSelf(context, self);
-
-    if ( pcpbd->hDlg == NULL )
-    {
-        return noWindowsDialogException(context, self);
-    }
-
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
-    {
-        return TheNegativeOneObj;
-    }
-    HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
-    if ( hCtrl == NULL )
-    {
-        oodSetSysErrCode(context->threadContext);
-        return TheOneObj;
-    }
-
-    RECT r = {0};
-    if ( GetClientRect(hCtrl, &r) == 0 )
-    {
-        oodSetSysErrCode(context->threadContext);
-        return TheOneObj;
-    }
-
-    return clearRect(context, hCtrl, &r);
-}
-
-
 
 
 /**

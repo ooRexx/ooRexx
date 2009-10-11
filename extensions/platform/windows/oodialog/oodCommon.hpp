@@ -165,18 +165,17 @@ extern void          ooDialogInternalException(RexxMethodContext *, char *, int,
 extern RexxObjectPtr noWindowsDialogException(RexxMethodContext *c, RexxObjectPtr rxDlg);
 extern inline void   failedToRetrieveDlgAdmException(RexxThreadContext *c, RexxObjectPtr source);
 
-extern oodClass_t oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
-extern uint32_t   oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
-extern bool       oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern oodClass_t    oodClass(RexxMethodContext *, RexxObjectPtr, oodClass_t *, size_t);
+extern uint32_t      oodResolveSymbolicID(RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern bool          oodSafeResolveID(uint32_t *, RexxMethodContext *, RexxObjectPtr, RexxObjectPtr, int, int);
+extern DWORD         oodGetSysErrCode(RexxThreadContext *);
+extern void          oodSetSysErrCode(RexxThreadContext *, DWORD);
+extern void          oodResetSysErrCode(RexxThreadContext *context);
 
 extern int32_t    checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    idError(RexxMethodContext *c, RexxObjectPtr rxID);
 extern int32_t    resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    resolveIconID(RexxMethodContext *c, RexxObjectPtr rxIconID, RexxObjectPtr self);
-
-extern DWORD      oodGetSysErrCode(RexxThreadContext *);
-extern void       oodSetSysErrCode(RexxThreadContext *, DWORD);
-extern void       oodResetSysErrCode(RexxThreadContext *context);
 
 extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos);
 extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);

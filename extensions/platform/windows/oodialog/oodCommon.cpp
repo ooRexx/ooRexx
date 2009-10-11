@@ -1044,6 +1044,23 @@ bool goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max
  * The purpose is to give the Rexx programmer some flexibility in how they pass
  * in "rectangle-like" coordinates to a method.
  *
+ * The coordinates can be expressed as a .Rect, as a .Point and a .Size, as a
+ * .Point and a .Point, or as 4 individual intergers.
+ *
+ * There are also two basic scenarios where this is used:
+ *
+ * 1.) A bounding rectangle: x1, y1, x2, y2  With a bounding rectangle x1 and y1
+ * specify the upper-left corner of the rectangle. x2 and y2 specify the
+ * lower-bottom corner of the rectangle.  In this scenario, the Rexx programmer
+ * can use .Point .Point, but not .Point .Size.
+ *
+ * 2.) A point / size rectangle.  In this case the first two args specify the
+ * upper-left corner of the rectangel, and the third and forth args specify the
+ * width and height of the rectangle.  In this scenario, the Rexx programmer can
+ * use .Point and .Size, but not .Point and .Point
+ *
+ * In either case, .Rect and 4 indvidual integers are taken at face value.
+ *
  * @param c
  * @param args
  * @param rect
@@ -1095,17 +1112,24 @@ bool getRectFromArglist(RexxMethodContext *c, RexxArrayObject args, PRECT rect, 
             goto err_out;
         }
 
-        PSIZE s = rxGetSize(c, obj2, startArg + 1);
-        if ( p == NULL )
-        {
-            goto err_out;
-        }
+        // If it is a bounding rectangle, the second object has to be a .Point
+        // object. Otherwise, the second object has to be a .Size object
         if ( boundingRect )
         {
-            SetRect(rect, p->x, p->y, p->x + s->cx, p->y + s->cy);
+            PPOINT p2 = rxGetPoint(c, obj2, startArg + 1);
+            if ( p2 == NULL )
+            {
+                goto err_out;
+            }
+            SetRect(rect, p->x, p->y, p2->x, p2->y);
         }
         else
         {
+            PSIZE s = rxGetSize(c, obj2, startArg + 1);
+            if ( s == NULL )
+            {
+                goto err_out;
+            }
             SetRect(rect, p->x, p->y, s->cx, s->cy);
         }
         *usedArgs = 2;

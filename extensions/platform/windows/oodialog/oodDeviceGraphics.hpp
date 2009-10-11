@@ -39,6 +39,10 @@
 #ifndef oodDeviceGraphics_Included
 #define oodDeviceGraphics_Included
 
-extern RexxObjectPtr clearRect(RexxMethodContext *c, HWND hwnd, PRECT rect);
+extern RexxObjectPtr oodGetClientRect(RexxMethodContext *, HWND hwnd, PRECT);
+extern RexxObjectPtr oodGetWindowRect(RexxMethodContext *, HWND hwnd);
+extern RexxObjectPtr clearRect(RexxMethodContext *, HWND, PRECT);
+extern RexxObjectPtr redrawRect(RexxMethodContext *, HWND, PRECT, bool);
+extern RexxObjectPtr drawButton(HWND hDlg, HWND hCtrl, uint32_t id);
 
 #endif

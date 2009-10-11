@@ -97,14 +97,8 @@
 
 ::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
-
-::method clear
-   parse value WindowRect("GET", self~Hwnd) with r.1 r.2 r.3 r.4
-   return WindowRect("CLR", self~oDlg~adm, self~Hwnd,r.1,r.2,r.3,r.4)
-
-::method clearRect
-   use arg left, top, right, bottom
-   return WindowRect("CLR", self~oDlg~adm, self~hwnd,left,top,right,bottom)
+::method RedrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
+::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
 
 ::method value unguarded  -- TODO this method won't work if this control is on a category page.
                           -- Implement in native code
@@ -132,12 +126,6 @@
 ::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
 ::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"
 ::method hasKeyPressConnection unguarded external "LIBRARY oodialog dlgctrl_hasKeyPressConnection"
-
-   /* Redraws the given rectangle */
-::method RedrawRect unguarded
-   use arg left, top, right, bottom, erasebkg
-   if arg(5, 'o') = 1 then erasebkg = 0
-   return WindowRect("RDW", self~hwnd,left,top,right,bottom, erasebkg)
 
 -- DEPRECATED
 ::method assignWindow

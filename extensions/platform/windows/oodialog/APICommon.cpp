@@ -227,6 +227,31 @@ void numberTooSmallException(RexxThreadContext *c, int pos, int min, RexxObjectP
     userDefinedMsgException(c, buffer);
 }
 
+/**
+ * Argument <argPos> must be true or false; found "<actual>"
+ *
+ * Argument 5 must be true or fals; found "an Array"
+ *
+ * Similar to:
+ *
+ * 88.904
+ * Argument argument must be zero or a positive whole number; found "value"
+ *
+ * Raises 88.900
+ *
+ * @param c        Thread context we are executing in.
+ * @param pos      Argumet position
+ * @param actual   Actual Rexx object
+ */
+RexxObjectPtr notBooleanException(RexxThreadContext *c, int pos, RexxObjectPtr actual)
+{
+    TCHAR buffer[256];
+    _snprintf(buffer, sizeof(buffer), "Argument %d must be true or false; found \"%s\"",
+              pos, c->ObjectToStringValue(actual));
+    userDefinedMsgException(c, buffer);
+    return NULLOBJECT;
+}
+
 void wrongObjInArrayException(RexxThreadContext *c, int argPos, size_t index, CSTRING obj)
 {
     TCHAR buffer[256];
