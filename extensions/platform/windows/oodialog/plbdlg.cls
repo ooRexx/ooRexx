@@ -425,10 +425,13 @@
 
 ::method get unguarded external "LIBRARY oodialog pbdlg_get"
 ::method getSelf unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
-::method getItem unguarded external "LIBRARY oodialog pbdlg_getItem"
 
--- TODO getItem() could be deprecated and forward to getControl().  getControl would return
--- a .Pointer; getItem() could check for a null pointer and return 0 in its place.
+-- TODO getItem() could be deprecated and forward to getControlHandle().  getControl would return
+-- a .Pointer; getItem() could check for a null pointer and return 0 in its place.  Also need to
+-- deal with -1 for bad resource ID, although the return for getItem is not documented as returning
+-- -1.
+::method getControlHandle unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
+::method getItem unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
 
 ::method getControlID unguarded external "LIBRARY oodialog pbdlg_getControlID"
 
@@ -457,20 +460,10 @@
 ::method EnsureVisible unguarded
    return SendWinMsg("ANY", self~dlgHandle, "0x0402", 0, 0)
 
-   /* This method changes the title of a window */
-
-::method SetWindowTitle unguarded
-   use arg hwnd, text
-   return Wnd_Desktop("SETTXT", hwnd, text)
-
-::method WindowTitle unguarded
-   use arg handle
-   return Wnd_Desktop("TXT", handle)
-
-   /* This method returns the title of the item 'id'  */
-::method ItemTitle unguarded
-   use arg id
-   return Wnd_Desktop("TXT", self~getItem(id))
+::method getWindowText unguarded external "LIBRARY oodialog pbdlg_getWindowText"
+::method setWindowText unguarded external "LIBRARY oodialog pbdlg_setWindowText"
+::method getControlText unguarded external "LIBRARY oodialog pbdlg_getControlText"
+::method setControlText unguarded external "LIBRARY oodialog pbdlg_setControlText"
 
 /* The following methods 'connect' a Windows dialog control with a 'data' attribute of the Rexx
  * dialog object.  For each dialog control an attribute of the dialog object is created and an
@@ -867,7 +860,6 @@
    end
 
 
-
    /* This method will clear all pending dialog messages */
 
 ::method ClearMessages unguarded protected
@@ -916,19 +908,6 @@
    use arg hwnd
    return WndShow_Pos("S",hwnd, "NORMAL", self~adm)
 
-   /* resize a dialog including border */
-::method Resize unguarded
-   use arg width, hight, showOptions
-   if arg(3,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   parse value Wnd_Desktop("RECT", self~hwnd) with x y cx cy
-   /* diffsx and diffsy are needed for the title and the frame */
-   diffsx = cx - x - (self~sizeX * self~factorX)
-   diffsy = cy - y - (self~sizeY * self~factorY)
-   self~sizeX = width
-   self~sizeY = hight
-   return WndShow_Pos("P", self~dlgHandle, 0, 0, width * self~factorX + diffsx,,
-                          hight* self~factorY + diffsy,"NOMOVE "||showOptions )
-
 ::method FocusItem unguarded
    use arg id
    return SendWinMsg("ANY", self~dlgHandle, "0x0028", self~getItem(id), 1)
@@ -941,10 +920,6 @@
 
 
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
-::method getTextSize unguarded
-   forward message "getTextSizeDlg" continue
-   return result~width result~height
-
 ::method setTabStop unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
 ::method setGroup unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
 
@@ -1054,4 +1029,16 @@
    forward message 'setControlData'
 ::method setAttrib unguarded
    forward message 'setControlDataAttribute'
+
+::method setWindowTitle unguarded
+   forward message 'setWindowText'
+::method windowTitle unguarded
+   forward message 'getWindowText'
+::method ItemTitle unguarded
+   forward message 'getControlText'
+
+
+::method getTextSize unguarded
+   forward message "getTextSizeDlg" continue
+   return result~width result~height
 

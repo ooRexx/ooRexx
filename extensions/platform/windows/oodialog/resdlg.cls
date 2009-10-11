@@ -82,11 +82,8 @@
       if self~autoDetect then do
          ids = self~getDataTableIDs
          do id over ids
-            hnd = self~getItem(id)
-            if (hnd \= 0) then do
-                txt = Wnd_Desktop("TXT",hnd)
-                self~addAttribute(id, txt)
-            end
+            text = self~getControlText(id)
+            self~addAttribute(id, txt)
          end
       end
       self~initDialog

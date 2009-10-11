@@ -1973,7 +1973,136 @@ RexxMethod3(RexxObjectPtr, pbdlg_setDlgFont, CSTRING, fontName, OPTIONAL_uint32_
 }
 
 
-/** PlainBaseDialog::getItem()
+/** PlainBaseDialog::getWindowText()
+ *
+ *  Gets the text of the specified window.
+ *
+ *  For a window with a frame, this is the window title.  But for a dialog
+ *  control, this is the text for the control.  This of course varies depending
+ *  on the type of control.  For a button, it is the button label, for an edit
+ *  control it is the edit text, etc..
+ *
+ *  @param  hwnd  The handle of the window.
+ *
+ *  @return  On success, the window text, which could be the empty string.  On
+ *           failure, the empty string.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod1(RexxStringObject, pbdlg_getWindowText, POINTERSTRING, hwnd)
+{
+    RexxStringObject result = context->NullString();
+    rxGetWindowText(context, (HWND)hwnd, &result);
+    return result;
+}
+
+/** PlainBaseDialog::setWindowText()
+ *
+ *  Sets the text for the specified window.
+ *
+ *  @param  hwnd  The handle of the window.
+ *  @param  text  The text to be set.
+ *
+ *  @return  0 for success, 1 for error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(wholenumber_t, pbdlg_setWindowText, POINTERSTRING, hwnd, CSTRING, text)
+{
+    oodResetSysErrCode(context->threadContext);
+    if ( SetWindowText((HWND)hwnd, text) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return 1;
+    }
+    return 0;
+}
+
+/** PlainBaseDialog::getControlText()
+ *
+ *  Gets the text of the specified control.
+ *
+ *  @param  rxID  The resource ID of the control, may be numeric or symbolic.
+ *
+ *  @return  On success, the window text, which could be the empty string.  On
+ *           failure, the empty string.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(RexxStringObject, pbdlg_getControlText, RexxObjectPtr, rxID, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    RexxStringObject result = context->NullString();
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+    }
+    else
+    {
+        HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
+        if ( hCtrl == NULL )
+        {
+            oodSetSysErrCode(context->threadContext);
+        }
+        else
+        {
+            rxGetWindowText(context, hCtrl, &result);
+        }
+    }
+    return result;
+}
+
+/** PlainBaseDialog::setControlText()
+ *
+ *  Sets the text for the specified control.
+ *
+ *  @param  rxID  The resource ID of the control, may be numeric or symbolic.
+ *  @param  text  The text to be set.
+ *
+ *  @return  0 for success, -1 for an incorrect resource ID, 1 for other errors.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(RexxObjectPtr, pbdlg_setControlText, RexxObjectPtr, rxID, CSTRING, text, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    RexxObjectPtr result = TheOneObj;
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+        result = TheNegativeOneObj;
+    }
+    else
+    {
+        HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
+        if ( hCtrl == NULL )
+        {
+            oodSetSysErrCode(context->threadContext);
+        }
+        else
+        {
+            if ( SetWindowText(hCtrl, text) == 0 )
+            {
+                oodSetSysErrCode(context->threadContext);
+            }
+            else
+            {
+                result = TheZeroObj;
+            }
+        }
+    }
+    return result;
+}
+
+/** PlainBaseDialog::getControlHandle()
  *
  *  Gets the window handle of a dialog control.
  *
@@ -1984,14 +2113,18 @@ RexxMethod3(RexxObjectPtr, pbdlg_setDlgFont, CSTRING, fontName, OPTIONAL_uint32_
  *
  *  @return The window handle of the specified dialog control on success. -1 if
  *          the ID can not be resolved.  A null handle there is no such control.
+ *
+ *  @note  Sets the .SystemErrorCode.
  */
-RexxMethod3(RexxObjectPtr, pbdlg_getItem, RexxObjectPtr, rxID, OPTIONAL_RexxStringObject, _hDlg, CSELF, pCSelf)
+RexxMethod3(RexxObjectPtr, pbdlg_getControlHandle, RexxObjectPtr, rxID, OPTIONAL_RexxStringObject, _hDlg, CSELF, pCSelf)
 {
+    oodResetSysErrCode(context->threadContext);
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
 
     uint32_t id;
     if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
     {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
         return TheNegativeOneObj;
     }
 
@@ -2004,7 +2137,13 @@ RexxMethod3(RexxObjectPtr, pbdlg_getItem, RexxObjectPtr, rxID, OPTIONAL_RexxStri
     {
         hDlg = (HWND)string2pointer(context, _hDlg);
     }
-    return pointer2string(context, GetDlgItem(hDlg, id));
+
+    HWND hCtrl = GetDlgItem(hDlg, id);
+    if ( hCtrl == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return pointer2string(context, hCtrl);
 }
 
 RexxMethod1(int32_t, pbdlg_getControlID, CSTRING, hwnd)

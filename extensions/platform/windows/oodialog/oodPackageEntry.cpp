@@ -231,7 +231,11 @@ REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
 REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
-REXX_METHOD_PROTOTYPE(pbdlg_getItem);
+REXX_METHOD_PROTOTYPE(pbdlg_getControlHandle);
+REXX_METHOD_PROTOTYPE(pbdlg_getWindowText);
+REXX_METHOD_PROTOTYPE(pbdlg_setWindowText);
+REXX_METHOD_PROTOTYPE(pbdlg_getControlText);
+REXX_METHOD_PROTOTYPE(pbdlg_setControlText);
 REXX_METHOD_PROTOTYPE(pbdlg_getControlID);
 REXX_METHOD_PROTOTYPE(pbdlg_doMinMax);
 REXX_METHOD_PROTOTYPE(pbdlg_setTabGroup);
@@ -622,7 +626,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_putDlgDataInStem_pvt,    pbdlg_putDlgDataInStem_pvt),
     REXX_METHOD(plbdlg_getControlData,         plbdlg_getControlData),
     REXX_METHOD(pbdlg_setControlData,          pbdlg_setControlData),
-    REXX_METHOD(pbdlg_getItem,                 pbdlg_getItem),
+    REXX_METHOD(pbdlg_getControlHandle,                 pbdlg_getControlHandle),
+    REXX_METHOD(pbdlg_getWindowText,           pbdlg_getWindowText),
+    REXX_METHOD(pbdlg_setWindowText,           pbdlg_setWindowText),
+    REXX_METHOD(pbdlg_getControlText,          pbdlg_getControlText),
+    REXX_METHOD(pbdlg_setControlText,          pbdlg_setControlText),
     REXX_METHOD(pbdlg_getControlID,            pbdlg_getControlID),
     REXX_METHOD(pbdlg_doMinMax,                pbdlg_doMinMax),
     REXX_METHOD(pbdlg_setTabGroup,             pbdlg_setTabGroup),

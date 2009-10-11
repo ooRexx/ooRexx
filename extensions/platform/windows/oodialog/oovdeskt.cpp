@@ -63,19 +63,6 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
 
    CHECKARGL(1);
 
-   if (!strcmp(argv[0].strptr,"TXT"))      /* get the window text/title */
-   {
-       CHECKARG(2);
-       hW = GET_HWND(argv[1].strptr);
-       if (hW)
-       {
-           retstr->strlength = GetWindowText(hW, retstr->strptr, 255);
-           return 0;
-       }
-       retstr->strlength = 0;
-       return 0;
-   }
-   else
    if (!strcmp(argv[0].strptr,"ENABLE"))    /* enable/disable the window */
    {
        ULONG st;
@@ -97,16 +84,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
        }
        RETVAL(st)
    }
-   else
-   if (!strcmp(argv[0].strptr,"SETTXT"))     /* set the window text/title */
-   {
-       CHECKARG(3);
-
-       hW = GET_HWND(argv[1].strptr);
-       RETC(!SetWindowText(hW, argv[2].strptr))
-   }
-   else
-   if (!strcmp(argv[0].strptr,"SETFOC"))
+   else if (!strcmp(argv[0].strptr,"SETFOC"))
    {
        CHAR qualifier = 'C';
        LRESULT result;
@@ -155,8 +133,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
        else
           return 0;   /* retstr has handle of control that previously had the focus */
    }
-   else
-   if (!strcmp(argv[0].strptr,"GETFOC"))
+   else if (!strcmp(argv[0].strptr,"GETFOC"))
    {
        CHECKARG(2);
 
@@ -166,8 +143,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
        getCurrentFocus(hW, retstr);
        return 0;
    }
-   else
-   if (!strcmp(argv[0].strptr,"TOP"))       /* put window to the foreground */
+   else if (!strcmp(argv[0].strptr,"TOP"))       /* put window to the foreground */
    {
        CHECKARG(2);
        hW = GetForegroundWindow();
@@ -178,40 +154,11 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
        else
            RETVAL(0)   /* indicate failure */
    }
-   else
-   if (!strcmp(argv[0].strptr,"FG"))       /* get foreground window */
+   else if (!strcmp(argv[0].strptr,"FG"))       /* get foreground window */
    {
        RETHANDLE(GetForegroundWindow())
    }
-   else
-   if (!strcmp(argv[0].strptr,"RECT"))     /* get the window pos and size */  /* same as WindoRect("Get",hw) but in plain */
-   {
-       RECT r;
-       CHECKARG(2);
-       retstr->strlength = 0;
-
-       hW = GET_HWND(argv[1]);
-       if (hW)
-       {
-          if (!GetWindowRect(hW, &r)) return 0;
-          sprintf(retstr->strptr, "%d %d %d %d", r.left, r.top, r.right, r.bottom);
-          retstr->strlength = strlen(retstr->strptr);
-       }
-       return 0;
-   }
-   else
-   if (!strcmp(argv[0].strptr,"ID"))     /* get the window id */
-   {
-       CHECKARG(2);
-       hW = GET_HWND(argv[1]);
-       if (hW)
-       {
-          RETVAL((ULONG)GetWindowLong(hW, GWL_ID))
-       }
-       RETC(0);
-   }
-   else
-   if (!strcmp(argv[0].strptr,"CAP"))     /* get/set/release the mouse capture */
+   else if (!strcmp(argv[0].strptr,"CAP"))     /* get/set/release the mouse capture */
    {   /* capture must be handled by window thread, therefore sendmessage is used */
        CHECKARG(3);
        hW = GET_HWND(argv[1]);
@@ -230,8 +177,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
        }
        RETERR
    }
-   else
-   if (!strcmp(argv[0].strptr,"CURSOR"))     /* get/set the mouse cursor */
+   else if (!strcmp(argv[0].strptr,"CURSOR"))     /* get/set the mouse cursor */
    {
        if (argc == 1)
        {
@@ -275,8 +221,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
        }
        RETERR
    }
-   else
-   if (!strcmp(argv[0].strptr,"KSTAT"))     /* key state and mouse buttons*/
+   else if (!strcmp(argv[0].strptr,"KSTAT"))     /* key state and mouse buttons*/
    {    /* keystate must be handled by window thread, therefore sendmessage is used */
        CHECKARG(3);
        hW = GET_HWND(argv[1]);
@@ -292,8 +237,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
        }
        RETC(0)
    }
-   else
-   if (!strcmp(argv[0].strptr,"COORD"))     /* screen to client and  vice versa */
+   else if (!strcmp(argv[0].strptr,"COORD"))     /* screen to client and  vice versa */
    {
        CHECKARG(5);
        hW = GET_HWND(argv[1]);
