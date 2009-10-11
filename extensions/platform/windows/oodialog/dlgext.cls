@@ -84,16 +84,22 @@
 
    /* This method is started asynchronously to handle dialog messages */
 
-::method AsyncMessageHandling unguarded protected
+::method asyncMessageHandling unguarded protected
    use arg sleeptime
    do while self~finished = 0 & self~adm \= 0
       msg = getDlgMsg(self~adm)
       if msg~pos("1DLGDELETED1") > 0 then do
-          if self~finished = 0 then self~finished = 2
+         if self~finished = 0 then self~finished = 2
       end
       else do
-          if msg \= "" then interpret("self~"msg)
-          else call msSleep sleeptime /* to yield cpu */
+         if msg \= "" then do
+            parse var msg methodName '(' args ')'
+            argList = args~space(0)~makeArray(',')
+            self~sendWith(methodName, argList)
+         end
+         else do
+            if sleeptime \= 0 then call msSleep sleeptime
+         end
       end
    end
 

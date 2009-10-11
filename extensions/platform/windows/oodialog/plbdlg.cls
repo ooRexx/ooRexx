@@ -856,9 +856,17 @@
       if self~finished = 0 then self~finished = 2
    end
    else do
-      if msg \= "" then interpret("self~"msg)
-      else if sleeptime \= 0 then call msSleep sleeptime
+      if msg \= "" then do
+         parse var msg methodName '(' args ')'
+         argList = args~space(0)~makeArray(',')
+         self~sendWith(methodName, argList)
+      end
+      else do
+         if sleeptime \= 0 then call msSleep sleeptime
+      end
    end
+
+
 
    /* This method will clear all pending dialog messages */
 
