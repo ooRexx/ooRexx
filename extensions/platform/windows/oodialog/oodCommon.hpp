@@ -203,6 +203,7 @@ extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd,
 extern int           getKeywordValue(String2Int *cMap, const char * str);
 extern RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
 extern int           putUnicodeText(LPWORD dest, const char *text);
+extern uint32_t      parseShowOptions(CSTRING options);
 extern bool          goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max, size_t *arraySize);
 extern bool          getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, int *);
 extern bool          getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, int *);

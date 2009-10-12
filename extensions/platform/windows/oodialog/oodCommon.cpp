@@ -48,6 +48,7 @@
 #include <dlgs.h>
 #include <malloc.h>
 #include <CommCtrl.h>
+#include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 
@@ -1002,6 +1003,31 @@ int putUnicodeText(LPWORD dest, const char *text)
         }
     }
     return count;
+}
+
+
+/**
+ * Parses the show options for a number of methods that have to do with the
+ * moving, resizing, or both, of windows
+ *
+ * @param options  The keyword string.  This is a case-insensitive check. More
+ *                 than one keyword, or no keyword, is acceptable.
+ *
+ * @return uint32_t
+ */
+uint32_t parseShowOptions(CSTRING options)
+{
+    uint32_t opts = SWP_NOZORDER;
+
+    if ( options != NULL )
+    {
+       if ( StrStrI(options, "NOMOVE"    ) ) opts |= SWP_NOMOVE;
+       if ( StrStrI(options, "NOSIZE"    ) ) opts |= SWP_NOSIZE;
+       if ( StrStrI(options, "HIDEWINDOW") ) opts |= SWP_HIDEWINDOW;
+       if ( StrStrI(options, "SHOWWINDOW") ) opts |= SWP_SHOWWINDOW;
+       if ( StrStrI(options, "NOREDRAW"  ) ) opts |= SWP_NOREDRAW;
+    }
+    return opts;
 }
 
 

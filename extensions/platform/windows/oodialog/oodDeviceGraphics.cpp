@@ -686,7 +686,7 @@ RexxMethod2(RexxObjectPtr, dlgext_clearControlRect, RexxObjectPtr, rxID, OSELF, 
  *  @param coordinates  The coordinates of the rectangle, given in pixels.
  *    Form 1:  A .Rect object.
  *    Form 2:  A .Point object and a .Point object.
- *    Form 3:  x1, y1, y1, y2
+ *    Form 3:  x1, y1, x1, y2
  *
  *  @return 0 on success or 1 on error.
  *
@@ -719,6 +719,90 @@ RexxMethod3(RexxObjectPtr, dlgext_clearRect, POINTERSTRING, hwnd, ARGLIST, args,
     return clearRect(context, (HWND)hwnd, &r);
 }
 
+
+/** DialogExtensions::setWindowRect()
+ *
+ *  Changes the size and position of the specified window.
+ *
+ *  By specifying either NOSIZE or NOMOVE options the programmer can only move
+ *  or only resize the window.
+ *
+ *  @param hwnd         The window to be moved, resized, or both.
+ *  @param coordinates  The coordinates of a point / size rectangle, given in
+ *                      pixels
+ *
+ *    Form 1:  A .Rect object.
+ *    Form 2:  A .Point object and a .Size object.
+ *    Form 3:  x1, y1, cx, cy
+ *
+ *  @param  flags   [OPTIONAL] Keywords specifying the behavior of the method.
+ *
+ *  @return  0 for success, 1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  Microsoft says: If the SWP_SHOWWINDOW or SWP_HIDEWINDOW flag is
+ *            set, the window cannot be moved or sized.  But, that does not
+ *            appear to be true.
+ *
+ *            This method is essentially WindowBase::setWindowPos() but works on
+ *            a supplied window rather then the self object.
+ */
+RexxMethod3(RexxObjectPtr, dlgext_setWindowRect, POINTERSTRING, hwnd, ARGLIST, args, OSELF, self)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    size_t countArgs;
+    int    argsUsed;
+    RECT   rect;
+    if ( ! getRectFromArglist(context, args, &rect, false, 2, 6, &countArgs, &argsUsed) )
+    {
+        return NULLOBJECT;
+    }
+
+    RexxObjectPtr obj;
+    CSTRING options = "";
+    if ( argsUsed == 1 )
+    {
+        if ( countArgs > 3 )
+        {
+            return tooManyArgsException(context->threadContext, 3);
+        }
+        if ( countArgs == 3 )
+        {
+            obj = context->ArrayAt(args, 3);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+    else if ( argsUsed == 2 )
+    {
+        if ( countArgs > 4 )
+        {
+            return tooManyArgsException(context->threadContext, 4);
+        }
+        if ( countArgs == 4 )
+        {
+            obj = context->ArrayAt(args, 4);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+    else
+    {
+        if ( countArgs == 6 )
+        {
+            obj = context->ArrayAt(args, 6);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+
+    uint32_t opts = parseShowOptions(options);
+    if ( SetWindowPos((HWND)hwnd, NULL, rect.left, rect.top, rect.right, rect.bottom, opts) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+    return TheZeroObj;
+}
 
 /** DialogExtensions::handle2Rect()
  *
@@ -823,7 +907,7 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawWindowRect, OPTIONAL_POINTERSTRING, _hwn
  *
  *  @note  Sets the .SystemErrorCode.
  */
-RexxMethod3(RexxObjectPtr, dlgext_redrawRect, POINTERSTRING, _hwnd, ARGLIST, args, OSELF, self)
+RexxMethod3(RexxObjectPtr, dlgext_redrawRect, OPTIONAL_POINTERSTRING, _hwnd, ARGLIST, args, OSELF, self)
 {
     pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
     if ( pcpbd == NULL )

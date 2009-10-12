@@ -236,7 +236,9 @@ REXX_METHOD_PROTOTYPE(pbdlg_getWindowText);
 REXX_METHOD_PROTOTYPE(pbdlg_setWindowText);
 REXX_METHOD_PROTOTYPE(pbdlg_getControlText);
 REXX_METHOD_PROTOTYPE(pbdlg_setControlText);
+REXX_METHOD_PROTOTYPE(pbdlg_enableDisableControl);
 REXX_METHOD_PROTOTYPE(pbdlg_getControlID);
+REXX_METHOD_PROTOTYPE(pbdlg_center);
 REXX_METHOD_PROTOTYPE(pbdlg_doMinMax);
 REXX_METHOD_PROTOTYPE(pbdlg_setTabGroup);
 REXX_METHOD_PROTOTYPE(pbdlg_connect_ControName);
@@ -249,6 +251,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
+REXX_METHOD_PROTOTYPE(dlgext_setWindowRect);
 REXX_METHOD_PROTOTYPE(dlgext_clearWindowRect);
 REXX_METHOD_PROTOTYPE(dlgext_clearControlRect);
 REXX_METHOD_PROTOTYPE(dlgext_clearRect);
@@ -626,12 +629,14 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_putDlgDataInStem_pvt,    pbdlg_putDlgDataInStem_pvt),
     REXX_METHOD(plbdlg_getControlData,         plbdlg_getControlData),
     REXX_METHOD(pbdlg_setControlData,          pbdlg_setControlData),
-    REXX_METHOD(pbdlg_getControlHandle,                 pbdlg_getControlHandle),
+    REXX_METHOD(pbdlg_getControlHandle,        pbdlg_getControlHandle),
     REXX_METHOD(pbdlg_getWindowText,           pbdlg_getWindowText),
     REXX_METHOD(pbdlg_setWindowText,           pbdlg_setWindowText),
     REXX_METHOD(pbdlg_getControlText,          pbdlg_getControlText),
     REXX_METHOD(pbdlg_setControlText,          pbdlg_setControlText),
+    REXX_METHOD(pbdlg_enableDisableControl,    pbdlg_enableDisableControl),
     REXX_METHOD(pbdlg_getControlID,            pbdlg_getControlID),
+    REXX_METHOD(pbdlg_center,                  pbdlg_center),
     REXX_METHOD(pbdlg_doMinMax,                pbdlg_doMinMax),
     REXX_METHOD(pbdlg_setTabGroup,             pbdlg_setTabGroup),
     REXX_METHOD(pbdlg_stopIt,                  pbdlg_stopIt),
@@ -640,6 +645,7 @@ RexxMethodEntry oodialog_methods[] = {
 
     REXX_METHOD(generic_setListTabulators,    generic_setListTabulators),
 
+    REXX_METHOD(dlgext_setWindowRect,         dlgext_setWindowRect),
     REXX_METHOD(dlgext_clearWindowRect,       dlgext_clearWindowRect),
     REXX_METHOD(dlgext_clearControlRect,      dlgext_clearControlRect),
     REXX_METHOD(dlgext_clearRect,             dlgext_clearRect),

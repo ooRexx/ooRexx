@@ -774,22 +774,6 @@ static inline HWND getWBWindow(void *pCSelf)
     return ((pCWindowBase)pCSelf)->hwnd;
 }
 
-// TODO, may be okay to use static ?
-uint32_t parseShowOptions(CSTRING options)
-{
-    uint32_t opts = SWP_NOZORDER;
-
-    if ( options != NULL )
-    {
-       if ( StrStrI(options, "NOMOVE"    ) ) opts |= SWP_NOMOVE;
-       if ( StrStrI(options, "NOSIZE"    ) ) opts |= SWP_NOSIZE;
-       if ( StrStrI(options, "HIDEWINDOW") ) opts |= SWP_HIDEWINDOW;
-       if ( StrStrI(options, "SHOWWINDOW") ) opts |= SWP_SHOWWINDOW;
-       if ( StrStrI(options, "NOREDRAW"  ) ) opts |= SWP_NOREDRAW;
-    }
-    return opts;
-}
-
 /**
  * Performs the initialization of the WindowBase mixin class.
  *
@@ -1592,6 +1576,13 @@ RexxMethod1(RexxObjectPtr, wb_clear, CSELF, pCSelf)
  */
 #define PLAINBASEDIALOG_CLASS  "PlainBaseDialog"
 
+
+static inline HWND getPBDWindow(void *pCSelf)
+{
+    return ((pCPlainBaseDialog)pCSelf)->hDlg;
+}
+
+
 int32_t stopDialog(HWND hDlg)
 {
     if ( hDlg != NULL )
@@ -1996,6 +1987,68 @@ RexxMethod1(RexxStringObject, pbdlg_getWindowText, POINTERSTRING, hwnd)
     return result;
 }
 
+
+/** PlainBaseDialog::center()
+ *
+ *  Moves the dialog to the center of screen.
+ *
+ *  The dialog can be centered in the physical screen, or optionally centered in
+ *  the screen work area. The work area is the portion of the screen not
+ *  obscured by the system taskbar or by application desktop toolbars.
+ *
+ *  @param options  A string of zero or more blank separated keywords.  The key
+ *                  words control the behavior when the dialog is moved.
+ *  @param workArea If true, the dialog is centered in the work area of the
+ *                  screen.  The default, false, centers the dialog in the
+ *                  physical screen area.
+ *
+ *  @return  True on success, otherwise false.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(RexxObjectPtr, pbdlg_center, OPTIONAL_CSTRING, options, OPTIONAL_logical_t, workArea, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    HWND hwnd = getPBDWindow(pCSelf);
+
+    RECT r;
+    if ( GetWindowRect(hwnd, &r) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheFalseObj;
+    }
+
+    if ( workArea )
+    {
+        RECT wa;
+        if ( ! SystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0) )
+        {
+            oodSetSysErrCode(context->threadContext);
+            return TheFalseObj;
+        }
+        r.left = wa.left + (((wa.right - wa.left) - (r.right - r.left)) / 2);
+        r.top = wa.top + (((wa.bottom - wa.top) - (r.bottom - r.top)) / 2);
+    }
+    else
+    {
+        uint32_t cxScr = GetSystemMetrics(SM_CXSCREEN);
+        uint32_t cyScr = GetSystemMetrics(SM_CYSCREEN);
+
+        r.left = (cxScr - (r.right - r.left)) / 2;
+        r.top = (cyScr - (r.bottom - r.top)) / 2;
+    }
+
+    uint32_t opts = parseShowOptions(options);
+    opts = (opts | SWP_NOSIZE) & ~SWP_NOMOVE;
+
+    if ( SetWindowPos(hwnd, NULL, r.left, r.top, r.right, r.bottom, opts) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheFalseObj;
+    }
+    return TheTrueObj;
+}
+
 /** PlainBaseDialog::setWindowText()
  *
  *  Sets the text for the specified window.
@@ -2097,6 +2150,53 @@ RexxMethod3(RexxObjectPtr, pbdlg_setControlText, RexxObjectPtr, rxID, CSTRING, t
             {
                 result = TheZeroObj;
             }
+        }
+    }
+    return result;
+}
+
+/** PlainBaseDialog::enableControl()
+ *  PlainBaseDialog::disableControl()
+ *
+ *  Disables or enables the specified control
+ *
+ *  @param  rxID  The resource ID of the control, may be numeric or symbolic.
+ *
+ *  @return  1 (true) if the window was previously disabled, returns 0 (false)
+ *           if the window was not previously disabled.  Note that this is not
+ *           succes or failure.  -1 on error
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  The return was not previously documented.
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_enableDisableControl, RexxObjectPtr, rxID, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    RexxObjectPtr result = TheNegativeOneObj;
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+    }
+    else
+    {
+        HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
+        if ( hCtrl == NULL )
+        {
+            oodSetSysErrCode(context->threadContext);
+        }
+        else
+        {
+            BOOL enable = TRUE;
+            if ( msgAbbrev(context) == 'D' )
+            {
+                enable = FALSE;
+            }
+            result = EnableWindow(hCtrl, enable) == 0 ? TheZeroObj : TheOneObj;
         }
     }
     return result;

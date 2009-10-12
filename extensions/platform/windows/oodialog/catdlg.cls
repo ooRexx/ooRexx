@@ -621,19 +621,19 @@
    forward message 'setControlDataAttribute'
 
 
-::method EnableCategoryItem unguarded
+::method enableCategoryItem unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   h = self~getItem(id, self~catalog['handles'][category])
-   if h = 0 then return 1
-   return Wnd_Desktop("ENABLE", h, 1)
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if .SystemErrorCode <> 0 then return 1
+   .Window~new(hwnd)~enable
 
-::method DisableCategoryItem unguarded
+::method disableCategoryItem unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   h = self~getItem(id, self~catalog['handles'][category])
-   if h = 0 then return 1
-   return Wnd_Desktop("ENABLE",h, 0)
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if .SystemErrorCode <> 0 then return 1
+   .Window~new(hwnd)~disable
 
 ::method HideCategoryItem unguarded
    use arg id, category

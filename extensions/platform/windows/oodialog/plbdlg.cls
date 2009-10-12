@@ -876,17 +876,8 @@
  /* The following methods are to enable/disable and show/hide dialog items */
  /* The extension fast means that the method will not redraw the item */
 
-::method EnableItem unguarded
-   use arg id
-   h = self~getItem(id)
-   if h = 0 then return -1
-   return Wnd_Desktop("ENABLE",h, 1)
-
-::method DisableItem unguarded
-   use arg id
-   h = self~getItem(id)
-   if h = 0 then return -1
-   return Wnd_Desktop("ENABLE",h, 0)
+::method enableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"
+::method disableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"
 
 ::method HideItem unguarded
    use arg id
@@ -918,18 +909,10 @@
 ::method TabToPrevious unguarded
    return Wnd_Desktop("SETFOC", self~dlgHandle, 1, "P")
 
-
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
 ::method setTabStop unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
 ::method setGroup unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
-
-::method center unguarded
-   use arg showOptions
-   if arg(1,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   parse value self~GetSize with dcx dcy
-   s = screenSize()
-   return WndShow_Pos("P",self~dlgHandle, (s[3] - dcx * self~factorX) %2, (s[4] - dcy * self~factorY) %2, 0, 0,,
-                           "NOSIZE "||showOptions)
+::method center unguarded external "LIBRARY oodialog pbdlg_center"
 
 -- initAutoDetection() is invoked by init() to set the default for automatic data field detection.
 -- Therefore, subclasses can over-ride this method to change the default, which is enabled.
@@ -1036,6 +1019,11 @@
    forward message 'getWindowText'
 ::method ItemTitle unguarded
    forward message 'getControlText'
+::method enableItem unguarded
+   forward message 'enableControl'
+::method disableItem unguarded
+   forward message 'disableControl'
+
 
 
 ::method getTextSize unguarded

@@ -684,12 +684,18 @@
 /* Graphics and drawing extensions */
 
 ::method drawButton unguarded external "LIBRARY oodialog dlgext_drawButton"
+
+::method setWindowRect unguarded external "LIBRARY oodialog dlgext_setWindowRect"
 ::method clearRect unguarded external "LIBRARY oodialog dlgext_clearRect"
 ::method clearWindowRect unguarded external "LIBRARY oodialog dlgext_clearWindowRect"
 ::method clearControlRect unguarded external "LIBRARY oodialog dlgext_clearControlRect"
 ::method redrawRect unguarded external "LIBRARY oodialog dlgext_redrawRect"
 ::method redrawWindowRect unguarded external "LIBRARY oodialog dlgext_redrawWindowRect"
 ::method redrawControl unguarded external "LIBRARY oodialog dlgext_redrawControl"
+
+::method redrawWindow unguarded
+   use arg hwnd
+   .Window~new(hwnd)~redraw
 
 ::method clearButtonRect unguarded
    forward message 'CLEARCONTROLRECT'
@@ -764,16 +770,6 @@
 
 ::method PeekDialogMessage unguarded
    return getDlgMsg(self~adm, .true)
-
-::method SetWindowRect unguarded     -- TODO this could be implemented by using a .Window object
-   use arg hwnd, x, y, width, high, showOptions = ""
-   showOptions = showOptions~translate
-   return WndShow_Pos("P",hwnd, x, y, width, high, showOptions)
-
-   /* Redraws the given rectangle */
-::method RedrawWindow unguarded
-   use arg hwnd
-   return WndShow_Pos("S", hwnd, "REDRAW")
 
 ::method GetFocus unguarded
    return Wnd_Desktop("GETFOC", self~dlgHandle)

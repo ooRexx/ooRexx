@@ -63,28 +63,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
 
    CHECKARGL(1);
 
-   if (!strcmp(argv[0].strptr,"ENABLE"))    /* enable/disable the window */
-   {
-       ULONG st;
-
-       CHECKARG(3);
-       hW = GET_HWND(argv[1].strptr);
-
-       if (atoi(argv[2].strptr))
-       {
-          if (IsWindowEnabled(hW))
-              st = 0;
-          else st = EnableWindow(hW, TRUE);
-       }
-       else
-       {
-          if (!IsWindowEnabled(hW))
-             st = 0;
-          else st = EnableWindow(hW, FALSE);
-       }
-       RETVAL(st)
-   }
-   else if (!strcmp(argv[0].strptr,"SETFOC"))
+   if (!strcmp(argv[0].strptr,"SETFOC"))
    {
        CHAR qualifier = 'C';
        LRESULT result;
@@ -283,21 +262,13 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
            dlgAdm->AktChild = w;
        }
 
-       if (strstr(argv[2].strptr, "REDRAW"))
-       {
-           // Causes the entire window, including frame, to be redrawn.2
-           if (RedrawWindow(w, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN))
-               RETC(0) else RETC(1)
-       }
-       else
        if (strstr(argv[2].strptr, "UPDATE"))
        {
           GetClientRect(w, &r);
           InvalidateRect(w, &r, TRUE);
           RETC(0)
        }
-       else
-       if (strstr(argv[2].strptr, "FAST"))
+       else if (strstr(argv[2].strptr, "FAST"))
        {
            st = GetWindowLong(w, GWL_STYLE);
            if (st)
@@ -330,8 +301,7 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
               RETC(1)
        }
    }
-   else
-   if (argv[0].strptr[0]=='P')        /* move or resize a window */
+   else if (argv[0].strptr[0]=='P')        /* move or resize a window */
    {
        w = GET_HWND(argv[1]);
        LONG ibuffer[5], opts;
@@ -369,8 +339,7 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
         opts | SWP_NOZORDER
        ))
    }
-   else
-   if (argv[0].strptr[0] == 'B')   /* scroll position */
+   else if (argv[0].strptr[0] == 'B')   /* scroll position */
    {
        CHECKARGL(3);
        if (argc == 3)
@@ -386,8 +355,7 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
        }
        RETERR
    }
-   else
-   if (argv[0].strptr[0] == 'M')   /* scroll window contents */
+   else if (argv[0].strptr[0] == 'M')   /* scroll window contents */
    {
        CHECKARG(4);
        w = GET_HWND(argv[1]);
