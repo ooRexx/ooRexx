@@ -209,7 +209,6 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/lib/ooRexx/librxsock.la                     /usr/lib/librxsock.la
    ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.%{orx_libversion}
    ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.%{orx_current}
-   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so
    ln -sf %{_prefix}/lib/ooRexx/librxmath.la                     /usr/lib/librxmath.la
    ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.%{orx_libversion}
    ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.%{orx_current}
@@ -232,8 +231,19 @@ if [ -d /opt/ooRexx ]; then
    ln -sf %{_prefix}/share/man/man1/rxsubcom.1            /usr/share/man/man1/rxsubcom.1
    ln -sf %{_prefix}/share/man/man1/rxqueue.1             /usr/share/man/man1/rxqueue.1
    ln -sf %{_prefix}/share/ooRexx/rexxtry.rex             /usr/bin/rexxtry.rex
-# allow backwards compatibility to Object REXX 2.x
+# allow backwards compatibility to previous versions
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librexx.so.%{orx_libversion}     /usr/lib/librexx.so.3
    ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librexxapi.so.%{orx_libversion}  /usr/lib/librexxapi.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxsock.so.%{orx_libversion}   /usr/lib/librxsock.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxmath.so.%{orx_libversion}   /usr/lib/librxmath.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librxregexp.so.%{orx_libversion} /usr/lib/librxregexp.so.3
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.2
+   ln -sf %{_prefix}/lib/ooRexx/librexxutil.so.%{orx_libversion} /usr/lib/librexxutil.so.3
 fi
 if [ -d /etc/rc.d/init.d ]; then
    # Red Hat
