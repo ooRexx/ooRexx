@@ -251,81 +251,69 @@
    if arg(3, 'o') = 1 then bRedraw = 1
    return SendWinMsg("ANY", self~getItem(id), "0x0030", hFont, bRedraw)
 
-::method HideWindowFast unguarded
-   use arg hwnd
-   return WndShow_Pos("S", hwnd, "HIDE FAST")
+::method getWindowRect unguarded -- old method returns coordinates as a string
+   forward message "windowRect" continue
+   rect = result
+   return rect~left rect~top rect~right rect~bottom
 
-::method ShowWindowFast unguarded
-   use arg hwnd
-   return WndShow_Pos("S", hwnd, "NORMAL FAST", self~adm)
-
-::method HideItemFast unguarded
-   use arg id
-   h = self~getItem(id)
-   if h = 0 then return -1
-   return WndShow_Pos("S", h, "HIDE FAST")
-
-::method ShowItemFast unguarded
-   use arg id
-   h = self~getItem(id)
-   if h = 0 then return -1
-   return WndShow_Pos("S",h, "NORMAL FAST")
-
-::method handle2Rect unguarded external "LIBRARY oodialog dlgext_handle2Rect"
+::method setWindowRect unguarded external "LIBRARY oodialog dlgext_setWindowRect"
 ::method getControlRect unguarded external "LIBRARY oodialog dlgext_getControlRect"
+::method resizeControl unguarded external "LIBRARY oodialog dlgext_resizeMoveControl"
+::method moveControl unguarded external "LIBRARY oodialog dlgext_resizeMoveControl"
 
+::method clearRect unguarded external "LIBRARY oodialog dlgext_clearRect"
+::method clearWindowRect unguarded external "LIBRARY oodialog dlgext_clearWindowRect"
+::method clearControlRect unguarded external "LIBRARY oodialog dlgext_clearControlRect"
+::method redrawRect unguarded external "LIBRARY oodialog dlgext_redrawRect"
+::method redrawWindowRect unguarded external "LIBRARY oodialog dlgext_redrawWindowRect"
+::method redrawControl unguarded external "LIBRARY oodialog dlgext_redrawControl"
+
+::method drawButton unguarded external "LIBRARY oodialog dlgext_drawButton"
+
+::method redrawWindow unguarded
+   use arg hwnd
+   return .Window~new(hwnd)~redraw
+
+-- DEPRECATED
 ::method getButtonRect unguarded -- old method returns coordinates as a string
    forward message "getControlRect" continue
    rect = result
-   if .SystemErrorCode <> 0 then return 1  -- mimic old behavior
+   if \ rect~isA(.Rect) then return 1  -- mimic old behavior
    return rect~left rect~top rect~right rect~bottom
 
-::method getWindowRect unguarded -- old method returns coordinates as a string
-   forward message "handle2Rect" continue
-   rect = result
-   return rect~left rect~top rect~right rect~bottom
+::method clearButtonRect unguarded
+   forward message 'CLEARCONTROLRECT'
 
+::method redrawButton unguarded
+   forward message 'REDRAWCONTROL'
 
--- TODO resizeItem() and moveItem could be deprecated and forward to resizeControl() and
--- moveControl().  The new methods would take pixels, the old methods could still use the
--- incorrect * self~factorX, etc..
-   /* This method will resize a dialog item */
+::method moveItem unguarded      -- old method, this is not accurate
+   use strict arg id, xPos, yPos, showOptions = ""
+   p = .Point~new(xPos * self~factorX, yPos * self~factorY)
+   return self~moveControl(id, p, showOptions)
 
-::method ResizeItem unguarded
-   use arg id, width, high, showOptions = ""
-   showOptions = showOptions~translate
-   hwnd = self~getItem(id)
-   if hwnd = 0 then return -1
-   return WndShow_Pos("P",hwnd, 0, 0, width * self~factorX, high* self~factorY,,
-                           "NOMOVE "||showOptions)
+::method resizeItem unguarded    -- old method, this is not accurate
+   use strict arg id, width, height, showOptions = ""
+   s = .Size~new(width * self~factorX, height * self~factorY)
+   return self~resizeControl(id, s, showOptions)
 
-   /* This method will move a dialog item to an other position */
-
-::method MoveItem unguarded
-   use arg id, xPos, yPos, showOptions = ""
-   showOptions = showOptions~translate
-   hwnd = self~getItem(id)
-   if hwnd = 0 then return -1
-   return WndShow_Pos("P", hwnd, xPos * self~factorX, yPos * self~factorY, 0, 0,,
-                           "NOSIZE "||showOptions)
-
-   /* This method will add a method that will be started automatically */
-   /* and run concurrently when the dialog is executed. That is the   */
-   /* method 'InClass'~'MethodName' will be started, when the dialog receives */
-   /* the message 'execute' or execute async. You can use this method to */
-   /* animate buttons */
-
-::method AddAutoStartMethod
-   use arg InClass, MethodName, Parameters
-   if arg(1,"o") = 0 then self~automaticMethods~push(InClass); else self~automaticMethods~push(self)
-   if arg(2,"o") = 0 then self~automaticMethods~push(MethodName)
-   if arg(3,"o") = 0 then self~automaticMethods~push(Parameters)
 
 /******************************************************************************/
 /* Bitmap extensions */
 
 ::method BkgBitmap attribute protected   -- handle to bitmap that will be displayed in the background
 ::method BkgBrushBmp attribute protected -- handle to brushbmp that will be displayed in the background
+
+-- This method will add a method that will be started automatically and run concurrently when
+-- the dialog is executed. That is the  method 'InClass'~'MethodName' will be started, when
+-- the dialog receives the message 'execute' or execute async. You can use this method to animate
+-- buttons.
+
+::method addAutoStartMethod
+   use arg inClass = (self), methodName, parameters
+   self~automaticMethods~push(inClass)
+   if arg(2,"E") then self~automaticMethods~push(methodName)
+   if arg(3,"E") then self~automaticMethods~push(parameters)
 
 -- Load a bitmap from a file into memory and return the bitmap handle.
 ::method LoadBitmap
@@ -682,28 +670,6 @@
 
 /******************************************************************************/
 /* Graphics and drawing extensions */
-
-::method drawButton unguarded external "LIBRARY oodialog dlgext_drawButton"
-
-::method setWindowRect unguarded external "LIBRARY oodialog dlgext_setWindowRect"
-::method clearRect unguarded external "LIBRARY oodialog dlgext_clearRect"
-::method clearWindowRect unguarded external "LIBRARY oodialog dlgext_clearWindowRect"
-::method clearControlRect unguarded external "LIBRARY oodialog dlgext_clearControlRect"
-::method redrawRect unguarded external "LIBRARY oodialog dlgext_redrawRect"
-::method redrawWindowRect unguarded external "LIBRARY oodialog dlgext_redrawWindowRect"
-::method redrawControl unguarded external "LIBRARY oodialog dlgext_redrawControl"
-
-::method redrawWindow unguarded
-   use arg hwnd
-   .Window~new(hwnd)~redraw
-
-::method clearButtonRect unguarded
-   forward message 'CLEARCONTROLRECT'
-
-::method redrawButton unguarded
-   forward message 'REDRAWCONTROL'
-
-
 
    /* This method allows you to write text to a window in the given font, in */
    /* the given size, and to the given position */

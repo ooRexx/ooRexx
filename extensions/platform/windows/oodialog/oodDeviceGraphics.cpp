@@ -636,48 +636,6 @@ RexxMethod2(RexxObjectPtr, dlgext_clearWindowRect, POINTERSTRING, hwnd, OSELF, s
 }
 
 
-/** DialogExtensions::clearWindowRect()
- *
- *  'Clears' the client area of the specified dialog control.
- *
- *  @param  rxID  The resource ID used to identify which control is cleared.
- *                May be numeric or symbolic.
- *
- *  @return 0 on success, 1 for error.
- *
- *  @note  Sets the .SystemErrorCode.
- *
- *  @see WindowBase::clear()
- */
-RexxMethod2(RexxObjectPtr, dlgext_clearControlRect, RexxObjectPtr, rxID, OSELF, self)
-{
-    pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
-    if ( pcpbd == NULL )
-    {
-        return TheOneObj;
-    }
-
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
-    {
-        return TheNegativeOneObj;
-    }
-    HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
-    if ( hCtrl == NULL )
-    {
-        oodSetSysErrCode(context->threadContext);
-        return TheOneObj;
-    }
-
-    RECT r = {0};
-    if ( oodGetClientRect(context, hCtrl, &r) == TheOneObj )
-    {
-        return TheOneObj;
-    }
-    return clearRect(context, hCtrl, &r);
-}
-
-
 /** DialogExtension::clearRect()
  *
  *  'Clears' a rectangle in the specified Window.
@@ -745,8 +703,9 @@ RexxMethod3(RexxObjectPtr, dlgext_clearRect, POINTERSTRING, hwnd, ARGLIST, args,
  *            set, the window cannot be moved or sized.  But, that does not
  *            appear to be true.
  *
- *            This method is essentially WindowBase::setWindowPos() but works on
- *            a supplied window rather then the self object.
+ *            This method is essentially WindowBase::setRect() but works
+ *            wit a supplied window handle rather then the window handle of the
+ *            Rexx object.
  */
 RexxMethod3(RexxObjectPtr, dlgext_setWindowRect, POINTERSTRING, hwnd, ARGLIST, args, OSELF, self)
 {
@@ -802,62 +761,6 @@ RexxMethod3(RexxObjectPtr, dlgext_setWindowRect, POINTERSTRING, hwnd, ARGLIST, a
         return TheOneObj;
     }
     return TheZeroObj;
-}
-
-/** DialogExtensions::handle2Rect()
- *
- *  Retrieves the dimensions of the bounding rectangle of the specified window.
- *  The dimensions are in screen coordinates that are relative to the upper-left
- *  corner of the screen.
- *
- *  @param  hwnd  The window handle whose bounding rectangle is to be retrieved.
- *
- *  @return  The bounding rectangle of the specified window.
- *
- *  @note  Sets the .SystemErrorCode.
- */
-RexxMethod1(RexxObjectPtr, dlgext_handle2Rect, POINTERSTRING, hwnd)
-{
-    return oodGetWindowRect(context, (HWND)hwnd);
-}
-
-/** DialogExtensions::getControlRect()
- *
- *  Retrieves the dimensions of the bounding rectangle of the specified dialog
- *  control. The dimensions are in screen coordinates that are relative to the
- *  upper-left corner of the screen.
- *
- *  @param  rxID  The resource ID of the dialog control.  May be numeric or
- *                symbolic.
- *
- *  @return  The bounding rectangle of the specified dialog control.
- *
- *  @note  Sets the .SystemErrorCode.
- *
- *  @remarks  The old getButtonRect() method forwards to this method, takes the
- *            returned .Rect object and manipulates it.  So, we must return a
- *            .Rect object.  Therefore, if rxID is not good, rather than return
- *            -1, we use a null HWND.  GetWindowRect() will fail and the
- *             .SystemErrorCode will get set.  getButtonRect() can then check if
- *             the system error code is not 0 and return 1 to mimic the old
- *             behavior.
- */
-RexxMethod2(RexxObjectPtr, dlgext_getControlRect, RexxObjectPtr, rxID, OSELF, self)
-{
-    pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
-    if ( pcpbd == NULL )
-    {
-        return TheOneObj;
-    }
-
-    HWND hCtrl = NULL;
-
-    uint32_t id;
-    if ( oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
-    {
-        hCtrl = GetDlgItem(pcpbd->hDlg, id);
-    }
-    return oodGetWindowRect(context, hCtrl);
 }
 
 /** DialogExtensions::redrawWindowRect()
@@ -950,6 +853,196 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawRect, OPTIONAL_POINTERSTRING, _hwnd, ARG
     return redrawRect(context, hwnd, &r, doErase);
 }
 
+RexxObjectPtr dlgExtControlSetup(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr rxID,
+                                 pCPlainBaseDialog *ppcpbd, uint32_t *pID, HWND *phCtrl)
+{
+    pCPlainBaseDialog pcpbd = dlgExtSetup(c, self);
+    if ( pcpbd == NULL )
+    {
+        return TheOneObj;
+    }
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, c, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
+    if ( hCtrl == NULL )
+    {
+        oodSetSysErrCode(c->threadContext);
+        return TheOneObj;
+    }
+
+    if ( ppcpbd != NULL )
+    {
+        *ppcpbd = pcpbd;
+    }
+    if ( pID != NULL )
+    {
+        *pID = id;
+    }
+    if ( phCtrl != NULL )
+    {
+        *phCtrl = hCtrl;
+    }
+    return TheZeroObj;
+}
+
+/** DialogExtensions::getControlRect()
+ *
+ *  Retrieves the dimensions of the bounding rectangle of the specified dialog
+ *  control. The dimensions are in screen coordinates that are relative to the
+ *  upper-left corner of the screen.
+ *
+ *  @param  rxID  The resource ID of the dialog control.  May be numeric or
+ *                symbolic.
+ *
+ *  @return  The bounding rectangle of the specified dialog control.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(RexxObjectPtr, dlgext_getControlRect, RexxObjectPtr, rxID, OSELF, self)
+{
+    HWND hCtrl;
+    RexxObjectPtr result = dlgExtControlSetup(context, self, rxID, NULL, NULL, &hCtrl);
+    if ( result != TheZeroObj )
+    {
+        return result;
+    }
+
+    return oodGetWindowRect(context, hCtrl);
+}
+
+
+/** DialogExtensions::clearContolRect()
+ *
+ *  'Clears' the client area of the specified dialog control.
+ *
+ *  @param  rxID  The resource ID used to identify which control is cleared.
+ *                May be numeric or symbolic.
+ *
+ *  @return 0 on success, 1 for error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @see WindowBase::clear()
+ */
+RexxMethod2(RexxObjectPtr, dlgext_clearControlRect, RexxObjectPtr, rxID, OSELF, self)
+{
+    HWND hCtrl;
+    RexxObjectPtr result = dlgExtControlSetup(context, self, rxID, NULL, NULL, &hCtrl);
+    if ( result != TheZeroObj )
+    {
+        return result;
+    }
+
+    RECT r = {0};
+    if ( oodGetClientRect(context, hCtrl, &r) == TheOneObj )
+    {
+        return TheOneObj;
+    }
+    return clearRect(context, hCtrl, &r);
+}
+
+
+/** DialogExtensions::resizeControl()
+ *  DialogExtensions::moveControl()
+ *
+ *  Resize control, changes the size of the specified control.
+ *
+ *  Move control, changes the position of the specified control.
+ *
+ *  @param  coordinates  The new position (x, y) of the upper right corner of
+ *                       the control, or the new size (cx, cy) for the control.
+ *                       The units are pixels.
+ *
+ *    resizeControl()
+ *      Form 1:  A .Size object.
+ *      Form 2:  cx, cy
+ *
+ *    moveControl()
+ *      Form 1:  A .Point object.
+ *      Form 2:  x, y
+ *
+ *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
+ *
+ *  @return  0 for success, 1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  No effort is made to ensure that only a .Size object is used for
+ *            resizeControl() and only a .Point object for moveControl().
+ */
+RexxMethod4(RexxObjectPtr, dlgext_resizeMoveControl, RexxObjectPtr, rxID, ARGLIST, args, NAME, method, OSELF, self)
+{
+    HWND hCtrl;
+    RexxObjectPtr result = dlgExtControlSetup(context, self, rxID, NULL, NULL, &hCtrl);
+    if ( result != TheZeroObj )
+    {
+        return result;
+    }
+
+    size_t arraySize;
+    int    argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 2, 4, &arraySize, &argsUsed) )
+    {
+        return NULLOBJECT;
+    }
+
+    RexxObjectPtr obj;
+    CSTRING options = "";
+    if ( argsUsed == 1 )
+    {
+        if ( arraySize > 2 )
+        {
+            return tooManyArgsException(context->threadContext, 3);
+        }
+        if ( arraySize == 3 )
+        {
+            // The object at index 3 has to exist, otherwise arraySize would
+            // equal 2.
+            obj = context->ArrayAt(args, 3);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+    else if ( argsUsed == 2 )
+    {
+        if ( arraySize == 4 )
+        {
+            // The object at index 4 has to exist, otherwise arraySize would
+            // equal 3.
+            obj = context->ArrayAt(args, 4);
+            options = context->ObjectToStringValue(obj);
+        }
+    }
+
+    uint32_t opts = parseShowOptions(options);
+    RECT r = {0};
+
+    if ( *method == 'R' )
+    {
+        opts |= SWP_NOMOVE;
+        r.right = point.x;
+        r.bottom = point.y;
+    }
+    else
+    {
+        opts |= SWP_NOSIZE;
+        r.left = point.x;
+        r.top = point.y;
+    }
+
+    if ( SetWindowPos(hCtrl, NULL, r.left, r.top, r.right, r.bottom, opts) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+    return TheZeroObj;
+}
+
 
 /** DialogExtensions::redrawControl()
  *
@@ -965,50 +1058,29 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawRect, OPTIONAL_POINTERSTRING, _hwnd, ARG
  */
 RexxMethod3(RexxObjectPtr, dlgext_redrawControl, RexxObjectPtr, rxID, OPTIONAL_logical_t, erase, OSELF, self)
 {
-    pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
-    if ( pcpbd == NULL )
+    HWND hCtrl;
+    RexxObjectPtr result = dlgExtControlSetup(context, self, rxID, NULL, NULL, &hCtrl);
+    if ( result != TheZeroObj )
     {
-        return TheOneObj;
-    }
-
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
-    {
-        return TheNegativeOneObj;
+        return result;
     }
 
     bool doErase = argumentExists(2) ? (erase ? true : false) : false;
-    HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
-
-    if ( hCtrl == NULL )
-    {
-        oodSetSysErrCode(context->threadContext);
-        return TheOneObj;
-    }
     return redrawRect(context, hCtrl, NULL, doErase);
 }
 
 
 RexxMethod2(RexxObjectPtr, dlgext_drawButton, RexxObjectPtr, rxID, OSELF, self)
 {
-    pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
-    if ( pcpbd == NULL )
-    {
-        return TheOneObj;
-    }
-
+    pCPlainBaseDialog pcpbd;
     uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    HWND hCtrl;
+    RexxObjectPtr result = dlgExtControlSetup(context, self, rxID, &pcpbd, &id, &hCtrl);
+    if ( result != TheZeroObj )
     {
-        return TheNegativeOneObj;
+        return result;
     }
 
-    HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
-    if ( hCtrl == NULL )
-    {
-        oodSetSysErrCode(context->threadContext);
-        return TheOneObj;
-    }
     return drawButton(pcpbd->hDlg, hCtrl, id);
 }
 

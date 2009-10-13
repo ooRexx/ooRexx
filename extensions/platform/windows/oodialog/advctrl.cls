@@ -717,9 +717,6 @@
    if arg(1,'o') = 1 then return -1
    return HandleListCtrl("M","UPDATE", self~Hwnd, item)
 
-::method Update
-   return WndShow_Pos("S",self~Hwnd, "UPDATE")
-
 ::method EnsureVisible
    use arg item, partial
    if arg(1,'o') = 1 then return -1

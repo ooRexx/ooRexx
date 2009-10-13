@@ -151,8 +151,7 @@
    else code = .DlgUtil~loWord(wp)
    if code \= 0 then do
        self~update
-       wnd = .Window~new(self~catalog['handles'][self~catalog['category']])
-       wnd~update
+       .Window~new(self~catalog['handles'][self~catalog['category']])~update
    end
 
 ::method getSelectedPage unguarded

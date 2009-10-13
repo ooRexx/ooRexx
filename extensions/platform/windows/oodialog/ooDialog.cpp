@@ -775,6 +775,73 @@ static inline HWND getWBWindow(void *pCSelf)
 }
 
 /**
+ * Common code to call ShowWindow() from a native C++ API method.
+ *
+ * @param hwnd  Window handle of window to show.
+ * @param type  Single character indicating which SW_ flag to use.
+ *
+ * @return  True if the window was previously visible.  Return false if the
+ *          window was previously hidden.
+ */
+logical_t showWindow(HWND hwnd, char type)
+{
+    int flag;
+    switch ( type )
+    {
+        case 'D' :
+        case 'N' :
+        case 'S' :
+            flag = SW_NORMAL;
+            break;
+
+        case 'H' :
+            flag = SW_HIDE;
+            break;
+
+        case 'I' :
+            flag = SW_SHOWNA;
+            break;
+
+        case 'M' :
+            flag = SW_SHOWMINIMIZED;
+            break;
+
+        case 'R' :
+            flag = SW_RESTORE;
+            break;
+
+        case 'X' :
+            flag = SW_SHOWMAXIMIZED;
+            break;
+
+        default :
+            flag = SW_SHOW;
+            break;
+
+    }
+    return ShowWindow(hwnd, flag);
+}
+
+uint32_t showFast(HWND hwnd, char type)
+{
+    uint32_t style = GetWindowLong(hwnd, GWL_STYLE);
+    if ( style )
+    {
+        if ( type == 'H' )
+        {
+            style ^= WS_VISIBLE;
+        }
+        else
+        {
+            style |= WS_VISIBLE;
+        }
+        SetWindowLong(hwnd, GWL_STYLE, style);
+        return 0;
+    }
+    return 1;
+}
+
+/**
  * Performs the initialization of the WindowBase mixin class.
  *
  * This is done by creating the cself struct for that class and then sending
@@ -989,75 +1056,6 @@ RexxMethod1(logical_t, wb_isVisible, CSELF, pCSelf)
     return IsWindowVisible(getWBWindow(pCSelf));
 }
 
-/**
- * Common code to call ShowWindow() for a native API method.
- *
- * @param pCSelf   Pointer to a struct with the window handle.  Must be a
- *                 CWindowBase struct.
- * @param type     Single character indicating which SW_ flag to use.
- *
- * @return  True if the window was previously visible.  Return false if the
- *          window was previously hidden.
- */
-logical_t showWindow(void *pCSelf, char type)
-{
-    int flag;
-    switch ( type )
-    {
-        case 'D' :
-        case 'N' :
-        case 'S' :
-            flag = SW_NORMAL;
-            break;
-
-        case 'H' :
-            flag = SW_HIDE;
-            break;
-
-        case 'I' :
-            flag = SW_SHOWNA;
-            break;
-
-        case 'M' :
-            flag = SW_SHOWMINIMIZED;
-            break;
-
-        case 'R' :
-            flag = SW_RESTORE;
-            break;
-
-        case 'X' :
-            flag = SW_SHOWMAXIMIZED;
-            break;
-
-        default :
-            flag = SW_SHOW;
-            break;
-
-    }
-    return ShowWindow(getWBWindow(pCSelf), flag);
-}
-
-uint32_t showFast(void *pCSelf, char type)
-{
-    HWND hwnd = getWBWindow(pCSelf);
-    uint32_t style = GetWindowLong(hwnd, GWL_STYLE);
-    if ( style )
-    {
-        if ( type == 'H' )
-        {
-            style ^= WS_VISIBLE;
-        }
-        else
-        {
-            style |= WS_VISIBLE;
-        }
-        SetWindowLong(hwnd, GWL_STYLE, style);
-        return 0;
-    }
-    return 1;
-}
-
 /** WindowBase::show() / WindowBase::hide()
  *
  *  Hides or shows the window.  This function is mapped to both methods of
@@ -1068,7 +1066,7 @@ uint32_t showFast(void *pCSelf, char type)
  */
 RexxMethod1(logical_t, wb_show, CSELF, pCSelf)
 {
-    return showWindow(pCSelf, msgAbbrev(context));
+    return showWindow(getWBWindow(pCSelf), msgAbbrev(context));
 }
 
 /** WindowBase::showFast() / WindowBase::hideFast()
@@ -1083,7 +1081,7 @@ RexxMethod1(logical_t, wb_show, CSELF, pCSelf)
  */
 RexxMethod1(uint32_t, wb_showFast, CSELF, pCSelf)
 {
-    return showFast(pCSelf, msgAbbrev(context));
+    return showFast(getWBWindow(pCSelf), msgAbbrev(context));
 }
 
 /** WindowBase::display()
@@ -1096,6 +1094,7 @@ RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
     char type;
     uint32_t ret = 0;
     bool doFast = false;
+    HWND hwnd = getWBWindow(pCSelf);
 
     if ( opts != NULL && StrStrI(opts, "FAST") != NULL )
     {
@@ -1103,9 +1102,9 @@ RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
     }
 
     if ( opts == NULL ) {type = 'S';}
-    else if ( StrStrI(opts, "NORMAL") != NULL ) {type = 'S';}
-    else if ( StrStrI(opts, "DEFAULT") != NULL ) {type = 'S';}
-    else if ( StrStrI(opts, "HIDE") != NULL ) {type = 'H';}
+    else if ( StrStrI(opts, "NORMAL"  ) != NULL ) {type = 'S';}
+    else if ( StrStrI(opts, "DEFAULT" ) != NULL ) {type = 'S';}
+    else if ( StrStrI(opts, "HIDE"    ) != NULL ) {type = 'H';}
     else if ( StrStrI(opts, "INACTIVE") != NULL )
     {
         if ( doFast )
@@ -1117,17 +1116,16 @@ RexxMethod2(uint32_t, wb_display, OPTIONAL_CSTRING, opts,  CSELF, pCSelf)
     }
     else
     {
-        userDefinedMsgException(context->threadContext, 1, "The keyword option string must contain one of NORMAL, DEFAULT, HIDE, INACTIVE");
-        goto done_out;
+        type = 'S';
     }
 
     if ( doFast )
     {
-        ret = showFast(pCSelf, type);
+        ret = showFast(hwnd, type);
     }
     else
     {
-        showWindow(pCSelf, type);
+        showWindow(hwnd, type);
     }
 
 done_out:
@@ -1250,16 +1248,31 @@ RexxMethod2(wholenumber_t, wb_setText, CSTRING, text, CSELF, pCSelf)
 /** WindowBase::windowRect()
  *
  *  Retrieves the dimensions of the bounding rectangle of this window.  The
- *  dimensions are in screen coordinates that are relative to the upper-left
+ *  dimensions are in pixels and the coordinates are relative to the upper-left
  *  corner of the screen.
  *
- *  @return  The bounding rectangle of this window.
+ *  @param  hwnd  [OPTIONAL]  By default, the coordinates are for this window.
+ *                However, the optional hwnd argument can be used to specify
+ *                getting the coordinates for some other window.  See remarks.
+ *
+ *  @return  The bounding rectangle of the window as .Rect object.
  *
  *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  The windowRect() method supplies an alternative to both the
+ *            getRect() and getWindowRect(hwnd) methods, to allow returning a
+ *            .Rect object rather than a string of blank separated values.
+ *
+ *            Pre 4.0.1, getRect() was in WindowExtensions and getWindowRect()
+ *            was in DialogExtensions.  The need to provide backward
+ *            compatibility, use meaningful method names, maintain symmetry with
+ *            the getClientRect(hwnd) method is what drove the decision to allow
+ *            the optional hwnd argument to this method.
  */
-RexxMethod1(RexxObjectPtr, wb_windowRect, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, wb_windowRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
 {
-    return oodGetWindowRect(context, getWBWindow(pCSelf));
+    HWND hwnd = (argumentOmitted(1) ? getWBWindow(pCSelf) : (HWND)_hwnd);
+    return oodGetWindowRect(context, hwnd);
 }
 
 
@@ -1271,30 +1284,36 @@ RexxMethod1(RexxObjectPtr, wb_windowRect, CSELF, pCSelf)
  *  The client coordinates specify the upper-left and lower-right corners of the
  *  client area. Because client coordinates are relative to the upper-left
  *  corner of a window's client area, the coordinates of the upper-left corner
- *  are (0,0).
+ *  are always (0,0).
  *
  *  @param  hwnd  [OPTIONAL]  By default, the coordinates are for this window.
  *                However, the optional hwnd argument can be used to specify
- *                getting the coordinates for some other window.
+ *                getting the coordinates for some other window.  See remarks.
  *
- *  @return  The coordinates of the client area of the specified window as a
- *           .Rect object.
+ *  @return  The coordinates of the client area of the window as a .Rect object.
  *
  *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  The clientRect() method supplies an alternative to the
+ *            getClinetRect(hwnd) method, to allow returning a .Rect object
+ *            rather than a string of blank separated values.
+ *
+ *            Pre 4.0.1, getClientRect() was in WindowExtensions.  The need to
+ *            provide backward compatibility, use meaningful method names, and
+ *            maintain symmetry with the getRect() and getWindowRect(hwnd)
+ *            methods is what drove the decision to move this method to
+ *            WidnowBase and allow the optional hwnd argument to this method.
  */
-RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, hwnd, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, _hwnd, CSELF, pCSelf)
 {
-    if ( argumentOmitted(1) )
-    {
-        hwnd = getWBWindow(pCSelf);
-    }
+    HWND hwnd = (argumentOmitted(1) ? getWBWindow(pCSelf) : (HWND)_hwnd);
 
     RECT r = {0};
     oodGetClientRect(context, (HWND)hwnd, &r);
     return rxNewRect(context, &r);
 }
 
-/** WindowBase::setWindowPos()
+/** WindowBase::setRect()
  *
  *  Changes the size, and position of a child, pop-up, or top-level window.
  *
@@ -1305,30 +1324,13 @@ RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, hwnd, CSELF, p
  *  By specifying either NOSIZE or NOMOVE options the programmer can only move
  *  or only resize the window.
  *
- *  The arguments needed are as follows:
+ *  @param coordinates  The coordinates of a point / size rectangle, given in
+ *                      pixels
  *
- *  However, the position and size can be specified in a flexiable manner. There
- *  are 3 forms accepted.
+ *    Form 1:  A .Rect object.
+ *    Form 2:  A .Point object and a .Size object.
+ *    Form 3:  x1, y1, cx, cy
  *
- *  Form One:
- *  @param  rect    The new size and position specified as a .Rect object.  Note
- *                  that this is a point / size rectangle, not a bounding
- *                  rectangle. rect.right must specify the "width" of the window
- *                  and rect.bottom must specify the height of the window. They
- *                  must *not* specify the bottom left corner of the window.
- *  @param  flags   [OPTIONAL] Keywords specifying the behavior of the method.
- *
- *  Form Two:
- *  @param  pos     The new upper left corner position for the window, specified
- *                  as a .Point object.
- *  @param  size    The new size for the window, specified as a .Size object.
- *  @param  flags   [OPTIONAL] Keywords specifying the behavior of the method.
- *
- *  Form Three:
- *  @param  x       x coordinate of upper left corner of window, in pixels.
- *  @param  y       y coordinate of upper left corner of window, in pixels.
- *  @param  width   Width of window in pixels.
- *  @param  height  Height of window in pixels.
  *  @param  flags   [OPTIONAL] Keywords specifying the behavior of the method.
  *
  *  @return  0 for success, 1 on error.
@@ -1339,7 +1341,7 @@ RexxMethod2(RexxObjectPtr, wb_clientRect, OPTIONAL_POINTERSTRING, hwnd, CSELF, p
  *            set, the window cannot be moved or sized.  But, that does not
  *            appear to be true.
  */
-RexxMethod2(RexxObjectPtr, wb_setWindowPos, ARGLIST, args, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, wb_setRect, ARGLIST, args, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;
     oodResetSysErrCode(context->threadContext);
@@ -1407,29 +1409,24 @@ RexxMethod2(RexxObjectPtr, wb_setWindowPos, ARGLIST, args, CSELF, pCSelf)
  *  Move to, changes the position of this window.  The new position is specified
  *  as the coordinates of the upper left corner of the window, in pixels.
  *
- *  Two forms for the argument list.  For resizeTo(), either the new size, is
- *  specified as .Size object, or as individual integers.  For moveTo(), the new
- *  position is specified as either a .Point object or as individual integers.
+ *  @param  coordinates  The new position (x, y) or new size (cx, cy) in pixels.
  *
- *  Form One:
- *  @param  size    The new size is specified using a .Size object.
- *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
+ *    resizeTo()
+ *      Form 1:  A .Size object.
+ *      Form 2:  cx, cy
  *
- *  @param  point   The new position is specified using a .Point object.
- *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
+ *    moveTo()
+ *      Form 1:  A .Point object.
+ *      Form 2:  x, y
  *
- *  Form Two:
- *  @param  cx      The new width of the window.
- *  @param  cy      The new height of the window.
- *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
- *
- *  @param  x       The x coordinate of the upper left corner of the window.
- *  @param  y       The y coordinate of the upper left corner of the window.
  *  @param  flags   [OPTIONAL] Keywords that control the behavior of the method.
  *
  *  @return  0 for success, 1 on error.
  *
  *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  No effort is made to ensure that only a .Size object is used for
+ *            resizeTo() and only a .Point object for moveTo().
  */
 RexxMethod3(RexxObjectPtr, wb_resizeMove, ARGLIST, args, NAME, method, CSELF, pCSelf)
 {
@@ -1526,12 +1523,6 @@ RexxMethod2(RexxObjectPtr, wb_getSizePos, NAME, method, CSELF, pCSelf)
 }
 
 
-RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
-{
-    return GetWindowLong(getWBWindow(pCSelf), flag);
-}
-
-
 /** WindowBase::clear()
  *
  *  'Clears' the dialog's client area by painting the entire area with the
@@ -1571,6 +1562,27 @@ RexxMethod1(RexxObjectPtr, wb_clear, CSELF, pCSelf)
     return clearRect(context, hwnd, &r);
 }
 
+
+/** WindowBase::getWindowLong()  [private]
+ *
+ *  Retrieves information about this window.  Specifically, the information
+ *  available through the GetWindowLong().  Internally this used to get the
+ *  GWL_ID, GWL_STYLE, and GWL_EXSTYLE values.
+ *
+ *  @param  flag  The index for the information to be retrieved.
+ *
+ *  @return  The unsigned 32-bit information for the specified index.
+ *
+ *  @remarks  The other indexes, besides the 3 mentioned above are all pointer
+ *            or handle values.  Because of this, this method should not be
+ *            documented.  The implementation may change.
+ */
+RexxMethod2(uint32_t, wb_getWindowLong_pvt, int32_t, flag, CSELF, pCSelf)
+{
+    return GetWindowLong(getWBWindow(pCSelf), flag);
+}
+
+
 /**
  *  Methods for the .PlainBaseDialog class.
  */
@@ -1582,6 +1594,26 @@ static inline HWND getPBDWindow(void *pCSelf)
     return ((pCPlainBaseDialog)pCSelf)->hDlg;
 }
 
+HWND getPBDControlWindow(RexxMethodContext *c, pCPlainBaseDialog pcpbd, RexxObjectPtr rxID)
+{
+    HWND hCtrl = NULL;
+    oodResetSysErrCode(c->threadContext);
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, c, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+    }
+    else
+    {
+        hCtrl = GetDlgItem(pcpbd->hDlg, id);
+        if ( hCtrl == NULL )
+        {
+            oodSetSysErrCode(c->threadContext);
+        }
+    }
+    return hCtrl;
+}
 
 int32_t stopDialog(HWND hDlg)
 {
@@ -1987,6 +2019,111 @@ RexxMethod1(RexxStringObject, pbdlg_getWindowText, POINTERSTRING, hwnd)
     return result;
 }
 
+/** PlainBaseDialog::show()
+ *
+ *  Shows the dialog in the manner specified by the keyword option.  The dialog
+ *  can be hidden, minimized, made visible, brought to the foreground, etc.
+ *
+ *  @param  keyword  A single keyword that controls how the dialog is shown.
+ *                   Case is not significant.
+ *
+ *  @return  True if the dialog was previously visible.  Return false if the
+ *           window was previously hidden.  Note that this is not a success or
+ *           failure return, rather it is what the Windows API returns.
+ *
+ *  @note  The SHOWTOP DEFAULT NORMAL keywords are all equivalent to
+ *         SW_SHOWNORMAL.
+ *
+ *         Key words are NORMAL DEFAULT SHOWTOP RESTORE MIN MAX HIDE INACTIVE
+ *
+ *  @remarks  Note!  This method over-rides the WindowBase::show() method.  The
+ *            WindowBase::show() method, does a show normal only.  This method
+ *            takes a number of keyword options, whereas WindowBase::show()
+ *            method takes no options.
+ *
+ *            Therefore, all dialog objects have this show method.  All dialog
+ *            control objects have the no-option show() method.
+ *
+ *            The WindowBase::display() method is similar to this show(), but
+ *            with fewer, and somewhat different, keywords.
+ *
+ *            PlainBaseDialog::restore() also maps to this function.  restore()
+ *            takes no options.
+ */
+RexxMethod3(logical_t, pbdlg_show, OPTIONAL_CSTRING, options, NAME, method, CSELF, pCSelf)
+{
+    HWND hwnd = getPBDWindow(pCSelf);
+
+    char flag = (*method == 'R' ? 'R' : 'S')  ;
+
+    if ( options != NULL && *options != '\0' && flag != 'R' )
+    {
+        switch ( toupper(*options) )
+        {
+            case 'S' :
+                SetForegroundWindow(hwnd);
+                break;
+
+            case 'M' :
+                flag = (stricmp("MIN", options) == 0 ? 'M' : 'X');
+                break;
+
+            case 'H' :
+                flag = 'H';
+                break;
+
+            case 'I' :
+                flag = 'I';
+                break;
+
+            case 'R' :
+                flag = 'R';
+                break;
+
+            case 'D' :
+            case 'N' :
+            default  :
+                break;
+
+        }
+    }
+    return showWindow(hwnd, flag);
+}
+
+
+/** PlainBaseDialog::showControl() / PlainBaseDialog::hideControl()
+ *  PlainBaseDialog::showControlFast() / PlainBaseDialog::hideControlFast()
+ *
+ *  Hides or shows the dialog control window, normally, or 'fast'.  "Fast" means
+ *  the visible flag is set, but the window is not forced to update.
+ *
+ *  @return  1 if the window was previously visible.  Return 0 if the
+ *           window was previously hidden.  Return -1 if the resource ID was no
+ *           good. The return for these methods was not previously documented,
+ *           but this matches what was returned.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(RexxObjectPtr, plbdlg_showControl, RexxObjectPtr, rxID, NAME, method, CSELF, pCSelf)
+{
+    HWND hCtrl = getPBDControlWindow(context, (pCPlainBaseDialog)pCSelf, rxID);
+    if ( hCtrl == NULL )
+    {
+        return TheNegativeOneObj;
+    }
+
+    logical_t rc;
+    if ( strstr("FAST", method) != NULL )
+    {
+        rc = showFast(hCtrl, *method);
+    }
+    else
+    {
+        rc = showWindow(hCtrl, *method);
+    }
+
+    return (rc ? TheOneObj : TheZeroObj);
+}
 
 /** PlainBaseDialog::center()
  *
@@ -1996,11 +2133,12 @@ RexxMethod1(RexxStringObject, pbdlg_getWindowText, POINTERSTRING, hwnd)
  *  the screen work area. The work area is the portion of the screen not
  *  obscured by the system taskbar or by application desktop toolbars.
  *
- *  @param options  A string of zero or more blank separated keywords.  The key
- *                  words control the behavior when the dialog is moved.
- *  @param workArea If true, the dialog is centered in the work area of the
- *                  screen.  The default, false, centers the dialog in the
- *                  physical screen area.
+ *  @param options  [OPTIONAL]  A string of zero or more blank separated
+ *                  keywords. The key words control the behavior when the dialog
+ *                  is moved.
+ *  @param workArea [OPTIONAL]  If true, the dialog is centered in the work area
+ *                  of the screen.  The default, false, centers the dialog in
+ *                  the physical screen area.
  *
  *  @return  True on success, otherwise false.
  *
@@ -2021,7 +2159,7 @@ RexxMethod3(RexxObjectPtr, pbdlg_center, OPTIONAL_CSTRING, options, OPTIONAL_log
     if ( workArea )
     {
         RECT wa;
-        if ( ! SystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0) )
+        if ( SystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0) == 0 )
         {
             oodSetSysErrCode(context->threadContext);
             return TheFalseObj;
@@ -2211,10 +2349,13 @@ RexxMethod2(RexxObjectPtr, pbdlg_enableDisableControl, RexxObjectPtr, rxID, CSEL
  *  @param  _hDlg [optional]  The window handle of the dialog the control
  *                belongs to.  If omitted, the handle of this dialog is used.
  *
- *  @return The window handle of the specified dialog control on success. -1 if
- *          the ID can not be resolved.  A null handle there is no such control.
+ *  @return The window handle of the specified dialog control on success,
+ *          otherwise 0.
  *
  *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  For pre 4.0.1 compatibility, this method needs to return 0 if the
+ *            symbolic ID does not resolve, rather than the normal -1.
  */
 RexxMethod3(RexxObjectPtr, pbdlg_getControlHandle, RexxObjectPtr, rxID, OPTIONAL_RexxStringObject, _hDlg, CSELF, pCSelf)
 {
@@ -2225,7 +2366,7 @@ RexxMethod3(RexxObjectPtr, pbdlg_getControlHandle, RexxObjectPtr, rxID, OPTIONAL
     if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
     {
         oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
-        return TheNegativeOneObj;
+        return TheZeroObj;
     }
 
     HWND hDlg;

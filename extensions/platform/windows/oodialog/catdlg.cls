@@ -640,14 +640,14 @@
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    h = self~getItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
-   return WndShow_Pos("S",h, "HIDE")
+   return WndShow_Pos("S",h, "HIDE")     -- Implement using .Window
 
 ::method ShowCategoryItem unguarded
    use arg id, category
    if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
    h = self~getItem(id, self~catalog['handles'][category])
    if h = 0 then return 1
-   return WndShow_Pos("S",h, "NORMAL")
+   return WndShow_Pos("S",h, "NORMAL")   -- Implement using .Window
 
 ::method getItem unguarded
    use arg id, hDlg

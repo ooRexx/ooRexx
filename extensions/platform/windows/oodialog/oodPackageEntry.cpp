@@ -198,7 +198,7 @@ REXX_METHOD_PROTOTYPE(wb_redrawClient);
 REXX_METHOD_PROTOTYPE(wb_redraw);
 REXX_METHOD_PROTOTYPE(wb_getText);
 REXX_METHOD_PROTOTYPE(wb_setText);
-REXX_METHOD_PROTOTYPE(wb_setWindowPos);
+REXX_METHOD_PROTOTYPE(wb_setRect);
 REXX_METHOD_PROTOTYPE(wb_resizeMove);
 REXX_METHOD_PROTOTYPE(wb_getSizePos);
 REXX_METHOD_PROTOTYPE(wb_windowRect);
@@ -231,6 +231,8 @@ REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
 REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
+REXX_METHOD_PROTOTYPE(pbdlg_show);
+REXX_METHOD_PROTOTYPE(plbdlg_showControl);
 REXX_METHOD_PROTOTYPE(pbdlg_getControlHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_getWindowText);
 REXX_METHOD_PROTOTYPE(pbdlg_setWindowText);
@@ -252,14 +254,14 @@ REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
 
 REXX_METHOD_PROTOTYPE(dlgext_setWindowRect);
+REXX_METHOD_PROTOTYPE(dlgext_getControlRect);
 REXX_METHOD_PROTOTYPE(dlgext_clearWindowRect);
 REXX_METHOD_PROTOTYPE(dlgext_clearControlRect);
 REXX_METHOD_PROTOTYPE(dlgext_clearRect);
-REXX_METHOD_PROTOTYPE(dlgext_handle2Rect);
-REXX_METHOD_PROTOTYPE(dlgext_getControlRect);
 REXX_METHOD_PROTOTYPE(dlgext_redrawRect);
 REXX_METHOD_PROTOTYPE(dlgext_redrawWindowRect);
 REXX_METHOD_PROTOTYPE(dlgext_redrawControl);
+REXX_METHOD_PROTOTYPE(dlgext_resizeMoveControl);
 REXX_METHOD_PROTOTYPE(dlgext_drawButton);
 
 REXX_METHOD_PROTOTYPE(baseDlg_init);
@@ -595,7 +597,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_redraw,                    wb_redraw),
     REXX_METHOD(wb_getText,                   wb_getText),
     REXX_METHOD(wb_setText,                   wb_setText),
-    REXX_METHOD(wb_setWindowPos,              wb_setWindowPos),
+    REXX_METHOD(wb_setRect,                   wb_setRect),
     REXX_METHOD(wb_resizeMove,                wb_resizeMove),
     REXX_METHOD(wb_getSizePos,                wb_getSizePos),
     REXX_METHOD(wb_windowRect,                wb_windowRect),
@@ -624,6 +626,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_getDlgHandle,            pbdlg_getDlgHandle),
     REXX_METHOD(pbdlg_get,                     pbdlg_get),
     REXX_METHOD(pbdlg_isDialogActive,          pbdlg_isDialogActive),
+    REXX_METHOD(pbdlg_show,                    pbdlg_show),
+    REXX_METHOD(plbdlg_showControl,            plbdlg_showControl),
     REXX_METHOD(pbdlg_connect_ControName,      pbdlg_connect_ControName),
     REXX_METHOD(pbdlg_setDlgDataFromStem_pvt,  pbdlg_setDlgDataFromStem_pvt),
     REXX_METHOD(pbdlg_putDlgDataInStem_pvt,    pbdlg_putDlgDataInStem_pvt),
@@ -649,11 +653,11 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_clearWindowRect,       dlgext_clearWindowRect),
     REXX_METHOD(dlgext_clearControlRect,      dlgext_clearControlRect),
     REXX_METHOD(dlgext_clearRect,             dlgext_clearRect),
-    REXX_METHOD(dlgext_handle2Rect,           dlgext_handle2Rect),
     REXX_METHOD(dlgext_getControlRect,        dlgext_getControlRect),
-    REXX_METHOD(dlgext_redrawRect,            dlgext_redrawRect),
     REXX_METHOD(dlgext_redrawWindowRect,      dlgext_redrawWindowRect),
     REXX_METHOD(dlgext_redrawControl,         dlgext_redrawControl),
+    REXX_METHOD(dlgext_redrawRect,            dlgext_redrawRect),
+    REXX_METHOD(dlgext_resizeMoveControl,     dlgext_resizeMoveControl),
     REXX_METHOD(dlgext_drawButton,            dlgext_drawButton),
 
     REXX_METHOD(baseDlg_init,                 baseDlg_init),

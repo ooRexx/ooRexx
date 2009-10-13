@@ -245,7 +245,6 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
 
 size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
 {
-   RECT r;
    ULONG st;
    INT k;
    HWND w;
@@ -262,13 +261,7 @@ size_t RexxEntry WndShow_Pos(const char *funcname, size_t argc, CONSTRXSTRING *a
            dlgAdm->AktChild = w;
        }
 
-       if (strstr(argv[2].strptr, "UPDATE"))
-       {
-          GetClientRect(w, &r);
-          InvalidateRect(w, &r, TRUE);
-          RETC(0)
-       }
-       else if (strstr(argv[2].strptr, "FAST"))
+       if (strstr(argv[2].strptr, "FAST"))
        {
            st = GetWindowLong(w, GWL_STYLE);
            if (st)

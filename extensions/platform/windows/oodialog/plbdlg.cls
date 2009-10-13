@@ -106,7 +106,7 @@
 ::method setText unguarded external "LIBRARY oodialog wb_setText"
 ::method getText unguarded external "LIBRARY oodialog wb_getText"
 
-::method setWindowPos unguarded external "LIBRARY oodialog wb_setWindowPos"
+::method setRect unguarded external "LIBRARY oodialog wb_setRect"
 ::method resizeTo unguarded external "LIBRARY oodialog wb_resizeMove"
 ::method moveTo unguarded external "LIBRARY oodialog wb_resizeMove"
 ::method getRealSize unguarded external "LIBRARY oodialog wb_getSizePos"
@@ -115,21 +115,17 @@
 ::method clientRect unguarded external "LIBRARY oodialog wb_clientRect"
 ::method clear unguarded external "LIBRARY oodialog wb_clear"
 
--- old method, documented as taking x, y, width, height, showOptions.  But, setWindowPos()
--- can handle arguments in that format.
-::method setRect unguarded external "LIBRARY oodialog wb_setWindowPos"
-
 ::method resize unguarded        -- old method, this is not accurate.
    use strict arg width, height, showOptions = ""
    p = .Point~new(0, 0)
    s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
-   return self~setWindowPos(p, s, "NOMOVE " || showOptions);
+   return self~setRect(p, s, "NOMOVE " || showOptions);
 
 ::method move unguarded          -- old method, this is not accurate.
    use strict arg xPos, yPos, showOptions = ""
    p = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
    s = .Size~new(0, 0)
-   return self~setWindowPos(p, s, "NOSIZE " || showOptions);
+   return self~setRect(p, s, "NOSIZE " || showOptions);
 
 ::method getSize unguarded       -- old method, this is not accurate.
    forward message "getRealSize" continue
@@ -425,6 +421,9 @@
 
 ::method get unguarded external "LIBRARY oodialog pbdlg_get"
 ::method getSelf unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
+::method getControlID unguarded external "LIBRARY oodialog pbdlg_getControlID"
+::method show unguarded external "LIBRARY oodialog pbdlg_show"
+::method restore unguarded external "LIBRARY oodialog pbdlg_show"
 
 -- TODO getItem() could be deprecated and forward to getControlHandle().  getControl would return
 -- a .Pointer; getItem() could check for a null pointer and return 0 in its place.  Also need to
@@ -432,16 +431,6 @@
 -- -1.
 ::method getControlHandle unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
 ::method getItem unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
-
-::method getControlID unguarded external "LIBRARY oodialog pbdlg_getControlID"
-
--- This method shows the dialog
-::method Show unguarded
-   use arg option = "NORMAL"
-   if option = "" then option = "NORMAL"; else option = option~translate
-   if option~wordpos("SHOWTOP") > 0 then self~ToTheTop
-   return WndShow_Pos("S",self~dlgHandle, option)
-
 
 -- This method makes the dialog the front dialog.
 ::method ToTheTop unguarded
@@ -453,8 +442,6 @@
 ::method isMaximized unguarded external "LIBRARY oodialog pbdlg_doMinMax"
 ::method isMinimized unguarded external "LIBRARY oodialog pbdlg_doMinMax"
 
-::method Restore unguarded
-   return WndShow_Pos("S",self~dlgHandle, "RESTORE")
 
 -- Send the DM_REPOSITION  message to the dialog.
 ::method EnsureVisible unguarded
@@ -878,26 +865,38 @@
 
 ::method enableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"
 ::method disableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"
+::method showControl unguarded external "LIBRARY oodialog plbdlg_showControl"
+::method hideControl unguarded external "LIBRARY oodialog plbdlg_showControl"
+::method showControlFast unguarded external "LIBRARY oodialog plbdlg_showControl"
+::method hideControlFast unguarded external "LIBRARY oodialog plbdlg_showControl"
 
-::method HideItem unguarded
-   use arg id
-   h = self~getItem(id)
-   if h = 0 then return -1
-   return WndShow_Pos("S",h, "HIDE")
+::method ShowWindow unguarded  /* used for the category dialog */
+   use arg hwnd
+   return WndShow_Pos("S",hwnd, "NORMAL", self~adm)
 
-::method ShowItem unguarded
-   use arg id
-   h = self~getItem(id)
-   if h = 0 then return -1
-   return WndShow_Pos("S",h, "NORMAL")
+::method ShowWindowFast unguarded
+   use arg hwnd
+   return WndShow_Pos("S", hwnd, "NORMAL FAST", self~adm)
 
 ::method HideWindow unguarded
    use arg hwnd
    return WndShow_Pos("S",hwnd, "HIDE")
 
-::method ShowWindow unguarded  /* used for the category dialog */
+::method HideWindowFast unguarded
    use arg hwnd
-   return WndShow_Pos("S",hwnd, "NORMAL", self~adm)
+   return WndShow_Pos("S", hwnd, "HIDE FAST")
+
+::method showItem unguarded
+   forward message "showControl"
+
+::method hideItem unguarded
+   forward message "hideControl"
+
+::method showItemFast unguarded
+   forward message "showControlFast"
+
+::method hideItemFast unguarded
+   forward message "hideControlFast"
 
 ::method FocusItem unguarded
    use arg id
