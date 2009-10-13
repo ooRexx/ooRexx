@@ -212,6 +212,7 @@ VOID CALLBACK SleepTimerProc( HWND, UINT, UINT, DWORD);
 #define RNDFACTOR      1664525L
 #define MAX_ENVVAR     1024
 #define MAX_LINE_LEN   4096            /* max line length            */
+#define MAX_CREATEPROCESS_CMDLINE (32 * 1024)
 
 /*********************************************************************/
 /*  Various definitions used by the math functions                   */
@@ -3201,7 +3202,7 @@ size_t RexxEntry RxWinExec(const char *name, size_t numargs, CONSTRXSTRING args[
 
     // Should be 1 or 2 args.
     if ( numargs < 1 || numargs > 2 || !RXVALIDSTRING(args[0]) ||
-         (numargs == 2 && !RXVALIDSTRING(args[1])) || args[0].strlength > (32 * 1024) )
+         (numargs == 2 && !RXVALIDSTRING(args[1])) || args[0].strlength > MAX_CREATEPROCESS_CMDLINE )
     {
         return INVALID_ROUTINE;
     }
