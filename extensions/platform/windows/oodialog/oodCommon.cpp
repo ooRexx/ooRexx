@@ -890,6 +890,59 @@ bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringO
     return true;
 }
 
+
+bool rxLogicalFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
+                            BOOL *logical, int argPos)
+{
+    logical_t value;
+    RexxObjectPtr obj = context->DirectoryAt(d, index);
+    if ( obj != NULLOBJECT )
+    {
+        if ( ! context->Logical(obj, &value) )
+        {
+            wrongObjInDirectoryException(context->threadContext, argPos, index, "a logical", obj);
+            return false;
+        }
+        *logical = (BOOL)value;
+    }
+    return true;
+}
+
+bool rxNumberFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
+                           DWORD *number, int argPos)
+{
+    DWORD value;
+    RexxObjectPtr obj = context->DirectoryAt(d, index);
+    if ( obj != NULLOBJECT )
+    {
+        if ( ! context->UnsignedInt32(obj, (uint32_t*)&value) )
+        {
+            wrongObjInDirectoryException(context->threadContext, argPos, index, "a positive whole number", obj);
+            return false;
+        }
+        *number = value;
+    }
+    return true;
+}
+
+bool rxIntFromDirectory(RexxMethodContext *context, RexxDirectoryObject d, CSTRING index,
+                        int *number, int argPos)
+{
+    int value;
+    RexxObjectPtr obj = context->DirectoryAt(d, index);
+    if ( obj != NULLOBJECT )
+    {
+        if ( ! context->Int32(obj, &value) )
+        {
+            wrongObjInDirectoryException(context->threadContext, argPos, index, "an integer", obj);
+            return false;
+        }
+        *number = value;
+    }
+    return true;
+}
+
+
 /**
  * Look up the int value of a keyword.
  *
@@ -1003,31 +1056,6 @@ int putUnicodeText(LPWORD dest, const char *text)
         }
     }
     return count;
-}
-
-
-/**
- * Parses the show options for a number of methods that have to do with the
- * moving, resizing, or both, of windows
- *
- * @param options  The keyword string.  This is a case-insensitive check. More
- *                 than one keyword, or no keyword, is acceptable.
- *
- * @return uint32_t
- */
-uint32_t parseShowOptions(CSTRING options)
-{
-    uint32_t opts = SWP_NOZORDER;
-
-    if ( options != NULL )
-    {
-       if ( StrStrI(options, "NOMOVE"    ) ) opts |= SWP_NOMOVE;
-       if ( StrStrI(options, "NOSIZE"    ) ) opts |= SWP_NOSIZE;
-       if ( StrStrI(options, "HIDEWINDOW") ) opts |= SWP_HIDEWINDOW;
-       if ( StrStrI(options, "SHOWWINDOW") ) opts |= SWP_SHOWWINDOW;
-       if ( StrStrI(options, "NOREDRAW"  ) ) opts |= SWP_NOREDRAW;
-    }
-    return opts;
 }
 
 

@@ -487,9 +487,7 @@ done_out:
  *  The base init() for all dialog control objects.
  *
  *  Initializes the WindowBase and sets the 3 attributes: id, hDlg, and oDlg.
- *  These attributes are publicly 'get' only attributes and can not be changed.
- *
- *
+ *  These attributes are 'get' only attributes and can not be changed.
  */
 RexxMethod2(uint32_t, dlgctrl_init, OPTIONAL_POINTER, args, OSELF, self)
 {
@@ -515,6 +513,12 @@ RexxMethod2(uint32_t, dlgctrl_init, OPTIONAL_POINTER, args, OSELF, self)
     {
         goto done_out;
     }
+
+    if ( ! initWindowExtensions(context, self, params->hwnd, wbCSelf, NULL) )
+    {
+        goto done_out;
+    }
+
 
     pCDialogControl cdcCSelf = (pCDialogControl)c->BufferData(cdcBuf);
     memset(cdcCSelf, 0, sizeof(CDialogControl));

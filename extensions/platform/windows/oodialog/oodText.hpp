@@ -38,6 +38,7 @@
 #ifndef oodText_Included
 #define oodText_Included
 
+extern int   getWeight(CSTRING opts);
 extern bool  getTextSize(RexxMethodContext *, CSTRING, CSTRING, uint32_t, HWND, RexxObjectPtr, PSIZE);
 extern bool  textSizeIndirect(RexxMethodContext *, CSTRING, CSTRING, uint32_t, SIZE *, HWND);
 extern bool  textSizeFromWindow(RexxMethodContext *, CSTRING, SIZE *, HWND);

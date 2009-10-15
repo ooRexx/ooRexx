@@ -860,31 +860,16 @@
    end
 
 
- /* The following methods are to enable/disable and show/hide dialog items */
- /* The extension fast means that the method will not redraw the item */
-
 ::method enableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"
 ::method disableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"
 ::method showControl unguarded external "LIBRARY oodialog plbdlg_showControl"
 ::method hideControl unguarded external "LIBRARY oodialog plbdlg_showControl"
 ::method showControlFast unguarded external "LIBRARY oodialog plbdlg_showControl"
 ::method hideControlFast unguarded external "LIBRARY oodialog plbdlg_showControl"
-
-::method ShowWindow unguarded  /* used for the category dialog */
-   use arg hwnd
-   return WndShow_Pos("S",hwnd, "NORMAL", self~adm)
-
-::method ShowWindowFast unguarded
-   use arg hwnd
-   return WndShow_Pos("S", hwnd, "NORMAL FAST", self~adm)
-
-::method HideWindow unguarded
-   use arg hwnd
-   return WndShow_Pos("S",hwnd, "HIDE")
-
-::method HideWindowFast unguarded
-   use arg hwnd
-   return WndShow_Pos("S", hwnd, "HIDE FAST")
+::method showWindow unguarded external "LIBRARY oodialog plbdlg_showWindow"
+::method showWindowFast unguarded external "LIBRARY oodialog plbdlg_showWindow"
+::method hideWindow unguarded external "LIBRARY oodialog plbdlg_showWindow"
+::method hideWindowFast unguarded external "LIBRARY oodialog plbdlg_showWindow"
 
 ::method showItem unguarded
    forward message "showControl"

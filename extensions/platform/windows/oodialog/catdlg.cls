@@ -620,93 +620,134 @@
 ::method setCategoryAttrib unguarded
    forward message 'setControlDataAttribute'
 
+-- DEPRECATED (maybe?)
+::method getItem unguarded
+   forward message 'getControlHandle'
 
 ::method enableCategoryItem unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
-   if .SystemErrorCode <> 0 then return 1
-   .Window~new(hwnd)~enable
+   forward message 'enableCategoryControl'
 
 ::method disableCategoryItem unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
+   forward message 'disableCategoryControl'
+
+::method hideCategoryItem unguarded
+   forward message 'hideCategoryControl'
+
+::method showCategoryItem unguarded
+   forward message 'showCategoryCotrol'
+
+::method resizeCategoryItem unguarded  -- old method, this is not accurate
+   use strict arg id, width, height, showOptions = "", category = ""
+   if arg(5, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+
    hwnd = self~getControlHandle(id, self~catalog['handles'][category])
-   if .SystemErrorCode <> 0 then return 1
-   .Window~new(hwnd)~disable
+   if hwnd = 0 then return -1
+   size = .Size~new(width * self~factorX, height * self~factorY)
+   return .Window~new(hwnd)~resizeTo(size, showOptions)
 
-::method HideCategoryItem unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   h = self~getItem(id, self~catalog['handles'][category])
-   if h = 0 then return 1
-   return WndShow_Pos("S",h, "HIDE")     -- Implement using .Window
+::method moveCategoryItem unguarded    -- old method, this is not accurate
+   use strict arg id, xPos, yPos, showOptions = "", category = ""
+   if arg(5, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
 
-::method ShowCategoryItem unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   h = self~getItem(id, self~catalog['handles'][category])
-   if h = 0 then return 1
-   return WndShow_Pos("S",h, "NORMAL")   -- Implement using .Window
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if hwnd = 0 then return -1
+   pos = .Point~new(xPos * self~factorX, yPos * self~factorY)
+   return .Window~new(hwnd)~moveTo(pos, showOptions)
 
-::method getItem unguarded
+-- End DEPRECATED (maybe ?)
+
+
+::method getControlHandle unguarded
    use arg id, hDlg
 
    forward class (super) continue
    hwnd = result
-   if hwnd == -1 then return -1
 
    if hwnd = 0 & arg(2,'O') then do
        if \ id~datatype("W") then id = self~resolveSymbolicId(id)
        if id == -1 then return -1
 
        -- Try current page.
-       hwnd = self~getItem:super(id, self~catalog['handles'][self~catalog['category']])
+       hwnd = self~getControlHandle:super(id, self~catalog['handles'][self~catalog['category']])
 
        -- If still no good, try all pages.
        if hwnd = 0 then do i = 1 to self~catalog['count'] while hwnd = 0
-           hwnd = self~getItem:super(id, self~catalog['handles'][i])
+           hwnd = self~getControlHandle:super(id, self~catalog['handles'][i])
        end
    end
    return hwnd
 
+::method enableCategoryControl unguarded
+   use strict arg id, category = ""
+   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if hwnd = 0 then return 1
+   .Window~new(hwnd)~enable
+
+::method disableCategoryControl unguarded
+   use strict arg id, category = ""
+   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if hwnd = 0 then return 1
+   .Window~new(hwnd)~disable
+
+::method hideCategoryControl unguarded
+   use strict arg id, category = ""
+   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if hwnd = 0 then return 1
+   return .Window~new(hwnd)~hide
+
+::method showCategoryControl unguarded
+   use strict arg id, category = ""
+   if arg(2, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if hwnd = 0 then return 1
+   .Window~new(hwnd)~show
+
+::method resizeCategoryControl unguarded
+   use strict arg id, width, height, showOptions = "", category = ""
+   if arg(5,'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if hwnd = 0 then return -1
+   size = .Size~new(width, height)
+   return .Window~new(hwnd)~resizeTo(size, showOptions)
+
+::method moveCategoryControl unguarded
+   use strict arg id, xPos, yPos, showOptions = "", category = ""
+   if arg(5,'O') | \ category~dataType("W") then category = self~catalog['category']  /* try current */
+
+   hwnd = self~getControlHandle(id, self~catalog['handles'][category])
+   if hwnd = 0 then return -1
+   pos = .Point~new(xPos, yPos)
+   return .Window~new(hwnd)~moveTo(pos, showOptions)
+
+
+
 ::method SendMessageToCategoryItem unguarded
-   parse arg id,a2,a3,a4, category
-   if arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   return SendWinMsg("DLG", self~catalog['handles'][category],id,a2,a3,a4)
+   use strict arg id, a2, a3, a4, category = ""
+   if arg(5, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+   if \ id~datatype("W") then id = self~resolveSymbolicId(id)
+   return SendWinMsg("DLG", self~catalog['handles'][category], id, a2, a3, a4)
 
 ::method SetCategoryItemFont unguarded
-   use arg id, hFont, bRedraw, category     /* WM_SETFONT */
-   if arg(4,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   if arg(3, 'o') = 1 then bRedraw = 1
-   return SendWinMsg("ANY",self~getItem(id, self~catalog['handles'][category]), "0x0030", hFont, bRedraw)
+   use strict arg id, hFont, bRedraw = 1, category = ""     /* WM_SETFONT */
+   if arg(4, 'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
+
+   hCtrl = self~getControlHandle(id, self~catalog['handles'][category])
+   return SendWinMsg("ANY", hCtrl, "0x0030", hFont, bRedraw)
 
 ::method FocusCategoryItem unguarded
-   use arg id, category
-   if arg(2,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   return SendWinMsg("ANY",self~catalog['handles'][category], "0x0028", self~getItem(id, self~catalog['handles'][category]), 1)
+   use strict arg id, category = ""
+   if arg(2,'O') | \ category~datatype("W") then category = self~catalog['category']  /* try current */
 
-::method ResizeCategoryItem unguarded
-   use arg id, width, high, showOptions, category
-   if arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   if arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   hnd = self~getItem(id, self~catalog['handles'][category])
-   if hnd = 0 then return -1
-   return WndShow_Pos("P",hnd, 0, 0, width * self~factorX, high* self~factorY,,
-                           "NOMOVE "||showOptions)
-
-   /* This method will move a dialog item to an other position */
-
-::method MoveCategoryItem unguarded
-   use arg id, xPos, yPos, showOptions, category
-   if arg(5,'o') = 1 | category~DataType("N") = 0 then category = self~catalog['category']  /* try current */
-   if arg(4,"o") = 1 then showOptions = ""; else showOptions = showOptions~translate
-   h = self~getItem(id, self~catalog['handles'][category])
-   if h = 0 then return -1
-   return WndShow_Pos("P",h, xPos * self~factorX, yPos * self~factorY, 0, 0,,
-                           "NOSIZE "||showOptions)
-
+   hCtrl = self~getControlHandle(id, self~catalog['handles'][category])
+   return SendWinMsg("ANY", self~catalog['handles'][category], "0x0028", hCtrl, 1)
 
 /* set/get the horizontal scroll width of a list box */
 

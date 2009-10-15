@@ -104,11 +104,20 @@ typedef struct _pbdcCSelf {
 } CPlainBaseDialogClass;
 typedef CPlainBaseDialogClass *pCPlainBaseDialogClass;
 
+/* Struct for the WindowExtensions object CSelf. */
+typedef struct _weCSelf {
+    pCWindowBase   wndBase;
+    HWND           hwnd;
+    RexxObjectPtr  rexxSelf;
+} CWindowExtensions;
+typedef CWindowExtensions *pCWindowExtensions;
+
 /* Struct for the PlainBaseDialog object CSelf. */
 typedef struct _pbdCSelf {
     char                 fontName[MAX_DEFAULT_FONTNAME];
     pCWindowBase         wndBase;
     pCEventNotification  enCSelf;
+    pCWindowExtensions   weCSelf;
     RexxObjectPtr        rexxSelf;
     HWND                 hDlg;
     DIALOGADMIN          *dlgAdm;
@@ -176,6 +185,7 @@ extern int32_t    checkID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPt
 extern int32_t    idError(RexxMethodContext *c, RexxObjectPtr rxID);
 extern int32_t    resolveResourceID(RexxMethodContext *c, RexxObjectPtr rxID, RexxObjectPtr self);
 extern int32_t    resolveIconID(RexxMethodContext *c, RexxObjectPtr rxIconID, RexxObjectPtr self);
+extern bool       requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
 
 extern PPOINT        rxGetPoint(RexxMethodContext *context, RexxObjectPtr p, int argPos);
 extern RexxObjectPtr rxNewPoint(RexxMethodContext *c, long x, long y);
@@ -186,27 +196,34 @@ extern PSIZE         rxGetSize(RexxMethodContext *context, RexxObjectPtr s, int 
 extern RexxObjectPtr rxNewSize(RexxMethodContext *c, long cx, long cy);
 
 extern bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringObj);
+extern bool rxLogicalFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, BOOL *, int);
+extern bool rxNumberFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, DWORD *, int);
+extern bool rxIntFromDirectory(RexxMethodContext *, RexxDirectoryObject, CSTRING, int *, int);
 
-// These functions are defined in oodUser.cpp.
-extern bool     getCategoryHDlg(RexxMethodContext *, RexxObjectPtr, uint32_t *, HWND *, bool);
-extern uint32_t getCategoryNumber(RexxMethodContext *, RexxObjectPtr);
+extern RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
+extern int           putUnicodeText(LPWORD dest, const char *text);
+extern int           getKeywordValue(String2Int *cMap, const char * str);
+extern bool          goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max, size_t *arraySize);
+extern bool          getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, int *);
+extern bool          getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, int *);
 
 // TODO move to APICommon when ooDialog is converted to use .Pointer instead of
 // pointer strings.
 extern POINTER rxGetPointerAttribute(RexxMethodContext *context, RexxObjectPtr obj, CSTRING name);
 
-extern bool        requiredComCtl32Version(RexxMethodContext *context, const char *methodName, DWORD minimum);
+// These functions are defined in oodUser.cpp.
+extern bool     getCategoryHDlg(RexxMethodContext *, RexxObjectPtr, uint32_t *, HWND *, bool);
+extern uint32_t getCategoryNumber(RexxMethodContext *, RexxObjectPtr);
+
+// These functions are defined in oodUtilities.cpp
 extern const char *comctl32VersionPart(DWORD id, DWORD type);
 
+// These functions are defined in ooDialog.cpp
 extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
 extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hDlg);
-extern int           getKeywordValue(String2Int *cMap, const char * str);
-extern RexxObjectPtr setWindowStyle(RexxMethodContext *c, HWND hwnd, uint32_t style);
-extern int           putUnicodeText(LPWORD dest, const char *text);
-extern uint32_t      parseShowOptions(CSTRING options);
-extern bool          goodMinMaxArgs(RexxMethodContext *c, RexxArrayObject args, int min, int max, size_t *arraySize);
-extern bool          getRectFromArglist(RexxMethodContext *, RexxArrayObject, PRECT, bool, int, int, size_t *, int *);
-extern bool          getPointFromArglist(RexxMethodContext *, RexxArrayObject, PPOINT, int, int, size_t *, int *);
+
+// These functions are defined in oodBaseDialog.cpp
+extern bool initWindowExtensions(RexxMethodContext *, RexxObjectPtr, HWND, pCWindowBase, pCPlainBaseDialog);
 
 // Shared button stuff.
 typedef enum {push, check, radio, group, owner, notButton} BUTTONTYPE, *PBUTTONTYPE;
@@ -315,7 +332,7 @@ inline const char *comctl32VersionName(DWORD id)
 }
 
 /**
- * Retrieves th PlainBaseDialog class CSelf pointer.
+ * Retrieves the PlainBaseDialog class CSelf pointer.
  *
  * @param c  Method contex we are operating in.
  *

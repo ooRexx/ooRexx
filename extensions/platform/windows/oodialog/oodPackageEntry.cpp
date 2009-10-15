@@ -96,7 +96,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(Wnd_Desktop);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(WndShow_Pos);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleScrollBar);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DCDraw);
@@ -128,7 +127,6 @@ RexxRoutineEntry oodialog_functions[] =
 {
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
     REXX_CLASSIC_ROUTINE(Wnd_Desktop,          Wnd_Desktop),
-    REXX_CLASSIC_ROUTINE(WndShow_Pos,          WndShow_Pos),
     REXX_CLASSIC_ROUTINE(HandleScrollBar,      HandleScrollBar),
     REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),
     REXX_CLASSIC_ROUTINE(DCDraw,               DCDraw),
@@ -233,6 +231,7 @@ REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
 REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
 REXX_METHOD_PROTOTYPE(pbdlg_show);
 REXX_METHOD_PROTOTYPE(plbdlg_showControl);
+REXX_METHOD_PROTOTYPE(plbdlg_showWindow);
 REXX_METHOD_PROTOTYPE(pbdlg_getControlHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_getWindowText);
 REXX_METHOD_PROTOTYPE(pbdlg_setWindowText);
@@ -311,11 +310,16 @@ REXX_METHOD_PROTOTYPE(dyndlg_stopDynamic_pvt);
 REXX_METHOD_PROTOTYPE(resdlg_getDataTableIDs_pvt);
 REXX_METHOD_PROTOTYPE(resdlg_startDialog_pvt);
 
+REXX_METHOD_PROTOTYPE(winex_initWindowExtensions);
 REXX_METHOD_PROTOTYPE(winex_getTextSizeScreen);
 REXX_METHOD_PROTOTYPE(winex_getFont);
 REXX_METHOD_PROTOTYPE(winex_setFont);
 REXX_METHOD_PROTOTYPE(winex_createFontEx);
 REXX_METHOD_PROTOTYPE(winex_createFont);
+REXX_METHOD_PROTOTYPE(winex_getScrollPos);
+REXX_METHOD_PROTOTYPE(winex_setScrollPos);
+REXX_METHOD_PROTOTYPE(winex_scroll);
+REXX_METHOD_PROTOTYPE(winex_test);
 
 REXX_METHOD_PROTOTYPE(ri_init);
 REXX_METHOD_PROTOTYPE(ri_release);
@@ -627,6 +631,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_get,                     pbdlg_get),
     REXX_METHOD(pbdlg_isDialogActive,          pbdlg_isDialogActive),
     REXX_METHOD(pbdlg_show,                    pbdlg_show),
+    REXX_METHOD(plbdlg_showWindow,             plbdlg_showWindow),
     REXX_METHOD(plbdlg_showControl,            plbdlg_showControl),
     REXX_METHOD(pbdlg_connect_ControName,      pbdlg_connect_ControName),
     REXX_METHOD(pbdlg_setDlgDataFromStem_pvt,  pbdlg_setDlgDataFromStem_pvt),
@@ -722,11 +727,16 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(resdlg_getDataTableIDs_pvt,   resdlg_getDataTableIDs_pvt),
     REXX_METHOD(resdlg_startDialog_pvt,       resdlg_startDialog_pvt),
 
-    REXX_METHOD(winex_getTextSizeScreen,      winex_getTextSizeScreen),
+    REXX_METHOD(winex_initWindowExtensions,   winex_initWindowExtensions),
     REXX_METHOD(winex_getFont,                winex_getFont),
     REXX_METHOD(winex_setFont,                winex_setFont),
+    REXX_METHOD(winex_getTextSizeScreen,      winex_getTextSizeScreen),
     REXX_METHOD(winex_createFontEx,           winex_createFontEx),
     REXX_METHOD(winex_createFont,             winex_createFont),
+    REXX_METHOD(winex_getScrollPos,           winex_getScrollPos),
+    REXX_METHOD(winex_setScrollPos,        	  winex_setScrollPos),
+    REXX_METHOD(winex_scroll,        	      winex_scroll),
+    REXX_METHOD(winex_test,                   winex_test),
 
     REXX_METHOD(ri_init,                     ri_init),
     REXX_METHOD(ri_release,                  ri_release),

@@ -35,6 +35,13 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
+
+/**
+ * ooDialog.cpp
+ *
+ * The base module for the ooDialog package.  Contains the method implmentations
+ * for the WindowBase and PlainBaseDialog classes.
+ */
 #include "ooDialog.hpp"     // Must be first, includes windows.h and oorexxapi.h
 
 #include <mmsystem.h>
@@ -58,17 +65,6 @@ extern LRESULT PaletteMessage(DIALOGADMIN * addr, HWND hWnd, UINT msg, WPARAM wP
 extern LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data);
 
 static HICON GetIconForID(DIALOGADMIN *, UINT, UINT, int, int);
-
-
-class LoopThreadArgs
-{
-public:
-    RexxMethodContext *context;  // Used for data autodetection only.
-    DIALOGADMIN *dlgAdmin;
-    uint32_t resourceId;
-    bool autoDetect;
-    bool *release;               // Used for a return value
-};
 
 
 /* dialog procedure
@@ -562,59 +558,6 @@ int32_t DelDialog(DIALOGADMIN * aDlg)
 }
 
 
-/* create an asynchronous dialog and run asynchronous message loop */
-DWORD WINAPI WindowLoopThread(void *arg)
-{
-    MSG msg;
-    DIALOGADMIN * dlgAdm;
-    bool * release;
-    ULONG ret;
-
-    LoopThreadArgs *args = (LoopThreadArgs *)arg;
-
-    dlgAdm = args->dlgAdmin;
-    dlgAdm->TheDlg = CreateDialogParam(dlgAdm->TheInstance, MAKEINTRESOURCE(args->resourceId), 0, (DLGPROC)RexxDlgProc, dlgAdm->Use3DControls);  /* pass 3D flag to WM_INITDIALOG */
-    dlgAdm->ChildDlg[0] = dlgAdm->TheDlg;
-
-    release = args->release;
-    if ( dlgAdm->TheDlg )
-    {
-        if ( args->autoDetect )
-        {
-            if ( ! doDataAutoDetection(args->context, dlgAdm) )
-            {
-                dlgAdm->TheThread = NULL;
-                return 0;
-            }
-        }
-
-        *release = true;  /* Release wait in startDialog()  */
-        do
-        {
-            if ( GetMessage(&msg,NULL, 0,0) )
-            {
-                if ( ! IsDialogMessage(dlgAdm->TheDlg, &msg) )
-                {
-                    DispatchMessage(&msg);
-                }
-            }
-        } while ( dlgAdm && dialogInAdminTable(dlgAdm) && ! dlgAdm->LeaveDialog );
-    }
-    else
-    {
-        *release = true;
-    }
-    EnterCriticalSection(&crit_sec);
-    if ( dialogInAdminTable(dlgAdm) )
-    {
-        ret = DelDialog(dlgAdm);
-        dlgAdm->TheThread = NULL;
-    }
-    LeaveCriticalSection(&crit_sec);
-    return ret;
-}
-
-
 /**
  * Loads and returns the handles to the regular size and small size icons for
  * the dialog. These icons are used in the title bar of the dialog, on the task
@@ -1002,27 +945,6 @@ RexxMethod1(uint32_t, wb_getPixelY, CSELF, pCSelf)
     RECT r = {0};
     GetWindowRect(pcs->hwnd, &r);
     return r.bottom - r.top;
-}
-
-/** WindowBase::size()
- *
- *  Returns the size of the window in pixels.
- *
- *  @return  A .Size object with the width and height of the window in pixels.
- *           If there is now underlying window yet, the width and height will be
- *           0.
- */
-RexxMethod1(RexxObjectPtr, wb_size, CSELF, pCSelf)
-{
-    pCWindowBase pcs = (pCWindowBase)pCSelf;
-    if ( pcs->hwnd == NULL )
-    {
-        return rxNewSize(context, 0, 0);
-    }
-
-    RECT r = {0};
-    GetWindowRect(pcs->hwnd, &r);
-    return rxNewSize(context, r.right - r.left, r.bottom - r.top);
 }
 
 /** WindowBase::enable() / WindowBase::disable()
@@ -1644,6 +1566,11 @@ RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND h
     pcpbd->hDlg = hDlg;
     pcpbd->enCSelf->hDlg = hDlg;
 
+    if ( pcpbd->weCSelf != NULL )
+    {
+        pcpbd->weCSelf->hwnd = hDlg;
+    }
+
     if ( pcpbd->hDlg != NULL )
     {
         pcwb->hwnd = pcpbd->hDlg;
@@ -1766,6 +1693,7 @@ RexxMethod5(RexxObjectPtr, pbdlg_init, RexxObjectPtr, library, RexxObjectPtr, re
 
     pcpbd->autoDetect = TRUE;
     pcpbd->wndBase = pWB;
+    pcpbd->weCSelf = NULL;
     pcpbd->rexxSelf = self;
     pcpbd->hDlg = NULL;
     context->SetObjectVariable("CSELF", cselfBuffer);
@@ -2091,11 +2019,51 @@ RexxMethod3(logical_t, pbdlg_show, OPTIONAL_CSTRING, options, NAME, method, CSEL
 }
 
 
+/** PlainBaseDialog::showWindow() / PlainBaseDialog::hideWindow()
+ *  PlainBaseDialog::showWindow() / PlainBaseDialog::hideWindow()
+ *
+ *  Hides or shows the specified window, normally, or 'fast'.  "Fast" means
+ *  the visible flag is set, but the window is not forced to update.
+ *
+ *  @param   hwnd  The handle of the window to be shown.
+ *
+ *  @return  1 if the window was previously visible.  Return 0 if the
+ *           window was previously hidden.  The return for these methods was not
+ *           previously documented, but this matches what was returned.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(RexxObjectPtr, plbdlg_showWindow, POINTERSTRING, hwnd, NAME, method, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    if ( *method == 'S' )
+    {
+        ((pCPlainBaseDialog)pCSelf)->dlgAdm->AktChild = (HWND)hwnd;
+    }
+
+    logical_t rc;
+    if ( strstr("FAST", method) != NULL )
+    {
+        rc = showFast((HWND)hwnd, *method);
+    }
+    else
+    {
+        rc = showWindow((HWND)hwnd, *method);
+    }
+
+    return (rc ? TheOneObj : TheZeroObj);
+}
+
+
 /** PlainBaseDialog::showControl() / PlainBaseDialog::hideControl()
  *  PlainBaseDialog::showControlFast() / PlainBaseDialog::hideControlFast()
  *
  *  Hides or shows the dialog control window, normally, or 'fast'.  "Fast" means
  *  the visible flag is set, but the window is not forced to update.
+ *
+ *  @param   rxID  The resource ID of the dialog control, may be numeric or
+ *                 symbolic.
  *
  *  @return  1 if the window was previously visible.  Return 0 if the
  *           window was previously hidden.  Return -1 if the resource ID was no
@@ -2383,6 +2351,7 @@ RexxMethod3(RexxObjectPtr, pbdlg_getControlHandle, RexxObjectPtr, rxID, OPTIONAL
     if ( hCtrl == NULL )
     {
         oodSetSysErrCode(context->threadContext);
+        return TheZeroObj;
     }
     return pointer2string(context, hCtrl);
 }
@@ -2749,489 +2718,4 @@ RexxMethod5(RexxObjectPtr, pbdlg_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRING
     return NULLOBJECT;
 }
 
-
-/**
- *  Methods for the .BaseDialog class.
- */
-#define BASEDIALOG_CLASS              "BaseDialog"
-#define CONTROLBAG_ATTRIBUTE          "BaseDialogControlBag"
-
-/** BaseDialog::init()
- */
-RexxMethod3(RexxObjectPtr, baseDlg_init, ARGLIST, args, SUPER, super, OSELF, self)
-{
-    RexxObjectPtr result = context->ForwardMessage(NULL, NULL, super, NULL);
-
-    if ( isInt(0, result, context) )
-    {
-        context->SendMessage1(self, "SCROLLNOW=", TheZeroObj);
-        context->SendMessage1(self, "BKGBITMAP=", TheZeroObj);
-        context->SendMessage1(self, "BKGBRUSHBMP=", TheZeroObj);
-        context->SendMessage1(self, "MENUBAR=", context->Nil());
-        context->SendMessage1(self, "ISLINKED=", TheFalseObj);
-    }
-
-    return result;
-}
-
-
-/** BaseDialog::newXXX()
- *
- *  Instantiates a dialog control object for the specified Windows control.  All
- *  dialog control objects are instantiated through one of the BaseDialog
- *  newXXX() methods. In turn each of those methods filter through this
- *  function. newEdit(), newPushButton(), newListView(), etc..
- *
- * @param  rxID  The resource ID of the control.
- *
- * @param  categoryPageID  [optional] If the dialog is a category dialog, this
- *                         indicates which page of the dialog the control is on.
- *
- * @returns  The properly instantiated dialog control object on success, or the
- *           nil object on failure.
- *
- * @remarks Either returns the control object asked for, or .nil.
- *
- *          The first time a Rexx object is instantiated for a specific Windows
- *          control, the Rexx object is stored in the window words of the
- *          control.  Before a Rexx object is instantiated, the window words are
- *          checked to see if there is already an instantiated object. If so,
- *          that object is returned rather than instantiating a new object.
- */
-RexxMethod5(RexxObjectPtr, baseDlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint32_t, categoryPageID,
-            NAME, msgName, OSELF, self, CSELF, pCSelf)
-{
-    RexxMethodContext *c = context;
-    RexxObjectPtr result = TheNilObj;
-
-    bool isCategoryDlg = false;
-    HWND hDlg = ((pCPlainBaseDialog)pCSelf)->hDlg;
-
-    if ( c->IsOfType(self, "CATEGORYDIALOG") )
-    {
-        if ( ! getCategoryHDlg(context, self, &categoryPageID, &hDlg, argumentExists(2)) )
-        {
-            goto out;
-        }
-        isCategoryDlg = true;
-    }
-
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, c, self, rxID, -1, 1) || (int)id < 0 )
-    {
-        goto out;
-    }
-
-    HWND hControl = GetDlgItem(hDlg, (int)id);
-    if ( hControl == NULL )
-    {
-        goto out;
-    }
-
-    // Check that the underlying Windows control is the control type requested
-    // by the programmer.  Return .nil if this is not true.
-    oodControl_t controlType = oodName2controlType(msgName + 3);
-    if ( ! isControlMatch(hControl, controlType) )
-    {
-        goto out;
-    }
-
-    RexxObjectPtr rxControl = (RexxObjectPtr)getWindowPtr(hControl, GWLP_USERDATA);
-    if ( rxControl != NULLOBJECT )
-    {
-        // Okay, this specific control has already had a control object
-        // instantiated to represent it.  We return this object.
-        result = rxControl;
-        goto out;
-    }
-
-    // No pointer is stored in the user data area, so no control object has been
-    // instantiated for this specific control, yet.  We instantiate one now and
-    // then store the object in the user data area of the control window.
-
-    PNEWCONTROLPARAMS pArgs = (PNEWCONTROLPARAMS)malloc(sizeof(NEWCONTROLPARAMS));
-    if ( pArgs == NULL )
-    {
-        outOfMemoryException(context->threadContext);
-        goto out;
-    }
-
-    RexxClassObject controlCls = oodClass4controlType(context, controlType);
-    if ( controlCls == NULLOBJECT )
-    {
-        goto out;
-    }
-
-    pArgs->hwnd = hControl;
-    pArgs->hwndDlg = hDlg;
-    pArgs->id = id;
-    pArgs->parentDlg = self;
-
-    rxControl = c->SendMessage1(controlCls, "NEW", c->NewPointer(pArgs));
-    free(pArgs);
-
-    if ( rxControl != NULLOBJECT && rxControl != TheNilObj )
-    {
-        result = rxControl;
-        setWindowPtr(hControl, GWLP_USERDATA, (LONG_PTR)result);
-        c->SendMessage1(self, "putControl", result);
-    }
-
-out:
-    return result;
-}
-
-RexxMethod2(RexxObjectPtr, baseDlg_putControl_pvt, RexxObjectPtr, control, OSELF, self)
-{
-
-    RexxObjectPtr bag = context->GetObjectVariable(CONTROLBAG_ATTRIBUTE);
-    if ( bag == NULLOBJECT )
-    {
-        bag = rxNewBag(context);
-        context->SetObjectVariable(CONTROLBAG_ATTRIBUTE, bag);
-    }
-    if ( bag != NULLOBJECT )
-    {
-        context->SendMessage2(bag, "PUT", control, control);
-    }
-
-    return TheNilObj;
-}
-
-RexxMethod3(RexxObjectPtr, baseDlg_test, int, x, CSTRING, y, CSELF, pCSelf)
-{
-    RexxMethodContext *c = context;
-
-    /*
-    size_t count = c->ArrayItems(args);
-    size_t size = c->ArraySize(args);
-    printf("Arg count=%d size=%d\n", count, size);
-    */
-    return TheTrueObj;
-}
-
-
-/**
- *  Methods for the .ResDialog class.
- */
-#define RESDIALOG_CLASS        "ResDialog"
-
-
-/**
- *  Used to set the fontName and fontSize attributes of the resource dialog.
- */
-void setFontAttrib(RexxMethodContext *c, pCPlainBaseDialog pcpbd)
-{
-    HFONT font = (HFONT)SendMessage(pcpbd->hDlg, WM_GETFONT, 0, 0);
-    if ( font == NULL )
-    {
-        font = (HFONT)GetStockObject(SYSTEM_FONT);
-    }
-
-    HDC hdc = GetDC(pcpbd->hDlg);
-    if ( hdc )
-    {
-        HFONT oldFont = (HFONT)SelectObject(hdc, font);
-
-        char fontName[64];
-        TEXTMETRIC tm;
-
-        GetTextMetrics(hdc, &tm);
-        GetTextFace(hdc, sizeof(fontName), fontName);
-
-        long fontSize = MulDiv((tm.tmHeight - tm.tmInternalLeading), 72, GetDeviceCaps(hdc, LOGPIXELSY));
-
-        strcpy(pcpbd->fontName, fontName);
-        pcpbd->fontSize = fontSize;
-
-        SelectObject(hdc, oldFont);
-        ReleaseDC(pcpbd->hDlg, hdc);
-    }
-    return;
-}
-
-
-/**
- * Creates the underlying Windows dialog using a dialog resource stored in a
- * DLL.  Currently this is only used for ResDialog dialogs.  All other ooDialog
- * dialogs use DynamicDialog::startParentDialog() to create the underlying
- * Windows dialog.
- *
- * @param libray      The name of the DLL.
- * @param dlgID       The resource ID for the dialog in the DLL
- * @param autoDetect  True if auto detect is on, otherwise false.
- * @param iconID      Ther resource ID to use for the application icon.
- * @param modeless    Whether to create a modeless or a modal dialog.
- *
- * @return True on succes, otherwise false.
- */
-RexxMethod6(logical_t, resdlg_startDialog_pvt, CSTRING, library, uint32_t, dlgID, logical_t, autoDetect, uint32_t, iconID,
-            logical_t, modeless, CSELF, pCSelf)
-{
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-
-    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
-
-    ULONG thID;
-    bool Release = false;
-
-    EnterCriticalSection(&crit_sec);
-    if ( ! InstallNecessaryStuff(dlgAdm, library) )
-    {
-        if ( dlgAdm )
-        {
-            // TODO why is DelDialog() used here, but not below ??
-            DelDialog(dlgAdm);
-
-            // Note: The message queue and dialog administration block are /
-            // must be freed from PlainBaseDialog::deInstall() or
-            // PlainBaseDialog::unInit().
-        }
-        LeaveCriticalSection(&crit_sec);
-        return FALSE;
-    }
-
-    LoopThreadArgs threadArgs;
-    threadArgs.context = context;
-    threadArgs.dlgAdmin = dlgAdm;
-    threadArgs.resourceId = dlgID;
-    threadArgs.autoDetect = autoDetect ? true : false;
-    threadArgs.release = &Release;
-
-    dlgAdm->TheThread = CreateThread(NULL, 2000, WindowLoopThread, &threadArgs, 0, &thID);
-
-    // Wait for dialog start.
-    while ( ! Release && (dlgAdm->TheThread) )
-    {
-        Sleep(1);
-    }
-    LeaveCriticalSection(&crit_sec);
-
-    if (dlgAdm)
-    {
-        if (dlgAdm->TheDlg)
-        {
-            HICON hBig = NULL;
-            HICON hSmall = NULL;
-
-            // Set the thread priority higher for faster drawing.
-            SetThreadPriority(dlgAdm->TheThread, THREAD_PRIORITY_ABOVE_NORMAL);
-            dlgAdm->OnTheTop = TRUE;
-            dlgAdm->threadID = thID;
-
-            // Is this to be a modal dialog?
-            if ( dlgAdm->previous && ! modeless && IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg) )
-            {
-                EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, FALSE);
-            }
-
-            if ( GetDialogIcons(dlgAdm, iconID, ICON_DLL, (PHANDLE)&hBig, (PHANDLE)&hSmall) )
-            {
-                dlgAdm->SysMenuIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICON, (LONG_PTR)hBig);
-                dlgAdm->TitleBarIcon = (HICON)setClassPtr(dlgAdm->TheDlg, GCLP_HICONSM, (LONG_PTR)hSmall);
-                dlgAdm->DidChangeIcon = TRUE;
-
-                SendMessage(dlgAdm->TheDlg, WM_SETICON, ICON_SMALL, (LPARAM)hSmall);
-            }
-
-                RexxMethodContext *c = context;
-
-            setDlgHandle(context, pcpbd, dlgAdm->TheDlg);
-            setFontAttrib(context, pcpbd);
-            return TRUE;
-        }
-
-        // The dialog creation failed, so clean up.  For now, with the
-        // mixture of old and new native APIs, the freeing of the dialog
-        // administration block must be done in the deInstall() or
-        // unInit() methods.
-
-        // TODO this seems very wrong.  Why isn't a DelDialog() done here???
-        dlgAdm->OnTheTop = FALSE;
-        if (dlgAdm->previous)
-        {
-            ((DIALOGADMIN *)(dlgAdm->previous))->OnTheTop = TRUE;
-        }
-        if ((dlgAdm->previous) && !IsWindowEnabled(((DIALOGADMIN *)dlgAdm->previous)->TheDlg))
-        {
-            EnableWindow(((DIALOGADMIN *)dlgAdm->previous)->TheDlg, TRUE);
-        }
-    }
-    return FALSE;
-}
-
-
-RexxMethod2(RexxArrayObject, resdlg_getDataTableIDs_pvt, CSELF, pCSelf, OSELF, self)
-{
-    return getDataTableIDs(context, (pCPlainBaseDialog)pCSelf, self);
-}
-
-
-/* dump out the dialog admin table(s) */
-
-LONG SetRexxStem(const char * name, INT id, const char * secname, const char * data)
-{
-   SHVBLOCK shvb;
-   CHAR buffer[72];
-
-   if (id == -1)
-   {
-       sprintf(buffer,"%s.%s",name,secname);
-   }
-   else
-   {
-       if (secname) sprintf(buffer,"%s.%d.%s",name,id, secname);
-       else sprintf(buffer,"%s.%d",name,id);
-   }
-   shvb.shvnext = NULL;
-   shvb.shvname.strptr = buffer;
-   shvb.shvname.strlength = strlen(buffer);
-   shvb.shvnamelen = shvb.shvname.strlength;
-   shvb.shvvalue.strptr = const_cast<char *>(data);
-   shvb.shvvalue.strlength = strlen(data);
-   shvb.shvvaluelen = strlen(data);
-   shvb.shvcode = RXSHV_SYSET;
-   shvb.shvret = 0;
-   if (RexxVariablePool(&shvb) == RXSHV_BADN) {
-       char messageBuffer[265];
-       sprintf(messageBuffer, "Variable %s could not be declared", buffer);
-       MessageBox(0,messageBuffer,"Error",MB_OK | MB_ICONHAND);
-       return FALSE;
-   }
-   return TRUE;
-}
-
-
-size_t RexxEntry DumpAdmin(const char *funcname, size_t argc, CONSTRXSTRING *argv, const char *qname, RXSTRING *retstr)
-{
-   CHAR data[256];
-   /* SHVBLOCK shvb; */
-   CHAR name[64];
-   CHAR buffer[128];
-   DEF_ADM;
-   INT i, cnt = 0;
-
-   CHECKARGL(1);
-
-   strcpy(name, argv[0].strptr); /* stem name */
-   if (argc == 2)
-   {
-       dlgAdm = (DIALOGADMIN *)GET_POINTER(argv[1]);
-       if (!dlgAdm) RETVAL(-1)
-
-       strcpy(name, argv[0].strptr); /* stem name */
-       itoa(dlgAdm->TableEntry, data, 10);
-       if (!SetRexxStem(name, -1, "Slot", data)) { RETERR; }
-       pointer2string(data, dlgAdm->TheThread);
-       if (!SetRexxStem(name, -1, "hThread", data))  { RETERR; }
-       pointer2string(data, dlgAdm->TheDlg);
-       if (!SetRexxStem(name, -1, "hDialog", data))  { RETERR; }
-       pointer2string(data, dlgAdm->BkgBrush);
-       if (!SetRexxStem(name, -1, "BkgBrush", data))  { RETERR; }
-       pointer2string(data, dlgAdm->BkgBitmap);
-       if (!SetRexxStem(name, -1, "BkgBitmap", data))  { RETERR; }
-       itoa(dlgAdm->OnTheTop, data, 10);
-       if (!SetRexxStem(name, -1, "TopMost", data))  { RETERR; }
-       pointer2string(data, dlgAdm->AktChild);
-       if (!SetRexxStem(name, -1, "CurrentChild", data))  { RETERR; }
-       pointer2string(data, dlgAdm->TheInstance);
-       if (!SetRexxStem(name, -1, "DLL", data))  { RETERR; }
-       if (!SetRexxStem(name, -1, "Queue", dlgAdm->pMessageQueue))  { RETERR; }
-       itoa(dlgAdm->BT_size, data, 10);
-       if (!SetRexxStem(name, -1, "BmpButtons", data))  { RETERR; }
-       sprintf(buffer, "%s.%s", argv[0].strptr, "BmpTab");
-       for (i=0; i<dlgAdm->BT_size; i++)
-       {
-           itoa(dlgAdm->BmpTab[i].buttonID, data, (dlgAdm->BmpTab[i].Loaded ? 16: 10));
-           if (!SetRexxStem(buffer, i+1, "ID", data))  { RETERR; }
-           pointer2string(data, (void *)dlgAdm->BmpTab[i].bitmapID);
-           if (!SetRexxStem(buffer, i+1, "Normal", data))  { RETERR; }
-           pointer2string(data, (void *)dlgAdm->BmpTab[i].bmpFocusID);
-           if (!SetRexxStem(buffer, i+1, "Focused", data))  { RETERR; }
-           pointer2string(data, (void *)dlgAdm->BmpTab[i].bmpSelectID);
-           if (!SetRexxStem(buffer, i+1, "Selected", data))  { RETERR; }
-           pointer2string(data, (void *)dlgAdm->BmpTab[i].bmpDisableID);
-           if (!SetRexxStem(buffer, i+1, "Disabled", data))  { RETERR; }
-       }
-       itoa(dlgAdm->MT_size, data, 10);
-       if (!SetRexxStem(name, -1, "Messages", data))  { RETERR; }
-       sprintf(buffer, "%s.%s", argv[0].strptr, "MsgTab");
-       for (i=0; i<dlgAdm->MT_size; i++)
-       {
-           ultoa(dlgAdm->MsgTab[i].msg, data, 16);
-           if (!SetRexxStem(buffer, i+1, "msg", data))  { RETERR; }
-           pointer2string(data, (void *)dlgAdm->MsgTab[i].wParam);
-           if (!SetRexxStem(buffer, i+1, "param1", data))  { RETERR; }
-           pointer2string(data, (void *)dlgAdm->MsgTab[i].lParam);
-           if (!SetRexxStem(buffer, i+1, "param2", data))  { RETERR; }
-           strcpy(data, dlgAdm->MsgTab[i].rexxProgram);
-           if (!SetRexxStem(buffer, i+1, "method", data))  { RETERR; }
-       }
-       itoa(dlgAdm->DT_size, data, 10);
-       if (!SetRexxStem(name, -1, "DataItems", data))  { RETERR; }
-       sprintf(buffer, "%s.%s", argv[0].strptr, "DataTab");
-       for (i=0; i<dlgAdm->DT_size; i++)
-       {
-           itoa(dlgAdm->DataTab[i].id, data, 10);
-           if (!SetRexxStem(buffer, i+1, "ID", data))  { RETERR; }
-           itoa(dlgAdm->DataTab[i].type, data, 10);
-           if (!SetRexxStem(buffer, i+1, "type", data))  { RETERR; }
-           itoa(dlgAdm->DataTab[i].category, data, 10);
-           if (!SetRexxStem(buffer, i+1, "category", data))  { RETERR; }
-       }
-       itoa(dlgAdm->CT_size, data, 10);
-       if (!SetRexxStem(name, -1, "ColorItems", data))  { RETERR; }
-       sprintf(buffer, "%s.%s", argv[0].strptr, "ColorTab");
-       for (i=0; i<dlgAdm->CT_size; i++)
-       {
-           itoa(dlgAdm->ColorTab[i].itemID, data, 10);
-           if (!SetRexxStem(buffer, i+1, "ID", data))  { RETERR; }
-           itoa(dlgAdm->ColorTab[i].ColorBk, data, 10);
-           if (!SetRexxStem(buffer, i+1, "Background", data))  { RETERR; }
-           itoa(dlgAdm->ColorTab[i].ColorFG, data, 10);
-           if (!SetRexxStem(buffer, i+1, "Foreground", data)) { RETERR; }
-       }
-   }
-
-   if (argc == 1)
-   {
-       for (i=0; i<MAXDIALOGS; i++)
-       {
-           if (DialogTab[i] != NULL)
-           {
-               cnt++;
-               pointer2string(data, DialogTab[i]);
-               if (!SetRexxStem(name, cnt, "AdmBlock", data)) { RETERR; }
-               itoa(DialogTab[i]->TableEntry, data, 10);
-               if (!SetRexxStem(name, cnt, "Slot", data)) { RETERR; }
-               pointer2string(data, DialogTab[i]->TheThread);
-               if (!SetRexxStem(name, cnt, "hThread", data)) { RETERR; }
-               pointer2string(data, DialogTab[i]->TheDlg);
-               if (!SetRexxStem(name, cnt, "hDialog", data)) { RETERR; }
-               pointer2string(data, DialogTab[i]->BkgBrush);
-               if (!SetRexxStem(name, cnt, "BkgBrush", data)) { RETERR; }
-               pointer2string(data, DialogTab[i]->BkgBitmap);
-               if (!SetRexxStem(name, cnt, "BkgBitmap", data)) { RETERR; }
-               itoa(DialogTab[i]->OnTheTop, data, 10);
-               if (!SetRexxStem(name, cnt, "TopMost", data)) { RETERR; }
-               pointer2string(data, DialogTab[i]->AktChild);
-               if (!SetRexxStem(name, cnt, "CurrentChild", data)) { RETERR; }
-               pointer2string(data, DialogTab[i]->TheInstance);
-               if (!SetRexxStem(name, cnt, "DLL", data)) { RETERR; }
-               if (!SetRexxStem(name, cnt, "Queue", DialogTab[i]->pMessageQueue)) { RETERR; }
-               itoa(DialogTab[i]->BT_size, data, 10);
-               if (!SetRexxStem(name, cnt, "BmpButtons", data)) { RETERR; }
-               itoa(DialogTab[i]->MT_size, data, 10);
-               if (!SetRexxStem(name, cnt, "Messages", data)) { RETERR; }
-               itoa(DialogTab[i]->DT_size, data, 10);
-               if (!SetRexxStem(name, cnt, "DataItems", data)) { RETERR; }
-               itoa(DialogTab[i]->CT_size, data, 10);
-               if (!SetRexxStem(name, cnt, "ColorItems", data)) { RETERR; }
-           }
-       }
-       itoa(cnt, data, 10);
-       if (!SetRexxStem(name, 0, NULL, data)) { RETERR; }  /* Set number of dialog tables */
-   }
-   RETC(0);
-}
 

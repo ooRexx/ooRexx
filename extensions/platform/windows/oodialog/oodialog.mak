@@ -1,7 +1,7 @@
 #/*----------------------------------------------------------------------------*/
 #/*                                                                            */
 #/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
-#/* Copyright (c) 2005-2008 Rexx Language Association. All rights reserved.    */
+#/* Copyright (c) 2005-2009 Rexx Language Association. All rights reserved.    */
 #/*                                                                            */
 #/* This program and the accompanying materials are made available under       */
 #/* the terms of the Common Public License v1.0 which accompanies this         */
@@ -48,34 +48,34 @@ OPTIONS= $(cflags_common) $(cflags_dll) $(OR_ORYXINCL)
 OR_LIB=$(OR_OUTDIR)
 
 # All Source Files
-SOURCEF= $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodData.obj \
-         $(OR_OUTDIR)\oodDeviceGraphics.obj $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj $(OR_OUTDIR)\oodMessaging.obj \
-         $(OR_OUTDIR)\oodPackageEntry.obj $(OR_OUTDIR)\oodRoutines.obj $(OR_OUTDIR)\oodUser.obj $(OR_OUTDIR)\oodUtilities.obj \
-         $(OR_OUTDIR)\oovbmp.obj $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovother.obj $(OR_OUTDIR)\oovscrll.obj \
-         $(OR_OUTDIR)\oodText.obj $(OR_OUTDIR)\oodialog.res
+SOURCEF= $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodControl.obj \
+         $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oodDeviceGraphics.obj $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj \
+         $(OR_OUTDIR)\oodMessaging.obj $(OR_OUTDIR)\oodPackageEntry.obj $(OR_OUTDIR)\oodRoutines.obj $(OR_OUTDIR)\oodUser.obj \
+         $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovbmp.obj $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovother.obj \
+         $(OR_OUTDIR)\oovscrll.obj $(OR_OUTDIR)\oodText.obj $(OR_OUTDIR)\oodialog.res
 
 # All Source files that include oodCommon.hpp
-COMMON_SOURCEF = $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oodDeviceGraphics.obj \
-                 $(OR_OUTDIR)\oodMenu.obj $(OR_OUTDIR)\oodMessaging.obj $(OR_OUTDIR)\oodRoutines.obj $(OR_OUTDIR)\oodUser.obj \
-                 $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovbmp.obj $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovother.obj \
-                 $(OR_OUTDIR)\oovscrll.obj $(OR_OUTDIR)\oodText.obj
+COMMON_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodData.obj \
+                 $(OR_OUTDIR)\oodDeviceGraphics.obj $(OR_OUTDIR)\oodMenu.obj $(OR_OUTDIR)\oodMessaging.obj \
+                 $(OR_OUTDIR)\oodRoutines.obj $(OR_OUTDIR)\oodUser.obj $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovbmp.obj \
+                 $(OR_OUTDIR)\oovdeskt.obj $(OR_OUTDIR)\oovother.obj $(OR_OUTDIR)\oovscrll.obj $(OR_OUTDIR)\oodText.obj
 
 # All Source files that include APICommon.hpp
-APICOMMON_SOURCEF = $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodData.obj \
-                    $(OR_OUTDIR)\oodDeviceGraphics.obj $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj \
-                    $(OR_OUTDIR)\oodMessaging.obj $(OR_OUTDIR)\oodText.obj $(OR_OUTDIR)\oodUser.obj \
-                    $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovother.obj
+APICOMMON_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\APICommon.obj $(OR_OUTDIR)\oodCommon.obj \
+                    $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oodDeviceGraphics.obj \
+                    $(OR_OUTDIR)\ooDialog.obj $(OR_OUTDIR)\oodMenu.obj $(OR_OUTDIR)\oodMessaging.obj $(OR_OUTDIR)\oodText.obj \
+                    $(OR_OUTDIR)\oodUser.obj $(OR_OUTDIR)\oodUtilities.obj $(OR_OUTDIR)\oovother.obj
 
 # All Source files that include oodText.hpp
-OODTEXT_SOURCEF = $(OR_OUTDIR)\oodControl.cpp $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodText.cpp $(OR_OUTDIR)\oodUser.obj \
-                  $(OR_OUTDIR)\oodUtilities.cpp $(OR_OUTDIR)\oovother.cpp
+OODTEXT_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\oodControl.cpp $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodText.cpp \
+                  $(OR_OUTDIR)\oodUser.obj $(OR_OUTDIR)\oodUtilities.cpp $(OR_OUTDIR)\oovother.cpp
 
 # All Source files that include oodData.hpp
-OODDATA_SOURCEF = $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oodUser.obj
+OODDATA_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\oodUser.obj
 
 # All Source files that include oodControl.hpp
-OODCONTROL_SOURCEF = $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodData.obj $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodUser.obj \
-                     $(OR_OUTDIR)\oovother.obj
+OODCONTROL_SOURCEF = $(OR_OUTDIR)\oodBaseDialog.obj $(OR_OUTDIR)\oodControl.obj $(OR_OUTDIR)\oodData.obj \
+                     $(OR_OUTDIR)\ooDialog.cpp $(OR_OUTDIR)\oodUser.obj $(OR_OUTDIR)\oovother.obj
 
 # All Source files that include oodMessaging.hpp
 OODMESSAGING_SOURCEF = $(OR_OUTDIR)\oodControl.obj$(OR_OUTDIR)\oodDeviceGraphics.obj $(OR_OUTDIR)\ooDialog.obj \

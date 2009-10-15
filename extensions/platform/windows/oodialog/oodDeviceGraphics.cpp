@@ -6,7 +6,7 @@
 /* This program and the accompanying materials are made available under       */
 /* the terms of the Common Public License v1.0 which accompanies this         */
 /* distribution. A copy is also available at the following address:           */
-/* http://www.oorexx.org/license.html                          */
+/* http://www.oorexx.org/license.html                                         */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or                 */
 /* without modification, are permitted provided that the following            */
@@ -50,6 +50,7 @@
 
 #include <stdio.h>
 #include <dlgs.h>
+#include <shlwapi.h>
 #include "APICommon.hpp"
 #include "oodCommon.hpp"
 #include "oodDeviceGraphics.hpp"
@@ -86,6 +87,31 @@ RexxObjectPtr drawButton(HWND hDlg, HWND hCtrl, uint32_t id)
 
     ReleaseDC(hCtrl, dis.hDC);
     return result;
+}
+
+
+/**
+ * Parses the show options for a number of methods that have to do with the
+ * moving, resizing, or both, of windows
+ *
+ * @param options  The keyword string.  This is a case-insensitive check. More
+ *                 than one keyword, or no keyword, is acceptable.
+ *
+ * @return uint32_t
+ */
+uint32_t parseShowOptions(CSTRING options)
+{
+    uint32_t opts = SWP_NOZORDER;
+
+    if ( options != NULL )
+    {
+       if ( StrStrI(options, "NOMOVE"    ) ) opts |= SWP_NOMOVE;
+       if ( StrStrI(options, "NOSIZE"    ) ) opts |= SWP_NOSIZE;
+       if ( StrStrI(options, "HIDEWINDOW") ) opts |= SWP_HIDEWINDOW;
+       if ( StrStrI(options, "SHOWWINDOW") ) opts |= SWP_SHOWWINDOW;
+       if ( StrStrI(options, "NOREDRAW"  ) ) opts |= SWP_NOREDRAW;
+    }
+    return opts;
 }
 
 
@@ -613,6 +639,43 @@ pCPlainBaseDialog dlgExtSetup(RexxMethodContext *c, RexxObjectPtr dlg)
     return pcpbd;
 }
 
+RexxObjectPtr dlgExtControlSetup(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr rxID,
+                                 pCPlainBaseDialog *ppcpbd, uint32_t *pID, HWND *phCtrl)
+{
+    pCPlainBaseDialog pcpbd = dlgExtSetup(c, self);
+    if ( pcpbd == NULL )
+    {
+        return TheOneObj;
+    }
+
+    uint32_t id;
+    if ( ! oodSafeResolveID(&id, c, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    {
+        return TheNegativeOneObj;
+    }
+
+    HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
+    if ( hCtrl == NULL )
+    {
+        oodSetSysErrCode(c->threadContext);
+        return TheOneObj;
+    }
+
+    if ( ppcpbd != NULL )
+    {
+        *ppcpbd = pcpbd;
+    }
+    if ( pID != NULL )
+    {
+        *pID = id;
+    }
+    if ( phCtrl != NULL )
+    {
+        *phCtrl = hCtrl;
+    }
+    return TheZeroObj;
+}
+
 /** DialogExtensions::clearWindowRect()
  *
  *  'Clears' the client area of the specified Window.
@@ -853,43 +916,6 @@ RexxMethod3(RexxObjectPtr, dlgext_redrawRect, OPTIONAL_POINTERSTRING, _hwnd, ARG
     return redrawRect(context, hwnd, &r, doErase);
 }
 
-RexxObjectPtr dlgExtControlSetup(RexxMethodContext *c, RexxObjectPtr self, RexxObjectPtr rxID,
-                                 pCPlainBaseDialog *ppcpbd, uint32_t *pID, HWND *phCtrl)
-{
-    pCPlainBaseDialog pcpbd = dlgExtSetup(c, self);
-    if ( pcpbd == NULL )
-    {
-        return TheOneObj;
-    }
-
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, c, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
-    {
-        return TheNegativeOneObj;
-    }
-
-    HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
-    if ( hCtrl == NULL )
-    {
-        oodSetSysErrCode(c->threadContext);
-        return TheOneObj;
-    }
-
-    if ( ppcpbd != NULL )
-    {
-        *ppcpbd = pcpbd;
-    }
-    if ( pID != NULL )
-    {
-        *pID = id;
-    }
-    if ( phCtrl != NULL )
-    {
-        *phCtrl = hCtrl;
-    }
-    return TheZeroObj;
-}
-
 /** DialogExtensions::getControlRect()
  *
  *  Retrieves the dimensions of the bounding rectangle of the specified dialog
@@ -950,9 +976,12 @@ RexxMethod2(RexxObjectPtr, dlgext_clearControlRect, RexxObjectPtr, rxID, OSELF, 
 /** DialogExtensions::resizeControl()
  *  DialogExtensions::moveControl()
  *
- *  Resize control, changes the size of the specified control.
+ *  Resize control, changes the size of the specified dialog control.
  *
- *  Move control, changes the position of the specified control.
+ *  Move control, changes the position of the specified dialog control.
+ *
+ *  @param  rxID         The resource id of the dialog control, may be symbolic
+ *                       or numeric.
  *
  *  @param  coordinates  The new position (x, y) of the upper right corner of
  *                       the control, or the new size (cx, cy) for the control.
@@ -996,7 +1025,7 @@ RexxMethod4(RexxObjectPtr, dlgext_resizeMoveControl, RexxObjectPtr, rxID, ARGLIS
     CSTRING options = "";
     if ( argsUsed == 1 )
     {
-        if ( arraySize > 2 )
+        if ( arraySize > 3 )
         {
             return tooManyArgsException(context->threadContext, 3);
         }

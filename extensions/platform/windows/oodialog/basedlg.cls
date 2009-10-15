@@ -57,30 +57,24 @@
  * been followed through on.
  */
 
-::class 'WindowExtensions' public MIXINCLASS object
+::class 'WindowExtensions' public mixinclass Object
 
+::method initWindowExtensions external "LIBRARY oodialog winex_initWindowExtensions"
 ::method setFont unguarded external "LIBRARY oodialog winex_setFont"
 ::method getFont unguarded external "LIBRARY oodialog winex_getFont"
+::method HScrollPos unguarded external "LIBRARY oodialog winex_getScrollPos"
+::method SetHScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
+::method VScrollPos unguarded  external "LIBRARY oodialog winex_getScrollPos"
+::method SetVScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
+::method Scroll unguarded external "LIBRARY oodialog winex_scroll"
 
-::method HScrollPos unguarded
-    return WndShow_Pos("B", self~hwnd, 0)
+-- CreateFont() has always been broken, maintained for program compatibility.
+-- CreateFontEx() is a correct implementation.
+::method CreateFont unguarded external "LIBRARY oodialog winex_createFont"
+::method createFontEx unguarded external "LIBRARY oodialog winex_createFontEx"
 
-::method SetHScrollPos unguarded
-    use arg pos, redraw
-    if arg(2, 'o') = 1 then redraw = 1
-    return WndShow_Pos("B", self~hwnd, 0, pos, redraw)
+::method testWindowExtensions unguarded external "LIBRARY oodialog winex_test"
 
-::method VScrollPos unguarded
-    return WndShow_Pos("B", self~hwnd, 1)
-
-::method SetVScrollPos unguarded
-    use arg pos, redraw
-    if arg(2, 'o') = 1 then redraw = 1
-    return WndShow_Pos("B", self~hwnd, 1, pos, redraw)
-
-::method Scroll unguarded
-    use arg x, y
-    return WndShow_Pos("M", self~hwnd, x, y)
 
 ::method GetDC unguarded
    return HandleDC_Obj("G", self~hwnd)
@@ -114,11 +108,6 @@
 
 ::method Cursor_Wait unguarded
    return Wnd_Desktop("CURSOR", self~hwnd, "S", 32514)
-
--- CreateFont() has always been broken, maintained for program compatibility.
--- CreateFontEx() is a correct implementation.
-::method CreateFont unguarded external "LIBRARY oodialog winex_createFont"
-::method createFontEx unguarded external "LIBRARY oodialog winex_createFontEx"
 
    /* Deletes a font */
 ::method DeleteFont unguarded

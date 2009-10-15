@@ -39,6 +39,7 @@
 #ifndef oodDeviceGraphics_Included
 #define oodDeviceGraphics_Included
 
+extern uint32_t      parseShowOptions(CSTRING options);
 extern RexxObjectPtr oodGetClientRect(RexxMethodContext *, HWND hwnd, PRECT);
 extern RexxObjectPtr oodGetWindowRect(RexxMethodContext *, HWND hwnd);
 extern RexxObjectPtr clearRect(RexxMethodContext *, HWND, PRECT);
