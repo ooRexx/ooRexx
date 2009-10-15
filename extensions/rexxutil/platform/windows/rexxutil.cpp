@@ -192,6 +192,7 @@
 #include <conio.h>
 #include <math.h>
 #include <limits.h>
+#include <shlwapi.h>
 
 #define OM_WAKEUP (WM_USER+10)
 VOID CALLBACK SleepTimerProc( HWND, UINT, UINT, DWORD);
@@ -5421,6 +5422,37 @@ RexxRoutine0(RexxStringObject, SysUtilVersion)
     return context->String(buffer);
 }
 
+/**
+ * Check if the dwFlags arguement to WideCharToMultiByte() can be used by the
+ * specified code page.  See MSDN documentation for WideCharToMultiByte() for
+ * clarification.  This is used by SysFromUnicode()
+ *
+ * @param cp  Code page to check.
+ *
+ * @return Return true if dwFlags can be non-zero, return false if dwFlags must
+ *         be zero.
+ */
+static bool canUseWideCharFlags(UINT cp)
+{
+    if ( cp == CP_SYMBOL || cp == CP_UTF7 || cp == CP_UTF8 )
+    {
+        return false;
+    }
+    if ( 50220 <= cp && cp <= 50222  )
+    {
+        return false;
+    }
+    if ( cp == 50225 || cp == 50227 || cp == 50229 || cp == 52936 || cp == 54936 )
+    {
+        return false;
+    }
+    if ( 57002 <= cp && cp <= 57011  )
+    {
+        return false;
+    }
+    return true;
+}
+
 /*************************************************************************
 * Function:  SysFromUnicode                                              *
 *            Converts a UNICODE string to an ASCII string                *
@@ -5502,14 +5534,8 @@ RexxRoutine0(RexxStringObject, SysUtilVersion)
 RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRING, codePageOpt,
     OPTIONAL_CSTRING, mappingFlags, OPTIONAL_CSTRING, defaultChar, RexxStemObject, stem)
 {
-    const char  *strDefaultChar = NULL;
-    BOOL  bUsedDefaultChar = FALSE;
-
     const char *source = context->StringData(sourceString);
     size_t sourceLength = context->StringLength(sourceString);
-
-    /* calculate the length of the input string */
-    size_t len = wcslen((wchar_t*)(source)) + 1;
 
     UINT  codePage;
     /* evaluate codepage          */
@@ -5555,26 +5581,47 @@ RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRI
 
     DWORD dwFlags = 0;
     /* evaluate the mapping flags */
-    if (mappingFlags != NULL)
+    if (mappingFlags != NULL && *mappingFlags != '\0' )
     {
-        /* all flags MUST also specify WC_COMPOSITECHECK */
-        if (mystrstr(mappingFlags, "COMPOSITECHECK"))
+        /* The WC_SEPCHARS, WC_DISCARDNS, and WC_DEFAULTCHAR flags must also
+         * specify the WC_COMPOSITECHECK flag.  So, we add that for the user if
+         * they skipped it. Those 4 flags are only available for code pages <
+         * 50000, excluding 42 (CP_SYMBOL).  See the remarks section in the MSDN
+         * docs for clarification.
+         */
+        if ( codePage < 50000 && codePage != CP_SYMBOL )
         {
-            dwFlags |= WC_COMPOSITECHECK;
+            if ( StrStrI(mappingFlags, "COMPOSITECHECK") != NULL )
+            {
+                dwFlags |= WC_COMPOSITECHECK;
+            }
+            if ( StrStrI(mappingFlags, "SEPCHARS") != NULL )
+            {
+                dwFlags |= WC_SEPCHARS | WC_COMPOSITECHECK;
+            }
+            if ( StrStrI(mappingFlags, "DISCARDNS") != NULL )
+            {
+                dwFlags |= WC_DISCARDNS| WC_COMPOSITECHECK;
+            }
+            if ( StrStrI(mappingFlags, "DEFAULTCHAR") != NULL )
+            {
+                dwFlags |= WC_DEFAULTCHAR | WC_COMPOSITECHECK;
+            }
         }
-        if (mystrstr(mappingFlags, "SEPCHARS"))
+
+        if ( StrStrI(mappingFlags, "NO_BEST_FIT") != NULL )
         {
-            dwFlags |= WC_SEPCHARS | WC_COMPOSITECHECK;
+            dwFlags |= WC_NO_BEST_FIT_CHARS;
         }
-        if (mystrstr(mappingFlags, "DISCARDNS"))
+
+        if ( StrStrI(mappingFlags, "ERR_INVALID") != NULL )
         {
-            dwFlags |= WC_DISCARDNS| WC_COMPOSITECHECK;
+            if ( codePage == CP_UTF8 )
+            {
+                dwFlags |= WC_ERR_INVALID_CHARS;
+            }
         }
-        if (mystrstr(mappingFlags, "DEFAULTCHAR"))
-        {
-            dwFlags |= WC_DEFAULTCHAR | WC_COMPOSITECHECK;
-        }
-        if (dwFlags == 0)
+        else if ( dwFlags == 0 && ! (codePage < 50000 && codePage != CP_SYMBOL) )
         {
             context->InvalidRoutine();
             return 0;
@@ -5582,6 +5629,10 @@ RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRI
     }
 
     /* evaluate default charcter  */
+    const char  *strDefaultChar = NULL;
+    BOOL  bUsedDefaultChar = FALSE;
+    BOOL  *pUsedDefaultChar = &bUsedDefaultChar;
+
     if (defaultChar != NULL && (dwFlags & WC_DEFAULTCHAR) == WC_DEFAULTCHAR)
     {
         strDefaultChar = defaultChar;
@@ -5590,6 +5641,21 @@ RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRI
     {
         /* use our own default character rather than relying on the windows default */
         strDefaultChar = "?";
+    }
+
+    /* There are a number of invalid combinations of arguments to
+     *  WideCharToMultiByte(), see the MSDN docs. Eliminate them here.
+     */
+    if ( codePage == CP_UTF8 && dwFlags == WC_ERR_INVALID_CHARS)
+    {
+        strDefaultChar = NULL;
+        pUsedDefaultChar = NULL;
+    }
+    else if ( ! canUseWideCharFlags(codePage) )
+    {
+        dwFlags = 0;
+        strDefaultChar = NULL;
+        pUsedDefaultChar = NULL;
     }
 
     /* Allocate space for the string, to allow double zero byte termination */
@@ -5604,8 +5670,8 @@ RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRI
     /* Query the number of bytes required to store the Dest string */
     int iBytesNeeded = WideCharToMultiByte( codePage,
                                         dwFlags,
-                                        (LPWSTR) strptr,     // (LPWSTR)args[0].strptr,
-                                        (int)(sourceLength/2), // len,
+                                        (LPWSTR) strptr,
+                                        (int)(sourceLength/2),
                                         NULL,
                                         0,
                                         NULL,
@@ -5626,30 +5692,30 @@ RexxRoutine5(int, SysFromUniCode, RexxStringObject, sourceString, OPTIONAL_CSTRI
     }
 
         /* Do the conversion */
-    int iBytesDestination = WideCharToMultiByte(codePage,               //codepage
-                                            dwFlags,                //conversion flags
-                                            (LPWSTR) strptr,        // (LPWSTR)args[0].strptr,  //source string
-                                            (int)(sourceLength/2),    // len,                     //source string length
-                                            str,                    //target string
-                                            (int)iBytesNeeded,      //size of target buffer
+    int iBytesDestination = WideCharToMultiByte(codePage,           // codepage
+                                            dwFlags,                // conversion flags
+                                            (LPWSTR) strptr,        // source string
+                                            (int)(sourceLength/2),  // source string length
+                                            str,                    // target string
+                                            (int)iBytesNeeded,      // size of target buffer
                                             strDefaultChar,
-                                            &bUsedDefaultChar);
+                                            pUsedDefaultChar);
 
     if (iBytesDestination == 0) // call to function fails
     {
         GlobalFree(str);          //  free allocated string
-        GlobalFree(strptr);          // free allocated string
+        GlobalFree(strptr);       // free allocated string
         return GetLastError();    // return error from function call
     }
 
-    // set the default character flag in the output stem
-    if (bUsedDefaultChar && (dwFlags & WC_DEFAULTCHAR) == WC_DEFAULTCHAR)
+    // set whether the default character was used in the output stem
+    if (bUsedDefaultChar)
     {
-        context->SetStemElement(stem, "!USEDDEFAULTCHAR", context->String(strDefaultChar));
+        context->SetStemElement(stem, "!USEDDEFAULTCHAR", context->True());
     }
     else
     {
-        context->SetStemElement(stem, "!USEDDEFAULTCHAR", context->String(strDefaultChar));
+        context->SetStemElement(stem, "!USEDDEFAULTCHAR", context->False());
     }
 
     context->SetStemElement(stem, "!TEXT", context->String(str, iBytesNeeded));

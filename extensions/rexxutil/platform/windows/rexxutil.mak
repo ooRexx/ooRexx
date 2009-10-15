@@ -71,7 +71,7 @@ $(OR_OUTDIR)\rexxutil.dll : $(RXUTILOBJ) \
                             $(SOURCE_DIR)\rexxutil.def \
                             $(OR_OUTDIR)\rexxutil.exp   \
                             $(OR_OUTDIR)\verinfo.res
-    $(OR_LINK) $(lflags_common) $(lflags_dll) /DELAYLOAD:advapi32.dll -out:$(OR_OUTDIR)\$(@B).dll \
+    $(OR_LINK) $(lflags_common) $(lflags_dll) /DELAYLOAD:advapi32.dll shlwapi.lib -out:$(OR_OUTDIR)\$(@B).dll \
              $(RXUTILOBJ) \
              $(OR_OUTDIR)\verinfo.res \
              $(OR_OUTDIR)\$(@B).exp \
