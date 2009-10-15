@@ -757,12 +757,7 @@
 ::method ReleaseMouseCapture
    return Wnd_Desktop("CAP", self~dlgHandle, "R")
 
-::method IsMouseButtonDown
-   use arg mb = "LEFT"
-   mb = mb~translate~space(0)
-   if mb = "LEFT" then return Wnd_Desktop("KSTAT", self~dlgHandle,1) /* VK_LBUTTON */
-   if mb = "MIDDLE" then return Wnd_Desktop("KSTAT", self~dlgHandle,4) /* VK_MBUTTON */
-   if mb = "RIGHT" then return Wnd_Desktop("KSTAT", self~dlgHandle,2) /* VK_RBUTTON */
+::method isMouseButtonDown external "LIBRARY oodialog dlgext_isMouseButtonDown"
 
 
 ::method Dump

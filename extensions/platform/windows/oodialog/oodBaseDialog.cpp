@@ -1048,27 +1048,173 @@ RexxMethod2(RexxObjectPtr, winex_scroll, ARGLIST, args, CSELF, pCSelf)
 }
 
 
-RexxMethod2(int, winex_test, OSELF, self, CSELF, pCSelf)
+/** WindowExtensions::Cursor_Arrow()
+ *  WindowExtensions::Cursor_AppStarting()
+ *  WindowExtensions::Cursor_Cross()
+ *  WindowExtensions::Cursor_No()
+ *  WindowExtensions::Cursor_Wait()
+ *
+ *
+ *
+ *
+ */
+RexxMethod2(RexxObjectPtr, winex_setCursorShape, NAME, method, CSELF, pCSelf)
 {
-    RexxMethodContext *c = context;
+    HCURSOR oldCursor = NULL;
 
-    dbgPrintClassID(c, self);
-    if ( c->IsOfType(self, "PLAINBASEDIALOG") )
+    HWND hwnd = winExtSetup(context, pCSelf);
+    if ( hwnd == NULL )
     {
-        printf("WindowExtensions() self is a PlainBaseDialog\n" );
-        printf("This pCSelf=%p PlainBaseDialog pCSelf=%p\n", pCSelf, dlgToCSelf(c, self));
-        printf("Dialog hwnd=%p\n", ((pCWindowExtensions)pCSelf)->hwnd);
+        goto done_out;
     }
-    else if ( c->IsOfType(self, "DIALOGCONTROL") )
+
+    LPTSTR cursor = IDC_ARROW;
+    switch ( method[7] )
     {
-        RexxClassObject dcClass = rxGetContextClass(c, "DIALOGCONTROL");
-        printf("WindowExtensions self is a DialogControl\n" );
-        printf("This pCSelf=%p DialogControl pCSelf=%p\n", pCSelf, c->ObjectToCSelf(self, dcClass));
-        printf("This pCSelf=%p PlainBaseDialog pCSelf=%p\n", pCSelf, dlgToCSelf(c, self));
-        printf("Control hwnd=%p\n", ((pCWindowExtensions)pCSelf)->hwnd);
+        case 'A' :
+            cursor = (method[8] == 'R' ? IDC_ARROW : IDC_APPSTARTING);
+            break;
+        case 'C' :
+            cursor = IDC_CROSS;
+            break;
+        case 'N' :
+            cursor = IDC_NO;
+            break;
+        case 'W' :
+            cursor = IDC_WAIT;
+            break;
     }
-    return 0;
+
+    HCURSOR hCursor = LoadCursor(NULL, cursor);
+    if ( hCursor == NULL )
+    {
+        oodSetSysErrCode(context->threadContext);
+        goto done_out;
+    }
+
+    oldCursor = (HCURSOR)setClassPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)hCursor);
+    SetCursor(hCursor);
+
+done_out:
+    return pointer2string(context, oldCursor);
 }
+
+
+/** WindowExtensions::setCursorPos()
+ *
+ *  Moves the cursor to the specified position.
+ *
+ *  @param  newPos  The new position (x, y), in pixels. The amount can be
+ *                  specified in these formats:
+ *
+ *      Form 1:  A .Point object.
+ *      Form 2:  x, y
+ *
+ *  @return  0 for success, 1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ *  @remarks  No effort is made to ensure that a .Size object, not a .Point
+ *            object is used.
+ */
+RexxMethod2(RexxObjectPtr, winex_setCursorPos, ARGLIST, args, CSELF, pCSelf)
+{
+    HWND hwnd = winExtSetup(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    size_t sizeArray;
+    int    argsUsed;
+    POINT  point;
+    if ( ! getPointFromArglist(context, args, &point, 1, 3, &sizeArray, &argsUsed) )
+    {
+        return NULLOBJECT;
+    }
+
+    if ( argsUsed == 1 && sizeArray == 2)
+    {
+        return tooManyArgsException(context->threadContext, 1);
+    }
+
+    if ( SetCursorPos(point.x, point.y) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+        return TheOneObj;
+    }
+    return TheZeroObj;
+}
+
+
+/** WindowExtensions::getCursorPos()
+ *
+ *  Retrieves the current cursor position in pixels.
+ *
+ *  @return The cursor position as a .Point object.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod1(RexxObjectPtr, winex_getCursorPos, CSELF, pCSelf)
+{
+    HWND hwnd = winExtSetup(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    POINT p = {0};
+    if ( GetCursorPos(&p) == 0 )
+    {
+        oodSetSysErrCode(context->threadContext);
+    }
+    return rxNewPoint(context, p.x, p.y);
+}
+
+
+/** WindowExtension::restoreCursorShape()
+ *
+ *  Sets the cursor to the specified cursor.
+ *
+ *  @param  newCursor  [OPTIONAL]  A handle to the new cursor.  If this argument
+ *                     is omitted, the cursor is set to the arrow cursor.
+ *
+ *  @return  A handle to the previous cursor, or a null handle if there was no
+ *           previous cursor.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(RexxObjectPtr, winex_restoreCursorShape, OPTIONAL_POINTERSTRING, newCursor, CSELF, pCSelf)
+{
+    HCURSOR oldCursor = NULL;
+
+    HWND hwnd = winExtSetup(context, pCSelf);
+    if ( hwnd == NULL )
+    {
+        goto done_out;
+    }
+
+    HCURSOR hCursor;
+    if ( argumentExists(1) )
+    {
+        hCursor = (HCURSOR)newCursor;
+    }
+    else
+    {
+        hCursor = LoadCursor(NULL, IDC_ARROW);
+        if ( hCursor == NULL )
+        {
+            oodSetSysErrCode(context->threadContext);
+            goto done_out;
+        }
+    }
+    oldCursor = (HCURSOR)setClassPtr(hwnd, GCLP_HCURSOR, (LONG_PTR)hCursor);
+    SetCursor(hCursor);
+
+done_out:
+    return pointer2string(context, oldCursor);
+}
+
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *\
  *  The following functions are used to dump out the dialog admin table(s).

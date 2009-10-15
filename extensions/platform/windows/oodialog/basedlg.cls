@@ -62,18 +62,31 @@
 ::method initWindowExtensions external "LIBRARY oodialog winex_initWindowExtensions"
 ::method setFont unguarded external "LIBRARY oodialog winex_setFont"
 ::method getFont unguarded external "LIBRARY oodialog winex_getFont"
-::method HScrollPos unguarded external "LIBRARY oodialog winex_getScrollPos"
-::method SetHScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
-::method VScrollPos unguarded  external "LIBRARY oodialog winex_getScrollPos"
-::method SetVScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
-::method Scroll unguarded external "LIBRARY oodialog winex_scroll"
+::method hScrollPos unguarded external "LIBRARY oodialog winex_getScrollPos"
+::method setHScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
+::method vScrollPos unguarded  external "LIBRARY oodialog winex_getScrollPos"
+::method setVScrollPos unguarded external "LIBRARY oodialog winex_setScrollPos"
+::method scroll unguarded external "LIBRARY oodialog winex_scroll"
 
--- CreateFont() has always been broken, maintained for program compatibility.
--- CreateFontEx() is a correct implementation.
-::method CreateFont unguarded external "LIBRARY oodialog winex_createFont"
+-- createFont() has always been broken, maintained for program compatibility.
+-- createFontEx() is a correct implementation.
+::method createFont unguarded external "LIBRARY oodialog winex_createFont"
 ::method createFontEx unguarded external "LIBRARY oodialog winex_createFontEx"
 
-::method testWindowExtensions unguarded external "LIBRARY oodialog winex_test"
+::method getTextSizeScreen  external "LIBRARY oodialog winex_getTextSizeScreen"
+::method cursor_Arrow unguarded external "LIBRARY oodialog winex_setCursorShape"
+::method cursor_AppStarting unguarded external "LIBRARY oodialog winex_setCursorShape"
+::method cursor_Cross unguarded external "LIBRARY oodialog winex_setCursorShape"
+::method cursor_No unguarded external "LIBRARY oodialog winex_setCursorShape"
+::method cursor_Wait unguarded external "LIBRARY oodialog winex_setCursorShape"
+::method setCursorPos unguarded external "LIBRARY oodialog winex_setCursorPos"
+::method getCursorPos unguarded external "LIBRARY oodialog winex_getCursorPos"
+::method restoreCursorShape unguarded external "LIBRARY oodialog winex_restoreCursorShape"
+
+::method cursorPos unguarded       -- old method, returns a string
+   forward message "getCursorPos" continue
+   return result~x result~y
+
 
 
 ::method GetDC unguarded
@@ -82,32 +95,6 @@
 ::method FreeDC unguarded
    use arg dc
    return HandleDC_obj("F", self~hwnd, dc)
-
-::method SetCursorPos unguarded
-   use arg x, y
-   return Wnd_Desktop("CURSOR", x, y)
-
-::method CursorPos unguarded
-   return Wnd_Desktop("CURSOR")
-
-::method RestoreCursorShape unguarded
-   use arg cursor
-   return Wnd_Desktop("CURSOR", self~hwnd, "R", cursor)
-
-::method Cursor_Arrow unguarded
-   return Wnd_Desktop("CURSOR", self~hwnd, "R", 0)
-
-::method Cursor_AppStarting unguarded
-   return Wnd_Desktop("CURSOR", self~hwnd, "S", 32650)
-
-::method Cursor_Cross unguarded
-   return Wnd_Desktop("CURSOR", self~hwnd, "S", 32515)
-
-::method Cursor_No unguarded
-   return Wnd_Desktop("CURSOR", self~hwnd, "S", 32648)
-
-::method Cursor_Wait unguarded
-   return Wnd_Desktop("CURSOR", self~hwnd, "S", 32514)
 
    /* Deletes a font */
 ::method DeleteFont unguarded
@@ -189,8 +176,6 @@
    use arg color, dc
    if arg(1,'o') = 1 then color = 1
    return DrawGetSet("COL", dc, color)
-
-::method getTextSizeScreen  external "LIBRARY oodialog winex_getTextSizeScreen"
 
    /* This method will create a pen in the given color and style */
    /* It returns a handle to a pen object */

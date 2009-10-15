@@ -262,6 +262,7 @@ REXX_METHOD_PROTOTYPE(dlgext_redrawWindowRect);
 REXX_METHOD_PROTOTYPE(dlgext_redrawControl);
 REXX_METHOD_PROTOTYPE(dlgext_resizeMoveControl);
 REXX_METHOD_PROTOTYPE(dlgext_drawButton);
+REXX_METHOD_PROTOTYPE(dlgext_isMouseButtonDown);
 
 REXX_METHOD_PROTOTYPE(baseDlg_init);
 REXX_METHOD_PROTOTYPE(baseDlg_newControl);
@@ -319,7 +320,10 @@ REXX_METHOD_PROTOTYPE(winex_createFont);
 REXX_METHOD_PROTOTYPE(winex_getScrollPos);
 REXX_METHOD_PROTOTYPE(winex_setScrollPos);
 REXX_METHOD_PROTOTYPE(winex_scroll);
-REXX_METHOD_PROTOTYPE(winex_test);
+REXX_METHOD_PROTOTYPE(winex_setCursorShape);
+REXX_METHOD_PROTOTYPE(winex_setCursorPos);
+REXX_METHOD_PROTOTYPE(winex_getCursorPos);
+REXX_METHOD_PROTOTYPE(winex_restoreCursorShape);
 
 REXX_METHOD_PROTOTYPE(ri_init);
 REXX_METHOD_PROTOTYPE(ri_release);
@@ -664,6 +668,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_redrawRect,            dlgext_redrawRect),
     REXX_METHOD(dlgext_resizeMoveControl,     dlgext_resizeMoveControl),
     REXX_METHOD(dlgext_drawButton,            dlgext_drawButton),
+    REXX_METHOD(dlgext_isMouseButtonDown,     dlgext_isMouseButtonDown),
 
     REXX_METHOD(baseDlg_init,                 baseDlg_init),
     REXX_METHOD(baseDlg_newControl,           baseDlg_newControl),
@@ -736,7 +741,10 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(winex_getScrollPos,           winex_getScrollPos),
     REXX_METHOD(winex_setScrollPos,        	  winex_setScrollPos),
     REXX_METHOD(winex_scroll,        	      winex_scroll),
-    REXX_METHOD(winex_test,                   winex_test),
+    REXX_METHOD(winex_setCursorShape,         winex_setCursorShape),
+    REXX_METHOD(winex_setCursorPos,           winex_setCursorPos),
+    REXX_METHOD(winex_getCursorPos,           winex_getCursorPos),
+    REXX_METHOD(winex_restoreCursorShape,     winex_restoreCursorShape),
 
     REXX_METHOD(ri_init,                     ri_init),
     REXX_METHOD(ri_release,                  ri_release),

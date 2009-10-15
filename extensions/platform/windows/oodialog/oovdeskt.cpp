@@ -156,66 +156,6 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
        }
        RETERR
    }
-   else if (!strcmp(argv[0].strptr,"CURSOR"))     /* get/set the mouse cursor */
-   {
-       if (argc == 1)
-       {
-           POINT pt;
-           GetCursorPos(&pt);
-           retstr->strlength = sprintf(retstr->strptr, "%ld %ld", pt.x, pt.y);
-           return 0;
-       }
-       else
-       if (argc == 3)
-       {
-           RETC(!SetCursorPos(atol(argv[1].strptr), atol(argv[2].strptr)))
-       }
-       else
-       if (argc == 4)
-       {
-           hW = GET_HWND(argv[1]);
-           if (argv[2].strptr[0] == 'S')
-           {
-               LONG res;
-               HCURSOR oC, hC;
-               res = atoi(argv[3].strptr);
-               hC = LoadCursor(NULL, MAKEINTRESOURCE(res));
-               oC = (HCURSOR)setClassPtr(hW, GCLP_HCURSOR, (LONG_PTR)hC);
-               SetCursor(hC);
-               RETHANDLE(oC)
-           }
-           else if (argv[2].strptr[0] == 'R')
-           {
-               HCURSOR hC = (HCURSOR)GET_HANDLE(argv[3]);
-               if (hC) {
-                   setClassPtr(hW, GCLP_HCURSOR, (LONG_PTR)hC);
-                   RETHANDLE(SetCursor(hC))
-               }
-               else
-               {
-                   setClassPtr(hW, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_ARROW));
-                   RETHANDLE(SetCursor(LoadCursor(NULL, IDC_ARROW)))
-               }
-           }
-       }
-       RETERR
-   }
-   else if (!strcmp(argv[0].strptr,"KSTAT"))     /* key state and mouse buttons*/
-   {    /* keystate must be handled by window thread, therefore sendmessage is used */
-       CHECKARG(3);
-       hW = GET_HWND(argv[1]);
-       if (hW)
-       {
-           LONG k = atoi(argv[2].strptr);
-           if (GetSystemMetrics(SM_SWAPBUTTON))
-           {
-               if (k == 1) k = 2;
-               else if (k==2) k = 1;
-           }
-           RETVAL((ULONG)SendMessage(hW, WM_USER_GETKEYSTATE, k,0))
-       }
-       RETC(0)
-   }
    else if (!strcmp(argv[0].strptr,"COORD"))     /* screen to client and  vice versa */
    {
        CHECKARG(5);

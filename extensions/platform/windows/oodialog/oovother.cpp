@@ -2924,8 +2924,7 @@ RexxMethod2(RexxObjectPtr, stc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
     }
     if ( type > IMAGE_ENHMETAFILE )
     {
-        wrongArgValueException(context->threadContext, 1, IMAGE_TYPE_LIST, getImageTypeName(type));
-        return NULLOBJECT;
+        return wrongArgValueException(context->threadContext, 1, IMAGE_TYPE_LIST, getImageTypeName(type));
     }
     return oodGetImageAttribute(context, self, STATICIMAGE_ATTRIBUTE, STM_GETIMAGE, type, -1, winStatic);
 }
@@ -3594,8 +3593,7 @@ RexxMethod2(RexxObjectPtr, bc_getImage, OPTIONAL_uint8_t, type, OSELF, self)
     }
     if ( type > IMAGE_CURSOR )
     {
-        wrongArgValueException(context->threadContext, 1, "Bitmap, Icon, Cursor", getImageTypeName(type));
-        return NULLOBJECT;
+        return wrongArgValueException(context->threadContext, 1, "Bitmap, Icon, Cursor", getImageTypeName(type));
     }
     WPARAM wParam = (type == IMAGE_BITMAP) ? IMAGE_BITMAP : IMAGE_ICON;
 

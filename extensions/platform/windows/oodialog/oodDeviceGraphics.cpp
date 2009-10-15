@@ -1115,3 +1115,56 @@ RexxMethod2(RexxObjectPtr, dlgext_drawButton, RexxObjectPtr, rxID, OSELF, self)
 
 
 
+/** DialogExtensions::isMouseButtonDown()
+ *
+ *  Determines if one of the mouse buttons is down.
+ *
+ *  @param  whichButton  [OPTIONAL]  Keyword indicating which mouse button
+ *                       should be queried. By default it is the left button
+ *                       that is queried.
+ *
+ *  @return  True if the specified mouse button was down, otherwise false
+ *
+ *  @note  Sets the .SystemErrorCode, but there is nothing that would change it
+ *         to not zero.
+ *
+ *  @remarks  The key state must be handled in the window thread, so
+ *            SendMessage() has to be used.
+ */
+RexxMethod2(RexxObjectPtr, dlgext_isMouseButtonDown, OPTIONAL_CSTRING, whichButton, OSELF, self)
+{
+    pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
+    if ( pcpbd == NULL )
+    {
+        return NULLOBJECT;
+    }
+
+    int mb = VK_LBUTTON;
+    if ( argumentExists(1) )
+    {
+        if ( StrStrI(whichButton, "LEFT"  ) ) mb = VK_LBUTTON;
+        else if ( StrStrI(whichButton, "RIGHT" ) ) mb = VK_RBUTTON;
+        else if ( StrStrI(whichButton, "MIDDLE") ) mb = VK_MBUTTON;
+        else
+        {
+            return wrongArgValueException(context->threadContext, 1, "LEFT, RIGHT, MIDDLE", whichButton);
+        }
+    }
+
+    if ( GetSystemMetrics(SM_SWAPBUTTON) )
+    {
+        if ( mb == VK_LBUTTON )
+        {
+            mb = VK_RBUTTON;
+        }
+        else if ( mb == VK_RBUTTON )
+        {
+            mb = VK_LBUTTON;
+        }
+    }
+
+    return ((short)SendMessage(pcpbd->hDlg, WM_USER_GETKEYSTATE, mb, 0) & ISDOWN) ? TheTrueObj : TheFalseObj;
+}
+
+
+
