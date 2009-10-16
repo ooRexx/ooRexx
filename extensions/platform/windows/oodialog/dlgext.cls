@@ -267,6 +267,7 @@
 ::method redrawRect unguarded external "LIBRARY oodialog dlgext_redrawRect"
 ::method redrawWindowRect unguarded external "LIBRARY oodialog dlgext_redrawWindowRect"
 ::method redrawControl unguarded external "LIBRARY oodialog dlgext_redrawControl"
+::method setForegroundWindow unguarded external "LIBRARY oodialog dlgext_setForgroundWindow"
 
 ::method drawButton unguarded external "LIBRARY oodialog dlgext_drawButton"
 
@@ -289,12 +290,12 @@
 
 ::method moveItem unguarded      -- old method, this is not accurate
    use strict arg id, xPos, yPos, showOptions = ""
-   p = .Point~new(xPos * self~factorX, yPos * self~factorY)
+   p = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
    return self~moveControl(id, p, showOptions)
 
 ::method resizeItem unguarded    -- old method, this is not accurate
    use strict arg id, width, height, showOptions = ""
-   s = .Size~new(width * self~factorX, height * self~factorY)
+   s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
    return self~resizeControl(id, s, showOptions)
 
 
@@ -736,9 +737,6 @@
 
 ::method PeekDialogMessage unguarded
    return getDlgMsg(self~adm, .true)
-
-::method GetFocus unguarded
-   return Wnd_Desktop("GETFOC", self~dlgHandle)
 
 ::method SetFocus unguarded
    use arg hwnd

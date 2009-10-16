@@ -112,31 +112,6 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
        else
           return 0;   /* retstr has handle of control that previously had the focus */
    }
-   else if (!strcmp(argv[0].strptr,"GETFOC"))
-   {
-       CHECKARG(2);
-
-       hW = GET_HWND(argv[1]);
-
-       /* return the handle of the window control that has the focus */
-       getCurrentFocus(hW, retstr);
-       return 0;
-   }
-   else if (!strcmp(argv[0].strptr,"TOP"))       /* put window to the foreground */
-   {
-       CHECKARG(2);
-       hW = GetForegroundWindow();
-       HWND hTarget = GET_HWND(argv[1]);
-       if (hW == hTarget) RETHANDLE(hW)
-       if ( SetForegroundWindow(hTarget) )
-           RETHANDLE(hW)  /* return the handle of the window that had the focus before */
-       else
-           RETVAL(0)   /* indicate failure */
-   }
-   else if (!strcmp(argv[0].strptr,"FG"))       /* get foreground window */
-   {
-       RETHANDLE(GetForegroundWindow())
-   }
    else if (!strcmp(argv[0].strptr,"CAP"))     /* get/set/release the mouse capture */
    {   /* capture must be handled by window thread, therefore sendmessage is used */
        CHECKARG(3);

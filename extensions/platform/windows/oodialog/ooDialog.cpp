@@ -1485,6 +1485,23 @@ RexxMethod1(RexxObjectPtr, wb_clear, CSELF, pCSelf)
 }
 
 
+/** WindowBase::foreGroundWindow()
+ *
+ *  Returns the handle of the window in the foreground.  The foreground window
+ *  can be NULL in certain circumstances, such as when a window is losing
+ *  activation.
+ *
+ *  @note  Sets the .SystemErrorCode, but it is unlikely that the operating
+ *         system sets last error during the execution of this method.
+ */
+RexxMethod0(POINTERSTRING, wb_foreGroundWindow)
+{
+    oodResetSysErrCode(context->threadContext);
+    HWND hwnd = GetForegroundWindow();
+    oodSetSysErrCode(context->threadContext);
+    return hwnd;
+}
+
 /** WindowBase::getWindowLong()  [private]
  *
  *  Retrieves information about this window.  Specifically, the information
@@ -1587,6 +1604,67 @@ RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND h
     }
 
     return NULLOBJECT;
+}
+
+
+/**
+ * Gets the window handle of the dialog control that has the focus.  The call to
+ * GetFocus() needs to run in the window thread of the dialog to ensure that the
+ * correct handle is obtained.
+ *
+ * @param c       Method context we are operating in.
+ * @param hDlg    Handle to the dialog of interest.
+ *
+ * @return  The window handle of the dialog control with the focus, or 0 on
+ *          failure.
+ */
+RexxObjectPtr oodGetFocus(RexxMethodContext *c, HWND hDlg)
+{
+   HWND hwndFocus = (HWND)SendMessage(hDlg, WM_USER_GETFOCUS, 0,0);
+   return pointer2string(c, hwndFocus);
+}
+
+
+/**
+ * Brings the specified window to the foreground and returns the previous
+ * foreground window.
+ *
+ * @param c
+ * @param hwnd
+ *
+ * @return The previous window handle as a Rexx object, or 0 on error.
+ *
+ * @remarks  SetForegroundWindow() is not documented as setting last error.  So,
+ *           if it fails, last error is checked.  If it is set, it is used.  If
+ *           it is not set, we arbitrarily use ERROR_NOTSUPPORTED.  On XP at
+ *           least, last error is set to 5, access denied.
+ */
+RexxObjectPtr oodSetForegroundWindow(RexxMethodContext *c, HWND hwnd)
+{
+    oodResetSysErrCode(c->threadContext);
+
+    if ( hwnd == NULL )
+    {
+        oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+        return TheZeroObj;
+    }
+
+    HWND hwndPrevious = GetForegroundWindow();
+    if ( hwndPrevious != hwnd )
+    {
+        SetLastError(0);
+        if ( SetForegroundWindow(hwnd) == 0 )
+        {
+            uint32_t rc = GetLastError();
+            if ( rc == 0 )
+            {
+                rc = ERROR_NOT_SUPPORTED;
+            }
+            oodSetSysErrCode(c->threadContext, rc);
+            hwndPrevious = NULL;
+        }
+    }
+    return pointer2string(c, hwndPrevious);
 }
 
 bool initEventNotification(RexxMethodContext *c, DIALOGADMIN *dlgAdm, RexxObjectPtr self, pCEventNotification *ppCEN)
@@ -2033,7 +2111,7 @@ RexxMethod3(logical_t, pbdlg_show, OPTIONAL_CSTRING, options, NAME, method, CSEL
  *
  *  @note  Sets the .SystemErrorCode.
  */
-RexxMethod3(RexxObjectPtr, plbdlg_showWindow, POINTERSTRING, hwnd, NAME, method, CSELF, pCSelf)
+RexxMethod3(RexxObjectPtr, pbdlg_showWindow, POINTERSTRING, hwnd, NAME, method, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
 
@@ -2072,7 +2150,7 @@ RexxMethod3(RexxObjectPtr, plbdlg_showWindow, POINTERSTRING, hwnd, NAME, method,
  *
  *  @note  Sets the .SystemErrorCode.
  */
-RexxMethod3(RexxObjectPtr, plbdlg_showControl, RexxObjectPtr, rxID, NAME, method, CSELF, pCSelf)
+RexxMethod3(RexxObjectPtr, pbdlg_showControl, RexxObjectPtr, rxID, NAME, method, CSELF, pCSelf)
 {
     HWND hCtrl = getPBDControlWindow(context, (pCPlainBaseDialog)pCSelf, rxID);
     if ( hCtrl == NULL )
@@ -2177,6 +2255,50 @@ RexxMethod2(wholenumber_t, pbdlg_setWindowText, POINTERSTRING, hwnd, CSTRING, te
     return 0;
 }
 
+/** PlainBaseDialog::toTheTop()
+ *
+ *  Brings this dialog to the foreground.
+ *
+ *  @return  The handle of the window that previously was the foreground on
+ *           success, 0 on failure.
+ *
+ *  @note  Sets the .SystemErrorCode.  In very rare cases, there might not be a
+ *         previous foreground window and 0 would be returned.  In this case,
+ *         the .SystemErrorCode will be 0, otherwise the .SystemErrorCode will
+ *         not be 0.
+ *
+ *  @note  Windows no longer allows a program to arbitrarily change the
+ *         foreground window.
+ *
+ *         The system restricts which processes can set the foreground window. A
+ *         process can set the foreground window only if one of the following
+ *         conditions is true:
+ *
+ *         The process is the foreground process.
+ *         The process was started by the foreground process.
+ *         The process received the last input event.
+ *         There is no foreground process.
+ *         No menus are active.
+ *
+ *         With this change, an application cannot force a window to the
+ *         foreground while the user is working with another window.
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_toTheTop, CSELF, pCSelf)
+{
+    return oodSetForegroundWindow(context, getPBDWindow(pCSelf));
+}
+
+/** PlainBaseDialog::getFocus()
+ *
+ *  Retrieves the window handle of the dialog control with the focus.
+ *
+ *  @return  The window handle on success, 0 on failure.
+ */
+RexxMethod1(RexxObjectPtr, pbdlg_getFocus, CSELF, pCSelf)
+{
+    return oodGetFocus(context, getPBDWindow(pCSelf));
+}
+
 /** PlainBaseDialog::getControlText()
  *
  *  Gets the text of the specified control.
@@ -2190,27 +2312,16 @@ RexxMethod2(wholenumber_t, pbdlg_setWindowText, POINTERSTRING, hwnd, CSTRING, te
  */
 RexxMethod2(RexxStringObject, pbdlg_getControlText, RexxObjectPtr, rxID, CSELF, pCSelf)
 {
-    oodResetSysErrCode(context->threadContext);
-
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
     RexxStringObject result = context->NullString();
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    HWND hCtrl = getPBDControlWindow(context, (pCPlainBaseDialog)pCSelf, rxID);
+    if ( hCtrl != NULL )
     {
-        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+        rxGetWindowText(context, hCtrl, &result);
     }
     else
     {
-        HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
-        if ( hCtrl == NULL )
-        {
-            oodSetSysErrCode(context->threadContext);
-        }
-        else
-        {
-            rxGetWindowText(context, hCtrl, &result);
-        }
+        result = context->String("-1");
     }
     return result;
 }
@@ -2228,35 +2339,23 @@ RexxMethod2(RexxStringObject, pbdlg_getControlText, RexxObjectPtr, rxID, CSELF, 
  */
 RexxMethod3(RexxObjectPtr, pbdlg_setControlText, RexxObjectPtr, rxID, CSTRING, text, CSELF, pCSelf)
 {
-    oodResetSysErrCode(context->threadContext);
-
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
     RexxObjectPtr result = TheOneObj;
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    HWND hCtrl = getPBDControlWindow(context, (pCPlainBaseDialog)pCSelf, rxID);
+    if ( hCtrl != NULL )
     {
-        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
-        result = TheNegativeOneObj;
-    }
-    else
-    {
-        HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
-        if ( hCtrl == NULL )
+        if ( SetWindowText(hCtrl, text) == 0 )
         {
             oodSetSysErrCode(context->threadContext);
         }
         else
         {
-            if ( SetWindowText(hCtrl, text) == 0 )
-            {
-                oodSetSysErrCode(context->threadContext);
-            }
-            else
-            {
-                result = TheZeroObj;
-            }
+            result = TheZeroObj;
         }
+    }
+    else
+    {
+        result = TheNegativeOneObj;
     }
     return result;
 }
@@ -2278,32 +2377,21 @@ RexxMethod3(RexxObjectPtr, pbdlg_setControlText, RexxObjectPtr, rxID, CSTRING, t
  */
 RexxMethod2(RexxObjectPtr, pbdlg_enableDisableControl, RexxObjectPtr, rxID, CSELF, pCSelf)
 {
-    oodResetSysErrCode(context->threadContext);
-
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
     RexxObjectPtr result = TheNegativeOneObj;
 
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, context, pcpbd->rexxSelf, rxID, -1, 1) || (int)id < 0 )
+    HWND hCtrl = getPBDControlWindow(context, (pCPlainBaseDialog)pCSelf, rxID);
+    if ( hCtrl != NULL )
     {
-        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+        BOOL enable = TRUE;
+        if ( msgAbbrev(context) == 'D' )
+        {
+            enable = FALSE;
+        }
+        result = EnableWindow(hCtrl, enable) == 0 ? TheZeroObj : TheOneObj;
     }
     else
     {
-        HWND hCtrl = GetDlgItem(pcpbd->hDlg, id);
-        if ( hCtrl == NULL )
-        {
-            oodSetSysErrCode(context->threadContext);
-        }
-        else
-        {
-            BOOL enable = TRUE;
-            if ( msgAbbrev(context) == 'D' )
-            {
-                enable = FALSE;
-            }
-            result = EnableWindow(hCtrl, enable) == 0 ? TheZeroObj : TheOneObj;
-        }
+        result = TheNegativeOneObj;
     }
     return result;
 }
@@ -2552,7 +2640,7 @@ RexxMethod2(uint32_t, pbdlg_putDlgDataInStem_pvt, RexxStemObject, internDlgData,
  *            returned.  This is the value that signals getControlData() to do a
  *            data table look up by resource ID.
  */
-RexxMethod3(RexxObjectPtr, plbdlg_getControlData, RexxObjectPtr, rxID, NAME, msgName, CSELF, pCSelf)
+RexxMethod3(RexxObjectPtr, pbdlg_getControlData, RexxObjectPtr, rxID, NAME, msgName, CSELF, pCSelf)
 {
     pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
     if ( pcpbd->hDlg == NULL )

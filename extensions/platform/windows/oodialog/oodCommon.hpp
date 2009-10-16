@@ -221,6 +221,8 @@ extern const char *comctl32VersionPart(DWORD id, DWORD type);
 // These functions are defined in ooDialog.cpp
 extern bool          initWindowBase(RexxMethodContext *c, HWND hwndObj, RexxObjectPtr self, pCWindowBase *ppCWB);
 extern RexxObjectPtr setDlgHandle(RexxMethodContext *c, pCPlainBaseDialog pcpbd, HWND hDlg);
+extern RexxObjectPtr oodSetForegroundWindow(RexxMethodContext *c, HWND hwnd);
+extern RexxObjectPtr oodGetFocus(RexxMethodContext *c, HWND hDlg);
 
 // These functions are defined in oodBaseDialog.cpp
 extern bool initWindowExtensions(RexxMethodContext *, RexxObjectPtr, HWND, pCWindowBase, pCPlainBaseDialog);

@@ -147,12 +147,7 @@
    rect = result
    return rect~left rect~top rect~right rect~bottom
 
-::method SetForegroundWindow unguarded
-    use arg hwnd
-    return Wnd_Desktop("TOP", hwnd)
-
-::method ForegroundWindow unguarded
-   return Wnd_Desktop("FG")
+::method ForegroundWindow unguarded external "LIBRARY oodialog wb_foreGroundWindow"
 
 ::method ScreenToClient unguarded
     use arg x,y
@@ -418,12 +413,20 @@
        end
    end
 
-
 ::method get unguarded external "LIBRARY oodialog pbdlg_get"
 ::method getSelf unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
 ::method getControlID unguarded external "LIBRARY oodialog pbdlg_getControlID"
 ::method show unguarded external "LIBRARY oodialog pbdlg_show"
 ::method restore unguarded external "LIBRARY oodialog pbdlg_show"
+::method toTheTop unguarded external "LIBRARY oodialog pbdlg_toTheTop"
+::method minimize unguarded external "LIBRARY oodialog pbdlg_doMinMax"
+::method maximize unguarded external "LIBRARY oodialog pbdlg_doMinMax"
+::method isMaximized unguarded external "LIBRARY oodialog pbdlg_doMinMax"
+::method isMinimized unguarded external "LIBRARY oodialog pbdlg_doMinMax"
+::method getWindowText unguarded external "LIBRARY oodialog pbdlg_getWindowText"
+::method setWindowText unguarded external "LIBRARY oodialog pbdlg_setWindowText"
+::method getControlText unguarded external "LIBRARY oodialog pbdlg_getControlText"
+::method setControlText unguarded external "LIBRARY oodialog pbdlg_setControlText"
 
 -- TODO getItem() could be deprecated and forward to getControlHandle().  getControl would return
 -- a .Pointer; getItem() could check for a null pointer and return 0 in its place.  Also need to
@@ -432,25 +435,10 @@
 ::method getControlHandle unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
 ::method getItem unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
 
--- This method makes the dialog the front dialog.
-::method ToTheTop unguarded
-   return Wnd_Desktop("TOP",self~dlgHandle)
-
-
-::method minimize unguarded external "LIBRARY oodialog pbdlg_doMinMax"
-::method maximize unguarded external "LIBRARY oodialog pbdlg_doMinMax"
-::method isMaximized unguarded external "LIBRARY oodialog pbdlg_doMinMax"
-::method isMinimized unguarded external "LIBRARY oodialog pbdlg_doMinMax"
-
-
 -- Send the DM_REPOSITION  message to the dialog.
 ::method EnsureVisible unguarded
    return SendWinMsg("ANY", self~dlgHandle, "0x0402", 0, 0)
 
-::method getWindowText unguarded external "LIBRARY oodialog pbdlg_getWindowText"
-::method setWindowText unguarded external "LIBRARY oodialog pbdlg_setWindowText"
-::method getControlText unguarded external "LIBRARY oodialog pbdlg_getControlText"
-::method setControlText unguarded external "LIBRARY oodialog pbdlg_setControlText"
 
 /* The following methods 'connect' a Windows dialog control with a 'data' attribute of the Rexx
  * dialog object.  For each dialog control an attribute of the dialog object is created and an
@@ -571,12 +559,12 @@
 
 -- This method gets the 'data' of a dialog control. You don't have to know what kind of control it is
 -- if it has been 'connected' previously, i.e. connectTreeView(), connectTab(), etc..
-::method getControlData unguarded external "LIBRARY oodialog plbdlg_getControlData"
-::method getCheckBoxData unguarded external "LIBRARY oodialog plbdlg_getControlData"
-::method getRadioButtonData unguarded external "LIBRARY oodialog plbdlg_getControlData"
-::method getEditData unguarded external "LIBRARY oodialog plbdlg_getControlData"
-::method getListBoxData unguarded external "LIBRARY oodialog plbdlg_getControlData"
-::method getComboBoxData unguarded external "LIBRARY oodialog plbdlg_getControlData"
+::method getControlData unguarded external "LIBRARY oodialog pbdlg_getControlData"
+::method getCheckBoxData unguarded external "LIBRARY oodialog pbdlg_getControlData"
+::method getRadioButtonData unguarded external "LIBRARY oodialog pbdlg_getControlData"
+::method getEditData unguarded external "LIBRARY oodialog pbdlg_getControlData"
+::method getListBoxData unguarded external "LIBRARY oodialog pbdlg_getControlData"
+::method getComboBoxData unguarded external "LIBRARY oodialog pbdlg_getControlData"
 
 -- This method gets the 'data' of a dialog control and uses that data to set the value of the attribute
 -- associated with the dialog control through one of the connectXXX methods.  I.e., connectEdit(),
@@ -862,14 +850,14 @@
 
 ::method enableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"
 ::method disableControl unguarded external "LIBRARY oodialog pbdlg_enableDisableControl"
-::method showControl unguarded external "LIBRARY oodialog plbdlg_showControl"
-::method hideControl unguarded external "LIBRARY oodialog plbdlg_showControl"
-::method showControlFast unguarded external "LIBRARY oodialog plbdlg_showControl"
-::method hideControlFast unguarded external "LIBRARY oodialog plbdlg_showControl"
-::method showWindow unguarded external "LIBRARY oodialog plbdlg_showWindow"
-::method showWindowFast unguarded external "LIBRARY oodialog plbdlg_showWindow"
-::method hideWindow unguarded external "LIBRARY oodialog plbdlg_showWindow"
-::method hideWindowFast unguarded external "LIBRARY oodialog plbdlg_showWindow"
+::method showControl unguarded external "LIBRARY oodialog pbdlg_showControl"
+::method hideControl unguarded external "LIBRARY oodialog pbdlg_showControl"
+::method showControlFast unguarded external "LIBRARY oodialog pbdlg_showControl"
+::method hideControlFast unguarded external "LIBRARY oodialog pbdlg_showControl"
+::method showWindow unguarded external "LIBRARY oodialog pbdlg_showWindow"
+::method showWindowFast unguarded external "LIBRARY oodialog pbdlg_showWindow"
+::method hideWindow unguarded external "LIBRARY oodialog pbdlg_showWindow"
+::method hideWindowFast unguarded external "LIBRARY oodialog pbdlg_showWindow"
 
 ::method showItem unguarded
    forward message "showControl"
@@ -893,6 +881,7 @@
 ::method TabToPrevious unguarded
    return Wnd_Desktop("SETFOC", self~dlgHandle, 1, "P")
 
+::method getFocus unguarded external "LIBRARY oodialog pbdlg_getFocus"
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
 ::method setTabStop unguarded external "LIBRARY oodialog pbdlg_setTabGroup"
 ::method setGroup unguarded external "LIBRARY oodialog pbdlg_setTabGroup"

@@ -642,7 +642,7 @@
 
    hwnd = self~getControlHandle(id, self~catalog['handles'][category])
    if hwnd = 0 then return -1
-   size = .Size~new(width * self~factorX, height * self~factorY)
+   size = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
    return .Window~new(hwnd)~resizeTo(size, showOptions)
 
 ::method moveCategoryItem unguarded    -- old method, this is not accurate
@@ -651,7 +651,7 @@
 
    hwnd = self~getControlHandle(id, self~catalog['handles'][category])
    if hwnd = 0 then return -1
-   pos = .Point~new(xPos * self~factorX, yPos * self~factorY)
+   pos = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
    return .Window~new(hwnd)~moveTo(pos, showOptions)
 
 -- End DEPRECATED (maybe ?)

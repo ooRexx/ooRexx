@@ -1167,4 +1167,44 @@ RexxMethod2(RexxObjectPtr, dlgext_isMouseButtonDown, OPTIONAL_CSTRING, whichButt
 }
 
 
+/** DialogExtensions::setForegroundWindow()
+ *
+ *  Brings the specified wind to the foreground.
+ *
+ *  @param  hwnd  The window handle of the window to bring to the foreground.
+ *
+ *  @return  The handle of the window that previously was the foreground on
+ *           success, 0 on failure.
+ *
+ *  @note  Sets the .SystemErrorCode.  In very rare cases, there might not be a
+ *         previous foreground window and 0 would be returned.  In this case,
+ *         the .SystemErrorCode will be 0, otherwise the .SystemErrorCode will
+ *         not be 0.
+ *
+ *  @note  Windows no longer allows a program to arbitrarily change the
+ *         foreground window.
+ *
+ *         The system restricts which processes can set the foreground window. A
+ *         process can set the foreground window only if one of the following
+ *         conditions is true:
+ *
+ *         The process is the foreground process.
+ *         The process was started by the foreground process.
+ *         The process received the last input event.
+ *         There is no foreground process.
+ *         No menus are active.
+ *
+ *         With this change, an application cannot force a window to the
+ *         foreground while the user is working with another window.
+ *
+ * @remarks  SetForegroundWindow() is not documented as setting last error.  So,
+ *           if it fails, last error is checked.  If it is set, it is used.  If
+ *           it is not set, we arbitrarily use ERROR_NOTSUPPORTED.  On XP at
+ *           least, last error is set to 5, access denied.
+ */
+RexxMethod1(RexxObjectPtr, dlgext_setForgroundWindow, RexxStringObject, hwnd)
+{
+    return oodSetForegroundWindow(context, (HWND)string2pointer(context, hwnd));
+}
+
 

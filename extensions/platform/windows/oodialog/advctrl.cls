@@ -83,7 +83,7 @@
    return SendWinMsg("ANY",self~hDlg, "0x0028", self~hwnd, 1)
 
 ::method getFocus unguarded
-   return Wnd_Desktop("GETFOC", self~hDlg)
+   return self~oDlg~getFocus
 
 ::method setFocus unguarded
    use arg hwnd
@@ -97,7 +97,7 @@
 
 ::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
-::method RedrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
+::method redrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
 ::method clearRect unguarded external "LIBRARY oodialog dlgctrl_clearRect"
 
 ::method value unguarded  -- TODO this method won't work if this control is on a category page.
