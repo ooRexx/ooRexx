@@ -306,7 +306,7 @@
 ::method newDateTimePicker unguarded external "LIBRARY oodialog baseDlg_newControl"
 ::method putControl private unguarded external "LIBRARY oodialog baseDlg_putControl_pvt"
 
-::method test unguarded external "LIBRARY oodialog baseDlg_test"
+::method baseDlgTest unguarded external "LIBRARY oodialog baseDlg_test"
 
 -- TODO needs doc
 ::method getMenuBar

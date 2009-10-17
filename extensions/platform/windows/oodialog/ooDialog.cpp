@@ -155,15 +155,23 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 
              case WM_COMMAND:
-             switch( LOWORD(wParam) ) {
-                   case IDOK:
-                      if (!HIWORD(wParam)) addressedTo->LeaveDialog = 1; /* Notify code must be 0 */
-                      return TRUE;
-                      break;
-                   case IDCANCEL:
-                      if (!HIWORD(wParam)) addressedTo->LeaveDialog = 2; /* Notify code must be 0 */
-                      return TRUE;
-                      break;
+             switch( LOWORD(wParam) )
+             {
+                 // For both IDOK and IDCANCEL, the notification code (the high
+                 // word value,) must be 0.
+                 case IDOK:
+                     if ( HIWORD(wParam) == 0 )
+                     {
+                         addressedTo->LeaveDialog = 1;
+                     }
+                     return TRUE;
+
+                 case IDCANCEL:
+                     if ( HIWORD(wParam) == 0 )
+                     {
+                         addressedTo->LeaveDialog = 2;
+                     }
+                     return TRUE;
              }
              break;
 
@@ -199,17 +207,35 @@ LRESULT CALLBACK RexxDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 hW = CreateDialogIndirectParam(MyInstance, (DLGTEMPLATE *)lParam, hDlg, (DLGPROC)RexxDlgProc, addressedTo->Use3DControls);
                 ReplyMessage((LRESULT)hW);
                 return (LRESULT)hW;
+
              case WM_USER_INTERRUPTSCROLL:
                 addressedTo->StopScroll = wParam;
                 return (TRUE);
+
              case WM_USER_GETFOCUS:
                 ReplyMessage((LRESULT)GetFocus());
                 return (TRUE);
+
              case WM_USER_GETSETCAPTURE:
-                if (!wParam) ReplyMessage((LRESULT)GetCapture());
-                else if (wParam == 2) ReplyMessage((LRESULT)ReleaseCapture());
-                else ReplyMessage((LRESULT)SetCapture((HWND)lParam));
+                if ( wParam == 0 )
+                {
+                    ReplyMessage((LRESULT)GetCapture());
+                }
+                else if ( wParam == 2 )
+                {
+                    uint32_t rc = 0;
+                    if ( ReleaseCapture == 0 )
+                    {
+                        rc = GetLastError();
+                    }
+                    ReplyMessage((LRESULT)rc);
+                }
+                else
+                {
+                    ReplyMessage((LRESULT)SetCapture((HWND)lParam));
+                }
                 return (TRUE);
+
              case WM_USER_GETKEYSTATE:
                 ReplyMessage((LRESULT)GetAsyncKeyState((int)wParam));
                 return (TRUE);
@@ -1502,6 +1528,70 @@ RexxMethod0(POINTERSTRING, wb_foreGroundWindow)
     return hwnd;
 }
 
+
+/** WindowBase::screen2client()
+ *  WindowBase::client2screen()
+ *
+ *  screen2client() converts the screen coordinates of the specified point on
+ *  the screen to client-area coordinates of this window.
+ *
+ *  This method uses the screen coordinates given in the .Point object to
+ *  compute client-area coordinates. It then replaces the screen coordinates
+ *  with the client coordinates. The new coordinates are relative to the
+ *  upper-left corner of this window's client area.
+ *
+ *
+ *  client2screen() converts the client-area coordinates of the specified point
+ *  to screen coordinates.
+ *
+ *  This method uses the client-area coordinates given in the .Point object to
+ *  compute screen coordinates. It then replaces the client-area coordinates
+ *  with the screen coordinates. The new coordinates are relative to the
+ *  upper-left corner of the screen.
+ *
+ *  @param  pt  [in/out] On entry, the coordinates to be converted, on exit the
+ *              converted coordinates.
+ *
+ *  @return True on success, false on failure.  The .SystemErrorCode should
+ *          contain the reason for failure.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ *
+ */
+RexxMethod4(logical_t, wb_screenClient, RexxObjectPtr, pt, NAME, method, OSELF, self, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+    BOOL success = FALSE;
+
+    HWND hwnd = getWBWindow(pCSelf);
+    if ( hwnd == NULL )
+    {
+        noWindowsDialogException(context, self);
+        goto done_out;
+    }
+
+    POINT *p = rxGetPoint(context, pt, 1);
+    if ( p != NULL )
+    {
+        if ( *method == 'S' )
+        {
+            success = ScreenToClient(hwnd, p);
+        }
+        else
+        {
+            success = ClientToScreen(hwnd, p);
+        }
+
+        if ( ! success )
+        {
+            oodSetSysErrCode(context->threadContext);
+        }
+    }
+
+done_out:
+    return success;
+}
+
 /** WindowBase::getWindowLong()  [private]
  *
  *  Retrieves information about this window.  Specifically, the information
@@ -1643,7 +1733,7 @@ RexxObjectPtr oodSetForegroundWindow(RexxMethodContext *c, HWND hwnd)
 {
     oodResetSysErrCode(c->threadContext);
 
-    if ( hwnd == NULL )
+    if ( hwnd == NULL || ! IsWindow(hwnd) )
     {
         oodSetSysErrCode(c->threadContext, ERROR_INVALID_WINDOW_HANDLE);
         return TheZeroObj;
@@ -1661,7 +1751,7 @@ RexxObjectPtr oodSetForegroundWindow(RexxMethodContext *c, HWND hwnd)
                 rc = ERROR_NOT_SUPPORTED;
             }
             oodSetSysErrCode(c->threadContext, rc);
-            hwndPrevious = NULL;
+            return TheZeroObj;
         }
     }
     return pointer2string(c, hwndPrevious);
@@ -2299,6 +2389,99 @@ RexxMethod1(RexxObjectPtr, pbdlg_getFocus, CSELF, pCSelf)
     return oodGetFocus(context, getPBDWindow(pCSelf));
 }
 
+/** PlainBaseDialog::setFocus()
+ *
+ *  Sets the focus to the dialog control specified.
+ *
+ *  @param  hwnd  The window handle of the dialog control to recieve the focus.
+ *
+ *  PlainBaseDialog::setFocusToWindow()
+ *
+ *  Sets the focus to the dialog or other top-level window specified.
+ *
+ *  @param  hwnd  The window handle of the dialog or other top-level window that
+ *                will be brought to the foreground.
+ *
+ *  @return  On success, the window handle of the dialog control that previously
+ *           had the focus.  Otherwise, 0, if the focus was changed, but the
+ *           previous focus could not be determined, and -1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod3(RexxObjectPtr, pbdlg_setFocus, RexxStringObject, hwnd, NAME, method, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HWND hDlg = getPBDWindow(pCSelf);
+    if ( hDlg == NULL )
+    {
+        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
+        return TheNegativeOneObj;
+    }
+
+    HWND focusNext = (HWND)string2pointer(context, hwnd);
+    if ( ! IsWindow(focusNext) )
+    {
+        oodSetSysErrCode(context->threadContext, ERROR_INVALID_WINDOW_HANDLE);
+        return TheNegativeOneObj;
+    }
+
+    RexxObjectPtr previousFocus = oodGetFocus(context, hDlg);
+    if ( strlen(method) > 7 )
+    {
+        if ( oodSetForegroundWindow(context, focusNext) == TheZeroObj )
+        {
+            return TheNegativeOneObj;
+        }
+    }
+    else
+    {
+        SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)focusNext, TRUE);
+    }
+    return previousFocus;
+}
+
+/** PlainBaseDialog::TabToNext()
+ *
+ *  Sets the focus to the next tab stop dialog control in the dialog and returns
+ *  the window handle of the dialog control that currently has the focus.
+ *
+ *  PlainBaseDialog::TabToPrevious()
+ *
+ *  Sets the focus to the previous tab stop dialog control in the dialog and
+ *  returns the window handle of the dialog control that currently has the
+ *  focus.
+ *
+ *  @return  On success, the window handle of the dialog control that previously
+ *           had the focus.  Otherwise, 0, if the focus was changed, but the
+ *           previous focus could not be determined, and -1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode, but there is nothing that would change it
+ *         from 0.
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_tabTo, NAME, method, CSELF, pCSelf)
+{
+    oodResetSysErrCode(context->threadContext);
+
+    HWND hDlg = getPBDWindow(pCSelf);
+    if ( hDlg == NULL )
+    {
+        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
+        return TheNegativeOneObj;
+    }
+
+    RexxObjectPtr previousFocus = oodGetFocus(context, hDlg);
+    if ( method[5] == 'N' )
+    {
+        SendMessage(hDlg, WM_NEXTDLGCTL, 0, FALSE);
+    }
+    else
+    {
+        SendMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
+    }
+    return previousFocus;
+}
+
 /** PlainBaseDialog::getControlText()
  *
  *  Gets the text of the specified control.
@@ -2360,6 +2543,32 @@ RexxMethod3(RexxObjectPtr, pbdlg_setControlText, RexxObjectPtr, rxID, CSTRING, t
     return result;
 }
 
+
+/** PlainBaseDialog::focusControl
+ *
+ *  Sets the focus to the specified control in this dialog.
+ *
+ *  @param  rxID  The resource ID of the control, may be numeric or symbolic.
+ *
+ *  @return  0 on success, -1 if there is a problem identifying the dialog
+ *           control.
+ *
+ *  @note  Sets the .SystemErrorCode.
+ */
+RexxMethod2(RexxObjectPtr, pbdlg_focusControl, RexxObjectPtr, rxID, CSELF, pCSelf)
+{
+    HWND hCtrl = getPBDControlWindow(context, (pCPlainBaseDialog)pCSelf, rxID);
+    if ( hCtrl != NULL )
+    {
+        SendMessage(((pCPlainBaseDialog)pCSelf)->hDlg, WM_NEXTDLGCTL, (WPARAM)hCtrl, TRUE);
+        return TheZeroObj;
+    }
+    else
+    {
+        return TheNegativeOneObj;
+    }
+}
+
 /** PlainBaseDialog::enableControl()
  *  PlainBaseDialog::disableControl()
  *
@@ -2388,10 +2597,6 @@ RexxMethod2(RexxObjectPtr, pbdlg_enableDisableControl, RexxObjectPtr, rxID, CSEL
             enable = FALSE;
         }
         result = EnableWindow(hCtrl, enable) == 0 ? TheZeroObj : TheOneObj;
-    }
-    else
-    {
-        result = TheNegativeOneObj;
     }
     return result;
 }
@@ -2469,27 +2674,27 @@ RexxMethod1(int32_t, pbdlg_getControlID, CSTRING, hwnd)
  */
 RexxMethod2(RexxObjectPtr, pbdlg_doMinMax, NAME, method, CSELF, pCSelf)
 {
-    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
-    if ( pcpbd->hDlg == NULL )
+    HWND hDlg = getPBDWindow(pCSelf);
+    if ( hDlg == NULL )
     {
-        noWindowsDialogException(context, pcpbd->rexxSelf);
+        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
         return TheFalseObj;
     }
 
     if ( *method == 'M' )
     {
         uint32_t flag = (method[1] == 'I' ? SW_SHOWMINIMIZED : SW_SHOWMAXIMIZED);
-        return (ShowWindow(pcpbd->hDlg, flag) ? TheZeroObj : TheOneObj);
+        return (ShowWindow(hDlg, flag) ? TheZeroObj : TheOneObj);
     }
 
     if ( method[3] == 'A' )
     {
         // Zoomed is Maximized.
-        return (IsZoomed(pcpbd->hDlg) ? TheTrueObj : TheFalseObj);
+        return (IsZoomed(hDlg) ? TheTrueObj : TheFalseObj);
     }
 
     // Iconic is Minimized.
-    return (IsIconic(pcpbd->hDlg) ? TheTrueObj : TheFalseObj);
+    return (IsIconic(hDlg) ? TheTrueObj : TheFalseObj);
 }
 
 

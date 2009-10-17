@@ -115,47 +115,53 @@
 ::method clientRect unguarded external "LIBRARY oodialog wb_clientRect"
 ::method clear unguarded external "LIBRARY oodialog wb_clear"
 
-::method resize unguarded        -- old method, this is not accurate.
+::method resize unguarded           -- old method, this is not accurate.
    use strict arg width, height, showOptions = ""
    p = .Point~new(0, 0)
    s = .Size~new(trunc(width * self~factorX), trunc(height * self~factorY))
    return self~setRect(p, s, "NOMOVE " || showOptions);
 
-::method move unguarded          -- old method, this is not accurate.
+::method move unguarded             -- old method, this is not accurate.
    use strict arg xPos, yPos, showOptions = ""
    p = .Point~new(trunc(xPos * self~factorX), trunc(yPos * self~factorY))
    s = .Size~new(0, 0)
    return self~setRect(p, s, "NOSIZE " || showOptions);
 
-::method getSize unguarded       -- old method, this is not accurate.
+::method getSize unguarded          -- old method, this is not accurate.
    forward message "getRealSize" continue
    size = result
    return (size~width % self~factorX) || " " || (size~height % self~factorY)
 
-::method getPos unguarded        -- old method, this is not accurate.
+::method getPos unguarded           -- old method, this is not accurate.
    forward message "getRealPos" continue
    p = result
    return (p~x % self~factorX) || " " || (p~y % self~factorY)
 
-::method getRect unguarded       -- old method returns coordinates as a string
+::method getRect unguarded          -- old method returns coordinates as a string
    forward message "windowRect" continue
    rect = result
    return rect~left rect~top rect~right rect~bottom
 
-::method getClientRect unguarded -- old method returns coordinates as a string
+::method getClientRect unguarded    -- old method returns coordinates as a string
    forward message "clientRect" continue
    rect = result
    return rect~left rect~top rect~right rect~bottom
 
-::method ForegroundWindow unguarded external "LIBRARY oodialog wb_foreGroundWindow"
+::method foregroundWindow unguarded external "LIBRARY oodialog wb_foreGroundWindow"
+::method screen2client unguarded external "LIBRARY oodialog wb_screenClient"
+::method client2screen unguarded external "LIBRARY oodialog wb_screenClient"
 
-::method ScreenToClient unguarded
-    use arg x,y
-    return Wnd_Desktop("COORD", self~hwnd, x, y, "S2C")
+::method screenToClient unguarded   -- old method returns coordinates as a string
+    use strict arg x, y
+    p = .Point~new(x, y)
+    if self~screen2client(p) then return p.x p.y
+    else return 0 0
 
-::method ClientToScreen unguarded
-    use arg x,y
-    return Wnd_Desktop("COORD", self~hwnd, x, y, "C2S")
+::method clientToScreen unguarded   -- old method returns coordinates as a string
+    use strict arg x, y
+    p = .Point~new(x, y)
+    if self~client2screen(p) then return p.x p.y
+    else return 0 0
 
 ::method unknown unguarded
    use arg msgname
@@ -837,7 +843,7 @@
 
    /* This method will clear all pending dialog messages */
 
-::method ClearMessages unguarded protected
+::method clearMessages unguarded protected
    if self~adm = 0 then return
    msg = getDlgMsg(self~adm)
    do while msg \= "" & self~adm \= 0
@@ -871,16 +877,14 @@
 ::method hideItemFast unguarded
    forward message "hideControlFast"
 
-::method FocusItem unguarded
-   use arg id
-   return SendWinMsg("ANY", self~dlgHandle, "0x0028", self~getItem(id), 1)
+::method focusItem unguarded
+   forward message "focusControl"
 
-::method TabToNext unguarded
-   return Wnd_Desktop("SETFOC", self~dlgHandle, 0, "N")
-
-::method TabToPrevious unguarded
-   return Wnd_Desktop("SETFOC", self~dlgHandle, 1, "P")
-
+::method focusControl unguarded external "LIBRARY oodialog pbdlg_focusControl"
+::method setFocusToWindow unguarded external "LIBRARY oodialog pbdlg_setFocus"
+::method TabToNext unguarded external "LIBRARY oodialog pbdlg_tabTo"
+::method TabToPrevious unguarded external "LIBRARY oodialog pbdlg_tabTo"
+::method setFocus unguarded external "LIBRARY oodialog pbdlg_setFocus"
 ::method getFocus unguarded external "LIBRARY oodialog pbdlg_getFocus"
 ::method getTextSizeDlg unguarded external "LIBRARY oodialog pbdlg_getTextSizeDlg"
 ::method setTabStop unguarded external "LIBRARY oodialog pbdlg_setTabGroup"

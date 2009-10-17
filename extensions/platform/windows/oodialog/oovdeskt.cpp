@@ -63,56 +63,7 @@ size_t RexxEntry Wnd_Desktop(const char *funcname, size_t argc, CONSTRXSTRING *a
 
    CHECKARGL(1);
 
-   if (!strcmp(argv[0].strptr,"SETFOC"))
-   {
-       CHAR qualifier = 'C';
-       LRESULT result;
-       HWND hDlg, hNextFocus;
-       CHECKARGL(3);
-
-       hDlg = GET_HWND(argv[1].strptr);
-       if ( ! IsWindow(hDlg) )
-          RETVAL(-1)
-
-       /* Get the handle of the window control that had the focus before setting
-        * the new focus.  This will be returned to the caller in retstr.
-        */
-       getCurrentFocus(hDlg, retstr);
-
-       if ( argc > 3 )
-          qualifier = argv[3].strptr[0];
-
-       switch ( qualifier )
-       {
-          case 'F' :  /* set window to Foreground like Wnd_Desktop("TOP"..) but returns hwnd of previous control */
-             hNextFocus = GET_HWND(argv[2]);
-             if ( ! IsWindow(hNextFocus) )
-                RETVAL(-1)
-             result = SetForegroundWindow(hNextFocus);
-             break;
-
-          case 'N' :  /* set focus on Next tab stop control */
-             result = SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)0, (LPARAM)FALSE);
-             break;
-
-          case 'P' :  /* set focus on Previous tab stop control */
-             result = SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)1, (LPARAM)FALSE);
-             break;
-
-          case 'C' :  /* set focus on specified Control */
-          default  :
-              hNextFocus = GET_HWND(argv[2]);
-             if ( ! IsWindow(hNextFocus) )
-                RETVAL(-1)
-             result = SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)hNextFocus, TRUE);
-             break;
-       }
-       if ( ! result )
-          RETVAL(-1)  /* change retstr to indicate failure */
-       else
-          return 0;   /* retstr has handle of control that previously had the focus */
-   }
-   else if (!strcmp(argv[0].strptr,"CAP"))     /* get/set/release the mouse capture */
+   if (!strcmp(argv[0].strptr,"CAP"))     /* get/set/release the mouse capture */
    {   /* capture must be handled by window thread, therefore sendmessage is used */
        CHECKARG(3);
        hW = GET_HWND(argv[1]);

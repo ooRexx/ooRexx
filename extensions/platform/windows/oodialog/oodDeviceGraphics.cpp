@@ -1114,6 +1114,83 @@ RexxMethod2(RexxObjectPtr, dlgext_drawButton, RexxObjectPtr, rxID, OSELF, self)
 }
 
 
+/** DialogExtensions::getMouseCapture()
+ *
+ *  Retrieves a handle to the window (if any) that has captured the mouse.
+ *
+ *  Only one window at a time can capture the mouse; this window receives mouse
+ *  input whether or not the cursor is within its borders.
+ *
+ *  @return  A NULL return value means the current thread has not captured the
+ *           mouse. However, it is possible that another thread or process has
+ *           captured the mouse.
+ *
+ *  DialogExtensions::releaseMouseCapture()
+ *
+ *  Releases the mouse capture from a window in the current thread and restores
+ *  normal mouse input processing.
+ *
+ *  @return  0 on success, 1 on error.
+ *
+ *  @note  Sets the .SystemErrorCode, but that only has meaning for
+ *         releaseMouseCapture().
+ *
+ *  @remarks  GetCapture() and ReleaseCapture() need to run on the same thread
+ *            as the dialog's message loop.  So we use SendMessage with one of
+ *            the custom window messages.
+ *
+ */
+RexxMethod2(RexxObjectPtr, dlgext_mouseCapture, NAME, method, OSELF, self)
+{
+    RexxObjectPtr result = NULLOBJECT;
+
+    pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
+    if ( pcpbd != NULL )
+    {
+        if ( *method == 'G' )
+        {
+            HWND hwnd = (HWND)SendMessage(pcpbd->hDlg, WM_USER_GETSETCAPTURE, 0, 0);
+            result = pointer2string(context, hwnd);
+        }
+        else
+        {
+            RexxMethodContext *c = context;
+            uint32_t rc = (uint32_t)SendMessage(pcpbd->hDlg, WM_USER_GETSETCAPTURE, 2,0);
+            result = (rc == 0 ? TheZeroObj : c->UnsignedInt32(rc));
+        }
+    }
+    return result;
+}
+
+/** DialogExtensions::captureMouse
+ *
+ *  Sets the mouse capture to this dialog window.  captureMouse() captures mouse
+ *  input either when the mouse is over the dialog, or when the mouse button was
+ *  pressed while the mouse was over the dialog and the button is still down.
+ *  Only one window at a time can capture the mouse.
+ *
+ *  If the mouse cursor is over a window created by another thread, the system
+ *  will direct mouse input to the specified window only if a mouse button is
+ *  down.
+ *
+ *  @return  The window handle of the window that previously had captured the
+ *           mouse, or 0 if there was no such window.
+ *
+ *  @note  Sets the .SystemErrorCode,
+ */
+RexxMethod1(RexxObjectPtr, dlgext_captureMouse, OSELF, self)
+{
+    RexxObjectPtr result = TheZeroObj;
+
+    pCPlainBaseDialog pcpbd = dlgExtSetup(context, self);
+    if ( pcpbd != NULL )
+    {
+        HWND oldCapture = (HWND)SendMessage(pcpbd->hDlg, WM_USER_GETSETCAPTURE, 1, (LPARAM)pcpbd->hDlg);
+        result = pointer2string(context, oldCapture);
+    }
+    return result;
+}
+
 
 /** DialogExtensions::isMouseButtonDown()
  *

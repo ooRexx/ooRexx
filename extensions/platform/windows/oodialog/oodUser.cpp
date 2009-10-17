@@ -2009,7 +2009,7 @@ RexxMethod0(RexxObjectPtr, dyndlg_stop)
  *  pointer attribute was not used after it was freed.  This attribute is now
  *  set to null when it is freed, making this method redundent.
  */
-RexxMethod1(RexxObjectPtr, dyndlg_stopDynamic_pvt, CSELF, pCSelf)
+RexxMethod2(RexxObjectPtr, dyndlg_stopDynamic_pvt, OPTIONAL_RexxObjectPtr, ignored, CSELF, pCSelf)
 {
     pCDynamicDialog pcdd = (pCDynamicDialog)pCSelf;
 

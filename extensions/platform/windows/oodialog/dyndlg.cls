@@ -1019,7 +1019,7 @@
 ::method addCheckGroup
    forward message "CREATECHECKBOXGROUP"
 ::method addCheckBoxStem
-   forward message "CREATECHEKCBOXSTEM"
+   forward message "CREATECHECKBOXSTEM"
 ::method addRadioGroup
    forward message "CREATERADIOBUTTONGROUP"
 ::method addRadioStem

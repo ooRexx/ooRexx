@@ -95,7 +95,6 @@ BOOL REXXENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 
 REXX_CLASSIC_ROUTINE_PROTOTYPE(SendWinMsg);
-REXX_CLASSIC_ROUTINE_PROTOTYPE(Wnd_Desktop);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(HandleScrollBar);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(BmpButton);
 REXX_CLASSIC_ROUTINE_PROTOTYPE(DCDraw);
@@ -126,7 +125,6 @@ REXX_TYPED_ROUTINE_PROTOTYPE(routineTest_rtn);
 RexxRoutineEntry oodialog_functions[] =
 {
     REXX_CLASSIC_ROUTINE(SendWinMsg,           SendWinMsg),
-    REXX_CLASSIC_ROUTINE(Wnd_Desktop,          Wnd_Desktop),
     REXX_CLASSIC_ROUTINE(HandleScrollBar,      HandleScrollBar),
     REXX_CLASSIC_ROUTINE(BmpButton,            BmpButton),
     REXX_CLASSIC_ROUTINE(DCDraw,               DCDraw),
@@ -203,6 +201,7 @@ REXX_METHOD_PROTOTYPE(wb_windowRect);
 REXX_METHOD_PROTOTYPE(wb_clientRect);
 REXX_METHOD_PROTOTYPE(wb_clear);
 REXX_METHOD_PROTOTYPE(wb_foreGroundWindow);
+REXX_METHOD_PROTOTYPE(wb_screenClient);
 REXX_METHOD_PROTOTYPE(wb_getWindowLong_pvt);
 
 REXX_METHOD_PROTOTYPE(en_init_eventNotification);
@@ -233,6 +232,9 @@ REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
 REXX_METHOD_PROTOTYPE(pbdlg_show);
 REXX_METHOD_PROTOTYPE(pbdlg_toTheTop);
 REXX_METHOD_PROTOTYPE(pbdlg_getFocus);
+REXX_METHOD_PROTOTYPE(pbdlg_setFocus);
+REXX_METHOD_PROTOTYPE(pbdlg_tabTo);
+REXX_METHOD_PROTOTYPE(pbdlg_focusControl);
 REXX_METHOD_PROTOTYPE(pbdlg_showControl);
 REXX_METHOD_PROTOTYPE(pbdlg_showWindow);
 REXX_METHOD_PROTOTYPE(pbdlg_getControlHandle);
@@ -266,6 +268,8 @@ REXX_METHOD_PROTOTYPE(dlgext_redrawControl);
 REXX_METHOD_PROTOTYPE(dlgext_resizeMoveControl);
 REXX_METHOD_PROTOTYPE(dlgext_setForgroundWindow);
 REXX_METHOD_PROTOTYPE(dlgext_drawButton);
+REXX_METHOD_PROTOTYPE(dlgext_mouseCapture);
+REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgext_isMouseButtonDown);
 
 REXX_METHOD_PROTOTYPE(baseDlg_init);
@@ -375,10 +379,12 @@ REXX_METHOD_PROTOTYPE(dlgctrl_connectKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_connectFKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_disconnectKeyPress);
 REXX_METHOD_PROTOTYPE(dlgctrl_hasKeyPressConnection);
+REXX_METHOD_PROTOTYPE(dlgctrl_assignFocus);
 REXX_METHOD_PROTOTYPE(dlgctrl_tabGroup);
 REXX_METHOD_PROTOTYPE(dlgctrl_redrawRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_clearRect);
 REXX_METHOD_PROTOTYPE(dlgctrl_getTextSizeDlg);
+REXX_METHOD_PROTOTYPE(dlgctrl_captureMouse);
 
 // Edit
 REXX_METHOD_PROTOTYPE(e_selection);
@@ -616,6 +622,7 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(wb_clientRect,                  wb_clientRect),
     REXX_METHOD(wb_clear,                       wb_clear),
     REXX_METHOD(wb_foreGroundWindow,            wb_foreGroundWindow),
+    REXX_METHOD(wb_screenClient,                wb_screenClient),
     REXX_METHOD(wb_getWindowLong_pvt,           wb_getWindowLong_pvt),
 
     REXX_METHOD(en_init_eventNotification,      en_init_eventNotification),
@@ -643,6 +650,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_showWindow,               pbdlg_showWindow),
     REXX_METHOD(pbdlg_toTheTop,                 pbdlg_toTheTop),
     REXX_METHOD(pbdlg_getFocus,                 pbdlg_getFocus),
+    REXX_METHOD(pbdlg_setFocus,                 pbdlg_setFocus),
+    REXX_METHOD(pbdlg_tabTo,                    pbdlg_tabTo),
+    REXX_METHOD(pbdlg_focusControl,             pbdlg_focusControl),
     REXX_METHOD(pbdlg_showControl,              pbdlg_showControl),
     REXX_METHOD(pbdlg_connect_ControName,       pbdlg_connect_ControName),
     REXX_METHOD(pbdlg_setDlgDataFromStem_pvt,   pbdlg_setDlgDataFromStem_pvt),
@@ -676,6 +686,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_resizeMoveControl,       dlgext_resizeMoveControl),
     REXX_METHOD(dlgext_setForgroundWindow,      dlgext_setForgroundWindow),
     REXX_METHOD(dlgext_drawButton,              dlgext_drawButton),
+    REXX_METHOD(dlgext_mouseCapture,            dlgext_mouseCapture),
+    REXX_METHOD(dlgext_captureMouse,            dlgext_captureMouse),
     REXX_METHOD(dlgext_isMouseButtonDown,       dlgext_isMouseButtonDown),
 
     REXX_METHOD(baseDlg_init,                   baseDlg_init),
@@ -729,10 +741,12 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgctrl_connectFKeyPress,       dlgctrl_connectFKeyPress),
     REXX_METHOD(dlgctrl_disconnectKeyPress,     dlgctrl_disconnectKeyPress),
     REXX_METHOD(dlgctrl_hasKeyPressConnection,  dlgctrl_hasKeyPressConnection),
+    REXX_METHOD(dlgctrl_assignFocus,            dlgctrl_assignFocus),
     REXX_METHOD(dlgctrl_tabGroup,               dlgctrl_tabGroup),
     REXX_METHOD(dlgctrl_clearRect,              dlgctrl_clearRect),
     REXX_METHOD(dlgctrl_redrawRect,             dlgctrl_redrawRect),
     REXX_METHOD(dlgctrl_getTextSizeDlg,         dlgctrl_getTextSizeDlg),
+    REXX_METHOD(dlgctrl_captureMouse,           dlgctrl_captureMouse),
 
     REXX_METHOD(window_init,                    window_init),
     REXX_METHOD(window_unInit,                  window_unInit),

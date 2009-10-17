@@ -62,7 +62,12 @@ BOOL AddDialogMessage(CHAR * msg, CHAR * Qptr)
       strcat(Qptr, msg);
       strcat(Qptr, ";");
       return 1;
-   } else return 0;
+   }
+   else
+   {
+       printf("MESSAGE QUEUE OVERFLOW\n");
+   }
+   return 0;
 }
 
 

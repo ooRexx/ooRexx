@@ -219,15 +219,23 @@ RexxMethod2(RexxObjectPtr, baseDlg_putControl_pvt, RexxObjectPtr, control, OSELF
     return TheNilObj;
 }
 
-RexxMethod3(RexxObjectPtr, baseDlg_test, int, x, CSTRING, y, CSELF, pCSelf)
+RexxMethod1(RexxObjectPtr, baseDlg_test, CSELF, pCSelf)
 {
     RexxMethodContext *c = context;
 
-    /*
-    size_t count = c->ArrayItems(args);
-    size_t size = c->ArraySize(args);
-    printf("Arg count=%d size=%d\n", count, size);
-    */
+    pCPlainBaseDialog pcpbd = (pCPlainBaseDialog)pCSelf;
+    DIALOGADMIN *dlgAdm = pcpbd->dlgAdm;
+
+    MESSAGETABLEENTRY *m = dlgAdm->MsgTab;
+
+    for ( size_t i = 0; i < dlgAdm->MT_size; i++ )
+    {
+        printf("method: %s msg=0x%08x msgF=0x%08x\n", m[i].rexxProgram, m[i].msg, m[i].filterM);
+        printf("wp=0x%016I64x wpF=0x%016I64x lp=0x%016I64x lpF=0x%016I64x\n",
+               m[i].wParam, m[i].filterP, m[i].lParam, m[i].filterL);
+
+    }
+
     return TheTrueObj;
 }
 

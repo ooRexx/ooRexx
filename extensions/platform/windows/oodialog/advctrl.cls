@@ -79,22 +79,19 @@
    else
        return SetBackground(self~oDlg~adm, "COL", self~id, colorbk, colorfg, "SYS")  /* set both, background and foreground color */
 
-::method assignFocus
-   return SendWinMsg("ANY",self~hDlg, "0x0028", self~hwnd, 1)
-
 ::method getFocus unguarded
-   return self~oDlg~getFocus
+   forward to (self~oDlg)
 
 ::method setFocus unguarded
-   use arg hwnd
-   return Wnd_Desktop("SETFOC", self~hDlg, hwnd)
+   forward to (self~oDlg)
 
 ::method tabToNext unguarded
-   return Wnd_Desktop("SETFOC", self~hDlg, 0, "N")
+   forward to (self~oDlg)
 
 ::method tabToPrevious unguarded
-   return Wnd_Desktop("SETFOC", self~hDlg, 1, "P")
+   forward to (self~oDlg)
 
+::method assignFocus external "LIBRARY oodialog dlgctrl_assignFocus"
 ::method tabStop unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method group unguarded external "LIBRARY oodialog dlgctrl_tabGroup"
 ::method redrawRect unguarded external "LIBRARY oodialog dlgctrl_redrawRect"
@@ -110,18 +107,17 @@
     --self~oDlg~setControlData(self~Id, data, self~hDlg)
     self~oDlg~setControlData(self~Id, data)
 
-::method captureMouse
-   return Wnd_Desktop("CAP", self~hDlg, self~hwnd)
 
 ::method getMouseCapture
-   return Wnd_Desktop("CAP", self~hDlg, "G")
-
-::method releaseMouseCapture
-   return Wnd_Desktop("CAP", self~hDlg, "R")
-
-::method IsMouseButtonDown
    forward to (self~oDlg)
 
+::method releaseMouseCapture
+   forward to (self~oDlg)
+
+::method isMouseButtonDown
+   forward to (self~oDlg)
+
+::method captureMouse external "LIBRARY oodialog dlgctrl_captureMouse"
 ::method connectFKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectFKeyPress"
 ::method connectKeyPress unguarded external "LIBRARY oodialog dlgctrl_connectKeyPress"
 ::method disconnectKeyPress unguarded external "LIBRARY oodialog dlgctrl_disconnectKeyPress"

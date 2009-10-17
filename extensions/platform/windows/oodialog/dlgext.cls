@@ -42,12 +42,12 @@
  * Dialog class extensions.
  */
 
-::class 'DialogExtensions' public MIXINCLASS object
+::class 'DialogExtensions' public mixinclass Object
 
    /* This method will do the same as execute but it will do an asynchronous */
    /* dispatch of messages      */
 
-::method ExecuteAsync unguarded
+::method executeAsync unguarded
    use arg sleeptime, sh, icon = 0, nomodal
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
    if arg(2,'o') = 1 then sh = "DEFAULT"
@@ -70,7 +70,7 @@
 
    /* This method ends the asynchronous execution of a dialog */
 
-::method EndAsyncExecution unguarded
+::method endAsyncExecution unguarded
    do while self~finished = 0
       call msSleep 20
    end
@@ -104,7 +104,7 @@
    end
 
    /* Run a nonmodal dialog */
-::method Popup
+::method popup
    use arg sh, sleeptime, icon = 0
    if arg(1,'o') = 1 then sh = "DEFAULT"
    if sleeptime~Datatype('N') = 0 then sleeptime = 10
@@ -112,7 +112,7 @@
    self~start("execute", sh, icon, sleeptime, "NOTMODAL")
 
 
-::method PopupAsChild
+::method popupAsChild
    use arg parent, sh, sleeptime, icon = 0
 
    if arg(1,'o') = 1 | parent = 0 then do
@@ -128,11 +128,14 @@
    self~start("execute", sh, icon, sleeptime, "NOTMODAL")
 
 
-::method SendMessageToItem unguarded
+::method sendMessageToItem unguarded
    parse arg id,a2,a3,a4
    if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
    return SendWinMsg("DLG",self~dlgHandle,id,a2,a3,a4)
+
+::method peekDialogMessage unguarded
+   return getDlgMsg(self~adm, .true)
 
 
  /* The following Methods are to set/get the behaviour of/from a scrollbar */
@@ -607,7 +610,7 @@
     else return HandleDC_Obj("B", self~adm, color, brushSpecifier)  /* brushSpecifier must be filename or resource ID */
 
 
-::method SetItemSysColor
+::method setControlSysColor
    use arg id, colorbk, colorfg
    if \ id~DataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
@@ -616,7 +619,7 @@
    else
        return SetBackground(self~adm, "COL", id, colorbk, colorfg, "SYS")
 
-::method SetItemColor
+::method setControlColor
    use arg id, colorbk, colorfg
    if \ id~DataType("W") then id = self~resolveSymbolicId(id)
    if id = -1 then return -1
@@ -624,6 +627,12 @@
        return SetBackground(self~adm, "COL", id, colorbk)
    else
        return SetBackground(self~adm, "COL", id, colorbk, colorfg)
+
+::method setItemColor
+   forward message "setControlColor"
+
+::method setItemSysColor
+   forward message "setControlSysColor"
 
 
    /* This method scrolls 'text' in the button */
@@ -732,29 +741,9 @@
    hwnd = self~getItem(id)
    return self~FreeWindowDC(hwnd, dc)
 
-/******************************************************************************/
-/* New extensions */
-
-::method PeekDialogMessage unguarded
-   return getDlgMsg(self~adm, .true)
-
-::method SetFocus unguarded
-   use arg hwnd
-   return Wnd_Desktop("SETFOC", self~dlgHandle, hwnd)
-
-::method SetFocusToWindow unguarded
-   use arg hwnd
-   return Wnd_Desktop("SETFOC", self~dlgHandle, hwnd, 'F')
-
-::method GetMouseCapture
-   return Wnd_Desktop("CAP", self~dlgHandle, "G")
-
-::method CaptureMouse
-   return Wnd_Desktop("CAP", self~dlgHandle, self~dlgHandle)
-
-::method ReleaseMouseCapture
-   return Wnd_Desktop("CAP", self~dlgHandle, "R")
-
+::method CaptureMouse external "LIBRARY oodialog dlgext_captureMouse"
+::method getMouseCapture external "LIBRARY oodialog dlgext_mouseCapture"
+::method releaseMouseCapture external "LIBRARY oodialog dlgext_mouseCapture"
 ::method isMouseButtonDown external "LIBRARY oodialog dlgext_isMouseButtonDown"
 
 

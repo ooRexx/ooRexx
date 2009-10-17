@@ -559,6 +559,12 @@ RexxMethod1(RexxObjectPtr, dlgctrl_unInit, CSELF, pCSelf)
     } return NULLOBJECT;
 }
 
+RexxMethod1(RexxObjectPtr, dlgctrl_assignFocus, CSELF, pCSelf)
+{
+    SendMessage(((pCDialogControl)pCSelf)->hDlg, WM_NEXTDLGCTL, (WPARAM)((pCDialogControl)pCSelf)->hCtrl, TRUE);
+    return TheZeroObj;
+}
+
 RexxMethod4(int32_t, dlgctrl_connectKeyPress, CSTRING, methodName, CSTRING, keys, OPTIONAL_CSTRING, filter,
             CSELF, pCSelf)
 {
@@ -847,6 +853,28 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
         return rxNewSize(context, textSize.cx, textSize.cy);
     }
     return NULLOBJECT;
+}
+
+
+/** DialogControl::captureMouse
+ *
+ *  Sets the mouse capture to this dialog control.  captureMouse() captures
+ *  mouse input either when the mouse is over the control, or when the mouse
+ *  button was pressed while the mouse was over the control and the button is
+ *  still down. Only one window at a time can capture the mouse.
+ *
+ *  If the mouse cursor is over a window created by another thread, the system
+ *  will direct mouse input to the specified window only if a mouse button is
+ *  down.
+ *
+ *  @return  The window handle of the window that previously had captured the
+ *           mouse, or the null handle if there was no such window.
+ */
+RexxMethod1(RexxObjectPtr, dlgctrl_captureMouse, CSELF, pCSelf)
+{
+    pCDialogControl pcdc = (pCDialogControl)pCSelf;
+    HWND oldCapture = (HWND)SendMessage(pcdc->hDlg, WM_USER_GETSETCAPTURE, 1, (LPARAM)pcdc->hCtrl);
+    return pointer2string(context, oldCapture);
 }
 
 
