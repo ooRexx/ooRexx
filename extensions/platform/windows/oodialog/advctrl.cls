@@ -1393,7 +1393,7 @@
    return self~Message2Parent(0x00000190, 0, 0)
 
 ::method SelectedIndexes
-   return self~oDlg~internalGetItemData(self~id, self~hDlg, 4)
+   return self~oDlg~internalGetItemData(self~id, self~hDlg, 4)  -- TODO this
 
 ::method MakeFirstVisible
    use arg ndx
@@ -1411,7 +1411,7 @@
    self~Delete(index)
    return self~Insert(index, dataString)
 
-::method SetTabulators external "LIBRARY oodialog generic_setListTabulators"
+::method setTabulators external "LIBRARY oodialog generic_setListTabulators"
 
 ::method AddDirectory
    use arg drvPath, fileAttributes
@@ -1454,6 +1454,8 @@
 
 
 ::class 'ComboBox' subclass DialogControl public
+
+::method getText external "LIBRARY oodialog lb_getText"
 
 ::method Add
    use arg data
@@ -1505,12 +1507,6 @@
 
 ::method Items
    return self~Message2Parent(0x00000146, 0, 0)
-
-::method GetText
-   use arg ndx
-   len = SendWinMsg("DLG", self~hDlg, self~id, 0x00000149, ndx-1,0)
-   if len <= 0 then return ""
-   else return SendWinMsg("PTR", self~hDlg, self~id, 0x00000148, ndx-1,"G" || len+1)
 
 ::method Modify
    use arg index, dataString

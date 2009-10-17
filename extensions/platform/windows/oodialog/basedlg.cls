@@ -288,24 +288,6 @@
 
 ::method init external "LIBRARY oodialog baseDlg_init"
 
-::method newStatic unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newPushButton unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newRadioButton unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newCheckBox unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newGroupBox unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newEdit unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newComboBox unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newListBox unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newScrollBar unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newTreeView unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newListView unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newTab unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newProgressBar unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newTrackBar unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newMonthCalendar unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method newDateTimePicker unguarded external "LIBRARY oodialog baseDlg_newControl"
-::method putControl private unguarded external "LIBRARY oodialog baseDlg_putControl_pvt"
-
 ::method baseDlgTest unguarded external "LIBRARY oodialog baseDlg_test"
 
 -- TODO needs doc
@@ -317,39 +299,6 @@
   return self~menuBar \== .nil & self~isLinked
 
 -- DEPRECATED
-::method getStaticControl unguarded
-   forward message 'newStatic'
-::method getButtonControl unguarded
-   forward message 'newPushButton'
-::method getRadioControl unguarded
-   forward message 'newRadioButton'
-::method getCheckControl unguarded
-   forward message 'newCheckBox'
-::method getGroupBox unguarded
-   forward message 'newGroupBox'
-::method getEditControl unguarded
-   forward message 'newEdit'
-::method getComboBox unguarded
-   forward message 'newComboBox'
-::method getListBox unguarded
-   forward message 'newListBox'
-::method getScrollBar unguarded
-   forward message 'newScrollBar'
-::method getTreeControl unguarded
-   forward message 'newTreeView'
-::method getListControl unguarded
-   forward message 'newListView'
-::method getTabControl unguarded
-   forward message 'newTab'
-::method getProgressBar unguarded
-   forward message 'newProgressBar'
-::method getSliderControl unguarded
-   forward message 'newTrackBar'
-::method getMonthCalendar unguarded
-   forward message 'newMonthCalendar'
-::method getDateTimePicker unguarded
-   forward message 'newDateTimePicker'
-
 
 ::class 'ResourceImage' public
 

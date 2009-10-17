@@ -285,6 +285,49 @@ RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlT
 
 
 /**
+ * Get the text of an item in a list box or a combo box.
+ *
+ * @param c           Context we are operating in.
+ * @param pcdc        Pointer to a dialog control C self.
+ * @param index       The one based index of the item
+ * @param textLenMsg  The appropriate get text length message.
+ * @param textMsg     The appropriate get text message
+ *
+ * @return The Rexx string object that represents the text.
+ *
+ * @remarks  The process of getting the text for an item in a list box and an
+ *           item in a combo box is exactly the, except for the specific
+ *           messages being sent.
+ */
+RexxStringObject getBoxText(RexxMethodContext *c, pCDialogControl pcdc, uint32_t index, uint32_t textLenMsg, uint32_t textMsg)
+{
+    RexxStringObject result = c->NullString();
+
+    if ( index-- > 0 )
+    {
+        LRESULT l = SendMessage(pcdc->hCtrl, textLenMsg, index, 0);
+        if ( l > 0 )
+        {
+            char *buf = (char *)malloc(l + 1);
+            if ( buf == NULL )
+            {
+                outOfMemoryException(c->threadContext);
+                return result;
+            }
+
+            l = SendMessage(pcdc->hCtrl, textMsg, index, (LPARAM)buf);
+            if ( l > 0 )
+            {
+                result = c->String(buf);
+            }
+            free(buf);
+        }
+    }
+    return result;
+}
+
+
+/**
  *  Methods for the .DialogControl class.
  */
 #define DIALOGCONTROL_CLASS        "DialogControl"
@@ -1119,29 +1162,25 @@ RexxMethod4(RexxObjectPtr, e_style, OPTIONAL_CSTRING, _style1, OPTIONAL_CSTRING,
  */
 RexxMethod2(RexxObjectPtr, lb_getText, uint32_t, index, CSELF, pCSelf)
 {
-    pCDialogControl pcdc = (pCDialogControl)pCSelf;
-    RexxStringObject result = context->NullString();
-
-    if ( index-- > 0 )
-    {
-        LRESULT l = SendMessage(pcdc->hCtrl, LB_GETTEXTLEN, index, 0);
-        if ( l > 0 )
-        {
-            char *buf = (char *)malloc(l + 1);
-            if ( buf == NULL )
-            {
-                outOfMemoryException(context->threadContext);
-                return result;
-            }
-
-            l = SendMessage(pcdc->hCtrl, LB_GETTEXT, (WPARAM)buf, 0);
-            if ( l > 0 )
-            {
-                result = context->String(buf);
-            }
-            free(buf);
-        }
-    }
-    return result;
+    return getBoxText(context, (pCDialogControl)pCSelf, index, LB_GETTEXTLEN, LB_GETTEXT);
 }
 
+
+/**
+ * Methods for the ComboBox class.
+ */
+#define COMBOBOX_CLASS   "ComboBox"
+
+/** ComboBox::getText()
+ *
+ *  Return the text of the item at the specified index.
+ *
+ *  @param  index  The 1-based item index.  (The underlying combo box uses
+ *                 0-based indexes.)
+ *
+ *  @return  The item's text or the empty string on error.
+ */
+RexxMethod2(RexxStringObject, cb_getText, uint32_t, index, CSELF, pCSelf)
+{
+    return getBoxText(context, (pCDialogControl)pCSelf, index, CB_GETLBTEXTLEN, CB_GETLBTEXT);
+}

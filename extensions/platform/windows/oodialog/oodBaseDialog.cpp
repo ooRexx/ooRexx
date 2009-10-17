@@ -69,7 +69,6 @@ public:
  *  Methods for the .BaseDialog class.
  */
 #define BASEDIALOG_CLASS              "BaseDialog"
-#define CONTROLBAG_ATTRIBUTE          "BaseDialogControlBag"
 
 /** BaseDialog::init()
  */
@@ -95,129 +94,6 @@ RexxMethod3(RexxObjectPtr, baseDlg_init, ARGLIST, args, SUPER, super, OSELF, sel
     return result;
 }
 
-
-/** BaseDialog::newXXX()
- *
- *  Instantiates a dialog control object for the specified Windows control.  All
- *  dialog control objects are instantiated through one of the BaseDialog
- *  newXXX() methods. In turn each of those methods filter through this
- *  function. newEdit(), newPushButton(), newListView(), etc..
- *
- * @param  rxID  The resource ID of the control.
- *
- * @param  categoryPageID  [optional] If the dialog is a category dialog, this
- *                         indicates which page of the dialog the control is on.
- *
- * @returns  The properly instantiated dialog control object on success, or the
- *           nil object on failure.
- *
- * @remarks Either returns the control object asked for, or .nil.
- *
- *          The first time a Rexx object is instantiated for a specific Windows
- *          control, the Rexx object is stored in the window words of the
- *          control.  Before a Rexx object is instantiated, the window words are
- *          checked to see if there is already an instantiated object. If so,
- *          that object is returned rather than instantiating a new object.
- */
-RexxMethod5(RexxObjectPtr, baseDlg_newControl, RexxObjectPtr, rxID, OPTIONAL_uint32_t, categoryPageID,
-            NAME, msgName, OSELF, self, CSELF, pCSelf)
-{
-    RexxMethodContext *c = context;
-    RexxObjectPtr result = TheNilObj;
-
-    bool isCategoryDlg = false;
-    HWND hDlg = ((pCPlainBaseDialog)pCSelf)->hDlg;
-
-    if ( c->IsOfType(self, "CATEGORYDIALOG") )
-    {
-        if ( ! getCategoryHDlg(context, self, &categoryPageID, &hDlg, argumentExists(2)) )
-        {
-            goto out;
-        }
-        isCategoryDlg = true;
-    }
-
-    uint32_t id;
-    if ( ! oodSafeResolveID(&id, c, self, rxID, -1, 1) || (int)id < 0 )
-    {
-        goto out;
-    }
-
-    HWND hControl = GetDlgItem(hDlg, (int)id);
-    if ( hControl == NULL )
-    {
-        goto out;
-    }
-
-    // Check that the underlying Windows control is the control type requested
-    // by the programmer.  Return .nil if this is not true.
-    oodControl_t controlType = oodName2controlType(msgName + 3);
-    if ( ! isControlMatch(hControl, controlType) )
-    {
-        goto out;
-    }
-
-    RexxObjectPtr rxControl = (RexxObjectPtr)getWindowPtr(hControl, GWLP_USERDATA);
-    if ( rxControl != NULLOBJECT )
-    {
-        // Okay, this specific control has already had a control object
-        // instantiated to represent it.  We return this object.
-        result = rxControl;
-        goto out;
-    }
-
-    // No pointer is stored in the user data area, so no control object has been
-    // instantiated for this specific control, yet.  We instantiate one now and
-    // then store the object in the user data area of the control window.
-
-    PNEWCONTROLPARAMS pArgs = (PNEWCONTROLPARAMS)malloc(sizeof(NEWCONTROLPARAMS));
-    if ( pArgs == NULL )
-    {
-        outOfMemoryException(context->threadContext);
-        goto out;
-    }
-
-    RexxClassObject controlCls = oodClass4controlType(context, controlType);
-    if ( controlCls == NULLOBJECT )
-    {
-        goto out;
-    }
-
-    pArgs->hwnd = hControl;
-    pArgs->hwndDlg = hDlg;
-    pArgs->id = id;
-    pArgs->parentDlg = self;
-
-    rxControl = c->SendMessage1(controlCls, "NEW", c->NewPointer(pArgs));
-    free(pArgs);
-
-    if ( rxControl != NULLOBJECT && rxControl != TheNilObj )
-    {
-        result = rxControl;
-        setWindowPtr(hControl, GWLP_USERDATA, (LONG_PTR)result);
-        c->SendMessage1(self, "putControl", result);
-    }
-
-out:
-    return result;
-}
-
-RexxMethod2(RexxObjectPtr, baseDlg_putControl_pvt, RexxObjectPtr, control, OSELF, self)
-{
-
-    RexxObjectPtr bag = context->GetObjectVariable(CONTROLBAG_ATTRIBUTE);
-    if ( bag == NULLOBJECT )
-    {
-        bag = rxNewBag(context);
-        context->SetObjectVariable(CONTROLBAG_ATTRIBUTE, bag);
-    }
-    if ( bag != NULLOBJECT )
-    {
-        context->SendMessage2(bag, "PUT", control, control);
-    }
-
-    return TheNilObj;
-}
 
 RexxMethod1(RexxObjectPtr, baseDlg_test, CSELF, pCSelf)
 {

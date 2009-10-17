@@ -253,6 +253,8 @@ REXX_METHOD_PROTOTYPE(pbdlg_putDlgDataInStem_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_getControlData);
 REXX_METHOD_PROTOTYPE(pbdlg_setControlData);
 REXX_METHOD_PROTOTYPE(pbdlg_getTextSizeDlg);
+REXX_METHOD_PROTOTYPE(pbdlg_newControl);
+REXX_METHOD_PROTOTYPE(pbdlg_putControl_pvt);
 REXX_METHOD_PROTOTYPE(pbdlg_unInit);
 
 REXX_METHOD_PROTOTYPE(generic_setListTabulators);
@@ -273,8 +275,6 @@ REXX_METHOD_PROTOTYPE(dlgext_captureMouse);
 REXX_METHOD_PROTOTYPE(dlgext_isMouseButtonDown);
 
 REXX_METHOD_PROTOTYPE(baseDlg_init);
-REXX_METHOD_PROTOTYPE(baseDlg_newControl);
-REXX_METHOD_PROTOTYPE(baseDlg_putControl_pvt);
 REXX_METHOD_PROTOTYPE(baseDlg_test);
 
 REXX_METHOD_PROTOTYPE(userdlg_init);
@@ -467,6 +467,10 @@ REXX_METHOD_PROTOTYPE(bc_test_cls);
 // ListBox
 REXX_METHOD_PROTOTYPE(lb_getText);
 
+// ComboBox
+REXX_METHOD_PROTOTYPE(cb_getText);
+
+// .Rect
 REXX_METHOD_PROTOTYPE(rect_init);
 REXX_METHOD_PROTOTYPE(rect_left);
 REXX_METHOD_PROTOTYPE(rect_top);
@@ -477,12 +481,14 @@ REXX_METHOD_PROTOTYPE(rect_setTop);
 REXX_METHOD_PROTOTYPE(rect_setRight);
 REXX_METHOD_PROTOTYPE(rect_setBottom);
 
+// .Point
 REXX_METHOD_PROTOTYPE(point_init);
 REXX_METHOD_PROTOTYPE(point_x);
 REXX_METHOD_PROTOTYPE(point_setX);
 REXX_METHOD_PROTOTYPE(point_y);
 REXX_METHOD_PROTOTYPE(point_setY);
 
+// .Size
 REXX_METHOD_PROTOTYPE(size_init);
 REXX_METHOD_PROTOTYPE(size_cx);
 REXX_METHOD_PROTOTYPE(size_setCX);
@@ -671,6 +677,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setTabGroup,              pbdlg_setTabGroup),
     REXX_METHOD(pbdlg_stopIt,                   pbdlg_stopIt),
     REXX_METHOD(pbdlg_getTextSizeDlg,           pbdlg_getTextSizeDlg),
+    REXX_METHOD(pbdlg_newControl,               pbdlg_newControl),
+    REXX_METHOD(pbdlg_putControl_pvt,         pbdlg_putControl_pvt),
     REXX_METHOD(pbdlg_unInit,                   pbdlg_unInit),
 
     REXX_METHOD(generic_setListTabulators,      generic_setListTabulators),
@@ -691,8 +699,6 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgext_isMouseButtonDown,       dlgext_isMouseButtonDown),
 
     REXX_METHOD(baseDlg_init,                   baseDlg_init),
-    REXX_METHOD(baseDlg_newControl,             baseDlg_newControl),
-    REXX_METHOD(baseDlg_putControl_pvt,         baseDlg_putControl_pvt),
     REXX_METHOD(baseDlg_test,                   baseDlg_test),
 
     REXX_METHOD(userdlg_init,                   userdlg_init),
@@ -876,6 +882,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_test_cls,                    bc_test_cls),
 
     REXX_METHOD(lb_getText,                     lb_getText),
+
+    REXX_METHOD(cb_getText,                     cb_getText),
 
     REXX_METHOD(rect_init,                      rect_init),
     REXX_METHOD(rect_left,                      rect_left),
