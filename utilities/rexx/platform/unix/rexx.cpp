@@ -106,14 +106,14 @@ int main (int argc, char **argv)
           instore[1].strptr = NULL;
           instore[1].strlength = 0;
           real_argument = false;
-          break;
+          return 0;
 
         case 'v': case 'V':            /* display version string            */
           ptr = RexxGetVersionInformation();
           fprintf(stderr, ptr);
           fprintf(stderr, "\n");
           RexxFreeMemory(ptr);
-          break;
+          return 0;
 
         default:                       /* ignore other switches             */
           break;
@@ -135,8 +135,9 @@ int main (int argc, char **argv)
   {
                                        /* give a simple error message       */
     fprintf(stderr,"\n");
-    fprintf(stderr,"Syntax is \"rexx [-v] filename [arguments]\"\n");
-    fprintf(stderr,"or        \"rexx [-e] program_string [arguments]\".\n");
+    fprintf(stderr,"Syntax is \"rexx filename [arguments]\"\n");
+    fprintf(stderr,"or        \"rexx -e program_string [arguments]\"\n");
+    fprintf(stderr,"or        \"rexx -v\".\n");
     return -1;
   }
 

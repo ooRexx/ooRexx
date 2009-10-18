@@ -149,8 +149,9 @@ int __cdecl main(int argc, char *argv[])
                                        /* give a simple error message       */
     #undef printf
     printf("\n");
-    printf("Syntax: REXX [-v] ProgramName [parameter_1....parameter_n]\n");
-    printf("or    : REXX [-e] ProgramString [parameter_1....parameter_n]\n");
+    fprintf(stderr,"Syntax is \"rexx filename [arguments]\"\n");
+    fprintf(stderr,"or        \"rexx -e program_string [arguments]\"\n");
+    fprintf(stderr,"or        \"rexx -v\".\n");
     return -1;
   }
   else {                               /* real program execution            */
