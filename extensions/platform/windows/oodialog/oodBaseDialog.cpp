@@ -346,7 +346,7 @@ static inline HWND getWEWindow(void *pCSelf)
     return ((pCWindowExtensions)pCSelf)->hwnd;
 }
 
-HWND winExtSetup(RexxMethodContext *c, void *pCSelf)
+static HWND winExtSetup(RexxMethodContext *c, void *pCSelf)
 {
     oodResetSysErrCode(c->threadContext);
     HWND hwnd = getWEWindow(pCSelf);
@@ -356,6 +356,25 @@ HWND winExtSetup(RexxMethodContext *c, void *pCSelf)
         noWindowsDialogException(c, ((pCWindowExtensions)pCSelf)->rexxSelf);
     }
     return hwnd;
+}
+
+
+static int scrollBarType(HWND hwnd, CSTRING method)
+{
+    int type;
+    if ( isControlMatch(hwnd, winScrollBar) )
+    {
+        type = SB_CTL;
+    }
+    else if ( *method == 'S' )
+    {
+        type = (method[3] == 'H' ? SB_HORZ : SB_VERT);
+    }
+    else
+    {
+        type = (*method == 'H' ? SB_HORZ : SB_VERT);
+    }
+    return type;
 }
 
 
@@ -770,24 +789,6 @@ RexxMethod4(POINTERSTRING, winex_createFontEx, CSTRING, fontName, OPTIONAL_int, 
 
 error_out:
   return NULLOBJECT;
-}
-
-static int scrollBarType(HWND hwnd, CSTRING method)
-{
-    int type;
-    if ( isControlMatch(hwnd, winScrollBar) )
-    {
-        type = SB_CTL;
-    }
-    else if ( *method == 'S' )
-    {
-        type = (method[3] == 'H' ? SB_HORZ : SB_VERT);
-    }
-    else
-    {
-        type = (*method == 'H' ? SB_HORZ : SB_VERT);
-    }
-    return type;
 }
 
 /** WindowExtension::hScrollPos()

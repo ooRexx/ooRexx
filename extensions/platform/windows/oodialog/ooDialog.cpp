@@ -2012,6 +2012,46 @@ RexxMethod1(RexxObjectPtr, pbdlg_getDlgHandle, CSELF, pCSelf)
     return ( ((pCPlainBaseDialog)pCSelf)->wndBase->rexxHwnd );
 }
 
+
+/** PlainBaseDialog::sendNumericMsg()
+ *
+ *  Sends a message to a Windows window where WPARAM and LPARAM are both numbers
+ *  and the return is a number.  I.e., neither param is a handle and the return
+ *  is not a string or a handle.
+ *
+ *  @param  wm_msg  The Windows window message ID.  This can be specified in
+ *                  either "0xFFFF" or numeric format.
+ *
+ *  @param  wParam  The WPARAM value for the message.
+ *  @param  lParam  The LPARAM value for the message.
+ *
+ *  @return The result of sending the message, as returned by the operating
+ *          system.
+ *
+ *  @remarks  There is no reason why this method can not be used internally with
+ *            handles as either the params, or as the return.  Provided of
+ *            course that the caller understands the message being sent.  This
+ *            is not meant to be documented.
+ */
+RexxMethod4(intptr_t, pbdlg_sendNumericMsg, CSTRING, wm_msg, uintptr_t, wParam, intptr_t, lParam, CSELF, pCSelf)
+{
+    HWND hDlg = ((pCPlainBaseDialog)pCSelf)->hDlg;
+    if ( hDlg == NULL )
+    {
+        noWindowsDialogException(context, ((pCPlainBaseDialog)pCSelf)->rexxSelf);
+        return 0;
+    }
+
+    uint64_t msgID;
+    if ( ! rxStr2Number(context, wm_msg, &msgID, 1) )
+    {
+        return 0;
+    }
+
+    return (intptr_t)SendMessage(hDlg, (uint32_t)msgID, (WPARAM)wParam, (LPARAM)lParam);
+}
+
+
 /** PlainBaseDialog::get()
  *
  *  Returns the handle of the "top" dialog.

@@ -293,6 +293,9 @@
  */
 ::class 'PlainBaseDialog' public inherit WindowBase ResourceUtils EventNotification
 
+::constant DM_REPOSITION  "0x0402"
+
+
 ::method init class external "LIBRARY oodialog pbdlg_init_cls"
 ::method setDefaultFont class external "LIBRARY oodialog pbdlg_setDefaultFont_cls"
 ::method getFontName class external "LIBRARY oodialog pbdlg_getFontName_cls"
@@ -419,6 +422,8 @@
        end
    end
 
+::method sendNumericMsg unguarded external "LIBRARY oodialog pbdlg_sendNumericMsg"
+
 ::method get unguarded external "LIBRARY oodialog pbdlg_get"
 ::method getSelf unguarded external "LIBRARY oodialog pbdlg_getDlgHandle"
 ::method getControlID unguarded external "LIBRARY oodialog pbdlg_getControlID"
@@ -442,8 +447,8 @@
 ::method getItem unguarded external "LIBRARY oodialog pbdlg_getControlHandle"
 
 -- Send the DM_REPOSITION  message to the dialog.
-::method EnsureVisible unguarded
-   return SendWinMsg("ANY", self~dlgHandle, "0x0402", 0, 0)
+::method ensureVisible unguarded
+   return self~sendNumericMsg(self~DM_REPOSITION, 0, 0)
 
 
 /* The following methods 'connect' a Windows dialog control with a 'data' attribute of the Rexx
@@ -625,8 +630,11 @@
 
    /* This method adds a string to the combobox */
 
-::method AddComboEntry unguarded
-   use arg id, string
+::method addComboEntry unguarded
+   use strict arg id, string
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   else return comboBox~add(string)
    if arg(2,'o') = 1 | string = "DATA" then return -1
    return self~BoxMessage(id, 0x00000143, 0, "T" || string) + 1
 
@@ -680,13 +688,11 @@
 
    /* Returns the text string of entry index */
 
-::method GetComboEntry unguarded
-   use arg id, ndx
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   len = SendWinMsg("DLG", self~dlgHandle, id, 0x00000149, ndx-1,0)
-   if len <= 0 then return ""
-   else return SendWinMsg("PTR", self~dlgHandle, id, 0x00000148, ndx-1,"G" || len+1)
+::method getComboEntry unguarded
+   use strict arg id, index
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~getText(index)
 
    /* Changes the value of 'item' to 'string' */
 
@@ -726,19 +732,22 @@
 
    /* Adds 'data' (a string) to the list box 'id' */
 
-::method AddListEntry unguarded
-   use arg id, data
-   if arg(2,'o') = 1 | data = "DATA" then return -1
-   return self~BoxMessage(id, 0x00000180, 0, "T" || data) + 1
+::method addListEntry unguarded
+   use strict arg id, data
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   else return listBox~add(data)
 
    /* Inserts 'data' (a string) into the list box 'id'. The new item */
    /* will be inserted after that with 'index' */
 
-::method InsertListEntry unguarded
-   use arg id, index, data
-   if arg(3,'o') = 1 | data = "DATA" then return -1
-   if arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
-   return self~BoxMessage(id, 0x00000181, index-1, "T" || data) + 1
+::method insertListEntry unguarded
+   use strict arg id, index = (-2), data
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+
+   args = arg(2, 'A')
+   return listBox~sendWith("INSERT", args)
 
    /* Deletes an item from a list box. */
    /* For argument 'index' don't use string but the index */
@@ -777,13 +786,11 @@
 
    /* Returns the text string of entry index */
 
-::method GetListEntry unguarded
-   use arg id, ndx
-   if id~DataType("N") = 0 then id = self~resolveSymbolicId(id)
-   if id = -1 then return -1
-   len = SendWinMsg("DLG", self~dlgHandle, id, 0x0000018A, ndx-1,0)
-   if len <= 0 then return ""
-   else return SendWinMsg("PTR", self~dlgHandle, id, 0x00000189, ndx-1,"G" || len+1)
+::method getListEntry unguarded
+   use strict arg id, indexx
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~getText
 
    /* Changes the item at 'index' with 'dataString' */
 

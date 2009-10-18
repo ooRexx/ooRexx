@@ -285,49 +285,6 @@ RexxClassObject oodClass4controlType(RexxMethodContext *c, oodControl_t controlT
 
 
 /**
- * Get the text of an item in a list box or a combo box.
- *
- * @param c           Context we are operating in.
- * @param pcdc        Pointer to a dialog control C self.
- * @param index       The one based index of the item
- * @param textLenMsg  The appropriate get text length message.
- * @param textMsg     The appropriate get text message
- *
- * @return The Rexx string object that represents the text.
- *
- * @remarks  The process of getting the text for an item in a list box and an
- *           item in a combo box is exactly the, except for the specific
- *           messages being sent.
- */
-RexxStringObject getBoxText(RexxMethodContext *c, pCDialogControl pcdc, uint32_t index, uint32_t textLenMsg, uint32_t textMsg)
-{
-    RexxStringObject result = c->NullString();
-
-    if ( index-- > 0 )
-    {
-        LRESULT l = SendMessage(pcdc->hCtrl, textLenMsg, index, 0);
-        if ( l > 0 )
-        {
-            char *buf = (char *)malloc(l + 1);
-            if ( buf == NULL )
-            {
-                outOfMemoryException(c->threadContext);
-                return result;
-            }
-
-            l = SendMessage(pcdc->hCtrl, textMsg, index, (LPARAM)buf);
-            if ( l > 0 )
-            {
-                result = c->String(buf);
-            }
-            free(buf);
-        }
-    }
-    return result;
-}
-
-
-/**
  *  Methods for the .DialogControl class.
  */
 #define DIALOGCONTROL_CLASS        "DialogControl"
@@ -1151,6 +1108,74 @@ RexxMethod4(RexxObjectPtr, e_style, OPTIONAL_CSTRING, _style1, OPTIONAL_CSTRING,
 #define LISTBOX_CLASS   "ListBox"
 
 
+/**
+ * Get the text of an item in a list box or a combo box.
+ *
+ * @param c           Context we are operating in.
+ * @param pcdc        Pointer to a dialog control C self.
+ * @param index       The one based index of the item
+ * @param textLenMsg  The appropriate get text length message.
+ * @param textMsg     The appropriate get text message
+ *
+ * @return The Rexx string object that represents the text.
+ *
+ * @remarks  The process of getting the text for an item in a list box and an
+ *           item in a combo box is exactly the, except for the specific
+ *           messages being sent.
+ */
+RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, uint32_t index, uint32_t textLenMsg, uint32_t textMsg)
+{
+    RexxStringObject result = c->NullString();
+
+    if ( index-- > 0 )
+    {
+        LRESULT l = SendMessage(pcdc->hCtrl, textLenMsg, index, 0);
+        if ( l > 0 )
+        {
+            char *buf = (char *)malloc(l + 1);
+            if ( buf == NULL )
+            {
+                outOfMemoryException(c->threadContext);
+                return result;
+            }
+
+            l = SendMessage(pcdc->hCtrl, textMsg, index, (LPARAM)buf);
+            if ( l > 0 )
+            {
+                result = c->String(buf);
+            }
+            free(buf);
+        }
+    }
+    return result;
+}
+
+
+int32_t cbLbInsert(RexxMethodContext *context, pCDialogControl pcdc, int32_t index, CSTRING text, oodControl_t ctrl)
+{
+    uint32_t msg;
+
+    if ( argumentOmitted(1) )
+    {
+        msg = (ctrl == winComboBox ? CB_GETCURSEL : LB_GETCURSEL);
+        index = (int32_t)SendMessage(pcdc->hCtrl, msg, 0, 0);
+    }
+    if ( index >= 0 )
+    {
+        index++;   // Insert after
+    }
+
+    msg = (ctrl == winComboBox ? CB_INSERTSTRING : LB_INSERTSTRING);
+
+    int32_t ret = (int32_t)SendMessage(pcdc->hCtrl, msg, (WPARAM)index, (LPARAM)text);
+    if ( ret >= 0 )
+    {
+        ret++;
+    }
+    return ret;
+}
+
+
 /** ListBox::getText()
  *
  *  Return the text of the item at the specified index.
@@ -1162,7 +1187,58 @@ RexxMethod4(RexxObjectPtr, e_style, OPTIONAL_CSTRING, _style1, OPTIONAL_CSTRING,
  */
 RexxMethod2(RexxObjectPtr, lb_getText, uint32_t, index, CSELF, pCSelf)
 {
-    return getBoxText(context, (pCDialogControl)pCSelf, index, LB_GETTEXTLEN, LB_GETTEXT);
+    return cbLbGetText(context, (pCDialogControl)pCSelf, index, LB_GETTEXTLEN, LB_GETTEXT);
+}
+
+/** ListBox::add()
+ *
+ *  Adds a string item to the list box.
+ *
+ *  @param  The string to add.
+ *
+ *  @return  The 1-based index of the added item on success.  -1 (LB_ERR) on
+ *           error and -2 (LB_ERRSPACE) if there is not enough room for the new
+ *           string.
+ */
+RexxMethod2(int32_t, lb_add, CSTRING, text, CSELF, pCSelf)
+{
+    int32_t ret = (int32_t)SendMessage(((pCDialogControl)pCSelf)->hCtrl, LB_ADDSTRING, 0, (LPARAM)text);
+    if ( ret >= 0 )
+    {
+        ret++;
+    }
+    return ret;
+}
+
+/** ListBox::inset()
+ *
+ *  Inserts a string item into the list box at the index specified.
+ *
+ *  @param  index  [OPTIONAL] The one-based index of where the item is to be
+ *                 inerted.  If index is -1, the item is inserted at the end of
+ *                 the list.  When this argument is omitted, exactly where the
+ *                 item is inserted depends on if the list box is
+ *                 single-selection or multi-selection.  See the notes.
+ *                 item
+ *
+ *  @param  text   The text of the item being inserted.
+ *
+ *  @return  The 1-based index of the inserted item on success.  -1 (LB_ERR) on
+ *           error and -2 (LB_ERRSPACE) if there is not enough room for the new
+ *           item.
+ *
+ *  @notes  For a multiple-selection list box, when the index argument is
+ *            omitted, the item is inserted after the item with the current
+ *            focus. If no item has the current focus, the item is inserted as
+ *            the first item.
+ *
+ *            For a single-selection list box, when the index argument is
+ *            omitted, the item is inserted after the currently selected item.
+ *            If no item is selected, the item is inserted as the first item.
+ */
+RexxMethod3(int32_t, lb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, pCSelf)
+{
+    return cbLbInsert(context, (pCDialogControl)pCSelf, index, text, winListBox);
 }
 
 
@@ -1182,5 +1258,48 @@ RexxMethod2(RexxObjectPtr, lb_getText, uint32_t, index, CSELF, pCSelf)
  */
 RexxMethod2(RexxStringObject, cb_getText, uint32_t, index, CSELF, pCSelf)
 {
-    return getBoxText(context, (pCDialogControl)pCSelf, index, CB_GETLBTEXTLEN, CB_GETLBTEXT);
+    return cbLbGetText(context, (pCDialogControl)pCSelf, index, CB_GETLBTEXTLEN, CB_GETLBTEXT);
+}
+
+
+/** ComboBox::add()
+ *
+ *  Adds a string entry to the cobo box.
+ *
+ *  @param  The string to add.
+ *
+ *  @return  The 1-based index of the added entry on success.  -1 (CB_ERR) on
+ *           error and -2 (CB_ERRSPACE) if there is not enough room for the new
+ *           entry.
+ */
+RexxMethod2(int32_t, cb_add, CSTRING, text, CSELF, pCSelf)
+{
+    int32_t ret = (int32_t)SendMessage(((pCDialogControl)pCSelf)->hCtrl, CB_ADDSTRING, 0, (LPARAM)text);
+    if ( ret >= 0 )
+    {
+        ret++;
+    }
+    return ret;
+}
+
+
+/** ComboBox::insert()
+ *
+ *  Inserts a string entry into the cobo box at the index specified.
+ *
+ *  @param  index  [OPTIONAL]  The one-based index of where the entry is to be
+ *                 inerted.  If index is -1, the entry is inserted at the end of
+ *                 the combo box.  When this argument is omitted, the entry is
+ *                 inserted after the current selected entry.  If there is no
+ *                 selected entry, the new entry is inserted as the first entry.
+
+ *  @param  text   The string to insert.
+ *
+ *  @return  The 1-based index of the added entry on success.  -1 (CB_ERR) on
+ *           error and -2 (CB_ERRSPACE) if there is not enough room for the new
+ *           entry.
+ */
+RexxMethod3(int32_t, cb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, pCSelf)
+{
+    return cbLbInsert(context, (pCDialogControl)pCSelf, index, text, winComboBox);
 }

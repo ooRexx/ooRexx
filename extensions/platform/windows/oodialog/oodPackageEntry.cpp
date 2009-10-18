@@ -225,8 +225,9 @@ REXX_METHOD_PROTOTYPE(pbdlg_getFontName);
 REXX_METHOD_PROTOTYPE(pbdlg_getFontSize);
 REXX_METHOD_PROTOTYPE(pbdlg_getAutoDetect);
 REXX_METHOD_PROTOTYPE(pbdlg_setAutoDetect);
-REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
+REXX_METHOD_PROTOTYPE(pbdlg_sendNumericMsg);
 REXX_METHOD_PROTOTYPE(pbdlg_get);
+REXX_METHOD_PROTOTYPE(pbdlg_getDlgHandle);
 REXX_METHOD_PROTOTYPE(pbdlg_isDialogActive);
 REXX_METHOD_PROTOTYPE(pbdlg_stopIt);
 REXX_METHOD_PROTOTYPE(pbdlg_show);
@@ -466,9 +467,13 @@ REXX_METHOD_PROTOTYPE(bc_test_cls);
 
 // ListBox
 REXX_METHOD_PROTOTYPE(lb_getText);
+REXX_METHOD_PROTOTYPE(lb_add);
+REXX_METHOD_PROTOTYPE(lb_insert);
 
 // ComboBox
 REXX_METHOD_PROTOTYPE(cb_getText);
+REXX_METHOD_PROTOTYPE(cb_add);
+REXX_METHOD_PROTOTYPE(cb_insert);
 
 // .Rect
 REXX_METHOD_PROTOTYPE(rect_init);
@@ -649,8 +654,9 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(pbdlg_setDlgFont,               pbdlg_setDlgFont),
     REXX_METHOD(pbdlg_getAutoDetect,            pbdlg_getAutoDetect),
     REXX_METHOD(pbdlg_setAutoDetect,            pbdlg_setAutoDetect),
-    REXX_METHOD(pbdlg_getDlgHandle,             pbdlg_getDlgHandle),
+    REXX_METHOD(pbdlg_sendNumericMsg,           pbdlg_sendNumericMsg),
     REXX_METHOD(pbdlg_get,                      pbdlg_get),
+    REXX_METHOD(pbdlg_getDlgHandle,             pbdlg_getDlgHandle),
     REXX_METHOD(pbdlg_isDialogActive,           pbdlg_isDialogActive),
     REXX_METHOD(pbdlg_show,                     pbdlg_show),
     REXX_METHOD(pbdlg_showWindow,               pbdlg_showWindow),
@@ -881,9 +887,15 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(bc_test,                        bc_test),
     REXX_METHOD(bc_test_cls,                    bc_test_cls),
 
+    // ListBox
     REXX_METHOD(lb_getText,                     lb_getText),
+    REXX_METHOD(lb_add,                         lb_add),
+    REXX_METHOD(lb_insert,                      lb_insert),
 
+    // ComboBox
     REXX_METHOD(cb_getText,                     cb_getText),
+    REXX_METHOD(cb_add,                         cb_add),
+    REXX_METHOD(cb_insert,                      cb_insert),
 
     REXX_METHOD(rect_init,                      rect_init),
     REXX_METHOD(rect_left,                      rect_left),

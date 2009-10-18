@@ -1315,17 +1315,8 @@
 ::class 'ListBox' subclass DialogControl public
 
 ::method getText external "LIBRARY oodialog lb_getText"
-
-::method Add
-   use arg data
-   if arg(1,'o') = 1 then return -1
-   return self~Message2Parent(0x00000180, 0, "T" || data) +1
-
-::method Insert
-   use arg index, data
-   if arg(2,'o') = 1 then return -1
-   if arg(1,"o") = 1 then index = self~SelectedIndex
-   return self~Message2Parent(0x00000181, index-1, "T" || data) + 1
+::method add external "LIBRARY oodialog lb_add"
+::method insert external "LIBRARY oodialog lb_insert"
 
 ::method Delete
    use arg index
@@ -1345,11 +1336,11 @@
        index = self~Message2Parent(0x0000018F, ndx-1, "T" || dataString)  /* find prefix */
    if index >= 0 then return index + 1; else return 0
 
-::method SelectedIndex
+::method selectedIndex
    return self~Message2Parent(0x00000188, 0, 0) + 1
 
 ::method Selected
-   return self~GetText(self~SelectedIndex)
+   return self~getText(self~SelectedIndex)
 
 ::method SelectIndex
    use arg ndx
@@ -1392,8 +1383,8 @@
 ::method SelectedItems
    return self~Message2Parent(0x00000190, 0, 0)
 
-::method SelectedIndexes
-   return self~oDlg~internalGetItemData(self~id, self~hDlg, 4)  -- TODO this
+::method selectedIndexes
+   return self~oDlg~getListBoxData(self~id)
 
 ::method MakeFirstVisible
    use arg ndx
@@ -1402,7 +1393,6 @@
 
 ::method GetFirstVisible
    return self~Message2Parent(0x0000018E, 0, 0) + 1
-
 
 ::method Modify
    use arg index, dataString
@@ -1456,24 +1446,15 @@
 ::class 'ComboBox' subclass DialogControl public
 
 ::method getText external "LIBRARY oodialog lb_getText"
+::method add external "LIBRARY oodialog cb_add"
+::method insert external "LIBRARY oodialog cb_insert"
 
-::method Add
-   use arg data
-   if arg(1,'o') = 1 then return -1
-   return self~Message2Parent(0x00000143, 0, "T" || data) + 1
-
-::method Insert
-   use arg index, data
-   if arg(2,'o') = 1 then return -1
-   if arg(1,"o") = 1 then index = self~SelectedIndex
-   return self~Message2Parent(0x0000014A, index-1, "T" || data) + 1
-
-::method Delete
+::method Delete      -- CB_DELETESTRING             0x0144
    use arg index
    if arg(1,"o") = 1 then index = self~SelectedIndex
    return self~Message2Parent(0x00000144, index-1, 0)
 
-::method DeleteAll
+::method DeleteAll   -- CB_RESETCONTENT             0x014B
    return self~Message2Parent(0x0000014B, 0, 0)
 
 ::method Find
@@ -1490,8 +1471,8 @@
 ::method SelectedIndex
    return self~Message2Parent(0x00000147, 0, 0) + 1
 
-::method Selected
-   return self~GetText(self~SelectedIndex)
+::method selected
+   return self~getText(self~SelectedIndex)
 
 ::method SelectIndex
    use arg ndx
