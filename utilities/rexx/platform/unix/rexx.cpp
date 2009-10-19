@@ -110,8 +110,8 @@ int main (int argc, char **argv)
 
         case 'v': case 'V':            /* display version string            */
           ptr = RexxGetVersionInformation();
-          fprintf(stderr, ptr);
-          fprintf(stderr, "\n");
+          fprintf(stdout, ptr);
+          fprintf(stdout, "\n");
           RexxFreeMemory(ptr);
           return 0;
 

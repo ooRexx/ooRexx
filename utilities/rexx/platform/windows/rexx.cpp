@@ -121,7 +121,8 @@ int __cdecl main(int argc, char *argv[])
             {
                 char *ptr = RexxGetVersionInformation();
                 if (ptr) {
-                    printf(ptr, "Interpreter");
+                    fprintf(stdout, ptr);
+                    fprintf(stdout, "\n");
                     RexxFreeMemory(ptr);
                 }
             }
