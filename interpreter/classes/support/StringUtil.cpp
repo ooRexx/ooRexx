@@ -156,13 +156,13 @@ size_t StringUtil::pos(const char *stringData, size_t haystack_length, RexxStrin
     // get the two working lengths
     size_t needle_length = needle->getLength();
     // make sure the range is capped
-    _range = Numerics::minVal(_range, haystack_length - _start + 1);
+    _range = Numerics::minVal(_range, haystack_length - _start);
 
     // ok, there are a few quick checks we can perform.  If the needle is
     // bigger than the haystack, or the needle is a null string or
     // our haystack length after adjusting to the starting position
     // zero, then we can quickly return zero.
-    if (_start > haystack_length || needle_length > _range || needle_length == 0)
+    if (_start >= haystack_length || needle_length > _range || needle_length == 0)
     {
         return 0;
     }
