@@ -1859,10 +1859,7 @@ Output:
 
 ::METHOD readObject CLASS
     use strict arg handler
-    s = self~new(handler~readNumber)
-    handler~publish(s)
-    -- just let the queue handler to the rest of the work.
-    s~readObject(handler)
+    return self~new(handler~readNumber)
 
 ::method init                 -- create an instance, memorizes the size
   expose size

@@ -104,7 +104,7 @@
 *    @param pos The entry to restore.
 */
 ::METHOD FromSerializedData PRIVATE
-    expose objectIndex currentPos serialObjects references current package canRead canPublish
+    expose objectIndex currentPos serialObjects references current package canRead
     use strict arg pos, stringOnly=(.false)
     if pos = 0 then
         return .nil
@@ -128,20 +128,15 @@
             raise syntax 93.900 array ("Could not load class" className)
         current = 3
         if class~hasMethod("readObject") then do
-            canPublish = .true
-            class~readObject(self)
-            if .true == canPublish then
-                raise syntax 93.900 array ("Did not publish an object:" class)
-            canRead = .false
-            object = objectIndex[pos]
+            canRead = 2
+            object = class~readObject(self)
         end
-        else do
+        else
             object = class~new
-            objectIndex[pos] = object
-            canRead = .true
-            object~readObject(self)
-            canRead = .false
-        end
+        objectIndex[pos] = object
+        canRead = .true
+        object~readObject(self)
+        canRead = .false
     end
     else raise syntax 93.900 array ("Invalid data:" serialObjects[pos])
     currentPos = .nil
@@ -273,16 +268,6 @@ Say "       Object: total: "stat.2.1 "unique:" stat.2.2
     buffer~append(" ")
     buffer~append(object)
 
--- Callback for classes to pubish a new object from readObject class method
-::METHOD publish
-    expose objectIndex currentPos canPublish canRead
-    use strict arg object
-    if .true \= canPublish then
-        raise syntax 93.900 array ("Not permitted")
-    objectIndex[currentPos] = object
-    canRead = .true
-    canPublish = .false
-
 -- Read next object.
 ::METHOD readObject
     expose references current canRead
@@ -296,8 +281,8 @@ Say "       Object: total: "stat.2.1 "unique:" stat.2.2
 
 -- Read next number
 ::METHOD readNumber
-    expose references current canRead canPublish
-    if .true \= canRead & .true \= canPublish then
+    expose references current canRead
+    if .true \= canRead, 2 \= canRead then
         raise syntax 93.900 array ("Not permitted")
     if current > references~items then
         raise syntax 93.100 array ("No data available")
@@ -307,8 +292,8 @@ Say "       Object: total: "stat.2.1 "unique:" stat.2.2
 
 -- Read next string object
 ::METHOD readString
-    expose references current canRead canPublish
-    if .true \= canRead & .true \= canPublish then
+    expose references current canRead
+    if .true \= canRead, 2 \= canRead then
         raise syntax 93.100 array ("Not permitted")
     if current > references~items then
         raise syntax 93.100 array ("No data available")
