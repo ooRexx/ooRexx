@@ -105,7 +105,7 @@
 */
 ::METHOD FromSerializedData PRIVATE
     expose objectIndex currentPos serialObjects references current package canRead canPublish
-    use strict arg pos
+    use strict arg pos, stringOnly=(.false)
     if pos = 0 then
         return .nil
     -- check if there is something in the cache for the index
@@ -116,7 +116,7 @@
 
     references = serialObjects[pos]~makeArray(" ")
     -- A string object
-    if references[1] = "S" then do
+    if references[1] = "S" | stringOnly then do
         object = references[2]~decodeBase64
         objectIndex[pos] = object
     end
@@ -296,12 +296,25 @@ Say "       Object: total: "stat.2.1 "unique:" stat.2.2
 
 -- Read next number
 ::METHOD readNumber
-    expose references current canRead
-    if .true \= canRead then
-        raise syntax 93.100 array ("Not permitted")
+    expose references current canRead canPublish
+    if .true \= canRead & .true \= canPublish then
+        raise syntax 93.900 array ("Not permitted")
     if current > references~items then
         raise syntax 93.100 array ("No data available")
     object = references[current]
+    current = current + 1
+    return object
+
+-- Read next string object
+::METHOD readString
+    expose references current canRead canPublish
+    if .true \= canRead & .true \= canPublish then
+        raise syntax 93.100 array ("Not permitted")
+    if current > references~items then
+        raise syntax 93.100 array ("No data available")
+    object = self~fromSerializedData(references[current], .true)
+    if \object~isA(.String) then
+        raise syntax 93.100 array ("Not a string")
     current = current + 1
     return object
 

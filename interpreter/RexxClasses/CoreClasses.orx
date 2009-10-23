@@ -1859,8 +1859,9 @@ Output:
 
 ::METHOD readObject CLASS
     use strict arg handler
-    s = self~new(0)
+    s = self~new(handler~readNumber)
     handler~publish(s)
+    -- just let the queue handler to the rest of the work.
     s~readObject(handler)
 
 ::method init                 -- create an instance, memorizes the size
@@ -1878,12 +1879,6 @@ Output:
     expose size
     use strict arg handler
     handler~writeNumber(size)
-    forward class (super)
-
-::METHOD readObject
-    expose size
-    use strict arg handler
-    size = handler~readNumber(size)
     forward class (super)
 
 ::METHOD size                 -- return size
