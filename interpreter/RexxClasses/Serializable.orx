@@ -1,0 +1,307 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 2009 Rexx Language Association. All rights reserved.         */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* http://www.oorexx.org/license.html                                         */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+-- Version: 2.0
+
+/** This class offers the base functionality to serialize and deserialize data.
+* It manages data handlers for managing a specific data type and offers a public
+* function to serialize data and deserialize it.
+* Assume variable A holds an object of a class inheriting from Serializable.
+* In this case the following command will return the serialized object:
+* <code>buffer = .SerializeFunctions~Serialize(A)</code>
+*
+* Deserializing works the same way (B will be like A~copy with references copied):
+*    <code>B = .SerializableFunctions~DeSerialize(buffer)</code>
+*
+* The serializing and deserializing process is iterative. Thus there can be as
+* many objects nested as desired - as long as the memory is not full. Recursive
+* data structure should cause no problem.
+******************************************************************************/
+::CLASS SerializeFunctions PUBLIC
+
+::METHOD Serialize CLASS
+    use strict arg data, buffer=(.MutableBuffer~new)
+    signal on syntax
+    -- create a new serializer instance, just for data encapsulation
+    serializer = self~new(buffer)
+    -- return the serialized data
+    return serializer~toSerializableDataCtrl(data)
+
+    syntax: raise propagate
+
+::METHOD DeSerialize CLASS
+    -- called with a string or mutable buffer.
+    use strict arg Buffer, package
+    deserializer = self~new(buffer, package)
+    return deserializer~fromSerializedDataCtrl(1)
+    syntax: raise propagate
+
+/**************************** INSTANCE METHODS ********************************/
+
+::METHOD Init PRIVATE
+    -- save the handlers and the string buffer
+    expose buffer package
+    use arg buffer, package
+
+/** Control the deserialization. This method works on the current serializer
+*    instance.
+*    @param offset The offset specifies the position the serialized data starts
+*        in the buffer.
+*/
+::METHOD FromSerializedDataCtrl PRIVATE
+    expose objectIndex buffer serialObjects
+    parse arg Offset
+    -- split the line
+    limit = buffer~pos(";", offset)
+    if limit < 2 then
+        raise syntax 93.900 array ("Unable to locate data end marker")
+    serialObjects = buffer~substr(offset, limit-1)~makeArray(".")
+    -- initialize the object index
+    objectIndex = .array~new(serialObjects~items)
+    do i = serialObjects~items to 1 by -1
+        self~fromSerializedData(i)
+    end
+    -- the top index stores the first object referencing all other objects
+    head = objectIndex[1]
+    drop objectIndex serialObject
+    return head
+
+/**
+*    Do the actual deserialization on the specified position.
+*    @param pos The entry to restore.
+*/
+::METHOD FromSerializedData PRIVATE
+    expose objectIndex currentPos serialObjects references current package canRead canPublish
+    use strict arg pos
+    if pos = 0 then
+        return .nil
+    -- check if there is something in the cache for the index
+    if objectIndex~hasIndex(pos) then
+        return objectIndex[pos]
+    -- store the current position for FromSerializedDataPut
+    currentPos = pos
+
+    references = serialObjects[pos]~makeArray(" ")
+    -- A string object
+    if references[1] = "S" then do
+        object = references[2]~decodeBase64
+        objectIndex[pos] = object
+    end
+    -- an object
+    else if references[1] = "L" then do
+        className = self~fromSerializedData(references[2])
+        class = package~findClass(className)
+        if class = .nil then
+            raise syntax 93.900 array ("Could not load class" className)
+        current = 3
+        if class~hasMethod("readObject") then do
+            canPublish = .true
+            class~readObject(self)
+            if .true == canPublish then
+                raise syntax 93.900 array ("Did not publish an object:" class)
+            canRead = .false
+            object = objectIndex[pos]
+        end
+        else do
+            object = class~new
+            objectIndex[pos] = object
+            canRead = .true
+            object~readObject(self)
+            canRead = .false
+        end
+    end
+    else raise syntax 93.900 array ("Invalid data:" serialObjects[pos])
+    currentPos = .nil
+    return object
+
+::METHOD ToSerializableDataCtrl PRIVATE
+    expose objectList objectIndex buffer stringIndex stat. canWrite
+
+    use strict arg object
+    -- initalize some containers
+    -- store the object -> id relation
+    objectIndex = .IdentityTable~new
+    -- store the string -> id relation
+    stringIndex = .Table~new
+    -- store id -> object relation
+    objectList = .Array~new
+/*    
+    do i = 1 to 2
+        do j = 1 to 2 
+            stat.i.j = 0
+        end
+    end
+*/
+    -- the first item to be serialized is no. 1
+    position = 1
+    objectList[1] = object
+    -- work until all objects have been serialized
+    do until position > objectList~size
+        -- get the current object
+        object = objectList[position]
+        -- only append dot after the first element
+        if position > 1 then buffer~append(".")
+        -- check the way to serialize it
+        -- match string diretly, not via handler
+        if object~class = .String then do
+            buffer~append("S ")
+            buffer~append(object~encodeBase64)
+        end
+        else if object~isInstanceOf(.Serializable) then do
+                buffer~append("L ")
+                buffer~append(self~toSerializableData(object~class~id))
+                -- Ask the object to store its data. Provide self as callback.
+                canWrite = .true
+                signal on syntax name syntax_writeObject
+                object~writeObject(self)
+                signal off syntax
+                canWrite = .false
+        end
+        -- no handler found and object is not .nil, so raise an error
+        else raise syntax 93.900 array ("Can't serialize object" position":",
+            object~string "Class" object~class)
+        -- go to the next position
+        position += 1
+    end
+    -- append object structure end marker
+    buffer~append(";")
+    -- return the array of lines
+/*
+Say "strings:" StringIndex~items
+Say "other objects:" ObjectIndex~items
+Say "cache: String: total:" stat.1.1 "unique:" stat.1.2
+Say "       Object: total: "stat.2.1 "unique:" stat.2.2
+*/
+    return buffer
+
+    syntax_writeObject:
+        raise propagate description ("writeObject failed for object" object)
+    syntax: raise propagate
+
+::METHOD ToSerializableData PRIVATE
+    expose objectList objectIndex stringIndex stat.
+    use strict arg object
+    if object~class = .String then do
+        -- work on strings
+--        stat.1.1 += 1
+        -- this cache check will avoid serializing the same string again
+        index = stringIndex[object]
+        if index \= .nil then
+            return index
+--        stat.1.2 += 1
+        -- the ID will be the next ObjectList entry
+        currPos = objectList~size + 1
+        -- Store the ID -> string and string -> ID relation
+        objectList[currPos] = object
+        stringIndex[object] = currPos
+        return currpos
+    end
+    else if object = .nil then
+        return 0
+    else do
+        -- work on other objects
+--        stat.2.1 += 1
+        -- this cache check will avoid serializing the same object again
+        index = objectIndex[object]
+        if index \= .nil then
+            return index
+--        stat.2.2 += 1
+        -- the ID will be the next ObjectList entry
+        currPos = objectList~size + 1
+        -- Store the ID -> object and object -> ID relation
+        objectList[currPos] = object
+        objectIndex[object] = currPos
+        return CurrPos
+    end
+
+-- Write an object
+::METHOD writeObject
+    expose buffer canWrite
+    signal on syntax
+    if .true \= canWrite then
+        raise syntax 93.100 array ("Not permitted")
+    use strict arg object
+    pos = self~toSerializableData(object)
+    buffer~append(" ")
+    buffer~append(pos)
+    return
+
+    syntax: say object
+    raise propagate
+
+-- Write a number
+::METHOD writeNumber
+    expose buffer canWrite
+    if .true \= canWrite then
+        raise syntax 93.100 array ("Not permitted")
+    use strict arg object
+    if \datatype(object, "N") then
+        raise syntax 93.100 array ("Not a number: "||object)
+    buffer~append(" ")
+    buffer~append(object)
+
+-- Callback for classes to pubish a new object from readObject class method
+::METHOD publish
+    expose objectIndex currentPos canPublish canRead
+    use strict arg object
+    if .true \= canPublish then
+        raise syntax 93.900 array ("Not permitted")
+    objectIndex[currentPos] = object
+    canRead = .true
+    canPublish = .false
+
+-- Read next object.
+::METHOD readObject
+    expose references current canRead
+    if .true \= canRead then
+        raise syntax 93.100 array ("Not permitted")
+    if current > references~items then
+        raise syntax 93.100 array ("No data available")
+    object = self~fromSerializedData(references[current])
+    current = current + 1
+    return object
+
+-- Read next number
+::METHOD readNumber
+    expose references current canRead
+    if .true \= canRead then
+        raise syntax 93.100 array ("Not permitted")
+    if current > references~items then
+        raise syntax 93.100 array ("No data available")
+    object = references[current]
+    current = current + 1
+    return object
+
