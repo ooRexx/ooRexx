@@ -34,10 +34,6 @@
 /* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-/* ========================================================================= */
-/* Template for an OODialog GUI by Jon Wolfers www.sahananda.fwbo.net/rexx   */
-/* ========================================================================= */
-/*                                                                           */
 /* How to use this template:                                                 */
 /*                                                                           */
 /* This template allows you to create dialogs with OODialog without need     */
@@ -53,16 +49,6 @@
 /* Not all Dialogs require all the methods listed in the template.           */
 /* If you are not adding any control through a particular method then you    */
 /* can delete that method and let the superclass handle it                   */
-/*                                                                           */
-/* There is no copywrite applied to the work of preparing this template      */
-/* You may copy and adapt it as you like removing whatever you like and      */
-/* you are under no obligation to credit me in your work.                    */
-/* At the same time, this is provided as-is and I cannot Guarantee that any  */
-/* particular Dialog based on this template will work.                       */
-/*                                                                           */
-/* I am happy to accept corrections or suggestions for improvements          */
-/*                                                                           */
-/* Sahananda @ wlbc.co.uk                                    May 2005        */
 /*                                                                           */
 /* ========================================================================= */
 
@@ -254,7 +240,7 @@ exit -1
 /* self~createStaticText(id, x,y,cx,cy,'options','text')                     */
 /* self~create[Black|White|Gray]Rect,x,y,cx,cy,'options',id)                 */
 /* etc. etc. ...                                                             */
-/* other controls should have unique ids over 10 (or -1 for static text)     */
+/* other controls should have unique ids over 100 (or -1 for static text)    */
 
                         /* ------------------------------------------------- */
                         /* You can add a menu here using self~addMenuItem &  */
@@ -276,7 +262,7 @@ exit -1
                         /* ------------------------------------------------- */
 
 /*  for example:                                                             */
-/*  List = self~newListView([id])                                         */
+/*  List = self~newListView([id])                                            */
 /*  if List \= .Nil then do                                                  */
 /*    list~setImageList(imageList, .Image~toID(LVSIL_SMALL))                 */
 /*    list~AddStyle("[Style1 style2...]")                                    */
