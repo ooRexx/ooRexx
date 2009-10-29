@@ -1109,27 +1109,74 @@ RexxMethod4(RexxObjectPtr, e_style, OPTIONAL_CSTRING, _style1, OPTIONAL_CSTRING,
 
 
 /**
+ * Gets an array of the selected items indexes from a multiple selection list
+ * box.
+ *
+ * @param hwnd   Handle of the list box.
+ * @param count  The count of selected items / size of the array is returned
+ *               here.  On a memory allocation error this is set to -1.  If
+ *               there are no selected items this is set to 0.
+ *
+ * @return A pointer to a buffer containing the indexes.  Null is returned if
+ *         there is a memory allocation, or if there are no selected items.  The
+ *         caller is responsible for freeing the buffer if non-null is returned.
+ *
+ * @assumes The caller has already determined the list box is a multiple
+ *          selection list box.
+ */
+static int32_t *getLBSelectedItems(HWND hwnd, int32_t *count)
+{
+    int32_t c = 0;
+    int32_t *items = NULL;
+
+    c = (int32_t)SendMessage(hwnd, LB_GETSELCOUNT, 0, 0);
+    if ( c < 1 )
+    {
+        c = 0;
+        goto done_out;
+    }
+
+    items = (int32_t *)malloc(c * sizeof(int32_t));
+    if ( items == NULL )
+    {
+        c = -1;
+        goto done_out;
+    }
+
+    if ( SendMessage(hwnd, LB_GETSELITEMS, c, (LPARAM)items) != c )
+    {
+        // Really should never happen.
+        free(items);
+        c = 0;
+        items = NULL;
+    }
+
+done_out:
+    *count = c;
+    return items;
+}
+
+
+/*
+ * Much of the functionality of the list box and combo box is basically the
+ * same.  Some common functions follow that merely use different Window
+ * messages.
+ */
+
+/**
  * Get the text of an item in a list box or a combo box.
  *
- * @param c           Context we are operating in.
- * @param pcdc        Pointer to a dialog control C self.
- * @param index       The one based index of the item
- * @param textLenMsg  The appropriate get text length message.
- * @param textMsg     The appropriate get text message
- *
  * @return The Rexx string object that represents the text.
- *
- * @remarks  The process of getting the text for an item in a list box and an
- *           item in a combo box is exactly the, except for the specific
- *           messages being sent.
  */
-RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, uint32_t index, uint32_t textLenMsg, uint32_t textMsg)
+RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, uint32_t index, oodControl_t ctrl)
 {
     RexxStringObject result = c->NullString();
 
     if ( index-- > 0 )
     {
-        LRESULT l = SendMessage(pcdc->hCtrl, textLenMsg, index, 0);
+        uint32_t msg = (ctrl == winComboBox ? CB_GETLBTEXTLEN : LB_GETTEXTLEN);
+
+        LRESULT l = SendMessage(pcdc->hCtrl, msg, index, 0);
         if ( l > 0 )
         {
             char *buf = (char *)malloc(l + 1);
@@ -1139,7 +1186,8 @@ RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, uint32_
                 return result;
             }
 
-            l = SendMessage(pcdc->hCtrl, textMsg, index, (LPARAM)buf);
+            msg = (ctrl == winComboBox ? CB_GETLBTEXT : LB_GETTEXT);
+            l = SendMessage(pcdc->hCtrl, msg, index, (LPARAM)buf);
             if ( l > 0 )
             {
                 result = c->String(buf);
@@ -1151,29 +1199,68 @@ RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, uint32_
 }
 
 
-int32_t cbLbInsert(RexxMethodContext *context, pCDialogControl pcdc, int32_t index, CSTRING text, oodControl_t ctrl)
+/**
+ * Insert an item into a single selection list box or a combo box.  Note that
+ * this will not work properly for a multiple selection list box.
+ */
+int32_t cbLbInsert(RexxMethodContext *context, HWND hCtrl, int32_t index, CSTRING text, oodControl_t ctrl)
 {
     uint32_t msg;
 
     if ( argumentOmitted(1) )
     {
         msg = (ctrl == winComboBox ? CB_GETCURSEL : LB_GETCURSEL);
-        index = (int32_t)SendMessage(pcdc->hCtrl, msg, 0, 0);
+        index = (int32_t)SendMessage(hCtrl, msg, 0, 0);
     }
-    if ( index >= 0 )
+    else
     {
-        index++;   // Insert after
+        if ( index > 0 )
+        {
+            index--;
+        }
+        else if ( index < -1 )
+        {
+            index = -1;
+        }
     }
 
     msg = (ctrl == winComboBox ? CB_INSERTSTRING : LB_INSERTSTRING);
 
-    int32_t ret = (int32_t)SendMessage(pcdc->hCtrl, msg, (WPARAM)index, (LPARAM)text);
+    int32_t ret = (int32_t)SendMessage(hCtrl, msg, (WPARAM)index, (LPARAM)text);
     if ( ret >= 0 )
     {
         ret++;
     }
     return ret;
 }
+
+int32_t cbLbSelect(HWND hCtrl, CSTRING text, oodControl_t ctrl)
+{
+    uint32_t msg = (ctrl == winComboBox ? CB_FINDSTRING : LB_FINDSTRING);
+
+    int32_t index = (int32_t)SendMessage(hCtrl, msg, 0, (LPARAM)text);
+    if ( index < 0 )
+    {
+        return 0;
+    }
+
+    msg = (ctrl == winComboBox ? CB_SETCURSEL : LB_SETCURSEL);
+
+    // LB_SETCURSEL is only for single selection list boxes and LB_SETSEL is
+    // only for multiple selection list boxes
+
+    if ( msg == LB_SETCURSEL && ! isSingleSelectionListBox(hCtrl) )
+    {
+        index = (SendMessage(hCtrl, LB_SETSEL, TRUE, index) == 0 ? index + 1 : 0);
+    }
+    else
+    {
+        index = (SendMessage(hCtrl, msg, index, 0) < 0 ? 0 : index + 1);
+    }
+
+    return index;
+}
+
 
 
 /** ListBox::getText()
@@ -1187,7 +1274,7 @@ int32_t cbLbInsert(RexxMethodContext *context, pCDialogControl pcdc, int32_t ind
  */
 RexxMethod2(RexxObjectPtr, lb_getText, uint32_t, index, CSELF, pCSelf)
 {
-    return cbLbGetText(context, (pCDialogControl)pCSelf, index, LB_GETTEXTLEN, LB_GETTEXT);
+    return cbLbGetText(context, (pCDialogControl)pCSelf, index, winListBox);
 }
 
 /** ListBox::add()
@@ -1210,42 +1297,91 @@ RexxMethod2(int32_t, lb_add, CSTRING, text, CSELF, pCSelf)
     return ret;
 }
 
-/** ListBox::inset()
+/** ListBox::insert()
  *
  *  Inserts a string item into the list box at the index specified.
  *
  *  @param  index  [OPTIONAL] The one-based index of where the item is to be
  *                 inerted.  If index is -1, the item is inserted at the end of
- *                 the list.  When this argument is omitted, exactly where the
- *                 item is inserted depends on if the list box is
- *                 single-selection or multi-selection.  See the notes.
- *                 item
+ *                 the list.  If the index is 0, the item is insererted at the
+ *                 beginning of the list.  (Numbers less than -1 are treated as
+ *                 -1.)
+ *
+ *                 When this argument is omitted, the item is inserted after the
+ *                 selected item (after the last selected item on multiple
+ *                 selection list boxes.)  If there is no selected item, the new
+ *                 item is inserted as the last item.
  *
  *  @param  text   The text of the item being inserted.
  *
  *  @return  The 1-based index of the inserted item on success.  -1 (LB_ERR) on
  *           error and -2 (LB_ERRSPACE) if there is not enough room for the new
  *           item.
- *
- *  @notes  For a multiple-selection list box, when the index argument is
- *            omitted, the item is inserted after the item with the current
- *            focus. If no item has the current focus, the item is inserted as
- *            the first item.
- *
- *            For a single-selection list box, when the index argument is
- *            omitted, the item is inserted after the currently selected item.
- *            If no item is selected, the item is inserted as the first item.
  */
 RexxMethod3(int32_t, lb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, pCSelf)
 {
-    return cbLbInsert(context, (pCDialogControl)pCSelf, index, text, winListBox);
+    HWND hwnd = ((pCDialogControl)pCSelf)->hCtrl;
+
+    if ( isSingleSelectionListBox(hwnd) )
+    {
+        return cbLbInsert(context, hwnd, index, text, winListBox);
+    }
+
+    if ( argumentOmitted(1) )
+    {
+        int32_t count;
+        int32_t *items = getLBSelectedItems(hwnd, &count);
+        if ( count < 1 || items == NULL )
+        {
+            index = -1;
+        }
+        else
+        {
+            index = items[count - 1] + 1;
+            free(items);
+        }
+    }
+    else
+    {
+        if ( index > 0 )
+        {
+            index--;
+        }
+        else if ( index < -1 )
+        {
+            index = -1;
+        }
+    }
+
+    int32_t ret = (int32_t)SendMessage(hwnd, LB_INSERTSTRING, (WPARAM)index, (LPARAM)text);
+    if ( ret >= 0 )
+    {
+        ret++;
+    }
+    return ret;
 }
 
+/** ListBox::select()
+ *
+ *  Selects the item in the list box that that begins with the letters specified
+ *  by text.  The search is case insensitive.  I.e., if text is 'new' it would
+ *  select "New York".
+ *
+ *  @param  text  The text (or prefix) of the item to select.
+ *
+ *  @return  The one-based index of the item selected. 0 if no matching entry
+ *           was found, or some other error.
+ */
+RexxMethod2(int32_t, lb_select, CSTRING, text, CSELF, pCSelf)
+{
+    return cbLbSelect(((pCDialogControl)pCSelf)->hCtrl, text, winListBox);
+}
 
 /**
  * Methods for the ComboBox class.
  */
 #define COMBOBOX_CLASS   "ComboBox"
+
 
 /** ComboBox::getText()
  *
@@ -1258,7 +1394,7 @@ RexxMethod3(int32_t, lb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, p
  */
 RexxMethod2(RexxStringObject, cb_getText, uint32_t, index, CSELF, pCSelf)
 {
-    return cbLbGetText(context, (pCDialogControl)pCSelf, index, CB_GETLBTEXTLEN, CB_GETLBTEXT);
+    return cbLbGetText(context, (pCDialogControl)pCSelf, index, winComboBox);
 }
 
 
@@ -1288,10 +1424,13 @@ RexxMethod2(int32_t, cb_add, CSTRING, text, CSELF, pCSelf)
  *  Inserts a string entry into the cobo box at the index specified.
  *
  *  @param  index  [OPTIONAL]  The one-based index of where the entry is to be
- *                 inerted.  If index is -1, the entry is inserted at the end of
- *                 the combo box.  When this argument is omitted, the entry is
- *                 inserted after the current selected entry.  If there is no
- *                 selected entry, the new entry is inserted as the first entry.
+ *                 inerted.  If index is less than -1, the entry is inserted at
+ *                 the end of the entries.  If index is 0, the new entry is
+ *                 inserted as the first entry.
+ *
+ *                 When this argument is omitted, the entry is inserted after
+ *                 the current selected entry.  If there is no selected entry,
+ *                 the new entry is inserted as the last entry.
 
  *  @param  text   The string to insert.
  *
@@ -1301,5 +1440,23 @@ RexxMethod2(int32_t, cb_add, CSTRING, text, CSELF, pCSelf)
  */
 RexxMethod3(int32_t, cb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, pCSelf)
 {
-    return cbLbInsert(context, (pCDialogControl)pCSelf, index, text, winComboBox);
+    return cbLbInsert(context, ((pCDialogControl)pCSelf)->hCtrl, index, text, winComboBox);
 }
+
+
+/** ComboBox::select()
+ *
+ *  Selects the entry in the combo box that that begins with the letters
+ *  specified by text.  The search is case insensitive.  I.e., if text is 'new'
+ *  it would select "New York".
+ *
+ *  @param  text  The text (or prefix) of the entry to select.
+ *
+ *  @return  The one-based index of the entry selected. 0 if no matching entry
+ *           was found, or some other error.
+ */
+RexxMethod2(int32_t, cb_select, CSTRING, text, CSELF, pCSelf)
+{
+    return cbLbSelect(((pCDialogControl)pCSelf)->hCtrl, text, winComboBox);
+}
+

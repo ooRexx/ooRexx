@@ -104,7 +104,7 @@ RexxMethod1(RexxObjectPtr, baseDlg_test, CSELF, pCSelf)
 
     MESSAGETABLEENTRY *m = dlgAdm->MsgTab;
 
-    for ( size_t i = 0; i < dlgAdm->MT_size; i++ )
+    for ( int i = 0; i < dlgAdm->MT_size; i++ )
     {
         printf("method: %s msg=0x%08x msgF=0x%08x\n", m[i].rexxProgram, m[i].msg, m[i].filterM);
         printf("wp=0x%016I64x wpF=0x%016I64x lp=0x%016I64x lpF=0x%016I64x\n",

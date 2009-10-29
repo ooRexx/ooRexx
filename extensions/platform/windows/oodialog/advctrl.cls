@@ -1317,6 +1317,7 @@
 ::method getText external "LIBRARY oodialog lb_getText"
 ::method add external "LIBRARY oodialog lb_add"
 ::method insert external "LIBRARY oodialog lb_insert"
+::method select external "LIBRARY oodialog lb_select"
 
 ::method Delete
    use arg index
@@ -1351,13 +1352,6 @@
    use arg ndx
    if arg(1,'o') = 1 then ndx = 0
    return self~Message2Parent(0x00000186, ndx-1, "D")
-
-::method Select
-   use arg text
-   if arg(1,'o') = 1 then return -1
-   index = self~Message2Parent(0x0000018F, 0, "T" || text)
-   if index < 0 then return 0
-   return self~Message2Parent(0x00000186, index, 0)
 
 ::method SelectRange
    use arg fromNdx, toNdx
@@ -1448,6 +1442,7 @@
 ::method getText external "LIBRARY oodialog lb_getText"
 ::method add external "LIBRARY oodialog cb_add"
 ::method insert external "LIBRARY oodialog cb_insert"
+::method select external "LIBRARY oodialog cb_select"
 
 ::method Delete      -- CB_DELETESTRING             0x0144
    use arg index
@@ -1478,13 +1473,6 @@
    use arg ndx
    if arg(1,'o') = 1 then ndx = 0
    return self~Message2Parent(0x0000014E, ndx-1, 0)
-
-::method Select
-   use arg text
-   if arg(1,'o') = 1 then return -1
-   index = self~Message2Parent(0x0000014C, 0, "T" || text)
-   if index < 0 then return 0
-   return self~Message2Parent(0x0000014E, index, 0)
 
 ::method Items
    return self~Message2Parent(0x00000146, 0, 0)

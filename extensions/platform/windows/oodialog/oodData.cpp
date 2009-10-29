@@ -92,18 +92,6 @@ static inline uint32_t dlgDataToNumber(RexxMethodContext *c, RexxObjectPtr data)
     return number;
 }
 
-/* Determine if a combo box is a drop down list combo box.  */
-inline bool isDropDownList(HWND hDlg, uint32_t id)
-{
-    return ((GetWindowLong(GetDlgItem(hDlg, id), GWL_STYLE) & CBS_DROPDOWNLIST) == CBS_DROPDOWNLIST);
-}
-
-/* Determine if a list box is a single selection list box.  */
-inline bool isSingleSelectionListBox(HWND hDlg, uint32_t id)
-{
-    return ((GetWindowLong(GetDlgItem(hDlg, id), GWL_STYLE) & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)) == 0);
-}
-
 /* Is the control type one used with a data attribute. */
 inline bool isDataAttributeControl(oodControl_t control)
 {

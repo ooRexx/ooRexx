@@ -1055,10 +1055,6 @@
    forward message 'newProgressBar'
 ::method getSliderControl unguarded
    forward message 'newTrackBar'
-::method getMonthCalendar unguarded
-   forward message 'newMonthCalendar'
-::method getDateTimePicker unguarded
-   forward message 'newDateTimePicker'
 
 
 ::method getTextSize unguarded
