@@ -193,6 +193,9 @@ exit
 /* ************************************************************************** */
 /* ************************************************************************** */
 
+::METHOD array_test
+  say "Hello"
+
 /* Serializable support methods */
 ::METHOD array_wo
     use strict arg handler
@@ -279,7 +282,7 @@ exit
     handler~writeObject(self~source)
 
 -- This does not work yet.
-::METHOD method_ro 
+::METHOD method_ro
     use strict arg handler
     m =    .Method~new('', Caller~FromSerializedData(arguments))
     if mode~bitAnd(4) = 4 then m~setGuarded

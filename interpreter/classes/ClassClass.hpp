@@ -89,6 +89,8 @@
    RexxObject *defineMethod(RexxString *, RexxMethod *);
    RexxObject *defineMethods(RexxTable *);
    RexxObject *deleteMethod(RexxString *);
+   RexxObject *defineClassMethod(RexxString *method_name, RexxMethod *newMethod);
+   void        removeClassMethod(RexxString *method_name);
    RexxMethod *method(RexxString *);
    RexxSupplier *methods(RexxClass *);
    void        updateSubClasses();

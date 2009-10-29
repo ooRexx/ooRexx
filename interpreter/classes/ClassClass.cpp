@@ -709,6 +709,48 @@ RexxObject *RexxClass::defineMethods(
     return OREF_NULL;                    /* returns nothing                   */
 }
 
+/**
+ * special method to allow a class method to be added
+ * to a primitive class during image build.
+ *
+ * @param method_name
+ *                  The name of the new method.
+ * @param newMethod The method object to add
+ *
+ * @return always returns OREF_NULL
+ */
+RexxObject *RexxClass::defineClassMethod(RexxString *method_name, RexxMethod *newMethod)
+{
+    // validate the arguments
+    method_name = stringArgument(method_name, ARG_ONE)->upper();
+    requiredArgument(newMethod, ARG_TWO);
+    newMethod->setScope(this);        // change the scope to the class
+    /* now add this to the behaviour     */
+    this->behaviour->getMethodDictionary()->stringPut(newMethod, method_name);
+    this->classMethodDictionary->stringAdd(newMethod, method_name);
+    return OREF_NULL;                    /* returns nothing                   */
+}
+
+/**
+ * Remove a class method from a class and all of its class methods.
+ *
+ * @param method_name
+ *               The target method name.
+ */
+void RexxClass::removeClassMethod(RexxString *method_name)
+{
+    // remove from our behaviour
+    this->behaviour->deleteMethod(method_name);
+
+    // propagate to all subclasses
+    RexxArray *subclass_list = getSubClasses();
+    for (size_t i = 1; i < subclass_list->size(); i++)
+    {
+        ((RexxClass *)subclass_list->get(i))->removeClassMethod(method_name);
+    }
+}
+
+
 RexxObject *RexxClass::deleteMethod(
     RexxString  *method_name)          /* deleted method name               */
 /*****************************************************************************/

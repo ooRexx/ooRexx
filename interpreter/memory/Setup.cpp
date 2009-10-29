@@ -258,6 +258,7 @@ void RexxMemory::createImage()
   defineProtectedKernelMethod(CHAR_BASECLASS       ,TheClassBehaviour, CPPM(RexxClass::getBaseClass), 0);
   defineProtectedKernelMethod(CHAR_DEFINE          ,TheClassBehaviour, CPPM(RexxClass::defineMethod), 2);
   defineProtectedKernelMethod(CHAR_DEFINE_METHODS  ,TheClassBehaviour, CPPM(RexxClass::defineMethods), 1);
+  defineProtectedKernelMethod("!DEFINE_CLASS_METHOD"  ,TheClassBehaviour, CPPM(RexxClass::defineClassMethod), 2);
   defineProtectedKernelMethod(CHAR_DELETE ,TheClassBehaviour, CPPM(RexxClass::deleteMethod), 1);
   defineKernelMethod(CHAR_ENHANCED        ,TheClassBehaviour, CPPM(RexxClass::enhanced), A_COUNT);
   defineKernelMethod(CHAR_ID              ,TheClassBehaviour, CPPM(RexxClass::getId), 0);
@@ -1506,6 +1507,11 @@ void RexxMemory::createImage()
   TheStringClass->inherit(comparable, OREF_NULL);
   TheStringClass->setRexxDefined();
 
+  // disable the special class methods we only use during the image build phase.
+  // this removes this from all of the subclasses as well
+  TheObjectClass->removeClassMethod(new_string(CHAR_DEFINE_METHODS));
+  TheObjectClass->removeClassMethod(new_string(CHAR_SHRIEKREXXDEFINED));
+  TheObjectClass->removeClassMethod(new_string("!DEFINE_CLASS_METHOD"));
 
   // now save the image
   memoryObject.saveImage();
