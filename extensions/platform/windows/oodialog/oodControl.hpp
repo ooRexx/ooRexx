@@ -67,6 +67,12 @@ extern bool            isControlMatch(HWND, oodControl_t);
 #define ComboBoxAtom         0x0085
 
 
+/* Determine if a list box is a single selection list box.  */
+inline bool isSingleLineEdit(HWND hEdit)
+{
+    return ((GetWindowLong(hEdit, GWL_STYLE) & ES_MULTILINE) == 0);
+}
+
 /* Determine if a combo box is a drop down list combo box.  */
 inline bool isDropDownList(HWND hDlg, uint32_t id)
 {

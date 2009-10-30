@@ -864,9 +864,9 @@ bool rxGetWindowText(RexxMethodContext *c, HWND hwnd, RexxStringObject *pStringO
         return true;
     }
 
-    // TODO For all windows except an edit control this is fine.  We should
-    // check the count and if bigger than a certain size, see if it could be
-    // optimized by using a string buffer.
+    // TODO For all windows except a multiline edit control this is fine.  We
+    // should check the count and if bigger than a certain size, see if it could
+    // be optimized by using a string buffer.
 
     LPTSTR pBuf = (LPTSTR)malloc(++count);
     if ( pBuf == NULL )

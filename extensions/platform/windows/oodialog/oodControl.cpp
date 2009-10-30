@@ -967,6 +967,85 @@ RexxMethod1(RexxObjectPtr, e_selection, CSELF, pCSelf)
 }
 
 
+/** Edit::replaceSelText()
+ *
+ *  Replaces the selected text in an edit control with the specified text.
+ *
+ *  @param  replacement  The text that replaces the selected text.
+ *
+ *  @param  canUndo      [OPTIONAL]  If true, the replacement can be undone, if
+ *                       false it can not be undone.  The default is true.
+ *
+ *  @return  0, always.  MSDN docs say: This message does not return a value.
+ */
+RexxMethod3(RexxObjectPtr, e_replaceSelText, CSTRING, replacement, OPTIONAL_logical_t, canUndo, CSELF, pCSelf)
+{
+    if ( argumentOmitted(2) )
+    {
+        canUndo = TRUE;
+    }
+    SendMessage(((pCDialogControl)pCSelf)->hCtrl, EM_REPLACESEL, canUndo, (LPARAM)replacement);
+    return TheZeroObj;
+}
+
+
+RexxMethod3(RexxStringObject, e_getLine, uint32_t, lineNumber, OPTIONAL_RexxObjectPtr, ignored, CSELF, pCSelf)
+{
+    RexxMethodContext *c = context;
+
+    HWND hwnd = ((pCDialogControl)pCSelf)->hCtrl;
+    char *buf = NULL;
+    RexxStringObject result = context->NullString();
+
+    if ( lineNumber < 1 )
+    {
+        goto done_out;
+    }
+
+    if ( isSingleLineEdit(hwnd) )
+    {
+        if ( lineNumber != 1 )
+        {
+            goto done_out;
+        }
+        rxGetWindowText(context, hwnd, &result);
+    }
+    else
+    {
+        lineNumber--;
+        int32_t charIndex = (int32_t)SendMessage(hwnd, EM_LINEINDEX, lineNumber, 0);
+        if ( charIndex == -1 )
+        {
+            goto done_out;
+        }
+
+        WORD count = (WORD)SendMessage(hwnd, EM_LINELENGTH, charIndex, 0);
+        if ( count == 0 )
+        {
+            goto done_out;
+        }
+        count++;
+
+        buf = (char *)LocalAlloc(LPTR, count);
+        if ( buf == NULL )
+        {
+            outOfMemoryException(context->threadContext);
+            goto done_out;
+        }
+
+        (*(WORD *)buf) = count;
+        if ( SendMessage(hwnd, EM_GETLINE, lineNumber, (LPARAM)buf) != 0 )
+        {
+            result = c->String(buf);
+        }
+    }
+
+done_out:
+    safeLocalFree(buf);
+    return result;
+}
+
+
 RexxMethod1(RexxObjectPtr, e_hideBallon, CSELF, pCSelf)
 {
     if ( ! requiredComCtl32Version(context, context->GetMessageName(), COMCTL32_6_0)  )

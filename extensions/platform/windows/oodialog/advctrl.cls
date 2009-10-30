@@ -1089,6 +1089,17 @@
     s = self~selection
     return s~startChar s~endChar
 
+::method replaceSelText external "LIBRARY oodialog e_replaceSelText"
+::method getLine external "LIBRARY oodialog e_getLine"
+::method hideBalloon external "LIBRARY oodialog e_hideBallon"
+::method showBalloon external "LIBRARY oodialog e_showBallon"
+::method setCue external "LIBRARY oodialog e_setCue"
+::method replaceStyle external "LIBRARY oodialog e_style"
+::method addStyle external "LIBRARY oodialog e_style"
+::method removeStyle external "LIBRARY oodialog e_style"
+::method getStyle external "LIBRARY oodialog e_style"
+
+
 ::method select
     use arg start, end
     if arg(1,'o') = 1 then start = 1
@@ -1138,18 +1149,13 @@
     ndx = self~Message2Parent(0x00BB, line, 0)
     return self~Message2Parent(0x00C1, ndx, 0)
 
-::method ReplaceSelText
-    use arg text
-    if arg(1,'o') = 1 then return -1
-    self~Message2Parent(0x00C2, 1, "T" || text)
-
 ::method SetLimit
     use arg limit
     self~Message2Parent(0x00C5, limit, 0)
 
 ::method LineFromIndex
     use arg ndx
-    if arg(1,'o') = 1 then ndx = -1; else ndx = ndx -1
+    if arg(1,'o') = 1 then ndx = -1; else ndx = ndx - 1
     return self~Message2Parent(0x00C9, ndx, 0) +1
 
 ::method "PasswordChar="
@@ -1185,23 +1191,12 @@
     left = .DlgUtil~loWord(marg)
     return left" "right
 
-::method GetLine
-    use arg line, maxlen
-    if arg(1,'o') = 1 then line = 0
-    if arg(2,'o') = 1 then maxlen = 255
-    return self~Message2Parent(0x00C4, line-1, "G" || maxlen)
+::method getLine external "LIBRARY oodialog e_getLine"
 
 ::method "Tab="
     use arg dlgunits
     self~Message2Parent(0x00CB, 1, "L" || dlgunits)
 
-::method hideBalloon external "LIBRARY oodialog e_hideBallon"
-::method showBalloon external "LIBRARY oodialog e_showBallon"
-::method setCue external "LIBRARY oodialog e_setCue"
-::method replaceStyle external "LIBRARY oodialog e_style"
-::method addStyle external "LIBRARY oodialog e_style"
-::method removeStyle external "LIBRARY oodialog e_style"
-::method getStyle external "LIBRARY oodialog e_style"
 
 /******************* ButtonControl Classes ************************************/
 

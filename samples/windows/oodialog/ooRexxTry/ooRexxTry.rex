@@ -682,18 +682,17 @@ return self~ok:super
     iarray = .array~new()
     max_length = 0
     do i = 1 to the_input~lines
-        -- Using 6000 in hopes no one will ever have a single line of code > 6000 characters
         if stripIt then
             do
-                if the_input~getLine(i,6000)~strip() \= '' then
+                if the_input~getLine(i)~strip() \= '' then
                     do
-                        iarray~append(the_input~getLine(i,6000))
+                        iarray~append(the_input~getLine(i))
                         max_length += iarray[iarray~last]~length
                     end
             end
         else
             do
-                iarray~append(the_input~getLine(i,6000))
+                iarray~append(the_input~getLine(i))
                 max_length += iarray[iarray~last]~length
             end
     end
