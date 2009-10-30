@@ -1314,10 +1314,14 @@
 
 ::class 'ListBox' subclass DialogControl public
 
+::method setTabulators external "LIBRARY oodialog generic_setListTabulators"
 ::method getText external "LIBRARY oodialog lb_getText"
 ::method add external "LIBRARY oodialog lb_add"
 ::method insert external "LIBRARY oodialog lb_insert"
 ::method select external "LIBRARY oodialog lb_select"
+::method find external "LIBRARY oodialog lb_find"
+::method addDirectory external "LIBRARY oodialog lb_addDirectory"
+
 
 ::method Delete
    use arg index
@@ -1326,16 +1330,6 @@
 
 ::method DeleteAll
    return self~Message2Parent(0x00000184, 0, 0)
-
-::method Find
-   use arg dataString, ndx, how
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then ndx = 0
-   if arg(3,'e') = 1 & (how = 1 | how~left(1)~translate = "E") then
-       index = self~Message2Parent(0x000001A2, ndx-1, "T" || dataString)  /* find exactly */
-   else
-       index = self~Message2Parent(0x0000018F, ndx-1, "T" || dataString)  /* find prefix */
-   if index >= 0 then return index + 1; else return 0
 
 ::method selectedIndex
    return self~Message2Parent(0x00000188, 0, 0) + 1
@@ -1395,22 +1389,6 @@
    self~Delete(index)
    return self~Insert(index, dataString)
 
-::method setTabulators external "LIBRARY oodialog generic_setListTabulators"
-
-::method AddDirectory
-   use arg drvPath, fileAttributes
-   if arg(2,"o") = 1 then fileAttributes = "READWRITE"
-   READWRITE  = 0
-   READONLY   = 1
-   HIDDEN     = 2
-   SYSTEM     = 4
-   DIRECTORY  = 16
-   ARCHIVE    = 32
-   EXCLUSIVE  = 32768
-   interpret( "opts = "fileAttributes~translate('+',' ') )
-   if opts \= 0 then opts = opts + EXCLUSIVE
-   return self~Message2Parent(0x0000018D, opts, "T" || drvpath) + 1
-
 ::method SetWidth
    use arg dlgunits
    if arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
@@ -1443,6 +1421,8 @@
 ::method add external "LIBRARY oodialog cb_add"
 ::method insert external "LIBRARY oodialog cb_insert"
 ::method select external "LIBRARY oodialog cb_select"
+::method find external "LIBRARY oodialog cb_find"
+::method addDirectory external "LIBRARY oodialog cb_addDirectory"
 
 ::method Delete      -- CB_DELETESTRING             0x0144
    use arg index
@@ -1452,22 +1432,11 @@
 ::method DeleteAll   -- CB_RESETCONTENT             0x014B
    return self~Message2Parent(0x0000014B, 0, 0)
 
-::method Find
-   use arg dataString, ndx, how
-   if arg(1,'o') = 1 then return -1
-   if arg(2,'o') = 1 then ndx = 0
-   if arg(3,'e') = 1 & (how = 1 | how~left(1)~translate = "E") then
-       index = self~Message2Parent(0x00000158, ndx-1, "T" || dataString)  /* find exactly */
-   else
-       index = self~Message2Parent(0x0000014C, ndx-1, "T" || dataString)    /* find prefix */
-   if index >= 0 then return index + 1; else return 0
-
-
 ::method SelectedIndex
    return self~Message2Parent(0x00000147, 0, 0) + 1
 
 ::method selected
-   return self~getText(self~SelectedIndex)
+   return self~getText(self~selectedIndex)
 
 ::method SelectIndex
    use arg ndx
@@ -1502,19 +1471,6 @@
 
 
 
-::method AddDirectory
-   use arg drvPath, fileAttributes
-   if arg(2,"o") = 1 then fileAttributes = "READWRITE"
-   READWRITE  = 0
-   READONLY   = 1
-   HIDDEN     = 2
-   SYSTEM     = 4
-   DIRECTORY  = 16
-   ARCHIVE    = 32
-   EXCLUSIVE  = 32768
-   interpret( "opts = "fileAttributes~translate('+',' ') )
-   if opts \= 0 then opts = opts + EXCLUSIVE
-   return self~Message2Parent(0x00000145, opts, "T" || drvpath) + 1
 
 
 

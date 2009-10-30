@@ -628,23 +628,38 @@
    if id = -1 then return -1
    return SendWinMsg("PTR", self~dlgHandle, id, msg, wP, lP)
 
-   /* This method adds a string to the combobox */
 
 ::method addComboEntry unguarded
    use strict arg id, string
    comboBox = self~newComboBox(id)
    if comboBox == .nil then return -1
    else return comboBox~add(string)
-   if arg(2,'o') = 1 | string = "DATA" then return -1
-   return self~BoxMessage(id, 0x00000143, 0, "T" || string) + 1
 
-   /* This method inserts a string to the combobox */
+::method insertComboEntry unguarded
+   use strict arg id, index = 0, string
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   if arg(2, 'O') then return comboBox~insert( , string)
+   else return comboBox~insert(index, string)
 
-::method InsertComboEntry unguarded
-   use arg id, item, string
-   if arg(3,'o') = 1 | string = "DATA" then return -1
-   if arg(2,"o") = 1 then item = self~GetCurrentComboIndex(id)
-   return self~BoxMessage(id, 0x0000014A, item-1, "T" || string) + 1
+::method getComboEntry unguarded
+   use strict arg id, index
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~getText(index)
+
+::method findComboEntry unguarded
+   use strict arg id, string
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~find(string)
+
+::method comboAddDirectory unguarded
+   use strict arg id, drivepath, fileAttributes = ""
+   comboBox = self~newComboBox(id)
+   if comboBox == .nil then return -1
+   return comboBox~addDirectory(drivePath, fileAttibutes)
+
 
    /* This method deletes a string from the combo box. */
    /* For argument 'index' don't use string but the index instead */
@@ -655,15 +670,6 @@
    if arg(2,"o") = 1 then index = self~GetCurrentComboIndex(id)
    return self~BoxMessage(id, 0x00000144, index-1, 0)
 
-
-   /* This method finds a string in the combo box. It returns the */
-   /* corresponding index */
-
-::method FindComboEntry unguarded
-   use arg id, string
-   if arg(2,'o') = 1 | string = "DATA" then return -1
-   item = self~BoxMessage(id, 0x0000014C, 0, "T" || string)
-   if item >= 0 then return item + 1; else return 0
 
 
    /* This returns the index of the currently selected item */
@@ -686,14 +692,6 @@
    use arg id
    return self~BoxMessage(id, 0x00000146, 0, 0)
 
-   /* Returns the text string of entry index */
-
-::method getComboEntry unguarded
-   use strict arg id, index
-   comboBox = self~newComboBox(id)
-   if comboBox == .nil then return -1
-   return comboBox~getText(index)
-
    /* Changes the value of 'item' to 'string' */
 
 ::method ChangeComboEntry unguarded
@@ -704,20 +702,6 @@
    return self~InsertComboEntry(id, item, string)
 
 
-   /* add all filenames in the directory to the combo box */
-   /* argument fileAttributes can be none, one or more of (seperated by blanks): */
-
-::method ComboAddDirectory unguarded
-   use arg id, drvpath, fileAttributes
-   READWRITE  = 0
-   READONLY   = 1
-   HIDDEN     = 2
-   SYSTEM     = 4
-   DIRECTORY  = 16
-   ARCHIVE    = 32
-   interpret( "opts = "fileAttributes~translate('+',' ') )
-   return self~BoxMessage(id, 0x00000145, opts, "T" || drvpath) + 1
-
 
    /* Deletes all strings of the combo box */
 
@@ -727,27 +711,33 @@
 
 
 /* The following methods are to manipulate a list box. */
-/*  For remarks see the combo box methods */
 
-
-   /* Adds 'data' (a string) to the list box 'id' */
+::method setListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
 
 ::method addListEntry unguarded
-   use strict arg id, data
+   use strict arg id, text
    listBox = self~newListBox(id)
    if listBox == .nil then return -1
-   else return listBox~add(data)
-
-   /* Inserts 'data' (a string) into the list box 'id'. The new item */
-   /* will be inserted after that with 'index' */
+   else return listBox~add(text)
 
 ::method insertListEntry unguarded
-   use strict arg id, index = (-2), data
+   use strict arg id, index = (-2), text
    listBox = self~newListBox(id)
    if listBox == .nil then return -1
+   if arg(2, 'O') then return listBox~insert( , text)
+   else return listBox~insert(index, text)
 
-   args = arg(2, 'A')
-   return listBox~sendWith("INSERT", args)
+::method findListEntry unguarded
+   use strict arg id, text
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~find(text)
+
+::method listAddDirectory unguarded
+   use strict arg id, drivePath, fileAttributes = ""
+   listBox = self~newListBox(id)
+   if listBox == .nil then return -1
+   return listBox~addDirectory(drivePath, fileAttributes)
 
    /* Deletes an item from a list box. */
    /* For argument 'index' don't use string but the index */
@@ -757,13 +747,6 @@
    if arg(2,"o") = 1 then index = self~GetCurrentListIndex(id)
    return self~BoxMessage(id, 0x00000182, index-1, 0)
 
-   /* Returns the index of 'dataString' in the list box 'id' */
-
-::method FindListEntry unguarded
-   use arg id, dataString
-   if arg(2,'o') = 1 | dataString = "DATASTRING" then return -1
-   index = self~BoxMessage(id, 0x0000018F, 0, "T" || dataString)
-   if index >= 0 then return index + 1; else return 0
 
    /* Returns the index of the currently selected list box item */
 
@@ -800,22 +783,6 @@
    if index <= 0 then return -1
    self~DeleteListEntry(id, index)
    return self~InsertListEntry(id, index, dataString)
-
--- Sets the tab stops for a ListBox.
-::method SetListTabulators unguarded external "LIBRARY oodialog generic_setListTabulators"
-
-   /* Adds all filenames in the directory 'drvPath' to the list box */
-   /* argument 'fileAttributes' can be none, one or more of (seperated by blanks): */
-::method ListAddDirectory unguarded
-   use arg id, drvPath, fileAttributes
-   READWRITE  = 0
-   READONLY   = 1
-   HIDDEN     = 2
-   SYSTEM     = 4
-   DIRECTORY  = 16
-   ARCHIVE    = 32
-   interpret( "opts = "fileAttributes~translate('+',' ') )
-   return self~BoxMessage(id, 0x0000018D, opts, "T" || drvpath) + 1
 
    /* Removes all items from list box 'id' */
 

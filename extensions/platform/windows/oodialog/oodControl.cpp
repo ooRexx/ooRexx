@@ -1108,6 +1108,12 @@ RexxMethod4(RexxObjectPtr, e_style, OPTIONAL_CSTRING, _style1, OPTIONAL_CSTRING,
 #define LISTBOX_CLASS   "ListBox"
 
 
+/*
+ * Much of the functionality of the list box and combo box is basically the
+ * same.  Some common functions follow that merely use different Window
+ * messages.
+ */
+
 /**
  * Gets an array of the selected items indexes from a multiple selection list
  * box.
@@ -1168,7 +1174,7 @@ done_out:
  *
  * @return The Rexx string object that represents the text.
  */
-RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, uint32_t index, oodControl_t ctrl)
+static RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, uint32_t index, oodControl_t ctrl)
 {
     RexxStringObject result = c->NullString();
 
@@ -1203,13 +1209,13 @@ RexxStringObject cbLbGetText(RexxMethodContext *c, pCDialogControl pcdc, uint32_
  * Insert an item into a single selection list box or a combo box.  Note that
  * this will not work properly for a multiple selection list box.
  */
-int32_t cbLbInsert(RexxMethodContext *context, HWND hCtrl, int32_t index, CSTRING text, oodControl_t ctrl)
+static int32_t cbLbInsert(RexxMethodContext *context, HWND hCtrl, int32_t index, CSTRING text, oodControl_t ctrl)
 {
     uint32_t msg;
 
     if ( argumentOmitted(1) )
     {
-        msg = (ctrl == winComboBox ? CB_GETCURSEL : LB_GETCURSEL);
+        msg = ( ctrl == winComboBox ? CB_GETCURSEL : LB_GETCURSEL);
         index = (int32_t)SendMessage(hCtrl, msg, 0, 0);
     }
     else
@@ -1234,7 +1240,7 @@ int32_t cbLbInsert(RexxMethodContext *context, HWND hCtrl, int32_t index, CSTRIN
     return ret;
 }
 
-int32_t cbLbSelect(HWND hCtrl, CSTRING text, oodControl_t ctrl)
+static int32_t cbLbSelect(HWND hCtrl, CSTRING text, oodControl_t ctrl)
 {
     uint32_t msg = (ctrl == winComboBox ? CB_FINDSTRING : LB_FINDSTRING);
 
@@ -1261,6 +1267,53 @@ int32_t cbLbSelect(HWND hCtrl, CSTRING text, oodControl_t ctrl)
     return index;
 }
 
+static int32_t cbLbFind(HWND hCtrl, CSTRING text, uint32_t startIndex, CSTRING exactly, oodControl_t ctrl)
+{
+    bool exact = false;
+    if ( exactly != NULL && (*exactly == '1' || toupper(*exactly) || 'E') )
+    {
+        exact = true;
+    }
+    if ( startIndex > 0 )
+    {
+        startIndex--;
+    }
+
+    int32_t found;
+    uint32_t msg;
+    if ( exact )
+    {
+        msg = (ctrl == winComboBox ? CB_FINDSTRINGEXACT : LB_FINDSTRINGEXACT);
+    }
+    else
+    {
+        msg = (ctrl == winComboBox ? CB_FINDSTRING : LB_FINDSTRING);
+    }
+
+    found = (int32_t)SendMessage(hCtrl, LB_FINDSTRING, startIndex, (LPARAM)text);
+
+    return (found > 0 ? 0 : --found);
+}
+
+
+static int32_t cbLbAddDirectory(HWND hCtrl, CSTRING drivePath, CSTRING fileAttributes, oodControl_t ctrl)
+{
+    uint32_t attributes = DDL_READWRITE;
+    if ( fileAttributes != NULL && *fileAttributes != '\0' )
+    {
+        if ( StrStrI(fileAttributes, "READWRITE") != 0 ) attributes |= DDL_READWRITE;
+        if ( StrStrI(fileAttributes, "READONLY" ) != 0 ) attributes |= DDL_READONLY;
+        if ( StrStrI(fileAttributes, "HIDDEN"   ) != 0 ) attributes |= DDL_HIDDEN;
+        if ( StrStrI(fileAttributes, "SYSTEM"   ) != 0 ) attributes |= DDL_SYSTEM;
+        if ( StrStrI(fileAttributes, "DIRECTORY") != 0 ) attributes |= DDL_DIRECTORY;
+        if ( StrStrI(fileAttributes, "ARCHIVE"  ) != 0 ) attributes |= DDL_ARCHIVE;
+        if ( StrStrI(fileAttributes, "EXCLUSIVE") != 0 ) attributes |= DDL_EXCLUSIVE;
+        if ( StrStrI(fileAttributes, "DRIVES"   ) != 0 ) attributes |= DDL_DRIVES;
+    }
+    uint32_t msg = (ctrl == winComboBox ? CB_DIR : LB_DIR);
+
+    return (int32_t)SendMessage(hCtrl, msg, attributes, (LPARAM)drivePath);
+}
 
 
 /** ListBox::getText()
@@ -1377,6 +1430,45 @@ RexxMethod2(int32_t, lb_select, CSTRING, text, CSELF, pCSelf)
     return cbLbSelect(((pCDialogControl)pCSelf)->hCtrl, text, winListBox);
 }
 
+
+/** ListBox::find()
+ *
+ *  Finds the index of the list box item that matches 'text'.  In all cases
+ *  the search is case insensitive.
+ *
+ *  @param  text        The text of the item to search for.  If not exact, this
+ *                      can be just an abbreviation, or prefix, of the item.
+ *                      Otherwise an exact match, disregarding case, is searched
+ *                      for.
+ *
+ *  @param  startIndex  [OPTIONAL] The one-based index of the item to start the
+ *                      search at.  If the search reaches the end of the items
+ *                      without a match, the search continues with the first
+ *                      item until all items have been examined.  When
+ *                      omitted, or 0, the search starts with the first item.
+ *
+ *  @param  exactly     [OPTIONAL]  Whether to do an exact match.  When this
+ *                      arugment is omitted, 'text' can just the abbreviation of
+ *                      the item to find.  I.e., 'San' would match "San Diego."
+ *                      If the argument is used and equals true or "Exact" then
+ *                      the item must match text exactly.  When using the
+ *                      "Exact" form, only the first letter is considered and
+ *                      case is insignificant.
+ *
+ *  @return  The one-based index of the item, if found, otherwise 0.
+ */
+RexxMethod4(int32_t, lb_find, CSTRING, text, OPTIONAL_uint32_t, startIndex, OPTIONAL_CSTRING, exactly, CSELF, pCSelf)
+{
+
+    return cbLbFind(((pCDialogControl)pCSelf)->hCtrl, text, startIndex, exactly, winListBox);
+}
+
+
+RexxMethod3(int32_t, lb_addDirectory, CSTRING, drivePath, OPTIONAL_CSTRING, fileAttributes, CSELF, pCSelf)
+{
+    return cbLbAddDirectory(((pCDialogControl)pCSelf)->hCtrl, drivePath, fileAttributes, winListBox);
+}
+
 /**
  * Methods for the ComboBox class.
  */
@@ -1400,9 +1492,9 @@ RexxMethod2(RexxStringObject, cb_getText, uint32_t, index, CSELF, pCSelf)
 
 /** ComboBox::add()
  *
- *  Adds a string entry to the cobo box.
+ *  Adds a string entry to the combo box.
  *
- *  @param  The string to add.
+ *  @param  text  The string to add.
  *
  *  @return  The 1-based index of the added entry on success.  -1 (CB_ERR) on
  *           error and -2 (CB_ERRSPACE) if there is not enough room for the new
@@ -1431,7 +1523,7 @@ RexxMethod2(int32_t, cb_add, CSTRING, text, CSELF, pCSelf)
  *                 When this argument is omitted, the entry is inserted after
  *                 the current selected entry.  If there is no selected entry,
  *                 the new entry is inserted as the last entry.
-
+ *
  *  @param  text   The string to insert.
  *
  *  @return  The 1-based index of the added entry on success.  -1 (CB_ERR) on
@@ -1454,9 +1546,49 @@ RexxMethod3(int32_t, cb_insert, OPTIONAL_int32_t, index, CSTRING, text, CSELF, p
  *
  *  @return  The one-based index of the entry selected. 0 if no matching entry
  *           was found, or some other error.
+ *
+ *  @note  The first match found is selected.  For instance with two entries in
+ *         the combo box of "San Diego" and "San Jose" and using for text 'san',
+ *         the entry with the lowest index would be selected.
  */
 RexxMethod2(int32_t, cb_select, CSTRING, text, CSELF, pCSelf)
 {
     return cbLbSelect(((pCDialogControl)pCSelf)->hCtrl, text, winComboBox);
 }
 
+
+/** ComboBox::find()
+ *
+ *  Finds the index of the combo box entry that matches 'text'.  In all cases
+ *  the search is case insensitive.
+ *
+ *  @param  text        The text of the entry to search for.  If not exact, this
+ *                      can be just an abbreviation, or prefix, of the entry.
+ *                      Otherwise an exact match, disregarding case, is searched
+ *                      for.
+ *
+ *  @param  startIndex  [OPTIONAL] The one-based index of the entry to start the
+ *                      search at.  If the search reaches the end of the entries
+ *                      without a match, the search continues with the first
+ *                      entry until all entries have been examined.  When
+ *                      omitted, or 0, the search starts with the first entry.
+ *
+ *  @param  exactly     [OPTIONAL]  Whether to do an exact match.  When this
+ *                      arugment is omitted, 'text' can just the abbreviation of
+ *                      the entry to find.  I.e., 'San' would match "San Diego."
+ *                      If the argument is used and equals true or "Exact" then
+ *                      the entry must match text exactly.  When using the
+ *                      "Exact" form, only the first letter is considered and
+ *                      case is insignificant.
+ *
+ *  @return  The one-based index of the entry, if found, otherwise 0.
+ */
+RexxMethod4(int32_t, cb_find, CSTRING, text, OPTIONAL_uint32_t, startIndex, OPTIONAL_CSTRING, exactly, CSELF, pCSelf)
+{
+    return cbLbFind(((pCDialogControl)pCSelf)->hCtrl, text, startIndex, exactly, winComboBox);
+}
+
+RexxMethod3(int32_t, cb_addDirectory, CSTRING, drivePath, OPTIONAL_CSTRING, fileAttributes, CSELF, pCSelf)
+{
+    return cbLbAddDirectory(((pCDialogControl)pCSelf)->hCtrl, drivePath, fileAttributes, winComboBox);
+}

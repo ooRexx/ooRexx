@@ -470,12 +470,16 @@ REXX_METHOD_PROTOTYPE(lb_getText);
 REXX_METHOD_PROTOTYPE(lb_add);
 REXX_METHOD_PROTOTYPE(lb_insert);
 REXX_METHOD_PROTOTYPE(lb_select);
+REXX_METHOD_PROTOTYPE(lb_find);
+REXX_METHOD_PROTOTYPE(lb_addDirectory);
 
 // ComboBox
 REXX_METHOD_PROTOTYPE(cb_getText);
 REXX_METHOD_PROTOTYPE(cb_add);
 REXX_METHOD_PROTOTYPE(cb_insert);
 REXX_METHOD_PROTOTYPE(cb_select);
+REXX_METHOD_PROTOTYPE(cb_find);
+REXX_METHOD_PROTOTYPE(cb_addDirectory);
 
 // .Rect
 REXX_METHOD_PROTOTYPE(rect_init);
@@ -894,12 +898,16 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lb_add,                         lb_add),
     REXX_METHOD(lb_insert,                      lb_insert),
     REXX_METHOD(lb_select,                      lb_select),
+    REXX_METHOD(lb_find,                        lb_find),
+    REXX_METHOD(lb_addDirectory,                lb_addDirectory),
 
     // ComboBox
     REXX_METHOD(cb_getText,                     cb_getText),
     REXX_METHOD(cb_add,                         cb_add),
     REXX_METHOD(cb_insert,                      cb_insert),
     REXX_METHOD(cb_select,                      cb_select),
+    REXX_METHOD(cb_find,                        cb_find),
+    REXX_METHOD(cb_addDirectory,                cb_addDirectory),
 
     REXX_METHOD(rect_init,                      rect_init),
     REXX_METHOD(rect_left,                      rect_left),
