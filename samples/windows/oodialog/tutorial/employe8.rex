@@ -99,9 +99,12 @@ CleanUp:
     self~AddListEntry(23, "Lawyer")
     self~connectEachSBEvent(11, "Emp_Previous", "Emp_Next")
     self~DisableItem(11)
-    font = self~CreateFont("Script",14,"BOLD")
-    self~SetItemFont(1, font)
-    self~DisableItem(13)
+
+    additional = .directory~new
+    additional~weight = 600
+    font = self~createFontEx("Script", 16, additional)
+    self~setControlFont(1, font)
+    self~disableItem(13)
 
 ::method Print
     self~GetData
@@ -196,9 +199,9 @@ CleanUp:
 
 ::method InitDialog
    expose font
+   font = self~createFontEx("Courier", 14)
+   self~setControlFont(101, font)
    self~parent~FillList(self, 101)
-   font = self~CreateFont("Courier", 10)
-   self~SetItemFont(101, font)
 
 ::method Leaving
    expose font
