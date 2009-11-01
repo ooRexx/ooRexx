@@ -1003,13 +1003,6 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
            }
        }
        else
-       if (!strcmp(argv[1].strptr, "STRWIDTH"))
-       {
-           CHECKARG(4);
-
-           RETVAL(ListView_GetStringWidth(h, argv[3].strptr));
-       }
-       else
        if (!strcmp(argv[1].strptr, "ARRANGE"))
        {
            UINT flag;
@@ -1080,42 +1073,6 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
    else
    if (argv[0].strptr[0] == 'C')
    {
-       if (!strcmp(argv[1].strptr, "INS"))
-       {
-           LVCOLUMN lvi;
-           int retVal;
-
-           CHECKARG(7);
-
-           lvi.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
-
-           lvi.iSubItem = atoi(argv[3].strptr);
-
-           lvi.pszText = (LPSTR)argv[4].strptr;
-           lvi.cchTextMax = (int)argv[4].strlength;
-
-           lvi.cx = atoi(argv[5].strptr);
-           if (lvi.cx >= 0) lvi.mask |= LVCF_WIDTH;
-
-           if (strstr(argv[6].strptr,"CENTER")) lvi.fmt = LVCFMT_CENTER;
-           else if (strstr(argv[6].strptr,"RIGHT")) lvi.fmt = LVCFMT_RIGHT;
-           else lvi.fmt = LVCFMT_LEFT;
-
-           retVal = ListView_InsertColumn(h, lvi.iSubItem, &lvi);
-           if ( retVal != -1 && lvi.fmt != LVCFMT_LEFT && lvi.iSubItem == 0 )
-           {
-               /* According to the MSDN docs: "If a column is added to a
-                * list-view control with index 0 (the leftmost column) and with
-                * LVCFMT_RIGHT or LVCFMT_CENTER specified, the text is not
-                * right-aligned or centered." This is the suggested work around.
-                */
-               lvi.iSubItem = 1;
-               ListView_InsertColumn(h, lvi.iSubItem, &lvi);
-               ListView_DeleteColumn(h, 0);
-           }
-           RETVAL(retVal);
-       }
-       else
        if (!strcmp(argv[1].strptr, "SET"))
        {
            LV_COLUMN lvi;
@@ -1183,13 +1140,6 @@ size_t RexxEntry HandleListCtrl(const char *funcname, size_t argc, CONSTRXSTRING
                RETC(0)
            }
            else RETVAL(-1)
-       }
-       else
-       if (!strcmp(argv[1].strptr, "GETWIDTH"))
-       {
-           CHECKARG(4);
-
-           RETVAL(ListView_GetColumnWidth(h, atoi(argv[3].strptr)));
        }
        else
        if (!strcmp(argv[1].strptr, "SETWIDTH"))
@@ -2434,11 +2384,23 @@ done:
     return success;
 }
 
-// TODO review method name
-RexxMethod5(int, lv_insertColumnEx, OPTIONAL_uint16_t, column, CSTRING, text, uint16_t, width,
-            OPTIONAL_CSTRING, fmt, OSELF, self)
+/** ListControl::insertColumnPx()
+ *
+ *
+ *  @param column
+ *  @param text
+ *  @param width   The width of the column in pixels
+ *
+ *
+ *  @note  Even though the width argument in insertColumn() was documented as
+ *         being in pixels, the code actually converted it to dialog units.
+ *         This method is provided to really use pixels.
+ *
+ */
+RexxMethod5(int, lv_insertColumnPx, OPTIONAL_uint16_t, column, CSTRING, text, uint16_t, width,
+            OPTIONAL_CSTRING, fmt, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
 
     LVCOLUMN lvi = {0};
     int retVal = 0;
@@ -2488,26 +2450,16 @@ RexxMethod5(int, lv_insertColumnEx, OPTIONAL_uint16_t, column, CSTRING, text, ui
     return retVal;
 }
 
-// TODO review method name
-RexxMethod2(int, lv_columnWidthEx, uint16_t, column, OSELF, self)
+RexxMethod2(int, lv_stringWidthPx, CSTRING, text, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    return ListView_GetColumnWidth(hwnd, column);
+    return ListView_GetStringWidth(getDCHCtrl(pCSelf), text);
 }
 
 // TODO review method name
-RexxMethod2(int, lv_stringWidthEx, CSTRING, text, OSELF, self)
+RexxMethod6(int, lv_addRowEx, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL_int, imageIndex,
+            OPTIONAL_RexxObjectPtr, subItems, OSELF, self, CSELF, pCSelf)
 {
-    HWND hwnd = rxGetWindowHandle(context, self);
-    return ListView_GetStringWidth(hwnd, text);
-}
-
-// TODO review method name
-RexxMethod5(int, lv_addRowEx, CSTRING, text, OPTIONAL_int, itemIndex, OPTIONAL_int, imageIndex,
-            OPTIONAL_RexxObjectPtr, subItems, OSELF, self)
-{
-    //RexxMethodContext *context;
-    HWND hwnd = rxGetWindowHandle(context, self);
+    HWND hwnd = getDCHCtrl(pCSelf);
 
     if ( argumentOmitted(2) )
     {

@@ -158,6 +158,8 @@ REXX_METHOD_PROTOTYPE(dlgutil_comctl32Version_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_version_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_hiWord_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_loWord_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_makeLPARAM_cls);
+REXX_METHOD_PROTOTYPE(dlgutil_makeWPARAM_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_and_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_or_cls);
 REXX_METHOD_PROTOTYPE(dlgutil_getSystemMetrics_cls);
@@ -408,9 +410,8 @@ REXX_METHOD_PROTOTYPE(lv_getImageList);
 REXX_METHOD_PROTOTYPE(lv_getColumnCount);
 REXX_METHOD_PROTOTYPE(lv_getColumnOrder);
 REXX_METHOD_PROTOTYPE(lv_setColumnOrder);
-REXX_METHOD_PROTOTYPE(lv_insertColumnEx);    // TODO review method name
-REXX_METHOD_PROTOTYPE(lv_columnWidthEx);     // TODO review method name
-REXX_METHOD_PROTOTYPE(lv_stringWidthEx);     // TODO review method name
+REXX_METHOD_PROTOTYPE(lv_insertColumnPx);    // TODO review method name
+REXX_METHOD_PROTOTYPE(lv_stringWidthPx);
 REXX_METHOD_PROTOTYPE(lv_addRowEx);          // TODO review method name
 
 // TreeView
@@ -604,6 +605,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(dlgutil_version_cls,            dlgutil_version_cls),
     REXX_METHOD(dlgutil_hiWord_cls,             dlgutil_hiWord_cls),
     REXX_METHOD(dlgutil_loWord_cls,             dlgutil_loWord_cls),
+    REXX_METHOD(dlgutil_makeLPARAM_cls,         dlgutil_makeLPARAM_cls),
+    REXX_METHOD(dlgutil_makeWPARAM_cls,         dlgutil_makeWPARAM_cls),
     REXX_METHOD(dlgutil_and_cls,                dlgutil_and_cls),
     REXX_METHOD(dlgutil_or_cls,                 dlgutil_or_cls),
     REXX_METHOD(dlgutil_mapPixel2Du_cls,        dlgutil_mapPixel2Du_cls),
@@ -843,9 +846,8 @@ RexxMethodEntry oodialog_methods[] = {
     REXX_METHOD(lv_getColumnCount,              lv_getColumnCount),
     REXX_METHOD(lv_getColumnOrder,              lv_getColumnOrder),
     REXX_METHOD(lv_setColumnOrder,              lv_setColumnOrder),
-    REXX_METHOD(lv_insertColumnEx,              lv_insertColumnEx),     // TODO review method name
-    REXX_METHOD(lv_columnWidthEx,               lv_columnWidthEx),      // TODO review method name
-    REXX_METHOD(lv_stringWidthEx,               lv_stringWidthEx),      // TODO review method name
+    REXX_METHOD(lv_insertColumnPx,              lv_insertColumnPx),     // TODO review method name
+    REXX_METHOD(lv_stringWidthPx,               lv_stringWidthPx),
     REXX_METHOD(lv_addRowEx,         	        lv_addRowEx),           // TODO review method name
 
     REXX_METHOD(e_selection,                    e_selection),

@@ -548,25 +548,7 @@ size_t RexxEntry SendWinMsg(const char *funcname, size_t argc, CONSTRXSTRING *ar
     CHECKARGL(5);
     hWnd = GET_HWND(argv[1]);
 
-    if ( strcmp(argv[0].strptr, "DLG") == 0 )
-    {
-        CHECKARG(6);
-
-        for (i=1; i<5; i++)
-        {
-           if (isHex(argv[i+1].strptr))
-               n[i] = strtol(argv[i+1].strptr,'\0',16);
-           else
-               n[i] = atol(argv[i+1].strptr);
-        }
-
-        // TODO need to decide what to do here.  Return is LRESULT which could
-        // possibly be a 64-bit number.
-        ltoa((long)SendDlgItemMessage((HWND)hWnd, n[1], n[2], (WPARAM)n[3], (LPARAM)n[4]), retstr->strptr, 10);
-        retstr->strlength = strlen(retstr->strptr);
-        return 0;
-    }
-    else if (!strcmp(argv[0].strptr,"PTR"))
+    if ( strcmp(argv[0].strptr,"PTR") == 0 )
     {
         LONG ret, lBuffer;
         LPARAM lP;

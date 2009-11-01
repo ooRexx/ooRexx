@@ -69,7 +69,7 @@ extern RexxStringObject cbLbGetText(RexxMethodContext *c, HWND hCtrl, uint32_t i
 #define ComboBoxAtom         0x0085
 
 
-/* Determine if a list box is a single selection list box.  */
+/* Determine if an edit control is a single line edit control.  */
 inline bool isSingleLineEdit(HWND hEdit)
 {
     return ((GetWindowLong(hEdit, GWL_STYLE) & ES_MULTILINE) == 0);
@@ -86,10 +86,23 @@ inline bool isSingleSelectionListBox(HWND hListBox)
 {
     return ((GetWindowLong(hListBox, GWL_STYLE) & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)) == 0);
 }
-
 inline bool isSingleSelectionListBox(HWND hDlg, uint32_t id)
 {
     return isSingleSelectionListBox(GetDlgItem(hDlg, id));
+}
+
+/* Retrieve specified fields in the CDialogControl struct. */
+inline HWND getDCHCtrl(void *pCSelf)
+{
+    return (((pCDialogControl)pCSelf)->hCtrl);
+}
+inline HWND getDCHDlg(void *pCSelf)
+{
+    return (((pCDialogControl)pCSelf)->hDlg);
+}
+inline RexxObjectPtr getDCOwnerDlg(void *pCSelf)
+{
+    return (((pCDialogControl)pCSelf)->oDlg);
 }
 
 

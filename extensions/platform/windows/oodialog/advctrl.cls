@@ -374,11 +374,15 @@
    return HandleTreeCtrl("HIT", self~Hwnd, x, y)
 
 
-/****************************************************** List Control Class *********************************************************/
+/************ List Control Class **********************************************/
 
 ::class 'ListControl' subclass DialogControl public
 
-::method LastItem attribute
+-- LVM_FIRST = 0x1000  == 4096
+::constant LVM_GETCOLUMNWIDTH                4125             -- LVM_FIRST + 29
+
+
+::method lastItem attribute
 
 ::method Init
    forward class (super) continue
@@ -454,14 +458,6 @@
    if \ item~datatype('W') then raise syntax 93.905 array(1, item)
    return (HandleListCtrlEx(self~Hwnd, "M", "CHK", item) == 1)
 
-::method insertColumnEx external "LIBRARY oodialog lv_insertColumnEx"  -- TODO review method name
-::method InsertColumn
-   use arg nr, text, width, fmt
-   if arg(1,'O') then nr = 0
-   if arg(3,'o') = 1 then width = -1; else width = width*self~factorX
-   if arg(4,'o') = 1 then fmt = "LEFT"
-   return HandleListCtrl("C","INS", self~Hwnd, nr, text, width, fmt~translate)
-
 
 ::method DeleteColumn
    use arg nr
@@ -486,12 +482,24 @@
    return InternalLVColInfo.
 
 
-::method stringWidthEx external "LIBRARY oodialog lv_stringWidthEx"  -- TODO review method name
-::method columnWidthEx external "LIBRARY oodialog lv_columnWidthEx"  -- TODO review method name
-::method ColumnWidth
-   use arg nr
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("C","GETWIDTH", self~Hwnd, nr) / self~factorX
+::method stringWidthPx external "LIBRARY oodialog lv_stringWidthPx"
+::method stringWidth  -- Dialog units, not accurate.
+   use strict arg text
+   return self~stringWidthPx(text) / self~factorX
+
+::method columnWidthPx
+  use strict arg column
+  return self~sendWinIntMsg(self~LVM_GETCOLUMNWIDTH, column, 0)
+
+::method columnWidth  -- Dialog units, not accurate.
+   use strict arg colNum
+   return self~columnWidthPx(colNum) / self~factorX
+
+::method insertColumnPx external "LIBRARY oodialog lv_insertColumnPx"
+::method insertColumn -- Dialog units, not accurate.
+   use arg nr = 0, text, width, fmt = "L"
+   width = trunc(width * self~factorX)
+   return self~insertColumnPx(nr, text, width, fmt)
 
 ::method SetColumnWidth
    use arg nr, width
@@ -503,11 +511,6 @@
 ::method getColumnCount external "LIBRARY oodialog lv_getColumnCount"
 ::method getColumnOrder external "LIBRARY oodialog lv_getColumnOrder"
 ::method setColumnOrder external "LIBRARY oodialog lv_setColumnOrder"
-
-::method StringWidth
-   use arg text
-   if arg(1,'o') = 1 then return -1
-   return HandleListCtrl("M","STRWIDTH", self~Hwnd, text) / self~factorX
 
 
 ::method Insert
@@ -1307,6 +1310,10 @@
 
 ::class 'ListBox' subclass DialogControl public
 
+::constant LB_GETHORIZONTALEXTENT  "0x0193"
+::constant LB_SETHORIZONTALEXTENT  "0x0194"
+
+
 ::method setTabulators external "LIBRARY oodialog generic_setListTabulators"
 ::method getText external "LIBRARY oodialog lb_getText"
 ::method add external "LIBRARY oodialog lb_add"
@@ -1314,7 +1321,6 @@
 ::method select external "LIBRARY oodialog lb_select"
 ::method find external "LIBRARY oodialog lb_find"
 ::method addDirectory external "LIBRARY oodialog lb_addDirectory"
-
 
 ::method Delete
    use arg index
@@ -1349,10 +1355,8 @@
    return self~Message2Parent(0x0000019B, 1, lparam)
 
 
-::method DeselectRange
-   use arg fromNdx, toNdx
-   if arg(1,'o') = 1 then fromNdx = 1
-   if arg(2,'o') = 1 then toNdx = self~Items
+::method deselectRange
+   use strict arg fromNdx = 1, toNdx = (self~items)
 
    lparam = (toNdx-1) * "10000"~x2d + (fromNdx-1)
    return self~Message2Parent(0x0000019B, 0, lparam)
@@ -1368,24 +1372,28 @@
    return self~oDlg~getListBoxData(self~id)
 
 ::method MakeFirstVisible
-   use arg ndx
-   if arg(1,'o') = 1 then ndx = 1
-   return self~Message2Parent(0x00000197, ndx-1, 0)
+   use strict arg ndx = 1
+   return self~Message2Parent(0x00000197, ndx - 1, 0)
 
 ::method GetFirstVisible
    return self~Message2Parent(0x0000018E, 0, 0) + 1
 
 ::method Modify
-   use arg index, dataString
-   if arg(1,"o") = 1 then index = self~SelectedIndex
+   use strict arg index = (self~selectedIndex), newItem
    if index <= 0 then return -1
-   self~Delete(index)
-   return self~Insert(index, dataString)
+   self~delete(index)
+   return self~insert(index, newItem)
 
-::method SetWidth
-   use arg dlgunits
-   if arg(1,'o') = 1 | dlgunits~datatype("N") = 0 then return -1
-   self~Message2Parent(0x00000194, dlgunits*self~factorX, 0)
+::method setWidthPx
+   use strict arg pixels
+   self~sendWinIntMsg(self~LB_SETHORIZONTALEXTENT, pixels, 0)
+   return 0
+
+::method setWidth       -- Dialog units, not accurate
+   use strict arg dlgunits
+   if dlgunits~datatype("N") = 0 then return -1
+   px = trunc(dlgunits * self~factorX)
+   self~setWidthPx(px)
 
 ::method Width
    return self~Message2Parent(0x00000193, 0, 0)/self~factorX
@@ -1404,11 +1412,18 @@
    self~Message2Parent(0x00000195, dlgunits*self~factorX, 0)
 
 
-
-/****************************************************** Combo Box Class *********************************************************/
-
+/********** Combo Box Class ***************************************************/
 
 ::class 'ComboBox' subclass DialogControl public
+
+::constant CB_SETEDITSEL               "0x0142"
+::constant CB_DELETESTRING             "0x0144"
+::constant CB_GETCOUNT                 "0x0146"
+::constant CB_GETCURSEL                "0x0147"
+::constant CB_RESETCONTENT             "0x014B"
+::constant CB_SETCURSEL                "0x014E"
+::constant CB_SHOWDROPDOWN             "0x014F"
+::constant CB_GETDROPPEDSTATE          "0x0157"
 
 ::method getText external "LIBRARY oodialog cb_getText"
 ::method add external "LIBRARY oodialog cb_add"
@@ -1417,57 +1432,51 @@
 ::method find external "LIBRARY oodialog cb_find"
 ::method addDirectory external "LIBRARY oodialog cb_addDirectory"
 
-::method Delete      -- CB_DELETESTRING             0x0144
-   use arg index
-   if arg(1,"o") = 1 then index = self~SelectedIndex
-   return self~Message2Parent(0x00000144, index-1, 0)
+::method delete
+   use strict arg index = (self~selectedIndex)
+   ret = self~sendWinIntMsg(self~CB_DELETESTRING, index - 1, 0)
+   if ret == 0 then self~deleteAll
+   return ret
 
-::method DeleteAll   -- CB_RESETCONTENT             0x014B
-   return self~Message2Parent(0x0000014B, 0, 0)
+::method deleteAll
+   return self~sendWinIntMsg(self~CB_RESETCONTENT, 0, 0)
 
-::method SelectedIndex
-   return self~Message2Parent(0x00000147, 0, 0) + 1
+::method selectedIndex
+   return self~sendWinIntMsg(self~CB_GETCURSEL, 0, 0) + 1
 
 ::method selected
    return self~getText(self~selectedIndex)
 
-::method SelectIndex
-   use arg ndx
-   if arg(1,'o') = 1 then ndx = 0
-   return self~Message2Parent(0x0000014E, ndx-1, 0)
+::method selectIndex
+   use strict arg ndx = 0
+   return self~sendWinIntMsg(self~CB_SETCURSEL, ndx - 1, 0)
 
-::method Items
-   return self~Message2Parent(0x00000146, 0, 0)
+::method items
+   return self~sendWinIntMsg(self~CB_GETCOUNT, 0, 0)
 
-::method Modify
-   use arg index, dataString
-   if arg(1,"o") = 1 then index = self~SelectedIndex
+::method modify
+   use strict arg index = (self~selectedIndex), newEntry
    if index <= 0 then return -1
-   self~Delete(index)
-   return self~Insert(index, dataString)
+   self~delete(index)
+   return self~insert(index, newEntry)
 
-::method OpenDropDown
-   self~Message2Parent(0x0000014F, 1,0)
+::method openDropDown
+   self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 1, 0)
 
-::method CloseDropDown
-   self~Message2Parent(0x0000014F, 0, 0)
+::method closeDropDown
+   self~sendWinIntMsg(self~CB_SHOWDROPDOWN, 0, 0)
 
-::method IsDropDownOpen
-   return self~Message2Parent(0x00000157, 0, 0)
+::method isDropDownOpen
+   return self~sendWinIntMsg(self~CB_GETDROPPEDSTATE, 0, 0)
 
-::method EditSelection
-   use arg startndx, endndx
-   if arg(1,'o') = 1 then startNdx = 0
-   if arg(2,'o') = 1 then endNdx = 0
-   lparam = (endndx-1) * "10000"~x2d + (startndx -1)
-   return (self~Message2Parent(0x00000142, 0, lparam)\=1)
-
+::method editSelection
+   use strict arg startndx = 0, endndx = 0
+   if endndx == 0 then endndx = -1
+   lParam = .DlgUtil~makeLParam(startndx - 1, endndx)
+   return self~sendWinIntMsg(self~CB_SETEDITSEL, 0, lParam) == -1
 
 
-
-
-
-/****************************************************** ScrollBar Class *********************************************************/
+/*********** ScrollBar Class **************************************************/
 
 
 ::class 'ScrollBar' subclass DialogControl public

@@ -726,7 +726,6 @@ RexxMethod3(RexxObjectPtr, dlgctrl_tabGroup, OPTIONAL_logical_t, addStyle, NAME,
 RexxMethod2(RexxObjectPtr, dlgctrl_clearRect, ARGLIST, args, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    pCDialogControl pcdc = (pCDialogControl)pCSelf;
 
     RECT r = {0};
     size_t arraySize;
@@ -741,7 +740,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_clearRect, ARGLIST, args, CSELF, pCSelf)
         return tooManyArgsException(context->threadContext, argsUsed);
     }
 
-    return clearRect(context, pcdc->hCtrl, &r);
+    return clearRect(context, getDCHCtrl(pCSelf), &r);
 }
 
 /** DialogControl::redrawRect()
@@ -763,7 +762,6 @@ RexxMethod2(RexxObjectPtr, dlgctrl_clearRect, ARGLIST, args, CSELF, pCSelf)
 RexxMethod2(RexxObjectPtr, dlgctrl_redrawRect, ARGLIST, args, CSELF, pCSelf)
 {
     oodResetSysErrCode(context->threadContext);
-    pCDialogControl pcdc = (pCDialogControl)pCSelf;
 
     bool doErase = false;
     RECT r = {0};
@@ -793,7 +791,7 @@ RexxMethod2(RexxObjectPtr, dlgctrl_redrawRect, ARGLIST, args, CSELF, pCSelf)
         doErase = erase ? true : false;
     }
 
-    return redrawRect(context, pcdc->hCtrl, &r, doErase);
+    return redrawRect(context, getDCHCtrl(pCSelf), &r, doErase);
 }
 
 /** DialogControl::getTextSizeDlg()
@@ -848,7 +846,7 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
     }
 
     SIZE textSize = {0};
-    if ( getTextSize(context, text, fontName, fontSize, hwndSrc, ((pCDialogControl)pCSelf)->oDlg, &textSize) )
+    if ( getTextSize(context, text, fontName, fontSize, hwndSrc, getDCOwnerDlg(pCSelf), &textSize) )
     {
         return rxNewSize(context, textSize.cx, textSize.cy);
     }
@@ -872,8 +870,7 @@ RexxMethod5(RexxObjectPtr, dlgctrl_getTextSizeDlg, CSTRING, text, OPTIONAL_CSTRI
  */
 RexxMethod1(RexxObjectPtr, dlgctrl_captureMouse, CSELF, pCSelf)
 {
-    pCDialogControl pcdc = (pCDialogControl)pCSelf;
-    HWND oldCapture = (HWND)SendMessage(pcdc->hDlg, WM_USER_GETSETCAPTURE, 1, (LPARAM)pcdc->hCtrl);
+    HWND oldCapture = (HWND)SendMessage(getDCHDlg(pCSelf), WM_USER_GETSETCAPTURE, 1, (LPARAM)getDCHCtrl(pCSelf));
     return pointer2string(context, oldCapture);
 }
 
